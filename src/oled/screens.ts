@@ -16,21 +16,23 @@ import { ICON_LINK_OFF, ICON_LINK_ON } from "./icons";
 import { EmulatorState, LIGHTBAR_MODE_NAMES, TRIGGER_PRESET_NAMES, formatBdAddr } from "./state";
 
 // ===== 0: Status =====
+// Mirrors src/oled.cpp render_screen() byte-for-byte.
 export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
   drawText(fb, 0, 0, "DS5 Bridge v0.5.4");
-  drawIcon(fb, 120, 0, s.isConnected ? ICON_LINK_ON : ICON_LINK_OFF, 8, 8);
+  drawIcon(fb, 120, 0, s.isConnected || s.isDemoMode ? ICON_LINK_ON : ICON_LINK_OFF, 8, 8);
 
   if (!s.isConnected && !s.isDemoMode) {
-    drawText(fb, 0, 18, "Waiting for DS5...");
-    drawText(fb, 0, 27, "Hold Create + PS");
-    drawText(fb, 0, 36, "until lightbar pulses");
+    drawText(fb, 0, 14, "Pair your DualSense:");
+    drawText(fb, 0, 26, "1. Hold Create + PS");
+    drawText(fb, 0, 36, "2. Wait for light bar");
+    drawText(fb, 0, 46, "   to flash blue");
     return;
   }
 
   drawText(fb, 0, 9, s.bdAddr);
 
-  // Battery
+  // Battery: "%3d%%%c" pattern + battery icon at x=30
   const marker =
     s.input.batteryState === 0x1 ? "+" :
     s.input.batteryState === 0x2 ? "*" :
@@ -38,39 +40,59 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, 0, 18, `${pad3(s.input.batteryPct)}%${marker}`);
   drawBatteryIcon(fb, 30, 18, s.input.batteryPct);
 
-  // Sticks (32x32 boxes)
+  // Left stick box at (0, 30, 32, 32)
   rectOutline(fb, 0, 30, 32, 32);
   const lx = 2 + Math.round((s.input.leftStick.x * 27) / 255);
   const ly = 32 + Math.round((s.input.leftStick.y * 27) / 255);
-  px(fb, lx, ly, true); px(fb, lx + 1, ly, true);
-  px(fb, lx, ly + 1, true); px(fb, lx + 1, ly + 1, true);
+  rectFilled(fb, lx - 1, ly - 1, 3, 3);
 
+  // Right stick box at (96, 30, 32, 32)
   rectOutline(fb, 96, 30, 32, 32);
   const rx = 98 + Math.round((s.input.rightStick.x * 27) / 255);
   const ry = 32 + Math.round((s.input.rightStick.y * 27) / 255);
-  px(fb, rx, ry, true); px(fb, rx + 1, ry, true);
-  px(fb, rx, ry + 1, true); px(fb, rx + 1, ry + 1, true);
+  rectFilled(fb, rx - 1, ry - 1, 3, 3);
 
-  // L1 / R1 / Triggers + face buttons in the middle
-  if (s.input.l1) rectFilled(fb, 36, 30, 18, 7); else rectOutline(fb, 36, 30, 18, 7);
-  drawText(fb, 39, 31, "L1");
-  if (s.input.r1) rectFilled(fb, 74, 30, 18, 7); else rectOutline(fb, 74, 30, 18, 7);
-  drawText(fb, 77, 31, "R1");
+  // L2 vertical fill bar at (32, 33, 4, 29) — fills from bottom up
+  rectOutline(fb, 32, 33, 4, 29);
+  const l2_fill = Math.round((s.input.triggerLeft * 27) / 255);
+  if (l2_fill > 0) rectFilled(fb, 33, 61 - l2_fill, 2, l2_fill);
 
-  // L2 / R2 trigger fill bars
-  const l2 = Math.round((s.input.triggerLeft * 16) / 255);
-  rectOutline(fb, 36, 40, 18, 5);
-  if (l2 > 0) rectFilled(fb, 37, 41, l2, 3);
-  const r2 = Math.round((s.input.triggerRight * 16) / 255);
-  rectOutline(fb, 74, 40, 18, 5);
-  if (r2 > 0) rectFilled(fb, 75, 41, r2, 3);
+  // R2 vertical fill bar at (92, 33, 4, 29) — fills from bottom up
+  rectOutline(fb, 92, 33, 4, 29);
+  const r2_fill = Math.round((s.input.triggerRight * 27) / 255);
+  if (r2_fill > 0) rectFilled(fb, 93, 61 - r2_fill, 2, r2_fill);
 
-  // Face buttons (compact glyphs)
-  const fy = 48;
-  drawText(fb, 60, fy,     s.input.triangle ? "T" : "t");
-  drawText(fb, 60, fy + 8, s.input.cross    ? "X" : "x");
-  drawText(fb, 54, fy + 4, s.input.square   ? "S" : "s");
-  drawText(fb, 66, fy + 4, s.input.circle   ? "O" : "o");
+  // D-pad indicator: 4 dots in + pattern at center (46, 46), radius 5
+  const dp = s.input.dpad;
+  const dp_n = dp === 7 || dp === 0 || dp === 1;
+  const dp_e = dp === 1 || dp === 2 || dp === 3;
+  const dp_s = dp === 3 || dp === 4 || dp === 5;
+  const dp_w = dp === 5 || dp === 6 || dp === 7;
+  const dcx = 46, dcy = 46;
+  const dot = (dx: number, dy: number, on: boolean) => {
+    if (on) rectFilled(fb, dcx + dx - 1, dcy + dy - 1, 3, 3);
+    else    rectOutline(fb, dcx + dx - 1, dcy + dy - 1, 3, 3);
+  };
+  dot( 0, -5, dp_n);
+  dot( 5,  0, dp_e);
+  dot( 0,  5, dp_s);
+  dot(-5,  0, dp_w);
+
+  // Face buttons: 5x5 squares in diamond at (fcx=64+18, fcy=46)
+  const fcx = 64 + 18;
+  const fcy = 46;
+  const sq = (dx: number, dy: number, on: boolean) => {
+    if (on) rectFilled(fb, fcx + dx - 2, fcy + dy - 2, 5, 5);
+    else    rectOutline(fb, fcx + dx - 2, fcy + dy - 2, 5, 5);
+  };
+  sq( 0, -8, s.input.triangle);
+  sq( 8,  0, s.input.circle);
+  sq( 0,  8, s.input.cross);
+  sq(-8,  0, s.input.square);
+
+  // L1 / R1: small 12x3 pill rects above the stick boxes
+  if (s.input.l1) rectFilled(fb, 36, 30, 12, 3); else rectOutline(fb, 36, 30, 12, 3);
+  if (s.input.r1) rectFilled(fb, 80, 30, 12, 3); else rectOutline(fb, 80, 30, 12, 3);
 }
 
 // ===== 1: Slots =====

@@ -346,7 +346,7 @@ export default function App() {
             <h2>OLED Preview</h2>
           </div>
           <p className="panel-blurb">
-            Pixel-perfect emulation of the firmware's 10 OLED screens. Auto-cycles every 4 s with mock data when no controller is connected. With a controller connected (click <strong>Connect</strong> above), data is live. Share <code>#preview</code> to land Discord viewers directly on this view.
+            Live emulation of the firmware's 10 OLED screens — close to what the physical Pico-OLED-1.3 shows but not byte-perfect. Auto-cycles every 4 s with mock data when no controller is connected. With a controller connected (click <strong>Connect</strong> above), data is live. Share <code>#preview</code> to land Discord viewers directly on this view.
           </p>
           <OledEmulator client={bridge.client} />
         </section>
