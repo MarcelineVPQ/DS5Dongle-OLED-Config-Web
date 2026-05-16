@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import OledEmulator from "./components/OledEmulator";
+import ThemeToggle from "./components/ThemeToggle";
 import { useDs5Bridge } from "./hooks/useDs5Bridge";
 import {
   AUTO_HAPTICS_LOWPASS_OPTIONS,
@@ -70,9 +71,12 @@ export default function App() {
           <div className="eyebrow">WebHID</div>
           <h1>DS5 Bridge Config — OLED Edition</h1>
         </div>
-        <div className={`status-pill ${bridge.isConnected ? "connected" : ""}`}>
-          {bridge.isConnected ? <CheckCircle2 size={16} /> : <Usb size={16} />}
-          <span>{bridge.statusText}</span>
+        <div className="header-tools">
+          <ThemeToggle />
+          <div className={`status-pill ${bridge.isConnected ? "connected" : ""}`}>
+            {bridge.isConnected ? <CheckCircle2 size={16} /> : <Usb size={16} />}
+            <span>{bridge.statusText}</span>
+          </div>
         </div>
       </header>
 
