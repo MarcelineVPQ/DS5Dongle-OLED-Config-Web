@@ -70,13 +70,13 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   const dp_w = dp === 5 || dp === 6 || dp === 7;
   const dcx = 46, dcy = 46;
   const dot = (dx: number, dy: number, on: boolean) => {
-    if (on) rectFilled(fb, dcx + dx - 1, dcy + dy - 1, 3, 3);
-    else    rectOutline(fb, dcx + dx - 1, dcy + dy - 1, 3, 3);
+    if (on) rectFilled(fb, dcx + dx - 2, dcy + dy - 2, 5, 5);
+    else    rectOutline(fb, dcx + dx - 2, dcy + dy - 2, 5, 5);
   };
-  dot( 0, -5, dp_n);
-  dot( 5,  0, dp_e);
-  dot( 0,  5, dp_s);
-  dot(-5,  0, dp_w);
+  dot( 0, -7, dp_n);
+  dot( 7,  0, dp_e);
+  dot( 0,  7, dp_s);
+  dot(-7,  0, dp_w);
 
   // Face buttons: 5x5 squares in diamond at (fcx=64+18, fcy=46)
   const fcx = 64 + 18;
