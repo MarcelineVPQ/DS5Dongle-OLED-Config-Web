@@ -500,3 +500,138 @@ input[type="number"] {
     padding: 14px;
   }
 }
+
+/* ---------- Tab nav ---------- */
+
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 18px 0;
+  border-bottom: 1px solid #d6dee7;
+}
+
+.tab-nav .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5b6877;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+
+.tab-nav .tab:hover {
+  color: #0f766e;
+}
+
+.tab-nav .tab.active {
+  color: #0f766e;
+  border-bottom-color: #0f766e;
+}
+
+/* ---------- OLED Emulator ---------- */
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.oled-emulator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.oled-stage {
+  padding: 14px;
+  background: linear-gradient(180deg, #1a1f2e, #0a0d18);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 2px #2a3548;
+  display: inline-block;
+}
+
+.oled-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 512px;
+  height: 256px;
+}
+
+.oled-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  width: min(512px, 100%);
+}
+
+.oled-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #f3f7fb;
+  border: 1px solid #d6dee7;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #2a3947;
+  cursor: pointer;
+  transition: background .15s, transform .05s;
+}
+
+.oled-key:hover { background: #e7f1ec; border-color: #0f766e; }
+.oled-key:active { transform: translateY(1px); }
+
+.oled-controls .oled-key:first-child { justify-self: start; }
+.oled-controls .oled-key:last-child  { justify-self: end; }
+
+.oled-screen-name {
+  text-align: center;
+  font-size: 13px;
+  color: #556070;
+}
+
+.oled-screen-name strong {
+  color: #0f766e;
+}
+
+.oled-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.oled-toolbar .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.oled-banner {
+  padding: 6px 12px;
+  background: #fef6e1;
+  border: 1px solid #f3d99a;
+  border-radius: 4px;
+  color: #6b4f1d;
+  font-size: 13px;
+}
+
+@media (max-width: 540px) {
+  .oled-canvas {
+    width: 100%;
+    height: auto;
+    max-width: 512px;
+  }
+}

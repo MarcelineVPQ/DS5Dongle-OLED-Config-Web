@@ -2,16 +2,19 @@ import {
   AlertCircle,
   CheckCircle2,
   Download,
+  Monitor,
   Power,
   RefreshCw,
   RotateCcw,
   Save,
   Send,
   SlidersHorizontal,
+  Sliders,
   Usb,
   Waves,
 } from "lucide-react";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
+import OledEmulator from "./components/OledEmulator";
 import { useDs5Bridge } from "./hooks/useDs5Bridge";
 import {
   AUTO_HAPTICS_LOWPASS_OPTIONS,
@@ -29,10 +32,33 @@ import {
   fieldIssue,
 } from "./protocol/config";
 
+type Tab = "config" | "preview";
+
+function readTabFromHash(): Tab {
+  if (typeof window === "undefined") return "config";
+  const h = window.location.hash.replace(/^#\/?/, "");
+  return h === "preview" ? "preview" : "config";
+}
+
 export default function App() {
   const bridge = useDs5Bridge();
   const isBusy = bridge.operation !== null;
   const hasIssues = bridge.issues.length > 0;
+  const [tab, setTab] = useState<Tab>(readTabFromHash);
+
+  // Sync tab ↔ URL hash so #preview is shareable in Discord.
+  useEffect(() => {
+    const onHashChange = () => setTab(readTabFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+  useEffect(() => {
+    const target = tab === "preview" ? "#preview" : "#config";
+    if (window.location.hash !== target) {
+      // replaceState avoids piling history entries on every tab toggle.
+      window.history.replaceState(null, "", `${window.location.pathname}${target}`);
+    }
+  }, [tab]);
 
   const autoHapticsHint =
     AUTO_HAPTICS_MODE_OPTIONS.find((o) => o.value === bridge.draft.autoHapticsEnable)?.hint ?? "";
@@ -49,6 +75,25 @@ export default function App() {
           <span>{bridge.statusText}</span>
         </div>
       </header>
+
+      <nav className="tab-nav" aria-label="View tabs">
+        <button
+          type="button"
+          className={tab === "config" ? "tab active" : "tab"}
+          onClick={() => setTab("config")}
+          aria-pressed={tab === "config"}
+        >
+          <Sliders size={16} /> Config
+        </button>
+        <button
+          type="button"
+          className={tab === "preview" ? "tab active" : "tab"}
+          onClick={() => setTab("preview")}
+          aria-pressed={tab === "preview"}
+        >
+          <Monitor size={16} /> OLED Preview
+        </button>
+      </nav>
 
       {bridge.error && (
         <div className="notice error" role="alert">
@@ -97,6 +142,7 @@ export default function App() {
         </div>
       </section>
 
+      {tab === "config" && (
       <div className="content-grid">
         <section className="panel config-panel">
           <div className="panel-title">
@@ -291,6 +337,20 @@ export default function App() {
           </div>
         </aside>
       </div>
+      )}
+
+      {tab === "preview" && (
+        <section className="panel preview-panel">
+          <div className="panel-title">
+            <Monitor size={18} />
+            <h2>OLED Preview</h2>
+          </div>
+          <p className="panel-blurb">
+            Pixel-perfect emulation of the firmware's 10 OLED screens. Auto-cycles every 4 s with mock data when no controller is connected. With a controller connected (click <strong>Connect</strong> above), data is live. Share <code>#preview</code> to land Discord viewers directly on this view.
+          </p>
+          <OledEmulator client={bridge.client} />
+        </section>
+      )}
 
       <footer className="app-footer">
         Fork of <a href="https://github.com/awalol/ds5dongle-config-web" target="_blank" rel="noopener noreferrer">awalol/ds5dongle-config-web</a>{" "}

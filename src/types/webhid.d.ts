@@ -14,6 +14,12 @@ interface HIDConnectionEvent extends Event {
   readonly device: HIDDevice;
 }
 
+interface HIDInputReportEvent extends Event {
+  readonly device: HIDDevice;
+  readonly reportId: number;
+  readonly data: DataView;
+}
+
 interface HIDDevice extends EventTarget {
   readonly opened: boolean;
   readonly vendorId: number;
@@ -24,6 +30,16 @@ interface HIDDevice extends EventTarget {
   forget?(): Promise<void>;
   receiveFeatureReport(reportId: number): Promise<DataView>;
   sendFeatureReport(reportId: number, data: BufferSource): Promise<void>;
+  addEventListener(
+    type: "inputreport",
+    listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: "inputreport",
+    listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown,
+    options?: boolean | EventListenerOptions,
+  ): void;
 }
 
 interface HID extends EventTarget {
