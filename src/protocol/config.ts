@@ -48,7 +48,7 @@ export interface ConfigValidationIssue {
 export const DEFAULT_CONFIG: ConfigBody = {
   configVersion: 1,
   hapticsGain: 1.0,
-  speakerVolume: -20,
+  speakerVolume: 0,
   inactiveTime: 30,
   disableInactiveDisconnect: false,
   disablePicoLed: false,
