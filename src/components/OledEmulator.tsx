@@ -26,7 +26,7 @@ import { EmulatorState, SCREEN_NAMES, formatBdAddr, key1Action, newEmulatorState
 
 const AUTO_CYCLE_MS = 4000;
 const FEATURE_POLL_MS = 200;
-const CANVAS_SCALE = 4;
+const CANVAS_SCALE = 3;
 
 export interface OledEmulatorProps {
   client: Ds5BridgeHidClient | null;

@@ -560,8 +560,8 @@ input[type="number"] {
   display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  width: 512px;
-  height: 256px;
+  width: 384px;
+  height: 192px;
 }
 
 .oled-controls {
@@ -569,7 +569,7 @@ input[type="number"] {
   grid-template-columns: 1fr auto 1fr;
   gap: 16px;
   align-items: center;
-  width: min(512px, 100%);
+  width: min(384px, 100%);
 }
 
 .oled-key {
@@ -632,6 +632,6 @@ input[type="number"] {
   .oled-canvas {
     width: 100%;
     height: auto;
-    max-width: 512px;
+    max-width: 384px;
   }
 }
