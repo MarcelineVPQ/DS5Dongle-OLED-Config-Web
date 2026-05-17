@@ -14,14 +14,18 @@ import fr    from "./locales/fr.json";
 import ja    from "./locales/ja.json";
 import ptBR  from "./locales/pt-BR.json";
 
+// Use bare BCP47 language codes only. We only support one variant of
+// each, so "zh" / "pt" is enough; the previous "zh-CN" / "pt-BR" codes
+// tripped i18next's region-tag normalization and silently fell back to
+// English even when the user explicitly picked them.
 export const SUPPORTED_LANGUAGES = [
-  { code: "en",    label: "English",         shortLabel: "EN" },
-  { code: "zh-CN", label: "中文",             shortLabel: "中" },
-  { code: "es",    label: "Español",         shortLabel: "ES" },
-  { code: "de",    label: "Deutsch",         shortLabel: "DE" },
-  { code: "fr",    label: "Français",        shortLabel: "FR" },
-  { code: "ja",    label: "日本語",           shortLabel: "JA" },
-  { code: "pt-BR", label: "Português (BR)",  shortLabel: "PT" },
+  { code: "en", label: "English",        shortLabel: "EN" },
+  { code: "zh", label: "中文",           shortLabel: "中" },
+  { code: "es", label: "Español",        shortLabel: "ES" },
+  { code: "de", label: "Deutsch",        shortLabel: "DE" },
+  { code: "fr", label: "Français",       shortLabel: "FR" },
+  { code: "ja", label: "日本語",          shortLabel: "JA" },
+  { code: "pt", label: "Português (BR)", shortLabel: "PT" },
 ] as const;
 
 export type LanguageCode = typeof SUPPORTED_LANGUAGES[number]["code"];
@@ -31,23 +35,20 @@ void i18n
   .use(initReactI18next)
   .init({
     resources: {
-      "en":    { translation: en },
-      // Register the Chinese / Portuguese bundles under both the explicit
-      // region-tagged code AND the bare language code. i18next's internal
-      // lookup normalizes "zh-CN" → "zh" in some code paths, which would
-      // otherwise fall back to English even when "zh-CN" is the active lng.
-      "zh":    { translation: zhCN },
-      "zh-CN": { translation: zhCN },
-      "es":    { translation: es },
-      "de":    { translation: de },
-      "fr":    { translation: fr },
-      "ja":    { translation: ja },
-      "pt":    { translation: ptBR },
-      "pt-BR": { translation: ptBR },
+      en: { translation: en },
+      zh: { translation: zhCN },
+      es: { translation: es },
+      de: { translation: de },
+      fr: { translation: fr },
+      ja: { translation: ja },
+      pt: { translation: ptBR },
     },
     fallbackLng: "en",
-    supportedLngs: ["en", "zh", "zh-CN", "es", "de", "fr", "ja", "pt", "pt-BR"],
+    supportedLngs: ["en", "zh", "es", "de", "fr", "ja", "pt"],
+    // navigator may report "zh-CN" / "pt-BR" / "en-US" etc; match those
+    // against the bare-code resources we ship.
     nonExplicitSupportedLngs: true,
+    load: "languageOnly",
     interpolation: {
       escapeValue: false,      // React already escapes
     },
