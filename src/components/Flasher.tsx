@@ -1,10 +1,17 @@
 // Flash firmware tab. Uses WebUSB + piersfinlayson/picoflash to push a
 // .uf2 to a Pico 2 W that's in BOOTSEL mode (VID:2E8A PID:000F).
 
-import { AlertTriangle, CheckCircle2, Cpu, FileUp, Usb, Zap } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, CheckCircle2, Cpu, Download, FileUp, Usb, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PicoflashAPI, PicoflashHandle, parseUf2 } from "../flash";
+
+interface LatestFirmwareMeta {
+  tag: string;
+  name: string;
+  size: number;
+  publishedAt: string;
+}
 
 type FlashStage =
   | "idle"
@@ -31,8 +38,41 @@ export default function Flasher() {
   const [device, setDevice] = useState<PicoflashHandle | null>(null);
   const [stage, setStage] = useState<FlashStage>("idle");
   const [message, setMessage] = useState<string>("");
+  const [latestMeta, setLatestMeta] = useState<LatestFirmwareMeta | null>(null);
 
   const isBusy = stage === "parsing" || stage === "connecting" || stage === "writing" || stage === "rebooting";
+
+  // Probe for the CI-bundled latest-release metadata. If absent (e.g. local
+  // dev where the workflow hasn't run), the "use latest" button stays hidden.
+  useEffect(() => {
+    const url = `${import.meta.env.BASE_URL}firmware-latest.json`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((meta: LatestFirmwareMeta | null) => meta && setLatestMeta(meta))
+      .catch(() => { /* no bundled firmware; that's fine */ });
+  }, []);
+
+  async function handleUseLatest() {
+    if (!latestMeta) return;
+    setStage("parsing");
+    setMessage("");
+    try {
+      const url = `${import.meta.env.BASE_URL}firmware-latest.uf2`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`Fetch failed: HTTP ${r.status}`);
+      const buffer = await r.arrayBuffer();
+      const { address, data } = parseUf2(buffer);
+      if (address !== FLASH_BASE_ADDRESS) {
+        throw new Error(`Unexpected base address 0x${address.toString(16)}`);
+      }
+      setUf2({ fileName: latestMeta.name, byteSize: data.byteLength, baseAddress: address, binary: data });
+      setStage("idle");
+    } catch (err) {
+      setStage("error");
+      setMessage(err instanceof Error ? err.message : String(err));
+      setUf2(null);
+    }
+  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -115,17 +155,30 @@ export default function Flasher() {
           <div>
             <h3>{t("flash.step1Title")}</h3>
             <p>{t("flash.step1Hint")}</p>
-            <input
-              type="file"
-              accept=".uf2"
-              onChange={handleFileChange}
-              disabled={isBusy}
-              id="flasher-file"
-              className="flasher-file-input"
-            />
-            <label htmlFor="flasher-file" className="button-secondary">
-              <FileUp size={14} /> {uf2 ? uf2.fileName : t("flash.pickFile")}
-            </label>
+            <div className="flasher-source-row">
+              {latestMeta && (
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={handleUseLatest}
+                  disabled={isBusy}
+                  title={`${latestMeta.name} (${(latestMeta.size / 1024).toFixed(1)} KiB)`}
+                >
+                  <Download size={14} /> {t("flash.useLatest", { tag: latestMeta.tag })}
+                </button>
+              )}
+              <input
+                type="file"
+                accept=".uf2"
+                onChange={handleFileChange}
+                disabled={isBusy}
+                id="flasher-file"
+                className="flasher-file-input"
+              />
+              <label htmlFor="flasher-file" className="button-secondary">
+                <FileUp size={14} /> {uf2 ? uf2.fileName : t("flash.pickFile")}
+              </label>
+            </div>
             {uf2 && (
               <span className="flasher-file-size">
                 {(uf2.byteSize / 1024).toFixed(1)} KiB · 0x{uf2.baseAddress.toString(16).toUpperCase()}

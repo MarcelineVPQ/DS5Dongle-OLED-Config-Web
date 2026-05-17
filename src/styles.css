@@ -1336,3 +1336,10 @@ input[type="number"] {
 .flasher-panel {
   padding: 20px;
 }
+
+.flasher-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}

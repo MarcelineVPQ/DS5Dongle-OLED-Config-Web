@@ -3,3 +3,7 @@ dist/
 .DS_Store
 *.log
 .vite/
+
+# Firmware artifacts bundled at CI build-time, not committed
+public/firmware-latest.uf2
+public/firmware-latest.json
