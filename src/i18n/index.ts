@@ -32,16 +32,21 @@ void i18n
   .init({
     resources: {
       "en":    { translation: en },
+      // Register the Chinese / Portuguese bundles under both the explicit
+      // region-tagged code AND the bare language code. i18next's internal
+      // lookup normalizes "zh-CN" → "zh" in some code paths, which would
+      // otherwise fall back to English even when "zh-CN" is the active lng.
+      "zh":    { translation: zhCN },
       "zh-CN": { translation: zhCN },
       "es":    { translation: es },
       "de":    { translation: de },
       "fr":    { translation: fr },
       "ja":    { translation: ja },
+      "pt":    { translation: ptBR },
       "pt-BR": { translation: ptBR },
     },
     fallbackLng: "en",
-    load: "currentOnly",       // avoid auto-promoting "zh-CN" to "zh"
-    supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
+    supportedLngs: ["en", "zh", "zh-CN", "es", "de", "fr", "ja", "pt", "pt-BR"],
     nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,      // React already escapes
