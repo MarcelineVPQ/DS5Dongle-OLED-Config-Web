@@ -12,10 +12,12 @@ import {
   Sliders,
   Usb,
   Waves,
+  Zap,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import AdvancedReveal from "./components/AdvancedReveal";
+import Flasher from "./components/Flasher";
 import LanguageToggle from "./components/LanguageToggle";
 import OledEmulator from "./components/OledEmulator";
 import StatusHero from "./components/StatusHero";
@@ -36,12 +38,14 @@ import {
   fieldIssue,
 } from "./protocol/config";
 
-type Tab = "config" | "preview";
+type Tab = "config" | "preview" | "flash";
 
 function readTabFromHash(): Tab {
   if (typeof window === "undefined") return "config";
   const h = window.location.hash.replace(/^#\/?/, "");
-  return h === "preview" ? "preview" : "config";
+  if (h === "preview") return "preview";
+  if (h === "flash") return "flash";
+  return "config";
 }
 
 export default function App() {
@@ -58,7 +62,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
   useEffect(() => {
-    const target = tab === "preview" ? "#preview" : "#config";
+    const target = tab === "preview" ? "#preview" : tab === "flash" ? "#flash" : "#config";
     if (window.location.hash !== target) {
       // replaceState avoids piling history entries on every tab toggle.
       window.history.replaceState(null, "", `${window.location.pathname}${target}`);
@@ -101,6 +105,14 @@ export default function App() {
           aria-pressed={tab === "preview"}
         >
           <Monitor size={16} /> {t("tabs.preview")}
+        </button>
+        <button
+          type="button"
+          className={tab === "flash" ? "tab active" : "tab"}
+          onClick={() => setTab("flash")}
+          aria-pressed={tab === "flash"}
+        >
+          <Zap size={16} /> {t("tabs.flash")}
         </button>
       </nav>
 
@@ -332,6 +344,12 @@ export default function App() {
           </p>
           <OledEmulator client={bridge.client} />
         </section>
+      )}
+
+      {tab === "flash" && (
+        <div className="panel flasher-panel">
+          <Flasher />
+        </div>
       )}
 
       <footer className="app-footer">

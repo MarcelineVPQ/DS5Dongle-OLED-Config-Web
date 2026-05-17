@@ -6,7 +6,8 @@
   },
   "tabs": {
     "config": "Config",
-    "preview": "OLED Preview"
+    "preview": "OLED Preview",
+    "flash": "Flash Firmware"
   },
   "themeToggle": {
     "light": "Light theme",
@@ -147,5 +148,37 @@
   },
   "footer": {
     "credits": "Fork of <0>awalol/ds5dongle-config-web</0> for <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> firmware. Audio Auto Haptics DSP credited to <2>loteran/DS5Dongle</2>."
+  },
+  "flash": {
+    "sectionTitle": "Flash firmware",
+    "blurb": "Push a .uf2 firmware image to the Pico over WebUSB — no picotool, no drag-and-drop. Use this to upgrade or reflash without leaving the browser. Powered by piersfinlayson/picoflash.",
+    "webusbUnavailable": "WebUSB isn't available in this browser. Use Chrome, Edge, Vivaldi, Brave, or Opera.",
+    "step1Title": "1. Pick a UF2",
+    "step1Hint": "Download the latest release from the firmware repo, or use a local build (build/ds5-bridge-oled.uf2).",
+    "pickFile": "Choose .uf2",
+    "step2Title": "2. Put the Pico in BOOTSEL and connect",
+    "step2Hint": "Hold the BOOTSEL button while plugging in USB. The browser will prompt you to authorize the device.",
+    "connect": "Connect to Pico",
+    "reconnect": "Reconnect",
+    "connectTitle": "Authorize the BOOTSEL-mode Pico",
+    "connected": "Connected",
+    "step3Title": "3. Flash",
+    "step3Hint": "Erases the flash region, writes the new firmware, and reboots the Pico. Takes a few seconds.",
+    "flashButton": "Flash now",
+    "done": "Done — Pico is rebooting into the new firmware.",
+    "stage": {
+      "idle": "Ready",
+      "parsing": "Parsing UF2…",
+      "connecting": "Connecting…",
+      "writing": "Erasing + writing flash…",
+      "rebooting": "Rebooting Pico…",
+      "done": "Done!",
+      "error": "Error"
+    },
+    "driverHelpSummary": "Driver / permission setup",
+    "driverHelpLinux": "Linux requires a one-time udev rule so non-root users can access the Pico's BOOTSEL interface. Save the following to /etc/udev/rules.d/99-pico-bootsel.rules:",
+    "driverHelpLinuxInstall": "Then reload udev:",
+    "driverHelpWindows": "Windows needs the WinUSB driver assigned to the BOOTSEL interface. Use",
+    "driverHelpMac": "No setup needed."
   }
 }

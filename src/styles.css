@@ -1197,3 +1197,142 @@ input[type="number"] {
 
   .panel { padding: 14px; }
 }
+
+/* === Flasher tab === */
+
+.flasher-card {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.flasher-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--accent-warning, #f59e0b) 12%, transparent);
+  color: var(--accent-warning, #f59e0b);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin: 12px 0 16px;
+}
+
+.flasher-steps {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: grid;
+  gap: 16px;
+}
+
+.flasher-steps > li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.flasher-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2, #1b2336);
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.flasher-steps h3 {
+  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.flasher-steps p {
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+  margin: 0 0 10px;
+}
+
+.flasher-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flasher-file-size,
+.flasher-device-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  font-size: 12px;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  color: var(--accent-success, #22c55e);
+}
+
+.flasher-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface-2, #1b2336);
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.flasher-status strong {
+  font-weight: 600;
+}
+
+.flasher-status-msg {
+  color: var(--text-muted, #94a3b8);
+  font-size: 13px;
+}
+
+.flasher-status-done { background: color-mix(in srgb, var(--accent-success, #22c55e) 15%, transparent); }
+.flasher-status-error { background: color-mix(in srgb, var(--accent-error, #ef4444) 15%, transparent); color: var(--accent-error, #ef4444); }
+.flasher-status-writing,
+.flasher-status-rebooting,
+.flasher-status-connecting,
+.flasher-status-parsing { background: color-mix(in srgb, var(--accent, #22c55e) 12%, transparent); }
+
+.flasher-driver-help {
+  margin-top: 20px;
+  font-size: 13px;
+}
+
+.flasher-driver-help summary {
+  cursor: pointer;
+  padding: 8px 0;
+  color: var(--text-muted, #94a3b8);
+}
+
+.flasher-driver-help h4 {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.flasher-driver-help pre {
+  background: var(--surface-2, #1b2336);
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.flasher-driver-help code {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.flasher-panel {
+  padding: 20px;
+}
