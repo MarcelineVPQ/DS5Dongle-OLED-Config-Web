@@ -1343,3 +1343,110 @@ input[type="number"] {
   gap: 8px;
   align-items: center;
 }
+
+/* === Flasher device-info strip === */
+
+.flasher-device-strip {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: var(--surface-2, #1b2336);
+  border: 1px solid var(--border, #334155);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.flasher-device-strip > div {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.flasher-device-strip .label {
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+
+.flasher-device-strip .num {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  color: var(--text, #e2e8f0);
+}
+
+/* === Flasher progress bar === */
+
+.flasher-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-2, #1b2336);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 0 16px;
+}
+
+.flasher-progress-fill {
+  height: 100%;
+  background: var(--accent, #22c55e);
+  transition: width 100ms linear, background-color 200ms ease;
+  width: 0;
+}
+
+.flasher-progress-fill.errored {
+  background: var(--accent-error, #ef4444);
+}
+
+/* === Flasher action row (Flash + Reboot side-by-side) === */
+
+.flasher-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* === Flasher activity log === */
+
+.flasher-log-toggle {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.button-link {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.button-link:hover {
+  color: var(--text, #e2e8f0);
+}
+
+.flasher-log {
+  margin-top: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface-2, #1b2336);
+  border: 1px solid var(--border, #334155);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.log-entry {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-info    { color: var(--text-muted, #94a3b8); }
+.log-success { color: var(--accent-success, #22c55e); }
+.log-warning { color: var(--accent-warning, #f59e0b); }
+.log-error   { color: var(--accent-error, #ef4444); }

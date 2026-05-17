@@ -13,8 +13,17 @@
 // @ts-expect-error — vendored JS module, no .d.ts file
 import { Picoboot } from "./picoflash/picoboot.js";
 
+export interface PicoflashUsbInfo {
+  vendorId: number;
+  productId: number;
+  serialNumber: string;
+  productName?: string;
+  manufacturerName?: string;
+}
+
 export interface PicoflashHandle {
   getTarget(): { toString(): string };
+  getUsbDeviceInfo(): PicoflashUsbInfo;
   isConnected(): boolean;
   connect(): Promise<unknown>;
   disconnect(): Promise<void>;

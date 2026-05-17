@@ -166,7 +166,20 @@
     "step3Title": "3. Flash",
     "step3Hint": "Erases the flash region, writes the new firmware, and reboots the Pico. Takes a few seconds.",
     "flashButton": "Flash now",
+    "flashingButton": "Flashing…",
+    "rebootButton": "Reboot Pico",
+    "rebootingButton": "Rebooting…",
+    "rebootTitle": "Reboot the Pico out of BOOTSEL into application mode",
+    "showLogs": "Show logs",
+    "hideLogs": "Hide logs",
+    "clearLogs": "Clear",
+    "logEmpty": "No activity yet.",
     "done": "Done — Pico is rebooting into the new firmware.",
+    "info": {
+      "device": "Device",
+      "serial": "Serial",
+      "state": "State"
+    },
     "stage": {
       "idle": "Ready",
       "parsing": "Parsing UF2…",
