@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -22,6 +23,7 @@ function applyTheme(theme: Theme): void {
 }
 
 export default function ThemeToggle() {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>(readStoredTheme);
 
   useEffect(() => {
@@ -29,16 +31,16 @@ export default function ThemeToggle() {
     window.localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
-  const setTo = useCallback((t: Theme) => () => setTheme(t), []);
+  const setTo = useCallback((next: Theme) => () => setTheme(next), []);
 
   return (
-    <div className="theme-toggle" role="group" aria-label="Color theme">
+    <div className="theme-toggle" role="group" aria-label={t("themeToggle.groupLabel")}>
       <button
         type="button"
         className={theme === "light" ? "active" : ""}
         onClick={setTo("light")}
         aria-pressed={theme === "light"}
-        title="Light theme"
+        title={t("themeToggle.light")}
       >
         <Sun size={15} />
       </button>
@@ -47,7 +49,7 @@ export default function ThemeToggle() {
         className={theme === "system" ? "active" : ""}
         onClick={setTo("system")}
         aria-pressed={theme === "system"}
-        title="Follow system theme"
+        title={t("themeToggle.system")}
       >
         <Monitor size={15} />
       </button>
@@ -56,7 +58,7 @@ export default function ThemeToggle() {
         className={theme === "dark" ? "active" : ""}
         onClick={setTo("dark")}
         aria-pressed={theme === "dark"}
-        title="Dark theme"
+        title={t("themeToggle.dark")}
       >
         <Moon size={15} />
       </button>

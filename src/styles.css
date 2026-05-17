@@ -909,6 +909,101 @@ input[type="number"] {
 .tab-nav .tab:hover { color: var(--accent); }
 .tab-nav .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+/* ---------- Language toggle ---------- */
+
+.language-toggle {
+  position: relative;
+}
+
+.language-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-segment);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  height: 38px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.language-toggle-button:hover {
+  background: var(--bg-accent-tint);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.language-toggle-current {
+  min-width: 18px;
+  text-align: left;
+}
+
+.language-toggle-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 50;
+  min-width: 180px;
+  animation: tab-fade-in 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.language-toggle-menu li {
+  padding: 0;
+}
+
+.language-toggle-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.language-toggle-menu button:hover {
+  background: var(--bg-inset);
+  color: var(--text-strong);
+}
+
+.language-toggle-menu button.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.language-toggle-label {
+  flex: 1 1 auto;
+}
+
+.language-toggle-short {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .language-toggle-menu { animation: none; }
+}
+
 /* ---------- Theme toggle ---------- */
 
 .theme-toggle {

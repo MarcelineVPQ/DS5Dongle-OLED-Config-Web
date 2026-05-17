@@ -14,7 +14,9 @@ import {
   Waves,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import AdvancedReveal from "./components/AdvancedReveal";
+import LanguageToggle from "./components/LanguageToggle";
 import OledEmulator from "./components/OledEmulator";
 import StatusHero from "./components/StatusHero";
 import ThemeToggle from "./components/ThemeToggle";
@@ -44,6 +46,7 @@ function readTabFromHash(): Tab {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const bridge = useDs5Bridge();
   const isBusy = bridge.operation !== null;
   const hasIssues = bridge.issues.length > 0;
@@ -63,17 +66,18 @@ export default function App() {
     }
   }, [tab]);
 
-  const autoHapticsHint =
-    AUTO_HAPTICS_MODE_OPTIONS.find((o) => o.value === bridge.draft.autoHapticsEnable)?.hint ?? "";
+  const autoHapticsModeKey = ["off", "fallback", "mix", "replace"][bridge.draft.autoHapticsEnable & 3];
+  const autoHapticsHint = t(`autoHaptics.modes.${autoHapticsModeKey}.hint`);
 
   return (
     <main className="app-shell">
       <header className="app-header">
         <div>
-          <div className="eyebrow">WebHID</div>
-          <h1>DS5 Bridge Config — OLED Edition</h1>
+          <div className="eyebrow">{t("header.eyebrow")}</div>
+          <h1>{t("header.title")} — {t("header.titleSuffix")}</h1>
         </div>
         <div className="header-tools">
+          <LanguageToggle />
           <ThemeToggle />
           <div className={`status-pill ${bridge.isConnected ? "connected" : ""}`}>
             {bridge.isConnected ? <CheckCircle2 size={16} /> : <Usb size={16} />}
@@ -89,7 +93,7 @@ export default function App() {
           onClick={() => setTab("config")}
           aria-pressed={tab === "config"}
         >
-          <Sliders size={16} /> Config
+          <Sliders size={16} /> {t("tabs.config")}
         </button>
         <button
           type="button"
@@ -97,7 +101,7 @@ export default function App() {
           onClick={() => setTab("preview")}
           aria-pressed={tab === "preview"}
         >
-          <Monitor size={16} /> OLED Preview
+          <Monitor size={16} /> {t("tabs.preview")}
         </button>
       </nav>
 
@@ -105,14 +109,14 @@ export default function App() {
         <div className="notice error" role="alert">
           <AlertCircle size={18} />
           <span>{bridge.error}</span>
-          <button type="button" onClick={bridge.clearError}>Dismiss</button>
+          <button type="button" onClick={bridge.clearError}>{t("notice.dismiss")}</button>
         </div>
       )}
 
       {!bridge.supported && (
         <div className="notice warning">
           <AlertCircle size={18} />
-          <span>WebHID is available in Chromium-based browsers (Chrome, Edge, Brave, Opera) on secure origins. Firefox is not supported by Mozilla.</span>
+          <span>{t("notice.webhidUnavailable")}</span>
         </div>
       )}
 
@@ -120,7 +124,7 @@ export default function App() {
         <div className="device-main">
           <div className="device-icon"><Usb size={22} /></div>
           <div>
-            <div className="label">Device</div>
+            <div className="label">{t("device.label")}</div>
             <strong>{bridge.deviceLabel}</strong>
           </div>
         </div>
@@ -131,9 +135,9 @@ export default function App() {
               className="button secondary"
               onClick={() => bridge.connectAuthorized(bridge.authorizedDevices[0])}
               disabled={isBusy}
-              title="Open the first previously authorized device"
+              title={t("device.openPrevTitle")}
             >
-              <Power size={17} /> Open
+              <Power size={17} /> {t("device.openPrev")}
             </button>
           )}
           <button
@@ -141,9 +145,9 @@ export default function App() {
             className={`button primary ${bridge.isConnected ? "" : "pulse"}`}
             onClick={bridge.connect}
             disabled={!bridge.supported || isBusy}
-            title="Choose a DS5 Bridge HID device"
+            title={t("device.connectTitle")}
           >
-            <Usb size={17} /> Connect
+            <Usb size={17} /> {t("device.connect")}
           </button>
         </div>
       </section>
@@ -166,23 +170,23 @@ export default function App() {
         <section className="card span-4 actions-card">
           <div className="panel-title">
             <Download size={18} />
-            <h2>Actions</h2>
+            <h2>{t("actions.title")}</h2>
           </div>
           <div className="action-stack">
-            <button type="button" className="button secondary wide" onClick={bridge.readConfig} disabled={!bridge.client || isBusy} title="Read current config from report 0xF7">
-              <RefreshCw size={17} /> Read
+            <button type="button" className="button secondary wide" onClick={bridge.readConfig} disabled={!bridge.client || isBusy} title={t("actions.readTitle")}>
+              <RefreshCw size={17} /> {t("actions.read")}
             </button>
-            <button type="button" className="button primary wide" onClick={bridge.applyConfig} disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues} title="Send command 0x01 through report 0xF6 (update in-memory config)">
-              <Send size={17} /> Apply to Device
+            <button type="button" className="button primary wide" onClick={bridge.applyConfig} disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues} title={t("actions.applyTitle")}>
+              <Send size={17} /> {t("actions.apply")}
             </button>
-            <button type="button" className="button success wide" onClick={bridge.saveToFlash} disabled={!bridge.client || isBusy || bridge.isDirty} title={bridge.isDirty ? "Apply changes before saving" : "Send command 0x02 through report 0xF6 (write flash)"}>
-              <Save size={17} /> Save to Flash
+            <button type="button" className="button success wide" onClick={bridge.saveToFlash} disabled={!bridge.client || isBusy || bridge.isDirty} title={bridge.isDirty ? t("actions.saveNeedsApply") : t("actions.saveTitle")}>
+              <Save size={17} /> {t("actions.save")}
             </button>
-            <button type="button" className="button secondary wide" onClick={bridge.reconnectUsb} disabled={!bridge.client || isBusy} title="Send command 0x03 through report 0xF6 (reconnect TinyUSB)">
-              <Power size={17} /> Reconnect USB
+            <button type="button" className="button secondary wide" onClick={bridge.reconnectUsb} disabled={!bridge.client || isBusy} title={t("actions.reconnectTitle")}>
+              <Power size={17} /> {t("actions.reconnect")}
             </button>
-            <button type="button" className="button ghost wide" onClick={bridge.resetDraft} disabled={!bridge.config || isBusy || !bridge.isDirty} title="Restore the last config read or applied">
-              <RotateCcw size={17} /> Reset Edits
+            <button type="button" className="button ghost wide" onClick={bridge.resetDraft} disabled={!bridge.config || isBusy || !bridge.isDirty} title={t("actions.resetEditsTitle")}>
+              <RotateCcw size={17} /> {t("actions.resetEdits")}
             </button>
           </div>
         </section>
@@ -191,12 +195,10 @@ export default function App() {
         <section className="card hover-lift feature span-12">
           <div className="panel-title">
             <Waves size={18} />
-            <h2>Audio Auto Haptics</h2>
-            <span className="feature-badge" title="Unique to the OLED Edition firmware">OLED Edition</span>
+            <h2>{t("autoHaptics.sectionTitle")}</h2>
+            <span className="feature-badge" title={t("autoHaptics.blurb")}>{t("autoHaptics.badge")}</span>
           </div>
-          <p className="panel-blurb">
-            Derive haptic feedback from the game's speaker audio for titles that send no native HD-haptic data (e.g. Ghost of Tsushima on Linux + Steam).
-          </p>
+          <p className="panel-blurb">{t("autoHaptics.blurb")}</p>
           <div className="control-stack">
             <AutoHapticsModeControl
               value={bridge.draft.autoHapticsEnable}
@@ -204,7 +206,7 @@ export default function App() {
             />
             <p className="control-hint">{autoHapticsHint}</p>
             <IntegerControl
-              label="Auto Haptics gain"
+              label={t("autoHaptics.gainLabel")}
               suffix="%"
               value={bridge.draft.autoHapticsGain}
               min={0}
@@ -226,14 +228,12 @@ export default function App() {
         <section className="card hover-lift span-6">
           <div className="panel-title">
             <SlidersHorizontal size={18} />
-            <h2>Multi-slot pairing</h2>
+            <h2>{t("slots.sectionTitle")}</h2>
           </div>
-          <p className="panel-blurb">
-            Bond up to four DualSenses. The active slot reconnects on boot.
-          </p>
+          <p className="panel-blurb">{t("slots.blurb")}</p>
           <div className="control-stack">
             <SegmentedControl
-              label="Active slot"
+              label={t("slots.activeLabel")}
               value={bridge.draft.currentSlot}
               options={SLOT_OPTIONS}
               onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
@@ -245,11 +245,11 @@ export default function App() {
         <section className="card hover-lift span-6">
           <div className="panel-title">
             <SlidersHorizontal size={18} />
-            <h2>Haptics & Audio</h2>
+            <h2>{t("haptics.sectionTitle")}</h2>
           </div>
           <div className="control-stack">
             <FloatControl
-              label="Haptics gain"
+              label={t("haptics.gainLabel")}
               value={bridge.draft.hapticsGain}
               min={1}
               max={2}
@@ -258,7 +258,7 @@ export default function App() {
               onChange={(value) => bridge.setDraftField("hapticsGain", value)}
             />
             <FloatControl
-              label="Speaker volume (dB)"
+              label={t("haptics.speakerVolumeLabel")}
               value={bridge.draft.speakerVolume}
               min={-100}
               max={0}
@@ -267,7 +267,7 @@ export default function App() {
               onChange={(value) => bridge.setDraftField("speakerVolume", value)}
             />
             <IntegerControl
-              label="Audio buffer length"
+              label={t("haptics.audioBufferLabel")}
               value={bridge.draft.audioBufferLength}
               min={16}
               max={128}
@@ -280,10 +280,10 @@ export default function App() {
 
         {/* Advanced — collapsed by default, span-12 */}
         <section className="card span-12 advanced-card">
-          <AdvancedReveal>
+          <AdvancedReveal title={t("behavior.sectionTitle")} hint={t("behavior.hint")}>
             <div className="control-stack">
               <IntegerControl
-                label="Inactive timeout (minutes)"
+                label={t("behavior.inactiveTimeLabel")}
                 value={bridge.draft.inactiveTime}
                 min={5}
                 max={60}
@@ -292,23 +292,23 @@ export default function App() {
                 onChange={(value) => bridge.setDraftField("inactiveTime", value)}
               />
               <ToggleControl
-                label="Disable inactive disconnect"
+                label={t("behavior.disableInactiveDisconnect")}
                 value={bridge.draft.disableInactiveDisconnect}
                 onChange={(value) => bridge.setDraftField("disableInactiveDisconnect", value)}
               />
               <ToggleControl
-                label="Disable Pico LED"
+                label={t("behavior.disablePicoLed")}
                 value={bridge.draft.disablePicoLed}
                 onChange={(value) => bridge.setDraftField("disablePicoLed", value)}
               />
               <SegmentedControl
-                label="Polling rate"
+                label={t("behavior.pollingRateLabel")}
                 value={bridge.draft.pollingRateMode}
                 options={POLLING_RATE_OPTIONS}
                 onChange={(value) => bridge.setDraftField("pollingRateMode", value as PollingRateMode)}
               />
               <SegmentedControl
-                label="Controller mode"
+                label={t("behavior.controllerModeLabel")}
                 value={bridge.draft.controllerMode}
                 options={CONTROLLER_MODE_OPTIONS}
                 onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
@@ -323,19 +323,24 @@ export default function App() {
         <section className="panel preview-panel">
           <div className="panel-title">
             <Monitor size={18} />
-            <h2>OLED Preview</h2>
+            <h2>{t("preview.sectionTitle")}</h2>
           </div>
           <p className="panel-blurb">
-            Live emulation of the firmware's 10 OLED screens — close to what the physical Pico-OLED-1.3 shows but not byte-perfect. Auto-cycles every 4 s with mock data when no controller is connected. With a controller connected (click <strong>Connect</strong> above), data is live. Share <code>#preview</code> to land Discord viewers directly on this view.
+            <Trans i18nKey="preview.blurb" components={{ strong: <strong />, code: <code /> }} />
           </p>
           <OledEmulator client={bridge.client} />
         </section>
       )}
 
       <footer className="app-footer">
-        Fork of <a href="https://github.com/awalol/ds5dongle-config-web" target="_blank" rel="noopener noreferrer">awalol/ds5dongle-config-web</a>{" "}
-        for <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition" target="_blank" rel="noopener noreferrer">MarcelineVPQ/DS5Dongle-OLED-Edition</a> firmware.{" "}
-        Audio Auto Haptics DSP credited to <a href="https://github.com/loteran/DS5Dongle" target="_blank" rel="noopener noreferrer">loteran/DS5Dongle</a>.
+        <Trans
+          i18nKey="footer.credits"
+          components={[
+            <a href="https://github.com/awalol/ds5dongle-config-web" target="_blank" rel="noopener noreferrer" />,
+            <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition" target="_blank" rel="noopener noreferrer" />,
+            <a href="https://github.com/loteran/DS5Dongle" target="_blank" rel="noopener noreferrer" />,
+          ]}
+        />
       </footer>
     </main>
   );
@@ -467,20 +472,22 @@ interface AutoHapticsModeControlProps {
 }
 
 function AutoHapticsModeControl({ value, onChange }: AutoHapticsModeControlProps) {
+  const { t } = useTranslation();
+  const keys = ["off", "fallback", "mix", "replace"] as const;
   return (
     <div className="control-row">
-      <strong>Mode</strong>
-      <div className="segmented-control n-options-4" role="group" aria-label="Auto Haptics mode">
-        {AUTO_HAPTICS_MODE_OPTIONS.map((option) => (
+      <strong>{t("autoHaptics.modeLabel")}</strong>
+      <div className="segmented-control n-options-4" role="group" aria-label={t("autoHaptics.sectionTitle")}>
+        {AUTO_HAPTICS_MODE_OPTIONS.map((option, i) => (
           <button
             type="button"
             key={option.value}
             className={option.value === value ? "selected" : ""}
             onClick={() => onChange(option.value)}
             aria-pressed={option.value === value}
-            title={option.hint}
+            title={t(`autoHaptics.modes.${keys[i]}.hint`)}
           >
-            {option.label}
+            {t(`autoHaptics.modes.${keys[i]}.label`)}
           </button>
         ))}
       </div>
@@ -495,11 +502,13 @@ interface AutoHapticsLowpassControlProps {
 }
 
 function AutoHapticsLowpassControl({ value, onChange, disabled }: AutoHapticsLowpassControlProps) {
+  const { t } = useTranslation();
+  const lpKeys = ["80", "160", "250", "400"] as const;
   return (
     <div className={`control-row ${disabled ? "disabled" : ""}`}>
-      <strong>Low-pass cutoff</strong>
-      <div className="segmented-control n-options-4" role="group" aria-label="Auto Haptics low-pass cutoff">
-        {AUTO_HAPTICS_LOWPASS_OPTIONS.map((option) => (
+      <strong>{t("autoHaptics.lpLabel")}</strong>
+      <div className="segmented-control n-options-4" role="group" aria-label={t("autoHaptics.lpLabel")}>
+        {AUTO_HAPTICS_LOWPASS_OPTIONS.map((option, i) => (
           <button
             type="button"
             key={option.value}
@@ -508,7 +517,7 @@ function AutoHapticsLowpassControl({ value, onChange, disabled }: AutoHapticsLow
             aria-pressed={option.value === value}
             disabled={disabled}
           >
-            {option.label}
+            {t(`autoHaptics.lpOptions.${lpKeys[i]}`)}
           </button>
         ))}
       </div>

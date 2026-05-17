@@ -1,0 +1,151 @@
+{
+  "header": {
+    "eyebrow": "WebHID",
+    "title": "DS5 Bridge Config",
+    "titleSuffix": "OLED Edition"
+  },
+  "tabs": {
+    "config": "Config",
+    "preview": "OLED Preview"
+  },
+  "themeToggle": {
+    "light": "Light theme",
+    "system": "Follow system theme",
+    "dark": "Dark theme",
+    "groupLabel": "Color theme"
+  },
+  "languageToggle": {
+    "groupLabel": "Language",
+    "currentTitle": "Current language: {{name}}",
+    "switchTo": "Switch to {{name}}"
+  },
+  "notice": {
+    "dismiss": "Dismiss",
+    "webhidUnavailable": "WebHID is available in Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) on secure origins. Firefox is not supported by Mozilla."
+  },
+  "device": {
+    "label": "Device",
+    "noDevice": "No device",
+    "openPrev": "Open",
+    "openPrevTitle": "Open the first previously authorized device",
+    "connect": "Connect",
+    "connectTitle": "Choose a DS5 Bridge HID device"
+  },
+  "status": {
+    "ready": "Ready to connect",
+    "connected": "Connected",
+    "unsavedEdits": "unsaved edits",
+    "activeSlot": "Active slot",
+    "configVersion": "Config version",
+    "autoHaptics": "Auto Haptics",
+    "slotN": "Slot {{n}}",
+    "configVersionPrefix": "v{{n}}",
+    "empty": "Plug in your Pico + pair the DualSense, then click <strong>Connect</strong> above."
+  },
+  "statusText": {
+    "webhidUnavailable": "WebHID unavailable",
+    "ready": "Ready to connect",
+    "unsaved": "Unsaved edits",
+    "applied": "Applied to device",
+    "saved": "Saved to flash",
+    "connected": "Connected",
+    "connecting": "Connecting",
+    "reading": "Reading config",
+    "applying": "Applying",
+    "saving": "Saving to flash",
+    "reconnecting": "Reconnecting USB"
+  },
+  "actions": {
+    "title": "Actions",
+    "read": "Read",
+    "readTitle": "Read current config from report 0xF7",
+    "apply": "Apply to Device",
+    "applyTitle": "Send command 0x01 through report 0xF6 (update in-memory config)",
+    "save": "Save to Flash",
+    "saveTitle": "Send command 0x02 through report 0xF6 (write flash)",
+    "saveNeedsApply": "Apply changes before saving",
+    "reconnect": "Reconnect USB",
+    "reconnectTitle": "Send command 0x03 through report 0xF6 (reconnect TinyUSB)",
+    "resetEdits": "Reset Edits",
+    "resetEditsTitle": "Restore the last config read or applied"
+  },
+  "autoHaptics": {
+    "sectionTitle": "Audio Auto Haptics",
+    "badge": "OLED Edition",
+    "blurb": "Derive haptic feedback from the game's speaker audio for titles that send no native HD-haptic data (e.g. Ghost of Tsushima on Linux + Steam).",
+    "modeLabel": "Mode",
+    "modes": {
+      "off":      { "label": "Off",      "hint": "Native haptics only (channels 2 + 3 of the USB audio stream)." },
+      "fallback": { "label": "Fallback", "hint": "Default. Derived haptic fires only when the game has been silent on the native haptic path for ~1 s. Preserves native HD haptics (Spider-Man Remastered, etc.) while filling in for games that send no haptic data (Ghost of Tsushima on Linux, etc.)." },
+      "mix":      { "label": "Mix",      "hint": "Always add derived haptic on top of native, soft-clipped together. Best for adding more body to games with weak native haptics." },
+      "replace":  { "label": "Replace",  "hint": "Always use derived; discard native completely. Uniform feel across all games regardless of what they send." }
+    },
+    "gainLabel": "Auto Haptics gain",
+    "lpLabel": "Low-pass cutoff",
+    "lpOptions": {
+      "80":  "80 Hz  (sub-bass)",
+      "160": "160 Hz (bass / default)",
+      "250": "250 Hz (punchy mid-bass)",
+      "400": "400 Hz (presence)"
+    }
+  },
+  "haptics": {
+    "sectionTitle": "Haptics & Audio",
+    "gainLabel": "Haptics gain",
+    "speakerVolumeLabel": "Speaker volume (dB)",
+    "audioBufferLabel": "Audio buffer length"
+  },
+  "behavior": {
+    "sectionTitle": "Advanced settings",
+    "hint": "Polling rate, controller mode, LED behavior, inactive disconnect — most users never change these.",
+    "inactiveTimeLabel": "Inactive timeout (minutes)",
+    "disableInactiveDisconnect": "Disable inactive disconnect",
+    "disablePicoLed": "Disable Pico LED",
+    "pollingRateLabel": "Polling rate",
+    "pollingRates": {
+      "250": "250 Hz",
+      "500": "500 Hz",
+      "1000": "Real-time (1 kHz)"
+    },
+    "controllerModeLabel": "Controller mode",
+    "controllerModes": {
+      "ds5":  "DS5",
+      "dse":  "DSE (Edge)",
+      "auto": "Auto (detect)"
+    }
+  },
+  "slots": {
+    "sectionTitle": "Multi-slot pairing",
+    "blurb": "Bond up to four DualSenses. The active slot reconnects on boot.",
+    "activeLabel": "Active slot"
+  },
+  "preview": {
+    "sectionTitle": "OLED Preview",
+    "blurb": "Live emulation of the firmware's 10 OLED screens — close to what the physical Pico-OLED-1.3 shows but not byte-perfect. Auto-cycles every 4 s with mock data when no controller is connected. With a controller connected (click <strong>Connect</strong> above), data is live. Share <code>#preview</code> to land Discord viewers directly on this view.",
+    "liveDemoBanner": "Live demo — connect a controller for real values.",
+    "key0": "KEY0",
+    "key1": "KEY1",
+    "key0Title": "KEY0 — next screen",
+    "key1Title": "KEY1 — back / cycle preset on Trigger Test / cycle mode on Lightbar",
+    "screenIndicator": "Screen <strong>{{n}} / {{total}}</strong>: {{name}}",
+    "autoCycleOn": "Auto-cycle ON",
+    "autoCycleOff": "Auto-cycle OFF",
+    "autoCycleOnTitle": "Pause auto-cycle",
+    "autoCycleOffTitle": "Resume auto-cycle"
+  },
+  "validation": {
+    "hapticsGain": "Haptics gain must be between 1.0 and 2.0",
+    "speakerVolume": "Speaker volume must be between -100 dB and 0 dB",
+    "inactiveTime": "Inactive time must be between 5 and 60 minutes",
+    "pollingRateMode": "Polling rate mode must be 0, 1, or 2",
+    "audioBufferLength": "Audio buffer length must be between 16 and 128",
+    "controllerMode": "Controller mode must be 0 (DS5), 1 (DSE), or 2 (Auto)",
+    "currentSlot": "Current slot must be 0-3",
+    "autoHapticsEnable": "Auto Haptics mode must be 0 (Off), 1 (Fallback), 2 (Mix), or 3 (Replace)",
+    "autoHapticsGain": "Auto Haptics gain must be between 0 % and 200 %",
+    "autoHapticsLowpass": "Auto Haptics LP must be 0-3 (80/160/250/400 Hz)"
+  },
+  "footer": {
+    "credits": "Fork of <0>awalol/ds5dongle-config-web</0> for <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> firmware. Audio Auto Haptics DSP credited to <2>loteran/DS5Dongle</2>."
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "__comment": "Machine-translated by AI from en.json. PRs welcome for corrections — see https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
+  "header": {
+    "eyebrow": "WebHID",
+    "title": "DS5 Bridge Config",
+    "titleSuffix": "OLED Edition"
+  },
+  "tabs": {
+    "config": "設定",
+    "preview": "OLED プレビュー"
+  },
+  "themeToggle": {
+    "light": "ライトテーマ",
+    "system": "システムに従う",
+    "dark": "ダークテーマ",
+    "groupLabel": "カラーテーマ"
+  },
+  "languageToggle": {
+    "groupLabel": "言語",
+    "currentTitle": "現在の言語: {{name}}",
+    "switchTo": "{{name}} に切り替え"
+  },
+  "notice": {
+    "dismiss": "閉じる",
+    "webhidUnavailable": "WebHID は Chromium ベースのブラウザ (Chrome、Edge、Vivaldi、Brave、Opera) の安全なオリジンで利用できます。Mozilla は Firefox をサポートしていません。"
+  },
+  "device": {
+    "label": "デバイス",
+    "noDevice": "デバイスなし",
+    "openPrev": "開く",
+    "openPrevTitle": "以前に承認した最初のデバイスを開く",
+    "connect": "接続",
+    "connectTitle": "DS5 Bridge HID デバイスを選択"
+  },
+  "status": {
+    "ready": "接続準備完了",
+    "connected": "接続済み",
+    "unsavedEdits": "未保存の編集",
+    "activeSlot": "アクティブなスロット",
+    "configVersion": "設定バージョン",
+    "autoHaptics": "Auto Haptics",
+    "slotN": "スロット {{n}}",
+    "configVersionPrefix": "v{{n}}",
+    "empty": "Pico を接続して DualSense をペアリングし、上の <strong>接続</strong> をクリックしてください。"
+  },
+  "statusText": {
+    "webhidUnavailable": "WebHID 利用不可",
+    "ready": "接続準備完了",
+    "unsaved": "未保存の編集",
+    "applied": "デバイスに適用済み",
+    "saved": "フラッシュに保存済み",
+    "connected": "接続済み",
+    "connecting": "接続中",
+    "reading": "設定読み込み中",
+    "applying": "適用中",
+    "saving": "フラッシュに保存中",
+    "reconnecting": "USB 再接続中"
+  },
+  "actions": {
+    "title": "アクション",
+    "read": "読み込み",
+    "readTitle": "レポート 0xF7 から現在の設定を読み込む",
+    "apply": "デバイスに適用",
+    "applyTitle": "レポート 0xF6 経由でコマンド 0x01 を送信 (メモリ内設定を更新)",
+    "save": "フラッシュに保存",
+    "saveTitle": "レポート 0xF6 経由でコマンド 0x02 を送信 (フラッシュ書き込み)",
+    "saveNeedsApply": "保存する前に変更を適用してください",
+    "reconnect": "USB 再接続",
+    "reconnectTitle": "レポート 0xF6 経由でコマンド 0x03 を送信 (TinyUSB 再接続)",
+    "resetEdits": "編集をリセット",
+    "resetEditsTitle": "最後に読み込んだまたは適用した設定を復元"
+  },
+  "autoHaptics": {
+    "sectionTitle": "Audio Auto Haptics",
+    "badge": "OLED Edition",
+    "blurb": "ネイティブの HD-haptic データを送信しないタイトル (例: Linux + Steam の Ghost of Tsushima) のために、ゲームのスピーカー音声から触覚フィードバックを生成します。",
+    "modeLabel": "モード",
+    "modes": {
+      "off":      { "label": "オフ",      "hint": "ネイティブの触覚のみ (USB オーディオストリームのチャンネル 2 + 3)。" },
+      "fallback": { "label": "フォールバック", "hint": "デフォルト。ゲームがネイティブの触覚パスで約 1 秒間沈黙していた場合にのみ、派生した触覚が発火します。ネイティブの HD haptic (Spider-Man Remastered など) を維持しつつ、触覚データを送信しないゲーム (Linux の Ghost of Tsushima など) を補完します。" },
+      "mix":      { "label": "ミックス",  "hint": "常にネイティブの上に派生した触覚を追加し、一緒にソフトクリップします。ネイティブ触覚が弱いゲームに厚みを加えるのに最適。" },
+      "replace":  { "label": "置き換え",  "hint": "常に派生のみを使用し、ネイティブを完全に破棄。ゲームが送信するものに関わらず、すべてのゲームで均一な感覚。" }
+    },
+    "gainLabel": "Auto Haptics ゲイン",
+    "lpLabel": "ローパスカットオフ",
+    "lpOptions": {
+      "80":  "80 Hz (サブベース)",
+      "160": "160 Hz (ベース / デフォルト)",
+      "250": "250 Hz (パンチのあるミッドベース)",
+      "400": "400 Hz (プレゼンス)"
+    }
+  },
+  "haptics": {
+    "sectionTitle": "Haptics & オーディオ",
+    "gainLabel": "Haptics ゲイン",
+    "speakerVolumeLabel": "スピーカー音量 (dB)",
+    "audioBufferLabel": "オーディオバッファ長"
+  },
+  "behavior": {
+    "sectionTitle": "詳細設定",
+    "hint": "ポーリングレート、コントローラモード、LED の動作、非アクティブ時の切断 — ほとんどのユーザーはこれらを変更しません。",
+    "inactiveTimeLabel": "非アクティブタイムアウト (分)",
+    "disableInactiveDisconnect": "非アクティブ時の切断を無効化",
+    "disablePicoLed": "Pico LED を無効化",
+    "pollingRateLabel": "ポーリングレート",
+    "pollingRates": {
+      "250": "250 Hz",
+      "500": "500 Hz",
+      "1000": "リアルタイム (1 kHz)"
+    },
+    "controllerModeLabel": "コントローラモード",
+    "controllerModes": {
+      "ds5":  "DS5",
+      "dse":  "DSE (Edge)",
+      "auto": "自動 (検出)"
+    }
+  },
+  "slots": {
+    "sectionTitle": "マルチスロットペアリング",
+    "blurb": "最大 4 つの DualSense をバインドします。アクティブなスロットは起動時に再接続します。",
+    "activeLabel": "アクティブなスロット"
+  },
+  "preview": {
+    "sectionTitle": "OLED プレビュー",
+    "blurb": "ファームウェアの 10 個の OLED 画面のライブエミュレーション — 物理的な Pico-OLED-1.3 が表示するものに近いですが、バイト単位で完璧ではありません。コントローラが接続されていない場合、モックデータで 4 秒ごとに自動サイクル。コントローラ接続時 (上の <strong>接続</strong> をクリック) は、データはライブです。<code>#preview</code> を共有して Discord 視聴者を直接このビューに案内できます。",
+    "liveDemoBanner": "ライブデモ — 実際の値を見るにはコントローラを接続してください。",
+    "key0": "KEY0",
+    "key1": "KEY1",
+    "key0Title": "KEY0 — 次の画面",
+    "key1Title": "KEY1 — 戻る / トリガーテストでプリセットを循環 / ライトバーでモードを循環",
+    "screenIndicator": "画面 <strong>{{n}} / {{total}}</strong>: {{name}}",
+    "autoCycleOn": "自動サイクル オン",
+    "autoCycleOff": "自動サイクル オフ",
+    "autoCycleOnTitle": "自動サイクルを一時停止",
+    "autoCycleOffTitle": "自動サイクルを再開"
+  },
+  "validation": {
+    "hapticsGain": "Haptics ゲインは 1.0 から 2.0 の間でなければなりません",
+    "speakerVolume": "スピーカー音量は -100 dB から 0 dB の間でなければなりません",
+    "inactiveTime": "非アクティブ時間は 5 分から 60 分の間でなければなりません",
+    "pollingRateMode": "ポーリングレートモードは 0、1、または 2 でなければなりません",
+    "audioBufferLength": "オーディオバッファ長は 16 から 128 の間でなければなりません",
+    "controllerMode": "コントローラモードは 0 (DS5)、1 (DSE)、または 2 (Auto) でなければなりません",
+    "currentSlot": "現在のスロットは 0-3 でなければなりません",
+    "autoHapticsEnable": "Auto Haptics モードは 0 (Off)、1 (Fallback)、2 (Mix)、または 3 (Replace) でなければなりません",
+    "autoHapticsGain": "Auto Haptics ゲインは 0 % から 200 % の間でなければなりません",
+    "autoHapticsLowpass": "Auto Haptics LP は 0-3 (80/160/250/400 Hz) でなければなりません"
+  },
+  "footer": {
+    "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。"
+  }
+}

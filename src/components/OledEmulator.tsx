@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, ChevronLeft, Pause, Play } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { Ds5BridgeHidClient } from "../protocol/ds5BridgeHid";
 import { FB_W, FB_H, flush, newFramebuffer } from "../oled/canvas";
 import PicoBoardFrame from "./PicoBoardFrame";
@@ -34,6 +35,7 @@ export interface OledEmulatorProps {
 }
 
 export default function OledEmulator({ client }: OledEmulatorProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<EmulatorState>(newEmulatorState());
   const mockRef = useRef(newMockState());
@@ -198,7 +200,7 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
     <div className="oled-emulator">
       {!isConnected && (
         <div className="oled-banner oled-banner-top" aria-live="polite">
-          Live demo — connect a controller for real values.
+          {t("preview.liveDemoBanner")}
         </div>
       )}
 
@@ -216,20 +218,28 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
           type="button"
           className="oled-key"
           onClick={handleKey1}
-          title="KEY1 — back / cycle preset on Trigger Test / cycle mode on Lightbar"
+          title={t("preview.key1Title")}
         >
-          <ChevronLeft size={18} /> KEY1
+          <ChevronLeft size={18} /> {t("preview.key1")}
         </button>
         <div className="oled-screen-name">
-          Screen <strong>{stateRef.current.currentScreen + 1} / {SCREEN_NAMES.length}</strong>: {currentScreenName}
+          <Trans
+            i18nKey="preview.screenIndicator"
+            values={{
+              n: stateRef.current.currentScreen + 1,
+              total: SCREEN_NAMES.length,
+              name: currentScreenName,
+            }}
+            components={{ strong: <strong /> }}
+          />
         </div>
         <button
           type="button"
           className="oled-key"
           onClick={handleKey0}
-          title="KEY0 — next screen"
+          title={t("preview.key0Title")}
         >
-          KEY0 <ChevronRight size={18} />
+          {t("preview.key0")} <ChevronRight size={18} />
         </button>
       </div>
 
@@ -238,10 +248,10 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
           type="button"
           className="button ghost"
           onClick={() => setAutoCycle((v) => !v)}
-          title={autoCycle ? "Pause auto-cycle" : "Resume auto-cycle"}
+          title={autoCycle ? t("preview.autoCycleOnTitle") : t("preview.autoCycleOffTitle")}
         >
           {autoCycle ? <Pause size={15} /> : <Play size={15} />}
-          {autoCycle ? "Auto-cycle ON" : "Auto-cycle OFF"}
+          {autoCycle ? t("preview.autoCycleOn") : t("preview.autoCycleOff")}
         </button>
       </div>
     </div>

@@ -1,0 +1,152 @@
+{
+  "__comment": "Machine-translated by AI from en.json. PRs welcome for corrections — see https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
+  "header": {
+    "eyebrow": "WebHID",
+    "title": "DS5 Bridge Config",
+    "titleSuffix": "Edición OLED"
+  },
+  "tabs": {
+    "config": "Config",
+    "preview": "Vista OLED"
+  },
+  "themeToggle": {
+    "light": "Tema claro",
+    "system": "Seguir el sistema",
+    "dark": "Tema oscuro",
+    "groupLabel": "Tema de color"
+  },
+  "languageToggle": {
+    "groupLabel": "Idioma",
+    "currentTitle": "Idioma actual: {{name}}",
+    "switchTo": "Cambiar a {{name}}"
+  },
+  "notice": {
+    "dismiss": "Cerrar",
+    "webhidUnavailable": "WebHID está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) en orígenes seguros. Mozilla no admite Firefox."
+  },
+  "device": {
+    "label": "Dispositivo",
+    "noDevice": "Sin dispositivo",
+    "openPrev": "Abrir",
+    "openPrevTitle": "Abrir el primer dispositivo autorizado anteriormente",
+    "connect": "Conectar",
+    "connectTitle": "Elegir un dispositivo HID DS5 Bridge"
+  },
+  "status": {
+    "ready": "Listo para conectar",
+    "connected": "Conectado",
+    "unsavedEdits": "cambios sin guardar",
+    "activeSlot": "Slot activo",
+    "configVersion": "Versión de config",
+    "autoHaptics": "Auto Haptics",
+    "slotN": "Slot {{n}}",
+    "configVersionPrefix": "v{{n}}",
+    "empty": "Conecta tu Pico + empareja el DualSense, luego haz clic en <strong>Conectar</strong> arriba."
+  },
+  "statusText": {
+    "webhidUnavailable": "WebHID no disponible",
+    "ready": "Listo para conectar",
+    "unsaved": "Cambios sin guardar",
+    "applied": "Aplicado al dispositivo",
+    "saved": "Guardado en flash",
+    "connected": "Conectado",
+    "connecting": "Conectando",
+    "reading": "Leyendo config",
+    "applying": "Aplicando",
+    "saving": "Guardando en flash",
+    "reconnecting": "Reconectando USB"
+  },
+  "actions": {
+    "title": "Acciones",
+    "read": "Leer",
+    "readTitle": "Leer config actual del informe 0xF7",
+    "apply": "Aplicar al dispositivo",
+    "applyTitle": "Enviar comando 0x01 a través del informe 0xF6 (actualizar config en memoria)",
+    "save": "Guardar en Flash",
+    "saveTitle": "Enviar comando 0x02 a través del informe 0xF6 (escribir flash)",
+    "saveNeedsApply": "Aplica los cambios antes de guardar",
+    "reconnect": "Reconectar USB",
+    "reconnectTitle": "Enviar comando 0x03 a través del informe 0xF6 (reconectar TinyUSB)",
+    "resetEdits": "Restablecer ediciones",
+    "resetEditsTitle": "Restaurar la última config leída o aplicada"
+  },
+  "autoHaptics": {
+    "sectionTitle": "Audio Auto Haptics",
+    "badge": "Edición OLED",
+    "blurb": "Deriva retroalimentación háptica del audio del altavoz del juego para títulos que no envían datos HD-haptic nativos (ej. Ghost of Tsushima en Linux + Steam).",
+    "modeLabel": "Modo",
+    "modes": {
+      "off":      { "label": "Off",      "hint": "Solo hápticos nativos (canales 2 + 3 del flujo de audio USB)." },
+      "fallback": { "label": "Fallback", "hint": "Predeterminado. El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva los hápticos HD nativos (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)." },
+      "mix":      { "label": "Mix",      "hint": "Siempre añade el háptico derivado al nativo, recortados suavemente juntos. Mejor para añadir más cuerpo a juegos con hápticos nativos débiles." },
+      "replace":  { "label": "Reemplazar", "hint": "Siempre usar derivado; descartar el nativo completamente. Sensación uniforme en todos los juegos sin importar lo que envíen." }
+    },
+    "gainLabel": "Ganancia Auto Haptics",
+    "lpLabel": "Corte paso-bajo",
+    "lpOptions": {
+      "80":  "80 Hz (sub-grave)",
+      "160": "160 Hz (graves / predet.)",
+      "250": "250 Hz (medios-graves)",
+      "400": "400 Hz (presencia)"
+    }
+  },
+  "haptics": {
+    "sectionTitle": "Hápticos y Audio",
+    "gainLabel": "Ganancia háptica",
+    "speakerVolumeLabel": "Volumen del altavoz (dB)",
+    "audioBufferLabel": "Longitud del búfer de audio"
+  },
+  "behavior": {
+    "sectionTitle": "Ajustes avanzados",
+    "hint": "Tasa de sondeo, modo de controlador, comportamiento del LED, desconexión inactiva — la mayoría de los usuarios nunca los cambia.",
+    "inactiveTimeLabel": "Tiempo de inactividad (minutos)",
+    "disableInactiveDisconnect": "Desactivar desconexión inactiva",
+    "disablePicoLed": "Desactivar LED del Pico",
+    "pollingRateLabel": "Tasa de sondeo",
+    "pollingRates": {
+      "250": "250 Hz",
+      "500": "500 Hz",
+      "1000": "Tiempo real (1 kHz)"
+    },
+    "controllerModeLabel": "Modo de controlador",
+    "controllerModes": {
+      "ds5":  "DS5",
+      "dse":  "DSE (Edge)",
+      "auto": "Auto (detectar)"
+    }
+  },
+  "slots": {
+    "sectionTitle": "Emparejamiento multi-slot",
+    "blurb": "Empareja hasta cuatro DualSense. El slot activo se reconecta al arrancar.",
+    "activeLabel": "Slot activo"
+  },
+  "preview": {
+    "sectionTitle": "Vista OLED",
+    "blurb": "Emulación en vivo de las 10 pantallas OLED del firmware — cercana a lo que muestra el Pico-OLED-1.3 físico pero no perfecta byte por byte. Auto-rota cada 4 s con datos simulados cuando no hay controlador conectado. Con un controlador conectado (clic en <strong>Conectar</strong> arriba), los datos están en vivo. Comparte <code>#preview</code> para llevar a los espectadores de Discord directamente a esta vista.",
+    "liveDemoBanner": "Demo en vivo — conecta un controlador para valores reales.",
+    "key0": "KEY0",
+    "key1": "KEY1",
+    "key0Title": "KEY0 — siguiente pantalla",
+    "key1Title": "KEY1 — atrás / cicla preset en Test de gatillos / cicla modo en Barra LED",
+    "screenIndicator": "Pantalla <strong>{{n}} / {{total}}</strong>: {{name}}",
+    "autoCycleOn": "Auto-rotación ON",
+    "autoCycleOff": "Auto-rotación OFF",
+    "autoCycleOnTitle": "Pausar auto-rotación",
+    "autoCycleOffTitle": "Reanudar auto-rotación"
+  },
+  "validation": {
+    "hapticsGain": "La ganancia háptica debe estar entre 1.0 y 2.0",
+    "speakerVolume": "El volumen del altavoz debe estar entre -100 dB y 0 dB",
+    "inactiveTime": "El tiempo inactivo debe estar entre 5 y 60 minutos",
+    "pollingRateMode": "El modo de tasa de sondeo debe ser 0, 1 o 2",
+    "audioBufferLength": "La longitud del búfer de audio debe estar entre 16 y 128",
+    "controllerMode": "El modo de controlador debe ser 0 (DS5), 1 (DSE) o 2 (Auto)",
+    "currentSlot": "El slot actual debe ser 0-3",
+    "autoHapticsEnable": "El modo Auto Haptics debe ser 0 (Off), 1 (Fallback), 2 (Mix) o 3 (Replace)",
+    "autoHapticsGain": "La ganancia Auto Haptics debe estar entre 0 % y 200 %",
+    "autoHapticsLowpass": "Auto Haptics LP debe ser 0-3 (80/160/250/400 Hz)"
+  },
+  "footer": {
+    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para el firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics acreditado a <2>loteran/DS5Dongle</2>."
+  }
+}
