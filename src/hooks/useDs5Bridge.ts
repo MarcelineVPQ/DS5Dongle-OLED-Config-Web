@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ConfigBody,
   DEFAULT_CONFIG,
@@ -39,6 +40,7 @@ export interface UseDs5BridgeResult {
 }
 
 export function useDs5Bridge(): UseDs5BridgeResult {
+  const { t } = useTranslation();
   const supported = webHidAvailable();
   const [client, setClient] = useState<Ds5BridgeHidClient | null>(null);
   const [authorizedDevices, setAuthorizedDevices] = useState<HIDDevice[]>([]);
@@ -51,29 +53,31 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const issues = useMemo(() => validateConfig(draft), [draft]);
   const isConnected = Boolean(client?.device.opened);
   const isDirty = !configsEqual(config, draft);
-  const deviceLabel = getDeviceLabel(client?.device ?? null);
+  // "No device" is the only translatable part of the device label — the
+  // connected form is a productName + hex PID which doesn't localize.
+  const deviceLabel = client?.device ? getDeviceLabel(client.device) : t("device.noDevice");
 
   const statusText = useMemo(() => {
     if (!supported) {
-      return "WebHID unavailable";
+      return t("statusText.webhidUnavailable");
     }
     if (operation) {
-      return operationLabel(operation);
+      return t(`statusText.${operation}`);
     }
     if (!client) {
-      return "Ready to connect";
+      return t("statusText.ready");
     }
     if (isDirty) {
-      return "Unsaved edits";
+      return t("statusText.unsaved");
     }
     if (saveState === "applied") {
-      return "Applied to device";
+      return t("statusText.applied");
     }
     if (saveState === "saved") {
-      return "Saved to flash";
+      return t("statusText.saved");
     }
-    return "Connected";
-  }, [client, isDirty, operation, saveState, supported]);
+    return t("statusText.connected");
+  }, [client, isDirty, operation, saveState, supported, t]);
 
   const refreshAuthorizedDevices = useCallback(async () => {
     if (!supported) {
@@ -273,21 +277,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     resetDraft,
     clearError: () => setError(null),
   };
-}
-
-function operationLabel(operation: Exclude<Operation, null>): string {
-  switch (operation) {
-    case "connecting":
-      return "Connecting";
-    case "reading":
-      return "Reading config";
-    case "applying":
-      return "Applying config";
-    case "saving":
-      return "Saving to flash";
-    case "reconnecting":
-      return "Reconnecting USB";
-  }
 }
 
 function errorMessage(cause: unknown): string {

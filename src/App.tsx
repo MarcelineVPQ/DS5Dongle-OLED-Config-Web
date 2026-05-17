@@ -32,7 +32,6 @@ import {
   ControllerMode,
   POLLING_RATE_OPTIONS,
   PollingRateMode,
-  SLOT_OPTIONS,
   SlotIndex,
   fieldIssue,
 } from "./protocol/config";
@@ -235,7 +234,10 @@ export default function App() {
             <SegmentedControl
               label={t("slots.activeLabel")}
               value={bridge.draft.currentSlot}
-              options={SLOT_OPTIONS}
+              options={[0, 1, 2, 3].map((n) => ({
+                value: n as SlotIndex,
+                label: t("status.slotN", { n }),
+              }))}
               onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
             />
           </div>

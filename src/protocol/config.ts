@@ -73,13 +73,6 @@ export const CONTROLLER_MODE_OPTIONS: Array<{ value: ControllerMode; label: stri
   { value: 2, label: "Auto (detect)" },
 ];
 
-export const SLOT_OPTIONS: Array<{ value: SlotIndex; label: string }> = [
-  { value: 0, label: "Slot 0" },
-  { value: 1, label: "Slot 1" },
-  { value: 2, label: "Slot 2" },
-  { value: 3, label: "Slot 3" },
-];
-
 export const AUTO_HAPTICS_MODE_OPTIONS: Array<{
   value: AutoHapticsMode;
   label: string;
