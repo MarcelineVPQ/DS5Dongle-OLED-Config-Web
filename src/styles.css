@@ -371,6 +371,179 @@ h3 { font-size: 0.95rem; color: var(--text-strong); }
   }
 }
 
+/* ---------- Status hero card ---------- */
+
+.status-hero { display: flex; flex-direction: column; gap: 10px; }
+
+.status-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-hero-eyebrow .lucide { color: var(--accent); }
+
+.status-hero-dirty {
+  color: var(--text-warning);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.status-hero-title {
+  margin: 4px 0 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  line-height: 1.1;
+}
+
+.status-hero-device {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.status-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.status-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-hero-stat .label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.status-hero-stat strong {
+  color: var(--text-strong);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.status-hero-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 0;
+  padding: 10px 12px;
+  background: var(--bg-inset);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-hero-empty strong { color: var(--accent); }
+
+.status-hero-issues {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+  color: var(--text-validation);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* ---------- Feature badge (Audio Auto Haptics) ---------- */
+
+.feature-badge {
+  margin-left: auto;
+  padding: 3px 8px;
+  background: var(--accent-bg-tint);
+  color: var(--text-on-tint);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+}
+
+/* ---------- Actions card ---------- */
+
+.actions-card .action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- Advanced reveal ---------- */
+
+.advanced-card { padding: 0; }
+.advanced-card .advanced-reveal { padding: 22px; }
+
+.advanced-reveal { width: 100%; }
+
+.advanced-reveal-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+  list-style: none;
+  user-select: none;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.advanced-reveal-summary::-webkit-details-marker { display: none; }
+
+.advanced-reveal-chevron {
+  color: var(--text-muted);
+  transition: transform var(--t-base);
+}
+
+.advanced-reveal[open] .advanced-reveal-chevron {
+  transform: rotate(180deg);
+}
+
+.advanced-reveal-title {
+  font-size: 0.95rem;
+}
+
+.advanced-reveal-hint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+@media (max-width: 720px) {
+  .advanced-reveal-hint { display: none; }
+}
+
+.advanced-reveal-body {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---------- Hide legacy stacked spaced titles inside bento (no longer used) ---------- */
+
+.bento .panel-title.spaced { display: none; }
+
 .device-strip {
   display: flex;
   align-items: center;

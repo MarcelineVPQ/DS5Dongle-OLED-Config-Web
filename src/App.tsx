@@ -14,7 +14,9 @@ import {
   Waves,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
+import AdvancedReveal from "./components/AdvancedReveal";
 import OledEmulator from "./components/OledEmulator";
+import StatusHero from "./components/StatusHero";
 import ThemeToggle from "./components/ThemeToggle";
 import { useDs5Bridge } from "./hooks/useDs5Bridge";
 import {
@@ -147,14 +149,53 @@ export default function App() {
       </section>
 
       {tab === "config" && (
-      <div className="content-grid">
-        <section className="panel config-panel">
+      <div className="bento">
+        {/* Status hero — top-left, span-8 */}
+        <section className="card hover-lift span-8">
+          <StatusHero
+            isConnected={bridge.isConnected}
+            isDirty={bridge.isDirty}
+            statusText={bridge.statusText}
+            deviceLabel={bridge.deviceLabel}
+            config={bridge.config}
+            issues={bridge.issues}
+          />
+        </section>
+
+        {/* Actions — top-right, span-4 */}
+        <section className="card span-4 actions-card">
+          <div className="panel-title">
+            <Download size={18} />
+            <h2>Actions</h2>
+          </div>
+          <div className="action-stack">
+            <button type="button" className="button secondary wide" onClick={bridge.readConfig} disabled={!bridge.client || isBusy} title="Read current config from report 0xF7">
+              <RefreshCw size={17} /> Read
+            </button>
+            <button type="button" className="button primary wide" onClick={bridge.applyConfig} disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues} title="Send command 0x01 through report 0xF6 (update in-memory config)">
+              <Send size={17} /> Apply to Device
+            </button>
+            <button type="button" className="button success wide" onClick={bridge.saveToFlash} disabled={!bridge.client || isBusy || bridge.isDirty} title={bridge.isDirty ? "Apply changes before saving" : "Send command 0x02 through report 0xF6 (write flash)"}>
+              <Save size={17} /> Save to Flash
+            </button>
+            <button type="button" className="button secondary wide" onClick={bridge.reconnectUsb} disabled={!bridge.client || isBusy} title="Send command 0x03 through report 0xF6 (reconnect TinyUSB)">
+              <Power size={17} /> Reconnect USB
+            </button>
+            <button type="button" className="button ghost wide" onClick={bridge.resetDraft} disabled={!bridge.config || isBusy || !bridge.isDirty} title="Restore the last config read or applied">
+              <RotateCcw size={17} /> Reset Edits
+            </button>
+          </div>
+        </section>
+
+        {/* Audio Auto Haptics — distinguishing feature, full width, .feature accent */}
+        <section className="card hover-lift feature span-12">
           <div className="panel-title">
             <Waves size={18} />
             <h2>Audio Auto Haptics</h2>
+            <span className="feature-badge" title="Unique to the OLED Edition firmware">OLED Edition</span>
           </div>
           <p className="panel-blurb">
-            Derive haptic feedback from the game's speaker audio for titles that send no native HD-haptic data (e.g. Ghost of Tsushima on Linux + Steam). This is unique to the OLED Edition firmware.
+            Derive haptic feedback from the game's speaker audio for titles that send no native HD-haptic data (e.g. Ghost of Tsushima on Linux + Steam).
           </p>
           <div className="control-stack">
             <AutoHapticsModeControl
@@ -179,8 +220,30 @@ export default function App() {
               disabled={bridge.draft.autoHapticsEnable === 0}
             />
           </div>
+        </section>
 
-          <div className="panel-title spaced">
+        {/* Multi-slot pairing — span-6 */}
+        <section className="card hover-lift span-6">
+          <div className="panel-title">
+            <SlidersHorizontal size={18} />
+            <h2>Multi-slot pairing</h2>
+          </div>
+          <p className="panel-blurb">
+            Bond up to four DualSenses. The active slot reconnects on boot.
+          </p>
+          <div className="control-stack">
+            <SegmentedControl
+              label="Active slot"
+              value={bridge.draft.currentSlot}
+              options={SLOT_OPTIONS}
+              onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
+            />
+          </div>
+        </section>
+
+        {/* Haptics & Audio — span-6 */}
+        <section className="card hover-lift span-6">
+          <div className="panel-title">
             <SlidersHorizontal size={18} />
             <h2>Haptics & Audio</h2>
           </div>
@@ -213,133 +276,46 @@ export default function App() {
               onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
             />
           </div>
-
-          <div className="panel-title spaced">
-            <SlidersHorizontal size={18} />
-            <h2>Behavior</h2>
-          </div>
-          <div className="control-stack">
-            <IntegerControl
-              label="Inactive timeout (minutes)"
-              value={bridge.draft.inactiveTime}
-              min={5}
-              max={60}
-              step={1}
-              issue={fieldIssue(bridge.issues, "inactiveTime")}
-              onChange={(value) => bridge.setDraftField("inactiveTime", value)}
-            />
-            <ToggleControl
-              label="Disable inactive disconnect"
-              value={bridge.draft.disableInactiveDisconnect}
-              onChange={(value) => bridge.setDraftField("disableInactiveDisconnect", value)}
-            />
-            <ToggleControl
-              label="Disable Pico LED"
-              value={bridge.draft.disablePicoLed}
-              onChange={(value) => bridge.setDraftField("disablePicoLed", value)}
-            />
-            <SegmentedControl
-              label="Polling rate"
-              value={bridge.draft.pollingRateMode}
-              options={POLLING_RATE_OPTIONS}
-              onChange={(value) => bridge.setDraftField("pollingRateMode", value as PollingRateMode)}
-            />
-            <SegmentedControl
-              label="Controller mode"
-              value={bridge.draft.controllerMode}
-              options={CONTROLLER_MODE_OPTIONS}
-              onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
-            />
-          </div>
-
-          <div className="panel-title spaced">
-            <SlidersHorizontal size={18} />
-            <h2>Multi-slot pairing</h2>
-          </div>
-          <p className="panel-blurb">
-            The OLED Edition firmware can persistently bond up to four DualSenses. The active slot reconnects on boot.
-          </p>
-          <div className="control-stack">
-            <SegmentedControl
-              label="Active slot"
-              value={bridge.draft.currentSlot}
-              options={SLOT_OPTIONS}
-              onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
-            />
-          </div>
         </section>
 
-        <aside className="panel side-panel">
-          <div className="panel-title">
-            <Download size={18} />
-            <h2>Actions</h2>
-          </div>
-
-          <div className="action-stack">
-            <button
-              type="button"
-              className="button secondary wide"
-              onClick={bridge.readConfig}
-              disabled={!bridge.client || isBusy}
-              title="Read current config from report 0xF7"
-            >
-              <RefreshCw size={17} /> Read
-            </button>
-            <button
-              type="button"
-              className="button primary wide"
-              onClick={bridge.applyConfig}
-              disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues}
-              title="Send command 0x01 through report 0xF6 (update in-memory config)"
-            >
-              <Send size={17} /> Apply to Device
-            </button>
-            <button
-              type="button"
-              className="button success wide"
-              onClick={bridge.saveToFlash}
-              disabled={!bridge.client || isBusy || bridge.isDirty}
-              title={bridge.isDirty ? "Apply changes before saving" : "Send command 0x02 through report 0xF6 (write flash)"}
-            >
-              <Save size={17} /> Save to Flash
-            </button>
-            <button
-              type="button"
-              className="button secondary wide"
-              onClick={bridge.reconnectUsb}
-              disabled={!bridge.client || isBusy}
-              title="Send command 0x03 through report 0xF6 (reconnect TinyUSB)"
-            >
-              <Power size={17} /> Reconnect USB
-            </button>
-            <button
-              type="button"
-              className="button ghost wide"
-              onClick={bridge.resetDraft}
-              disabled={!bridge.config || isBusy || !bridge.isDirty}
-              title="Restore the last config read or applied"
-            >
-              <RotateCcw size={17} /> Reset Edits
-            </button>
-          </div>
-
-          <div className="state-box">
-            <div className="label">State</div>
-            <strong>{bridge.statusText}</strong>
-            {bridge.config && (
-              <p className="firmware-line">
-                Config v{bridge.config.configVersion} on device
-              </p>
-            )}
-            {bridge.issues.length > 0 && (
-              <ul>
-                {bridge.issues.map((issue) => (
-                  <li key={issue.field}>{issue.message}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </aside>
+        {/* Advanced — collapsed by default, span-12 */}
+        <section className="card span-12 advanced-card">
+          <AdvancedReveal>
+            <div className="control-stack">
+              <IntegerControl
+                label="Inactive timeout (minutes)"
+                value={bridge.draft.inactiveTime}
+                min={5}
+                max={60}
+                step={1}
+                issue={fieldIssue(bridge.issues, "inactiveTime")}
+                onChange={(value) => bridge.setDraftField("inactiveTime", value)}
+              />
+              <ToggleControl
+                label="Disable inactive disconnect"
+                value={bridge.draft.disableInactiveDisconnect}
+                onChange={(value) => bridge.setDraftField("disableInactiveDisconnect", value)}
+              />
+              <ToggleControl
+                label="Disable Pico LED"
+                value={bridge.draft.disablePicoLed}
+                onChange={(value) => bridge.setDraftField("disablePicoLed", value)}
+              />
+              <SegmentedControl
+                label="Polling rate"
+                value={bridge.draft.pollingRateMode}
+                options={POLLING_RATE_OPTIONS}
+                onChange={(value) => bridge.setDraftField("pollingRateMode", value as PollingRateMode)}
+              />
+              <SegmentedControl
+                label="Controller mode"
+                value={bridge.draft.controllerMode}
+                options={CONTROLLER_MODE_OPTIONS}
+                onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
+              />
+            </div>
+          </AdvancedReveal>
+        </section>
       </div>
       )}
 
