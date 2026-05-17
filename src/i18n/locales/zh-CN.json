@@ -7,7 +7,8 @@
   },
   "tabs": {
     "config": "配置",
-    "preview": "OLED 预览"
+    "preview": "OLED 预览",
+    "flash": "刷写固件"
   },
   "themeToggle": {
     "light": "浅色主题",
@@ -76,15 +77,27 @@
     "blurb": "从游戏的扬声器音频中推导触感反馈,适用于不发送原生 HD 触感数据的游戏(例如 Linux + Steam 上的对马岛之鬼)。",
     "modeLabel": "模式",
     "modes": {
-      "off":      { "label": "关闭",   "hint": "仅使用原生触感(USB 音频流的通道 2 + 3)。" },
-      "fallback": { "label": "回退",   "hint": "默认。仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生 HD 触感(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。" },
-      "mix":      { "label": "混合",   "hint": "始终在原生触感之上添加推导触感,共同进行软限幅。最适合为原生触感较弱的游戏增加质感。" },
-      "replace":  { "label": "替换",   "hint": "始终使用推导触感;完全丢弃原生触感。无论游戏发送什么,所有游戏的感觉都一致。" }
+      "off": {
+        "label": "关闭",
+        "hint": "仅使用原生触感(USB 音频流的通道 2 + 3)。"
+      },
+      "fallback": {
+        "label": "回退",
+        "hint": "默认。仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生 HD 触感(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。"
+      },
+      "mix": {
+        "label": "混合",
+        "hint": "始终在原生触感之上添加推导触感,共同进行软限幅。最适合为原生触感较弱的游戏增加质感。"
+      },
+      "replace": {
+        "label": "替换",
+        "hint": "始终使用推导触感;完全丢弃原生触感。无论游戏发送什么,所有游戏的感觉都一致。"
+      }
     },
     "gainLabel": "自动触感增益",
     "lpLabel": "低通截止",
     "lpOptions": {
-      "80":  "80 Hz(超低音)",
+      "80": "80 Hz(超低音)",
       "160": "160 Hz(低音 / 默认)",
       "250": "250 Hz(清脆中低音)",
       "400": "400 Hz(临场感)"
@@ -110,8 +123,8 @@
     },
     "controllerModeLabel": "控制器模式",
     "controllerModes": {
-      "ds5":  "DS5",
-      "dse":  "DSE (Edge)",
+      "ds5": "DS5",
+      "dse": "DSE (Edge)",
       "auto": "自动(检测)"
     }
   },
@@ -148,5 +161,50 @@
   },
   "footer": {
     "credits": "<0>awalol/ds5dongle-config-web</0> 的分叉,适用于 <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> 固件。音频自动触感 DSP 归功于 <2>loteran/DS5Dongle</2>。"
+  },
+  "flash": {
+    "sectionTitle": "刷写固件",
+    "blurb": "通过 WebUSB 将 .uf2 固件镜像推送到 Pico —— 无需 picotool,无需拖放。用于升级或重新刷写,无需离开浏览器。由 piersfinlayson/picoflash 提供支持。",
+    "webusbUnavailable": "此浏览器不支持 WebUSB。请使用 Chrome、Edge、Vivaldi、Brave 或 Opera。",
+    "step1Title": "1. 选择 UF2",
+    "step1Hint": "使用本站点捆绑的最新版本,或加载本地构建 (build/ds5-bridge-oled.uf2)。",
+    "useLatest": "使用最新版本 ({{title}})",
+    "pickFile": "选择 .uf2",
+    "step2Title": "2. 将 Pico 置于 BOOTSEL 模式并连接",
+    "step2Hint": "插入 USB 时按住 BOOTSEL 按钮。浏览器将提示授权设备。",
+    "connect": "连接 Pico",
+    "reconnect": "重新连接",
+    "connectTitle": "授权 BOOTSEL 模式的 Pico",
+    "connected": "已连接",
+    "step3Title": "3. 刷写",
+    "step3Hint": "擦除闪存区域,写入新固件,然后重启 Pico。需要几秒钟。",
+    "flashButton": "立即刷写",
+    "flashingButton": "刷写中…",
+    "rebootButton": "重启 Pico",
+    "rebootingButton": "重启中…",
+    "rebootTitle": "将 Pico 退出 BOOTSEL 进入应用模式",
+    "showLogs": "显示日志",
+    "hideLogs": "隐藏日志",
+    "clearLogs": "清除",
+    "logEmpty": "暂无活动。",
+    "done": "完成 — Pico 正在重启到新固件。",
+    "info": {
+      "device": "设备",
+      "serial": "序列号",
+      "state": "状态"
+    },
+    "stage": {
+      "idle": "就绪",
+      "parsing": "解析 UF2…",
+      "connecting": "连接中…",
+      "writing": "擦除 + 写入闪存…",
+      "rebooting": "重启 Pico…",
+      "done": "完成!",
+      "error": "错误"
+    },
+    "driverHelpSummary": "驱动/权限设置",
+    "driverHelpLinux": "Linux 需要一次性的 udev 规则,以便非 root 用户能访问 Pico 的 BOOTSEL 接口。在终端中粘贴:",
+    "driverHelpWindows": "Windows 需要将 WinUSB 驱动分配给 BOOTSEL 接口。使用",
+    "driverHelpMac": "无需设置。"
   }
 }

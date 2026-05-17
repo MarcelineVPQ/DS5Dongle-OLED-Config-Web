@@ -7,7 +7,8 @@
   },
   "tabs": {
     "config": "Config",
-    "preview": "Pré-visualização OLED"
+    "preview": "Pré-visualização OLED",
+    "flash": "Gravar firmware"
   },
   "themeToggle": {
     "light": "Tema claro",
@@ -76,15 +77,27 @@
     "blurb": "Deriva feedback háptico do áudio do alto-falante do jogo para títulos que não enviam dados HD-haptic nativos (ex. Ghost of Tsushima no Linux + Steam).",
     "modeLabel": "Modo",
     "modes": {
-      "off":      { "label": "Off",       "hint": "Apenas hápticos nativos (canais 2 + 3 do fluxo de áudio USB)." },
-      "fallback": { "label": "Fallback",  "hint": "Padrão. O háptico derivado dispara apenas quando o jogo estiver em silêncio no caminho háptico nativo por ~1 s. Preserva hápticos HD nativos (Spider-Man Remastered, etc.) enquanto preenche jogos que não enviam dados hápticos (Ghost of Tsushima no Linux, etc.)." },
-      "mix":      { "label": "Mix",       "hint": "Sempre adiciona o háptico derivado sobre o nativo, soft-clipados juntos. Melhor para dar mais corpo a jogos com hápticos nativos fracos." },
-      "replace":  { "label": "Substituir", "hint": "Sempre usar o derivado; descartar o nativo completamente. Sensação uniforme em todos os jogos, independentemente do que enviem." }
+      "off": {
+        "label": "Off",
+        "hint": "Apenas hápticos nativos (canais 2 + 3 do fluxo de áudio USB)."
+      },
+      "fallback": {
+        "label": "Fallback",
+        "hint": "Padrão. O háptico derivado dispara apenas quando o jogo estiver em silêncio no caminho háptico nativo por ~1 s. Preserva hápticos HD nativos (Spider-Man Remastered, etc.) enquanto preenche jogos que não enviam dados hápticos (Ghost of Tsushima no Linux, etc.)."
+      },
+      "mix": {
+        "label": "Mix",
+        "hint": "Sempre adiciona o háptico derivado sobre o nativo, soft-clipados juntos. Melhor para dar mais corpo a jogos com hápticos nativos fracos."
+      },
+      "replace": {
+        "label": "Substituir",
+        "hint": "Sempre usar o derivado; descartar o nativo completamente. Sensação uniforme em todos os jogos, independentemente do que enviem."
+      }
     },
     "gainLabel": "Ganho Auto Haptics",
     "lpLabel": "Corte passa-baixa",
     "lpOptions": {
-      "80":  "80 Hz (sub-grave)",
+      "80": "80 Hz (sub-grave)",
       "160": "160 Hz (grave / padrão)",
       "250": "250 Hz (médios-graves marcantes)",
       "400": "400 Hz (presença)"
@@ -110,8 +123,8 @@
     },
     "controllerModeLabel": "Modo do controle",
     "controllerModes": {
-      "ds5":  "DS5",
-      "dse":  "DSE (Edge)",
+      "ds5": "DS5",
+      "dse": "DSE (Edge)",
       "auto": "Auto (detectar)"
     }
   },
@@ -148,5 +161,50 @@
   },
   "footer": {
     "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para o firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics creditado a <2>loteran/DS5Dongle</2>."
+  },
+  "flash": {
+    "sectionTitle": "Gravar firmware",
+    "blurb": "Envia uma imagem de firmware .uf2 para o Pico via WebUSB — sem picotool, sem arrastar e soltar. Use para atualizar ou re-gravar sem sair do navegador. Funciona com piersfinlayson/picoflash.",
+    "webusbUnavailable": "WebUSB não está disponível neste navegador. Use Chrome, Edge, Vivaldi, Brave ou Opera.",
+    "step1Title": "1. Escolha um UF2",
+    "step1Hint": "Use a versão mais recente incluída com este site, ou carregue uma compilação local (build/ds5-bridge-oled.uf2).",
+    "useLatest": "Usar versão mais recente ({{title}})",
+    "pickFile": "Escolher .uf2",
+    "step2Title": "2. Coloque o Pico em BOOTSEL e conecte",
+    "step2Hint": "Segure o botão BOOTSEL enquanto conecta o USB. O navegador vai pedir para autorizar o dispositivo.",
+    "connect": "Conectar ao Pico",
+    "reconnect": "Reconectar",
+    "connectTitle": "Autorizar o Pico em modo BOOTSEL",
+    "connected": "Conectado",
+    "step3Title": "3. Gravar",
+    "step3Hint": "Apaga a região de flash, escreve o novo firmware e reinicia o Pico. Leva alguns segundos.",
+    "flashButton": "Gravar agora",
+    "flashingButton": "Gravando…",
+    "rebootButton": "Reiniciar Pico",
+    "rebootingButton": "Reiniciando…",
+    "rebootTitle": "Tirar o Pico de BOOTSEL para o modo aplicação",
+    "showLogs": "Mostrar logs",
+    "hideLogs": "Ocultar logs",
+    "clearLogs": "Limpar",
+    "logEmpty": "Nenhuma atividade ainda.",
+    "done": "Concluído — o Pico está reiniciando no novo firmware.",
+    "info": {
+      "device": "Dispositivo",
+      "serial": "Número de série",
+      "state": "Estado"
+    },
+    "stage": {
+      "idle": "Pronto",
+      "parsing": "Analisando UF2…",
+      "connecting": "Conectando…",
+      "writing": "Apagando + escrevendo flash…",
+      "rebooting": "Reiniciando Pico…",
+      "done": "Pronto!",
+      "error": "Erro"
+    },
+    "driverHelpSummary": "Configuração de driver / permissão",
+    "driverHelpLinux": "Linux requer uma regra udev única para que usuários não-root possam acessar a interface BOOTSEL do Pico. Cole isto num terminal:",
+    "driverHelpWindows": "Windows precisa do driver WinUSB atribuído à interface BOOTSEL. Use",
+    "driverHelpMac": "Nenhuma configuração necessária."
   }
 }

@@ -7,7 +7,8 @@
   },
   "tabs": {
     "config": "Konfig",
-    "preview": "OLED-Vorschau"
+    "preview": "OLED-Vorschau",
+    "flash": "Firmware flashen"
   },
   "themeToggle": {
     "light": "Helles Thema",
@@ -76,15 +77,27 @@
     "blurb": "Leitet haptisches Feedback aus dem Spiel-Lautsprecher-Audio ab für Titel ohne native HD-Haptik-Daten (z.B. Ghost of Tsushima auf Linux + Steam).",
     "modeLabel": "Modus",
     "modes": {
-      "off":      { "label": "Aus",          "hint": "Nur native Haptik (Kanäle 2 + 3 des USB-Audiostreams)." },
-      "fallback": { "label": "Fallback",     "hint": "Standard. Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält native HD-Haptik (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)." },
-      "mix":      { "label": "Mix",          "hint": "Fügt abgeleitete Haptik immer zur nativen hinzu, gemeinsam weichbegrenzt. Am besten, um Spielen mit schwacher nativer Haptik mehr Körper zu geben." },
-      "replace":  { "label": "Ersetzen",     "hint": "Immer abgeleitete verwenden; native komplett verwerfen. Einheitliches Gefühl über alle Spiele hinweg, egal was sie senden." }
+      "off": {
+        "label": "Aus",
+        "hint": "Nur native Haptik (Kanäle 2 + 3 des USB-Audiostreams)."
+      },
+      "fallback": {
+        "label": "Fallback",
+        "hint": "Standard. Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält native HD-Haptik (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
+      },
+      "mix": {
+        "label": "Mix",
+        "hint": "Fügt abgeleitete Haptik immer zur nativen hinzu, gemeinsam weichbegrenzt. Am besten, um Spielen mit schwacher nativer Haptik mehr Körper zu geben."
+      },
+      "replace": {
+        "label": "Ersetzen",
+        "hint": "Immer abgeleitete verwenden; native komplett verwerfen. Einheitliches Gefühl über alle Spiele hinweg, egal was sie senden."
+      }
     },
     "gainLabel": "Auto Haptics-Verstärkung",
     "lpLabel": "Tiefpass-Grenzfreq.",
     "lpOptions": {
-      "80":  "80 Hz (Subbass)",
+      "80": "80 Hz (Subbass)",
       "160": "160 Hz (Bass / Standard)",
       "250": "250 Hz (knackiger Mittelbass)",
       "400": "400 Hz (Präsenz)"
@@ -110,8 +123,8 @@
     },
     "controllerModeLabel": "Controller-Modus",
     "controllerModes": {
-      "ds5":  "DS5",
-      "dse":  "DSE (Edge)",
+      "ds5": "DS5",
+      "dse": "DSE (Edge)",
       "auto": "Auto (erkennen)"
     }
   },
@@ -148,5 +161,50 @@
   },
   "footer": {
     "credits": "Fork von <0>awalol/ds5dongle-config-web</0> für die Firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. Audio Auto Haptics DSP geht auf <2>loteran/DS5Dongle</2> zurück."
+  },
+  "flash": {
+    "sectionTitle": "Firmware flashen",
+    "blurb": "Schiebe ein .uf2-Firmware-Image über WebUSB auf den Pico — kein picotool, kein Drag-and-Drop. Zum Aktualisieren oder Neuflashen, ohne den Browser zu verlassen. Powered by piersfinlayson/picoflash.",
+    "webusbUnavailable": "WebUSB ist in diesem Browser nicht verfügbar. Verwende Chrome, Edge, Vivaldi, Brave oder Opera.",
+    "step1Title": "1. UF2 auswählen",
+    "step1Hint": "Verwende die mit dieser Seite gebündelte neueste Version oder lade einen lokalen Build (build/ds5-bridge-oled.uf2).",
+    "useLatest": "Neueste Version verwenden ({{title}})",
+    "pickFile": ".uf2 auswählen",
+    "step2Title": "2. Pico in BOOTSEL versetzen und verbinden",
+    "step2Hint": "Halte die BOOTSEL-Taste gedrückt, während du das USB-Kabel einsteckst. Der Browser fordert dich zur Geräteautorisierung auf.",
+    "connect": "Mit Pico verbinden",
+    "reconnect": "Erneut verbinden",
+    "connectTitle": "Pico im BOOTSEL-Modus autorisieren",
+    "connected": "Verbunden",
+    "step3Title": "3. Flashen",
+    "step3Hint": "Löscht den Flash-Bereich, schreibt die neue Firmware und startet den Pico neu. Dauert ein paar Sekunden.",
+    "flashButton": "Jetzt flashen",
+    "flashingButton": "Flashe…",
+    "rebootButton": "Pico neu starten",
+    "rebootingButton": "Starte neu…",
+    "rebootTitle": "Pico aus BOOTSEL in den Anwendungsmodus starten",
+    "showLogs": "Logs anzeigen",
+    "hideLogs": "Logs verbergen",
+    "clearLogs": "Löschen",
+    "logEmpty": "Noch keine Aktivität.",
+    "done": "Fertig — Pico startet neu in die neue Firmware.",
+    "info": {
+      "device": "Gerät",
+      "serial": "Seriennummer",
+      "state": "Status"
+    },
+    "stage": {
+      "idle": "Bereit",
+      "parsing": "UF2 wird geparst…",
+      "connecting": "Verbinde…",
+      "writing": "Lösche + schreibe Flash…",
+      "rebooting": "Pico startet neu…",
+      "done": "Fertig!",
+      "error": "Fehler"
+    },
+    "driverHelpSummary": "Treiber / Berechtigungseinrichtung",
+    "driverHelpLinux": "Linux benötigt eine einmalige udev-Regel, damit Nicht-Root-Benutzer auf die BOOTSEL-Schnittstelle des Pico zugreifen können. Füge dies in einem Terminal ein:",
+    "driverHelpWindows": "Windows benötigt den WinUSB-Treiber, der der BOOTSEL-Schnittstelle zugewiesen ist. Verwende",
+    "driverHelpMac": "Keine Einrichtung erforderlich."
   }
 }

@@ -7,7 +7,8 @@
   },
   "tabs": {
     "config": "設定",
-    "preview": "OLED プレビュー"
+    "preview": "OLED プレビュー",
+    "flash": "ファームウェア書き込み"
   },
   "themeToggle": {
     "light": "ライトテーマ",
@@ -76,15 +77,27 @@
     "blurb": "ネイティブの HD-haptic データを送信しないタイトル (例: Linux + Steam の Ghost of Tsushima) のために、ゲームのスピーカー音声から触覚フィードバックを生成します。",
     "modeLabel": "モード",
     "modes": {
-      "off":      { "label": "オフ",      "hint": "ネイティブの触覚のみ (USB オーディオストリームのチャンネル 2 + 3)。" },
-      "fallback": { "label": "フォールバック", "hint": "デフォルト。ゲームがネイティブの触覚パスで約 1 秒間沈黙していた場合にのみ、派生した触覚が発火します。ネイティブの HD haptic (Spider-Man Remastered など) を維持しつつ、触覚データを送信しないゲーム (Linux の Ghost of Tsushima など) を補完します。" },
-      "mix":      { "label": "ミックス",  "hint": "常にネイティブの上に派生した触覚を追加し、一緒にソフトクリップします。ネイティブ触覚が弱いゲームに厚みを加えるのに最適。" },
-      "replace":  { "label": "置き換え",  "hint": "常に派生のみを使用し、ネイティブを完全に破棄。ゲームが送信するものに関わらず、すべてのゲームで均一な感覚。" }
+      "off": {
+        "label": "オフ",
+        "hint": "ネイティブの触覚のみ (USB オーディオストリームのチャンネル 2 + 3)。"
+      },
+      "fallback": {
+        "label": "フォールバック",
+        "hint": "デフォルト。ゲームがネイティブの触覚パスで約 1 秒間沈黙していた場合にのみ、派生した触覚が発火します。ネイティブの HD haptic (Spider-Man Remastered など) を維持しつつ、触覚データを送信しないゲーム (Linux の Ghost of Tsushima など) を補完します。"
+      },
+      "mix": {
+        "label": "ミックス",
+        "hint": "常にネイティブの上に派生した触覚を追加し、一緒にソフトクリップします。ネイティブ触覚が弱いゲームに厚みを加えるのに最適。"
+      },
+      "replace": {
+        "label": "置き換え",
+        "hint": "常に派生のみを使用し、ネイティブを完全に破棄。ゲームが送信するものに関わらず、すべてのゲームで均一な感覚。"
+      }
     },
     "gainLabel": "Auto Haptics ゲイン",
     "lpLabel": "ローパスカットオフ",
     "lpOptions": {
-      "80":  "80 Hz (サブベース)",
+      "80": "80 Hz (サブベース)",
       "160": "160 Hz (ベース / デフォルト)",
       "250": "250 Hz (パンチのあるミッドベース)",
       "400": "400 Hz (プレゼンス)"
@@ -110,8 +123,8 @@
     },
     "controllerModeLabel": "コントローラモード",
     "controllerModes": {
-      "ds5":  "DS5",
-      "dse":  "DSE (Edge)",
+      "ds5": "DS5",
+      "dse": "DSE (Edge)",
       "auto": "自動 (検出)"
     }
   },
@@ -148,5 +161,50 @@
   },
   "footer": {
     "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。"
+  },
+  "flash": {
+    "sectionTitle": "ファームウェア書き込み",
+    "blurb": "WebUSB 経由で .uf2 ファームウェアイメージを Pico にプッシュ — picotool 不要、ドラッグ&ドロップ不要。ブラウザを離れずにアップグレードまたは再書き込み。piersfinlayson/picoflash により提供。",
+    "webusbUnavailable": "このブラウザでは WebUSB を利用できません。Chrome、Edge、Vivaldi、Brave、または Opera を使用してください。",
+    "step1Title": "1. UF2 を選択",
+    "step1Hint": "このサイトに同梱の最新リリースを使用するか、ローカルビルド (build/ds5-bridge-oled.uf2) を読み込みます。",
+    "useLatest": "最新リリースを使用 ({{title}})",
+    "pickFile": ".uf2 を選択",
+    "step2Title": "2. Pico を BOOTSEL モードにして接続",
+    "step2Hint": "USB を接続している間 BOOTSEL ボタンを押し続けてください。ブラウザがデバイスの認証を求めます。",
+    "connect": "Pico に接続",
+    "reconnect": "再接続",
+    "connectTitle": "BOOTSEL モードの Pico を認証",
+    "connected": "接続済み",
+    "step3Title": "3. 書き込み",
+    "step3Hint": "フラッシュ領域を消去し、新しいファームウェアを書き込み、Pico を再起動します。数秒かかります。",
+    "flashButton": "今すぐ書き込み",
+    "flashingButton": "書き込み中…",
+    "rebootButton": "Pico を再起動",
+    "rebootingButton": "再起動中…",
+    "rebootTitle": "Pico を BOOTSEL からアプリケーションモードに起動",
+    "showLogs": "ログを表示",
+    "hideLogs": "ログを非表示",
+    "clearLogs": "クリア",
+    "logEmpty": "まだ活動はありません。",
+    "done": "完了 — Pico は新しいファームウェアで再起動中です。",
+    "info": {
+      "device": "デバイス",
+      "serial": "シリアル",
+      "state": "状態"
+    },
+    "stage": {
+      "idle": "準備完了",
+      "parsing": "UF2 を解析中…",
+      "connecting": "接続中…",
+      "writing": "フラッシュを消去 + 書き込み中…",
+      "rebooting": "Pico を再起動中…",
+      "done": "完了!",
+      "error": "エラー"
+    },
+    "driverHelpSummary": "ドライバ/権限のセットアップ",
+    "driverHelpLinux": "Linux では、非 root ユーザーが Pico の BOOTSEL インターフェースにアクセスできるよう、一度だけ udev ルールを設定する必要があります。ターミナルに貼り付けてください:",
+    "driverHelpWindows": "Windows では BOOTSEL インターフェースに WinUSB ドライバを割り当てる必要があります。",
+    "driverHelpMac": "セットアップは不要です。"
   }
 }
