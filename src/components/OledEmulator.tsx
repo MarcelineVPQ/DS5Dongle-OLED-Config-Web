@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, ChevronLeft, Pause, Play } from "lucide-react";
 import { Ds5BridgeHidClient } from "../protocol/ds5BridgeHid";
 import { FB_W, FB_H, flush, newFramebuffer } from "../oled/canvas";
+import PicoBoardFrame from "./PicoBoardFrame";
 import { decodeInputReport, emptyInputReport } from "../oled/inputReport";
 import {
   mockDiag,
@@ -195,14 +196,20 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
 
   return (
     <div className="oled-emulator">
-      <div className="oled-stage">
+      {!isConnected && (
+        <div className="oled-banner oled-banner-top" aria-live="polite">
+          Live demo — connect a controller for real values.
+        </div>
+      )}
+
+      <PicoBoardFrame connected={isConnected}>
         <canvas
           ref={canvasRef}
           width={FB_W * CANVAS_SCALE}
           height={FB_H * CANVAS_SCALE}
           className="oled-canvas"
         />
-      </div>
+      </PicoBoardFrame>
 
       <div className="oled-controls">
         <button
@@ -236,11 +243,6 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
           {autoCycle ? <Pause size={15} /> : <Play size={15} />}
           {autoCycle ? "Auto-cycle ON" : "Auto-cycle OFF"}
         </button>
-        {!isConnected && (
-          <span className="oled-banner">
-            Live demo — connect a controller for real values.
-          </span>
-        )}
       </div>
     </div>
   );

@@ -691,20 +691,47 @@ input[type="number"] {
   gap: 12px;
 }
 
-.oled-stage {
-  padding: 14px;
-  background: linear-gradient(180deg, #1a1f2e, #0a0d18);
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 2px #2a3548;
-  display: inline-block;
+/* ---------- Pico-OLED-1.3 device frame ---------- */
+
+.pico-board {
+  position: relative;
+  width: min(640px, 100%);
+  aspect-ratio: 600 / 300;
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.3));
+  transition: filter var(--t-slow);
+}
+
+.pico-board.connected {
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 24px rgba(34, 197, 94, 0.18));
+}
+
+.pico-board-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pico-board-screen-slot {
+  position: absolute;
+  /* left/top/width/height set inline from the component */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .oled-canvas {
   display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  width: 384px;
-  height: 192px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Pre-connect banner pinned above the device frame */
+.oled-banner-top {
+  align-self: stretch;
+  text-align: center;
 }
 
 .oled-controls {
@@ -712,7 +739,7 @@ input[type="number"] {
   grid-template-columns: 1fr auto 1fr;
   gap: 16px;
   align-items: center;
-  width: min(384px, 100%);
+  width: min(640px, 100%);
 }
 
 .oled-key {
@@ -795,10 +822,8 @@ input[type="number"] {
 }
 
 @media (max-width: 540px) {
-  .oled-canvas {
+  .pico-board {
     width: 100%;
-    height: auto;
-    max-width: 384px;
   }
 }
 
