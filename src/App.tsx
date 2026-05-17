@@ -138,7 +138,7 @@ export default function App() {
           )}
           <button
             type="button"
-            className="button primary"
+            className={`button primary ${bridge.isConnected ? "" : "pulse"}`}
             onClick={bridge.connect}
             disabled={!bridge.supported || isBusy}
             title="Choose a DS5 Bridge HID device"
