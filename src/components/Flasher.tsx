@@ -103,8 +103,12 @@ export default function Flasher() {
     setStage("connecting");
     setMessage("");
     try {
+      // Don't open / claim the interface here — just request authorization.
+      // picoflash's flashEraseAndWrite() and rebootRp2350() both manage the
+      // open / claim / release lifecycle internally; holding the device open
+      // between the Connect click and the Flash click invites stale-session
+      // transferOut errors.
       const handle = await PicoflashAPI.requestDevice();
-      await handle.connect();
       setDevice(handle);
       setStage("idle");
       setMessage(`${t("flash.connected")}: ${handle.getTarget().toString()}`);
