@@ -4,7 +4,7 @@
 import { AlertTriangle, CheckCircle2, Cpu, Download, FileUp, Usb, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PicoflashAPI, PicoflashHandle, parseUf2 } from "../flash";
+import { PicoflashAPI, PicoflashHandle, parseUf2Regions, Uf2Region } from "../flash";
 
 interface LatestFirmwareMeta {
   tag: string;        // git tag, e.g. "v0.6.0-oled-edition"
@@ -24,13 +24,11 @@ type FlashStage =
   | "error";
 
 const FLASH_BASE_ADDRESS = 0x10000000; // RP2350 XIP flash base
-const RP2350_FAMILY_ID = 0xe48bff57;
 
 interface ParsedUf2 {
   fileName: string;
-  byteSize: number;
-  baseAddress: number;
-  binary: Uint8Array;
+  regions: Uf2Region[];
+  totalBytes: number;
 }
 
 export default function Flasher() {
@@ -61,18 +59,26 @@ export default function Flasher() {
       const url = `${import.meta.env.BASE_URL}firmware-latest.uf2`;
       const r = await fetch(url);
       if (!r.ok) throw new Error(`Fetch failed: HTTP ${r.status}`);
-      const buffer = await r.arrayBuffer();
-      const { address, data } = parseUf2(buffer);
-      if (address !== FLASH_BASE_ADDRESS) {
-        throw new Error(`Unexpected base address 0x${address.toString(16)}`);
-      }
-      setUf2({ fileName: latestMeta.assetName, byteSize: data.byteLength, baseAddress: address, binary: data });
-      setStage("idle");
+      ingestUf2(latestMeta.assetName, await r.arrayBuffer());
     } catch (err) {
       setStage("error");
       setMessage(err instanceof Error ? err.message : String(err));
       setUf2(null);
     }
+  }
+
+  function ingestUf2(fileName: string, buffer: ArrayBuffer) {
+    const regions = parseUf2Regions(buffer);
+    if (regions.length === 0) throw new Error("UF2 contains no blocks");
+    if (regions[0].address !== FLASH_BASE_ADDRESS) {
+      throw new Error(`First region at 0x${regions[0].address.toString(16)} — expected 0x${FLASH_BASE_ADDRESS.toString(16)}`);
+    }
+    const totalBytes = regions.reduce((n, r) => n + r.data.byteLength, 0);
+    if (totalBytes < 1024 || totalBytes > 4 * 1024 * 1024) {
+      throw new Error(`Unexpected total firmware size: ${totalBytes} bytes across ${regions.length} regions`);
+    }
+    setUf2({ fileName, regions, totalBytes });
+    setStage("idle");
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -81,17 +87,7 @@ export default function Flasher() {
     setStage("parsing");
     setMessage("");
     try {
-      const buffer = await file.arrayBuffer();
-      const { address, data } = parseUf2(buffer);
-      // Sanity check on the binary size — guard against picking the wrong file.
-      if (data.byteLength < 1024 || data.byteLength > 4 * 1024 * 1024) {
-        throw new Error(`Unexpected firmware size: ${data.byteLength} bytes`);
-      }
-      if (address !== FLASH_BASE_ADDRESS) {
-        throw new Error(`Unexpected base address 0x${address.toString(16)} — expected 0x${FLASH_BASE_ADDRESS.toString(16)}`);
-      }
-      setUf2({ fileName: file.name, byteSize: data.byteLength, baseAddress: address, binary: data });
-      setStage("idle");
+      ingestUf2(file.name, await file.arrayBuffer());
     } catch (err) {
       setStage("error");
       setMessage(err instanceof Error ? err.message : String(err));
@@ -124,10 +120,19 @@ export default function Flasher() {
     setStage("writing");
     setMessage("");
     try {
-      await device.flashEraseAndWrite(uf2.baseAddress, uf2.binary);
+      // Open + claim once for the whole sequence so each region's
+      // flashEraseAndWrite call uses the existing connection (wasConnected
+      // = true → it won't disconnect between regions, just resetInterface).
+      await device.connect();
+      for (let i = 0; i < uf2.regions.length; i++) {
+        const r = uf2.regions[i];
+        setMessage(`region ${i + 1}/${uf2.regions.length}: ${r.data.byteLength} B @ 0x${r.address.toString(16)}`);
+        await device.flashEraseAndWrite(r.address, r.data);
+      }
       setStage("rebooting");
-      // Reboot RP2350 into normal mode. Flags=0 means reboot to application;
-      // p0/p1 are unused for this flag.
+      setMessage("");
+      // Reboot RP2350 into application mode. Flags=0 = reboot-to-application;
+      // p0/p1 unused for this flag.
       await device.rebootRp2350(0, 0, 0, 100);
       setStage("done");
       setMessage(t("flash.done"));
@@ -135,6 +140,7 @@ export default function Flasher() {
     } catch (err) {
       setStage("error");
       setMessage(err instanceof Error ? err.message : String(err));
+      try { await device.disconnect(); } catch { /* device may already be gone */ }
     }
   }
 
@@ -186,7 +192,7 @@ export default function Flasher() {
             </div>
             {uf2 && (
               <span className="flasher-file-size">
-                {(uf2.byteSize / 1024).toFixed(1)} KiB · 0x{uf2.baseAddress.toString(16).toUpperCase()}
+                {(uf2.totalBytes / 1024).toFixed(1)} KiB · {uf2.regions.length} region{uf2.regions.length === 1 ? "" : "s"}
               </span>
             )}
           </div>

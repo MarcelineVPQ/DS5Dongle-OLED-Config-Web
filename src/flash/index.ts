@@ -2,11 +2,16 @@
 // The .js modules in ./picoflash/ are vendored verbatim under their original
 // MIT license — see ./picoflash/LICENSE. We only re-export the surface area
 // our Flasher component actually uses.
+//
+// Note: we deliberately do NOT use picoflash's uf2ToFlashBuffer helper —
+// it builds one contiguous buffer from minAddr to maxAddr, which for our
+// RP2350 UF2 (firmware at 0x10000000 + a 256-byte partition table at
+// 0x10ffff00) produces a 16 MB mostly-empty buffer. The bootloader can't
+// receive a 16 MB write in one bulk transfer. parseUf2Regions() below
+// returns each contiguous region separately, which we flash one at a time.
 
 // @ts-expect-error — vendored JS module, no .d.ts file
 import { Picoboot } from "./picoflash/picoboot.js";
-// @ts-expect-error — vendored JS module, no .d.ts file
-import { uf2ToFlashBuffer } from "./picoflash/uf2.js";
 
 export interface PicoflashHandle {
   getTarget(): { toString(): string };
@@ -23,7 +28,67 @@ export interface PicoflashStatic {
 
 export const PicoflashAPI: PicoflashStatic = Picoboot as unknown as PicoflashStatic;
 
-export function parseUf2(buffer: ArrayBuffer): { address: number; data: Uint8Array } {
+export interface Uf2Region {
+  address: number;
+  data: Uint8Array;
+}
+
+const UF2_MAGIC_START = 0x0a324655;
+const UF2_MAGIC_START2 = 0x9e5d5157;
+const UF2_MAGIC_END = 0x0ab16f30;
+
+/**
+ * Parse a UF2 file into the set of contiguous flash regions it specifies.
+ * Each region is `{ address, data }` and can be flashed independently with
+ * `Picoboot.flashEraseAndWrite(region.address, region.data)`.
+ */
+export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
   const u8 = new Uint8Array(buffer);
-  return uf2ToFlashBuffer(u8) as { address: number; data: Uint8Array };
+  if (u8.length === 0 || u8.length % 512 !== 0) {
+    throw new Error(`UF2 size ${u8.length} is not a multiple of 512 bytes`);
+  }
+
+  interface Block { address: number; payload: Uint8Array }
+  const blocks: Block[] = [];
+  for (let offset = 0; offset < u8.length; offset += 512) {
+    const view = new DataView(u8.buffer, u8.byteOffset + offset, 512);
+    if (
+      view.getUint32(0, true) !== UF2_MAGIC_START ||
+      view.getUint32(4, true) !== UF2_MAGIC_START2 ||
+      view.getUint32(508, true) !== UF2_MAGIC_END
+    ) {
+      throw new Error(`Invalid UF2 magic at offset ${offset}`);
+    }
+    const address = view.getUint32(12, true);
+    const payloadSize = view.getUint32(16, true);
+    const payload = new Uint8Array(u8.buffer, u8.byteOffset + offset + 32, payloadSize);
+    blocks.push({ address, payload });
+  }
+
+  blocks.sort((a, b) => a.address - b.address);
+
+  // Walk sorted blocks, grouping contiguous runs.
+  type Plan = { start: number; end: number; idxs: number[] };
+  const plans: Plan[] = [];
+  let cur: Plan | null = null;
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (cur && b.address === cur.end) {
+      cur.end += b.payload.length;
+      cur.idxs.push(i);
+    } else {
+      if (cur) plans.push(cur);
+      cur = { start: b.address, end: b.address + b.payload.length, idxs: [i] };
+    }
+  }
+  if (cur) plans.push(cur);
+
+  return plans.map(({ start, end, idxs }) => {
+    const data = new Uint8Array(end - start);
+    for (const idx of idxs) {
+      const block = blocks[idx];
+      data.set(block.payload, block.address - start);
+    }
+    return { address: start, data };
+  });
 }
