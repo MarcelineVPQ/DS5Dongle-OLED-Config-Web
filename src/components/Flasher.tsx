@@ -178,9 +178,7 @@ export default function Flasher() {
         <summary>{t("flash.driverHelpSummary")}</summary>
         <h4>Linux</h4>
         <p>{t("flash.driverHelpLinux")}</p>
-        <pre><code>{`SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666"`}</code></pre>
-        <p>{t("flash.driverHelpLinuxInstall")}</p>
-        <pre><code>{`sudo tee /etc/udev/rules.d/99-pico-bootsel.rules
+        <pre><code>{`echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666"' | sudo tee /etc/udev/rules.d/99-pico-bootsel.rules
 sudo udevadm control --reload-rules && sudo udevadm trigger`}</code></pre>
         <h4>Windows</h4>
         <p>{t("flash.driverHelpWindows")} <a href="https://zadig.akeo.ie" target="_blank" rel="noopener noreferrer">Zadig</a>.</p>

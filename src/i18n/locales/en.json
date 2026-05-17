@@ -176,8 +176,7 @@
       "error": "Error"
     },
     "driverHelpSummary": "Driver / permission setup",
-    "driverHelpLinux": "Linux requires a one-time udev rule so non-root users can access the Pico's BOOTSEL interface. Save the following to /etc/udev/rules.d/99-pico-bootsel.rules:",
-    "driverHelpLinuxInstall": "Then reload udev:",
+    "driverHelpLinux": "Linux requires a one-time udev rule so non-root users can access the Pico's BOOTSEL interface. Paste this in a terminal:",
     "driverHelpWindows": "Windows needs the WinUSB driver assigned to the BOOTSEL interface. Use",
     "driverHelpMac": "No setup needed."
   }
