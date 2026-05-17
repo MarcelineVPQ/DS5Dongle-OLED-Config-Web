@@ -4,6 +4,11 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+  # Fired by firmware repo's release workflow when a new release is published,
+  # so the bundled firmware-latest.uf2 always reflects the newest firmware
+  # without needing a manual web-repo rebuild. See firmware repo's release.yml.
+  repository_dispatch:
+    types: [firmware-released]
 
 permissions:
   contents: read
