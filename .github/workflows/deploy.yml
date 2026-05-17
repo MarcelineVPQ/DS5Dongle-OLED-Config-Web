@@ -48,10 +48,11 @@ jobs:
           fi
           curl -sfL -o public/firmware-latest.uf2 "$URL"
           SIZE=$(stat -c %s public/firmware-latest.uf2)
-          jq -n --arg tag "$TAG" --arg title "$TITLE" --arg asset "$ASSET" --argjson size "$SIZE" --arg pub "$DATE" \
-            '{tag: $tag, title: $title, assetName: $asset, size: $size, publishedAt: $pub}' \
+          SHA256=$(sha256sum public/firmware-latest.uf2 | cut -d ' ' -f 1)
+          jq -n --arg tag "$TAG" --arg title "$TITLE" --arg asset "$ASSET" --argjson size "$SIZE" --arg sha "$SHA256" --arg pub "$DATE" \
+            '{tag: $tag, title: $title, assetName: $asset, size: $size, sha256: $sha, publishedAt: $pub}' \
             > public/firmware-latest.json
-          echo "Bundled $ASSET ($SIZE bytes) from $TAG / $TITLE"
+          echo "Bundled $ASSET ($SIZE bytes, sha256 $SHA256) from $TAG / $TITLE"
 
       - run: npm run build
 

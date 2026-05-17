@@ -205,6 +205,7 @@
     "driverHelpSummary": "驱动/权限设置",
     "driverHelpLinux": "Linux 需要一次性的 udev 规则,以便非 root 用户能访问 Pico 的 BOOTSEL 接口。在终端中粘贴:",
     "driverHelpWindows": "Windows 需要将 WinUSB 驱动分配给 BOOTSEL 接口。使用",
-    "driverHelpMac": "无需设置。"
+    "driverHelpMac": "无需设置。",
+    "trustWarning": "刷写的固件将以 USB 设备权限在 dongle 插入的任何主机上运行。仅刷写来自你信任来源的 UF2 文件。"
   }
 }

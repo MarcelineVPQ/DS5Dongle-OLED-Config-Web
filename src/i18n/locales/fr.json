@@ -205,6 +205,7 @@
     "driverHelpSummary": "Configuration pilote / permissions",
     "driverHelpLinux": "Linux nécessite une règle udev unique pour que les utilisateurs non-root puissent accéder à l'interface BOOTSEL du Pico. Collez ceci dans un terminal :",
     "driverHelpWindows": "Windows a besoin du pilote WinUSB assigné à l'interface BOOTSEL. Utilisez",
-    "driverHelpMac": "Aucune configuration requise."
+    "driverHelpMac": "Aucune configuration requise.",
+    "trustWarning": "Vous allez écrire un firmware qui s’exécutera avec les privilèges d’un périphérique USB sur tout hôte sur lequel ce dongle sera branché. Ne flashez que des fichiers UF2 provenant de sources fiables."
   }
 }

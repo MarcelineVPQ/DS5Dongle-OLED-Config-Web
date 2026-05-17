@@ -41,6 +41,19 @@ The firmware exposes six USB HID feature reports — `0xF6`–`0xF9` are shared 
 
 `src/protocol/config.ts` is the single source of truth for the `Config_body` layout; if the firmware's `Config_body` ever grows or shrinks, edit only this file.
 
+## Trust model (Flash Firmware tab)
+
+The browser-based flasher uses WebUSB to push a UF2 to a Pico in BOOTSEL mode. A few things worth knowing:
+
+- **Browser permission gate**: WebUSB requires a user gesture + explicit device-picker confirmation per origin. Authorizations are persistent per origin and revocable at `chrome://settings/content/usbDevices`.
+- **Bundled latest UF2**: when the deploy workflow runs, it downloads the latest release UF2 from `MarcelineVPQ/DS5Dongle-OLED-Edition` and bundles it as `public/firmware-latest.uf2` alongside this site. The "Use latest release" button reads it same-origin. CI also writes the SHA-256 into `firmware-latest.json`; the UI compares that against the SHA-256 it computes from the fetched bytes and logs a warning if they differ.
+- **User-supplied UF2**: when you pick a file from your disk, a warning banner appears reminding you that the firmware will run with USB-device privileges on every host the dongle subsequently plugs into. Only flash files from sources you trust.
+- **No signature verification on the bootloader side**: stock RP2350 BOOTSEL accepts any firmware image. Secure Boot via OTP fuses exists but is one-way and is deliberately not used here, because it would block normal re-flashing.
+- **Per-board serial display**: the device-info strip shows the per-board flash chip ID (e.g. `BC844357D3EF5218`). We never transmit it; it's there so you can recognize your own device.
+- **Same-origin everything**: no third-party CDNs, no analytics, no telemetry. The flasher's only outbound network requests are the same-origin fetches for `firmware-latest.{uf2,json}`.
+
+The firmware's release page also includes a `SHA256SUMS.txt` asset; you can manually verify the bundled UF2 hash against it.
+
 ## Credits
 
 - **[awalol/DS5Dongle](https://github.com/awalol/DS5Dongle)** — upstream firmware + original web config base.

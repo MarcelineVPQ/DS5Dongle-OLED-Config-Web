@@ -175,6 +175,7 @@
     "clearLogs": "Clear",
     "logEmpty": "No activity yet.",
     "done": "Done — Pico is rebooting into the new firmware.",
+    "trustWarning": "You're about to write firmware that will run with USB-device privileges on any host this dongle plugs into. Only flash UF2 files from sources you trust.",
     "info": {
       "device": "Device",
       "serial": "Serial",

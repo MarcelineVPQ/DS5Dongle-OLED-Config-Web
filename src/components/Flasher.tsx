@@ -27,8 +27,11 @@ interface LatestFirmwareMeta {
   title: string;      // pretty release title, e.g. "v0.6.0 — OLED Edition"
   assetName: string;  // UF2 filename, e.g. "ds5-bridge-oled-v0.6.0-oled-edition.uf2"
   size: number;
+  sha256?: string;    // hex digest of the UF2, written by deploy.yml from `sha256sum`
   publishedAt: string;
 }
+
+type Uf2Source = "file" | "latest";
 
 type FlashStage =
   | "idle"
@@ -58,6 +61,9 @@ interface ParsedUf2 {
   fileName: string;
   regions: Uf2Region[];
   totalBytes: number;
+  sha256: string;       // hex digest of the raw UF2 file
+  source: Uf2Source;    // 'file' = user-supplied, 'latest' = trusted CI-bundled
+  expectedSha256?: string; // for 'latest' source, the hash CI computed; compared against sha256
 }
 
 // ---- helpers ----------------------------------------------------------------
@@ -71,6 +77,13 @@ function formatBytes(n: number): string {
 function calcTimeoutMs(byteCount: number): number {
   const base = (1000 * byteCount) / FLASH_SPEED_BPS + TIMEOUT_BUFFER_MS;
   return Math.max(base, base * TIMEOUT_VARIANCE);
+}
+
+async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function withTimeout<T>(fn: () => Promise<T>, ms: number, label: string): Promise<T> {
@@ -173,7 +186,12 @@ export default function Flasher() {
 
   // ---- UF2 loading ---------------------------------------------------------
 
-  function ingestUf2(fileName: string, buffer: ArrayBuffer) {
+  async function ingestUf2(
+    fileName: string,
+    buffer: ArrayBuffer,
+    source: Uf2Source,
+    expectedSha256?: string,
+  ) {
     const regions = parseUf2Regions(buffer);
     if (regions.length === 0) throw new Error("UF2 contains no blocks");
     if (regions[0].address !== FLASH_BASE_ADDRESS) {
@@ -185,9 +203,16 @@ export default function Flasher() {
     if (totalBytes < 1024 || totalBytes > 4 * 1024 * 1024) {
       throw new Error(`Unexpected total firmware size: ${totalBytes} bytes across ${regions.length} regions`);
     }
-    setUf2({ fileName, regions, totalBytes });
+    const sha256 = await sha256Hex(buffer);
+    setUf2({ fileName, regions, totalBytes, sha256, source, expectedSha256 });
     setStage("idle");
-    log(`Loaded UF2: ${fileName} — ${formatBytes(totalBytes)} across ${regions.length} region${regions.length === 1 ? "" : "s"}`, "success");
+    log(`Loaded UF2: ${fileName} — ${formatBytes(totalBytes)} · sha256 ${sha256.slice(0, 16)}…`, "success");
+    if (expectedSha256 && expectedSha256.toLowerCase() !== sha256.toLowerCase()) {
+      log(
+        `Integrity warning: bundled SHA-256 ${expectedSha256.slice(0, 16)}… ≠ computed ${sha256.slice(0, 16)}… — UF2 was modified after CI built it.`,
+        "warning",
+      );
+    }
   }
 
   async function handleUseLatest() {
@@ -197,7 +222,7 @@ export default function Flasher() {
       log(`Fetching ${latestMeta.assetName} (${latestMeta.title})...`);
       const r = await fetch(`${import.meta.env.BASE_URL}firmware-latest.uf2`);
       if (!r.ok) throw new Error(`Fetch failed: HTTP ${r.status}`);
-      ingestUf2(latestMeta.assetName, await r.arrayBuffer());
+      await ingestUf2(latestMeta.assetName, await r.arrayBuffer(), "latest", latestMeta.sha256);
     } catch (err) {
       const m = err instanceof Error ? err.message : String(err);
       log(`Failed to load latest release: ${m}`, "error");
@@ -211,7 +236,7 @@ export default function Flasher() {
     if (!file) return;
     setStage("parsing");
     try {
-      ingestUf2(file.name, await file.arrayBuffer());
+      await ingestUf2(file.name, await file.arrayBuffer(), "file");
     } catch (err) {
       const m = err instanceof Error ? err.message : String(err);
       log(`Failed to parse UF2: ${m}`, "error");
@@ -390,9 +415,23 @@ export default function Flasher() {
               </label>
             </div>
             {uf2 && (
-              <span className="flasher-file-size">
-                {formatBytes(uf2.totalBytes)} · {uf2.regions.length} region{uf2.regions.length === 1 ? "" : "s"}
-              </span>
+              <div className="flasher-file-meta">
+                <span className="flasher-file-size">
+                  {formatBytes(uf2.totalBytes)} · {uf2.regions.length} region{uf2.regions.length === 1 ? "" : "s"}
+                </span>
+                <span
+                  className="flasher-file-hash"
+                  title={`SHA-256: ${uf2.sha256}`}
+                >
+                  sha256 {uf2.sha256.slice(0, 16)}…
+                </span>
+              </div>
+            )}
+            {uf2?.source === "file" && (
+              <div className="flasher-warning flasher-warning-trust">
+                <AlertTriangle size={14} />
+                <span>{t("flash.trustWarning")}</span>
+              </div>
             )}
           </div>
         </li>

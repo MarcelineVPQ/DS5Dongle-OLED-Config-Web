@@ -1450,3 +1450,29 @@ input[type="number"] {
 .log-success { color: var(--accent-success, #22c55e); }
 .log-warning { color: var(--accent-warning, #f59e0b); }
 .log-error   { color: var(--accent-error, #ef4444); }
+
+.flasher-file-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-top: 4px;
+}
+
+.flasher-file-hash {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  cursor: help;
+}
+
+/* Trust-model warning shown when user picks a UF2 from disk
+   (as opposed to using the CI-bundled latest release). */
+.flasher-warning-trust {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--accent-warning, #f59e0b) 12%, transparent);
+  color: var(--accent-warning, #f59e0b);
+  border-left: 3px solid var(--accent-warning, #f59e0b);
+}

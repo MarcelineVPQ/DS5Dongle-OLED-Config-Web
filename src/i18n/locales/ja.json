@@ -205,6 +205,7 @@
     "driverHelpSummary": "ドライバ/権限のセットアップ",
     "driverHelpLinux": "Linux では、非 root ユーザーが Pico の BOOTSEL インターフェースにアクセスできるよう、一度だけ udev ルールを設定する必要があります。ターミナルに貼り付けてください:",
     "driverHelpWindows": "Windows では BOOTSEL インターフェースに WinUSB ドライバを割り当てる必要があります。",
-    "driverHelpMac": "セットアップは不要です。"
+    "driverHelpMac": "セットアップは不要です。",
+    "trustWarning": "これから書き込むファームウェアは、この dongle が接続される任意のホスト上で USB デバイス権限で実行されます。信頼できるソースの UF2 ファイルのみを書き込んでください。"
   }
 }

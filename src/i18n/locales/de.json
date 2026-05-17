@@ -205,6 +205,7 @@
     "driverHelpSummary": "Treiber / Berechtigungseinrichtung",
     "driverHelpLinux": "Linux benötigt eine einmalige udev-Regel, damit Nicht-Root-Benutzer auf die BOOTSEL-Schnittstelle des Pico zugreifen können. Füge dies in einem Terminal ein:",
     "driverHelpWindows": "Windows benötigt den WinUSB-Treiber, der der BOOTSEL-Schnittstelle zugewiesen ist. Verwende",
-    "driverHelpMac": "Keine Einrichtung erforderlich."
+    "driverHelpMac": "Keine Einrichtung erforderlich.",
+    "trustWarning": "Du wirst gleich Firmware schreiben, die mit USB-Geräterechten auf jedem Host läuft, an den dieser Dongle angeschlossen wird. Flashe nur UF2-Dateien aus Quellen, denen du vertraust."
   }
 }
