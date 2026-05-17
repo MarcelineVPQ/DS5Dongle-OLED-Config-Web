@@ -89,6 +89,31 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
       const block = blocks[idx];
       data.set(block.payload, block.address - start);
     }
-    return { address: start, data };
+    return alignRegionToSector({ address: start, data });
   });
+}
+
+const FLASH_SECTOR_SIZE = 0x1000; // RP2040 + RP2350
+
+/**
+ * Align a region to flash-sector boundaries so picoflash's flashEraseAndWrite
+ * accepts it. Some UF2 blocks (e.g. RP2350 absolute partition table at
+ * 0x10ffff00) land at non-sector-aligned addresses; pre-pad with 0xFF (the
+ * erased-flash value) at the start, post-pad to the next sector boundary
+ * at the end. The flash sectors we overwrite that aren't covered by the
+ * payload are effectively erased — correct behavior for a fresh-flash UF2.
+ */
+function alignRegionToSector({ address, data }: Uf2Region): Uf2Region {
+  const alignedStart = address & ~(FLASH_SECTOR_SIZE - 1);
+  const startPad = address - alignedStart;
+  const totalLen = startPad + data.byteLength;
+  const alignedTotal = Math.ceil(totalLen / FLASH_SECTOR_SIZE) * FLASH_SECTOR_SIZE;
+
+  if (startPad === 0 && data.byteLength === alignedTotal) {
+    return { address, data };
+  }
+  const padded = new Uint8Array(alignedTotal);
+  padded.fill(0xff);
+  padded.set(data, startPad);
+  return { address: alignedStart, data: padded };
 }
