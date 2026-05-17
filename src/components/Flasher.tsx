@@ -7,8 +7,9 @@ import { useTranslation } from "react-i18next";
 import { PicoflashAPI, PicoflashHandle, parseUf2 } from "../flash";
 
 interface LatestFirmwareMeta {
-  tag: string;
-  name: string;
+  tag: string;        // git tag, e.g. "v0.6.0-oled-edition"
+  title: string;      // pretty release title, e.g. "v0.6.0 — OLED Edition"
+  assetName: string;  // UF2 filename, e.g. "ds5-bridge-oled-v0.6.0-oled-edition.uf2"
   size: number;
   publishedAt: string;
 }
@@ -65,7 +66,7 @@ export default function Flasher() {
       if (address !== FLASH_BASE_ADDRESS) {
         throw new Error(`Unexpected base address 0x${address.toString(16)}`);
       }
-      setUf2({ fileName: latestMeta.name, byteSize: data.byteLength, baseAddress: address, binary: data });
+      setUf2({ fileName: latestMeta.assetName, byteSize: data.byteLength, baseAddress: address, binary: data });
       setStage("idle");
     } catch (err) {
       setStage("error");
@@ -162,9 +163,9 @@ export default function Flasher() {
                   className="button-secondary"
                   onClick={handleUseLatest}
                   disabled={isBusy}
-                  title={`${latestMeta.name} (${(latestMeta.size / 1024).toFixed(1)} KiB)`}
+                  title={`${latestMeta.assetName} (${(latestMeta.size / 1024).toFixed(1)} KiB)`}
                 >
-                  <Download size={14} /> {t("flash.useLatest", { tag: latestMeta.tag })}
+                  <Download size={14} /> {t("flash.useLatest", { title: latestMeta.title })}
                 </button>
               )}
               <input

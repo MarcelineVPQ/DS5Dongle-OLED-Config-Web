@@ -33,17 +33,20 @@ jobs:
           mkdir -p public
           API=$(curl -sfL https://api.github.com/repos/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest)
           TAG=$(echo "$API" | jq -r '.tag_name')
+          TITLE=$(echo "$API" | jq -r '.name // .tag_name')
+          DATE=$(echo "$API" | jq -r '.published_at')
           URL=$(echo "$API" | jq -r '[.assets[] | select(.name | endswith(".uf2") and (contains("debug") | not))][0].browser_download_url')
-          NAME=$(echo "$API" | jq -r '[.assets[] | select(.name | endswith(".uf2") and (contains("debug") | not))][0].name')
+          ASSET=$(echo "$API" | jq -r '[.assets[] | select(.name | endswith(".uf2") and (contains("debug") | not))][0].name')
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
             echo "No non-debug UF2 in latest release; skipping bundle"
             exit 0
           fi
           curl -sfL -o public/firmware-latest.uf2 "$URL"
           SIZE=$(stat -c %s public/firmware-latest.uf2)
-          DATE=$(echo "$API" | jq -r '.published_at')
-          echo "{\"tag\":\"$TAG\",\"name\":\"$NAME\",\"size\":$SIZE,\"publishedAt\":\"$DATE\"}" > public/firmware-latest.json
-          echo "Bundled $NAME ($SIZE bytes) from $TAG"
+          jq -n --arg tag "$TAG" --arg title "$TITLE" --arg asset "$ASSET" --argjson size "$SIZE" --arg pub "$DATE" \
+            '{tag: $tag, title: $title, assetName: $asset, size: $size, publishedAt: $pub}' \
+            > public/firmware-latest.json
+          echo "Bundled $ASSET ($SIZE bytes) from $TAG / $TITLE"
 
       - run: npm run build
 
