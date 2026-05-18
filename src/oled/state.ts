@@ -13,9 +13,10 @@ export const SCREEN_NAMES = [
   "Gyro Tilt",     // 4
   "Touchpad",      // 5
   "Diagnostics",   // 6
-  "RSSI",          // 7
-  "VU Meters",     // 8
-  "Settings",      // 9
+  "CPU/Clock",     // 7
+  "RSSI",          // 8
+  "VU Meters",     // 9
+  "Settings",      // 10
 ] as const;
 export const NUM_SCREENS = SCREEN_NAMES.length;
 
@@ -46,6 +47,17 @@ export interface DiagSnapshot {
   btRate?: number;        // computed packets/s
 }
 
+// Mirrors the firmware CPU/Clock screen layout. Always representative mock
+// values (mockCpu) — even when connected. The device exposes this on HID
+// report 0xfc, but it is not readable over WebHID (declaring the report
+// breaks DualSense enumeration on Windows; see ds5BridgeHid.ts / CHANGELOG).
+export interface CpuSnapshot {
+  setFreqMhz: number;   // configured target (SYS_CLOCK_KHZ / 1000)
+  realFreqMhz: number;  // clk_sys measured by the on-chip frequency counter
+  vcoreV: number;       // core voltage read back from the regulator
+  tempC: number;        // RP2350 on-die temperature sensor
+}
+
 export interface EmulatorState {
   currentScreen: number;
   isDemoMode: boolean;
@@ -55,6 +67,7 @@ export interface EmulatorState {
   input: InputReport;
   slots: SlotsSnapshot;
   diag: DiagSnapshot;
+  cpu: CpuSnapshot;
   rssi: number;
   triggerPreset: number;   // 0..6
   lightbarMode: number;    // 0..7 (LIVE / FAV0..3 / effects)
@@ -82,6 +95,7 @@ export function newEmulatorState(): EmulatorState {
       uptimeSeconds: 0, usbFrames: 0, btPackets: 0,
       peakSpeaker: 0, peakHaptic: 0, hciErrors: 0,
     },
+    cpu: { setFreqMhz: 320, realFreqMhz: 320, vcoreV: 1.2, tempC: 42 },
     rssi: -60,
     triggerPreset: 0,
     lightbarMode: 0,

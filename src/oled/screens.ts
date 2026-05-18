@@ -218,7 +218,34 @@ export function renderDiag(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, 0, 56, "K0=next K1=back");
 }
 
-// ===== 7: RSSI =====
+// ===== 7: CPU / Clock =====
+// Mirrors src/oled.cpp render_screen_cpu() byte-for-byte (truncation, not
+// rounding, on the frequency/temperature decimals — to match the firmware's
+// integer-division formatting).
+export function renderCpu(fb: Uint8Array, s: EmulatorState): void {
+  fbClear(fb);
+  drawText(fb, 0, 0, "CPU / Clock");
+
+  const c = s.cpu;
+
+  drawText(fb, 0, 12, `Set : ${Math.floor(c.setFreqMhz)} MHz`);
+
+  const rfWhole = Math.floor(c.realFreqMhz);
+  const rfTenth = Math.floor((c.realFreqMhz - rfWhole) * 10);
+  drawText(fb, 0, 22, `Real: ${rfWhole}.${rfTenth} MHz`);
+
+  const mv = Math.round(c.vcoreV * 1000);
+  drawText(fb, 0, 32, `Vcore: ${Math.floor(mv / 1000)}.${pad2(Math.floor((mv % 1000) / 10))} V`);
+
+  const t10 = Math.trunc(c.tempC * 10 + (c.tempC >= 0 ? 0.5 : -0.5));
+  const tWhole = Math.trunc(t10 / 10);
+  const tFrac = Math.abs(t10) % 10;
+  drawText(fb, 0, 42, `Temp : ${tWhole}.${tFrac} C`);
+
+  drawText(fb, 0, 56, "K0=next K1=back");
+}
+
+// ===== 8: RSSI =====
 export function renderRssi(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
   drawText(fb, 0, 0, "BT Signal");
@@ -240,7 +267,7 @@ export function renderRssi(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, 0, 56, "K0=next K1=back");
 }
 
-// ===== 8: VU Meters =====
+// ===== 9: VU Meters =====
 export function renderVu(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
   drawText(fb, 0, 0, "VU Meters");
@@ -257,7 +284,7 @@ export function renderVu(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, 0, 56, "K0=next K1=back");
 }
 
-// ===== 9: Settings =====
+// ===== 10: Settings =====
 export function renderSettings(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
   drawText(fb, 0, 0, "Settings");
@@ -291,9 +318,10 @@ export const SCREEN_RENDERERS: ScreenRenderer[] = [
   renderGyro,      // 4
   renderTouchpad,  // 5
   renderDiag,      // 6
-  renderRssi,      // 7
-  renderVu,        // 8
-  renderSettings,  // 9
+  renderCpu,       // 7
+  renderRssi,      // 8
+  renderVu,        // 9
+  renderSettings,  // 10
 ];
 
 // silence unused-import warning if FB_W stays unused at lint time

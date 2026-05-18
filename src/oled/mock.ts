@@ -76,6 +76,18 @@ export function mockDiag(state: MockState) {
   };
 }
 
+export function mockCpu(state: MockState) {
+  const t = (performance.now() - state.startMs) / 1000;
+  return {
+    setFreqMhz: 320,
+    // Tiny jitter around the target, like the real frequency counter.
+    realFreqMhz: 320 + 0.1 * Math.sin(t * 0.7),
+    vcoreV: 1.2,
+    // Slow thermal drift, ~41–47 C.
+    tempC: 44 + 3 * Math.sin(t * 0.08),
+  };
+}
+
 export function mockRssi(state: MockState): number {
   const t = (performance.now() - state.startMs) / 1000;
   return Math.round(-55 + 10 * Math.sin(t * 0.3));
