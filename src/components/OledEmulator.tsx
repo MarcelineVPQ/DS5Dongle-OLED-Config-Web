@@ -307,7 +307,6 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
 
       {isConnected && hidDiag && (
         <details
-          className="oled-hid-diag"
           style={{
             marginTop: 8, fontFamily: "monospace", fontSize: 11,
             opacity: 0.8, maxWidth: 360,
