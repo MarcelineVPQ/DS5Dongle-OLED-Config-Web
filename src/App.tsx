@@ -225,12 +225,10 @@ export default function App() {
               step={10}
               issue={fieldIssue(bridge.issues, "autoHapticsGain")}
               onChange={(value) => bridge.setDraftField("autoHapticsGain", value)}
-              disabled={bridge.draft.autoHapticsEnable === 0}
             />
             <AutoHapticsLowpassControl
               value={bridge.draft.autoHapticsLowpass}
               onChange={(value) => bridge.setDraftField("autoHapticsLowpass", value)}
-              disabled={bridge.draft.autoHapticsEnable === 0}
             />
           </div>
         </section>
