@@ -219,9 +219,11 @@ export function renderDiag(fb: Uint8Array, s: EmulatorState): void {
 }
 
 // ===== 7: CPU / Clock =====
-// Mirrors src/oled.cpp render_screen_cpu() byte-for-byte (truncation, not
-// rounding, on the frequency/temperature decimals — to match the firmware's
-// integer-division formatting).
+// Mirrors src/oled.cpp render_screen_cpu(). Decimal formatting matches
+// firmware per-field: freq tenths via truncation (firmware integer
+// division (real_khz % 1000) / 100, web Math.floor); temp tenths via
+// round-half-away-from-zero (firmware adds ±0.5f before casting to int,
+// web does the same with Math.trunc).
 export function renderCpu(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
   drawText(fb, 0, 0, "CPU / Clock");
