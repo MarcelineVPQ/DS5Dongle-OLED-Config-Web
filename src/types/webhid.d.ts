@@ -44,6 +44,7 @@ interface HIDDevice extends EventTarget {
   forget?(): Promise<void>;
   receiveFeatureReport(reportId: number): Promise<DataView>;
   sendFeatureReport(reportId: number, data: BufferSource): Promise<void>;
+  sendReport(reportId: number, data: BufferSource): Promise<void>;
   addEventListener(
     type: "inputreport",
     listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown,

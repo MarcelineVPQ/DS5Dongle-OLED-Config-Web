@@ -63,6 +63,19 @@ export function drawText(fb: Uint8Array, x: number, y: number, s: string): void 
   }
 }
 
+// Content origin x for every screen — the left 6 px are reserved for the
+// per-button chrome glyphs ('>' near KEY0, '<' near KEY1). Mirrors
+// kContentX in src/oled.cpp.
+export const CONTENT_X = 6;
+
+// Paint the K0/K1 chrome onto the framebuffer just before flush. KEY0
+// glyph sits in the upper-left, KEY1 in the lower-left, matching where
+// the physical Pico-OLED-1.3 buttons live on the device.
+export function drawButtonChrome(fb: Uint8Array): void {
+  drawChar(fb, 0, 8,  ">".charCodeAt(0));
+  drawChar(fb, 0, 49, "<".charCodeAt(0));
+}
+
 // Bitmap: row-major, MSB = leftmost pixel, ceil(w/8) bytes per row.
 // Same layout as src/oled.cpp::draw_icon().
 export function drawIcon(
@@ -95,15 +108,23 @@ export function drawBatteryIcon(fb: Uint8Array, x: number, y: number, pct: numbe
 }
 
 // Paint framebuffer to a 128x64 OffscreenCanvas, then drawImage scaled
-// onto the display canvas with imageSmoothingEnabled=false for crisp pixels.
-export function flush(displayCtx: CanvasRenderingContext2D, fb: Uint8Array): void {
+// onto the display canvas with imageSmoothingEnabled=false for crisp
+// pixels. The optional `tint` overrides the default "on" pixel color —
+// used to mark the mock-only screens (Slots / Diag / CPU) when a real
+// controller is connected but Chrome WebHID can't expose those reports.
+export function flush(
+  displayCtx: CanvasRenderingContext2D,
+  fb: Uint8Array,
+  tint?: [number, number, number],
+): void {
   const { canvas } = displayCtx;
   const off = ensureOffscreen(canvas);
   const offCtx = off.getContext("2d")!;
   const img = offCtx.getImageData(0, 0, FB_W, FB_H);
   const data = img.data;
+  const onColor = tint ?? COLOR_ON;
   for (let i = 0; i < fb.length; i++) {
-    const c = fb[i] ? COLOR_ON : COLOR_OFF;
+    const c = fb[i] ? onColor : COLOR_OFF;
     data[i * 4 + 0] = c[0];
     data[i * 4 + 1] = c[1];
     data[i * 4 + 2] = c[2];
@@ -114,6 +135,9 @@ export function flush(displayCtx: CanvasRenderingContext2D, fb: Uint8Array): voi
   displayCtx.clearRect(0, 0, canvas.width, canvas.height);
   displayCtx.drawImage(off, 0, 0, FB_W, FB_H, 0, 0, canvas.width, canvas.height);
 }
+
+// RGB triple for the mock-data tint (Tailwind orange-500 ≈ #f59e0b).
+export const MOCK_TINT: [number, number, number] = [245, 158, 11];
 
 const offscreenCache = new WeakMap<HTMLCanvasElement, OffscreenCanvas | HTMLCanvasElement>();
 function ensureOffscreen(displayCanvas: HTMLCanvasElement): OffscreenCanvas | HTMLCanvasElement {

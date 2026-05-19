@@ -72,6 +72,7 @@ export interface EmulatorState {
   triggerPreset: number;   // 0..6
   lightbarMode: number;    // 0..7 (LIVE / FAV0..3 / effects)
   lightbarRgb: [number, number, number];
+  settingsSel: number;     // 0..4 — selected row on the Settings screen
 }
 
 export function newEmulatorState(): EmulatorState {
@@ -95,11 +96,12 @@ export function newEmulatorState(): EmulatorState {
       uptimeSeconds: 0, usbFrames: 0, btPackets: 0,
       peakSpeaker: 0, peakHaptic: 0, hciErrors: 0,
     },
-    cpu: { setFreqMhz: 320, realFreqMhz: 320, vcoreV: 1.2, tempC: 42 },
+    cpu: { setFreqMhz: 320, realFreqMhz: 320, vcoreV: 1.2, tempC: 33.6 },
     rssi: -60,
     triggerPreset: 0,
     lightbarMode: 0,
     lightbarRgb: [255, 215, 0],
+    settingsSel: 0,
   };
 }
 
@@ -114,16 +116,10 @@ export function nextScreen(s: EmulatorState): void {
   s.currentScreen = (s.currentScreen + 1) % NUM_SCREENS;
 }
 
-// KEY1 behavior matches firmware's handle_buttons:
-// - On Trigger Test (3): cycle trigger preset
-// - On Lightbar (2): cycle lightbar mode
-// - Everywhere else: step back one screen.
+// KEY1 = "previous screen" on every screen. The old screen-2 / screen-3
+// cycle overloads moved to controller-button rising-edge handlers
+// (Triangle on Trigger Test, R1 on Lightbar) — see OledEmulator.tsx.
+// Mirrors the firmware refactor in src/oled.cpp.
 export function key1Action(s: EmulatorState): void {
-  if (s.currentScreen === 3) {
-    s.triggerPreset = (s.triggerPreset + 1) % TRIGGER_PRESET_NAMES.length;
-  } else if (s.currentScreen === 2) {
-    s.lightbarMode = (s.lightbarMode + 1) % LIGHTBAR_MODE_NAMES.length;
-  } else {
-    s.currentScreen = (s.currentScreen - 1 + NUM_SCREENS) % NUM_SCREENS;
-  }
+  s.currentScreen = (s.currentScreen - 1 + NUM_SCREENS) % NUM_SCREENS;
 }

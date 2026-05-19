@@ -83,8 +83,9 @@ export function mockCpu(state: MockState) {
     // Tiny jitter around the target, like the real frequency counter.
     realFreqMhz: 320 + 0.1 * Math.sin(t * 0.7),
     vcoreV: 1.2,
-    // Slow thermal drift, ~41–47 C.
-    tempC: 44 + 3 * Math.sin(t * 0.08),
+    // Small jitter around a realistic Pico 2 W idle die temperature.
+    // ±0.4 C around 33.6 C — visibly alive without exaggerating the load.
+    tempC: 33.6 + 0.4 * Math.sin(t * 1.5),
   };
 }
 

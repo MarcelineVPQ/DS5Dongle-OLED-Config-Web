@@ -35,6 +35,88 @@ export interface HidDiagnostics {
   probes: HidReportProbe[];
 }
 
+// Bitpacked DS5 adaptive-trigger effect params (per dualsensectl's
+// reverse-engineering). Mirrors src/oled.cpp send_trigger_effect() in
+// the firmware byte-for-byte. The caller applies the same {mode, params}
+// to both R2 and L2 in the SetStateData payload.
+function buildTriggerEffect(preset: number): { mode: number; params: Uint8Array } {
+  const params = new Uint8Array(9);
+  let mode = 0x05; // OFF
+
+  switch (preset) {
+    case 0: // Off
+      mode = 0x05;
+      break;
+    case 1: { // Feedback — all 10 zones at max strength 8
+      mode = 0x21;
+      const active = 0x03FF;
+      let strength = 0;
+      for (let i = 0; i < 10; i++) strength |= 7 << (3 * i);
+      params[0] = active & 0xFF;
+      params[1] = (active >> 8) & 0xFF;
+      params[2] = strength & 0xFF;
+      params[3] = (strength >> 8) & 0xFF;
+      params[4] = (strength >> 16) & 0xFF;
+      params[5] = (strength >> 24) & 0xFF;
+      break;
+    }
+    case 2: { // Weapon — snap between positions 3 and 5, force 8
+      mode = 0x25;
+      const startStop = (1 << 3) | (1 << 5);
+      params[0] = startStop & 0xFF;
+      params[1] = (startStop >> 8) & 0xFF;
+      params[2] = 7; // force = strength - 1
+      break;
+    }
+    case 3: { // Vibration — all zones, amplitude 8, frequency 30 Hz
+      mode = 0x26;
+      const active = 0x03FF;
+      let strength = 0;
+      for (let i = 0; i < 10; i++) strength |= 7 << (3 * i);
+      params[0] = active & 0xFF;
+      params[1] = (active >> 8) & 0xFF;
+      params[2] = strength & 0xFF;
+      params[3] = (strength >> 8) & 0xFF;
+      params[4] = (strength >> 16) & 0xFF;
+      params[5] = (strength >> 24) & 0xFF;
+      params[8] = 30;
+      break;
+    }
+    case 4: { // Bow — drawing resistance + snap at position 6
+      mode = 0x22;
+      const startStop = (1 << 2) | (1 << 6);
+      const forcePair = 7 | (7 << 3); // strength=8, snap=8
+      params[0] = startStop & 0xFF;
+      params[1] = (startStop >> 8) & 0xFF;
+      params[2] = forcePair;
+      break;
+    }
+    case 5: { // Galloping
+      mode = 0x23;
+      const startStop = (1 << 0) | (1 << 9);
+      const ratio = (5 & 0x07) | ((1 & 0x07) << 3);
+      params[0] = startStop & 0xFF;
+      params[1] = (startStop >> 8) & 0xFF;
+      params[2] = ratio;
+      params[3] = 5; // frequency
+      break;
+    }
+    case 6: { // Machine gun
+      mode = 0x27;
+      const startStop = (1 << 1) | (1 << 8);
+      const forcePair = 7 | (7 << 3);
+      params[0] = startStop & 0xFF;
+      params[1] = (startStop >> 8) & 0xFF;
+      params[2] = forcePair;
+      params[3] = 20; // frequency
+      params[4] = 0;  // period
+      break;
+    }
+  }
+
+  return { mode, params };
+}
+
 export class Ds5BridgeHidClient {
   constructor(public readonly device: HIDDevice) {}
 
@@ -146,6 +228,24 @@ export class Ds5BridgeHidClient {
       peakHaptic:    view.getUint8(13),
       hciErrors:     view.getUint32(14, true),
     };
+  }
+
+  // Send a DS5 adaptive-trigger preset to the connected controller via
+  // the dongle. Mirrors src/oled.cpp send_trigger_effect() so the web
+  // preview's Trigger Test screen drives the same physical haptic feel
+  // as cycling KEY1 on the OLED. Pushes DS5 USB output report 0x02
+  // (SetStateData, 47 bytes); the dongle forwards it to the paired
+  // DualSense over BT. Same effect applied to both L2 and R2.
+  async sendTriggerPreset(preset: number): Promise<void> {
+    await this.open();
+    const data = new Uint8Array(47);
+    data[0] = 0x0C; // valid_flag0: RIGHT_TRIGGER_MOTOR_ENABLE | LEFT_TRIGGER_MOTOR_ENABLE
+    const { mode, params } = buildTriggerEffect(preset);
+    data[10] = mode;
+    for (let i = 0; i < 9; i++) data[11 + i] = params[i];
+    data[21] = mode;
+    for (let i = 0; i < 9; i++) data[22 + i] = params[i];
+    await this.device.sendReport(0x02, data);
   }
 
   // NOTE: there is intentionally no readCpuRaw(). The firmware exposes
