@@ -77,7 +77,10 @@ export default function App() {
       <header className="app-header">
         <div>
           <div className="eyebrow">{t("header.eyebrow")}</div>
-          <h1>{t("header.title")} — {t("header.titleSuffix")}</h1>
+          <h1 className="app-title">
+            {t("header.title")}
+            <span className="app-title-suffix">{t("header.titleSuffix")}</span>
+          </h1>
         </div>
         <div className="header-tools">
           <LanguageToggle />

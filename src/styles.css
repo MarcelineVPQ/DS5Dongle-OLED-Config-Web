@@ -254,6 +254,24 @@ h1 {
   line-height: 1.05;
 }
 
+/* Two-line app title: primary on top, "OLED Edition" qualifier below
+   at ~75% of the primary size, italic, slightly muted so the eye
+   reads it as a subtitle and not a runaway word from the heading. */
+.app-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.app-title-suffix {
+  font-size: 0.6em;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
 h2 { font-size: 1.05rem; color: var(--text-strong); }
 h3 { font-size: 0.95rem; color: var(--text-strong); }
 
