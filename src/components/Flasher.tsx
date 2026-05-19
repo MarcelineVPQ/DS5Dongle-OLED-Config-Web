@@ -516,8 +516,10 @@ export default function Flasher() {
         </div>
       )}
 
-      <details className="flasher-driver-help">
-        <summary>{t("flash.driverHelpSummary")}</summary>
+      {/* Always-visible — Linux users won't notice they need the udev
+          rule if it's hidden behind a "click to expand" affordance. */}
+      <section className="flasher-driver-help" aria-labelledby="flasher-driver-help-heading">
+        <h3 id="flasher-driver-help-heading">{t("flash.driverHelpSummary")}</h3>
         <h4>Linux</h4>
         <p>{t("flash.driverHelpLinux")}</p>
         <pre><code>{`echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666"' | sudo tee /etc/udev/rules.d/99-pico-bootsel.rules
@@ -526,7 +528,7 @@ sudo udevadm control --reload-rules && sudo udevadm trigger`}</code></pre>
         <p>{t("flash.driverHelpWindows")} <a href="https://zadig.akeo.ie" target="_blank" rel="noopener noreferrer">Zadig</a>.</p>
         <h4>macOS</h4>
         <p>{t("flash.driverHelpMac")}</p>
-      </details>
+      </section>
     </section>
   );
 }

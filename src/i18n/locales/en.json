@@ -160,7 +160,7 @@
     "useLatest": "Use latest release ({{title}})",
     "pickFile": "Choose .uf2",
     "step2Title": "2. Put the Pico in BOOTSEL and connect",
-    "step2Hint": "Hold the BOOTSEL button while plugging in USB. The browser will prompt you to authorize the device.",
+    "step2Hint": "Hold the BOOTSEL button while plugging in USB. The Pico will appear as a removable drive named “RP2350” (Linux / macOS) or “RPI-RP2” (Windows) — that's expected; you don't need to open or interact with it. Then click “Connect to Pico” below and authorize the device when the browser prompts. Linux users: a one-time udev rule is needed for WebUSB permission — see “Driver / permission setup” at the bottom of this page.",
     "connect": "Connect to Pico",
     "reconnect": "Reconnect",
     "connectTitle": "Authorize the BOOTSEL-mode Pico",
@@ -195,6 +195,6 @@
     "driverHelpSummary": "Driver / permission setup",
     "driverHelpLinux": "Linux requires a one-time udev rule so non-root users can access the Pico's BOOTSEL interface. Paste this in a terminal:",
     "driverHelpWindows": "Windows needs the WinUSB driver assigned to the BOOTSEL interface. Use",
-    "driverHelpMac": "No setup needed."
+    "driverHelpMac": "macOS usually works without any setup. If WebUSB can't see the Pico, open System Settings → Privacy & Security and grant the browser USB device access, then retry."
   }
 }
