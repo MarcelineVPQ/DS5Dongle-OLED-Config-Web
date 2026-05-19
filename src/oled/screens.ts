@@ -22,7 +22,7 @@ import { EmulatorState, LIGHTBAR_MODE_NAMES, TRIGGER_PRESET_NAMES, formatBdAddr 
 // y=49) doesn't paint over the live stick dot.
 export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   fbClear(fb);
-  drawText(fb, CONTENT_X, 0, "DS5 Bridge v0.5.4");
+  drawText(fb, CONTENT_X, 0, `DS5 Bridge ${s.firmwareVersionLabel}`);
   drawIcon(fb, 120, 0, s.isConnected || s.isDemoMode ? ICON_LINK_ON : ICON_LINK_OFF, 8, 8);
 
   if (!s.isConnected && !s.isDemoMode) {

@@ -73,6 +73,13 @@ export interface EmulatorState {
   lightbarMode: number;    // 0..7 (LIVE / FAV0..3 / effects)
   lightbarRgb: [number, number, number];
   settingsSel: number;     // 0..4 — selected row on the Settings screen
+  // Firmware version label rendered on the Status screen. Pulled from
+  // CI-bundled public/firmware-latest.json at runtime so a release on
+  // the firmware repo automatically updates the web preview without a
+  // matching web-repo edit. Defaults to "dev" if the JSON isn't loaded
+  // yet (matches the firmware-side default when built without
+  // -DVERSION).
+  firmwareVersionLabel: string;
 }
 
 export function newEmulatorState(): EmulatorState {
@@ -102,6 +109,7 @@ export function newEmulatorState(): EmulatorState {
     lightbarMode: 0,
     lightbarRgb: [255, 215, 0],
     settingsSel: 0,
+    firmwareVersionLabel: "dev",
   };
 }
 

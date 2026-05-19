@@ -57,6 +57,25 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
 
   const isConnected = !!client?.device.opened;
 
+  // Pull the firmware version label from CI-bundled firmware-latest.json
+  // once on mount. Single source of truth: the firmware release tag.
+  // No version string is hardcoded in this repo — a firmware release
+  // automatically propagates here without a web-repo edit.
+  useEffect(() => {
+    const url = `${import.meta.env.BASE_URL}firmware-latest.json`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((meta: { tag?: string } | null) => {
+        if (!meta?.tag) return;
+        // "v0.6.2-oled-edition" → "v0.6.2" (drop the suffix for the
+        // 128-px-wide Status header; full tag stays visible in the
+        // Flasher tab's release-info badge).
+        const short = meta.tag.replace(/-oled-edition$/, "");
+        stateRef.current.firmwareVersionLabel = short;
+      })
+      .catch(() => { /* preview defaults to "dev" — fine in local dev */ });
+  }, []);
+
   // Keep stateRef.isConnected / isDemoMode in sync with the React-side flag.
   useEffect(() => {
     stateRef.current.isConnected = isConnected;
