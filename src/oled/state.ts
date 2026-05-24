@@ -58,6 +58,23 @@ export interface CpuSnapshot {
   tempC: number;        // RP2350 on-die temperature sensor
 }
 
+// Charge-ETA tracker — mirrors sample_charge_eta() in src/oled.cpp. The DS5
+// only reports battery in 10% steps, so we time how long each step takes while
+// charging and extrapolate, with a Li-ion taper weighting. Only meaningful
+// while the preview is open and a controller is charging; like the firmware it
+// shows "~--m" until a full 10% step has elapsed (~15-20 min).
+export interface ChargeEtaState {
+  charging: boolean;        // batteryState === 1 → render the token
+  valid: boolean;           // a full step has been timed → minutes is real
+  minutes: number;          // estimated minutes to 100%
+  // internals (mirror the firmware's function-static state):
+  ring: number[];           // recent bulk-equivalent step durations (ms)
+  curStep: number;          // last observed 10% step, -1 = uninitialized
+  stepStartMs: number;
+  wasCharging: boolean;
+  firstStepPending: boolean; // discard the partial step in progress at plug-in
+}
+
 export interface EmulatorState {
   currentScreen: number;
   isDemoMode: boolean;
@@ -73,6 +90,7 @@ export interface EmulatorState {
   lightbarMode: number;    // 0..7 (LIVE / FAV0..3 / effects)
   lightbarRgb: [number, number, number];
   settingsSel: number;     // 0..4 — selected row on the Settings screen
+  chargeEta: ChargeEtaState;
   // Firmware version label rendered on the Status screen. Pulled from
   // CI-bundled public/firmware-latest.json at runtime so a release on
   // the firmware repo automatically updates the web preview without a
@@ -109,8 +127,67 @@ export function newEmulatorState(): EmulatorState {
     lightbarMode: 0,
     lightbarRgb: [255, 215, 0],
     settingsSel: 0,
+    chargeEta: {
+      charging: false, valid: false, minutes: 0,
+      ring: [], curStep: -1, stepStartMs: 0,
+      wasCharging: false, firstStepPending: false,
+    },
     firmwareVersionLabel: "dev",
   };
+}
+
+// Relative time the step ending at `toLevel` (10% units, 1..10) takes vs a bulk
+// step — Li-ion CV taper. Mirrors charge_step_weight() in src/oled.cpp.
+function chargeStepWeight(toLevel: number): number {
+  if (toLevel >= 10) return 2.2; // 90→100%
+  if (toLevel === 9) return 1.5; // 80→90%
+  return 1.0;                    // bulk constant-current region
+}
+
+// Port of sample_charge_eta() (src/oled.cpp), milliseconds instead of µs.
+// Call once per render tick; tracks 10% step transitions while charging and
+// extrapolates remaining time with the taper weighting above.
+export function sampleChargeEta(s: EmulatorState, nowMs: number): void {
+  const e = s.chargeEta;
+  const RING = 3;
+  const step = Math.min(10, s.input.batteryRaw & 0x0f);
+  const charging = s.input.batteryState === 1;
+
+  if (!charging) {
+    e.charging = false; e.valid = false; e.minutes = 0;
+    e.ring = []; e.curStep = -1; e.wasCharging = false; e.firstStepPending = false;
+    return;
+  }
+
+  if (!e.wasCharging) {
+    // Just started charging: begin timing here; the in-progress step is partial.
+    e.curStep = step; e.stepStartMs = nowMs; e.ring = [];
+    e.firstStepPending = true; e.wasCharging = true;
+  } else if (step === e.curStep + 1) {
+    const dur = nowMs - e.stepStartMs;
+    if (e.firstStepPending) {
+      e.firstStepPending = false; // discard the partial plug-in step
+    } else {
+      e.ring.push(dur / chargeStepWeight(step));
+      if (e.ring.length > RING) e.ring.shift();
+    }
+    e.curStep = step; e.stepStartMs = nowMs;
+  } else if (step !== e.curStep) {
+    // Multi-step jump or a small dip — resync without polluting the ring.
+    e.curStep = step; e.stepStartMs = nowMs; e.firstStepPending = false;
+  }
+
+  e.charging = true;
+  if (e.ring.length > 0 && e.curStep < 10) {
+    const bulk = e.ring.reduce((a, b) => a + b, 0) / e.ring.length;
+    let remMs = 0;
+    for (let L = e.curStep + 1; L <= 10; L++) remMs += bulk * chargeStepWeight(L);
+    e.minutes = Math.min(999, Math.max(0, Math.round(remMs / 60000)));
+    e.valid = true;
+  } else {
+    e.valid = e.curStep >= 10;
+    e.minutes = 0;
+  }
 }
 
 export function formatBdAddr(bytes: number[]): string {

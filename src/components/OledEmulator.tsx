@@ -34,6 +34,7 @@ import {
   key1Action,
   newEmulatorState,
   nextScreen,
+  sampleChargeEta,
 } from "../oled/state";
 
 const AUTO_CYCLE_MS = 4000;
@@ -296,6 +297,11 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         }
       }
       lastScreenRef.current = s.currentScreen;
+
+      // Track charge progress every tick (mirrors sample_charge_eta() running
+      // each frame in the firmware's oled_loop) so the Status screen's ETA token
+      // stays current. s.input is live (connected) or mock (demo) by this point.
+      sampleChargeEta(s, now);
 
       // Render. Chrome (the K0/K1 arrow glyphs on the left edge) paints
       // last so it sits on top of any per-screen content and is never
