@@ -43,10 +43,14 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, CONTENT_X, 18, `${pad3(s.input.batteryPct)}%${marker}`);
   drawBatteryIcon(fb, 36, 18, s.input.batteryPct);
 
-  // Charge ETA, right of the battery icon — only while charging. "~--m" until a
-  // full 10% step has been timed. Mirrors render_screen()/sample_charge_eta().
+  // Charge ETA, right of the battery icon — only while charging. Provisional
+  // default-rate estimate "~Nm?" on plug-in; "?" drops once a real 10% step is
+  // timed. Mirrors render_screen()/sample_charge_eta().
   if (s.chargeEta.charging) {
-    drawText(fb, 94, 18, s.chargeEta.valid ? `~${s.chargeEta.minutes}m` : "~--m");
+    const eta = s.chargeEta.valid
+      ? `~${s.chargeEta.minutes}m${s.chargeEta.provisional ? "?" : ""}`
+      : "~--m";
+    drawText(fb, 94, 18, eta);
   }
 
   // Left stick box shifted right by CONTENT_X.

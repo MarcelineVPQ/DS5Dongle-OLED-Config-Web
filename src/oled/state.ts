@@ -65,7 +65,8 @@ export interface CpuSnapshot {
 // shows "~--m" until a full 10% step has elapsed (~15-20 min).
 export interface ChargeEtaState {
   charging: boolean;        // batteryState === 1 → render the token
-  valid: boolean;           // a full step has been timed → minutes is real
+  valid: boolean;           // minutes is meaningful (provisional or measured)
+  provisional: boolean;     // true until a full step is timed (uses default rate)
   minutes: number;          // estimated minutes to 100%
   // internals (mirror the firmware's function-static state):
   ring: number[];           // recent bulk-equivalent step durations (ms)
@@ -128,7 +129,7 @@ export function newEmulatorState(): EmulatorState {
     lightbarRgb: [255, 215, 0],
     settingsSel: 0,
     chargeEta: {
-      charging: false, valid: false, minutes: 0,
+      charging: false, valid: false, provisional: false, minutes: 0,
       ring: [], curStep: -1, stepStartMs: 0,
       wasCharging: false, firstStepPending: false,
     },
@@ -143,6 +144,10 @@ function chargeStepWeight(toLevel: number): number {
   if (toLevel === 9) return 1.5; // 80→90%
   return 1.0;                    // bulk constant-current region
 }
+
+// Default bulk-step duration (ms) for the provisional estimate before any real
+// step is timed — mirrors kDefaultStepUs in src/oled.cpp (~15 min per 10%).
+const DEFAULT_STEP_MS = 15 * 60 * 1000;
 
 // Port of sample_charge_eta() (src/oled.cpp), milliseconds instead of µs.
 // Call once per render tick; tracks 10% step transitions while charging and
@@ -178,14 +183,21 @@ export function sampleChargeEta(s: EmulatorState, nowMs: number): void {
   }
 
   e.charging = true;
-  if (e.ring.length > 0 && e.curStep < 10) {
-    const bulk = e.ring.reduce((a, b) => a + b, 0) / e.ring.length;
+  if (e.curStep < 10) {
+    // Measured rate once we have a timed step; until then the default rate,
+    // flagged provisional (renders "?").
+    const measured = e.ring.length > 0;
+    const bulk = measured
+      ? e.ring.reduce((a, b) => a + b, 0) / e.ring.length
+      : DEFAULT_STEP_MS;
     let remMs = 0;
     for (let L = e.curStep + 1; L <= 10; L++) remMs += bulk * chargeStepWeight(L);
     e.minutes = Math.min(999, Math.max(0, Math.round(remMs / 60000)));
     e.valid = true;
+    e.provisional = !measured;
   } else {
-    e.valid = e.curStep >= 10;
+    e.valid = true;
+    e.provisional = false;
     e.minutes = 0;
   }
 }
