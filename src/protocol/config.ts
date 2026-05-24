@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 19 bytes, little-endian, packed (matches src/config.h in the firmware).
+// 34 bytes, little-endian, packed (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
 //   offset 1   float32 haptics_gain                [1.0, 2.0]
@@ -14,8 +14,22 @@
 //   offset 16  uint8   auto_haptics_enable         0=Off 1=Fallback 2=Mix 3=Replace  (OLED Edition)
 //   offset 17  uint8   auto_haptics_gain           percent [0, 200]                  (OLED Edition)
 //   offset 18  uint8   auto_haptics_lowpass        0=80Hz 1=160Hz 2=250Hz 3=400Hz    (OLED Edition)
+//   offset 19  uint8   lightbar_mode               0=LIVE 1-4=FAV 5=BREA 6=RAIN 7=FADE 8=HOST (v0.6.5)
+//   offset 20  uint8[4] lb_fav_r                   4 favorite-slot red values        (v0.6.5)
+//   offset 24  uint8[4] lb_fav_g                   4 favorite-slot green values      (v0.6.5)
+//   offset 28  uint8[4] lb_fav_b                   4 favorite-slot blue values       (v0.6.5)
+//   offset 32  uint8   screen_dim_timeout          minutes [0, 250], 0 = disabled    (issue #5)
+//   offset 33  uint8   screen_off_timeout          minutes [0, 250], 0 = disabled    (issue #5)
+//
+// NOTE: lightbar_mode / lb_fav_* are managed on the OLED device, not in this UI,
+// but MUST be decoded/encoded so a config save round-trips them unchanged — the
+// firmware copies sizeof(Config_body) bytes, so a short body would zero them.
 
-export const CONFIG_BODY_SIZE = 19;
+export const CONFIG_BODY_SIZE = 34;
+// Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
+// fields). We still accept that and default the missing tail, so the updated
+// UI can read older firmware without erroring.
+export const CONFIG_BODY_MIN_SIZE = 19;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode  = 0 | 1 | 2;
@@ -38,6 +52,14 @@ export interface ConfigBody {
   autoHapticsEnable: AutoHapticsMode;
   autoHapticsGain: number;
   autoHapticsLowpass: AutoHapticsLowpass;
+  // OLED-managed lightbar state — round-tripped here, not edited in this UI.
+  lightbarMode: number;     // 0..8 (see offset map)
+  lbFavR: number[];         // length 4, each 0..255
+  lbFavG: number[];         // length 4, each 0..255
+  lbFavB: number[];         // length 4, each 0..255
+  // Screen idle-ladder thresholds (issue #5), minutes, 0 = tier disabled.
+  screenDimTimeout: number; // [0, 250]
+  screenOffTimeout: number; // [0, 250]
 }
 
 export interface ConfigValidationIssue {
@@ -59,6 +81,12 @@ export const DEFAULT_CONFIG: ConfigBody = {
   autoHapticsEnable: 1,   // Fallback (the OLED Edition's distinguishing default)
   autoHapticsGain: 100,
   autoHapticsLowpass: 1,  // 160 Hz
+  lightbarMode: 8,        // HOST passthrough (firmware default)
+  lbFavR: [255, 0,   0,   255],
+  lbFavG: [0,   255, 0,   255],
+  lbFavB: [0,   0,   255, 255],
+  screenDimTimeout: 2,    // minutes (firmware default)
+  screenOffTimeout: 15,   // minutes (firmware default)
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -96,7 +124,7 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   // WebHID feature-report reads may or may not include the leading report-ID
   // byte depending on browser/driver. Try both offsets and pick whichever
   // passes validation.
-  const candidates = bytes.byteLength >= CONFIG_BODY_SIZE + 1 ? [0, 1] : [0];
+  const candidates = bytes.byteLength >= CONFIG_BODY_MIN_SIZE + 1 ? [0, 1] : [0];
   const parsed = candidates.map((offset) => decodeAt(bytes, offset)).filter(Boolean) as ConfigBody[];
   const valid = parsed.find((config) => validateConfig(config).length === 0);
   if (valid) return valid;
@@ -104,7 +132,7 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
     const issues = validateConfig(parsed[0]).map((i) => i.message).join("; ");
     throw new Error(`Device returned invalid config: ${issues}`);
   }
-  throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_SIZE}`);
+  throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_MIN_SIZE}`);
 }
 
 export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
@@ -127,6 +155,12 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(16, config.autoHapticsEnable);
   view.setUint8(17, config.autoHapticsGain & 0xff);
   view.setUint8(18, config.autoHapticsLowpass);
+  view.setUint8(19, config.lightbarMode & 0xff);
+  for (let i = 0; i < 4; i++) view.setUint8(20 + i, config.lbFavR[i] & 0xff);
+  for (let i = 0; i < 4; i++) view.setUint8(24 + i, config.lbFavG[i] & 0xff);
+  for (let i = 0; i < 4; i++) view.setUint8(28 + i, config.lbFavB[i] & 0xff);
+  view.setUint8(32, config.screenDimTimeout & 0xff);
+  view.setUint8(33, config.screenOffTimeout & 0xff);
   return bytes;
 }
 
@@ -162,6 +196,14 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.autoHapticsLowpass) || config.autoHapticsLowpass < 0 || config.autoHapticsLowpass > 3) {
     issues.push({ field: "autoHapticsLowpass", message: "Auto Haptics LP must be 0-3 (80/160/250/400 Hz)" });
   }
+  if (!Number.isInteger(config.screenDimTimeout) || config.screenDimTimeout < 0 || config.screenDimTimeout > 250) {
+    issues.push({ field: "screenDimTimeout", message: "Screen dim timeout must be 0-250 minutes (0 = disabled)" });
+  }
+  if (!Number.isInteger(config.screenOffTimeout) || config.screenOffTimeout < 0 || config.screenOffTimeout > 250) {
+    issues.push({ field: "screenOffTimeout", message: "Screen off timeout must be 0-250 minutes (0 = disabled)" });
+  }
+  // lightbar_mode / lb_fav_* are OLED-managed and firmware-clamped; not validated
+  // here (no UI to correct them) — normalizeConfig clamps them defensively.
   return issues;
 }
 
@@ -180,6 +222,12 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     autoHapticsEnable:         clampInteger(config.autoHapticsEnable, 0, 3) as AutoHapticsMode,
     autoHapticsGain:           clampInteger(config.autoHapticsGain, 0, 200),
     autoHapticsLowpass:        clampInteger(config.autoHapticsLowpass, 0, 3) as AutoHapticsLowpass,
+    lightbarMode:              clampInteger(config.lightbarMode, 0, 8),
+    lbFavR:                    config.lbFavR.map((v) => clampInteger(v, 0, 255)),
+    lbFavG:                    config.lbFavG.map((v) => clampInteger(v, 0, 255)),
+    lbFavB:                    config.lbFavB.map((v) => clampInteger(v, 0, 255)),
+    screenDimTimeout:          clampInteger(config.screenDimTimeout, 0, 250),
+    screenOffTimeout:          clampInteger(config.screenOffTimeout, 0, 250),
   };
 }
 
@@ -198,8 +246,18 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.currentSlot === right.currentSlot &&
     left.autoHapticsEnable === right.autoHapticsEnable &&
     left.autoHapticsGain === right.autoHapticsGain &&
-    left.autoHapticsLowpass === right.autoHapticsLowpass
+    left.autoHapticsLowpass === right.autoHapticsLowpass &&
+    left.lightbarMode === right.lightbarMode &&
+    arraysEqual(left.lbFavR, right.lbFavR) &&
+    arraysEqual(left.lbFavG, right.lbFavG) &&
+    arraysEqual(left.lbFavB, right.lbFavB) &&
+    left.screenDimTimeout === right.screenDimTimeout &&
+    left.screenOffTimeout === right.screenOffTimeout
   );
+}
+
+function arraysEqual(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
 export function fieldIssue(
@@ -210,8 +268,13 @@ export function fieldIssue(
 }
 
 function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
-  if (bytes.byteLength - offset < CONFIG_BODY_SIZE) return null;
-  const view = new DataView(bytes.buffer, bytes.byteOffset + offset, CONFIG_BODY_SIZE);
+  const avail = bytes.byteLength - offset;
+  if (avail < CONFIG_BODY_MIN_SIZE) return null;
+  const len = Math.min(avail, CONFIG_BODY_SIZE);
+  const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
+  // Read tail fields (offset >= 19) only when the firmware actually sent them;
+  // older firmware stops at offset 18, so default the rest.
+  const u8 = (o: number, fallback: number) => (o < len ? view.getUint8(o) : fallback);
   return {
     configVersion:             view.getUint8(0),
     hapticsGain:               view.getFloat32(1, true),
@@ -226,6 +289,12 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     autoHapticsEnable:         view.getUint8(16) as AutoHapticsMode,
     autoHapticsGain:           view.getUint8(17),
     autoHapticsLowpass:        view.getUint8(18) as AutoHapticsLowpass,
+    lightbarMode:              u8(19, DEFAULT_CONFIG.lightbarMode),
+    lbFavR:                    [0, 1, 2, 3].map((i) => u8(20 + i, DEFAULT_CONFIG.lbFavR[i])),
+    lbFavG:                    [0, 1, 2, 3].map((i) => u8(24 + i, DEFAULT_CONFIG.lbFavG[i])),
+    lbFavB:                    [0, 1, 2, 3].map((i) => u8(28 + i, DEFAULT_CONFIG.lbFavB[i])),
+    screenDimTimeout:          u8(32, DEFAULT_CONFIG.screenDimTimeout),
+    screenOffTimeout:          u8(33, DEFAULT_CONFIG.screenOffTimeout),
   };
 }
 

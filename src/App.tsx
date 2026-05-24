@@ -328,6 +328,26 @@ export default function App() {
                 options={CONTROLLER_MODE_OPTIONS}
                 onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
               />
+              <IntegerControl
+                label={t("behavior.screenDimTimeoutLabel")}
+                suffix={t("behavior.screenTimeoutSuffix")}
+                value={bridge.draft.screenDimTimeout}
+                min={0}
+                max={250}
+                step={1}
+                issue={fieldIssue(bridge.issues, "screenDimTimeout")}
+                onChange={(value) => bridge.setDraftField("screenDimTimeout", value)}
+              />
+              <IntegerControl
+                label={t("behavior.screenOffTimeoutLabel")}
+                suffix={t("behavior.screenTimeoutSuffix")}
+                value={bridge.draft.screenOffTimeout}
+                min={0}
+                max={250}
+                step={1}
+                issue={fieldIssue(bridge.issues, "screenOffTimeout")}
+                onChange={(value) => bridge.setDraftField("screenOffTimeout", value)}
+              />
             </div>
           </AdvancedReveal>
         </section>
