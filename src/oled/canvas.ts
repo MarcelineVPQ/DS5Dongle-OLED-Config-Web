@@ -45,6 +45,20 @@ export function rectFilled(fb: Uint8Array, x: number, y: number, w: number, h: n
   }
 }
 
+// XOR-invert every pixel in a region (mirrors firmware rect_invert; used to
+// flash a control "pressed").
+export function rectInvert(fb: Uint8Array, x: number, y: number, w: number, h: number): void {
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const xx = x + i;
+      const yy = y + j;
+      if (xx < 0 || xx >= FB_W || yy < 0 || yy >= FB_H) continue;
+      const idx = yy * FB_W + xx;
+      fb[idx] = fb[idx] ? 0 : 1;
+    }
+  }
+}
+
 export function drawChar(fb: Uint8Array, x: number, y: number, c: number): void {
   const idx = c - FONT_FIRST_CHAR;
   if (idx < 0 || idx >= FONT_5x7.length) return;

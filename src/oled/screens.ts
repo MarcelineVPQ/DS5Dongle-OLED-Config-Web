@@ -11,6 +11,7 @@ import {
   fbClear,
   px,
   rectFilled,
+  rectInvert,
   rectOutline,
 } from "./canvas";
 import { ICON_LINK_OFF, ICON_LINK_ON } from "./icons";
@@ -58,12 +59,16 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   const lx = (CONTENT_X + 2) + Math.round((s.input.leftStick.x * 27) / 255);
   const ly = 32 + Math.round((s.input.leftStick.y * 27) / 255);
   rectFilled(fb, lx - 1, ly - 1, 3, 3);
+  // L3 (left stick click) — invert the whole box (dot inverts with it).
+  if (s.input.l3) rectInvert(fb, CONTENT_X, 30, 32, 32);
 
   // Right stick box at (96, 30, 32, 32)
   rectOutline(fb, 96, 30, 32, 32);
   const rx = 98 + Math.round((s.input.rightStick.x * 27) / 255);
   const ry = 32 + Math.round((s.input.rightStick.y * 27) / 255);
   rectFilled(fb, rx - 1, ry - 1, 3, 3);
+  // R3 (right stick click) — invert the whole box.
+  if (s.input.r3) rectInvert(fb, 96, 30, 32, 32);
 
   // L2 vertical fill bar just right of the shifted left stick.
   rectOutline(fb, CONTENT_X + 32, 33, 4, 29);
