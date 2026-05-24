@@ -7,6 +7,7 @@
   },
   "tabs": {
     "config": "Config",
+    "remap": "Reasignar",
     "preview": "Vista OLED",
     "flash": "Grabar firmware"
   },
@@ -136,6 +137,27 @@
     "sectionTitle": "Barra de luz",
     "blurb": "Elige el modo de la barra de luz y cuatro colores favoritos. También editable en el OLED; HOST cede el LED al juego.",
     "modeLabel": "Modo"
+  },
+  "remap": {
+    "sectionTitle": "Reasignación de botones",
+    "badge": "OLED Edition",
+    "blurb": "Reasigna cualquier botón del mando a otro. La asignación se guarda en el dongle, así que funciona en cualquier juego y sistema operativo sin software adicional. Los cambios se escriben y guardan al pulsar Aplicar.",
+    "unsupported": "El firmware conectado no admite la reasignación de botones. Actualiza al firmware OLED Edition más reciente en la pestaña Flashear.",
+    "connectHint": "Conecta un dispositivo para editar la reasignación de botones.",
+    "applied": "Reasignación aplicada y guardada en el dongle.",
+    "noChange": "— Sin cambios —",
+    "disabled": "Desactivado (sin salida)",
+    "remappedTag": "reasignado",
+    "rowAria": "Botón de destino para {{button}}",
+    "apply": "Aplicar reasignación",
+    "applyTitle": "Escribir la tabla de reasignación en el dongle y guardarla (informe 0xF6)",
+    "revert": "Revertir cambios",
+    "revertTitle": "Descartar los cambios y restaurar la reasignación actual del dongle",
+    "reset": "Restablecer valores",
+    "resetTitle": "Borrar toda la reasignación (identidad) — luego pulsa Aplicar",
+    "verifyFailed": "No se pudo verificar la escritura de la reasignación: el dispositivo no confirmó el cambio.",
+    "noneRemapped": "Ningún botón reasignado — disposición predeterminada.",
+    "countRemapped": "Botones reasignados: {{count}}"
   },
   "slots": {
     "sectionTitle": "Emparejamiento multi-slot",

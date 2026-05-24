@@ -7,6 +7,7 @@
   },
   "tabs": {
     "config": "Config",
+    "remap": "Remapear",
     "preview": "Pré-visualização OLED",
     "flash": "Gravar firmware"
   },
@@ -136,6 +137,27 @@
     "sectionTitle": "Barra de luz",
     "blurb": "Escolha o modo da barra de luz e quatro cores favoritas. Também editável no OLED; HOST entrega o LED ao jogo.",
     "modeLabel": "Modo"
+  },
+  "remap": {
+    "sectionTitle": "Remapeamento de botões",
+    "badge": "OLED Edition",
+    "blurb": "Reatribua qualquer botão do controle a outro. O mapeamento é armazenado no dongle, então funciona em qualquer jogo e sistema operacional sem software adicional. As alterações são gravadas e salvas assim que você clica em Aplicar.",
+    "unsupported": "O firmware conectado não oferece suporte ao remapeamento de botões. Atualize para o firmware OLED Edition mais recente na aba Gravar.",
+    "connectHint": "Conecte um dispositivo para editar o remapeamento de botões.",
+    "applied": "Remapeamento aplicado e salvo no dongle.",
+    "noChange": "— Sem alteração —",
+    "disabled": "Desativado (sem saída)",
+    "remappedTag": "remapeado",
+    "rowAria": "Botão de destino para {{button}}",
+    "apply": "Aplicar remapeamento",
+    "applyTitle": "Gravar a tabela de remapeamento no dongle e salvá-la (relatório 0xF6)",
+    "revert": "Reverter edições",
+    "revertTitle": "Descartar as edições e restaurar o remapeamento atual do dongle",
+    "reset": "Restaurar padrão",
+    "resetTitle": "Limpar todo o remapeamento (identidade) — depois clique em Aplicar",
+    "verifyFailed": "Não foi possível verificar a gravação do remapeamento — o dispositivo não confirmou a alteração.",
+    "noneRemapped": "Nenhum botão remapeado — layout padrão.",
+    "countRemapped": "Botões remapeados: {{count}}"
   },
   "slots": {
     "sectionTitle": "Pareamento multi-slot",

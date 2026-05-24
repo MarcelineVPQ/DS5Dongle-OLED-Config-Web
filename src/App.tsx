@@ -2,6 +2,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Download,
+  Gamepad2,
   Monitor,
   Palette,
   Power,
@@ -21,6 +22,7 @@ import AdvancedReveal from "./components/AdvancedReveal";
 import Flasher from "./components/Flasher";
 import LanguageToggle from "./components/LanguageToggle";
 import OledEmulator from "./components/OledEmulator";
+import RemapEditor from "./components/RemapEditor";
 import StatusHero from "./components/StatusHero";
 import ThemeToggle from "./components/ThemeToggle";
 import { useDs5Bridge } from "./hooks/useDs5Bridge";
@@ -40,11 +42,12 @@ import {
   fieldIssue,
 } from "./protocol/config";
 
-type Tab = "config" | "preview" | "flash";
+type Tab = "config" | "remap" | "preview" | "flash";
 
 function readTabFromHash(): Tab {
   if (typeof window === "undefined") return "config";
   const h = window.location.hash.replace(/^#\/?/, "");
+  if (h === "remap") return "remap";
   if (h === "preview") return "preview";
   if (h === "flash") return "flash";
   return "config";
@@ -64,7 +67,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
   useEffect(() => {
-    const target = tab === "preview" ? "#preview" : tab === "flash" ? "#flash" : "#config";
+    const target = tab === "remap" ? "#remap" : tab === "preview" ? "#preview" : tab === "flash" ? "#flash" : "#config";
     if (window.location.hash !== target) {
       // replaceState avoids piling history entries on every tab toggle.
       window.history.replaceState(null, "", `${window.location.pathname}${target}`);
@@ -102,6 +105,14 @@ export default function App() {
           aria-pressed={tab === "config"}
         >
           <Sliders size={16} /> {t("tabs.config")}
+        </button>
+        <button
+          type="button"
+          className={tab === "remap" ? "tab active" : "tab"}
+          onClick={() => setTab("remap")}
+          aria-pressed={tab === "remap"}
+        >
+          <Gamepad2 size={16} /> {t("tabs.remap")}
         </button>
         <button
           type="button"
@@ -390,6 +401,17 @@ export default function App() {
           </AdvancedReveal>
         </section>
       </div>
+      )}
+
+      {tab === "remap" && (
+        <section className="panel remap-panel">
+          <div className="panel-title">
+            <Gamepad2 size={18} />
+            <h2>{t("remap.sectionTitle")}</h2>
+            <span className="feature-badge" title={t("remap.blurb")}>{t("remap.badge")}</span>
+          </div>
+          <RemapEditor client={bridge.client} />
+        </section>
       )}
 
       {tab === "preview" && (

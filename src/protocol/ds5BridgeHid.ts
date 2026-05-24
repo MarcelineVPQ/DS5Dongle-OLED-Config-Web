@@ -4,6 +4,11 @@ import {
   decodeConfigBody,
   encodeConfigBody,
 } from "./config";
+import {
+  RemapState,
+  decodeRemapFromConfigReport,
+  encodeRemapSet,
+} from "./remap";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
@@ -175,6 +180,21 @@ export class Ds5BridgeHidClient {
   async saveToFlash(): Promise<void> {
     await this.open();
     await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_SAVE_TO_FLASH));
+  }
+
+  // Button remap rides the same 0xF6/0xF7 reports. Read returns null on older
+  // firmware that doesn't append the remap block to its 0xF7 response.
+  async readRemap(): Promise<RemapState | null> {
+    await this.open();
+    const report = await this.device.receiveFeatureReport(REPORT_GET_CONFIG);
+    return decodeRemapFromConfigReport(report);
+  }
+
+  // Write + persist a remap table. The firmware saves it to its own flash
+  // sector immediately (no separate save-to-flash step) and bumps the revision.
+  async applyRemap(table: number[]): Promise<void> {
+    await this.open();
+    await this.device.sendFeatureReport(REPORT_SET_CONFIG, encodeRemapSet(table));
   }
 
   async reconnectUsb(): Promise<void> {

@@ -7,6 +7,7 @@
   },
   "tabs": {
     "config": "Config",
+    "remap": "Remappage",
     "preview": "Aperçu OLED",
     "flash": "Flasher le firmware"
   },
@@ -136,6 +137,27 @@
     "sectionTitle": "Barre lumineuse",
     "blurb": "Choisis le mode de la barre lumineuse et quatre couleurs favorites. Modifiable aussi sur l'OLED ; HOST laisse la LED au jeu.",
     "modeLabel": "Mode"
+  },
+  "remap": {
+    "sectionTitle": "Remappage des boutons",
+    "badge": "OLED Edition",
+    "blurb": "Réaffectez n'importe quel bouton de la manette à un autre. Le mappage est stocké sur le dongle : il fonctionne dans tous les jeux et sur tous les systèmes, sans logiciel supplémentaire. Les modifications sont écrites et enregistrées dès que vous cliquez sur Appliquer.",
+    "unsupported": "Le firmware connecté ne prend pas en charge le remappage des boutons. Mettez à jour vers le dernier firmware OLED Edition dans l'onglet Flasher.",
+    "connectHint": "Connectez un appareil pour modifier le remappage des boutons.",
+    "applied": "Remappage appliqué et enregistré sur le dongle.",
+    "noChange": "— Aucun changement —",
+    "disabled": "Désactivé (aucune sortie)",
+    "remappedTag": "remappé",
+    "rowAria": "Bouton cible pour {{button}}",
+    "apply": "Appliquer le remappage",
+    "applyTitle": "Écrire la table de remappage sur le dongle et l'enregistrer (rapport 0xF6)",
+    "revert": "Annuler les modifications",
+    "revertTitle": "Abandonner les modifications et restaurer le remappage actuel du dongle",
+    "reset": "Réinitialiser",
+    "resetTitle": "Effacer tout le remappage (identité) — puis cliquez sur Appliquer",
+    "verifyFailed": "L'écriture du remappage n'a pas pu être vérifiée — l'appareil n'a pas confirmé la modification.",
+    "noneRemapped": "Aucun bouton remappé — disposition par défaut.",
+    "countRemapped": "Boutons remappés : {{count}}"
   },
   "slots": {
     "sectionTitle": "Appairage multi-slot",

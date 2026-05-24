@@ -7,6 +7,7 @@
   },
   "tabs": {
     "config": "配置",
+    "remap": "重映射",
     "preview": "OLED 预览",
     "flash": "刷写固件"
   },
@@ -136,6 +137,27 @@
     "sectionTitle": "灯条",
     "blurb": "选择灯条模式和四个收藏颜色。也可在 OLED 上编辑；HOST 模式将 LED 交给游戏控制。",
     "modeLabel": "模式"
+  },
+  "remap": {
+    "sectionTitle": "按键重映射",
+    "badge": "OLED Edition",
+    "blurb": "将任意手柄按键重新分配为其他按键。映射保存在适配器上，因此在任何游戏和操作系统中都无需额外软件即可使用。点击“应用”后立即写入并保存。",
+    "unsupported": "连接的固件不支持按键重映射。请在“刷写固件”选项卡中更新到最新的 OLED Edition 固件。",
+    "connectHint": "连接设备以编辑按键重映射。",
+    "applied": "重映射已应用并保存到适配器。",
+    "noChange": "— 不更改 —",
+    "disabled": "禁用（无输出）",
+    "remappedTag": "已重映射",
+    "rowAria": "{{button}} 的目标按键",
+    "apply": "应用重映射",
+    "applyTitle": "将重映射表写入适配器并保存（报告 0xF6）",
+    "revert": "撤销编辑",
+    "revertTitle": "放弃编辑并恢复适配器当前的重映射",
+    "reset": "恢复默认",
+    "resetTitle": "清除所有重映射（默认）——然后点击“应用”",
+    "verifyFailed": "无法验证重映射写入——设备未确认更改。",
+    "noneRemapped": "未重映射任何按键——默认布局。",
+    "countRemapped": "已重映射按键：{{count}}"
   },
   "slots": {
     "sectionTitle": "多槽配对",

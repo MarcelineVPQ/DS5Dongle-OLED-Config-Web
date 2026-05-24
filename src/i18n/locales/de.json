@@ -7,6 +7,7 @@
   },
   "tabs": {
     "config": "Konfig",
+    "remap": "Belegung",
     "preview": "OLED-Vorschau",
     "flash": "Firmware flashen"
   },
@@ -136,6 +137,27 @@
     "sectionTitle": "Lightbar",
     "blurb": "Lightbar-Modus und vier Favoritenfarben wählen. Auch am OLED einstellbar; HOST überlässt die LED dem Spiel.",
     "modeLabel": "Modus"
+  },
+  "remap": {
+    "sectionTitle": "Tastenbelegung",
+    "badge": "OLED Edition",
+    "blurb": "Belege jede Controller-Taste mit einer anderen. Die Zuordnung wird auf dem Dongle gespeichert und funktioniert daher in jedem Spiel und unter jedem Betriebssystem ohne zusätzliche Software. Änderungen werden beim Klick auf „Anwenden“ geschrieben und gespeichert.",
+    "unsupported": "Die verbundene Firmware unterstützt keine Tastenbelegung. Aktualisiere im Tab „Firmware flashen“ auf die neueste OLED-Edition-Firmware.",
+    "connectHint": "Verbinde ein Gerät, um die Tastenbelegung zu bearbeiten.",
+    "applied": "Belegung angewendet und auf dem Dongle gespeichert.",
+    "noChange": "— Keine Änderung —",
+    "disabled": "Deaktiviert (keine Ausgabe)",
+    "remappedTag": "neu belegt",
+    "rowAria": "Zieltaste für {{button}}",
+    "apply": "Belegung anwenden",
+    "applyTitle": "Belegungstabelle auf den Dongle schreiben und speichern (Report 0xF6)",
+    "revert": "Änderungen verwerfen",
+    "revertTitle": "Änderungen verwerfen und die aktuelle Belegung des Dongles wiederherstellen",
+    "reset": "Auf Standard zurücksetzen",
+    "resetTitle": "Alle Belegungen löschen (Standard) — dann auf „Anwenden“ klicken",
+    "verifyFailed": "Schreiben der Belegung konnte nicht bestätigt werden — das Gerät hat die Änderung nicht bestätigt.",
+    "noneRemapped": "Keine Tasten neu belegt — Standardlayout.",
+    "countRemapped": "Neu belegte Tasten: {{count}}"
   },
   "slots": {
     "sectionTitle": "Multi-Slot-Kopplung",

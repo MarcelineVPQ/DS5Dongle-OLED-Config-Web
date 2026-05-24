@@ -6,6 +6,7 @@
   },
   "tabs": {
     "config": "Config",
+    "remap": "Remap",
     "preview": "OLED Preview",
     "flash": "Flash Firmware"
   },
@@ -123,6 +124,27 @@
     "sectionTitle": "Lightbar",
     "blurb": "Pick the lightbar mode and four favorite colors. Also editable on the OLED; HOST hands the LED to the game.",
     "modeLabel": "Mode"
+  },
+  "remap": {
+    "sectionTitle": "Button remapping",
+    "badge": "OLED Edition",
+    "blurb": "Reassign any controller button to another. The map is stored on the dongle, so it works in every game and on every OS with no extra software. Changes are written and saved the moment you click Apply.",
+    "unsupported": "The connected firmware doesn't support button remapping. Update to the latest OLED Edition firmware on the Flash tab.",
+    "connectHint": "Connect a device to edit button remapping.",
+    "applied": "Remapping applied and saved to the dongle.",
+    "noChange": "— No change —",
+    "disabled": "Disabled (no output)",
+    "remappedTag": "remapped",
+    "rowAria": "Remap target for {{button}}",
+    "apply": "Apply remapping",
+    "applyTitle": "Write the remap table to the dongle and persist it (report 0xF6)",
+    "revert": "Revert edits",
+    "revertTitle": "Discard edits and restore the dongle's current remapping",
+    "reset": "Reset to default",
+    "resetTitle": "Clear all remapping (identity) — then click Apply",
+    "verifyFailed": "Remap write could not be verified — the device did not confirm the change.",
+    "noneRemapped": "No buttons remapped — default layout.",
+    "countRemapped": "Remapped buttons: {{count}}"
   },
   "slots": {
     "sectionTitle": "Multi-slot pairing",
