@@ -131,6 +131,11 @@
       "auto": "自动(检测)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "灯条",
+    "blurb": "选择灯条模式和四个收藏颜色。也可在 OLED 上编辑；HOST 模式将 LED 交给游戏控制。",
+    "modeLabel": "模式"
+  },
   "slots": {
     "sectionTitle": "多槽配对",
     "blurb": "可绑定多达四个 DualSense。当前槽位在启动时重新连接。",

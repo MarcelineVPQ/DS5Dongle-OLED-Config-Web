@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   Download,
   Monitor,
+  Palette,
   Power,
   RefreshCw,
   RotateCcw,
@@ -32,6 +33,7 @@ import {
   ConfigValidationIssue,
   CONTROLLER_MODE_OPTIONS,
   ControllerMode,
+  LIGHTBAR_MODE_OPTIONS,
   POLLING_RATE_OPTIONS,
   PollingRateMode,
   SlotIndex,
@@ -253,6 +255,37 @@ export default function App() {
               }))}
               onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
             />
+          </div>
+        </section>
+
+        {/* Lightbar — span-6. Mode + 4 favorite colors (also editable on the
+            OLED device; round-tripped through Config_body either way). */}
+        <section className="card hover-lift span-6">
+          <div className="panel-title">
+            <Palette size={18} />
+            <h2>{t("lightbar.sectionTitle")}</h2>
+          </div>
+          <p className="panel-blurb">{t("lightbar.blurb")}</p>
+          <div className="control-stack">
+            <SelectControl
+              label={t("lightbar.modeLabel")}
+              value={bridge.draft.lightbarMode}
+              options={LIGHTBAR_MODE_OPTIONS}
+              onChange={(value) => bridge.setDraftField("lightbarMode", value)}
+            />
+            {[0, 1, 2, 3].map((i) => (
+              <ColorControl
+                key={i}
+                label={`FAV${i}`}
+                rgb={[bridge.draft.lbFavR[i], bridge.draft.lbFavG[i], bridge.draft.lbFavB[i]]}
+                onChange={([r, g, b]) => {
+                  const at = (arr: number[], v: number) => arr.map((x, j) => (j === i ? v : x));
+                  bridge.setDraftField("lbFavR", at(bridge.draft.lbFavR, r));
+                  bridge.setDraftField("lbFavG", at(bridge.draft.lbFavG, g));
+                  bridge.setDraftField("lbFavB", at(bridge.draft.lbFavB, b));
+                }}
+              />
+            ))}
           </div>
         </section>
 
@@ -504,6 +537,53 @@ function SegmentedControl<T extends number>({ label, value, options, onChange, d
         ))}
       </div>
     </div>
+  );
+}
+
+interface SelectControlProps {
+  label: string;
+  value: number;
+  options: Array<{ value: number; label: string }>;
+  onChange: (value: number) => void;
+}
+
+function SelectControl({ label, value, options, onChange }: SelectControlProps) {
+  return (
+    <label className="control-row">
+      <strong>{label}</strong>
+      <select value={value} onChange={(e) => onChange(Number(e.currentTarget.value))}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function rgbToHex(rgb: number[]): string {
+  return "#" + rgb.map((c) => Math.max(0, Math.min(255, c | 0)).toString(16).padStart(2, "0")).join("");
+}
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+}
+
+interface ColorControlProps {
+  label: string;
+  rgb: number[];
+  onChange: (rgb: [number, number, number]) => void;
+}
+
+function ColorControl({ label, rgb, onChange }: ColorControlProps) {
+  return (
+    <label className="control-row">
+      <strong>{label}</strong>
+      <input
+        type="color"
+        value={rgbToHex(rgb)}
+        onChange={(e) => onChange(hexToRgb(e.currentTarget.value))}
+      />
+    </label>
   );
 }
 

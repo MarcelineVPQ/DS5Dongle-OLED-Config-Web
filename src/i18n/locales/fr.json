@@ -131,6 +131,11 @@
       "auto": "Auto (détecter)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "Barre lumineuse",
+    "blurb": "Choisis le mode de la barre lumineuse et quatre couleurs favorites. Modifiable aussi sur l'OLED ; HOST laisse la LED au jeu.",
+    "modeLabel": "Mode"
+  },
   "slots": {
     "sectionTitle": "Appairage multi-slot",
     "blurb": "Appaire jusqu'à quatre DualSense. Le slot actif se reconnecte au démarrage.",

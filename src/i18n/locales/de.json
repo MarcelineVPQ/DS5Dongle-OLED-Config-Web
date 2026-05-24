@@ -131,6 +131,11 @@
       "auto": "Auto (erkennen)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "Lightbar",
+    "blurb": "Lightbar-Modus und vier Favoritenfarben wählen. Auch am OLED einstellbar; HOST überlässt die LED dem Spiel.",
+    "modeLabel": "Modus"
+  },
   "slots": {
     "sectionTitle": "Multi-Slot-Kopplung",
     "blurb": "Bis zu vier DualSense binden. Der aktive Slot verbindet sich beim Start neu.",

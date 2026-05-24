@@ -131,6 +131,11 @@
       "auto": "Auto (detectar)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "Barra de luz",
+    "blurb": "Escolha o modo da barra de luz e quatro cores favoritas. Também editável no OLED; HOST entrega o LED ao jogo.",
+    "modeLabel": "Modo"
+  },
   "slots": {
     "sectionTitle": "Pareamento multi-slot",
     "blurb": "Pareie até quatro DualSense. O slot ativo se reconecta ao iniciar.",

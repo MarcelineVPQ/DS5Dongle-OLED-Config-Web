@@ -791,6 +791,28 @@ input[type="number"] {
   font-weight: 750;
 }
 
+/* Lightbar mode dropdown + favorite-color swatches share the number-input look. */
+.control-row select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  color: var(--text-strong);
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  font-weight: 750;
+}
+
+.control-row input[type="color"] {
+  width: 100%;
+  min-height: 38px;
+  padding: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 .toggle-row { min-height: 58px; }
 
 .switch {

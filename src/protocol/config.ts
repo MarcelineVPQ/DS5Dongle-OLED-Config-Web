@@ -112,6 +112,20 @@ export const AUTO_HAPTICS_MODE_OPTIONS: Array<{
   { value: 3, label: "Replace",  hint: "Always use derived; discard native completely. Uniform feel across all games regardless of what they send." },
 ];
 
+// Lightbar mode names — short firmware UI codes (mirror lb_mode_tag in
+// src/oled.cpp), shown verbatim in the mode dropdown; not translated.
+export const LIGHTBAR_MODE_OPTIONS: Array<{ value: number; label: string }> = [
+  { value: 0, label: "LIVE (tilt)" },
+  { value: 1, label: "FAV0" },
+  { value: 2, label: "FAV1" },
+  { value: 3, label: "FAV2" },
+  { value: 4, label: "FAV3" },
+  { value: 5, label: "Breathing" },
+  { value: 6, label: "Rainbow" },
+  { value: 7, label: "Fade" },
+  { value: 8, label: "Host (game)" },
+];
+
 export const AUTO_HAPTICS_LOWPASS_OPTIONS: Array<{ value: AutoHapticsLowpass; label: string }> = [
   { value: 0, label: "80 Hz  (sub-bass)" },
   { value: 1, label: "160 Hz (bass / default)" },

@@ -131,6 +131,11 @@
       "auto": "自動 (検出)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "ライトバー",
+    "blurb": "ライトバーのモードと4つのお気に入りカラーを選択。OLED でも編集可能。HOST はゲームに LED を委ねます。",
+    "modeLabel": "モード"
+  },
   "slots": {
     "sectionTitle": "マルチスロットペアリング",
     "blurb": "最大 4 つの DualSense をバインドします。アクティブなスロットは起動時に再接続します。",

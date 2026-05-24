@@ -118,6 +118,11 @@
       "auto": "Auto (detect)"
     }
   },
+  "lightbar": {
+    "sectionTitle": "Lightbar",
+    "blurb": "Pick the lightbar mode and four favorite colors. Also editable on the OLED; HOST hands the LED to the game.",
+    "modeLabel": "Mode"
+  },
   "slots": {
     "sectionTitle": "Multi-slot pairing",
     "blurb": "Bond up to four DualSenses. The active slot reconnects on boot.",
