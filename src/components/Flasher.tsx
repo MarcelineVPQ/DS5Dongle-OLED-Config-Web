@@ -419,11 +419,8 @@ export default function Flasher() {
                 <span className="flasher-file-size">
                   {formatBytes(uf2.totalBytes)} · {uf2.regions.length} region{uf2.regions.length === 1 ? "" : "s"}
                 </span>
-                <span
-                  className="flasher-file-hash"
-                  title={`SHA-256: ${uf2.sha256}`}
-                >
-                  sha256 {uf2.sha256.slice(0, 16)}…
+                <span className="flasher-file-hash">
+                  sha256 {uf2.sha256}
                 </span>
               </div>
             )}
