@@ -157,7 +157,9 @@
     "resetTitle": "Limpar todo o remapeamento (identidade) — depois clique em Aplicar",
     "verifyFailed": "Não foi possível verificar a gravação do remapeamento — o dispositivo não confirmou a alteração.",
     "noneRemapped": "Nenhum botão remapeado — layout padrão.",
-    "countRemapped": "Botões remapeados: {{count}}"
+    "countRemapped": "Botões remapeados: {{count}}",
+    "diagramHint": "Clique em um botão no controle para definir o remapeamento.",
+    "allButtons": "Todos os botões"
   },
   "slots": {
     "sectionTitle": "Pareamento multi-slot",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "Auto Haptics LP deve ser 0-3 (80/160/250/400 Hz)"
   },
   "footer": {
-    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para o firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics creditado a <2>loteran/DS5Dongle</2>."
+    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para o firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics creditado a <2>loteran/DS5Dongle</2>.",
+    "assetCredit": "Arte do controle e dos botões por <0>Zacksly</0> (<1>CC BY 3.0</1>, modificada)."
   },
   "flash": {
     "sectionTitle": "Gravar firmware",

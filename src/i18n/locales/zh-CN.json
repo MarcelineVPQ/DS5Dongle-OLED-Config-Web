@@ -157,7 +157,9 @@
     "resetTitle": "清除所有重映射（默认）——然后点击“应用”",
     "verifyFailed": "无法验证重映射写入——设备未确认更改。",
     "noneRemapped": "未重映射任何按键——默认布局。",
-    "countRemapped": "已重映射按键：{{count}}"
+    "countRemapped": "已重映射按键：{{count}}",
+    "diagramHint": "点击手柄上的按键以设置其重映射。",
+    "allButtons": "所有按键"
   },
   "slots": {
     "sectionTitle": "多槽配对",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "自动触感低通必须为 0-3 (80/160/250/400 Hz)"
   },
   "footer": {
-    "credits": "<0>awalol/ds5dongle-config-web</0> 的分叉,适用于 <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> 固件。音频自动触感 DSP 归功于 <2>loteran/DS5Dongle</2>。"
+    "credits": "<0>awalol/ds5dongle-config-web</0> 的分叉,适用于 <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> 固件。音频自动触感 DSP 归功于 <2>loteran/DS5Dongle</2>。",
+    "assetCredit": "手柄与按键图形由 <0>Zacksly</0> 提供（<1>CC BY 3.0</1>，已修改）。"
   },
   "flash": {
     "sectionTitle": "刷写固件",

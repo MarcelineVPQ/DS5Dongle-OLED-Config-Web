@@ -157,7 +157,9 @@
     "resetTitle": "すべての再割り当てを消去（初期状態）— その後「適用」をクリック",
     "verifyFailed": "再割り当ての書き込みを確認できませんでした。デバイスが変更を確認しませんでした。",
     "noneRemapped": "再割り当てされたボタンはありません — デフォルト配置です。",
-    "countRemapped": "再割り当てしたボタン: {{count}}"
+    "countRemapped": "再割り当てしたボタン: {{count}}",
+    "diagramHint": "コントローラー上のボタンをクリックして再割り当てを設定します。",
+    "allButtons": "すべてのボタン"
   },
   "slots": {
     "sectionTitle": "マルチスロットペアリング",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "Auto Haptics LP は 0-3 (80/160/250/400 Hz) でなければなりません"
   },
   "footer": {
-    "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。"
+    "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。",
+    "assetCredit": "コントローラーとボタンのアートワーク: <0>Zacksly</0>（<1>CC BY 3.0</1>、改変あり）。"
   },
   "flash": {
     "sectionTitle": "ファームウェア書き込み",

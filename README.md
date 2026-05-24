@@ -6,6 +6,7 @@ Browser-based configuration tool for the [MarcelineVPQ/DS5Dongle-OLED-Edition](h
 
 Forked from [awalol/ds5dongle-config-web](https://github.com/awalol/ds5dongle-config-web) to support the extended `Config_body` shipped by the OLED Edition firmware:
 
+- **Button remapping (Remap tab)** — reassign any of the 16 digital controls (face buttons, D-pad, shoulders/triggers, stick clicks, Create/Options) to any other. Click a button on a live DualSense diagram to set its target, or use the collapsible full list; the map is stored on the dongle and applied before the host sees the report, so it works in every game and OS with **no host-side software**. The shoulders/triggers float out to the corners as labeled glyphs (off-camera in a front view). Rides the existing `0xF6`/`0xF7` reports (no HID-descriptor change → no Windows enumeration risk); apply persists to flash immediately and is confirmed by a revision read-back. Controller outline + button glyphs by [Zacksly](https://zacksly.itch.io) (CC BY 3.0).
 - **OLED Preview tab** — live, in-browser pixel emulation of all 10 firmware OLED screens (Status, Slots, Lightbar, Trigger Test, Gyro, Touchpad, Diagnostics, RSSI, VU Meters, Settings). Renders to a 384×192 canvas inside a stylized Pico-OLED-1.3 device frame; KEY0 / KEY1 buttons in the UI cycle / contextual-back exactly like the physical hardware. Auto-cycles with mock data every 4 s when no controller is connected — so visitors can experience the whole feature set without owning the OLED add-on. Reads live data via HID feature reports `0xFA` (slots) and `0xFB` (diagnostics + audio meters) when a controller is connected. Share `#preview` on the URL to land Discord viewers directly on the emulator.
 - **Multilingual UI** — 7 languages bundled via i18next: English, 中文, Español, Deutsch, Français, 日本語, Português. Auto-detects from browser, overridable via the header globe icon, persists choice to localStorage. Translations of non-English locales are machine-generated; PRs from native speakers welcome.
 - **Audio Auto Haptics** controls — 4-mode selector (Off / **Fallback (default)** / Mix / Replace), gain (0–200 %), and low-pass cutoff (80 / 160 / 250 / 400 Hz). DSP itself is borrowed from [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) commit `5d6bc2f`; the Fallback mode is an OLED-Edition addition that only fires when native haptics have been silent for ~1 s (preserves native HD haptics where games send them, fills in where they don't).
@@ -39,6 +40,8 @@ The firmware exposes six USB HID feature reports — `0xF6`–`0xF9` are shared 
 | `0xFA` | device → host | Read multi-slot pairing table (4 × 6-byte bd_addr + 4 × occupancy flag = 28 bytes). OLED Edition only. |
 | `0xFB` | device → host | Read live diagnostics: uptime, USB-audio frame counter, BT-0x32 packet counter, speaker peak, haptic peak, HCI error count (18 bytes). OLED Edition only. |
 
+**Button remap** rides the same `0xF6`/`0xF7` reports rather than a new report ID (declaring extra HID report IDs broke DualSense enumeration on Windows). `0xF6` with func-id `0x10` and an `['R','M', version, table[16]]` frame sets the 16-entry remap table (source→target, `0xFF` = disabled); the `0xF7` response appends an `['R','M', version, revision, table[16]]` block after `Config_body` so the web tool reads config + remap in one GET (older firmware omits it). See `src/protocol/remap.ts`.
+
 `src/protocol/config.ts` is the single source of truth for the `Config_body` layout; if the firmware's `Config_body` ever grows or shrinks, edit only this file.
 
 ## Trust model (Flash Firmware tab)
@@ -58,6 +61,7 @@ The firmware's release page also includes a `SHA256SUMS.txt` asset; you can manu
 
 - **[awalol/DS5Dongle](https://github.com/awalol/DS5Dongle)** — upstream firmware + original web config base.
 - **[loteran/DS5Dongle](https://github.com/loteran/DS5Dongle)** — Audio Auto Haptics DSP design and the matching CLI tool (`scripts/set_ds5.py` in our firmware repo).
+- **[PS5 Button Icons and Controls](https://zacksly.itch.io/ps5-button-icons-and-controls)** by **Zacksly** — DualSense controller outline + button glyphs used in the Remap tab, licensed [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (recolored to `currentColor` and cropped for theming).
 
 ## License
 

@@ -447,6 +447,15 @@ export default function App() {
           {" — "}
           <a href="https://42pixelstudios.com/games/neon-debris/" target="_blank" rel="noopener noreferrer">play Neon Debris ↗</a>
         </div>
+        <div className="studio-credit">
+          <Trans
+            i18nKey="footer.assetCredit"
+            components={[
+              <a href="https://zacksly.itch.io" target="_blank" rel="noopener noreferrer" />,
+              <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer" />,
+            ]}
+          />
+        </div>
       </footer>
     </main>
   );

@@ -1517,3 +1517,128 @@ input[type="number"] {
   color: var(--accent-warning, #f59e0b);
   border-left: 3px solid var(--accent-warning, #f59e0b);
 }
+
+/* ── Button-remap visual diagram (Remap tab) ───────────────────────────────
+   Controller art is Zacksly's CC BY 3.0 outline recolored to currentColor;
+   the hotspots overlay shares its viewBox so click targets line up exactly. */
+.controller-diagram {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 4px auto 14px;
+  color: var(--text-strong, #e2e8f0);
+}
+.controller-art svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.controller-hotspots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* fill is painted (transparent) rather than `none` so the whole disc is
+   clickable, not just its stroke. */
+.ctrl-hotspot {
+  fill: var(--accent, #6366f1);
+  fill-opacity: 0;
+  stroke: var(--accent, #6366f1);
+  stroke-opacity: 0;
+  stroke-width: 16;
+  cursor: pointer;
+  transition: fill-opacity 0.12s ease, stroke-opacity 0.12s ease, stroke-width 0.12s ease;
+}
+.ctrl-hotspot:hover {
+  fill-opacity: 0.18;
+}
+.ctrl-hotspot:focus-visible {
+  outline: none;
+  stroke-opacity: 1;
+}
+.ctrl-hotspot.remapped {
+  fill-opacity: 0.28;
+  stroke-opacity: 0.85;
+}
+.ctrl-hotspot.selected {
+  fill-opacity: 0.24;
+  stroke-opacity: 1;
+  stroke-width: 26;
+}
+.controller-diagram.disabled .ctrl-hotspot {
+  cursor: not-allowed;
+}
+
+/* Floating shoulder/trigger glyphs (L1/L2/R1/R2) — visible button outlines in
+   the corners with a leader line to the shoulder, since they have no on-screen
+   target in a front view. */
+.ctrl-leader {
+  stroke: var(--text-muted, #94a3b8);
+  stroke-width: 4;
+  stroke-dasharray: 10 10;
+  opacity: 0.45;
+  pointer-events: none;
+}
+.ctrl-float {
+  cursor: pointer;
+  color: var(--text-strong, #e2e8f0); /* glyph uses currentColor */
+}
+.ctrl-float-glyph {
+  pointer-events: none;
+  overflow: visible;
+}
+.ctrl-float-hit {
+  fill: var(--accent, #6366f1);
+  fill-opacity: 0;
+  stroke: var(--accent, #6366f1);
+  stroke-opacity: 0;
+  stroke-width: 8;
+  transition: fill-opacity 0.12s ease, stroke-opacity 0.12s ease;
+}
+.ctrl-float:hover .ctrl-float-hit {
+  fill-opacity: 0.14;
+}
+.ctrl-float:focus-visible {
+  outline: none;
+}
+.ctrl-float:focus-visible .ctrl-float-hit {
+  stroke-opacity: 1;
+}
+.ctrl-float.remapped {
+  color: var(--accent, #6366f1);
+}
+.ctrl-float.remapped .ctrl-float-hit {
+  stroke-opacity: 0.7;
+}
+.ctrl-float.selected {
+  color: var(--accent, #6366f1);
+}
+.ctrl-float.selected .ctrl-float-hit {
+  fill-opacity: 0.18;
+  stroke-opacity: 1;
+}
+.controller-diagram.disabled .ctrl-float {
+  cursor: not-allowed;
+}
+
+/* Contextual picker for the button selected on the diagram. */
+.control-row.remap-selected {
+  border: 1px solid color-mix(in srgb, var(--accent, #6366f1) 45%, transparent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: color-mix(in srgb, var(--accent, #6366f1) 8%, transparent);
+}
+
+/* Full list kept as a collapsible fallback under the diagram. */
+.remap-fulllist {
+  margin: 6px 0 4px;
+}
+.remap-fulllist > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+  padding: 6px 0;
+  user-select: none;
+}

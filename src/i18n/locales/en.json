@@ -144,7 +144,9 @@
     "resetTitle": "Clear all remapping (identity) — then click Apply",
     "verifyFailed": "Remap write could not be verified — the device did not confirm the change.",
     "noneRemapped": "No buttons remapped — default layout.",
-    "countRemapped": "Remapped buttons: {{count}}"
+    "countRemapped": "Remapped buttons: {{count}}",
+    "diagramHint": "Click a button on the controller to set its remap.",
+    "allButtons": "All buttons"
   },
   "slots": {
     "sectionTitle": "Multi-slot pairing",
@@ -180,7 +182,8 @@
     "autoHapticsLowpass": "Auto Haptics LP must be 0-3 (80/160/250/400 Hz)"
   },
   "footer": {
-    "credits": "Fork of <0>awalol/ds5dongle-config-web</0> for <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> firmware. Audio Auto Haptics DSP credited to <2>loteran/DS5Dongle</2>."
+    "credits": "Fork of <0>awalol/ds5dongle-config-web</0> for <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> firmware. Audio Auto Haptics DSP credited to <2>loteran/DS5Dongle</2>.",
+    "assetCredit": "Controller & button art by <0>Zacksly</0> (<1>CC BY 3.0</1>, modified)."
   },
   "flash": {
     "sectionTitle": "Flash firmware",

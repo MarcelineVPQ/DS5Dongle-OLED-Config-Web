@@ -3,11 +3,15 @@
 // user reassign each physical button, and writes it back over 0xF6. The
 // firmware persists to its own flash sector on write — there is no separate
 // save-to-flash step, so "Apply remapping" is the commit.
+//
+// Two ways to edit, sharing one draft: click a button on the visual controller
+// (diagram-driven, primary), or use the full dropdown list below (fallback).
 
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, RotateCcw, Send, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Ds5BridgeHidClient } from "../protocol/ds5BridgeHid";
+import ControllerDiagram from "./ControllerDiagram";
 import {
   REMAP_BUTTON_OPTIONS,
   REMAP_DISABLED,
@@ -21,6 +25,8 @@ export interface RemapEditorProps {
   client: Ds5BridgeHidClient | null;
 }
 
+const buttonLabel = (index: number) => REMAP_BUTTON_OPTIONS[index]?.label ?? `#${index}`;
+
 export default function RemapEditor({ client }: RemapEditorProps) {
   const { t } = useTranslation();
   const [device, setDevice] = useState<RemapState | null>(null);
@@ -29,6 +35,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
   const [busy, setBusy] = useState(false);
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
 
   const connected = !!client?.device.opened;
 
@@ -39,6 +46,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
       setSupported(null);
       setDevice(null);
       setDraft(identityTable());
+      setSelected(null);
       setError(null);
       setApplied(false);
       return;
@@ -106,6 +114,25 @@ export default function RemapEditor({ client }: RemapEditorProps) {
     setApplied(false);
   }, [deviceTable]);
 
+  // A target <select> for one source button — reused by the contextual picker
+  // and the full fallback list.
+  const targetSelect = (source: number) => (
+    <select
+      value={draft[source]}
+      disabled={!editable}
+      onChange={(e) => setRow(source, Number(e.currentTarget.value))}
+      aria-label={t("remap.rowAria", { button: buttonLabel(source) })}
+    >
+      <option value={source}>{t("remap.noChange")}</option>
+      {REMAP_BUTTON_OPTIONS.filter((o) => o.value !== source).map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+      <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
+    </select>
+  );
+
   return (
     <>
       <p className="panel-blurb">{t("remap.blurb")}</p>
@@ -135,34 +162,45 @@ export default function RemapEditor({ client }: RemapEditorProps) {
         </div>
       )}
 
-      <div className="control-stack">
-        {REMAP_BUTTON_OPTIONS.map((source) => {
-          const target = draft[source.value];
-          const changed = target !== source.value;
-          return (
-            <label className="control-row" key={source.value}>
-              <strong>
-                {source.label}
-                {changed && <small>{t("remap.remappedTag")}</small>}
-              </strong>
-              <select
-                value={target}
-                disabled={!editable}
-                onChange={(e) => setRow(source.value, Number(e.currentTarget.value))}
-                aria-label={t("remap.rowAria", { button: source.label })}
-              >
-                <option value={source.value}>{t("remap.noChange")}</option>
-                {REMAP_BUTTON_OPTIONS.filter((o) => o.value !== source.value).map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-                <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
-              </select>
-            </label>
-          );
-        })}
-      </div>
+      {/* Diagram-driven editing (primary). */}
+      {supported !== false && (
+        <>
+          <ControllerDiagram
+            table={draft}
+            selected={selected}
+            onSelect={setSelected}
+            disabled={!editable}
+            labelFor={buttonLabel}
+          />
+          {selected === null ? (
+            <p className="control-hint">{t("remap.diagramHint")}</p>
+          ) : (
+            <div className="control-row remap-selected">
+              <strong>{buttonLabel(selected)}</strong>
+              {targetSelect(selected)}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Full list (fallback), collapsed by default. */}
+      <details className="remap-fulllist">
+        <summary>{t("remap.allButtons")}</summary>
+        <div className="control-stack">
+          {REMAP_BUTTON_OPTIONS.map((source) => {
+            const changed = draft[source.value] !== source.value;
+            return (
+              <label className="control-row" key={source.value}>
+                <strong>
+                  {source.label}
+                  {changed && <small>{t("remap.remappedTag")}</small>}
+                </strong>
+                {targetSelect(source.value)}
+              </label>
+            );
+          })}
+        </div>
+      </details>
 
       <div className="action-stack remap-actions">
         <button

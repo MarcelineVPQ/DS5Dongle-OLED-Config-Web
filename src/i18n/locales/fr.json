@@ -157,7 +157,9 @@
     "resetTitle": "Effacer tout le remappage (identité) — puis cliquez sur Appliquer",
     "verifyFailed": "L'écriture du remappage n'a pas pu être vérifiée — l'appareil n'a pas confirmé la modification.",
     "noneRemapped": "Aucun bouton remappé — disposition par défaut.",
-    "countRemapped": "Boutons remappés : {{count}}"
+    "countRemapped": "Boutons remappés : {{count}}",
+    "diagramHint": "Cliquez sur un bouton de la manette pour définir son remappage.",
+    "allButtons": "Tous les boutons"
   },
   "slots": {
     "sectionTitle": "Appairage multi-slot",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "Auto Haptics LP doit être 0-3 (80/160/250/400 Hz)"
   },
   "footer": {
-    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> pour le firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP Audio Auto Haptics crédité à <2>loteran/DS5Dongle</2>."
+    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> pour le firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP Audio Auto Haptics crédité à <2>loteran/DS5Dongle</2>.",
+    "assetCredit": "Visuels de la manette et des boutons par <0>Zacksly</0> (<1>CC BY 3.0</1>, modifiés)."
   },
   "flash": {
     "sectionTitle": "Flasher le firmware",

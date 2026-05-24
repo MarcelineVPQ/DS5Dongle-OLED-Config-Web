@@ -157,7 +157,9 @@
     "resetTitle": "Alle Belegungen löschen (Standard) — dann auf „Anwenden“ klicken",
     "verifyFailed": "Schreiben der Belegung konnte nicht bestätigt werden — das Gerät hat die Änderung nicht bestätigt.",
     "noneRemapped": "Keine Tasten neu belegt — Standardlayout.",
-    "countRemapped": "Neu belegte Tasten: {{count}}"
+    "countRemapped": "Neu belegte Tasten: {{count}}",
+    "diagramHint": "Klicke im Controller auf eine Taste, um ihre Belegung festzulegen.",
+    "allButtons": "Alle Tasten"
   },
   "slots": {
     "sectionTitle": "Multi-Slot-Kopplung",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "Auto Haptics LP muss 0-3 (80/160/250/400 Hz) sein"
   },
   "footer": {
-    "credits": "Fork von <0>awalol/ds5dongle-config-web</0> für die Firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. Audio Auto Haptics DSP geht auf <2>loteran/DS5Dongle</2> zurück."
+    "credits": "Fork von <0>awalol/ds5dongle-config-web</0> für die Firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. Audio Auto Haptics DSP geht auf <2>loteran/DS5Dongle</2> zurück.",
+    "assetCredit": "Controller- und Tastengrafiken von <0>Zacksly</0> (<1>CC BY 3.0</1>, bearbeitet)."
   },
   "flash": {
     "sectionTitle": "Firmware flashen",

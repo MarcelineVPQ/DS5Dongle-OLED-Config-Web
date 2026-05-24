@@ -157,7 +157,9 @@
     "resetTitle": "Borrar toda la reasignación (identidad) — luego pulsa Aplicar",
     "verifyFailed": "No se pudo verificar la escritura de la reasignación: el dispositivo no confirmó el cambio.",
     "noneRemapped": "Ningún botón reasignado — disposición predeterminada.",
-    "countRemapped": "Botones reasignados: {{count}}"
+    "countRemapped": "Botones reasignados: {{count}}",
+    "diagramHint": "Haz clic en un botón del mando para definir su reasignación.",
+    "allButtons": "Todos los botones"
   },
   "slots": {
     "sectionTitle": "Emparejamiento multi-slot",
@@ -193,7 +195,8 @@
     "autoHapticsLowpass": "Auto Haptics LP debe ser 0-3 (80/160/250/400 Hz)"
   },
   "footer": {
-    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para el firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics acreditado a <2>loteran/DS5Dongle</2>."
+    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para el firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics acreditado a <2>loteran/DS5Dongle</2>.",
+    "assetCredit": "Gráficos del mando y los botones por <0>Zacksly</0> (<1>CC BY 3.0</1>, modificados)."
   },
   "flash": {
     "sectionTitle": "Grabar firmware",
