@@ -140,6 +140,8 @@
     "sectionTitle": "OLED プレビュー",
     "blurb": "ファームウェアの 10 個の OLED 画面のライブエミュレーション — 物理的な Pico-OLED-1.3 が表示するものに近いですが、バイト単位で完璧ではありません。コントローラが接続されていない場合、モックデータで 4 秒ごとに自動サイクル。コントローラ接続時 (上の <strong>接続</strong> をクリック) は、データはライブです。<code>#preview</code> を共有して Discord 視聴者を直接このビューに案内できます。",
     "liveDemoBanner": "ライブデモ — 実際の値を見るにはコントローラを接続してください。",
+    "firmwareNote": "トリガーハプティクスは、ドングルが MarcelineVPQ/DS5Dongle-OLED-Edition ファームウェアを実行している場合にのみ動作します。",
+    "mockNote": "モック値 — Chrome WebHID は標準の DualSense ディスクリプタではこのレポートを公開できません。HID 診断を参照してください。",
     "key0": "KEY0",
     "key1": "KEY1",
     "key0Title": "KEY0 — 次の画面",

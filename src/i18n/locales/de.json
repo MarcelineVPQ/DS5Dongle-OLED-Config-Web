@@ -140,6 +140,8 @@
     "sectionTitle": "OLED-Vorschau",
     "blurb": "Live-Emulation der 10 OLED-Bildschirme der Firmware — nahe an dem, was das physische Pico-OLED-1.3 zeigt, aber nicht byte-genau. Rotiert alle 4 s mit Mock-Daten, wenn kein Controller verbunden ist. Mit verbundenem Controller (oben auf <strong>Verbinden</strong> klicken) sind die Daten live. Teile <code>#preview</code>, um Discord-Besucher direkt auf diese Ansicht zu leiten.",
     "liveDemoBanner": "Live-Demo — Controller verbinden für echte Werte.",
+    "firmwareNote": "Trigger-Haptik wird nur ausgelöst, wenn dein Dongle die Firmware MarcelineVPQ/DS5Dongle-OLED-Edition ausführt.",
+    "mockNote": "Simulierte Werte — Chrome WebHID kann diesen Report bei einem Standard-DualSense-Deskriptor nicht bereitstellen. Siehe HID-Diagnose.",
     "key0": "KEY0",
     "key1": "KEY1",
     "key0Title": "KEY0 — nächster Bildschirm",

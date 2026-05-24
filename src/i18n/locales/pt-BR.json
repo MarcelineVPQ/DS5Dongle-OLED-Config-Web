@@ -140,6 +140,8 @@
     "sectionTitle": "Pré-visualização OLED",
     "blurb": "Emulação ao vivo das 10 telas OLED do firmware — próxima do que o Pico-OLED-1.3 físico mostra, mas não perfeita byte a byte. Auto-rotaciona a cada 4 s com dados simulados quando nenhum controle está conectado. Com um controle conectado (clique em <strong>Conectar</strong> acima), os dados são ao vivo. Compartilhe <code>#preview</code> para levar os visualizadores do Discord direto para esta vista.",
     "liveDemoBanner": "Demo ao vivo — conecte um controle para valores reais.",
+    "firmwareNote": "Os hápticos de gatilho só funcionam se o seu dongle estiver rodando o firmware MarcelineVPQ/DS5Dongle-OLED-Edition.",
+    "mockNote": "Valores simulados — o Chrome WebHID não consegue expor este relatório em um descritor DualSense padrão. Veja o diagnóstico HID.",
     "key0": "KEY0",
     "key1": "KEY1",
     "key0Title": "KEY0 — próxima tela",

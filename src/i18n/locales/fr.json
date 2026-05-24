@@ -140,6 +140,8 @@
     "sectionTitle": "Aperçu OLED",
     "blurb": "Émulation en direct des 10 écrans OLED du firmware — proche de ce qu'affiche le Pico-OLED-1.3 physique mais pas parfaitement byte par byte. Auto-rotation toutes les 4 s avec des données factices lorsqu'aucun contrôleur n'est connecté. Avec un contrôleur connecté (clic sur <strong>Connecter</strong> ci-dessus), les données sont en direct. Partage <code>#preview</code> pour amener les utilisateurs Discord directement sur cette vue.",
     "liveDemoBanner": "Démo en direct — connecte un contrôleur pour des valeurs réelles.",
+    "firmwareNote": "Les retours haptiques des gâchettes ne se déclenchent que si ton dongle exécute le firmware MarcelineVPQ/DS5Dongle-OLED-Edition.",
+    "mockNote": "Valeurs fictives — Chrome WebHID ne peut pas exposer ce rapport sur un descripteur DualSense standard. Voir le diagnostic HID.",
     "key0": "KEY0",
     "key1": "KEY1",
     "key0Title": "KEY0 — écran suivant",

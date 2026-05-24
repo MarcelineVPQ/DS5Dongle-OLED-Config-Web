@@ -140,6 +140,8 @@
     "sectionTitle": "OLED 预览",
     "blurb": "固件 10 个 OLED 屏幕的实时模拟 — 接近物理 Pico-OLED-1.3 显示的内容,但不是逐字节完美。未连接控制器时,每 4 秒使用模拟数据自动循环。连接控制器后(点击上方的 <strong>连接</strong>),数据实时更新。分享 <code>#preview</code> 让 Discord 观众直接访问此视图。",
     "liveDemoBanner": "实时演示 — 连接控制器以获取真实数据。",
+    "firmwareNote": "扳机触感仅在 dongle 运行 MarcelineVPQ/DS5Dongle-OLED-Edition 固件时才会触发。",
+    "mockNote": "模拟值 — Chrome WebHID 无法在标准 DualSense 描述符上暴露此报告。详见 HID 诊断。",
     "key0": "KEY0",
     "key1": "KEY1",
     "key0Title": "KEY0 — 下一屏",
