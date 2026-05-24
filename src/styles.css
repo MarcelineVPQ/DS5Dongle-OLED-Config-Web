@@ -746,6 +746,7 @@ input[type="range"]:focus::-webkit-slider-thumb {
 }
 
 .app-footer a { color: var(--accent); }
+.app-footer .studio-credit { margin-top: 6px; font-size: 12px; opacity: 0.9; }
 
 .control-stack, .action-stack { flex-direction: column; }
 

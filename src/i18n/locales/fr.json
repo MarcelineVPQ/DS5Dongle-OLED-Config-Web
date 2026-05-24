@@ -107,7 +107,8 @@
     "sectionTitle": "Haptics & Audio",
     "gainLabel": "Gain haptique",
     "speakerVolumeLabel": "Volume du haut-parleur (dB)",
-    "audioBufferLabel": "Longueur du tampon audio"
+    "audioBufferLabel": "Longueur du tampon audio",
+    "btMicLabel": "Microphone BT"
   },
   "behavior": {
     "sectionTitle": "Paramètres avancés",

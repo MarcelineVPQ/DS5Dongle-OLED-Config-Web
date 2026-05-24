@@ -107,7 +107,8 @@
     "sectionTitle": "Haptik & Audio",
     "gainLabel": "Haptik-Verstärkung",
     "speakerVolumeLabel": "Lautsprecherlautstärke (dB)",
-    "audioBufferLabel": "Audio-Pufferlänge"
+    "audioBufferLabel": "Audio-Pufferlänge",
+    "btMicLabel": "BT-Mikrofon"
   },
   "behavior": {
     "sectionTitle": "Erweiterte Einstellungen",

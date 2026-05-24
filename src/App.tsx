@@ -323,6 +323,11 @@ export default function App() {
               issue={fieldIssue(bridge.issues, "audioBufferLength")}
               onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
             />
+            <ToggleControl
+              label={t("haptics.btMicLabel")}
+              value={bridge.draft.btMicEnable}
+              onChange={(value) => bridge.setDraftField("btMicEnable", value)}
+            />
           </div>
         </section>
 
@@ -415,6 +420,11 @@ export default function App() {
             <a href="https://github.com/loteran/DS5Dongle" target="_blank" rel="noopener noreferrer" />,
           ]}
         />
+        <div className="studio-credit">
+          A <a href="https://42pixelstudios.com" target="_blank" rel="noopener noreferrer">42 Pixel Studios</a> production
+          {" — "}
+          <a href="https://42pixelstudios.com/games/neon-debris/" target="_blank" rel="noopener noreferrer">play Neon Debris ↗</a>
+        </div>
       </footer>
     </main>
   );

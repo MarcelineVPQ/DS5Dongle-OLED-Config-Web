@@ -107,7 +107,8 @@
     "sectionTitle": "Hápticos e Áudio",
     "gainLabel": "Ganho háptico",
     "speakerVolumeLabel": "Volume do alto-falante (dB)",
-    "audioBufferLabel": "Comprimento do buffer de áudio"
+    "audioBufferLabel": "Comprimento do buffer de áudio",
+    "btMicLabel": "Microfone BT"
   },
   "behavior": {
     "sectionTitle": "Configurações avançadas",

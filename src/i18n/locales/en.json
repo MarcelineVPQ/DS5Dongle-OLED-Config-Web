@@ -94,7 +94,8 @@
     "sectionTitle": "Haptics & Audio",
     "gainLabel": "Haptics gain",
     "speakerVolumeLabel": "Speaker volume (dB)",
-    "audioBufferLabel": "Audio buffer length"
+    "audioBufferLabel": "Audio buffer length",
+    "btMicLabel": "BT microphone"
   },
   "behavior": {
     "sectionTitle": "Advanced settings",

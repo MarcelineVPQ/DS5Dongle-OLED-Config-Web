@@ -107,7 +107,8 @@
     "sectionTitle": "触感和音频",
     "gainLabel": "触感增益",
     "speakerVolumeLabel": "扬声器音量 (dB)",
-    "audioBufferLabel": "音频缓冲区长度"
+    "audioBufferLabel": "音频缓冲区长度",
+    "btMicLabel": "蓝牙麦克风"
   },
   "behavior": {
     "sectionTitle": "高级设置",

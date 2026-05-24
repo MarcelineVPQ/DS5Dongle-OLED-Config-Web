@@ -107,7 +107,8 @@
     "sectionTitle": "Haptics & オーディオ",
     "gainLabel": "Haptics ゲイン",
     "speakerVolumeLabel": "スピーカー音量 (dB)",
-    "audioBufferLabel": "オーディオバッファ長"
+    "audioBufferLabel": "オーディオバッファ長",
+    "btMicLabel": "Bluetooth マイク"
   },
   "behavior": {
     "sectionTitle": "詳細設定",
