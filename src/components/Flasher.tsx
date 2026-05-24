@@ -206,10 +206,10 @@ export default function Flasher() {
     const sha256 = await sha256Hex(buffer);
     setUf2({ fileName, regions, totalBytes, sha256, source, expectedSha256 });
     setStage("idle");
-    log(`Loaded UF2: ${fileName} — ${formatBytes(totalBytes)} · sha256 ${sha256.slice(0, 16)}…`, "success");
+    log(`Loaded UF2: ${fileName} — ${formatBytes(totalBytes)} · sha256 ${sha256}`, "success");
     if (expectedSha256 && expectedSha256.toLowerCase() !== sha256.toLowerCase()) {
       log(
-        `Integrity warning: bundled SHA-256 ${expectedSha256.slice(0, 16)}… ≠ computed ${sha256.slice(0, 16)}… — UF2 was modified after CI built it.`,
+        `Integrity warning: bundled SHA-256 ${expectedSha256} ≠ computed ${sha256} — UF2 was modified after CI built it.`,
         "warning",
       );
     }
