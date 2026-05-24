@@ -96,6 +96,7 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
   const prevTriangleRef = useRef(false);
   const prevR1Ref = useRef(false);
   const prevDpadRef = useRef(8); // 8 = neutral / no direction
+  const lastScreenRef = useRef<number>(0); // for leave-screen cleanup hooks
   useEffect(() => {
     if (!client) return;
     const unsub = client.onInputReport((data, reportId) => {
@@ -280,6 +281,21 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         lastAutoCycleRef.current = now;
         nextScreen(s);
       }
+
+      // Leaving Trigger Test (screen 3) → reset preset to Off and
+      // tell the controller. Mirrors src/oled.cpp's oled_loop check.
+      // Otherwise a cycled effect stays active on the DS5 even after
+      // the user navigates away.
+      if (lastScreenRef.current === 3 && s.currentScreen !== 3) {
+        s.triggerPreset = 0;
+        if (client) {
+          client.sendTriggerPreset(0).catch((e) => {
+            // eslint-disable-next-line no-console
+            console.warn("[trigger] reset-on-leave failed", e);
+          });
+        }
+      }
+      lastScreenRef.current = s.currentScreen;
 
       // Render. Chrome (the K0/K1 arrow glyphs on the left edge) paints
       // last so it sits on top of any per-screen content and is never
