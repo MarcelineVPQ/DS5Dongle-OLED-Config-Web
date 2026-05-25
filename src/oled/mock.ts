@@ -37,8 +37,8 @@ export function mockInputReport(state: MockState): InputReport {
     gyroY: Math.round(800 * Math.cos(t * 0.3)),
     gyroZ: 0,
     accelX: Math.round(1200 * Math.sin(t * 0.4)),
-    accelY: Math.round(1200 * Math.cos(t * 0.4)),
-    accelZ: 8000,
+    accelY: 8000,                                // gravity rests on Y when flat (matches real DS5)
+    accelZ: Math.round(1200 * Math.cos(t * 0.4)),
     fingers: [
       { x: Math.round(960 + 800 * Math.sin(t * 0.6)), y: Math.round(540 + 400 * Math.cos(t * 0.6)),
         touching: finger1Touching, index: 1 },

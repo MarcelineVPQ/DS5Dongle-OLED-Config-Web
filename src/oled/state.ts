@@ -149,12 +149,17 @@ function chargeStepWeight(toLevel: number): number {
 // step is timed — mirrors kDefaultStepUs in src/oled.cpp (~15 min per 10%).
 const DEFAULT_STEP_MS = 15 * 60 * 1000;
 
+// Ceiling on a single timed step's bulk-equivalent — mirrors kMaxStepUs in
+// src/oled.cpp. Clamps anomalous/under-load samples so one slow step can't
+// balloon the projection (observed ~222m at 70% off a ~47-min step).
+const MAX_STEP_MS = 30 * 60 * 1000;
+
 // Port of sample_charge_eta() (src/oled.cpp), milliseconds instead of µs.
 // Call once per render tick; tracks 10% step transitions while charging and
 // extrapolates remaining time with the taper weighting above.
 export function sampleChargeEta(s: EmulatorState, nowMs: number): void {
   const e = s.chargeEta;
-  const RING = 3;
+  const RING = 5;
   const step = Math.min(10, s.input.batteryRaw & 0x0f);
   const charging = s.input.batteryState === 1;
 
@@ -173,7 +178,7 @@ export function sampleChargeEta(s: EmulatorState, nowMs: number): void {
     if (e.firstStepPending) {
       e.firstStepPending = false; // discard the partial plug-in step
     } else {
-      e.ring.push(dur / chargeStepWeight(step));
+      e.ring.push(Math.min(MAX_STEP_MS, dur / chargeStepWeight(step)));
       if (e.ring.length > RING) e.ring.shift();
     }
     e.curStep = step; e.stepStartMs = nowMs;
@@ -187,9 +192,13 @@ export function sampleChargeEta(s: EmulatorState, nowMs: number): void {
     // Measured rate once we have a timed step; until then the default rate,
     // flagged provisional (renders "?").
     const measured = e.ring.length > 0;
-    const bulk = measured
-      ? e.ring.reduce((a, b) => a + b, 0) / e.ring.length
-      : DEFAULT_STEP_MS;
+    // Median of the timed steps — robust to a single slow/fast outlier in a way
+    // the old mean wasn't. Mirrors the median in sample_charge_eta().
+    let bulk = DEFAULT_STEP_MS;
+    if (measured) {
+      const sorted = [...e.ring].sort((a, b) => a - b);
+      bulk = sorted[Math.floor(sorted.length / 2)];
+    }
     let remMs = 0;
     for (let L = e.curStep + 1; L <= 10; L++) remMs += bulk * chargeStepWeight(L);
     e.minutes = Math.min(999, Math.max(0, Math.round(remMs / 60000)));

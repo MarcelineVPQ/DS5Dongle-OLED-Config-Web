@@ -122,7 +122,7 @@ export function emptyInputReport(): InputReport {
     create: false, options: false, l3: false, r3: false,
     home: false, pad: false, mute: false,
     gyroX: 0, gyroY: 0, gyroZ: 0,
-    accelX: 0, accelY: 0, accelZ: 8000, // gravity baseline
+    accelX: 0, accelY: 8000, accelZ: 0, // gravity baseline (Y when flat, matches real DS5)
     fingers: [
       { x: 0, y: 0, touching: false, index: 0 },
       { x: 0, y: 0, touching: false, index: 0 },

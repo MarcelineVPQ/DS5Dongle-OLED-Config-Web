@@ -194,10 +194,13 @@ export function renderGyro(fb: Uint8Array, s: EmulatorState): void {
     px(fb, bx + i, by + bs / 2, true);
     px(fb, bx + bs / 2, by + i, true);
   }
-  // Map accelX/accelY to a dot in the box (clamp ±2g ≈ ±8000 raw)
+  // Map X (roll, left/right) and Z (pitch, fwd/back) — the two axes that read ~0
+  // when the controller lies flat (gravity rests on Y), so the dot stays centred
+  // flat and tracks as you tilt. Mirrors render_screen_gyro(). Clamp ±2g ≈ ±8000.
+  // Negated so the dot follows the tilt direction (mirrors render_screen_gyro()).
   const clamp = (v: number) => Math.max(-1, Math.min(1, v / 8000));
-  const dx = bx + Math.round((bs / 2) + clamp(s.input.accelX) * ((bs - 4) / 2));
-  const dy = by + Math.round((bs / 2) + clamp(s.input.accelY) * ((bs - 4) / 2));
+  const dx = bx + Math.round((bs / 2) - clamp(s.input.accelX) * ((bs - 4) / 2));
+  const dy = by + Math.round((bs / 2) - clamp(s.input.accelZ) * ((bs - 4) / 2));
   rectFilled(fb, dx, dy, 2, 2);
 }
 
