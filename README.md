@@ -1,5 +1,13 @@
 # DS5 Bridge Config — OLED Edition
 
+<p align="center">
+  <a href="https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/">
+    <img src="https://img.shields.io/badge/%E2%96%B6%20LAUNCH-Live%20Web%20Config-22c55e?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=0b1220" alt="Open the live web config in your browser">
+  </a>
+</p>
+
+<p align="center"><b><a href="https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/">▶ marcelinevpq.github.io/DS5Dongle-OLED-Config-Web</a></b> — no install, runs in any Chromium browser</p>
+
 Browser-based configuration tool for the [MarcelineVPQ/DS5Dongle-OLED-Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition) firmware. Reads and writes the firmware's persistent config over **WebHID** — no driver, no installer, no native app. Works on Linux / macOS / Windows in any Chromium-based browser (Chrome, Edge, Vivaldi, Brave, Opera). **Firefox is not supported** — Mozilla has declined to implement WebHID.
 
 ## What this fork adds vs upstream
