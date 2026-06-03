@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 34 bytes, little-endian, packed (matches src/config.h in the firmware).
+// 37 bytes, little-endian, packed (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
 //   offset 1   float32 haptics_gain                [1.0, 2.0]
@@ -21,12 +21,14 @@
 //   offset 32  uint8   screen_dim_timeout          minutes [0, 250], 0 = disabled    (issue #5)
 //   offset 33  uint8   screen_off_timeout          minutes [0, 250], 0 = disabled    (issue #5)
 //   offset 34  uint8   bt_mic_enable               0 = off, 1 = on (default)         (BT mic, Phase I)
+//   offset 35  uint8   screen_brightness           kBrightLevels index [0, 3]        (issue #9, v0.6.11)
+//   offset 36  uint8   controller_wakes_display    0 = OLED sleeps during play, 1 = stays awake (issues #8/#9, v0.6.11)
 //
 // NOTE: lightbar_mode / lb_fav_* are managed on the OLED device, not in this UI,
 // but MUST be decoded/encoded so a config save round-trips them unchanged — the
 // firmware copies sizeof(Config_body) bytes, so a short body would zero them.
 
-export const CONFIG_BODY_SIZE = 35;
+export const CONFIG_BODY_SIZE = 37;
 // Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
 // fields). We still accept that and default the missing tail, so the updated
 // UI can read older firmware without erroring.
@@ -62,6 +64,11 @@ export interface ConfigBody {
   screenDimTimeout: number; // [0, 250]
   screenOffTimeout: number; // [0, 250]
   btMicEnable: boolean;     // DualSense mic over Bluetooth (default on)
+  // OLED-managed, round-tripped here (not edited in this UI), like the lightbar
+  // fields. Decoding/encoding them keeps the remap block aligned and stops a
+  // config save from zeroing them. Issues #8 / #9 (v0.6.11).
+  screenBrightness: number;       // kBrightLevels index [0, 3]
+  controllerWakesDisplay: boolean; // false = OLED sleeps during play
 }
 
 export interface ConfigValidationIssue {
@@ -90,6 +97,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
   screenDimTimeout: 2,    // minutes (firmware default)
   screenOffTimeout: 15,   // minutes (firmware default)
   btMicEnable: true,      // mic over BT on by default (firmware default)
+  screenBrightness: 0,    // full brightness (firmware default)
+  controllerWakesDisplay: true, // controller activity wakes OLED (firmware default)
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -179,6 +188,8 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(32, config.screenDimTimeout & 0xff);
   view.setUint8(33, config.screenOffTimeout & 0xff);
   view.setUint8(34, config.btMicEnable ? 1 : 0);
+  view.setUint8(35, config.screenBrightness & 0xff);
+  view.setUint8(36, config.controllerWakesDisplay ? 1 : 0);
   return bytes;
 }
 
@@ -247,6 +258,8 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     screenDimTimeout:          clampInteger(config.screenDimTimeout, 0, 250),
     screenOffTimeout:          clampInteger(config.screenOffTimeout, 0, 250),
     btMicEnable:               Boolean(config.btMicEnable),
+    screenBrightness:          clampInteger(config.screenBrightness, 0, 3),
+    controllerWakesDisplay:    Boolean(config.controllerWakesDisplay),
   };
 }
 
@@ -272,7 +285,9 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     arraysEqual(left.lbFavB, right.lbFavB) &&
     left.screenDimTimeout === right.screenDimTimeout &&
     left.screenOffTimeout === right.screenOffTimeout &&
-    left.btMicEnable === right.btMicEnable
+    left.btMicEnable === right.btMicEnable &&
+    left.screenBrightness === right.screenBrightness &&
+    left.controllerWakesDisplay === right.controllerWakesDisplay
   );
 }
 
@@ -316,6 +331,8 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     screenDimTimeout:          u8(32, DEFAULT_CONFIG.screenDimTimeout),
     screenOffTimeout:          u8(33, DEFAULT_CONFIG.screenOffTimeout),
     btMicEnable:               u8(34, DEFAULT_CONFIG.btMicEnable ? 1 : 0) === 1,
+    screenBrightness:          u8(35, DEFAULT_CONFIG.screenBrightness),
+    controllerWakesDisplay:    u8(36, DEFAULT_CONFIG.controllerWakesDisplay ? 1 : 0) === 1,
   };
 }
 
