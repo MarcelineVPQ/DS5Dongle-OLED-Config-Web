@@ -147,6 +147,13 @@ export default function App() {
         </div>
       )}
 
+      {(tab === "config" || tab === "remap") && (
+        <div className="notice warning">
+          <AlertCircle size={18} />
+          <span>{t("notice.firmwareDisabled")}</span>
+        </div>
+      )}
+
       <section className="device-strip">
         <div className="device-main">
           <div className="device-icon"><Usb size={22} /></div>

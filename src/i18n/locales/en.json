@@ -23,7 +23,8 @@
   },
   "notice": {
     "dismiss": "Dismiss",
-    "webhidUnavailable": "WebHID is available in Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) on secure origins. Firefox is not supported by Mozilla."
+    "webhidUnavailable": "WebHID is available in Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) on secure origins. Firefox is not supported by Mozilla.",
+    "firmwareDisabled": "Heads up: the Config and Remap tabs are currently disabled for firmware v0.6.12 and newer. That firmware makes the dongle byte-identical to a real DualSense so games fire native adaptive triggers, which meant removing the HID config reports this browser tool relies on. Configure from the dongle's on-screen OLED menu instead. A browser-based fix is being explored — firmware v0.6.11 and earlier still work here."
   },
   "device": {
     "label": "Device",
