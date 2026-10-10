@@ -30,6 +30,6 @@ export default tseslint.config(
   },
   {
     files: ["electron/**/*.ts", "*.config.{ts,js}", "tools/**/*.{js,mjs}"],
-    languageOptions: { globals: { process: "readonly", console: "readonly", Buffer: "readonly" } },
+    languageOptions: { globals: { process: "readonly", console: "readonly", Buffer: "readonly", fetch: "readonly", URL: "readonly" } },
   },
 );
