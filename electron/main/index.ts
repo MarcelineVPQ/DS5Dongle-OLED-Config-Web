@@ -7,6 +7,7 @@ import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
+import { GamesService } from "./games/service";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
@@ -77,8 +78,29 @@ function start(): void {
     settings,
   );
 
+  // Games page (Linux): launcher setup for native DualSense features.
+  const games =
+    process.platform === "linux"
+      ? new GamesService({
+          userData: app.getPath("userData"),
+          fetchManifest: () => updater.fetchManifest(),
+          download: (d, path, progress) => updater.downloadAsset(d, path, progress),
+          onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
+        })
+      : null;
+  const linuxOnly = <T>(run: (g: GamesService) => T): T => {
+    if (!games) throw new Error("Game setup is only available on Linux.");
+    return run(games);
+  };
+
   registerIpc({
     isTrusted,
+    gamesScan: () => linuxOnly((g) => g.scan()),
+    gamesApply: (ids) => linuxOnly((g) => g.apply(ids)),
+    gamesUndo: (id) => linuxOnly((g) => g.undo(id)),
+    gamesBackups: () => linuxOnly((g) => g.listBackups()),
+    closeLauncher: (l) => linuxOnly((g) => g.close(l)),
+    installProton: () => linuxOnly((g) => g.installLatestProton()),
     onStatus: (status) => tray?.update(status),
     onTrayIcon: (png) => tray?.setCustomIcon(png),
     getSettings: () => settings,

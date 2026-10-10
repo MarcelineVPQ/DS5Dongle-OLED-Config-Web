@@ -4,7 +4,7 @@
 // here: the page uses WebUSB, which the main process limits to the dongle and
 // the RP2350 boot device.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import { IPC, type DesktopApi, type TrayCommand, type UpdateState } from "../../src/desktop/api";
+import { IPC, type DesktopApi, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
 import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
@@ -38,6 +38,17 @@ const api: DesktopApi = {
     const handler = (_event: IpcRendererEvent, palette: DesktopPalette | null) => listener(palette);
     ipcRenderer.on(IPC.desktopPalette, handler);
     return () => ipcRenderer.removeListener(IPC.desktopPalette, handler);
+  },
+  gamesScan: () => ipcRenderer.invoke(IPC.gamesScan),
+  gamesApply: (fixIds) => ipcRenderer.invoke(IPC.gamesApply, fixIds),
+  gamesUndo: (backupId) => ipcRenderer.invoke(IPC.gamesUndo, backupId),
+  gamesBackups: () => ipcRenderer.invoke(IPC.gamesBackups),
+  closeLauncher: (launcher) => ipcRenderer.invoke(IPC.closeLauncher, launcher),
+  installProton: () => ipcRenderer.invoke(IPC.installProton),
+  onProtonProgress: (listener) => {
+    const handler = (_event: IpcRendererEvent, progress: ProtonProgress) => listener(progress);
+    ipcRenderer.on(IPC.protonProgress, handler);
+    return () => ipcRenderer.removeListener(IPC.protonProgress, handler);
   },
 };
 

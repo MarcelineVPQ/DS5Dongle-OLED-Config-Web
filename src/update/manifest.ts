@@ -30,6 +30,14 @@ export const Manifest = z.object({
       uf2: Download,
     })
     .optional(),
+  // Our GE-Proton DualSense build, installed by the Games page (Linux).
+  proton: z
+    .object({
+      name: z.string().regex(/^GE-Proton[\w.-]+$/, "proton name must be a plain GE-Proton folder name"),
+      notes_url: z.string().url().optional(),
+      tarball: Download,
+    })
+    .optional(),
 });
 export type Manifest = z.infer<typeof Manifest>;
 

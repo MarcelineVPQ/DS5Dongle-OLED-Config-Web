@@ -1,3 +1,4 @@
+import type { ApplyResult, GamesReport, LauncherId } from "./games/types";
 import type { DesktopPalette } from "./theme/desktopPalette";
 
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
@@ -43,6 +44,17 @@ export interface LatestFirmware {
   notesUrl?: string;
 }
 
+export interface GameBackup {
+  id: string;
+  created: string;
+  description: string;
+  files: string[];
+}
+
+export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
+export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
+export type CloseLauncherResult = "closed" | "not-running" | "game-running" | "timeout";
+
 export interface DesktopApi {
   platform: string;
   reportStatus(status: DeviceStatus): void;
@@ -69,6 +81,14 @@ export interface DesktopApi {
   firmwareChangelog(): Promise<string>;
   onDesktopPalette(listener: (palette: DesktopPalette | null) => void): () => void;
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
+  // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
+  gamesScan(): Promise<GamesReport>;
+  gamesApply(fixIds: string[]): Promise<ApplyResult>;
+  gamesUndo(backupId: string): Promise<{ restored: string[]; blockedBy: LauncherId[] }>;
+  gamesBackups(): Promise<GameBackup[]>;
+  closeLauncher(launcher: LauncherId): Promise<CloseLauncherResult>;
+  installProton(): Promise<ProtonInstallResult>;
+  onProtonProgress(listener: (progress: ProtonProgress) => void): () => void;
 }
 
 export const IPC = {
@@ -90,6 +110,13 @@ export const IPC = {
   firmwareChangelog: "desktop:firmware-changelog",
   desktopPalette: "desktop:desktop-palette",
   setupUsbAccess: "desktop:setup-usb-access",
+  gamesScan: "desktop:games-scan",
+  gamesApply: "desktop:games-apply",
+  gamesUndo: "desktop:games-undo",
+  gamesBackups: "desktop:games-backups",
+  closeLauncher: "desktop:close-launcher",
+  installProton: "desktop:install-proton",
+  protonProgress: "desktop:proton-progress",
 } as const;
 
 declare global {

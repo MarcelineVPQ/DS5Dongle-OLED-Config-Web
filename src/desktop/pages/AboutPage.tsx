@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
+import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
 import readme from "../../../README.md?raw";
 import Markdown from "../Markdown";
+import diceIcon from "../assets/42ps-dice.png";
 
 export type AboutTab = "changes" | "firmware" | "guide" | "credits";
 
 const CREDITS = `
-### DS5 Dongle OLED Edition Configurator
-
-MIT License. Source: [github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web)
+### Built on
 
 Firmware: [DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition), a fork of [awalol/DS5Dongle](https://github.com/awalol/DS5Dongle) (MIT). The original web config tool is [awalol/ds5dongle-config-web](https://github.com/awalol/ds5dongle-config-web).
 
@@ -17,7 +17,7 @@ Thanks to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes
 
 ### Third-party assets and code
 
-| | |
+| What | Credit |
 |---|---|
 | Controller art and button glyphs | "PS5 Button Icons and Controls" by Zacksly, CC BY 3.0, modified. [zacksly.itch.io](https://zacksly.itch.io) |
 | PICOBOOT flasher | picoflash by Piers Finlayson, MIT |
@@ -27,6 +27,39 @@ Thanks to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes
 
 DualSense and PlayStation are trademarks of Sony Interactive Entertainment. This project is not affiliated with Sony.
 `;
+
+const STUDIO_LINKS = [
+  { href: "https://42pixelstudios.com/", icon: Globe, label: "42pixelstudios.com" },
+  { href: "https://github.com/MarcelineVPQ", icon: Github, label: "github.com/MarcelineVPQ" },
+  { href: "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web", icon: Code, labelKey: "desktop.about.source", fallback: "Source code (MIT)" },
+  { href: "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues", icon: Bug, labelKey: "desktop.about.issues", fallback: "Report an issue" },
+] as const;
+
+function StudioCard() {
+  const { t } = useTranslation();
+  return (
+    <section className="dk-card dk-studio">
+      <img className="dk-studio-logo" src={diceIcon} alt="" width={112} height={82} />
+      <div className="dk-studio-text">
+        <span className="dk-studio-eyebrow">{t("desktop.about.production", "A 42 Pixel Studios production")}</span>
+        <h2 className="dk-studio-title">DS5 Dongle OLED Edition Configurator</h2>
+        <p className="dk-studio-by">
+          {t("desktop.about.developedBy", "Developed by")} <strong>Marcy Kuhn</strong>
+          {window.desktop && <span className="dk-studio-version"> · v{window.desktop.appVersion}</span>}
+        </p>
+        <div className="dk-studio-links">
+          {STUDIO_LINKS.map((l) => (
+            <a key={l.href} className="dk-btn" href={l.href} target="_blank" rel="noreferrer noopener">
+              <l.icon size={14} aria-hidden="true" />
+              {"label" in l ? l.label : t(l.labelKey, l.fallback)}
+            </a>
+          ))}
+        </div>
+        <small className="dk-studio-copy">© {new Date().getFullYear()} 42 Pixel Studios — a Marcy Kuhn production.</small>
+      </div>
+    </section>
+  );
+}
 
 export default function AboutPage({ initialTab = "changes" }: { initialTab?: AboutTab }) {
   const { t } = useTranslation();
@@ -58,6 +91,7 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
           </button>
         ))}
       </div>
+      {tab === "credits" && <StudioCard />}
       <section className="dk-card">
         {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: window.desktop.appVersion, defaultValue: "You're running version {{version}}." })}</p>}
         {tab === "changes" && <Markdown text={changelog} />}

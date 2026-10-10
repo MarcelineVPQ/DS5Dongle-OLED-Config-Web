@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Build latest.json (ADR-0003) from what is ALREADY published:
 //   - the latest release of this repo (the app: AppImage, portable exe, mac zip)
-//   - the latest release of the firmware repo (the Pico 2 W UF2)
+//   - the newest firmware release of the firmware repo (the Pico 2 W UF2)
+//   - the newest Proton release of the firmware repo (proton-* tag: the
+//     GE-Proton DualSense build the Games page installs)
 // Every asset is downloaded and measured (size + SHA-256) here, so the
 // manifest can never point at a file that doesn't exist or doesn't match.
 //
@@ -27,6 +29,28 @@ async function latestRelease(repo) {
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`${repo}: GitHub API returned ${r.status}`);
   return r.json();
+}
+
+// Newest non-draft release whose tag matches. The firmware repo also carries
+// proton-* releases, so "latest" alone could be the wrong kind of release.
+async function newestRelease(repo, tagPattern) {
+  const r = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, { headers });
+  if (!r.ok) throw new Error(`${repo}: GitHub API returned ${r.status}`);
+  return (await r.json()).find((rel) => !rel.draft && !rel.prerelease && tagPattern.test(rel.tag_name)) ?? null;
+}
+
+// Streamed hash for large assets (the Proton build is ~565 MB).
+async function measureStream(asset) {
+  const r = await fetch(asset.browser_download_url, { redirect: "follow" });
+  if (!r.ok || !r.body) throw new Error(`${asset.name}: download returned ${r.status}`);
+  const hash = createHash("sha256");
+  let size = 0;
+  for await (const chunk of r.body) {
+    size += chunk.byteLength;
+    hash.update(chunk);
+  }
+  if (size !== asset.size) throw new Error(`${asset.name}: size ${size} != ${asset.size}`);
+  return { url: asset.browser_download_url, size, sha256: hash.digest("hex") };
 }
 
 async function measure(asset) {
@@ -56,10 +80,27 @@ if (app) {
   manifest.app = { version, notes_url: app.html_url, platforms };
 }
 
-const fw = await latestRelease(FIRMWARE_REPO);
+const fw = await newestRelease(FIRMWARE_REPO, /^v\d+\.\d+\.\d+-oled-edition$/);
 // Pico 2 W build only (not the Pico W / debug variants).
 const uf2 = fw ? pick(fw, new RegExp(`^ds5-bridge-oled-${fw.tag_name.replace(/[.]/g, "\\.")}\\.uf2$`)) : null;
 if (fw && uf2) manifest.firmware = { version: fw.tag_name, notes_url: fw.html_url, uf2: await measure(uf2) };
+
+const proton = await newestRelease(FIRMWARE_REPO, /^proton-/);
+const protonTar = pick(proton, /^GE-Proton[\w.-]+\.tar\.gz$/);
+if (proton && protonTar) {
+  const measured = await measureStream(protonTar);
+  // Cross-check with the SHA256SUMS.txt published next to it.
+  const sums = pick(proton, /^SHA256SUMS\.txt$/);
+  if (sums) {
+    const text = await (await fetch(sums.browser_download_url, { redirect: "follow" })).text();
+    const listed = text
+      .split("\n")
+      .find((l) => l.trim().endsWith(protonTar.name))
+      ?.split(/\s+/)[0];
+    if (listed && listed !== measured.sha256) throw new Error(`${protonTar.name}: SHA256SUMS.txt says ${listed}, download hashes to ${measured.sha256}`);
+  }
+  manifest.proton = { name: protonTar.name.replace(/\.tar\.gz$/, ""), notes_url: proton.html_url, tarball: measured };
+}
 
 if (!manifest.app) {
   console.error(`No app release in ${APP_REPO} yet; not writing a manifest (the app requires an app block).`);
@@ -73,4 +114,6 @@ if (checkOnly) {
   process.exit(text === current ? 0 : 1);
 }
 writeFileSync(out, text);
-console.log(`Wrote ${out}: app ${manifest.app.version} (${Object.keys(manifest.app.platforms).join(", ")}), firmware ${manifest.firmware?.version ?? "none"}`);
+console.log(
+  `Wrote ${out}: app ${manifest.app.version} (${Object.keys(manifest.app.platforms).join(", ")}), firmware ${manifest.firmware?.version ?? "none"}, proton ${manifest.proton?.name ?? "none"}`,
+);

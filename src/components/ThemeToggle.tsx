@@ -1,7 +1,8 @@
 // Light / system / dark theme toggle, plus "match desktop" in the desktop app
 // (the desktop's own colors: KDE's color scheme, or the system accent).
-// Persists the user's choice in localStorage; falls back to "system"
-// (which means: follow prefers-color-scheme).
+// Persists the user's choice in localStorage. With no stored choice the desktop
+// app matches the desktop's colors (falling back to "system" when the desktop
+// exposes none) and the web tool uses "system" (follow prefers-color-scheme).
 
 import { useCallback, useEffect, useState } from "react";
 import { Monitor, Moon, Palette, Sun } from "lucide-react";
@@ -19,7 +20,7 @@ function readStoredTheme(): Theme {
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "light" || stored === "dark" || stored === "system") return stored;
   if (stored === "desktop" && isDesktop()) return stored;
-  return "system";
+  return isDesktop() ? "desktop" : "system";
 }
 
 function clearDesktopPalette(): void {

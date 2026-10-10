@@ -8,12 +8,13 @@
 // matching checksum, nothing downgrades, and every failure is reported to the
 // user verbatim.
 import { createHash } from "node:crypto";
-import { createWriteStream, readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
+import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
 import { Manifest, isAllowedDownloadUrl, isNewer, type Download } from "../../src/update/manifest";
 import type { UpdateState } from "../../src/desktop/api";
+import { downloadVerified } from "./download";
 
 const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/master/latest.json";
 const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
@@ -122,6 +123,12 @@ export class Updater {
     }
   }
 
+  // Download a manifest asset other than the app/firmware (the Proton build).
+  async downloadAsset(download: Download, path: string, progress: (got: number, total: number) => void, signal?: AbortSignal): Promise<void> {
+    if (!downloadAllowed(download.url)) throw new Error("The download points somewhere other than GitHub; refusing.");
+    await downloadVerified(download, path, progress, signal);
+  }
+
   async fetchManifest(): Promise<Manifest> {
     const response = await net.fetch(manifestUrl(), { cache: "no-store" });
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
@@ -209,38 +216,7 @@ export class Updater {
 
   private async downloadTo(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
     if (!downloadAllowed(download.url)) throw new Error("The update points somewhere other than GitHub; refusing.");
-    rmSync(path, { force: true });
-    const response = await net.fetch(download.url);
-    if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status}).`);
-    const hash = createHash("sha256");
-    const file = createWriteStream(path);
-    let got = 0;
-    let lastReport = 0;
-    try {
-      const reader = response.body.getReader();
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        got += value.byteLength;
-        if (got > download.size) throw new Error("The download is larger than the manifest says.");
-        hash.update(value);
-        if (!file.write(value)) await new Promise<void>((r) => file.once("drain", () => r()));
-        if (Date.now() - lastReport > 150) {
-          lastReport = Date.now();
-          progress(got, download.size);
-        }
-      }
-      await new Promise<void>((resolve, reject) => file.end((err?: Error | null) => (err ? reject(err) : resolve())));
-    } catch (cause) {
-      file.destroy();
-      rmSync(path, { force: true });
-      throw cause;
-    }
-    progress(got, download.size);
-    if (got !== download.size || hash.digest("hex") !== download.sha256) {
-      rmSync(path, { force: true });
-      throw new Error("The download is corrupt (size or checksum mismatch).");
-    }
+    await downloadVerified(download, path, progress);
   }
 
   private async downloadBytes(download: Download): Promise<Uint8Array> {

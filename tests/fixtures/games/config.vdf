@@ -1,0 +1,100 @@
+"InstallConfigStore"
+{
+	"Software"
+	{
+		"Valve"
+		{
+			"Steam"
+			{
+				"CompatToolMapping"
+				{
+					"0"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"75"
+					}
+					"1091500"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"3280350"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"2215430"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"990080"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"1659420"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"5001530"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"4382310"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"4197990"
+					{
+						"name"		"proton_hotfix"
+						"config"		""
+						"priority"		"250"
+					}
+					"2402680"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"3917090"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"3904850"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"1084160"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+					"4078430"
+					{
+						"name"		"GE-Proton11-7-DualSense"
+						"config"		""
+						"priority"		"250"
+					}
+				}
+				"SDL_GamepadBind"		"keep me"
+			}
+		}
+	}
+}

@@ -1,0 +1,508 @@
+// Games (Linux): checks Steam, Heroic and Lutris for settings that stop the
+// DualSense's native features (adaptive triggers, haptics) from reaching games,
+// and fixes them with the user's consent.
+//
+// Consent flow (load-bearing, see src/desktop/games/types.ts):
+//   scan (reads only) -> pick changes (each says what, why and which files)
+//   -> review (every file listed; running launchers must be closed, on request)
+//   -> apply (backed up first) -> Undo.
+// Downloading Proton is its own confirmation with size and destination.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { GameBackup, ProtonProgress } from "../api";
+import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId } from "../games/types";
+
+const LAUNCHER_NAME: Record<LauncherId | "system", string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", system: "System" };
+const STORE_NAME: Record<GameEntry["store"], string> = { steam: "Steam", epic: "Epic", gog: "GOG", amazon: "Amazon", sideload: "Sideloaded", lutris: "Lutris" };
+
+type Step = "pick" | "review" | "done";
+
+// Changes the user unticked stay unticked across rescans and visits until
+// they tick them again (a recommendation is a suggestion, not a default).
+const DECLINED_KEY = "ds5-games-declined";
+
+export function loadDeclined(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(DECLINED_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDeclined(ids: Set<string>): void {
+  try {
+    window.localStorage.setItem(DECLINED_KEY, JSON.stringify([...ids]));
+  } catch {
+    // storage unavailable: the choice lasts for this visit only
+  }
+}
+
+function formatMB(bytes: number): string {
+  return `${Math.round(bytes / 1e6)} MB`;
+}
+
+export default function GamesPage({ onScanned }: { onScanned?: (report: GamesReport) => void }) {
+  const { t } = useTranslation();
+  const desktop = window.desktop!;
+  const [report, setReport] = useState<GamesReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [chosen, setChosen] = useState<Set<string>>(new Set());
+  const declined = useRef<Set<string>>(loadDeclined());
+  const [step, setStep] = useState<Step>("pick");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [result, setResult] = useState<ApplyResult | null>(null);
+  const [closeNote, setCloseNote] = useState<string | null>(null);
+  const [backups, setBackups] = useState<GameBackup[]>([]);
+  const [protonConfirm, setProtonConfirm] = useState(false);
+  const [protonProgress, setProtonProgress] = useState<ProtonProgress | null>(null);
+  const [protonMessage, setProtonMessage] = useState<string | null>(null);
+
+  const receive = useCallback(
+    async (r: GamesReport, keepSelection: boolean) => {
+      setReport(r);
+      onScanned?.(r);
+      const all = allFixes(r);
+      setChosen((prev) => (keepSelection ? new Set(all.filter((f) => prev.has(f.id)).map((f) => f.id)) : new Set(all.filter((f) => f.recommended && !declined.current.has(f.id)).map((f) => f.id))));
+      setBackups(await desktop.gamesBackups());
+    },
+    [desktop, onScanned],
+  );
+
+  const rescan = useCallback(
+    async (keepSelection = false) => {
+      setScanning(true);
+      setError(null);
+      try {
+        await receive(await desktop.gamesScan(), keepSelection);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : String(cause));
+      } finally {
+        setScanning(false);
+      }
+    },
+    [desktop, receive],
+  );
+
+  // First scan on open (state is only set once the scan resolves).
+  useEffect(() => {
+    let live = true;
+    desktop.gamesScan().then(
+      (r) => live && void receive(r, false),
+      (cause: unknown) => live && setError(cause instanceof Error ? cause.message : String(cause)),
+    );
+    return () => {
+      live = false;
+    };
+  }, [desktop, receive]);
+  useEffect(() => desktop.onProtonProgress(setProtonProgress), [desktop]);
+
+  const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
+  const selected = fixes.filter((f) => chosen.has(f.id));
+  const blocking = report ? [...new Set(selected.map((f) => f.launcher))].filter((l): l is LauncherId => l !== "system" && !!report.launchers.find((x) => x.id === l && x.running)) : [];
+
+  const toggle = (id: string) =>
+    setChosen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        declined.current.add(id);
+      } else {
+        next.add(id);
+        declined.current.delete(id);
+      }
+      saveDeclined(declined.current);
+      return next;
+    });
+
+  const closeLauncher = async (launcher: LauncherId) => {
+    setBusy(`close-${launcher}`);
+    setCloseNote(null);
+    try {
+      const r = await desktop.closeLauncher(launcher);
+      if (r === "game-running") setCloseNote(t("desktop.games.closeGameRunning", "A game is still running. Quit the game first, then try again."));
+      else if (r === "timeout")
+        setCloseNote(t("desktop.games.closeTimeout", { launcher: LAUNCHER_NAME[launcher], defaultValue: "{{launcher}} didn't quit within 30 seconds. Quit it yourself, then press Rescan." }));
+      await rescan(true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const apply = async () => {
+    setBusy("apply");
+    try {
+      const r = await desktop.gamesApply(selected.map((f) => f.id));
+      if (r.blockedBy.length) {
+        await rescan(true);
+        return;
+      }
+      setResult(r);
+      setStep("done");
+      await rescan();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const undo = async (backupId: string) => {
+    setBusy(`undo-${backupId}`);
+    try {
+      const r = await desktop.gamesUndo(backupId);
+      if (r.blockedBy.length)
+        setCloseNote(
+          t("desktop.games.undoBlocked", {
+            launchers: r.blockedBy.map((l) => LAUNCHER_NAME[l]).join(", "),
+            defaultValue: "Close {{launchers}} first: it would overwrite the restored settings when it quits.",
+          }),
+        );
+      else {
+        setResult(null);
+        setStep("pick");
+      }
+      await rescan();
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const installProton = async () => {
+    setProtonConfirm(false);
+    setBusy("proton");
+    setProtonMessage(null);
+    try {
+      const r = await desktop.installProton();
+      setProtonMessage(r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.message);
+      await rescan();
+    } finally {
+      setProtonProgress(null);
+      setBusy(null);
+    }
+  };
+
+  if (!report) {
+    return (
+      <div className="dk-stack">
+        <section className="dk-card">{error ? <p className="dk-bad">{error}</p> : <p className="dk-hint">{t("desktop.games.scanning", "Checking Steam, Heroic and Lutris…")}</p>}</section>
+      </div>
+    );
+  }
+
+  const found = report.launchers.filter((l) => l.found);
+  const ours = report.ourProton.name;
+
+  return (
+    <div className="dk-stack">
+      <section className="dk-card">
+        <h2>{t("desktop.games.title", "Game setup")}</h2>
+        <p className="dk-hint">
+          {t(
+            "desktop.games.intro",
+            "Checks your launchers for settings that stop adaptive triggers and haptics from reaching games. Checking only reads your settings. Nothing changes until you review the changes and press Apply, and every change can be undone.",
+          )}
+        </p>
+        <div className="dk-games-launchers">
+          {found.length === 0 && <span className="dk-hint">{t("desktop.games.noLaunchers", "No Steam, Heroic or Lutris installation found.")}</span>}
+          {found.map((l) => (
+            <span key={`${l.id}${l.flatpak}`} className={`dk-chip${l.defaultIsOurs ? " ok" : ""}`} title={l.defaultRunner ?? ""}>
+              <span className="dot" />
+              {LAUNCHER_NAME[l.id]}
+              {l.flatpak ? " (Flatpak)" : ""} · {l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}
+              {l.defaultIsOurs ? ` · ${t("desktop.games.ourDefault", "our Proton is the default")}` : ""}
+            </span>
+          ))}
+          <span className="dk-spacer" />
+          <button type="button" className="dk-btn" onClick={() => void rescan(step !== "pick")} disabled={scanning || busy !== null}>
+            {scanning ? t("desktop.games.scanningShort", "Checking…") : t("desktop.games.rescan", "Rescan")}
+          </button>
+        </div>
+      </section>
+
+      <section className="dk-card">
+        <h2>{t("desktop.games.protonTitle", "DualSense Proton build")}</h2>
+        {ours ? (
+          <p>
+            <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
+          </p>
+        ) : (
+          <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptics through the dongle.")}</p>
+        )}
+        {report.ourProton.updateAvailable && report.ourProton.latest && !protonConfirm && busy !== "proton" && (
+          <button type="button" className="dk-btn primary" onClick={() => setProtonConfirm(true)}>
+            {ours
+              ? t("desktop.games.protonUpdate", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })
+              : t("desktop.games.protonInstall", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })}
+          </button>
+        )}
+        {protonConfirm && (
+          <div className="dk-confirm">
+            <p>
+              {t("desktop.games.protonConfirm", {
+                name: report.ourProton.latest,
+                defaultValue:
+                  "This downloads {{name}} (about 565 MB) from the project's GitHub release, checks its SHA-256 checksum, and unpacks it into Steam's compatibilitytools.d folder (and Heroic's Proton folder). Existing Proton versions are not changed or removed. Afterwards you choose which launchers and games use it.",
+              })}
+            </p>
+            <div className="dk-row-btns">
+              <button type="button" className="dk-btn primary" onClick={() => void installProton()}>
+                {t("desktop.games.protonGo", "Download and install")}
+              </button>
+              <button type="button" className="dk-btn" onClick={() => setProtonConfirm(false)}>
+                {t("desktop.games.cancel", "Cancel")}
+              </button>
+            </div>
+          </div>
+        )}
+        {busy === "proton" && <ProtonProgressView progress={protonProgress} />}
+        {protonMessage && <p className="dk-hint">{protonMessage}</p>}
+      </section>
+
+      <SystemCard report={report} />
+
+      {closeNote && <div className="dk-notice">{closeNote}</div>}
+      {error && <div className="dk-notice error">{error}</div>}
+
+      {step === "pick" && (
+        <section className="dk-card">
+          <h2>{t("desktop.games.changesTitle", "Recommended changes")}</h2>
+          {fixes.length === 0 ? (
+            <p className="dk-good">{t("desktop.games.allGood", "Everything is set up. Nothing to change.")}</p>
+          ) : (
+            <>
+              <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
+              <FixList fixes={fixes} chosen={chosen} onToggle={toggle} />
+              <div className="dk-row-btns">
+                <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={() => setStep("review")}>
+                  {t("desktop.games.review", { count: selected.length, defaultValue: "Review {{count}} changes" })}
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      {step === "review" && (
+        <section className="dk-card">
+          <h2>{t("desktop.games.reviewTitle", "Review before applying")}</h2>
+          <p className="dk-hint">{t("desktop.games.reviewHint", "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.")}</p>
+          <ul className="dk-review">
+            {selected.map((f) => (
+              <li key={f.id}>
+                <strong>{f.label}</strong>
+                {f.files.map((file) => (
+                  <div key={file} className="dk-mono dk-file">
+                    {file}
+                  </div>
+                ))}
+                {f.files.length === 0 && <div className="dk-hint">{t("desktop.games.noFiles", "No files change.")}</div>}
+              </li>
+            ))}
+          </ul>
+          {blocking.map((l) => (
+            <div key={l} className="dk-notice">
+              <span>
+                {t("desktop.games.mustClose", {
+                  launcher: LAUNCHER_NAME[l],
+                  defaultValue: "{{launcher}} is running. It rewrites these settings when it quits, which would undo the changes, so it has to be closed first.",
+                })}
+              </span>
+              <span className="dk-spacer" />
+              <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => void closeLauncher(l)}>
+                {busy === `close-${l}` ? t("desktop.games.closing", "Closing…") : t("desktop.games.closeLauncher", { launcher: LAUNCHER_NAME[l], defaultValue: "Close {{launcher}}" })}
+              </button>
+            </div>
+          ))}
+          <div className="dk-row-btns">
+            <button type="button" className="dk-btn primary" disabled={blocking.length > 0 || busy !== null || selected.length === 0} onClick={() => void apply()}>
+              {busy === "apply" ? t("desktop.games.applying", "Applying…") : t("desktop.games.apply", { count: selected.length, defaultValue: "Apply {{count}} changes" })}
+            </button>
+            <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>
+              {t("desktop.games.back", "Back")}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === "done" && result && (
+        <section className="dk-card">
+          <h2>{t("desktop.games.doneTitle", "Done")}</h2>
+          <ul className="dk-review">
+            {result.applied.map((a) => (
+              <li key={a.id} className={a.ok ? "" : "dk-bad"}>
+                {a.ok ? "✓ " : "✗ "}
+                {fixLabel(a.id, selected, fixes) ?? a.id}
+                {a.message && <div className="dk-hint">{a.message}</div>}
+              </li>
+            ))}
+          </ul>
+          <p className="dk-hint">{t("desktop.games.doneHint", "Start the launcher again; it picks up the new settings when it starts.")}</p>
+          <div className="dk-row-btns">
+            {result.backupId && (
+              <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => void undo(result.backupId!)}>
+                {t("desktop.games.undo", "Undo these changes")}
+              </button>
+            )}
+            <button type="button" className="dk-btn" onClick={() => setStep("pick")}>
+              {t("desktop.games.ok", "OK")}
+            </button>
+          </div>
+        </section>
+      )}
+
+      <details className="dk-card dk-advanced">
+        <summary>{t("desktop.games.allGames", { count: report.games.length, defaultValue: "All games ({{count}})" })}</summary>
+        <GameTable games={report.games} />
+      </details>
+
+      {backups.length > 0 && (
+        <details className="dk-card dk-advanced">
+          <summary>{t("desktop.games.history", "Change history")}</summary>
+          <ul className="dk-review">
+            {backups.map((b) => (
+              <li key={b.id}>
+                <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.description}
+                <button type="button" className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => void undo(b.id)}>
+                  {t("desktop.games.undoShort", "Undo")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+export function allFixes(r: GamesReport): Fix[] {
+  return [...r.launchers.flatMap((l) => l.fixes), ...r.system.fixes, ...r.games.flatMap((g) => g.fixes)];
+}
+
+function fixLabel(id: string, ...lists: Fix[][]): string | undefined {
+  for (const list of lists) {
+    const f = list.find((x) => x.id === id);
+    if (f) return f.label;
+  }
+  return undefined;
+}
+
+function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string>; onToggle: (id: string) => void }) {
+  const groups = (["system", "steam", "heroic", "lutris"] as const).map((g) => ({ g, items: fixes.filter((f) => f.launcher === g) })).filter((x) => x.items.length);
+  return (
+    <div className="dk-fixes">
+      {groups.map(({ g, items }) => (
+        <div key={g}>
+          <h3>{LAUNCHER_NAME[g]}</h3>
+          {items.map((f) => (
+            <label key={f.id} className="dk-fix">
+              <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />
+              <span>
+                <span className="dk-fix-label">{f.label}</span>
+                <span className="dk-fix-why">{f.why}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SystemCard({ report }: { report: GamesReport }) {
+  const { t } = useTranslation();
+  const s = report.system;
+  const proAudio = s.audioProfile !== null && /pro-audio/i.test(s.audioProfile);
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.games.systemTitle", "This computer")}</h2>
+      <dl className="dk-kv">
+        <dt>{t("desktop.games.audio", "Controller audio")}</dt>
+        <dd className={proAudio ? "dk-bad" : ""}>{s.audioProfile ?? t("desktop.games.noController", "controller not connected")}</dd>
+        <dt>{t("desktop.games.hidraw", "Controller access")}</dt>
+        <dd className={s.hidrawAccess === false ? "dk-bad" : ""}>
+          {s.hidrawAccess === null
+            ? t("desktop.games.noController", "controller not connected")
+            : s.hidrawAccess
+              ? t("desktop.games.hidrawOk", "games can talk to the controller directly")
+              : t("desktop.games.hidrawNo", "games can't reach the controller (missing udev rule)")}
+        </dd>
+        <dt>{t("desktop.games.env", "Environment")}</dt>
+        <dd className={s.envWarnings.length ? "dk-bad" : ""}>{s.envWarnings.length ? s.envWarnings.join("; ") : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}</dd>
+      </dl>
+      {s.envWarnings.length > 0 && (
+        <p className="dk-hint">
+          {t("desktop.games.envHint", "These variables are set outside any launcher, so this app doesn't change them. Remove them from the file named above, then log out and back in.")}
+        </p>
+      )}
+      {s.proAudioRules.some((r) => r.startsWith("/etc")) && (
+        <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>
+      )}
+    </section>
+  );
+}
+
+function GameTable({ games }: { games: GameEntry[] }) {
+  const { t } = useTranslation();
+  const support: Record<GameEntry["support"], string> = {
+    triggers: t("desktop.games.supTriggers", "Triggers + haptics"),
+    haptics: t("desktop.games.supHaptics", "Haptics"),
+    xinput: t("desktop.games.supXinput", "Xbox-style only"),
+    unknown: "",
+  };
+  const sorted = [...games].sort((a, b) => Number(b.support !== "unknown") - Number(a.support !== "unknown") || a.title.localeCompare(b.title));
+  return (
+    <table className="dk-table dk-games-table">
+      <thead>
+        <tr>
+          <th>{t("desktop.games.colGame", "Game")}</th>
+          <th>{t("desktop.games.colStore", "Store")}</th>
+          <th>{t("desktop.games.colRunner", "Runs with")}</th>
+          <th>{t("desktop.games.colDs", "DualSense")}</th>
+          <th>{t("desktop.games.colStatus", "Status")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((g) => (
+          <tr key={g.key}>
+            <td>{g.title}</td>
+            <td>{STORE_NAME[g.store]}</td>
+            <td className={g.runnerMissing ? "dk-bad" : "dk-mono"}>{g.runnerMissing ? t("desktop.games.missing", { name: g.runner, defaultValue: "{{name}} (missing)" }) : (g.runner ?? "—")}</td>
+            <td>{support[g.support]}</td>
+            <td>
+              {g.fixes.length ? (
+                <span className="dk-bad">{t("desktop.games.needsAttention", "needs attention")}</span>
+              ) : g.support === "triggers" || g.support === "haptics" ? (
+                <span className="dk-good">✓</span>
+              ) : (
+                ""
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function ProtonProgressView({ progress }: { progress: ProtonProgress | null }) {
+  const { t } = useTranslation();
+  if (!progress || progress.phase === "downloading") {
+    const got = progress?.got ?? 0;
+    const total = progress?.total ?? 1;
+    return (
+      <div className="dk-progress-wrap">
+        <progress className="dk-progress" max={total} value={got} />
+        <span className="dk-hint">{t("desktop.games.downloading", { got: formatMB(got), total: formatMB(total), defaultValue: "Downloading {{got}} of {{total}}" })}</span>
+      </div>
+    );
+  }
+  const label =
+    progress.phase === "verifying"
+      ? t("desktop.games.verifying", "Checking the archive…")
+      : progress.phase === "unpacking"
+        ? t("desktop.games.unpacking", "Unpacking…")
+        : t("desktop.games.copying", "Copying for the Flatpak launcher…");
+  return <p className="dk-hint">{label}</p>;
+}

@@ -1,11 +1,13 @@
-import { Gamepad2, Info, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Gamepad2, Info, Joystick, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/LanguageToggle";
 import ThemeToggle from "../components/ThemeToggle";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
+import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
+import type { GamesReport } from "./games/types";
 import ButtonsPage from "./pages/ButtonsPage";
 import ControllerPage from "./pages/ControllerPage";
 import DonglePage from "./pages/DonglePage";
@@ -16,12 +18,13 @@ import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdat
 import { usePoll } from "./usePoll";
 import "./desktop.css";
 
-type PageId = "controller" | "audio" | "buttons" | "dongle" | "about";
+type PageId = "controller" | "audio" | "buttons" | "dongle" | "games" | "about";
 
 interface PageDef {
   id: PageId;
   label: string;
   icon: LucideIcon;
+  badge?: number;
   render: (bridge: UseDs5BridgeResult, fw: FirmwareUpdate) => JSX.Element;
 }
 
@@ -37,11 +40,13 @@ export default function DesktopApp() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
+  const games = useGamesAttention();
   const pages: PageDef[] = [
     { id: "controller", label: t("desktop.nav.controller", "Controller"), icon: Gamepad2, render: (b) => <ControllerPage bridge={b} /> },
     { id: "audio", label: t("desktop.nav.audio", "Audio & haptics"), icon: Volume2, render: (b) => <SettingsCards bridge={b} group="audio" /> },
     { id: "buttons", label: t("desktop.nav.buttons", "Buttons"), icon: ToggleLeft, render: (b) => <ButtonsPage bridge={b} /> },
     { id: "dongle", label: t("desktop.nav.dongle", "Dongle"), icon: Settings2, render: (b, f) => <DonglePage bridge={b} fw={f} advancedOpen={advancedOpen} /> },
+    ...(games.supported ? [{ id: "games" as const, label: t("desktop.nav.games", "Games"), icon: Joystick, badge: games.count, render: () => <GamesPage onScanned={games.update} /> }] : []),
     { id: "about", label: t("desktop.nav.about", "About"), icon: Info, render: () => <AboutPage key={aboutTab} initialTab={aboutTab} /> },
   ];
 
@@ -121,6 +126,11 @@ export default function DesktopApp() {
           <button type="button" key={p.id} className={`dk-nav-item${p.id === page ? " active" : ""}`} aria-current={p.id === page ? "page" : undefined} onClick={() => setPage(p.id)}>
             <p.icon size={15} />
             {p.label}
+            {p.badge ? (
+              <span className="dk-badge" title={t("desktop.games.attention", { count: p.badge, defaultValue: "{{count}} recommended changes" })}>
+                {p.badge}
+              </span>
+            ) : null}
           </button>
         ))}
         <div className="dk-side-foot">
@@ -239,4 +249,17 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
     setVersion(null);
   };
   return { version, dismiss };
+}
+
+// Linux: one read-only scan at startup so the sidebar can show how many
+// recommended game-setup changes are waiting; the Games page refreshes it.
+function useGamesAttention() {
+  const supported = window.desktop?.platform === "linux";
+  const [count, setCount] = useState(0);
+  const update = useCallback((report: GamesReport) => setCount(allFixes(report).filter((f) => f.recommended && !loadDeclined().has(f.id)).length), []);
+  useEffect(() => {
+    if (!supported) return;
+    window.desktop!.gamesScan().then(update, () => undefined);
+  }, [supported, update]);
+  return { supported, count, update };
 }

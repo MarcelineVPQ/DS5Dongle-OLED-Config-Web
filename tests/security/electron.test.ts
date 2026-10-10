@@ -30,6 +30,7 @@ describe("external URL allowlist", () => {
   it("allows https GitHub and the project site", () => {
     expect(isAllowedExternalUrl("https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition")).toBe(true);
     expect(isAllowedExternalUrl("https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/")).toBe(true);
+    expect(isAllowedExternalUrl("https://42pixelstudios.com/")).toBe(true);
   });
 
   it("refuses other schemes, hosts, look-alikes and embedded credentials", () => {

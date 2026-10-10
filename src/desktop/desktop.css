@@ -748,3 +748,176 @@ html[data-theme="dark"] .dk {
   color: var(--text-muted);
   font-size: var(--dk-small);
 }
+
+/* About -> Credits: studio card. Brand colors (42 Pixel Studios guide: neon
+   magenta #FC51FD, neon cyan #40F8F0) only as accents, so text keeps the
+   theme's contrast in light and dark. */
+.dk-studio {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 16px;
+}
+.dk-studio::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #fc51fd, #40f8f0);
+}
+.dk-studio-logo {
+  flex: none;
+  width: 112px;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(252, 81, 253, 0.35));
+}
+.dk-studio-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.dk-studio-eyebrow {
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #c23ac4, #1aa9a2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dk-studio .dk-studio-title {
+  margin: 0;
+  font-size: 1.35em;
+  text-transform: none;
+  letter-spacing: 0;
+  color: inherit;
+}
+.dk-studio-by {
+  margin: 0;
+}
+.dk-studio-version {
+  color: var(--text-muted);
+}
+.dk-studio-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.dk-studio-links .dk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.dk-studio-copy {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+@media (max-width: 560px) {
+  .dk-studio {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---- Games page ---- */
+.dk-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--dk-accent);
+  color: var(--dk-on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.dk-games-launchers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.dk-games-launchers .dk-spacer {
+  flex: 1;
+}
+.dk-row-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dk-confirm {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+}
+.dk-confirm p {
+  margin: 0;
+}
+.dk-fixes h3 {
+  margin: 10px 0 4px;
+  font-size: var(--dk-small);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.dk-fix {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+.dk-fix input {
+  margin-top: 3px;
+  accent-color: var(--dk-accent);
+}
+.dk-fix-label {
+  display: block;
+  font-weight: 600;
+}
+.dk-fix-why {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.dk-review {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+.dk-review li {
+  margin: 4px 0;
+}
+.dk-file {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.dk-inline-btn {
+  margin-left: 8px;
+  height: 22px;
+}
+.dk-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.dk-progress {
+  flex: 1;
+  height: 8px;
+  accent-color: var(--dk-accent);
+}
+.dk-games-table td {
+  font-size: var(--dk-small);
+}

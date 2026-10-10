@@ -2,7 +2,9 @@
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import { z } from "zod";
-import { IPC, type DesktopSettings, type DeviceStatus, type LatestFirmware, type UpdateState } from "../../src/desktop/api";
+import { IPC, type CloseLauncherResult, type DesktopSettings, type DeviceStatus, type GameBackup, type LatestFirmware, type ProtonInstallResult, type UpdateState } from "../../src/desktop/api";
+import type { ApplyResult, GamesReport, LauncherId } from "../../src/desktop/games/types";
+import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 
 export const DeviceStatusSchema = z.strictObject({
@@ -19,6 +21,19 @@ export const TrayIconSchema = z
   .string()
   .max(256 * 1024)
   .regex(/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/);
+
+// Games page: the renderer names fixes by id only (resolved against a fresh
+// scan in the main process), never a path or a value.
+export const FixIdsSchema = z
+  .array(
+    z
+      .string()
+      .max(200)
+      .regex(/^(steam|heroic|lutris)\d+:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+)$|^system:(audio-rule:\d+|audio-profile:[\w.-]+)$/),
+  )
+  .max(500);
+export const BackupIdSchema = z.string().regex(BACKUP_ID);
+export const LauncherSchema = z.enum(["steam", "heroic", "lutris"]);
 
 export interface IpcHandlers {
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
@@ -37,6 +52,12 @@ export interface IpcHandlers {
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
   getDesktopPalette: () => Promise<unknown>;
   firmwareChangelog: () => Promise<string>;
+  gamesScan: () => Promise<GamesReport>;
+  gamesApply: (fixIds: string[]) => Promise<ApplyResult>;
+  gamesUndo: (backupId: string) => { restored: string[]; blockedBy: LauncherId[] };
+  gamesBackups: () => GameBackup[];
+  closeLauncher: (launcher: LauncherId) => Promise<CloseLauncherResult>;
+  installProton: () => Promise<ProtonInstallResult>;
 }
 
 export function registerIpc(h: IpcHandlers): void {
@@ -89,6 +110,18 @@ export function registerIpc(h: IpcHandlers): void {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.setupUsbAccess();
   });
+
+  invoke(IPC.gamesScan, h.gamesScan);
+  invoke(IPC.gamesBackups, h.gamesBackups);
+  invoke(IPC.installProton, h.installProton);
+  const invokeWith = <T>(channel: string, schema: z.ZodType<T>, run: (value: T) => unknown) =>
+    ipcMain.handle(channel, (event, raw: unknown) => {
+      if (!trusted(event)) throw new Error("untrusted sender");
+      return run(schema.parse(raw));
+    });
+  invokeWith(IPC.gamesApply, FixIdsSchema, h.gamesApply);
+  invokeWith(IPC.gamesUndo, BackupIdSchema, h.gamesUndo);
+  invokeWith(IPC.closeLauncher, LauncherSchema, h.closeLauncher);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");
