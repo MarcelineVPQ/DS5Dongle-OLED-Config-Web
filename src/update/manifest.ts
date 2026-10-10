@@ -1,0 +1,72 @@
+// The update feed: one latest.json for the app and the firmware (ADR-0003).
+// Served from raw.githubusercontent.com (no API rate limit, indifferent to
+// prerelease flags). Every download carries its full URL and SHA-256; the
+// client never builds a URL and never installs without a matching checksum.
+import { z } from "zod";
+
+const Sha256 = z.string().regex(/^[0-9a-f]{64}$/, "sha256 must be 64 lowercase hex characters");
+
+export const Download = z.object({
+  url: z.string().url(),
+  size: z.number().int().positive(),
+  sha256: Sha256,
+});
+export type Download = z.infer<typeof Download>;
+
+export const Manifest = z.object({
+  app: z.object({
+    version: z.string(),
+    notes_url: z.string().url().optional(),
+    platforms: z.object({
+      linux: Download.optional(),
+      windows: Download.optional(),
+      macos: Download.optional(),
+    }),
+  }),
+  firmware: z
+    .object({
+      version: z.string(),
+      notes_url: z.string().url().optional(),
+      uf2: Download,
+    })
+    .optional(),
+});
+export type Manifest = z.infer<typeof Manifest>;
+
+// `v0.8.0-oled-edition`, `0.8.0`, `0.7.0-vendor` -> [0, 8, 0]. Anything after
+// the first "-" is a channel label, not part of the ordering. Returns null for
+// anything else; callers treat null as "can't tell", never as "newer".
+export function parseVersion(raw: string | null | undefined): [number, number, number] | null {
+  if (!raw) return null;
+  let s = raw.trim();
+  if (s.startsWith("v") || s.startsWith("V")) s = s.slice(1);
+  const dash = s.indexOf("-");
+  if (dash !== -1) s = s.slice(0, dash);
+  const parts = s.split(".");
+  if (parts.length !== 3 || parts.some((p) => !/^\d+$/.test(p))) return null;
+  return [Number(parts[0]), Number(parts[1]), Number(parts[2])];
+}
+
+// Strictly newer only. Equal is not newer, and an unparseable version on
+// either side is not newer: an updater that can't read a version must do
+// nothing rather than risk moving someone backwards.
+export function isNewer(remote: string | null | undefined, local: string | null | undefined): boolean {
+  const r = parseVersion(remote);
+  const l = parseVersion(local);
+  if (!r || !l) return false;
+  for (let i = 0; i < 3; i++) if (r[i] !== l[i]) return r[i] > l[i];
+  return false;
+}
+
+// Hosts a manifest download may point at: GitHub release assets and the
+// redirect targets GitHub serves them from.
+export const DOWNLOAD_HOSTS = new Set(["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"]);
+
+export function isAllowedDownloadUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" && DOWNLOAD_HOSTS.has(url.hostname) && url.username === "" && url.password === "";
+  } catch {
+    return false;
+  }
+}

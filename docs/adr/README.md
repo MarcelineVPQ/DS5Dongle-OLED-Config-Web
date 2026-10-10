@@ -12,7 +12,7 @@ An ADR records one important architectural decision: the context that forced it,
 | ------------------------------------------ | ------------------------------------------------------- | -------- | ---------- |
 | [0001](0001-vendor-usb-transport.md)        | Vendor-class USB interface over WebUSB as the transport | Accepted | 2026-10-10 |
 | [0002](0002-dual-browser-desktop-target.md) | One codebase, browser and Electron targets              | Accepted | 2026-10-10 |
-| [0003](0003-update-manifest.md)             | Self-update from a repo-hosted `latest.json` manifest   | Proposed | 2026-10-10 |
+| [0003](0003-update-manifest.md)             | Self-update from a repo-hosted `latest.json` manifest   | Accepted | 2026-10-10 |
 | [0004](0004-linux-sandbox-and-gpu.md)       | Linux: Chromium sandbox under AppArmor, NVIDIA GPU      | Accepted | 2026-10-10 |
 
 ## Creating a New ADR

@@ -316,7 +316,9 @@
       "zeroOff": "0 = jamais",
       "controllerWakes": "La manette réveille l'écran",
       "usb": "USB",
-      "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher)."
+      "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher).",
+      "speakerLevel": "Niveau du haut-parleur",
+      "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer"
     },
     "lightbar": {
       "mode": "Mode",
@@ -395,7 +397,42 @@
       "resetDone": "Paramètres réinitialisés par défaut et enregistrés.",
       "confirmReset": "Réinitialiser tous les paramètres",
       "factoryReset": "Réinitialisation d'usine…",
-      "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les appairages et remappages de boutons sont conservés."
+      "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les appairages et remappages de boutons sont conservés.",
+      "latest": "Dernière",
+      "unknown": "inconnue (hors ligne ?)",
+      "update": "Mettre à jour en {{version}}",
+      "upToDate": "À jour",
+      "check": "Vérifier maintenant",
+      "updateHint": "Le dongle redémarre dans son bootloader, est flashé et redémarre tout seul. Laisse-le branché ; appuie ensuite sur PS sur la manette."
+    },
+    "usbAccess": {
+      "label": "Règle d'accès USB",
+      "installed": "Installée",
+      "missing": "Non installée (les règles de Steam couvrent peut-être déjà le dongle)",
+      "working": "En attente du mot de passe…",
+      "button": "Configurer l'accès USB"
+    },
+    "update": {
+      "appAvailable": "La mise à jour {{version}} de l'app est disponible ({{size}}).",
+      "download": "Télécharger et installer",
+      "downloading": "Téléchargement de {{version}} : {{got}} sur {{total}} ({{pct}} %)",
+      "installing": "Installation de la mise à jour…",
+      "ready": "La version {{version}} est installée.",
+      "restart": "Redémarrer maintenant",
+      "manual": "La mise à jour {{version}} est disponible sur la page des versions.",
+      "open": "Ouvrir la page des versions",
+      "fwAvailable": "Le firmware {{version}} est disponible pour ton dongle.",
+      "details": "Détails",
+      "fwDontUnplug": "Mise à jour du firmware, ne débranche pas le dongle.",
+      "fwDone": "Firmware mis à jour en {{version}}. Appuie sur PS pour reconnecter la manette.",
+      "fwStep": {
+        "downloading": "Téléchargement et vérification du firmware…",
+        "rebooting": "Redémarrage du dongle dans son bootloader…",
+        "waiting-bootloader": "En attente du bootloader…",
+        "flashing": "Écriture du firmware",
+        "restarting": "Redémarrage du dongle…",
+        "verifying": "En attente du retour du dongle…"
+      }
     }
   }
 }

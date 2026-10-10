@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (implementation is Phase 3)
+Accepted (implemented and verified end to end on Linux, 2026-10-10)
 
 ## Date
 

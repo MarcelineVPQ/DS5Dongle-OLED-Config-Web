@@ -33,6 +33,8 @@ export interface PicoflashHandle {
 
 export interface PicoflashStatic {
   requestDevice(): Promise<PicoflashHandle>;
+  // Already-permitted PICOBOOT devices (desktop: granted by the main process).
+  getDevices(): Promise<PicoflashHandle[]>;
 }
 
 export const PicoflashAPI: PicoflashStatic = Picoboot as unknown as PicoflashStatic;

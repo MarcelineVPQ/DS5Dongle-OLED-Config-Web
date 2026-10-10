@@ -17,7 +17,10 @@
     "test:coverage": "vitest run --coverage",
     "start:desktop": "electron-vite preview -- --no-sandbox",
     "gates": "./.hooks/check_electron_security.sh && ./.hooks/check_dom_sinks.sh",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run gates && npm test"
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run gates && npm test",
+    "dist:linux": "electron-vite build && electron-builder --linux",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:mac": "electron-vite build && electron-builder --mac"
   },
   "dependencies": {
     "@fontsource/dm-sans": "5.3.0",
@@ -57,5 +60,11 @@
   "engines": {
     "node": ">=22"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "author": {
+    "name": "MarcelineVPQ",
+    "email": "noreply@github.com"
+  },
+  "homepage": "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
+  "desktopName": "io.github.MarcelineVPQ.DS5DongleConfigurator.desktop"
 }

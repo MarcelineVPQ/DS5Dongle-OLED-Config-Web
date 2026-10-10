@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import UsbAccessSetup from "../UsbAccessSetup";
+import type { FirmwareUpdate } from "../useUpdates";
 
-export default function FirmwarePage({ bridge }: { bridge: UseDs5BridgeResult }) {
+export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   const { t } = useTranslation();
   const client = bridge.client;
   const [busy, setBusy] = useState(false);
@@ -32,8 +34,20 @@ export default function FirmwarePage({ bridge }: { bridge: UseDs5BridgeResult })
           <dd className="dk-mono">{bridge.firmwareVersion ?? "—"}</dd>
           <dt>{t("desktop.overview.protocol", "Protocol")}</dt>
           <dd className="dk-mono">{bridge.identity ? `${bridge.identity.protoMajor}.${bridge.identity.protoMinor}` : "—"}</dd>
+          <dt>{t("desktop.firmware.latest", "Latest")}</dt>
+          <dd className="dk-mono">{fw.latest?.version ?? t("desktop.firmware.unknown", "unknown (offline?)")}</dd>
         </dl>
-        <p className="dk-hint">{t("desktop.firmware.updatesSoon", "Automatic firmware updates are coming in the next build.")}</p>
+        <div className="dk-ctl" style={{ justifyContent: "flex-start", gap: 8, paddingBottom: 6 }}>
+          <button type="button" className="dk-btn primary" disabled={!client || !fw.available || fw.state.phase === "running" || fw.state.phase === "verifying"} onClick={() => void fw.start()}>
+            {fw.available ? t("desktop.firmware.update", { version: fw.latest?.version, defaultValue: "Update to {{version}}" }) : t("desktop.firmware.upToDate", "Up to date")}
+          </button>
+          <button type="button" className="dk-btn" onClick={() => void window.desktop?.checkForUpdates()}>
+            {t("desktop.firmware.check", "Check now")}
+          </button>
+        </div>
+        <p className="dk-hint">
+          {t("desktop.firmware.updateHint", "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press PS on the controller afterwards.")}
+        </p>
       </section>
 
       <section className="dk-card">
@@ -85,6 +99,7 @@ export default function FirmwarePage({ bridge }: { bridge: UseDs5BridgeResult })
           )}
         </div>
         <p className="dk-hint">{t("desktop.firmware.resetHint", "Factory reset restores default settings. Pairings and button remaps are kept.")}</p>
+        <UsbAccessSetup />
       </section>
     </div>
   );

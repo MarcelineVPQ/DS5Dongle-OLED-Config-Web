@@ -1,0 +1,46 @@
+# Desktop packaging. Build with `npm run dist:linux` / `dist:win` / `dist:mac`
+# after `npm run build:desktop`. Releases are built in CI on each OS
+# (.github/workflows/release.yml); see docs/adr/0003-update-manifest.md.
+appId: io.github.MarcelineVPQ.DS5DongleConfigurator
+productName: DS5 Dongle Configurator
+copyright: Copyright © 2026 MarcelineVPQ
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - package.json
+# Tray icons, app icon and the Linux setup files, readable at runtime from
+# process.resourcesPath/resources (electron/main/index.ts).
+extraResources:
+  - from: resources
+    to: resources
+asar: true
+artifactName: DS5DongleConfigurator-${version}-${os}-${arch}.${ext}
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: build/icon.png
+  category: Utility
+  syncDesktopName: true
+  synopsis: Configure the DS5 Dongle OLED Edition
+  description: Settings, remapping, pairing slots, diagnostics and firmware updates for the DS5 Dongle (DualSense Bluetooth bridge).
+
+# Portable single exe (user decision): no installer, self-updates in place,
+# offers Start Menu / desktop shortcuts on first run.
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  icon: build/icon.ico
+portable:
+  artifactName: DS5DongleConfigurator-${version}-win-x64.exe
+
+mac:
+  target:
+    - target: zip
+      arch: [universal]
+  icon: build/icon.png
+  category: public.app-category.utilities

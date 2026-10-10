@@ -31,12 +31,14 @@ interface SliderProps {
   digits?: number;
   invalid?: boolean;
   disabled?: boolean;
+  // Show an explicit + on positive values (gains around 0).
+  signed?: boolean;
   onChange: (value: number) => void;
 }
 
 // The range thumb updates a local value while dragging and only reports on
 // release, so a drag sends one write to the dongle, not dozens.
-export function Slider({ label, sub, value, min, max, step, unit, digits = 0, invalid, disabled, onChange }: SliderProps) {
+export function Slider({ label, sub, value, min, max, step, unit, digits = 0, invalid, disabled, signed, onChange }: SliderProps) {
   // While the user is dragging or typing, show their value; otherwise show the
   // dongle's. null = not editing.
   const [editing, setEditing] = useState<number | null>(null);
@@ -62,6 +64,7 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
         onPointerUp={(e) => commit(Number(e.currentTarget.value))}
         onKeyUp={(e) => commit(Number(e.currentTarget.value))}
       />
+      {signed && <span className="dk-sign">{local > 0 ? "+" : ""}</span>}
       <input
         type="number"
         min={min}

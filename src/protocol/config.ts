@@ -3,7 +3,7 @@
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
 //   offset 1   float32 haptics_gain                [1.0, 6.0]
-//   offset 5   float32 speaker_volume              dB [-100, 0]
+//   offset 5   float32 speaker_volume              dB [-100, +12] (digital gain; > 0 boosts, firmware v0.8+)
 //   offset 9   uint8   inactive_time               minutes [5, 60]
 //   offset 10  uint8   disable_inactive_disconnect 0 = auto-disconnect on idle, 1 = stay paired forever
 //   offset 11  uint8   disable_pico_led            0 = LED on, 1 = LED off
@@ -204,8 +204,8 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isFinite(config.hapticsGain) || config.hapticsGain < 1 || config.hapticsGain > 6) {
     issues.push({ field: "hapticsGain", message: "Haptics gain must be between 1.0 and 6.0" });
   }
-  if (!Number.isFinite(config.speakerVolume) || config.speakerVolume < -100 || config.speakerVolume > 0) {
-    issues.push({ field: "speakerVolume", message: "Speaker volume must be between -100 dB and 0 dB" });
+  if (!Number.isFinite(config.speakerVolume) || config.speakerVolume < -100 || config.speakerVolume > 12) {
+    issues.push({ field: "speakerVolume", message: "Speaker volume must be between -100 dB and +12 dB" });
   }
   if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 5 || config.inactiveTime > 60) {
     issues.push({ field: "inactiveTime", message: "Inactive time must be between 5 and 60 minutes" });

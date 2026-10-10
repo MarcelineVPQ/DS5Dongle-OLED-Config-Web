@@ -5,6 +5,11 @@ import LanguageToggle from "../components/LanguageToggle";
 import RemapEditor from "../components/RemapEditor";
 import ThemeToggle from "../components/ThemeToggle";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
+import { renderTrayIcon } from "./tray/trayIcon";
+import UpdateBanners from "./UpdateBanners";
+import UsbAccessSetup from "./UsbAccessSetup";
+import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdates";
+import { usePoll } from "./usePoll";
 import DiagnosticsPage from "./pages/DiagnosticsPage";
 import FirmwarePage from "./pages/FirmwarePage";
 import LightbarPage from "./pages/LightbarPage";
@@ -20,7 +25,7 @@ interface PageDef {
   id: PageId;
   label: string;
   icon: LucideIcon;
-  render: (bridge: UseDs5BridgeResult) => JSX.Element;
+  render: (bridge: UseDs5BridgeResult, fw: FirmwareUpdate) => JSX.Element;
 }
 
 const APPLY_DEBOUNCE_MS = 150;
@@ -28,6 +33,8 @@ const APPLY_DEBOUNCE_MS = 150;
 export default function DesktopApp() {
   const { t } = useTranslation();
   const bridge = useDs5Bridge();
+  const appUpdate = useAppUpdate();
+  const fw = useFirmwareUpdate(bridge, appUpdate);
   const [page, setPage] = useState<PageId>("settings");
 
   const pages: PageDef[] = [
@@ -38,7 +45,7 @@ export default function DesktopApp() {
     { id: "slots", label: t("desktop.nav.slots", "Pairing slots"), icon: Link2, render: (b) => <SlotsPage bridge={b} /> },
     { id: "triggers", label: t("desktop.nav.triggers", "Trigger test"), icon: Activity, render: (b) => <TriggersPage bridge={b} /> },
     { id: "diagnostics", label: t("desktop.nav.diagnostics", "Diagnostics"), icon: Cpu, render: (b) => <DiagnosticsPage bridge={b} /> },
-    { id: "firmware", label: t("desktop.nav.firmware", "Firmware"), icon: HardDriveDownload, render: (b) => <FirmwarePage bridge={b} /> },
+    { id: "firmware", label: t("desktop.nav.firmware", "Firmware"), icon: HardDriveDownload, render: (b, f) => <FirmwarePage bridge={b} fw={f} /> },
   ];
   const current = pages.find((p) => p.id === page) ?? pages[0];
 
@@ -53,6 +60,53 @@ export default function DesktopApp() {
 
   const connected = bridge.isConnected;
   const busy = bridge.operation !== null;
+
+  // Keep the tray icon/menu in step with the device, even while the window is
+  // hidden (the window keeps running in the background for exactly this).
+  const client = bridge.client;
+  const liveIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
+  const firmware = bridge.firmwareVersion;
+  const controllerOn = Boolean(connected && liveIdentity?.controllerConnected);
+  const charging = controllerOn && Boolean(liveIdentity?.charging);
+  const battery = controllerOn ? (liveIdentity?.battery ?? null) : null;
+  const lightbar = controllerOn ? (liveIdentity?.lightbar ?? null) : null;
+  const lightbarKey = lightbar ? lightbar.join(",") : "";
+  useEffect(() => {
+    window.desktop?.reportStatus({
+      dongle: connected,
+      controller: controllerOn,
+      slot: connected && liveIdentity ? liveIdentity.currentSlot : -1,
+      firmware: connected ? firmware : null,
+      charging,
+      battery,
+    });
+  }, [connected, controllerOn, liveIdentity, firmware, charging, battery]);
+
+  // Redraw the tray icon only when something it shows changes.
+  useEffect(() => {
+    if (!window.desktop) return;
+    const rgb = lightbarKey ? (lightbarKey.split(",").map(Number) as [number, number, number]) : null;
+    let cancelled = false;
+    void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", lightbar: rgb, charging })
+      .then((png) => !cancelled && window.desktop?.setTrayIcon(png))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, controllerOn, charging, lightbarKey]);
+
+  useEffect(
+    () =>
+      window.desktop?.onTrayCommand((command) => {
+        if (command.type === "openPage") {
+          if (pages.some((p) => p.id === command.page)) setPage(command.page as PageId);
+        } else if (command.type === "switchSlot") {
+          void client?.switchSlot(command.slot).catch(() => undefined);
+        }
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pages is rebuilt every render; ids never change
+    [client],
+  );
 
   return (
     <div className="dk">
@@ -92,6 +146,7 @@ export default function DesktopApp() {
         </header>
 
         <main className="dk-body">
+          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => setPage("firmware")} />
           {bridge.error && (
             <div className="dk-notice error" role="alert">
               <span>{bridge.error}</span>
@@ -102,13 +157,14 @@ export default function DesktopApp() {
             </div>
           )}
           {connected ? (
-            current.render(bridge)
+            current.render(bridge, fw)
           ) : (
             <div className="dk-empty">
               <div>
                 <strong>{t("desktop.empty.title", "Plug in the DS5 Dongle")}</strong>
                 {t("desktop.empty.body", "It connects automatically. Needs OLED Edition firmware v0.8 or newer.")}
                 {!bridge.supported && <div className="dk-bad">{t("statusText.webusbUnavailable")}</div>}
+                <UsbAccessSetup compact />
               </div>
             </div>
           )}

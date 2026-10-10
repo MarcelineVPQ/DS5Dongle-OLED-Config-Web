@@ -122,7 +122,7 @@ export function drawBatteryIcon(fb: Uint8Array, x: number, y: number, pct: numbe
 export function flush(displayCtx: CanvasRenderingContext2D, fb: Uint8Array, tint?: [number, number, number]): void {
   const { canvas } = displayCtx;
   const off = ensureOffscreen(canvas);
-  const offCtx = off.getContext("2d")!;
+  const offCtx = off.getContext("2d") as OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
   const img = offCtx.getImageData(0, 0, FB_W, FB_H);
   const data = img.data;
   const onColor = tint ?? COLOR_ON;

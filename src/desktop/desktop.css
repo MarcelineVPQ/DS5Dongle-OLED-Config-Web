@@ -591,3 +591,9 @@ html[data-theme="dark"] .dk {
   font-size: 12.5px;
   padding: 4px 0;
 }
+.dk-sign {
+  width: 8px;
+  text-align: right;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}

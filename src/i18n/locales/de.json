@@ -316,7 +316,9 @@
       "zeroOff": "0 = nie",
       "controllerWakes": "Controller-Eingabe weckt das Display",
       "usb": "USB",
-      "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt)."
+      "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt).",
+      "speakerLevel": "Lautsprecherpegel",
+      "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern"
     },
     "lightbar": {
       "mode": "Modus",
@@ -395,7 +397,42 @@
       "resetDone": "Einstellungen auf Standard zurückgesetzt und gespeichert.",
       "confirmReset": "Alle Einstellungen zurücksetzen",
       "factoryReset": "Werkseinstellungen…",
-      "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenbelegungen bleiben erhalten."
+      "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenbelegungen bleiben erhalten.",
+      "latest": "Neueste",
+      "unknown": "unbekannt (offline?)",
+      "update": "Auf {{version}} aktualisieren",
+      "upToDate": "Aktuell",
+      "check": "Jetzt prüfen",
+      "updateHint": "Der Dongle startet in den Bootloader, wird geflasht und startet von selbst neu. Lass ihn eingesteckt; drücke danach PS am Controller."
+    },
+    "usbAccess": {
+      "label": "USB-Zugriffsregel",
+      "installed": "Installiert",
+      "missing": "Nicht installiert (Steams Regeln decken den Dongle eventuell schon ab)",
+      "working": "Warte auf Passwort…",
+      "button": "USB-Zugriff einrichten"
+    },
+    "update": {
+      "appAvailable": "App-Update {{version}} ist verfügbar ({{size}}).",
+      "download": "Herunterladen und installieren",
+      "downloading": "Lade {{version}}: {{got}} von {{total}} ({{pct}} %)",
+      "installing": "Update wird installiert…",
+      "ready": "Version {{version}} ist installiert.",
+      "restart": "Jetzt neu starten",
+      "manual": "App-Update {{version}} ist auf der Release-Seite verfügbar.",
+      "open": "Release-Seite öffnen",
+      "fwAvailable": "Firmware {{version}} ist für deinen Dongle verfügbar.",
+      "details": "Details",
+      "fwDontUnplug": "Firmware wird aktualisiert, Dongle nicht abziehen.",
+      "fwDone": "Firmware auf {{version}} aktualisiert. Drücke PS, um den Controller zu verbinden.",
+      "fwStep": {
+        "downloading": "Firmware wird geladen und geprüft…",
+        "rebooting": "Dongle startet in den Bootloader…",
+        "waiting-bootloader": "Warte auf den Bootloader…",
+        "flashing": "Firmware wird geschrieben",
+        "restarting": "Dongle startet neu…",
+        "verifying": "Warte, bis der Dongle zurück ist…"
+      }
     }
   }
 }

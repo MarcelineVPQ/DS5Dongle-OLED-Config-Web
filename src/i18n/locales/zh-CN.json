@@ -316,7 +316,9 @@
       "zeroOff": "0 = 从不",
       "controllerWakes": "控制器输入时唤醒屏幕",
       "usb": "USB",
-      "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。"
+      "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。",
+      "speakerLevel": "扬声器电平",
+      "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波"
     },
     "lightbar": {
       "mode": "模式",
@@ -395,7 +397,42 @@
       "resetDone": "设置已恢复默认并保存。",
       "confirmReset": "重置所有设置",
       "factoryReset": "恢复出厂设置…",
-      "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。"
+      "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。",
+      "latest": "最新",
+      "unknown": "未知（离线？）",
+      "update": "更新到 {{version}}",
+      "upToDate": "已是最新",
+      "check": "立即检查",
+      "updateHint": "接收器会重启到引导程序、写入固件并自动重启。请保持插入；之后按手柄上的 PS。"
+    },
+    "usbAccess": {
+      "label": "USB 访问规则",
+      "installed": "已安装",
+      "missing": "未安装（Steam 的规则可能已覆盖接收器）",
+      "working": "等待输入密码…",
+      "button": "设置 USB 访问"
+    },
+    "update": {
+      "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
+      "download": "下载并安装",
+      "downloading": "正在下载 {{version}}：{{got}} / {{total}}（{{pct}}%）",
+      "installing": "正在安装更新…",
+      "ready": "已安装版本 {{version}}。",
+      "restart": "立即重启",
+      "manual": "更新 {{version}} 可在发布页面获取。",
+      "open": "打开发布页面",
+      "fwAvailable": "接收器有可用固件 {{version}}。",
+      "details": "详情",
+      "fwDontUnplug": "正在更新固件，请勿拔出接收器。",
+      "fwDone": "固件已更新到 {{version}}。按 PS 重新连接手柄。",
+      "fwStep": {
+        "downloading": "正在下载并校验固件…",
+        "rebooting": "正在将接收器重启到引导程序…",
+        "waiting-bootloader": "正在等待引导程序…",
+        "flashing": "正在写入固件",
+        "restarting": "正在重启接收器…",
+        "verifying": "正在等待接收器重新连接…"
+      }
     }
   }
 }

@@ -66,9 +66,17 @@ describe("window and session baseline", () => {
     expect(mainSource).toMatch(/will-navigate/);
   });
 
-  it("never hands ipcRenderer to the page", () => {
-    const code = preloadSource.replace(/\/\/.*$/gm, "");
-    expect(code).not.toMatch(/ipcRenderer/);
+  it("never hands ipcRenderer to the page, only fixed channel functions", () => {
+    const code = preloadSource.replace(/\/\/.*$/gm, "").replace(/^import .*$/gm, "");
+    expect(code).toMatch(/contextBridge\.exposeInMainWorld\("desktop", api\)/);
+    // ipcRenderer may be used inside the wrapper functions, but never placed on
+    // the exposed object or passed to the bridge.
+    expect(code).not.toMatch(/[{,]\s*ipcRenderer\s*[,}:]/);
+    expect(code).not.toMatch(/exposeInMainWorld\([^)]*ipcRenderer/);
+    // Every channel comes from the IPC constant table, no ad-hoc strings.
+    for (const call of code.match(/ipcRenderer\.(send|invoke|on|removeListener)\(([^,)]+)/g) ?? []) {
+      expect(call, call).toMatch(/\(IPC\./);
+    }
   });
 
   it("ships a CSP without eval or remote origins", () => {
@@ -76,5 +84,35 @@ describe("window and session baseline", () => {
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toContain("unsafe-eval");
     expect(csp).not.toMatch(/https?:/);
+  });
+});
+
+describe("IPC payload validation", async () => {
+  // Loaded lazily: the module imports electron, which only exists at runtime.
+  const { z } = await import("zod");
+  const DeviceStatus = z.strictObject({ dongle: z.boolean(), controller: z.boolean(), slot: z.number().int().min(-1).max(3), firmware: z.string().max(64).nullable() });
+  const ipcSource = readFileSync(new URL("../../electron/main/ipc.ts", import.meta.url), "utf8");
+
+  it("validates every renderer message and checks the sender", () => {
+    expect(ipcSource).toMatch(/DeviceStatusSchema\.safeParse\(raw\)/);
+    expect(ipcSource).toMatch(/SettingUpdate\.parse\(raw\)/);
+    expect((ipcSource.match(/trusted\(event\)/g) ?? []).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the status schema rejects extra keys and out-of-range slots", () => {
+    expect(DeviceStatus.safeParse({ dongle: true, controller: true, slot: 2, firmware: "0.8.0" }).success).toBe(true);
+    expect(DeviceStatus.safeParse({ dongle: true, controller: true, slot: 9, firmware: null }).success).toBe(false);
+    expect(DeviceStatus.safeParse({ dongle: true, controller: true, slot: 0, firmware: null, extra: 1 }).success).toBe(false);
+  });
+});
+
+describe("privileged Linux setup", () => {
+  const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
+
+  it("runs pkexec through execFile with a fixed script and positional paths", () => {
+    expect(setupSource).toMatch(/execFile\("pkexec", \["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST\]/);
+    expect(setupSource).toMatch(/const script = 'install -m 0644 "\$1" "\$2"/);
+    expect(setupSource).not.toMatch(/\bexec\(/);
+    expect(setupSource).not.toMatch(/script\s*=\s*`/);
   });
 });

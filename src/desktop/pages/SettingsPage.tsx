@@ -22,7 +22,18 @@ export default function SettingsPage({ bridge }: { bridge: UseDs5BridgeResult })
       <section className="dk-card">
         <h2>{t("desktop.settings.audio", "Audio & haptics")}</h2>
         <Slider label={t("haptics.gainLabel")} value={d.hapticsGain} min={1} max={6} step={0.1} digits={1} unit="×" invalid={issue("hapticsGain")} onChange={(v) => set("hapticsGain", v)} />
-        <Slider label={t("haptics.speakerVolumeLabel")} value={d.speakerVolume} min={-100} max={0} step={1} unit="dB" invalid={issue("speakerVolume")} onChange={(v) => set("speakerVolume", v)} />
+        <Slider
+          label={t("desktop.settings.speakerLevel", "Speaker level")}
+          sub={t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip")}
+          value={d.speakerVolume}
+          min={-12}
+          max={12}
+          step={1}
+          unit="dB"
+          signed
+          invalid={issue("speakerVolume")}
+          onChange={(v) => set("speakerVolume", v)}
+        />
         <Slider label={t("haptics.audioBufferLabel")} value={d.audioBufferLength} min={16} max={128} step={4} invalid={issue("audioBufferLength")} onChange={(v) => set("audioBufferLength", v)} />
         <Toggle label={t("haptics.btMicLabel")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       </section>

@@ -316,7 +316,9 @@
       "zeroOff": "0 = なし",
       "controllerWakes": "コントローラー入力で画面を復帰",
       "usb": "USB",
-      "usbHint": "USB 再接続後に反映されます (PC からはドングルが抜き差しされたように見えます)。"
+      "usbHint": "USB 再接続後に反映されます (PC からはドングルが抜き差しされたように見えます)。",
+      "speakerLevel": "スピーカーレベル",
+      "speakerLevelSub": "0 = 変更なし。0 より上は増幅され、音割れすることがあります"
     },
     "lightbar": {
       "mode": "モード",
@@ -395,7 +397,42 @@
       "resetDone": "設定を初期値に戻して保存しました。",
       "confirmReset": "すべての設定をリセット",
       "factoryReset": "初期化…",
-      "resetHint": "初期化すると設定が既定値に戻ります。ペアリングとボタン割り当ては保持されます。"
+      "resetHint": "初期化すると設定が既定値に戻ります。ペアリングとボタン割り当ては保持されます。",
+      "latest": "最新",
+      "unknown": "不明（オフライン？）",
+      "update": "{{version}} に更新",
+      "upToDate": "最新です",
+      "check": "今すぐ確認",
+      "updateHint": "ドングルはブートローダーで再起動し、書き込み後に自動で再起動します。挿したままにして、その後コントローラーの PS を押してください。"
+    },
+    "usbAccess": {
+      "label": "USB アクセスルール",
+      "installed": "インストール済み",
+      "missing": "未インストール（Steam のルールで既に対応している場合があります）",
+      "working": "パスワード入力を待っています…",
+      "button": "USB アクセスを設定"
+    },
+    "update": {
+      "appAvailable": "アプリのアップデート {{version}} があります（{{size}}）。",
+      "download": "ダウンロードしてインストール",
+      "downloading": "{{version}} をダウンロード中：{{got}} / {{total}}（{{pct}}%）",
+      "installing": "アップデートをインストール中…",
+      "ready": "バージョン {{version}} をインストールしました。",
+      "restart": "今すぐ再起動",
+      "manual": "アップデート {{version}} はリリースページから入手できます。",
+      "open": "リリースページを開く",
+      "fwAvailable": "ドングル用のファームウェア {{version}} があります。",
+      "details": "詳細",
+      "fwDontUnplug": "ファームウェアを更新中です。ドングルを抜かないでください。",
+      "fwDone": "ファームウェアを {{version}} に更新しました。PS を押してコントローラーを再接続してください。",
+      "fwStep": {
+        "downloading": "ファームウェアをダウンロードして検証中…",
+        "rebooting": "ドングルをブートローダーで再起動中…",
+        "waiting-bootloader": "ブートローダーを待っています…",
+        "flashing": "ファームウェアを書き込み中",
+        "restarting": "ドングルを再起動中…",
+        "verifying": "ドングルの復帰を待っています…"
+      }
     }
   }
 }

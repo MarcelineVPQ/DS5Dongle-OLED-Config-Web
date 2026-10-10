@@ -316,7 +316,9 @@
       "zeroOff": "0 = nunca",
       "controllerWakes": "Usar o controle reativa a tela",
       "usb": "USB",
-      "usbHint": "Entram em vigor após Reconectar USB (o PC vê o dongle ser desconectado e reconectado)."
+      "usbHint": "Entram em vigor após Reconectar USB (o PC vê o dongle ser desconectado e reconectado).",
+      "speakerLevel": "Nível do alto-falante",
+      "speakerLevelSub": "0 = sem alteração; acima de 0 amplifica e pode distorcer"
     },
     "lightbar": {
       "mode": "Modo",
@@ -395,7 +397,42 @@
       "resetDone": "Configurações restauradas para o padrão e salvas.",
       "confirmReset": "Redefinir todas as configurações",
       "factoryReset": "Redefinição de fábrica…",
-      "resetHint": "A redefinição de fábrica restaura as configurações padrão. Pareamentos e remapeamentos de botões são mantidos."
+      "resetHint": "A redefinição de fábrica restaura as configurações padrão. Pareamentos e remapeamentos de botões são mantidos.",
+      "latest": "Mais recente",
+      "unknown": "desconhecida (offline?)",
+      "update": "Atualizar para {{version}}",
+      "upToDate": "Atualizado",
+      "check": "Verificar agora",
+      "updateHint": "O dongle reinicia no bootloader, é gravado e reinicia sozinho. Mantenha-o conectado; depois pressione PS no controle."
+    },
+    "usbAccess": {
+      "label": "Regra de acesso USB",
+      "installed": "Instalada",
+      "missing": "Não instalada (as regras do Steam talvez já cubram o dongle)",
+      "working": "Aguardando a senha…",
+      "button": "Configurar acesso USB"
+    },
+    "update": {
+      "appAvailable": "A atualização {{version}} do app está disponível ({{size}}).",
+      "download": "Baixar e instalar",
+      "downloading": "Baixando {{version}}: {{got}} de {{total}} ({{pct}}%)",
+      "installing": "Instalando a atualização…",
+      "ready": "A versão {{version}} está instalada.",
+      "restart": "Reiniciar agora",
+      "manual": "A atualização {{version}} está na página de versões.",
+      "open": "Abrir página de versões",
+      "fwAvailable": "O firmware {{version}} está disponível para o seu dongle.",
+      "details": "Detalhes",
+      "fwDontUnplug": "Atualizando o firmware, não desconecte o dongle.",
+      "fwDone": "Firmware atualizado para {{version}}. Pressione PS para reconectar o controle.",
+      "fwStep": {
+        "downloading": "Baixando e verificando o firmware…",
+        "rebooting": "Reiniciando o dongle no bootloader…",
+        "waiting-bootloader": "Aguardando o bootloader…",
+        "flashing": "Gravando o firmware",
+        "restarting": "Reiniciando o dongle…",
+        "verifying": "Aguardando o dongle voltar…"
+      }
     }
   }
 }

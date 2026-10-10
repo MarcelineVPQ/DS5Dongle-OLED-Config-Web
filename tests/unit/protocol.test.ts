@@ -82,7 +82,27 @@ describe("identity report (0xF1)", () => {
       slotCount: 4,
       currentSlot: 2,
       controllerConnected: true,
+      charging: false,
+      batteryFull: false,
+      lightbar: null,
+      battery: null,
     });
+  });
+
+  it("decodes the protocol 1.1 controller fields when present", () => {
+    const b = new Uint8Array(25);
+    b.set(sample());
+    b.set([0x01, 170, 15, 97, 7], 20);
+    const id = decodeIdentity(b);
+    expect(id).toMatchObject({ charging: true, batteryFull: false, lightbar: [170, 15, 97], battery: 70 });
+  });
+
+  it("reports no lightbar or battery without a controller", () => {
+    const b = new Uint8Array(25);
+    b.set(sample());
+    b[18] = 0;
+    b[24] = 0xff;
+    expect(decodeIdentity(b)).toMatchObject({ lightbar: null, battery: null, charging: false });
   });
 
   it("rejects a report without the DS5O magic", () => {

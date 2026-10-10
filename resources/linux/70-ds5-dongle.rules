@@ -1,0 +1,8 @@
+# DS5 Dongle Configurator: let the logged-in user open the dongle's
+# configurator interface and the RP2350 boot device (firmware updates) over
+# WebUSB. Installed by the app's "Set up USB access" button.
+# DS5 Dongle (DualSense / DualSense Edge mode)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0df2", TAG+="uaccess"
+# RP2350 BOOTSEL (PICOBOOT)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", TAG+="uaccess"

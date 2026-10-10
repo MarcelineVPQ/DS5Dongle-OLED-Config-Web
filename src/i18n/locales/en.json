@@ -315,7 +315,9 @@
       "zeroOff": "0 = never",
       "controllerWakes": "Controller input wakes the screen",
       "usb": "USB",
-      "usbHint": "These take effect after Reconnect USB (the PC sees the dongle unplug and replug)."
+      "usbHint": "These take effect after Reconnect USB (the PC sees the dongle unplug and replug).",
+      "speakerLevel": "Speaker level",
+      "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip"
     },
     "lightbar": {
       "mode": "Mode",
@@ -394,7 +396,42 @@
       "resetDone": "Settings reset to defaults and saved.",
       "confirmReset": "Reset all settings",
       "factoryReset": "Factory reset…",
-      "resetHint": "Factory reset restores default settings. Pairings and button remaps are kept."
+      "resetHint": "Factory reset restores default settings. Pairings and button remaps are kept.",
+      "latest": "Latest",
+      "unknown": "unknown (offline?)",
+      "update": "Update to {{version}}",
+      "upToDate": "Up to date",
+      "check": "Check now",
+      "updateHint": "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press PS on the controller afterwards."
+    },
+    "usbAccess": {
+      "label": "USB access rule",
+      "installed": "Installed",
+      "missing": "Not installed (Steam's rules may already cover the dongle)",
+      "working": "Waiting for password…",
+      "button": "Set up USB access"
+    },
+    "update": {
+      "appAvailable": "App update {{version}} is available ({{size}}).",
+      "download": "Download and install",
+      "downloading": "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
+      "installing": "Installing the update…",
+      "ready": "Version {{version}} is installed.",
+      "restart": "Restart now",
+      "manual": "App update {{version}} is available on the release page.",
+      "open": "Open release page",
+      "fwAvailable": "Firmware {{version}} is available for your dongle.",
+      "details": "Details",
+      "fwDontUnplug": "Updating firmware, don't unplug the dongle.",
+      "fwDone": "Firmware updated to {{version}}. Press PS to reconnect the controller.",
+      "fwStep": {
+        "downloading": "Downloading and checking the firmware…",
+        "rebooting": "Restarting the dongle into its bootloader…",
+        "waiting-bootloader": "Waiting for the bootloader…",
+        "flashing": "Writing firmware",
+        "restarting": "Restarting the dongle…",
+        "verifying": "Waiting for the dongle to come back…"
+      }
     }
   }
 }

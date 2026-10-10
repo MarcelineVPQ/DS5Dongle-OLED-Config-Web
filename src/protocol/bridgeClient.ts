@@ -57,6 +57,11 @@ export interface BridgeIdentity {
   slotCount: number;
   currentSlot: number;
   controllerConnected: boolean;
+  // Protocol 1.1+; null/false on older firmware.
+  charging: boolean;
+  batteryFull: boolean;
+  lightbar: [number, number, number] | null;
+  battery: number | null; // percent, in 10% steps
 }
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
@@ -76,6 +81,10 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     slotCount: bytes[16],
     currentSlot: bytes[17],
     controllerConnected: bytes[18] === 1,
+    charging: bytes.length >= 25 && (bytes[20] & 0x01) !== 0,
+    batteryFull: bytes.length >= 25 && (bytes[20] & 0x02) !== 0,
+    lightbar: bytes.length >= 25 && bytes[18] === 1 ? [bytes[21], bytes[22], bytes[23]] : null,
+    battery: bytes.length >= 25 && bytes[24] <= 10 ? bytes[24] * 10 : null,
   };
 }
 
@@ -140,7 +149,7 @@ export class Ds5BridgeClient {
   }
 
   async identity(): Promise<BridgeIdentity> {
-    return decodeIdentity(await this.transport.getReport(REPORT.identity, 20));
+    return decodeIdentity(await this.transport.getReport(REPORT.identity, 25));
   }
 
   // Throws if the dongle speaks a protocol major this app doesn't understand.

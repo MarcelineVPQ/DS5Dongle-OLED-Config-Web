@@ -1,13 +1,32 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
-import { app, BrowserWindow, shell, session } from "electron";
+import { app, BrowserWindow, shell, session, type WebContents } from "electron";
+import { IPC, type DesktopSettings } from "../../src/desktop/api";
+import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
+import { createDesktopShortcut, integrateDesktop } from "./integration";
+import { registerIpc } from "./ipc";
+import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
+import { loadSettings, saveSettings } from "./settings";
+import { AppTray } from "./tray";
+import { Updater } from "./updater";
 import { isAllowedExternalUrl } from "./urls";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
+// Icons and other runtime files: <repo>/resources in development, the
+// packaged app's resources/ folder (electron-builder extraResources) otherwise.
+const resourcesDir = app.isPackaged ? join(process.resourcesPath, "resources") : join(app.getAppPath(), "resources");
 let mainWindow: BrowserWindow | null = null;
+let tray: AppTray | null = null;
+let updater: Updater;
+const UPDATE_FIRST_CHECK_MS = 20_000;
+const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
+let settings: DesktopSettings;
+// Set when the user really quits (tray Quit, OS logout), so close-to-tray
+// doesn't swallow it.
+let quitting = false;
 
 applyLinuxWorkarounds();
 
@@ -15,24 +34,94 @@ applyLinuxWorkarounds();
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
+  // Launching it again just brings the running copy forward.
+  app.on("second-instance", showWindow);
   void app.whenReady().then(start);
 }
 
 function start(): void {
-  lockDownSession();
-  createWindow();
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (process.platform === "win32") app.setAppUserModelId(APP_ID);
+  settings = loadSettings();
+  integrateDesktop(resourcesDir);
+  updater = new Updater((state) => {
+    mainWindow?.webContents.send(IPC.updateState, state);
+    tray?.updateUpdateState(state);
   });
+  updater.pruneStaleFiles();
+  setTimeout(() => settings.checkForUpdates && void updater.check(), UPDATE_FIRST_CHECK_MS);
+  setInterval(() => settings.checkForUpdates && void updater.check(), UPDATE_INTERVAL_MS);
+  applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  lockDownSession();
+
+  tray = new AppTray(
+    resourcesDir,
+    {
+      toggleWindow,
+      command: (command) => {
+        if (command.type === "openPage") showWindow();
+        mainWindow?.webContents.send(IPC.trayCommand, command);
+      },
+      setSetting: (key, value) => void updateSetting(key, value),
+      createDesktopShortcut: process.platform === "win32" ? () => void createDesktopShortcut() : undefined,
+      checkForUpdates: () => {
+        showWindow();
+        void updater.check();
+      },
+      restartToUpdate: () => updater.restart(),
+      quit: () => {
+        quitting = true;
+        app.quit();
+      },
+    },
+    settings,
+  );
+
+  registerIpc({
+    isTrusted,
+    onStatus: (status) => tray?.update(status),
+    onTrayIcon: (png) => tray?.setCustomIcon(png),
+    getSettings: () => settings,
+    setSetting: updateSetting,
+    usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
+    setupUsbAccess: () => installUsbRule(resourcesDir),
+    appVersion: () => app.getVersion(),
+    checkForUpdates: () => updater.check(),
+    getUpdateState: () => updater.getState(),
+    installUpdate: () => updater.downloadAndInstall(),
+    restartToUpdate: () => updater.restart(),
+    latestFirmware: async () => {
+      const manifest = updater.getManifest() ?? (await updater.fetchManifest().catch(() => null));
+      return manifest?.firmware ? { version: manifest.firmware.version, notesUrl: manifest.firmware.notes_url } : null;
+    },
+    downloadFirmware: () => updater.downloadFirmware(),
+  });
+
+  createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
+  app.on("activate", showWindow);
+  app.on("before-quit", () => (quitting = true));
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
   });
+}
+
+function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): DesktopSettings {
+  settings = { ...settings, [key]: value };
+  saveSettings(settings);
+  if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  tray?.updateSettings(settings);
+  return settings;
+}
+
+function showWindow(): void {
+  if (!mainWindow) return createWindow(true);
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function toggleWindow(): void {
+  if (mainWindow?.isVisible() && mainWindow.isFocused()) mainWindow.hide();
+  else showWindow();
 }
 
 // The page gets exactly one web permission, WebUSB, and only for the app's own
@@ -53,7 +142,7 @@ function lockDownSession(): void {
   });
 }
 
-function createWindow(): void {
+function createWindow(visible: boolean): void {
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 760,
@@ -62,6 +151,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: "DS5 Dongle Configurator",
+    icon: join(resourcesDir, "icon.png"),
     webPreferences: {
       preload: join(here, "../preload/index.cjs"),
       contextIsolation: true,
@@ -69,6 +159,8 @@ function createWindow(): void {
       nodeIntegration: false,
       webSecurity: true,
       spellcheck: false,
+      // Keep polling the dongle while hidden in the tray.
+      backgroundThrottling: false,
     },
   });
 
@@ -76,8 +168,14 @@ function createWindow(): void {
   // (Chromium persists zoom per origin, so pin it rather than inherit a stale one.)
   mainWindow.webContents.on("did-finish-load", () => mainWindow?.webContents.setZoomFactor(1));
   mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
-    mainWindow?.focus();
+    if (visible) showWindow();
+  });
+  // Close-to-tray: hide instead of quitting; tray Quit and logout still quit.
+  mainWindow.on("close", (event) => {
+    if (settings.closeToTray && !quitting) {
+      event.preventDefault();
+      mainWindow?.hide();
+    }
   });
   mainWindow.on("closed", () => (mainWindow = null));
 
@@ -101,6 +199,10 @@ function createWindow(): void {
 function isAppUrl(url: string): boolean {
   if (devServerUrl) return url.startsWith(devServerUrl);
   return url.startsWith("file://") && url.includes("/renderer/");
+}
+
+function isTrusted(sender: WebContents, frameUrl: string): boolean {
+  return mainWindow !== null && sender === mainWindow.webContents && isAppUrl(frameUrl);
 }
 
 function isAppOrigin(origin: string | undefined): boolean {
