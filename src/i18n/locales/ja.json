@@ -15,7 +15,8 @@
     "light": "ライトテーマ",
     "system": "システムに従う",
     "dark": "ダークテーマ",
-    "groupLabel": "カラーテーマ"
+    "groupLabel": "カラーテーマ",
+    "desktop": "デスクトップの配色に合わせる"
   },
   "languageToggle": {
     "groupLabel": "言語",

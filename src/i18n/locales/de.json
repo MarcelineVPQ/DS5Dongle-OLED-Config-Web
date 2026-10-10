@@ -15,7 +15,8 @@
     "light": "Helles Thema",
     "system": "System folgen",
     "dark": "Dunkles Thema",
-    "groupLabel": "Farbthema"
+    "groupLabel": "Farbthema",
+    "desktop": "Desktop-Farben übernehmen"
   },
   "languageToggle": {
     "groupLabel": "Sprache",

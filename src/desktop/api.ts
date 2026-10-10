@@ -1,3 +1,5 @@
+import type { DesktopPalette } from "./theme/desktopPalette";
+
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
 // build, so `isDesktop()` is the switch between the two targets. Every call
 // goes through a fixed IPC channel that the main process validates
@@ -61,6 +63,9 @@ export interface DesktopApi {
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
   latestFirmware(): Promise<LatestFirmware | null>;
+  // "Match desktop" theme: the desktop's colors, and changes to them.
+  getDesktopPalette(): Promise<DesktopPalette | null>;
+  onDesktopPalette(listener: (palette: DesktopPalette | null) => void): () => void;
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
 }
 
@@ -79,6 +84,8 @@ export const IPC = {
   updateState: "desktop:update-state",
   latestFirmware: "desktop:latest-firmware",
   downloadFirmware: "desktop:download-firmware",
+  getDesktopPalette: "desktop:get-desktop-palette",
+  desktopPalette: "desktop:desktop-palette",
   setupUsbAccess: "desktop:setup-usb-access",
 } as const;
 

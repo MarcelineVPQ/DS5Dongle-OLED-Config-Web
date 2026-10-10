@@ -15,7 +15,8 @@
     "light": "浅色主题",
     "system": "跟随系统",
     "dark": "深色主题",
-    "groupLabel": "颜色主题"
+    "groupLabel": "颜色主题",
+    "desktop": "跟随桌面配色"
   },
   "languageToggle": {
     "groupLabel": "语言",

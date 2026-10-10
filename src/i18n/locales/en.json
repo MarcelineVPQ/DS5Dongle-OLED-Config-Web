@@ -14,7 +14,8 @@
     "light": "Light theme",
     "system": "Follow system theme",
     "dark": "Dark theme",
-    "groupLabel": "Color theme"
+    "groupLabel": "Color theme",
+    "desktop": "Match desktop colors"
   },
   "languageToggle": {
     "groupLabel": "Language",

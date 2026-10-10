@@ -15,7 +15,8 @@
     "light": "Tema claro",
     "system": "Seguir el sistema",
     "dark": "Tema oscuro",
-    "groupLabel": "Tema de color"
+    "groupLabel": "Tema de color",
+    "desktop": "Usar los colores del escritorio"
   },
   "languageToggle": {
     "groupLabel": "Idioma",

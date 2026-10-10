@@ -9,6 +9,7 @@ import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
+import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
 import { Updater } from "./updater";
 import { isAllowedExternalUrl } from "./urls";
@@ -94,9 +95,11 @@ function start(): void {
       return manifest?.firmware ? { version: manifest.firmware.version, notesUrl: manifest.firmware.notes_url } : null;
     },
     downloadFirmware: () => updater.downloadFirmware(),
+    getDesktopPalette: () => readDesktopPalette(),
   });
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
+  watchDesktopPalette(() => void readDesktopPalette().then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette)));
   app.on("activate", showWindow);
   app.on("before-quit", () => (quitting = true));
   app.on("window-all-closed", () => {

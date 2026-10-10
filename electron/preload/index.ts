@@ -5,6 +5,7 @@
 // the RP2350 boot device.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 import { IPC, type DesktopApi, type TrayCommand, type UpdateState } from "../../src/desktop/api";
+import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
   platform: process.platform,
@@ -31,6 +32,12 @@ const api: DesktopApi = {
   },
   latestFirmware: () => ipcRenderer.invoke(IPC.latestFirmware),
   downloadFirmware: () => ipcRenderer.invoke(IPC.downloadFirmware),
+  getDesktopPalette: () => ipcRenderer.invoke(IPC.getDesktopPalette),
+  onDesktopPalette: (listener) => {
+    const handler = (_event: IpcRendererEvent, palette: DesktopPalette | null) => listener(palette);
+    ipcRenderer.on(IPC.desktopPalette, handler);
+    return () => ipcRenderer.removeListener(IPC.desktopPalette, handler);
+  },
 };
 
 contextBridge.exposeInMainWorld("desktop", api);
