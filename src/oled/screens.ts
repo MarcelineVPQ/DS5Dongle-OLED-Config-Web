@@ -2,18 +2,7 @@
 // framebuffer. Layouts mirror src/oled.cpp's render_screen_X() in the
 // firmware repo so the emulator looks like the physical OLED.
 
-import {
-  CONTENT_X,
-  FB_W,
-  drawBatteryIcon,
-  drawIcon,
-  drawText,
-  fbClear,
-  px,
-  rectFilled,
-  rectInvert,
-  rectOutline,
-} from "./canvas";
+import { CONTENT_X, FB_W, drawBatteryIcon, drawIcon, drawText, fbClear, px, rectFilled, rectInvert, rectOutline } from "./canvas";
 import { ICON_LINK_OFF, ICON_LINK_ON } from "./icons";
 import { EmulatorState, LIGHTBAR_MODE_NAMES, TRIGGER_PRESET_NAMES, formatBdAddr } from "./state";
 
@@ -37,10 +26,7 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, CONTENT_X, 9, s.bdAddr);
 
   // Battery: "%3d%%%c" pattern + battery icon shifted right of the chrome.
-  const marker =
-    s.input.batteryState === 0x1 ? "+" :
-    s.input.batteryState === 0x2 ? "*" :
-    s.input.batteryState >= 0xA ? "!" : " ";
+  const marker = s.input.batteryState === 0x1 ? "+" : s.input.batteryState === 0x2 ? "*" : s.input.batteryState >= 0xa ? "!" : " ";
   drawText(fb, CONTENT_X, 18, `${pad3(s.input.batteryPct)}%${marker}`);
   drawBatteryIcon(fb, 36, 18, s.input.batteryPct);
 
@@ -48,15 +34,13 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   // default-rate estimate "~Nm?" on plug-in; "?" drops once a real 10% step is
   // timed. Mirrors render_screen()/sample_charge_eta().
   if (s.chargeEta.charging) {
-    const eta = s.chargeEta.valid
-      ? `~${s.chargeEta.minutes}m${s.chargeEta.provisional ? "?" : ""}`
-      : "~--m";
+    const eta = s.chargeEta.valid ? `~${s.chargeEta.minutes}m${s.chargeEta.provisional ? "?" : ""}` : "~--m";
     drawText(fb, 94, 18, eta);
   }
 
   // Left stick box shifted right by CONTENT_X.
   rectOutline(fb, CONTENT_X, 30, 32, 32);
-  const lx = (CONTENT_X + 2) + Math.round((s.input.leftStick.x * 27) / 255);
+  const lx = CONTENT_X + 2 + Math.round((s.input.leftStick.x * 27) / 255);
   const ly = 32 + Math.round((s.input.leftStick.y * 27) / 255);
   rectFilled(fb, lx - 1, ly - 1, 3, 3);
   // L3 (left stick click) — invert the whole box (dot inverts with it).
@@ -87,31 +71,34 @@ export function renderStatus(fb: Uint8Array, s: EmulatorState): void {
   const dp_e = dp === 1 || dp === 2 || dp === 3;
   const dp_s = dp === 3 || dp === 4 || dp === 5;
   const dp_w = dp === 5 || dp === 6 || dp === 7;
-  const dcx = 52, dcy = 46;
+  const dcx = 52,
+    dcy = 46;
   const dot = (dx: number, dy: number, on: boolean) => {
     if (on) rectFilled(fb, dcx + dx - 2, dcy + dy - 2, 5, 5);
-    else    rectOutline(fb, dcx + dx - 2, dcy + dy - 2, 5, 5);
+    else rectOutline(fb, dcx + dx - 2, dcy + dy - 2, 5, 5);
   };
-  dot( 0, -7, dp_n);
-  dot( 7,  0, dp_e);
-  dot( 0,  7, dp_s);
-  dot(-7,  0, dp_w);
+  dot(0, -7, dp_n);
+  dot(7, 0, dp_e);
+  dot(0, 7, dp_s);
+  dot(-7, 0, dp_w);
 
   // Face buttons: 5x5 squares in diamond at (fcx=64+18, fcy=46)
   const fcx = 64 + 18;
   const fcy = 46;
   const sq = (dx: number, dy: number, on: boolean) => {
     if (on) rectFilled(fb, fcx + dx - 2, fcy + dy - 2, 5, 5);
-    else    rectOutline(fb, fcx + dx - 2, fcy + dy - 2, 5, 5);
+    else rectOutline(fb, fcx + dx - 2, fcy + dy - 2, 5, 5);
   };
-  sq( 0, -8, s.input.triangle);
-  sq( 8,  0, s.input.circle);
-  sq( 0,  8, s.input.cross);
-  sq(-8,  0, s.input.square);
+  sq(0, -8, s.input.triangle);
+  sq(8, 0, s.input.circle);
+  sq(0, 8, s.input.cross);
+  sq(-8, 0, s.input.square);
 
   // L1 sized smaller to sit between the L2 column and the d-pad; R1 unchanged.
-  if (s.input.l1) rectFilled(fb, 42, 30, 8, 3);  else rectOutline(fb, 42, 30, 8, 3);
-  if (s.input.r1) rectFilled(fb, 80, 30, 12, 3); else rectOutline(fb, 80, 30, 12, 3);
+  if (s.input.l1) rectFilled(fb, 42, 30, 8, 3);
+  else rectOutline(fb, 42, 30, 8, 3);
+  if (s.input.r1) rectFilled(fb, 80, 30, 12, 3);
+  else rectOutline(fb, 80, 30, 12, 3);
 }
 
 // ===== 1: Slots =====
@@ -187,7 +174,9 @@ export function renderGyro(fb: Uint8Array, s: EmulatorState): void {
   drawText(fb, CONTENT_X, 9, `X${pad5s(s.input.accelX)} Y${pad5s(s.input.accelY)} Z${pad5s(s.input.accelZ)}`);
 
   // 40x40 crosshair box (stays centered around x=44 — already clear of chrome).
-  const bx = 44, by = 18, bs = 40;
+  const bx = 44,
+    by = 18,
+    bs = 40;
   rectOutline(fb, bx, by, bs, bs);
   // Cross at center
   for (let i = 1; i < bs - 1; i++) {
@@ -199,8 +188,8 @@ export function renderGyro(fb: Uint8Array, s: EmulatorState): void {
   // flat and tracks as you tilt. Mirrors render_screen_gyro(). Clamp ±2g ≈ ±8000.
   // Negated so the dot follows the tilt direction (mirrors render_screen_gyro()).
   const clamp = (v: number) => Math.max(-1, Math.min(1, v / 8000));
-  const dx = bx + Math.round((bs / 2) - clamp(s.input.accelX) * ((bs - 4) / 2));
-  const dy = by + Math.round((bs / 2) - clamp(s.input.accelZ) * ((bs - 4) / 2));
+  const dx = bx + Math.round(bs / 2 - clamp(s.input.accelX) * ((bs - 4) / 2));
+  const dy = by + Math.round(bs / 2 - clamp(s.input.accelZ) * ((bs - 4) / 2));
   rectFilled(fb, dx, dy, 2, 2);
 }
 
@@ -213,7 +202,7 @@ export function renderTouchpad(fb: Uint8Array, s: EmulatorState): void {
   for (const f of s.input.fingers) {
     if (!f.touching) continue;
     active++;
-    let sx = (CONTENT_X + 3) + Math.round((f.x * 110) / 1919);
+    let sx = CONTENT_X + 3 + Math.round((f.x * 110) / 1919);
     let sy = 13 + Math.round((f.y * 26) / 1079);
     if (sx < CONTENT_X + 3) sx = CONTENT_X + 3;
     if (sx > 122) sx = 122;
@@ -326,8 +315,12 @@ export function renderSettings(fb: Uint8Array, s: EmulatorState): void {
 }
 
 // Helpers
-function pad2(n: number): string { return n.toString().padStart(2, "0"); }
-function pad3(n: number): string { return n.toString().padStart(3, " "); }
+function pad2(n: number): string {
+  return n.toString().padStart(2, "0");
+}
+function pad3(n: number): string {
+  return n.toString().padStart(3, " ");
+}
 function pad5s(n: number): string {
   const s = (n >= 0 ? "+" : "-") + Math.abs(n).toString();
   return s.padStart(5, " ");
@@ -336,17 +329,17 @@ function pad5s(n: number): string {
 // Index -> renderer
 export type ScreenRenderer = (fb: Uint8Array, s: EmulatorState) => void;
 export const SCREEN_RENDERERS: ScreenRenderer[] = [
-  renderStatus,    // 0
-  renderSlots,     // 1
-  renderLightbar,  // 2
-  renderTriggers,  // 3
-  renderGyro,      // 4
-  renderTouchpad,  // 5
-  renderDiag,      // 6
-  renderCpu,       // 7
-  renderRssi,      // 8
-  renderVu,        // 9
-  renderSettings,  // 10
+  renderStatus, // 0
+  renderSlots, // 1
+  renderLightbar, // 2
+  renderTriggers, // 3
+  renderGyro, // 4
+  renderTouchpad, // 5
+  renderDiag, // 6
+  renderCpu, // 7
+  renderRssi, // 8
+  renderVu, // 9
+  renderSettings, // 10
 ];
 
 // silence unused-import warning if FB_W stays unused at lint time

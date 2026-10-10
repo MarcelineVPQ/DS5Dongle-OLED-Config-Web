@@ -1,14 +1,5 @@
-import {
-  ConfigBody,
-  FEATURE_REPORT_PAYLOAD_SIZE,
-  decodeConfigBody,
-  encodeConfigBody,
-} from "./config";
-import {
-  RemapState,
-  decodeRemapFromConfigReport,
-  encodeRemapSet,
-} from "./remap";
+import { ConfigBody, FEATURE_REPORT_PAYLOAD_SIZE, decodeConfigBody, encodeConfigBody } from "./config";
+import { RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
@@ -16,10 +7,10 @@ export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
 const REPORT_SET_CONFIG = 0xf6;
 const REPORT_GET_CONFIG = 0xf7;
 const REPORT_GET_VERSION = 0xf8;
-const REPORT_GET_RSSI    = 0xf9;
-const REPORT_GET_SLOTS   = 0xfa;
-const REPORT_GET_DIAG    = 0xfb;
-const REPORT_GET_CPU     = 0xfc;
+const REPORT_GET_RSSI = 0xf9;
+const REPORT_GET_SLOTS = 0xfa;
+const REPORT_GET_DIAG = 0xfb;
+const REPORT_GET_CPU = 0xfc;
 const CMD_UPDATE_CONFIG = 0x01;
 const CMD_SAVE_TO_FLASH = 0x02;
 const CMD_RECONNECT_USB = 0x03;
@@ -27,10 +18,10 @@ const CMD_RECONNECT_USB = 0x03;
 export interface HidReportProbe {
   id: number;
   name: string;
-  declared: boolean;   // present in the device's parsed HID report descriptor
-  ok?: boolean;        // receiveFeatureReport resolved
+  declared: boolean; // present in the device's parsed HID report descriptor
+  ok?: boolean; // receiveFeatureReport resolved
   byteLength?: number; // payload size on success
-  error?: string;      // "<ErrorName>: <message>" on failure
+  error?: string; // "<ErrorName>: <message>" on failure
 }
 
 export interface HidDiagnostics {
@@ -52,69 +43,75 @@ function buildTriggerEffect(preset: number): { mode: number; params: Uint8Array 
     case 0: // Off
       mode = 0x05;
       break;
-    case 1: { // Feedback — all 10 zones at max strength 8
+    case 1: {
+      // Feedback — all 10 zones at max strength 8
       mode = 0x21;
-      const active = 0x03FF;
+      const active = 0x03ff;
       let strength = 0;
       for (let i = 0; i < 10; i++) strength |= 7 << (3 * i);
-      params[0] = active & 0xFF;
-      params[1] = (active >> 8) & 0xFF;
-      params[2] = strength & 0xFF;
-      params[3] = (strength >> 8) & 0xFF;
-      params[4] = (strength >> 16) & 0xFF;
-      params[5] = (strength >> 24) & 0xFF;
+      params[0] = active & 0xff;
+      params[1] = (active >> 8) & 0xff;
+      params[2] = strength & 0xff;
+      params[3] = (strength >> 8) & 0xff;
+      params[4] = (strength >> 16) & 0xff;
+      params[5] = (strength >> 24) & 0xff;
       break;
     }
-    case 2: { // Weapon — snap between positions 3 and 5, force 8
+    case 2: {
+      // Weapon — snap between positions 3 and 5, force 8
       mode = 0x25;
       const startStop = (1 << 3) | (1 << 5);
-      params[0] = startStop & 0xFF;
-      params[1] = (startStop >> 8) & 0xFF;
+      params[0] = startStop & 0xff;
+      params[1] = (startStop >> 8) & 0xff;
       params[2] = 7; // force = strength - 1
       break;
     }
-    case 3: { // Vibration — all zones, amplitude 8, frequency 30 Hz
+    case 3: {
+      // Vibration — all zones, amplitude 8, frequency 30 Hz
       mode = 0x26;
-      const active = 0x03FF;
+      const active = 0x03ff;
       let strength = 0;
       for (let i = 0; i < 10; i++) strength |= 7 << (3 * i);
-      params[0] = active & 0xFF;
-      params[1] = (active >> 8) & 0xFF;
-      params[2] = strength & 0xFF;
-      params[3] = (strength >> 8) & 0xFF;
-      params[4] = (strength >> 16) & 0xFF;
-      params[5] = (strength >> 24) & 0xFF;
+      params[0] = active & 0xff;
+      params[1] = (active >> 8) & 0xff;
+      params[2] = strength & 0xff;
+      params[3] = (strength >> 8) & 0xff;
+      params[4] = (strength >> 16) & 0xff;
+      params[5] = (strength >> 24) & 0xff;
       params[8] = 30;
       break;
     }
-    case 4: { // Bow — drawing resistance + snap at position 6
+    case 4: {
+      // Bow — drawing resistance + snap at position 6
       mode = 0x22;
       const startStop = (1 << 2) | (1 << 6);
       const forcePair = 7 | (7 << 3); // strength=8, snap=8
-      params[0] = startStop & 0xFF;
-      params[1] = (startStop >> 8) & 0xFF;
+      params[0] = startStop & 0xff;
+      params[1] = (startStop >> 8) & 0xff;
       params[2] = forcePair;
       break;
     }
-    case 5: { // Galloping
+    case 5: {
+      // Galloping
       mode = 0x23;
       const startStop = (1 << 0) | (1 << 9);
       const ratio = (5 & 0x07) | ((1 & 0x07) << 3);
-      params[0] = startStop & 0xFF;
-      params[1] = (startStop >> 8) & 0xFF;
+      params[0] = startStop & 0xff;
+      params[1] = (startStop >> 8) & 0xff;
       params[2] = ratio;
       params[3] = 5; // frequency
       break;
     }
-    case 6: { // Machine gun
+    case 6: {
+      // Machine gun
       mode = 0x27;
       const startStop = (1 << 1) | (1 << 8);
       const forcePair = 7 | (7 << 3);
-      params[0] = startStop & 0xFF;
-      params[1] = (startStop >> 8) & 0xFF;
+      params[0] = startStop & 0xff;
+      params[1] = (startStop >> 8) & 0xff;
       params[2] = forcePair;
       params[3] = 20; // frequency
-      params[4] = 0;  // period
+      params[4] = 0; // period
       break;
     }
   }
@@ -234,19 +231,23 @@ export class Ds5BridgeHidClient {
 
   // 18-byte diagnostics payload (see firmware src/cmd.cpp).
   async readDiagRaw(): Promise<{
-    uptimeSeconds: number; usbFrames: number; btPackets: number;
-    peakSpeaker: number;  peakHaptic: number; hciErrors: number;
+    uptimeSeconds: number;
+    usbFrames: number;
+    btPackets: number;
+    peakSpeaker: number;
+    peakHaptic: number;
+    hciErrors: number;
   }> {
     await this.open();
     const report = await this.device.receiveFeatureReport(REPORT_GET_DIAG);
     const view = new DataView(report.buffer, report.byteOffset + 1, 18);
     return {
       uptimeSeconds: view.getUint32(0, true),
-      usbFrames:     view.getUint32(4, true),
-      btPackets:     view.getUint32(8, true),
-      peakSpeaker:   view.getUint8(12),
-      peakHaptic:    view.getUint8(13),
-      hciErrors:     view.getUint32(14, true),
+      usbFrames: view.getUint32(4, true),
+      btPackets: view.getUint32(8, true),
+      peakSpeaker: view.getUint8(12),
+      peakHaptic: view.getUint8(13),
+      hciErrors: view.getUint32(14, true),
     };
   }
 
@@ -259,7 +260,7 @@ export class Ds5BridgeHidClient {
   async sendTriggerPreset(preset: number): Promise<void> {
     await this.open();
     const data = new Uint8Array(47);
-    data[0] = 0x0C; // valid_flag0: RIGHT_TRIGGER_MOTOR_ENABLE | LEFT_TRIGGER_MOTOR_ENABLE
+    data[0] = 0x0c; // valid_flag0: RIGHT_TRIGGER_MOTOR_ENABLE | LEFT_TRIGGER_MOTOR_ENABLE
     const { mode, params } = buildTriggerEffect(preset);
     data[10] = mode;
     for (let i = 0; i < 9; i++) data[11 + i] = params[i];
@@ -314,13 +315,19 @@ export class Ds5BridgeHidClient {
       try {
         const report = await this.device.receiveFeatureReport(id);
         probes.push({
-          id, name, declared, ok: true,
+          id,
+          name,
+          declared,
+          ok: true,
           byteLength: report.byteLength,
         });
       } catch (e) {
         const err = e as { name?: string; message?: string };
         probes.push({
-          id, name, declared, ok: false,
+          id,
+          name,
+          declared,
+          ok: false,
           error: `${err.name ?? "Error"}: ${err.message ?? String(e)}`,
         });
       }

@@ -8,39 +8,23 @@
 // standalone Reboot button. UI structure is React but the patterns
 // match piersfinlayson/picoflash's reference implementation.
 
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Cpu,
-  Download,
-  FileUp,
-  Power,
-  Usb,
-  Zap,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Cpu, Download, FileUp, Power, Usb, Zap } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PicoflashAPI, PicoflashHandle, parseUf2Regions, Uf2Region } from "../flash";
 
 interface LatestFirmwareMeta {
-  tag: string;        // git tag, e.g. "v0.6.0-oled-edition"
-  title: string;      // pretty release title, e.g. "v0.6.0 — OLED Edition"
-  assetName: string;  // UF2 filename, e.g. "ds5-bridge-oled-v0.6.0-oled-edition.uf2"
+  tag: string; // git tag, e.g. "v0.6.0-oled-edition"
+  title: string; // pretty release title, e.g. "v0.6.0 — OLED Edition"
+  assetName: string; // UF2 filename, e.g. "ds5-bridge-oled-v0.6.0-oled-edition.uf2"
   size: number;
-  sha256?: string;    // hex digest of the UF2, written by deploy.yml from `sha256sum`
+  sha256?: string; // hex digest of the UF2, written by deploy.yml from `sha256sum`
   publishedAt: string;
 }
 
 type Uf2Source = "file" | "latest";
 
-type FlashStage =
-  | "idle"
-  | "parsing"
-  | "connecting"
-  | "writing"
-  | "rebooting"
-  | "done"
-  | "error";
+type FlashStage = "idle" | "parsing" | "connecting" | "writing" | "rebooting" | "done" | "error";
 
 type Op = null | "flash" | "reboot";
 
@@ -50,19 +34,19 @@ interface LogEntry {
   severity: "info" | "success" | "warning" | "error";
 }
 
-const FLASH_BASE_ADDRESS = 0x10000000;            // RP2350 XIP flash base
-const FLASH_SPEED_BPS    = 80 * 1024;             // picoflash.org's estimate
-const TIMEOUT_BUFFER_MS  = 5000;                  // baseline timeout slack
-const TIMEOUT_VARIANCE   = 1.1;                   // 10 % padding
-const REBOOT_DELAY_MS    = 100;                   // ms before reboot fires
-const SHOW_LOGS_KEY      = "flasher-show-logs";
+const FLASH_BASE_ADDRESS = 0x10000000; // RP2350 XIP flash base
+const FLASH_SPEED_BPS = 80 * 1024; // picoflash.org's estimate
+const TIMEOUT_BUFFER_MS = 5000; // baseline timeout slack
+const TIMEOUT_VARIANCE = 1.1; // 10 % padding
+const REBOOT_DELAY_MS = 100; // ms before reboot fires
+const SHOW_LOGS_KEY = "flasher-show-logs";
 
 interface ParsedUf2 {
   fileName: string;
   regions: Uf2Region[];
   totalBytes: number;
-  sha256: string;       // hex digest of the raw UF2 file
-  source: Uf2Source;    // 'file' = user-supplied, 'latest' = trusted CI-bundled
+  sha256: string; // hex digest of the raw UF2 file
+  source: Uf2Source; // 'file' = user-supplied, 'latest' = trusted CI-bundled
   expectedSha256?: string; // for 'latest' source, the hash CI computed; compared against sha256
 }
 
@@ -88,12 +72,7 @@ async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
 
 async function withTimeout<T>(fn: () => Promise<T>, ms: number, label: string): Promise<T> {
   const rounded = Math.round(ms / 100) * 100;
-  return Promise.race([
-    fn(),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out after ${rounded}ms`)), rounded),
-    ),
-  ]);
+  return Promise.race([fn(), new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out after ${rounded}ms`)), rounded))]);
 }
 
 function logReducer(state: LogEntry[], action: LogEntry | { type: "clear" }): LogEntry[] {
@@ -148,7 +127,9 @@ export default function Flasher() {
     fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((meta: LatestFirmwareMeta | null) => meta && setLatestMeta(meta))
-      .catch(() => { /* no bundled firmware; that's fine */ });
+      .catch(() => {
+        /* no bundled firmware; that's fine */
+      });
   }, []);
 
   // Cleanup any leftover progress interval on unmount.
@@ -186,18 +167,11 @@ export default function Flasher() {
 
   // ---- UF2 loading ---------------------------------------------------------
 
-  async function ingestUf2(
-    fileName: string,
-    buffer: ArrayBuffer,
-    source: Uf2Source,
-    expectedSha256?: string,
-  ) {
+  async function ingestUf2(fileName: string, buffer: ArrayBuffer, source: Uf2Source, expectedSha256?: string) {
     const regions = parseUf2Regions(buffer);
     if (regions.length === 0) throw new Error("UF2 contains no blocks");
     if (regions[0].address !== FLASH_BASE_ADDRESS) {
-      throw new Error(
-        `First region at 0x${regions[0].address.toString(16)} — expected 0x${FLASH_BASE_ADDRESS.toString(16)}`,
-      );
+      throw new Error(`First region at 0x${regions[0].address.toString(16)} — expected 0x${FLASH_BASE_ADDRESS.toString(16)}`);
     }
     const totalBytes = regions.reduce((n, r) => n + r.data.byteLength, 0);
     if (totalBytes < 1024 || totalBytes > 4 * 1024 * 1024) {
@@ -208,10 +182,7 @@ export default function Flasher() {
     setStage("idle");
     log(`Loaded UF2: ${fileName} — ${formatBytes(totalBytes)} · sha256 ${sha256}`, "success");
     if (expectedSha256 && expectedSha256.toLowerCase() !== sha256.toLowerCase()) {
-      log(
-        `Integrity warning: bundled SHA-256 ${expectedSha256} ≠ computed ${sha256} — UF2 was modified after CI built it.`,
-        "warning",
-      );
+      log(`Integrity warning: bundled SHA-256 ${expectedSha256} ≠ computed ${sha256} — UF2 was modified after CI built it.`, "warning");
     }
   }
 
@@ -294,11 +265,7 @@ export default function Flasher() {
         const r = uf2.regions[i];
         const label = `region ${i + 1}/${uf2.regions.length} (${formatBytes(r.data.byteLength)} @ 0x${r.address.toString(16)})`;
         log(`Writing ${label}`);
-        await withTimeout(
-          () => device.flashEraseAndWrite(r.address, r.data),
-          calcTimeoutMs(r.data.byteLength),
-          label,
-        );
+        await withTimeout(() => device.flashEraseAndWrite(r.address, r.data), calcTimeoutMs(r.data.byteLength), label);
       }
       setStage("rebooting");
       log("Rebooting Pico into the new firmware...");
@@ -328,11 +295,7 @@ export default function Flasher() {
     log("Rebooting Pico into application mode...");
     try {
       await device.connect();
-      await withTimeout(
-        () => device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS),
-        5_000,
-        "Reboot",
-      );
+      await withTimeout(() => device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS), 5_000, "Reboot");
       setStage("done");
       log("Reboot command sent.", "success");
       setDevice(null);
@@ -371,17 +334,23 @@ export default function Flasher() {
 
       {/* Device info strip — model / serial / state */}
       <div className="flasher-device-strip">
-        <div><span className="label">{t("flash.info.device")}</span><span className="num">{deviceModel}</span></div>
-        <div><span className="label">{t("flash.info.serial")}</span><span className="num">{deviceSerial}</span></div>
-        <div><span className="label">{t("flash.info.state")}</span><span className="num">{stateLabel}</span></div>
+        <div>
+          <span className="label">{t("flash.info.device")}</span>
+          <span className="num">{deviceModel}</span>
+        </div>
+        <div>
+          <span className="label">{t("flash.info.serial")}</span>
+          <span className="num">{deviceSerial}</span>
+        </div>
+        <div>
+          <span className="label">{t("flash.info.state")}</span>
+          <span className="num">{stateLabel}</span>
+        </div>
       </div>
 
       {/* Progress bar */}
       <div className="flasher-progress" aria-hidden={progressPct === 0 && !progressErrored}>
-        <div
-          className={`flasher-progress-fill ${progressErrored ? "errored" : ""}`}
-          style={{ width: `${progressPct}%` }}
-        />
+        <div className={`flasher-progress-fill ${progressErrored ? "errored" : ""}`} style={{ width: `${progressPct}%` }} />
       </div>
 
       <ol className="flasher-steps">
@@ -392,24 +361,11 @@ export default function Flasher() {
             <p>{t("flash.step1Hint")}</p>
             <div className="flasher-source-row">
               {latestMeta && (
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={handleUseLatest}
-                  disabled={isBusy}
-                  title={`${latestMeta.assetName} (${formatBytes(latestMeta.size)})`}
-                >
+                <button type="button" className="button-secondary" onClick={handleUseLatest} disabled={isBusy} title={`${latestMeta.assetName} (${formatBytes(latestMeta.size)})`}>
                   <Download size={14} /> {t("flash.useLatest", { title: latestMeta.title })}
                 </button>
               )}
-              <input
-                type="file"
-                accept=".uf2"
-                onChange={handleFileChange}
-                disabled={isBusy}
-                id="flasher-file"
-                className="flasher-file-input"
-              />
+              <input type="file" accept=".uf2" onChange={handleFileChange} disabled={isBusy} id="flasher-file" className="flasher-file-input" />
               <label htmlFor="flasher-file" className="button-secondary">
                 <FileUp size={14} /> {uf2 ? uf2.fileName : t("flash.pickFile")}
               </label>
@@ -419,9 +375,7 @@ export default function Flasher() {
                 <span className="flasher-file-size">
                   {formatBytes(uf2.totalBytes)} · {uf2.regions.length} region{uf2.regions.length === 1 ? "" : "s"}
                 </span>
-                <span className="flasher-file-hash">
-                  sha256 {uf2.sha256}
-                </span>
+                <span className="flasher-file-hash">sha256 {uf2.sha256}</span>
               </div>
             )}
             {uf2?.source === "file" && (
@@ -438,13 +392,7 @@ export default function Flasher() {
           <div>
             <h3>{t("flash.step2Title")}</h3>
             <p>{t("flash.step2Hint")}</p>
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={handleConnect}
-              disabled={isBusy || !webUsbSupported}
-              title={t("flash.connectTitle")}
-            >
+            <button type="button" className="button-secondary" onClick={handleConnect} disabled={isBusy || !webUsbSupported} title={t("flash.connectTitle")}>
               <Usb size={14} /> {device ? t("flash.reconnect") : t("flash.connect")}
             </button>
             {device && (
@@ -461,21 +409,10 @@ export default function Flasher() {
             <h3>{t("flash.step3Title")}</h3>
             <p>{t("flash.step3Hint")}</p>
             <div className="flasher-action-row">
-              <button
-                type="button"
-                className="button-primary"
-                onClick={handleFlash}
-                disabled={!uf2 || !device || isBusy}
-              >
+              <button type="button" className="button-primary" onClick={handleFlash} disabled={!uf2 || !device || isBusy}>
                 <Cpu size={14} /> {op === "flash" ? t("flash.flashingButton") : t("flash.flashButton")}
               </button>
-              <button
-                type="button"
-                className="button-secondary"
-                onClick={handleReboot}
-                disabled={!device || isBusy}
-                title={t("flash.rebootTitle")}
-              >
+              <button type="button" className="button-secondary" onClick={handleReboot} disabled={!device || isBusy} title={t("flash.rebootTitle")}>
                 <Power size={14} /> {op === "reboot" ? t("flash.rebootingButton") : t("flash.rebootButton")}
               </button>
             </div>
@@ -485,19 +422,11 @@ export default function Flasher() {
 
       {/* Activity log toggle + panel */}
       <div className="flasher-log-toggle">
-        <button
-          type="button"
-          className="button-link"
-          onClick={() => setShowLogs((v) => !v)}
-        >
+        <button type="button" className="button-link" onClick={() => setShowLogs((v) => !v)}>
           {showLogs ? t("flash.hideLogs") : t("flash.showLogs")} ({logs.length})
         </button>
         {logs.length > 0 && (
-          <button
-            type="button"
-            className="button-link"
-            onClick={() => dispatchLog({ type: "clear" })}
-          >
+          <button type="button" className="button-link" onClick={() => dispatchLog({ type: "clear" })}>
             {t("flash.clearLogs")}
           </button>
         )}
@@ -525,10 +454,18 @@ export default function Flasher() {
         </div>
         <h4>Linux</h4>
         <p>{t("flash.driverHelpLinux")}</p>
-        <pre><code>{`echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666"' | sudo tee /etc/udev/rules.d/99-pico-bootsel.rules
-sudo udevadm control --reload-rules && sudo udevadm trigger`}</code></pre>
+        <pre>
+          <code>{`echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666"' | sudo tee /etc/udev/rules.d/99-pico-bootsel.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger`}</code>
+        </pre>
         <h4>Windows</h4>
-        <p>{t("flash.driverHelpWindows")} <a href="https://zadig.akeo.ie" target="_blank" rel="noopener noreferrer">Zadig</a>.</p>
+        <p>
+          {t("flash.driverHelpWindows")}{" "}
+          <a href="https://zadig.akeo.ie" target="_blank" rel="noopener noreferrer">
+            Zadig
+          </a>
+          .
+        </p>
         <h4>macOS</h4>
         <p>{t("flash.driverHelpMac")}</p>
       </section>

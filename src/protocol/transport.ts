@@ -1,0 +1,37 @@
+// How the configurator reaches the dongle's pico command reports (0xF1-0xFE).
+//
+// The dongle's gamepad HID descriptor is byte-identical to a real DualSense, so
+// these reports are not declared there and WebHID / Windows HID refuse them.
+// Firmware built with ENABLE_COMPANION_VENDOR adds a control-only vendor-class
+// USB interface that carries them instead (firmware src/vendor_itf.h). WebUSB
+// reaches it in Chromium browsers and in the Electron app alike.
+
+export interface Ds5Transport {
+  readonly label: string;
+  readonly isOpen: boolean;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  // GET a report. Resolves to the payload WITHOUT the report-id byte.
+  getReport(reportId: number, length: number): Promise<Uint8Array>;
+  // SET a report. For 0xF6, payload[0] is the function id.
+  setReport(reportId: number, payload: Uint8Array): Promise<void>;
+}
+
+// A transfer failed because the device left the bus (reboot, BOOTSEL, unplug).
+export class DeviceGoneError extends Error {
+  constructor(message = "The dongle disconnected") {
+    super(message);
+    this.name = "DeviceGoneError";
+  }
+}
+
+// The firmware refused the request (USB STALL): unknown report, or a firmware
+// too old to have it.
+export class ReportStalledError extends Error {
+  constructor(public readonly reportId: number) {
+    super(`The dongle refused report 0x${reportId.toString(16).toUpperCase()}`);
+    this.name = "ReportStalledError";
+  }
+}
+
+export const MAX_REPORT_PAYLOAD = 63;

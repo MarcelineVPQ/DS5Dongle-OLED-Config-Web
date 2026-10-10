@@ -3,7 +3,7 @@
 // enumeration on Windows). See firmware src/remap.cpp + src/cmd.cpp.
 //
 //   SET  sendFeatureReport(0xF6, [0x10,'R','M',ver, table[16], …pad])
-//   GET  receiveFeatureReport(0xF7) → <Config_body(35)> then the appended block:
+//   GET  receiveFeatureReport(0xF7) → <Config_body(37)> then the appended block:
 //        ['R','M', ver, rev_lo, rev_hi, table[16]]
 //
 // The table maps source index → target index; 0xFF = source disabled.
@@ -22,16 +22,16 @@ const MAGIC_M = 0x4d; // 'M'
 // firmware src/remap.cpp. Not translated — short controller-button names, same
 // convention as LIGHTBAR_MODE_OPTIONS in config.ts.
 export const REMAP_BUTTON_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
-  { value: 0,  label: "L2" },
-  { value: 1,  label: "L1" },
-  { value: 2,  label: "Create" },
-  { value: 3,  label: "D-Pad Up" },
-  { value: 4,  label: "D-Pad Left" },
-  { value: 5,  label: "D-Pad Down" },
-  { value: 6,  label: "D-Pad Right" },
-  { value: 7,  label: "L3" },
-  { value: 8,  label: "R2" },
-  { value: 9,  label: "R1" },
+  { value: 0, label: "L2" },
+  { value: 1, label: "L1" },
+  { value: 2, label: "Create" },
+  { value: 3, label: "D-Pad Up" },
+  { value: 4, label: "D-Pad Left" },
+  { value: 5, label: "D-Pad Down" },
+  { value: 6, label: "D-Pad Right" },
+  { value: 7, label: "L3" },
+  { value: 8, label: "R2" },
+  { value: 9, label: "R1" },
   { value: 10, label: "Options" },
   { value: 11, label: "Triangle △" },
   { value: 12, label: "Circle ○" },
@@ -42,8 +42,8 @@ export const REMAP_BUTTON_OPTIONS: ReadonlyArray<{ value: number; label: string 
 
 export interface RemapState {
   version: number;
-  revision: number;   // bumps on each successful device write — poll to confirm
-  table: number[];    // length REMAP_COUNT
+  revision: number; // bumps on each successful device write — poll to confirm
+  table: number[]; // length REMAP_COUNT
 }
 
 export function identityTable(): number[] {

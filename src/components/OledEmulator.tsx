@@ -16,26 +16,9 @@ import { Ds5BridgeHidClient, HidDiagnostics } from "../protocol/ds5BridgeHid";
 import { FB_W, FB_H, MOCK_TINT, drawButtonChrome, flush, newFramebuffer } from "../oled/canvas";
 import PicoBoardFrame from "./PicoBoardFrame";
 import { decodeInputReport, emptyInputReport } from "../oled/inputReport";
-import {
-  mockCpu,
-  mockDiag,
-  mockInputReport,
-  mockRssi,
-  mockSlots,
-  newMockState,
-} from "../oled/mock";
+import { mockCpu, mockDiag, mockInputReport, mockRssi, mockSlots, newMockState } from "../oled/mock";
 import { SCREEN_RENDERERS } from "../oled/screens";
-import {
-  EmulatorState,
-  LIGHTBAR_MODE_NAMES,
-  SCREEN_NAMES,
-  TRIGGER_PRESET_NAMES,
-  formatBdAddr,
-  key1Action,
-  newEmulatorState,
-  nextScreen,
-  sampleChargeEta,
-} from "../oled/state";
+import { EmulatorState, LIGHTBAR_MODE_NAMES, SCREEN_NAMES, TRIGGER_PRESET_NAMES, formatBdAddr, key1Action, newEmulatorState, nextScreen, sampleChargeEta } from "../oled/state";
 
 const AUTO_CYCLE_MS = 4000;
 const FEATURE_POLL_MS = 200;
@@ -74,7 +57,9 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         const short = meta.tag.replace(/-oled-edition$/, "");
         stateRef.current.firmwareVersionLabel = short;
       })
-      .catch(() => { /* preview defaults to "dev" — fine in local dev */ });
+      .catch(() => {
+        /* preview defaults to "dev" — fine in local dev */
+      });
   }, []);
 
   // Keep stateRef.isConnected / isDemoMode in sync with the React-side flag.
@@ -107,9 +92,9 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
       stateRef.current.input = next;
 
       const triRising = next.triangle && !prevTriangleRef.current;
-      const r1Rising  = next.r1       && !prevR1Ref.current;
+      const r1Rising = next.r1 && !prevR1Ref.current;
       prevTriangleRef.current = next.triangle;
-      prevR1Ref.current       = next.r1;
+      prevR1Ref.current = next.r1;
 
       // D-pad rising-edge: only fires when the direction CHANGES, so
       // holding the stick doesn't repeat. dpad encoding: 0=N, 1=NE,
@@ -125,7 +110,6 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         const np = (stateRef.current.triggerPreset + 1) % TRIGGER_PRESET_NAMES.length;
         stateRef.current.triggerPreset = np;
         client.sendTriggerPreset(np).catch((e) => {
-          // eslint-disable-next-line no-console
           console.warn("[trigger] sendReport failed", e);
         });
       }
@@ -152,7 +136,10 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
   // actually does — to root-cause the slots/diag/cpu telemetry reads
   // without changing firmware. Logged to the console and shown in-UI.
   useEffect(() => {
-    if (!client) { setHidDiag(null); return; }
+    if (!client) {
+      setHidDiag(null);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -160,28 +147,20 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         if (cancelled) return;
         setHidDiag(d);
         const hex = (n: number) => "0x" + n.toString(16).toUpperCase();
-        // eslint-disable-next-line no-console
-        console.groupCollapsed(
-          `[HID diag] pid=${hex(d.productId)} ` +
-          `feature=[${d.declaredFeatureIds.map(hex).join(", ")}] ` +
-          `input=[${d.declaredInputIds.map(hex).join(", ")}]`,
-        );
+
+        console.groupCollapsed(`[HID diag] pid=${hex(d.productId)} ` + `feature=[${d.declaredFeatureIds.map(hex).join(", ")}] ` + `input=[${d.declaredInputIds.map(hex).join(", ")}]`);
         for (const p of d.probes) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `${hex(p.id)} ${p.name}: ` +
-            `${p.declared ? "declared" : "NOT declared"} — ` +
-            (p.ok ? `OK ${p.byteLength}B` : `FAIL ${p.error}`),
-          );
+          console.log(`${hex(p.id)} ${p.name}: ` + `${p.declared ? "declared" : "NOT declared"} — ` + (p.ok ? `OK ${p.byteLength}B` : `FAIL ${p.error}`));
         }
-        // eslint-disable-next-line no-console
+
         console.groupEnd();
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn("[HID diag] failed", e);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [client]);
 
   // Poll feature reports for data not in the input stream.
@@ -196,12 +175,7 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         // breaks DualSense enumeration on Windows (verified twice on real
         // hardware). The CPU preview stays on representative mock values;
         // see the read-only HID diagnostic below for the evidence.
-        const [config, slots, diag, rssi] = await Promise.all([
-          client.readConfig(),
-          client.readSlotsRaw().catch(() => null),
-          client.readDiagRaw().catch(() => null),
-          client.readRssi().catch(() => 0),
-        ]);
+        const [config, slots, diag, rssi] = await Promise.all([client.readConfig(), client.readSlotsRaw().catch(() => null), client.readDiagRaw().catch(() => null), client.readRssi().catch(() => 0)]);
         if (cancelled) return;
         const s = stateRef.current;
         s.config = config;
@@ -220,12 +194,12 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
           const prev = s.diag;
           const now = performance.now();
           let usbRate = prev.usbRate ?? 0;
-          let btRate  = prev.btRate  ?? 0;
+          let btRate = prev.btRate ?? 0;
           if (prev.prevSampleMs !== undefined) {
             const dtS = (now - prev.prevSampleMs) / 1000;
             if (dtS > 0) {
               usbRate = Math.round((diag.usbFrames - (prev.prevUsbFrames ?? 0)) / dtS);
-              btRate  = Math.round((diag.btPackets - (prev.prevBtPackets ?? 0)) / dtS);
+              btRate = Math.round((diag.btPackets - (prev.prevBtPackets ?? 0)) / dtS);
             }
           }
           s.diag = {
@@ -233,7 +207,8 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
             prevUsbFrames: diag.usbFrames,
             prevBtPackets: diag.btPackets,
             prevSampleMs: now,
-            usbRate, btRate,
+            usbRate,
+            btRate,
           };
         }
       } catch {
@@ -242,7 +217,10 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
     };
     void tick();
     const id = window.setInterval(tick, FEATURE_POLL_MS);
-    return () => { cancelled = true; window.clearInterval(id); };
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, [client]);
 
   // Render loop at ~30 Hz.
@@ -291,7 +269,6 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         s.triggerPreset = 0;
         if (client) {
           client.sendTriggerPreset(0).catch((e) => {
-            // eslint-disable-next-line no-console
             console.warn("[trigger] reset-on-leave failed", e);
           });
         }
@@ -316,9 +293,7 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
         const renderer = SCREEN_RENDERERS[s.currentScreen];
         renderer(fbRef.current, s);
         drawButtonChrome(fbRef.current);
-        const isMockOnly =
-          isConnected &&
-          (s.currentScreen === 1 || s.currentScreen === 6 || s.currentScreen === 7);
+        const isMockOnly = isConnected && (s.currentScreen === 1 || s.currentScreen === 6 || s.currentScreen === 7);
         flush(ctx, fbRef.current, isMockOnly ? MOCK_TINT : undefined);
       }
       // Force React subtree (button labels) to refresh every ~10 frames.
@@ -391,40 +366,22 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
             paddingBlock: "12%",
           }}
         >
-          <button
-            type="button"
-            className="oled-key"
-            onClick={handleKey0}
-            title={t("preview.key0Title")}
-          >
+          <button type="button" className="oled-key" onClick={handleKey0} title={t("preview.key0Title")}>
             <ChevronRight size={18} /> {t("preview.key0")}
           </button>
-          <button
-            type="button"
-            className="oled-key"
-            onClick={handleKey1}
-            title={t("preview.key1Title")}
-          >
+          <button type="button" className="oled-key" onClick={handleKey1} title={t("preview.key1Title")}>
             <ChevronLeft size={18} /> {t("preview.key1")}
           </button>
         </div>
 
         <div style={{ flex: "0 0 min(640px, calc(100% - 140px))" }}>
           <PicoBoardFrame connected={isConnected}>
-            <canvas
-              ref={canvasRef}
-              width={FB_W * CANVAS_SCALE}
-              height={FB_H * CANVAS_SCALE}
-              className="oled-canvas"
-            />
+            <canvas ref={canvasRef} width={FB_W * CANVAS_SCALE} height={FB_H * CANVAS_SCALE} className="oled-canvas" />
           </PicoBoardFrame>
         </div>
       </div>
 
-      <div
-        className="oled-screen-name"
-        style={{ textAlign: "center", marginTop: 6 }}
-      >
+      <div className="oled-screen-name" style={{ textAlign: "center", marginTop: 6 }}>
         <Trans
           i18nKey="preview.screenIndicator"
           values={{
@@ -437,29 +394,16 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
       </div>
 
       <div className="oled-toolbar">
-        <button
-          type="button"
-          className="button ghost"
-          onClick={() => setAutoCycle((v) => !v)}
-          title={autoCycle ? t("preview.autoCycleOnTitle") : t("preview.autoCycleOffTitle")}
-        >
+        <button type="button" className="button ghost" onClick={() => setAutoCycle((v) => !v)} title={autoCycle ? t("preview.autoCycleOnTitle") : t("preview.autoCycleOffTitle")}>
           {autoCycle ? <Pause size={15} /> : <Play size={15} />}
           {autoCycle ? t("preview.autoCycleOn") : t("preview.autoCycleOff")}
         </button>
       </div>
 
-      <p className="oled-firmware-note">
-        {t("preview.firmwareNote")}
-      </p>
+      <p className="oled-firmware-note">{t("preview.firmwareNote")}</p>
 
-      {isConnected &&
-        (stateRef.current.currentScreen === 1 ||
-          stateRef.current.currentScreen === 6 ||
-          stateRef.current.currentScreen === 7) && (
-        <p
-          className="oled-firmware-note"
-          style={{ color: "#f59e0b", fontStyle: "italic" }}
-        >
+      {isConnected && (stateRef.current.currentScreen === 1 || stateRef.current.currentScreen === 6 || stateRef.current.currentScreen === 7) && (
+        <p className="oled-firmware-note" style={{ color: "#f59e0b", fontStyle: "italic" }}>
           {t("preview.mockNote")}
         </p>
       )}
@@ -467,28 +411,21 @@ export default function OledEmulator({ client }: OledEmulatorProps) {
       {isConnected && hidDiag && (
         <details
           style={{
-            marginTop: 8, fontFamily: "monospace", fontSize: 11,
-            opacity: 0.8, maxWidth: 360,
+            marginTop: 8,
+            fontFamily: "monospace",
+            fontSize: 11,
+            opacity: 0.8,
+            maxWidth: 360,
           }}
         >
           <summary style={{ cursor: "pointer" }}>
-            HID diagnostic ({hidDiag.probes.filter((p) => p.ok).length}/
-            {hidDiag.probes.length} reads OK)
+            HID diagnostic ({hidDiag.probes.filter((p) => p.ok).length}/{hidDiag.probes.length} reads OK)
           </summary>
           <div style={{ marginTop: 4, lineHeight: 1.5 }}>
-            <div>
-              declared feature reports:{" "}
-              {hidDiag.declaredFeatureIds.length
-                ? hidDiag.declaredFeatureIds
-                    .map((n) => "0x" + n.toString(16).toUpperCase())
-                    .join(", ")
-                : "(none)"}
-            </div>
+            <div>declared feature reports: {hidDiag.declaredFeatureIds.length ? hidDiag.declaredFeatureIds.map((n) => "0x" + n.toString(16).toUpperCase()).join(", ") : "(none)"}</div>
             {hidDiag.probes.map((p) => (
               <div key={p.id}>
-                0x{p.id.toString(16).toUpperCase()} {p.name}:{" "}
-                {p.declared ? "declared" : "NOT declared"} —{" "}
-                {p.ok ? `OK ${p.byteLength}B` : `FAIL ${p.error}`}
+                0x{p.id.toString(16).toUpperCase()} {p.name}: {p.declared ? "declared" : "NOT declared"} — {p.ok ? `OK ${p.byteLength}B` : `FAIL ${p.error}`}
               </div>
             ))}
           </div>

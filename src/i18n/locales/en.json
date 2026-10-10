@@ -24,7 +24,7 @@
   "notice": {
     "dismiss": "Dismiss",
     "webhidUnavailable": "WebHID is available in Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) on secure origins. Firefox is not supported by Mozilla.",
-    "firmwareDisabled": "Heads up: the Config and Remap tabs are currently disabled for firmware v0.6.12 and newer. That firmware makes the dongle byte-identical to a real DualSense so games fire native adaptive triggers, which meant removing the HID config reports this browser tool relies on. Configure from the dongle's on-screen OLED menu instead. A browser-based fix is being explored — firmware v0.6.11 and earlier still work here."
+    "webusbUnavailable": "WebUSB is available in Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) and in the desktop app. Firefox and Safari don't support it. Firmware v0.8 or newer is needed for configuration."
   },
   "device": {
     "label": "Device",
@@ -56,7 +56,8 @@
     "reading": "Reading config",
     "applying": "Applying",
     "saving": "Saving to flash",
-    "reconnecting": "Reconnecting USB"
+    "reconnecting": "Reconnecting USB",
+    "webusbUnavailable": "WebUSB unavailable"
   },
   "actions": {
     "title": "Actions",
@@ -78,15 +79,27 @@
     "blurb": "Derive haptic feedback from the game's speaker audio for titles that send no native HD-haptic data (e.g. Ghost of Tsushima on Linux + Steam).",
     "modeLabel": "Mode",
     "modes": {
-      "off":      { "label": "Off",      "hint": "Native haptics only (channels 2 + 3 of the USB audio stream)." },
-      "fallback": { "label": "Fallback", "hint": "Default. Derived haptic fires only when the game has been silent on the native haptic path for ~1 s. Preserves native HD haptics (Spider-Man Remastered, etc.) while filling in for games that send no haptic data (Ghost of Tsushima on Linux, etc.)." },
-      "mix":      { "label": "Mix",      "hint": "Always add derived haptic on top of native, soft-clipped together. Best for adding more body to games with weak native haptics." },
-      "replace":  { "label": "Replace",  "hint": "Always use derived; discard native completely. Uniform feel across all games regardless of what they send." }
+      "off": {
+        "label": "Off",
+        "hint": "Default. Native haptics only (channels 2 + 3 of the USB audio stream)."
+      },
+      "fallback": {
+        "label": "Fallback",
+        "hint": "Derived haptic fires only when the game has been silent on the native haptic path for ~1 s. Preserves native HD haptics (Spider-Man Remastered, etc.) while filling in for games that send no haptic data (Ghost of Tsushima on Linux, etc.)."
+      },
+      "mix": {
+        "label": "Mix",
+        "hint": "Always add derived haptic on top of native, soft-clipped together. Best for adding more body to games with weak native haptics."
+      },
+      "replace": {
+        "label": "Replace",
+        "hint": "Always use derived; discard native completely. Uniform feel across all games regardless of what they send."
+      }
     },
     "gainLabel": "Auto Haptics gain",
     "lpLabel": "Low-pass cutoff",
     "lpOptions": {
-      "80":  "80 Hz  (sub-bass)",
+      "80": "80 Hz  (sub-bass)",
       "160": "160 Hz (bass / default)",
       "250": "250 Hz (punchy mid-bass)",
       "400": "400 Hz (presence)"
@@ -116,8 +129,8 @@
     },
     "controllerModeLabel": "Controller mode",
     "controllerModes": {
-      "ds5":  "DS5",
-      "dse":  "DSE (Edge)",
+      "ds5": "DS5",
+      "dse": "DSE (Edge)",
       "auto": "Auto (detect)"
     }
   },
@@ -168,7 +181,8 @@
     "autoCycleOn": "Auto-cycle ON",
     "autoCycleOff": "Auto-cycle OFF",
     "autoCycleOnTitle": "Pause auto-cycle",
-    "autoCycleOffTitle": "Resume auto-cycle"
+    "autoCycleOffTitle": "Resume auto-cycle",
+    "connectLive": "Connect for live preview"
   },
   "validation": {
     "hapticsGain": "Haptics gain must be between 1.0 and 2.0",
@@ -231,5 +245,156 @@
     "driverHelpLinux": "Linux requires a one-time udev rule so non-root users can access the Pico's BOOTSEL interface. Paste this in a terminal:",
     "driverHelpWindows": "Windows needs the WinUSB driver assigned to the BOOTSEL interface. Use",
     "driverHelpMac": "macOS usually works without any setup. If WebUSB can't see the Pico, open System Settings → Privacy & Security and grant the browser USB device access, then retry."
+  },
+  "desktop": {
+    "nav": {
+      "overview": "Overview",
+      "settings": "Settings",
+      "lightbar": "Lightbar",
+      "remap": "Remap",
+      "slots": "Pairing slots",
+      "triggers": "Trigger test",
+      "diagnostics": "Diagnostics",
+      "firmware": "Firmware"
+    },
+    "brandSub": "OLED Edition configurator",
+    "status": {
+      "connected": "Dongle connected",
+      "waiting": "Waiting for the dongle…"
+    },
+    "empty": {
+      "title": "Plug in the DS5 Dongle",
+      "body": "It connects automatically. Needs OLED Edition firmware v0.8 or newer."
+    },
+    "bar": {
+      "unsaved": "Applied to the dongle, not saved yet: changes are lost when it powers off.",
+      "saved": "All changes saved on the dongle.",
+      "revert": "Revert",
+      "save": "Save to dongle"
+    },
+    "common": {
+      "cancel": "Cancel"
+    },
+    "overview": {
+      "dongle": "Dongle",
+      "firmware": "Firmware",
+      "protocol": "Protocol",
+      "uptime": "Uptime",
+      "cpu": "CPU",
+      "controller": "Controller",
+      "status": "Status",
+      "connected": "Connected",
+      "notConnected": "Not connected (press PS)",
+      "slot": "Pairing slot",
+      "signal": "Signal",
+      "signalQ": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "weak": "Weak"
+      },
+      "fromIdeal": "dB from ideal",
+      "audio": "Audio",
+      "stream": "Game audio",
+      "streaming": "Streaming",
+      "idle": "Idle",
+      "drops": "Dropped audio chunks",
+      "flashFails": "Failed saves",
+      "settings": "Current settings",
+      "unsaved": "Unsaved changes",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "settings": {
+      "audio": "Audio & haptics",
+      "power": "Power",
+      "idleDisconnect": "Disconnect when idle",
+      "picoLed": "Pico status LED",
+      "display": "OLED display",
+      "brightness": "Brightness",
+      "zeroOff": "0 = never",
+      "controllerWakes": "Controller input wakes the screen",
+      "usb": "USB",
+      "usbHint": "These take effect after Reconnect USB (the PC sees the dongle unplug and replug)."
+    },
+    "lightbar": {
+      "mode": "Mode",
+      "modes": {
+        "host": "Game controls it",
+        "breathing": "Breathing",
+        "rainbow": "Rainbow",
+        "fade": "Fade",
+        "live": "Tilt color",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "While charging, the dongle shows an amber pulse in every mode.",
+      "favorites": "Favorite colors",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "Pairing slots",
+      "hint": "Each slot remembers one controller. Switching disconnects the current controller; press PS on the one in the new slot. To pair a new controller into an empty slot, switch to it and hold Create + PS.",
+      "slot": "Slot",
+      "controller": "Controller",
+      "active": "Active",
+      "empty": "Empty",
+      "switch": "Switch to",
+      "forget": "Forget",
+      "wipeConfirm": "Forget all four controllers?",
+      "wipe": "Forget all"
+    },
+    "triggers": {
+      "title": "Adaptive trigger test",
+      "hint": "Pick an effect, then pull L2 and R2. Games override this as soon as they send their own trigger effects.",
+      "presets": {
+        "off": "Off",
+        "feedback": "Feedback",
+        "weapon": "Weapon",
+        "vibration": "Vibration",
+        "bow": "Bow",
+        "gallop": "Gallop",
+        "machine": "Machine"
+      }
+    },
+    "diag": {
+      "title": "Audio pipeline counters",
+      "core1Frozen": "Core1 stopped: the audio path is dead until the dongle restarts.",
+      "counter": "Counter",
+      "total": "Total",
+      "perSecond": "Per second",
+      "counters": {
+        "usbFrames": "USB audio frames in",
+        "btOut": "Audio reports sent over BT",
+        "dropRaw": "Dropped: speaker PCM (core1 too slow)",
+        "dropEnc": "Dropped: encoded speaker",
+        "dropHap": "Dropped: haptics",
+        "core1Loops": "Core1 loop count",
+        "core1Encoded": "Speaker frames encoded",
+        "rawPushed": "Speaker chunks queued",
+        "hapPushed": "Haptic chunks queued",
+        "micFrames": "Mic frames decoded",
+        "micPlc": "Mic frames concealed (lost)",
+        "flashWrites": "Flash writes",
+        "flashFailures": "Flash write failures",
+        "setFeatureCount": "Host feature writes",
+        "setFeatureLast": "Last host feature write"
+      }
+    },
+    "firmware": {
+      "installed": "Installed firmware",
+      "updatesSoon": "Automatic firmware updates are coming in the next build.",
+      "device": "Device",
+      "rebooting": "Restarting… press PS on the controller once it's back.",
+      "reboot": "Restart dongle",
+      "bootsel": "The dongle is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
+      "enterBootsel": "Enter BOOTSEL mode",
+      "resetDone": "Settings reset to defaults and saved.",
+      "confirmReset": "Reset all settings",
+      "factoryReset": "Factory reset…",
+      "resetHint": "Factory reset restores default settings. Pairings and button remaps are kept."
+    }
   }
 }

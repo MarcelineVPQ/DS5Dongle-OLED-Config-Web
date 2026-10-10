@@ -24,7 +24,8 @@
   },
   "notice": {
     "dismiss": "关闭",
-    "webhidUnavailable": "WebHID 仅在基于 Chromium 的浏览器(Chrome、Edge、Vivaldi、Brave、Opera)的安全源中可用。Mozilla 不支持 Firefox。"
+    "webhidUnavailable": "WebHID 仅在基于 Chromium 的浏览器(Chrome、Edge、Vivaldi、Brave、Opera)的安全源中可用。Mozilla 不支持 Firefox。",
+    "webusbUnavailable": "WebUSB 可在基于 Chromium 的浏览器（Chrome、Edge、Vivaldi、Brave、Opera）和桌面应用中使用。Firefox 和 Safari 不支持。配置需要 v0.8 或更新的固件。"
   },
   "device": {
     "label": "设备",
@@ -56,7 +57,8 @@
     "reading": "读取配置中",
     "applying": "应用中",
     "saving": "保存到闪存中",
-    "reconnecting": "重新连接 USB"
+    "reconnecting": "重新连接 USB",
+    "webusbUnavailable": "WebUSB 不可用"
   },
   "actions": {
     "title": "操作",
@@ -80,11 +82,11 @@
     "modes": {
       "off": {
         "label": "关闭",
-        "hint": "仅使用原生触感(USB 音频流的通道 2 + 3)。"
+        "hint": "默认。仅使用原生触感(USB 音频流的通道 2 + 3)。"
       },
       "fallback": {
         "label": "回退",
-        "hint": "默认。仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生 HD 触感(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。"
+        "hint": "仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生 HD 触感(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。"
       },
       "mix": {
         "label": "混合",
@@ -180,7 +182,8 @@
     "autoCycleOn": "自动循环 开",
     "autoCycleOff": "自动循环 关",
     "autoCycleOnTitle": "暂停自动循环",
-    "autoCycleOffTitle": "恢复自动循环"
+    "autoCycleOffTitle": "恢复自动循环",
+    "connectLive": "连接以进行实时预览"
   },
   "validation": {
     "hapticsGain": "触感增益必须在 1.0 到 2.0 之间",
@@ -243,5 +246,156 @@
     "driverHelpWindows": "Windows 需要将 WinUSB 驱动分配给 BOOTSEL 接口。使用",
     "driverHelpMac": "无需设置。",
     "trustWarning": "刷写的固件将以 USB 设备权限在 dongle 插入的任何主机上运行。仅刷写来自你信任来源的 UF2 文件。"
+  },
+  "desktop": {
+    "nav": {
+      "overview": "概览",
+      "settings": "设置",
+      "lightbar": "灯条",
+      "remap": "重映射",
+      "slots": "配对槽位",
+      "triggers": "扳机测试",
+      "diagnostics": "诊断",
+      "firmware": "固件"
+    },
+    "brandSub": "OLED Edition 配置工具",
+    "status": {
+      "connected": "接收器已连接",
+      "waiting": "等待接收器…"
+    },
+    "empty": {
+      "title": "请插入 DS5 Dongle",
+      "body": "将自动连接。需要 OLED Edition 固件 v0.8 或更高版本。"
+    },
+    "bar": {
+      "unsaved": "已应用到接收器，尚未保存：断电后更改将丢失。",
+      "saved": "所有更改已保存到接收器。",
+      "revert": "还原",
+      "save": "保存到接收器"
+    },
+    "common": {
+      "cancel": "取消"
+    },
+    "overview": {
+      "dongle": "接收器",
+      "firmware": "固件",
+      "protocol": "协议",
+      "uptime": "运行时间",
+      "cpu": "CPU",
+      "controller": "控制器",
+      "status": "状态",
+      "connected": "已连接",
+      "notConnected": "未连接(请按 PS)",
+      "slot": "配对槽位",
+      "signal": "信号",
+      "signalQ": {
+        "excellent": "极佳",
+        "good": "良好",
+        "fair": "一般",
+        "weak": "较弱"
+      },
+      "fromIdeal": "dB(与理想值之差)",
+      "audio": "音频",
+      "stream": "游戏音频",
+      "streaming": "传输中",
+      "idle": "空闲",
+      "drops": "丢弃的音频块",
+      "flashFails": "保存失败次数",
+      "settings": "当前设置",
+      "unsaved": "未保存的更改",
+      "yes": "是",
+      "no": "否"
+    },
+    "settings": {
+      "audio": "音频和触感",
+      "power": "电源",
+      "idleDisconnect": "空闲时断开",
+      "picoLed": "Pico 状态 LED",
+      "display": "OLED 屏幕",
+      "brightness": "亮度",
+      "zeroOff": "0 = 从不",
+      "controllerWakes": "控制器输入时唤醒屏幕",
+      "usb": "USB",
+      "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。"
+    },
+    "lightbar": {
+      "mode": "模式",
+      "modes": {
+        "host": "由游戏控制",
+        "breathing": "呼吸",
+        "rainbow": "彩虹",
+        "fade": "渐变",
+        "live": "倾斜变色",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "充电时，接收器在所有模式下都会显示琥珀色脉冲。",
+      "favorites": "收藏颜色",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "配对槽位",
+      "hint": "每个槽位记住一个控制器。切换会断开当前控制器；请在新槽位的控制器上按 PS。要将新控制器配对到空槽位，请切换到该槽位并按住 Create + PS。",
+      "slot": "槽位",
+      "controller": "控制器",
+      "active": "当前",
+      "empty": "空",
+      "switch": "切换到",
+      "forget": "忘记",
+      "wipeConfirm": "忘记全部四个控制器？",
+      "wipe": "全部忘记"
+    },
+    "triggers": {
+      "title": "自适应扳机测试",
+      "hint": "选择一个效果，然后按下 L2 和 R2。游戏发送自己的扳机效果后会覆盖此设置。",
+      "presets": {
+        "off": "关闭",
+        "feedback": "反馈",
+        "weapon": "武器",
+        "vibration": "振动",
+        "bow": "弓",
+        "gallop": "奔马",
+        "machine": "机器"
+      }
+    },
+    "diag": {
+      "title": "音频管线计数器",
+      "core1Frozen": "Core1 已停止：音频通路在接收器重启前将无法工作。",
+      "counter": "计数器",
+      "total": "总计",
+      "perSecond": "每秒",
+      "counters": {
+        "usbFrames": "USB 音频输入帧",
+        "btOut": "通过 BT 发送的音频报告",
+        "dropRaw": "丢弃：扬声器 PCM(core1 过慢)",
+        "dropEnc": "丢弃：已编码扬声器",
+        "dropHap": "丢弃：触感",
+        "core1Loops": "Core1 循环次数",
+        "core1Encoded": "已编码扬声器帧",
+        "rawPushed": "已入队扬声器块",
+        "hapPushed": "已入队触感块",
+        "micFrames": "已解码麦克风帧",
+        "micPlc": "已补偿麦克风帧(丢失)",
+        "flashWrites": "闪存写入",
+        "flashFailures": "闪存写入失败",
+        "setFeatureCount": "主机 Feature 写入",
+        "setFeatureLast": "最近一次主机 Feature 写入"
+      }
+    },
+    "firmware": {
+      "installed": "已安装固件",
+      "updatesSoon": "固件自动更新将在下一个版本中推出。",
+      "device": "设备",
+      "rebooting": "正在重启… 恢复后请按控制器上的 PS。",
+      "reboot": "重启接收器",
+      "bootsel": "接收器现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
+      "enterBootsel": "进入 BOOTSEL 模式",
+      "resetDone": "设置已恢复默认并保存。",
+      "confirmReset": "重置所有设置",
+      "factoryReset": "恢复出厂设置…",
+      "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。"
+    }
   }
 }

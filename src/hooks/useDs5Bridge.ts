@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ConfigBody,
-  DEFAULT_CONFIG,
-  ConfigValidationIssue,
-  configsEqual,
-  normalizeConfig,
-  validateConfig,
-} from "../protocol/config";
-import { Ds5BridgeHidClient, getDeviceLabel, webHidAvailable } from "../protocol/ds5BridgeHid";
+import { type BridgeIdentity, Ds5BridgeClient } from "../protocol/bridgeClient";
+import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
+import { Ds5BridgeHidClient, webHidAvailable } from "../protocol/ds5BridgeHid";
+import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 
 export interface UseDs5BridgeResult {
   supported: boolean;
-  client: Ds5BridgeHidClient | null;
+  client: Ds5BridgeClient | null;
+  identity: BridgeIdentity | null;
+  firmwareVersion: string | null;
   deviceLabel: string;
-  authorizedDevices: HIDDevice[];
   config: ConfigBody | null;
+  // What the dongle has in flash, as far as this app knows: the config read at
+  // connect, updated on every successful save.
+  savedConfig: ConfigBody | null;
+  hasUnsavedChanges: boolean;
   draft: ConfigBody;
   issues: ConfigValidationIssue[];
   saveState: SaveState;
@@ -28,189 +28,164 @@ export interface UseDs5BridgeResult {
   isConnected: boolean;
   isDirty: boolean;
   setDraftField: <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => void;
-  refreshAuthorizedDevices: () => Promise<void>;
   connect: () => Promise<void>;
-  connectAuthorized: (device: HIDDevice) => Promise<void>;
   readConfig: () => Promise<void>;
   applyConfig: () => Promise<void>;
   saveToFlash: () => Promise<void>;
   reconnectUsb: () => Promise<void>;
   resetDraft: () => void;
+  // Put the dongle back to savedConfig (RAM only; flash already holds it).
+  revertToSaved: () => Promise<void>;
   clearError: () => void;
+  // Live input preview over the gamepad HID interface (browser WebHID only).
+  hidClient: Ds5BridgeHidClient | null;
+  hidSupported: boolean;
+  connectPreview: () => Promise<void>;
 }
 
 export function useDs5Bridge(): UseDs5BridgeResult {
   const { t } = useTranslation();
-  const supported = webHidAvailable();
-  const [client, setClient] = useState<Ds5BridgeHidClient | null>(null);
-  const [authorizedDevices, setAuthorizedDevices] = useState<HIDDevice[]>([]);
+  const supported = webUsbAvailable();
+  const [client, setClient] = useState<Ds5BridgeClient | null>(null);
+  const [identity, setIdentity] = useState<BridgeIdentity | null>(null);
+  const [firmwareVersion, setFirmwareVersion] = useState<string | null>(null);
   const [config, setConfig] = useState<ConfigBody | null>(null);
+  const [savedConfig, setSavedConfig] = useState<ConfigBody | null>(null);
   const [draft, setDraft] = useState<ConfigBody>(DEFAULT_CONFIG);
   const [operation, setOperation] = useState<Operation>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [hidClient, setHidClient] = useState<Ds5BridgeHidClient | null>(null);
+  const clientRef = useRef<Ds5BridgeClient | null>(null);
+  useEffect(() => {
+    clientRef.current = client;
+  }, [client]);
 
   const issues = useMemo(() => validateConfig(draft), [draft]);
-  const isConnected = Boolean(client?.device.opened);
+  const isConnected = Boolean(client?.isOpen);
   const isDirty = !configsEqual(config, draft);
-  // "No device" is the only translatable part of the device label — the
-  // connected form is a productName + hex PID which doesn't localize.
-  const deviceLabel = client?.device ? getDeviceLabel(client.device) : t("device.noDevice");
+  const deviceLabel = client ? client.transport.label : t("device.noDevice");
 
   const statusText = useMemo(() => {
-    if (!supported) {
-      return t("statusText.webhidUnavailable");
-    }
-    if (operation) {
-      return t(`statusText.${operation}`);
-    }
-    if (!client) {
-      return t("statusText.ready");
-    }
-    if (isDirty) {
-      return t("statusText.unsaved");
-    }
-    if (saveState === "applied") {
-      return t("statusText.applied");
-    }
-    if (saveState === "saved") {
-      return t("statusText.saved");
-    }
+    if (!supported) return t("statusText.webusbUnavailable");
+    if (operation) return t(`statusText.${operation}`);
+    if (!client) return t("statusText.ready");
+    if (isDirty) return t("statusText.unsaved");
+    if (saveState === "applied") return t("statusText.applied");
+    if (saveState === "saved") return t("statusText.saved");
     return t("statusText.connected");
   }, [client, isDirty, operation, saveState, supported, t]);
 
-  const refreshAuthorizedDevices = useCallback(async () => {
-    if (!supported) {
-      setAuthorizedDevices([]);
-      return;
-    }
+  const detach = useCallback(() => {
+    setClient(null);
+    setIdentity(null);
+    setFirmwareVersion(null);
+    setConfig(null);
+    setSavedConfig(null);
+    setDraft(DEFAULT_CONFIG);
+    setSaveState("idle");
+  }, []);
 
-    setAuthorizedDevices(await Ds5BridgeHidClient.authorizedDevices());
-  }, [supported]);
-
-  const readConfigWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
-    setOperation("reading");
+  const attach = useCallback(async (device: USBDevice) => {
+    setOperation("connecting");
     try {
-      const nextConfig = normalizeConfig(await nextClient.readConfig());
-      setConfig(nextConfig);
-      setDraft(nextConfig);
+      const next = new Ds5BridgeClient(new WebUsbTransport(device));
+      await next.transport.open();
+      const id = await next.checkCompatible();
+      const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
+      const normalized = normalizeConfig(cfg);
+      setClient(next);
+      setIdentity(id);
+      setFirmwareVersion(version);
+      setConfig(normalized);
+      setSavedConfig(normalized);
+      setDraft(normalized);
       setSaveState("idle");
       setError(null);
+    } catch (cause) {
+      setError(errorMessage(cause));
     } finally {
       setOperation(null);
     }
   }, []);
 
-  const attachClient = useCallback(
-    async (nextClient: Ds5BridgeHidClient) => {
-      setOperation("connecting");
-      try {
-        await nextClient.open();
-        setClient(nextClient);
-        setError(null);
-      } finally {
-        setOperation(null);
-      }
-      await readConfigWithClient(nextClient);
-    },
-    [readConfigWithClient],
-  );
+  // Desktop: the main process has already granted the dongle, so this connects
+  // with no prompt. Browser: works once the user has picked the dongle before.
+  const autoConnect = useCallback(async () => {
+    if (!supported || clientRef.current) return;
+    const device = await WebUsbTransport.findPermitted();
+    if (device) await attach(device);
+  }, [attach, supported]);
 
   const connect = useCallback(async () => {
     try {
-      await attachClient(await Ds5BridgeHidClient.requestDevice());
-      await refreshAuthorizedDevices();
+      await attach(await WebUsbTransport.request());
+    } catch (cause) {
+      if (!(cause instanceof DOMException && cause.name === "NotFoundError")) setError(errorMessage(cause));
+    }
+  }, [attach]);
+
+  const run = useCallback(async (op: Exclude<Operation, null>, task: (c: Ds5BridgeClient) => Promise<void>) => {
+    const c = clientRef.current;
+    if (!c) return;
+    setOperation(op);
+    try {
+      await task(c);
+      setError(null);
     } catch (cause) {
       setError(errorMessage(cause));
+    } finally {
       setOperation(null);
     }
-  }, [attachClient, refreshAuthorizedDevices]);
+  }, []);
 
-  const connectAuthorized = useCallback(
-    async (device: HIDDevice) => {
-      try {
-        await attachClient(new Ds5BridgeHidClient(device));
-      } catch (cause) {
-        setError(errorMessage(cause));
-        setOperation(null);
-      }
-    },
-    [attachClient],
+  const readConfig = useCallback(
+    () =>
+      run("reading", async (c) => {
+        const next = normalizeConfig(await c.readConfig());
+        setConfig(next);
+        setDraft(next);
+        setSaveState("idle");
+      }),
+    [run],
   );
 
-  const readConfig = useCallback(async () => {
-    if (!client) {
-      return;
-    }
-
-    try {
-      await readConfigWithClient(client);
-    } catch (cause) {
-      setError(errorMessage(cause));
-      setOperation(null);
-    }
-  }, [client, readConfigWithClient]);
-
   const applyConfig = useCallback(async () => {
-    if (!client || issues.length > 0) {
-      return;
-    }
-
-    setOperation("applying");
-    try {
+    if (issues.length > 0) return;
+    await run("applying", async (c) => {
       const normalized = normalizeConfig(draft);
-      await client.applyConfig(normalized);
+      await c.applyConfig(normalized);
       setConfig(normalized);
       setDraft(normalized);
       setSaveState("applied");
-      setError(null);
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setOperation(null);
-    }
-  }, [client, draft, issues.length]);
+    });
+  }, [draft, issues.length, run]);
 
   const saveToFlash = useCallback(async () => {
-    if (!client || isDirty) {
-      return;
-    }
-
-    setOperation("saving");
-    try {
-      await client.saveToFlash();
+    if (isDirty) return;
+    await run("saving", async (c) => {
+      await c.saveToFlash();
+      setSavedConfig(config);
       setSaveState("saved");
-      setError(null);
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setOperation(null);
-    }
-  }, [client, isDirty]);
+    });
+  }, [config, isDirty, run]);
 
-  const reconnectUsb = useCallback(async () => {
-    if (!client) {
-      return;
-    }
+  const revertToSaved = useCallback(async () => {
+    if (!savedConfig) return;
+    await run("applying", async (c) => {
+      await c.applyConfig(savedConfig);
+      setConfig(savedConfig);
+      setDraft(savedConfig);
+      setSaveState("idle");
+    });
+  }, [run, savedConfig]);
 
-    setOperation("reconnecting");
-    try {
-      await client.reconnectUsb();
-      setError(null);
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setOperation(null);
-    }
-  }, [client]);
+  const reconnectUsb = useCallback(() => run("reconnecting", (c) => c.reconnectUsb()), [run]);
 
-  const setDraftField = useCallback(
-    <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
-      setDraft((current) => ({ ...current, [field]: value }));
-      setSaveState("dirty");
-    },
-    [],
-  );
+  const setDraftField = useCallback(<Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+    setSaveState("dirty");
+  }, []);
 
   const resetDraft = useCallback(() => {
     if (config) {
@@ -219,45 +194,48 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [config]);
 
-  useEffect(() => {
-    void refreshAuthorizedDevices();
-  }, [refreshAuthorizedDevices]);
-
-  useEffect(() => {
-    if (!navigator.hid) {
-      return;
+  const connectPreview = useCallback(async () => {
+    try {
+      const next = await Ds5BridgeHidClient.requestDevice();
+      await next.open();
+      setHidClient(next);
+    } catch (cause) {
+      setError(errorMessage(cause));
     }
+  }, []);
 
-    const handleDisconnect = (event: HIDConnectionEvent) => {
-      if (client?.device === event.device) {
-        setClient(null);
-        setConfig(null);
-        setDraft(DEFAULT_CONFIG);
-        setSaveState("idle");
-        setError("Device disconnected");
-      }
-      void refreshAuthorizedDevices();
+  useEffect(() => {
+    void autoConnect();
+  }, [autoConnect]);
+
+  // Reboot, BOOTSEL + flash, USB reconnect and replugging all re-enumerate the
+  // dongle: drop the old handle and pick the new one up automatically.
+  useEffect(() => {
+    if (!supported) return;
+    const onDisconnect = (event: USBConnectionEvent) => {
+      const current = clientRef.current?.transport;
+      if (current instanceof WebUsbTransport && current.device === event.device) detach();
     };
-
-    const handleConnect = () => {
-      void refreshAuthorizedDevices();
+    const onConnect = (event: USBConnectionEvent) => {
+      if (isDongle(event.device)) void autoConnect();
     };
-
-    navigator.hid.addEventListener("disconnect", handleDisconnect);
-    navigator.hid.addEventListener("connect", handleConnect);
-
+    navigator.usb.addEventListener("disconnect", onDisconnect);
+    navigator.usb.addEventListener("connect", onConnect);
     return () => {
-      navigator.hid?.removeEventListener("disconnect", handleDisconnect);
-      navigator.hid?.removeEventListener("connect", handleConnect);
+      navigator.usb.removeEventListener("disconnect", onDisconnect);
+      navigator.usb.removeEventListener("connect", onConnect);
     };
-  }, [client, refreshAuthorizedDevices]);
+  }, [autoConnect, detach, supported]);
 
   return {
     supported,
     client,
+    identity,
+    firmwareVersion,
     deviceLabel,
-    authorizedDevices,
     config,
+    savedConfig,
+    hasUnsavedChanges: !configsEqual(config, savedConfig),
     draft,
     issues,
     saveState,
@@ -267,22 +245,21 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     isConnected,
     isDirty,
     setDraftField,
-    refreshAuthorizedDevices,
     connect,
-    connectAuthorized,
     readConfig,
     applyConfig,
     saveToFlash,
     reconnectUsb,
     resetDraft,
+    revertToSaved,
     clearError: () => setError(null),
+    hidClient,
+    hidSupported: webHidAvailable(),
+    connectPreview,
   };
 }
 
 function errorMessage(cause: unknown): string {
-  if (cause instanceof Error) {
-    return cause.message;
-  }
-
-  return "Unexpected WebHID error";
+  if (cause instanceof Error) return cause.message;
+  return "Unexpected USB error";
 }

@@ -10,8 +10,8 @@ export const FB_H = 64;
 
 // Display palette — Waveshare's whitish-on-deep-blue look, close to what
 // the physical Pico-OLED-1.3 outputs.
-const COLOR_ON: [number, number, number]  = [220, 230, 255];
-const COLOR_OFF: [number, number, number] = [8,   12,  22];
+const COLOR_ON: [number, number, number] = [220, 230, 255];
+const COLOR_OFF: [number, number, number] = [8, 12, 22];
 
 export function newFramebuffer(): Uint8Array {
   return new Uint8Array(FB_W * FB_H);
@@ -86,20 +86,13 @@ export const CONTENT_X = 6;
 // glyph sits in the upper-left, KEY1 in the lower-left, matching where
 // the physical Pico-OLED-1.3 buttons live on the device.
 export function drawButtonChrome(fb: Uint8Array): void {
-  drawChar(fb, 0, 8,  ">".charCodeAt(0));
+  drawChar(fb, 0, 8, ">".charCodeAt(0));
   drawChar(fb, 0, 49, "<".charCodeAt(0));
 }
 
 // Bitmap: row-major, MSB = leftmost pixel, ceil(w/8) bytes per row.
 // Same layout as src/oled.cpp::draw_icon().
-export function drawIcon(
-  fb: Uint8Array,
-  x: number,
-  y: number,
-  bitmap: ReadonlyArray<number>,
-  w: number,
-  h: number,
-): void {
+export function drawIcon(fb: Uint8Array, x: number, y: number, bitmap: ReadonlyArray<number>, w: number, h: number): void {
   const rowBytes = Math.ceil(w / 8);
   for (let row = 0; row < h; row++) {
     for (let col = 0; col < w; col++) {
@@ -126,11 +119,7 @@ export function drawBatteryIcon(fb: Uint8Array, x: number, y: number, pct: numbe
 // pixels. The optional `tint` overrides the default "on" pixel color —
 // used to mark the mock-only screens (Slots / Diag / CPU) when a real
 // controller is connected but Chrome WebHID can't expose those reports.
-export function flush(
-  displayCtx: CanvasRenderingContext2D,
-  fb: Uint8Array,
-  tint?: [number, number, number],
-): void {
+export function flush(displayCtx: CanvasRenderingContext2D, fb: Uint8Array, tint?: [number, number, number]): void {
   const { canvas } = displayCtx;
   const off = ensureOffscreen(canvas);
   const offCtx = off.getContext("2d")!;

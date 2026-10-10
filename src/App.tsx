@@ -1,21 +1,4 @@
-import {
-  AlertCircle,
-  CheckCircle2,
-  Download,
-  Gamepad2,
-  Monitor,
-  Palette,
-  Power,
-  RefreshCw,
-  RotateCcw,
-  Save,
-  Send,
-  SlidersHorizontal,
-  Sliders,
-  Usb,
-  Waves,
-  Zap,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Gamepad2, Monitor, Palette, Power, RefreshCw, RotateCcw, Save, Send, SlidersHorizontal, Sliders, Usb, Waves, Zap } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import AdvancedReveal from "./components/AdvancedReveal";
@@ -31,7 +14,6 @@ import {
   AUTO_HAPTICS_MODE_OPTIONS,
   AutoHapticsLowpass,
   AutoHapticsMode,
-  ConfigBody,
   ConfigValidationIssue,
   CONTROLLER_MODE_OPTIONS,
   ControllerMode,
@@ -98,36 +80,16 @@ export default function App() {
       </header>
 
       <nav className="tab-nav" aria-label="View tabs">
-        <button
-          type="button"
-          className={tab === "config" ? "tab active" : "tab"}
-          onClick={() => setTab("config")}
-          aria-pressed={tab === "config"}
-        >
+        <button type="button" className={tab === "config" ? "tab active" : "tab"} onClick={() => setTab("config")} aria-pressed={tab === "config"}>
           <Sliders size={16} /> {t("tabs.config")}
         </button>
-        <button
-          type="button"
-          className={tab === "remap" ? "tab active" : "tab"}
-          onClick={() => setTab("remap")}
-          aria-pressed={tab === "remap"}
-        >
+        <button type="button" className={tab === "remap" ? "tab active" : "tab"} onClick={() => setTab("remap")} aria-pressed={tab === "remap"}>
           <Gamepad2 size={16} /> {t("tabs.remap")}
         </button>
-        <button
-          type="button"
-          className={tab === "preview" ? "tab active" : "tab"}
-          onClick={() => setTab("preview")}
-          aria-pressed={tab === "preview"}
-        >
+        <button type="button" className={tab === "preview" ? "tab active" : "tab"} onClick={() => setTab("preview")} aria-pressed={tab === "preview"}>
           <Monitor size={16} /> {t("tabs.preview")}
         </button>
-        <button
-          type="button"
-          className={tab === "flash" ? "tab active" : "tab"}
-          onClick={() => setTab("flash")}
-          aria-pressed={tab === "flash"}
-        >
+        <button type="button" className={tab === "flash" ? "tab active" : "tab"} onClick={() => setTab("flash")} aria-pressed={tab === "flash"}>
           <Zap size={16} /> {t("tabs.flash")}
         </button>
       </nav>
@@ -136,278 +98,240 @@ export default function App() {
         <div className="notice error" role="alert">
           <AlertCircle size={18} />
           <span>{bridge.error}</span>
-          <button type="button" onClick={bridge.clearError}>{t("notice.dismiss")}</button>
+          <button type="button" onClick={bridge.clearError}>
+            {t("notice.dismiss")}
+          </button>
         </div>
       )}
 
       {!bridge.supported && (
         <div className="notice warning">
           <AlertCircle size={18} />
-          <span>{t("notice.webhidUnavailable")}</span>
-        </div>
-      )}
-
-      {(tab === "config" || tab === "remap") && (
-        <div className="notice warning">
-          <AlertCircle size={18} />
-          <span>{t("notice.firmwareDisabled")}</span>
+          <span>{t("notice.webusbUnavailable")}</span>
         </div>
       )}
 
       <section className="device-strip">
         <div className="device-main">
-          <div className="device-icon"><Usb size={22} /></div>
+          <div className="device-icon">
+            <Usb size={22} />
+          </div>
           <div>
             <div className="label">{t("device.label")}</div>
             <strong>{bridge.deviceLabel}</strong>
           </div>
         </div>
         <div className="device-actions">
-          {bridge.authorizedDevices.length > 0 && !bridge.client && (
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => bridge.connectAuthorized(bridge.authorizedDevices[0])}
-              disabled={isBusy}
-              title={t("device.openPrevTitle")}
-            >
-              <Power size={17} /> {t("device.openPrev")}
-            </button>
-          )}
-          <button
-            type="button"
-            className={`button primary ${bridge.isConnected ? "" : "pulse"}`}
-            onClick={bridge.connect}
-            disabled={!bridge.supported || isBusy}
-            title={t("device.connectTitle")}
-          >
+          <button type="button" className={`button primary ${bridge.isConnected ? "" : "pulse"}`} onClick={bridge.connect} disabled={!bridge.supported || isBusy} title={t("device.connectTitle")}>
             <Usb size={17} /> {t("device.connect")}
           </button>
         </div>
       </section>
 
       {tab === "config" && (
-      <div className="bento">
-        {/* Status hero — top-left, span-8 */}
-        <section className="card hover-lift span-8">
-          <StatusHero
-            isConnected={bridge.isConnected}
-            isDirty={bridge.isDirty}
-            statusText={bridge.statusText}
-            deviceLabel={bridge.deviceLabel}
-            config={bridge.config}
-            issues={bridge.issues}
-          />
-        </section>
+        <div className="bento">
+          {/* Status hero — top-left, span-8 */}
+          <section className="card hover-lift span-8">
+            <StatusHero isConnected={bridge.isConnected} isDirty={bridge.isDirty} statusText={bridge.statusText} deviceLabel={bridge.deviceLabel} config={bridge.config} issues={bridge.issues} />
+          </section>
 
-        {/* Actions — top-right, span-4 */}
-        <section className="card span-4 actions-card">
-          <div className="panel-title">
-            <Download size={18} />
-            <h2>{t("actions.title")}</h2>
-          </div>
-          <div className="action-stack">
-            <button type="button" className="button secondary wide" onClick={bridge.readConfig} disabled={!bridge.client || isBusy} title={t("actions.readTitle")}>
-              <RefreshCw size={17} /> {t("actions.read")}
-            </button>
-            <button type="button" className="button primary wide" onClick={bridge.applyConfig} disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues} title={t("actions.applyTitle")}>
-              <Send size={17} /> {t("actions.apply")}
-            </button>
-            <button type="button" className="button success wide" onClick={bridge.saveToFlash} disabled={!bridge.client || isBusy || bridge.isDirty} title={bridge.isDirty ? t("actions.saveNeedsApply") : t("actions.saveTitle")}>
-              <Save size={17} /> {t("actions.save")}
-            </button>
-            <button type="button" className="button secondary wide" onClick={bridge.reconnectUsb} disabled={!bridge.client || isBusy} title={t("actions.reconnectTitle")}>
-              <Power size={17} /> {t("actions.reconnect")}
-            </button>
-            <button type="button" className="button ghost wide" onClick={bridge.resetDraft} disabled={!bridge.config || isBusy || !bridge.isDirty} title={t("actions.resetEditsTitle")}>
-              <RotateCcw size={17} /> {t("actions.resetEdits")}
-            </button>
-          </div>
-        </section>
+          {/* Actions — top-right, span-4 */}
+          <section className="card span-4 actions-card">
+            <div className="panel-title">
+              <Download size={18} />
+              <h2>{t("actions.title")}</h2>
+            </div>
+            <div className="action-stack">
+              <button type="button" className="button secondary wide" onClick={bridge.readConfig} disabled={!bridge.client || isBusy} title={t("actions.readTitle")}>
+                <RefreshCw size={17} /> {t("actions.read")}
+              </button>
+              <button type="button" className="button primary wide" onClick={bridge.applyConfig} disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues} title={t("actions.applyTitle")}>
+                <Send size={17} /> {t("actions.apply")}
+              </button>
+              <button
+                type="button"
+                className="button success wide"
+                onClick={bridge.saveToFlash}
+                disabled={!bridge.client || isBusy || bridge.isDirty}
+                title={bridge.isDirty ? t("actions.saveNeedsApply") : t("actions.saveTitle")}
+              >
+                <Save size={17} /> {t("actions.save")}
+              </button>
+              <button type="button" className="button secondary wide" onClick={bridge.reconnectUsb} disabled={!bridge.client || isBusy} title={t("actions.reconnectTitle")}>
+                <Power size={17} /> {t("actions.reconnect")}
+              </button>
+              <button type="button" className="button ghost wide" onClick={bridge.resetDraft} disabled={!bridge.config || isBusy || !bridge.isDirty} title={t("actions.resetEditsTitle")}>
+                <RotateCcw size={17} /> {t("actions.resetEdits")}
+              </button>
+            </div>
+          </section>
 
-        {/* Audio Auto Haptics — distinguishing feature, full width, .feature accent */}
-        <section className="card hover-lift feature span-12">
-          <div className="panel-title">
-            <Waves size={18} />
-            <h2>{t("autoHaptics.sectionTitle")}</h2>
-            <span className="feature-badge" title={t("autoHaptics.blurb")}>{t("autoHaptics.badge")}</span>
-          </div>
-          <p className="panel-blurb">{t("autoHaptics.blurb")}</p>
-          <div className="control-stack">
-            <AutoHapticsModeControl
-              value={bridge.draft.autoHapticsEnable}
-              onChange={(value) => bridge.setDraftField("autoHapticsEnable", value)}
-            />
-            <p className="control-hint">{autoHapticsHint}</p>
-            <IntegerControl
-              label={t("autoHaptics.gainLabel")}
-              suffix="%"
-              value={bridge.draft.autoHapticsGain}
-              min={0}
-              max={200}
-              step={10}
-              issue={fieldIssue(bridge.issues, "autoHapticsGain")}
-              onChange={(value) => bridge.setDraftField("autoHapticsGain", value)}
-            />
-            <AutoHapticsLowpassControl
-              value={bridge.draft.autoHapticsLowpass}
-              onChange={(value) => bridge.setDraftField("autoHapticsLowpass", value)}
-            />
-          </div>
-        </section>
-
-        {/* Multi-slot pairing — span-6 */}
-        <section className="card hover-lift span-6">
-          <div className="panel-title">
-            <SlidersHorizontal size={18} />
-            <h2>{t("slots.sectionTitle")}</h2>
-          </div>
-          <p className="panel-blurb">{t("slots.blurb")}</p>
-          <div className="control-stack">
-            <SegmentedControl
-              label={t("slots.activeLabel")}
-              value={bridge.draft.currentSlot}
-              options={[0, 1, 2, 3].map((n) => ({
-                value: n as SlotIndex,
-                label: t("status.slotN", { n }),
-              }))}
-              onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
-            />
-          </div>
-        </section>
-
-        {/* Lightbar — span-6. Mode + 4 favorite colors (also editable on the
-            OLED device; round-tripped through Config_body either way). */}
-        <section className="card hover-lift span-6">
-          <div className="panel-title">
-            <Palette size={18} />
-            <h2>{t("lightbar.sectionTitle")}</h2>
-          </div>
-          <p className="panel-blurb">{t("lightbar.blurb")}</p>
-          <div className="control-stack">
-            <SelectControl
-              label={t("lightbar.modeLabel")}
-              value={bridge.draft.lightbarMode}
-              options={LIGHTBAR_MODE_OPTIONS}
-              onChange={(value) => bridge.setDraftField("lightbarMode", value)}
-            />
-            {[0, 1, 2, 3].map((i) => (
-              <ColorControl
-                key={i}
-                label={`FAV${i}`}
-                rgb={[bridge.draft.lbFavR[i], bridge.draft.lbFavG[i], bridge.draft.lbFavB[i]]}
-                onChange={([r, g, b]) => {
-                  const at = (arr: number[], v: number) => arr.map((x, j) => (j === i ? v : x));
-                  bridge.setDraftField("lbFavR", at(bridge.draft.lbFavR, r));
-                  bridge.setDraftField("lbFavG", at(bridge.draft.lbFavG, g));
-                  bridge.setDraftField("lbFavB", at(bridge.draft.lbFavB, b));
-                }}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Haptics & Audio — span-6 */}
-        <section className="card hover-lift span-6">
-          <div className="panel-title">
-            <SlidersHorizontal size={18} />
-            <h2>{t("haptics.sectionTitle")}</h2>
-          </div>
-          <div className="control-stack">
-            <FloatControl
-              label={t("haptics.gainLabel")}
-              value={bridge.draft.hapticsGain}
-              min={1}
-              max={2}
-              step={0.05}
-              issue={fieldIssue(bridge.issues, "hapticsGain")}
-              onChange={(value) => bridge.setDraftField("hapticsGain", value)}
-            />
-            <FloatControl
-              label={t("haptics.speakerVolumeLabel")}
-              value={bridge.draft.speakerVolume}
-              min={-100}
-              max={0}
-              step={1}
-              issue={fieldIssue(bridge.issues, "speakerVolume")}
-              onChange={(value) => bridge.setDraftField("speakerVolume", value)}
-            />
-            <IntegerControl
-              label={t("haptics.audioBufferLabel")}
-              value={bridge.draft.audioBufferLength}
-              min={16}
-              max={128}
-              step={4}
-              issue={fieldIssue(bridge.issues, "audioBufferLength")}
-              onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
-            />
-            <ToggleControl
-              label={t("haptics.btMicLabel")}
-              value={bridge.draft.btMicEnable}
-              onChange={(value) => bridge.setDraftField("btMicEnable", value)}
-            />
-          </div>
-        </section>
-
-        {/* Advanced — collapsed by default, span-12 */}
-        <section className="card span-12 advanced-card">
-          <AdvancedReveal title={t("behavior.sectionTitle")} hint={t("behavior.hint")}>
+          {/* Audio Auto Haptics — distinguishing feature, full width, .feature accent */}
+          <section className="card hover-lift feature span-12">
+            <div className="panel-title">
+              <Waves size={18} />
+              <h2>{t("autoHaptics.sectionTitle")}</h2>
+              <span className="feature-badge" title={t("autoHaptics.blurb")}>
+                {t("autoHaptics.badge")}
+              </span>
+            </div>
+            <p className="panel-blurb">{t("autoHaptics.blurb")}</p>
             <div className="control-stack">
+              <AutoHapticsModeControl value={bridge.draft.autoHapticsEnable} onChange={(value) => bridge.setDraftField("autoHapticsEnable", value)} />
+              <p className="control-hint">{autoHapticsHint}</p>
               <IntegerControl
-                label={t("behavior.inactiveTimeLabel")}
-                value={bridge.draft.inactiveTime}
-                min={5}
-                max={60}
-                step={1}
-                issue={fieldIssue(bridge.issues, "inactiveTime")}
-                onChange={(value) => bridge.setDraftField("inactiveTime", value)}
-              />
-              <ToggleControl
-                label={t("behavior.disableInactiveDisconnect")}
-                value={bridge.draft.disableInactiveDisconnect}
-                onChange={(value) => bridge.setDraftField("disableInactiveDisconnect", value)}
-              />
-              <ToggleControl
-                label={t("behavior.disablePicoLed")}
-                value={bridge.draft.disablePicoLed}
-                onChange={(value) => bridge.setDraftField("disablePicoLed", value)}
-              />
-              <SegmentedControl
-                label={t("behavior.pollingRateLabel")}
-                value={bridge.draft.pollingRateMode}
-                options={POLLING_RATE_OPTIONS}
-                onChange={(value) => bridge.setDraftField("pollingRateMode", value as PollingRateMode)}
-              />
-              <SegmentedControl
-                label={t("behavior.controllerModeLabel")}
-                value={bridge.draft.controllerMode}
-                options={CONTROLLER_MODE_OPTIONS}
-                onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
-              />
-              <IntegerControl
-                label={t("behavior.screenDimTimeoutLabel")}
-                suffix={t("behavior.screenTimeoutSuffix")}
-                value={bridge.draft.screenDimTimeout}
+                label={t("autoHaptics.gainLabel")}
+                suffix="%"
+                value={bridge.draft.autoHapticsGain}
                 min={0}
-                max={250}
-                step={1}
-                issue={fieldIssue(bridge.issues, "screenDimTimeout")}
-                onChange={(value) => bridge.setDraftField("screenDimTimeout", value)}
+                max={200}
+                step={10}
+                issue={fieldIssue(bridge.issues, "autoHapticsGain")}
+                onChange={(value) => bridge.setDraftField("autoHapticsGain", value)}
               />
-              <IntegerControl
-                label={t("behavior.screenOffTimeoutLabel")}
-                suffix={t("behavior.screenTimeoutSuffix")}
-                value={bridge.draft.screenOffTimeout}
-                min={0}
-                max={250}
-                step={1}
-                issue={fieldIssue(bridge.issues, "screenOffTimeout")}
-                onChange={(value) => bridge.setDraftField("screenOffTimeout", value)}
+              <AutoHapticsLowpassControl value={bridge.draft.autoHapticsLowpass} onChange={(value) => bridge.setDraftField("autoHapticsLowpass", value)} />
+            </div>
+          </section>
+
+          {/* Multi-slot pairing — span-6 */}
+          <section className="card hover-lift span-6">
+            <div className="panel-title">
+              <SlidersHorizontal size={18} />
+              <h2>{t("slots.sectionTitle")}</h2>
+            </div>
+            <p className="panel-blurb">{t("slots.blurb")}</p>
+            <div className="control-stack">
+              <SegmentedControl
+                label={t("slots.activeLabel")}
+                value={bridge.draft.currentSlot}
+                options={[0, 1, 2, 3].map((n) => ({
+                  value: n as SlotIndex,
+                  label: t("status.slotN", { n }),
+                }))}
+                onChange={(value) => bridge.setDraftField("currentSlot", value as SlotIndex)}
               />
             </div>
-          </AdvancedReveal>
-        </section>
-      </div>
+          </section>
+
+          {/* Lightbar — span-6. Mode + 4 favorite colors (also editable on the
+            OLED device; round-tripped through Config_body either way). */}
+          <section className="card hover-lift span-6">
+            <div className="panel-title">
+              <Palette size={18} />
+              <h2>{t("lightbar.sectionTitle")}</h2>
+            </div>
+            <p className="panel-blurb">{t("lightbar.blurb")}</p>
+            <div className="control-stack">
+              <SelectControl label={t("lightbar.modeLabel")} value={bridge.draft.lightbarMode} options={LIGHTBAR_MODE_OPTIONS} onChange={(value) => bridge.setDraftField("lightbarMode", value)} />
+              {[0, 1, 2, 3].map((i) => (
+                <ColorControl
+                  key={i}
+                  label={`FAV${i}`}
+                  rgb={[bridge.draft.lbFavR[i], bridge.draft.lbFavG[i], bridge.draft.lbFavB[i]]}
+                  onChange={([r, g, b]) => {
+                    const at = (arr: number[], v: number) => arr.map((x, j) => (j === i ? v : x));
+                    bridge.setDraftField("lbFavR", at(bridge.draft.lbFavR, r));
+                    bridge.setDraftField("lbFavG", at(bridge.draft.lbFavG, g));
+                    bridge.setDraftField("lbFavB", at(bridge.draft.lbFavB, b));
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Haptics & Audio — span-6 */}
+          <section className="card hover-lift span-6">
+            <div className="panel-title">
+              <SlidersHorizontal size={18} />
+              <h2>{t("haptics.sectionTitle")}</h2>
+            </div>
+            <div className="control-stack">
+              <FloatControl
+                label={t("haptics.gainLabel")}
+                value={bridge.draft.hapticsGain}
+                min={1}
+                max={6}
+                step={0.1}
+                issue={fieldIssue(bridge.issues, "hapticsGain")}
+                onChange={(value) => bridge.setDraftField("hapticsGain", value)}
+              />
+              <FloatControl
+                label={t("haptics.speakerVolumeLabel")}
+                value={bridge.draft.speakerVolume}
+                min={-100}
+                max={0}
+                step={1}
+                issue={fieldIssue(bridge.issues, "speakerVolume")}
+                onChange={(value) => bridge.setDraftField("speakerVolume", value)}
+              />
+              <IntegerControl
+                label={t("haptics.audioBufferLabel")}
+                value={bridge.draft.audioBufferLength}
+                min={16}
+                max={128}
+                step={4}
+                issue={fieldIssue(bridge.issues, "audioBufferLength")}
+                onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
+              />
+              <ToggleControl label={t("haptics.btMicLabel")} value={bridge.draft.btMicEnable} onChange={(value) => bridge.setDraftField("btMicEnable", value)} />
+            </div>
+          </section>
+
+          {/* Advanced — collapsed by default, span-12 */}
+          <section className="card span-12 advanced-card">
+            <AdvancedReveal title={t("behavior.sectionTitle")} hint={t("behavior.hint")}>
+              <div className="control-stack">
+                <IntegerControl
+                  label={t("behavior.inactiveTimeLabel")}
+                  value={bridge.draft.inactiveTime}
+                  min={5}
+                  max={60}
+                  step={1}
+                  issue={fieldIssue(bridge.issues, "inactiveTime")}
+                  onChange={(value) => bridge.setDraftField("inactiveTime", value)}
+                />
+                <ToggleControl
+                  label={t("behavior.disableInactiveDisconnect")}
+                  value={bridge.draft.disableInactiveDisconnect}
+                  onChange={(value) => bridge.setDraftField("disableInactiveDisconnect", value)}
+                />
+                <ToggleControl label={t("behavior.disablePicoLed")} value={bridge.draft.disablePicoLed} onChange={(value) => bridge.setDraftField("disablePicoLed", value)} />
+                <SegmentedControl
+                  label={t("behavior.pollingRateLabel")}
+                  value={bridge.draft.pollingRateMode}
+                  options={POLLING_RATE_OPTIONS}
+                  onChange={(value) => bridge.setDraftField("pollingRateMode", value as PollingRateMode)}
+                />
+                <SegmentedControl
+                  label={t("behavior.controllerModeLabel")}
+                  value={bridge.draft.controllerMode}
+                  options={CONTROLLER_MODE_OPTIONS}
+                  onChange={(value) => bridge.setDraftField("controllerMode", value as ControllerMode)}
+                />
+                <IntegerControl
+                  label={t("behavior.screenDimTimeoutLabel")}
+                  suffix={t("behavior.screenTimeoutSuffix")}
+                  value={bridge.draft.screenDimTimeout}
+                  min={0}
+                  max={250}
+                  step={1}
+                  issue={fieldIssue(bridge.issues, "screenDimTimeout")}
+                  onChange={(value) => bridge.setDraftField("screenDimTimeout", value)}
+                />
+                <IntegerControl
+                  label={t("behavior.screenOffTimeoutLabel")}
+                  suffix={t("behavior.screenTimeoutSuffix")}
+                  value={bridge.draft.screenOffTimeout}
+                  min={0}
+                  max={250}
+                  step={1}
+                  issue={fieldIssue(bridge.issues, "screenOffTimeout")}
+                  onChange={(value) => bridge.setDraftField("screenOffTimeout", value)}
+                />
+              </div>
+            </AdvancedReveal>
+          </section>
+        </div>
       )}
 
       {tab === "remap" && (
@@ -415,7 +339,9 @@ export default function App() {
           <div className="panel-title">
             <Gamepad2 size={18} />
             <h2>{t("remap.sectionTitle")}</h2>
-            <span className="feature-badge" title={t("remap.blurb")}>{t("remap.badge")}</span>
+            <span className="feature-badge" title={t("remap.blurb")}>
+              {t("remap.badge")}
+            </span>
           </div>
           <RemapEditor client={bridge.client} />
         </section>
@@ -430,7 +356,12 @@ export default function App() {
           <p className="panel-blurb">
             <Trans i18nKey="preview.blurb" components={{ strong: <strong />, code: <code /> }} />
           </p>
-          <OledEmulator client={bridge.client} />
+          {!bridge.hidClient && bridge.hidSupported && (
+            <button type="button" className="button secondary" onClick={bridge.connectPreview}>
+              <Gamepad2 size={17} /> {t("preview.connectLive")}
+            </button>
+          )}
+          <OledEmulator client={bridge.hidClient} />
         </section>
       )}
 
@@ -450,9 +381,15 @@ export default function App() {
           ]}
         />
         <div className="studio-credit">
-          A <a href="https://42pixelstudios.com" target="_blank" rel="noopener noreferrer">42 Pixel Studios</a> production
+          A{" "}
+          <a href="https://42pixelstudios.com" target="_blank" rel="noopener noreferrer">
+            42 Pixel Studios
+          </a>{" "}
+          production
           {" — "}
-          <a href="https://42pixelstudios.com/games/neon-debris/" target="_blank" rel="noopener noreferrer">play Neon Debris ↗</a>
+          <a href="https://42pixelstudios.com/games/neon-debris/" target="_blank" rel="noopener noreferrer">
+            play Neon Debris ↗
+          </a>
         </div>
         <div className="studio-credit">
           <Trans
@@ -518,7 +455,10 @@ function IntegerControl({ label, value, min, max, step = 1, suffix, issue, onCha
   return (
     <label className={`control-row ${issue ? "invalid" : ""} ${disabled ? "disabled" : ""}`}>
       <span>
-        <strong>{label}{suffix ? ` (${suffix})` : ""}</strong>
+        <strong>
+          {label}
+          {suffix ? ` (${suffix})` : ""}
+        </strong>
         {issue && <small>{issue.message}</small>}
       </span>
       <div className="range-inputs">
@@ -539,14 +479,7 @@ function ToggleControl({ label, value, onChange }: ToggleControlProps) {
   return (
     <div className="control-row toggle-row">
       <strong>{label}</strong>
-      <button
-        type="button"
-        className={`switch ${value ? "on" : ""}`}
-        role="switch"
-        aria-checked={value}
-        onClick={() => onChange(!value)}
-        title={value ? "Enabled" : "Disabled"}
-      >
+      <button type="button" className={`switch ${value ? "on" : ""}`} role="switch" aria-checked={value} onClick={() => onChange(!value)} title={value ? "Enabled" : "Disabled"}>
         <span />
       </button>
     </div>
@@ -601,7 +534,9 @@ function SelectControl({ label, value, options, onChange }: SelectControlProps) 
       <strong>{label}</strong>
       <select value={value} onChange={(e) => onChange(Number(e.currentTarget.value))}>
         {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
         ))}
       </select>
     </label>
@@ -609,7 +544,16 @@ function SelectControl({ label, value, options, onChange }: SelectControlProps) 
 }
 
 function rgbToHex(rgb: number[]): string {
-  return "#" + rgb.map((c) => Math.max(0, Math.min(255, c | 0)).toString(16).padStart(2, "0")).join("");
+  return (
+    "#" +
+    rgb
+      .map((c) =>
+        Math.max(0, Math.min(255, c | 0))
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
 }
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
@@ -626,11 +570,7 @@ function ColorControl({ label, rgb, onChange }: ColorControlProps) {
   return (
     <label className="control-row">
       <strong>{label}</strong>
-      <input
-        type="color"
-        value={rgbToHex(rgb)}
-        onChange={(e) => onChange(hexToRgb(e.currentTarget.value))}
-      />
+      <input type="color" value={rgbToHex(rgb)} onChange={(e) => onChange(hexToRgb(e.currentTarget.value))} />
     </label>
   );
 }

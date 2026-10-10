@@ -57,15 +57,14 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
     throw new Error(`UF2 size ${u8.length} is not a multiple of 512 bytes`);
   }
 
-  interface Block { address: number; payload: Uint8Array }
+  interface Block {
+    address: number;
+    payload: Uint8Array;
+  }
   const blocks: Block[] = [];
   for (let offset = 0; offset < u8.length; offset += 512) {
     const view = new DataView(u8.buffer, u8.byteOffset + offset, 512);
-    if (
-      view.getUint32(0, true) !== UF2_MAGIC_START ||
-      view.getUint32(4, true) !== UF2_MAGIC_START2 ||
-      view.getUint32(508, true) !== UF2_MAGIC_END
-    ) {
+    if (view.getUint32(0, true) !== UF2_MAGIC_START || view.getUint32(4, true) !== UF2_MAGIC_START2 || view.getUint32(508, true) !== UF2_MAGIC_END) {
       throw new Error(`Invalid UF2 magic at offset ${offset}`);
     }
     const address = view.getUint32(12, true);

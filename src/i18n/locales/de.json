@@ -24,7 +24,8 @@
   },
   "notice": {
     "dismiss": "Schließen",
-    "webhidUnavailable": "WebHID ist in Chromium-basierten Browsern (Chrome, Edge, Vivaldi, Brave, Opera) auf sicheren Ursprüngen verfügbar. Firefox wird von Mozilla nicht unterstützt."
+    "webhidUnavailable": "WebHID ist in Chromium-basierten Browsern (Chrome, Edge, Vivaldi, Brave, Opera) auf sicheren Ursprüngen verfügbar. Firefox wird von Mozilla nicht unterstützt.",
+    "webusbUnavailable": "WebUSB ist in Chromium-basierten Browsern (Chrome, Edge, Vivaldi, Brave, Opera) und in der Desktop-App verfügbar. Firefox und Safari unterstützen es nicht. Für die Konfiguration wird Firmware v0.8 oder neuer benötigt."
   },
   "device": {
     "label": "Gerät",
@@ -56,7 +57,8 @@
     "reading": "Lese Konfig",
     "applying": "Wende an",
     "saving": "Speichere in Flash",
-    "reconnecting": "USB wird neu verbunden"
+    "reconnecting": "USB wird neu verbunden",
+    "webusbUnavailable": "WebUSB nicht verfügbar"
   },
   "actions": {
     "title": "Aktionen",
@@ -80,11 +82,11 @@
     "modes": {
       "off": {
         "label": "Aus",
-        "hint": "Nur native Haptik (Kanäle 2 + 3 des USB-Audiostreams)."
+        "hint": "Standard. Nur native Haptik (Kanäle 2 + 3 des USB-Audiostreams)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Standard. Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält native HD-Haptik (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
+        "hint": "Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält native HD-Haptik (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
       },
       "mix": {
         "label": "Mix",
@@ -180,7 +182,8 @@
     "autoCycleOn": "Auto-Rotation AN",
     "autoCycleOff": "Auto-Rotation AUS",
     "autoCycleOnTitle": "Auto-Rotation pausieren",
-    "autoCycleOffTitle": "Auto-Rotation fortsetzen"
+    "autoCycleOffTitle": "Auto-Rotation fortsetzen",
+    "connectLive": "Für Live-Vorschau verbinden"
   },
   "validation": {
     "hapticsGain": "Haptik-Verstärkung muss zwischen 1.0 und 2.0 liegen",
@@ -243,5 +246,156 @@
     "driverHelpWindows": "Windows benötigt den WinUSB-Treiber, der der BOOTSEL-Schnittstelle zugewiesen ist. Verwende",
     "driverHelpMac": "Keine Einrichtung erforderlich.",
     "trustWarning": "Du wirst gleich Firmware schreiben, die mit USB-Geräterechten auf jedem Host läuft, an den dieser Dongle angeschlossen wird. Flashe nur UF2-Dateien aus Quellen, denen du vertraust."
+  },
+  "desktop": {
+    "nav": {
+      "overview": "Übersicht",
+      "settings": "Einstellungen",
+      "lightbar": "Lightbar",
+      "remap": "Belegung",
+      "slots": "Kopplungs-Slots",
+      "triggers": "Trigger-Test",
+      "diagnostics": "Diagnose",
+      "firmware": "Firmware"
+    },
+    "brandSub": "Konfigurator für die OLED Edition",
+    "status": {
+      "connected": "Dongle verbunden",
+      "waiting": "Warte auf den Dongle…"
+    },
+    "empty": {
+      "title": "DS5 Dongle anschließen",
+      "body": "Die Verbindung erfolgt automatisch. Benötigt OLED-Edition-Firmware v0.8 oder neuer."
+    },
+    "bar": {
+      "unsaved": "Auf den Dongle angewendet, noch nicht gespeichert: Änderungen gehen beim Ausschalten verloren.",
+      "saved": "Alle Änderungen auf dem Dongle gespeichert.",
+      "revert": "Verwerfen",
+      "save": "Auf Dongle speichern"
+    },
+    "common": {
+      "cancel": "Abbrechen"
+    },
+    "overview": {
+      "dongle": "Dongle",
+      "firmware": "Firmware",
+      "protocol": "Protokoll",
+      "uptime": "Laufzeit",
+      "cpu": "CPU",
+      "controller": "Controller",
+      "status": "Status",
+      "connected": "Verbunden",
+      "notConnected": "Nicht verbunden (PS drücken)",
+      "slot": "Kopplungs-Slot",
+      "signal": "Signal",
+      "signalQ": {
+        "excellent": "Ausgezeichnet",
+        "good": "Gut",
+        "fair": "Mittel",
+        "weak": "Schwach"
+      },
+      "fromIdeal": "dB vom Idealwert",
+      "audio": "Audio",
+      "stream": "Spielaudio",
+      "streaming": "Aktiv",
+      "idle": "Inaktiv",
+      "drops": "Verworfene Audio-Chunks",
+      "flashFails": "Fehlgeschlagene Speicherungen",
+      "settings": "Aktuelle Einstellungen",
+      "unsaved": "Ungesicherte Änderungen",
+      "yes": "Ja",
+      "no": "Nein"
+    },
+    "settings": {
+      "audio": "Audio & Haptik",
+      "power": "Energie",
+      "idleDisconnect": "Bei Inaktivität trennen",
+      "picoLed": "Pico-Status-LED",
+      "display": "OLED-Display",
+      "brightness": "Helligkeit",
+      "zeroOff": "0 = nie",
+      "controllerWakes": "Controller-Eingabe weckt das Display",
+      "usb": "USB",
+      "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt)."
+    },
+    "lightbar": {
+      "mode": "Modus",
+      "modes": {
+        "host": "Spiel steuert sie",
+        "breathing": "Atmen",
+        "rainbow": "Regenbogen",
+        "fade": "Überblenden",
+        "live": "Neigungsfarbe",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "Beim Laden zeigt der Dongle in jedem Modus ein bernsteinfarbenes Pulsieren.",
+      "favorites": "Favoritenfarben",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "Kopplungs-Slots",
+      "hint": "Jeder Slot merkt sich einen Controller. Beim Wechseln wird der aktuelle Controller getrennt; drück PS am Controller im neuen Slot. Um einen neuen Controller in einen leeren Slot zu koppeln, wechsle dorthin und halte Create + PS.",
+      "slot": "Slot",
+      "controller": "Controller",
+      "active": "Aktiv",
+      "empty": "Leer",
+      "switch": "Wechseln",
+      "forget": "Vergessen",
+      "wipeConfirm": "Alle vier Controller vergessen?",
+      "wipe": "Alle vergessen"
+    },
+    "triggers": {
+      "title": "Test der adaptiven Trigger",
+      "hint": "Wähl einen Effekt und drück dann L2 und R2. Spiele überschreiben das, sobald sie eigene Trigger-Effekte senden.",
+      "presets": {
+        "off": "Aus",
+        "feedback": "Feedback",
+        "weapon": "Waffe",
+        "vibration": "Vibration",
+        "bow": "Bogen",
+        "gallop": "Galopp",
+        "machine": "Maschine"
+      }
+    },
+    "diag": {
+      "title": "Zähler der Audio-Pipeline",
+      "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis der Dongle neu startet.",
+      "counter": "Zähler",
+      "total": "Gesamt",
+      "perSecond": "Pro Sekunde",
+      "counters": {
+        "usbFrames": "Eingehende USB-Audio-Frames",
+        "btOut": "Über BT gesendete Audio-Reports",
+        "dropRaw": "Verworfen: Lautsprecher-PCM (core1 zu langsam)",
+        "dropEnc": "Verworfen: kodierter Lautsprecher",
+        "dropHap": "Verworfen: Haptik",
+        "core1Loops": "Core1-Schleifendurchläufe",
+        "core1Encoded": "Kodierte Lautsprecher-Frames",
+        "rawPushed": "Eingereihte Lautsprecher-Chunks",
+        "hapPushed": "Eingereihte Haptik-Chunks",
+        "micFrames": "Dekodierte Mikrofon-Frames",
+        "micPlc": "Verdeckte Mikrofon-Frames (verloren)",
+        "flashWrites": "Flash-Schreibvorgänge",
+        "flashFailures": "Fehlgeschlagene Flash-Schreibvorgänge",
+        "setFeatureCount": "Feature-Writes vom Host",
+        "setFeatureLast": "Letzter Feature-Write vom Host"
+      }
+    },
+    "firmware": {
+      "installed": "Installierte Firmware",
+      "updatesSoon": "Automatische Firmware-Updates kommen mit dem nächsten Build.",
+      "device": "Gerät",
+      "rebooting": "Startet neu… drück PS am Controller, sobald er wieder da ist.",
+      "reboot": "Dongle neu starten",
+      "bootsel": "Der Dongle ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder steck ihn ab, um abzubrechen.",
+      "enterBootsel": "BOOTSEL-Modus starten",
+      "resetDone": "Einstellungen auf Standard zurückgesetzt und gespeichert.",
+      "confirmReset": "Alle Einstellungen zurücksetzen",
+      "factoryReset": "Werkseinstellungen…",
+      "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenbelegungen bleiben erhalten."
+    }
   }
 }

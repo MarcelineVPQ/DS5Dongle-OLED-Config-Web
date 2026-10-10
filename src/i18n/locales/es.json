@@ -24,7 +24,8 @@
   },
   "notice": {
     "dismiss": "Cerrar",
-    "webhidUnavailable": "WebHID está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) en orígenes seguros. Mozilla no admite Firefox."
+    "webhidUnavailable": "WebHID está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) en orígenes seguros. Mozilla no admite Firefox.",
+    "webusbUnavailable": "WebUSB está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) y en la aplicación de escritorio. Firefox y Safari no lo admiten. La configuración requiere firmware v0.8 o posterior."
   },
   "device": {
     "label": "Dispositivo",
@@ -56,7 +57,8 @@
     "reading": "Leyendo config",
     "applying": "Aplicando",
     "saving": "Guardando en flash",
-    "reconnecting": "Reconectando USB"
+    "reconnecting": "Reconectando USB",
+    "webusbUnavailable": "WebUSB no disponible"
   },
   "actions": {
     "title": "Acciones",
@@ -80,11 +82,11 @@
     "modes": {
       "off": {
         "label": "Off",
-        "hint": "Solo hápticos nativos (canales 2 + 3 del flujo de audio USB)."
+        "hint": "Predeterminado. Solo hápticos nativos (canales 2 + 3 del flujo de audio USB)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Predeterminado. El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva los hápticos HD nativos (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
+        "hint": "El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva los hápticos HD nativos (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
       },
       "mix": {
         "label": "Mix",
@@ -180,7 +182,8 @@
     "autoCycleOn": "Auto-rotación ON",
     "autoCycleOff": "Auto-rotación OFF",
     "autoCycleOnTitle": "Pausar auto-rotación",
-    "autoCycleOffTitle": "Reanudar auto-rotación"
+    "autoCycleOffTitle": "Reanudar auto-rotación",
+    "connectLive": "Conectar para vista previa en vivo"
   },
   "validation": {
     "hapticsGain": "La ganancia háptica debe estar entre 1.0 y 2.0",
@@ -243,5 +246,156 @@
     "driverHelpWindows": "Windows necesita el driver WinUSB asignado a la interfaz BOOTSEL. Usa",
     "driverHelpMac": "No requiere configuración.",
     "trustWarning": "Vas a escribir firmware que se ejecutará con privilegios de dispositivo USB en cualquier host donde conectes el dongle. Solo graba archivos UF2 de fuentes en las que confíes."
+  },
+  "desktop": {
+    "nav": {
+      "overview": "Resumen",
+      "settings": "Ajustes",
+      "lightbar": "Barra de luz",
+      "remap": "Reasignar",
+      "slots": "Slots de emparejamiento",
+      "triggers": "Prueba de gatillos",
+      "diagnostics": "Diagnóstico",
+      "firmware": "Firmware"
+    },
+    "brandSub": "Configurador OLED Edition",
+    "status": {
+      "connected": "Dongle conectado",
+      "waiting": "Esperando el dongle…"
+    },
+    "empty": {
+      "title": "Conecta el DS5 Dongle",
+      "body": "Se conecta automáticamente. Requiere firmware OLED Edition v0.8 o posterior."
+    },
+    "bar": {
+      "unsaved": "Aplicado al dongle, aún sin guardar: los cambios se pierden al apagarlo.",
+      "saved": "Todos los cambios guardados en el dongle.",
+      "revert": "Revertir",
+      "save": "Guardar en el dongle"
+    },
+    "common": {
+      "cancel": "Cancelar"
+    },
+    "overview": {
+      "dongle": "Dongle",
+      "firmware": "Firmware",
+      "protocol": "Protocolo",
+      "uptime": "Tiempo activo",
+      "cpu": "CPU",
+      "controller": "Controlador",
+      "status": "Estado",
+      "connected": "Conectado",
+      "notConnected": "No conectado (pulsa PS)",
+      "slot": "Slot de emparejamiento",
+      "signal": "Señal",
+      "signalQ": {
+        "excellent": "Excelente",
+        "good": "Buena",
+        "fair": "Regular",
+        "weak": "Débil"
+      },
+      "fromIdeal": "dB del ideal",
+      "audio": "Audio",
+      "stream": "Audio del juego",
+      "streaming": "Transmitiendo",
+      "idle": "Inactivo",
+      "drops": "Fragmentos de audio perdidos",
+      "flashFails": "Guardados fallidos",
+      "settings": "Ajustes actuales",
+      "unsaved": "Cambios sin guardar",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "settings": {
+      "audio": "Audio y hápticos",
+      "power": "Energía",
+      "idleDisconnect": "Desconectar en inactividad",
+      "picoLed": "LED de estado del Pico",
+      "display": "Pantalla OLED",
+      "brightness": "Brillo",
+      "zeroOff": "0 = nunca",
+      "controllerWakes": "Usar el controlador activa la pantalla",
+      "usb": "USB",
+      "usbHint": "Se aplican tras Reconectar USB (el PC ve el dongle desconectarse y reconectarse)."
+    },
+    "lightbar": {
+      "mode": "Modo",
+      "modes": {
+        "host": "Lo controla el juego",
+        "breathing": "Respiración",
+        "rainbow": "Arcoíris",
+        "fade": "Fundido",
+        "live": "Color por inclinación",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "Durante la carga, el dongle muestra un pulso ámbar en todos los modos.",
+      "favorites": "Colores favoritos",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "Slots de emparejamiento",
+      "hint": "Cada slot recuerda un controlador. Al cambiar se desconecta el controlador actual; pulsa PS en el del nuevo slot. Para emparejar un controlador nuevo en un slot vacío, cambia a él y mantén Create + PS.",
+      "slot": "Slot",
+      "controller": "Controlador",
+      "active": "Activo",
+      "empty": "Vacío",
+      "switch": "Cambiar a",
+      "forget": "Olvidar",
+      "wipeConfirm": "¿Olvidar los cuatro controladores?",
+      "wipe": "Olvidar todos"
+    },
+    "triggers": {
+      "title": "Prueba de gatillos adaptativos",
+      "hint": "Elige un efecto y luego aprieta L2 y R2. Los juegos lo sustituyen en cuanto envían sus propios efectos de gatillo.",
+      "presets": {
+        "off": "Desactivado",
+        "feedback": "Resistencia",
+        "weapon": "Arma",
+        "vibration": "Vibración",
+        "bow": "Arco",
+        "gallop": "Galope",
+        "machine": "Máquina"
+      }
+    },
+    "diag": {
+      "title": "Contadores del pipeline de audio",
+      "core1Frozen": "Core1 detenido: el audio no funcionará hasta que el dongle se reinicie.",
+      "counter": "Contador",
+      "total": "Total",
+      "perSecond": "Por segundo",
+      "counters": {
+        "usbFrames": "Tramas de audio USB recibidas",
+        "btOut": "Informes de audio enviados por BT",
+        "dropRaw": "Descartado: PCM del altavoz (core1 demasiado lento)",
+        "dropEnc": "Descartado: altavoz codificado",
+        "dropHap": "Descartado: hápticos",
+        "core1Loops": "Iteraciones del bucle de Core1",
+        "core1Encoded": "Tramas de altavoz codificadas",
+        "rawPushed": "Fragmentos de altavoz en cola",
+        "hapPushed": "Fragmentos hápticos en cola",
+        "micFrames": "Tramas de micrófono decodificadas",
+        "micPlc": "Tramas de micrófono ocultadas (perdidas)",
+        "flashWrites": "Escrituras en flash",
+        "flashFailures": "Fallos de escritura en flash",
+        "setFeatureCount": "Escrituras de feature del host",
+        "setFeatureLast": "Última escritura de feature del host"
+      }
+    },
+    "firmware": {
+      "installed": "Firmware instalado",
+      "updatesSoon": "Las actualizaciones automáticas de firmware llegarán en la próxima versión.",
+      "device": "Dispositivo",
+      "rebooting": "Reiniciando… pulsa PS en el controlador cuando vuelva.",
+      "reboot": "Reiniciar dongle",
+      "bootsel": "El dongle es ahora una unidad RP2350. Copia un .uf2 en ella o desconéctalo para cancelar.",
+      "enterBootsel": "Entrar en modo BOOTSEL",
+      "resetDone": "Ajustes restablecidos a los valores predeterminados y guardados.",
+      "confirmReset": "Restablecer todos los ajustes",
+      "factoryReset": "Restablecer de fábrica…",
+      "resetHint": "El restablecimiento de fábrica restaura los ajustes predeterminados. Se conservan los emparejamientos y las reasignaciones de botones."
+    }
   }
 }

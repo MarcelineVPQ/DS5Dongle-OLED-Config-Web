@@ -35,31 +35,13 @@ export default function ThemeToggle() {
 
   return (
     <div className="theme-toggle" role="group" aria-label={t("themeToggle.groupLabel")}>
-      <button
-        type="button"
-        className={theme === "light" ? "active" : ""}
-        onClick={setTo("light")}
-        aria-pressed={theme === "light"}
-        title={t("themeToggle.light")}
-      >
+      <button type="button" className={theme === "light" ? "active" : ""} onClick={setTo("light")} aria-pressed={theme === "light"} title={t("themeToggle.light")}>
         <Sun size={15} />
       </button>
-      <button
-        type="button"
-        className={theme === "system" ? "active" : ""}
-        onClick={setTo("system")}
-        aria-pressed={theme === "system"}
-        title={t("themeToggle.system")}
-      >
+      <button type="button" className={theme === "system" ? "active" : ""} onClick={setTo("system")} aria-pressed={theme === "system"} title={t("themeToggle.system")}>
         <Monitor size={15} />
       </button>
-      <button
-        type="button"
-        className={theme === "dark" ? "active" : ""}
-        onClick={setTo("dark")}
-        aria-pressed={theme === "dark"}
-        title={t("themeToggle.dark")}
-      >
+      <button type="button" className={theme === "dark" ? "active" : ""} onClick={setTo("dark")} aria-pressed={theme === "dark"} title={t("themeToggle.dark")}>
         <Moon size={15} />
       </button>
     </div>

@@ -27,13 +27,7 @@ const OLED_H = 192;
 export default function PicoBoardFrame({ children, connected = false }: PicoBoardFrameProps) {
   return (
     <div className={`pico-board ${connected ? "connected" : ""}`} aria-label="Pico-OLED-1.3 add-on board">
-      <svg
-        className="pico-board-svg"
-        viewBox={`0 0 ${W} ${H}`}
-        xmlns="http://www.w3.org/2000/svg"
-        role="img"
-        aria-hidden="true"
-      >
+      <svg className="pico-board-svg" viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
         {/* PCB body — Waveshare's navy-blue solder mask, slight gradient for depth */}
         <defs>
           <linearGradient id="pcb-grad" x1="0" y1="0" x2="0" y2="1">
@@ -75,13 +69,17 @@ export default function PicoBoardFrame({ children, connected = false }: PicoBoar
           {/* KEY0 — upper */}
           <rect x="32" y="85" width="34" height="34" rx="4" fill="#1a1a1a" stroke="#3a3a3a" strokeWidth="1.5" />
           <circle cx="49" cy="102" r="10" fill="#262626" stroke="#0a0a0a" strokeWidth="1" />
-          <text x="80" y="106" fontSize="11" fontFamily="JetBrains Mono, monospace" fill="#cbd5e1">KEY0</text>
+          <text x="80" y="106" fontSize="11" fontFamily="JetBrains Mono, monospace" fill="#cbd5e1">
+            KEY0
+          </text>
         </g>
         <g>
           {/* KEY1 — lower */}
           <rect x="32" y="185" width="34" height="34" rx="4" fill="#1a1a1a" stroke="#3a3a3a" strokeWidth="1.5" />
           <circle cx="49" cy="202" r="10" fill="#262626" stroke="#0a0a0a" strokeWidth="1" />
-          <text x="80" y="206" fontSize="11" fontFamily="JetBrains Mono, monospace" fill="#cbd5e1">KEY1</text>
+          <text x="80" y="206" fontSize="11" fontFamily="JetBrains Mono, monospace" fill="#cbd5e1">
+            KEY1
+          </text>
         </g>
 
         {/* OLED screen bezel — black recessed panel */}
@@ -101,27 +99,12 @@ export default function PicoBoardFrame({ children, connected = false }: PicoBoar
         <rect x={OLED_X} y={OLED_Y} width={OLED_W} height={OLED_H} fill="#000" />
 
         {/* "Pico-OLED-1.3" silkscreen on the right side, rotated 90° */}
-        <text
-          x={W - 38}
-          y={H / 2 + 50}
-          fontSize="11"
-          fontFamily="JetBrains Mono, monospace"
-          fill="#e2e8f0"
-          opacity="0.6"
-          transform={`rotate(-90 ${W - 38} ${H / 2 + 50})`}
-        >
+        <text x={W - 38} y={H / 2 + 50} fontSize="11" fontFamily="JetBrains Mono, monospace" fill="#e2e8f0" opacity="0.6" transform={`rotate(-90 ${W - 38} ${H / 2 + 50})`}>
           Pico-OLED-1.3 · SH1107
         </text>
 
         {/* Waveshare logo placeholder text top-right */}
-        <text
-          x={W - 80}
-          y="22"
-          fontSize="9"
-          fontFamily="JetBrains Mono, monospace"
-          fill="#e2e8f0"
-          opacity="0.5"
-        >
+        <text x={W - 80} y="22" fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#e2e8f0" opacity="0.5">
           WAVESHARE
         </text>
       </svg>

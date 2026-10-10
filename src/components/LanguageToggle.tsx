@@ -12,10 +12,7 @@ export default function LanguageToggle() {
   const ref = useRef<HTMLDivElement | null>(null);
 
   // Resolve the current language to one of our supported codes (or fallback to en).
-  const current =
-    SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ??
-    SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ??
-    SUPPORTED_LANGUAGES[0];
+  const current = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
 
   // Click-outside-to-close
   useEffect(() => {
@@ -53,11 +50,7 @@ export default function LanguageToggle() {
         <span className="language-toggle-current">{current.shortLabel}</span>
       </button>
       {open && (
-        <ul
-          className="language-toggle-menu"
-          role="listbox"
-          aria-label={t("languageToggle.groupLabel")}
-        >
+        <ul className="language-toggle-menu" role="listbox" aria-label={t("languageToggle.groupLabel")}>
           {SUPPORTED_LANGUAGES.map((lang) => {
             const active = lang.code === current.code;
             return (

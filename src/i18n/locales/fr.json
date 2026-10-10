@@ -24,7 +24,8 @@
   },
   "notice": {
     "dismiss": "Fermer",
-    "webhidUnavailable": "WebHID est disponible dans les navigateurs basés sur Chromium (Chrome, Edge, Vivaldi, Brave, Opera) sur des origines sécurisées. Mozilla ne prend pas en charge Firefox."
+    "webhidUnavailable": "WebHID est disponible dans les navigateurs basés sur Chromium (Chrome, Edge, Vivaldi, Brave, Opera) sur des origines sécurisées. Mozilla ne prend pas en charge Firefox.",
+    "webusbUnavailable": "WebUSB est disponible dans les navigateurs basés sur Chromium (Chrome, Edge, Vivaldi, Brave, Opera) et dans l'application de bureau. Firefox et Safari ne le prennent pas en charge. La configuration nécessite le firmware v0.8 ou plus récent."
   },
   "device": {
     "label": "Appareil",
@@ -56,7 +57,8 @@
     "reading": "Lecture de la config",
     "applying": "Application",
     "saving": "Enregistrement en flash",
-    "reconnecting": "Reconnexion USB"
+    "reconnecting": "Reconnexion USB",
+    "webusbUnavailable": "WebUSB indisponible"
   },
   "actions": {
     "title": "Actions",
@@ -80,11 +82,11 @@
     "modes": {
       "off": {
         "label": "Off",
-        "hint": "Haptics natifs uniquement (canaux 2 + 3 du flux audio USB)."
+        "hint": "Par défaut. Haptics natifs uniquement (canaux 2 + 3 du flux audio USB)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Par défaut. Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~1 s. Préserve les haptics HD natifs (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
+        "hint": "Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~1 s. Préserve les haptics HD natifs (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
       },
       "mix": {
         "label": "Mix",
@@ -180,7 +182,8 @@
     "autoCycleOn": "Auto-rotation ON",
     "autoCycleOff": "Auto-rotation OFF",
     "autoCycleOnTitle": "Mettre en pause l'auto-rotation",
-    "autoCycleOffTitle": "Reprendre l'auto-rotation"
+    "autoCycleOffTitle": "Reprendre l'auto-rotation",
+    "connectLive": "Connecter pour l'aperçu en direct"
   },
   "validation": {
     "hapticsGain": "Le gain haptique doit être entre 1.0 et 2.0",
@@ -243,5 +246,156 @@
     "driverHelpWindows": "Windows a besoin du pilote WinUSB assigné à l'interface BOOTSEL. Utilisez",
     "driverHelpMac": "Aucune configuration requise.",
     "trustWarning": "Vous allez écrire un firmware qui s’exécutera avec les privilèges d’un périphérique USB sur tout hôte sur lequel ce dongle sera branché. Ne flashez que des fichiers UF2 provenant de sources fiables."
+  },
+  "desktop": {
+    "nav": {
+      "overview": "Aperçu",
+      "settings": "Paramètres",
+      "lightbar": "Barre lumineuse",
+      "remap": "Remappage",
+      "slots": "Slots d'appairage",
+      "triggers": "Test des gâchettes",
+      "diagnostics": "Diagnostic",
+      "firmware": "Firmware"
+    },
+    "brandSub": "Configurateur OLED Edition",
+    "status": {
+      "connected": "Dongle connecté",
+      "waiting": "En attente du dongle…"
+    },
+    "empty": {
+      "title": "Branche le DS5 Dongle",
+      "body": "La connexion est automatique. Nécessite le firmware OLED Edition v0.8 ou plus récent."
+    },
+    "bar": {
+      "unsaved": "Appliqué au dongle, pas encore enregistré : les changements seront perdus à l'extinction.",
+      "saved": "Tous les changements sont enregistrés sur le dongle.",
+      "revert": "Annuler",
+      "save": "Enregistrer sur le dongle"
+    },
+    "common": {
+      "cancel": "Annuler"
+    },
+    "overview": {
+      "dongle": "Dongle",
+      "firmware": "Firmware",
+      "protocol": "Protocole",
+      "uptime": "Temps de fonctionnement",
+      "cpu": "CPU",
+      "controller": "Manette",
+      "status": "État",
+      "connected": "Connectée",
+      "notConnected": "Non connectée (appuie sur PS)",
+      "slot": "Slot d'appairage",
+      "signal": "Signal",
+      "signalQ": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "fair": "Moyen",
+        "weak": "Faible"
+      },
+      "fromIdeal": "dB de l'idéal",
+      "audio": "Audio",
+      "stream": "Audio du jeu",
+      "streaming": "En cours",
+      "idle": "Inactif",
+      "drops": "Blocs audio perdus",
+      "flashFails": "Enregistrements échoués",
+      "settings": "Paramètres actuels",
+      "unsaved": "Modifications non enregistrées",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "settings": {
+      "audio": "Audio & haptics",
+      "power": "Alimentation",
+      "idleDisconnect": "Déconnecter si inactif",
+      "picoLed": "LED d'état du Pico",
+      "display": "Écran OLED",
+      "brightness": "Luminosité",
+      "zeroOff": "0 = jamais",
+      "controllerWakes": "La manette réveille l'écran",
+      "usb": "USB",
+      "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher)."
+    },
+    "lightbar": {
+      "mode": "Mode",
+      "modes": {
+        "host": "Contrôlée par le jeu",
+        "breathing": "Respiration",
+        "rainbow": "Arc-en-ciel",
+        "fade": "Fondu",
+        "live": "Couleur selon l'inclinaison",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "Pendant la charge, le dongle affiche une pulsation ambre dans tous les modes.",
+      "favorites": "Couleurs favorites",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "Slots d'appairage",
+      "hint": "Chaque slot mémorise une manette. Changer de slot déconnecte la manette actuelle ; appuie sur PS sur celle du nouveau slot. Pour appairer une nouvelle manette dans un slot vide, passe sur ce slot et maintiens Create + PS.",
+      "slot": "Slot",
+      "controller": "Manette",
+      "active": "Actif",
+      "empty": "Vide",
+      "switch": "Basculer",
+      "forget": "Oublier",
+      "wipeConfirm": "Oublier les quatre manettes ?",
+      "wipe": "Tout oublier"
+    },
+    "triggers": {
+      "title": "Test des gâchettes adaptatives",
+      "hint": "Choisis un effet, puis appuie sur L2 et R2. Les jeux le remplacent dès qu'ils envoient leurs propres effets de gâchette.",
+      "presets": {
+        "off": "Désactivé",
+        "feedback": "Résistance",
+        "weapon": "Arme",
+        "vibration": "Vibration",
+        "bow": "Arc",
+        "gallop": "Galop",
+        "machine": "Machine"
+      }
+    },
+    "diag": {
+      "title": "Compteurs du pipeline audio",
+      "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
+      "counter": "Compteur",
+      "total": "Total",
+      "perSecond": "Par seconde",
+      "counters": {
+        "usbFrames": "Trames audio USB reçues",
+        "btOut": "Rapports audio envoyés en BT",
+        "dropRaw": "Perdu : PCM haut-parleur (core1 trop lent)",
+        "dropEnc": "Perdu : haut-parleur encodé",
+        "dropHap": "Perdu : haptics",
+        "core1Loops": "Itérations de la boucle Core1",
+        "core1Encoded": "Trames haut-parleur encodées",
+        "rawPushed": "Blocs haut-parleur en file",
+        "hapPushed": "Blocs haptiques en file",
+        "micFrames": "Trames micro décodées",
+        "micPlc": "Trames micro masquées (perdues)",
+        "flashWrites": "Écritures flash",
+        "flashFailures": "Échecs d'écriture flash",
+        "setFeatureCount": "Écritures feature de l'hôte",
+        "setFeatureLast": "Dernière écriture feature de l'hôte"
+      }
+    },
+    "firmware": {
+      "installed": "Firmware installé",
+      "updatesSoon": "Les mises à jour automatiques du firmware arrivent dans la prochaine version.",
+      "device": "Appareil",
+      "rebooting": "Redémarrage… appuie sur PS sur la manette une fois le dongle revenu.",
+      "reboot": "Redémarrer le dongle",
+      "bootsel": "Le dongle est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche-le pour annuler.",
+      "enterBootsel": "Passer en mode BOOTSEL",
+      "resetDone": "Paramètres réinitialisés par défaut et enregistrés.",
+      "confirmReset": "Réinitialiser tous les paramètres",
+      "factoryReset": "Réinitialisation d'usine…",
+      "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les appairages et remappages de boutons sont conservés."
+    }
   }
 }

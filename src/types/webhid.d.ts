@@ -45,31 +45,15 @@ interface HIDDevice extends EventTarget {
   receiveFeatureReport(reportId: number): Promise<DataView>;
   sendFeatureReport(reportId: number, data: BufferSource): Promise<void>;
   sendReport(reportId: number, data: BufferSource): Promise<void>;
-  addEventListener(
-    type: "inputreport",
-    listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  removeEventListener(
-    type: "inputreport",
-    listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  addEventListener(type: "inputreport", listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener(type: "inputreport", listener: (this: HIDDevice, ev: HIDInputReportEvent) => unknown, options?: boolean | EventListenerOptions): void;
 }
 
 interface HID extends EventTarget {
   getDevices(): Promise<HIDDevice[]>;
   requestDevice(options: HIDDeviceRequestOptions): Promise<HIDDevice[]>;
-  addEventListener(
-    type: "connect" | "disconnect",
-    listener: (this: HID, ev: HIDConnectionEvent) => unknown,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  removeEventListener(
-    type: "connect" | "disconnect",
-    listener: (this: HID, ev: HIDConnectionEvent) => unknown,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  addEventListener(type: "connect" | "disconnect", listener: (this: HID, ev: HIDConnectionEvent) => unknown, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener(type: "connect" | "disconnect", listener: (this: HID, ev: HIDConnectionEvent) => unknown, options?: boolean | EventListenerOptions): void;
 }
 
 interface Navigator {

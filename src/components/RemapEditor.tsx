@@ -1,4 +1,4 @@
-// Button-remap editor. Self-contained: takes the connected HID client, reads
+// Button-remap editor. Self-contained: takes the connected dongle client, reads
 // the remap table off the device (appended to the 0xF7 config report), lets the
 // user reassign each physical button, and writes it back over 0xF6. The
 // firmware persists to its own flash sector on write — there is no separate
@@ -10,19 +10,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, RotateCcw, Send, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Ds5BridgeHidClient } from "../protocol/ds5BridgeHid";
+import type { Ds5BridgeClient } from "../protocol/bridgeClient";
 import ControllerDiagram from "./ControllerDiagram";
-import {
-  REMAP_BUTTON_OPTIONS,
-  REMAP_DISABLED,
-  RemapState,
-  identityTable,
-  isIdentity,
-  tablesEqual,
-} from "../protocol/remap";
+import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, RemapState, identityTable, isIdentity, tablesEqual } from "../protocol/remap";
 
 export interface RemapEditorProps {
-  client: Ds5BridgeHidClient | null;
+  client: Pick<Ds5BridgeClient, "isOpen" | "readRemap" | "applyRemap"> | null;
 }
 
 const buttonLabel = (index: number) => REMAP_BUTTON_OPTIONS[index]?.label ?? `#${index}`;
@@ -37,7 +30,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const connected = !!client?.device.opened;
+  const connected = !!client?.isOpen;
 
   // Read the device's table whenever a client attaches; clear when it detaches.
   useEffect(() => {
@@ -117,12 +110,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
   // A target <select> for one source button — reused by the contextual picker
   // and the full fallback list.
   const targetSelect = (source: number) => (
-    <select
-      value={draft[source]}
-      disabled={!editable}
-      onChange={(e) => setRow(source, Number(e.currentTarget.value))}
-      aria-label={t("remap.rowAria", { button: buttonLabel(source) })}
-    >
+    <select value={draft[source]} disabled={!editable} onChange={(e) => setRow(source, Number(e.currentTarget.value))} aria-label={t("remap.rowAria", { button: buttonLabel(source) })}>
       <option value={source}>{t("remap.noChange")}</option>
       {REMAP_BUTTON_OPTIONS.filter((o) => o.value !== source).map((o) => (
         <option key={o.value} value={o.value}>
@@ -144,9 +132,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
         </div>
       )}
 
-      {!connected && supported !== false && (
-        <p className="control-hint">{t("remap.connectHint")}</p>
-      )}
+      {!connected && supported !== false && <p className="control-hint">{t("remap.connectHint")}</p>}
 
       {error && (
         <div className="notice error" role="alert">
@@ -165,13 +151,7 @@ export default function RemapEditor({ client }: RemapEditorProps) {
       {/* Diagram-driven editing (primary). */}
       {supported !== false && (
         <>
-          <ControllerDiagram
-            table={draft}
-            selected={selected}
-            onSelect={setSelected}
-            disabled={!editable}
-            labelFor={buttonLabel}
-          />
+          <ControllerDiagram table={draft} selected={selected} onSelect={setSelected} disabled={!editable} labelFor={buttonLabel} />
           {selected === null ? (
             <p className="control-hint">{t("remap.diagramHint")}</p>
           ) : (
@@ -203,40 +183,18 @@ export default function RemapEditor({ client }: RemapEditorProps) {
       </details>
 
       <div className="action-stack remap-actions">
-        <button
-          type="button"
-          className="button primary wide"
-          onClick={apply}
-          disabled={!editable || !isDirty}
-          title={t("remap.applyTitle")}
-        >
+        <button type="button" className="button primary wide" onClick={apply} disabled={!editable || !isDirty} title={t("remap.applyTitle")}>
           <Send size={17} /> {t("remap.apply")}
         </button>
-        <button
-          type="button"
-          className="button ghost wide"
-          onClick={revert}
-          disabled={!editable || !isDirty}
-          title={t("remap.revertTitle")}
-        >
+        <button type="button" className="button ghost wide" onClick={revert} disabled={!editable || !isDirty} title={t("remap.revertTitle")}>
           <Undo2 size={17} /> {t("remap.revert")}
         </button>
-        <button
-          type="button"
-          className="button ghost wide"
-          onClick={resetToDefault}
-          disabled={!editable || isIdentity(draft)}
-          title={t("remap.resetTitle")}
-        >
+        <button type="button" className="button ghost wide" onClick={resetToDefault} disabled={!editable || isIdentity(draft)} title={t("remap.resetTitle")}>
           <RotateCcw size={17} /> {t("remap.reset")}
         </button>
       </div>
 
-      {supported === true && (
-        <p className="control-hint">
-          {remappedCount === 0 ? t("remap.noneRemapped") : t("remap.countRemapped", { count: remappedCount })}
-        </p>
-      )}
+      {supported === true && <p className="control-hint">{remappedCount === 0 ? t("remap.noneRemapped") : t("remap.countRemapped", { count: remappedCount })}</p>}
     </>
   );
 }

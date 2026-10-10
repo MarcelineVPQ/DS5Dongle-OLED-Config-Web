@@ -24,7 +24,8 @@
   },
   "notice": {
     "dismiss": "閉じる",
-    "webhidUnavailable": "WebHID は Chromium ベースのブラウザ (Chrome、Edge、Vivaldi、Brave、Opera) の安全なオリジンで利用できます。Mozilla は Firefox をサポートしていません。"
+    "webhidUnavailable": "WebHID は Chromium ベースのブラウザ (Chrome、Edge、Vivaldi、Brave、Opera) の安全なオリジンで利用できます。Mozilla は Firefox をサポートしていません。",
+    "webusbUnavailable": "WebUSB は Chromium ベースのブラウザー（Chrome、Edge、Vivaldi、Brave、Opera）とデスクトップアプリで利用できます。Firefox と Safari は非対応です。設定にはファームウェア v0.8 以降が必要です。"
   },
   "device": {
     "label": "デバイス",
@@ -56,7 +57,8 @@
     "reading": "設定読み込み中",
     "applying": "適用中",
     "saving": "フラッシュに保存中",
-    "reconnecting": "USB 再接続中"
+    "reconnecting": "USB 再接続中",
+    "webusbUnavailable": "WebUSB を利用できません"
   },
   "actions": {
     "title": "アクション",
@@ -80,11 +82,11 @@
     "modes": {
       "off": {
         "label": "オフ",
-        "hint": "ネイティブの触覚のみ (USB オーディオストリームのチャンネル 2 + 3)。"
+        "hint": "デフォルト。ネイティブの触覚のみ (USB オーディオストリームのチャンネル 2 + 3)。"
       },
       "fallback": {
         "label": "フォールバック",
-        "hint": "デフォルト。ゲームがネイティブの触覚パスで約 1 秒間沈黙していた場合にのみ、派生した触覚が発火します。ネイティブの HD haptic (Spider-Man Remastered など) を維持しつつ、触覚データを送信しないゲーム (Linux の Ghost of Tsushima など) を補完します。"
+        "hint": "ゲームがネイティブの触覚パスで約 1 秒間沈黙していた場合にのみ、派生した触覚が発火します。ネイティブの HD haptic (Spider-Man Remastered など) を維持しつつ、触覚データを送信しないゲーム (Linux の Ghost of Tsushima など) を補完します。"
       },
       "mix": {
         "label": "ミックス",
@@ -180,7 +182,8 @@
     "autoCycleOn": "自動サイクル オン",
     "autoCycleOff": "自動サイクル オフ",
     "autoCycleOnTitle": "自動サイクルを一時停止",
-    "autoCycleOffTitle": "自動サイクルを再開"
+    "autoCycleOffTitle": "自動サイクルを再開",
+    "connectLive": "ライブプレビューに接続"
   },
   "validation": {
     "hapticsGain": "Haptics ゲインは 1.0 から 2.0 の間でなければなりません",
@@ -243,5 +246,156 @@
     "driverHelpWindows": "Windows では BOOTSEL インターフェースに WinUSB ドライバを割り当てる必要があります。",
     "driverHelpMac": "セットアップは不要です。",
     "trustWarning": "これから書き込むファームウェアは、この dongle が接続される任意のホスト上で USB デバイス権限で実行されます。信頼できるソースの UF2 ファイルのみを書き込んでください。"
+  },
+  "desktop": {
+    "nav": {
+      "overview": "概要",
+      "settings": "設定",
+      "lightbar": "ライトバー",
+      "remap": "再割り当て",
+      "slots": "ペアリングスロット",
+      "triggers": "トリガーテスト",
+      "diagnostics": "診断",
+      "firmware": "ファームウェア"
+    },
+    "brandSub": "OLED Edition 設定ツール",
+    "status": {
+      "connected": "ドングル接続済み",
+      "waiting": "ドングルを待機中…"
+    },
+    "empty": {
+      "title": "DS5 Dongle を接続してください",
+      "body": "自動的に接続されます。OLED Edition ファームウェア v0.8 以降が必要です。"
+    },
+    "bar": {
+      "unsaved": "ドングルに適用済み、未保存: 電源を切ると変更は失われます。",
+      "saved": "すべての変更をドングルに保存しました。",
+      "revert": "元に戻す",
+      "save": "ドングルに保存"
+    },
+    "common": {
+      "cancel": "キャンセル"
+    },
+    "overview": {
+      "dongle": "ドングル",
+      "firmware": "ファームウェア",
+      "protocol": "プロトコル",
+      "uptime": "稼働時間",
+      "cpu": "CPU",
+      "controller": "コントローラー",
+      "status": "状態",
+      "connected": "接続済み",
+      "notConnected": "未接続 (PS を押してください)",
+      "slot": "ペアリングスロット",
+      "signal": "信号",
+      "signalQ": {
+        "excellent": "非常に良好",
+        "good": "良好",
+        "fair": "普通",
+        "weak": "弱い"
+      },
+      "fromIdeal": "dB (理想値との差)",
+      "audio": "オーディオ",
+      "stream": "ゲーム音声",
+      "streaming": "ストリーミング中",
+      "idle": "アイドル",
+      "drops": "ドロップしたオーディオチャンク",
+      "flashFails": "保存の失敗",
+      "settings": "現在の設定",
+      "unsaved": "未保存の変更",
+      "yes": "はい",
+      "no": "いいえ"
+    },
+    "settings": {
+      "audio": "オーディオ & Haptics",
+      "power": "電源",
+      "idleDisconnect": "アイドル時に切断",
+      "picoLed": "Pico ステータス LED",
+      "display": "OLED ディスプレイ",
+      "brightness": "明るさ",
+      "zeroOff": "0 = なし",
+      "controllerWakes": "コントローラー入力で画面を復帰",
+      "usb": "USB",
+      "usbHint": "USB 再接続後に反映されます (PC からはドングルが抜き差しされたように見えます)。"
+    },
+    "lightbar": {
+      "mode": "モード",
+      "modes": {
+        "host": "ゲームが制御",
+        "breathing": "ブリージング",
+        "rainbow": "レインボー",
+        "fade": "フェード",
+        "live": "傾きカラー",
+        "fav0": "FAV0",
+        "fav1": "FAV1",
+        "fav2": "FAV2",
+        "fav3": "FAV3"
+      },
+      "hint": "充電中は、どのモードでもドングルがアンバー色に点滅します。",
+      "favorites": "お気に入りカラー",
+      "favN": "FAV{{n}}"
+    },
+    "slots": {
+      "title": "ペアリングスロット",
+      "hint": "各スロットは 1 台のコントローラーを記憶します。切り替えると現在のコントローラーは切断されるので、新しいスロットのコントローラーで PS を押してください。空きスロットに新しいコントローラーをペアリングするには、そのスロットに切り替えて Create + PS を長押しします。",
+      "slot": "スロット",
+      "controller": "コントローラー",
+      "active": "アクティブ",
+      "empty": "空き",
+      "switch": "切り替え",
+      "forget": "削除",
+      "wipeConfirm": "4 台すべてのコントローラーを削除しますか?",
+      "wipe": "すべて削除"
+    },
+    "triggers": {
+      "title": "アダプティブトリガーテスト",
+      "hint": "エフェクトを選んで L2 と R2 を引いてください。ゲームが独自のトリガーエフェクトを送ると上書きされます。",
+      "presets": {
+        "off": "オフ",
+        "feedback": "フィードバック",
+        "weapon": "武器",
+        "vibration": "振動",
+        "bow": "弓",
+        "gallop": "ギャロップ",
+        "machine": "マシン"
+      }
+    },
+    "diag": {
+      "title": "オーディオパイプラインのカウンター",
+      "core1Frozen": "Core1 が停止しました: ドングルを再起動するまでオーディオは動作しません。",
+      "counter": "カウンター",
+      "total": "合計",
+      "perSecond": "毎秒",
+      "counters": {
+        "usbFrames": "USB オーディオ入力フレーム",
+        "btOut": "BT で送信したオーディオレポート",
+        "dropRaw": "ドロップ: スピーカー PCM (core1 が遅すぎ)",
+        "dropEnc": "ドロップ: エンコード済みスピーカー",
+        "dropHap": "ドロップ: Haptics",
+        "core1Loops": "Core1 ループ回数",
+        "core1Encoded": "エンコードしたスピーカーフレーム",
+        "rawPushed": "キュー済みスピーカーチャンク",
+        "hapPushed": "キュー済み Haptics チャンク",
+        "micFrames": "デコードしたマイクフレーム",
+        "micPlc": "補間したマイクフレーム (損失)",
+        "flashWrites": "フラッシュ書き込み",
+        "flashFailures": "フラッシュ書き込み失敗",
+        "setFeatureCount": "ホストからの Feature 書き込み",
+        "setFeatureLast": "最後のホスト Feature 書き込み"
+      }
+    },
+    "firmware": {
+      "installed": "インストール済みファームウェア",
+      "updatesSoon": "ファームウェアの自動更新は次のビルドで対応予定です。",
+      "device": "デバイス",
+      "rebooting": "再起動中… 復帰したらコントローラーの PS を押してください。",
+      "reboot": "ドングルを再起動",
+      "bootsel": "ドングルは RP2350 ドライブになりました。.uf2 をコピーするか、取り外してキャンセルしてください。",
+      "enterBootsel": "BOOTSEL モードに入る",
+      "resetDone": "設定を初期値に戻して保存しました。",
+      "confirmReset": "すべての設定をリセット",
+      "factoryReset": "初期化…",
+      "resetHint": "初期化すると設定が既定値に戻ります。ペアリングとボタン割り当ては保持されます。"
+    }
   }
 }

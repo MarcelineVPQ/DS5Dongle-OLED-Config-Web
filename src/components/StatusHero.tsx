@@ -18,14 +18,7 @@ export interface StatusHeroProps {
 
 const AUTO_HAP_MODE_KEYS = ["off", "fallback", "mix", "replace"] as const;
 
-export default function StatusHero({
-  isConnected,
-  isDirty,
-  statusText,
-  deviceLabel,
-  config,
-  issues,
-}: StatusHeroProps) {
+export default function StatusHero({ isConnected, isDirty, statusText, deviceLabel, config, issues }: StatusHeroProps) {
   const { t } = useTranslation();
   return (
     <div className="status-hero">
@@ -34,9 +27,7 @@ export default function StatusHero({
         <span>{statusText}</span>
         {isDirty && <span className="status-hero-dirty">· {t("status.unsavedEdits")}</span>}
       </div>
-      <h2 className="status-hero-title">
-        {isConnected ? t("status.connected") : t("status.ready")}
-      </h2>
+      <h2 className="status-hero-title">{isConnected ? t("status.connected") : t("status.ready")}</h2>
       <div className="status-hero-device">{deviceLabel}</div>
 
       {config && (
@@ -58,8 +49,7 @@ export default function StatusHero({
 
       {!config && !isConnected && (
         <p className="status-hero-empty">
-          <RadioTower size={14} />{" "}
-          <Trans i18nKey="status.empty" components={{ strong: <strong /> }} />
+          <RadioTower size={14} /> <Trans i18nKey="status.empty" components={{ strong: <strong /> }} />
         </p>
       )}
 
