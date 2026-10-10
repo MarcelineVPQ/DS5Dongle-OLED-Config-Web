@@ -1,76 +1,107 @@
-# DS5 Bridge Config — OLED Edition
+# DS5 Dongle OLED Edition Configurator
 
-<p align="center">
-  <a href="https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/">
-    <img src="https://img.shields.io/badge/%E2%96%B6%20LAUNCH-Live%20Web%20Config-22c55e?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=0b1220" alt="Open the live web config in your browser">
-  </a>
-</p>
+The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, HD haptics, speaker and mic included).
 
-<p align="center"><b><a href="https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/">▶ marcelinevpq.github.io/DS5Dongle-OLED-Config-Web</a></b> — no install, runs in any Chromium browser</p>
+Linux, Windows and macOS. No drivers to install. It updates itself and the dongle's firmware.
 
-Browser-based configuration tool for the [MarcelineVPQ/DS5Dongle-OLED-Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition) firmware. Reads and writes the firmware's persistent config over **WebHID** — no driver, no installer, no native app. Works on Linux / macOS / Windows in any Chromium-based browser (Chrome, Edge, Vivaldi, Brave, Opera). **Firefox is not supported** — Mozilla has declined to implement WebHID.
+## What you can do
 
-## What this fork adds vs upstream
+- **Controller:** see the controller's connection, battery, charging and signal; set the lightbar (game-controlled, four favorite colors, breathing, rainbow, fade, tilt); manage the four pairing slots.
+- **Audio & haptics:** haptics strength, speaker level (up to +12 dB), Bluetooth microphone, and Audio Auto Haptics, which creates rumble from game audio for games that send no haptics.
+- **Buttons:** remap any button on a picture of the controller; test the adaptive trigger effects.
+- **Dongle:** OLED display brightness and sleep timers, power and idle disconnect, USB polling rate and controller mode, firmware updates, and diagnostics under *Advanced*.
+- **Tray:** the app keeps running in the system tray. The icon shows the controller with its touchpad in your lightbar color, a bolt while charging, and a dot: green connected, amber no controller, grey no dongle. Right-click for slots, updates and settings.
+- **Themes:** light, dark, follow the system, or **match your desktop** (your KDE Plasma color scheme, or the system accent color elsewhere).
+- **About:** what's new in each version, the firmware's changes, this guide, and credits, all inside the app.
 
-Forked from [awalol/ds5dongle-config-web](https://github.com/awalol/ds5dongle-config-web) to support the extended `Config_body` shipped by the OLED Edition firmware:
+Changes apply to the dongle the moment you make them, so you can hear and feel them. **Save to dongle** keeps them after the dongle powers off; **Revert** goes back to what's saved.
 
-- **Button remapping (Remap tab)** — reassign any of the 16 digital controls (face buttons, D-pad, shoulders/triggers, stick clicks, Create/Options) to any other. Click a button on a live DualSense diagram to set its target, or use the collapsible full list; the map is stored on the dongle and applied before the host sees the report, so it works in every game and OS with **no host-side software**. The shoulders/triggers float out to the corners as labeled glyphs (off-camera in a front view). Rides the existing `0xF6`/`0xF7` reports (no HID-descriptor change → no Windows enumeration risk); apply persists to flash immediately and is confirmed by a revision read-back. Controller outline + button glyphs by [Zacksly](https://zacksly.itch.io) (CC BY 3.0).
-- **OLED Preview tab** — live, in-browser pixel emulation of all 10 firmware OLED screens (Status, Slots, Lightbar, Trigger Test, Gyro, Touchpad, Diagnostics, RSSI, VU Meters, Settings). Renders to a 384×192 canvas inside a stylized Pico-OLED-1.3 device frame; KEY0 / KEY1 buttons in the UI cycle / contextual-back exactly like the physical hardware. Auto-cycles with mock data every 4 s when no controller is connected — so visitors can experience the whole feature set without owning the OLED add-on. Reads live data via HID feature reports `0xFA` (slots) and `0xFB` (diagnostics + audio meters) when a controller is connected. Share `#preview` on the URL to land Discord viewers directly on the emulator.
-- **Multilingual UI** — 7 languages bundled via i18next: English, 中文, Español, Deutsch, Français, 日本語, Português. Auto-detects from browser, overridable via the header globe icon, persists choice to localStorage. Translations of non-English locales are machine-generated; PRs from native speakers welcome.
-- **Audio Auto Haptics** controls — 4-mode selector (Off / **Fallback (default)** / Mix / Replace), gain (0–200 %), and low-pass cutoff (80 / 160 / 250 / 400 Hz). DSP itself is borrowed from [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) commit `5d6bc2f`; the Fallback mode is an OLED-Edition addition that only fires when native haptics have been silent for ~1 s (preserves native HD haptics where games send them, fills in where they don't).
-- **Multi-slot pairing** — pick the active slot (0–3) for the firmware's 4-slot persistent BT pairing system (Phase G).
-- **Inactive timeout** slider — was missing from upstream's UI entirely despite existing in the firmware.
-- **All bug fixes from upstream's stale UI**: `speakerVolume` validation rule corrected (was checking 1.0–2.0, fixed to -100..0 dB); `controllerMode` now includes the **Auto** option (upstream capped at DS5 / DSE only); `audioBufferLength` range corrected to `[16, 128]` (upstream allowed up to 255).
-- Bento-grid layout with light / system / dark theme toggle, Pico-OLED-1.3 device-frame hero, and DualSense face-button glyph accents.
-- Branding updates: title, footer, hint text for each control.
+## Requirements
 
-## Run
+- A DS5 Dongle running **OLED Edition firmware v0.8 or newer**. That's the first firmware with the configurator interface.
+- **Older firmware?** Update it once by hand:
+  1. Download the latest `.uf2` from the [firmware releases](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases).
+  2. Hold the dongle's **BOOTSEL** button while plugging it in, so it shows up as a drive.
+  3. Copy the `.uf2` onto that drive.
 
-Use either the deployed GitHub Pages site (link in repo About panel once Pages is enabled), or run locally:
+  From then on, the app updates the firmware for you.
+
+## Install
+
+Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/releases)**.
+
+### Linux
+
+1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-linux-x86_64.AppImage`, put it wherever you keep apps, and make it executable (file properties, or `chmod +x`).
+2. Run it once. It adds itself to your application menu, and updates keep that entry working.
+3. **If the app says it can't open the dongle:** open the **Dongle** page and press **Set up USB access** (asks for your password once). Users with Steam installed usually don't need this.
+
+### Windows
+
+1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
+2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.
+3. Windows loads the USB driver for the dongle automatically.
+4. **If the dongle doesn't show up** and it was plugged into this PC before updating its firmware: unplug it and plug it back in.
+
+### macOS
+
+Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time, right-click the app and choose **Open**. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
+
+## Updates
+
+- **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off from the tray menu.
+- **Firmware:** when a newer firmware is published, the app offers it on the **Dongle** page. One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press **PS** on the controller afterwards.
+
+## Privacy
+
+No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates and to load the firmware changelog. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
+
+## Troubleshooting
+
+| Problem | What to do |
+| --- | --- |
+| "Plug in the DS5 Dongle" while it is plugged in | On Linux, press **Set up USB access** on that screen. Everywhere: make sure the dongle runs firmware v0.8 or newer. |
+| The app window doesn't appear | It may have opened behind other windows, or be in the tray. Click the tray icon. |
+| Controller shows "Not connected" | Press **PS** on the controller. After a firmware update or slot switch it doesn't reconnect by itself. |
+| Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
+| Linux with an NVIDIA card | Handled automatically (the app renders without the GPU, which avoids a known Electron crash). |
+
+## Build it yourself
+
+You need [Node.js 22](https://nodejs.org) and Git. On any OS:
 
 ```bash
-npm install
-npm run dev          # vite dev server, http://127.0.0.1:5173
-npm run build        # type-check + production bundle into dist/
-npm run preview      # serve the production bundle locally
+git clone https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web.git
+cd DS5Dongle-OLED-Config-Web
+npx -y npm@11.6.2 ci          # install dependencies (npm 11; older npm versions crash on this tree)
+npm run dist:linux           # Linux AppImage
+npm run dist:win             # Windows portable exe (on Windows, or on Linux with Wine)
+npm run dist:mac             # macOS zip (on a Mac)
 ```
 
-## Wire protocol
+The result is in `release/`. The official downloads are built the same way by [GitHub Actions](.github/workflows/release.yml), on real Linux, Windows and macOS machines, so anyone can see exactly how each file was made.
 
-The firmware exposes six USB HID feature reports — `0xF6`–`0xF9` are shared with upstream and loteran; `0xFA` and `0xFB` are OLED-Edition additions consumed by the in-browser emulator. The OLED Edition's `0xF7` payload is 19 bytes (upstream's is 13, loteran's is 17).
+## For developers
 
-| Report | Direction | Purpose |
-|---|---|---|
-| `0xF6` | host → device | Set config. `[0x01, ...body bytes]` = update in-memory; `[0x02]` = persist to flash; `[0x03]` = reconnect TinyUSB |
-| `0xF7` | device → host | Read current `Config_body` (19 bytes for OLED Edition) |
-| `0xF8` | device → host | Read firmware version string |
-| `0xF9` | device → host | Read live BT RSSI (1 signed byte, dBm) |
-| `0xFA` | device → host | Read multi-slot pairing table (4 × 6-byte bd_addr + 4 × occupancy flag = 28 bytes). OLED Edition only. |
-| `0xFB` | device → host | Read live diagnostics: uptime, USB-audio frame counter, BT-0x32 packet counter, speaker peak, haptic peak, HCI error count (18 bytes). OLED Edition only. |
-
-**Button remap** rides the same `0xF6`/`0xF7` reports rather than a new report ID (declaring extra HID report IDs broke DualSense enumeration on Windows). `0xF6` with func-id `0x10` and an `['R','M', version, table[16]]` frame sets the 16-entry remap table (source→target, `0xFF` = disabled); the `0xF7` response appends an `['R','M', version, revision, table[16]]` block after `Config_body` so the web tool reads config + remap in one GET (older firmware omits it). See `src/protocol/remap.ts`.
-
-`src/protocol/config.ts` is the single source of truth for the `Config_body` layout; if the firmware's `Config_body` ever grows or shrinks, edit only this file.
-
-## Trust model (Flash Firmware tab)
-
-The browser-based flasher uses WebUSB to push a UF2 to a Pico in BOOTSEL mode. A few things worth knowing:
-
-- **Browser permission gate**: WebUSB requires a user gesture + explicit device-picker confirmation per origin. Authorizations are persistent per origin and revocable at `chrome://settings/content/usbDevices`.
-- **Bundled latest UF2**: when the deploy workflow runs, it downloads the latest release UF2 from `MarcelineVPQ/DS5Dongle-OLED-Edition` and bundles it as `public/firmware-latest.uf2` alongside this site. The "Use latest release" button reads it same-origin. CI also writes the SHA-256 into `firmware-latest.json`; the UI compares that against the SHA-256 it computes from the fetched bytes and logs a warning if they differ.
-- **User-supplied UF2**: when you pick a file from your disk, a warning banner appears reminding you that the firmware will run with USB-device privileges on every host the dongle subsequently plugs into. Only flash files from sources you trust.
-- **No signature verification on the bootloader side**: stock RP2350 BOOTSEL accepts any firmware image. Secure Boot via OTP fuses exists but is one-way and is deliberately not used here, because it would block normal re-flashing.
-- **Per-board serial display**: the device-info strip shows the per-board flash chip ID (e.g. `BC844357D3EF5218`). We never transmit it; it's there so you can recognize your own device.
-- **Same-origin everything**: no third-party CDNs, no analytics, no telemetry. The flasher's only outbound network requests are the same-origin fetches for `firmware-latest.{uf2,json}`.
-
-The firmware's release page also includes a `SHA256SUMS.txt` asset; you can manually verify the bundled UF2 hash against it.
+- **Run from source:** `npm run dev:desktop`. Before a pull request, run `npm run check` (typecheck, lint, formatting, security gates, tests).
+- **Docs:**
+  - [CONTRIBUTING](docs/CONTRIBUTING.md): setup, code style, pre-commit, commit format.
+  - [TEST_PLAN](docs/TEST_PLAN.md).
+  - [SECURITY_AUDIT](docs/SECURITY_AUDIT.md).
+  - [Architecture decisions](docs/adr/README.md).
+  - [CLAUDE.md](CLAUDE.md): an architecture overview.
+- **Protocol:** the app talks to the dongle over a vendor USB interface using WebUSB; see [ADR-0001](docs/adr/0001-vendor-usb-transport.md) and the firmware's `CLAUDE.md`.
+- **Browser version:** this repository still builds the original browser-based config tool (`npm run dev`), but the desktop app is the supported way to configure the dongle.
 
 ## Credits
 
-- **[awalol/DS5Dongle](https://github.com/awalol/DS5Dongle)** — upstream firmware + original web config base.
-- **[loteran/DS5Dongle](https://github.com/loteran/DS5Dongle)** — Audio Auto Haptics DSP design and the matching CLI tool (`scripts/set_ds5.py` in our firmware repo).
-- **[PS5 Button Icons and Controls](https://zacksly.itch.io/ps5-button-icons-and-controls)** by **Zacksly** — DualSense controller outline + button glyphs used in the Remap tab, licensed [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (recolored to `currentColor` and cropped for theming).
+- **Firmware:** [DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition), a fork of [awalol/DS5Dongle](https://github.com/awalol/DS5Dongle). The browser tool started as [awalol/ds5dongle-config-web](https://github.com/awalol/ds5dongle-config-web).
+- **Thanks** to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes, Audio Auto Haptics DSP) and [zurce/DS5Dongle-OLED](https://github.com/zurce/DS5Dongle-OLED) (multi-slot pairing).
+- **Controller art and button glyphs:** "PS5 Button Icons and Controls" by [Zacksly](https://zacksly.itch.io), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), modified.
+- **PICOBOOT flasher:** picoflash by Piers Finlayson (MIT).
+
+DualSense and PlayStation are trademarks of Sony Interactive Entertainment. This project is not affiliated with Sony.
 
 ## License
 
-Same as upstream awalol/ds5dongle-config-web.
+[MIT](LICENSE).
