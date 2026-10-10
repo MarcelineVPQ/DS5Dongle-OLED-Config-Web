@@ -28,6 +28,9 @@ export const SUPPORTED_LANGUAGES = [
   { code: "pt", label: "Português (BR)", shortLabel: "PT" },
 ] as const;
 
+// Where an explicitly chosen language is remembered.
+export const LANGUAGE_KEY = "i18nextLng";
+
 export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]["code"];
 
 void i18n
@@ -52,10 +55,13 @@ void i18n
     interpolation: {
       escapeValue: false, // React already escapes
     },
+    // A language the user picked (saved by LanguageToggle) wins; otherwise the
+    // system language every launch. Detected languages are not saved, so a
+    // later change of system language is followed.
     detection: {
       order: ["localStorage", "navigator"],
-      caches: ["localStorage"],
-      lookupLocalStorage: "i18nextLng",
+      caches: [],
+      lookupLocalStorage: LANGUAGE_KEY,
     },
   });
 

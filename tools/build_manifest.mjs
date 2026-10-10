@@ -39,8 +39,8 @@ async function newestRelease(repo, tagPattern) {
   return (await r.json()).find((rel) => !rel.draft && !rel.prerelease && tagPattern.test(rel.tag_name)) ?? null;
 }
 
-// Streamed hash for large assets (the Proton build is ~565 MB).
-async function measureStream(asset) {
+// Download and hash an asset, streamed (the Proton build is ~565 MB).
+async function measure(asset) {
   const r = await fetch(asset.browser_download_url, { redirect: "follow" });
   if (!r.ok || !r.body) throw new Error(`${asset.name}: download returned ${r.status}`);
   const hash = createHash("sha256");
@@ -51,14 +51,6 @@ async function measureStream(asset) {
   }
   if (size !== asset.size) throw new Error(`${asset.name}: size ${size} != ${asset.size}`);
   return { url: asset.browser_download_url, size, sha256: hash.digest("hex") };
-}
-
-async function measure(asset) {
-  const r = await fetch(asset.browser_download_url, { redirect: "follow" });
-  if (!r.ok) throw new Error(`${asset.name}: download returned ${r.status}`);
-  const bytes = new Uint8Array(await r.arrayBuffer());
-  if (bytes.byteLength !== asset.size) throw new Error(`${asset.name}: size ${bytes.byteLength} != ${asset.size}`);
-  return { url: asset.browser_download_url, size: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 
 function pick(release, pattern) {
@@ -86,19 +78,20 @@ const uf2 = fw ? pick(fw, new RegExp(`^ds5-bridge-oled-${fw.tag_name.replace(/[.
 if (fw && uf2) manifest.firmware = { version: fw.tag_name, notes_url: fw.html_url, uf2: await measure(uf2) };
 
 const proton = await newestRelease(FIRMWARE_REPO, /^proton-/);
-const protonTar = pick(proton, /^GE-Proton[\w.-]+\.tar\.gz$/);
+// Same naming rule as the app (PROTON_NAME in src/update/manifest.ts).
+const protonTar = pick(proton, /^GE-Proton[\w.-]*DualSense\.tar\.gz$/);
 if (proton && protonTar) {
-  const measured = await measureStream(protonTar);
-  // Cross-check with the SHA256SUMS.txt published next to it.
+  const measured = await measure(protonTar);
+  // The release's SHA256SUMS.txt must list the tarball with the same hash.
   const sums = pick(proton, /^SHA256SUMS\.txt$/);
-  if (sums) {
-    const text = await (await fetch(sums.browser_download_url, { redirect: "follow" })).text();
-    const listed = text
-      .split("\n")
-      .find((l) => l.trim().endsWith(protonTar.name))
-      ?.split(/\s+/)[0];
-    if (listed && listed !== measured.sha256) throw new Error(`${protonTar.name}: SHA256SUMS.txt says ${listed}, download hashes to ${measured.sha256}`);
-  }
+  if (!sums) throw new Error(`${proton.tag_name}: no SHA256SUMS.txt in the release`);
+  const r = await fetch(sums.browser_download_url, { redirect: "follow" });
+  if (!r.ok) throw new Error(`SHA256SUMS.txt: download returned ${r.status}`);
+  const listed = (await r.text())
+    .split("\n")
+    .find((l) => l.trim().endsWith(protonTar.name))
+    ?.split(/\s+/)[0];
+  if (listed !== measured.sha256) throw new Error(`${protonTar.name}: SHA256SUMS.txt says ${listed ?? "nothing"}, download hashes to ${measured.sha256}`);
   manifest.proton = { name: protonTar.name.replace(/\.tar\.gz$/, ""), notes_url: proton.html_url, tarball: measured };
 }
 

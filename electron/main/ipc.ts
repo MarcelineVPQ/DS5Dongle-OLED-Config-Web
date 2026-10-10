@@ -2,7 +2,17 @@
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import { z } from "zod";
-import { IPC, type CloseLauncherResult, type DesktopSettings, type DeviceStatus, type GameBackup, type LatestFirmware, type ProtonInstallResult, type UpdateState } from "../../src/desktop/api";
+import {
+  IPC,
+  type CloseLauncherResult,
+  type DesktopSettings,
+  type DeviceStatus,
+  type GameBackup,
+  type LatestFirmware,
+  type ProtonInstallResult,
+  type UndoResult,
+  type UpdateState,
+} from "../../src/desktop/api";
 import type { ApplyResult, GamesReport, LauncherId } from "../../src/desktop/games/types";
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
@@ -29,7 +39,8 @@ export const FixIdsSchema = z
     z
       .string()
       .max(200)
-      .regex(/^(steam|heroic|lutris)\d+:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+)$|^system:(audio-rule:\d+|audio-profile:[\w.-]+)$/),
+      // Same shapes games.ts builds (a test checks every id a scan produces passes).
+      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+)$|^system:audio-(rule|profile):[0-9a-f]{8}$/),
   )
   .max(500);
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
@@ -54,7 +65,7 @@ export interface IpcHandlers {
   firmwareChangelog: () => Promise<string>;
   gamesScan: () => Promise<GamesReport>;
   gamesApply: (fixIds: string[]) => Promise<ApplyResult>;
-  gamesUndo: (backupId: string) => { restored: string[]; blockedBy: LauncherId[] };
+  gamesUndo: (backupId: string) => Promise<UndoResult>;
   gamesBackups: () => GameBackup[];
   closeLauncher: (launcher: LauncherId) => Promise<CloseLauncherResult>;
   installProton: () => Promise<ProtonInstallResult>;

@@ -6,6 +6,13 @@ import { z } from "zod";
 
 const Sha256 = z.string().regex(/^[0-9a-f]{64}$/, "sha256 must be 64 lowercase hex characters");
 
+// Our Proton builds are named GE-Proton<version>-DualSense. The manifest, the
+// installer and the Games scanner all use this one rule to recognise them.
+export const PROTON_NAME = /^GE-Proton[\w.-]*DualSense$/;
+
+// Newer of two of our build names ("GE-Proton11-10-DualSense" > "GE-Proton11-7-DualSense").
+export const compareProtonNames = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
+
 export const Download = z.object({
   url: z.string().url(),
   size: z.number().int().positive(),
@@ -33,7 +40,7 @@ export const Manifest = z.object({
   // Our GE-Proton DualSense build, installed by the Games page (Linux).
   proton: z
     .object({
-      name: z.string().regex(/^GE-Proton[\w.-]+$/, "proton name must be a plain GE-Proton folder name"),
+      name: z.string().regex(PROTON_NAME, "proton name must be a GE-Proton<version>-DualSense folder name"),
       notes_url: z.string().url().optional(),
       tarball: Download,
     })

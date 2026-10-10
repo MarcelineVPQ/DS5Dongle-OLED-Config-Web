@@ -2,7 +2,8 @@
 // Proton builds run through umu; Lutris lists a build when its folder holds a
 // `proton` script in runners/wine/ (and, in newer versions, in Steam's
 // compatibilitytools.d).
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
+import { readParsed } from "./files";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 
@@ -17,6 +18,7 @@ export interface LutrisInstall {
 
 export interface LutrisGame {
   slug: string;
+  configId: string; // the yml file name (unique per install; one game can be installed twice)
   name: string;
   configPath: string; // games/<configpath>.yml
   runner: string | null; // wine.version, null = runner default
@@ -30,7 +32,12 @@ export function findLutrisInstalls(home: string): LutrisInstall[] {
   ] as Array<[string, string, boolean]>) {
     if (!existsSync(join(dataDir, "pga.db"))) continue;
     // Lutris uses ~/.config/lutris only if it holds the games; otherwise the data dir.
-    const configDir = existsSync(join(configHome, "games")) && readdirSync(join(configHome, "games")).length > 0 ? configHome : dataDir;
+    let configDir = dataDir;
+    try {
+      if (readdirSync(join(configHome, "games")).length > 0) configDir = configHome;
+    } catch {
+      // no ~/.config/lutris/games: Lutris uses the data dir
+    }
     out.push({
       dataDir,
       configDir,
@@ -43,12 +50,8 @@ export function findLutrisInstalls(home: string): LutrisInstall[] {
   return out;
 }
 
-export function readYaml(path: string): unknown {
-  try {
-    return parseYaml(readFileSync(path, "utf8"));
-  } catch {
-    return null;
-  }
+function readYaml(path: string): unknown {
+  return readParsed(path, (text) => parseYaml(text) as unknown);
 }
 
 function wineVersion(doc: unknown): string | null {
@@ -92,7 +95,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
     .filter((r) => r.configpath && /^[\w.-]+$/.test(r.configpath))
     .map((r) => {
       const configPath = join(install.configDir, "games", `${r.configpath}.yml`);
-      return { slug: r.slug, name: r.name, configPath, runner: wineVersion(readYaml(configPath)) };
+      return { slug: r.slug, configId: r.configpath!, name: r.name, configPath, runner: wineVersion(readYaml(configPath)) };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 }

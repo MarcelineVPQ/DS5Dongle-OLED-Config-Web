@@ -83,6 +83,7 @@ function start(): void {
     process.platform === "linux"
       ? new GamesService({
           userData: app.getPath("userData"),
+          allowed: () => settings.gamesScanAllowed,
           fetchManifest: () => updater.fetchManifest(),
           download: (d, path, progress) => updater.downloadAsset(d, path, progress),
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),

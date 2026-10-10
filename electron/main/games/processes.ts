@@ -3,6 +3,7 @@
 // SIGTERM (what a normal window-manager quit sends), then we wait.
 import { execFile } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
+import type { CloseLauncherResult } from "../../../src/desktop/api";
 import type { LauncherId } from "../../../src/desktop/games/types";
 
 interface Proc {
@@ -59,9 +60,7 @@ export function gameRunning(): boolean {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export type CloseResult = "closed" | "not-running" | "game-running" | "timeout";
-
-export async function closeLauncher(launcher: LauncherId, timeoutMs = 30_000): Promise<CloseResult> {
+export async function closeLauncher(launcher: LauncherId, timeoutMs = 30_000): Promise<CloseLauncherResult> {
   if (!runningLaunchers().has(launcher)) return "not-running";
   // Quitting a launcher mid-game can kill the game; the user closes the game first.
   if (gameRunning()) return "game-running";
@@ -71,7 +70,14 @@ export async function closeLauncher(launcher: LauncherId, timeoutMs = 30_000): P
     const [cmd, args] = flatpak ? ["flatpak", ["run", "com.valvesoftware.Steam", "-shutdown"]] : ["steam", ["-shutdown"]];
     execFile(cmd, args, { timeout: 15_000 }, () => undefined);
   } else {
-    for (const p of processes()) if (matches(launcher, p) && isMain(p)) process.kill(p.pid, "SIGTERM");
+    for (const p of processes()) {
+      if (!matches(launcher, p) || !isMain(p)) continue;
+      try {
+        process.kill(p.pid, "SIGTERM");
+      } catch {
+        // already gone
+      }
+    }
   }
 
   const deadline = Date.now() + timeoutMs;

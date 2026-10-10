@@ -1,5 +1,5 @@
 import { Gamepad2, Info, Joystick, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/LanguageToggle";
 import ThemeToggle from "../components/ThemeToggle";
@@ -25,6 +25,7 @@ interface PageDef {
   label: string;
   icon: LucideIcon;
   badge?: number;
+  standalone?: boolean; // works without the dongle (no "plug in" screen, no save bar)
   render: (bridge: UseDs5BridgeResult, fw: FirmwareUpdate) => JSX.Element;
 }
 
@@ -46,8 +47,19 @@ export default function DesktopApp() {
     { id: "audio", label: t("desktop.nav.audio", "Audio & haptics"), icon: Volume2, render: (b) => <SettingsCards bridge={b} group="audio" /> },
     { id: "buttons", label: t("desktop.nav.buttons", "Buttons"), icon: ToggleLeft, render: (b) => <ButtonsPage bridge={b} /> },
     { id: "dongle", label: t("desktop.nav.dongle", "Dongle"), icon: Settings2, render: (b, f) => <DonglePage bridge={b} fw={f} advancedOpen={advancedOpen} /> },
-    ...(games.supported ? [{ id: "games" as const, label: t("desktop.nav.games", "Games"), icon: Joystick, badge: games.count, render: () => <GamesPage onScanned={games.update} /> }] : []),
-    { id: "about", label: t("desktop.nav.about", "About"), icon: Info, render: () => <AboutPage key={aboutTab} initialTab={aboutTab} /> },
+    ...(games.supported
+      ? [
+          {
+            id: "games" as const,
+            label: t("desktop.nav.games", "Games"),
+            icon: Joystick,
+            badge: games.count,
+            standalone: true,
+            render: () => <GamesPage allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />,
+          },
+        ]
+      : []),
+    { id: "about", label: t("desktop.nav.about", "About"), icon: Info, standalone: true, render: () => <AboutPage key={aboutTab} initialTab={aboutTab} /> },
   ];
 
   const current = pages.find((p) => p.id === page) ?? pages[0];
@@ -118,16 +130,12 @@ export default function DesktopApp() {
   return (
     <div className="dk">
       <aside className="dk-side">
-        <div className="dk-brand">
-          DS5 Dongle OLED Edition
-          <small>{t("desktop.brandSub", "Configurator")}</small>
-        </div>
         {pages.map((p) => (
           <button type="button" key={p.id} className={`dk-nav-item${p.id === page ? " active" : ""}`} aria-current={p.id === page ? "page" : undefined} onClick={() => setPage(p.id)}>
             <p.icon size={15} />
             {p.label}
             {p.badge ? (
-              <span className="dk-badge" title={t("desktop.games.attention", { count: p.badge, defaultValue: "{{count}} recommended changes" })}>
+              <span className="dk-badge" title={t("desktop.games.attention", { count: p.badge })}>
                 {p.badge}
               </span>
             ) : null}
@@ -188,7 +196,7 @@ export default function DesktopApp() {
               </button>
             </div>
           )}
-          {connected || current.id === "about" ? (
+          {connected || current.standalone ? (
             current.render(bridge, fw)
           ) : (
             <div className="dk-empty">
@@ -202,24 +210,26 @@ export default function DesktopApp() {
           )}
         </main>
 
-        <footer className="dk-bar">
-          <span className="dk-bar-note">
-            {busy
-              ? t(`statusText.${bridge.operation}`)
-              : bridge.hasUnsavedChanges
-                ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
-                : connected
-                  ? t("desktop.bar.saved", "All changes saved on the dongle.")
-                  : ""}
-          </span>
-          <span className="dk-spacer" />
-          <button type="button" className="dk-btn" disabled={!connected || busy || !bridge.hasUnsavedChanges} onClick={() => void bridge.revertToSaved()}>
-            {t("desktop.bar.revert", "Revert")}
-          </button>
-          <button type="button" className="dk-btn primary" disabled={!connected || busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>
-            {t("desktop.bar.save", "Save to dongle")}
-          </button>
-        </footer>
+        {!current.standalone && (
+          <footer className="dk-bar">
+            <span className="dk-bar-note">
+              {busy
+                ? t(`statusText.${bridge.operation}`)
+                : bridge.hasUnsavedChanges
+                  ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
+                  : connected
+                    ? t("desktop.bar.saved", "All changes saved on the dongle.")
+                    : ""}
+            </span>
+            <span className="dk-spacer" />
+            <button type="button" className="dk-btn" disabled={!connected || busy || !bridge.hasUnsavedChanges} onClick={() => void bridge.revertToSaved()}>
+              {t("desktop.bar.revert", "Revert")}
+            </button>
+            <button type="button" className="dk-btn primary" disabled={!connected || busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>
+              {t("desktop.bar.save", "Save to dongle")}
+            </button>
+          </footer>
+        )}
       </div>
     </div>
   );
@@ -251,15 +261,48 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
   return { version, dismiss };
 }
 
-// Linux: one read-only scan at startup so the sidebar can show how many
-// recommended game-setup changes are waiting; the Games page refreshes it.
+// Linux Games page: whether the user allowed it to read launcher settings, and
+// how many recommended changes are waiting (the sidebar badge). The startup
+// check only runs once the user has allowed it.
 function useGamesAttention() {
   const supported = window.desktop?.platform === "linux";
+  const [allowed, setAllowedState] = useState(false);
   const [count, setCount] = useState(0);
-  const update = useCallback((report: GamesReport) => setCount(allFixes(report).filter((f) => f.recommended && !loadDeclined().has(f.id)).length), []);
+  const last = useRef<GamesReport | null>(null);
+  const recount = useCallback(() => setCount(last.current ? allFixes(last.current).filter((f) => f.recommended && !loadDeclined().has(f.id)).length : 0), []);
+  const update = useCallback(
+    (report: GamesReport) => {
+      last.current = report;
+      recount();
+    },
+    [recount],
+  );
   useEffect(() => {
     if (!supported) return;
-    window.desktop!.gamesScan().then(update, () => undefined);
+    let live = true;
+    void window.desktop!.getSettings().then((s) => {
+      if (!live) return;
+      setAllowedState(s.gamesScanAllowed);
+      if (s.gamesScanAllowed)
+        window.desktop!.gamesScan().then(
+          (r) => live && update(r),
+          () => undefined,
+        );
+    });
+    return () => {
+      live = false;
+    };
   }, [supported, update]);
-  return { supported, count, update };
+  const setAllowed = useCallback(
+    (value: boolean) => {
+      setAllowedState(value);
+      if (!value) {
+        last.current = null;
+        recount();
+      }
+      void window.desktop!.setSetting("gamesScanAllowed", value);
+    },
+    [recount],
+  );
+  return { supported, allowed, setAllowed, count, update, recount };
 }

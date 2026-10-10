@@ -95,21 +95,6 @@ html[data-theme="dark"] .dk {
   border-right: 1px solid var(--border-default);
   min-height: 0;
 }
-.dk-brand {
-  padding: 2px 8px 10px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-strong);
-  line-height: 1.2;
-}
-.dk-brand small {
-  display: block;
-  font-family: var(--font-body);
-  font-weight: 400;
-  font-size: var(--dk-small);
-  color: var(--text-muted);
-}
 .dk-nav-item {
   display: flex;
   align-items: center;
@@ -150,6 +135,7 @@ html[data-theme="dark"] .dk {
 /* ---- Main column ---- */
 .dk-main {
   display: grid;
+  /* top bar, scrolling body, save bar (absent on pages that don't need the dongle) */
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
   min-height: 0;

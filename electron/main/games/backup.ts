@@ -1,53 +1,115 @@
 // Every Games-page write goes through here: the original files are copied into
 // a backup set first, then each new file is written atomically (temp file,
-// fsync, rename). Undo puts the originals back byte for byte, and removes
-// files that did not exist before.
-import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
+// fsync, rename; symlinked config files are written through to their target).
+//
+// Undo puts the originals back byte for byte and removes files that did not
+// exist before, but only if nothing else has changed those files since: the
+// manifest keeps a hash of what we wrote, and a launcher that saved its own
+// settings in between (or a newer change set on the same file) makes Undo
+// refuse instead of silently discarding those edits. A set can be undone once.
+import { createHash } from "node:crypto";
+import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
+import type { LauncherId, Msg } from "../../../src/desktop/games/types";
 
 const KEEP = 10;
 
+const MsgSchema: z.ZodType<Msg> = z.lazy(() =>
+  z.object({
+    key: z.string().max(100),
+    params: z.record(z.string(), z.union([z.string().max(2000), MsgSchema])).optional(),
+  }),
+);
+
+const Owner = z.enum(["steam", "heroic", "lutris", "system"]);
+export type Owner = z.infer<typeof Owner>;
+
 const ManifestSchema = z.object({
   created: z.string(),
-  description: z.string(),
-  files: z.array(z.object({ path: z.string(), backup: z.string().nullable() })),
+  changes: z.array(MsgSchema).optional(),
+  description: z.string().optional(), // sets written before messages were translatable
+  restored: z.string().optional(), // when it was undone
+  after: z.array(z.string()).optional(), // what to run after restoring, e.g. "restart-wireplumber"
+  files: z.array(
+    z.object({
+      path: z.string(),
+      backup: z.string().nullable(), // null: the file didn't exist before
+      owner: Owner.optional(), // missing in older sets
+      written: z.string().nullable().optional(), // sha256 after our write; null: we removed it
+    }),
+  ),
 });
 export type BackupManifest = z.infer<typeof ManifestSchema>;
 
 export interface BackupSummary {
   id: string;
   created: string;
-  description: string;
+  changes: Msg[];
   files: string[];
+  restored: boolean;
+}
+
+export interface BackupFile {
+  path: string;
+  owner: Owner;
+}
+
+export class UndoConflictError extends Error {
+  constructor(readonly changed: string[]) {
+    super(`Changed since the backup: ${changed.join(", ")}`);
+  }
 }
 
 export const BACKUP_ID = /^\d{8}T\d{6}Z-[0-9a-f]{6}$/;
 
-export function writeFileAtomic(path: string, data: string | Buffer): void {
-  mkdirSync(dirname(path), { recursive: true });
-  const tmp = `${path}.ds5-tmp-${process.pid}`;
-  let mode: number | undefined;
+const sha256 = (path: string): string | null => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : null);
+
+// Write the real file behind a symlink (dotfile managers link config files);
+// renaming over the link would replace it with a plain copy.
+function target(path: string): string {
   try {
-    mode = statSync(path).mode & 0o777;
+    return realpathSync(path);
   } catch {
-    mode = undefined;
+    return path;
   }
-  const fd = openSync(tmp, "w", mode ?? 0o644);
+}
+
+export function writeFileAtomic(path: string, data: string | Buffer): void {
+  const dest = target(path);
+  mkdirSync(dirname(dest), { recursive: true });
+  const tmp = `${dest}.ds5-tmp-${process.pid}`;
+  let mode = 0o644;
   try {
-    writeSync(fd, typeof data === "string" ? Buffer.from(data, "utf8") : data);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
+    mode = statSync(dest).mode & 0o777;
+  } catch {
+    // new file
   }
-  renameSync(tmp, path);
+  try {
+    const fd = openSync(tmp, "w", mode);
+    try {
+      writeSync(fd, typeof data === "string" ? Buffer.from(data, "utf8") : data);
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+    renameSync(tmp, dest);
+  } catch (err) {
+    rmSync(tmp, { force: true });
+    throw err;
+  }
+}
+
+function removeFile(path: string): void {
+  const dest = target(path);
+  if (existsSync(dest)) unlinkSync(dest);
 }
 
 export class Backups {
   constructor(private readonly dir: string) {}
 
-  // Snapshot `paths`, then run `write`. If writing throws, everything is rolled back.
-  run(description: string, paths: string[], write: () => void): string {
+  // Snapshot `files`, then run `write`. If writing throws, everything is rolled back.
+  run(changes: Msg[], files: BackupFile[], write: () => void, after: string[] = []): string {
     const stamp = new Date()
       .toISOString()
       .replace(/[-:]/g, "")
@@ -57,38 +119,52 @@ export class Backups {
       .padStart(6, "0")}`;
     const setDir = join(this.dir, id);
     mkdirSync(setDir, { recursive: true });
-    const unique = [...new Set(paths)];
+    const unique = [...new Map(files.map((f) => [f.path, f])).values()];
     const manifest: BackupManifest = {
       created: new Date().toISOString(),
-      description,
-      files: unique.map((path, i) => {
-        if (!existsSync(path)) return { path, backup: null };
+      changes,
+      after,
+      files: unique.map(({ path, owner }, i) => {
+        if (!existsSync(path)) return { path, owner, backup: null };
         const backup = `${i}.orig`;
         copyFileSync(path, join(setDir, backup));
-        return { path, backup };
+        return { path, owner, backup };
       }),
     };
-    writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+    const save = () => writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+    save();
     try {
       write();
     } catch (err) {
-      this.restore(id);
+      this.putBack(setDir, manifest);
+      rmSync(setDir, { recursive: true, force: true });
       throw err;
     }
+    for (const f of manifest.files) f.written = sha256(f.path);
+    save();
     this.prune();
     return id;
   }
 
-  restore(id: string): string[] {
-    if (!BACKUP_ID.test(id)) throw new Error("Invalid backup id");
+  // Undo a set. Throws UndoConflictError (and changes nothing) if any file was
+  // changed after our write; returns what to run afterwards (e.g. restart-wireplumber).
+  restore(id: string): { files: string[]; after: string[] } {
+    const manifest = this.manifest(id);
+    if (manifest.restored) throw new Error("This change set was already undone.");
+    const changed = manifest.files.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
+    if (changed.length) throw new UndoConflictError(changed);
     const setDir = join(this.dir, id);
-    const manifest = ManifestSchema.parse(JSON.parse(readFileSync(join(setDir, "manifest.json"), "utf8")));
+    this.putBack(setDir, manifest);
+    manifest.restored = new Date().toISOString();
+    writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+    return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [] };
+  }
+
+  private putBack(setDir: string, manifest: BackupManifest): void {
     for (const f of manifest.files) {
-      if (f.backup === null) {
-        if (existsSync(f.path)) unlinkSync(f.path);
-      } else writeFileAtomic(f.path, readFileSync(join(setDir, f.backup)));
+      if (f.backup === null) removeFile(f.path);
+      else writeFileAtomic(f.path, readFileSync(join(setDir, f.backup)));
     }
-    return manifest.files.map((f) => f.path);
   }
 
   list(): BackupSummary[] {
@@ -103,8 +179,8 @@ export class Backups {
       .reverse()
       .flatMap((id) => {
         try {
-          const m = ManifestSchema.parse(JSON.parse(readFileSync(join(this.dir, id, "manifest.json"), "utf8")));
-          return [{ id, created: m.created, description: m.description, files: m.files.map((f) => f.path) }];
+          const m = this.manifest(id);
+          return [{ id, created: m.created, changes: m.changes ?? [{ key: "legacy", params: { text: m.description ?? "" } }], files: m.files.map((f) => f.path), restored: !!m.restored }];
         } catch {
           return [];
         }
@@ -116,10 +192,24 @@ export class Backups {
     return ManifestSchema.parse(JSON.parse(readFileSync(join(this.dir, id, "manifest.json"), "utf8")));
   }
 
+  // Launchers that own files in this set (older sets: guessed from the path).
+  owners(id: string): LauncherId[] {
+    const owners = this.manifest(id).files.map((f) => f.owner ?? guessOwner(f.path));
+    return [...new Set(owners.filter((o): o is LauncherId => o !== "system"))];
+  }
+
   private prune(): void {
     const ids = readdirSync(this.dir)
       .filter((d) => BACKUP_ID.test(d))
       .sort();
     for (const id of ids.slice(0, Math.max(0, ids.length - KEEP))) rmSync(join(this.dir, id), { recursive: true, force: true });
   }
+}
+
+// Only for sets written before owners were recorded; those touched just these locations.
+function guessOwner(path: string): Owner {
+  if (path.includes("/.config/heroic/") || path.includes("/com.heroicgameslauncher.hgl/")) return "heroic";
+  if (path.includes("/lutris/")) return "lutris";
+  if (path.includes("/wireplumber/") || path.includes("/pipewire/")) return "system";
+  return "steam";
 }

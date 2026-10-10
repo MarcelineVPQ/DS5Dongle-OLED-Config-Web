@@ -1,8 +1,10 @@
 // Steam: installs, games, compatibility-tool mapping and per-game Steam Input.
 // Read side only; edits are planned in games.ts and written through backup.ts.
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { readParsed } from "./files";
 import { join } from "node:path";
-import { getNode, getString, parseVdf, type VdfNode } from "./vdf";
+import { protonBuilds } from "./proton";
+import { ensureNode, getNode, getString, parseVdf, setKey, type VdfNode } from "./vdf";
 
 export interface SteamInstall {
   root: string; // realpath
@@ -21,8 +23,9 @@ export interface SteamGame {
 const TOOL_APPIDS = new Set(["228980", "1070560", "1391110", "1628350", "4183110", "1493710", "2180100", "1887720", "1826330", "1580130", "2348590", "3658110"]);
 const TOOL_NAME = /^(Proton\b|Steam Linux Runtime|Steamworks Common|SteamVR)/i;
 
-export const STEAM_TOOL_PRIORITY_DEFAULT = "75";
-export const STEAM_TOOL_PRIORITY_GAME = "250";
+// Steam's own CompatToolMapping priorities: "0" (the default) and per-game entries.
+const STEAM_TOOL_PRIORITY_DEFAULT = "75";
+const STEAM_TOOL_PRIORITY_GAME = "250";
 
 export function findSteamInstalls(home: string): SteamInstall[] {
   const candidates: Array<[string, boolean]> = [
@@ -69,22 +72,22 @@ function newestLocalConfig(root: string): string | null {
 }
 
 export function readVdfFile(path: string): VdfNode | null {
-  try {
-    return parseVdf(readFileSync(path, "utf8"));
-  } catch {
-    return null;
-  }
+  return readParsed(path, parseVdf);
 }
 
-export function listSteamGames(install: SteamInstall): SteamGame[] {
+// Every Steam library folder (the install itself plus libraryfolders.vdf entries).
+export function steamLibraries(install: SteamInstall): string[] {
   const lf = readVdfFile(join(install.root, "steamapps/libraryfolders.vdf")) ?? readVdfFile(join(install.root, "config/libraryfolders.vdf"));
   const libraries = new Set<string>([install.root]);
   for (const [, entry] of getNode(lf ?? [], "libraryfolders") ?? []) {
-    if (typeof entry !== "string") {
-      const path = getString(entry, "path");
-      if (path) libraries.add(path);
-    }
+    const path = typeof entry === "string" ? undefined : getString(entry, "path");
+    if (path) libraries.add(path);
   }
+  return [...libraries];
+}
+
+export function listSteamGames(install: SteamInstall): SteamGame[] {
+  const libraries = steamLibraries(install);
   const games = new Map<string, SteamGame>();
   for (const lib of libraries) {
     const steamapps = join(lib, "steamapps");
@@ -120,11 +123,21 @@ export function launchOptions(localConfig: VdfNode | null, appid: string): strin
   return getString(localConfig ?? [], "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", appid, "LaunchOptions") ?? "";
 }
 
-// Compatibility tools installed in compatibilitytools.d: folder name -> has a proton script.
+// Compatibility tools in compatibilitytools.d.
 export function installedTools(install: SteamInstall): string[] {
-  try {
-    return readdirSync(install.toolsDir).filter((d) => existsSync(join(install.toolsDir, d, "proton")));
-  } catch {
-    return [];
-  }
+  return protonBuilds(install.toolsDir);
+}
+
+// Valve's own Proton builds (steamapps/common/<name>/proton) in every library.
+export function valveProtons(install: SteamInstall): string[] {
+  return steamLibraries(install).flatMap((lib) => protonBuilds(join(lib, "steamapps/common")).filter((n) => /^Proton\b/.test(n)));
+}
+
+// Point CompatToolMapping[key] ("0" = the default for all Windows games, or an
+// app id) at `tool`, creating the entry with Steam's own priorities if needed.
+export function setCompatTool(config: VdfNode, key: string, tool: string): void {
+  const entry = ensureNode(config, "InstallConfigStore", "Software", "Valve", "Steam", "CompatToolMapping", key);
+  setKey(entry, "name", tool);
+  if (getString(entry, "config") === undefined) setKey(entry, "config", "");
+  if (getString(entry, "priority") === undefined) setKey(entry, "priority", key === "0" ? STEAM_TOOL_PRIORITY_DEFAULT : STEAM_TOOL_PRIORITY_GAME);
 }

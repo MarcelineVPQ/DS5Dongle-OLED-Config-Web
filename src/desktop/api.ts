@@ -1,4 +1,4 @@
-import type { ApplyResult, GamesReport, LauncherId } from "./games/types";
+import type { ApplyResult, GamesReport, LauncherId, Msg } from "./games/types";
 import type { DesktopPalette } from "./theme/desktopPalette";
 
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
@@ -25,6 +25,7 @@ export interface DesktopSettings {
   startMinimized: boolean;
   launchAtLogin: boolean;
   checkForUpdates: boolean;
+  gamesScanAllowed: boolean; // the user agreed to let the Games page read launcher settings
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).
@@ -47,13 +48,15 @@ export interface LatestFirmware {
 export interface GameBackup {
   id: string;
   created: string;
-  description: string;
+  changes: Msg[];
   files: string[];
 }
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
-export type CloseLauncherResult = "closed" | "not-running" | "game-running" | "timeout";
+export type CloseLauncherResult = "closed" | "not-running" | "game-running" | "timeout" | "failed";
+// conflict: files a launcher changed after our write (undo would discard that, so it refuses).
+export type UndoResult = { ok: true; restored: string[] } | { ok: false; blockedBy: LauncherId[] } | { ok: false; conflict: string[] } | { ok: false; error: string };
 
 export interface DesktopApi {
   platform: string;
@@ -84,7 +87,7 @@ export interface DesktopApi {
   // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
   gamesScan(): Promise<GamesReport>;
   gamesApply(fixIds: string[]): Promise<ApplyResult>;
-  gamesUndo(backupId: string): Promise<{ restored: string[]; blockedBy: LauncherId[] }>;
+  gamesUndo(backupId: string): Promise<UndoResult>;
   gamesBackups(): Promise<GameBackup[]>;
   closeLauncher(launcher: LauncherId): Promise<CloseLauncherResult>;
   installProton(): Promise<ProtonInstallResult>;

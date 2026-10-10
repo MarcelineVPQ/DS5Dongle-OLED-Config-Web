@@ -11,6 +11,8 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   startMinimized: false,
   launchAtLogin: false,
   checkForUpdates: true,
+  // Linux Games page: off until the user agrees to let the app read launcher settings.
+  gamesScanAllowed: false,
 };
 
 const SettingsFile = z.object({
@@ -18,6 +20,7 @@ const SettingsFile = z.object({
   startMinimized: z.boolean().optional(),
   launchAtLogin: z.boolean().optional(),
   checkForUpdates: z.boolean().optional(),
+  gamesScanAllowed: z.boolean().optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [
@@ -25,6 +28,7 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("startMinimized"), value: z.boolean() }),
   z.strictObject({ key: z.literal("launchAtLogin"), value: z.boolean() }),
   z.strictObject({ key: z.literal("checkForUpdates"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("gamesScanAllowed"), value: z.boolean() }),
 ]);
 
 function settingsPath(): string {

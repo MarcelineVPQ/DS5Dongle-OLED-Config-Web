@@ -13,6 +13,10 @@ const run = promisify(execFile);
 const DS5_CARD = /^alsa_card\.usb-Sony_Interactive_Entertainment_DualSense(_Edge)?_Wireless_Controller/;
 export const SDL_FORCING_VARS = ["PROTON_PREFER_SDL", "PROTON_USE_SDL"];
 
+// Set to anything but "0" or "" forces the Xbox (SDL) path. The one rule used for
+// environment files here and for Steam launch options and Heroic env lists (games.ts).
+export const sdlVarForcing = (key: string, value: string) => SDL_FORCING_VARS.includes(key) && value !== "0" && value !== "";
+
 export interface AudioCard {
   name: string;
   activeProfile: string;
@@ -87,7 +91,14 @@ export function findProAudioRules(home: string): ProAudioRule[] {
 }
 
 // Environment files that set an SDL-forcing variable for every game.
-export function findGlobalSdlVars(home: string): string[] {
+// Where an SDL-forcing variable is set for every game: a file (shown with ~),
+// or null for this session's own environment.
+export interface SdlVarSource {
+  variable: string;
+  file: string | null;
+}
+
+export function findGlobalSdlVars(home: string): SdlVarSource[] {
   const files = [join(home, ".profile"), join(home, ".bash_profile"), join(home, ".bashrc"), join(home, ".zshenv"), join(home, ".pam_environment"), "/etc/environment"];
   for (const dir of [join(home, ".config/environment.d"), join(home, ".config/plasma-workspace/env"), "/etc/environment.d"]) {
     try {
@@ -96,17 +107,18 @@ export function findGlobalSdlVars(home: string): string[] {
       // missing dir
     }
   }
-  const out: string[] = [];
-  const pattern = new RegExp(`^\\s*(export\\s+)?(${SDL_FORCING_VARS.join("|")})\\s*=`, "m");
+  const out: SdlVarSource[] = [];
+  const pattern = new RegExp(`^\\s*(?:export\\s+)?(${SDL_FORCING_VARS.join("|")})\\s*=\\s*["']?([^"'\\s#]*)`, "gm");
   for (const f of files) {
     try {
-      const m = pattern.exec(readFileSync(f, "utf8"));
-      if (m) out.push(`${m[2]} is set in ${f.startsWith(home) ? f.replace(home, "~") : f}`);
+      for (const m of readFileSync(f, "utf8").matchAll(pattern)) {
+        if (sdlVarForcing(m[1], m[2])) out.push({ variable: m[1], file: f.startsWith(home) ? f.replace(home, "~") : f });
+      }
     } catch {
       // missing file
     }
   }
-  for (const v of SDL_FORCING_VARS) if (process.env[v]) out.push(`${v} is set in this session's environment`);
+  for (const v of SDL_FORCING_VARS) if (sdlVarForcing(v, process.env[v] ?? "")) out.push({ variable: v, file: null });
   return out;
 }
 

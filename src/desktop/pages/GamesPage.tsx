@@ -3,17 +3,19 @@
 // and fixes them with the user's consent.
 //
 // Consent flow (load-bearing, see src/desktop/games/types.ts):
-//   scan (reads only) -> pick changes (each says what, why and which files)
+//   allow (first visit: what will be read, nothing until the user agrees)
+//   -> scan (reads only) -> pick changes (each says what, why and which files)
 //   -> review (every file listed; running launchers must be closed, on request)
 //   -> apply (backed up first) -> Undo.
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameBackup, ProtonProgress } from "../api";
-import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId } from "../games/types";
+import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId, Msg } from "../games/types";
 
-const LAUNCHER_NAME: Record<LauncherId | "system", string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", system: "System" };
-const STORE_NAME: Record<GameEntry["store"], string> = { steam: "Steam", epic: "Epic", gog: "GOG", amazon: "Amazon", sideload: "Sideloaded", lutris: "Lutris" };
+// Product names stay untranslated; "sideload" is translated where it's shown.
+const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris" };
+const STORE_NAME: Record<Exclude<GameEntry["store"], "sideload">, string> = { steam: "Steam", epic: "Epic", gog: "GOG", amazon: "Amazon", lutris: "Lutris" };
 
 type Step = "pick" | "review" | "done";
 
@@ -38,11 +40,58 @@ function saveDeclined(ids: Set<string>): void {
   }
 }
 
+// Translate a main-process message (see Msg in games/types.ts); params may be messages too.
+export function useMsg(): (m: Msg) => string {
+  const { t } = useTranslation();
+  return useCallback(
+    function render(m: Msg): string {
+      const params = Object.fromEntries(Object.entries(m.params ?? {}).map(([k, v]) => [k, typeof v === "string" ? v : render(v)]));
+      return t(`desktop.games.msg.${m.key}`, { ...params, interpolation: { escapeValue: false } });
+    },
+    [t],
+  );
+}
+
 function formatMB(bytes: number): string {
   return `${Math.round(bytes / 1e6)} MB`;
 }
 
-export default function GamesPage({ onScanned }: { onScanned?: (report: GamesReport) => void }) {
+interface GamesPageProps {
+  allowed: boolean;
+  onAllowedChange: (allowed: boolean) => void;
+  onScanned?: (report: GamesReport) => void;
+  onDeclinedChange?: () => void;
+}
+
+export default function GamesPage({ allowed, onAllowedChange, ...rest }: GamesPageProps) {
+  return allowed ? <GamesSetup {...rest} onStop={() => onAllowedChange(false)} /> : <GamesConsent onAllow={() => onAllowedChange(true)} />;
+}
+
+// First visit: say exactly what checking reads, and read nothing until the user agrees.
+function GamesConsent({ onAllow }: { onAllow: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="dk-stack">
+      <section className="dk-card">
+        <h2>{t("desktop.games.title", "Game setup")}</h2>
+        <p>{t("desktop.games.consentIntro")}</p>
+        <ul className="dk-review">
+          <li>{t("desktop.games.consentLaunchers")}</li>
+          <li>{t("desktop.games.consentAudio")}</li>
+          <li>{t("desktop.games.consentProton")}</li>
+        </ul>
+        <p className="dk-hint">{t("desktop.games.consentPromise")}</p>
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn primary" onClick={onAllow}>
+            {t("desktop.games.consentAllow")}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps, "allowed" | "onAllowedChange"> & { onStop: () => void }) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [report, setReport] = useState<GamesReport | null>(null);
@@ -52,7 +101,8 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
   const declined = useRef<Set<string>>(loadDeclined());
   const [step, setStep] = useState<Step>("pick");
   const [busy, setBusy] = useState<string | null>(null);
-  const [result, setResult] = useState<ApplyResult | null>(null);
+  const [result, setResult] = useState<(ApplyResult & { labels: Map<string, Msg> }) | null>(null);
+  const m = useMsg();
   const [closeNote, setCloseNote] = useState<string | null>(null);
   const [backups, setBackups] = useState<GameBackup[]>([]);
   const [protonConfirm, setProtonConfirm] = useState(false);
@@ -113,6 +163,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
         declined.current.delete(id);
       }
       saveDeclined(declined.current);
+      onDeclinedChange?.();
       return next;
     });
 
@@ -120,8 +171,9 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
     setBusy(`close-${launcher}`);
     setCloseNote(null);
     try {
-      const r = await desktop.closeLauncher(launcher);
-      if (r === "game-running") setCloseNote(t("desktop.games.closeGameRunning", "A game is still running. Quit the game first, then try again."));
+      const r = await desktop.closeLauncher(launcher).catch(() => "failed" as const);
+      if (r === "failed") setCloseNote(t("desktop.games.closeFailed", { launcher: LAUNCHER_NAME[launcher] }));
+      else if (r === "game-running") setCloseNote(t("desktop.games.closeGameRunning", "A game is still running. Quit the game first, then try again."));
       else if (r === "timeout")
         setCloseNote(t("desktop.games.closeTimeout", { launcher: LAUNCHER_NAME[launcher], defaultValue: "{{launcher}} didn't quit within 30 seconds. Quit it yourself, then press Rescan." }));
       await rescan(true);
@@ -133,12 +185,14 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
   const apply = async () => {
     setBusy("apply");
     try {
+      // Keep the labels: after the rescan, applied fixes are no longer in the list.
+      const labels = new Map(selected.map((f) => [f.id, f.label]));
       const r = await desktop.gamesApply(selected.map((f) => f.id));
       if (r.blockedBy.length) {
         await rescan(true);
         return;
       }
-      setResult(r);
+      setResult({ ...r, labels });
       setStep("done");
       await rescan();
     } catch (cause) {
@@ -152,18 +206,20 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
     setBusy(`undo-${backupId}`);
     try {
       const r = await desktop.gamesUndo(backupId);
-      if (r.blockedBy.length)
-        setCloseNote(
-          t("desktop.games.undoBlocked", {
-            launchers: r.blockedBy.map((l) => LAUNCHER_NAME[l]).join(", "),
-            defaultValue: "Close {{launchers}} first: it would overwrite the restored settings when it quits.",
-          }),
-        );
-      else {
+      setCloseNote(null);
+      if (r.ok) {
         setResult(null);
         setStep("pick");
+      } else if ("blockedBy" in r) {
+        setCloseNote(t("desktop.games.undoBlocked", { launchers: r.blockedBy.map((l) => LAUNCHER_NAME[l]).join(", ") }));
+      } else if ("conflict" in r) {
+        setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
+      } else {
+        setError(r.error);
       }
       await rescan();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setBusy(null);
     }
@@ -177,6 +233,8 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
       const r = await desktop.installProton();
       setProtonMessage(r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.message);
       await rescan();
+    } catch (cause) {
+      setProtonMessage(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setProtonProgress(null);
       setBusy(null);
@@ -218,6 +276,9 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
           <button type="button" className="dk-btn" onClick={() => void rescan(step !== "pick")} disabled={scanning || busy !== null}>
             {scanning ? t("desktop.games.scanningShort", "Checking…") : t("desktop.games.rescan", "Rescan")}
           </button>
+          <button type="button" className="dk-btn" onClick={onStop} disabled={busy !== null} title={t("desktop.games.stopHint")}>
+            {t("desktop.games.stop")}
+          </button>
         </div>
       </section>
 
@@ -239,13 +300,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
         )}
         {protonConfirm && (
           <div className="dk-confirm">
-            <p>
-              {t("desktop.games.protonConfirm", {
-                name: report.ourProton.latest,
-                defaultValue:
-                  "This downloads {{name}} (about 565 MB) from the project's GitHub release, checks its SHA-256 checksum, and unpacks it into Steam's compatibilitytools.d folder (and Heroic's Proton folder). Existing Proton versions are not changed or removed. Afterwards you choose which launchers and games use it.",
-              })}
-            </p>
+            <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
             <div className="dk-row-btns">
               <button type="button" className="dk-btn primary" onClick={() => void installProton()}>
                 {t("desktop.games.protonGo", "Download and install")}
@@ -276,7 +331,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
               <FixList fixes={fixes} chosen={chosen} onToggle={toggle} />
               <div className="dk-row-btns">
                 <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={() => setStep("review")}>
-                  {t("desktop.games.review", { count: selected.length, defaultValue: "Review {{count}} changes" })}
+                  {t("desktop.games.review", { count: selected.length })}
                 </button>
               </div>
             </>
@@ -291,7 +346,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
           <ul className="dk-review">
             {selected.map((f) => (
               <li key={f.id}>
-                <strong>{f.label}</strong>
+                <strong>{m(f.label)}</strong>
                 {f.files.map((file) => (
                   <div key={file} className="dk-mono dk-file">
                     {file}
@@ -317,7 +372,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
           ))}
           <div className="dk-row-btns">
             <button type="button" className="dk-btn primary" disabled={blocking.length > 0 || busy !== null || selected.length === 0} onClick={() => void apply()}>
-              {busy === "apply" ? t("desktop.games.applying", "Applying…") : t("desktop.games.apply", { count: selected.length, defaultValue: "Apply {{count}} changes" })}
+              {busy === "apply" ? t("desktop.games.applying", "Applying…") : t("desktop.games.apply", { count: selected.length })}
             </button>
             <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>
               {t("desktop.games.back", "Back")}
@@ -333,8 +388,8 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
             {result.applied.map((a) => (
               <li key={a.id} className={a.ok ? "" : "dk-bad"}>
                 {a.ok ? "✓ " : "✗ "}
-                {fixLabel(a.id, selected, fixes) ?? a.id}
-                {a.message && <div className="dk-hint">{a.message}</div>}
+                {result.labels.has(a.id) ? m(result.labels.get(a.id)!) : a.id}
+                {a.message && <div className="dk-hint">{m(a.message)}</div>}
               </li>
             ))}
           </ul>
@@ -363,7 +418,7 @@ export default function GamesPage({ onScanned }: { onScanned?: (report: GamesRep
           <ul className="dk-review">
             {backups.map((b) => (
               <li key={b.id}>
-                <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.description}
+                <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.changes.map(m).join("; ")}
                 <button type="button" className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => void undo(b.id)}>
                   {t("desktop.games.undoShort", "Undo")}
                 </button>
@@ -380,27 +435,21 @@ export function allFixes(r: GamesReport): Fix[] {
   return [...r.launchers.flatMap((l) => l.fixes), ...r.system.fixes, ...r.games.flatMap((g) => g.fixes)];
 }
 
-function fixLabel(id: string, ...lists: Fix[][]): string | undefined {
-  for (const list of lists) {
-    const f = list.find((x) => x.id === id);
-    if (f) return f.label;
-  }
-  return undefined;
-}
-
 function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string>; onToggle: (id: string) => void }) {
+  const { t } = useTranslation();
+  const m = useMsg();
   const groups = (["system", "steam", "heroic", "lutris"] as const).map((g) => ({ g, items: fixes.filter((f) => f.launcher === g) })).filter((x) => x.items.length);
   return (
     <div className="dk-fixes">
       {groups.map(({ g, items }) => (
         <div key={g}>
-          <h3>{LAUNCHER_NAME[g]}</h3>
+          <h3>{g === "system" ? t("desktop.games.systemTitle", "This computer") : LAUNCHER_NAME[g]}</h3>
           {items.map((f) => (
             <label key={f.id} className="dk-fix">
               <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />
               <span>
-                <span className="dk-fix-label">{f.label}</span>
-                <span className="dk-fix-why">{f.why}</span>
+                <span className="dk-fix-label">{m(f.label)}</span>
+                <span className="dk-fix-why">{m(f.why)}</span>
               </span>
             </label>
           ))}
@@ -413,7 +462,7 @@ function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string
 function SystemCard({ report }: { report: GamesReport }) {
   const { t } = useTranslation();
   const s = report.system;
-  const proAudio = s.audioProfile !== null && /pro-audio/i.test(s.audioProfile);
+  const proAudio = s.proAudio;
   return (
     <section className="dk-card">
       <h2>{t("desktop.games.systemTitle", "This computer")}</h2>
@@ -429,7 +478,11 @@ function SystemCard({ report }: { report: GamesReport }) {
               : t("desktop.games.hidrawNo", "games can't reach the controller (missing udev rule)")}
         </dd>
         <dt>{t("desktop.games.env", "Environment")}</dt>
-        <dd className={s.envWarnings.length ? "dk-bad" : ""}>{s.envWarnings.length ? s.envWarnings.join("; ") : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}</dd>
+        <dd className={s.envWarnings.length ? "dk-bad" : ""}>
+          {s.envWarnings.length
+            ? s.envWarnings.map((w) => (w.file ? t("desktop.games.envSetIn", { variable: w.variable, file: w.file }) : t("desktop.games.envSession", { variable: w.variable }))).join("; ")
+            : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}
+        </dd>
       </dl>
       {s.envWarnings.length > 0 && (
         <p className="dk-hint">
@@ -467,7 +520,7 @@ function GameTable({ games }: { games: GameEntry[] }) {
         {sorted.map((g) => (
           <tr key={g.key}>
             <td>{g.title}</td>
-            <td>{STORE_NAME[g.store]}</td>
+            <td>{g.store === "sideload" ? t("desktop.games.storeSideload", "Sideloaded") : STORE_NAME[g.store]}</td>
             <td className={g.runnerMissing ? "dk-bad" : "dk-mono"}>{g.runnerMissing ? t("desktop.games.missing", { name: g.runner, defaultValue: "{{name}} (missing)" }) : (g.runner ?? "—")}</td>
             <td>{support[g.support]}</td>
             <td>

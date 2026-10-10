@@ -1,8 +1,10 @@
 // Heroic Games Launcher (Epic via legendary, GOG, Amazon via nile, sideloaded):
 // installs, games and their Wine/Proton settings. Read side only.
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
+import { readParsed } from "./files";
 import { join } from "node:path";
 import type { Store } from "../../../src/desktop/games/types";
+import { protonBuilds } from "./proton";
 
 export interface HeroicInstall {
   root: string; // ~/.config/heroic or the Flatpak equivalent
@@ -38,12 +40,8 @@ export function findHeroicInstalls(home: string): HeroicInstall[] {
   return out;
 }
 
-export function readJson(path: string): unknown {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    return null;
-  }
+function readJson(path: string): unknown {
+  return readParsed(path, JSON.parse);
 }
 
 function obj(v: unknown): Record<string, unknown> {
@@ -109,6 +107,7 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
   }
 
   return found
+    .filter(({ appName }) => /^[\w.-]+$/.test(appName)) // used as a file name below
     .map(({ appName, title, store }) => {
       const configPath = join(install.root, "GamesConfig", `${appName}.json`);
       const cfg = obj(obj(readJson(configPath))[appName]);
@@ -121,9 +120,5 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
 }
 
 export function heroicTools(install: HeroicInstall): string[] {
-  try {
-    return readdirSync(install.toolsDir).filter((d) => existsSync(join(install.toolsDir, d, "proton")));
-  } catch {
-    return [];
-  }
+  return protonBuilds(install.toolsDir);
 }

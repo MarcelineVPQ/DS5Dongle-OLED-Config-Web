@@ -67,7 +67,7 @@ export function parseVdf(text: string): VdfNode {
         return node;
       }
       if (key === "{") throw new VdfSyntaxError("Unexpected {");
-      // Conditional suffixes like [$WIN32] are not used in these files; reject.
+      // Conditional suffixes like [$WIN32] don't occur in the Steam files we read and aren't supported.
       const value = token();
       if (value === null) throw new VdfSyntaxError(`Missing value for ${key.slice(1)}`);
       if (value === "{") node.push([key.slice(1), parseBlock(true)]);

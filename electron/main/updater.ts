@@ -7,14 +7,13 @@
 // SHA-256, progress) -> install -> "Restart now". Nothing installs without a
 // matching checksum, nothing downgrades, and every failure is reported to the
 // user verbatim.
-import { createHash } from "node:crypto";
 import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
 import { Manifest, isAllowedDownloadUrl, isNewer, type Download } from "../../src/update/manifest";
 import type { UpdateState } from "../../src/desktop/api";
-import { downloadVerified } from "./download";
+import { downloadBytes, downloadVerified } from "./download";
 
 const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/master/latest.json";
 const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
@@ -123,10 +122,11 @@ export class Updater {
     }
   }
 
-  // Download a manifest asset other than the app/firmware (the Proton build).
-  async downloadAsset(download: Download, path: string, progress: (got: number, total: number) => void, signal?: AbortSignal): Promise<void> {
+  // Verified download of any manifest asset (the app update, the Proton build).
+  // Only GitHub release URLs (or the loopback test feed) are fetched.
+  async downloadAsset(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
     if (!downloadAllowed(download.url)) throw new Error("The download points somewhere other than GitHub; refusing.");
-    await downloadVerified(download, path, progress, signal);
+    await downloadVerified(download, path, progress);
   }
 
   async fetchManifest(): Promise<Manifest> {
@@ -147,7 +147,7 @@ export class Updater {
     try {
       const target = this.installTarget(download);
       const part = `${target}.part`;
-      await this.downloadTo(download, part, (got, total) => this.set({ phase: "downloading", version, got, total }));
+      await this.downloadAsset(download, part, (got, total) => this.set({ phase: "downloading", version, got, total }));
       this.set({ phase: "installing", version });
       this.installedPath = this.install(part, target);
       return this.set({ phase: "ready", version });
@@ -174,7 +174,8 @@ export class Updater {
     const fw = manifest.firmware;
     if (!fw) throw new Error("No firmware is published in the update manifest.");
     if (fw.uf2.size > FIRMWARE_MAX_BYTES) throw new Error("The published firmware is implausibly large.");
-    const bytes = await this.downloadBytes(fw.uf2);
+    if (!downloadAllowed(fw.uf2.url)) throw new Error("The firmware points somewhere other than GitHub; refusing.");
+    const bytes = await downloadBytes(fw.uf2);
     return { version: fw.version, bytes };
   }
 
@@ -212,22 +213,6 @@ export class Updater {
       throw cause;
     }
     return target;
-  }
-
-  private async downloadTo(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
-    if (!downloadAllowed(download.url)) throw new Error("The update points somewhere other than GitHub; refusing.");
-    await downloadVerified(download, path, progress);
-  }
-
-  private async downloadBytes(download: Download): Promise<Uint8Array> {
-    if (!downloadAllowed(download.url)) throw new Error("The firmware points somewhere other than GitHub; refusing.");
-    const response = await net.fetch(download.url);
-    if (!response.ok) throw new Error(`Firmware download failed (HTTP ${response.status}).`);
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    if (bytes.byteLength !== download.size || createHash("sha256").update(bytes).digest("hex") !== download.sha256) {
-      throw new Error("The firmware download is corrupt (size or checksum mismatch).");
-    }
-    return bytes;
   }
 
   // Start the installed version and quit this one.
