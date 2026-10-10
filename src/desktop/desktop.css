@@ -1,0 +1,593 @@
+/* Desktop (Electron) layout. Dense by design: a settings tool that sits next to
+ * games and terminals. The shell is exactly the window: sidebar + page, with
+ * only the page body scrolling, and only when the window is too small for it.
+ * Colors come from the shared theme tokens in styles.css. */
+
+.dk {
+  --dk-gap: 10px;
+  --dk-pad: 12px;
+  --dk-row-h: 30px;
+  --dk-font: 13px;
+  --dk-small: 11.5px;
+  --dk-radius: 6px;
+
+  /* Selection / action colors. Light theme uses a deeper green than the web
+   * tool's accent so selected states read clearly on white. */
+  --dk-accent: #15803d;
+  --dk-accent-hover: #166534;
+  --dk-on-accent: #ffffff;
+  --dk-sel-bg: #dcfce7;
+  --dk-sel-border: #16a34a;
+  --dk-sel-text: #14532d;
+  --dk-disabled-bg: #e2e8f0;
+  --dk-disabled-text: #475569;
+  --dk-focus: #15803d;
+  /* Light theme: stronger greys than the web tool's, for small desktop type. */
+  --text-muted: #475569;
+  --text-eyebrow: #475569;
+  --text-soft: #1e293b;
+  --dk-chip-ok-bg: #15803d;
+  --dk-chip-ok-text: #ffffff;
+
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  font-size: var(--dk-font);
+  line-height: 1.35;
+  background: var(--bg-page);
+  color: var(--text-body);
+}
+
+html[data-theme="dark"] .dk {
+  --dk-accent: #22c55e;
+  --dk-accent-hover: #16a34a;
+  --dk-on-accent: #052e16;
+  --dk-sel-bg: #052e1f;
+  --dk-sel-border: #15803d;
+  --dk-sel-text: #86efac;
+  --dk-disabled-bg: #1e293b;
+  --dk-disabled-text: #64748b;
+  --dk-focus: #4ade80;
+  --text-muted: #94a3b8;
+  --text-eyebrow: #94a3b8;
+  --text-soft: #cbd5e1;
+  --dk-chip-ok-bg: #052e1f;
+  --dk-chip-ok-text: #86efac;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] .dk,
+  html:not([data-theme]) .dk {
+    --dk-accent: #22c55e;
+    --dk-accent-hover: #16a34a;
+    --dk-on-accent: #052e16;
+    --dk-sel-bg: #052e1f;
+    --dk-sel-border: #15803d;
+    --dk-sel-text: #86efac;
+    --dk-disabled-bg: #1e293b;
+    --dk-disabled-text: #64748b;
+    --dk-focus: #4ade80;
+    --text-muted: #94a3b8;
+    --text-eyebrow: #94a3b8;
+    --text-soft: #cbd5e1;
+    --dk-chip-ok-bg: #052e1f;
+    --dk-chip-ok-text: #86efac;
+  }
+}
+
+/* Keyboard focus: one visible ring in the theme color (Chromium's default is
+ * the platform accent, orange on this desktop). */
+.dk :focus {
+  outline: none;
+}
+.dk :focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 1px;
+}
+
+/* ---- Sidebar ---- */
+.dk-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-default);
+  min-height: 0;
+}
+.dk-brand {
+  padding: 2px 8px 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-strong);
+  line-height: 1.2;
+}
+.dk-brand small {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--dk-small);
+  color: var(--text-muted);
+}
+.dk-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dk-radius);
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dk-nav-item:hover {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+.dk-nav-item.active {
+  background: var(--dk-sel-bg);
+  color: var(--dk-sel-text);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--dk-accent);
+}
+.dk-nav-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+.dk-side-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 4px 0;
+}
+
+/* ---- Main column ---- */
+.dk-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+.dk-top {
+  display: flex;
+  align-items: center;
+  gap: var(--dk-gap);
+  padding: 8px var(--dk-pad);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-panel);
+}
+.dk-top h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.dk-top .dk-spacer {
+  flex: 1;
+}
+.dk-body {
+  overflow: auto;
+  padding: var(--dk-pad);
+  min-height: 0;
+}
+.dk-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px var(--dk-pad);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-panel);
+}
+.dk-bar .dk-spacer {
+  flex: 1;
+}
+.dk-bar-note {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+
+/* ---- Chips, notices ---- */
+.dk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-inset);
+  color: var(--text-soft);
+  font-size: var(--dk-small);
+  white-space: nowrap;
+}
+.dk-chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.dk-chip.ok {
+  border-color: var(--dk-sel-border);
+  color: var(--dk-chip-ok-text);
+  background: var(--dk-chip-ok-bg);
+  font-weight: 600;
+}
+.dk-chip.ok .dot {
+  background: currentColor;
+}
+.dk-chip.warn .dot {
+  background: #f59e0b;
+}
+
+.dk-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: var(--dk-gap);
+  padding: 8px 10px;
+  border-radius: var(--dk-radius);
+  border: 1px solid var(--notice-warn-bd);
+  background: var(--notice-warn-bg);
+  color: var(--text-warning);
+}
+.dk-notice.error {
+  border-color: var(--notice-error-bd);
+  background: var(--notice-error-bg);
+  color: var(--text-error);
+}
+.dk-notice .dk-spacer {
+  flex: 1;
+}
+
+/* ---- Layout blocks ---- */
+.dk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: var(--dk-gap);
+  align-items: start;
+}
+.dk-card {
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  padding: 8px var(--dk-pad) 6px;
+  min-width: 0;
+}
+.dk-card h2 {
+  margin: 0 0 4px;
+  font-size: var(--dk-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-eyebrow);
+}
+.dk-card p.dk-hint {
+  margin: 2px 0 6px;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+
+/* ---- Rows & controls ---- */
+.dk-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: var(--dk-row-h);
+  border-top: 1px solid var(--border-subtle);
+}
+.dk-row:first-of-type {
+  border-top: 0;
+}
+.dk-row > label,
+.dk-row > span.dk-label {
+  color: var(--text-soft);
+}
+.dk-row .dk-sub {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.dk-row.invalid > label {
+  color: var(--text-validation);
+}
+.dk-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.dk input[type="range"] {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--dk-accent);
+  height: 16px;
+}
+.dk input[type="number"],
+.dk select {
+  height: 24px;
+  border: 1px solid var(--border-input);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-strong);
+  font: inherit;
+  padding: 0 6px;
+}
+.dk input[type="number"] {
+  width: 62px;
+  text-align: right;
+}
+.dk select {
+  min-width: 140px;
+}
+.dk input[type="color"] {
+  width: 44px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-input);
+  border-radius: 4px;
+  background: none;
+}
+.dk-unit {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  width: 26px;
+}
+
+.dk-seg {
+  display: inline-flex;
+  border: 1px solid var(--border-input);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.dk-seg button {
+  height: 24px;
+  padding: 0 9px;
+  border: 0;
+  border-left: 1px solid var(--border-input);
+  background: var(--bg-input);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.dk-seg button:first-child {
+  border-left: 0;
+}
+.dk-seg button.on {
+  background: var(--dk-accent);
+  color: var(--dk-on-accent);
+  font-weight: 600;
+}
+.dk-seg button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.dk-toggle {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--switch-off-bg);
+  cursor: pointer;
+  flex: none;
+}
+.dk-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--switch-knob-bg);
+  transition: transform var(--t-fast);
+}
+.dk-toggle.on {
+  background: var(--dk-accent);
+}
+.dk-toggle.on::after {
+  transform: translateX(16px);
+}
+
+.dk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-input);
+  border-radius: 5px;
+  background: var(--bg-input);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dk-btn:hover:not(:disabled) {
+  border-color: var(--border-soft);
+  background: var(--bg-segment);
+}
+.dk-btn:disabled {
+  cursor: default;
+}
+.dk-btn.primary {
+  background: var(--dk-accent);
+  border-color: var(--dk-accent);
+  color: var(--dk-on-accent);
+  font-weight: 600;
+}
+.dk-btn.primary:hover:not(:disabled) {
+  background: var(--dk-accent-hover);
+  border-color: var(--dk-accent-hover);
+}
+.dk-btn:disabled,
+.dk-btn.primary:disabled {
+  opacity: 1;
+  background: var(--dk-disabled-bg);
+  border-color: var(--dk-disabled-bg);
+  color: var(--dk-disabled-text);
+}
+.dk-btn.danger {
+  color: var(--text-error);
+  border-color: var(--notice-error-bd);
+}
+
+/* ---- Data tables (diagnostics, slots) ---- */
+.dk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.dk-table th,
+.dk-table td {
+  padding: 4px 6px;
+  border-top: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.dk-table th {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  border-top: 0;
+}
+.dk-table td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.dk-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.dk-bad {
+  color: var(--text-error);
+}
+.dk-good {
+  color: var(--dk-accent);
+}
+
+.dk-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 14px;
+  margin: 2px 0 4px;
+}
+.dk-kv dt {
+  color: var(--text-muted);
+}
+.dk-kv dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.dk-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+  padding: 4px 0 6px;
+}
+.dk-presets .dk-btn {
+  justify-content: center;
+  height: 32px;
+}
+.dk-presets .dk-btn.on {
+  background: var(--dk-sel-bg);
+  border-color: var(--dk-sel-border);
+  color: var(--dk-sel-text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--dk-sel-border);
+}
+
+.dk-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 200px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.dk-empty strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+/* ---- Shared web components inside the desktop shell ----
+ * The Remap editor (and the web form controls in general) carry the web
+ * tool's roomy sizing. Re-tune them to the desktop density here instead of
+ * forking the components. */
+.dk input[type="number"] {
+  min-height: 0;
+  font-weight: 500;
+}
+.dk select {
+  min-height: 0;
+  width: auto;
+}
+
+.dk .panel-blurb {
+  margin: 0 0 8px;
+  font-size: var(--dk-small);
+  line-height: 1.4;
+}
+.dk .notice {
+  min-height: 0;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: var(--dk-radius);
+  font-weight: 500;
+  font-size: 12.5px;
+}
+.dk .button {
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 5px;
+  font-weight: 500;
+  font-size: 12.5px;
+  gap: 6px;
+}
+.dk .button.wide {
+  width: auto;
+}
+.dk .action-stack {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.dk .control-row {
+  grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
+  gap: 10px;
+  min-height: var(--dk-row-h);
+  padding: 3px 0;
+}
+.dk .control-row select {
+  min-height: 24px;
+  height: 24px;
+}
+.dk .controller-diagram {
+  max-height: 300px;
+  margin: 0 auto 6px;
+}
+.dk .controller-art svg {
+  max-height: 300px;
+}
+.dk .remap-fulllist > summary {
+  font-size: 12.5px;
+  padding: 4px 0;
+}
