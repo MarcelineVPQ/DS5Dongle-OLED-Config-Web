@@ -33,6 +33,7 @@ const api: DesktopApi = {
   latestFirmware: () => ipcRenderer.invoke(IPC.latestFirmware),
   downloadFirmware: () => ipcRenderer.invoke(IPC.downloadFirmware),
   getDesktopPalette: () => ipcRenderer.invoke(IPC.getDesktopPalette),
+  firmwareChangelog: () => ipcRenderer.invoke(IPC.firmwareChangelog),
   onDesktopPalette: (listener) => {
     const handler = (_event: IpcRendererEvent, palette: DesktopPalette | null) => listener(palette);
     ipcRenderer.on(IPC.desktopPalette, handler);

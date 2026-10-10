@@ -17,6 +17,8 @@ import type { UpdateState } from "../../src/desktop/api";
 
 const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/master/latest.json";
 const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
+const FIRMWARE_CHANGELOG_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/CHANGELOG.md";
+const CHANGELOG_MAX_CHARS = 512 * 1024;
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
 
 // Test feed: DS5_UPDATE_MANIFEST=http://127.0.0.1:8765/latest.json points the
@@ -147,6 +149,14 @@ export class Updater {
     } finally {
       this.busy = false;
     }
+  }
+
+  // The firmware repo's CHANGELOG, for the About page. Text only, size-capped.
+  async firmwareChangelog(): Promise<string> {
+    const response = await net.fetch(FIRMWARE_CHANGELOG_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Couldn't load the firmware changelog (HTTP ${response.status}).`);
+    const text = await response.text();
+    return text.length > CHANGELOG_MAX_CHARS ? text.slice(0, CHANGELOG_MAX_CHARS) : text;
   }
 
   // Firmware for the renderer's flasher: downloaded and verified here (the

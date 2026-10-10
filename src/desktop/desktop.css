@@ -663,3 +663,88 @@ html[data-theme="dark"] .dk {
   padding: 0;
   background: transparent;
 }
+
+/* ---- Rendered Markdown (About page) ---- */
+.dk-md {
+  font-size: var(--dk-font);
+  line-height: 1.5;
+  color: var(--text-body);
+  max-width: 900px;
+}
+.dk-md h1 {
+  font-size: 18px;
+  margin: 4px 0 10px;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+}
+.dk-md h2 {
+  font-size: 15px;
+  margin: 18px 0 6px;
+  color: var(--text-strong);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.dk-md h3 {
+  font-size: 13.5px;
+  margin: 14px 0 4px;
+  color: var(--text-strong);
+}
+.dk-md p,
+.dk-md ul,
+.dk-md ol {
+  margin: 4px 0 8px;
+}
+.dk-md ul,
+.dk-md ol {
+  padding-left: 20px;
+}
+.dk-md li {
+  margin: 2px 0;
+}
+.dk-md a {
+  color: var(--dk-sel-text);
+}
+.dk-md code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-inset);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.dk-md pre {
+  background: var(--bg-inset);
+  padding: 8px 10px;
+  border-radius: var(--dk-radius);
+  overflow: auto;
+}
+.dk-md pre code {
+  background: none;
+  padding: 0;
+}
+.dk-md blockquote {
+  margin: 6px 0;
+  padding: 4px 10px;
+  border-left: 3px solid var(--dk-accent);
+  color: var(--text-soft);
+}
+.dk-md table {
+  border-collapse: collapse;
+  margin: 6px 0 10px;
+}
+.dk-md th,
+.dk-md td {
+  border: 1px solid var(--border-default);
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.dk-md hr {
+  border: 0;
+  border-top: 1px solid var(--border-default);
+  margin: 14px 0;
+}
+.dk-md-imgalt {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}

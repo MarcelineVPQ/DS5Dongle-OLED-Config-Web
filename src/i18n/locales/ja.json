@@ -261,7 +261,8 @@
       "controller": "コントローラー",
       "audio": "オーディオと触覚",
       "buttons": "ボタン",
-      "dongle": "ドングル"
+      "dongle": "ドングル",
+      "about": "情報"
     },
     "brandSub": "コンフィギュレーター",
     "status": {
@@ -445,6 +446,16 @@
     },
     "dongle": {
       "advanced": "詳細"
+    },
+    "about": {
+      "changes": "新機能",
+      "firmware": "ファームウェアの変更点",
+      "guide": "ガイド",
+      "credits": "クレジット",
+      "version": "バージョン {{version}} を使用中です。",
+      "loading": "読み込み中…",
+      "updated": "{{version}} に更新しました。",
+      "seeWhatsNew": "新機能を見る"
     }
   }
 }

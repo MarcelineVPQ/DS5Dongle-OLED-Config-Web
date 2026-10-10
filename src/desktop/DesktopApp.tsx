@@ -1,10 +1,11 @@
-import { Gamepad2, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
+import { Gamepad2, Info, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/LanguageToggle";
 import ThemeToggle from "../components/ThemeToggle";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
+import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import ButtonsPage from "./pages/ButtonsPage";
 import ControllerPage from "./pages/ControllerPage";
 import DonglePage from "./pages/DonglePage";
@@ -15,7 +16,7 @@ import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdat
 import { usePoll } from "./usePoll";
 import "./desktop.css";
 
-type PageId = "controller" | "audio" | "buttons" | "dongle";
+type PageId = "controller" | "audio" | "buttons" | "dongle" | "about";
 
 interface PageDef {
   id: PageId;
@@ -34,11 +35,14 @@ export default function DesktopApp() {
   const [page, setPage] = useState<PageId>("controller");
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
+  const whatsNew = useWhatsNew();
   const pages: PageDef[] = [
     { id: "controller", label: t("desktop.nav.controller", "Controller"), icon: Gamepad2, render: (b) => <ControllerPage bridge={b} /> },
     { id: "audio", label: t("desktop.nav.audio", "Audio & haptics"), icon: Volume2, render: (b) => <SettingsCards bridge={b} group="audio" /> },
     { id: "buttons", label: t("desktop.nav.buttons", "Buttons"), icon: ToggleLeft, render: (b) => <ButtonsPage bridge={b} /> },
     { id: "dongle", label: t("desktop.nav.dongle", "Dongle"), icon: Settings2, render: (b, f) => <DonglePage bridge={b} fw={f} advancedOpen={advancedOpen} /> },
+    { id: "about", label: t("desktop.nav.about", "About"), icon: Info, render: () => <AboutPage key={aboutTab} initialTab={aboutTab} /> },
   ];
 
   const current = pages.find((p) => p.id === page) ?? pages[0];
@@ -145,6 +149,26 @@ export default function DesktopApp() {
 
         <main className="dk-body">
           <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => setPage("dongle")} />
+          {whatsNew.version && (
+            <div className="dk-notice">
+              <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
+              <span className="dk-spacer" />
+              <button
+                type="button"
+                className="dk-btn"
+                onClick={() => {
+                  setAboutTab("changes");
+                  setPage("about");
+                  whatsNew.dismiss();
+                }}
+              >
+                {t("desktop.about.seeWhatsNew", "See what's new")}
+              </button>
+              <button type="button" className="dk-btn" onClick={whatsNew.dismiss}>
+                {t("notice.dismiss")}
+              </button>
+            </div>
+          )}
           {bridge.error && (
             <div className="dk-notice error" role="alert">
               <span>{bridge.error}</span>
@@ -154,7 +178,7 @@ export default function DesktopApp() {
               </button>
             </div>
           )}
-          {connected ? (
+          {connected || current.id === "about" ? (
             current.render(bridge, fw)
           ) : (
             <div className="dk-empty">
@@ -189,4 +213,30 @@ export default function DesktopApp() {
       </div>
     </div>
   );
+}
+
+// Shows "Updated to X" once after the app version changes (not on first run).
+const SEEN_KEY = "ds5-last-seen-version";
+function useWhatsNew(): { version: string | null; dismiss: () => void } {
+  const current = window.desktop?.appVersion ?? null;
+  const [version, setVersion] = useState<string | null>(() => {
+    if (!current) return null;
+    let seen: string | null;
+    try {
+      seen = window.localStorage.getItem(SEEN_KEY);
+      if (!seen) window.localStorage.setItem(SEEN_KEY, current);
+    } catch {
+      return null;
+    }
+    return seen && seen !== current ? current : null;
+  });
+  const dismiss = () => {
+    try {
+      if (current) window.localStorage.setItem(SEEN_KEY, current);
+    } catch {
+      // storage unavailable: the banner just reappears next launch
+    }
+    setVersion(null);
+  };
+  return { version, dismiss };
 }

@@ -261,7 +261,8 @@
       "controller": "Controller",
       "audio": "Audio & Haptik",
       "buttons": "Tasten",
-      "dongle": "Dongle"
+      "dongle": "Dongle",
+      "about": "Über"
     },
     "brandSub": "Konfigurator",
     "status": {
@@ -445,6 +446,16 @@
     },
     "dongle": {
       "advanced": "Erweitert"
+    },
+    "about": {
+      "changes": "Neuigkeiten",
+      "firmware": "Firmware-Änderungen",
+      "guide": "Anleitung",
+      "credits": "Mitwirkende",
+      "version": "Du nutzt Version {{version}}.",
+      "loading": "Lädt…",
+      "updated": "Auf {{version}} aktualisiert.",
+      "seeWhatsNew": "Neuigkeiten ansehen"
     }
   }
 }

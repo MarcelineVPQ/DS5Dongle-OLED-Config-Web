@@ -96,6 +96,7 @@ function start(): void {
     },
     downloadFirmware: () => updater.downloadFirmware(),
     getDesktopPalette: () => readDesktopPalette(),
+    firmwareChangelog: () => updater.firmwareChangelog(),
   });
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));

@@ -261,7 +261,8 @@
       "controller": "Manette",
       "audio": "Audio et haptique",
       "buttons": "Boutons",
-      "dongle": "Dongle"
+      "dongle": "Dongle",
+      "about": "À propos"
     },
     "brandSub": "Configurateur",
     "status": {
@@ -445,6 +446,16 @@
     },
     "dongle": {
       "advanced": "Avancé"
+    },
+    "about": {
+      "changes": "Nouveautés",
+      "firmware": "Changements du firmware",
+      "guide": "Guide",
+      "credits": "Crédits",
+      "version": "Tu utilises la version {{version}}.",
+      "loading": "Chargement…",
+      "updated": "Mis à jour en {{version}}.",
+      "seeWhatsNew": "Voir les nouveautés"
     }
   }
 }

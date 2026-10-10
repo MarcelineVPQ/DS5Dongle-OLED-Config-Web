@@ -36,6 +36,7 @@ export interface IpcHandlers {
   latestFirmware: () => Promise<LatestFirmware | null>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
   getDesktopPalette: () => Promise<unknown>;
+  firmwareChangelog: () => Promise<string>;
 }
 
 export function registerIpc(h: IpcHandlers): void {
@@ -73,6 +74,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.latestFirmware, h.latestFirmware);
   invoke(IPC.downloadFirmware, h.downloadFirmware);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
+  invoke(IPC.firmwareChangelog, h.firmwareChangelog);
 
   ipcMain.on(IPC.restartToUpdate, (event) => {
     if (trusted(event)) h.restartToUpdate();
