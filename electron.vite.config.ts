@@ -1,0 +1,63 @@
+// Desktop (Electron) build. The browser build still uses vite.config.ts.
+import { resolve } from "node:path";
+import { defineConfig } from "electron-vite";
+import type { Plugin } from "vite";
+import react from "@vitejs/plugin-react";
+
+// Strict CSP for the desktop renderer: no remote scripts, no eval, and the page
+// can only talk to its own origin. Device access is WebUSB, gated in the main
+// process. Production only: the Vite dev server needs inline scripts for HMR.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+
+function desktopCsp(): Plugin {
+  return {
+    name: "ds5-desktop-csp",
+    apply: "build",
+    transformIndexHtml: {
+      order: "pre",
+      handler(html: string) {
+        return html.replace("<head>", `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`);
+      },
+    },
+  };
+}
+
+export default defineConfig({
+  main: {
+    build: {
+      outDir: "out/main",
+      rollupOptions: { input: resolve("electron/main/index.ts") },
+    },
+  },
+  preload: {
+    build: {
+      outDir: "out/preload",
+      rollupOptions: {
+        input: resolve("electron/preload/index.ts"),
+        // Sandboxed preloads must be CommonJS.
+        output: { format: "cjs", entryFileNames: "[name].cjs" },
+      },
+    },
+  },
+  renderer: {
+    root: ".",
+    plugins: [react(), desktopCsp()],
+    define: { "import.meta.env.VITE_DESKTOP": JSON.stringify("1") },
+    build: {
+      outDir: "out/renderer",
+      // Never inline assets as data: URLs; the CSP only allows 'self'.
+      assetsInlineLimit: 0,
+      rollupOptions: { input: resolve("index.html") },
+    },
+  },
+});
