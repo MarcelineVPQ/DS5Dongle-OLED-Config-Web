@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  NODE_VERSION: "22"
+  # The npm bundled with Node 22 (10.x) hits an arborist "edgesOut" crash on
+  # this dependency tree; npm 11 resolves it. Pinned, see CONTRIBUTING.md.
+  NPM: npx -y npm@11.6.2
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: $NPM ci
+      - name: ESLint
+        run: npx eslint . --max-warnings=11
+      - name: Prettier
+        run: npx prettier --check .
+      - name: Electron security gate
+        run: ./.hooks/check_electron_security.sh
+      - name: DOM sink gate
+        run: ./.hooks/check_dom_sinks.sh
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: $NPM ci
+      - run: npx tsc -b
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: $NPM ci
+      - name: Unit, integration and security tests with coverage
+        run: npx vitest run --coverage --coverage.reporter=text --coverage.reporter=html
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  build:
+    name: Build (web + desktop)
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: $NPM ci
+      - name: Web build
+        run: npx vite build
+      - name: Desktop build
+        run: npx electron-vite build

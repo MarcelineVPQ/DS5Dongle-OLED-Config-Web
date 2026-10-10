@@ -1,0 +1,95 @@
+# Contributing to the DS5 Dongle Configurator
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 22+
+- **npm 11** (`npx -y npm@11.6.2 …`). The npm 9/10 that ships with Node 22 on some distros crashes with `Cannot read properties of null (reading 'edgesOut')` resolving this dependency tree.
+- Git, and [pre-commit](https://pre-commit.com/) (`pip install pre-commit`)
+- For hardware testing: a dongle on OLED Edition firmware built with `ENABLE_COMPANION_VENDOR` (v0.8+)
+
+### Initial Setup
+
+```bash
+git clone https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web.git
+cd DS5Dongle-OLED-Config-Web
+npx -y npm@11.6.2 ci
+pre-commit install
+```
+
+### Running
+
+```bash
+npm run dev            # browser build, http://127.0.0.1:5173 (Chromium only: WebUSB)
+npm run dev:desktop    # desktop app with hot reload
+npm run build          # browser production build (GitHub Pages)
+npm run build:desktop  # desktop production build into out/
+npm run start:desktop  # run the desktop production build
+```
+
+On Linux the desktop scripts pass `--no-sandbox` (see `docs/adr/0004-linux-sandbox-and-gpu.md`). If the app can't open the dongle (`SecurityError` / access denied), install a udev rule granting your user access to `054c:0ce6` (Steam's controller rules already do).
+
+## Code Style
+
+Automated, same roles as AVNetworkMonitor's Black / isort / Pylint / mypy:
+
+- **Prettier**: formatting (`.prettierrc.json`, print width 200)
+- **ESLint**: bugs and hooks rules (`eslint.config.js`)
+- **TypeScript**: `strict` everywhere, separate projects for app / electron / node / tests (`tsc -b`)
+
+```bash
+npm run format        # write
+npm run lint
+npm run typecheck
+npm run check         # everything CI runs: typecheck, lint, format check, gates, tests
+```
+
+### Pre-commit Hooks
+
+```bash
+pre-commit run --all-files
+git commit --no-verify   # emergencies only
+```
+
+Project-specific gates (`.hooks/`):
+
+- **`check_electron_security.sh`** blocks `nodeIntegration: true`, `contextIsolation: false`, `sandbox: false`, `webSecurity: false`, insecure content, and exposing `ipcRenderer` through `contextBridge`.
+- **`check_dom_sinks.sh`** blocks `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`/`dangerouslySetInnerHTML`/`eval`/`new Function`. A justified exception (e.g. a bundled build-time SVG) carries `sink-allowed: <reason>` on the same line.
+
+## Testing
+
+See `docs/TEST_PLAN.md`.
+
+```bash
+npm test
+npm run test:coverage
+npx vitest run tests/integration   # one category
+```
+
+## Pull Request Process
+
+1. Branch from `master`: `git checkout -b feat/your-feature`
+2. `npm run check` passes and `pre-commit run --all-files` is clean
+3. User-facing change: add a `CHANGELOG.md` entry under `[Unreleased]`
+4. Protocol change: update the firmware's `CLAUDE.md` protocol section and bump `PICO_PROTO_MINOR` (additions) or `MAJOR` (layout breaks); the app's `SUPPORTED_PROTO_MAJOR` must follow
+5. Security-relevant change (window, session, IPC, CSP, device allowlist, updater): update `docs/SECURITY_AUDIT.md` and the tests in `tests/security/`
+6. Architectural decision: add an ADR (`docs/adr/`)
+
+## Commit Message Format
+
+[Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <description>
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `deps`. Scopes in use: `desktop`, `protocol`, `web`, `i18n`, `updater`, `security`.
+
+## Versioning
+
+`package.json` `version` is the single source of truth. `node tools/update_version.mjs 1.2.3` sets it and syncs the CHANGELOG header; `node tools/update_version.mjs --verify` fails if anything disagrees (CI and `tools/publish.sh` run it).
+
+## License
+
+MIT (`LICENSE`). Third-party assets keep their own licenses: Zacksly art is CC BY 3.0 (`src/assets/ZACKSLY-LICENSE.txt`), the PICOBOOT library ships its own (`src/flash/picoflash/LICENSE`).

@@ -1,0 +1,83 @@
+name: Security Scans
+
+# Free, no-GHAS SAST + secret scanning (same setup as AVNetworkMonitor):
+#   - Semgrep OSS  -> static analysis (TypeScript, React, Electron rules via p/javascript)
+#   - Gitleaks     -> hard-coded secrets across the full git history
+# Both emit SARIF as build artifacts.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Weekly sweep (Mondays 05:30 UTC) so rule updates catch drift without a push.
+    - cron: "30 5 * * 1"
+
+jobs:
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/secrets \
+            --config=p/typescript \
+            --config=p/react \
+            --config=p/javascript \
+            --config=p/owasp-top-ten \
+            --metrics=off \
+            --sarif --output=semgrep-report.sarif \
+            --verbose || true
+
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ -f semgrep-report.sarif ]; then
+            python3 -c "import json; d=json.load(open('semgrep-report.sarif')); print('Semgrep findings:', sum(len(r.get('results', [])) for r in d.get('runs', [])))"
+          else
+            echo "No Semgrep SARIF produced."
+          fi
+
+      - name: Upload Semgrep report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: semgrep-report
+          path: semgrep-report.sarif
+          retention-days: 30
+
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (full history)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # scan every commit, not just the tip
+
+      - name: Run Gitleaks
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:v8.18.4 detect \
+            --source=/repo \
+            --report-format=sarif \
+            --report-path=/repo/gitleaks-report.sarif \
+            --redact \
+            --exit-code=0 \
+            --verbose
+
+      - name: Upload Gitleaks report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.sarif
+          retention-days: 30

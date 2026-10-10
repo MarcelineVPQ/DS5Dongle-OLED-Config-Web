@@ -1,0 +1,33 @@
+name: npm-audit
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: "0 3 * * 1" # weekly on Monday 03:00 UTC
+
+jobs:
+  npm-audit:
+    name: npm audit (vulnerabilities)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run npm audit on shipped dependencies (fail on high)
+        run: npx -y npm@11.6.2 audit --omit=dev --audit-level=high --json | tee npm_audit_report.json
+      - name: Report dev-dependency advisories (informational)
+        if: always()
+        run: npx -y npm@11.6.2 audit --audit-level=high || true
+      - name: Upload npm audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm_audit_report.json
+          retention-days: 30

@@ -1,0 +1,99 @@
+import { describe, expect, it } from "vitest";
+import { decodeIdentity } from "../../src/protocol/bridgeClient";
+import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, validateConfig } from "../../src/protocol/config";
+import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
+
+describe("config codec (firmware Config_body, 37 bytes)", () => {
+  it("round-trips every field", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGain: 4.5, speakerVolume: -20, lightbarMode: 3, lbFavR: [1, 2, 3, 4], screenBrightness: 2, controllerWakesDisplay: false });
+    const bytes = encodeConfigBody(cfg);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+  });
+
+  it("puts haptics gain at offset 1 as little-endian float32", () => {
+    const bytes = encodeConfigBody({ ...DEFAULT_CONFIG, hapticsGain: 1 });
+    expect([...bytes.subarray(1, 5)]).toEqual([0x00, 0x00, 0x80, 0x3f]);
+  });
+
+  it("accepts haptics gain 1.0-6.0 like the firmware, and nothing outside", () => {
+    expect(validateConfig({ ...DEFAULT_CONFIG, hapticsGain: 6 })).toEqual([]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, hapticsGain: 6.1 })[0]?.field).toBe("hapticsGain");
+    expect(validateConfig({ ...DEFAULT_CONFIG, hapticsGain: 0.9 })[0]?.field).toBe("hapticsGain");
+  });
+
+  it("defaults Auto Haptics to Off, matching firmware v0.7.0", () => {
+    expect(DEFAULT_CONFIG.autoHapticsEnable).toBe(0);
+  });
+
+  it("refuses to encode an invalid config", () => {
+    expect(() => encodeConfigBody({ ...DEFAULT_CONFIG, inactiveTime: 2 })).toThrow();
+  });
+
+  it("decodes a pre-v0.6.5 19-byte body with defaults for the tail", () => {
+    const full = encodeConfigBody({ ...DEFAULT_CONFIG, hapticsGain: 2 });
+    const cfg = decodeConfigBody(full.subarray(0, 19));
+    expect(cfg.hapticsGain).toBe(2);
+    expect(cfg.lightbarMode).toBe(DEFAULT_CONFIG.lightbarMode);
+  });
+});
+
+describe("remap codec", () => {
+  it("encodes the 0x10 SET with magic and version", () => {
+    const report = encodeRemapSet(identityTable());
+    expect([...report.subarray(0, 4)]).toEqual([0x10, 0x52, 0x4d, 1]);
+    expect([...report.subarray(4, 20)]).toEqual(identityTable());
+  });
+
+  it("rejects tables with bad entries", () => {
+    const bad = identityTable();
+    bad[3] = 16;
+    expect(() => encodeRemapSet(bad)).toThrow();
+  });
+
+  it("finds the remap block right after the 37-byte body", () => {
+    const report = new Uint8Array(58);
+    report.set([0x52, 0x4d, 1, 7, 0, ...identityTable()], CONFIG_BODY_SIZE);
+    expect(decodeRemapFromConfigReport(report)).toEqual({ version: 1, revision: 7, table: identityTable() });
+  });
+
+  it("returns null when the firmware has no remap block", () => {
+    expect(decodeRemapFromConfigReport(new Uint8Array(37))).toBeNull();
+  });
+});
+
+describe("identity report (0xF1)", () => {
+  const sample = () => {
+    const b = new Uint8Array(20);
+    b.set([0x44, 0x53, 0x35, 0x4f, 1, 2, 37, 0x1f, 0x34, 0x12, 0x0a, 1, 9, 0, 0, 0, 4, 2, 1]);
+    return b;
+  };
+
+  it("decodes every field", () => {
+    expect(decodeIdentity(sample())).toEqual({
+      protoMajor: 1,
+      protoMinor: 2,
+      configBodyLength: 37,
+      features: 0x1f,
+      sequence: 0x1234,
+      lastFunction: 0x0a,
+      lastResult: "pending",
+      hostConfigGeneration: 9,
+      slotCount: 4,
+      currentSlot: 2,
+      controllerConnected: true,
+    });
+  });
+
+  it("rejects a report without the DS5O magic", () => {
+    const b = sample();
+    b[3] = 0;
+    expect(() => decodeIdentity(b)).toThrow(/DS5O/);
+  });
+
+  it("maps an unknown result code to failed rather than ok", () => {
+    const b = sample();
+    b[11] = 99;
+    expect(decodeIdentity(b).lastResult).toBe("failed");
+  });
+});

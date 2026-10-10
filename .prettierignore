@@ -1,0 +1,9 @@
+dist/
+out/
+release/
+coverage/
+node_modules/
+src/flash/picoflash/
+package-lock.json
+bun.lock
+*.md
