@@ -47,9 +47,9 @@ const app = await latestRelease(APP_REPO);
 if (app) {
   const version = app.tag_name.replace(/^v/, "");
   const platforms = {};
-  const linux = pick(app, /^DS5DongleConfigurator-[\d.]+-linux-x86_64\.AppImage$/);
-  const windows = pick(app, /^DS5DongleConfigurator-[\d.]+-win-x64\.exe$/);
-  const macos = pick(app, /^DS5DongleConfigurator-[\d.]+-mac-universal\.zip$/);
+  const linux = pick(app, /^DS5Dongle-OLED-Edition-Configurator-[\d.]+-linux-x86_64\.AppImage$/);
+  const windows = pick(app, /^DS5Dongle-OLED-Edition-Configurator-[\d.]+-win-x64\.exe$/);
+  const macos = pick(app, /^DS5Dongle-OLED-Edition-Configurator-[\d.]+-mac-universal\.zip$/);
   if (linux) platforms.linux = await measure(linux);
   if (windows) platforms.windows = await measure(windows);
   if (macos) platforms.macos = await measure(macos);

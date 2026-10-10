@@ -54,7 +54,7 @@
     "vite": "7.3.6",
     "vitest": "5.0.1"
   },
-  "productName": "DS5 Dongle Configurator",
+  "productName": "DS5 Dongle OLED Edition Configurator",
   "description": "Desktop and web configurator for the DS5 Dongle OLED Edition firmware.",
   "main": "out/main/index.js",
   "engines": {

@@ -13,10 +13,10 @@ export function trayState(status: DeviceStatus): TrayState {
 }
 
 export function trayTooltip(status: DeviceStatus): string {
-  if (!status.dongle) return "DS5 Dongle: not connected";
+  if (!status.dongle) return "DS5 Dongle OLED Edition: not connected";
   const battery = status.battery === null ? "" : `, battery ${status.battery}%${status.charging ? " charging" : ""}`;
   const controller = status.controller ? `controller connected (slot ${status.slot}${battery})` : "no controller (press PS)";
-  return `DS5 Dongle${status.firmware ? ` ${status.firmware}` : ""}: ${controller}`;
+  return `DS5 Dongle OLED Edition${status.firmware ? ` ${status.firmware}` : ""}: ${controller}`;
 }
 
 export interface TrayHandlers {

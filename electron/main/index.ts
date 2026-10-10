@@ -150,7 +150,7 @@ function createWindow(visible: boolean): void {
     minHeight: 560,
     show: false,
     autoHideMenuBar: true,
-    title: "DS5 Dongle Configurator",
+    title: "DS5 Dongle OLED Edition Configurator",
     icon: join(resourcesDir, "icon.png"),
     webPreferences: {
       preload: join(here, "../preload/index.cjs"),

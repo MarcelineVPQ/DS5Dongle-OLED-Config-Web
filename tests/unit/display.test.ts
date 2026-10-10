@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adcToCelsius, formatUptime, signalQuality } from "../../src/desktop/pages/OverviewPage";
+import { adcToCelsius, formatUptime, signalQuality } from "../../src/desktop/format";
 
 describe("Overview display helpers", () => {
   it("converts the RP2350 temperature ADC reading to Celsius", () => {

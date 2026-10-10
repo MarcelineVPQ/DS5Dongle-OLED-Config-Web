@@ -256,9 +256,13 @@
       "slots": "ペアリングスロット",
       "triggers": "トリガーテスト",
       "diagnostics": "診断",
-      "firmware": "ファームウェア"
+      "firmware": "ファームウェア",
+      "controller": "コントローラー",
+      "audio": "オーディオと触覚",
+      "buttons": "ボタン",
+      "dongle": "ドングル"
     },
-    "brandSub": "OLED Edition 設定ツール",
+    "brandSub": "コンフィギュレーター",
     "status": {
       "connected": "ドングル接続済み",
       "waiting": "ドングルを待機中…"
@@ -433,6 +437,13 @@
         "restarting": "ドングルを再起動中…",
         "verifying": "ドングルの復帰を待っています…"
       }
+    },
+    "controller": {
+      "battery": "バッテリー",
+      "charging": "充電中"
+    },
+    "dongle": {
+      "advanced": "詳細"
     }
   }
 }

@@ -2,7 +2,7 @@
 # after `npm run build:desktop`. Releases are built in CI on each OS
 # (.github/workflows/release.yml); see docs/adr/0003-update-manifest.md.
 appId: io.github.MarcelineVPQ.DS5DongleConfigurator
-productName: DS5 Dongle Configurator
+productName: DS5 Dongle OLED Edition Configurator
 copyright: Copyright © 2026 MarcelineVPQ
 directories:
   output: release
@@ -16,7 +16,7 @@ extraResources:
   - from: resources
     to: resources
 asar: true
-artifactName: DS5DongleConfigurator-${version}-${os}-${arch}.${ext}
+artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-${os}-${arch}.${ext}
 
 linux:
   target:
@@ -36,7 +36,7 @@ win:
       arch: [x64]
   icon: build/icon.ico
 portable:
-  artifactName: DS5DongleConfigurator-${version}-win-x64.exe
+  artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-win-x64.exe
 
 mac:
   target:

@@ -47,7 +47,7 @@ node tools/update_version.mjs --verify
 echo "[3/4] Commit and tag…"
 git add package.json package-lock.json
 git commit -m "chore(release): $TAG"
-git tag -a "$TAG" -m "DS5 Dongle Configurator $TAG"
+git tag -a "$TAG" -m "DS5 Dongle OLED Edition Configurator $TAG"
 
 echo "[4/4] Push (starts the release workflow)…"
 git push origin master

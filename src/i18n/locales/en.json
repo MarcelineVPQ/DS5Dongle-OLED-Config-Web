@@ -255,9 +255,13 @@
       "slots": "Pairing slots",
       "triggers": "Trigger test",
       "diagnostics": "Diagnostics",
-      "firmware": "Firmware"
+      "firmware": "Firmware",
+      "controller": "Controller",
+      "audio": "Audio & haptics",
+      "buttons": "Buttons",
+      "dongle": "Dongle"
     },
-    "brandSub": "OLED Edition configurator",
+    "brandSub": "Configurator",
     "status": {
       "connected": "Dongle connected",
       "waiting": "Waiting for the dongle…"
@@ -432,6 +436,13 @@
         "restarting": "Restarting the dongle…",
         "verifying": "Waiting for the dongle to come back…"
       }
+    },
+    "controller": {
+      "battery": "Battery",
+      "charging": "charging"
+    },
+    "dongle": {
+      "advanced": "Advanced"
     }
   }
 }

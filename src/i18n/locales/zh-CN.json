@@ -256,9 +256,13 @@
       "slots": "配对槽位",
       "triggers": "扳机测试",
       "diagnostics": "诊断",
-      "firmware": "固件"
+      "firmware": "固件",
+      "controller": "手柄",
+      "audio": "音频与触感",
+      "buttons": "按键",
+      "dongle": "接收器"
     },
-    "brandSub": "OLED Edition 配置工具",
+    "brandSub": "配置工具",
     "status": {
       "connected": "接收器已连接",
       "waiting": "等待接收器…"
@@ -433,6 +437,13 @@
         "restarting": "正在重启接收器…",
         "verifying": "正在等待接收器重新连接…"
       }
+    },
+    "controller": {
+      "battery": "电量",
+      "charging": "充电中"
+    },
+    "dongle": {
+      "advanced": "高级"
     }
   }
 }

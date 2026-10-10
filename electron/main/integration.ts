@@ -1,6 +1,6 @@
 // Desktop integration without an installer.
 //
-// Linux (AppImage): keep a stable `DS5DongleConfigurator.AppImage` symlink next
+// Linux (AppImage): keep a stable `DS5Dongle-OLED-Edition-Configurator.AppImage` symlink next
 // to the versioned file, and point an XDG menu entry and icon at the symlink.
 // Self-updates download a new versioned AppImage and repoint the symlink, so
 // the menu entry, autostart and pinned launchers never go stale (Sonata's
@@ -16,8 +16,8 @@ import { execFile } from "node:child_process";
 import { app, shell } from "electron";
 import { APP_ID } from "./autostart";
 
-const STABLE_APPIMAGE = "DS5DongleConfigurator.AppImage";
-const SHORTCUT_NAME = "DS5 Dongle Configurator.lnk";
+const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
+const SHORTCUT_NAME = "DS5 Dongle OLED Edition Configurator.lnk";
 
 // The path launchers should run: the stable AppImage symlink, the real portable
 // exe, or the plain executable in development.
@@ -66,7 +66,7 @@ function integrateAppImage(resourcesDir: string): void {
   copyFileSync(join(resourcesDir, "icon.png"), iconPath);
 
   const entry =
-    "[Desktop Entry]\nType=Application\nName=DS5 Dongle Configurator\n" +
+    "[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\n" +
     "Comment=Configure the DS5 Dongle OLED Edition\n" +
     `Exec=${JSON.stringify(launch)} %U\n` +
     `Icon=${APP_ID}\nTerminal=false\nCategories=Utility;Settings;\n` +

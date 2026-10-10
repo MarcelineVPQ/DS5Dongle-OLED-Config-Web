@@ -24,7 +24,7 @@ export function applyAutostart(enabled: boolean, startMinimized: boolean): void 
       if (enabled) {
         mkdirSync(dir, { recursive: true });
         const exec = linuxExec() + (startMinimized ? ` ${HIDDEN_FLAG}` : "");
-        writeFileSync(file, `[Desktop Entry]\nType=Application\nName=DS5 Dongle Configurator\nExec=${exec}\nIcon=${APP_ID}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`);
+        writeFileSync(file, `[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\nExec=${exec}\nIcon=${APP_ID}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`);
       } else if (existsSync(file)) {
         unlinkSync(file);
       }

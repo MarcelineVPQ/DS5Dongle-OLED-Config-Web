@@ -256,9 +256,13 @@
       "slots": "Slots de pareamento",
       "triggers": "Teste de gatilhos",
       "diagnostics": "Diagnóstico",
-      "firmware": "Firmware"
+      "firmware": "Firmware",
+      "controller": "Controle",
+      "audio": "Áudio e háptica",
+      "buttons": "Botões",
+      "dongle": "Dongle"
     },
-    "brandSub": "Configurador OLED Edition",
+    "brandSub": "Configurador",
     "status": {
       "connected": "Dongle conectado",
       "waiting": "Aguardando o dongle…"
@@ -433,6 +437,13 @@
         "restarting": "Reiniciando o dongle…",
         "verifying": "Aguardando o dongle voltar…"
       }
+    },
+    "controller": {
+      "battery": "Bateria",
+      "charging": "carregando"
+    },
+    "dongle": {
+      "advanced": "Avançado"
     }
   }
 }

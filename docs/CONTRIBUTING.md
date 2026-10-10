@@ -1,4 +1,4 @@
-# Contributing to the DS5 Dongle Configurator
+# Contributing to the DS5 Dongle OLED Edition Configurator
 
 ## Development Setup
 

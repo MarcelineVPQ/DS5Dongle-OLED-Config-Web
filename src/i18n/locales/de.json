@@ -256,9 +256,13 @@
       "slots": "Kopplungs-Slots",
       "triggers": "Trigger-Test",
       "diagnostics": "Diagnose",
-      "firmware": "Firmware"
+      "firmware": "Firmware",
+      "controller": "Controller",
+      "audio": "Audio & Haptik",
+      "buttons": "Tasten",
+      "dongle": "Dongle"
     },
-    "brandSub": "Konfigurator für die OLED Edition",
+    "brandSub": "Konfigurator",
     "status": {
       "connected": "Dongle verbunden",
       "waiting": "Warte auf den Dongle…"
@@ -433,6 +437,13 @@
         "restarting": "Dongle startet neu…",
         "verifying": "Warte, bis der Dongle zurück ist…"
       }
+    },
+    "controller": {
+      "battery": "Akku",
+      "charging": "lädt"
+    },
+    "dongle": {
+      "advanced": "Erweitert"
     }
   }
 }

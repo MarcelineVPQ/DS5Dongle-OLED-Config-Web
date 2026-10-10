@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-This directory holds the Architecture Decision Records for the DS5 Dongle Configurator (web + desktop).
+This directory holds the Architecture Decision Records for the DS5 Dongle OLED Edition Configurator (web + desktop).
 
 ## What is an ADR?
 

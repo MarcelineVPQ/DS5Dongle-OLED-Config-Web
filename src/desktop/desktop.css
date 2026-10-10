@@ -597,3 +597,69 @@ html[data-theme="dark"] .dk {
   color: var(--text-strong);
   font-variant-numeric: tabular-nums;
 }
+
+/* The language menu sits at the bottom of the sidebar: open it upward and to
+ * the right so it never runs off the window. */
+.dk .language-toggle-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+  right: auto;
+  left: 0;
+  max-height: 60vh;
+  overflow: auto;
+}
+.dk .language-toggle-button {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+/* ---- Page composition ---- */
+.dk-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dk-gap);
+}
+.dk-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  align-items: center;
+  padding: 10px var(--dk-pad);
+}
+.dk-status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dk-status-label {
+  font-size: var(--dk-small);
+  color: var(--text-muted);
+}
+.dk-swatch {
+  display: inline-block;
+  width: 36px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border-default);
+}
+.dk-advanced > summary {
+  cursor: pointer;
+  font-size: var(--dk-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-eyebrow);
+  padding: 2px 0;
+}
+.dk-advanced[open] > summary {
+  margin-bottom: 6px;
+}
+.dk-advanced .dk-grid {
+  margin-top: 8px;
+}
+.dk-advanced .dk-card {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}

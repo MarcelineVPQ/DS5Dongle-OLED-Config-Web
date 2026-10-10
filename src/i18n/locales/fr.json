@@ -256,9 +256,13 @@
       "slots": "Slots d'appairage",
       "triggers": "Test des gâchettes",
       "diagnostics": "Diagnostic",
-      "firmware": "Firmware"
+      "firmware": "Firmware",
+      "controller": "Manette",
+      "audio": "Audio et haptique",
+      "buttons": "Boutons",
+      "dongle": "Dongle"
     },
-    "brandSub": "Configurateur OLED Edition",
+    "brandSub": "Configurateur",
     "status": {
       "connected": "Dongle connecté",
       "waiting": "En attente du dongle…"
@@ -433,6 +437,13 @@
         "restarting": "Redémarrage du dongle…",
         "verifying": "En attente du retour du dongle…"
       }
+    },
+    "controller": {
+      "battery": "Batterie",
+      "charging": "en charge"
+    },
+    "dongle": {
+      "advanced": "Avancé"
     }
   }
 }

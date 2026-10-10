@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the **DS5 Dongle Configurator** (web tool and desktop app) are documented here.
+All notable changes to the **DS5 Dongle OLED Edition Configurator** (web tool and desktop app) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 

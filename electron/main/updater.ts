@@ -17,7 +17,7 @@ import type { UpdateState } from "../../src/desktop/api";
 
 const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/master/latest.json";
 const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
-const STABLE_APPIMAGE = "DS5DongleConfigurator.AppImage";
+const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
 
 // Test feed: DS5_UPDATE_MANIFEST=http://127.0.0.1:8765/latest.json points the
 // updater at a server on this machine, so a full update cycle can be exercised
@@ -88,7 +88,7 @@ export class Updater {
         for (const f of readdirSync(dir)) {
           const full = join(dir, f);
           if (f.endsWith(".AppImage.part")) rmSync(full, { force: true });
-          const m = /^DS5DongleConfigurator-(\d+\.\d+\.\d+)-linux-x86_64\.AppImage$/.exec(f);
+          const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+)-linux-x86_64\.AppImage$/.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
       } else if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) {
@@ -168,7 +168,7 @@ export class Updater {
     if (process.platform === "linux") {
       const dir = dirname(realpathSync(process.env.APPIMAGE!));
       const name = basename(new URL(download.url).pathname);
-      if (!/^DS5DongleConfigurator-\d+\.\d+\.\d+-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
+      if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
       return join(dir, name);
     }
     return process.env.PORTABLE_EXECUTABLE_FILE!;

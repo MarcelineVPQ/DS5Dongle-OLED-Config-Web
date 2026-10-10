@@ -1,25 +1,21 @@
-import { Activity, Cpu, Gamepad2, Gauge, HardDriveDownload, Lightbulb, Link2, type LucideIcon, SlidersHorizontal } from "lucide-react";
+import { Gamepad2, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/LanguageToggle";
-import RemapEditor from "../components/RemapEditor";
 import ThemeToggle from "../components/ThemeToggle";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
+import ButtonsPage from "./pages/ButtonsPage";
+import ControllerPage from "./pages/ControllerPage";
+import DonglePage from "./pages/DonglePage";
+import SettingsCards from "./pages/SettingsPage";
 import UpdateBanners from "./UpdateBanners";
 import UsbAccessSetup from "./UsbAccessSetup";
 import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
-import DiagnosticsPage from "./pages/DiagnosticsPage";
-import FirmwarePage from "./pages/FirmwarePage";
-import LightbarPage from "./pages/LightbarPage";
-import OverviewPage from "./pages/OverviewPage";
-import SettingsPage from "./pages/SettingsPage";
-import SlotsPage from "./pages/SlotsPage";
-import TriggersPage from "./pages/TriggersPage";
 import "./desktop.css";
 
-type PageId = "overview" | "settings" | "lightbar" | "remap" | "slots" | "triggers" | "diagnostics" | "firmware";
+type PageId = "controller" | "audio" | "buttons" | "dongle";
 
 interface PageDef {
   id: PageId;
@@ -35,18 +31,16 @@ export default function DesktopApp() {
   const bridge = useDs5Bridge();
   const appUpdate = useAppUpdate();
   const fw = useFirmwareUpdate(bridge, appUpdate);
-  const [page, setPage] = useState<PageId>("settings");
+  const [page, setPage] = useState<PageId>("controller");
 
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const pages: PageDef[] = [
-    { id: "overview", label: t("desktop.nav.overview", "Overview"), icon: Gauge, render: (b) => <OverviewPage bridge={b} /> },
-    { id: "settings", label: t("desktop.nav.settings", "Settings"), icon: SlidersHorizontal, render: (b) => <SettingsPage bridge={b} /> },
-    { id: "lightbar", label: t("desktop.nav.lightbar", "Lightbar"), icon: Lightbulb, render: (b) => <LightbarPage bridge={b} /> },
-    { id: "remap", label: t("desktop.nav.remap", "Remap"), icon: Gamepad2, render: (b) => <RemapEditor client={b.client} /> },
-    { id: "slots", label: t("desktop.nav.slots", "Pairing slots"), icon: Link2, render: (b) => <SlotsPage bridge={b} /> },
-    { id: "triggers", label: t("desktop.nav.triggers", "Trigger test"), icon: Activity, render: (b) => <TriggersPage bridge={b} /> },
-    { id: "diagnostics", label: t("desktop.nav.diagnostics", "Diagnostics"), icon: Cpu, render: (b) => <DiagnosticsPage bridge={b} /> },
-    { id: "firmware", label: t("desktop.nav.firmware", "Firmware"), icon: HardDriveDownload, render: (b, f) => <FirmwarePage bridge={b} fw={f} /> },
+    { id: "controller", label: t("desktop.nav.controller", "Controller"), icon: Gamepad2, render: (b) => <ControllerPage bridge={b} /> },
+    { id: "audio", label: t("desktop.nav.audio", "Audio & haptics"), icon: Volume2, render: (b) => <SettingsCards bridge={b} group="audio" /> },
+    { id: "buttons", label: t("desktop.nav.buttons", "Buttons"), icon: ToggleLeft, render: (b) => <ButtonsPage bridge={b} /> },
+    { id: "dongle", label: t("desktop.nav.dongle", "Dongle"), icon: Settings2, render: (b, f) => <DonglePage bridge={b} fw={f} advancedOpen={advancedOpen} /> },
   ];
+
   const current = pages.find((p) => p.id === page) ?? pages[0];
 
   // Edits apply to the dongle's RAM as you make them (debounced), so every
@@ -99,7 +93,11 @@ export default function DesktopApp() {
     () =>
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
-          if (pages.some((p) => p.id === command.page)) setPage(command.page as PageId);
+          // The tray's "Diagnostics" lives under Dongle → Advanced now.
+          if (command.page === "diagnostics") {
+            setPage("dongle");
+            setAdvancedOpen(true);
+          } else if (pages.some((p) => p.id === command.page)) setPage(command.page as PageId);
         } else if (command.type === "switchSlot") {
           void client?.switchSlot(command.slot).catch(() => undefined);
         }
@@ -112,8 +110,8 @@ export default function DesktopApp() {
     <div className="dk">
       <aside className="dk-side">
         <div className="dk-brand">
-          DS5 Dongle
-          <small>{t("desktop.brandSub", "OLED Edition configurator")}</small>
+          DS5 Dongle OLED Edition
+          <small>{t("desktop.brandSub", "Configurator")}</small>
         </div>
         {pages.map((p) => (
           <button type="button" key={p.id} className={`dk-nav-item${p.id === page ? " active" : ""}`} aria-current={p.id === page ? "page" : undefined} onClick={() => setPage(p.id)}>
@@ -146,7 +144,7 @@ export default function DesktopApp() {
         </header>
 
         <main className="dk-body">
-          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => setPage("firmware")} />
+          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => setPage("dongle")} />
           {bridge.error && (
             <div className="dk-notice error" role="alert">
               <span>{bridge.error}</span>
