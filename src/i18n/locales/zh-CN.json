@@ -887,6 +887,40 @@
       "backdropBlurSub": "页面后方的游戏封面图更柔和或更清晰",
       "depth": "层次感",
       "depthSub": "卡片和手柄下方阴影的强度（0 = 平面）"
+    },
+    "calib": {
+      "title": "校准",
+      "shortcut": "摇杆漂移、死区、扳机行程、陀螺仪",
+      "intro": "在接收器内校正摇杆漂移、死区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入手柄；重置即可撤销。",
+      "needsFirmware": "更新接收器固件后才能校准。",
+      "needsController": "连接手柄后才能校准。",
+      "noInput": "该步骤中没有收到手柄输入。请重试。",
+      "start": "开始校准",
+      "again": "重新测量",
+      "measured": "测量完成。查看预览后保存。",
+      "step": {
+        "center": "松开两个摇杆",
+        "edges": "将两个摇杆沿边缘慢慢转一圈",
+        "triggers": "将两个扳机按到底后松开",
+        "gyro": "把手柄放下，不要触碰"
+      },
+      "leftStick": "左摇杆",
+      "rightStick": "右摇杆",
+      "raw": "原始",
+      "corrected": "游戏看到的",
+      "deadzone": "死区",
+      "deadzoneSub": "忽略中心附近的移动（防止漂移）",
+      "outer": "满量程位置",
+      "outerSub": "摇杆需要推多远才算推到底",
+      "center": "中心偏移：X {{x}}，Y {{y}}",
+      "triggers": "扳机",
+      "now": "当前 {{raw}} → {{out}}",
+      "gyro": "陀螺仪",
+      "gyroZero": "零点偏移：",
+      "save": "保存到接收器",
+      "revert": "撤销",
+      "reset": "恢复为未校准",
+      "saveHint": "保存在接收器自身的存储中，立即对所有游戏生效。"
     }
   },
   "ad": {

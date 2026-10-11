@@ -893,6 +893,40 @@
       "backdropBlurSub": "Arte del juego más suave o más nítido detrás de la página",
       "depth": "Profundidad",
       "depthSub": "Intensidad de las sombras bajo las tarjetas y el mando (0 = plano)"
+    },
+    "calib": {
+      "title": "Calibración",
+      "shortcut": "Deriva de sticks, zonas muertas, recorrido de gatillos, giroscopio",
+      "intro": "Corrige la deriva de los sticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en el dongle, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
+      "needsFirmware": "Actualiza el firmware del dongle para calibrar.",
+      "needsController": "Conecta un mando para calibrar.",
+      "noInput": "No llegó entrada del mando durante ese paso. Inténtalo de nuevo.",
+      "start": "Iniciar calibración",
+      "again": "Medir de nuevo",
+      "measured": "Medido. Revisa las vistas previas y guarda.",
+      "step": {
+        "center": "Suelta ambos sticks",
+        "edges": "Gira despacio ambos sticks por sus bordes",
+        "triggers": "Pulsa a fondo ambos gatillos y suéltalos",
+        "gyro": "Deja el mando sobre la mesa sin tocarlo"
+      },
+      "leftStick": "Stick izquierdo",
+      "rightStick": "Stick derecho",
+      "raw": "Sin procesar",
+      "corrected": "Lo que ven los juegos",
+      "deadzone": "Zona muerta",
+      "deadzoneSub": "Movimiento cerca del centro que se ignora (evita la deriva)",
+      "outer": "Inclinación máxima en",
+      "outerSub": "Cuánto debe moverse el stick para contar como pulsado a fondo",
+      "center": "Desplazamiento del centro: X {{x}}, Y {{y}}",
+      "triggers": "Gatillos",
+      "now": "ahora {{raw}} → {{out}}",
+      "gyro": "Giroscopio",
+      "gyroZero": "Desplazamiento del cero:",
+      "save": "Guardar en el dongle",
+      "revert": "Deshacer",
+      "reset": "Volver a sin calibrar",
+      "saveHint": "Se guarda en la memoria del dongle; se aplica al instante en todos los juegos."
     }
   },
   "ad": {

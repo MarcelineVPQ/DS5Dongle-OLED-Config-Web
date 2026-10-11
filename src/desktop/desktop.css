@@ -3058,3 +3058,51 @@ html[data-reduce-motion] .lib-row:hover {
   color: var(--text-muted);
   opacity: 1;
 }
+/* Calibration */
+.calib-preview {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 6px;
+}
+.calib-dot {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+}
+.calib-dot .live-stick {
+  width: 72px;
+  height: 72px;
+}
+.calib-dot figcaption {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.calib-dz {
+  fill: color-mix(in srgb, var(--dk-accent) 25%, transparent);
+  stroke: var(--dk-accent);
+  stroke-width: 0.6;
+}
+.calib-step {
+  display: grid;
+  gap: 6px;
+}
+.calib-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--dk-accent);
+  transform-origin: left;
+  animation: calib-fill linear forwards;
+}
+@keyframes calib-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.calib-trigger {
+  margin: 2px 0;
+}

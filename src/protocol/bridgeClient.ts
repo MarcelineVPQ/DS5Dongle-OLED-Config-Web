@@ -1,6 +1,7 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
 import { CONFIG_BODY_SIZE, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { type RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
@@ -17,6 +18,7 @@ export const REPORT = {
   diag: 0xfb,
   cpu: 0xfc,
   oledMirror: 0xef, // protocol 1.4+, feature bit FEATURES2.oledMirror
+  calibration: 0xee, // protocol 1.5+, feature bit FEATURES2.calibration
 } as const;
 
 export const FUNC = {
@@ -32,6 +34,7 @@ export const FUNC = {
   triggerPreview: 0x0a,
   narrator: 0x0b,
   narratorSay: 0x0c,
+  calibration: 0x0d,
   remap: 0x10,
 } as const;
 
@@ -52,6 +55,7 @@ export const IDENTITY_FEATURES = {
 // Identity [29] (protocol 1.4): more feature bits.
 export const FEATURES2 = {
   oledMirror: 0x01, // 0xEF: the OLED's image as last sent to the panel
+  calibration: 0x02, // 0xEE get / 0xF6 0x0D set: stick, trigger, gyro calibration
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -365,6 +369,15 @@ export class Ds5BridgeClient {
   async readCpu(): Promise<CpuInfo> {
     const view = toView(await this.transport.getReport(REPORT.cpu, 11), 11);
     return { setKhz: view.getUint32(0, true), measuredKhz: view.getUint32(4, true), vregCode: view.getUint8(8), tempRaw: view.getUint16(9, true) };
+  }
+
+  async readCalibration(): Promise<Calibration> {
+    return decodeCalibration(await this.transport.getReport(REPORT.calibration, CALIB_BODY_SIZE));
+  }
+
+  // Stored in the dongle's flash at once; applies to what games see.
+  async setCalibration(c: Calibration): Promise<void> {
+    await this.command(FUNC.calibration, [0x43, 0x4c, CALIB_PROTO_VER, ...encodeCalibration(c)]);
   }
 
   async readOledFrame(): Promise<OledFrame | null> {

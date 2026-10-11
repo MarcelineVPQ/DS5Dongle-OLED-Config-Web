@@ -893,6 +893,40 @@
       "backdropBlurSub": "Arte do jogo mais suave ou mais nítida atrás da página",
       "depth": "Profundidade",
       "depthSub": "Intensidade das sombras sob os cartões e o controle (0 = plano)"
+    },
+    "calib": {
+      "title": "Calibração",
+      "shortcut": "Drift dos analógicos, zonas mortas, curso dos gatilhos, giroscópio",
+      "intro": "Corrige o drift dos analógicos, as zonas mortas, o curso dos gatilhos e o zero do giroscópio no dongle, para todos os jogos. Nada é gravado no controle; Redefinir desfaz.",
+      "needsFirmware": "Atualize o firmware do dongle para calibrar.",
+      "needsController": "Conecte um controle para calibrar.",
+      "noInput": "Não chegou entrada do controle nessa etapa. Tente de novo.",
+      "start": "Iniciar calibração",
+      "again": "Medir de novo",
+      "measured": "Medido. Confira as prévias e salve.",
+      "step": {
+        "center": "Solte os dois analógicos",
+        "edges": "Gire devagar os dois analógicos pelas bordas",
+        "triggers": "Aperte os dois gatilhos até o fim e solte",
+        "gyro": "Deixe o controle parado sobre a mesa"
+      },
+      "leftStick": "Analógico esquerdo",
+      "rightStick": "Analógico direito",
+      "raw": "Bruto",
+      "corrected": "O que os jogos veem",
+      "deadzone": "Zona morta",
+      "deadzoneSub": "Movimento perto do centro que é ignorado (evita drift)",
+      "outer": "Inclinação máxima em",
+      "outerSub": "Quanto o analógico precisa ir para contar como totalmente empurrado",
+      "center": "Deslocamento do centro: X {{x}}, Y {{y}}",
+      "triggers": "Gatilhos",
+      "now": "agora {{raw}} → {{out}}",
+      "gyro": "Giroscópio",
+      "gyroZero": "Deslocamento do zero:",
+      "save": "Salvar no dongle",
+      "revert": "Desfazer",
+      "reset": "Voltar ao sem calibração",
+      "saveHint": "Salvo na memória do dongle; vale na hora para todos os jogos."
     }
   },
   "ad": {

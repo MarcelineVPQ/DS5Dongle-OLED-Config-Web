@@ -893,6 +893,40 @@
       "backdropBlurSub": "Weichere oder schärfere Spielgrafik hinter der Seite",
       "depth": "Tiefe",
       "depthSub": "Schattenstärke unter Karten und dem Controller (0 = flach)"
+    },
+    "calib": {
+      "title": "Kalibrierung",
+      "shortcut": "Stick-Drift, Totzonen, Triggerweg, Gyro",
+      "intro": "Korrigiert Stick-Drift, Totzonen, Triggerweg und den Nullpunkt des Gyros im Dongle, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
+      "needsFirmware": "Aktualisiere die Firmware des Dongles, um zu kalibrieren.",
+      "needsController": "Verbinde einen Controller, um zu kalibrieren.",
+      "noInput": "Während dieses Schritts kam keine Eingabe vom Controller. Versuche es erneut.",
+      "start": "Kalibrierung starten",
+      "again": "Erneut messen",
+      "measured": "Gemessen. Prüfe die Vorschau und speichere dann.",
+      "step": {
+        "center": "Lass beide Sticks los",
+        "edges": "Rolle beide Sticks langsam am Rand entlang",
+        "triggers": "Drücke beide Trigger ganz durch und lass los",
+        "gyro": "Leg den Controller hin und berühre ihn nicht"
+      },
+      "leftStick": "Linker Stick",
+      "rightStick": "Rechter Stick",
+      "raw": "Roh",
+      "corrected": "Was Spiele sehen",
+      "deadzone": "Totzone",
+      "deadzoneSub": "Bewegung nahe der Mitte, die ignoriert wird (gegen Drift)",
+      "outer": "Voller Ausschlag bei",
+      "outerSub": "Wie weit der Stick gehen muss, um als ganz gedrückt zu zählen",
+      "center": "Mittelpunkt-Versatz: X {{x}}, Y {{y}}",
+      "triggers": "Trigger",
+      "now": "jetzt {{raw}} → {{out}}",
+      "gyro": "Gyro",
+      "gyroZero": "Nullpunkt-Versatz:",
+      "save": "Auf dem Dongle speichern",
+      "revert": "Verwerfen",
+      "reset": "Auf unkalibriert zurücksetzen",
+      "saveHint": "Im eigenen Speicher des Dongles gesichert; gilt sofort für jedes Spiel."
     }
   },
   "ad": {

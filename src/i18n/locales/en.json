@@ -892,6 +892,40 @@
       "backdropBlurSub": "Softer or sharper game art behind the page",
       "depth": "Depth",
       "depthSub": "Shadow strength under cards and the controller (0 = flat)"
+    },
+    "calib": {
+      "title": "Calibration",
+      "shortcut": "Stick drift, deadzones, trigger travel, gyro",
+      "intro": "Corrects stick drift, deadzones, trigger travel and the gyro's zero inside the dongle, for every game. Nothing is written to the controller; Reset undoes it.",
+      "needsFirmware": "Update the dongle's firmware to calibrate.",
+      "needsController": "Connect a controller to calibrate.",
+      "noInput": "No input from the controller during that step. Try again.",
+      "start": "Start calibration",
+      "again": "Measure again",
+      "measured": "Measured. Check the previews, then Save.",
+      "step": {
+        "center": "Let go of both sticks",
+        "edges": "Roll both sticks slowly around their edges",
+        "triggers": "Press both triggers all the way, then let go",
+        "gyro": "Put the controller down and don't touch it"
+      },
+      "leftStick": "Left stick",
+      "rightStick": "Right stick",
+      "raw": "Raw",
+      "corrected": "What games see",
+      "deadzone": "Deadzone",
+      "deadzoneSub": "Movement near the center that's ignored (stops drift)",
+      "outer": "Full tilt at",
+      "outerSub": "How far the stick must go to count as fully pushed",
+      "center": "Center offset: X {{x}}, Y {{y}}",
+      "triggers": "Triggers",
+      "now": "now {{raw}} → {{out}}",
+      "gyro": "Gyro",
+      "gyroZero": "Zero offset:",
+      "save": "Save to dongle",
+      "revert": "Revert",
+      "reset": "Reset to uncalibrated",
+      "saveHint": "Saved in the dongle's own memory; it applies to every game right away."
     }
   },
   "ad": {

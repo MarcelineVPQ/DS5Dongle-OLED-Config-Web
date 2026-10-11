@@ -2,6 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import Calibration from "./Calibration";
 import { KNOBS, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
 import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, type DevModel } from "../devPreview";
@@ -35,7 +36,7 @@ import type { FirmwareUpdate } from "../useUpdates";
 import { REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 
-export type PanelView = "overview" | "dongle" | "app" | { part: PartId };
+export type PanelView = "overview" | "dongle" | "app" | "calibration" | { part: PartId };
 
 interface Props {
   view: PanelView;
@@ -46,10 +47,11 @@ interface Props {
   advancedOpen: boolean;
   onClose: () => void;
   onOpen: (part: PartId) => void;
+  onCalibrate: () => void;
   onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen, onClose, onOpen, onHide }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen, onClose, onOpen, onCalibrate, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -58,7 +60,9 @@ export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen
         ? t("desktop.nav.dongle", "Dongle")
         : view === "app"
           ? t("desktop.live.app", "App settings")
-          : partName(t, view.part);
+          : view === "calibration"
+            ? t("desktop.calib.title")
+            : partName(t, view.part);
 
   return (
     <div className="dk-stack">
@@ -75,7 +79,8 @@ export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen
           </button>
         )}
       </header>
-      {view === "overview" && <Overview onOpen={onOpen} />}
+      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} />}
+      {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} advancedOpen={advancedOpen} />}
       {view === "app" && <AppSettings />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} />}
@@ -98,7 +103,7 @@ const SHORTCUTS: Array<[key: string, part: PartId]> = [
   ["slots", "ps"],
 ];
 
-function Overview({ onOpen }: { onOpen: (part: PartId) => void }) {
+function Overview({ onOpen, onCalibrate }: { onOpen: (part: PartId) => void; onCalibrate: () => void }) {
   const { t } = useTranslation();
   return (
     <section className="dk-card">
@@ -110,6 +115,10 @@ function Overview({ onOpen }: { onOpen: (part: PartId) => void }) {
             <span>{t(`desktop.live.go.${key}.sub`)}</span>
           </button>
         ))}
+        <button type="button" className="live-shortcut" onClick={onCalibrate}>
+          <strong>{t("desktop.calib.title")}</strong>
+          <span>{t("desktop.calib.shortcut")}</span>
+        </button>
       </div>
       <p className="dk-hint">{t("desktop.live.go.buttons")}</p>
     </section>

@@ -238,6 +238,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
             advancedOpen={advancedOpen}
             onClose={() => onView("overview")}
             onOpen={(part) => onView({ part })}
+            onCalibrate={() => onView("calibration")}
             onHide={() => hidePanel(true)}
           />
         </aside>
