@@ -32,4 +32,9 @@ export default tseslint.config(
     files: ["electron/**/*.ts", "*.config.{ts,js}", "tools/**/*.{js,mjs}"],
     languageOptions: { globals: { process: "readonly", console: "readonly", Buffer: "readonly", fetch: "readonly", URL: "readonly" } },
   },
+  {
+    // The static download page (site/): plain browser script.
+    files: ["site/**/*.js"],
+    languageOptions: { sourceType: "script", globals: { window: "readonly", document: "readonly", navigator: "readonly", fetch: "readonly" } },
+  },
 );

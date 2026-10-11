@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DS5 Dongle OLED Edition</title>
+    <meta name="description" content="The desktop app for the DS5 Dongle OLED Edition: your DualSense live on screen, one-click firmware updates, no drivers. Linux and Windows." />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; media-src 'self'; connect-src https://raw.githubusercontent.com https://api.github.com; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="theme-color" content="#121418" />
+    <meta property="og:title" content="DS5 Dongle OLED Edition" />
+    <meta property="og:description" content="Your DualSense, live on screen. The configurator is now a desktop app." />
+    <meta property="og:image" content="img/hero.webp" />
+    <link rel="icon" href="img/favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="download.js" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="./">
+        <img src="img/icon.png" alt="" width="36" height="36" />
+        <span>DS5 Dongle <b>OLED Edition</b></span>
+      </a>
+      <nav>
+        <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition">Firmware &amp; hardware</a>
+        <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web">App source</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">The configurator is now a desktop app</p>
+        <h1>Your DualSense,<br /><span class="glow">live on screen.</span></h1>
+        <p class="lede">
+          The DS5 Dongle OLED Edition turns a Raspberry Pi Pico&nbsp;2&nbsp;W into a Bluetooth bridge that games see as a wired DualSense, with adaptive triggers, HD haptics, speaker and mic. The app
+          sets it all up, keeps its firmware current, and shows your controller live, in its own colors.
+        </p>
+
+        <div class="download" id="download">
+          <a class="btn primary" id="dl-main" href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest">
+            <span class="btn-title" id="dl-title">Download the app</span>
+            <span class="btn-sub" id="dl-sub">Linux and Windows</span>
+          </a>
+          <p class="others" id="dl-others" hidden>
+            Also for <span id="dl-other-links"></span> ·
+            <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest">all downloads &amp; release notes</a>
+          </p>
+          <p class="note" id="dl-note" hidden></p>
+        </div>
+
+        <figure class="shot">
+          <img src="img/hero.webp" width="1600" height="1626" alt="The app: a Cosmic Red DualSense drawn live, with tiles and live data below it" />
+        </figure>
+      </section>
+
+      <section class="why">
+        <article>
+          <h2>Live controller</h2>
+          <p>Buttons light up, triggers fill, sticks move and touches show as you play. Under it: every number the controller reports, with motion graphs.</p>
+        </article>
+        <article>
+          <h2>One-click firmware</h2>
+          <p>The app ships with the firmware. It installs it on a new Pico and keeps your dongle up to date: no BOOTSEL button, no files to copy.</p>
+        </article>
+        <article>
+          <h2>No drivers</h2>
+          <p>Plug it in and it works on Linux and Windows (a macOS build is coming along, untested so far). To games it's a real DualSense; the app talks to the dongle on its own USB channel.</p>
+        </article>
+      </section>
+
+      <section class="colorways">
+        <div>
+          <h2>It knows your controller</h2>
+          <p>The app reads which DualSense is connected (including the Edge) and draws it in its own colorway: Cosmic Red, Midnight Black, Starlight Blue, Chroma Teal and more.</p>
+        </div>
+        <video src="media/colorways.mp4" poster="img/colorways-poster.jpg" autoplay muted loop playsinline aria-label="The controller cycling through the 13 DualSense colorways"></video>
+      </section>
+
+      <section class="gallery">
+        <figure>
+          <img src="img/panel.webp" width="1200" height="1220" loading="lazy" alt="Click any part of the controller, or pick a setting from the list" />
+          <figcaption>Click any part to set it up: lightbar, triggers, haptics, speaker, mic, remapping, pairing slots.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/tour.webp" width="1200" height="1220" loading="lazy" alt="The guided tour" />
+          <figcaption>A one-minute guided tour the first time, driven from your controller.</figcaption>
+        </figure>
+      </section>
+
+      <section class="steps">
+        <h2>Getting started</h2>
+        <ol>
+          <li>
+            <b>Build the dongle.</b> A Pico 2 W, optionally with the OLED; parts and wiring are in the <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition#hardware">firmware repo</a>.
+          </li>
+          <li><b>Install the app</b> and plug the Pico in while holding its BOOTSEL button (a brand-new Pico doesn't need it). One click installs the firmware.</li>
+          <li><b>Pair your controller:</b> hold PS + Create until the light bar flashes. That's it.</li>
+        </ol>
+        <p class="legacy">Looking for the old browser configurator? It has been replaced by the app, which does everything it did and more.</p>
+      </section>
+    </main>
+
+    <footer>
+      <a class="studio" href="https://42pixelstudios.com">
+        <img src="img/42ps-dice.png" alt="" width="40" height="29" />
+        <span>A 42 Pixel Studios production</span>
+      </a>
+      <p>
+        Developed by Marcy Kuhn · Based on <a href="https://github.com/awalol/DS5Dongle">awalol/DS5Dongle</a> · Controller art by
+        <a href="https://github.com/AL2009man/Gamepad-Asset-Pack">AL2009man</a> (MIT) · Not affiliated with Sony Interactive Entertainment.
+      </p>
+    </footer>
+  </body>
+</html>
