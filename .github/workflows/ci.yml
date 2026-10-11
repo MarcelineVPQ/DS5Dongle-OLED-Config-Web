@@ -33,6 +33,8 @@ jobs:
         run: ./.hooks/check_electron_security.sh
       - name: DOM sink gate
         run: ./.hooks/check_dom_sinks.sh
+      - name: One theme system (no literal colors)
+        run: node .hooks/check_theme_colors.mjs
 
   typecheck:
     name: Typecheck
