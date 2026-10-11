@@ -46,6 +46,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
     <button
       type="button"
       className={`rail-link${active === item ? " active" : ""}`}
+      data-rail={item}
       aria-current={active === item ? "page" : undefined}
       title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : label}
       onClick={() => onSelect(item)}

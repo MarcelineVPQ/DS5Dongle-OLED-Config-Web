@@ -1872,6 +1872,11 @@ html[data-theme="light"] .live-ctl {
   color: var(--text-muted);
   font-size: var(--dk-small);
 }
+/* On the selected row: the selection's own text color, which is made legible
+   on the selection background (muted grey isn't). */
+.lib-row.sel .lib-mark {
+  color: inherit;
+}
 .lib-empty {
   padding: 8px 6px;
 }

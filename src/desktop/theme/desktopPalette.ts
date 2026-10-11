@@ -109,9 +109,10 @@ export const wantsLightInk = (bg: Rgb) => contrast([255, 255, 255], bg) >= contr
 // Push `fg` toward white or black (whichever reads better on `bg`) until it
 // reaches the target contrast against `bg`. Keeps the hue; only as far as
 // needed; at worst that black or white itself.
-export function ensureContrast(fg: Rgb, bg: Rgb, target: number): Rgb {
+// `toward` fixes the direction (a theme's own ink) when one color must work
+// on several grounds.
+export function ensureContrast(fg: Rgb, bg: Rgb, target: number, toward: Rgb = wantsLightInk(bg) ? [255, 255, 255] : [0, 0, 0]): Rgb {
   if (contrast(fg, bg) >= target) return fg;
-  const toward: Rgb = wantsLightInk(bg) ? [255, 255, 255] : [0, 0, 0];
   for (let t = 0.05; t <= 1; t += 0.05) {
     const c = mix(fg, toward, t);
     if (contrast(c, bg) >= target) return c;

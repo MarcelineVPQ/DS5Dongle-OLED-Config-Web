@@ -126,14 +126,27 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
   const dark = wantsLightInk(body); // light text on it
   const ink: Rgb = dark ? [255, 255, 255] : [0, 0, 0];
   const css = (x: Rgb) => `rgb(${x.join(", ")})`;
-  const text = (target: number, soften: number) => css(ensureContrast(mix(ink, body, soften), body, target));
+  // Insets (tiles, inputs, segments, buttons) step AWAY from the ink, so text
+  // on them reads at least as well as on the body (stepping toward it made
+  // white text on a mid-tone game color fall to ~3.9:1). Borders step toward
+  // the ink, to show.
+  const away: Rgb = dark ? [0, 0, 0] : [255, 255, 255];
+  const inset = mix(body, away, 0.12);
+  const segment = mix(body, away, 0.18);
+  const input = mix(body, away, 0.15);
+  const grounds = [body, inset, segment, input];
+  // Always pushed toward the ink: at worst the ink itself (the best this body allows).
+  const legible = (c: Rgb, target: number) => grounds.reduce((acc, g) => ensureContrast(acc, g, target, ink), c);
+  const text = (target: number, soften: number) => css(legible(mix(ink, body, soften), target));
   const accent = ensureContrast(trim, body, 3);
+  // Errors and danger buttons: red, made legible on these surfaces too.
+  const error = legible(dark ? [253, 164, 175] : [159, 18, 57], 4.5);
   return {
     "--bg-panel": css(body),
     "--bg-elevated": css(body),
-    "--bg-inset": css(mix(body, ink, 0.08)),
-    "--bg-segment": css(mix(body, ink, 0.12)),
-    "--bg-input": css(mix(body, ink, 0.1)),
+    "--bg-inset": css(inset),
+    "--bg-segment": css(segment),
+    "--bg-input": css(input),
     "--border-default": css(mix(body, ink, 0.22)),
     "--border-subtle": css(mix(body, ink, 0.14)),
     "--border-soft": css(mix(body, ink, 0.3)),
@@ -144,6 +157,7 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
     "--text-soft": text(5.5, 0.15),
     "--text-muted": text(4.5, 0.3),
     "--text-eyebrow": text(4.5, 0.3),
+    "--text-error": css(error),
     ...accentVars(accent, body, dark),
   };
 }
