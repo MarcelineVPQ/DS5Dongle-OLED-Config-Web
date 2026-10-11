@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type BridgeIdentity, Ds5BridgeClient } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
-import { Ds5BridgeHidClient, webHidAvailable } from "../protocol/ds5BridgeHid";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
@@ -47,10 +46,6 @@ export interface UseDs5BridgeResult {
   // per-game profiles switching in and out.
   applyBody: (body: ConfigBody) => Promise<boolean>;
   clearError: () => void;
-  // Live input preview over the gamepad HID interface (browser WebHID only).
-  hidClient: Ds5BridgeHidClient | null;
-  hidSupported: boolean;
-  connectPreview: () => Promise<void>;
 }
 
 export function useDs5Bridge(): UseDs5BridgeResult {
@@ -65,7 +60,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [operation, setOperation] = useState<Operation>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [hidClient, setHidClient] = useState<Ds5BridgeHidClient | null>(null);
   const clientRef = useRef<Ds5BridgeClient | null>(null);
   useEffect(() => {
     clientRef.current = client;
@@ -222,16 +216,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [config]);
 
-  const connectPreview = useCallback(async () => {
-    try {
-      const next = await Ds5BridgeHidClient.requestDevice();
-      await next.open();
-      setHidClient(next);
-    } catch (cause) {
-      setError(errorMessage(cause));
-    }
-  }, []);
-
   useEffect(() => {
     void autoConnect();
   }, [autoConnect]);
@@ -327,9 +311,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     revertToSaved,
     applyBody,
     clearError: () => setError(null),
-    hidClient,
-    hidSupported: webHidAvailable(),
-    connectPreview,
   };
 }
 

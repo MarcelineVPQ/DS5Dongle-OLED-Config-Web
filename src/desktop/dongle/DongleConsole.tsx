@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame } from "../../protocol/bridgeClient";
-import { SCREEN_NAMES } from "../../oled/state";
+import { SCREEN_NAMES } from "../../oled/screenNames";
 import { usePoll } from "../usePoll";
 
 const FB_W = 128;

@@ -74,7 +74,5 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: $NPM ci
-      - name: Web build
-        run: npx vite build
       - name: Desktop build
         run: npx electron-vite build

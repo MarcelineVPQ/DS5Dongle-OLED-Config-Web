@@ -86,51 +86,6 @@ html[data-theme="dark"] .dk {
 }
 
 /* ---- Sidebar ---- */
-.dk-side {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 8px;
-  background: var(--bg-panel);
-  border-right: 1px solid var(--border-default);
-  min-height: 0;
-}
-.dk-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: var(--dk-radius);
-  background: transparent;
-  color: var(--text-soft);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.dk-nav-item:hover {
-  background: var(--bg-segment);
-  color: var(--text-strong);
-}
-.dk-nav-item.active {
-  background: var(--dk-sel-bg);
-  color: var(--dk-sel-text);
-  font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--dk-accent);
-}
-.dk-nav-item:disabled {
-  opacity: 0.4;
-  cursor: default;
-  background: transparent;
-}
-.dk-side-foot {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 4px 0;
-}
 
 /* ---- Main column ---- */
 .dk-main {
@@ -592,12 +547,6 @@ html[data-theme="dark"] .dk {
   min-height: 0;
   width: auto;
 }
-
-.dk .panel-blurb {
-  margin: 0 0 8px;
-  font-size: var(--dk-small);
-  line-height: 1.4;
-}
 .dk .notice {
   min-height: 0;
   margin-bottom: 8px;
@@ -616,33 +565,6 @@ html[data-theme="dark"] .dk {
 }
 .dk .button.wide {
   width: auto;
-}
-.dk .action-stack {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0 8px;
-}
-.dk .control-row {
-  grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
-  gap: 10px;
-  min-height: var(--dk-row-h);
-  padding: 3px 0;
-}
-.dk .control-row select {
-  min-height: 24px;
-  height: 24px;
-}
-.dk .controller-diagram {
-  max-height: 300px;
-  margin: 0 auto 6px;
-}
-.dk .controller-art svg {
-  max-height: 300px;
-}
-.dk .remap-fulllist > summary {
-  font-size: 12.5px;
-  padding: 4px 0;
 }
 .dk-sign {
   width: 8px;
@@ -674,29 +596,6 @@ html[data-theme="dark"] .dk {
   display: flex;
   flex-direction: column;
   gap: var(--dk-gap);
-}
-.dk-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 28px;
-  align-items: center;
-  padding: 10px var(--dk-pad);
-}
-.dk-status > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.dk-status-label {
-  font-size: var(--dk-small);
-  color: var(--text-muted);
-}
-.dk-swatch {
-  display: inline-block;
-  width: 36px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1px solid var(--border-default);
 }
 .dk-advanced > summary {
   cursor: pointer;
@@ -881,19 +780,6 @@ html[data-theme="dark"] .dk {
 }
 
 /* ---- Games page ---- */
-.dk-badge {
-  margin-left: auto;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--dk-accent);
-  color: var(--dk-on-accent);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 18px;
-  text-align: center;
-}
 .dk-games-launchers {
   display: flex;
   flex-wrap: wrap;
@@ -972,9 +858,6 @@ html[data-theme="dark"] .dk {
   flex: 1;
   height: 8px;
   accent-color: var(--dk-accent);
-}
-.dk-games-table td {
-  font-size: var(--dk-small);
 }
 
 /* No dongle connected: plug-in instructions, or first-time setup of a new Pico. */
@@ -1117,34 +1000,8 @@ html[data-theme="dark"] .dk {
   /* page (+ its settings panel) | the navigation rail at the right edge */
   grid-template-columns: minmax(0, 1fr) auto;
 }
-.dk-top-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: var(--dk-radius);
-  background: transparent;
-  color: var(--text-soft);
-  font: inherit;
-  cursor: pointer;
-}
-.dk-top-btn:hover {
-  background: var(--bg-segment);
-  color: var(--text-strong);
-}
-.dk-top-btn.active {
-  background: var(--dk-sel-bg);
-  border-color: var(--dk-sel-border);
-  color: var(--dk-sel-text);
-  font-weight: 600;
-}
 .dk-icon-btn {
   padding: 0 7px;
-}
-.dk-top-btn .dk-badge {
-  margin-left: 2px;
 }
 /* The live screen fills the body; the panel scrolls on its own. */
 .dk-body.dk-body-live {
@@ -1161,16 +1018,6 @@ html[data-theme="dark"] .dk {
 }
 .live-view.collapsed {
   grid-template-columns: minmax(0, 1fr);
-}
-.live-show-panel {
-  position: sticky;
-  top: 0;
-  align-self: flex-end;
-  z-index: 2;
-  margin-bottom: -36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 .live-stage {
   min-height: 0;

@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
 import DesktopApp from "./desktop/DesktopApp";
 import { isDesktop } from "./desktop/api";
 // Fonts are self-hosted (no Google Fonts request; required by the desktop CSP).
@@ -17,4 +16,8 @@ import "@fontsource/jetbrains-mono/500.css";
 import "./i18n"; // initialize translations before the first render
 import "./styles.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode>{isDesktop() ? <DesktopApp /> : <App />}</React.StrictMode>);
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    {isDesktop() ? <DesktopApp /> : <p style={{ padding: 24, fontFamily: "sans-serif" }}>This is the DS5 Dongle OLED Edition desktop app&apos;s interface. Open the app to use it.</p>}
+  </React.StrictMode>,
+);
