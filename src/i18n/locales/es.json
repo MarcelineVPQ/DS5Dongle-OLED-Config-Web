@@ -718,7 +718,7 @@
       "replay": "Ver el recorrido otra vez",
       "welcome": {
         "title": "¡Bienvenido!",
-        "body": "Un recorrido de un minuto. Ten el mando a mano. Pulsa Esc o «Saltar el recorrido» cuando quieras."
+        "body": "Un recorrido de un minuto, con el mando en la mano. Pulsa ✕ para continuar y ○ para volver. Esc o «Saltar el recorrido» lo detiene cuando quieras."
       },
       "press": {
         "title": "Este es tu mando, en directo",

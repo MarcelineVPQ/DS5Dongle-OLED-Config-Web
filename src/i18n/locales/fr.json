@@ -718,7 +718,7 @@
       "replay": "Revoir la visite",
       "welcome": {
         "title": "Bienvenue !",
-        "body": "Une visite d'une minute. Prends ta manette en main. Échap ou « Passer la visite » pour arrêter à tout moment."
+        "body": "Une visite d'une minute, manette en main. Appuie sur ✕ pour continuer et ○ pour revenir. Échap ou « Passer la visite » l'arrête à tout moment."
       },
       "press": {
         "title": "Voici ta manette, en direct",

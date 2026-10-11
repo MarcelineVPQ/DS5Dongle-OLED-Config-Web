@@ -4,7 +4,7 @@
 // panel) and tick off when done. Shown once, the first time a controller is
 // connected; replayable from App settings. Respects reduced motion (the CSS
 // drops the glide and the pulse).
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
@@ -42,14 +42,17 @@ interface Step {
   target: string | null; // CSS selector; null = centered card, no spotlight
   // A hands-on step: done when this returns true.
   done?: (input: InputReport | null, view: PanelView) => boolean;
+  // Done with the controller (✕ then counts as the press); otherwise with
+  // the mouse, and ✕ skips it.
+  pad?: boolean;
   // Put the app in the state this step talks about.
   enter?: (onView: (v: PanelView) => void) => void;
 }
 
 const STEPS: Step[] = [
   { key: "welcome", target: null, enter: (go) => go("overview") },
-  { key: "press", target: ".live-ctl svg", done: (i) => anyPress(i) },
-  { key: "trigger", target: ".live-ctl svg", done: (i) => !!i && (i.triggerLeft > 200 || i.triggerRight > 200) },
+  { key: "press", target: ".live-ctl svg", pad: true, done: (i) => anyPress(i) },
+  { key: "trigger", target: ".live-ctl svg", pad: true, done: (i) => !!i && (i.triggerLeft > 200 || i.triggerRight > 200) },
   { key: "click", target: '.live-ctl [data-part="lightbar"]', done: (_i, v) => typeof v === "object" && v.part === "lightbar" },
   { key: "panel", target: ".live-panel" },
   { key: "list", target: ".live-shortcuts", enter: (go) => go("overview") },
@@ -76,6 +79,10 @@ export default function Tour({ input, view, onView, ready }: Props) {
   // The step whose hands-on task has been done (latched: letting go of the
   // button doesn't un-tick it).
   const [tickedStep, setTickedStep] = useState<number | null>(null);
+  // The step during which the controller has been seen at rest: hands-on
+  // steps only count a press that starts after the step appeared (the ✕ that
+  // moved on to "press any button" mustn't tick it straight away).
+  const [armedStep, setArmedStep] = useState<number | null>(null);
   const index = chosen ?? (ready && !closed && !tourDone() ? 0 : null);
 
   const go = useCallback(
@@ -98,7 +105,13 @@ export default function Tour({ input, view, onView, ready }: Props) {
   const ticked = tickedStep === index;
 
   // Hands-on steps tick off when the controller (or the mouse) does the thing.
-  const isDone = !!step?.done && step.done(input, view);
+  const idle = !anyPress(input);
+  useEffect(() => {
+    if (index === null || armedStep === index || !idle) return;
+    const frame = requestAnimationFrame(() => setArmedStep(index));
+    return () => cancelAnimationFrame(frame);
+  }, [idle, index, armedStep]);
+  const isDone = !!step?.done && armedStep === index && step.done(input, view);
   useEffect(() => {
     if (!isDone || ticked || index === null) return;
     const frame = requestAnimationFrame(() => setTickedStep(index));
@@ -123,18 +136,39 @@ export default function Tour({ input, view, onView, ready }: Props) {
   }, [step]);
   const spot = step?.target ? rect : null;
 
+  const finish = useCallback(() => {
+    markDone();
+    setChosen(null);
+    setClosed(true);
+  }, []);
+
+  // Console-style: ✕ continues, ○ goes back (on the press, not while held).
+  // On a controller step that isn't done yet, ✕ is just a press for the
+  // task; on a mouse step it skips it.
+  const current = useRef({ index, padTask: false, ticked: false });
+  useEffect(() => {
+    current.current = { index, padTask: !!step?.pad, ticked };
+  });
+  const pad = useRef({ cross: false, circle: false });
+  useEffect(() => {
+    const was = pad.current;
+    const cross = !!input?.cross;
+    const circle = !!input?.circle;
+    pad.current = { cross, circle };
+    const { index: i, padTask, ticked: done } = current.current;
+    if (i === null) return;
+    if (cross && !was.cross && (!padTask || done)) {
+      if (i >= STEPS.length - 1) finish();
+      else go(i + 1);
+    } else if (circle && !was.circle && i > 0) go(i - 1);
+  }, [input, go, finish]);
+
   // A ticked hands-on step moves on by itself after a moment to enjoy it.
   useEffect(() => {
     if (!ticked || index === null || index >= STEPS.length - 1) return;
     const timer = setTimeout(() => go(index + 1), 1400);
     return () => clearTimeout(timer);
   }, [ticked, index, go]);
-
-  const finish = useCallback(() => {
-    markDone();
-    setChosen(null);
-    setClosed(true);
-  }, []);
 
   useEffect(() => {
     if (index === null) return;
@@ -185,10 +219,20 @@ export default function Tour({ input, view, onView, ready }: Props) {
           <span className="dk-spacer" />
           {index > 0 && (
             <button type="button" className="dk-btn" onClick={() => go(index - 1)}>
+              {input && (
+                <span className="tour-glyph circle" aria-hidden="true">
+                  ○
+                </span>
+              )}
               {t("desktop.tour.back")}
             </button>
           )}
           <button type="button" className={`dk-btn${!handsOn || ticked ? " primary" : ""}`} onClick={next}>
+            {input && (!step.pad || ticked) && (
+              <span className="tour-glyph cross" aria-hidden="true">
+                ✕
+              </span>
+            )}
             {last ? t("desktop.tour.finishButton") : handsOn && !ticked ? t("desktop.tour.skipStep") : t("desktop.tour.next")}
           </button>
         </div>

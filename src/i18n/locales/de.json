@@ -718,7 +718,7 @@
       "replay": "Tour erneut zeigen",
       "welcome": {
         "title": "Willkommen!",
-        "body": "Eine Tour von einer Minute. Nimm deinen Controller in die Hand. Mit Esc oder „Tour überspringen“ kannst du jederzeit aufhören."
+        "body": "Eine Tour von einer Minute, mit dem Controller in der Hand. Drück ✕ zum Weitermachen und ○ für zurück. Esc oder „Tour überspringen“ beendet sie jederzeit."
       },
       "press": {
         "title": "Das ist dein Controller, live",

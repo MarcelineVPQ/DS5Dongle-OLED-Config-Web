@@ -717,7 +717,7 @@
       "replay": "Show the tour again",
       "welcome": {
         "title": "Welcome!",
-        "body": "Let's take a one-minute tour. You'll need your controller in your hands. Press Esc or Skip tour any time."
+        "body": "Let's take a one-minute tour, with your controller in your hands. Press ✕ to continue and ○ to go back. Esc or Skip tour stops it any time."
       },
       "press": {
         "title": "This is your controller, live",

@@ -92,6 +92,16 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
       parts.current.set(id, el);
       baseTransform.current.set(id, el.getAttribute("transform") ?? "");
     }
+    // The light strips run along the touchpad's edges: keep them above its
+    // click area, or clicking a strip opens the touchpad instead.
+    const strips = parts.current.get("lightbar");
+    if (strips) root.appendChild(strips);
+    // Decorative outlines that belong to no part (the touchpad's edge, the
+    // shell seams) let clicks through to whatever is under them.
+    for (const line of root.querySelectorAll<SVGElement>(".ln")) if (!line.closest("[data-part]")) line.style.pointerEvents = "none";
+    // (the player lights sit on the bottom strip, so they stay above it)
+    const pled = root.querySelector(".pled");
+    if (pled) root.appendChild(pled);
     const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
     layer.setAttribute("class", "touches");
     root.appendChild(layer);

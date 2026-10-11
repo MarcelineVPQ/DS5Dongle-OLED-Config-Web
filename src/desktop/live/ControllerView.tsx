@@ -2,7 +2,7 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import { PanelRightOpen } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { playerNumber } from "../../protocol/bridgeClient";
@@ -15,7 +15,7 @@ import LiveController from "./LiveController";
 import LiveData from "./LiveData";
 import LiveStrip from "./LiveStrip";
 import PartPanel, { type PanelView } from "./PartPanel";
-import Tour from "../tour/Tour";
+import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId } from "./parts";
 import { useRemap } from "./useRemap";
 
@@ -76,6 +76,12 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
     }
   };
   const collapsed = panelHidden && view === "overview";
+  // The tour points at the settings list, so it brings the panel back.
+  useEffect(() => {
+    const show = () => setPanelHidden(false);
+    window.addEventListener(TOUR_EVENT, show);
+    return () => window.removeEventListener(TOUR_EVENT, show);
+  }, []);
 
   return (
     <div className={`live-view${collapsed ? " collapsed" : ""}`}>

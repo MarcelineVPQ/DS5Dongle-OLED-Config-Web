@@ -718,7 +718,7 @@
       "replay": "Mostrar o tour de novo",
       "welcome": {
         "title": "Bem-vindo!",
-        "body": "Um tour de um minuto. Pegue seu controle. Aperte Esc ou “Pular o tour” quando quiser."
+        "body": "Um tour de um minuto, com o controle na mão. Aperte ✕ para continuar e ○ para voltar. Esc ou “Pular o tour” encerra quando quiser."
       },
       "press": {
         "title": "Este é seu controle, ao vivo",
