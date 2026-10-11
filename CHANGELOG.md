@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-10-11
+
+Needs firmware 0.9.0 (protocol 1.6) for calibration, left/right grip haptics and the grip test, 1.4 for the dongle console; older firmware keeps working without them (the app says so where it matters). Bundled with this release.
+
 ### Added
 
 - **Games library** (Linux). The Games tab lists your Steam, Heroic and Lutris games (search, filters, a Playing group); each game has a page with its artwork, play time, last played, size, the Proton it runs with and the recommended one (with a switch), its DualSense support tier and per-feature results, and its own setup fixes. Artwork comes from the launchers' local caches, served only for scanned games (`ds5-art://`); nothing is downloaded.
