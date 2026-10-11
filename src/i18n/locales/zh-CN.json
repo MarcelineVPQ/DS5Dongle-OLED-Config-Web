@@ -187,7 +187,7 @@
     "connectLive": "连接以进行实时预览"
   },
   "validation": {
-    "hapticsGain": "触感增益必须在 1.0 到 2.0 之间",
+    "hapticsGain": "触感增益必须在 1.0 到 6.0 之间",
     "speakerVolume": "扬声器音量必须在 -100 dB 到 0 dB 之间",
     "inactiveTime": "空闲时间必须在 5 到 60 分钟之间",
     "pollingRateMode": "轮询率模式必须为 0、1 或 2",
@@ -276,7 +276,11 @@
       "unsaved": "已应用到接收器，尚未保存：断电后更改将丢失。",
       "saved": "所有更改已保存到接收器。",
       "revert": "还原",
-      "save": "保存到接收器"
+      "save": "保存到接收器",
+      "profileActive": "{{title}} 配置文件已启用",
+      "profileSaved": "更改会保存到配置文件；游戏关闭后恢复你的常规设置。",
+      "profileUnsaved": "已在此更改，尚未保存到配置文件。",
+      "saveProfile": "保存到配置文件"
     },
     "common": {
       "cancel": "取消"
@@ -816,6 +820,150 @@
       "protanopia": "红色盲",
       "deuteranopia": "绿色盲",
       "tritanopia": "蓝色盲"
+    },
+    "library": {
+      "home": "主页",
+      "search": "搜索游戏",
+      "filter": "筛选游戏",
+      "filters": {
+        "all": "全部",
+        "profile": "有配置",
+        "dualsense": "DualSense",
+        "attention": "待设置"
+      },
+      "groupPlaying": "正在玩",
+      "groupProfile": "有配置",
+      "groupAll": "所有游戏",
+      "noMatch": "没有匹配的游戏。",
+      "running": "运行中",
+      "hasProfile": "已有手柄配置",
+      "needsAttention": "需要设置",
+      "playing": "正在游玩",
+      "lastPlayed": "上次游玩",
+      "never": "从未",
+      "playTime": "游玩时长",
+      "minutes_other": "{{count}} 分钟",
+      "hours_other": "{{count}} 小时",
+      "runsWith": "运行方式",
+      "launcherDefault": "启动器默认",
+      "dualsense": "DualSense",
+      "yourRating": "你的评分",
+      "jumpTo": "跳转到",
+      "section": {
+        "profile": "手柄配置",
+        "setup": "设置",
+        "compat": "兼容性",
+        "support": "DualSense 支持",
+        "reviews": "玩家评分",
+        "configs": "共享配置",
+        "rating": "你的评分",
+        "notes": "笔记",
+        "details": "详情"
+      },
+      "activeNow": "当前生效",
+      "profileNone": "此游戏使用你的常规接收器设置。配置只会为这款游戏切换触觉、扬声器、灯条和麦克风,游戏关闭后自动切回。",
+      "profileFromCurrent": "基于当前设置创建",
+      "profileNeedsDongle": "连接接收器后才能基于当前设置开始。",
+      "profileHint": "更改保存到此游戏的配置中,而不是接收器。",
+      "profileCopyCurrent": "复制当前设置",
+      "profileDelete": "删除配置",
+      "haptics": "触觉强度",
+      "autoHaptics": "音频自动触觉",
+      "autoMode": {
+        "off": "关闭",
+        "fallback": "后备",
+        "mix": "混合",
+        "replace": "替换"
+      },
+      "autoGain": "自动触觉增益",
+      "autoLowpass": "自动触觉低通",
+      "speaker": "扬声器音量",
+      "lightbar": "灯条",
+      "favorites": "收藏颜色",
+      "mic": "蓝牙麦克风",
+      "setupNone": "此游戏无需设置。",
+      "setupReview": "检查更改",
+      "setupApply": "应用",
+      "setupDone": "完成。如果游戏正在运行,请重启。",
+      "setupFailed": "部分更改未能应用。详见主页。",
+      "cancel": "取消",
+      "store": "商店",
+      "storeName": {
+        "steam": "Steam",
+        "epic": "Epic Games",
+        "gog": "GOG",
+        "amazon": "Amazon Games",
+        "sideload": "手动添加",
+        "lutris": "Lutris"
+      },
+      "launcher": "启动器",
+      "launcherName": {
+        "steam": "Steam",
+        "heroic": "Heroic",
+        "lutris": "Lutris"
+      },
+      "recommended": "推荐",
+      "protonNotInstalled": "DualSense Proton(未安装)",
+      "anyProton": "任意较新的 Proton",
+      "usesOurs": "使用 DualSense Proton 版本。",
+      "switchTo": "切换到 {{name}}",
+      "tier": {
+        "verified": "已验证",
+        "works": "可用",
+        "needs-setup": "需设置",
+        "partial": "部分可用",
+        "broken": "不可用",
+        "unknown": "未知"
+      },
+      "tierHint": {
+        "verified": "已在接收器上测试:扳机和触觉均可用。",
+        "works": "游戏原生支持 DualSense 功能。",
+        "needs-setup": "完成此游戏的设置后即可使用。",
+        "partial": "PC 上缺少部分 DualSense 功能。音频自动触觉可以补上震动。",
+        "broken": "玩家反馈无法使用。",
+        "unknown": "暂无反馈。"
+      },
+      "feature": {
+        "yes": "可用",
+        "no": "不支持",
+        "unknown": "暂不清楚"
+      },
+      "featureName": {
+        "triggers": "自适应扳机",
+        "haptics": "HD 触觉",
+        "speaker": "扬声器",
+        "mic": "麦克风",
+        "lightbar": "灯条"
+      },
+      "stars_other": "{{count}} 星",
+      "feedbackHint": "你注意到了什么?",
+      "tag": {
+        "triggers-work": "自适应扳机正常",
+        "haptics-work": "HD 触觉正常",
+        "speaker-works": "扬声器正常",
+        "mic-works": "麦克风正常",
+        "lightbar-works": "灯条正常",
+        "weak-vibration": "震动偏弱",
+        "no-triggers": "扳机无效",
+        "rumble-only": "仅普通震动",
+        "speaker-problems": "扬声器有问题",
+        "not-detected": "未检测到手柄",
+        "needs-steam-input-off": "需关闭 Steam Input",
+        "disconnects": "会断连"
+      },
+      "shareSoon": "已保存在此电脑。与其他玩家分享功能即将推出。",
+      "reviewsSoon": "即将推出:其他玩家的评分和反馈。",
+      "configsSoon": "即将推出:其他玩家为此游戏分享的配置。",
+      "notesPlaceholder": "私人笔记,仅保存在此电脑",
+      "id": "ID",
+      "size": "磁盘占用",
+      "updated": "最后更新",
+      "fixedIn": "已在 {{version}} 中修复:",
+      "fix": {},
+      "staleFix": "你评分时的 DS5 Dongle 版本早于 {{version}},该版本修复了此游戏的某个问题。",
+      "staleUpdateOn": "你评分时早于此游戏 {{date}} 的更新。",
+      "staleUpdate": "你评分时早于此游戏的最近一次更新。",
+      "stillAccurate": "仍然准确"
     }
   },
   "ad": {

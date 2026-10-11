@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Games library** (Linux). The Games tab lists your Steam, Heroic and Lutris games (search, filters, a Playing group); each game has a page with its artwork, play time, last played, size, the Proton it runs with and the recommended one (with a switch), its DualSense support tier and per-feature results, and its own setup fixes. Artwork comes from the launchers' local caches, served only for scanned games (`ds5-art://`); nothing is downloaded.
+- **Per-game controller profiles**: haptics strength, Audio Auto Haptics, speaker level, lightbar mode and favorite colors, BT mic. A profile switches in on the dongle (RAM only) while its game runs and your normal settings come back when it closes, also after a crash or a quit mid-game (kept as a restore point on disk). While one is active the bottom bar saves to the profile, never to the dongle.
+- **Your rating and feedback** per game: stars and a checklist of what you noticed (no free text to share), stamped with the app version and game build so feedback from before a game update or one of our fixes is flagged; private notes. Saved on this PC; sharing with other players comes later.
+
+### Fixed
+
+- The haptics gain error message gave the wrong range (1.0–2.0 instead of 1.0–6.0) in every language.
+
 ## [0.8.1] — 2026-10-11
 
 Includes firmware 0.8.1: rumble no longer cancelled in some games (Crimson Desert), output stays alive after a reconnect, steadier first pairing and faster reconnects. Tested on Linux; the Windows and macOS builds are included but untested.

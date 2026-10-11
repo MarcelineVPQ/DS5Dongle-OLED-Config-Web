@@ -1938,3 +1938,323 @@ html[data-theme="dark"] .dk {
   gap: 8px;
   margin-top: 0;
 }
+
+/* ---- Games library: list on the left, Home or a game page on the right;
+   each side scrolls on its own (like Steam's library). ---- */
+.dk-body.dk-body-lib {
+  overflow: hidden;
+  padding: 0;
+}
+.lib {
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+.lib-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: var(--dk-pad) 8px;
+  border-right: 1px solid var(--border-default);
+  background: var(--bg-panel);
+}
+.lib-home,
+.lib-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--dk-radius);
+  background: none;
+  color: var(--text-strong);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lib-home {
+  font-weight: 600;
+}
+.lib-home:hover,
+.lib-row:hover {
+  background: var(--bg-inset);
+}
+.lib-home.sel,
+.lib-row.sel {
+  border-color: var(--dk-sel-border);
+  background: var(--dk-sel-bg);
+  color: var(--dk-sel-text);
+}
+.lib-search {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+  color: var(--text-strong);
+  font: inherit;
+}
+.lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.lib-filters .dk-chip {
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--dk-small);
+}
+.lib-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.lib-group {
+  margin: 8px 6px 2px;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.lib-row img,
+.lib-glyph {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+.lib-glyph {
+  display: grid;
+  place-items: center;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+.lib-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lib-playing {
+  color: var(--dk-accent);
+  font-size: var(--dk-small);
+  font-weight: 600;
+}
+.lib-mark {
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.lib-empty {
+  padding: 8px 6px;
+}
+.lib-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+.lib-home-pane {
+  padding: var(--dk-pad);
+}
+
+/* ---- Game page ---- */
+.gp {
+  min-height: 100%;
+  overflow: auto;
+  height: 100%;
+}
+.gp-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: clamp(160px, 30vh, 300px);
+  padding: 18px 22px;
+  background: center / cover no-repeat;
+}
+.gp-hero.plain {
+  background: linear-gradient(135deg, var(--dk-sel-bg), var(--bg-panel));
+}
+.gp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 55%), transparent 55%);
+  pointer-events: none;
+}
+.gp-logo {
+  position: relative;
+  z-index: 1;
+  max-width: min(45%, 360px);
+  max-height: 70%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 60%));
+}
+.gp-title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 26px;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 70%);
+}
+.gp-hero.plain .gp-title {
+  color: var(--text-strong);
+  text-shadow: none;
+}
+.gp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  padding: 10px var(--dk-pad);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-panel);
+}
+.gp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.gp-stat.link {
+  cursor: pointer;
+}
+.gp-stat.link:hover .gp-stat-value {
+  text-decoration: underline;
+}
+.gp-stat-label {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gp-stat-value {
+  max-width: 260px;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gp-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px var(--dk-pad) 0;
+}
+.gp-jump .dk-btn {
+  height: 24px;
+  font-size: var(--dk-small);
+}
+.gp-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--dk-gap);
+  align-items: start;
+  padding: var(--dk-pad);
+}
+.gp-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dk-gap);
+  min-width: 0;
+}
+.gp-col .dk-card {
+  scroll-margin-top: 8px;
+}
+.gp-favs {
+  display: flex;
+  gap: 6px;
+}
+.gp-favs input[type="color"] {
+  width: 30px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+.gp-tier {
+  margin: 0 0 8px;
+}
+.gp-features,
+.gp-tags {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gp-tags {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  margin-bottom: 6px;
+}
+.gp-tags label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.gp-stars {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.gp-stars button {
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.gp-stars button.on {
+  color: var(--cv-warn, #d97706);
+}
+.dk-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+  color: var(--text-strong);
+  font: inherit;
+  resize: vertical;
+}
+.gp-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .gp-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .lib {
+    grid-template-columns: minmax(160px, 190px) minmax(0, 1fr);
+  }
+}

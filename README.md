@@ -25,7 +25,9 @@ Everything happens on one screen. Your controller is drawn in the middle, in its
 The top bar holds the rest:
 
 - **Dongle:** firmware and one-click updates, OLED brightness and sleep timers, power and idle disconnect, USB polling rate and controller mode, and diagnostics under *Advanced*.
-- **Games** (Linux): checks Steam, Heroic and Lutris for settings that block adaptive triggers and haptics, installs the DualSense Proton build, and fixes what it finds once you've reviewed each change. Everything it changes can be undone.
+- **Games** (Linux): a library of your Steam, Heroic and Lutris games, with each game's artwork, play time, the Proton it runs with and how well the DualSense works in it. Give a game its own **controller profile** (haptics, Audio Auto Haptics, speaker, lightbar, mic): it switches in on the dongle while the game runs and your normal settings come back when it closes; your saved settings on the dongle are never changed. Rate games and tick what you noticed (private notes stay on your PC). **Home** checks the launchers for settings that block adaptive triggers and haptics, installs the DualSense Proton build, and fixes what it finds once you've reviewed each change. Everything it changes can be undone.
+
+  ![The Games library](docs/screenshots/games-library.png)
 - **About:** what's new in each version, the firmware's changes, this guide, and credits.
 - **⚙ App settings:** theme (light, dark, follow the system, or **match your desktop**: your KDE Plasma color scheme, or the system accent color elsewhere), language, close to tray, start at login.
 

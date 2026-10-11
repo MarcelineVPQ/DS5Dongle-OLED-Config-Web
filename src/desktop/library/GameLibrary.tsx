@@ -1,0 +1,128 @@
+// The Games tab as a library (like Steam's): games on the left, grouped
+// (Playing, With profile, All games) with search and filters; Home (launcher
+// setup and fixes, the old Games page) or one game's page on the right.
+// Home stays mounted while a game is open, so switching back doesn't rescan.
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import type { GameEntry, GameInfo, GamesReport } from "../games/types";
+import type { LibraryFile } from "../games/library";
+import GamePage, { artUrl } from "./GamePage";
+import { supportOf } from "./support";
+
+type Filter = "all" | "profile" | "dualsense" | "attention";
+
+interface Props {
+  report: GamesReport | null;
+  home: ReactNode;
+  bridge: UseDs5BridgeResult;
+  onRescan: () => void;
+  library: LibraryFile;
+  onLibrary: (file: LibraryFile) => void;
+  running: string | null;
+}
+
+export default function GameLibrary({ report, home, bridge, onRescan, library, onLibrary, running }: Props) {
+  const { t } = useTranslation();
+  const desktop = window.desktop!;
+  const [details, setDetails] = useState<Record<string, GameInfo>>({});
+  const [selected, setSelected] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+
+  useEffect(() => {
+    if (report) void desktop.gamesDetails().then(setDetails, () => undefined);
+  }, [desktop, report]);
+
+  const games = useMemo(() => [...(report?.games ?? [])].sort((a, b) => a.title.localeCompare(b.title)), [report]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return games.filter((g) => {
+      if (q && !g.title.toLowerCase().includes(q)) return false;
+      if (filter === "profile") return !!library.games[g.key]?.profile;
+      if (filter === "dualsense") return g.support === "triggers" || g.support === "haptics";
+      if (filter === "attention") return g.fixes.length > 0 || g.runnerMissing;
+      return true;
+    });
+  }, [games, query, filter, library]);
+  const playing = visible.filter((g) => g.key === running);
+  const withProfile = visible.filter((g) => g.key !== running && library.games[g.key]?.profile);
+  const rest = visible.filter((g) => g.key !== running && !library.games[g.key]?.profile);
+  const game = games.find((g) => g.key === selected) ?? null;
+
+  const row = (g: GameEntry) => {
+    const s = supportOf(g);
+    const status = g.fixes.length || g.runnerMissing ? "⚠" : s.tier === "verified" || s.tier === "works" ? "✓" : "";
+    return (
+      <li key={g.key}>
+        <button type="button" className={`lib-row${selected === g.key ? " sel" : ""}`} aria-current={selected === g.key} onClick={() => setSelected(g.key)}>
+          {details[g.key]?.art.includes("icon") ? <img src={artUrl(g.key, "icon")} alt="" /> : <span className="lib-glyph">{STORE_GLYPH[g.store]}</span>}
+          <span className="lib-title" title={g.title}>
+            {g.title}
+          </span>
+          {g.key === running && <span className="lib-playing">{t("desktop.library.running")}</span>}
+          {library.games[g.key]?.profile && (
+            <span className="lib-mark" title={t("desktop.library.hasProfile")}>
+              ◆
+            </span>
+          )}
+          {status && (
+            <span className="lib-mark" title={status === "⚠" ? t("desktop.library.needsAttention") : t(`desktop.library.tier.${s.tier}`)}>
+              {status}
+            </span>
+          )}
+        </button>
+      </li>
+    );
+  };
+  const group = (label: string, list: GameEntry[]) =>
+    list.length > 0 && (
+      <>
+        <li className="lib-group">
+          {label} ({list.length})
+        </li>
+        {list.map(row)}
+      </>
+    );
+
+  return (
+    <div className="lib">
+      <aside className="lib-side">
+        <button type="button" className={`lib-home${selected === null ? " sel" : ""}`} onClick={() => setSelected(null)}>
+          ⌂ {t("desktop.library.home")}
+        </button>
+        <input
+          className="dk-input lib-search"
+          type="search"
+          placeholder={t("desktop.library.search")}
+          aria-label={t("desktop.library.search")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <div className="lib-filters" role="group" aria-label={t("desktop.library.filter")}>
+          {(["all", "profile", "dualsense", "attention"] as const).map((f) => (
+            <button key={f} type="button" className={`dk-chip${filter === f ? " ok" : ""}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>
+              {t(`desktop.library.filters.${f}`)}
+            </button>
+          ))}
+        </div>
+        <ul className="lib-list">
+          {group(t("desktop.library.groupPlaying"), playing)}
+          {group(t("desktop.library.groupProfile"), withProfile)}
+          {group(t("desktop.library.groupAll"), rest)}
+          {report && visible.length === 0 && <li className="dk-hint lib-empty">{t("desktop.library.noMatch")}</li>}
+        </ul>
+      </aside>
+      <div className="lib-main">
+        <div hidden={game !== null} className="lib-home-pane">
+          {home}
+        </div>
+        {game && report && (
+          <GamePage game={game} info={details[game.key]} record={library.games[game.key]} running={running === game.key} report={report} bridge={bridge} onLibrary={onLibrary} onRescan={onRescan} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+const STORE_GLYPH: Record<string, string> = { steam: "S", epic: "E", gog: "G", amazon: "A", sideload: "▣", lutris: "L" };

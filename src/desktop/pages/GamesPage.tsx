@@ -9,16 +9,17 @@
 //   -> apply (backed up first) -> Undo.
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import GameLibrary from "../library/GameLibrary";
+import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import type { GameProfileState } from "../library/useGameProfile";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
 import { say } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
-import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId, Msg } from "../games/types";
+import type { ApplyResult, Fix, GamesReport, LauncherId, Msg } from "../games/types";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris" };
-const STORE_NAME: Record<Exclude<GameEntry["store"], "sideload">, string> = { steam: "Steam", epic: "Epic", gog: "GOG", amazon: "Amazon", lutris: "Lutris" };
-
 type Step = "pick" | "review" | "done";
 
 // Changes the user unticked stay unticked across rescans and visits until
@@ -59,14 +60,38 @@ function formatMB(bytes: number): string {
 }
 
 interface GamesPageProps {
+  bridge: UseDs5BridgeResult;
+  profiles: GameProfileState;
   allowed: boolean;
   onAllowedChange: (allowed: boolean) => void;
   onScanned?: (report: GamesReport) => void;
   onDeclinedChange?: () => void;
 }
 
-export default function GamesPage({ allowed, onAllowedChange, ...rest }: GamesPageProps) {
-  return allowed ? <GamesSetup {...rest} onStop={() => onAllowedChange(false)} /> : <GamesConsent onAllow={() => onAllowedChange(true)} />;
+export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, onScanned, ...rest }: GamesPageProps) {
+  // The library shows the games of the latest scan; Home (setup and fixes)
+  // runs the scans, and rescans when a game page applied something.
+  const [report, setReport] = useState<GamesReport | null>(null);
+  const [rescanToken, setRescanToken] = useState(0);
+  const scanned = useCallback(
+    (r: GamesReport) => {
+      setReport(r);
+      onScanned?.(r);
+    },
+    [onScanned],
+  );
+  if (!allowed) return <GamesConsent onAllow={() => onAllowedChange(true)} />;
+  return (
+    <GameLibrary
+      report={report}
+      bridge={bridge}
+      library={profiles.library}
+      onLibrary={profiles.setLibrary}
+      running={profiles.running}
+      onRescan={() => setRescanToken((n) => n + 1)}
+      home={<GamesSetup {...rest} rescanToken={rescanToken} onScanned={scanned} onStop={() => onAllowedChange(false)} />}
+    />
+  );
 }
 
 // First visit: say exactly what checking reads, and read nothing until the user agrees.
@@ -93,7 +118,7 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
   );
 }
 
-function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps, "allowed" | "onAllowedChange"> & { onStop: () => void }) {
+function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<GamesPageProps, "allowed" | "onAllowedChange" | "bridge" | "profiles"> & { onStop: () => void; rescanToken: number }) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [report, setReport] = useState<GamesReport | null>(null);
@@ -145,6 +170,11 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
     };
   }, [desktop, receive]);
   useEffect(() => desktop.onProtonProgress(setProtonProgress), [desktop]);
+  // A game page applied a fix: rescan so Home and the library agree.
+  const firstToken = useRef(rescanToken);
+  useEffect(() => {
+    if (rescanToken !== firstToken.current) void rescan(true);
+  }, [rescanToken, rescan]);
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
   const selected = fixes.filter((f) => chosen.has(f.id));
@@ -407,11 +437,6 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
         </section>
       )}
 
-      <details className="dk-card dk-advanced">
-        <summary>{t("desktop.games.allGames", { count: report.games.length, defaultValue: "All games ({{count}})" })}</summary>
-        <GameTable games={report.games} />
-      </details>
-
       {backups.length > 0 && (
         <details className="dk-card dk-advanced">
           <summary>{t("desktop.games.history", "Change history")}</summary>
@@ -493,49 +518,6 @@ function SystemCard({ report }: { report: GamesReport }) {
         <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>
       )}
     </section>
-  );
-}
-
-function GameTable({ games }: { games: GameEntry[] }) {
-  const { t } = useTranslation();
-  const support: Record<GameEntry["support"], string> = {
-    triggers: t("desktop.games.supTriggers", "Triggers + haptics"),
-    haptics: t("desktop.games.supHaptics", "Haptics"),
-    xinput: t("desktop.games.supXinput", "Xbox-style only"),
-    unknown: "",
-  };
-  const sorted = [...games].sort((a, b) => Number(b.support !== "unknown") - Number(a.support !== "unknown") || a.title.localeCompare(b.title));
-  return (
-    <table className="dk-table dk-games-table">
-      <thead>
-        <tr>
-          <th>{t("desktop.games.colGame", "Game")}</th>
-          <th>{t("desktop.games.colStore", "Store")}</th>
-          <th>{t("desktop.games.colRunner", "Runs with")}</th>
-          <th>{t("desktop.games.colDs", "DualSense")}</th>
-          <th>{t("desktop.games.colStatus", "Status")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sorted.map((g) => (
-          <tr key={g.key}>
-            <td>{g.title}</td>
-            <td>{g.store === "sideload" ? t("desktop.games.storeSideload", "Sideloaded") : STORE_NAME[g.store]}</td>
-            <td className={g.runnerMissing ? "dk-bad" : "dk-mono"}>{g.runnerMissing ? t("desktop.games.missing", { name: g.runner, defaultValue: "{{name}} (missing)" }) : (g.runner ?? "—")}</td>
-            <td>{support[g.support]}</td>
-            <td>
-              {g.fixes.length ? (
-                <span className="dk-bad">{t("desktop.games.needsAttention", "needs attention")}</span>
-              ) : g.support === "triggers" || g.support === "haptics" ? (
-                <span className="dk-good">✓</span>
-              ) : (
-                ""
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
 

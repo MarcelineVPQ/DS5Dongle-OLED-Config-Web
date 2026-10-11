@@ -1,13 +1,16 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
-import { app, BrowserWindow, shell, session, type WebContents } from "electron";
+import { app, BrowserWindow, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings } from "../../src/desktop/api";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
+import { LibraryStore } from "./games/libraryStore";
+import { RunningGameWatcher } from "./games/running";
+import { GameKeySchema } from "../../src/desktop/games/library";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
@@ -30,8 +33,16 @@ let settings: DesktopSettings;
 // Set when the user really quits (tray Quit, OS logout), so close-to-tray
 // doesn't swallow it.
 let quitting = false;
+// Starts/stops the running-game watcher with the Games consent (set in start()).
+let syncRunningWatcher: () => void = () => undefined;
 
 applyLinuxWorkarounds();
+
+// Game artwork for the Games library: ds5-art://art/<game key>/<kind>, served
+// only from the files the last scan resolved for that game (never a path the
+// page names). Must be registered before the app is ready.
+const ART_KINDS = new Set(["hero", "logo", "cover", "header", "icon"]);
+protocol.registerSchemesAsPrivileged([{ scheme: "ds5-art", privileges: { standard: true, secure: true } }]);
 
 // One instance: two copies would fight over the USB interface claim.
 if (!app.requestSingleInstanceLock()) {
@@ -95,6 +106,32 @@ function start(): void {
     return run(games);
   };
 
+  // Games library: the player's per-game data (works on every OS), the
+  // running game (Linux scan; polled only while Games is allowed).
+  const library = new LibraryStore(app.getPath("userData"));
+  const watcher = games
+    ? new RunningGameWatcher(
+        () => games.runningCandidates(),
+        (key) => mainWindow?.webContents.send(IPC.runningGame, key),
+      )
+    : null;
+  syncRunningWatcher = () => {
+    if (!games || !watcher) return;
+    if (settings.gamesScanAllowed)
+      void games.scan().then(
+        () => watcher.start(),
+        () => undefined,
+      );
+    else watcher.stop();
+  };
+  syncRunningWatcher();
+  protocol.handle("ds5-art", (request) => {
+    const parts = new URL(request.url).pathname.split("/").filter(Boolean).map(decodeURIComponent);
+    const [key, kind] = parts;
+    const file = parts.length === 2 && GameKeySchema.safeParse(key).success && ART_KINDS.has(kind) ? games?.artPath(key, kind as never) : undefined;
+    return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
+  });
+
   // Firmware the app offers: bundled with this release, or a newer published one.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
@@ -120,6 +157,13 @@ function start(): void {
     gamesBackups: () => linuxOnly((g) => g.listBackups()),
     closeLauncher: (l) => linuxOnly((g) => g.close(l)),
     installProton: () => linuxOnly((g) => g.installLatestProton()),
+    gamesDetails: () => linuxOnly((g) => g.details()),
+    gamesRunning: () => watcher?.running ?? null,
+    libraryGet: () => library.get(),
+    librarySetProfile: (u) => library.setProfile(u.gameKey, u.title, u.settings),
+    libraryDeleteProfile: (key) => library.deleteProfile(key),
+    librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
+    librarySetRestore: (r) => library.setRestore(r ?? undefined),
     onStatus: (status) => tray?.update(status),
     onTrayIcon: (png) => tray?.setCustomIcon(png),
     getSettings: () => settings,
@@ -160,6 +204,7 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
   // Turned on with an update already waiting: install it now.
   if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") void updater.downloadAndInstall();
+  if (key === "gamesScanAllowed") syncRunningWatcher();
   tray?.updateSettings(settings);
   return settings;
 }

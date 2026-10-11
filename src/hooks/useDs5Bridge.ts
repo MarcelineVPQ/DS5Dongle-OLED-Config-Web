@@ -43,6 +43,9 @@ export interface UseDs5BridgeResult {
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
   revertToSaved: () => Promise<void>;
+  // Put this exact config on the dongle (RAM only) and make it the draft:
+  // per-game profiles switching in and out.
+  applyBody: (body: ConfigBody) => Promise<boolean>;
   clearError: () => void;
   // Live input preview over the gamepad HID interface (browser WebHID only).
   hidClient: Ds5BridgeHidClient | null;
@@ -193,6 +196,18 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     });
   }, [run, savedConfig]);
 
+  const applyBody = useCallback(
+    (body: ConfigBody) =>
+      run("applying", async (c) => {
+        const normalized = normalizeConfig(body);
+        await c.applyConfig(normalized);
+        setConfig(normalized);
+        setDraft(normalized);
+        setSaveState("applied");
+      }),
+    [run],
+  );
+
   const reconnectUsb = useCallback(() => run("reconnecting", (c) => c.reconnectUsb()), [run]);
 
   const setDraftField = useCallback(<Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
@@ -310,6 +325,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     reconnectUsb,
     resetDraft,
     revertToSaved,
+    applyBody,
     clearError: () => setError(null),
     hidClient,
     hidSupported: webHidAvailable(),

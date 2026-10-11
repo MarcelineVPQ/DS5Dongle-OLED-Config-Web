@@ -12,7 +12,7 @@ const CSP = [
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "img-src 'self' data:",
+  "img-src 'self' data: ds5-art:", // game artwork (main process, local files only)
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'none'",

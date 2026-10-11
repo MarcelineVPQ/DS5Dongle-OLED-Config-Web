@@ -1,4 +1,6 @@
 import type { ApplyResult, GamesReport, LauncherId, Msg } from "./games/types";
+import type { GameInfo } from "./games/types";
+import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
 
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
@@ -113,6 +115,17 @@ export interface DesktopApi {
   closeLauncher(launcher: LauncherId): Promise<CloseLauncherResult>;
   installProton(): Promise<ProtonInstallResult>;
   onProtonProgress(listener: (progress: ProtonProgress) => void): () => void;
+  // Games library (Linux scan; the library file works everywhere): details
+  // and artwork from the last scan, the running game, and the player's own
+  // per-game data (profile, rating, notes) plus the profile restore point.
+  gamesDetails(): Promise<Record<string, GameInfo>>;
+  gamesRunning(): Promise<string | null>;
+  onRunningGame(listener: (gameKey: string | null) => void): () => void;
+  libraryGet(): Promise<LibraryFile>;
+  librarySetProfile(update: { gameKey: string; title: string; settings: ProfileSettings }): Promise<LibraryFile>;
+  libraryDeleteProfile(gameKey: string): Promise<LibraryFile>;
+  librarySetMine(update: { gameKey: string; title: string; mine: Mine }): Promise<LibraryFile>;
+  librarySetRestore(restore: LibraryFile["restore"] | null): Promise<LibraryFile>;
 }
 
 export const IPC = {
@@ -142,6 +155,14 @@ export const IPC = {
   closeLauncher: "desktop:close-launcher",
   installProton: "desktop:install-proton",
   protonProgress: "desktop:proton-progress",
+  gamesDetails: "desktop:games-details",
+  gamesRunning: "desktop:games-running",
+  runningGame: "desktop:running-game",
+  libraryGet: "desktop:library-get",
+  librarySetProfile: "desktop:library-set-profile",
+  libraryDeleteProfile: "desktop:library-delete-profile",
+  librarySetMine: "desktop:library-set-mine",
+  librarySetRestore: "desktop:library-set-restore",
 } as const;
 
 declare global {

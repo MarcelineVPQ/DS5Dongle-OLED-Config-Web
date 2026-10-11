@@ -187,7 +187,7 @@
     "connectLive": "ライブプレビューに接続"
   },
   "validation": {
-    "hapticsGain": "Haptics ゲインは 1.0 から 2.0 の間でなければなりません",
+    "hapticsGain": "Haptics ゲインは 1.0 から 6.0 の間でなければなりません",
     "speakerVolume": "スピーカー音量は -100 dB から 0 dB の間でなければなりません",
     "inactiveTime": "非アクティブ時間は 5 分から 60 分の間でなければなりません",
     "pollingRateMode": "ポーリングレートモードは 0、1、または 2 でなければなりません",
@@ -276,7 +276,11 @@
       "unsaved": "ドングルに適用済み、未保存: 電源を切ると変更は失われます。",
       "saved": "すべての変更をドングルに保存しました。",
       "revert": "元に戻す",
-      "save": "ドングルに保存"
+      "save": "ドングルに保存",
+      "profileActive": "{{title}} のプロファイルが有効",
+      "profileSaved": "変更はプロファイルに保存されます。ゲームを閉じると通常の設定に戻ります。",
+      "profileUnsaved": "ここで変更済み。まだプロファイルに保存されていません。",
+      "saveProfile": "プロファイルに保存"
     },
     "common": {
       "cancel": "キャンセル"
@@ -816,6 +820,150 @@
       "protanopia": "1型色覚（P型）",
       "deuteranopia": "2型色覚（D型）",
       "tritanopia": "3型色覚（T型）"
+    },
+    "library": {
+      "home": "ホーム",
+      "search": "ゲームを検索",
+      "filter": "ゲームを絞り込む",
+      "filters": {
+        "all": "すべて",
+        "profile": "プロファイルあり",
+        "dualsense": "DualSense",
+        "attention": "要設定"
+      },
+      "groupPlaying": "プレイ中",
+      "groupProfile": "プロファイルあり",
+      "groupAll": "すべてのゲーム",
+      "noMatch": "一致するゲームはありません。",
+      "running": "実行中",
+      "hasProfile": "コントローラープロファイルあり",
+      "needsAttention": "設定が必要",
+      "playing": "プレイ中",
+      "lastPlayed": "最終プレイ",
+      "never": "なし",
+      "playTime": "プレイ時間",
+      "minutes_other": "{{count}} 分",
+      "hours_other": "{{count}} 時間",
+      "runsWith": "実行環境",
+      "launcherDefault": "ランチャー既定",
+      "dualsense": "DualSense",
+      "yourRating": "あなたの評価",
+      "jumpTo": "移動先",
+      "section": {
+        "profile": "コントローラープロファイル",
+        "setup": "セットアップ",
+        "compat": "互換性",
+        "support": "DualSense 対応",
+        "reviews": "プレイヤー評価",
+        "configs": "共有設定",
+        "rating": "あなたの評価",
+        "notes": "メモ",
+        "details": "詳細"
+      },
+      "activeNow": "適用中",
+      "profileNone": "このゲームは通常のドングル設定を使います。プロファイルを使うと、このゲームの間だけハプティクス、スピーカー、ライトバー、マイクが切り替わり、終了すると元に戻ります。",
+      "profileFromCurrent": "現在の設定から作成",
+      "profileNeedsDongle": "現在の設定から始めるには、ドングルを接続してください。",
+      "profileHint": "変更はドングルではなく、このゲームのプロファイルに保存されます。",
+      "profileCopyCurrent": "現在の設定をコピー",
+      "profileDelete": "プロファイルを削除",
+      "haptics": "ハプティクスの強さ",
+      "autoHaptics": "オーディオ Auto Haptics",
+      "autoMode": {
+        "off": "オフ",
+        "fallback": "フォールバック",
+        "mix": "ミックス",
+        "replace": "置き換え"
+      },
+      "autoGain": "Auto Haptics ゲイン",
+      "autoLowpass": "Auto Haptics ローパス",
+      "speaker": "スピーカーレベル",
+      "lightbar": "ライトバー",
+      "favorites": "お気に入りカラー",
+      "mic": "Bluetooth マイク",
+      "setupNone": "このゲームで設定することはありません。",
+      "setupReview": "変更を確認",
+      "setupApply": "適用",
+      "setupDone": "完了しました。ゲームが起動中の場合は再起動してください。",
+      "setupFailed": "一部の変更を適用できませんでした。詳細はホームをご覧ください。",
+      "cancel": "キャンセル",
+      "store": "ストア",
+      "storeName": {
+        "steam": "Steam",
+        "epic": "Epic Games",
+        "gog": "GOG",
+        "amazon": "Amazon Games",
+        "sideload": "手動で追加",
+        "lutris": "Lutris"
+      },
+      "launcher": "ランチャー",
+      "launcherName": {
+        "steam": "Steam",
+        "heroic": "Heroic",
+        "lutris": "Lutris"
+      },
+      "recommended": "おすすめ",
+      "protonNotInstalled": "DualSense 用 Proton(未インストール)",
+      "anyProton": "最近の Proton ならどれでも",
+      "usesOurs": "DualSense 用 Proton ビルドを使用します。",
+      "switchTo": "{{name}} に切り替え",
+      "tier": {
+        "verified": "検証済み",
+        "works": "動作",
+        "needs-setup": "要設定",
+        "partial": "一部対応",
+        "broken": "動作不可",
+        "unknown": "不明"
+      },
+      "tierHint": {
+        "verified": "ドングルで検証済み。トリガーとハプティクスが動作します。",
+        "works": "ゲームが DualSense の機能にネイティブ対応しています。",
+        "needs-setup": "このゲームのセットアップを済ませると動作します。",
+        "partial": "PC では一部の DualSense 機能が使えません。Audio Auto Haptics で振動を補えます。",
+        "broken": "動作しないとの報告があります。",
+        "unknown": "まだ報告がありません。"
+      },
+      "feature": {
+        "yes": "動作",
+        "no": "非対応",
+        "unknown": "未確認"
+      },
+      "featureName": {
+        "triggers": "アダプティブトリガー",
+        "haptics": "HD ハプティクス",
+        "speaker": "スピーカー",
+        "mic": "マイク",
+        "lightbar": "ライトバー"
+      },
+      "stars_other": "星 {{count}}",
+      "feedbackHint": "気づいたことは?",
+      "tag": {
+        "triggers-work": "アダプティブトリガー動作",
+        "haptics-work": "HD ハプティクス動作",
+        "speaker-works": "スピーカー動作",
+        "mic-works": "マイク動作",
+        "lightbar-works": "ライトバー動作",
+        "weak-vibration": "振動が弱い",
+        "no-triggers": "トリガーが効かない",
+        "rumble-only": "通常の振動のみ",
+        "speaker-problems": "スピーカーの不具合",
+        "not-detected": "コントローラー未検出",
+        "needs-steam-input-off": "Steam Input オフが必要",
+        "disconnects": "接続が切れる"
+      },
+      "shareSoon": "このPCに保存しました。他のプレイヤーとの共有は近日対応予定です。",
+      "reviewsSoon": "近日公開:他のプレイヤーの評価とフィードバック。",
+      "configsSoon": "近日公開:他のプレイヤーがこのゲーム用に共有したプロファイル。",
+      "notesPlaceholder": "非公開メモ(このPCのみ)",
+      "id": "ID",
+      "size": "ディスク使用量",
+      "updated": "最終更新",
+      "fixedIn": "{{version}} で修正:",
+      "fix": {},
+      "staleFix": "このゲームの問題を修正した DS5 Dongle {{version}} より前に評価しました。",
+      "staleUpdateOn": "{{date}} のゲーム更新より前に評価しました。",
+      "staleUpdate": "ゲームの最新の更新より前に評価しました。",
+      "stillAccurate": "今も正確"
     }
   },
   "ad": {

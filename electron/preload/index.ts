@@ -55,6 +55,18 @@ const api: DesktopApi = {
     ipcRenderer.on(IPC.protonProgress, handler);
     return () => ipcRenderer.removeListener(IPC.protonProgress, handler);
   },
+  gamesDetails: () => ipcRenderer.invoke(IPC.gamesDetails),
+  gamesRunning: () => ipcRenderer.invoke(IPC.gamesRunning),
+  onRunningGame: (listener) => {
+    const handler = (_event: IpcRendererEvent, key: string | null) => listener(key);
+    ipcRenderer.on(IPC.runningGame, handler);
+    return () => ipcRenderer.removeListener(IPC.runningGame, handler);
+  },
+  libraryGet: () => ipcRenderer.invoke(IPC.libraryGet),
+  librarySetProfile: (update) => ipcRenderer.invoke(IPC.librarySetProfile, update),
+  libraryDeleteProfile: (gameKey) => ipcRenderer.invoke(IPC.libraryDeleteProfile, gameKey),
+  librarySetMine: (update) => ipcRenderer.invoke(IPC.librarySetMine, update),
+  librarySetRestore: (restore) => ipcRenderer.invoke(IPC.librarySetRestore, restore),
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

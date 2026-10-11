@@ -1,4 +1,5 @@
 import { ArrowLeft, Info, Joystick, Settings, Usb } from "lucide-react";
+import { useGameProfile } from "./library/useGameProfile";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
@@ -38,6 +39,9 @@ export default function DesktopApp() {
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
+  // Per-game profiles switch in while their game runs (never mid-update).
+  const updating = fw.state.phase === "running" || fw.state.phase === "verifying";
+  const profiles = useGameProfile(bridge, updating);
 
   const openPanel = (view: PanelView) => {
     setMain("controller");
@@ -207,7 +211,7 @@ export default function DesktopApp() {
           </button>
         </header>
 
-        <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}`}>
+        <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
           <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => openPanel("dongle")} />
           <AutoUpdateAsk />
           {whatsNew.version && (
@@ -239,7 +243,7 @@ export default function DesktopApp() {
               </button>
             </div>
           )}
-          {main === "games" && <GamesPage allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
+          {main === "games" && <GamesPage bridge={bridge} profiles={profiles} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
           {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
           {main === "controller" &&
             (connected ? (
@@ -257,29 +261,46 @@ export default function DesktopApp() {
 
         {connected && !standalone && (
           <footer className="dk-bar">
-            <span className="dk-bar-note">
-              {busy
-                ? t(`statusText.${bridge.operation}`)
-                : bridge.hasUnsavedChanges
-                  ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
-                  : t("desktop.bar.saved", "All changes saved on the dongle.")}
-            </span>
-            <span className="dk-spacer" />
-            <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
-              {t("desktop.bar.revert", "Revert")}
-            </button>
-            <button
-              type="button"
-              className="dk-btn primary"
-              disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
-              onClick={() =>
-                void bridge.saveToFlash().then((ok) => {
-                  if (ok) void say("app_saved");
-                })
-              }
-            >
-              {t("desktop.bar.save", "Save to dongle")}
-            </button>
+            {profiles.active ? (
+              <>
+                <span className="dk-bar-note">
+                  <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
+                </span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={() => void profiles.revertToProfile()}>
+                  {t("desktop.bar.revert", "Revert")}
+                </button>
+                <button type="button" className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={() => void profiles.saveToProfile()}>
+                  {t("desktop.bar.saveProfile")}
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="dk-bar-note">
+                  {busy
+                    ? t(`statusText.${bridge.operation}`)
+                    : bridge.hasUnsavedChanges
+                      ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
+                      : t("desktop.bar.saved", "All changes saved on the dongle.")}
+                </span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
+                  {t("desktop.bar.revert", "Revert")}
+                </button>
+                <button
+                  type="button"
+                  className="dk-btn primary"
+                  disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
+                  onClick={() =>
+                    void bridge.saveToFlash().then((ok) => {
+                      if (ok) void say("app_saved");
+                    })
+                  }
+                >
+                  {t("desktop.bar.save", "Save to dongle")}
+                </button>
+              </>
+            )}
           </footer>
         )}
       </div>

@@ -49,6 +49,21 @@ export interface GameEntry {
   fixes: Fix[];
 }
 
+// Local artwork a game has (the files stay in the main process; the page
+// loads them through ds5-art://<game key>/<kind>).
+export type ArtKind = "hero" | "logo" | "cover" | "header" | "icon";
+
+// What the launchers keep on disk about a game (Games library page).
+export interface GameInfo {
+  installDir?: string;
+  sizeBytes?: number;
+  playtimeMin?: number;
+  lastPlayed?: number; // unix seconds
+  lastUpdated?: number; // unix seconds
+  buildId?: string; // Steam: changes with every game update
+  art: ArtKind[];
+}
+
 export interface LauncherInfo {
   id: LauncherId;
   found: boolean;

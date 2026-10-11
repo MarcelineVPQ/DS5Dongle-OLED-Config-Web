@@ -1,6 +1,8 @@
 // IPC from the renderer. Every message is checked against its sender (our own
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
+import { GameKeySchema, LibraryFileSchema, MineSchema, ProfileSettingsSchema, type LibraryFile, type Mine, type ProfileSettings } from "../../src/desktop/games/library";
+import type { GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
   IPC,
@@ -45,8 +47,20 @@ export const FixIdsSchema = z
   .max(500);
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
 export const LauncherSchema = z.enum(["steam", "heroic", "lutris"]);
+// Games library: keys from the scan, a title for display, schema-checked data.
+const TitleSchema = z.string().min(1).max(300);
+export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, settings: ProfileSettingsSchema });
+export const SetMineSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, mine: MineSchema });
+export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable();
 
 export interface IpcHandlers {
+  gamesDetails: () => Record<string, GameInfo>;
+  gamesRunning: () => string | null;
+  libraryGet: () => LibraryFile;
+  librarySetProfile: (u: { gameKey: string; title: string; settings: ProfileSettings }) => LibraryFile;
+  libraryDeleteProfile: (gameKey: string) => LibraryFile;
+  librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
+  librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
@@ -133,6 +147,13 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.gamesApply, FixIdsSchema, h.gamesApply);
   invokeWith(IPC.gamesUndo, BackupIdSchema, h.gamesUndo);
   invokeWith(IPC.closeLauncher, LauncherSchema, h.closeLauncher);
+  invoke(IPC.gamesDetails, h.gamesDetails);
+  invoke(IPC.gamesRunning, h.gamesRunning);
+  invoke(IPC.libraryGet, h.libraryGet);
+  invokeWith(IPC.librarySetProfile, SetProfileSchema, h.librarySetProfile);
+  invokeWith(IPC.libraryDeleteProfile, GameKeySchema, h.libraryDeleteProfile);
+  invokeWith(IPC.librarySetMine, SetMineSchema, h.librarySetMine);
+  invokeWith(IPC.librarySetRestore, RestoreSchema, h.librarySetRestore);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

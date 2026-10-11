@@ -86,6 +86,21 @@ async function views(t) {
   list.push(["app settings", () => clickText(t.appSettings)]);
   list.push(["about", () => clickText(t.about)]);
   list.push(["games", () => clickText(t.games)]);
+  // Game pages in the library: the first game with a profile, a GOG game,
+  // and the first game in the list.
+  for (const [name, pick] of [
+    ["game page (profile)", `[...document.querySelectorAll(".lib-row")].find((r) => r.innerText.includes("◆"))`],
+    ["game page (GOG)", `[...document.querySelectorAll(".lib-row")].find((r) => r.querySelector(".lib-glyph")?.innerText === "G")`],
+    ["game page (first)", `document.querySelector(".lib-row")`],
+  ])
+    list.push([
+      name,
+      async () => {
+        await clickText(t.games);
+        await sleep(2500);
+        await evaluate(`(${pick} ?? document.querySelector(".lib-row"))?.click()`);
+      },
+    ]);
   return list;
 }
 

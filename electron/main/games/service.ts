@@ -4,6 +4,9 @@
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
 import { homedir } from "node:os";
+import { gameDetails, type GameDetails } from "./details";
+import type { RunningCandidate } from "./running";
+import type { ArtKind, GameEntry, GameInfo } from "../../../src/desktop/games/types";
 import { join } from "node:path";
 import type { CloseLauncherResult, ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
 import type { ApplyResult, GamesReport, LauncherId } from "../../../src/desktop/games/types";
@@ -78,7 +81,33 @@ export class GamesService {
   }
 
   async scan(): Promise<GamesReport> {
-    return (await this.fresh()).report;
+    const report = (await this.fresh()).report;
+    this.lastGames = report.games;
+    this.lastDetails = gameDetails(this.home);
+    return report;
+  }
+
+  // ---- Games library: details, artwork, the running game ----
+  private lastGames: GameEntry[] = [];
+  private lastDetails = new Map<string, GameDetails>();
+
+  // Install folder, size, play time and which artwork exists, per game key
+  // (from the last scan; the page asks after scanning).
+  details(): Record<string, GameInfo> {
+    this.requireConsent();
+    return Object.fromEntries([...this.lastDetails].map(([key, { artPaths: _paths, ...info }]) => [key, info]));
+  }
+
+  // A local art file for the ds5-art:// protocol: only files the last scan
+  // resolved for a known game, and only with consent.
+  artPath(key: string, kind: ArtKind): string | undefined {
+    if (!this.deps.allowed()) return undefined;
+    return this.lastDetails.get(key)?.artPaths[kind];
+  }
+
+  runningCandidates(): RunningCandidate[] {
+    if (!this.deps.allowed()) return [];
+    return this.lastGames.map((g) => ({ key: g.key, launcher: g.launcher, id: g.id, installDir: this.lastDetails.get(g.key)?.installDir }));
   }
 
   apply(fixIds: string[]): Promise<ApplyResult> {
