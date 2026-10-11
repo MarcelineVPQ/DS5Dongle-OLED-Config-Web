@@ -49,7 +49,12 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
           )}
         </p>
         {error && <div className="dk-notice error">{error}</div>}
-        <table className="dk-table">
+        <table className="dk-table slots">
+          <colgroup>
+            <col className="slot" />
+            <col />
+            <col className="acts" />
+          </colgroup>
           <thead>
             <tr>
               <th>{t("desktop.slots.slot", "Slot")}</th>
@@ -63,22 +68,21 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
               const occupied = v?.slots.occupied[i] ?? false;
               return (
                 <tr key={i}>
-                  <td>
-                    {i}
-                    {active && (
-                      <span className="dk-chip ok" style={{ marginLeft: 8, height: 18 }}>
-                        {t("desktop.slots.active", "Active")}
-                      </span>
-                    )}
-                  </td>
+                  <td>{i}</td>
                   <td className="dk-mono">{v ? (occupied ? formatMac(v.slots.addrs[i]) : t("desktop.slots.empty", "Empty")) : "—"}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <button type="button" className="dk-btn" disabled={!client || busy || active} onClick={() => void act(() => client!.switchSlot(i))}>
-                      {t("desktop.slots.switch", "Switch to")}
-                    </button>{" "}
-                    <button type="button" className="dk-btn danger" disabled={!client || busy || !occupied} onClick={() => void act(() => client!.forgetSlot(i))}>
-                      {t("desktop.slots.forget", "Forget")}
-                    </button>
+                  <td>
+                    <div className="acts-cell">
+                      {active ? (
+                        <span className="dk-chip ok">{t("desktop.slots.active", "Active")}</span>
+                      ) : (
+                        <button type="button" className="dk-btn" disabled={!client || busy} onClick={() => void act(() => client!.switchSlot(i))}>
+                          {t("desktop.slots.switch", "Switch to")}
+                        </button>
+                      )}
+                      <button type="button" className="dk-btn danger" disabled={!client || busy || !occupied} onClick={() => void act(() => client!.forgetSlot(i))}>
+                        {t("desktop.slots.forget", "Forget")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

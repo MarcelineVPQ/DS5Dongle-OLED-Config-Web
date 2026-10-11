@@ -8,7 +8,7 @@ Linux and Windows (a macOS build is included but hasn't been tested yet). No dri
 
 ## What you can do
 
-Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. Below it, live tiles and **live data** show everything the controller reports: stick and trigger values, the effect each trigger is running, gyroscope and accelerometer with scrolling graphs and tilt, touch points, what's plugged into the controller, and the link itself (update rate, round trip, signal).
+Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. Below it, a row of live tiles shows the sticks, L2 and R2, battery, signal, the **lightbar mode** with its live color (click it to change it), and your player number and pairing slot. Under the tiles, eight **live data** cards show everything the controller reports: stick and trigger values, the effect each trigger is running, gyroscope and accelerometer with scrolling graphs and tilt, touch points, what's plugged into the controller, the link itself (update rate, round trip, signal), and your audio, haptics and dongle settings at a glance (click any of those lines to open its setting).
 
 **Click any part of the controller with your mouse** to set it up in the panel on the right, or pick a setting from the list there (the panel can be hidden with **»** to make the controller bigger):
 
@@ -29,7 +29,11 @@ The top bar holds the rest:
 - **About:** what's new in each version, the firmware's changes, this guide, and credits.
 - **⚙ App settings:** theme (light, dark, follow the system, or **match your desktop**: your KDE Plasma color scheme, or the system accent color elsewhere), language, close to tray, start at login.
 
-**New here?** The first time a controller connects, a one-minute guided tour walks you through it, hands-on: press a button, pull a trigger, click the lightbar. Replay it any time from ⚙ App settings.
+**New here?** The first time a controller connects, a one-minute guided tour walks you through it, hands-on and driven from the controller: press a few buttons, pull a trigger (and feel it push back), click the lightbar. On those play steps ✕ and ○ are just buttons to try: **hold ✕** to move on, hold ○ to go back. Replay the tour any time from ⚙ App settings.
+
+**The narrator.** The tour asks whether you'd like a voice: a narrator who speaks through the **controller's speaker** (never your PC's), in the app's language. She talks you through the tour and confirms things as they happen (saved, remapped, firmware updated). The dongle has her too, so even without the app she says when the controller connects, names the pairing slot you switch to, and warns when the battery runs low. **Captions** show her words on screen (on by default), and with the voice off the confirmations still show as text. Change either in ⚙ App settings → Narrator, where you can also test her voice.
+
+![App settings: theme, behavior, the narrator and captions](docs/screenshots/app-settings.png)
 
 | | |
 | --- | --- |
@@ -93,6 +97,7 @@ No accounts, no analytics, no telemetry. The app only goes online to check GitHu
 | The app window doesn't appear | It may have opened behind other windows, or be in the tray. Click the tray icon. |
 | Controller shows "Not connected" | Press **PS** on the controller. After a firmware update or slot switch it doesn't reconnect by itself. A new dongle only appears once a controller is paired: hold **PS + Create** until the light bar flashes. |
 | The controller drawing doesn't move | Update the dongle's firmware (the live view needs v0.8 or newer). |
+| The narrator is silent | She only speaks through the controller's speaker, and only when the narrator is on (⚙ App settings → Narrator). Check the controller's volume (and that it isn't muted on the PC). The dongle's own lines need firmware v0.8 or newer. |
 | Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
 | Linux with an NVIDIA card | Handled automatically (the app renders without the GPU, which avoids a known Electron crash). |
 
@@ -126,6 +131,7 @@ The result is in `release/`. The official downloads are built the same way by [G
 ## Credits
 
 - **Firmware:** [DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition), a fork of [awalol/DS5Dongle](https://github.com/awalol/DS5Dongle). The browser tool started as [awalol/ds5dongle-config-web](https://github.com/awalol/ds5dongle-config-web).
+- **Audio:** The clean controller speaker and Bluetooth mic are [awalol](https://github.com/awalol/DS5Dongle)'s work upstream: the audio path that runs from RAM, the packed audio reports and the mic decoding (and finding the bit that turns the mic on).
 - **Thanks** to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes, Audio Auto Haptics DSP) and [zurce/DS5Dongle-OLED](https://github.com/zurce/DS5Dongle-OLED) (multi-slot pairing).
 - **Live controller art:** DualSense art from the [Gamepad Asset Pack](https://github.com/AL2009man/Gamepad-Asset-Pack) by AL2009man, MIT, modified (recolored and tagged by `tools/prepare_controller_art.py`; license in `src/assets/AL2009MAN-LICENSE.txt`).
 - **Tray icon and web tool art:** "PS5 Button Icons and Controls" by [Zacksly](https://zacksly.itch.io), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), modified.

@@ -429,7 +429,7 @@
       "download": "Télécharger et installer",
       "downloading": "Téléchargement de {{version}} : {{got}} sur {{total}} ({{pct}} %)",
       "installing": "Installation de la mise à jour…",
-      "ready": "La version {{version}} est installée.",
+      "ready": "La version {{version}} est installée. Elle démarre à la prochaine ouverture de l'app, ou redémarre maintenant.",
       "restart": "Redémarrer maintenant",
       "manual": "La mise à jour {{version}} est disponible sur la page des versions.",
       "open": "Ouvrir la page des versions",
@@ -445,7 +445,11 @@
         "restarting": "Redémarrage du dongle…",
         "verifying": "En attente du retour du dongle…",
         "verifyingPress": "Flashé. Appuie sur PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
-      }
+      },
+      "askTitle": "Garder l'app à jour ?",
+      "askBody": "Les nouvelles versions peuvent se télécharger et s'installer toutes seules, vérifiées comme chaque mise à jour, et démarrer à la prochaine ouverture de l'app. Tu peux changer ça dans les réglages de l'app.",
+      "askYes": "Mettre à jour automatiquement",
+      "askNo": "Me demander à chaque fois"
     },
     "controller": {
       "battery": "Batterie",
@@ -703,7 +707,9 @@
         "bodyHint": "Retour haptique : intensité et Audio Auto Haptics"
       },
       "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
-      "showPanel": "Réglages"
+      "showPanel": "Réglages",
+      "autoInstall": "Installer les mises à jour automatiquement",
+      "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app"
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",

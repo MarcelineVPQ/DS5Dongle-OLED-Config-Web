@@ -429,7 +429,7 @@
       "download": "Baixar e instalar",
       "downloading": "Baixando {{version}}: {{got}} de {{total}} ({{pct}}%)",
       "installing": "Instalando a atualização…",
-      "ready": "A versão {{version}} está instalada.",
+      "ready": "A versão {{version}} está instalada. Ela abre na próxima vez que você abrir o app, ou reinicie agora.",
       "restart": "Reiniciar agora",
       "manual": "A atualização {{version}} está na página de versões.",
       "open": "Abrir página de versões",
@@ -445,7 +445,11 @@
         "restarting": "Reiniciando o dongle…",
         "verifying": "Aguardando o dongle voltar…",
         "verifyingPress": "Gravado. Aperte PS no controle: o dongle volta assim que um controle se conecta. Se continuar apagado, desconecte e conecte de novo."
-      }
+      },
+      "askTitle": "Manter o app atualizado?",
+      "askBody": "Novas versões podem se baixar e instalar sozinhas, verificadas como toda atualização, e abrem na próxima vez que você abrir o app. Você pode mudar isso nas configurações do app.",
+      "askYes": "Atualizar automaticamente",
+      "askNo": "Perguntar sempre"
     },
     "controller": {
       "battery": "Bateria",
@@ -703,7 +707,9 @@
         "bodyHint": "Hápticos: intensidade e Audio Auto Haptics"
       },
       "hidePanel": "Ocultar o painel de configurações (o controle fica maior)",
-      "showPanel": "Configurações"
+      "showPanel": "Configurações",
+      "autoInstall": "Instalar atualizações automaticamente",
+      "autoInstallSub": "Baixa e verifica em segundo plano; a nova versão abre na próxima vez que você abrir o app"
     },
     "tour": {
       "stepOf": "Passo {{n}} de {{total}}",

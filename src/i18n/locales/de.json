@@ -429,7 +429,7 @@
       "download": "Herunterladen und installieren",
       "downloading": "Lade {{version}}: {{got}} von {{total}} ({{pct}} %)",
       "installing": "Update wird installiert…",
-      "ready": "Version {{version}} ist installiert.",
+      "ready": "Version {{version}} ist installiert. Sie startet beim nächsten Öffnen der App, oder starte jetzt neu.",
       "restart": "Jetzt neu starten",
       "manual": "App-Update {{version}} ist auf der Release-Seite verfügbar.",
       "open": "Release-Seite öffnen",
@@ -445,7 +445,11 @@
         "restarting": "Dongle startet neu…",
         "verifying": "Warte, bis der Dongle zurück ist…",
         "verifyingPress": "Geflasht. Drücke PS am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
-      }
+      },
+      "askTitle": "Die App aktuell halten?",
+      "askBody": "Neue Versionen können sich selbst herunterladen und installieren, geprüft wie jedes Update, und starten beim nächsten Öffnen der App. Das kannst du in den App-Einstellungen ändern.",
+      "askYes": "Automatisch aktualisieren",
+      "askNo": "Jedes Mal fragen"
     },
     "controller": {
       "battery": "Akku",
@@ -703,7 +707,9 @@
         "bodyHint": "Haptik: Stärke und Audio Auto Haptics"
       },
       "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
-      "showPanel": "Einstellungen"
+      "showPanel": "Einstellungen",
+      "autoInstall": "Updates automatisch installieren",
+      "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App"
     },
     "tour": {
       "stepOf": "Schritt {{n}} von {{total}}",

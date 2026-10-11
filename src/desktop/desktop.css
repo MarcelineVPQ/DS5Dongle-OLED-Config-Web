@@ -272,6 +272,52 @@ html[data-theme="dark"] .dk {
 .dk-row:first-of-type {
   border-top: 0;
 }
+.dk-row.wide {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.dk-row.has-sub {
+  padding: 6px 0;
+}
+.dk-row.stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 6px 0 8px;
+}
+.dk-row.stack .dk-ctl {
+  justify-content: stretch;
+}
+.dk-row.stack .dk-seg {
+  display: flex;
+  width: 100%;
+}
+.dk-row.stack .dk-seg button {
+  flex: 1;
+}
+
+/* Pairing slots: fixed columns so the buttons never spill out of the card. */
+.dk-table.slots {
+  table-layout: fixed;
+}
+.dk-table.slots col.slot {
+  width: 30px;
+}
+.dk-table.slots col.acts {
+  width: 96px;
+}
+.dk-table.slots td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dk-table.slots .acts-cell {
+  display: grid;
+  gap: 4px;
+  padding: 5px 0;
+}
+.dk-table.slots .acts-cell > * {
+  width: 100%;
+  justify-content: center;
+}
 .dk-row > label,
 .dk-row > span.dk-label {
   color: var(--text-soft);
@@ -338,6 +384,7 @@ html[data-theme="dark"] .dk {
 .dk-seg button {
   height: 24px;
   padding: 0 9px;
+  white-space: nowrap;
   border: 0;
   border-left: 1px solid var(--border-input);
   background: var(--bg-input);
@@ -429,6 +476,10 @@ html[data-theme="dark"] .dk {
 .dk-btn.danger {
   color: var(--text-error);
   border-color: var(--notice-error-bd);
+}
+.dk-btn.danger:disabled {
+  color: var(--dk-disabled-text);
+  border-color: var(--dk-disabled-bg);
 }
 
 /* ---- Data tables (diagnostics, slots) ---- */
@@ -1112,8 +1163,10 @@ html[data-theme="dark"] .dk {
 }
 /* Controller and its status stay together, centered as one block; the art
    scales with the window but leaves room for the status lines. */
+/* The drawing keeps its size (min-height below) in a short window; the
+   column scrolls instead of the readouts sliding over it. */
 .live-stage .live-ctl {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
 }
 .live-stage .live-ctl svg {
@@ -1664,9 +1717,14 @@ html[data-theme="dark"] .dk {
 .live-strip > .live-tile-narrow {
   flex: 0.6 1 0;
 }
-@container (max-width: 560px) {
+/* Narrow (a small window with the panel open): two rows of four. */
+@container (max-width: 700px) {
   .live-strip {
     flex-wrap: wrap;
+  }
+  .live-strip > .live-tile,
+  .live-strip > .live-tile-narrow {
+    flex: 1 1 calc(25% - 8px);
   }
 }
 

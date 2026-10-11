@@ -12,6 +12,9 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   startMinimized: false,
   launchAtLogin: false,
   checkForUpdates: true,
+  // Off until the user says yes (the app asks once, after the tour).
+  autoInstallUpdates: false,
+  updatesAsked: false,
   // Linux Games page: off until the user agrees to let the app read launcher settings.
   gamesScanAllowed: false,
   // Silent until the user says yes (the tour asks once).
@@ -24,6 +27,8 @@ const SettingsFile = z.object({
   startMinimized: z.boolean().optional(),
   launchAtLogin: z.boolean().optional(),
   checkForUpdates: z.boolean().optional(),
+  autoInstallUpdates: z.boolean().optional(),
+  updatesAsked: z.boolean().optional(),
   gamesScanAllowed: z.boolean().optional(),
   narratorVoice: z.enum(["ask", "on", "off"]).optional(),
   narratorCaptions: z.boolean().optional(),
@@ -34,6 +39,8 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("startMinimized"), value: z.boolean() }),
   z.strictObject({ key: z.literal("launchAtLogin"), value: z.boolean() }),
   z.strictObject({ key: z.literal("checkForUpdates"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("autoInstallUpdates"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("updatesAsked"), value: z.boolean() }),
   z.strictObject({ key: z.literal("gamesScanAllowed"), value: z.boolean() }),
   z.strictObject({ key: z.literal("narratorVoice"), value: z.enum(["ask", "on", "off"]) }),
   z.strictObject({ key: z.literal("narratorCaptions"), value: z.boolean() }),

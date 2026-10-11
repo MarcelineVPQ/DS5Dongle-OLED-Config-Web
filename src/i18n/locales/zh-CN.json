@@ -429,7 +429,7 @@
       "download": "下载并安装",
       "downloading": "正在下载 {{version}}：{{got}} / {{total}}（{{pct}}%）",
       "installing": "正在安装更新…",
-      "ready": "已安装版本 {{version}}。",
+      "ready": "版本 {{version}} 已安装。下次打开应用时启动，或立即重启。",
       "restart": "立即重启",
       "manual": "更新 {{version}} 可在发布页面获取。",
       "open": "打开发布页面",
@@ -445,7 +445,11 @@
         "restarting": "正在重启接收器…",
         "verifying": "正在等待接收器重新连接…",
         "verifyingPress": "已写入。请按手柄上的 PS 键：手柄连接后接收器才会重新出现。如果一直没有反应，请拔下后重新插入。"
-      }
+      },
+      "askTitle": "让应用保持最新？",
+      "askBody": "新版本可以自动下载并安装（与每次更新一样经过校验），下次打开应用时启动。你可以随时在应用设置中更改。",
+      "askYes": "自动更新",
+      "askNo": "每次都问我"
     },
     "controller": {
       "battery": "电量",
@@ -700,7 +704,9 @@
         "bodyHint": "触觉反馈：强度和音频自动触觉"
       },
       "hidePanel": "隐藏设置面板（手柄会变大）",
-      "showPanel": "设置"
+      "showPanel": "设置",
+      "autoInstall": "自动安装更新",
+      "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本"
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",

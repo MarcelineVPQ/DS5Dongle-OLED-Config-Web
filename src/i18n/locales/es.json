@@ -429,7 +429,7 @@
       "download": "Descargar e instalar",
       "downloading": "Descargando {{version}}: {{got}} de {{total}} ({{pct}} %)",
       "installing": "Instalando la actualización…",
-      "ready": "La versión {{version}} está instalada.",
+      "ready": "La versión {{version}} está instalada. Se inicia la próxima vez que abras la app, o reinicia ahora.",
       "restart": "Reiniciar ahora",
       "manual": "La actualización {{version}} está en la página de versiones.",
       "open": "Abrir página de versiones",
@@ -445,7 +445,11 @@
         "restarting": "Reiniciando el dongle…",
         "verifying": "Esperando a que vuelva el dongle…",
         "verifyingPress": "Flasheado. Pulsa PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."
-      }
+      },
+      "askTitle": "¿Mantener la app al día?",
+      "askBody": "Las nuevas versiones pueden descargarse e instalarse solas, verificadas como cada actualización, y se inician la próxima vez que abras la app. Puedes cambiarlo en los ajustes de la app.",
+      "askYes": "Actualizar automáticamente",
+      "askNo": "Preguntarme cada vez"
     },
     "controller": {
       "battery": "Batería",
@@ -703,7 +707,9 @@
         "bodyHint": "Hápticos: intensidad y Audio Auto Haptics"
       },
       "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
-      "showPanel": "Ajustes"
+      "showPanel": "Ajustes",
+      "autoInstall": "Instalar actualizaciones automáticamente",
+      "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app"
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",

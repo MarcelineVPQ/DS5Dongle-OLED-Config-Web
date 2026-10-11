@@ -25,6 +25,10 @@ export interface DesktopSettings {
   startMinimized: boolean;
   launchAtLogin: boolean;
   checkForUpdates: boolean;
+  // Download and install app updates in the background (they start the next
+  // time the app opens); asked once on first run (updatesAsked).
+  autoInstallUpdates: boolean;
+  updatesAsked: boolean;
   gamesScanAllowed: boolean; // the user agreed to let the Games page read launcher settings
   // The narrator: "ask" until the user answers the tour's question (silent
   // until then), then on or off; changeable in App settings.

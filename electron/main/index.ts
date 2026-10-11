@@ -51,8 +51,8 @@ function start(): void {
     tray?.updateUpdateState(state);
   });
   updater.pruneStaleFiles();
-  setTimeout(() => settings.checkForUpdates && void updater.check(), UPDATE_FIRST_CHECK_MS);
-  setInterval(() => settings.checkForUpdates && void updater.check(), UPDATE_INTERVAL_MS);
+  setTimeout(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_FIRST_CHECK_MS);
+  setInterval(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_INTERVAL_MS);
   applyAutostart(settings.launchAtLogin, settings.startMinimized);
   lockDownSession();
 
@@ -146,10 +146,20 @@ function start(): void {
   });
 }
 
+// A scheduled check; with automatic updates on, a newer version is downloaded,
+// verified and installed in the background (the same path as the banner's
+// button), and starts the next time the app opens.
+async function checkForUpdates(): Promise<void> {
+  const state = await updater.check();
+  if (state.phase === "available" && settings.autoInstallUpdates) await updater.downloadAndInstall();
+}
+
 function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): DesktopSettings {
   settings = { ...settings, [key]: value };
   saveSettings(settings);
   if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  // Turned on with an update already waiting: install it now.
+  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") void updater.downloadAndInstall();
   tray?.updateSettings(settings);
   return settings;
 }

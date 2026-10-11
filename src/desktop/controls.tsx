@@ -1,16 +1,20 @@
 // Compact controls for the desktop layout. Each renders one .dk-row.
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface RowProps {
   label: string;
   sub?: string;
   invalid?: boolean;
+  // A small control (a switch): the label and its description get the width.
+  wide?: boolean;
+  // A wide control (long segmented choices): it goes under the label.
+  stack?: boolean;
   children: ReactNode;
 }
 
-export function Row({ label, sub, invalid, children }: RowProps) {
+export function Row({ label, sub, invalid, wide, stack, children }: RowProps) {
   return (
-    <div className={`dk-row${invalid ? " invalid" : ""}`}>
+    <div className={`dk-row${invalid ? " invalid" : ""}${wide ? " wide" : ""}${stack ? " stack" : ""}${sub ? " has-sub" : ""}`}>
       <span className="dk-label">
         {label}
         {sub && <span className="dk-sub">{sub}</span>}
@@ -102,7 +106,7 @@ interface ToggleProps {
 
 export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
   return (
-    <Row label={label} sub={sub}>
+    <Row label={label} sub={sub} wide>
       <button type="button" role="switch" aria-checked={value} aria-label={label} className={`dk-toggle${value ? " on" : ""}`} disabled={disabled} onClick={() => onChange(!value)} />
     </Row>
   );
@@ -117,10 +121,30 @@ interface SegmentedProps<T extends number> {
   onChange: (value: T) => void;
 }
 
+// The choices go under the label when they don't fit beside it (measured:
+// it depends on the label, the language and the panel's width).
 export function Segmented<T extends number>({ label, sub, value, options, disabled, onChange }: SegmentedProps<T>) {
+  const seg = useRef<HTMLDivElement>(null);
+  const needed = useRef(0); // the choices' width side by side, measured inline
+  const [stack, setStack] = useState(false);
+  useLayoutEffect(() => {
+    const el = seg.current;
+    const row = el?.closest(".dk-row");
+    if (!el || !row) return;
+    const check = () => {
+      if (!el.closest(".dk-row.stack")) needed.current = el.scrollWidth;
+      // Inline, the control gets what the label column (.dk-row) leaves.
+      const room = row.clientWidth - Math.max(110, row.clientWidth * 0.4) - 10;
+      setStack(needed.current > room);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(row);
+    return () => ro.disconnect();
+  }, [options]);
   return (
-    <Row label={label} sub={sub}>
-      <div className="dk-seg" role="group" aria-label={label}>
+    <Row label={label} sub={sub} stack={stack}>
+      <div className="dk-seg" role="group" aria-label={label} ref={seg}>
         {options.map((o) => (
           <button type="button" key={o.value} title={o.title} className={o.value === value ? "on" : ""} aria-pressed={o.value === value} disabled={disabled} onClick={() => onChange(o.value)}>
             {o.label}

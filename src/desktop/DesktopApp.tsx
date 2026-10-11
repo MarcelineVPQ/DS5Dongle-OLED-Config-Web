@@ -11,6 +11,7 @@ import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
 import type { PanelView } from "./live/PartPanel";
 import UpdateBanners from "./UpdateBanners";
+import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
 import "./desktop.css";
@@ -208,6 +209,7 @@ export default function DesktopApp() {
 
         <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}`}>
           <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => openPanel("dongle")} />
+          <AutoUpdateAsk />
           {whatsNew.version && (
             <div className="dk-notice">
               <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>

@@ -428,7 +428,7 @@
       "download": "Download and install",
       "downloading": "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
       "installing": "Installing the update…",
-      "ready": "Version {{version}} is installed.",
+      "ready": "Version {{version}} is installed. It starts the next time you open the app, or restart now.",
       "restart": "Restart now",
       "manual": "App update {{version}} is available on the release page.",
       "open": "Open release page",
@@ -444,7 +444,11 @@
         "restarting": "Restarting the dongle…",
         "verifying": "Waiting for the dongle to come back…",
         "verifyingPress": "Flashed. Press PS on the controller: the dongle comes back once a controller connects. If it stays dark, unplug it and plug it back in."
-      }
+      },
+      "askTitle": "Keep the app up to date?",
+      "askBody": "New versions can download and install by themselves, checked like every update, and start the next time you open the app. You can change this in App settings.",
+      "askYes": "Update automatically",
+      "askNo": "Ask me each time"
     },
     "controller": {
       "battery": "Battery",
@@ -702,7 +706,9 @@
         "bodyHint": "Haptics: strength and Audio Auto Haptics"
       },
       "hidePanel": "Hide the settings panel (the controller gets bigger)",
-      "showPanel": "Settings"
+      "showPanel": "Settings",
+      "autoInstall": "Install updates automatically",
+      "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app"
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",

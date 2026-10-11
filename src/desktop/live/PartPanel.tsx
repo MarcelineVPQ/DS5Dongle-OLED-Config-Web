@@ -273,6 +273,16 @@ function AppSettings() {
           <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
           <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
           <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
+          <Toggle
+            label={t("desktop.live.autoInstall")}
+            sub={t("desktop.live.autoInstallSub")}
+            value={settings.checkForUpdates && settings.autoInstallUpdates}
+            disabled={!settings.checkForUpdates}
+            onChange={(v) => {
+              set("autoInstallUpdates", v);
+              set("updatesAsked", true);
+            }}
+          />
         </section>
       )}
       <NarratorSettings />
