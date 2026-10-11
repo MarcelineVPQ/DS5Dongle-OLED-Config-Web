@@ -8,46 +8,15 @@ Made and tested on Linux. Windows and macOS builds are included but haven't been
 
 ## What you can do
 
-Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. Below it, a row of live tiles shows the sticks, L2 and R2, battery, signal, the **lightbar mode** with its live color (click it to change it), and your player number and pairing slot. Under the tiles, eight **live data** cards show everything the controller reports: stick and trigger values, the effect each trigger is running, gyroscope and accelerometer with scrolling graphs and tilt, touch points, what's plugged into the controller, the link itself (update rate, round trip, signal), and your audio, haptics and dongle settings at a glance (click any of those lines to open its setting).
+**The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-**Click any part of the controller with your mouse** to set it up in the panel on the right, or pick a setting from the list there (the panel can be hidden with **»** to make the controller bigger):
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptics strength per grip (HD haptics and rumble, with a test), Audio Auto Haptics, speaker and mic (with tests), button remapping, pairing slots.
+- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyro, stored in the dongle per controller.
+- **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline), and one-click firmware updates.
+- **Games (Linux):** your Steam, Heroic and Lutris library with per-game controller profiles that switch in while a game runs, Proton setup and fixes, DualSense support per game, and your own ratings and notes.
+- **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
-| Click | To set up |
-| --- | --- |
-| The light strips beside the touchpad | Lightbar: game-controlled, four favorite colors, breathing, rainbow, fade, tilt |
-| L2 / R2 | Try the adaptive trigger effects, see how far each trigger is pulled and which effect a game is running |
-| Any button or stick | Remap it to another button; the map lives on the dongle, so it works in every game with no software on the PC |
-| The speaker grille | Speaker level (up to +12 dB), with a live level meter |
-| The grips | Haptics strength and Audio Auto Haptics (rumble from game audio for games that send no haptics), with a live meter |
-| Mute | The Bluetooth microphone |
-| PS | The four pairing slots |
-
-The top bar holds the rest:
-
-- **Dongle:** firmware and one-click updates, OLED brightness and sleep timers, power and idle disconnect, USB polling rate and controller mode, and diagnostics under *Advanced*.
-- **Games** (Linux): a library of your Steam, Heroic and Lutris games, with each game's artwork, play time, the Proton it runs with and how well the DualSense works in it. Give a game its own **controller profile** (haptics, Audio Auto Haptics, speaker, lightbar, mic): it switches in on the dongle while the game runs and your normal settings come back when it closes; your saved settings on the dongle are never changed. Rate games and tick what you noticed (private notes stay on your PC). **Home** checks the launchers for settings that block adaptive triggers and haptics, installs the DualSense Proton build, and fixes what it finds once you've reviewed each change. Everything it changes can be undone.
-
-  ![The Games library](docs/screenshots/games-library.png)
-- **About:** what's new in each version, the firmware's changes, this guide, and credits.
-- **⚙ App settings:** theme (light, dark, follow the system, or **match your desktop**: your KDE Plasma color scheme, or the system accent color elsewhere), language, close to tray, start at login.
-
-**New here?** The first time a controller connects, a one-minute guided tour walks you through it, hands-on and driven from the controller: press a few buttons, pull a trigger (and feel it push back), click the lightbar. On those play steps ✕ and ○ are just buttons to try: **hold ✕** to move on, hold ○ to go back. Replay the tour any time from ⚙ App settings.
-
-**The narrator.** The tour asks whether you'd like a voice: a narrator who speaks through the **controller's speaker** (never your PC's), in the app's language. She talks you through the tour and confirms things as they happen (saved, remapped, firmware updated). The dongle has her too, so even without the app she says when the controller connects, names the pairing slot you switch to, and warns when the battery runs low. **Captions** show her words on screen (on by default), and with the voice off the confirmations still show as text. Change either in ⚙ App settings → Narrator, where you can also test her voice.
-
-![App settings: theme, behavior, the narrator and captions](docs/screenshots/app-settings.png)
-
-| | |
-| --- | --- |
-| ![The start panel: every setting one click away](docs/screenshots/live-controller-panel.png) | ![The guided tour](docs/screenshots/tour.png) |
-| ![Trigger panel](docs/screenshots/panel-trigger.png) | ![Lightbar panel](docs/screenshots/panel-lightbar.png) |
-| ![Remapping a button](docs/screenshots/panel-remap.png) | ![Dongle panel](docs/screenshots/panel-dongle.png) |
-
-![Live data: everything the controller reports](docs/screenshots/live-data.png)
-
-The app keeps running in the **system tray**. The icon shows the controller with its touchpad in your lightbar color, a bolt while charging, and a dot: green connected, amber no controller, grey no dongle. It's dark on a light taskbar and light on a dark one. Right-click it for slots, updates and settings.
-
-Changes apply to the dongle the moment you make them, so you can hear and feel them. **Save to dongle** keeps them after the dongle powers off; **Revert** goes back to what's saved.
+The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to dongle** keeps them after it powers off.
 
 ## Requirements
 
@@ -95,15 +64,7 @@ No accounts, no analytics, no telemetry. The app only goes online to check GitHu
 
 ## Troubleshooting
 
-| Problem | What to do |
-| --- | --- |
-| "Plug in the DS5 Dongle" while it is plugged in | On Linux, press **Set up USB access** on that screen. Everywhere: make sure the dongle runs firmware v0.8 or newer. |
-| The app window doesn't appear | It may have opened behind other windows, or be in the tray. Click the tray icon. |
-| Controller shows "Not connected" | Press **PS** on the controller. After a firmware update or slot switch it doesn't reconnect by itself. A new dongle only appears once a controller is paired: hold **PS + Create** until the light bar flashes. |
-| The controller drawing doesn't move | Update the dongle's firmware (the live view needs v0.8 or newer). |
-| The narrator is silent | She only speaks through the controller's speaker, and only when the narrator is on (⚙ App settings → Narrator). Check the controller's volume (and that it isn't muted on the PC). The dongle's own lines need firmware v0.8 or newer. |
-| Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
-| Linux with an NVIDIA card | Handled automatically (the app renders without the GPU, which avoids a known Electron crash). |
+See [the guide's troubleshooting](docs/GUIDE.md#9-troubleshooting) (amber light bar and USB 3.0 ports, nothing showing up, "Not connected", settings resetting, and more).
 
 ## Build it yourself
 

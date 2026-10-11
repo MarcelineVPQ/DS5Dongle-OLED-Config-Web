@@ -3,7 +3,7 @@ import { errorText } from "../../errorText";
 import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
-import readme from "../../../README.md?raw";
+import guide from "../../../docs/GUIDE.md?raw";
 import Markdown from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 
@@ -102,7 +102,7 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
         {tab === "changes" && <Markdown text={changelog} />}
         {tab === "firmware" &&
           (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}
-        {tab === "guide" && <Markdown text={readme} />}
+        {tab === "guide" && <Markdown text={guide} />}
         {tab === "credits" && <Markdown text={CREDITS} />}
       </section>
     </div>

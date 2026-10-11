@@ -1,0 +1,184 @@
+# DS5 Dongle OLED Edition: the guide
+
+Step by step, from the parts on your desk to every setting in the app. Each section has a picture of exactly what it describes.
+
+- [1. Build the dongle](#1-build-the-dongle)
+- [2. First start: firmware and pairing](#2-first-start-firmware-and-pairing)
+- [3. The Controller page](#3-the-controller-page)
+- [4. Each part of the controller](#4-each-part-of-the-controller)
+- [5. Calibration](#5-calibration)
+- [6. The Dongle page](#6-the-dongle-page)
+- [7. Games (Linux)](#7-games-linux)
+- [8. App settings](#8-app-settings)
+- [9. Troubleshooting](#9-troubleshooting)
+
+## 1. Build the dongle
+
+### Parts
+
+| Part | Notes |
+| --- | --- |
+| **Raspberry Pi Pico 2 W** | The **Pico 2 WH** has the pin headers already soldered on; the plain Pico 2 W needs two 20-pin headers soldered. The original Pico W (not 2) works without audio. |
+| **Waveshare Pico-OLED-1.3** (optional) | The 128×64 screen with two buttons (KEY0 / KEY1). SKU HIPI1798. Everything works without it; the app shows the screen either way. |
+| **A USB cable that carries data** | Micro-USB on the Pico's end. Charge-only cables power the Pico but your computer never sees it: if nothing appears, try another cable first. |
+| A small heatsink (optional) | The chip runs overclocked (320 MHz at 1.20 V, which Bluetooth needs); a stick-on heatsink keeps it cool in long sessions. |
+
+### Putting it together
+
+1. **Headers:** solder them on (skip this with a Pico 2 WH).
+2. **The screen:** the OLED board plugs straight onto the Pico's headers, no wiring. Line up its **USB marking with the Pico's USB connector** (Waveshare's [product photos](https://www.waveshare.com/wiki/Pico-OLED-1.3) show it seated) and press it down evenly.
+3. **Plug it in** (next section).
+
+![The Pico 2 W with the OLED board seated on top, USB end on the left](screenshots/guide-hardware.png)
+
+### Which USB port
+
+**Use a USB 2.0 port** (usually the black ones, not blue). USB 3.0 ports and USB 3.0 extension cables give off radio noise right in the 2.4 GHz band Bluetooth uses: the controller then gets stuck on an **amber light bar** and never connects. If you only have USB 3.0 ports nearby, use a short **USB 2.0** extension cable or a powered **USB 2.0** hub to move the dongle a little away from them. The dongle takes its power from the USB port; it needs nothing else.
+
+## 2. First start: firmware and pairing
+
+### Install the firmware
+
+The app includes the matching firmware, so this works offline.
+
+1. **A new Pico:** just plug it in. **A Pico with other firmware on it:** hold its **BOOTSEL** button while you plug it in.
+2. The app finds it and offers to **Install the firmware**. One click; keep it plugged in until it's done (your computer may also show a drive called RP2350: you don't need to open it).
+
+![The setup screen offering to install the firmware](screenshots/guide-setup.png)
+
+### Pair your controller
+
+Hold **PS + Create** on the controller until the light bar flashes. The dongle finds it and the app shows it a moment later. A controller that was paired before only needs **PS**.
+
+### USB access (Linux)
+
+On Linux, press **Set up USB access** on the Dongle page once (it asks for your password). It lets the app open the dongle, and on newer Ubuntu it also lets the app run inside its security sandbox.
+
+## 3. The Controller page
+
+Your controller, drawn in its own colors, moving as you use it: buttons light up as you press them, the sticks move, the light bar shows its real color. The **rail** on the right takes you to the other pages (hover it for names; pin it open with the button at the bottom, or Ctrl+B).
+
+![The Controller page: the live drawing, the status tiles and the data cards](screenshots/guide-controller.png)
+
+- **Click any part of the drawing** to set it up: its settings open in the panel on the right. Or pick a setting from the list in that panel.
+- **The tiles** under the drawing: battery, signal, light bar mode, and the player light and pairing slot.
+- **The cards**: inputs (sticks, triggers, buttons, touch), gyroscope, accelerometer, and the connection (update rate, round trip, headset and mic).
+- **Changes apply right away.** **Save to dongle** in the bottom bar keeps them after the dongle is unplugged; **Revert** goes back to what's saved.
+
+## 4. Each part of the controller
+
+### Light bar
+
+![The Lightbar panel](screenshots/guide-lightbar.png)
+
+Pick a mode: **Game** (the game decides), one of your four **favorite colors** (FAV0–FAV3), or an effect (breathing, rainbow, fade). Set the favorites with the color pickers.
+
+### Adaptive triggers
+
+![The Adaptive triggers panel](screenshots/guide-triggers.png)
+
+Try the trigger effects games can use (resistance, weapon, vibration…) on L2 and R2. Games set their own effects while you play; this is for feeling what they do and checking the triggers work.
+
+### Haptics
+
+![The Haptics panel with Left and Right grip and the test buttons](screenshots/guide-haptics.png)
+
+- **Haptics strength**, per grip: **Left grip** and **Right grip**, with **Link left and right** to move both together. It scales both kinds of vibration games use: HD haptics and classic rumble. (The triggers have their own motors; this doesn't change them.)
+- **Test left / Test right / Test both:** a short buzz on that grip at its strength now.
+- **Audio Auto Haptics:** vibration made from the game's sound, for games that send none (or to add to theirs): **Fallback** (only when the game sends nothing), **Mix**, or **Replace**, with its own strength and low-pass filter.
+
+### Speaker and microphone
+
+![The Speaker panel with the live meter and the chime test](screenshots/guide-speaker.png)
+
+- **Speaker level**, with a live meter of what's playing, and a test chime on the controller's speaker.
+- **Microphone:** turn the controller's Bluetooth mic on or off, and test it: it records three seconds and plays them back on the controller (Linux).
+
+### Buttons (remapping)
+
+![Remapping a button](screenshots/guide-remap.png)
+
+Click a button or stick on the drawing and choose what it **acts as**. Remaps are stored in the dongle and work in every game, on any computer.
+
+### Pairing slots
+
+![The pairing slots](screenshots/guide-slots.png)
+
+The dongle remembers up to four controllers (slots 0–3). **Switch** to another slot, **Forget** one, or forget all. Each slot keeps its own calibration.
+
+## 5. Calibration
+
+![Calibration: the guided run and the raw vs corrected previews](screenshots/guide-calibration.png)
+
+For stick drift, sticks that don't reach the edge, triggers that don't reach full, and a gyro that creeps. Open it from the settings list (**Calibration**).
+
+1. **Start calibration** and follow the four steps, each with a short "get ready" pause first:
+   1. let go of both sticks;
+   2. roll both sticks slowly around their edges;
+   3. press both triggers all the way, then let go;
+   4. put the controller down and don't touch it.
+2. Check the previews: **Raw** (what the stick really does) next to **What games see**. Adjust the **deadzone** and **full tilt** by hand if you like.
+3. **Save to dongle.** It applies to every game right away.
+
+A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
+
+## 6. The Dongle page
+
+![The Dongle page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)
+
+- **Dongle console:** the dongle's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on the dongle.
+- **The dashboard:** the Pico 2 W's chip temperature, CPU clock and core voltage; graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and the OLED's brightness, state and timeouts.
+
+![The dashboard's gauges and graphs](screenshots/guide-dashboard.png)
+
+In the panel on the right:
+
+- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (the dongle restarts itself; press PS on the controller afterwards).
+- **Device:** restart the dongle, enter BOOTSEL, factory reset (keeps pairings and remaps), USB access (Linux).
+- **Power:** disconnect the controller when idle, the timeout, the Pico's status light.
+- **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
+- **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
+
+## 7. Games (Linux)
+
+![The Games library](screenshots/guide-games.png)
+
+The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded).
+
+- **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games.
+- **A game's page:**
+
+![A game page](screenshots/guide-game-page.png)
+
+  - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
+  - **Controller profile:** haptics, Audio Auto Haptics, speaker, light bar and mic just for this game. It switches in while the game runs and your normal settings come back when it closes (also after a crash).
+  - **Setup:** this game's recommended fixes, applied with a backup you can undo.
+  - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
+  - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
+  - **Your rating** and a checklist of what you noticed, and private **notes**. Sharing with other players comes later.
+
+## 8. App settings
+
+![App settings](screenshots/guide-app-settings.png)
+
+Open with the ⚙ in the rail.
+
+- **Language.**
+- **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).
+- **Accessibility:** **Color vision** modes (colors never carry meaning alone anyway), **Reduce motion**, the **narrator** voice and captions.
+- **Startup and window:** close to tray, start at login, start minimized.
+- **Updates:** check automatically, install automatically.
+- **Advanced:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
+
+## 9. Troubleshooting
+
+| Problem | What to do |
+| --- | --- |
+| The light bar stays **amber** and never connects | Move the dongle to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
+| Nothing shows up when the dongle is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
+| "Not connected" | Press **PS** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold **PS + Create**. |
+| Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
+| The drawing doesn't move, or a page says "update the firmware" | Update the dongle's firmware from the Dongle page. |
+| The narrator is silent | She speaks only through the controller's speaker, and only when the narrator is on (App settings → Accessibility). Check the controller's volume. |
+| The app window doesn't appear | It may be in the tray: click the tray icon. |
+| A soft reboot without unplugging | Hold **PS + Mute** for 2 seconds, or **KEY0 + KEY1** on the OLED for 1 second. |
