@@ -1,0 +1,34 @@
+{
+  "about": "The look every screenshot is taken in (tools/screenshot_env.mjs apply). Saved 2026-10-11 from Marcy's setup.",
+  "prefs": {
+    "ds5.knob.backdropDim": "20",
+    "ds5.devTools": "0",
+    "ds5.glass": "1",
+    "ds5.reduceMotion": "0",
+    "ds5.dev.colorway": "",
+    "ds5.tourDone": "1",
+    "ds5.accent": "desktop",
+    "ds5.librarySort": "recent",
+    "ds5.panelHidden": "0",
+    "i18nextLng": "en",
+    "ds5.colorVision": "standard",
+    "ds5.railPinned": "0",
+    "ds5.knob.backdropBlur": "0",
+    "ds5.knob.hdrNits": "500",
+    "ds5.knob.depth": "70",
+    "ds5.dev.model": "",
+    "ds5.artBackdropOff": "0",
+    "ds5.knob.cardOpacity": "60",
+    "ds5-bridge-theme": "desktop"
+  },
+  "viewport": {
+    "width": 1215,
+    "height": 1147,
+    "deviceScaleFactor": 1.2
+  },
+  "expect": {
+    "colorway": "COSMIC RED",
+    "desktopPanel": "rgb(32, 35, 38)",
+    "desktopAccent": "rgb(233, 58, 154)"
+  }
+}
