@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-10-11
+
+Includes firmware 0.8.1: rumble no longer cancelled in some games (Crimson Desert), output stays alive after a reconnect, steadier first pairing and faster reconnects. Tested on Linux; the Windows and macOS builds are included but untested.
+
+### Changed
+
+- The language button shows the language's own name ("Español", "日本語") instead of a code, never a flag; the regional variants are spelled out: 中文（简体）, Português (Brasil).
+
 ## [0.8.0] — 2026-10-10
 
 The first desktop release: the configurator is now an app, released together with the firmware it includes. **Tested on Linux; the Windows and macOS builds are included but untested.**
