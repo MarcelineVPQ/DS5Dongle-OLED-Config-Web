@@ -1183,6 +1183,14 @@ html[data-theme="dark"] .dk {
   justify-content: center;
   gap: 6px;
 }
+/* The mute button's light, amber while the mic is muted (a fixed status
+   color, like the real controller's). */
+.live-ctl [data-part="mute"].muted .cap {
+  fill: #ffa630;
+  /* the art sets a translucent fill-opacity inline on this cap */
+  fill-opacity: 1 !important;
+  filter: drop-shadow(0 0 3px #ff9a1f);
+}
 /* The PS logo is a symbol (no button cap), so it lights as a whole. */
 .live-ctl [data-part="ps"].on {
   fill: var(--ctl-on);
@@ -1224,4 +1232,16 @@ html[data-theme="dark"] .dk {
     border-top-color: currentColor;
     opacity: 0.5;
   }
+}
+
+.dk-md-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--dk-border);
+  border-radius: 6px;
+  margin: 6px 0;
+}
+.dk-md td .dk-md-img {
+  margin: 0;
 }

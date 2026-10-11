@@ -4,15 +4,35 @@ The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/Marceline
 
 Linux, Windows and macOS. No drivers to install. It updates itself and the dongle's firmware.
 
+![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
+
 ## What you can do
 
-- **Controller:** see the controller's connection, battery, charging and signal; set the lightbar (game-controlled, four favorite colors, breathing, rainbow, fade, tilt); manage the four pairing slots.
-- **Audio & haptics:** haptics strength, speaker level (up to +12 dB), Bluetooth microphone, and Audio Auto Haptics, which creates rumble from game audio for games that send no haptics.
-- **Buttons:** remap any button on a picture of the controller; test the adaptive trigger effects.
-- **Dongle:** OLED display brightness and sleep timers, power and idle disconnect, USB polling rate and controller mode, firmware updates, and diagnostics under *Advanced*.
-- **Tray:** the app keeps running in the system tray. The icon shows the controller with its touchpad in your lightbar color, a bolt while charging, and a dot: green connected, amber no controller, grey no dongle. Right-click for slots, updates and settings.
-- **Themes:** light, dark, follow the system, or **match your desktop** (your KDE Plasma color scheme, or the system accent color elsewhere).
-- **About:** what's new in each version, the firmware's changes, this guide, and credits, all inside the app.
+Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. **Click any part of the controller** to set it up in the panel on the right:
+
+| Click | To set up |
+| --- | --- |
+| The light strips beside the touchpad | Lightbar: game-controlled, four favorite colors, breathing, rainbow, fade, tilt |
+| L2 / R2 | Try the adaptive trigger effects, see how far each trigger is pulled and which effect a game is running |
+| Any button or stick | Remap it to another button; the map lives on the dongle, so it works in every game with no software on the PC |
+| The speaker grille | Speaker level (up to +12 dB), with a live level meter |
+| The grips | Haptics strength and Audio Auto Haptics (rumble from game audio for games that send no haptics), with a live meter |
+| Mute | The Bluetooth microphone |
+| PS | The four pairing slots |
+
+The top bar holds the rest:
+
+- **Dongle:** firmware and one-click updates, OLED brightness and sleep timers, power and idle disconnect, USB polling rate and controller mode, and diagnostics under *Advanced*.
+- **Games** (Linux): checks Steam, Heroic and Lutris for settings that block adaptive triggers and haptics, installs the DualSense Proton build, and fixes what it finds once you've reviewed each change. Everything it changes can be undone.
+- **About:** what's new in each version, the firmware's changes, this guide, and credits.
+- **⚙ App settings:** theme (light, dark, follow the system, or **match your desktop**: your KDE Plasma color scheme, or the system accent color elsewhere), language, close to tray, start at login.
+
+| | |
+| --- | --- |
+| ![Trigger panel](docs/screenshots/panel-trigger.png) | ![Lightbar panel](docs/screenshots/panel-lightbar.png) |
+| ![Remapping a button](docs/screenshots/panel-remap.png) | ![Dongle panel](docs/screenshots/panel-dongle.png) |
+
+The app keeps running in the **system tray**. The icon shows the controller with its touchpad in your lightbar color, a bolt while charging, and a dot: green connected, amber no controller, grey no dongle. It's dark on a light taskbar and light on a dark one. Right-click it for slots, updates and settings.
 
 Changes apply to the dongle the moment you make them, so you can hear and feel them. **Save to dongle** keeps them after the dongle powers off; **Revert** goes back to what's saved.
 
@@ -48,12 +68,12 @@ Download the `.zip`, unzip it, and move the app to *Applications*. The build isn
 
 ## Updates
 
-- **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off from the tray menu.
-- **Firmware:** when a newer firmware is published, the app offers it on the **Dongle** page. One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press **PS** on the controller afterwards.
+- **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off in ⚙ App settings or the tray menu.
+- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear under **Dongle** (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press **PS** on the controller afterwards.
 
 ## Privacy
 
-No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates and to load the firmware changelog. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
+No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates and to load the firmware changelog. To show your controller's colors, the dongle reads the colorway code from the controller's factory serial number once when it connects; only those two characters are kept, and they never leave your PC. The Games page reads launcher settings only after you allow it. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
 
 ## Troubleshooting
 
@@ -61,7 +81,8 @@ No accounts, no analytics, no telemetry. The app only goes online to check GitHu
 | --- | --- |
 | "Plug in the DS5 Dongle" while it is plugged in | On Linux, press **Set up USB access** on that screen. Everywhere: make sure the dongle runs firmware v0.8 or newer. |
 | The app window doesn't appear | It may have opened behind other windows, or be in the tray. Click the tray icon. |
-| Controller shows "Not connected" | Press **PS** on the controller. After a firmware update or slot switch it doesn't reconnect by itself. |
+| Controller shows "Not connected" | Press **PS** on the controller. After a firmware update or slot switch it doesn't reconnect by itself. A new dongle only appears once a controller is paired: hold **PS + Create** until the light bar flashes. |
+| The controller drawing doesn't move | Update the dongle's firmware (the live view needs v0.8 or newer). |
 | Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
 | Linux with an NVIDIA card | Handled automatically (the app renders without the GPU, which avoids a known Electron crash). |
 

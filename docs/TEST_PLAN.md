@@ -46,12 +46,14 @@ When the firmware protocol changes, change the fake in the same commit, or the i
 
 On the release firmware with a paired DualSense:
 
-1. App auto-connects, Overview shows firmware/protocol/CPU/controller state.
-2. Change haptics gain, verify over HID (`scripts/` or OLED Settings), Revert restores it, Save persists across a dongle power cycle.
-3. Lightbar mode and favorites change the controller LED live.
-4. Remap: swap two buttons, confirm in a game or `evtest`, reset.
-5. Slots: switch to an empty slot and back (press PS each time).
-6. Trigger test: every preset is felt on L2/R2; leaving the page turns it off.
-7. Diagnostics: counters move while audio plays; drops stay 0 (`scripts/audio_diag.py 10` agrees).
-8. Firmware: Restart and Enter BOOTSEL both return/mount as described.
-9. Linux, Windows (tester), macOS (best effort): the dongle connects with no driver install.
+1. App auto-connects; the live controller shows the controller's model and colorway, battery, signal, player and slot.
+2. Live view: every button, D-pad direction, PS, mute and touchpad click lights up; L2/R2 fill with the pull; sticks move (L3/R3 light); touches show as dots; the lightbar and player indicator match the controller. On a DualSense Edge, the Fn and back-paddle chips light.
+3. Grips → haptics gain: verify over HID (`scripts/` or OLED Settings), Revert restores it, Save persists across a dongle power cycle.
+4. Lightbar strips → mode and favorites change the controller LED live.
+5. A button → remap it to another, Apply, confirm in a game or `evtest`; the part shows as remapped; Reset all.
+6. PS → slots: switch to an empty slot and back (press PS each time).
+7. L2/R2 → every trigger preset is felt; closing the panel turns it off.
+8. Dongle → Advanced: counters move while audio plays; drops stay 0 (`scripts/audio_diag.py 10` agrees).
+9. Dongle → Restart and Enter BOOTSEL both return/mount as described; Check now spins, then reports the result.
+10. First-time setup: a Pico in BOOTSEL is found, the bundled firmware installs with one click, pairing brings the dongle up.
+11. Linux, Windows (tester), macOS (best effort): the dongle connects with no driver install.

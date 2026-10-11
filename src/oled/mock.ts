@@ -63,6 +63,7 @@ export function mockInputReport(state: MockState): InputReport {
     batteryRaw: 0x08,
     batteryPct: 80,
     batteryState: 0,
+    micMuted: false,
   };
 }
 

@@ -138,6 +138,8 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
     root.classList.toggle("live", !!input);
     const on = input ? pressed(input) : new Set<PartId>();
     for (const [id, el] of parts.current) el.classList.toggle("on", on.has(id));
+    // The mute button's light: amber while the mic is muted, like the real one.
+    parts.current.get("mute")?.classList.toggle("muted", !!input?.micMuted);
 
     for (const [side, value] of [
       ["l2", input?.triggerLeft ?? 0],

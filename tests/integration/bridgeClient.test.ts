@@ -158,3 +158,12 @@ describe("DualSense Edge extras", () => {
     expect([i.home, i.pad, i.mute]).toEqual([false, false, false]);
   });
 });
+
+describe("mute light", () => {
+  it("reports the mic as muted from input byte 53 bit 2", async () => {
+    const { dongle, client } = setup();
+    expect((await client.readInput()).micMuted).toBe(false);
+    dongle.input[53] = 0x04;
+    expect((await client.readInput()).micMuted).toBe(true);
+  });
+});

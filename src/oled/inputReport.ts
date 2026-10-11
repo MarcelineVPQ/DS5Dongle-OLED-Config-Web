@@ -59,6 +59,8 @@ export interface InputReport {
   // Trigger effect the controller is running (0 none, 1 feedback, 2 weapon, 3 vibration)
   triggerEffectLeft: number;
   triggerEffectRight: number;
+  // Mic muted (the controller's mute light glows amber)
+  micMuted: boolean;
   // Battery (low nibble × 10 = %, high nibble = state)
   batteryRaw: number;
   batteryPct: number;
@@ -124,6 +126,7 @@ export function decodeInputReport(data: Uint8Array | DataView): InputReport {
     fingers: [decodeFinger(32), decodeFinger(36)],
     triggerEffectLeft: b(47) >> 4,
     triggerEffectRight: b(47) & 0x0f,
+    micMuted: ((b(53) >> 2) & 1) === 1,
     batteryRaw: pwr,
     batteryPct: (pwr & 0x0f) * 10,
     batteryState: (pwr >> 4) & 0x0f,
@@ -171,5 +174,6 @@ export function emptyInputReport(): InputReport {
     batteryRaw: 0x0a, // 10/10 = 100%
     batteryPct: 100,
     batteryState: 0,
+    micMuted: false,
   };
 }
