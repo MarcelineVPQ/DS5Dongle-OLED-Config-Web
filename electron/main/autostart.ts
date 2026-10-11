@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { app } from "electron";
+import { execArg } from "./desktopEntry";
 import { launchPath } from "./integration";
 
 export const APP_ID = "io.github.MarcelineVPQ.DS5DongleConfigurator";
@@ -13,7 +14,7 @@ export const HIDDEN_FLAG = "--hidden";
 function linuxExec(): string {
   // The stable AppImage symlink (integration.ts); never process.execPath, which
   // inside an AppImage is the FUSE mount and gone after exit.
-  return JSON.stringify(launchPath());
+  return execArg(launchPath());
 }
 
 export function applyAutostart(enabled: boolean, startMinimized: boolean): void {

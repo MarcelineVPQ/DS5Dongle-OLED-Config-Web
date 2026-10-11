@@ -443,7 +443,8 @@
         "waiting-bootloader": "Esperando al bootloader…",
         "flashing": "Escribiendo el firmware",
         "restarting": "Reiniciando el dongle…",
-        "verifying": "Esperando a que vuelva el dongle…"
+        "verifying": "Esperando a que vuelva el dongle…",
+        "verifyingPress": "Flasheado. Pulsa PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."
       }
     },
     "controller": {
@@ -632,15 +633,9 @@
         "speaker": "Altavoz",
         "body": "Empuñaduras (háptica)"
       },
-      "pickHint": "Haz clic en cualquier parte del mando para configurarla.",
+      "pickHint": "Haz clic en cualquier parte del dibujo para configurarla.",
       "needsFirmware": "Actualiza el firmware del dongle para ver el mando moverse en directo.",
       "overview": "Tu mando",
-      "overviewText": "Todo se configura desde el propio mando: haz clic en una parte para ver sus ajustes aquí.",
-      "tipLightbar": "Las franjas de luz junto al panel táctil: modo de la barra de luz y colores favoritos.",
-      "tipTriggers": "L2 / R2: efectos de gatillos adaptativos para probar, cuánto se pulsan y reasignación.",
-      "tipButtons": "Cualquier botón o stick: reasignarlo a otro botón.",
-      "tipAudio": "La rejilla del altavoz: nivel del altavoz. Las empuñaduras: háptica y Audio Auto Haptics.",
-      "tipPs": "El botón PS: slots de emparejamiento.",
       "app": "Ajustes de la app",
       "close": "Cerrar",
       "back": "Mando",
@@ -677,7 +672,113 @@
         "1": "resistencia",
         "2": "arma",
         "3": "vibración"
+      },
+      "go": {
+        "intro": "Haz clic con el ratón en una parte del dibujo, o elige un ajuste aquí:",
+        "lightbar": {
+          "title": "Barra de luz",
+          "sub": "Modo y colores favoritos"
+        },
+        "triggers": {
+          "title": "Gatillos adaptativos",
+          "sub": "Prueba los efectos en L2 / R2"
+        },
+        "haptics": {
+          "title": "Hápticos",
+          "sub": "Intensidad y Audio Auto Haptics"
+        },
+        "speaker": {
+          "title": "Altavoz",
+          "sub": "Nivel, con medidor en directo"
+        },
+        "mic": {
+          "title": "Micrófono",
+          "sub": "El micrófono Bluetooth del mando"
+        },
+        "slots": {
+          "title": "Ranuras de emparejamiento",
+          "sub": "Cambiar u olvidar mandos"
+        },
+        "buttons": "Para reasignar un botón o un stick, haz clic en él en el dibujo.",
+        "bodyHint": "Hápticos: intensidad y Audio Auto Haptics"
+      },
+      "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
+      "showPanel": "Ajustes"
+    },
+    "tour": {
+      "stepOf": "Paso {{n}} de {{total}}",
+      "skip": "Saltar el recorrido",
+      "skipStep": "Saltar este paso",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "finishButton": "¡Vamos!",
+      "waiting": "Esperándote…",
+      "helpTitle": "Ayuda",
+      "helpHint": "El recorrido guiado del primer inicio.",
+      "replay": "Ver el recorrido otra vez",
+      "welcome": {
+        "title": "¡Bienvenido!",
+        "body": "Un recorrido de un minuto. Ten el mando a mano. Pulsa Esc o «Saltar el recorrido» cuando quieras."
+      },
+      "press": {
+        "title": "Este es tu mando, en directo",
+        "body": "Pulsa cualquier botón del mando y mira cómo se ilumina aquí.",
+        "done": "¡Ahí está! Todo lo que pulsas aparece aquí."
+      },
+      "trigger": {
+        "title": "Ahora los gatillos",
+        "body": "Aprieta L2 o R2 hasta el fondo.",
+        "done": "El relleno sigue tu presión, como en el mando real."
+      },
+      "click": {
+        "title": "Configura con el ratón",
+        "body": "Haz clic con el ratón en la franja de luz junto al panel táctil. Cada parte del dibujo abre sus propios ajustes.",
+        "done": "Has abierto los ajustes de la barra de luz."
+      },
+      "panel": {
+        "title": "Los ajustes se abren aquí",
+        "body": "Los cambios llegan al dongle al instante: los ves, los oyes y los sientes. ✕ cierra el panel."
+      },
+      "list": {
+        "title": "O elige de la lista",
+        "body": "¿No sabes dónde está algo en el mando? Todos los ajustes están también aquí, a un clic."
+      },
+      "save": {
+        "title": "Quédate con lo que te guste",
+        "body": "Los cambios son inmediatos pero temporales. «Guardar en el dongle» los conserva al apagarlo; «Revertir» vuelve a lo guardado."
+      },
+      "top": {
+        "title": "El dongle, tus juegos y la ayuda",
+        "body": "Dongle: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y hápticos (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
+      },
+      "finish": {
+        "title": "Todo listo",
+        "body": "¡Diviértete! Puedes repetir este recorrido cuando quieras desde ⚙ Ajustes de la app."
       }
+    },
+    "liveData": {
+      "title": "Datos en directo",
+      "sticks": "Sticks",
+      "triggers": "Gatillos",
+      "effect": "Efecto",
+      "gyro": "Giroscopio",
+      "accel": "Acelerómetro",
+      "tilt": "Inclinación",
+      "touch": "Panel táctil",
+      "finger": "Dedo {{n}}",
+      "link": "Enlace",
+      "clock": "Reloj del sensor",
+      "rate": "Actualizaciones",
+      "roundTrip": "Ida y vuelta",
+      "signal": "Señal",
+      "ports": "Mando",
+      "headset": "Toma de auriculares",
+      "mic": "Toma de micrófono",
+      "muted": "Micro silenciado",
+      "usb": "Alimentación USB",
+      "yes": "sí",
+      "no": "no",
+      "inRange": "rango ideal"
     }
   }
 }

@@ -64,6 +64,11 @@ export function mockInputReport(state: MockState): InputReport {
     batteryPct: 80,
     batteryState: 0,
     micMuted: false,
+    seq: 0,
+    sensorTime: 0,
+    headphones: false,
+    micPlugged: false,
+    usbPower: false,
   };
 }
 

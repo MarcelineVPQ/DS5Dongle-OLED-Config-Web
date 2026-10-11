@@ -1,7 +1,7 @@
 // In-memory stand-in for the dongle's pico command reports, following the
 // firmware's rules in src/cmd.cpp: every 0xF6 SET bumps the sequence, deferred
 // functions report PENDING until the main loop runs them, a second deferred
-// function while one is pending is BUSY, and reboot/BOOTSEL make the device
+// function while any one is pending is BUSY, and reboot/BOOTSEL make the device
 // vanish. Used by the integration tests in place of real hardware.
 import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, encodeConfigBody } from "../../src/protocol/config";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "../../src/protocol/transport";
@@ -104,7 +104,7 @@ export class FakeDongle implements Ds5Transport {
     this.seq = (this.seq + 1) & 0xffff;
     this.lastFunc = func;
 
-    if (DEFERRED.has(func) && this.pending) {
+    if (this.pending) {
       this.lastResult = RESULT.busy;
       return;
     }
@@ -136,12 +136,14 @@ export class FakeDongle implements Ds5Transport {
     if (this.pending.polls-- > 0) return;
     const { func, arg } = this.pending;
     this.pending = null;
+    this.lastFunc = func; // reported under its own id
     this.lastResult = RESULT.ok;
     if (func === 0x02) {
       if (this.opts.saveFails) this.lastResult = RESULT.failed;
       else this.flashConfig = this.config.slice();
     } else if (func === 0x04) {
       this.currentSlot = arg;
+      this.flashConfig = this.config.slice(); // bt_set_slot() saves the config
       this.hostGen++;
     } else if (func === 0x05) this.slots[arg] = false;
     else if (func === 0x06) this.slots = [false, false, false, false];
@@ -155,7 +157,7 @@ export class FakeDongle implements Ds5Transport {
 
   private identity(): Uint8Array {
     const out = new Uint8Array(29);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 2, CONFIG_BODY_SIZE, 0x3f]);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 2, CONFIG_BODY_SIZE, 0x7f]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
@@ -164,6 +166,7 @@ export class FakeDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
+    out[19] = this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0; // unsaved settings
     out[24] = 8; // 80 % battery
     out[25] = this.playerLeds;
     out[26] = this.edge ? 1 : 0;

@@ -39,6 +39,11 @@ const api: DesktopApi = {
     ipcRenderer.on(IPC.desktopPalette, handler);
     return () => ipcRenderer.removeListener(IPC.desktopPalette, handler);
   },
+  onWindowVisible: (listener) => {
+    const handler = (_event: IpcRendererEvent, visible: boolean) => listener(visible);
+    ipcRenderer.on(IPC.windowVisible, handler);
+    return () => ipcRenderer.removeListener(IPC.windowVisible, handler);
+  },
   gamesScan: () => ipcRenderer.invoke(IPC.gamesScan),
   gamesApply: (fixIds) => ipcRenderer.invoke(IPC.gamesApply, fixIds),
   gamesUndo: (backupId) => ipcRenderer.invoke(IPC.gamesUndo, backupId),

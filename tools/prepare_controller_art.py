@@ -126,13 +126,34 @@ for e in list(root.iter()):
         edge.set("class", "led-edge")
         edge.set("clip-path", "url(#ctl-led-edge-clip)")
         edge.attrib.pop("id", None)
-        parent[e].append(edge)
+        # The glow (bloom) goes on a wrapper: a filter on the clipped path
+        # itself would be cut off at the clip's box.
+        p = parent[e]
+        glow = ET.Element(f"{{{SVG}}}g", {"class": "led-glow"})
+        p.insert(list(p).index(e), glow)
+        p.remove(e)
+        glow.append(e)
+        p.insert(list(p).index(glow) + 1, edge)
 
 # Player indicator: five lights in the bottom strip, centered (player 1 = the
 # middle one). Unlit ones are invisible, like on the controller.
 pled = ET.SubElement(root, f"{{{SVG}}}g", {"class": "pled", "data-part": "player-leds"})
 for i in range(5):
     ET.SubElement(pled, f"{{{SVG}}}rect", {"data-led": str(i), "x": f"{272.35 - 8 + (i - 2) * 17:.2f}", "y": "175.2", "width": "16", "height": "2.8", "rx": "1.4"})
+
+# Outlines drawn on the black plastic get .ln-dk, so the app can keep them
+# readable on colorways whose outline color is dark (see colorways.ts).
+DARK_LINE_PARTS = {"l1", "l2", "r1", "r2", "stick-l", "stick-r", "speaker", "ps", "mute"}
+DARK_LINE_IDS = {"path12690-4", "path14149", "path14160"}  # center edge, stick wells
+for e in list(root.iter()):
+    if e.get("class") != "ln":
+        continue
+    a, part = e, None
+    while a is not None and part is None:
+        part = a.get("data-part")
+        a = parent.get(a)
+    if part in DARK_LINE_PARTS or e.get("id") in DARK_LINE_IDS:
+        e.set("class", "ln ln-dk")
 
 for attr in ("width", "height"):
     root.attrib.pop(attr, None)  # sized by CSS; the viewBox stays

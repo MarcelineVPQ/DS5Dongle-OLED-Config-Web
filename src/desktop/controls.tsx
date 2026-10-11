@@ -42,6 +42,9 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
   // While the user is dragging or typing, show their value; otherwise show the
   // dongle's. null = not editing.
   const [editing, setEditing] = useState<number | null>(null);
+  // The number box keeps the text as typed ("-", "3.", "") until Enter or
+  // leaving the box, so ordinary typing works.
+  const [text, setText] = useState<string | null>(null);
   const local = editing ?? value;
   const setLocal = (next: number) => setEditing(next);
   const commit = (next: number) => {
@@ -70,12 +73,19 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
         min={min}
         max={max}
         step={step}
-        value={local.toFixed(digits)}
+        value={text ?? local.toFixed(digits)}
         disabled={disabled}
         aria-label={`${label} value`}
-        onChange={(e) => setLocal(Number(e.currentTarget.value))}
-        onBlur={(e) => commit(Number(e.currentTarget.value))}
-        onKeyDown={(e) => e.key === "Enter" && commit(Number(e.currentTarget.value))}
+        onChange={(e) => setText(e.currentTarget.value)}
+        onBlur={(e) => {
+          setText(null);
+          if (e.currentTarget.value.trim() !== "") commit(Number(e.currentTarget.value));
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" || e.currentTarget.value.trim() === "") return;
+          setText(null);
+          commit(Number(e.currentTarget.value));
+        }}
       />
       {unit !== undefined && <span className="dk-unit">{unit}</span>}
     </Row>
@@ -121,28 +131,6 @@ export function Segmented<T extends number>({ label, sub, value, options, disabl
   );
 }
 
-interface SelectProps {
-  label: string;
-  sub?: string;
-  value: number;
-  options: ReadonlyArray<{ value: number; label: string }>;
-  onChange: (value: number) => void;
-}
-
-export function Select({ label, sub, value, options, onChange }: SelectProps) {
-  return (
-    <Row label={label} sub={sub}>
-      <select value={value} aria-label={label} onChange={(e) => onChange(Number(e.currentTarget.value))}>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </Row>
-  );
-}
-
 export function rgbToHex([r, g, b]: number[]): string {
   return (
     "#" +
@@ -182,12 +170,12 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
   const [busy, setBusy] = useState(false);
   const [secs, setSecs] = useState(0);
   const live = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    live.current = true; // (again: StrictMode mounts twice in development)
+    return () => {
       live.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
   useEffect(() => {
     if (!busy) return;
     const started = Date.now();

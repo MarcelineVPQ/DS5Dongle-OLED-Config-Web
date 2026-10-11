@@ -15,6 +15,7 @@ import { dirname, join } from "node:path";
 import { execFile } from "node:child_process";
 import { app, shell } from "electron";
 import { APP_ID } from "./autostart";
+import { execArg } from "./desktopEntry";
 
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
 const SHORTCUT_NAME = "DS5 Dongle OLED Edition Configurator.lnk";
@@ -68,7 +69,7 @@ function integrateAppImage(resourcesDir: string): void {
   const entry =
     "[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\n" +
     "Comment=Configure the DS5 Dongle OLED Edition\n" +
-    `Exec=${JSON.stringify(launch)} %U\n` +
+    `Exec=${execArg(launch)} %U\n` +
     `Icon=${APP_ID}\nTerminal=false\nCategories=Utility;Settings;\n` +
     `StartupWMClass=${APP_ID}\n`;
   const appsDir = join(share, "applications");

@@ -11,7 +11,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import art from "../../assets/dualsense.svg?raw";
 import type { InputReport } from "../../oled/inputReport";
-import type { ColorwayColors } from "./colorways";
+import { lineOnDark, type ColorwayColors } from "./colorways";
 import { PART_IDS, type PartId } from "./parts";
 
 const STICK_TRAVEL = 9; // viewBox units at full deflection
@@ -76,6 +76,14 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
     const root = host.current?.querySelector("svg");
     if (!root) return;
     root.setAttribute("role", "group");
+    // The body has no data-part of its own (it's the whole shell): give it a
+    // keyboard stop too, so haptics can be reached without a mouse.
+    const body = root.querySelector<SVGGraphicsElement>(".bd");
+    if (body) {
+      body.setAttribute("data-part", "body");
+      body.setAttribute("tabindex", "0");
+      body.setAttribute("role", "button");
+    }
     for (const id of PART_IDS) {
       const el = root.querySelector<SVGGraphicsElement>(`[data-part="${id}"]`);
       if (!el) continue;
@@ -93,6 +101,8 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
   // Accessible names follow the language.
   useEffect(() => {
     for (const [id, el] of parts.current) el.setAttribute("aria-label", t(`desktop.live.part.${id}`));
+    host.current?.querySelector('[data-part="body"]')?.setAttribute("aria-label", t("desktop.live.part.body"));
+    host.current?.querySelector("svg")?.setAttribute("aria-label", t("desktop.live.overview", "Your controller"));
   }, [t]);
 
   useEffect(() => {
@@ -103,9 +113,21 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
     }
   }, [selected, remapped]);
 
+  // The lightbar like the real one: its color at full strength, mixed with
+  // the unlit grey plastic by how bright it is (off = plain grey, dim = a
+  // tinted grey), and a glow that fades with it.
   useEffect(() => {
     const root = host.current?.querySelector("svg");
-    if (root) root.style.setProperty("--ctl-led", lightbar ? `rgb(${lightbar[0]}, ${lightbar[1]}, ${lightbar[2]})` : "");
+    if (!root) return;
+    const peak = lightbar ? Math.max(...lightbar) : 0;
+    if (!lightbar || peak === 0) {
+      root.style.setProperty("--ctl-led", "transparent");
+      root.style.setProperty("--ctl-led-pct", "0%");
+      return;
+    }
+    const full = lightbar.map((c) => Math.round((c * 255) / peak)).join(", ");
+    root.style.setProperty("--ctl-led", `rgb(${full})`);
+    root.style.setProperty("--ctl-led-pct", `${Math.round((peak / 255) * 100)}%`);
   }, [lightbar]);
 
   // The connected controller's own colors (else the CSS theme defaults).
@@ -118,6 +140,7 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
       ["--ctl-dark", colors?.dark],
       ["--ctl-stick", colors?.stick],
       ["--ctl-line", colors?.line],
+      ["--ctl-line-dark", colors ? lineOnDark(colors) : undefined],
     ];
     for (const [name, value] of vars) {
       if (value) el.style.setProperty(name, value);
@@ -182,7 +205,9 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
     const el = (target as Element | null)?.closest?.("[data-part]");
     const id = el?.getAttribute("data-part") as PartId | null;
     if (id && (PART_IDS as readonly string[]).includes(id)) onSelect(id);
-    else if ((target as Element | null)?.closest?.(".bd, .dk")) onSelect("body");
+    // The body and the dark plastic (grips, center) open haptics; only inside
+    // the drawing (the app's own wrapper also has a "dk" class).
+    else if ((target as Element | null)?.closest?.(".live-ctl svg .bd, .live-ctl svg .dk")) onSelect("body");
   };
 
   return (

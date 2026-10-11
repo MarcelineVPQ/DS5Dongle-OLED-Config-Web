@@ -91,6 +91,9 @@ export interface DesktopApi {
   // The firmware repo's CHANGELOG.md (fetched by the main process).
   firmwareChangelog(): Promise<string>;
   onDesktopPalette(listener: (palette: DesktopPalette | null) => void): () => void;
+  // The window was shown or hidden (tray, minimize). Chromium's own visibility
+  // stays "visible" while hidden here (background throttling is off).
+  onWindowVisible(listener: (visible: boolean) => void): () => void;
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
   // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
   gamesScan(): Promise<GamesReport>;
@@ -120,6 +123,7 @@ export const IPC = {
   getDesktopPalette: "desktop:get-desktop-palette",
   firmwareChangelog: "desktop:firmware-changelog",
   desktopPalette: "desktop:desktop-palette",
+  windowVisible: "desktop:window-visible",
   setupUsbAccess: "desktop:setup-usb-access",
   gamesScan: "desktop:games-scan",
   gamesApply: "desktop:games-apply",

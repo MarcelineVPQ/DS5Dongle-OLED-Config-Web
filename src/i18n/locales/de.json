@@ -443,7 +443,8 @@
         "waiting-bootloader": "Warte auf den Bootloader…",
         "flashing": "Firmware wird geschrieben",
         "restarting": "Dongle startet neu…",
-        "verifying": "Warte, bis der Dongle zurück ist…"
+        "verifying": "Warte, bis der Dongle zurück ist…",
+        "verifyingPress": "Geflasht. Drücke PS am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
       }
     },
     "controller": {
@@ -632,15 +633,9 @@
         "speaker": "Lautsprecher",
         "body": "Griffe (Haptik)"
       },
-      "pickHint": "Klicke auf einen Teil des Controllers, um ihn einzurichten.",
+      "pickHint": "Klicke auf einen Teil der Abbildung, um ihn einzurichten.",
       "needsFirmware": "Aktualisiere die Firmware des Dongles, um den Controller live zu sehen.",
       "overview": "Dein Controller",
-      "overviewText": "Alles wird direkt am Controller eingerichtet: Klicke auf einen Teil, um hier seine Einstellungen zu sehen.",
-      "tipLightbar": "Die Lichtleisten neben dem Touchpad: Lightbar-Modus und Lieblingsfarben.",
-      "tipTriggers": "L2 / R2: adaptive Trigger-Effekte zum Ausprobieren, wie weit sie gedrückt sind, und Neubelegung.",
-      "tipButtons": "Jede Taste oder jeder Stick: auf eine andere Taste legen.",
-      "tipAudio": "Das Lautsprechergitter: Lautsprecherpegel. Die Griffe: Haptik und Audio Auto Haptics.",
-      "tipPs": "Die PS-Taste: Kopplungs-Slots.",
       "app": "App-Einstellungen",
       "close": "Schließen",
       "back": "Controller",
@@ -677,7 +672,113 @@
         "1": "Widerstand",
         "2": "Waffe",
         "3": "Vibration"
+      },
+      "go": {
+        "intro": "Klicke mit der Maus auf einen Teil der Abbildung oder wähle hier eine Einstellung:",
+        "lightbar": {
+          "title": "Lightbar",
+          "sub": "Modus und Lieblingsfarben"
+        },
+        "triggers": {
+          "title": "Adaptive Trigger",
+          "sub": "Effekte an L2 / R2 ausprobieren"
+        },
+        "haptics": {
+          "title": "Haptik",
+          "sub": "Stärke und Audio Auto Haptics"
+        },
+        "speaker": {
+          "title": "Lautsprecher",
+          "sub": "Pegel mit Live-Anzeige"
+        },
+        "mic": {
+          "title": "Mikrofon",
+          "sub": "Das Bluetooth-Mikrofon des Controllers"
+        },
+        "slots": {
+          "title": "Kopplungsplätze",
+          "sub": "Controller wechseln oder entfernen"
+        },
+        "buttons": "Um eine Taste oder einen Stick neu zu belegen, klicke in der Abbildung darauf.",
+        "bodyHint": "Haptik: Stärke und Audio Auto Haptics"
+      },
+      "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
+      "showPanel": "Einstellungen"
+    },
+    "tour": {
+      "stepOf": "Schritt {{n}} von {{total}}",
+      "skip": "Tour überspringen",
+      "skipStep": "Schritt überspringen",
+      "back": "Zurück",
+      "next": "Weiter",
+      "finishButton": "Los geht's",
+      "waiting": "Wartet auf dich…",
+      "helpTitle": "Hilfe",
+      "helpHint": "Die kurze Tour vom ersten Start.",
+      "replay": "Tour erneut zeigen",
+      "welcome": {
+        "title": "Willkommen!",
+        "body": "Eine Tour von einer Minute. Nimm deinen Controller in die Hand. Mit Esc oder „Tour überspringen“ kannst du jederzeit aufhören."
+      },
+      "press": {
+        "title": "Das ist dein Controller, live",
+        "body": "Drück eine beliebige Taste am Controller und sieh zu, wie sie hier aufleuchtet.",
+        "done": "Da ist sie! Alles, was du drückst, erscheint hier."
+      },
+      "trigger": {
+        "title": "Jetzt die Trigger",
+        "body": "Zieh L2 oder R2 ganz durch.",
+        "done": "Die Füllung folgt deinem Zug, wie beim echten Controller."
+      },
+      "click": {
+        "title": "Einrichten mit der Maus",
+        "body": "Klicke mit der Maus auf den leuchtenden Lichtstreifen neben dem Touchpad. Jeder Teil der Abbildung öffnet seine eigenen Einstellungen.",
+        "done": "Damit hast du die Lightbar-Einstellungen geöffnet."
+      },
+      "panel": {
+        "title": "Hier öffnen sich Einstellungen",
+        "body": "Änderungen gehen sofort an den Dongle, du siehst, hörst und spürst sie direkt. ✕ schließt das Feld."
+      },
+      "list": {
+        "title": "Oder aus der Liste wählen",
+        "body": "Nicht sicher, wo etwas am Controller sitzt? Jede Einstellung ist auch hier, nur einen Klick entfernt."
+      },
+      "save": {
+        "title": "Behalte, was dir gefällt",
+        "body": "Änderungen wirken sofort, sind aber vorläufig. „Auf Dongle speichern“ behält sie nach dem Ausschalten; „Zurücksetzen“ kehrt zum Gespeicherten zurück."
+      },
+      "top": {
+        "title": "Dongle, Spiele und Hilfe",
+        "body": "Dongle: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und Haptik vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
+      },
+      "finish": {
+        "title": "Alles bereit",
+        "body": "Viel Spaß! Du kannst die Tour jederzeit unter ⚙ App-Einstellungen wiederholen."
       }
+    },
+    "liveData": {
+      "title": "Live-Daten",
+      "sticks": "Sticks",
+      "triggers": "Trigger",
+      "effect": "Effekt",
+      "gyro": "Gyroskop",
+      "accel": "Beschleunigung",
+      "tilt": "Neigung",
+      "touch": "Touchpad",
+      "finger": "Finger {{n}}",
+      "link": "Verbindung",
+      "clock": "Sensor-Uhr",
+      "rate": "Updates",
+      "roundTrip": "Antwortzeit",
+      "signal": "Signal",
+      "ports": "Controller",
+      "headset": "Headset-Buchse",
+      "mic": "Mikrofon-Buchse",
+      "muted": "Mikro stumm",
+      "usb": "USB-Strom",
+      "yes": "ja",
+      "no": "nein",
+      "inRange": "idealer Bereich"
     }
   }
 }

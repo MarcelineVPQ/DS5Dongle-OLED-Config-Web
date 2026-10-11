@@ -443,7 +443,8 @@
         "waiting-bootloader": "En attente du bootloader…",
         "flashing": "Écriture du firmware",
         "restarting": "Redémarrage du dongle…",
-        "verifying": "En attente du retour du dongle…"
+        "verifying": "En attente du retour du dongle…",
+        "verifyingPress": "Flashé. Appuie sur PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
       }
     },
     "controller": {
@@ -632,15 +633,9 @@
         "speaker": "Haut-parleur",
         "body": "Poignées (haptique)"
       },
-      "pickHint": "Clique sur une partie de la manette pour la configurer.",
+      "pickHint": "Clique sur une partie du dessin pour la configurer.",
       "needsFirmware": "Mets à jour le firmware du dongle pour voir la manette bouger en direct.",
       "overview": "Ta manette",
-      "overviewText": "Tout se configure depuis la manette : clique sur une partie pour voir ses réglages ici.",
-      "tipLightbar": "Les bandes lumineuses autour du pavé tactile : mode de la barre lumineuse et couleurs favorites.",
-      "tipTriggers": "L2 / R2 : effets de gâchettes adaptatives à essayer, enfoncement et remappage.",
-      "tipButtons": "N'importe quel bouton ou stick : le remapper vers un autre bouton.",
-      "tipAudio": "La grille du haut-parleur : niveau du haut-parleur. Les poignées : haptique et Audio Auto Haptics.",
-      "tipPs": "Le bouton PS : slots d'appairage.",
       "app": "Réglages de l'app",
       "close": "Fermer",
       "back": "Manette",
@@ -677,7 +672,113 @@
         "1": "résistance",
         "2": "arme",
         "3": "vibration"
+      },
+      "go": {
+        "intro": "Clique sur une partie du dessin avec la souris, ou choisis un réglage ici :",
+        "lightbar": {
+          "title": "Barre lumineuse",
+          "sub": "Mode et couleurs favorites"
+        },
+        "triggers": {
+          "title": "Gâchettes adaptatives",
+          "sub": "Essaie les effets sur L2 / R2"
+        },
+        "haptics": {
+          "title": "Retour haptique",
+          "sub": "Intensité et Audio Auto Haptics"
+        },
+        "speaker": {
+          "title": "Haut-parleur",
+          "sub": "Niveau, avec un indicateur en direct"
+        },
+        "mic": {
+          "title": "Micro",
+          "sub": "Le micro Bluetooth de la manette"
+        },
+        "slots": {
+          "title": "Emplacements d'appairage",
+          "sub": "Changer ou oublier des manettes"
+        },
+        "buttons": "Pour réassigner un bouton ou un stick, clique dessus sur le dessin.",
+        "bodyHint": "Retour haptique : intensité et Audio Auto Haptics"
+      },
+      "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
+      "showPanel": "Réglages"
+    },
+    "tour": {
+      "stepOf": "Étape {{n}} sur {{total}}",
+      "skip": "Passer la visite",
+      "skipStep": "Passer cette étape",
+      "back": "Retour",
+      "next": "Suivant",
+      "finishButton": "C'est parti",
+      "waiting": "On t'attend…",
+      "helpTitle": "Aide",
+      "helpHint": "La courte visite guidée du premier lancement.",
+      "replay": "Revoir la visite",
+      "welcome": {
+        "title": "Bienvenue !",
+        "body": "Une visite d'une minute. Prends ta manette en main. Échap ou « Passer la visite » pour arrêter à tout moment."
+      },
+      "press": {
+        "title": "Voici ta manette, en direct",
+        "body": "Appuie sur n'importe quel bouton de ta manette et regarde-le s'allumer ici.",
+        "done": "Le voilà ! Tout ce que tu appuies s'affiche ici."
+      },
+      "trigger": {
+        "title": "Maintenant les gâchettes",
+        "body": "Enfonce L2 ou R2 jusqu'au bout.",
+        "done": "Le remplissage suit ta pression, comme sur la vraie manette."
+      },
+      "click": {
+        "title": "Tout se règle à la souris",
+        "body": "Clique avec la souris sur la bande lumineuse à côté du pavé tactile. Chaque partie du dessin ouvre ses propres réglages.",
+        "done": "Tu as ouvert les réglages de la barre lumineuse."
+      },
+      "panel": {
+        "title": "Les réglages s'ouvrent ici",
+        "body": "Les changements partent tout de suite vers le dongle : tu les vois, les entends et les sens. ✕ ferme le panneau."
+      },
+      "list": {
+        "title": "Ou choisis dans la liste",
+        "body": "Tu ne sais pas où se trouve un réglage sur la manette ? Ils sont tous ici aussi, à un clic."
+      },
+      "save": {
+        "title": "Garde ce qui te plaît",
+        "body": "Les changements sont actifs mais temporaires. « Enregistrer sur le dongle » les garde après extinction ; « Annuler » revient à ce qui est enregistré."
+      },
+      "top": {
+        "title": "Le dongle, tes jeux et l'aide",
+        "body": "Dongle : mises à jour du firmware, OLED, alimentation et USB. Jeux : prépare Steam et les autres lanceurs pour les gâchettes et l'haptique (Linux). À propos : nouveautés et guide. ⚙ : les réglages de l'app."
+      },
+      "finish": {
+        "title": "Tout est prêt",
+        "body": "Amuse-toi bien ! Tu peux revoir cette visite à tout moment dans ⚙ Réglages de l'app."
       }
+    },
+    "liveData": {
+      "title": "Données en direct",
+      "sticks": "Sticks",
+      "triggers": "Gâchettes",
+      "effect": "Effet",
+      "gyro": "Gyroscope",
+      "accel": "Accéléromètre",
+      "tilt": "Inclinaison",
+      "touch": "Pavé tactile",
+      "finger": "Doigt {{n}}",
+      "link": "Liaison",
+      "clock": "Horloge capteur",
+      "rate": "Mises à jour",
+      "roundTrip": "Aller-retour",
+      "signal": "Signal",
+      "ports": "Manette",
+      "headset": "Prise casque",
+      "mic": "Prise micro",
+      "muted": "Micro coupé",
+      "usb": "Alimentation USB",
+      "yes": "oui",
+      "no": "non",
+      "inRange": "plage idéale"
     }
   }
 }

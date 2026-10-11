@@ -31,7 +31,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **First-time setup screen.** With no dongle connected, the app explains how to connect one, finds a Pico in BOOTSEL mode, installs the firmware and walks you through pairing. The Controller page shows how to pair while no controller is connected.
 - Engineering baseline matching AVNetworkMonitor: ESLint + Prettier, strict TypeScript, Vitest unit/integration/security suites, pre-commit gates, CI (lint, typecheck, test, build), npm audit, Semgrep + Gitleaks, Dependabot, ADRs.
 
+### Added
+
+- **Live data.** Under the controller: tiles laid out like it (sticks, triggers, battery, signal, player and slot) and cards with every number the controller reports: stick and trigger values, the effect each trigger runs, gyroscope and accelerometer with scrolling graphs and tilt, touch points, headset and mic jacks, mute, USB power, and the link (sensor clock, update rate, round trip, signal).
+- **A guided tour** the first time a controller connects: the screen dims and a spotlight glides from part to part; hands-on steps wait for you to press a button, pull a trigger and click the lightbar, and tick off when you do. Replay it from ⚙ App settings → Help.
+- **Every setting one click away:** the start panel lists Lightbar, Adaptive triggers, Haptics, Speaker, Microphone and Pairing slots, for anyone who doesn't know where on the controller a setting lives. The body highlights on hover too.
+- **A bigger controller:** the settings panel can be hidden (») so the drawing uses the whole width; clicking a part or Settings brings it back.
+- Marketing renders of all 13 standard colorways (single images, a sheet, a GIF and an MP4) and full-resolution app screenshots in `docs/marketing/`.
+
 ### Changed
+
+- **The live lightbar** updates about 30 times a second (it was once a second), so rainbow, breathing and fade look smooth. It glows with a soft bloom and fades to the grey of the unlit plastic as it dims, like the real one.
+- Outlines stay readable on every colorway: on the black parts too, and Galactic Purple, Starlight Blue and Nova Pink outlines are more visible. A test checks the contrast of every colorway.
+- The hints say to click the drawing with the mouse (pressing buttons on the controller only lights them up).
+- The language menu opens downward inside the settings panel (it was cut off, with a sideways scrollbar).
+- The live view no longer flickers with a sideways scrollbar while you press buttons.
+
+### Fixed
+
+- Two actions within a moment of each other (a setting change and Apply remap, a slot, a trigger preset) no longer both fail: the app sends its commands one at a time.
+- An edit made while the previous one was being applied is no longer lost.
+- The save bar is right after a USB reconnect, an app restart, a factory reset, a slot switch or a change made on the OLED (firmware v0.8 reports unsaved settings itself), and Revert is only offered when the saved settings are known. Changes made on the OLED show up in the app and aren't overwritten by the next edit.
+- After a firmware update, the app waits for the controller (the dongle only comes back once one connects) instead of reporting a failure after 45 seconds; the setup screen no longer offers to flash the dongle again mid-update.
+- Restart and Enter BOOTSEL are no longer reported as errors when the dongle leaves quickly.
+- A refused setting isn't re-sent every 150 ms; it's retried after the next change.
+- Number boxes beside sliders accept normal typing (a minus sign, decimals); values set on the OLED outside a slider's usual range show as they are.
+- Clicking empty space no longer opens the haptics panel; the body is reachable by keyboard; "Check now" compares versions properly.
+- The controller drawing no longer shows a phantom press for a moment after the controller disconnects, and live polling stops while the window is in the tray.
+- Updates: a check after an update was installed no longer hides "Restart to update"; downloads that stall fail after a minute instead of hanging; the relaunch can't lose the single-instance race.
+- Linux USB setup works from the AppImage (root couldn't read the rule inside it); a missing `udevadm` is reported as such.
+- Games page: backups never drop the only copy of an original config file; Undo restores a symlinked file as a symlink; `PROTON_USE_SDL="0"` is recognized as off; Steam files keep every escape exactly as written, and a file with platform conditionals is refused instead of rewritten; a stray folder named like the Proton build no longer aborts an install.
+- Settings are saved atomically (a crash mid-save can't reset them or the autostart entry); the firmware offer isn't served from a stale feed; desktop-entry paths are quoted per spec.
+
+### Security
+
+- Only the app's own page is trusted for IPC and USB, not any local file under a `renderer/` folder (e.g. one dropped onto the window).
 
 - "Match desktop" is now the default theme in the desktop app; a theme you picked yourself is kept.
 - The app follows the system language on every launch until you pick one in the language menu (it used to remember the first detected language).

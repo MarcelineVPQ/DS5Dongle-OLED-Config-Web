@@ -8,7 +8,25 @@
 // settings in between (or a newer change set on the same file) makes Undo
 // refuse instead of silently discarding those edits. A set can be undone once.
 import { createHash } from "node:crypto";
-import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
+import {
+  closeSync,
+  copyFileSync,
+  existsSync,
+  fsyncSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  readlinkSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  unlinkSync,
+  writeSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import type { LauncherId, Msg } from "../../../src/desktop/games/types";
@@ -37,6 +55,7 @@ const ManifestSchema = z.object({
       backup: z.string().nullable(), // null: the file didn't exist before
       owner: Owner.optional(), // missing in older sets
       written: z.string().nullable().optional(), // sha256 after our write; null: we removed it
+      link: z.string().optional(), // the path was a symlink to this (restored as one)
     }),
   ),
 });
@@ -105,6 +124,23 @@ function removeFile(path: string): void {
   if (existsSync(dest)) unlinkSync(dest);
 }
 
+function fsyncFile(path: string): void {
+  const fd = openSync(path, "r");
+  try {
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function isLink(path: string): boolean {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 export class Backups {
   constructor(private readonly dir: string) {}
 
@@ -120,19 +156,28 @@ export class Backups {
     const setDir = join(this.dir, id);
     mkdirSync(setDir, { recursive: true });
     const unique = [...new Map(files.map((f) => [f.path, f])).values()];
-    const manifest: BackupManifest = {
-      created: new Date().toISOString(),
-      changes,
-      after,
-      files: unique.map(({ path, owner }, i) => {
-        if (!existsSync(path)) return { path, owner, backup: null };
-        const backup = `${i}.orig`;
-        copyFileSync(path, join(setDir, backup));
-        return { path, owner, backup };
-      }),
-    };
+    let manifest: BackupManifest;
     const save = () => writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
-    save();
+    try {
+      manifest = {
+        created: new Date().toISOString(),
+        changes,
+        after,
+        files: unique.map(({ path, owner }, i) => {
+          if (!existsSync(path)) return { path, owner, backup: null };
+          const backup = `${i}.orig`;
+          copyFileSync(path, join(setDir, backup));
+          fsyncFile(join(setDir, backup));
+          const link = lstatSync(path).isSymbolicLink() ? readlinkSync(path) : undefined;
+          return { path, owner, backup, ...(link ? { link } : {}) };
+        }),
+      };
+      save();
+    } catch (err) {
+      // No snapshot, no change: leave nothing half-made behind.
+      rmSync(setDir, { recursive: true, force: true });
+      throw err;
+    }
     try {
       write();
     } catch (err) {
@@ -141,7 +186,12 @@ export class Backups {
       throw err;
     }
     for (const f of manifest.files) f.written = sha256(f.path);
-    save();
+    try {
+      save();
+    } catch {
+      // The change is made and its originals are saved; without the hashes,
+      // Undo just can't detect later edits to these files.
+    }
     this.prune();
     return id;
   }
@@ -163,7 +213,12 @@ export class Backups {
   private putBack(setDir: string, manifest: BackupManifest): void {
     for (const f of manifest.files) {
       if (f.backup === null) removeFile(f.path);
-      else writeFileAtomic(f.path, readFileSync(join(setDir, f.backup)));
+      else {
+        // A symlink we removed (e.g. a dotfile-managed rule) comes back as the
+        // same link; the original content is then written through it.
+        if (f.link && !existsSync(f.path) && !isLink(f.path)) symlinkSync(f.link, f.path);
+        writeFileAtomic(f.path, readFileSync(join(setDir, f.backup)));
+      }
     }
   }
 
@@ -198,11 +253,30 @@ export class Backups {
     return [...new Set(owners.filter((o): o is LauncherId => o !== "system"))];
   }
 
+  // Keeps the newest KEEP sets, and for every file the oldest set that still
+  // holds its original (not undone yet), so the first state of a config is
+  // never lost however many changes follow.
   private prune(): void {
     const ids = readdirSync(this.dir)
       .filter((d) => BACKUP_ID.test(d))
       .sort();
-    for (const id of ids.slice(0, Math.max(0, ids.length - KEEP))) rmSync(join(this.dir, id), { recursive: true, force: true });
+    const keep = new Set(ids.slice(-KEEP));
+    const originals = new Set<string>();
+    for (const id of ids) {
+      let m: BackupManifest;
+      try {
+        m = this.manifest(id);
+      } catch {
+        continue; // unreadable: leave it for the user to inspect
+      }
+      if (m.restored) continue;
+      for (const f of m.files) {
+        if (originals.has(f.path)) continue;
+        originals.add(f.path);
+        keep.add(id);
+      }
+    }
+    for (const id of ids) if (!keep.has(id)) rmSync(join(this.dir, id), { recursive: true, force: true });
   }
 }
 

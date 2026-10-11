@@ -9,7 +9,12 @@
 export type VdfValue = string | VdfNode;
 export type VdfNode = Array<[string, VdfValue]>;
 
+// Steam's comments (`//`) are not kept; the files we rewrite don't have any.
+
 export class VdfSyntaxError extends Error {}
+
+// Marks an escape we don't decode (e.g. `\\x`), so it is written back as is.
+const RAW_ESCAPE = "\uE000";
 
 export function parseVdf(text: string): VdfNode {
   let i = 0;
@@ -40,7 +45,9 @@ export function parseVdf(text: string): VdfNode {
       while (i < n && text[i] !== '"') {
         if (text[i] === "\\" && i + 1 < n) {
           const e = text[i + 1];
-          out += e === "n" ? "\n" : e === "t" ? "\t" : e;
+          // Known escapes are decoded; any other one is kept exactly as
+          // written (marked, so serializing doesn't double its backslash).
+          out += e === "n" ? "\n" : e === "t" ? "\t" : e === "\\" || e === '"' ? e : RAW_ESCAPE + e;
           i += 2;
         } else out += text[i++];
       }
@@ -48,6 +55,9 @@ export function parseVdf(text: string): VdfNode {
       i++;
       return `"${out}`; // leading quote marks a string token
     }
+    // Platform conditionals ([$WIN32] after a value) aren't supported: refuse
+    // the file rather than misread every key after one and rewrite it wrong.
+    if (c === "[") throw new VdfSyntaxError("Conditional ([$...]) entries aren't supported");
     // Unquoted token (rare in Steam files, legal in KeyValues).
     const start = i;
     while (i < n && !/[\s{}"]/.test(text[i])) i++;
@@ -67,7 +77,6 @@ export function parseVdf(text: string): VdfNode {
         return node;
       }
       if (key === "{") throw new VdfSyntaxError("Unexpected {");
-      // Conditional suffixes like [$WIN32] don't occur in the Steam files we read and aren't supported.
       const value = token();
       if (value === null) throw new VdfSyntaxError(`Missing value for ${key.slice(1)}`);
       if (value === "{") node.push([key.slice(1), parseBlock(true)]);
@@ -80,7 +89,7 @@ export function parseVdf(text: string): VdfNode {
 }
 
 function escape(s: string): string {
-  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t").replaceAll(RAW_ESCAPE, "\\");
 }
 
 // Steam's own layout: tab indentation, two tabs between key and value.

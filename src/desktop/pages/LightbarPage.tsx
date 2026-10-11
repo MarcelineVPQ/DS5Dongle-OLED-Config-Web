@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { Row } from "../controls";
-import { hexToRgb, rgbToHex } from "../controls";
+import { hexToRgb, rgbToHex, Row } from "../controls";
 
 const MODES = [
   { value: 8, key: "host", label: "Game controls it" },

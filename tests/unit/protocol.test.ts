@@ -82,6 +82,7 @@ describe("identity report (0xF1)", () => {
       slotCount: 4,
       currentSlot: 2,
       controllerConnected: true,
+      unsaved: null, // feature bit 0x40 not set
       charging: false,
       batteryFull: false,
       lightbar: null,
@@ -90,6 +91,25 @@ describe("identity report (0xF1)", () => {
       model: null,
       colorwayCode: null,
     });
+  });
+
+  it("reports unsaved settings only when the firmware has the flag", () => {
+    const b = sample();
+    b[19] = 1;
+    expect(decodeIdentity(b).unsaved).toBeNull();
+    b[7] |= 0x40;
+    expect(decodeIdentity(b).unsaved).toBe(true);
+    b[19] = 0;
+    expect(decodeIdentity(b).unsaved).toBe(false);
+  });
+
+  it("reports no model until the dongle knows it (0xFF)", () => {
+    const b = new Uint8Array(29);
+    b.set(sample());
+    b[26] = 0xff;
+    expect(decodeIdentity(b).model).toBeNull();
+    b[26] = 1;
+    expect(decodeIdentity(b).model).toBe("edge");
   });
 
   it("decodes the protocol 1.1 controller fields when present", () => {

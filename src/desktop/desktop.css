@@ -586,11 +586,13 @@ html[data-theme="dark"] .dk {
 
 /* The language menu sits at the bottom of the sidebar: open it upward and to
  * the right so it never runs off the window. */
+/* Opens downward, its right edge on the button's, so it stays inside the
+   side panel (no clipped top, no horizontal scrollbar). */
 .dk .language-toggle-menu {
-  top: auto;
-  bottom: calc(100% + 6px);
-  right: auto;
-  left: 0;
+  top: calc(100% + 6px);
+  bottom: auto;
+  right: 0;
+  left: auto;
   max-height: 60vh;
   overflow: auto;
 }
@@ -931,6 +933,7 @@ html[data-theme="dark"] .dk {
   --ctl-dark: color-mix(in srgb, #000 62%, var(--bg-panel));
   --ctl-stick: color-mix(in srgb, #000 45%, var(--bg-panel));
   --ctl-line: var(--text-muted);
+  --ctl-line-dark: var(--ctl-line);
   --ctl-on: var(--dk-accent);
   display: flex;
   justify-content: center;
@@ -957,9 +960,22 @@ html[data-theme="dark"] .dk {
 .live-ctl .ln {
   fill: var(--ctl-line);
 }
+/* Outlines drawn on the black parts (tagged by tools/prepare_controller_art.py). */
+.live-ctl .ln.ln-dk {
+  fill: var(--ctl-line-dark);
+}
 .live-ctl .led {
-  fill: var(--ctl-led, #4061d6);
-  filter: drop-shadow(0 0 2px var(--ctl-led, transparent));
+  /* Unlit: the grey of the light strip's plastic (same as the bottom strip). */
+  --ctl-led-off: color-mix(in srgb, #fff 45%, var(--ctl-dark));
+  fill: color-mix(in srgb, var(--ctl-led, #4061d6) var(--ctl-led-pct, 100%), var(--ctl-led-off));
+  /* Bridges the ~30 Hz color samples so animated modes glide. */
+  transition: fill 40ms linear;
+}
+/* Bloom: a tight core glow plus a wide soft halo, both fading with the light
+   (on the wrapper, so the strip's clip doesn't cut the glow off). */
+.live-ctl .led-glow {
+  --ctl-led-glow: color-mix(in srgb, var(--ctl-led, transparent) var(--ctl-led-pct, 100%), transparent);
+  filter: drop-shadow(0 0 2px var(--ctl-led-glow)) drop-shadow(0 0 6px var(--ctl-led-glow)) drop-shadow(0 0 12px var(--ctl-led-glow)) drop-shadow(0 0 24px var(--ctl-led-glow));
 }
 .live-ctl .hit {
   fill: transparent;
@@ -1064,14 +1080,33 @@ html[data-theme="dark"] .dk {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: var(--dk-gap);
+}
+.live-view.collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+.live-show-panel {
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  z-index: 2;
+  margin-bottom: -36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .live-stage {
   min-height: 0;
+  /* Vertical scroll only, with its space always reserved: a glow or a longer
+     number poking past the edge must not toggle a scrollbar (which reflowed
+     the layout and made it flicker). */
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
   gap: 8px;
   padding: 8px;
 }
@@ -1082,7 +1117,8 @@ html[data-theme="dark"] .dk {
   min-height: 0;
 }
 .live-stage .live-ctl svg {
-  max-height: calc(100vh - 210px);
+  max-height: calc(100vh - 520px);
+  min-height: 260px;
 }
 .live-status {
   display: flex;
@@ -1100,6 +1136,8 @@ html[data-theme="dark"] .dk {
 .live-hint {
   text-align: center;
   margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 .live-panel {
   min-height: 0;
@@ -1168,7 +1206,7 @@ html[data-theme="dark"] .dk {
 }
 .live-ctl .pled rect.on {
   opacity: 1;
-  filter: blur(0.6px) drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+  filter: blur(0.6px) drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 18px rgba(255, 255, 255, 0.6));
 }
 
 .live-model {
@@ -1238,10 +1276,382 @@ html[data-theme="dark"] .dk {
   display: block;
   max-width: 100%;
   height: auto;
-  border: 1px solid var(--dk-border);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   margin: 6px 0;
 }
 .dk-md td .dk-md-img {
   margin: 0;
+}
+
+/* Overview shortcuts to each panel. */
+.live-shortcuts {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+}
+.live-shortcut {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-inset);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.live-shortcut span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.live-shortcut:hover,
+.live-shortcut:focus-visible {
+  border-color: var(--dk-accent);
+  outline: none;
+}
+/* The body opens haptics: show it's clickable like the buttons are. */
+.live-ctl [data-part="body"] {
+  transition: filter 120ms;
+}
+.live-ctl [data-part="body"]:hover,
+.live-ctl [data-part="body"]:focus-visible {
+  filter: brightness(1.12) drop-shadow(0 0 3px var(--ctl-on));
+}
+
+/* First-run tour (tour/Tour.tsx). The dim layer is the spotlight's shadow, so
+   the app stays clickable (the hands-on steps need the mouse). */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.tour-hole {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 2px var(--dk-accent),
+    0 0 24px 4px color-mix(in srgb, var(--dk-accent) 55%, transparent),
+    0 0 0 100vmax rgba(5, 6, 8, 0.66);
+  transition:
+    left 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tour-hole.none {
+  box-shadow: 0 0 0 100vmax rgba(5, 6, 8, 0.66);
+}
+.tour-hole.pulse {
+  animation: tour-pulse 1.6s ease-in-out infinite;
+}
+@keyframes tour-pulse {
+  50% {
+    box-shadow:
+      0 0 0 3px var(--dk-accent),
+      0 0 40px 10px color-mix(in srgb, var(--dk-accent) 70%, transparent),
+      0 0 0 100vmax rgba(5, 6, 8, 0.66);
+  }
+}
+.tour-card {
+  position: fixed;
+  pointer-events: auto;
+  padding: 16px 18px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  animation: tour-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+.tour-card h2 {
+  margin: 2px 0 6px;
+  font-size: 17px;
+}
+.tour-card p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+.tour-step {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tour-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+}
+.tour-task.ok {
+  color: var(--text-strong);
+}
+.tour-check {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  font-size: 12px;
+  font-weight: 700;
+}
+.tour-task:not(.ok) .tour-check {
+  border-top-color: var(--dk-accent);
+  animation: dk-spin 1s linear infinite;
+}
+.tour-task.ok .tour-check {
+  border-color: #22c55e;
+  background: #22c55e;
+  color: #fff;
+  animation: tour-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tour-pop {
+  from {
+    transform: scale(0.3);
+  }
+}
+.tour-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole,
+  .tour-card,
+  .tour-hole.pulse,
+  .tour-task .tour-check {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Live readouts under the controller (live/LiveStrip.tsx), mirroring it. */
+.live-strip {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.live-tile {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-width: 92px;
+  padding: 10px 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+.live-tile-narrow {
+  min-width: 64px;
+}
+.live-tile-value {
+  font-weight: 600;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+.live-tile-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.live-stick {
+  width: 60px;
+  height: 60px;
+}
+.live-stick .ring {
+  fill: color-mix(in srgb, var(--text-muted) 8%, transparent);
+  stroke: var(--border-default);
+  stroke-width: 1.5;
+}
+.live-stick .cross {
+  stroke: var(--border-default);
+  stroke-width: 1;
+}
+.live-stick .dot {
+  fill: var(--dk-accent);
+  filter: drop-shadow(0 0 3px var(--dk-accent));
+}
+.live-stick.pressed .ring {
+  stroke: var(--dk-accent);
+  stroke-width: 2.5;
+}
+.live-trig {
+  position: relative;
+  width: 16px;
+  height: 44px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  overflow: hidden;
+}
+.live-trig span {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: var(--dk-accent);
+  box-shadow: 0 0 8px var(--dk-accent);
+}
+.live-battery {
+  width: 44px;
+  height: 22px;
+}
+.live-battery .shell,
+.live-battery .shell-tip {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.live-battery .shell-tip {
+  fill: var(--text-muted);
+  stroke: none;
+}
+.live-battery .level {
+  fill: #22c55e;
+}
+.live-battery.low .level {
+  fill: #ef4444;
+}
+.live-battery .bolt {
+  fill: #fde047;
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 0.8;
+}
+.live-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+}
+.live-bars span {
+  width: 6px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-muted) 25%, transparent);
+}
+.live-bars span.on {
+  background: var(--dk-accent);
+}
+.live-pleds {
+  display: flex;
+  gap: 4px;
+  height: 22px;
+  align-items: center;
+}
+.live-pleds span {
+  width: 9px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-muted) 25%, transparent);
+}
+.live-pleds span.on {
+  background: #fff;
+  box-shadow: 0 0 6px #fff;
+}
+
+/* Live data panel (live/LiveData.tsx): all the numbers. */
+/* Six cards, columns by the panel's own width: 2, 3 or 6 per row, never a
+   card alone on a row. */
+.live-stage {
+  container-type: inline-size;
+}
+.live-data {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@container (max-width: 560px) {
+  .live-data {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width: 1250px) {
+  .live-data {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.live-data-card {
+  overflow: hidden;
+  padding: 8px 10px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  min-width: 0;
+}
+.live-data-card h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.live-data-rows {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+.live-data-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.live-data-rows dt {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.live-data-rows dd,
+.live-data-xyz {
+  margin: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+  color: var(--text-strong);
+}
+.live-data-xyz {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  font-size: 12px;
+}
+.live-data-xyz > span {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-muted) 8%, transparent);
+}
+.live-data-spark {
+  display: block;
+  width: 100%;
+  height: 56px;
+  margin: 6px 0 2px;
+}
+/* The tiles span the same width as the data cards below them. */
+.live-strip {
+  flex-wrap: nowrap;
+}
+.live-strip > .live-tile {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.live-strip > .live-tile-narrow {
+  flex: 0.6 1 0;
+}
+@container (max-width: 560px) {
+  .live-strip {
+    flex-wrap: wrap;
+  }
 }

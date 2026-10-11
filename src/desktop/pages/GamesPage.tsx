@@ -149,20 +149,21 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
   const selected = fixes.filter((f) => chosen.has(f.id));
   const blocking = report ? [...new Set(selected.map((f) => f.launcher))].filter((l): l is LauncherId => l !== "system" && !!report.launchers.find((x) => x.id === l && x.running)) : [];
 
-  const toggle = (id: string) =>
-    setChosen((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        declined.current.add(id);
-      } else {
-        next.add(id);
-        declined.current.delete(id);
-      }
-      saveDeclined(declined.current);
-      onDeclinedChange?.();
-      return next;
-    });
+  // Side effects (storage, the parent's count) stay out of the state updater,
+  // which React may run twice.
+  const toggle = (id: string) => {
+    const next = new Set(chosen);
+    if (next.has(id)) {
+      next.delete(id);
+      declined.current.add(id);
+    } else {
+      next.add(id);
+      declined.current.delete(id);
+    }
+    setChosen(next);
+    saveDeclined(declined.current);
+    onDeclinedChange?.();
+  };
 
   const closeLauncher = async (launcher: LauncherId) => {
     setBusy(`close-${launcher}`);

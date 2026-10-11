@@ -138,10 +138,14 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
       continue;
     }
     mkdirSync(target, { recursive: true });
+    const existing = join(target, build.name);
+    const there = lstatSync(existing, { throwIfNoEntry: false });
+    // A folder of that name without a build in it (an interrupted manual
+    // copy?) isn't ours to replace: that launcher is skipped, the rest go on.
+    if (there && !there.isSymbolicLink()) continue;
     if (link) {
       // A dangling link from an earlier, removed build is replaced; anything else is left alone.
-      const existing = join(target, build.name);
-      if (lstatSync(existing, { throwIfNoEntry: false })?.isSymbolicLink()) rmSync(existing);
+      if (there?.isSymbolicLink()) rmSync(existing);
       symlinkSync(join(primary, build.name), existing, "dir");
     } else {
       progress({ phase: "copying", target });

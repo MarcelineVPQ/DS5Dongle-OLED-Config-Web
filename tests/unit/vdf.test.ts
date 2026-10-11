@@ -47,3 +47,15 @@ describe("VDF parser", () => {
     expect(serializeVdf(root)).toBe(fixture("config.vdf"));
   });
 });
+
+describe("vdf escapes", () => {
+  it("writes back escapes exactly as Steam wrote them", () => {
+    const text = '"a"\n{\n\t"opts"\t\t"x \\"q\\" \\n \\t \\\\ \\x"\n}\n';
+    expect(serializeVdf(parseVdf(text))).toBe(text);
+    expect(getString(parseVdf(text), "a", "opts")).toBe('x "q" \n \t \\ \ue000x');
+  });
+
+  it("refuses platform conditionals instead of misreading them", () => {
+    expect(() => parseVdf('"a"\n{\n\t"k"\t\t"v" [$WIN32]\n}\n')).toThrow(VdfSyntaxError);
+  });
+});

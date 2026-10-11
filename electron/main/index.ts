@@ -1,5 +1,5 @@
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
 import { app, BrowserWindow, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings } from "../../src/desktop/api";
@@ -98,13 +98,15 @@ function start(): void {
   // Firmware the app offers: bundled with this release, or a newer published one.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
+    // Fresh every time (a cached feed would go stale with automatic checks
+    // off); the last one fetched is the fallback when offline.
     manifest: async () => {
-      const cached = updater.getManifest();
-      if (cached) return { manifest: cached, problem: null };
       try {
         return { manifest: await updater.fetchManifest(), problem: null };
       } catch (cause) {
-        return { manifest: null, problem: cause instanceof FeedMissingError ? "unpublished" : "offline" };
+        if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished" };
+        const cached = updater.getManifest();
+        return cached ? { manifest: cached, problem: null } : { manifest: null, problem: "offline" };
       }
     },
     downloadPublished: () => updater.downloadFirmware(),
@@ -218,6 +220,10 @@ function createWindow(visible: boolean): void {
     }
   });
   mainWindow.on("closed", () => (mainWindow = null));
+  // Tell the page when it's actually on screen, so live polling stops in the tray.
+  const sendVisible = () => mainWindow?.webContents.send(IPC.windowVisible, !!mainWindow && mainWindow.isVisible() && !mainWindow.isMinimized());
+  for (const event of ["show", "hide", "minimize", "restore"] as const) mainWindow.on(event as "show", sendVisible);
+  mainWindow.webContents.on("did-finish-load", sendVisible);
 
   const contents = mainWindow.webContents;
   // External links open in the system browser, and only to allowlisted hosts.
@@ -236,9 +242,24 @@ function createWindow(visible: boolean): void {
   else void mainWindow.loadFile(join(here, "../renderer/index.html"));
 }
 
+// Exactly the app's own page: the dev server's origin, or the packaged
+// index.html itself (not any local file, e.g. one dropped onto the window).
+// (Compared decoded, and case-insensitively on Windows, where drive-letter
+// case can differ.)
+const pagePath = (pathname: string) => {
+  const p = decodeURIComponent(pathname);
+  return process.platform === "win32" ? p.toLowerCase() : p;
+};
+const APP_PAGE = pagePath(pathToFileURL(join(here, "../renderer/index.html")).pathname);
 function isAppUrl(url: string): boolean {
-  if (devServerUrl) return url.startsWith(devServerUrl);
-  return url.startsWith("file://") && url.includes("/renderer/");
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (devServerUrl) return parsed.origin === new URL(devServerUrl).origin;
+  return parsed.protocol === "file:" && pagePath(parsed.pathname) === APP_PAGE;
 }
 
 function isTrusted(sender: WebContents, frameUrl: string): boolean {

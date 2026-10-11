@@ -1,13 +1,18 @@
 // Verified downloads, shared by the app updater, the firmware updater and the
 // Proton installer: anything bigger than declared is refused, and nothing is
 // kept unless both size and SHA-256 match. A write error (disk full, I/O)
-// rejects cleanly instead of crashing the main process.
+// rejects cleanly instead of crashing the main process. A server that doesn't
+// answer, or a download that stops sending data, fails instead of hanging
+// (which would also hold the Games queue and the updater's busy flag).
 import { createHash } from "node:crypto";
 import { createWriteStream, rmSync } from "node:fs";
 import { net } from "electron";
 import type { Download } from "../../src/update/manifest";
 
 const corrupt = () => new Error("The download is corrupt (size or checksum mismatch).");
+const CONNECT_TIMEOUT_MS = 20_000;
+const STALL_TIMEOUT_MS = 60_000;
+const stalled = () => new Error("The download stopped (no data for a minute). Check the connection and try again.");
 
 export function verifyBytes(download: Download, bytes: Uint8Array): void {
   if (bytes.byteLength !== download.size || createHash("sha256").update(bytes).digest("hex") !== download.sha256) throw corrupt();
@@ -15,8 +20,9 @@ export function verifyBytes(download: Download, bytes: Uint8Array): void {
 
 // Small files (firmware): into memory, verified.
 export async function downloadBytes(download: Download): Promise<Uint8Array> {
-  const response = await net.fetch(download.url);
+  const response = await net.fetch(download.url, { signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS + STALL_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`Download failed (HTTP ${response.status}).`);
+  if (Number(response.headers.get("content-length") ?? 0) > download.size) throw new Error("The download is larger than the manifest says.");
   const bytes = new Uint8Array(await response.arrayBuffer());
   verifyBytes(download, bytes);
   return bytes;
@@ -25,7 +31,9 @@ export async function downloadBytes(download: Download): Promise<Uint8Array> {
 // Large files: streamed to `path`, hashed on the way, deleted on any failure.
 export async function downloadVerified(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
   rmSync(path, { force: true });
-  const response = await net.fetch(download.url);
+  const response = await net.fetch(download.url, { signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) }).catch((cause: unknown) => {
+    throw cause instanceof Error && cause.name === "TimeoutError" ? new Error("The download server didn't answer. Check the connection and try again.") : cause;
+  });
   if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status}).`);
   const reader = response.body.getReader();
   const hash = createHash("sha256");
@@ -43,7 +51,9 @@ export async function downloadVerified(download: Download, path: string, progres
   let lastReport = 0;
   try {
     for (;;) {
-      const { done, value } = await Promise.race([reader.read(), failed]);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const stall = new Promise<never>((_, reject) => (timer = setTimeout(() => reject(stalled()), STALL_TIMEOUT_MS)));
+      const { done, value } = await Promise.race([reader.read(), failed, stall]).finally(() => clearTimeout(timer));
       if (done) break;
       if (writeError) throw writeError;
       got += value.byteLength;

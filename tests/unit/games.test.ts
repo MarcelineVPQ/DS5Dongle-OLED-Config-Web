@@ -249,6 +249,9 @@ describe("Games safety helpers", () => {
     expect(stripSdlVars("PROTON_PREFER_SDL=1 PROTON_LOG=1 %command%")).toBe("PROTON_LOG=1 %command%");
     expect(stripSdlVars("PROTON_USE_SDL=1 %command% -skipintro")).toBe("%command% -skipintro");
     expect(stripSdlVars("PROTON_PREFER_SDL=1")).toBe("");
+    // Quoted "off" values are already off: left alone.
+    expect(stripSdlVars('PROTON_USE_SDL="0" %command%')).toBe('PROTON_USE_SDL="0" %command%');
+    expect(stripSdlVars("PROTON_USE_SDL='' %command%")).toBe("PROTON_USE_SDL='' %command%");
   });
 
   it("matches known DualSense games across store spellings", () => {

@@ -95,16 +95,23 @@ export class GamesService {
         if (blockedBy.length) return { ok: false, blockedBy };
         const { files, after } = this.backups.restore(backupId);
         if (after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
-        return { ok: true, restored: files };
+        return { ok: true, restored: files.map((f) => this.tilde(f)) };
       } catch (cause) {
-        if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => f.replace(this.home, "~")) };
+        if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };
         return { ok: false, error: message(cause) };
       }
     });
   }
 
+  // The app's own change history; like everything here, only shown once the
+  // user has let the app look at launcher settings.
   listBackups(): BackupSummary[] {
-    return this.backups.list();
+    if (!this.deps.allowed()) return [];
+    return this.backups.list().map((b) => ({ ...b, files: b.files.map((f) => this.tilde(f)) }));
+  }
+
+  private tilde(path: string): string {
+    return path.startsWith(this.home + "/") ? "~" + path.slice(this.home.length) : path;
   }
 
   async close(launcher: LauncherId): Promise<CloseLauncherResult> {
@@ -139,7 +146,7 @@ export class GamesService {
           ...lutris.filter((l) => l.wineDir !== primary && (l.flatpak || steam.every((s) => s.flatpak))).map((l) => ({ dir: l.wineDir, link: !l.flatpak })),
         ];
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);
-        return { ok: true, name: build.name, installed: installed.map((p) => p.replace(this.home, "~")) };
+        return { ok: true, name: build.name, installed: installed.map((p) => this.tilde(p)) };
       } catch (cause) {
         return { ok: false, message: message(cause) };
       }

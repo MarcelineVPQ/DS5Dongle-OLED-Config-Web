@@ -17,7 +17,11 @@ export function useAppUpdate(): UpdateState {
 }
 
 export type FirmwareUpdateState =
-  { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "verifying"; version: string } | { phase: "done"; version: string } | { phase: "failed"; detail: string };
+  | { phase: "idle" }
+  | { phase: "running"; progress: FirmwareProgress }
+  | { phase: "verifying"; version: string; slow?: boolean }
+  | { phase: "done"; version: string }
+  | { phase: "failed"; detail: string };
 
 const RECONNECT_TIMEOUT_MS = 45_000;
 
@@ -79,10 +83,9 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     try {
       const version = await updateFirmware(client, (progress) => setState({ phase: "running", progress }));
       setState({ phase: "verifying", version });
-      timer.current = setTimeout(
-        () => setState({ phase: "failed", detail: "The dongle didn't come back after flashing. Unplug it and plug it back in; if it stays dark, hold BOOTSEL while plugging in and update again." }),
-        RECONNECT_TIMEOUT_MS,
-      );
+      // The dongle only shows up on USB once a controller connects, so a slow
+      // return isn't a failure: keep waiting, and ask for PS.
+      timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
     } catch (cause) {
       setState({ phase: "failed", detail: cause instanceof Error ? cause.message : String(cause) });
     }

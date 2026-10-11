@@ -15,7 +15,9 @@ export const SDL_FORCING_VARS = ["PROTON_PREFER_SDL", "PROTON_USE_SDL"];
 
 // Set to anything but "0" or "" forces the Xbox (SDL) path. The one rule used for
 // environment files here and for Steam launch options and Heroic env lists (games.ts).
-export const sdlVarForcing = (key: string, value: string) => SDL_FORCING_VARS.includes(key) && value !== "0" && value !== "";
+// `PROTON_USE_SDL="0"` / `=''` are off too: compare the value without its quotes.
+const unquote = (value: string) => value.replace(/^(["'])(.*)\1$/, "$2");
+export const sdlVarForcing = (key: string, value: string) => SDL_FORCING_VARS.includes(key) && unquote(value) !== "0" && unquote(value) !== "";
 
 export interface AudioCard {
   name: string;

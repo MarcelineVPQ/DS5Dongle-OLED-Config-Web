@@ -38,25 +38,21 @@ export default function LanguageToggle() {
 
   return (
     <div className="language-toggle" ref={ref}>
-      <button
-        type="button"
-        className="language-toggle-button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        title={t("languageToggle.currentTitle", { name: current.label })}
-      >
+      <button type="button" className="language-toggle-button" onClick={() => setOpen((v) => !v)} aria-expanded={open} title={t("languageToggle.currentTitle", { name: current.label })}>
         <Globe size={15} />
         <span className="language-toggle-current">{current.shortLabel}</span>
       </button>
       {open && (
-        <ul className="language-toggle-menu" role="listbox" aria-label={t("languageToggle.groupLabel")}>
+        // A disclosure: a plain list of buttons (a listbox role would promise
+        // arrow-key handling this menu doesn't have).
+        <ul className="language-toggle-menu" aria-label={t("languageToggle.groupLabel")}>
           {SUPPORTED_LANGUAGES.map((lang) => {
             const active = lang.code === current.code;
             return (
-              <li key={lang.code} role="option" aria-selected={active}>
+              <li key={lang.code}>
                 <button
                   type="button"
+                  aria-pressed={active}
                   className={active ? "active" : ""}
                   onClick={() => {
                     void i18n.changeLanguage(lang.code);

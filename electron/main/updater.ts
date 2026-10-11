@@ -113,7 +113,9 @@ export class Updater {
   }
 
   async check(): Promise<UpdateState> {
-    if (this.busy) return this.state;
+    // Once an update is installed, only a restart moves on (a fresh check would
+    // see the old running version and offer the same update again).
+    if (this.busy || this.state.phase === "ready") return this.state;
     this.set({ phase: "checking" });
     try {
       const manifest = await this.fetchManifest();
@@ -139,7 +141,7 @@ export class Updater {
   }
 
   async fetchManifest(): Promise<Manifest> {
-    const response = await net.fetch(manifestUrl(), { cache: "no-store" });
+    const response = await net.fetch(manifestUrl(), { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (response.status === 404) throw new FeedMissingError();
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
     const parsed = Manifest.safeParse(await response.json());
@@ -170,7 +172,7 @@ export class Updater {
 
   // The firmware repo's CHANGELOG, for the About page. Text only, size-capped.
   async firmwareChangelog(): Promise<string> {
-    const response = await net.fetch(FIRMWARE_CHANGELOG_URL, { cache: "no-store" });
+    const response = await net.fetch(FIRMWARE_CHANGELOG_URL, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (!response.ok) throw new Error(`Couldn't load the firmware changelog (HTTP ${response.status}).`);
     const text = await response.text();
     return text.length > CHANGELOG_MAX_CHARS ? text.slice(0, CHANGELOG_MAX_CHARS) : text;
@@ -229,6 +231,9 @@ export class Updater {
   restart(): void {
     if (this.state.phase !== "ready" || !this.installedPath) return;
     const target = this.installedPath;
+    // Before the new instance starts, or it could find the lock still held
+    // and quit, leaving no app running.
+    app.releaseSingleInstanceLock();
     if (process.platform === "linux") {
       // Relaunch in a clean session environment through the user's systemd
       // (Sonata: inheriting this process's Chromium environment crashed the
@@ -248,7 +253,6 @@ export class Updater {
     } else {
       spawn(target, [], { detached: true, stdio: "ignore" }).unref();
     }
-    app.releaseSingleInstanceLock();
     app.exit(0);
   }
 

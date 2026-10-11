@@ -68,7 +68,9 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     );
   }
 
-  if (install.phase === "restarting") {
+  // A Pico back in BOOTSEL (the user retried, or a different one) ends the
+  // wait: offer to set it up again.
+  if (install.phase === "restarting" && !pico) {
     return (
       <Center>
         <strong>{t("desktop.setup.restarting", { version: install.version })}</strong>
@@ -102,6 +104,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       <span>{t("desktop.setup.existing", "Already set up? It connects automatically.")}</span>
       <span>{t("desktop.setup.newPico", "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.")}</span>
       {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
+      {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
       <UsbAccessSetup compact />
     </Center>
   );

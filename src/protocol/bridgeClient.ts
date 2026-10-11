@@ -43,6 +43,7 @@ export const IDENTITY_FEATURES = {
   factoryReset: 0x08,
   triggerPreview: 0x10,
   liveInput: 0x20, // 0xF0 live input report (protocol 1.2)
+  unsavedFlag: 0x40, // identity [19] bit 0 (protocol 1.2)
 } as const;
 
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
@@ -60,6 +61,9 @@ export interface BridgeIdentity {
   slotCount: number;
   currentSlot: number;
   controllerConnected: boolean;
+  // Protocol 1.2+ (feature unsavedFlag): the settings in the dongle's RAM
+  // differ from flash. null on firmware that doesn't report it.
+  unsaved: boolean | null;
   // Protocol 1.1+; null/false on older firmware.
   charging: boolean;
   batteryFull: boolean;
@@ -96,12 +100,13 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     slotCount: bytes[16],
     currentSlot: bytes[17],
     controllerConnected: bytes[18] === 1,
+    unsaved: (bytes[7] & IDENTITY_FEATURES.unsavedFlag) !== 0 ? (bytes[19] & 0x01) !== 0 : null,
     charging: bytes.length >= 25 && (bytes[20] & 0x01) !== 0,
     batteryFull: bytes.length >= 25 && (bytes[20] & 0x02) !== 0,
     lightbar: bytes.length >= 25 && bytes[18] === 1 ? [bytes[21], bytes[22], bytes[23]] : null,
     battery: bytes.length >= 25 && bytes[24] <= 10 ? bytes[24] * 10 : null,
     playerLeds: bytes.length >= 26 ? bytes[25] & 0x1f : 0,
-    model: bytes.length >= 29 && bytes[18] === 1 ? (bytes[26] === 1 ? "edge" : "dualsense") : null,
+    model: bytes.length >= 29 && bytes[18] === 1 && bytes[26] !== 0xff ? (bytes[26] === 1 ? "edge" : "dualsense") : null,
     colorwayCode: bytes.length >= 29 && bytes[27] && bytes[28] ? String.fromCharCode(bytes[27], bytes[28]) : null,
   };
 }
@@ -179,9 +184,19 @@ export class Ds5BridgeClient {
     return id;
   }
 
+  // Commands from this app run one at a time, in order: two overlapping ones
+  // would read the same sequence number and both fail (or get BUSY).
+  private commandQueue: Promise<unknown> = Promise.resolve();
+
   // Send an 0xF6 function and wait until the dongle reports its outcome.
   // Reboot / BOOTSEL resolve "gone" once the device leaves the bus.
-  async command(func: number, args: number[] = []): Promise<"ok" | "gone"> {
+  command(func: number, args: number[] = []): Promise<"ok" | "gone"> {
+    const run = this.commandQueue.then(() => this.runCommand(func, args));
+    this.commandQueue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async runCommand(func: number, args: number[]): Promise<"ok" | "gone"> {
     const before = await this.identity();
     const payload = new Uint8Array([func, ...args]);
     await this.transport.setReport(REPORT.command, payload);
@@ -272,8 +287,11 @@ export class Ds5BridgeClient {
 
   // The controller's raw input right now (before remapping): buttons, sticks,
   // triggers, touchpad, motion, battery and the active trigger effects.
-  async readInput(): Promise<InputReport> {
-    return decodeInputReport(await this.transport.getReport(REPORT.liveInput, 63));
+  // null without a controller: the dongle then answers all zeros, which would
+  // decode as D-pad up, both sticks in a corner and two fingers touching.
+  async readInput(): Promise<InputReport | null> {
+    const bytes = await this.transport.getReport(REPORT.liveInput, 63);
+    return bytes.some((b) => b !== 0) ? decodeInputReport(bytes) : null;
   }
 
   async readRssi(): Promise<number> {

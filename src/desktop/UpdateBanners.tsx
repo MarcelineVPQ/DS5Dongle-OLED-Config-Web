@@ -79,7 +79,7 @@ export default function UpdateBanners({ app, fw, onShowFirmware }: { app: Update
       </div>,
     );
   } else if (s.phase === "running" || s.phase === "verifying") {
-    const step = s.phase === "verifying" ? "verifying" : s.progress.step;
+    const step = s.phase === "verifying" ? (s.slow ? "verifyingPress" : "verifying") : s.progress.step;
     const pct = s.phase === "running" && s.progress.fraction !== undefined ? ` ${Math.floor(s.progress.fraction * 100)}%` : "";
     banners.push(
       <div className="dk-notice" key="fw">

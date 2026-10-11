@@ -114,7 +114,7 @@ describe("live input (0xF0, protocol 1.2)", () => {
     const { client } = setup();
     const id = await client.identity();
     expect(supportsLiveInput(id)).toBe(true);
-    const input = await client.readInput();
+    const input = (await client.readInput())!;
     expect(input.leftStick).toEqual({ x: 128, y: 128 });
     expect(input.dpad).toBe(8);
     expect(input.cross || input.l1 || input.r2 || input.home).toBe(false);
@@ -133,7 +133,7 @@ describe("live input (0xF0, protocol 1.2)", () => {
     new DataView(dongle.input.buffer).setUint32(32, f >>> 0, true);
     new DataView(dongle.input.buffer).setUint32(36, 0x80, true); // finger 1 not touching
     dongle.input[47] = (2 << 4) | 1; // L weapon, R feedback
-    const i = await client.readInput();
+    const i = (await client.readInput())!;
     expect([i.triggerLeft, i.triggerRight, i.dpad]).toEqual([200, 37, 2]);
     expect([i.square, i.cross, i.circle, i.triangle]).toEqual([true, true, true, true]);
     expect([i.l1, i.r1, i.l2, i.r2, i.create, i.options, i.l3, i.r3]).toEqual(Array(8).fill(true));
@@ -153,7 +153,7 @@ describe("DualSense Edge extras", () => {
   it("decodes the Fn buttons and back paddles", async () => {
     const { dongle, client } = setup();
     dongle.input[9] = 0xf0;
-    const i = await client.readInput();
+    const i = (await client.readInput())!;
     expect([i.fnLeft, i.fnRight, i.backLeft, i.backRight]).toEqual([true, true, true, true]);
     expect([i.home, i.pad, i.mute]).toEqual([false, false, false]);
   });
@@ -162,8 +162,16 @@ describe("DualSense Edge extras", () => {
 describe("mute light", () => {
   it("reports the mic as muted from input byte 53 bit 2", async () => {
     const { dongle, client } = setup();
-    expect((await client.readInput()).micMuted).toBe(false);
+    expect((await client.readInput())!.micMuted).toBe(false);
     dongle.input[53] = 0x04;
-    expect((await client.readInput()).micMuted).toBe(true);
+    expect((await client.readInput())!.micMuted).toBe(true);
+  });
+});
+
+describe("live input without a controller", () => {
+  it("reads as no input, not a phantom press", async () => {
+    const { dongle, client } = setup();
+    dongle.input.fill(0); // what the dongle answers with no controller
+    expect(await client.readInput()).toBeNull();
   });
 });

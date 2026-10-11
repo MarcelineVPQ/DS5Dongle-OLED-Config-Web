@@ -18,7 +18,13 @@ export interface UseDs5BridgeResult {
   // What the dongle has in flash, as far as this app knows: the config read at
   // connect, updated on every successful save.
   savedConfig: ConfigBody | null;
+  // From the dongle itself when the firmware reports it (identity [19]):
+  // true after an app restart or USB reconnect with unsaved changes, false
+  // after a slot switch (which saves). Else compared against savedConfig.
   hasUnsavedChanges: boolean;
+  // Revert needs to know what's in flash: only after a save or a connect
+  // without unsaved changes.
+  canRevert: boolean;
   draft: ConfigBody;
   issues: ConfigValidationIssue[];
   saveState: SaveState;
@@ -29,10 +35,11 @@ export interface UseDs5BridgeResult {
   isDirty: boolean;
   setDraftField: <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => void;
   connect: () => Promise<void>;
-  readConfig: () => Promise<void>;
-  applyConfig: () => Promise<void>;
+  readConfig: () => Promise<boolean>;
+  // Resolves false if the dongle refused or the transfer failed (see error).
+  applyConfig: () => Promise<boolean>;
   saveToFlash: () => Promise<void>;
-  reconnectUsb: () => Promise<void>;
+  reconnectUsb: () => Promise<boolean>;
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
   revertToSaved: () => Promise<void>;
@@ -98,7 +105,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setIdentity(id);
       setFirmwareVersion(version);
       setConfig(normalized);
-      setSavedConfig(normalized);
+      // Flash holds this only if the dongle says nothing is unsaved (older
+      // firmware can't say: assume it does, as before).
+      setSavedConfig(id.unsaved ? null : normalized);
       setDraft(normalized);
       setSaveState("idle");
       setError(null);
@@ -125,15 +134,17 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [attach]);
 
-  const run = useCallback(async (op: Exclude<Operation, null>, task: (c: Ds5BridgeClient) => Promise<void>) => {
+  const run = useCallback(async (op: Exclude<Operation, null>, task: (c: Ds5BridgeClient) => Promise<void>): Promise<boolean> => {
     const c = clientRef.current;
-    if (!c) return;
+    if (!c) return false;
     setOperation(op);
     try {
       await task(c);
       setError(null);
+      return true;
     } catch (cause) {
       setError(errorMessage(cause));
+      return false;
     } finally {
       setOperation(null);
     }
@@ -150,13 +161,15 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     [run],
   );
 
-  const applyConfig = useCallback(async () => {
-    if (issues.length > 0) return;
-    await run("applying", async (c) => {
-      const normalized = normalizeConfig(draft);
+  const applyConfig = useCallback(async (): Promise<boolean> => {
+    if (issues.length > 0) return false;
+    return run("applying", async (c) => {
+      const sent = draft;
+      const normalized = normalizeConfig(sent);
       await c.applyConfig(normalized);
       setConfig(normalized);
-      setDraft(normalized);
+      // Edits made while this was on its way stay (and get applied next).
+      setDraft((current) => (current === sent ? normalized : current));
       setSaveState("applied");
     });
   }, [draft, issues.length, run]);
@@ -208,6 +221,50 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     void autoConnect();
   }, [autoConnect]);
 
+  // Keep up with the dongle: its identity every second (unsaved flag, slot,
+  // last command), and every other second its settings, so a change made on
+  // the OLED (or a slot switch) shows here and isn't overwritten by the next
+  // edit from the app. Skipped while the app has edits of its own on the way.
+  const isDirtyRef = useRef(isDirty);
+  const operationRef = useRef(operation);
+  const configRef = useRef(config);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+    operationRef.current = operation;
+    configRef.current = config;
+  });
+  useEffect(() => {
+    if (!client) return;
+    let stopped = false;
+    let tick = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+      try {
+        if (!operationRef.current) {
+          const id = await client.identity();
+          if (!stopped) setIdentity(id);
+          // Saved by something else (a slot switch, the OLED): flash = RAM now.
+          if (!stopped && id.unsaved === false && !isDirtyRef.current) setSavedConfig(configRef.current);
+          if (++tick % 2 === 0 && !isDirtyRef.current && !operationRef.current) {
+            const next = normalizeConfig(await client.readConfig());
+            if (!stopped && !isDirtyRef.current && !operationRef.current && !configsEqual(next, configRef.current)) {
+              setConfig(next);
+              setDraft(next);
+            }
+          }
+        }
+      } catch {
+        // gone or busy: the USB events handle reconnecting
+      }
+      if (!stopped) timer = setTimeout(() => void poll(), 1000);
+    };
+    timer = setTimeout(() => void poll(), 1000);
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [client]);
+
   // Reboot, BOOTSEL + flash, USB reconnect and replugging all re-enumerate the
   // dongle: drop the old handle and pick the new one up automatically.
   useEffect(() => {
@@ -235,7 +292,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     deviceLabel,
     config,
     savedConfig,
-    hasUnsavedChanges: !configsEqual(config, savedConfig),
+    hasUnsavedChanges: identity?.unsaved ?? !configsEqual(config, savedConfig),
+    canRevert: !!savedConfig && !configsEqual(config, savedConfig),
     draft,
     issues,
     saveState,

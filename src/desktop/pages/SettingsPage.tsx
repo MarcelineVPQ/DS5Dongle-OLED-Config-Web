@@ -63,7 +63,9 @@ export function SpeakerSection({ bridge }: SectionProps) {
         label={t("desktop.settings.speakerLevel", "Speaker level")}
         sub={t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip")}
         value={d.speakerVolume}
-        min={-12}
+        // Usual range ±12 dB; a lower level set on the OLED (down to -100)
+        // still shows as it is instead of being clamped by the slider.
+        min={Math.min(-12, Math.floor(d.speakerVolume))}
         max={12}
         step={1}
         unit="dB"
@@ -116,7 +118,7 @@ export function DisplaySection({ bridge }: SectionProps) {
         sub={t("desktop.settings.zeroOff", "0 = never")}
         value={d.screenDimTimeout}
         min={0}
-        max={60}
+        max={Math.max(60, d.screenDimTimeout)}
         step={1}
         unit="min"
         onChange={(v) => set("screenDimTimeout", v)}
@@ -126,7 +128,7 @@ export function DisplaySection({ bridge }: SectionProps) {
         sub={t("desktop.settings.zeroOff", "0 = never")}
         value={d.screenOffTimeout}
         min={0}
-        max={120}
+        max={Math.max(120, d.screenOffTimeout)}
         step={1}
         unit="min"
         onChange={(v) => set("screenOffTimeout", v)}

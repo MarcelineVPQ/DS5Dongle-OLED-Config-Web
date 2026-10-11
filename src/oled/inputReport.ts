@@ -61,6 +61,13 @@ export interface InputReport {
   triggerEffectRight: number;
   // Mic muted (the controller's mute light glows amber)
   micMuted: boolean;
+  // Report counter (byte 6), the motion sensor's clock (bytes 27-30, in
+  // 1/3 µs ticks) and what's plugged into the controller (byte 53).
+  seq: number;
+  sensorTime: number;
+  headphones: boolean;
+  micPlugged: boolean;
+  usbPower: boolean;
   // Battery (low nibble × 10 = %, high nibble = state)
   batteryRaw: number;
   batteryPct: number;
@@ -127,6 +134,11 @@ export function decodeInputReport(data: Uint8Array | DataView): InputReport {
     triggerEffectLeft: b(47) >> 4,
     triggerEffectRight: b(47) & 0x0f,
     micMuted: ((b(53) >> 2) & 1) === 1,
+    seq: b(6),
+    sensorTime: (b(27) | (b(28) << 8) | (b(29) << 16) | (b(30) << 24)) >>> 0,
+    headphones: (b(53) & 0x01) !== 0,
+    micPlugged: (b(53) & 0x02) !== 0,
+    usbPower: (b(53) & 0x10) !== 0,
     batteryRaw: pwr,
     batteryPct: (pwr & 0x0f) * 10,
     batteryState: (pwr >> 4) & 0x0f,
@@ -175,5 +187,10 @@ export function emptyInputReport(): InputReport {
     batteryPct: 100,
     batteryState: 0,
     micMuted: false,
+    seq: 0,
+    sensorTime: 0,
+    headphones: false,
+    micPlugged: false,
+    usbPower: false,
   };
 }

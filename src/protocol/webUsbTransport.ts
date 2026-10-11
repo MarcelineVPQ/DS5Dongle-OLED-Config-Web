@@ -101,8 +101,10 @@ export class WebUsbTransport implements Ds5Transport {
   }
 
   private async transfer<T>(reportId: number, run: () => Promise<T>): Promise<T> {
-    if (!this.isOpen) await this.open();
     try {
+      // Inside the try: reopening a device that has just left the bus (reboot,
+      // BOOTSEL) must also surface as DeviceGoneError, not a raw DOMException.
+      if (!this.isOpen) await this.open();
       return await run();
     } catch (cause) {
       if (!this.device.opened || (cause instanceof DOMException && (cause.name === "NotFoundError" || cause.name === "NetworkError"))) {

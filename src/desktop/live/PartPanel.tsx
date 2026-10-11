@@ -1,7 +1,7 @@
 // The side panel of the one-screen view: the settings for whatever is
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
-import { X } from "lucide-react";
+import { PanelRightClose, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
@@ -11,6 +11,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 import type { DesktopSettings } from "../api";
 import { BusyButton, Toggle } from "../controls";
+import { startTour } from "../tour/Tour";
 import DiagnosticsPage from "../pages/DiagnosticsPage";
 import { DongleInternals } from "../pages/DongleInternals";
 import FirmwarePage from "../pages/FirmwarePage";
@@ -33,9 +34,11 @@ interface Props {
   remap: Remap;
   advancedOpen: boolean;
   onClose: () => void;
+  onOpen: (part: PartId) => void;
+  onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen, onClose }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen, onClose, onOpen, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -50,13 +53,18 @@ export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen
     <div className="dk-stack">
       <header className="live-panel-head">
         <h2>{title}</h2>
+        {view === "overview" && (
+          <button type="button" className="dk-btn dk-icon-btn" onClick={onHide} title={t("desktop.live.hidePanel")} aria-label={t("desktop.live.hidePanel")}>
+            <PanelRightClose size={14} />
+          </button>
+        )}
         {view !== "overview" && (
           <button type="button" className="dk-btn dk-icon-btn" onClick={onClose} title={t("desktop.live.close", "Close")} aria-label={t("desktop.live.close", "Close")}>
             <X size={14} />
           </button>
         )}
       </header>
-      {view === "overview" && <Overview />}
+      {view === "overview" && <Overview onOpen={onOpen} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} advancedOpen={advancedOpen} />}
       {view === "app" && <AppSettings />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} />}
@@ -68,18 +76,31 @@ function partName(t: (k: string) => string, part: PartId): string {
   return part === "body" ? t("desktop.live.part.body") : t(`desktop.live.part.${part}`);
 }
 
-function Overview() {
+// Shortcuts to every panel, so nobody has to guess where on the drawing a
+// setting lives (the grips for haptics weren't obvious).
+const SHORTCUTS: Array<[key: string, part: PartId]> = [
+  ["lightbar", "lightbar"],
+  ["triggers", "r2"],
+  ["haptics", "body"],
+  ["speaker", "speaker"],
+  ["mic", "mute"],
+  ["slots", "ps"],
+];
+
+function Overview({ onOpen }: { onOpen: (part: PartId) => void }) {
   const { t } = useTranslation();
   return (
     <section className="dk-card">
-      <p>{t("desktop.live.overviewText")}</p>
-      <ul className="dk-review">
-        <li>{t("desktop.live.tipLightbar")}</li>
-        <li>{t("desktop.live.tipTriggers")}</li>
-        <li>{t("desktop.live.tipButtons")}</li>
-        <li>{t("desktop.live.tipAudio")}</li>
-        <li>{t("desktop.live.tipPs")}</li>
-      </ul>
+      <p>{t("desktop.live.go.intro")}</p>
+      <div className="live-shortcuts">
+        {SHORTCUTS.map(([key, part]) => (
+          <button key={key} type="button" className="live-shortcut" onClick={() => onOpen(part)}>
+            <strong>{t(`desktop.live.go.${key}.title`)}</strong>
+            <span>{t(`desktop.live.go.${key}.sub`)}</span>
+          </button>
+        ))}
+      </div>
+      <p className="dk-hint">{t("desktop.live.go.buttons")}</p>
     </section>
   );
 }
@@ -253,6 +274,15 @@ function AppSettings() {
           <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
         </section>
       )}
+      <section className="dk-card">
+        <h2>{t("desktop.tour.helpTitle")}</h2>
+        <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn" onClick={startTour}>
+            {t("desktop.tour.replay")}
+          </button>
+        </div>
+      </section>
     </>
   );
 }

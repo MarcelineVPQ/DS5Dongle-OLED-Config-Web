@@ -1,9 +1,10 @@
 // App settings (not dongle settings): stored as JSON in the user data folder.
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { app } from "electron";
 import { z } from "zod";
 import type { DesktopSettings } from "../../src/desktop/api";
+import { writeFileAtomic } from "./games/backup";
 
 export const DEFAULT_SETTINGS: DesktopSettings = {
   // The tray keeps track of the dongle, so closing the window hides it.
@@ -46,7 +47,9 @@ export function loadSettings(): DesktopSettings {
 
 export function saveSettings(settings: DesktopSettings): void {
   try {
-    writeFileSync(settingsPath(), JSON.stringify(settings, null, 2) + "\n");
+    // Atomic (temp file, fsync, rename): a crash mid-save can't leave a
+    // half-written file, which would reset every setting (and autostart).
+    writeFileAtomic(settingsPath(), JSON.stringify(settings, null, 2) + "\n");
   } catch (cause) {
     console.error("settings save failed:", cause instanceof Error ? cause.message : cause);
   }

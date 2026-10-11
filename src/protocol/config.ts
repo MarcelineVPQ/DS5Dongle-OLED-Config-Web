@@ -24,9 +24,9 @@
 //   offset 35  uint8   screen_brightness           kBrightLevels index [0, 3]        (issue #9, v0.6.11)
 //   offset 36  uint8   controller_wakes_display    0 = OLED sleeps during play, 1 = stays awake (issues #8/#9, v0.6.11)
 //
-// NOTE: lightbar_mode / lb_fav_* are managed on the OLED device, not in this UI,
-// but MUST be decoded/encoded so a config save round-trips them unchanged — the
-// firmware copies sizeof(Config_body) bytes, so a short body would zero them.
+// NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
+// lightbar panel (the web tool doesn't show them), and MUST always be encoded:
+// the firmware copies sizeof(Config_body) bytes, so a short body would zero them.
 
 export const CONFIG_BODY_SIZE = 37;
 // Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
@@ -237,8 +237,8 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.screenOffTimeout) || config.screenOffTimeout < 0 || config.screenOffTimeout > 250) {
     issues.push({ field: "screenOffTimeout", message: "Screen off timeout must be 0-250 minutes (0 = disabled)" });
   }
-  // lightbar_mode / lb_fav_* are OLED-managed and firmware-clamped; not validated
-  // here (no UI to correct them) — normalizeConfig clamps them defensively.
+  // lightbar_mode / lb_fav_* come from fixed choices (mode list, color pickers)
+  // and the firmware clamps them; normalizeConfig clamps them defensively too.
   return issues;
 }
 

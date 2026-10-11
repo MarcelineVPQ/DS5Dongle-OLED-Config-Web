@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import { isNewer } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
 import type { FirmwareUpdate } from "../useUpdates";
@@ -56,7 +57,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
               const [, lookup] = await Promise.all([window.desktop?.checkForUpdates().catch(() => undefined), fw.refreshLatest()]);
               setChecked(
                 lookup.latest
-                  ? fw.available || (installed && lookup.latest.version !== installed)
+                  ? installed && isNewer(lookup.latest.version, installed)
                     ? t("desktop.firmware.checkedNewer", { version: lookup.latest.version })
                     : t("desktop.firmware.checkedCurrent")
                   : lookup.problem === "unpublished"

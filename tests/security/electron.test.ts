@@ -107,12 +107,22 @@ describe("IPC payload validation", async () => {
   });
 });
 
+describe("trusted page", () => {
+  const mainSource = readFileSync(new URL("../../electron/main/index.ts", import.meta.url), "utf8");
+
+  it("trusts only the exact packaged page, not any file under a renderer/ folder", () => {
+    expect(mainSource).toMatch(/pagePath\(parsed\.pathname\) === APP_PAGE/);
+    expect(mainSource).not.toMatch(/includes\("\/renderer\/"\)/);
+    expect(mainSource).not.toMatch(/url\.startsWith\(devServerUrl\)/);
+  });
+});
+
 describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 
   it("runs pkexec through execFile with a fixed script and positional paths", () => {
     expect(setupSource).toMatch(/execFile\("pkexec", \["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST\]/);
-    expect(setupSource).toMatch(/const script = 'install -m 0644 "\$1" "\$2"/);
+    expect(setupSource).toMatch(/const script = 'command -v udevadm >\/dev\/null \|\| exit 3; install -m 0644 "\$1" "\$2"/);
     expect(setupSource).not.toMatch(/\bexec\(/);
     expect(setupSource).not.toMatch(/script\s*=\s*`/);
   });

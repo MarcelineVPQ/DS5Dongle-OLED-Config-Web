@@ -443,7 +443,8 @@
         "waiting-bootloader": "Aguardando o bootloader…",
         "flashing": "Gravando o firmware",
         "restarting": "Reiniciando o dongle…",
-        "verifying": "Aguardando o dongle voltar…"
+        "verifying": "Aguardando o dongle voltar…",
+        "verifyingPress": "Gravado. Aperte PS no controle: o dongle volta assim que um controle se conecta. Se continuar apagado, desconecte e conecte de novo."
       }
     },
     "controller": {
@@ -632,15 +633,9 @@
         "speaker": "Alto-falante",
         "body": "Pegadas (háptica)"
       },
-      "pickHint": "Clique em qualquer parte do controle para configurá-la.",
+      "pickHint": "Clique em qualquer parte do desenho para configurá-la.",
       "needsFirmware": "Atualize o firmware do dongle para ver o controle se mexer ao vivo.",
       "overview": "Seu controle",
-      "overviewText": "Tudo é configurado pelo próprio controle: clique numa parte para ver as configurações dela aqui.",
-      "tipLightbar": "As faixas de luz ao lado do touchpad: modo da barra de luz e cores favoritas.",
-      "tipTriggers": "L2 / R2: efeitos dos gatilhos adaptáveis para testar, quanto estão pressionados e remapeamento.",
-      "tipButtons": "Qualquer botão ou analógico: remapear para outro botão.",
-      "tipAudio": "A grade do alto-falante: nível do alto-falante. As pegadas: háptica e Audio Auto Haptics.",
-      "tipPs": "O botão PS: slots de pareamento.",
       "app": "Configurações do app",
       "close": "Fechar",
       "back": "Controle",
@@ -677,7 +672,113 @@
         "1": "resistência",
         "2": "arma",
         "3": "vibração"
+      },
+      "go": {
+        "intro": "Clique com o mouse numa parte do desenho, ou escolha uma configuração aqui:",
+        "lightbar": {
+          "title": "Barra de luz",
+          "sub": "Modo e cores favoritas"
+        },
+        "triggers": {
+          "title": "Gatilhos adaptáveis",
+          "sub": "Teste os efeitos em L2 / R2"
+        },
+        "haptics": {
+          "title": "Hápticos",
+          "sub": "Intensidade e Audio Auto Haptics"
+        },
+        "speaker": {
+          "title": "Alto-falante",
+          "sub": "Nível, com medidor ao vivo"
+        },
+        "mic": {
+          "title": "Microfone",
+          "sub": "O microfone Bluetooth do controle"
+        },
+        "slots": {
+          "title": "Slots de pareamento",
+          "sub": "Trocar ou esquecer controles"
+        },
+        "buttons": "Para remapear um botão ou analógico, clique nele no desenho.",
+        "bodyHint": "Hápticos: intensidade e Audio Auto Haptics"
+      },
+      "hidePanel": "Ocultar o painel de configurações (o controle fica maior)",
+      "showPanel": "Configurações"
+    },
+    "tour": {
+      "stepOf": "Passo {{n}} de {{total}}",
+      "skip": "Pular o tour",
+      "skipStep": "Pular este passo",
+      "back": "Voltar",
+      "next": "Próximo",
+      "finishButton": "Vamos lá",
+      "waiting": "Esperando você…",
+      "helpTitle": "Ajuda",
+      "helpHint": "O tour guiado rápido do primeiro uso.",
+      "replay": "Mostrar o tour de novo",
+      "welcome": {
+        "title": "Bem-vindo!",
+        "body": "Um tour de um minuto. Pegue seu controle. Aperte Esc ou “Pular o tour” quando quiser."
+      },
+      "press": {
+        "title": "Este é seu controle, ao vivo",
+        "body": "Aperte qualquer botão do controle e veja ele acender aqui.",
+        "done": "Aí está! Tudo o que você aperta aparece aqui."
+      },
+      "trigger": {
+        "title": "Agora os gatilhos",
+        "body": "Puxe L2 ou R2 até o fim.",
+        "done": "O preenchimento acompanha o seu aperto, como no controle de verdade."
+      },
+      "click": {
+        "title": "Configure com o mouse",
+        "body": "Clique com o mouse na faixa de luz ao lado do touchpad. Cada parte do desenho abre as próprias configurações.",
+        "done": "Você abriu as configurações da barra de luz."
+      },
+      "panel": {
+        "title": "As configurações abrem aqui",
+        "body": "As mudanças vão na hora para o dongle: você vê, ouve e sente. ✕ fecha o painel."
+      },
+      "list": {
+        "title": "Ou escolha na lista",
+        "body": "Não sabe onde algo fica no controle? Todas as configurações também estão aqui, a um clique."
+      },
+      "save": {
+        "title": "Guarde o que gostar",
+        "body": "As mudanças valem na hora, mas são temporárias. “Salvar no dongle” mantém depois de desligar; “Reverter” volta ao que está salvo."
+      },
+      "top": {
+        "title": "O dongle, seus jogos e a ajuda",
+        "body": "Dongle: atualizações de firmware, OLED, energia e USB. Jogos: prepare o Steam e outros launchers para gatilhos e hápticos (Linux). Sobre: novidades e o guia. ⚙: as configurações do app."
+      },
+      "finish": {
+        "title": "Tudo pronto",
+        "body": "Divirta-se! Você pode repetir este tour quando quiser em ⚙ Configurações do app."
       }
+    },
+    "liveData": {
+      "title": "Dados ao vivo",
+      "sticks": "Analógicos",
+      "triggers": "Gatilhos",
+      "effect": "Efeito",
+      "gyro": "Giroscópio",
+      "accel": "Acelerômetro",
+      "tilt": "Inclinação",
+      "touch": "Touchpad",
+      "finger": "Dedo {{n}}",
+      "link": "Conexão",
+      "clock": "Relógio do sensor",
+      "rate": "Atualizações",
+      "roundTrip": "Ida e volta",
+      "signal": "Sinal",
+      "ports": "Controle",
+      "headset": "Entrada de fone",
+      "mic": "Entrada de mic",
+      "muted": "Mic mudo",
+      "usb": "Energia USB",
+      "yes": "sim",
+      "no": "não",
+      "inRange": "faixa ideal"
     }
   }
 }

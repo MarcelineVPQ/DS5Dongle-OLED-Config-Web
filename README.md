@@ -8,7 +8,9 @@ Linux, Windows and macOS. No drivers to install. It updates itself and the dongl
 
 ## What you can do
 
-Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. **Click any part of the controller** to set it up in the panel on the right:
+Everything happens on one screen. Your controller is drawn in the middle, in its own colors (the app recognizes a Cosmic Red, Midnight Black, Starlight Blue or special-edition DualSense, and the DualSense Edge), and it moves live: buttons light up, L2 and R2 fill as you pull them, the sticks move, touches show on the touchpad, and the lightbar and player indicator glow like the real thing. Below it, live tiles and **live data** show everything the controller reports: stick and trigger values, the effect each trigger is running, gyroscope and accelerometer with scrolling graphs and tilt, touch points, what's plugged into the controller, and the link itself (update rate, round trip, signal).
+
+**Click any part of the controller with your mouse** to set it up in the panel on the right, or pick a setting from the list there (the panel can be hidden with **»** to make the controller bigger):
 
 | Click | To set up |
 | --- | --- |
@@ -27,10 +29,15 @@ The top bar holds the rest:
 - **About:** what's new in each version, the firmware's changes, this guide, and credits.
 - **⚙ App settings:** theme (light, dark, follow the system, or **match your desktop**: your KDE Plasma color scheme, or the system accent color elsewhere), language, close to tray, start at login.
 
+**New here?** The first time a controller connects, a one-minute guided tour walks you through it, hands-on: press a button, pull a trigger, click the lightbar. Replay it any time from ⚙ App settings.
+
 | | |
 | --- | --- |
+| ![The start panel: every setting one click away](docs/screenshots/live-controller-panel.png) | ![The guided tour](docs/screenshots/tour.png) |
 | ![Trigger panel](docs/screenshots/panel-trigger.png) | ![Lightbar panel](docs/screenshots/panel-lightbar.png) |
 | ![Remapping a button](docs/screenshots/panel-remap.png) | ![Dongle panel](docs/screenshots/panel-dongle.png) |
+
+![Live data: everything the controller reports](docs/screenshots/live-data.png)
 
 The app keeps running in the **system tray**. The icon shows the controller with its touchpad in your lightbar color, a bolt while charging, and a dot: green connected, amber no controller, grey no dongle. It's dark on a light taskbar and light on a dark one. Right-click it for slots, updates and settings.
 

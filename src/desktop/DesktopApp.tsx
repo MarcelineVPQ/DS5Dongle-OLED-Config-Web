@@ -42,12 +42,19 @@ export default function DesktopApp() {
 
   // Edits apply to the dongle's RAM as you make them (debounced), so every
   // change is heard and felt immediately. Saving to flash is a separate step.
-  const { isDirty, issues, operation, applyConfig } = bridge;
+  // A draft the dongle refused isn't sent again until it changes (no retry
+  // loop with the error showing).
+  const { isDirty, issues, operation, applyConfig, draft } = bridge;
+  const failedDraft = useRef<typeof draft | null>(null);
   useEffect(() => {
-    if (!isDirty || issues.length > 0 || operation) return;
-    const timer = setTimeout(() => void applyConfig(), APPLY_DEBOUNCE_MS);
+    if (!isDirty || issues.length > 0 || operation || draft === failedDraft.current) return;
+    const timer = setTimeout(() => {
+      void applyConfig().then((ok) => {
+        failedDraft.current = ok ? null : draft;
+      });
+    }, APPLY_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [isDirty, issues.length, operation, applyConfig]);
+  }, [isDirty, issues.length, operation, applyConfig, draft]);
 
   const connected = bridge.isConnected;
   const busy = bridge.operation !== null;
@@ -196,6 +203,10 @@ export default function DesktopApp() {
               <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} advancedOpen={advancedOpen} />
             ) : panel === "app" ? (
               <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} advancedOpen={false} />
+            ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
+              // Mid-update the dongle is a bootloader drive: the update banner
+              // shows the progress; Setup must not offer to flash it again.
+              <div className="dk-page" />
             ) : (
               <SetupScreen supported={bridge.supported} />
             ))}
@@ -211,7 +222,7 @@ export default function DesktopApp() {
                   : t("desktop.bar.saved", "All changes saved on the dongle.")}
             </span>
             <span className="dk-spacer" />
-            <button type="button" className="dk-btn" disabled={busy || !bridge.hasUnsavedChanges} onClick={() => void bridge.revertToSaved()}>
+            <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
               {t("desktop.bar.revert", "Revert")}
             </button>
             <button type="button" className="dk-btn primary" disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>

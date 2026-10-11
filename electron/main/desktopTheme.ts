@@ -90,5 +90,6 @@ export function watchDesktopPalette(onChange: () => void): () => void {
   return () => {
     watcher?.close();
     nativeTheme.removeListener("updated", fire);
+    if (process.platform === "win32") systemPreferences.removeListener("accent-color-changed", fire);
   };
 }

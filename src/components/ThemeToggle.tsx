@@ -18,7 +18,12 @@ const STYLE_ID = "ds5-desktop-palette";
 
 function readStoredTheme(): Theme {
   if (typeof window === "undefined") return "system";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  let stored: string | null = null;
+  try {
+    stored = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    // storage blocked: fall back to the default
+  }
   if (stored === "light" || stored === "dark" || stored === "system") return stored;
   if (stored === "desktop" && isDesktop()) return stored;
   return isDesktop() ? "desktop" : "system";
