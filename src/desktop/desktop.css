@@ -3331,3 +3331,11 @@ html[data-cards-translucent] .dash-card {
 .dash {
   flex: none;
 }
+/* HDR lighting layer over the drawing (HdrGlow.tsx); beats the hero's
+   "children are position: relative" rule. */
+.live-hero > .hdr-glow {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  dynamic-range-limit: no-limit;
+}

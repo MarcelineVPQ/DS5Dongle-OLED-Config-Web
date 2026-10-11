@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   narratorVoice: "ask",
   narratorCaptions: true,
   hardwareAcceleration: true,
+  hdrLighting: false,
 };
 
 const SettingsFile = z.object({
@@ -34,6 +35,7 @@ const SettingsFile = z.object({
   narratorVoice: z.enum(["ask", "on", "off"]).optional(),
   narratorCaptions: z.boolean().optional(),
   hardwareAcceleration: z.boolean().optional(),
+  hdrLighting: z.boolean().optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [
@@ -47,6 +49,7 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("narratorVoice"), value: z.enum(["ask", "on", "off"]) }),
   z.strictObject({ key: z.literal("narratorCaptions"), value: z.boolean() }),
   z.strictObject({ key: z.literal("hardwareAcceleration"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("hdrLighting"), value: z.boolean() }),
 ]);
 
 function settingsPath(): string {

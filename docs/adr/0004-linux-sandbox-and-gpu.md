@@ -38,3 +38,7 @@ Three Linux platform problems showed up on the first desktop launches (Ubuntu 26
 ### Neutral
 
 - ~~Software rendering costs nothing noticeable for this UI.~~ It did once the live view gained glows and the backdrop; see the 2026-10-11 note in Decision 2.
+
+## Addendum 2026-10-11: HDR
+
+KWin 6.6's `wp_color_manager_v1` offers the transfer functions gamma22, st2084_pq, ext_linear and bt1886, but not "srgb", which Chromium (Electron 43) asks for first; it then logs "Unable to set image transfer function" and runs without color management, so nothing above SDR white reaches the display (CSS `color(srgb-linear 4 ...)` and WebGPU extended canvases both clamp). With `--force-color-profile=scrgb-linear` (ext_linear + windows_scrgb, both offered) a WebGPU `rgba16float` canvas in extended tone mapping does reach the display as HDR (verified on an HDR monitor). The app adds that switch only while App settings -> HDR lighting is on (experimental, needs hardware acceleration); the glow is drawn by `src/desktop/live/HdrGlow.tsx` at the user's peak brightness (scRGB 1.0 = 80 nits).

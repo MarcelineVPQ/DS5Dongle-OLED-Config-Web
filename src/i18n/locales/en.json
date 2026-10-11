@@ -888,7 +888,9 @@
       "backdropBlur": "Background blur",
       "backdropBlurSub": "Softer or sharper game art behind the page",
       "depth": "Depth",
-      "depthSub": "Shadow strength under cards and the controller (0 = flat)"
+      "depthSub": "Shadow strength under cards and the controller (0 = flat)",
+      "hdrNits": "HDR peak brightness",
+      "hdrNitsSub": "Your display's peak brightness"
     },
     "calib": {
       "title": "Calibration",
@@ -958,6 +960,10 @@
       "never": "never",
       "yes": "yes",
       "no": "no"
+    },
+    "hdr": {
+      "label": "HDR lighting (experimental)",
+      "sub": "The lightbar glows brighter than white on an HDR display, like the real LEDs. Needs hardware acceleration; applies at restart."
     }
   },
   "ad": {

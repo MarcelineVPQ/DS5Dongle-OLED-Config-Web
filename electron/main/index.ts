@@ -46,6 +46,10 @@ applyLinuxWorkarounds();
 // Wayland. App settings can turn it off, and a GPU crash turns it off for the
 // next start (recordGpuCrash). Must be decided before the app is ready.
 if (!loadSettings().hardwareAcceleration) app.disableHardwareAcceleration();
+// HDR lighting: render in scRGB (linear, 1.0 = 80 nits). KWin 6.6's color
+// manager has no "srgb" transfer function, which Chromium's default path asks
+// for; scRGB (ext_linear + windows_scrgb) is the one that reaches the display.
+else if (loadSettings().hdrLighting) app.commandLine.appendSwitch("force-color-profile", "scrgb-linear");
 
 // Game artwork for the Games library: ds5-art://art/<game key>/<kind>, served
 // only from the files the last scan resolved for that game (never a path the

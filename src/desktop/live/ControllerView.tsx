@@ -2,6 +2,8 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
+import { knob, useKnob } from "../lookKnobs";
+import HdrGlow from "./HdrGlow";
 import DongleDashboard from "../dongle/DongleDashboard";
 import { hasColorwayColor } from "./controllerAccent";
 import { useDevPreview, useShownIdentity } from "../devPreview";
@@ -85,6 +87,14 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // The model title fits the gap between the drawing's triggers (~46% of its
   // width; a bold cap is ~0.6 em), measured from the drawing as drawn.
   const heroRef = useRef<HTMLDivElement>(null);
+  // HDR lighting: on in settings (the app started in scRGB), an HDR display,
+  // and WebGPU; otherwise the normal glow only.
+  const [hdrSetting, setHdrSetting] = useState(false);
+  useEffect(() => {
+    void window.desktop?.getSettings().then((s) => setHdrSetting(s.hdrLighting && s.hardwareAcceleration));
+  }, []);
+  const [hdrNits] = useKnob(knob("hdrNits"));
+  const hdr = hdrSetting && on && matchMedia("(dynamic-range: high)").matches && "gpu" in navigator;
   const [ctlWidth, setCtlWidth] = useState(800);
   useEffect(() => {
     const ctl = heroRef.current?.querySelector(".live-ctl");
@@ -152,6 +162,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 remapped={remapped}
                 onSelect={(part) => onView({ part })}
               />
+              {hdr && <HdrGlow host={heroRef.current?.querySelector<HTMLElement>(".live-ctl") ?? null} nits={hdrNits} />}
             </div>
             {on && id?.model && (
               <div className="live-specs">

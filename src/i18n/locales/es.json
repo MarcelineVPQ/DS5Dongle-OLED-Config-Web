@@ -889,7 +889,9 @@
       "backdropBlur": "Desenfoque del fondo",
       "backdropBlurSub": "Arte del juego más suave o más nítido detrás de la página",
       "depth": "Profundidad",
-      "depthSub": "Intensidad de las sombras bajo las tarjetas y el mando (0 = plano)"
+      "depthSub": "Intensidad de las sombras bajo las tarjetas y el mando (0 = plano)",
+      "hdrNits": "Brillo máximo HDR",
+      "hdrNitsSub": "El brillo máximo de tu pantalla"
     },
     "calib": {
       "title": "Calibración",
@@ -959,6 +961,10 @@
       "never": "nunca",
       "yes": "sí",
       "no": "no"
+    },
+    "hdr": {
+      "label": "Iluminación HDR (experimental)",
+      "sub": "La barra de luz brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar."
     }
   },
   "ad": {

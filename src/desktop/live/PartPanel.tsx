@@ -4,7 +4,7 @@
 import { PanelRightClose, X } from "lucide-react";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
-import { KNOBS, useKnob, type Knob } from "../lookKnobs";
+import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
 import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, type DevModel } from "../devPreview";
 import { REDUCE_MOTION_KEY } from "../motion";
@@ -280,6 +280,7 @@ function AppSettings() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<DesktopSettings | null>(null);
   const [gpuChanged, setGpuChanged] = useState(false);
+  const [hdrChanged, setHdrChanged] = useState(false);
   useEffect(() => {
     void window.desktop?.getSettings().then(setSettings);
   }, []);
@@ -300,7 +301,7 @@ function AppSettings() {
         <GlassSetting />
         <AccentSetting />
         <BackdropSetting />
-        {KNOBS.map((k) => (
+        {KNOBS.filter((k) => !k.hidden).map((k) => (
           <KnobSlider key={k.key} k={k} />
         ))}
       </section>
@@ -334,6 +335,17 @@ function AppSettings() {
           </section>
           <section className="dk-card">
             <h2>{t("desktop.settings2.advanced")}</h2>
+            <Toggle
+              label={t("desktop.hdr.label")}
+              sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
+              value={settings.hdrLighting}
+              disabled={!settings.hardwareAcceleration}
+              onChange={(v) => {
+                setHdrChanged(true);
+                set("hdrLighting", v);
+              }}
+            />
+            {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
             <Toggle
               label={t("desktop.live.hardwareAcceleration")}
               sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}

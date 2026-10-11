@@ -41,6 +41,9 @@ export interface DesktopSettings {
   // Draw with the graphics card (needed for blur, glass and smooth effects).
   // Turned off automatically if the GPU process crashes; applies at restart.
   hardwareAcceleration: boolean;
+  // Experimental: the lightbar glow brighter than paper white on HDR displays
+  // (starts the app with the scRGB color profile; applies at restart).
+  hdrLighting: boolean;
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).

@@ -13,6 +13,7 @@ export interface Knob {
   unit: string;
   cssVar: string;
   css: (v: number) => string;
+  hidden?: boolean; // not in the generic Appearance list
 }
 
 export const KNOBS: Knob[] = [
@@ -20,6 +21,8 @@ export const KNOBS: Knob[] = [
   { key: "backdropDim", min: 0, max: 90, step: 5, fallback: 55, unit: "%", cssVar: "--backdrop-dim", css: (v) => `${v}%` },
   { key: "backdropBlur", min: 0, max: 100, step: 10, fallback: 60, unit: "%", cssVar: "--backdrop-blur", css: (v) => String(v) },
   { key: "depth", min: 0, max: 100, step: 10, fallback: 60, unit: "%", cssVar: "--depth", css: (v) => String(v / 100) },
+  // HDR lighting's peak (your display's peak brightness); shown with that switch.
+  { key: "hdrNits", min: 200, max: 2000, step: 50, fallback: 500, unit: "nits", cssVar: "--hdr-nits", css: (v) => String(v), hidden: true },
 ];
 
 const values = (k: Knob) => Array.from({ length: Math.round((k.max - k.min) / k.step) + 1 }, (_, i) => String(k.min + i * k.step));

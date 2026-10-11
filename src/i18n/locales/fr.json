@@ -889,7 +889,9 @@
       "backdropBlur": "Flou du fond",
       "backdropBlurSub": "Visuels du jeu plus doux ou plus nets derrière la page",
       "depth": "Profondeur",
-      "depthSub": "Intensité des ombres sous les cartes et la manette (0 = plat)"
+      "depthSub": "Intensité des ombres sous les cartes et la manette (0 = plat)",
+      "hdrNits": "Luminosité de crête HDR",
+      "hdrNitsSub": "La luminosité maximale de votre écran"
     },
     "calib": {
       "title": "Calibrage",
@@ -959,6 +961,10 @@
       "never": "jamais",
       "yes": "oui",
       "no": "non"
+    },
+    "hdr": {
+      "label": "Éclairage HDR (expérimental)",
+      "sub": "La barre lumineuse brille plus que le blanc sur un écran HDR, comme les vraies LED. Nécessite l'accélération matérielle ; s'applique au redémarrage."
     }
   },
   "ad": {

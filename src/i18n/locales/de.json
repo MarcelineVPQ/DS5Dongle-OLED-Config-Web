@@ -889,7 +889,9 @@
       "backdropBlur": "Hintergrund-Unschärfe",
       "backdropBlurSub": "Weichere oder schärfere Spielgrafik hinter der Seite",
       "depth": "Tiefe",
-      "depthSub": "Schattenstärke unter Karten und dem Controller (0 = flach)"
+      "depthSub": "Schattenstärke unter Karten und dem Controller (0 = flach)",
+      "hdrNits": "HDR-Spitzenhelligkeit",
+      "hdrNitsSub": "Die Spitzenhelligkeit deines Displays"
     },
     "calib": {
       "title": "Kalibrierung",
@@ -959,6 +961,10 @@
       "never": "nie",
       "yes": "ja",
       "no": "nein"
+    },
+    "hdr": {
+      "label": "HDR-Beleuchtung (experimentell)",
+      "sub": "Die Lichtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart."
     }
   },
   "ad": {
