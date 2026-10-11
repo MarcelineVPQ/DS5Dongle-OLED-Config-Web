@@ -34,7 +34,7 @@
 
     <main>
       <section class="hero">
-        <p class="eyebrow">The configurator is now a desktop app</p>
+        <p class="eyebrow">New in 0.9: calibration, haptics per grip, the dongle's screen live</p>
         <h1>Your DualSense,<br /><span class="glow">live on screen.</span></h1>
         <p class="lede">
           The DS5 Dongle OLED Edition turns a Raspberry Pi Pico&nbsp;2&nbsp;W into a Bluetooth bridge that games see as a wired DualSense, with adaptive triggers, HD haptics, speaker and mic. The app
@@ -54,7 +54,7 @@
         </div>
 
         <figure class="shot">
-          <img src="img/hero.webp" width="1600" height="1698" alt="The app: a Cosmic Red DualSense drawn live, with tiles and live data below it" />
+          <img src="img/hero.webp" width="1458" height="1377" alt="The app: a Cosmic Red DualSense drawn live, with tiles and live data below it" />
         </figure>
       </section>
 
@@ -83,12 +83,16 @@
 
       <section class="gallery">
         <figure>
-          <img src="img/panel.webp" width="1200" height="1273" loading="lazy" alt="Click any part of the controller, or pick a setting from the list" />
-          <figcaption>Click any part to set it up: lightbar, triggers, haptics, speaker, mic, remapping, pairing slots.</figcaption>
+          <img src="img/haptics.webp" width="1200" height="1133" loading="lazy" alt="The Haptics panel: left and right grip strength, linked, with test buttons" />
+          <figcaption>Click any part to set it up. Haptics: a strength for each grip, for HD haptics and rumble, with a test.</figcaption>
         </figure>
         <figure>
-          <img src="img/tour.webp" width="1200" height="1273" loading="lazy" alt="The guided tour" />
-          <figcaption>A one-minute guided tour the first time, driven from your controller.</figcaption>
+          <img src="img/calibration.webp" width="1200" height="1133" loading="lazy" alt="Calibration: a guided run with raw and corrected stick previews" />
+          <figcaption>Calibration: stick drift, triggers that don't reach full, a creeping gyro. Fixed in the dongle, for every game.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/dongle.webp" width="1200" height="1133" loading="lazy" alt="The dongle's screen mirrored live, with its diagnostics dashboard" />
+          <figcaption>The dongle's own screen, live, and a dashboard of what it's doing.</figcaption>
         </figure>
       </section>
 
@@ -101,6 +105,7 @@
           <li><b>Install the app</b> and plug the Pico in while holding its BOOTSEL button (a brand-new Pico doesn't need it). One click installs the firmware.</li>
           <li><b>Pair your controller:</b> hold PS + Create until the light bar flashes. That's it.</li>
         </ol>
+        <p>Everything else, step by step, with a picture for each: <a href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/blob/master/docs/GUIDE.md">the guide</a>.</p>
         <p class="legacy">Looking for the old browser configurator? It has been replaced by the app, which does everything it did and more.</p>
       </section>
     </main>

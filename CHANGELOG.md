@@ -8,6 +8,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [0.9.0] — 2026-10-11
 
+**Highlights:** calibration for sticks, triggers and gyro, stored in the dongle per controller; haptics strength per grip (HD haptics and rumble, with a test); the dongle's own screen live with a diagnostics dashboard; a theme in your controller's own colors with game art behind it; a Games library with per-game controller profiles (Linux); and a [step-by-step guide](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/blob/master/docs/GUIDE.md) (also in About → Guide).
+
 Needs firmware 0.9.0 (protocol 1.6) for calibration, left/right grip haptics and the grip test, 1.4 for the dongle console; older firmware keeps working without them (the app says so where it matters). Bundled with this release.
 
 ### Added
