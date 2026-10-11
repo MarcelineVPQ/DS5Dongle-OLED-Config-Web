@@ -136,7 +136,6 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
             <div className="live-readouts">
               {on && id && liveCapable && (
                 <LiveStrip
-                  input={input}
                   id={id}
                   rssi={status?.rssi ?? null}
                   lightbarMode={bridge.config?.lightbarMode ?? null}
@@ -144,7 +143,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
                   onLightbar={() => onView({ part: "lightbar" })}
                 />
               )}
-              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} config={bridge.config} firmware={bridge.firmwareVersion} onOpen={onView} />}
+              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} />}
             </div>
             {!(on && id && liveCapable) && (
               <div className="live-status">

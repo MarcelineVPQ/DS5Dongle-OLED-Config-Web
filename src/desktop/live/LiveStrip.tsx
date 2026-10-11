@@ -1,15 +1,14 @@
-// The live readouts under the controller, laid out like it: left stick and
-// L2 on the left, R2 and the right stick on the right, the controller's
-// battery, signal, player and slot in the middle.
+// The controller's status under the drawing, in two pairs: power and link
+// (battery, signal), then the lights on the controller (lightbar, player
+// LEDs and pairing slot). Sticks and triggers aren't repeated here: the
+// drawing moves with them and the data below has their numbers.
 import { useTranslation } from "react-i18next";
-import type { InputReport } from "../../oled/inputReport";
 import type { BridgeIdentity } from "../../protocol/bridgeClient";
 import { playerNumber } from "../../protocol/bridgeClient";
 import { signalQuality } from "../format";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 
 interface Props {
-  input: InputReport | null;
   id: BridgeIdentity;
   rssi: number | null;
   // The lightbar's mode (from the dongle's settings) and its live color;
@@ -21,15 +20,13 @@ interface Props {
 
 const BARS = { excellent: 4, good: 3, fair: 2, weak: 1 } as const;
 
-export default function LiveStrip({ input, id, rssi, lightbarMode, lightbar, onLightbar }: Props) {
+export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar }: Props) {
   const { t } = useTranslation();
   const quality = rssi === null ? null : signalQuality(rssi);
   const player = playerNumber(id.playerLeds);
   const mode = LIGHTBAR_MODES.find((m) => m.value === lightbarMode);
   return (
     <div className="live-strip">
-      <Stick label="L3" x={input?.leftStick.x ?? 128} y={input?.leftStick.y ?? 128} pressed={!!input?.l3} name={t("desktop.live.part.stick-l")} />
-      <Trigger label="L2" value={input?.triggerLeft ?? 0} />
       <div className="live-tile">
         <BatteryIcon level={id.battery} charging={id.charging} />
         <span className="live-tile-value">{id.battery !== null ? `${id.battery}%` : "—"}</span>
@@ -60,37 +57,6 @@ export default function LiveStrip({ input, id, rssi, lightbarMode, lightbar, onL
           {t("desktop.overview.slot", "Pairing slot")} {id.currentSlot}
         </span>
       </div>
-      <Trigger label="R2" value={input?.triggerRight ?? 0} />
-      <Stick label="R3" x={input?.rightStick.x ?? 128} y={input?.rightStick.y ?? 128} pressed={!!input?.r3} name={t("desktop.live.part.stick-r")} />
-    </div>
-  );
-}
-
-function Stick({ label, x, y, pressed, name }: { label: string; x: number; y: number; pressed: boolean; name: string }) {
-  const cx = 30 + ((x - 128) / 128) * 22;
-  const cy = 30 + ((y - 128) / 128) * 22;
-  return (
-    <div className="live-tile" title={name}>
-      <svg viewBox="0 0 60 60" className={`live-stick${pressed ? " pressed" : ""}`} aria-hidden="true">
-        <circle cx="30" cy="30" r="26" className="ring" />
-        <line x1="30" y1="6" x2="30" y2="54" className="cross" />
-        <line x1="6" y1="30" x2="54" y2="30" className="cross" />
-        <circle cx={cx.toFixed(1)} cy={cy.toFixed(1)} r="6" className="dot" />
-      </svg>
-      <span className="live-tile-label">{label}</span>
-    </div>
-  );
-}
-
-function Trigger({ label, value }: { label: string; value: number }) {
-  const pct = Math.round((value / 255) * 100);
-  return (
-    <div className="live-tile live-tile-narrow">
-      <span className="live-trig" aria-hidden="true">
-        <span style={{ height: `${pct}%` }} />
-      </span>
-      <span className="live-tile-value">{pct}%</span>
-      <span className="live-tile-label">{label}</span>
     </div>
   );
 }

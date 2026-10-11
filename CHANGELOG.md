@@ -19,12 +19,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **Navigation rail** on the right edge replaces the top bar: Controller, Dongle, Games, App settings and About, with the dongle's status at the bottom. Icons only until you hover it (or tab into it); pin it open with the button at the bottom or Ctrl+B.
 
+- **Controller page data regrouped**: four equal cards (Inputs with the stick circles and trigger bars, Gyroscope, Accelerometer, Connection) and a four-tile status strip (battery, signal, lightbar, player and slot). Nothing repeats the drawing, and settings stay in the side panel.
+
 ### Removed
 
 - The old browser web tool (retired with 0.8.0): its page, components, OLED emulator, WebHID preview, build script and styles. The download page is unaffected.
 
 ### Fixed
 
+- The game page's Play no longer warns "Couldn't open that" when the launcher started the game fine (Steam exits non-zero after passing the link on).
+- Gyroscope / accelerometer readings no longer spill out of narrow cards.
 - The haptics gain error message gave the wrong range (1.0–2.0 instead of 1.0–6.0) in every language.
 
 ## [0.8.1] — 2026-10-11

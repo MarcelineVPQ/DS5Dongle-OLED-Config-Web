@@ -513,7 +513,10 @@ function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo
     setBusy(action);
     setFailed(null);
     try {
-      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) setFailed(action);
+      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) {
+        setFailed(action);
+        setTimeout(() => setFailed((f) => (f === action ? null : f)), 6000);
+      }
     } catch {
       setFailed(action);
     } finally {

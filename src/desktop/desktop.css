@@ -1497,6 +1497,7 @@ html[data-theme="dark"] .dk {
 .live-stage {
   container-type: inline-size;
 }
+/* Four equal cards: one row, or 2 x 2 when narrow. */
 .live-data {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2522,4 +2523,56 @@ html[data-theme="dark"] .dk {
 }
 .gp-action-failed {
   color: var(--cv-warn, #d97706);
+}
+/* X / Y / Z side by side while the card has room; stacked (label left, value
+   right, like the other cards' rows) when it doesn't, so 4-5 digit
+   accelerometer readings never spill. Follows the card's width, not the
+   window's. */
+.live-data-card {
+  container-type: inline-size;
+}
+@container (max-width: 330px) {
+  .live-data-xyz {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+}
+/* The status strip: always four across (2 x 2 when narrow), never 3 + 1. */
+.live-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@container (max-width: 520px) {
+  .live-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.live-strip > .live-tile {
+  padding: 6px 10px;
+}
+/* Inputs card: the sticks and triggers drawn, then their numbers. */
+.live-data-sticks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.live-data-sticks .live-stick {
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+.live-data-trig {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.live-data-trig .live-trig {
+  width: 12px;
+  height: 36px;
+}
+.live-data-trig-label {
+  color: var(--text-muted);
+  font-size: 10.5px;
 }

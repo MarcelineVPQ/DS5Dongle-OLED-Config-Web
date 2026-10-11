@@ -11,6 +11,7 @@ import { GamesService } from "./games/service";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { GameKeySchema } from "../../src/desktop/games/library";
+import { hasSchemeHandler } from "./games/schemeHandler";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
@@ -166,9 +167,16 @@ function start(): void {
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
     gameAction: async (u) => {
       const target = linuxOnly((g) => g.gameAction(u.gameKey, u.action));
-      if (target.url) await shell.openExternal(target.url);
-      else if (target.folder && existsSync(target.folder)) return (await shell.openPath(target.folder)) === "";
-      return !!(target.url || target.folder);
+      if (target.url) {
+        // Launchers often exit non-zero after handing the link to their
+        // running instance (Steam does), so the open result means nothing:
+        // success = a handler is registered for the scheme.
+        if (!hasSchemeHandler(target.url)) return false;
+        shell.openExternal(target.url).catch(() => undefined);
+        return true;
+      }
+      if (target.folder && existsSync(target.folder)) return (await shell.openPath(target.folder)) === "";
+      return false;
     },
     onStatus: (status) => tray?.update(status),
     onTrayIcon: (png) => tray?.setCustomIcon(png),
