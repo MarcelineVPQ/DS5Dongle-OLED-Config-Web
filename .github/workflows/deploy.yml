@@ -1,14 +1,9 @@
-name: Build and deploy to GitHub Pages
+name: Deploy the download page to GitHub Pages
 
 on:
   push:
     branches: [master]
   workflow_dispatch:
-  # Fired by firmware repo's release workflow when a new release is published,
-  # so the bundled firmware-latest.uf2 always reflects the newest firmware
-  # without needing a manual web-repo rebuild. See firmware repo's release.yml.
-  repository_dispatch:
-    types: [firmware-released]
 
 permissions:
   contents: read
@@ -19,46 +14,18 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# GitHub Pages serves the download page (site/): plain static files, no build.
+# Its button reads the app's update feed live, so a release needs no redeploy.
+# The browser configurator it replaced is retired: the desktop app does all
+# of it (and the web build can still be run locally with `npm run dev`).
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - run: npm ci
-
-      - name: Bundle latest firmware UF2 from GitHub releases
-        continue-on-error: true
-        run: |
-          mkdir -p public
-          API=$(curl -sfL https://api.github.com/repos/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest)
-          TAG=$(echo "$API" | jq -r '.tag_name')
-          TITLE=$(echo "$API" | jq -r '.name // .tag_name')
-          DATE=$(echo "$API" | jq -r '.published_at')
-          URL=$(echo "$API" | jq -r '[.assets[] | select(.name | endswith(".uf2") and (contains("debug") | not))][0].browser_download_url')
-          ASSET=$(echo "$API" | jq -r '[.assets[] | select(.name | endswith(".uf2") and (contains("debug") | not))][0].name')
-          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-            echo "No non-debug UF2 in latest release; skipping bundle"
-            exit 0
-          fi
-          curl -sfL -o public/firmware-latest.uf2 "$URL"
-          SIZE=$(stat -c %s public/firmware-latest.uf2)
-          SHA256=$(sha256sum public/firmware-latest.uf2 | cut -d ' ' -f 1)
-          jq -n --arg tag "$TAG" --arg title "$TITLE" --arg asset "$ASSET" --argjson size "$SIZE" --arg sha "$SHA256" --arg pub "$DATE" \
-            '{tag: $tag, title: $title, assetName: $asset, size: $size, sha256: $sha, publishedAt: $pub}' \
-            > public/firmware-latest.json
-          echo "Bundled $ASSET ($SIZE bytes, sha256 $SHA256) from $TAG / $TITLE"
-
-      - run: npm run build
-
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build
