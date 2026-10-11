@@ -2,7 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -168,10 +168,12 @@ function RemapSection({ index, remap }: { index: number; remap: Remap }) {
   );
 }
 
-function Meter({ value }: { value: number }) {
+function Meter({ value, hold }: { value: number; hold?: number }) {
+  const pct = (v: number) => `${Math.round(Math.min(1, Math.max(0, v)) * 100)}%`;
   return (
     <div className="live-meter" aria-hidden="true">
-      <span style={{ width: `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%` }} />
+      <span style={{ width: pct(value) }} />
+      {hold !== undefined && hold > 0.01 && <i style={{ left: pct(hold) }} />}
     </div>
   );
 }
@@ -220,15 +222,26 @@ function TouchLive({ input }: { input: InputReport | null }) {
   );
 }
 
+// The live level from the dongle's audio pipeline (0xFB peak, which decays
+// on every read), with a short peak-hold line, a percentage, and what it
+// means when it sits at zero.
 function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "speaker" | "haptic" }) {
   const { t } = useTranslation();
   const client = bridge.client;
-  const diag = usePoll(() => client!.readDiag(), 250, Boolean(client)).value;
-  const peak = diag ? (which === "speaker" ? diag.peakSpeaker : diag.peakHaptic) : 0;
+  const diag = usePoll(() => client!.readDiag(), 120, Boolean(client)).value;
+  const level = (diag ? (which === "speaker" ? diag.peakSpeaker : diag.peakHaptic) : 0) / 255;
+  const hold = useRef({ value: 0, at: 0 });
+  const now = Date.now();
+  if (level >= hold.current.value || now - hold.current.at > 1500) hold.current = { value: level, at: now };
+  const silent = hold.current.value < 0.01;
   return (
     <section className="dk-card">
       <h2>{which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptics level now")}</h2>
-      <Meter value={peak / 255} />
+      <div className="live-level">
+        <Meter value={level} hold={hold.current.value} />
+        <span className="live-level-pct">{Math.round(level * 100)}%</span>
+      </div>
+      <p className="dk-hint">{silent ? t(which === "speaker" ? "desktop.live.speakerSilent" : "desktop.live.hapticSilent") : t("desktop.live.levelLive")}</p>
     </section>
   );
 }

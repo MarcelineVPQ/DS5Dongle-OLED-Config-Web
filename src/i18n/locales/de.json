@@ -644,7 +644,10 @@
       },
       "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
       "autoInstall": "Updates automatisch installieren",
-      "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App"
+      "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
+      "hapticSilent": "Still: gerade sendet nichts Haptik. Der Pegel bewegt sich, wenn ein Spiel HD-Haptik abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
+      "speakerSilent": "Still: gerade spielt nichts auf dem Lautsprecher des Controllers.",
+      "levelLive": "Live vom Dongle."
     },
     "tour": {
       "stepOf": "Schritt {{n}} von {{total}}",

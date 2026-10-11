@@ -644,7 +644,10 @@
       },
       "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
       "autoInstall": "Installer les mises à jour automatiquement",
-      "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app"
+      "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
+      "hapticSilent": "Silence : rien n'envoie d'haptique en ce moment. Le niveau bouge quand un jeu joue de l'haptique HD, ou avec Audio Auto Haptics activé pendant que du son joue.",
+      "speakerSilent": "Silence : rien ne joue sur le haut-parleur de la manette en ce moment.",
+      "levelLive": "En direct depuis le dongle."
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",

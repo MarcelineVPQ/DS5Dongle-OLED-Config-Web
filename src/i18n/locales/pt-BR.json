@@ -644,7 +644,10 @@
       },
       "hidePanel": "Ocultar o painel de configurações (o controle fica maior)",
       "autoInstall": "Instalar atualizações automaticamente",
-      "autoInstallSub": "Baixa e verifica em segundo plano; a nova versão abre na próxima vez que você abrir o app"
+      "autoInstallSub": "Baixa e verifica em segundo plano; a nova versão abre na próxima vez que você abrir o app",
+      "hapticSilent": "Silêncio: nada está enviando háptico agora. Ele se move quando um jogo toca háptico HD, ou com o Audio Auto Haptics ligado enquanto toca som.",
+      "speakerSilent": "Silêncio: nada está tocando no alto-falante do controle agora.",
+      "levelLive": "Ao vivo do dongle."
     },
     "tour": {
       "stepOf": "Passo {{n}} de {{total}}",

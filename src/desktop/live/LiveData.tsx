@@ -36,14 +36,15 @@ export default function LiveData({ input, rssi }: Props) {
             with the trigger; numbers underneath. */}
         <div className="live-data-sticks">
           <Stick label={t("desktop.live.part.stick-l")} x={input.leftStick.x} y={input.leftStick.y} pressed={input.l3} />
-          <Trigger label="L2" value={input.triggerLeft} />
-          <Trigger label="R2" value={input.triggerRight} />
+          <Trigger label="L2" value={input.triggerLeft} bumper="L1" bumperDown={input.l1} />
+          <Trigger label="R2" value={input.triggerRight} bumper="R1" bumperDown={input.r1} />
           <Stick label={t("desktop.live.part.stick-r")} x={input.rightStick.x} y={input.rightStick.y} pressed={input.r3} />
         </div>
         <Rows
           rows={[
             [tl("leftStick"), `${fmt(centered(input.leftStick.x), 4)} ${fmt(centered(input.leftStick.y), 4)}`],
             [tl("rightStick"), `${fmt(centered(input.rightStick.x), 4)} ${fmt(centered(input.rightStick.y), 4)}`],
+            ["L1 / R1", `${input.l1 ? "●" : "○"} ${input.r1 ? "●" : "○"}`],
             ["L2 / R2", `${fmt(input.triggerLeft, 3)} ${fmt(input.triggerRight, 3)}`],
             [tl("effect"), `${effect(input.triggerEffectLeft)} · ${effect(input.triggerEffectRight)}`],
             ...input.fingers.map((f, i): [string, string] => [t("desktop.liveData.finger", { n: i + 1 }), f.touching ? `${fmt(f.x, 4)} ${fmt(f.y, 4)}` : "—"]),
@@ -173,10 +174,12 @@ function Stick({ label, x, y, pressed }: { label: string; x: number; y: number; 
   );
 }
 
-function Trigger({ label, value }: { label: string; value: number }) {
+// The bumper (L1 / R1) above its trigger, as on the controller: lit while held.
+function Trigger({ label, value, bumper, bumperDown }: { label: string; value: number; bumper: string; bumperDown: boolean }) {
   const pct = Math.round((value / 255) * 100);
   return (
-    <span className="live-data-trig" title={`${label} ${pct}%`}>
+    <span className="live-data-trig" title={`${bumper} ${bumperDown ? "●" : "○"} · ${label} ${pct}%`}>
+      <span className={`live-bumper${bumperDown ? " on" : ""}`} aria-hidden="true" />
       <span className="live-trig" aria-hidden="true">
         <span style={{ height: `${pct}%` }} />
       </span>

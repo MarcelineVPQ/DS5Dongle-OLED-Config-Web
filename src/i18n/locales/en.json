@@ -643,7 +643,10 @@
       },
       "hidePanel": "Hide the settings panel (the controller gets bigger)",
       "autoInstall": "Install updates automatically",
-      "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app"
+      "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app",
+      "hapticSilent": "Silent: nothing is sending haptics right now. It moves while a game plays HD haptics, or with Audio Auto Haptics on while sound plays.",
+      "speakerSilent": "Silent: nothing is playing on the controller's speaker right now.",
+      "levelLive": "Live from the dongle."
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",

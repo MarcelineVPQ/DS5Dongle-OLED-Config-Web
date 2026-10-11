@@ -644,7 +644,10 @@
       },
       "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
       "autoInstall": "Instalar actualizaciones automáticamente",
-      "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app"
+      "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
+      "hapticSilent": "Silencio: ahora nada envía hápticos. Se mueve cuando un juego reproduce hápticos HD, o con Audio Auto Haptics activado mientras suena audio.",
+      "speakerSilent": "Silencio: ahora no suena nada en el altavoz del mando.",
+      "levelLive": "En directo desde el dongle."
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",

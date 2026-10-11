@@ -641,7 +641,10 @@
       },
       "hidePanel": "隐藏设置面板（手柄会变大）",
       "autoInstall": "自动安装更新",
-      "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本"
+      "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本",
+      "hapticSilent": "静默：目前没有任何震动输入。游戏播放 HD 震动时，或开启 Audio Auto Haptics 且有声音播放时，电平才会变化。",
+      "speakerSilent": "静默：手柄扬声器目前没有播放任何声音。",
+      "levelLive": "来自接收器的实时数据。"
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",

@@ -1085,10 +1085,33 @@ html[data-theme="dark"] .dk {
   color: var(--text-strong);
 }
 .live-meter {
-  height: 8px;
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border: 1px solid var(--border-default);
   border-radius: 999px;
-  background: var(--bg-inset);
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
   overflow: hidden;
+}
+/* Peak hold: where the level last reached, for 1.5 s. */
+.live-meter i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text-strong);
+}
+.live-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-level-pct {
+  min-width: 3.5ch;
+  color: var(--text-strong);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  text-align: right;
 }
 .live-meter span {
   display: block;
@@ -2575,4 +2598,16 @@ html[data-theme="dark"] .dk {
 .live-data-trig-label {
   color: var(--text-muted);
   font-size: 10.5px;
+}
+.live-bumper {
+  width: 20px;
+  height: 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+}
+.live-bumper.on {
+  border-color: var(--dk-accent);
+  background: var(--dk-accent);
+  box-shadow: 0 0 6px var(--dk-accent);
 }
