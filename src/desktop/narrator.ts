@@ -19,6 +19,7 @@ import { useSyncExternalStore } from "react";
 import i18n from "../i18n";
 import type { DesktopSettings } from "./api";
 import captionTexts from "../assets/voice/captions.json";
+import { NARRATOR_LANGS, NARRATOR_OFF } from "../protocol/bridgeClient";
 
 export type NarratorSetting = DesktopSettings["narratorVoice"];
 
@@ -97,6 +98,15 @@ async function controllerSpeaker(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// What the dongle's own narrator should be set to (protocol 1.3): her
+// language while she's on, otherwise off (still "ask" = off).
+export function firmwareNarratorValue(value: NarratorSetting): number {
+  if (value !== "on") return NARRATOR_OFF;
+  const lang = voiceLang();
+  const i = NARRATOR_LANGS.findIndex((l) => l === lang);
+  return 1 + Math.max(0, i);
 }
 
 export function hasLine(key: string): boolean {

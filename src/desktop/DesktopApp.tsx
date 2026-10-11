@@ -15,7 +15,8 @@ import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
 import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
-import { say } from "./narrator";
+import { firmwareNarratorValue, say, useNarrator } from "./narrator";
+import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 
 // One screen: the live controller with its settings panel. Games and About
 // replace it while open (with a way back); the dongle and the app's own
@@ -25,7 +26,7 @@ type MainView = "controller" | "games" | "about";
 const APPLY_DEBOUNCE_MS = 150;
 
 export default function DesktopApp() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   useApplyTheme();
   const bridge = useDs5Bridge();
   const appUpdate = useAppUpdate();
@@ -101,6 +102,24 @@ export default function DesktopApp() {
       battery,
     });
   }, [connected, controllerOn, liveIdentity, firmware, charging, battery]);
+
+  // The dongle has her too (connected, slot, battery low; firmware 1.3):
+  // keep it in step with the app's narrator setting and language. Written
+  // only when it differs, since the dongle saves it to flash.
+  const narrator = useNarrator();
+  const fwNarrator = Boolean(liveIdentity && liveIdentity.features & IDENTITY_FEATURES.narrator);
+  useEffect(() => {
+    if (!client || !fwNarrator) return;
+    const want = firmwareNarratorValue(narrator);
+    let cancelled = false;
+    void client
+      .readNarrator()
+      .then((have) => (!cancelled && have !== null && have !== want ? client.setNarrator(want) : undefined))
+      .catch(() => undefined); // busy or gone: tried again on the next change or reconnect
+    return () => {
+      cancelled = true;
+    };
+  }, [client, fwNarrator, narrator, i18n.resolvedLanguage]);
 
   // Redraw the tray icon only when something it shows changes.
   const darkTaskbar = useDarkTaskbar();

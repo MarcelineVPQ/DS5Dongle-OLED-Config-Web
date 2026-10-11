@@ -5,7 +5,7 @@ import { PanelRightOpen } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { playerNumber } from "../../protocol/bridgeClient";
+import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
 import { signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 import { supportsLiveInput, useLiveInput, useLiveLightbar } from "../useLiveInput";
@@ -54,7 +54,8 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
   const wasOn = useRef<boolean | null>(null);
   useEffect(() => {
     if (!id) return;
-    if (wasOn.current === false && on) void say("app_controller");
+    // The dongle says its own "Connected" when it has the narrator.
+    if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
     wasOn.current = on;
   }, [on, id]);
   const remap = useRemap(client);

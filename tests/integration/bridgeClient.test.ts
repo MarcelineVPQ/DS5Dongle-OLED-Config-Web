@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CommandError, Ds5BridgeClient } from "../../src/protocol/bridgeClient";
+import { CommandError, Ds5BridgeClient, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { FakeDongle } from "../support/fakeDongle";
@@ -14,7 +14,7 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
     const { client } = setup();
     const id = await client.checkCompatible();
     expect(id.protoMajor).toBe(1);
-    expect(id.configBodyLength).toBe(37);
+    expect(id.configBodyLength).toBe(38); // + the narrator byte (protocol 1.3)
     expect(id.slotCount).toBe(4);
   });
 
@@ -173,5 +173,47 @@ describe("live input without a controller", () => {
     const { dongle, client } = setup();
     dongle.input.fill(0); // what the dongle answers with no controller
     expect(await client.readInput()).toBeNull();
+  });
+});
+
+describe("narrator firmware lines (protocol 1.3)", () => {
+  it("reads the narrator byte after the config body and sets it without saving anything else", async () => {
+    const dongle = new FakeDongle();
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.features & IDENTITY_FEATURES.narrator).toBeTruthy();
+    expect(await client.readNarrator()).toBe(NARRATOR_OFF);
+    // An unsaved edit stays unsaved when she's turned on.
+    await client.applyConfig({ ...DEFAULT_CONFIG, hapticsGain: 3 });
+    const flashBefore = dongle.flashConfig.slice();
+    await client.setNarrator(1 + NARRATOR_LANGS.indexOf("de"));
+    expect(await client.readNarrator()).toBe(2);
+    expect(dongle.flashNarrator).toBe(2);
+    expect(dongle.flashConfig).toEqual(flashBefore);
+    await client.setNarrator(NARRATOR_OFF);
+    expect(await client.readNarrator()).toBe(NARRATOR_OFF);
+  });
+
+  it("still finds the remap table after the longer body", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle());
+    await client.applyRemap([1, 0, ...Array.from({ length: 14 }, (_, i) => i + 2)]);
+    const remap = await client.readRemap();
+    expect(remap?.table.slice(0, 2)).toEqual([1, 0]);
+  });
+
+  it("previews a line and refuses bad arguments", async () => {
+    const dongle = new FakeDongle();
+    const client = new Ds5BridgeClient(dongle);
+    await client.sayNarratorLine(NARRATOR_LINES.batteryLow, 6);
+    expect(dongle.said).toEqual([[5, 6]]);
+    await expect(client.sayNarratorLine(6, 0)).rejects.toThrow();
+    await expect(client.setNarrator(9)).rejects.toThrow();
+  });
+
+  it("is off on older firmware (no byte after the body)", async () => {
+    const dongle = new FakeDongle();
+    const client = new Ds5BridgeClient(dongle);
+    dongle.getReport = async () => new Uint8Array(37);
+    expect(await client.readNarrator()).toBeNull();
   });
 });

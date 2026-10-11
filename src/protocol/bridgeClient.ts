@@ -29,6 +29,8 @@ export const FUNC = {
   bootsel: 0x08,
   factoryReset: 0x09,
   triggerPreview: 0x0a,
+  narrator: 0x0b,
+  narratorSay: 0x0c,
   remap: 0x10,
 } as const;
 
@@ -44,7 +46,13 @@ export const IDENTITY_FEATURES = {
   triggerPreview: 0x10,
   liveInput: 0x20, // 0xF0 live input report (protocol 1.2)
   unsavedFlag: 0x40, // identity [19] bit 0 (protocol 1.2)
+  narrator: 0x80, // the dongle's own narrator lines, 0x0B / 0x0C (protocol 1.3)
 } as const;
+
+// The narrator's firmware lines (protocol 1.3), in the firmware's order.
+export const NARRATOR_LINES = { connected: 0, slot0: 1, batteryLow: 5 } as const;
+export const NARRATOR_LANGS = ["en", "de", "fr", "es", "pt-BR", "zh-CN", "ja"] as const;
+export const NARRATOR_OFF = 0xff;
 
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
 const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed", "busy"];
@@ -276,6 +284,23 @@ export class Ds5BridgeClient {
   // 0 = off, 1-6 = the OLED Trigger Test presets.
   async previewTrigger(preset: number): Promise<void> {
     await this.command(FUNC.triggerPreview, [preset]);
+  }
+
+  // The dongle's narrator: NARRATOR_OFF, or 1 + an index into NARRATOR_LANGS.
+  // It's the byte after the config body (protocol 1.3); null on older firmware.
+  async readNarrator(): Promise<number | null> {
+    const bytes = await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE + 1);
+    return bytes.length > CONFIG_BODY_SIZE ? bytes[CONFIG_BODY_SIZE] : null;
+  }
+
+  // Saved on the dongle by itself (it never saves other unsaved edits).
+  async setNarrator(value: number): Promise<void> {
+    await this.command(FUNC.narrator, [value]);
+  }
+
+  // Plays one of her firmware lines now, whatever the setting (a preview).
+  async sayNarratorLine(line: number, lang: number): Promise<void> {
+    await this.command(FUNC.narratorSay, [line, lang]);
   }
 
   async readFirmwareVersion(): Promise<string> {

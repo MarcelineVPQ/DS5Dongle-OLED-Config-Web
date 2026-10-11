@@ -6,7 +6,7 @@
 import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, encodeConfigBody } from "../../src/protocol/config";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "../../src/protocol/transport";
 
-const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a]);
+const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
 
 export interface FakeDongleOptions {
@@ -27,6 +27,10 @@ export class FakeDongle implements Ds5Transport {
   slots = [true, false, false, false];
   currentSlot = 0;
   lastTrigger = -1;
+  // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
+  narrator = 0xff;
+  flashNarrator = 0xff;
+  said: [number, number][] = [];
   playerLeds = 0x04; // player 1
   edge = false;
   colorwayCode = "02"; // Cosmic Red
@@ -68,9 +72,10 @@ export class FakeDongle implements Ds5Transport {
         if (this.gone) throw new DeviceGoneError();
         return this.identity().subarray(0, length);
       case 0xf7: {
-        const out = new Uint8Array(58);
+        const out = new Uint8Array(59);
         out.set(this.config, 0);
-        out.set([0x52, 0x4d, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.remap], CONFIG_BODY_SIZE);
+        out[CONFIG_BODY_SIZE] = this.narrator;
+        out.set([0x52, 0x4d, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.remap], CONFIG_BODY_SIZE + 1);
         return out.subarray(0, Math.min(length, out.length));
       }
       case 0xf8:
@@ -122,6 +127,11 @@ export class FakeDongle implements Ds5Transport {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x0a && arg > 6) {
       this.lastResult = RESULT.invalid;
+    } else if (func === 0x0b && arg !== 0xff && (arg < 1 || arg > 7)) {
+      this.lastResult = RESULT.invalid;
+    } else if (func === 0x0c) {
+      if (payload.length < 3 || arg > 5 || payload[2] > 6) this.lastResult = RESULT.invalid;
+      else this.said.push([arg, payload[2]]);
     } else if (DEFERRED.has(func)) {
       this.pending = { func, arg, polls: this.opts.pendingPolls ?? 1 };
       this.lastResult = RESULT.pending;
@@ -153,11 +163,15 @@ export class FakeDongle implements Ds5Transport {
       this.flashConfig = this.config.slice();
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
+    else if (func === 0x0b) {
+      this.narrator = arg;
+      this.flashNarrator = arg; // saved on its own, nothing else
+    }
   }
 
   private identity(): Uint8Array {
     const out = new Uint8Array(29);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 2, CONFIG_BODY_SIZE, 0x7f]);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 3, CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
