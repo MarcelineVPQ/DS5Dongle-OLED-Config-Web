@@ -46,7 +46,6 @@ export default function DesktopApp() {
   const fw = useFirmwareUpdate(bridge, appUpdate);
   const [main, setMain] = useState<MainView>("controller");
   const [panel, setPanel] = useState<PanelView>("overview");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
@@ -169,9 +168,8 @@ export default function DesktopApp() {
     () =>
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
-          // The tray's "Diagnostics" is under Dongle → Advanced.
+          // The tray's "Diagnostics" opens the Dongle page (its live diagnostics).
           if (command.page === "diagnostics") {
-            setAdvancedOpen(true);
             setMain("controller");
             setPanel("dongle");
           } else if (command.page === "games" || command.page === "about") setMain(command.page);
@@ -227,9 +225,9 @@ export default function DesktopApp() {
           {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
           {main === "controller" &&
             (connected ? (
-              <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} advancedOpen={advancedOpen} />
+              <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
             ) : panel === "app" ? (
-              <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} advancedOpen={false} />
+              <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
             ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
               // Mid-update the dongle is a bootloader drive: the update banner
               // shows the progress; Setup must not offer to flash it again.

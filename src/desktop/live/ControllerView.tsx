@@ -2,6 +2,7 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
+import DongleDashboard from "../dongle/DongleDashboard";
 import { hasColorwayColor } from "./controllerAccent";
 import { useDevPreview, useShownIdentity } from "../devPreview";
 import { REGULAR_GLASS } from "../glass/variants";
@@ -36,10 +37,9 @@ interface Props {
   fw: FirmwareUpdate;
   view: PanelView;
   onView: (view: PanelView) => void;
-  advancedOpen: boolean;
 }
 
-export default function ControllerView({ bridge, fw, view, onView, advancedOpen }: Props) {
+export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const { t } = useTranslation();
   const client = bridge.client;
   const status = usePoll(
@@ -125,7 +125,10 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
     <div className={`live-view${collapsed ? " collapsed" : ""}`}>
       <div className="live-stage">
         {view === "dongle" ? (
-          <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
+          <>
+            <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
+            <DongleDashboard bridge={bridge} />
+          </>
         ) : (
           <>
             {/* Magazine-cover title: the model in big caps behind the drawing,
@@ -235,7 +238,6 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
             fw={fw}
             input={input}
             remap={remap}
-            advancedOpen={advancedOpen}
             onClose={() => onView("overview")}
             onOpen={(part) => onView({ part })}
             onCalibrate={() => onView("calibration")}

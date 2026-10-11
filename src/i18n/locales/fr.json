@@ -108,8 +108,6 @@
     "overview": {
       "firmware": "Firmware",
       "protocol": "Protocole",
-      "uptime": "Temps de fonctionnement",
-      "cpu": "CPU",
       "connected": "Connectée",
       "notConnected": "Non connectée (appuie sur PS)",
       "slot": "Slot d'appairage",
@@ -177,11 +175,7 @@
       }
     },
     "diag": {
-      "title": "Compteurs du pipeline audio",
       "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
-      "counter": "Compteur",
-      "total": "Total",
-      "perSecond": "Par seconde",
       "counters": {
         "usbFrames": "Trames audio USB reçues",
         "btOut": "Rapports audio envoyés en BT",
@@ -263,9 +257,7 @@
       "charging": "en charge",
       "pairHint": "Déjà appairée ? Appuie sur PS. Nouvelle manette ? Maintiens PS + Create jusqu'à ce que la barre lumineuse clignote ; elle s'appaire dans le slot actuel."
     },
-    "dongle": {
-      "advanced": "Avancé"
-    },
+    "dongle": {},
     "about": {
       "changes": "Nouveautés",
       "firmware": "Changements du firmware",
@@ -927,6 +919,41 @@
       "revert": "Annuler",
       "reset": "Revenir au non calibré",
       "saveHint": "Enregistré dans la mémoire du dongle ; s'applique tout de suite à tous les jeux."
+    },
+    "dash": {
+      "pico": "Pico 2 W",
+      "oled": "Écran OLED",
+      "temperature": "Température de la puce",
+      "clock": "Fréquence du CPU",
+      "clockSet": "réglée à {{mhz}} MHz",
+      "vcore": "Tension du cœur",
+      "uptime": "Allumé depuis",
+      "protocol": "Protocole",
+      "firmware": "Firmware",
+      "hciErrors": "Erreurs Bluetooth",
+      "usb": "Trames audio USB",
+      "bt": "Paquets Bluetooth",
+      "signal": "Signal",
+      "tempHistory": "Température",
+      "audio": "Chaîne audio",
+      "speakerPeak": "Niveau du haut-parleur",
+      "hapticPeak": "Niveau haptique",
+      "brightness": "Luminosité",
+      "oledState": "État",
+      "oledScreen": "Écran",
+      "oledFps": "Rafraîchissements",
+      "noMirror": "firmware 1.4 requis",
+      "power": {
+        "on": "Allumé",
+        "dim": "Atténué (inactif)",
+        "off": "Éteint (inactif)"
+      },
+      "dimAfter": "S'atténue après",
+      "offAfter": "S'éteint après",
+      "wakeOnInput": "Se réveille avec la manette",
+      "never": "jamais",
+      "yes": "oui",
+      "no": "non"
     }
   },
   "ad": {

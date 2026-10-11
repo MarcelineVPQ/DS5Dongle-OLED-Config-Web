@@ -108,8 +108,6 @@
     "overview": {
       "firmware": "Firmware",
       "protocol": "Protocolo",
-      "uptime": "Tiempo activo",
-      "cpu": "CPU",
       "connected": "Conectado",
       "notConnected": "No conectado (pulsa PS)",
       "slot": "Slot de emparejamiento",
@@ -177,11 +175,7 @@
       }
     },
     "diag": {
-      "title": "Contadores del pipeline de audio",
       "core1Frozen": "Core1 detenido: el audio no funcionará hasta que el dongle se reinicie.",
-      "counter": "Contador",
-      "total": "Total",
-      "perSecond": "Por segundo",
       "counters": {
         "usbFrames": "Tramas de audio USB recibidas",
         "btOut": "Informes de audio enviados por BT",
@@ -263,9 +257,7 @@
       "charging": "cargando",
       "pairHint": "¿Ya está emparejado? Pulsa el botón PS. ¿Mando nuevo? Mantén PS + Create hasta que la barra de luz parpadee; se empareja en el slot actual."
     },
-    "dongle": {
-      "advanced": "Avanzado"
-    },
+    "dongle": {},
     "about": {
       "changes": "Novedades",
       "firmware": "Cambios del firmware",
@@ -927,6 +919,41 @@
       "revert": "Deshacer",
       "reset": "Volver a sin calibrar",
       "saveHint": "Se guarda en la memoria del dongle; se aplica al instante en todos los juegos."
+    },
+    "dash": {
+      "pico": "Pico 2 W",
+      "oled": "Pantalla OLED",
+      "temperature": "Temperatura del chip",
+      "clock": "Frecuencia de la CPU",
+      "clockSet": "configurada a {{mhz}} MHz",
+      "vcore": "Tensión del núcleo",
+      "uptime": "Tiempo encendido",
+      "protocol": "Protocolo",
+      "firmware": "Firmware",
+      "hciErrors": "Errores de Bluetooth",
+      "usb": "Tramas de audio USB",
+      "bt": "Paquetes Bluetooth",
+      "signal": "Señal",
+      "tempHistory": "Temperatura",
+      "audio": "Cadena de audio",
+      "speakerPeak": "Nivel del altavoz",
+      "hapticPeak": "Nivel háptico",
+      "brightness": "Brillo",
+      "oledState": "Estado",
+      "oledScreen": "Pantalla",
+      "oledFps": "Redibujados",
+      "noMirror": "requiere firmware 1.4",
+      "power": {
+        "on": "Encendida",
+        "dim": "Atenuada (inactiva)",
+        "off": "Apagada (inactiva)"
+      },
+      "dimAfter": "Se atenúa tras",
+      "offAfter": "Se apaga tras",
+      "wakeOnInput": "Se activa con el mando",
+      "never": "nunca",
+      "yes": "sí",
+      "no": "no"
     }
   },
   "ad": {

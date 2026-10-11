@@ -108,8 +108,6 @@
     "overview": {
       "firmware": "Firmware",
       "protocol": "Protocolo",
-      "uptime": "Tempo ativo",
-      "cpu": "CPU",
       "connected": "Conectado",
       "notConnected": "Não conectado (pressione PS)",
       "slot": "Slot de pareamento",
@@ -177,11 +175,7 @@
       }
     },
     "diag": {
-      "title": "Contadores do pipeline de áudio",
       "core1Frozen": "Core1 parou: o áudio não funcionará até o dongle reiniciar.",
-      "counter": "Contador",
-      "total": "Total",
-      "perSecond": "Por segundo",
       "counters": {
         "usbFrames": "Quadros de áudio USB recebidos",
         "btOut": "Relatórios de áudio enviados por BT",
@@ -263,9 +257,7 @@
       "charging": "carregando",
       "pairHint": "Já pareado? Aperte o botão PS. Controle novo? Segure PS + Create até a barra de luz piscar; ele pareia no slot atual."
     },
-    "dongle": {
-      "advanced": "Avançado"
-    },
+    "dongle": {},
     "about": {
       "changes": "Novidades",
       "firmware": "Mudanças no firmware",
@@ -927,6 +919,41 @@
       "revert": "Desfazer",
       "reset": "Voltar ao sem calibração",
       "saveHint": "Salvo na memória do dongle; vale na hora para todos os jogos."
+    },
+    "dash": {
+      "pico": "Pico 2 W",
+      "oled": "Tela OLED",
+      "temperature": "Temperatura do chip",
+      "clock": "Clock da CPU",
+      "clockSet": "configurado em {{mhz}} MHz",
+      "vcore": "Tensão do núcleo",
+      "uptime": "Tempo ligado",
+      "protocol": "Protocolo",
+      "firmware": "Firmware",
+      "hciErrors": "Erros de Bluetooth",
+      "usb": "Quadros de áudio USB",
+      "bt": "Pacotes Bluetooth",
+      "signal": "Sinal",
+      "tempHistory": "Temperatura",
+      "audio": "Cadeia de áudio",
+      "speakerPeak": "Nível do alto-falante",
+      "hapticPeak": "Nível do háptico",
+      "brightness": "Brilho",
+      "oledState": "Estado",
+      "oledScreen": "Tela",
+      "oledFps": "Redesenhos",
+      "noMirror": "requer firmware 1.4",
+      "power": {
+        "on": "Ligada",
+        "dim": "Escurecida (inativa)",
+        "off": "Desligada (inativa)"
+      },
+      "dimAfter": "Escurece após",
+      "offAfter": "Desliga após",
+      "wakeOnInput": "Acorda com o controle",
+      "never": "nunca",
+      "yes": "sim",
+      "no": "não"
     }
   },
   "ad": {

@@ -24,8 +24,6 @@ import { BusyButton, Row, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { TOUR_ENABLED, startTour } from "../tour/Tour";
-import DiagnosticsPage from "../pages/DiagnosticsPage";
-import { DongleInternals } from "../pages/DongleInternals";
 import FirmwarePage from "../pages/FirmwarePage";
 import LightbarPage from "../pages/LightbarPage";
 import { AutoHapticsSection, DisplaySection, HapticsSection, MicSection, PowerSection, SpeakerSection, UsbSection } from "../pages/SettingsPage";
@@ -44,14 +42,13 @@ interface Props {
   fw: FirmwareUpdate;
   input: InputReport | null;
   remap: Remap;
-  advancedOpen: boolean;
   onClose: () => void;
   onOpen: (part: PartId) => void;
   onCalibrate: () => void;
   onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen, onClose, onOpen, onCalibrate, onHide }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -81,7 +78,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, advancedOpen
       </header>
       {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
-      {view === "dongle" && <DongleSections bridge={bridge} fw={fw} advancedOpen={advancedOpen} />}
+      {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
       {view === "app" && <AppSettings />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} />}
     </div>
@@ -266,19 +263,13 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   );
 }
 
-function DongleSections({ bridge, fw, advancedOpen }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate; advancedOpen: boolean }) {
-  const { t } = useTranslation();
+function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   return (
     <>
       <FirmwarePage bridge={bridge} fw={fw} />
       <PowerSection bridge={bridge} />
       <DisplaySection bridge={bridge} />
       <UsbSection bridge={bridge} />
-      <details className="dk-card dk-advanced" open={advancedOpen}>
-        <summary>{t("desktop.dongle.advanced", "Advanced")}</summary>
-        <DongleInternals bridge={bridge} />
-        <DiagnosticsPage bridge={bridge} />
-      </details>
     </>
   );
 }

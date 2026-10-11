@@ -108,8 +108,6 @@
     "overview": {
       "firmware": "固件",
       "protocol": "协议",
-      "uptime": "运行时间",
-      "cpu": "CPU",
       "connected": "已连接",
       "notConnected": "未连接(请按 PS)",
       "slot": "配对槽位",
@@ -177,11 +175,7 @@
       }
     },
     "diag": {
-      "title": "音频管线计数器",
       "core1Frozen": "Core1 已停止：音频通路在接收器重启前将无法工作。",
-      "counter": "计数器",
-      "total": "总计",
-      "perSecond": "每秒",
       "counters": {
         "usbFrames": "USB 音频输入帧",
         "btOut": "通过 BT 发送的音频报告",
@@ -263,9 +257,7 @@
       "charging": "充电中",
       "pairHint": "已经配对过？按 PS 键。新手柄？按住 PS + Create 直到灯条闪烁；它会配对到当前槽位。"
     },
-    "dongle": {
-      "advanced": "高级"
-    },
+    "dongle": {},
     "about": {
       "changes": "新功能",
       "firmware": "固件更新内容",
@@ -921,6 +913,41 @@
       "revert": "撤销",
       "reset": "恢复为未校准",
       "saveHint": "保存在接收器自身的存储中，立即对所有游戏生效。"
+    },
+    "dash": {
+      "pico": "Pico 2 W",
+      "oled": "OLED 屏幕",
+      "temperature": "芯片温度",
+      "clock": "CPU 频率",
+      "clockSet": "设定为 {{mhz}} MHz",
+      "vcore": "核心电压",
+      "uptime": "运行时间",
+      "protocol": "协议",
+      "firmware": "固件",
+      "hciErrors": "蓝牙错误",
+      "usb": "USB 音频帧",
+      "bt": "蓝牙数据包",
+      "signal": "信号",
+      "tempHistory": "温度",
+      "audio": "音频管线",
+      "speakerPeak": "扬声器电平",
+      "hapticPeak": "震动电平",
+      "brightness": "亮度",
+      "oledState": "状态",
+      "oledScreen": "屏幕",
+      "oledFps": "刷新",
+      "noMirror": "需要固件 1.4",
+      "power": {
+        "on": "开启",
+        "dim": "已调暗（空闲）",
+        "off": "已关闭（空闲）"
+      },
+      "dimAfter": "调暗时间",
+      "offAfter": "关闭时间",
+      "wakeOnInput": "手柄输入时唤醒",
+      "never": "从不",
+      "yes": "是",
+      "no": "否"
     }
   },
   "ad": {

@@ -941,17 +941,30 @@ html[data-theme="dark"] .dk {
   fill: url(#ctl-r2-fill);
 }
 .live-ctl .fill-on {
-  stop-color: var(--ctl-on);
+  stop-color: color-mix(in srgb, var(--ctl-dark) 55%, #fff);
 }
 .live-ctl .fill-off {
   stop-color: var(--ctl-dark);
 }
-/* Pressed. */
-.live-ctl .on .cap,
-.live-ctl .on .stk,
+/* Pressed: a grayscale tint over the part's own color, darker on light
+   buttons and lighter on dark ones (sticks, bumpers), so a press shows on
+   every colorway; the accent could match the body (Cosmic Red). */
+.live-ctl {
+  --ctl-press-ink: #fff;
+}
+html[data-theme="light"] .live-ctl {
+  --ctl-press-ink: #000;
+}
+.live-ctl .on .cap {
+  fill: color-mix(in srgb, var(--ctl-cap) 50%, var(--ctl-press-ink));
+}
+.live-ctl .on .stk {
+  fill: color-mix(in srgb, var(--ctl-stick) 50%, #fff);
+}
+/* L1 / R1 and the L2 / R2 fill: a light grey over the trigger color. */
 .live-ctl [data-part="l1"].on .dk,
 .live-ctl [data-part="r1"].on .dk {
-  fill: var(--ctl-on);
+  fill: color-mix(in srgb, var(--ctl-dark) 55%, #fff);
 }
 .live-ctl .on .ln,
 .live-ctl .on.hit {
@@ -3105,4 +3118,180 @@ html[data-reduce-motion] .lib-row:hover {
 }
 .calib-trigger {
   margin: 2px 0;
+}
+
+/* ---- Dongle diagnostics dashboard (DongleDashboard.tsx) ---- */
+.dash {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 900px);
+  margin: 12px auto 0;
+}
+.dash-group {
+  margin: 6px 0 0;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dash-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+.dash-card {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-1);
+}
+html[data-cards-translucent] .dash-card {
+  background: color-mix(in srgb, var(--bg-panel) var(--card-opacity, 100%), transparent);
+  backdrop-filter: blur(10px);
+}
+.dash-wide {
+  grid-column: 1 / -1;
+}
+.dash-card h4 {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dash-gauge {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+.dash-gauge svg {
+  width: 100%;
+  max-width: 150px;
+}
+.dash-gauge .track,
+.dash-gauge .fill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+.dash-gauge .track {
+  stroke: color-mix(in srgb, var(--text-muted) 20%, transparent);
+}
+.dash-gauge .fill {
+  stroke: var(--dk-accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--dk-accent) 60%, transparent));
+}
+.dash-gauge.warn .fill {
+  stroke: var(--cv-warn, #d97706);
+}
+.dash-gauge.bad .fill {
+  stroke: var(--cv-bad, #dc2626);
+}
+.dash-gauge-value {
+  position: absolute;
+  top: 38%;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+.dash-gauge-value span {
+  margin-left: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.dash-gauge figcaption {
+  display: grid;
+  justify-items: center;
+  margin-top: -6px;
+  color: var(--text-soft);
+  font-size: var(--dk-small);
+}
+.dash-gauge figcaption small {
+  color: var(--text-muted);
+}
+.dash-graph-now {
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+.dash-graph-now span {
+  margin-left: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.dash-graph-now em {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: normal;
+}
+.dash-graph svg {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-top: 4px;
+}
+.dash-graph polyline {
+  fill: none;
+  stroke: var(--dk-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.dash-facts {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+.dash-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--dk-small);
+}
+.dash-fact span {
+  color: var(--text-muted);
+}
+.dash-fact b {
+  color: var(--text-strong);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 500;
+  text-align: right;
+}
+.dash-fact.bad b {
+  color: var(--cv-warn, #d97706);
+}
+.dash-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 16px;
+  margin-bottom: 8px;
+}
+.dash-level {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr) 3.5ch;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--dk-small);
+}
+.dash-level span {
+  color: var(--text-muted);
+}
+.dash-level b {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 500;
+  text-align: right;
+}
+.dash-counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 3px 20px;
 }

@@ -108,8 +108,6 @@
     "overview": {
       "firmware": "Firmware",
       "protocol": "Protokoll",
-      "uptime": "Laufzeit",
-      "cpu": "CPU",
       "connected": "Verbunden",
       "notConnected": "Nicht verbunden (PS drücken)",
       "slot": "Kopplungs-Slot",
@@ -177,11 +175,7 @@
       }
     },
     "diag": {
-      "title": "Zähler der Audio-Pipeline",
       "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis der Dongle neu startet.",
-      "counter": "Zähler",
-      "total": "Gesamt",
-      "perSecond": "Pro Sekunde",
       "counters": {
         "usbFrames": "Eingehende USB-Audio-Frames",
         "btOut": "Über BT gesendete Audio-Reports",
@@ -263,9 +257,7 @@
       "charging": "lädt",
       "pairHint": "Schon gekoppelt? Drück die PS-Taste. Neuer Controller? Halte PS + Create, bis die Lightbar blinkt; er wird im aktuellen Slot gekoppelt."
     },
-    "dongle": {
-      "advanced": "Erweitert"
-    },
+    "dongle": {},
     "about": {
       "changes": "Neuigkeiten",
       "firmware": "Firmware-Änderungen",
@@ -927,6 +919,41 @@
       "revert": "Verwerfen",
       "reset": "Auf unkalibriert zurücksetzen",
       "saveHint": "Im eigenen Speicher des Dongles gesichert; gilt sofort für jedes Spiel."
+    },
+    "dash": {
+      "pico": "Pico 2 W",
+      "oled": "OLED-Display",
+      "temperature": "Chiptemperatur",
+      "clock": "CPU-Takt",
+      "clockSet": "eingestellt: {{mhz}} MHz",
+      "vcore": "Kernspannung",
+      "uptime": "Laufzeit",
+      "protocol": "Protokoll",
+      "firmware": "Firmware",
+      "hciErrors": "Bluetooth-Fehler",
+      "usb": "USB-Audio-Frames",
+      "bt": "Bluetooth-Pakete",
+      "signal": "Signal",
+      "tempHistory": "Temperatur",
+      "audio": "Audio-Pipeline",
+      "speakerPeak": "Lautsprecherpegel",
+      "hapticPeak": "Haptikpegel",
+      "brightness": "Helligkeit",
+      "oledState": "Zustand",
+      "oledScreen": "Seite",
+      "oledFps": "Neuzeichnungen",
+      "noMirror": "benötigt Firmware 1.4",
+      "power": {
+        "on": "An",
+        "dim": "Gedimmt (inaktiv)",
+        "off": "Aus (inaktiv)"
+      },
+      "dimAfter": "Dimmt nach",
+      "offAfter": "Schaltet ab nach",
+      "wakeOnInput": "Wacht bei Controller-Eingabe auf",
+      "never": "nie",
+      "yes": "ja",
+      "no": "nein"
     }
   },
   "ad": {
