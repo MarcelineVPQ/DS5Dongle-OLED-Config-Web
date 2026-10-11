@@ -11,6 +11,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 import type { DesktopSettings } from "../api";
 import { BusyButton, Toggle } from "../controls";
+import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { startTour } from "../tour/Tour";
 import DiagnosticsPage from "../pages/DiagnosticsPage";
 import { DongleInternals } from "../pages/DongleInternals";
@@ -274,6 +275,7 @@ function AppSettings() {
           <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
         </section>
       )}
+      <NarratorSettings />
       <section className="dk-card">
         <h2>{t("desktop.tour.helpTitle")}</h2>
         <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
@@ -284,5 +286,24 @@ function AppSettings() {
         </div>
       </section>
     </>
+  );
+}
+
+// The narrator's voice (controller speaker only) and her captions.
+function NarratorSettings() {
+  const { t } = useTranslation();
+  const voice = useNarrator();
+  const captions = useCaptionsOn();
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.narrator.title", "Narrator")}</h2>
+      <Toggle label={t("desktop.narrator.voice")} sub={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
+      <Toggle label={t("desktop.narrator.captions")} sub={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
+      <div className="dk-row-btns">
+        <button type="button" className="dk-btn" disabled={voice !== "on"} onClick={() => void say("app_controller", { cut: true })}>
+          {t("desktop.narrator.test", "Test the voice")}
+        </button>
+      </div>
+    </section>
   );
 }

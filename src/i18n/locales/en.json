@@ -717,17 +717,18 @@
       "replay": "Show the tour again",
       "welcome": {
         "title": "Welcome!",
-        "body": "Let's take a one-minute tour, with your controller in your hands. Press ✕ to continue and ○ to go back. Esc or Skip tour stops it any time."
+        "body": "Let's take a one-minute tour, with your controller in your hands. Press ✕ to continue and ○ to go back. Esc or Skip tour stops it any time.",
+        "bodyAsk": "A one-minute tour, with your controller in your hands. Esc or Skip tour stops it any time."
       },
       "press": {
         "title": "This is your controller, live",
-        "body": "Press any button on your controller and watch it light up here.",
-        "done": "There it is! Everything you press shows up here."
+        "body": "Press a few different buttons on your controller and watch them light up here.",
+        "done": "Nice! Everything you press shows up here."
       },
       "trigger": {
         "title": "Now the triggers",
-        "body": "Pull L2 or R2 all the way down.",
-        "done": "The fill follows your pull, just like the real thing."
+        "body": "Now pull a trigger, L2 or R2, all the way down. Feel anything?",
+        "done": "Feel that? That's an adaptive trigger: it pushes back, then snaps through. Games use it for guns, bows and brakes."
       },
       "click": {
         "title": "Set things up with the mouse",
@@ -740,7 +741,7 @@
       },
       "list": {
         "title": "Or pick from the list",
-        "body": "Not sure where something lives on the controller? Every setting is also here, one click away."
+        "body": "Not sure where something lives on the controller? Every setting is also here, one click away. » hides this panel for a bigger controller."
       },
       "save": {
         "title": "Keep what you like",
@@ -753,7 +754,18 @@
       "finish": {
         "title": "You're all set",
         "body": "Have fun! You can replay this tour any time from ⚙ App settings."
-      }
+      },
+      "voiceAsk": "Want her to talk you through it? She speaks only through your controller's speaker; you can change it any time in ⚙ App settings.",
+      "voiceYes": "Yes, talk me through it",
+      "voiceNo": "No thanks",
+      "data": {
+        "title": "Everything, live",
+        "body": "Down here: the sticks, triggers, motion, battery and the link, all as numbers and graphs, as your controller moves."
+      },
+      "pressGoal": "Press {{n}} more different buttons…",
+      "pressedLabel": "Buttons pressed so far",
+      "keepPlaying": "Keep playing as long as you like; hold ✕ when you're ready.",
+      "holdHint": "Hold ✕ to skip this step, or hold ○ to go back."
     },
     "liveData": {
       "title": "Live data",
@@ -777,7 +789,21 @@
       "usb": "USB power",
       "yes": "yes",
       "no": "no",
-      "inRange": "ideal range"
+      "inRange": "ideal range",
+      "audio": "Audio & haptics",
+      "on": "on",
+      "off": "off",
+      "never": "never",
+      "idle": "Idle disconnect",
+      "brightness": "brightness"
+    },
+    "narrator": {
+      "title": "Narrator",
+      "voice": "Narrator voice",
+      "voiceSub": "Short spoken lines for the tour and app events, only through your controller's speaker",
+      "captions": "Captions",
+      "captionsSub": "Show her words on screen while she speaks (and the short confirmations as text when the voice is off)",
+      "test": "Test the voice"
     }
   }
 }

@@ -4,6 +4,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
+import { say } from "../narrator";
 import type { FirmwareUpdate } from "../useUpdates";
 
 export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
@@ -110,6 +111,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                     async () => {
                       await client!.factoryReset();
                       await bridge.readConfig();
+                      void say("app_reset");
                     },
                     t("desktop.firmware.resetDone", "Settings reset to defaults and saved."),
                   )

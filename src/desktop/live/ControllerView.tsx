@@ -2,7 +2,7 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import { PanelRightOpen } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { playerNumber } from "../../protocol/bridgeClient";
@@ -14,6 +14,7 @@ import { colorway } from "./colorways";
 import LiveController from "./LiveController";
 import LiveData from "./LiveData";
 import LiveStrip from "./LiveStrip";
+import { say } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId } from "./parts";
@@ -48,6 +49,14 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
   const liveCapable = supportsLiveInput(bridge.identity);
   const input = useLiveInput(client, on && liveCapable);
   const liveLightbar = useLiveLightbar(client, on && liveCapable);
+  // "There you are." when a controller connects while the app is open (not
+  // for one that was already there at start).
+  const wasOn = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    if (wasOn.current === false && on) void say("app_controller");
+    wasOn.current = on;
+  }, [on, id]);
   const remap = useRemap(client);
 
   const remapped = useMemo(() => {
@@ -123,8 +132,19 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
             ))}
           </div>
         )}
-        {on && id && liveCapable && <LiveStrip input={input} id={id} rssi={status?.rssi ?? null} />}
-        {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} />}
+        <div className="live-readouts">
+          {on && id && liveCapable && (
+            <LiveStrip
+              input={input}
+              id={id}
+              rssi={status?.rssi ?? null}
+              lightbarMode={bridge.config?.lightbarMode ?? null}
+              lightbar={liveLightbar ?? id.lightbar}
+              onLightbar={() => onView({ part: "lightbar" })}
+            />
+          )}
+          {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} config={bridge.config} firmware={bridge.firmwareVersion} onOpen={onView} />}
+        </div>
         {!(on && id && liveCapable) && (
           <div className="live-status">
             <span className={on ? "dk-good" : ""}>
@@ -154,7 +174,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
         {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update the dongle's firmware to see the controller move live.")}</p>}
         {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
       </div>
-      <Tour input={input} view={view} onView={onView} ready={on && liveCapable} />
+      <Tour client={client} input={input} view={view} onView={onView} ready={on && liveCapable} />
       {!collapsed && (
         <aside className="live-panel">
           <PartPanel

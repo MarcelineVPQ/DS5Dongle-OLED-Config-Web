@@ -1,0 +1,173 @@
+{
+  "app_dongle_online": {
+    "en": "The dongle's online.",
+    "de": "Der Dongle ist online.",
+    "fr": "Le dongle est en ligne.",
+    "es": "El dongle está en línea.",
+    "pt-BR": "O dongle está online.",
+    "zh-CN": "接收器已上线。",
+    "ja": "ドングル、オンライン。"
+  },
+  "app_controller": {
+    "en": "There you are.",
+    "de": "Da bist du ja.",
+    "fr": "Te voilà.",
+    "es": "Ahí estás.",
+    "pt-BR": "Aí está você.",
+    "zh-CN": "你来啦。",
+    "ja": "来たね。"
+  },
+  "app_saved": {
+    "en": "Saved. It'll remember.",
+    "de": "Gespeichert. Er merkt es sich.",
+    "fr": "Enregistré. Il s'en souviendra.",
+    "es": "Guardado. Lo recordará.",
+    "pt-BR": "Salvo. Ele vai lembrar.",
+    "zh-CN": "已保存。它会记住的。",
+    "ja": "保存したよ。ちゃんと覚えてる。"
+  },
+  "app_fw_updated": {
+    "en": "Firmware updated. Shiny.",
+    "de": "Firmware aktualisiert. Glänzend.",
+    "fr": "Firmware mis à jour. Tout neuf.",
+    "es": "Firmware actualizado. Reluciente.",
+    "pt-BR": "Firmware atualizado. Novinho.",
+    "zh-CN": "升级完成。焕然一新。",
+    "ja": "ファームウェア更新完了。ピカピカだよ。"
+  },
+  "app_fw_available": {
+    "en": "There's new firmware waiting for you.",
+    "de": "Neue Firmware wartet auf dich.",
+    "fr": "Un nouveau firmware t'attend.",
+    "es": "Hay firmware nuevo esperándote.",
+    "pt-BR": "Tem firmware novo esperando por você.",
+    "zh-CN": "有新版本在等你。",
+    "ja": "新しいファームウェアが待ってるよ。"
+  },
+  "app_remapped": {
+    "en": "Buttons rewired.",
+    "de": "Tasten neu belegt.",
+    "fr": "Boutons réassignés.",
+    "es": "Botones reasignados.",
+    "pt-BR": "Botões remapeados.",
+    "zh-CN": "按钮重新设置好了。",
+    "ja": "ボタン、割り当て直したよ。"
+  },
+  "app_reset": {
+    "en": "Clean slate.",
+    "de": "Alles auf Anfang.",
+    "fr": "Table rase.",
+    "es": "Borrón y cuenta nueva.",
+    "pt-BR": "Tudo zerado.",
+    "zh-CN": "一切归零。",
+    "ja": "まっさらになったよ。"
+  },
+  "app_games_ready": {
+    "en": "Your games are ready for the good stuff.",
+    "de": "Deine Spiele sind bereit für das volle Programm.",
+    "fr": "Tes jeux sont prêts pour le grand jeu.",
+    "es": "Tus juegos están listos para lo bueno.",
+    "pt-BR": "Seus jogos estão prontos para o melhor.",
+    "zh-CN": "你的游戏都准备好了，尽情玩吧。",
+    "ja": "ゲームの準備、ばっちりだよ。"
+  },
+  "tour_welcome": {
+    "en": "Right. Grab your controller and I'll show you around.",
+    "de": "Gut. Schnapp dir deinen Controller, ich zeig dir alles.",
+    "fr": "Bon. Prends ta manette, je te fais visiter.",
+    "es": "Bien. Toma tu mando y te enseño todo.",
+    "pt-BR": "Certo. Pega o seu controle que eu te mostro tudo.",
+    "zh-CN": "好。拿起手柄，我带你转转。",
+    "ja": "さて。コントローラーを持って。案内するね。"
+  },
+  "tour_voice_ask": {
+    "en": "Want me to talk you through it? X for yes, circle for no.",
+    "de": "Soll ich dich durchführen? X für ja, Kreis für nein.",
+    "fr": "Je te guide ? Croix pour oui, rond pour non.",
+    "es": "¿Te guío? Equis para sí, círculo para no.",
+    "pt-BR": "Quer que eu te guie? Xis para sim, bola para não.",
+    "zh-CN": "要我带你走一遍吗？按叉表示要，按圈表示不要。",
+    "ja": "案内しようか？バツではい、マルでいいえ。"
+  },
+  "tour_press": {
+    "en": "Press any button. Go on, watch it light up.",
+    "de": "Drück eine Taste. Los, sieh zu, wie sie leuchtet.",
+    "fr": "Appuie sur un bouton. Vas-y, regarde-le s'allumer.",
+    "es": "Pulsa un botón. Venga, mira cómo se ilumina.",
+    "pt-BR": "Aperte um botão. Vai, veja ele acender.",
+    "zh-CN": "按任意键。来，看它亮起来。",
+    "ja": "どれかボタンを押して。ほら、光るでしょ。"
+  },
+  "tour_trigger": {
+    "en": "Now pull a trigger. All the way down.",
+    "de": "Jetzt zieh einen Trigger. Ganz durch.",
+    "fr": "Maintenant, appuie sur une gâchette. Jusqu'au bout.",
+    "es": "Ahora aprieta un gatillo. Hasta el fondo.",
+    "pt-BR": "Agora puxe um gatilho. Até o fim.",
+    "zh-CN": "现在按下一个扳机。按到底。",
+    "ja": "次はトリガーを引いて。奥までね。"
+  },
+  "tour_data": {
+    "en": "Down here: everything your controller's doing, live.",
+    "de": "Hier unten: alles, was dein Controller gerade macht, live.",
+    "fr": "Ici en bas : tout ce que fait ta manette, en direct.",
+    "es": "Aquí abajo: todo lo que hace tu mando, en directo.",
+    "pt-BR": "Aqui embaixo: tudo o que o seu controle está fazendo, ao vivo.",
+    "zh-CN": "下面这里：你的手柄正在做的一切，实时显示。",
+    "ja": "ここには、コントローラーの動きが全部リアルタイムで出るよ。"
+  },
+  "tour_click": {
+    "en": "Grab your mouse and click the light strip.",
+    "de": "Nimm die Maus und klick auf den Lichtstreifen.",
+    "fr": "Prends la souris et clique sur la bande lumineuse.",
+    "es": "Usa el ratón y haz clic en la franja de luz.",
+    "pt-BR": "Pegue o mouse e clique na faixa de luz.",
+    "zh-CN": "拿起鼠标，点一下灯条。",
+    "ja": "マウスでライトストリップをクリックして。"
+  },
+  "tour_panel": {
+    "en": "Everything opens here, and changes happen right away.",
+    "de": "Hier öffnet sich alles, und Änderungen wirken sofort.",
+    "fr": "Tout s'ouvre ici, et les changements sont immédiats.",
+    "es": "Todo se abre aquí, y los cambios son al instante.",
+    "pt-BR": "Tudo abre aqui, e as mudanças valem na hora.",
+    "zh-CN": "所有设置都在这里打开，修改立即生效。",
+    "ja": "設定はここに開いて、変更はすぐ反映されるよ。"
+  },
+  "tour_list": {
+    "en": "Can't find something? It's all in this list.",
+    "de": "Etwas nicht gefunden? Hier in der Liste ist alles.",
+    "fr": "Tu ne trouves pas quelque chose ? Tout est dans cette liste.",
+    "es": "¿No encuentras algo? Está todo en esta lista.",
+    "pt-BR": "Não achou algo? Está tudo nesta lista.",
+    "zh-CN": "找不到东西？都在这个列表里。",
+    "ja": "見つからない？全部このリストにあるよ。"
+  },
+  "tour_save": {
+    "en": "Like it? Save it to the Pico 2 W dongle. Don't? Revert.",
+    "de": "Gefällt's dir? Speicher es auf dem Pico 2 W Dongle. Nicht? Zurücksetzen.",
+    "fr": "Ça te plaît ? Enregistre-le sur le dongle Pico 2 W. Sinon ? Annule.",
+    "es": "¿Te gusta? Guárdalo en el dongle Pico 2 W. ¿No? Revierte.",
+    "pt-BR": "Gostou? Salve no dongle Pico 2 W. Não? Reverta.",
+    "zh-CN": "喜欢吗？保存到 Pico 2 W 接收器。不喜欢？还原。",
+    "ja": "気に入った？Pico 2 W ドングルに保存して。違った？元に戻して。"
+  },
+  "tour_top": {
+    "en": "Up top: your Pico 2 W dongle, your games, and help.",
+    "de": "Oben: dein Pico 2 W Dongle, deine Spiele und Hilfe.",
+    "fr": "En haut : ton dongle Pico 2 W, tes jeux et l'aide.",
+    "es": "Arriba: tu dongle Pico 2 W, tus juegos y la ayuda.",
+    "pt-BR": "Lá em cima: seu dongle Pico 2 W, seus jogos e a ajuda.",
+    "zh-CN": "上方是你的 Pico 2 W 接收器、你的游戏和帮助。",
+    "ja": "上には、Pico 2 W ドングル、ゲーム、ヘルプがあるよ。"
+  },
+  "tour_finish": {
+    "en": "That's the tour. Have fun, love.",
+    "de": "Das war die Tour. Viel Spaß!",
+    "fr": "C'est fini pour la visite. Amuse-toi bien !",
+    "es": "Eso es todo. ¡Que te diviertas!",
+    "pt-BR": "Esse foi o tour. Divirta-se!",
+    "zh-CN": "导览结束。玩得开心！",
+    "ja": "ツアーはおしまい。楽しんでね。"
+  }
+}

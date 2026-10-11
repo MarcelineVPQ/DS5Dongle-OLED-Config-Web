@@ -718,17 +718,18 @@
       "replay": "Tour erneut zeigen",
       "welcome": {
         "title": "Willkommen!",
-        "body": "Eine Tour von einer Minute, mit dem Controller in der Hand. Drück ✕ zum Weitermachen und ○ für zurück. Esc oder „Tour überspringen“ beendet sie jederzeit."
+        "body": "Eine Tour von einer Minute, mit dem Controller in der Hand. Drück ✕ zum Weitermachen und ○ für zurück. Esc oder „Tour überspringen“ beendet sie jederzeit.",
+        "bodyAsk": "Eine Tour von einer Minute, mit dem Controller in der Hand. Esc oder „Tour überspringen“ beendet sie jederzeit."
       },
       "press": {
         "title": "Das ist dein Controller, live",
-        "body": "Drück eine beliebige Taste am Controller und sieh zu, wie sie hier aufleuchtet.",
-        "done": "Da ist sie! Alles, was du drückst, erscheint hier."
+        "body": "Drück ein paar verschiedene Tasten am Controller und sieh zu, wie sie hier aufleuchten.",
+        "done": "Super! Alles, was du drückst, erscheint hier."
       },
       "trigger": {
         "title": "Jetzt die Trigger",
-        "body": "Zieh L2 oder R2 ganz durch.",
-        "done": "Die Füllung folgt deinem Zug, wie beim echten Controller."
+        "body": "Jetzt zieh einen Trigger, L2 oder R2, ganz durch. Spürst du was?",
+        "done": "Gespürt? Das ist ein adaptiver Trigger: Er drückt zurück und rastet dann durch. Spiele nutzen das für Waffen, Bögen und Bremsen."
       },
       "click": {
         "title": "Einrichten mit der Maus",
@@ -741,7 +742,7 @@
       },
       "list": {
         "title": "Oder aus der Liste wählen",
-        "body": "Nicht sicher, wo etwas am Controller sitzt? Jede Einstellung ist auch hier, nur einen Klick entfernt."
+        "body": "Nicht sicher, wo etwas am Controller sitzt? Jede Einstellung ist auch hier, nur einen Klick entfernt. » blendet das Feld aus, dann wird der Controller größer."
       },
       "save": {
         "title": "Behalte, was dir gefällt",
@@ -754,7 +755,18 @@
       "finish": {
         "title": "Alles bereit",
         "body": "Viel Spaß! Du kannst die Tour jederzeit unter ⚙ App-Einstellungen wiederholen."
-      }
+      },
+      "voiceAsk": "Soll sie dich durchführen? Sie spricht nur über den Lautsprecher deines Controllers; ändern kannst du das jederzeit unter ⚙ App-Einstellungen.",
+      "voiceYes": "Ja, führ mich durch",
+      "voiceNo": "Nein danke",
+      "data": {
+        "title": "Alles, live",
+        "body": "Hier unten: Sticks, Trigger, Bewegung, Akku und Verbindung, als Zahlen und Kurven, während sich dein Controller bewegt."
+      },
+      "pressGoal": "Noch {{n}} verschiedene Tasten…",
+      "pressedLabel": "Bisher gedrückte Tasten",
+      "keepPlaying": "Spiel ruhig weiter; halte ✕ gedrückt, wenn du bereit bist.",
+      "holdHint": "Halte ✕ gedrückt, um den Schritt zu überspringen, oder ○, um zurückzugehen."
     },
     "liveData": {
       "title": "Live-Daten",
@@ -778,7 +790,21 @@
       "usb": "USB-Strom",
       "yes": "ja",
       "no": "nein",
-      "inRange": "idealer Bereich"
+      "inRange": "idealer Bereich",
+      "audio": "Audio & Haptik",
+      "on": "an",
+      "off": "aus",
+      "never": "nie",
+      "idle": "Trennen bei Inaktivität",
+      "brightness": "Helligkeit"
+    },
+    "narrator": {
+      "title": "Erzählerin",
+      "voice": "Erzählstimme",
+      "voiceSub": "Kurze gesprochene Sätze für die Tour und App-Ereignisse, nur über den Lautsprecher deines Controllers",
+      "captions": "Untertitel",
+      "captionsSub": "Zeigt ihre Worte, während sie spricht (und die kurzen Bestätigungen als Text, wenn die Stimme aus ist)",
+      "test": "Stimme testen"
     }
   }
 }

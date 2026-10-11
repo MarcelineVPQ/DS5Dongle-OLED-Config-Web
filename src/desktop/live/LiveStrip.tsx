@@ -6,19 +6,26 @@ import type { InputReport } from "../../oled/inputReport";
 import type { BridgeIdentity } from "../../protocol/bridgeClient";
 import { playerNumber } from "../../protocol/bridgeClient";
 import { signalQuality } from "../format";
+import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 
 interface Props {
   input: InputReport | null;
   id: BridgeIdentity;
   rssi: number | null;
+  // The lightbar's mode (from the dongle's settings) and its live color;
+  // clicking the tile opens the lightbar settings.
+  lightbarMode: number | null;
+  lightbar: [number, number, number] | null;
+  onLightbar: () => void;
 }
 
 const BARS = { excellent: 4, good: 3, fair: 2, weak: 1 } as const;
 
-export default function LiveStrip({ input, id, rssi }: Props) {
+export default function LiveStrip({ input, id, rssi, lightbarMode, lightbar, onLightbar }: Props) {
   const { t } = useTranslation();
   const quality = rssi === null ? null : signalQuality(rssi);
   const player = playerNumber(id.playerLeds);
+  const mode = LIGHTBAR_MODES.find((m) => m.value === lightbarMode);
   return (
     <div className="live-strip">
       <Stick label="L3" x={input?.leftStick.x ?? 128} y={input?.leftStick.y ?? 128} pressed={!!input?.l3} name={t("desktop.live.part.stick-l")} />
@@ -37,6 +44,11 @@ export default function LiveStrip({ input, id, rssi }: Props) {
         <span className="live-tile-value">{quality ? t(`desktop.overview.signalQ.${quality}`, quality) : "—"}</span>
         <span className="live-tile-label">{t("desktop.overview.signal", "Signal")}</span>
       </div>
+      <button type="button" className="live-tile live-tile-button" onClick={onLightbar} title={t("desktop.live.part.lightbar", "Lightbar")}>
+        <span className="live-swatch" aria-hidden="true" style={lightbar ? { background: `rgb(${lightbar.join(", ")})`, color: `rgb(${lightbar.join(", ")})` } : undefined} />
+        <span className="live-tile-value">{mode ? t(`desktop.lightbar.modes.${mode.key}`, mode.label) : "—"}</span>
+        <span className="live-tile-label">{t("desktop.live.part.lightbar", "Lightbar")}</span>
+      </button>
       <div className="live-tile">
         <span className="live-pleds" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((n) => (

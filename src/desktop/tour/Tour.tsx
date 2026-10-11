@@ -8,7 +8,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
+import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import type { PanelView } from "../live/PartPanel";
+import { narratorIdle, say, setNarrator, stopNarrator, useNarrator } from "../narrator";
 
 const DONE_KEY = "ds5.tourDone";
 const PAD = 10;
@@ -33,6 +35,36 @@ function markDone(): void {
 export const TOUR_EVENT = "ds5:start-tour";
 export const startTour = () => window.dispatchEvent(new Event(TOUR_EVENT));
 
+// The buttons held right now, by the symbol shown on the card.
+const BUTTONS: Array<[label: string, held: (i: InputReport) => boolean]> = [
+  ["✕", (i) => i.cross],
+  ["○", (i) => i.circle],
+  ["□", (i) => i.square],
+  ["△", (i) => i.triangle],
+  ["L1", (i) => i.l1],
+  ["R1", (i) => i.r1],
+  ["L2", (i) => i.triggerLeft > 60],
+  ["R2", (i) => i.triggerRight > 60],
+  ["L3", (i) => i.l3],
+  ["R3", (i) => i.r3],
+  ["↑", (i) => i.dpad === 7 || i.dpad === 0 || i.dpad === 1],
+  ["→", (i) => i.dpad >= 1 && i.dpad <= 3],
+  ["↓", (i) => i.dpad >= 3 && i.dpad <= 5],
+  ["←", (i) => i.dpad >= 5 && i.dpad <= 7],
+  ["Create", (i) => i.create],
+  ["Options", (i) => i.options],
+  ["PS", (i) => i.home],
+  ["Touchpad", (i) => i.pad],
+  ["Mute", (i) => i.mute],
+];
+// "Press any button" wants a few different ones, so there's time to play.
+const PRESS_GOAL = 4;
+// On the play steps ✕ and ○ are buttons to play with: moving on (✕) or back
+// (○) takes holding one this long, with a ring filling on the card.
+const HOLD_MS = 900;
+// TriggersPage's preset list: 0 off, 1 feedback, 2 weapon, ...
+const WEAPON_PRESET = 2;
+
 const anyPress = (i: InputReport | null) =>
   !!i &&
   (i.cross || i.circle || i.square || i.triangle || i.l1 || i.r1 || i.create || i.options || i.l3 || i.r3 || i.home || i.pad || i.mute || i.dpad !== 8 || i.triggerLeft > 60 || i.triggerRight > 60);
@@ -51,10 +83,14 @@ interface Step {
 
 const STEPS: Step[] = [
   { key: "welcome", target: null, enter: (go) => go("overview") },
-  { key: "press", target: ".live-ctl svg", pad: true, done: (i) => anyPress(i) },
+  { key: "press", target: ".live-ctl svg", pad: true }, // done: PRESS_GOAL different buttons (below)
   { key: "trigger", target: ".live-ctl svg", pad: true, done: (i) => !!i && (i.triggerLeft > 200 || i.triggerRight > 200) },
-  { key: "click", target: '.live-ctl [data-part="lightbar"]', done: (_i, v) => typeof v === "object" && v.part === "lightbar" },
-  { key: "panel", target: ".live-panel" },
+  { key: "data", target: ".live-readouts" },
+  // The spotlight frames the strips and the touchpad between them, so a
+  // click on the touchpad counts too (and opens the lightbar, below).
+  { key: "click", target: '.live-ctl [data-part="lightbar"]', done: (_i, v) => typeof v === "object" && (v.part === "lightbar" || v.part === "touchpad") },
+  // (opens the lightbar's panel if the click step was skipped)
+  { key: "panel", target: ".live-panel", enter: (go) => go({ part: "lightbar" }) },
   { key: "list", target: ".live-shortcuts", enter: (go) => go("overview") },
   { key: "save", target: ".dk-bar" },
   { key: "top", target: ".dk-top" },
@@ -62,6 +98,8 @@ const STEPS: Step[] = [
 ];
 
 interface Props {
+  // For the trigger step's surprise: an adaptive trigger effect while it's open.
+  client: Ds5BridgeClient | null;
   input: InputReport | null;
   view: PanelView;
   onView: (view: PanelView) => void;
@@ -69,7 +107,7 @@ interface Props {
   ready: boolean;
 }
 
-export default function Tour({ input, view, onView, ready }: Props) {
+export default function Tour({ client, input, view, onView, ready }: Props) {
   const { t } = useTranslation();
   // null = not started by hand; the first run starts it by itself once a
   // controller is there (closed = dismissed in this session).
@@ -104,6 +142,53 @@ export default function Tour({ input, view, onView, ready }: Props) {
   const step = index === null ? null : STEPS[index];
   const ticked = tickedStep === index;
 
+  // The narrator: step 1 asks whether she should talk (her question is the
+  // sample, through the controller); every step after that has her line, if
+  // the answer was yes. A new step cuts the previous line off.
+  const narrator = useNarrator();
+  const asking = index === 0 && narrator === "ask";
+  const narratorRef = useRef(narrator);
+  useEffect(() => {
+    narratorRef.current = narrator;
+  });
+  useEffect(() => {
+    if (index === null) return;
+    const key = STEPS[index].key;
+    if (key === "welcome") {
+      void say("tour_welcome", { allowAsk: true, cut: true }).then(() => {
+        if (narratorRef.current === "ask") void say("tour_voice_ask", { allowAsk: true });
+      });
+    } else void say(`tour_${key}`, { cut: true });
+  }, [index]);
+  // The trigger step's surprise: both triggers get the "Weapon" effect (they
+  // resist, then snap through) while it's open; off again when it closes.
+  const onTriggerStep = index !== null && STEPS[index].key === "trigger";
+
+  // The click step: the strips pulse so it's clear what to click, and a click
+  // on the touchpad (inside the spotlight) opens the lightbar instead.
+  const onClickStep = index !== null && STEPS[index].key === "click";
+  useEffect(() => {
+    if (!onClickStep) return;
+    document.querySelector('.live-ctl [data-part="lightbar"]')?.classList.add("tour-pulse");
+    return () => document.querySelector('.live-ctl [data-part="lightbar"]')?.classList.remove("tour-pulse");
+  }, [onClickStep]);
+  useEffect(() => {
+    if (onClickStep && typeof view === "object" && view.part === "touchpad") onView({ part: "lightbar" });
+  }, [onClickStep, view, onView]);
+  useEffect(() => {
+    if (!onTriggerStep || !client) return;
+    void client.previewTrigger(WEAPON_PRESET).catch(() => undefined);
+    return () => void client.previewTrigger(0).catch(() => undefined);
+  }, [onTriggerStep, client]);
+
+  const answer = useCallback(
+    (talk: boolean) => {
+      setNarrator(talk ? "on" : "off");
+      go(1);
+    },
+    [go],
+  );
+
   // Hands-on steps tick off when the controller (or the mouse) does the thing.
   const idle = !anyPress(input);
   useEffect(() => {
@@ -111,12 +196,33 @@ export default function Tour({ input, view, onView, ready }: Props) {
     const frame = requestAnimationFrame(() => setArmedStep(index));
     return () => cancelAnimationFrame(frame);
   }, [idle, index, armedStep]);
-  const isDone = !!step?.done && armedStep === index && step.done(input, view);
+  // Step 2 collects the different buttons pressed since it appeared.
+  const [pressed, setPressed] = useState<{ step: number | null; labels: string[] }>({ step: null, labels: [] });
+  const heldNow = input ? BUTTONS.filter(([, held]) => held(input)).map(([label]) => label) : [];
+  const heldKey = heldNow.join(",");
+  useEffect(() => {
+    if (index === null || STEPS[index].key !== "press" || armedStep !== index || !heldKey) return;
+    const frame = requestAnimationFrame(() =>
+      setPressed((p) => {
+        const base = p.step === index ? p.labels : [];
+        const merged = [...base, ...heldKey.split(",").filter((l) => !base.includes(l))];
+        return merged.length === base.length && p.step === index ? p : { step: index, labels: merged };
+      }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [heldKey, index, armedStep]);
+  const pressedLabels = pressed.step === index ? pressed.labels : [];
+  const isDone = step?.key === "press" ? pressedLabels.length >= PRESS_GOAL : !!step?.done && armedStep === index && step.done(input, view);
   useEffect(() => {
     if (!isDone || ticked || index === null) return;
     const frame = requestAnimationFrame(() => setTickedStep(index));
     return () => cancelAnimationFrame(frame);
   }, [isDone, ticked, index]);
+
+  // Hold-to-continue on the play steps: which button is held, since when, and
+  // the ring's progress (0..1) for the card.
+  const hold = useRef<{ btn: "cross" | "circle"; since: number } | null>(null);
+  const [holdProgress, setHoldProgress] = useState<{ btn: "cross" | "circle"; p: number } | null>(null);
 
   // Follow the target (layouts move: panels open, the window resizes).
   useLayoutEffect(() => {
@@ -137,6 +243,7 @@ export default function Tour({ input, view, onView, ready }: Props) {
   const spot = step?.target ? rect : null;
 
   const finish = useCallback(() => {
+    stopNarrator();
     markDone();
     setChosen(null);
     setClosed(true);
@@ -145,9 +252,9 @@ export default function Tour({ input, view, onView, ready }: Props) {
   // Console-style: ✕ continues, ○ goes back (on the press, not while held).
   // On a controller step that isn't done yet, ✕ is just a press for the
   // task; on a mouse step it skips it.
-  const current = useRef({ index, padTask: false, ticked: false });
+  const current = useRef({ index, padTask: false, ticked: false, asking: false });
   useEffect(() => {
-    current.current = { index, padTask: !!step?.pad, ticked };
+    current.current = { index, padTask: !!step?.pad, ticked, asking };
   });
   const pad = useRef({ cross: false, circle: false });
   useEffect(() => {
@@ -155,19 +262,63 @@ export default function Tour({ input, view, onView, ready }: Props) {
     const cross = !!input?.cross;
     const circle = !!input?.circle;
     pad.current = { cross, circle };
-    const { index: i, padTask, ticked: done } = current.current;
+    const { index: i, padTask, asking: ask } = current.current;
     if (i === null) return;
-    if (cross && !was.cross && (!padTask || done)) {
+    // The narrator question: ✕ yes, ○ no.
+    if (ask) {
+      if (cross && !was.cross) answer(true);
+      else if (circle && !was.circle) answer(false);
+      return;
+    }
+    if (padTask) {
+      // Holding, not tapping: the ring effect below acts once it fills.
+      if (cross && !was.cross) hold.current = { btn: "cross", since: Date.now() };
+      else if (circle && !was.circle && i > 0) hold.current = { btn: "circle", since: Date.now() };
+      if ((hold.current?.btn === "cross" && !cross) || (hold.current?.btn === "circle" && !circle)) hold.current = null;
+      return;
+    }
+    if (cross && !was.cross) {
       if (i >= STEPS.length - 1) finish();
       else go(i + 1);
     } else if (circle && !was.circle && i > 0) go(i - 1);
-  }, [input, go, finish]);
+  }, [input, go, finish, answer]);
 
-  // A ticked hands-on step moves on by itself after a moment to enjoy it.
+  // While ✕ or ○ is held on a play step: fill the ring, then move on / back.
   useEffect(() => {
-    if (!ticked || index === null || index >= STEPS.length - 1) return;
-    const timer = setTimeout(() => go(index + 1), 1400);
-    return () => clearTimeout(timer);
+    if (index === null || !STEPS[index].pad) return;
+    let frame = 0;
+    const tick = () => {
+      const h = hold.current;
+      if (h) {
+        const p = Math.min(1, (Date.now() - h.since) / HOLD_MS);
+        setHoldProgress({ btn: h.btn, p });
+        if (p >= 1) {
+          hold.current = null;
+          setHoldProgress(null);
+          if (h.btn === "cross") go(index + 1);
+          else go(index - 1);
+          return;
+        }
+      } else setHoldProgress((v) => (v ? null : v));
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [index, go]);
+
+  // A ticked mouse step moves on by itself after a moment, but never over
+  // her: it waits for the current line to finish (the next step's line would
+  // cut it off). Controller steps wait for ✕ to be held instead.
+  useEffect(() => {
+    if (!ticked || index === null || index >= STEPS.length - 1 || STEPS[index].pad) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void narratorIdle().then(() => !cancelled && go(index + 1));
+    }, 1400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [ticked, index, go]);
 
   useEffect(() => {
@@ -179,7 +330,7 @@ export default function Tour({ input, view, onView, ready }: Props) {
 
   if (index === null || !step) return null;
   const last = index === STEPS.length - 1;
-  const handsOn = !!step.done;
+  const handsOn = !!step.done || step.key === "press";
   const next = () => (last ? finish() : go(index + 1));
 
   // The spotlight: a rounded hole in the dimmed screen (a huge shadow around
@@ -189,7 +340,7 @@ export default function Tour({ input, view, onView, ready }: Props) {
     : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
 
   // The card goes beside the spotlight where there's room, else centered.
-  const cardW = 340;
+  const cardW = asking ? 380 : 340;
   let card: React.CSSProperties;
   if (!spot) card = { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
   else if (window.innerWidth - (hole.left + hole.width) > cardW + 32) card = { left: hole.left + hole.width + 16, top: Math.max(16, Math.min(hole.top, window.innerHeight - 260)) };
@@ -203,16 +354,33 @@ export default function Tour({ input, view, onView, ready }: Props) {
       <div className="tour-card" style={{ ...card, width: cardW }} key={index}>
         <div className="tour-step">{t("desktop.tour.stepOf", { n: index + 1, total: STEPS.length })}</div>
         <h2 id="tour-title">{t(`desktop.tour.${step.key}.title`)}</h2>
-        <p>{t(`desktop.tour.${step.key}.body`)}</p>
+        {asking ? (
+          <>
+            <p>{t("desktop.tour.welcome.bodyAsk")}</p>
+            <p className="tour-voice">{t("desktop.tour.voiceAsk")}</p>
+          </>
+        ) : (
+          <p>{t(`desktop.tour.${step.key}.body`)}</p>
+        )}
         {handsOn && (
           <p className={`tour-task${ticked ? " ok" : ""}`} aria-live="polite">
             <span className="tour-check" aria-hidden="true">
               {ticked ? "✓" : ""}
             </span>
-            {ticked ? t(`desktop.tour.${step.key}.done`) : t("desktop.tour.waiting")}
+            {ticked ? t(`desktop.tour.${step.key}.done`) : step.key === "press" ? t("desktop.tour.pressGoal", { n: PRESS_GOAL - pressedLabels.length }) : t("desktop.tour.waiting")}
           </p>
         )}
-        <div className="tour-actions">
+        {step.key === "press" && pressedLabels.length > 0 && (
+          <p className="tour-chips" aria-label={t("desktop.tour.pressedLabel")}>
+            {pressedLabels.map((l) => (
+              <span key={l} className="tour-chip">
+                {l}
+              </span>
+            ))}
+          </p>
+        )}
+        {step.pad && <p className="dk-hint">{ticked ? t("desktop.tour.keepPlaying") : t("desktop.tour.holdHint")}</p>}
+        <div className={`tour-actions${asking ? " asking" : ""}`}>
           <button type="button" className="dk-btn" onClick={finish}>
             {t("desktop.tour.skip")}
           </button>
@@ -220,21 +388,42 @@ export default function Tour({ input, view, onView, ready }: Props) {
           {index > 0 && (
             <button type="button" className="dk-btn" onClick={() => go(index - 1)}>
               {input && (
-                <span className="tour-glyph circle" aria-hidden="true">
+                <span className={`tour-glyph circle${step.pad ? " hold" : ""}`} aria-hidden="true" style={{ "--hold": holdProgress?.btn === "circle" ? holdProgress.p : 0 } as React.CSSProperties}>
                   ○
                 </span>
               )}
               {t("desktop.tour.back")}
             </button>
           )}
-          <button type="button" className={`dk-btn${!handsOn || ticked ? " primary" : ""}`} onClick={next}>
-            {input && (!step.pad || ticked) && (
-              <span className="tour-glyph cross" aria-hidden="true">
-                ✕
-              </span>
-            )}
-            {last ? t("desktop.tour.finishButton") : handsOn && !ticked ? t("desktop.tour.skipStep") : t("desktop.tour.next")}
-          </button>
+          {asking ? (
+            <>
+              <button type="button" className="dk-btn" onClick={() => answer(false)}>
+                {input && (
+                  <span className="tour-glyph circle" aria-hidden="true">
+                    ○
+                  </span>
+                )}
+                {t("desktop.tour.voiceNo")}
+              </button>
+              <button type="button" className="dk-btn primary" onClick={() => answer(true)}>
+                {input && (
+                  <span className="tour-glyph cross" aria-hidden="true">
+                    ✕
+                  </span>
+                )}
+                {t("desktop.tour.voiceYes")}
+              </button>
+            </>
+          ) : (
+            <button type="button" className={`dk-btn${!handsOn || ticked ? " primary" : ""}`} onClick={next}>
+              {input && (
+                <span className={`tour-glyph cross${step.pad ? " hold" : ""}`} aria-hidden="true" style={{ "--hold": holdProgress?.btn === "cross" ? holdProgress.p : 0 } as React.CSSProperties}>
+                  ✕
+                </span>
+              )}
+              {last ? t("desktop.tour.finishButton") : handsOn && !ticked ? t("desktop.tour.skipStep") : t("desktop.tour.next")}
+            </button>
+          )}
         </div>
       </div>
     </div>,

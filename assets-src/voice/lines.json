@@ -359,6 +359,25 @@
       "tagged_ja": "[confidently] 次はトリガーを引いて。奥までね。"
     },
     {
+      "key": "tour_data",
+      "where": "controller speaker (app tour)",
+      "event": "Tour step 4: live tiles and data",
+      "text": "Down here: everything your controller's doing, live.",
+      "tagged": "[confidently] Down here: everything your controller's doing, live.",
+      "text_de": "Hier unten: alles, was dein Controller gerade macht, live.",
+      "tagged_de": "[confidently] Hier unten: alles, was dein Controller gerade macht, live.",
+      "text_fr": "Ici en bas : tout ce que fait ta manette, en direct.",
+      "tagged_fr": "[confidently] Ici en bas : tout ce que fait ta manette, en direct.",
+      "text_es": "Aquí abajo: todo lo que hace tu mando, en directo.",
+      "tagged_es": "[confidently] Aquí abajo: todo lo que hace tu mando, en directo.",
+      "text_pt-BR": "Aqui embaixo: tudo o que o seu controle está fazendo, ao vivo.",
+      "tagged_pt-BR": "[confidently] Aqui embaixo: tudo o que o seu controle está fazendo, ao vivo.",
+      "text_zh-CN": "下面这里：你的手柄正在做的一切，实时显示。",
+      "tagged_zh-CN": "[confidently] 下面这里：你的手柄正在做的一切，实时显示。",
+      "text_ja": "ここには、コントローラーの動きが全部リアルタイムで出るよ。",
+      "tagged_ja": "[confidently] ここには、コントローラーの動きが全部リアルタイムで出るよ。"
+    },
+    {
       "key": "tour_click",
       "where": "controller speaker (app tour)",
       "event": "Tour step 4: click the lightbar",

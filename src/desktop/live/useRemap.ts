@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
+import { say } from "../narrator";
 
 export interface Remap {
   supported: boolean | null; // null while loading
@@ -60,6 +61,7 @@ export function useRemap(client: Ds5BridgeClient | null): Remap {
       if (!after || !tablesEqual(after.table, draft) || after.revision === before) throw new Error(t("remap.verifyFailed"));
       setState(after);
       setDraft(after.table.slice());
+      void say("app_remapped");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
       // The dongle may have applied it anyway (in RAM, when only saving to

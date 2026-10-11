@@ -718,17 +718,18 @@
       "replay": "Mostrar o tour de novo",
       "welcome": {
         "title": "Bem-vindo!",
-        "body": "Um tour de um minuto, com o controle na mão. Aperte ✕ para continuar e ○ para voltar. Esc ou “Pular o tour” encerra quando quiser."
+        "body": "Um tour de um minuto, com o controle na mão. Aperte ✕ para continuar e ○ para voltar. Esc ou “Pular o tour” encerra quando quiser.",
+        "bodyAsk": "Um tour de um minuto, com o controle na mão. Esc ou “Pular o tour” encerra quando quiser."
       },
       "press": {
         "title": "Este é seu controle, ao vivo",
-        "body": "Aperte qualquer botão do controle e veja ele acender aqui.",
-        "done": "Aí está! Tudo o que você aperta aparece aqui."
+        "body": "Aperte alguns botões diferentes do controle e veja eles acenderem aqui.",
+        "done": "Boa! Tudo o que você aperta aparece aqui."
       },
       "trigger": {
         "title": "Agora os gatilhos",
-        "body": "Puxe L2 ou R2 até o fim.",
-        "done": "O preenchimento acompanha o seu aperto, como no controle de verdade."
+        "body": "Agora puxe um gatilho, L2 ou R2, até o fim. Sentiu alguma coisa?",
+        "done": "Sentiu? Isso é um gatilho adaptável: ele resiste e depois cede de uma vez. Os jogos usam isso em armas, arcos e freios."
       },
       "click": {
         "title": "Configure com o mouse",
@@ -741,7 +742,7 @@
       },
       "list": {
         "title": "Ou escolha na lista",
-        "body": "Não sabe onde algo fica no controle? Todas as configurações também estão aqui, a um clique."
+        "body": "Não sabe onde algo fica no controle? Todas as configurações também estão aqui, a um clique. » esconde este painel para o controle ficar maior."
       },
       "save": {
         "title": "Guarde o que gostar",
@@ -754,7 +755,18 @@
       "finish": {
         "title": "Tudo pronto",
         "body": "Divirta-se! Você pode repetir este tour quando quiser em ⚙ Configurações do app."
-      }
+      },
+      "voiceAsk": "Quer que ela te guie? Ela fala só pelo alto-falante do seu controle; dá para mudar quando quiser em ⚙ Configurações do app.",
+      "voiceYes": "Sim, me guie",
+      "voiceNo": "Não, obrigado",
+      "data": {
+        "title": "Tudo, ao vivo",
+        "body": "Aqui embaixo: analógicos, gatilhos, movimento, bateria e conexão, em números e gráficos, enquanto o seu controle se move."
+      },
+      "pressGoal": "Faltam {{n}} botões diferentes…",
+      "pressedLabel": "Botões apertados até agora",
+      "keepPlaying": "Continue o quanto quiser; segure ✕ quando estiver pronto.",
+      "holdHint": "Segure ✕ para pular este passo, ou ○ para voltar."
     },
     "liveData": {
       "title": "Dados ao vivo",
@@ -778,7 +790,21 @@
       "usb": "Energia USB",
       "yes": "sim",
       "no": "não",
-      "inRange": "faixa ideal"
+      "inRange": "faixa ideal",
+      "audio": "Áudio e hápticos",
+      "on": "ligado",
+      "off": "desligado",
+      "never": "nunca",
+      "idle": "Desconectar se inativo",
+      "brightness": "brilho"
+    },
+    "narrator": {
+      "title": "Narradora",
+      "voice": "Voz da narradora",
+      "voiceSub": "Frases curtas para o tour e os eventos do app, só pelo alto-falante do seu controle",
+      "captions": "Legendas",
+      "captionsSub": "Mostra as palavras dela enquanto fala (e as confirmações curtas como texto quando a voz está desligada)",
+      "test": "Testar a voz"
     }
   }
 }

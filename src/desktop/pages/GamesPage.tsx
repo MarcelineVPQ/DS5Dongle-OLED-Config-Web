@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
+import { say } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId, Msg } from "../games/types";
 
@@ -192,6 +193,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
       }
       setResult({ ...r, labels });
       setStep("done");
+      if (r.applied.length > 0 && r.applied.every((a) => a.ok)) void say("app_games_ready");
       await rescan();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));

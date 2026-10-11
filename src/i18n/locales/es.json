@@ -718,17 +718,18 @@
       "replay": "Ver el recorrido otra vez",
       "welcome": {
         "title": "¡Bienvenido!",
-        "body": "Un recorrido de un minuto, con el mando en la mano. Pulsa ✕ para continuar y ○ para volver. Esc o «Saltar el recorrido» lo detiene cuando quieras."
+        "body": "Un recorrido de un minuto, con el mando en la mano. Pulsa ✕ para continuar y ○ para volver. Esc o «Saltar el recorrido» lo detiene cuando quieras.",
+        "bodyAsk": "Un recorrido de un minuto, con el mando en la mano. Esc o «Saltar el recorrido» lo detiene cuando quieras."
       },
       "press": {
         "title": "Este es tu mando, en directo",
-        "body": "Pulsa cualquier botón del mando y mira cómo se ilumina aquí.",
-        "done": "¡Ahí está! Todo lo que pulsas aparece aquí."
+        "body": "Pulsa varios botones distintos del mando y mira cómo se iluminan aquí.",
+        "done": "¡Genial! Todo lo que pulsas aparece aquí."
       },
       "trigger": {
         "title": "Ahora los gatillos",
-        "body": "Aprieta L2 o R2 hasta el fondo.",
-        "done": "El relleno sigue tu presión, como en el mando real."
+        "body": "Ahora aprieta un gatillo, L2 o R2, hasta el fondo. ¿Notas algo?",
+        "done": "¿Lo notas? Es un gatillo adaptativo: hace fuerza y luego cede de golpe. Los juegos lo usan para armas, arcos y frenos."
       },
       "click": {
         "title": "Configura con el ratón",
@@ -741,7 +742,7 @@
       },
       "list": {
         "title": "O elige de la lista",
-        "body": "¿No sabes dónde está algo en el mando? Todos los ajustes están también aquí, a un clic."
+        "body": "¿No sabes dónde está algo en el mando? Todos los ajustes están también aquí, a un clic. » oculta este panel para agrandar el mando."
       },
       "save": {
         "title": "Quédate con lo que te guste",
@@ -754,7 +755,18 @@
       "finish": {
         "title": "Todo listo",
         "body": "¡Diviértete! Puedes repetir este recorrido cuando quieras desde ⚙ Ajustes de la app."
-      }
+      },
+      "voiceAsk": "¿Quieres que te guíe? Solo habla por el altavoz de tu mando; puedes cambiarlo cuando quieras en ⚙ Ajustes de la app.",
+      "voiceYes": "Sí, guíame",
+      "voiceNo": "No, gracias",
+      "data": {
+        "title": "Todo, en directo",
+        "body": "Aquí abajo: sticks, gatillos, movimiento, batería y conexión, en números y gráficas, mientras se mueve tu mando."
+      },
+      "pressGoal": "Faltan {{n}} botones distintos…",
+      "pressedLabel": "Botones pulsados hasta ahora",
+      "keepPlaying": "Sigue todo lo que quieras; mantén ✕ cuando estés listo.",
+      "holdHint": "Mantén ✕ para saltar este paso, o ○ para volver."
     },
     "liveData": {
       "title": "Datos en directo",
@@ -778,7 +790,21 @@
       "usb": "Alimentación USB",
       "yes": "sí",
       "no": "no",
-      "inRange": "rango ideal"
+      "inRange": "rango ideal",
+      "audio": "Audio y hápticos",
+      "on": "sí",
+      "off": "no",
+      "never": "nunca",
+      "idle": "Desconexión por inactividad",
+      "brightness": "brillo"
+    },
+    "narrator": {
+      "title": "Narradora",
+      "voice": "Voz de la narradora",
+      "voiceSub": "Frases cortas para el recorrido y los eventos de la app, solo por el altavoz de tu mando",
+      "captions": "Subtítulos",
+      "captionsSub": "Muestra sus palabras mientras habla (y las confirmaciones cortas como texto cuando la voz está apagada)",
+      "test": "Probar la voz"
     }
   }
 }

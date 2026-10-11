@@ -1,22 +1,29 @@
 // Everything the controller reports, as numbers (and motion as scrolling
-// graphs), in six cards so they always split evenly (3+3, 6, or 2+2+2):
+// graphs), plus the dongle's settings at a glance, in eight cards so they
+// always split evenly (4+4, or 2+2+2+2 when narrow):
 // sticks, triggers and their effects, gyro, accelerometer and tilt, the
 // controller (touch points, what's plugged in, mute) and the link (sensor
 // clock, update rate, round trip, signal, USB power).
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
+import type { ConfigBody } from "../../protocol/config";
 import { liveStats } from "../useLiveInput";
+import type { PanelView } from "./PartPanel";
 
 interface Props {
   input: InputReport;
   rssi: number | null;
+  // The dongle's settings at a glance; each line opens its panel.
+  config: ConfigBody | null;
+  firmware: string | null;
+  onOpen: (view: PanelView) => void;
 }
 
 const HISTORY = 150;
 const AXIS_COLORS = ["#f43f5e", "#22c55e", "#3b82f6"]; // X red, Y green, Z blue (as in 3D tools)
 
-export default function LiveData({ input, rssi }: Props) {
+export default function LiveData({ input, rssi, config, firmware, onOpen }: Props) {
   const { t } = useTranslation();
   const tl = (key: string) => t(`desktop.liveData.${key}`);
   const yn = (v: boolean) => (v ? tl("yes") : tl("no"));
@@ -80,7 +87,58 @@ export default function LiveData({ input, rssi }: Props) {
           ]}
         />
       </Card>
+      <Card title={tl("audio")}>
+        {config ? (
+          <Links
+            rows={[
+              [t("haptics.gainLabel"), `${config.hapticsGain.toFixed(1)}×`, () => onOpen({ part: "body" })],
+              [t("desktop.settings.speakerLevel"), `${config.speakerVolume > 0 ? "+" : ""}${Math.round(config.speakerVolume)} dB`, () => onOpen({ part: "speaker" })],
+              [t("autoHaptics.sectionTitle"), t(`autoHaptics.modes.${AUTO_HAPTICS[config.autoHapticsEnable] ?? "off"}.label`), () => onOpen({ part: "body" })],
+              [t("haptics.btMicLabel"), config.btMicEnable ? tl("on") : tl("off"), () => onOpen({ part: "mute" })],
+            ]}
+          />
+        ) : (
+          <p className="dk-hint">—</p>
+        )}
+      </Card>
+      <Card title={t("desktop.nav.dongle", "Dongle")}>
+        {config ? (
+          <Links
+            rows={[
+              [t("desktop.overview.firmware"), firmware ?? "—", () => onOpen("dongle")],
+              [t("behavior.pollingRateLabel"), POLLING[config.pollingRateMode] ?? "—", () => onOpen("dongle")],
+              [t("behavior.controllerModeLabel"), MODES[config.controllerMode] ?? "—", () => onOpen("dongle")],
+              [tl("idle"), config.disableInactiveDisconnect ? tl("never") : `${config.inactiveTime} min`, () => onOpen("dongle")],
+              [t("desktop.settings.display"), `${config.screenBrightness + 1}/4`, () => onOpen("dongle")],
+            ]}
+          />
+        ) : (
+          <p className="dk-hint">—</p>
+        )}
+      </Card>
     </section>
+  );
+}
+
+const AUTO_HAPTICS = ["off", "fallback", "mix", "replace"] as const;
+const POLLING = ["250 Hz", "500 Hz", "1 kHz"];
+const MODES = ["DS5", "Edge", "Auto"];
+
+// Settings rows that open their panel when clicked.
+function Links({ rows }: { rows: Array<[string, string, () => void]> }) {
+  return (
+    <dl className="live-data-rows live-data-links">
+      {rows.map(([k, v, open]) => (
+        <div key={k}>
+          <dt>
+            <button type="button" className="live-data-link" onClick={open}>
+              {k}
+            </button>
+          </dt>
+          <dd title={v}>{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

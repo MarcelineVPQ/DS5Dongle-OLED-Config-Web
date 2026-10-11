@@ -56,9 +56,11 @@ describe("window and session baseline", () => {
     expect(mainSource).toMatch(/webSecurity:\s*true/);
   });
 
-  it("denies every web permission request and only checks usb", () => {
+  it("denies every web permission request and only checks usb (and audio device names)", () => {
     expect(mainSource).toMatch(/setPermissionRequestHandler\(\(_contents, _permission, callback\) => callback\(false\)\)/);
-    expect(mainSource).toMatch(/permission === "usb" && isAppOrigin/);
+    expect(mainSource).toMatch(
+      /isAppOrigin\(requestingOrigin\) &&\s*\(permission === "usb" \|\| \(permission as string\) === "speaker-selection" \|\| \(permission === "media" && \(details as \{ mediaType\?: string \}\)\.mediaType === "audio"\)\)/,
+    );
     expect(mainSource).toMatch(/setDevicePermissionHandler/);
   });
 

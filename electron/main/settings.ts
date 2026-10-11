@@ -14,6 +14,9 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   checkForUpdates: true,
   // Linux Games page: off until the user agrees to let the app read launcher settings.
   gamesScanAllowed: false,
+  // Silent until the user says yes (the tour asks once).
+  narratorVoice: "ask",
+  narratorCaptions: true,
 };
 
 const SettingsFile = z.object({
@@ -22,6 +25,8 @@ const SettingsFile = z.object({
   launchAtLogin: z.boolean().optional(),
   checkForUpdates: z.boolean().optional(),
   gamesScanAllowed: z.boolean().optional(),
+  narratorVoice: z.enum(["ask", "on", "off"]).optional(),
+  narratorCaptions: z.boolean().optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [
@@ -30,6 +35,8 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("launchAtLogin"), value: z.boolean() }),
   z.strictObject({ key: z.literal("checkForUpdates"), value: z.boolean() }),
   z.strictObject({ key: z.literal("gamesScanAllowed"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("narratorVoice"), value: z.enum(["ask", "on", "off"]) }),
+  z.strictObject({ key: z.literal("narratorCaptions"), value: z.boolean() }),
 ]);
 
 function settingsPath(): string {

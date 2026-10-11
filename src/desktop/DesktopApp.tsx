@@ -14,6 +14,8 @@ import UpdateBanners from "./UpdateBanners";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
 import "./desktop.css";
+import NarratorCaption from "./NarratorCaption";
+import { say } from "./narrator";
 
 // One screen: the live controller with its settings panel. Games and About
 // replace it while open (with a way back); the dongle and the app's own
@@ -57,6 +59,25 @@ export default function DesktopApp() {
   }, [isDirty, issues.length, operation, applyConfig, draft]);
 
   const connected = bridge.isConnected;
+
+  // Narrator events (she only speaks if the user said yes, and only through
+  // the controller; see narrator.ts).
+  const wasConnected = useRef(false);
+  useEffect(() => {
+    if (connected && !wasConnected.current) void say("app_dongle_online");
+    wasConnected.current = connected;
+  }, [connected]);
+  const offered = useRef<string | null>(null);
+  useEffect(() => {
+    const version = fw.available ? fw.latest?.version : null;
+    if (version && offered.current !== version) {
+      offered.current = version;
+      void say("app_fw_available");
+    }
+  }, [fw.available, fw.latest?.version]);
+  useEffect(() => {
+    if (fw.state.phase === "done") void say("app_fw_updated");
+  }, [fw.state.phase]);
   const busy = bridge.operation !== null;
   const standalone = main !== "controller";
 
@@ -130,6 +151,7 @@ export default function DesktopApp() {
 
   return (
     <div className="dk dk-one">
+      <NarratorCaption />
       <div className="dk-main">
         <header className="dk-top">
           {standalone && (
@@ -225,7 +247,16 @@ export default function DesktopApp() {
             <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
               {t("desktop.bar.revert", "Revert")}
             </button>
-            <button type="button" className="dk-btn primary" disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>
+            <button
+              type="button"
+              className="dk-btn primary"
+              disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
+              onClick={() =>
+                void bridge.saveToFlash().then((ok) => {
+                  if (ok) void say("app_saved");
+                })
+              }
+            >
               {t("desktop.bar.save", "Save to dongle")}
             </button>
           </footer>

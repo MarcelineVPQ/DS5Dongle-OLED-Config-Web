@@ -167,12 +167,21 @@ function toggleWindow(): void {
 }
 
 // The page gets exactly one web permission, WebUSB, and only for the app's own
-// origin and the devices in devices.ts. Everything else is refused.
+// origin and the devices in devices.ts. Everything else is refused. The one
+// check besides it: "media" for audio, so the narrator can find the
+// controller's speaker by name (Chromium hides device names otherwise). It
+// grants no capture: getUserMedia goes through the request handler, which
+// refuses everything.
 function lockDownSession(): void {
   const ses = session.defaultSession;
 
   ses.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  ses.setPermissionCheckHandler((_contents, permission, requestingOrigin) => permission === "usb" && isAppOrigin(requestingOrigin));
+  ses.setPermissionCheckHandler(
+    (_contents, permission, requestingOrigin, details) =>
+      // ("speaker-selection" isn't in Electron's type list yet; it is checked at runtime.)
+      isAppOrigin(requestingOrigin) &&
+      (permission === "usb" || (permission as string) === "speaker-selection" || (permission === "media" && (details as { mediaType?: string }).mediaType === "audio")),
+  );
   ses.setDevicePermissionHandler((details) => details.deviceType === "usb" && isAppOrigin(details.origin) && isAllowedUsbDevice(details.device as { vendorId?: number; productId?: number }));
 
   // navigator.usb.requestDevice() has no picker in Electron: answer it with the
@@ -269,7 +278,8 @@ function isTrusted(sender: WebContents, frameUrl: string): boolean {
 function isAppOrigin(origin: string | undefined): boolean {
   if (!origin) return false;
   if (devServerUrl) return origin === new URL(devServerUrl).origin;
-  return origin === "file://";
+  // Chromium reports the packaged page's origin as "file://" or "file:///".
+  return origin === "file://" || origin === "file:///";
 }
 
 // Must run before app ready.

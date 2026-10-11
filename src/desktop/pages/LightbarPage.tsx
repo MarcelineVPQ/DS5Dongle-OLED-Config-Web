@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { hexToRgb, rgbToHex, Row } from "../controls";
 
-const MODES = [
+export const LIGHTBAR_MODES = [
   { value: 8, key: "host", label: "Game controls it" },
   { value: 1, key: "fav0", label: "FAV0" },
   { value: 2, key: "fav1", label: "FAV1" },
@@ -31,7 +31,7 @@ export default function LightbarPage({ bridge }: { bridge: UseDs5BridgeResult })
       <section className="dk-card">
         <h2>{t("desktop.lightbar.mode", "Mode")}</h2>
         <div className="dk-presets">
-          {MODES.map((m) => (
+          {LIGHTBAR_MODES.map((m) => (
             <button
               type="button"
               key={m.value}

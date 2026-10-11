@@ -718,17 +718,18 @@
       "replay": "Revoir la visite",
       "welcome": {
         "title": "Bienvenue !",
-        "body": "Une visite d'une minute, manette en main. Appuie sur ✕ pour continuer et ○ pour revenir. Échap ou « Passer la visite » l'arrête à tout moment."
+        "body": "Une visite d'une minute, manette en main. Appuie sur ✕ pour continuer et ○ pour revenir. Échap ou « Passer la visite » l'arrête à tout moment.",
+        "bodyAsk": "Une visite d'une minute, manette en main. Échap ou « Passer la visite » l'arrête à tout moment."
       },
       "press": {
         "title": "Voici ta manette, en direct",
-        "body": "Appuie sur n'importe quel bouton de ta manette et regarde-le s'allumer ici.",
-        "done": "Le voilà ! Tout ce que tu appuies s'affiche ici."
+        "body": "Appuie sur quelques boutons différents de ta manette et regarde-les s'allumer ici.",
+        "done": "Bravo ! Tout ce que tu appuies s'affiche ici."
       },
       "trigger": {
         "title": "Maintenant les gâchettes",
-        "body": "Enfonce L2 ou R2 jusqu'au bout.",
-        "done": "Le remplissage suit ta pression, comme sur la vraie manette."
+        "body": "Maintenant, enfonce une gâchette, L2 ou R2, jusqu'au bout. Tu sens quelque chose ?",
+        "done": "Tu l'as senti ? C'est une gâchette adaptative : elle résiste, puis cède d'un coup. Les jeux s'en servent pour les armes, les arcs et les freins."
       },
       "click": {
         "title": "Tout se règle à la souris",
@@ -741,7 +742,7 @@
       },
       "list": {
         "title": "Ou choisis dans la liste",
-        "body": "Tu ne sais pas où se trouve un réglage sur la manette ? Ils sont tous ici aussi, à un clic."
+        "body": "Tu ne sais pas où se trouve un réglage sur la manette ? Ils sont tous ici aussi, à un clic. » masque ce panneau pour agrandir la manette."
       },
       "save": {
         "title": "Garde ce qui te plaît",
@@ -754,7 +755,18 @@
       "finish": {
         "title": "Tout est prêt",
         "body": "Amuse-toi bien ! Tu peux revoir cette visite à tout moment dans ⚙ Réglages de l'app."
-      }
+      },
+      "voiceAsk": "Tu veux qu'elle te guide ? Elle ne parle que par le haut-parleur de ta manette ; tu peux changer ça à tout moment dans ⚙ Réglages de l'app.",
+      "voiceYes": "Oui, guide-moi",
+      "voiceNo": "Non merci",
+      "data": {
+        "title": "Tout, en direct",
+        "body": "Ici en bas : sticks, gâchettes, mouvements, batterie et liaison, en chiffres et en courbes, au rythme de ta manette."
+      },
+      "pressGoal": "Encore {{n}} boutons différents…",
+      "pressedLabel": "Boutons appuyés jusqu'ici",
+      "keepPlaying": "Continue autant que tu veux ; maintiens ✕ quand tu es prêt·e.",
+      "holdHint": "Maintiens ✕ pour passer cette étape, ou ○ pour revenir."
     },
     "liveData": {
       "title": "Données en direct",
@@ -778,7 +790,21 @@
       "usb": "Alimentation USB",
       "yes": "oui",
       "no": "non",
-      "inRange": "plage idéale"
+      "inRange": "plage idéale",
+      "audio": "Audio & haptique",
+      "on": "activé",
+      "off": "désactivé",
+      "never": "jamais",
+      "idle": "Déconnexion si inactif",
+      "brightness": "luminosité"
+    },
+    "narrator": {
+      "title": "Narratrice",
+      "voice": "Voix de la narratrice",
+      "voiceSub": "De courtes phrases pour la visite et les événements de l'app, uniquement par le haut-parleur de ta manette",
+      "captions": "Sous-titres",
+      "captionsSub": "Affiche ses mots pendant qu'elle parle (et les courtes confirmations en texte quand la voix est coupée)",
+      "test": "Tester la voix"
     }
   }
 }

@@ -38,7 +38,7 @@ export interface UseDs5BridgeResult {
   readConfig: () => Promise<boolean>;
   // Resolves false if the dongle refused or the transfer failed (see error).
   applyConfig: () => Promise<boolean>;
-  saveToFlash: () => Promise<void>;
+  saveToFlash: () => Promise<boolean>;
   reconnectUsb: () => Promise<boolean>;
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
@@ -174,9 +174,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     });
   }, [draft, issues.length, run]);
 
-  const saveToFlash = useCallback(async () => {
-    if (isDirty) return;
-    await run("saving", async (c) => {
+  const saveToFlash = useCallback(async (): Promise<boolean> => {
+    if (isDirty) return false;
+    return run("saving", async (c) => {
       await c.saveToFlash();
       setSavedConfig(config);
       setSaveState("saved");
