@@ -969,6 +969,41 @@
       "staleUpdateOn": "You rated this before the game's update on {{date}}.",
       "staleUpdate": "You rated this before the game's last update.",
       "stillAccurate": "Still accurate"
+    },
+    "dongleConsole": {
+      "title": "Dongle console",
+      "pane": {
+        "screen": "Screen",
+        "log": "Log"
+      },
+      "noDongle": "Waiting for the dongle",
+      "needsFirmware": "Update the dongle's firmware to see its screen",
+      "unavailable": "Screen not available, retrying",
+      "connecting": "Reading the screen…",
+      "live": "Live",
+      "dim": "Dimmed (idle)",
+      "off": "Screen off (idle)",
+      "screenN": "Screen {{n}}/{{total}}",
+      "brightness": "Brightness {{pct}}%",
+      "frame": "Frame {{n}}",
+      "hint": "Exactly what the dongle's screen shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1 on the dongle.",
+      "logEmpty": "Nothing yet.",
+      "log": {
+        "online": "Dongle connected (protocol {{version}})",
+        "offline": "Dongle disconnected",
+        "controller": "Controller connected (slot {{slot}})",
+        "controllerGone": "Controller disconnected",
+        "slot": "Switched to slot {{slot}}",
+        "charging": "Controller charging",
+        "notCharging": "Controller stopped charging",
+        "battery": "Battery {{pct}}%",
+        "saved": "Settings saved on the dongle"
+      }
+    },
+    "rail": {
+      "label": "Navigation",
+      "pin": "Keep open",
+      "collapse": "Collapse"
     }
   },
   "ad": {

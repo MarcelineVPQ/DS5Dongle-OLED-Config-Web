@@ -970,6 +970,41 @@
       "staleUpdateOn": "Tu as noté ce jeu avant sa mise à jour du {{date}}.",
       "staleUpdate": "Tu as noté ce jeu avant sa dernière mise à jour.",
       "stillAccurate": "Toujours valable"
+    },
+    "dongleConsole": {
+      "title": "Console du dongle",
+      "pane": {
+        "screen": "Écran",
+        "log": "Journal"
+      },
+      "noDongle": "En attente du dongle",
+      "needsFirmware": "Mettez à jour le firmware du dongle pour voir son écran",
+      "unavailable": "Écran indisponible, nouvel essai",
+      "connecting": "Lecture de l'écran…",
+      "live": "En direct",
+      "dim": "Atténué (inactif)",
+      "off": "Écran éteint (inactif)",
+      "screenN": "Écran {{n}}/{{total}}",
+      "brightness": "Luminosité {{pct}} %",
+      "frame": "Image {{n}}",
+      "hint": "Exactement ce qu'affiche l'écran du dongle, pixel par pixel. Fonctionne aussi sans le module OLED. Changez d'écran avec KEY0 / KEY1 sur le dongle.",
+      "logEmpty": "Rien pour l'instant.",
+      "log": {
+        "online": "Dongle connecté (protocole {{version}})",
+        "offline": "Dongle déconnecté",
+        "controller": "Manette connectée (emplacement {{slot}})",
+        "controllerGone": "Manette déconnectée",
+        "slot": "Passage à l'emplacement {{slot}}",
+        "charging": "Manette en charge",
+        "notCharging": "Manette plus en charge",
+        "battery": "Batterie {{pct}} %",
+        "saved": "Réglages enregistrés sur le dongle"
+      }
+    },
+    "rail": {
+      "label": "Navigation",
+      "pin": "Garder ouvert",
+      "collapse": "Replier"
     }
   },
   "ad": {

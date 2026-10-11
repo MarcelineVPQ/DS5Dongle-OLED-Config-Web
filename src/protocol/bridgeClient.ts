@@ -2,7 +2,7 @@
 // over any Ds5Transport. Report payloads here never include the report-id byte.
 import { CONFIG_BODY_SIZE, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { type RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
-import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport } from "./transport";
+import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
 
 export const REPORT = {
@@ -16,6 +16,7 @@ export const REPORT = {
   slots: 0xfa,
   diag: 0xfb,
   cpu: 0xfc,
+  oledMirror: 0xef, // protocol 1.4+, feature bit FEATURES2.oledMirror
 } as const;
 
 export const FUNC = {
@@ -48,6 +49,19 @@ export const IDENTITY_FEATURES = {
   unsavedFlag: 0x40, // identity [19] bit 0 (protocol 1.2)
   narrator: 0x80, // the dongle's own narrator lines, 0x0B / 0x0C (protocol 1.3)
 } as const;
+// Identity [29] (protocol 1.4): more feature bits.
+export const FEATURES2 = {
+  oledMirror: 0x01, // 0xEF: the OLED's image as last sent to the panel
+} as const;
+
+// What the dongle's OLED shows, pixel for pixel (protocol 1.4).
+export interface OledFrame {
+  power: "on" | "dim" | "off"; // dim = the idle breathing dot
+  screen: number; // the firmware's current screen, 0-based
+  contrast: number; // SH1107 contrast 0..255
+  seq: number; // bumps on every flush to the panel
+  pixels: Uint8Array; // 128x64, row-major, 16 bytes per row, MSB = leftmost
+}
 
 // The narrator's firmware lines (protocol 1.3), in the firmware's order.
 export const NARRATOR_LINES = { connected: 0, slot0: 1, batteryLow: 5 } as const;
@@ -83,6 +97,8 @@ export interface BridgeIdentity {
   // the factory serial ("02" = Cosmic Red; null while unknown or unsupported).
   model: "dualsense" | "edge" | null;
   colorwayCode: string | null;
+  // Protocol 1.4+: identity [29], more feature bits (FEATURES2); 0 on older firmware.
+  features2: number;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -116,6 +132,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     playerLeds: bytes.length >= 26 ? bytes[25] & 0x1f : 0,
     model: bytes.length >= 29 && bytes[18] === 1 && bytes[26] !== 0xff ? (bytes[26] === 1 ? "edge" : "dualsense") : null,
     colorwayCode: bytes.length >= 29 && bytes[27] && bytes[28] ? String.fromCharCode(bytes[27], bytes[28]) : null,
+    features2: bytes.length >= 30 ? bytes[29] : 0,
   };
 }
 
@@ -180,7 +197,7 @@ export class Ds5BridgeClient {
   }
 
   async identity(): Promise<BridgeIdentity> {
-    return decodeIdentity(await this.transport.getReport(REPORT.identity, 29));
+    return decodeIdentity(await this.transport.getReport(REPORT.identity, 30));
   }
 
   // Throws if the dongle speaks a protocol major this app doesn't understand.
@@ -348,6 +365,12 @@ export class Ds5BridgeClient {
   async readCpu(): Promise<CpuInfo> {
     const view = toView(await this.transport.getReport(REPORT.cpu, 11), 11);
     return { setKhz: view.getUint32(0, true), measuredKhz: view.getUint32(4, true), vregCode: view.getUint8(8), tempRaw: view.getUint16(9, true) };
+  }
+
+  async readOledFrame(): Promise<OledFrame | null> {
+    const bytes = await this.transport.getReport(REPORT.oledMirror, OLED_MIRROR_BYTES);
+    if (bytes.length < OLED_MIRROR_BYTES) return null;
+    return { power: bytes[0] === 2 ? "off" : bytes[0] === 1 ? "dim" : "on", screen: bytes[1], contrast: bytes[2], seq: bytes[3], pixels: bytes.slice(4) };
   }
 
   async readAudioCounters(): Promise<AudioCounters> {

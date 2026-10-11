@@ -135,8 +135,8 @@ html[data-theme="dark"] .dk {
 /* ---- Main column ---- */
 .dk-main {
   display: grid;
-  /* top bar, scrolling body, save bar (absent on pages that don't need the dongle) */
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* scrolling body, save bar (absent on pages that don't need the dongle) */
+  grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
   min-height: 0;
 }
@@ -1114,7 +1114,8 @@ html[data-theme="dark"] .dk {
 
 /* ---- One screen (src/desktop/live/ControllerView.tsx) ---- */
 .dk.dk-one {
-  grid-template-columns: minmax(0, 1fr);
+  /* page (+ its settings panel) | the navigation rail at the right edge */
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 .dk-top-btn {
   display: inline-flex;
@@ -2257,4 +2258,271 @@ html[data-theme="dark"] .dk {
   .lib {
     grid-template-columns: minmax(160px, 190px) minmax(0, 1fr);
   }
+}
+
+/* ---- Dongle console: the OLED mirror + log. Dark in every theme, like any
+   console (its colors don't follow the app theme on purpose). ---- */
+.dcon {
+  --dcon-bg: #0d0d0d;
+  --dcon-text: #e6e6e6;
+  --dcon-border: #2a2a2a;
+  --dcon-muted: #8a8a8a;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 900px);
+  margin: 0 auto auto;
+  border: 1px solid var(--dcon-border);
+  border-radius: var(--dk-radius);
+  background: var(--dcon-bg);
+  color: var(--dcon-text);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12.5px;
+  overflow: hidden;
+}
+.dcon-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--dcon-border);
+  background: #151515;
+}
+.dcon-title {
+  font-weight: 600;
+}
+.dcon-tabs {
+  display: flex;
+  gap: 4px;
+}
+.dcon-tab {
+  position: relative;
+  padding: 2px 10px;
+  border: 1px solid var(--dcon-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dcon-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.dcon-tab:hover {
+  color: var(--dcon-text);
+}
+.dcon-tab.on {
+  border-color: var(--dk-accent);
+  color: var(--dcon-text);
+}
+/* Something was logged while the log wasn't showing. */
+.dcon-tab[data-unread="1"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+.dcon-spacer {
+  flex: 1;
+}
+.dcon-status {
+  color: var(--dcon-muted);
+}
+.dcon-pane {
+  padding: 14px;
+}
+.dcon-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+/* Exact pixels: the component scales 128 x 64 by a whole number (up to 6x). */
+.dcon-oled-box {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.dcon-oled {
+  image-rendering: pixelated;
+  border: 1px solid #1f1f1f;
+  border-radius: 2px;
+}
+.dcon-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 18px;
+  color: var(--dcon-muted);
+}
+.dcon-hint {
+  margin: 0;
+  color: var(--dcon-muted);
+  font-family: var(--font-body, inherit);
+  font-size: var(--dk-small);
+  text-align: center;
+}
+.dcon-log {
+  height: clamp(220px, 46vh, 460px);
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.dcon-row {
+  line-height: 1.55;
+}
+.dcon-time,
+.dcon-muted {
+  color: var(--dcon-muted);
+}
+
+/* ---- Navigation rail (AppRail.tsx): AVIEW's sidebar, on the right ----
+   The slot reserves the collapsed width; unpinned, the rail expands over the
+   page (leftwards) on hover / keyboard focus; pinned it takes its full width. */
+.rail-slot {
+  --rail-w-collapsed: 52px;
+  --rail-w-expanded: 196px;
+  position: relative;
+  width: var(--rail-w-collapsed);
+  transition: width 0.18s ease;
+  z-index: 30;
+}
+.rail-slot.pinned {
+  width: var(--rail-w-expanded);
+}
+.app-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--rail-w-collapsed);
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-panel);
+  overflow: hidden;
+  transition:
+    width 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.rail-slot.pinned .app-rail,
+.app-rail:hover,
+.app-rail:focus-within {
+  width: var(--rail-w-expanded);
+}
+.rail-slot:not(.pinned) .app-rail:hover,
+.rail-slot:not(.pinned) .app-rail:focus-within {
+  box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
+}
+.rail-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 8px 6px;
+  overflow: hidden auto;
+}
+.rail-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-top: 1px solid var(--border-default);
+}
+.rail-link,
+.rail-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dk-radius);
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rail-status {
+  cursor: default;
+  font-size: var(--dk-small);
+}
+.rail-link:hover {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+.rail-link:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: -2px;
+}
+/* Active: tinted, with the accent bar on the inner (left) edge. */
+.rail-link.active {
+  background: var(--dk-sel-bg);
+  color: var(--dk-sel-text);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--dk-sel-border);
+}
+.rail-ic {
+  position: relative;
+  display: grid;
+  flex: 0 0 20px;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+.rail-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.rail-slot.pinned .rail-label,
+.app-rail:hover .rail-label,
+.app-rail:focus-within .rail-label {
+  opacity: 1;
+}
+.rail-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border-default);
+}
+.rail-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--cv-warn, #d97706);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+.rail-dot {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+.rail-status.ok .rail-dot {
+  background: var(--cv-good, #16a34a);
+}
+.rail-status.warn .rail-dot {
+  background: var(--cv-warn, #d97706);
+}
+.rail-status.ok .rail-label {
+  color: var(--text-strong);
 }

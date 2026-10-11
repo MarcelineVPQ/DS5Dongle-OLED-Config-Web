@@ -35,3 +35,8 @@ export class ReportStalledError extends Error {
 }
 
 export const MAX_REPORT_PAYLOAD = 63;
+// The one longer reply: the OLED screen mirror (0xEF, protocol 1.4), a 4-byte
+// header + the 128x64 image, in a single control transfer.
+export const OLED_MIRROR_REPORT = 0xef;
+export const OLED_MIRROR_BYTES = 4 + (128 * 64) / 8;
+export const maxGetLength = (reportId: number) => (reportId === OLED_MIRROR_REPORT ? OLED_MIRROR_BYTES : MAX_REPORT_PAYLOAD);

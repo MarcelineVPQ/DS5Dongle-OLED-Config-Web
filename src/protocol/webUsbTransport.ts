@@ -1,4 +1,4 @@
-import { DeviceGoneError, MAX_REPORT_PAYLOAD, ReportStalledError, type Ds5Transport } from "./transport";
+import { DeviceGoneError, MAX_REPORT_PAYLOAD, ReportStalledError, maxGetLength, type Ds5Transport } from "./transport";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const DONGLE_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
@@ -79,7 +79,7 @@ export class WebUsbTransport implements Ds5Transport {
 
   getReport(reportId: number, length: number): Promise<Uint8Array> {
     return this.enqueue(async () => {
-      const result = await this.transfer(reportId, () => this.device.controlTransferIn(this.setup(REQ_GET, reportId), Math.min(length, MAX_REPORT_PAYLOAD)));
+      const result = await this.transfer(reportId, () => this.device.controlTransferIn(this.setup(REQ_GET, reportId), Math.min(length, maxGetLength(reportId))));
       if (result.status === "stall") throw new ReportStalledError(reportId);
       const data = result.data;
       return data ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength) : new Uint8Array(0);

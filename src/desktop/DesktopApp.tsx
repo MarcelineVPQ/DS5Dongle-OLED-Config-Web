@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, Joystick, Settings, Usb } from "lucide-react";
+import AppRail from "./AppRail";
 import { useGameProfile } from "./library/useGameProfile";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -161,56 +161,10 @@ export default function DesktopApp() {
     [client],
   );
 
-  const headerButton = (label: string, icon: JSX.Element, active: boolean, onClick: () => void, badge?: number) => (
-    <button type="button" className={`dk-top-btn${active ? " active" : ""}`} aria-pressed={active} onClick={onClick}>
-      {icon}
-      {label}
-      {badge ? (
-        <span className="dk-badge" title={t("desktop.games.attention", { count: badge })}>
-          {badge}
-        </span>
-      ) : null}
-    </button>
-  );
-
   return (
     <div className="dk dk-one">
       <NarratorCaption />
       <div className="dk-main">
-        <header className="dk-top">
-          {standalone && (
-            <button type="button" className="dk-top-btn" onClick={() => setMain("controller")}>
-              <ArrowLeft size={15} />
-              {t("desktop.live.back", "Controller")}
-            </button>
-          )}
-          {headerButton(t("desktop.nav.dongle", "Dongle"), <Usb size={15} />, main === "controller" && panel === "dongle", () => openPanel("dongle"))}
-          {games.supported && headerButton(t("desktop.nav.games", "Games"), <Joystick size={15} />, main === "games", () => setMain("games"), games.count)}
-          {headerButton(t("desktop.nav.about", "About"), <Info size={15} />, main === "about", () => setMain("about"))}
-          <span className="dk-spacer" />
-          {connected ? (
-            <span className="dk-chip ok" title={bridge.deviceLabel}>
-              <span className="dot" />
-              {t("desktop.status.connected", "Dongle connected")}
-              {bridge.firmwareVersion ? ` · ${bridge.firmwareVersion}` : ""}
-            </span>
-          ) : (
-            <span className="dk-chip warn">
-              <span className="dot" />
-              {bridge.operation === "connecting" ? t("statusText.connecting") : t("desktop.status.waiting", "Waiting for the dongle…")}
-            </span>
-          )}
-          <button
-            type="button"
-            className={`dk-top-btn dk-icon-btn${main === "controller" && panel === "app" ? " active" : ""}`}
-            onClick={() => openPanel("app")}
-            title={t("desktop.live.app", "App settings")}
-            aria-label={t("desktop.live.app", "App settings")}
-          >
-            <Settings size={15} />
-          </button>
-        </header>
-
         <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
           <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => openPanel("dongle")} />
           <AutoUpdateAsk />
@@ -304,6 +258,22 @@ export default function DesktopApp() {
           </footer>
         )}
       </div>
+      <AppRail
+        active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
+        onSelect={(item) => {
+          if (item === "games" || item === "about") setMain(item);
+          else if (item === "controller") {
+            setMain("controller");
+            setPanel("overview");
+          } else openPanel(item);
+        }}
+        gamesSupported={games.supported}
+        gamesBadge={games.count}
+        connected={connected}
+        connecting={bridge.operation === "connecting"}
+        firmware={bridge.firmwareVersion}
+        deviceLabel={bridge.deviceLabel}
+      />
     </div>
   );
 }

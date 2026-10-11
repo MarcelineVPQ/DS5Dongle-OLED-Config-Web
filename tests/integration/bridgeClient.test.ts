@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CommandError, Ds5BridgeClient, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
+import { CommandError, Ds5BridgeClient, FEATURES2, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { FakeDongle } from "../support/fakeDongle";
@@ -215,5 +215,18 @@ describe("narrator firmware lines (protocol 1.3)", () => {
     const client = new Ds5BridgeClient(dongle);
     dongle.getReport = async () => new Uint8Array(37);
     expect(await client.readNarrator()).toBeNull();
+  });
+});
+
+describe("OLED screen mirror (0xEF, protocol 1.4)", () => {
+  it("reads identity [29] and decodes the frame header", async () => {
+    const { client } = setup();
+    const id = await client.identity();
+    expect(id.features2 & FEATURES2.oledMirror).toBe(FEATURES2.oledMirror);
+    const frame = await client.readOledFrame();
+    expect(frame).not.toBeNull();
+    expect(frame!.power).toBe("on");
+    expect(frame!.screen).toBe(2);
+    expect(frame!.pixels.length).toBe(1024);
   });
 });

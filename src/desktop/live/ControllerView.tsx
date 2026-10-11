@@ -2,6 +2,7 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import { PanelRightOpen } from "lucide-react";
+import DongleConsole from "../dongle/DongleConsole";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -101,79 +102,85 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
             <PanelRightOpen size={14} aria-hidden="true" /> {t("desktop.live.showPanel", "Settings")}
           </button>
         )}
-        <LiveController
-          input={input}
-          lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
-          playerLeds={on ? (id?.playerLeds ?? 0) : 0}
-          colors={on ? (look?.colors ?? null) : null}
-          selected={selected}
-          remapped={remapped}
-          onSelect={(part) => onView({ part })}
-        />
-        {on && id?.model && (
-          <div className="live-model">
-            {modelName}
-            {look ? ` · ${look.name}` : ""}
-            <span className="dk-good"> · {t("desktop.overview.connected", "Connected")}</span>
-          </div>
-        )}
-        {on && id?.model === "edge" && (
-          <div className="live-edge" aria-label={t("desktop.live.edgeButtons")}>
-            {(
-              [
-                ["backLeft", t("desktop.live.backLeft")],
-                ["fnLeft", "Fn L"],
-                ["fnRight", "Fn R"],
-                ["backRight", t("desktop.live.backRight")],
-              ] as const
-            ).map(([key, label]) => (
-              <span key={key} className={`dk-chip${input?.[key] ? " ok" : ""}`}>
-                {label}
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="live-readouts">
-          {on && id && liveCapable && (
-            <LiveStrip
+        {view === "dongle" ? (
+          <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
+        ) : (
+          <>
+            <LiveController
               input={input}
-              id={id}
-              rssi={status?.rssi ?? null}
-              lightbarMode={bridge.config?.lightbarMode ?? null}
-              lightbar={liveLightbar ?? id.lightbar}
-              onLightbar={() => onView({ part: "lightbar" })}
+              lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
+              playerLeds={on ? (id?.playerLeds ?? 0) : 0}
+              colors={on ? (look?.colors ?? null) : null}
+              selected={selected}
+              remapped={remapped}
+              onSelect={(part) => onView({ part })}
             />
-          )}
-          {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} config={bridge.config} firmware={bridge.firmwareVersion} onOpen={onView} />}
-        </div>
-        {!(on && id && liveCapable) && (
-          <div className="live-status">
-            <span className={on ? "dk-good" : ""}>
-              <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press PS)")) : "—"}</strong>
-            </span>
-            <span>
-              {t("desktop.controller.battery", "Battery")}{" "}
-              <strong>
-                {on && id?.battery !== null && id?.battery !== undefined ? `${id.battery}%` : "—"}
-                {on && id?.charging ? ` · ${t("desktop.controller.charging", "charging")}` : ""}
-              </strong>
-            </span>
-            <span>
-              {t("desktop.overview.signal", "Signal")} <strong>{on && status ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
-            </span>
-            {on && id && playerNumber(id.playerLeds) && (
-              <span>
-                {t("desktop.live.player", "Player")} <strong>{playerNumber(id.playerLeds)}</strong>
-              </span>
+            {on && id?.model && (
+              <div className="live-model">
+                {modelName}
+                {look ? ` · ${look.name}` : ""}
+                <span className="dk-good"> · {t("desktop.overview.connected", "Connected")}</span>
+              </div>
             )}
-            <span>
-              {t("desktop.overview.slot", "Pairing slot")} <strong>{id ? id.currentSlot : "—"}</strong>
-            </span>
-          </div>
+            {on && id?.model === "edge" && (
+              <div className="live-edge" aria-label={t("desktop.live.edgeButtons")}>
+                {(
+                  [
+                    ["backLeft", t("desktop.live.backLeft")],
+                    ["fnLeft", "Fn L"],
+                    ["fnRight", "Fn R"],
+                    ["backRight", t("desktop.live.backRight")],
+                  ] as const
+                ).map(([key, label]) => (
+                  <span key={key} className={`dk-chip${input?.[key] ? " ok" : ""}`}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="live-readouts">
+              {on && id && liveCapable && (
+                <LiveStrip
+                  input={input}
+                  id={id}
+                  rssi={status?.rssi ?? null}
+                  lightbarMode={bridge.config?.lightbarMode ?? null}
+                  lightbar={liveLightbar ?? id.lightbar}
+                  onLightbar={() => onView({ part: "lightbar" })}
+                />
+              )}
+              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} config={bridge.config} firmware={bridge.firmwareVersion} onOpen={onView} />}
+            </div>
+            {!(on && id && liveCapable) && (
+              <div className="live-status">
+                <span className={on ? "dk-good" : ""}>
+                  <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press PS)")) : "—"}</strong>
+                </span>
+                <span>
+                  {t("desktop.controller.battery", "Battery")}{" "}
+                  <strong>
+                    {on && id?.battery !== null && id?.battery !== undefined ? `${id.battery}%` : "—"}
+                    {on && id?.charging ? ` · ${t("desktop.controller.charging", "charging")}` : ""}
+                  </strong>
+                </span>
+                <span>
+                  {t("desktop.overview.signal", "Signal")} <strong>{on && status ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
+                </span>
+                {on && id && playerNumber(id.playerLeds) && (
+                  <span>
+                    {t("desktop.live.player", "Player")} <strong>{playerNumber(id.playerLeds)}</strong>
+                  </span>
+                )}
+                <span>
+                  {t("desktop.overview.slot", "Pairing slot")} <strong>{id ? id.currentSlot : "—"}</strong>
+                </span>
+              </div>
+            )}
+            {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
+            {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update the dongle's firmware to see the controller move live.")}</p>}
+            {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
+          </>
         )}
-        {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
-        {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update the dongle's firmware to see the controller move live.")}</p>}
-        {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
       </div>
       <Tour client={client} input={input} view={view} onView={onView} ready={on && liveCapable} />
       {!collapsed && (

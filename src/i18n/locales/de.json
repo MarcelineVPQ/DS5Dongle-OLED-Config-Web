@@ -970,6 +970,41 @@
       "staleUpdateOn": "Du hast das vor dem Update des Spiels am {{date}} bewertet.",
       "staleUpdate": "Du hast das vor dem letzten Update des Spiels bewertet.",
       "stillAccurate": "Stimmt noch"
+    },
+    "dongleConsole": {
+      "title": "Dongle-Konsole",
+      "pane": {
+        "screen": "Display",
+        "log": "Protokoll"
+      },
+      "noDongle": "Warte auf den Dongle",
+      "needsFirmware": "Aktualisiere die Firmware des Dongles, um sein Display zu sehen",
+      "unavailable": "Display nicht verfügbar, neuer Versuch",
+      "connecting": "Display wird gelesen…",
+      "live": "Live",
+      "dim": "Gedimmt (inaktiv)",
+      "off": "Display aus (inaktiv)",
+      "screenN": "Seite {{n}}/{{total}}",
+      "brightness": "Helligkeit {{pct}} %",
+      "frame": "Bild {{n}}",
+      "hint": "Genau das, was das Display des Dongles zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1 am Dongle.",
+      "logEmpty": "Noch nichts.",
+      "log": {
+        "online": "Dongle verbunden (Protokoll {{version}})",
+        "offline": "Dongle getrennt",
+        "controller": "Controller verbunden (Slot {{slot}})",
+        "controllerGone": "Controller getrennt",
+        "slot": "Zu Slot {{slot}} gewechselt",
+        "charging": "Controller lädt",
+        "notCharging": "Controller lädt nicht mehr",
+        "battery": "Akku {{pct}} %",
+        "saved": "Einstellungen auf dem Dongle gespeichert"
+      }
+    },
+    "rail": {
+      "label": "Navigation",
+      "pin": "Offen halten",
+      "collapse": "Einklappen"
     }
   },
   "ad": {

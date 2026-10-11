@@ -66,6 +66,13 @@ export class FakeDongle implements Ds5Transport {
     switch (reportId) {
       case 0xf0:
         return this.input.slice(0, length);
+      case 0xef: {
+        // OLED mirror: screen on, screen 2, full contrast, a test pattern.
+        const out = new Uint8Array(4 + 1024);
+        out.set([0, 2, 0xff, this.seq & 0xff]);
+        for (let i = 0; i < 1024; i++) out[4 + i] = i % 2 ? 0xaa : 0x55;
+        return out.subarray(0, length);
+      }
       case 0xf1:
         this.tick();
         // Reboot / BOOTSEL: the device is already off the bus, nothing answers.
@@ -170,8 +177,8 @@ export class FakeDongle implements Ds5Transport {
   }
 
   private identity(): Uint8Array {
-    const out = new Uint8Array(29);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 3, CONFIG_BODY_SIZE + 1, 0xff]);
+    const out = new Uint8Array(30);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 4, CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
@@ -188,6 +195,7 @@ export class FakeDongle implements Ds5Transport {
       [...this.colorwayCode].map((c) => c.charCodeAt(0)),
       27,
     );
+    out[29] = 0x01; // FEATURES2: OLED mirror
     return out;
   }
 

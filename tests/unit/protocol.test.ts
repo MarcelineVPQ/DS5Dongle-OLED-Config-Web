@@ -90,6 +90,7 @@ describe("identity report (0xF1)", () => {
       playerLeds: 0,
       model: null,
       colorwayCode: null,
+      features2: 0,
     });
   });
 

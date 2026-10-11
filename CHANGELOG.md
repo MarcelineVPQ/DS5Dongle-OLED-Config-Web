@@ -12,6 +12,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Per-game controller profiles**: haptics strength, Audio Auto Haptics, speaker level, lightbar mode and favorite colors, BT mic. A profile switches in on the dongle (RAM only) while its game runs and your normal settings come back when it closes, also after a crash or a quit mid-game (kept as a restore point on disk). While one is active the bottom bar saves to the profile, never to the dongle.
 - **Your rating and feedback** per game: stars and a checklist of what you noticed (no free text to share), stamped with the app version and game build so feedback from before a game update or one of our fixes is flagged; private notes. Saved on this PC; sharing with other players comes later.
 
+- **Dongle console.** The Dongle page shows the dongle's screen pixel for pixel, live (needs firmware with protocol 1.4; works without the OLED add-on too), plus a log of what the dongle did this session. Dark in every theme, like any console.
+
+### Changed
+
+- **Navigation rail** on the right edge replaces the top bar: Controller, Dongle, Games, App settings and About, with the dongle's status at the bottom. Icons only until you hover it (or tab into it); pin it open with the button at the bottom or Ctrl+B.
+
 ### Fixed
 
 - The haptics gain error message gave the wrong range (1.0–2.0 instead of 1.0–6.0) in every language.

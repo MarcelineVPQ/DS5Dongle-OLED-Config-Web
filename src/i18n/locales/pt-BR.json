@@ -970,6 +970,41 @@
       "staleUpdateOn": "Você avaliou isto antes da atualização do jogo em {{date}}.",
       "staleUpdate": "Você avaliou isto antes da última atualização do jogo.",
       "stillAccurate": "Ainda vale"
+    },
+    "dongleConsole": {
+      "title": "Console do dongle",
+      "pane": {
+        "screen": "Tela",
+        "log": "Registro"
+      },
+      "noDongle": "Aguardando o dongle",
+      "needsFirmware": "Atualize o firmware do dongle para ver a tela dele",
+      "unavailable": "Tela indisponível, tentando de novo",
+      "connecting": "Lendo a tela…",
+      "live": "Ao vivo",
+      "dim": "Escurecida (inativa)",
+      "off": "Tela desligada (inativa)",
+      "screenN": "Tela {{n}}/{{total}}",
+      "brightness": "Brilho {{pct}}%",
+      "frame": "Quadro {{n}}",
+      "hint": "Exatamente o que a tela do dongle mostra, pixel por pixel. Funciona também sem o módulo OLED. Troque de tela com KEY0 / KEY1 no dongle.",
+      "logEmpty": "Nada ainda.",
+      "log": {
+        "online": "Dongle conectado (protocolo {{version}})",
+        "offline": "Dongle desconectado",
+        "controller": "Controle conectado (slot {{slot}})",
+        "controllerGone": "Controle desconectado",
+        "slot": "Mudou para o slot {{slot}}",
+        "charging": "Controle carregando",
+        "notCharging": "Controle parou de carregar",
+        "battery": "Bateria {{pct}}%",
+        "saved": "Configurações salvas no dongle"
+      }
+    },
+    "rail": {
+      "label": "Navegação",
+      "pin": "Manter aberto",
+      "collapse": "Recolher"
     }
   },
   "ad": {

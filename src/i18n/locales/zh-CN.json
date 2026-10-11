@@ -964,6 +964,41 @@
       "staleUpdateOn": "你评分时早于此游戏 {{date}} 的更新。",
       "staleUpdate": "你评分时早于此游戏的最近一次更新。",
       "stillAccurate": "仍然准确"
+    },
+    "dongleConsole": {
+      "title": "接收器控制台",
+      "pane": {
+        "screen": "屏幕",
+        "log": "日志"
+      },
+      "noDongle": "正在等待接收器",
+      "needsFirmware": "更新接收器固件后即可查看其屏幕",
+      "unavailable": "屏幕暂不可用，正在重试",
+      "connecting": "正在读取屏幕…",
+      "live": "实时",
+      "dim": "已调暗（空闲）",
+      "off": "屏幕已关闭（空闲）",
+      "screenN": "第 {{n}}/{{total}} 屏",
+      "brightness": "亮度 {{pct}}%",
+      "frame": "第 {{n}} 帧",
+      "hint": "与接收器屏幕显示的内容逐像素一致。没有 OLED 模块也能使用。在接收器上用 KEY0 / KEY1 切换屏幕。",
+      "logEmpty": "暂无内容。",
+      "log": {
+        "online": "接收器已连接（协议 {{version}}）",
+        "offline": "接收器已断开",
+        "controller": "手柄已连接（槽位 {{slot}}）",
+        "controllerGone": "手柄已断开",
+        "slot": "已切换到槽位 {{slot}}",
+        "charging": "手柄正在充电",
+        "notCharging": "手柄停止充电",
+        "battery": "电量 {{pct}}%",
+        "saved": "设置已保存到接收器"
+      }
+    },
+    "rail": {
+      "label": "导航",
+      "pin": "保持展开",
+      "collapse": "收起"
     }
   },
   "ad": {
