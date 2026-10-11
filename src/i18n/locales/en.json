@@ -810,6 +810,14 @@
       "captions": "Captions",
       "captionsSub": "Show her words on screen while she speaks (and the short confirmations as text when the voice is off)",
       "test": "Test the voice"
+    },
+    "colorVision": {
+      "label": "Color vision",
+      "sub": "For color blindness",
+      "standard": "Off",
+      "protanopia": "Protanopia",
+      "deuteranopia": "Deuteranopia",
+      "tritanopia": "Tritanopia"
     }
   },
   "ad": {

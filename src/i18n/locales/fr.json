@@ -811,6 +811,14 @@
       "captions": "Sous-titres",
       "captionsSub": "Affiche ses mots pendant qu'elle parle (et les courtes confirmations en texte quand la voix est coupée)",
       "test": "Tester la voix"
+    },
+    "colorVision": {
+      "label": "Vision des couleurs",
+      "sub": "Pour le daltonisme",
+      "standard": "Désactivé",
+      "protanopia": "Protanopie",
+      "deuteranopia": "Deutéranopie",
+      "tritanopia": "Tritanopie"
     }
   },
   "ad": {

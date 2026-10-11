@@ -808,6 +808,14 @@
       "captions": "字幕",
       "captionsSub": "她说话时在屏幕上显示文字（语音关闭时，简短的提示也会以文字显示）",
       "test": "试听语音"
+    },
+    "colorVision": {
+      "label": "色觉",
+      "sub": "适用于色盲",
+      "standard": "关闭",
+      "protanopia": "红色盲",
+      "deuteranopia": "绿色盲",
+      "tritanopia": "蓝色盲"
     }
   },
   "ad": {

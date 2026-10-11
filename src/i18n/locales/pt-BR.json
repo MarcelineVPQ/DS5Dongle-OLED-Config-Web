@@ -811,6 +811,14 @@
       "captions": "Legendas",
       "captionsSub": "Mostra as palavras dela enquanto fala (e as confirmações curtas como texto quando a voz está desligada)",
       "test": "Testar a voz"
+    },
+    "colorVision": {
+      "label": "Visão de cores",
+      "sub": "Para daltonismo",
+      "standard": "Desligado",
+      "protanopia": "Protanopia",
+      "deuteranopia": "Deuteranopia",
+      "tritanopia": "Tritanopia"
     }
   },
   "ad": {

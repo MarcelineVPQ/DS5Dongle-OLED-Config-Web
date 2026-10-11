@@ -811,6 +811,14 @@
       "captions": "Untertitel",
       "captionsSub": "Zeigt ihre Worte, während sie spricht (und die kurzen Bestätigungen als Text, wenn die Stimme aus ist)",
       "test": "Stimme testen"
+    },
+    "colorVision": {
+      "label": "Farbsehen",
+      "sub": "Bei Farbenblindheit",
+      "standard": "Aus",
+      "protanopia": "Protanopie",
+      "deuteranopia": "Deuteranopie",
+      "tritanopia": "Tritanopie"
     }
   },
   "ad": {

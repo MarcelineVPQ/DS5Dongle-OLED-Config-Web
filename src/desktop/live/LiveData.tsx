@@ -5,6 +5,7 @@
 // controller (touch points, what's plugged in, mute) and the link (sensor
 // clock, update rate, round trip, signal, USB power).
 import { useEffect, useRef } from "react";
+import { AXIS_DASH, PALETTES } from "../colorVision";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import type { ConfigBody } from "../../protocol/config";
@@ -21,7 +22,8 @@ interface Props {
 }
 
 const HISTORY = 150;
-const AXIS_COLORS = ["#f43f5e", "#22c55e", "#3b82f6"]; // X red, Y green, Z blue (as in 3D tools)
+// X, Y, Z: red, green, blue as in 3D tools (or the Color vision palette), and
+// always a line pattern too (solid, dashed, dotted), so colour isn't needed.
 
 export default function LiveData({ input, rssi, config, firmware, onOpen }: Props) {
   const { t } = useTranslation();
@@ -174,7 +176,12 @@ function Xyz({ values }: { values: [number, number, number] }) {
     <div className="live-data-xyz">
       {(["X", "Y", "Z"] as const).map((axis, i) => (
         <span key={axis}>
-          <b style={{ color: AXIS_COLORS[i] }}>{axis}</b>
+          <b style={{ color: `var(--cv-axis-${i})` }}>
+            <svg className="axis-key" viewBox="0 0 16 4" aria-hidden="true">
+              <line x1="0" y1="2" x2="16" y2="2" stroke="currentColor" strokeWidth="2" strokeDasharray={AXIS_DASH[i].join(" ") || undefined} />
+            </svg>
+            {axis}
+          </b>
           <span>{values[i]}</span>
         </span>
       ))}
@@ -201,8 +208,10 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
     g.moveTo(0, ht / 2);
     g.lineTo(w, ht / 2);
     g.stroke();
+    const css = getComputedStyle(document.documentElement);
     for (let axis = 0; axis < 3; axis++) {
-      g.strokeStyle = AXIS_COLORS[axis];
+      g.strokeStyle = css.getPropertyValue(`--cv-axis-${axis}`).trim() || PALETTES.standard.axis[axis];
+      g.setLineDash(AXIS_DASH[axis]);
       g.lineWidth = 1.5;
       g.beginPath();
       h.forEach((sample, i) => {

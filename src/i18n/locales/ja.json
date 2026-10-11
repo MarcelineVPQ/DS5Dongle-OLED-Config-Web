@@ -808,6 +808,14 @@
       "captions": "字幕",
       "captionsSub": "話している間、言葉を画面に表示します（音声がオフのときも、短い確認メッセージを文字で表示）",
       "test": "音声をテスト"
+    },
+    "colorVision": {
+      "label": "色覚",
+      "sub": "色覚の多様性に対応",
+      "standard": "オフ",
+      "protanopia": "1型色覚（P型）",
+      "deuteranopia": "2型色覚（D型）",
+      "tritanopia": "3型色覚（T型）"
     }
   },
   "ad": {

@@ -10,7 +10,8 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 import type { DesktopSettings } from "../api";
-import { BusyButton, Toggle } from "../controls";
+import { BusyButton, Row, Toggle } from "../controls";
+import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { startTour } from "../tour/Tour";
 import DiagnosticsPage from "../pages/DiagnosticsPage";
@@ -265,6 +266,7 @@ function AppSettings() {
           <ThemeToggle />
           <LanguageToggle />
         </div>
+        <ColorVisionSetting />
       </section>
       {settings && (
         <section className="dk-card">
@@ -296,6 +298,23 @@ function AppSettings() {
         </div>
       </section>
     </>
+  );
+}
+
+// Colour-blind-safe palettes for the app's status colours and graphs.
+function ColorVisionSetting() {
+  const { t } = useTranslation();
+  const cv = useColorVision();
+  return (
+    <Row label={t("desktop.colorVision.label")} sub={t("desktop.colorVision.sub")}>
+      <select className="dk-select" aria-label={t("desktop.colorVision.label")} value={cv} onChange={(e) => setColorVision(e.target.value as ColorVision)}>
+        {COLOR_VISIONS.map((v) => (
+          <option key={v} value={v}>
+            {t(`desktop.colorVision.${v}`)}
+          </option>
+        ))}
+      </select>
+    </Row>
   );
 }
 

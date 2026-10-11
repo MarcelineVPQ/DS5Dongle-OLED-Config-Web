@@ -287,7 +287,8 @@ html[data-theme="dark"] .dk {
   justify-content: stretch;
 }
 .dk-row.stack .dk-seg {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   width: 100%;
 }
 .dk-row.stack .dk-seg button {
@@ -513,11 +514,22 @@ html[data-theme="dark"] .dk {
   font-family: var(--font-mono);
   font-size: 12px;
 }
+/* Status colours follow the Color vision setting (colorVision.ts); a problem
+   also gets a ⚠ so colour isn't the only sign. */
 .dk-bad {
-  color: var(--text-error);
+  color: var(--cv-bad, var(--text-error));
+}
+.dk-bad::before {
+  content: "⚠ ";
 }
 .dk-good {
-  color: var(--dk-accent);
+  color: var(--cv-good, var(--dk-accent));
+}
+.axis-key {
+  width: 14px;
+  height: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .dk-kv {
@@ -989,7 +1001,7 @@ html[data-theme="dark"] .dk {
   --ctl-stick: color-mix(in srgb, #000 45%, var(--bg-panel));
   --ctl-line: var(--text-muted);
   --ctl-line-dark: var(--ctl-line);
-  --ctl-on: var(--dk-accent);
+  --ctl-on: var(--cv-press, var(--dk-accent));
   display: flex;
   justify-content: center;
   min-height: 0;
@@ -1059,6 +1071,14 @@ html[data-theme="dark"] .dk {
 .live-ctl .on.hit {
   fill: var(--ctl-on);
   fill-opacity: 0.25;
+}
+/* Color vision modes: a press also gets a bright outline, so it shows by
+   brightness and shape, not hue alone (green on a red controller is exactly
+   the red-green clash). */
+[data-cv]:not([data-cv="standard"]) .live-ctl .on .cap,
+[data-cv]:not([data-cv="standard"]) .live-ctl .on .stk {
+  stroke: #fff;
+  stroke-width: 3px;
 }
 /* Selectable parts. */
 .live-ctl [data-part] {
@@ -1469,8 +1489,8 @@ html[data-theme="dark"] .dk {
   animation: dk-spin 1s linear infinite;
 }
 .tour-task.ok .tour-check {
-  border-color: #22c55e;
-  background: #22c55e;
+  border-color: var(--cv-good, #22c55e);
+  background: var(--cv-good, #22c55e);
   color: #fff;
   animation: tour-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1581,10 +1601,10 @@ html[data-theme="dark"] .dk {
   stroke: none;
 }
 .live-battery .level {
-  fill: #22c55e;
+  fill: var(--cv-good, #22c55e);
 }
 .live-battery.low .level {
-  fill: #ef4444;
+  fill: var(--cv-bad, #ef4444);
 }
 .live-battery .bolt {
   fill: #fde047;
