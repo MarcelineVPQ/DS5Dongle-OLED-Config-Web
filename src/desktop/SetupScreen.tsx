@@ -6,6 +6,7 @@
 //     dongle. A dongle only appears on USB once a controller is connected (it
 //     takes on the controller's identity), so the next step is pairing.
 import { useEffect, useState } from "react";
+import { errorText } from "../errorText";
 import { useTranslation } from "react-i18next";
 import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
@@ -53,7 +54,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       const version = await installFirmware(pico, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version });
     } catch (cause) {
-      setInstall({ phase: "failed", detail: cause instanceof Error ? cause.message : String(cause) });
+      setInstall({ phase: "failed", detail: errorText(cause) });
     }
   };
 

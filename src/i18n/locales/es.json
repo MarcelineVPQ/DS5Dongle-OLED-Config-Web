@@ -25,14 +25,11 @@
   },
   "notice": {
     "dismiss": "Cerrar",
-    "webhidUnavailable": "WebHID está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) en orígenes seguros. Mozilla no admite Firefox.",
     "webusbUnavailable": "WebUSB está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) y en la aplicación de escritorio. Firefox y Safari no lo admiten. La configuración requiere firmware v0.8 o posterior."
   },
   "device": {
     "label": "Dispositivo",
     "noDevice": "Sin dispositivo",
-    "openPrev": "Abrir",
-    "openPrevTitle": "Abrir el primer dispositivo autorizado anteriormente",
     "connect": "Conectar",
     "connectTitle": "Elegir un dispositivo HID DS5 Bridge"
   },
@@ -124,17 +121,7 @@
     "disableInactiveDisconnect": "Desactivar desconexión inactiva",
     "disablePicoLed": "Desactivar LED del Pico",
     "pollingRateLabel": "Tasa de sondeo",
-    "pollingRates": {
-      "250": "250 Hz",
-      "500": "500 Hz",
-      "1000": "Tiempo real (1 kHz)"
-    },
-    "controllerModeLabel": "Modo de controlador",
-    "controllerModes": {
-      "ds5": "DS5",
-      "dse": "DSE (Edge)",
-      "auto": "Auto (detectar)"
-    }
+    "controllerModeLabel": "Modo de controlador"
   },
   "lightbar": {
     "sectionTitle": "Barra de luz",
@@ -186,18 +173,6 @@
     "autoCycleOffTitle": "Reanudar auto-rotación",
     "connectLive": "Conectar para vista previa en vivo"
   },
-  "validation": {
-    "hapticsGain": "La ganancia háptica debe estar entre 1.0 y 6.0",
-    "speakerVolume": "El volumen del altavoz debe estar entre -100 dB y 0 dB",
-    "inactiveTime": "El tiempo inactivo debe estar entre 5 y 60 minutos",
-    "pollingRateMode": "El modo de tasa de sondeo debe ser 0, 1 o 2",
-    "audioBufferLength": "La longitud del búfer de audio debe estar entre 16 y 128",
-    "controllerMode": "El modo de controlador debe ser 0 (DS5), 1 (DSE) o 2 (Auto)",
-    "currentSlot": "El slot actual debe ser 0-3",
-    "autoHapticsEnable": "El modo Auto Haptics debe ser 0 (Off), 1 (Fallback), 2 (Mix) o 3 (Replace)",
-    "autoHapticsGain": "La ganancia Auto Haptics debe estar entre 0 % y 200 %",
-    "autoHapticsLowpass": "Auto Haptics LP debe ser 0-3 (80/160/250/400 Hz)"
-  },
   "footer": {
     "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para el firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics acreditado a <2>loteran/DS5Dongle</2>.",
     "assetCredit": "Gráficos del mando y los botones por <0>Zacksly</0> (<1>CC BY 3.0</1>, modificados)."
@@ -215,7 +190,6 @@
     "connect": "Conectar al Pico",
     "reconnect": "Reconectar",
     "connectTitle": "Autorizar el Pico en modo BOOTSEL",
-    "connected": "Conectado",
     "step3Title": "3. Grabar",
     "step3Hint": "Borra la región de flash, escribe el firmware nuevo y reinicia el Pico. Tarda unos segundos.",
     "flashButton": "Grabar ahora",
@@ -227,7 +201,6 @@
     "hideLogs": "Ocultar registros",
     "clearLogs": "Limpiar",
     "logEmpty": "Sin actividad aún.",
-    "done": "Listo — el Pico está reiniciando al nuevo firmware.",
     "info": {
       "device": "Dispositivo",
       "serial": "Número de serie",
@@ -250,17 +223,7 @@
   },
   "desktop": {
     "nav": {
-      "overview": "Resumen",
-      "settings": "Ajustes",
-      "lightbar": "Barra de luz",
-      "remap": "Reasignar",
-      "slots": "Slots de emparejamiento",
-      "triggers": "Prueba de gatillos",
-      "diagnostics": "Diagnóstico",
-      "firmware": "Firmware",
       "controller": "Mando",
-      "audio": "Audio y hápticos",
-      "buttons": "Botones",
       "dongle": "Dongle",
       "about": "Acerca de",
       "games": "Juegos"
@@ -286,13 +249,10 @@
       "cancel": "Cancelar"
     },
     "overview": {
-      "dongle": "Dongle",
       "firmware": "Firmware",
       "protocol": "Protocolo",
       "uptime": "Tiempo activo",
       "cpu": "CPU",
-      "controller": "Controlador",
-      "status": "Estado",
       "connected": "Conectado",
       "notConnected": "No conectado (pulsa PS)",
       "slot": "Slot de emparejamiento",
@@ -302,21 +262,9 @@
         "good": "Buena",
         "fair": "Regular",
         "weak": "Débil"
-      },
-      "fromIdeal": "dB del ideal",
-      "audio": "Audio",
-      "stream": "Audio del juego",
-      "streaming": "Transmitiendo",
-      "idle": "Inactivo",
-      "drops": "Fragmentos de audio perdidos",
-      "flashFails": "Guardados fallidos",
-      "settings": "Ajustes actuales",
-      "unsaved": "Cambios sin guardar",
-      "yes": "Sí",
-      "no": "No"
+      }
     },
     "settings": {
-      "audio": "Audio y hápticos",
       "power": "Energía",
       "idleDisconnect": "Desconectar en inactividad",
       "picoLed": "LED de estado del Pico",
@@ -397,7 +345,6 @@
     },
     "firmware": {
       "installed": "Firmware instalado",
-      "updatesSoon": "Las actualizaciones automáticas de firmware llegarán en la próxima versión.",
       "device": "Dispositivo",
       "rebooting": "Reiniciando… pulsa PS en el controlador cuando vuelva.",
       "reboot": "Reiniciar dongle",
@@ -408,7 +355,6 @@
       "factoryReset": "Restablecer de fábrica…",
       "resetHint": "El restablecimiento de fábrica restaura los ajustes predeterminados. Se conservan los emparejamientos y las reasignaciones de botones.",
       "latest": "Última",
-      "unknown": "desconocida (¿sin conexión?)",
       "update": "Actualizar a {{version}}",
       "upToDate": "Actualizado",
       "check": "Comprobar ahora",
@@ -532,21 +478,9 @@
       "undoShort": "Deshacer",
       "undoBlocked": "Cierra primero {{launchers}}: al cerrarse sobrescribiría los ajustes restaurados.",
       "ok": "Aceptar",
-      "allGames": "Todos los juegos ({{count}})",
       "history": "Historial de cambios",
       "attention_one": "{{count}} cambio recomendado",
       "attention_other": "{{count}} cambios recomendados",
-      "colGame": "Juego",
-      "colStore": "Tienda",
-      "colRunner": "Se ejecuta con",
-      "colDs": "DualSense",
-      "colStatus": "Estado",
-      "storeSideload": "Añadido a mano",
-      "supTriggers": "Gatillos + háptica",
-      "supHaptics": "Háptica",
-      "supXinput": "Solo estilo Xbox",
-      "missing": "{{name}} (no existe)",
-      "needsAttention": "requiere atención",
       "msg": {
         "label": {
           "defaultSteam": "Hacer de {{proton}} el predeterminado de Steam para juegos de Windows",
@@ -646,7 +580,6 @@
       "overview": "Tu mando",
       "app": "Ajustes de la app",
       "close": "Cerrar",
-      "back": "Mando",
       "haptics": "Háptica",
       "speaker": "Altavoz",
       "mic": "Micrófono",
@@ -655,7 +588,6 @@
       "remapDefault": "predeterminado",
       "remapHint": "Las reasignaciones se guardan en el dongle al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
       "remapApply": "Aplicar reasignación",
-      "remapApplying": "Aplicando…",
       "remapReset": "Restablecer todo",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
@@ -711,7 +643,6 @@
         "bodyHint": "Hápticos: intensidad y Audio Auto Haptics"
       },
       "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
-      "showPanel": "Ajustes",
       "autoInstall": "Instalar actualizaciones automáticamente",
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app"
     },
@@ -853,7 +784,6 @@
       "launcherDefault": "Predet. del launcher",
       "dualsense": "DualSense",
       "yourRating": "Tu valoración",
-      "jumpTo": "Ir a",
       "section": {
         "profile": "Perfil de mando",
         "setup": "Configuración",
@@ -965,11 +895,26 @@
       "size": "Tamaño en disco",
       "updated": "Última actualización",
       "fixedIn": "Corregido en {{version}}:",
-      "fix": {},
       "staleFix": "Valoraste esto antes de DS5 Dongle {{version}}, que corrigió algo en este juego.",
       "staleUpdateOn": "Valoraste esto antes de la actualización del juego del {{date}}.",
       "staleUpdate": "Valoraste esto antes de la última actualización del juego.",
-      "stillAccurate": "Sigue vigente"
+      "stillAccurate": "Sigue vigente",
+      "sort": "Ordenar",
+      "sorts": {
+        "name": "Nombre",
+        "recent": "Jugados recientemente",
+        "played": "Más jugados"
+      },
+      "filterHint": {
+        "all": "Todos los juegos instalados",
+        "profile": "Juegos con su propio perfil de mando",
+        "dualsense": "Juegos con gatillos adaptativos o hápticos HD nativos",
+        "attention": "Juegos con un ajuste pendiente"
+      },
+      "summary": "{{games}} juegos · {{dualsense}} con funciones DualSense · {{profiles}} con perfil",
+      "recent": "Jugados recientemente",
+      "tierLegend": "Qué significan los niveles",
+      "compatHint": "Los gatillos adaptativos y los hápticos HD solo llegan a los juegos de Windows con la versión Proton DualSense."
     },
     "dongleConsole": {
       "title": "Consola del dongle",

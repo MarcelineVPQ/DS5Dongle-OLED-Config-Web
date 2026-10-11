@@ -8,6 +8,7 @@
 // matching checksum, nothing downgrades, and every failure is reported to the
 // user verbatim.
 import { TRUSTED_KEYS, feedSignedBy } from "./feedSignature";
+import { errorText } from "../../src/errorText";
 import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
@@ -283,5 +284,5 @@ export class Updater {
 }
 
 function message(cause: unknown): string {
-  return cause instanceof Error ? cause.message : String(cause);
+  return errorText(cause);
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { usePoll } from "../usePoll";
@@ -30,7 +31,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
     try {
       await task();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
     } finally {
       setBusy(false);
       setConfirmWipe(false);

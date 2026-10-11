@@ -25,14 +25,11 @@
   },
   "notice": {
     "dismiss": "关闭",
-    "webhidUnavailable": "WebHID 仅在基于 Chromium 的浏览器(Chrome、Edge、Vivaldi、Brave、Opera)的安全源中可用。Mozilla 不支持 Firefox。",
     "webusbUnavailable": "WebUSB 可在基于 Chromium 的浏览器（Chrome、Edge、Vivaldi、Brave、Opera）和桌面应用中使用。Firefox 和 Safari 不支持。配置需要 v0.8 或更新的固件。"
   },
   "device": {
     "label": "设备",
     "noDevice": "无设备",
-    "openPrev": "打开",
-    "openPrevTitle": "打开先前已授权的第一个设备",
     "connect": "连接",
     "connectTitle": "选择一个 DS5 桥接 HID 设备"
   },
@@ -124,17 +121,7 @@
     "disableInactiveDisconnect": "禁用空闲断开",
     "disablePicoLed": "禁用 Pico LED",
     "pollingRateLabel": "轮询率",
-    "pollingRates": {
-      "250": "250 Hz",
-      "500": "500 Hz",
-      "1000": "实时 (1 kHz)"
-    },
-    "controllerModeLabel": "控制器模式",
-    "controllerModes": {
-      "ds5": "DS5",
-      "dse": "DSE (Edge)",
-      "auto": "自动(检测)"
-    }
+    "controllerModeLabel": "控制器模式"
   },
   "lightbar": {
     "sectionTitle": "灯条",
@@ -186,18 +173,6 @@
     "autoCycleOffTitle": "恢复自动循环",
     "connectLive": "连接以进行实时预览"
   },
-  "validation": {
-    "hapticsGain": "触感增益必须在 1.0 到 6.0 之间",
-    "speakerVolume": "扬声器音量必须在 -100 dB 到 0 dB 之间",
-    "inactiveTime": "空闲时间必须在 5 到 60 分钟之间",
-    "pollingRateMode": "轮询率模式必须为 0、1 或 2",
-    "audioBufferLength": "音频缓冲区长度必须在 16 到 128 之间",
-    "controllerMode": "控制器模式必须为 0 (DS5)、1 (DSE) 或 2 (Auto)",
-    "currentSlot": "当前槽位必须为 0-3",
-    "autoHapticsEnable": "自动触感模式必须为 0 (关闭)、1 (回退)、2 (混合) 或 3 (替换)",
-    "autoHapticsGain": "自动触感增益必须在 0 % 到 200 % 之间",
-    "autoHapticsLowpass": "自动触感低通必须为 0-3 (80/160/250/400 Hz)"
-  },
   "footer": {
     "credits": "<0>awalol/ds5dongle-config-web</0> 的分叉,适用于 <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> 固件。音频自动触感 DSP 归功于 <2>loteran/DS5Dongle</2>。",
     "assetCredit": "手柄与按键图形由 <0>Zacksly</0> 提供（<1>CC BY 3.0</1>，已修改）。"
@@ -215,7 +190,6 @@
     "connect": "连接 Pico",
     "reconnect": "重新连接",
     "connectTitle": "授权 BOOTSEL 模式的 Pico",
-    "connected": "已连接",
     "step3Title": "3. 刷写",
     "step3Hint": "擦除闪存区域,写入新固件,然后重启 Pico。需要几秒钟。",
     "flashButton": "立即刷写",
@@ -227,7 +201,6 @@
     "hideLogs": "隐藏日志",
     "clearLogs": "清除",
     "logEmpty": "暂无活动。",
-    "done": "完成 — Pico 正在重启到新固件。",
     "info": {
       "device": "设备",
       "serial": "序列号",
@@ -250,17 +223,7 @@
   },
   "desktop": {
     "nav": {
-      "overview": "概览",
-      "settings": "设置",
-      "lightbar": "灯条",
-      "remap": "重映射",
-      "slots": "配对槽位",
-      "triggers": "扳机测试",
-      "diagnostics": "诊断",
-      "firmware": "固件",
       "controller": "手柄",
-      "audio": "音频与触感",
-      "buttons": "按键",
       "dongle": "接收器",
       "about": "关于",
       "games": "游戏"
@@ -286,13 +249,10 @@
       "cancel": "取消"
     },
     "overview": {
-      "dongle": "接收器",
       "firmware": "固件",
       "protocol": "协议",
       "uptime": "运行时间",
       "cpu": "CPU",
-      "controller": "控制器",
-      "status": "状态",
       "connected": "已连接",
       "notConnected": "未连接(请按 PS)",
       "slot": "配对槽位",
@@ -302,21 +262,9 @@
         "good": "良好",
         "fair": "一般",
         "weak": "较弱"
-      },
-      "fromIdeal": "dB(与理想值之差)",
-      "audio": "音频",
-      "stream": "游戏音频",
-      "streaming": "传输中",
-      "idle": "空闲",
-      "drops": "丢弃的音频块",
-      "flashFails": "保存失败次数",
-      "settings": "当前设置",
-      "unsaved": "未保存的更改",
-      "yes": "是",
-      "no": "否"
+      }
     },
     "settings": {
-      "audio": "音频和触感",
       "power": "电源",
       "idleDisconnect": "空闲时断开",
       "picoLed": "Pico 状态 LED",
@@ -397,7 +345,6 @@
     },
     "firmware": {
       "installed": "已安装固件",
-      "updatesSoon": "固件自动更新将在下一个版本中推出。",
       "device": "设备",
       "rebooting": "正在重启… 恢复后请按控制器上的 PS。",
       "reboot": "重启接收器",
@@ -408,7 +355,6 @@
       "factoryReset": "恢复出厂设置…",
       "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。",
       "latest": "最新",
-      "unknown": "未知（离线？）",
       "update": "更新到 {{version}}",
       "upToDate": "已是最新",
       "check": "立即检查",
@@ -530,20 +476,8 @@
       "undoShort": "撤销",
       "undoBlocked": "请先关闭 {{launchers}}：它退出时会覆盖已恢复的设置。",
       "ok": "确定",
-      "allGames": "全部游戏（{{count}}）",
       "history": "更改记录",
       "attention_other": "{{count}} 项建议更改",
-      "colGame": "游戏",
-      "colStore": "商店",
-      "colRunner": "运行环境",
-      "colDs": "DualSense",
-      "colStatus": "状态",
-      "storeSideload": "手动添加",
-      "supTriggers": "扳机 + 触觉",
-      "supHaptics": "触觉",
-      "supXinput": "仅 Xbox 模式",
-      "missing": "{{name}}（缺失）",
-      "needsAttention": "需要处理",
       "msg": {
         "label": {
           "defaultSteam": "将 {{proton}} 设为 Steam 运行 Windows 游戏的默认版本",
@@ -643,7 +577,6 @@
       "overview": "你的手柄",
       "app": "应用设置",
       "close": "关闭",
-      "back": "手柄",
       "haptics": "触觉",
       "speaker": "扬声器",
       "mic": "麦克风",
@@ -652,7 +585,6 @@
       "remapDefault": "默认",
       "remapHint": "点击“应用”后重映射会写入接收器，在任何游戏中都有效，电脑无需安装软件。",
       "remapApply": "应用重映射",
-      "remapApplying": "正在应用…",
       "remapReset": "全部重置",
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
@@ -708,7 +640,6 @@
         "bodyHint": "触觉反馈：强度和音频自动触觉"
       },
       "hidePanel": "隐藏设置面板（手柄会变大）",
-      "showPanel": "设置",
       "autoInstall": "自动安装更新",
       "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本"
     },
@@ -848,7 +779,6 @@
       "launcherDefault": "启动器默认",
       "dualsense": "DualSense",
       "yourRating": "你的评分",
-      "jumpTo": "跳转到",
       "section": {
         "profile": "手柄配置",
         "setup": "设置",
@@ -959,11 +889,26 @@
       "size": "磁盘占用",
       "updated": "最后更新",
       "fixedIn": "已在 {{version}} 中修复:",
-      "fix": {},
       "staleFix": "你评分时的 DS5 Dongle 版本早于 {{version}},该版本修复了此游戏的某个问题。",
       "staleUpdateOn": "你评分时早于此游戏 {{date}} 的更新。",
       "staleUpdate": "你评分时早于此游戏的最近一次更新。",
-      "stillAccurate": "仍然准确"
+      "stillAccurate": "仍然准确",
+      "sort": "排序",
+      "sorts": {
+        "name": "名称",
+        "recent": "最近游玩",
+        "played": "游玩最多"
+      },
+      "filterHint": {
+        "all": "所有已安装的游戏",
+        "profile": "有专属手柄配置文件的游戏",
+        "dualsense": "原生支持自适应扳机或 HD 震动的游戏",
+        "attention": "有待处理设置更改的游戏"
+      },
+      "summary": "{{games}} 款游戏 · {{dualsense}} 款支持 DualSense 功能 · {{profiles}} 款有配置文件",
+      "recent": "最近游玩",
+      "tierLegend": "各等级的含义",
+      "compatHint": "自适应扳机和 HD 震动只有通过 DualSense Proton 版本才能传到 Windows 游戏。"
     },
     "dongleConsole": {
       "title": "接收器控制台",

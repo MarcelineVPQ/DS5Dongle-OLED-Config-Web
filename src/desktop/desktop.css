@@ -2156,16 +2156,6 @@ html[data-theme="dark"] .dk {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.gp-jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px var(--dk-pad) 0;
-}
-.gp-jump .dk-btn {
-  height: 24px;
-  font-size: var(--dk-small);
-}
 .gp-cols {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -2539,4 +2529,136 @@ html[data-theme="dark"] .dk {
   color: var(--text-muted);
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 10.5px;
+}
+
+/* Library: sort, Home's summary and recently-played shelf. */
+.lib-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.lib-sort .dk-select {
+  height: 24px;
+  font-size: var(--dk-small);
+}
+.lib-row img {
+  object-position: center top;
+}
+.lib-home-pane .dk-stack {
+  max-width: none;
+}
+.lib-shelf-wrap {
+  margin-bottom: var(--dk-gap);
+}
+.lib-summary {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
+.lib-shelf-title {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.lib-shelf {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: thin;
+}
+.lib-shelf > li {
+  flex: 0 0 104px;
+  width: 104px;
+  min-width: 0;
+}
+.lib-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+.lib-tile:hover,
+.lib-tile:focus-visible {
+  border-color: var(--dk-sel-border);
+}
+.lib-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+.lib-tile-title {
+  display: block;
+  padding: 4px 6px;
+  overflow: hidden;
+  font-size: var(--dk-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lib-tile-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--dk-accent);
+  color: var(--dk-on-accent);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+/* Narrow windows: a pinned rail floats over the page instead of taking room. */
+@media (max-width: 1000px) {
+  .rail-slot.pinned {
+    width: var(--rail-w-collapsed);
+  }
+  .rail-slot.pinned .app-rail {
+    width: var(--rail-w-collapsed);
+  }
+  .rail-slot.pinned .rail-label {
+    opacity: 0;
+  }
+  .rail-slot .app-rail:hover,
+  .rail-slot .app-rail:focus-within {
+    width: var(--rail-w-expanded);
+    box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
+  }
+  .rail-slot .app-rail:hover .rail-label,
+  .rail-slot .app-rail:focus-within .rail-label {
+    opacity: 1;
+  }
+}
+.gp-legend {
+  margin: 0 0 8px;
+}
+.gp-legend summary {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  cursor: pointer;
+}
+@keyframes gp-flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 2px var(--dk-sel-border);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+.gp-flash {
+  animation: gp-flash 1.2s ease-out;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 
@@ -26,7 +27,7 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
       await client.previewTrigger(preset);
       setActive(preset);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
     }
   };
 

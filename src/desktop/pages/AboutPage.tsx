@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { errorText } from "../../errorText";
 import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
@@ -75,7 +76,7 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
     window.desktop
       .firmwareChangelog()
       .then(setFirmware)
-      .catch((cause) => setFirmwareError(cause instanceof Error ? cause.message : String(cause)));
+      .catch((cause) => setFirmwareError(errorText(cause)));
   }, [tab, firmware]);
 
   const tabs: Array<{ id: AboutTab; label: string }> = [

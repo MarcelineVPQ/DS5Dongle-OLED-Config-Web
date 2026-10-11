@@ -9,6 +9,8 @@
 //   -> apply (backed up first) -> Undo.
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { errorText } from "../../errorText";
+import { readPref, writePref } from "../storage";
 import GameLibrary from "../library/GameLibrary";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { GameProfileState } from "../library/useGameProfile";
@@ -28,20 +30,14 @@ const DECLINED_KEY = "ds5-games-declined";
 
 export function loadDeclined(): Set<string> {
   try {
-    const raw = window.localStorage.getItem(DECLINED_KEY);
+    const raw = readPref(DECLINED_KEY);
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
   } catch {
-    return new Set();
+    return new Set(); // unreadable: nothing declined
   }
 }
 
-function saveDeclined(ids: Set<string>): void {
-  try {
-    window.localStorage.setItem(DECLINED_KEY, JSON.stringify([...ids]));
-  } catch {
-    // storage unavailable: the choice lasts for this visit only
-  }
-}
+const saveDeclined = (ids: Set<string>) => writePref(DECLINED_KEY, JSON.stringify([...ids]));
 
 // Translate a main-process message (see Msg in games/types.ts); params may be messages too.
 export function useMsg(): (m: Msg) => string {
@@ -152,7 +148,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       try {
         await receive(await desktop.gamesScan(), keepSelection);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : String(cause));
+        setError(errorText(cause));
       }
     },
     [desktop, receive],
@@ -163,7 +159,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
     let live = true;
     desktop.gamesScan().then(
       (r) => live && void receive(r, false),
-      (cause: unknown) => live && setError(cause instanceof Error ? cause.message : String(cause)),
+      (cause: unknown) => live && setError(errorText(cause)),
     );
     return () => {
       live = false;
@@ -226,7 +222,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       if (r.applied.length > 0 && r.applied.every((a) => a.ok)) void say("app_games_ready");
       await rescan();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
     } finally {
       setBusy(null);
     }
@@ -249,7 +245,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       }
       await rescan();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
     } finally {
       setBusy(null);
     }
@@ -264,7 +260,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       setProtonMessage(r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.message);
       await rescan();
     } catch (cause) {
-      setProtonMessage(cause instanceof Error ? cause.message : String(cause));
+      setProtonMessage(errorText(cause));
     } finally {
       setProtonProgress(null);
       setBusy(null);

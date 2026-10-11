@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer } from "../../update/manifest";
@@ -23,7 +24,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
       await task();
       setMessage(done);
     } catch (cause) {
-      setMessage(cause instanceof Error ? cause.message : String(cause));
+      setMessage(errorText(cause));
     } finally {
       setBusy(false);
       setConfirmReset(false);

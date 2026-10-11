@@ -25,14 +25,11 @@
   },
   "notice": {
     "dismiss": "閉じる",
-    "webhidUnavailable": "WebHID は Chromium ベースのブラウザ (Chrome、Edge、Vivaldi、Brave、Opera) の安全なオリジンで利用できます。Mozilla は Firefox をサポートしていません。",
     "webusbUnavailable": "WebUSB は Chromium ベースのブラウザー（Chrome、Edge、Vivaldi、Brave、Opera）とデスクトップアプリで利用できます。Firefox と Safari は非対応です。設定にはファームウェア v0.8 以降が必要です。"
   },
   "device": {
     "label": "デバイス",
     "noDevice": "デバイスなし",
-    "openPrev": "開く",
-    "openPrevTitle": "以前に承認した最初のデバイスを開く",
     "connect": "接続",
     "connectTitle": "DS5 Bridge HID デバイスを選択"
   },
@@ -124,17 +121,7 @@
     "disableInactiveDisconnect": "非アクティブ時の切断を無効化",
     "disablePicoLed": "Pico LED を無効化",
     "pollingRateLabel": "ポーリングレート",
-    "pollingRates": {
-      "250": "250 Hz",
-      "500": "500 Hz",
-      "1000": "リアルタイム (1 kHz)"
-    },
-    "controllerModeLabel": "コントローラモード",
-    "controllerModes": {
-      "ds5": "DS5",
-      "dse": "DSE (Edge)",
-      "auto": "自動 (検出)"
-    }
+    "controllerModeLabel": "コントローラモード"
   },
   "lightbar": {
     "sectionTitle": "ライトバー",
@@ -186,18 +173,6 @@
     "autoCycleOffTitle": "自動サイクルを再開",
     "connectLive": "ライブプレビューに接続"
   },
-  "validation": {
-    "hapticsGain": "Haptics ゲインは 1.0 から 6.0 の間でなければなりません",
-    "speakerVolume": "スピーカー音量は -100 dB から 0 dB の間でなければなりません",
-    "inactiveTime": "非アクティブ時間は 5 分から 60 分の間でなければなりません",
-    "pollingRateMode": "ポーリングレートモードは 0、1、または 2 でなければなりません",
-    "audioBufferLength": "オーディオバッファ長は 16 から 128 の間でなければなりません",
-    "controllerMode": "コントローラモードは 0 (DS5)、1 (DSE)、または 2 (Auto) でなければなりません",
-    "currentSlot": "現在のスロットは 0-3 でなければなりません",
-    "autoHapticsEnable": "Auto Haptics モードは 0 (Off)、1 (Fallback)、2 (Mix)、または 3 (Replace) でなければなりません",
-    "autoHapticsGain": "Auto Haptics ゲインは 0 % から 200 % の間でなければなりません",
-    "autoHapticsLowpass": "Auto Haptics LP は 0-3 (80/160/250/400 Hz) でなければなりません"
-  },
   "footer": {
     "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。",
     "assetCredit": "コントローラーとボタンのアートワーク: <0>Zacksly</0>（<1>CC BY 3.0</1>、改変あり）。"
@@ -215,7 +190,6 @@
     "connect": "Pico に接続",
     "reconnect": "再接続",
     "connectTitle": "BOOTSEL モードの Pico を認証",
-    "connected": "接続済み",
     "step3Title": "3. 書き込み",
     "step3Hint": "フラッシュ領域を消去し、新しいファームウェアを書き込み、Pico を再起動します。数秒かかります。",
     "flashButton": "今すぐ書き込み",
@@ -227,7 +201,6 @@
     "hideLogs": "ログを非表示",
     "clearLogs": "クリア",
     "logEmpty": "まだ活動はありません。",
-    "done": "完了 — Pico は新しいファームウェアで再起動中です。",
     "info": {
       "device": "デバイス",
       "serial": "シリアル",
@@ -250,17 +223,7 @@
   },
   "desktop": {
     "nav": {
-      "overview": "概要",
-      "settings": "設定",
-      "lightbar": "ライトバー",
-      "remap": "再割り当て",
-      "slots": "ペアリングスロット",
-      "triggers": "トリガーテスト",
-      "diagnostics": "診断",
-      "firmware": "ファームウェア",
       "controller": "コントローラー",
-      "audio": "オーディオと触覚",
-      "buttons": "ボタン",
       "dongle": "ドングル",
       "about": "情報",
       "games": "ゲーム"
@@ -286,13 +249,10 @@
       "cancel": "キャンセル"
     },
     "overview": {
-      "dongle": "ドングル",
       "firmware": "ファームウェア",
       "protocol": "プロトコル",
       "uptime": "稼働時間",
       "cpu": "CPU",
-      "controller": "コントローラー",
-      "status": "状態",
       "connected": "接続済み",
       "notConnected": "未接続 (PS を押してください)",
       "slot": "ペアリングスロット",
@@ -302,21 +262,9 @@
         "good": "良好",
         "fair": "普通",
         "weak": "弱い"
-      },
-      "fromIdeal": "dB (理想値との差)",
-      "audio": "オーディオ",
-      "stream": "ゲーム音声",
-      "streaming": "ストリーミング中",
-      "idle": "アイドル",
-      "drops": "ドロップしたオーディオチャンク",
-      "flashFails": "保存の失敗",
-      "settings": "現在の設定",
-      "unsaved": "未保存の変更",
-      "yes": "はい",
-      "no": "いいえ"
+      }
     },
     "settings": {
-      "audio": "オーディオ & Haptics",
       "power": "電源",
       "idleDisconnect": "アイドル時に切断",
       "picoLed": "Pico ステータス LED",
@@ -397,7 +345,6 @@
     },
     "firmware": {
       "installed": "インストール済みファームウェア",
-      "updatesSoon": "ファームウェアの自動更新は次のビルドで対応予定です。",
       "device": "デバイス",
       "rebooting": "再起動中… 復帰したらコントローラーの PS を押してください。",
       "reboot": "ドングルを再起動",
@@ -408,7 +355,6 @@
       "factoryReset": "初期化…",
       "resetHint": "初期化すると設定が既定値に戻ります。ペアリングとボタン割り当ては保持されます。",
       "latest": "最新",
-      "unknown": "不明（オフライン？）",
       "update": "{{version}} に更新",
       "upToDate": "最新です",
       "check": "今すぐ確認",
@@ -530,20 +476,8 @@
       "undoShort": "元に戻す",
       "undoBlocked": "先に {{launchers}} を終了してください。終了時に復元した設定が上書きされてしまいます。",
       "ok": "OK",
-      "allGames": "すべてのゲーム（{{count}}）",
       "history": "変更履歴",
       "attention_other": "おすすめの変更 {{count}} 件",
-      "colGame": "ゲーム",
-      "colStore": "ストア",
-      "colRunner": "実行環境",
-      "colDs": "DualSense",
-      "colStatus": "状態",
-      "storeSideload": "手動追加",
-      "supTriggers": "トリガー + ハプティクス",
-      "supHaptics": "ハプティクス",
-      "supXinput": "Xbox 方式のみ",
-      "missing": "{{name}}（見つかりません）",
-      "needsAttention": "要対応",
       "msg": {
         "label": {
           "defaultSteam": "{{proton}} を Steam の Windows ゲーム用の既定にする",
@@ -643,7 +577,6 @@
       "overview": "あなたのコントローラー",
       "app": "アプリ設定",
       "close": "閉じる",
-      "back": "コントローラー",
       "haptics": "ハプティクス",
       "speaker": "スピーカー",
       "mic": "マイク",
@@ -652,7 +585,6 @@
       "remapDefault": "標準",
       "remapHint": "割り当ては「適用」を押すとドングルに保存され、PC にソフトなしでどのゲームでも有効です。",
       "remapApply": "割り当てを適用",
-      "remapApplying": "適用しています…",
       "remapReset": "すべてリセット",
       "remapResetHint": "すべてのボタンを元に戻す",
       "pull": "押し込み",
@@ -708,7 +640,6 @@
         "bodyHint": "ハプティクス：強さとオーディオ自動ハプティクス"
       },
       "hidePanel": "設定パネルを隠す（コントローラーが大きくなります）",
-      "showPanel": "設定",
       "autoInstall": "アップデートを自動でインストール",
       "autoInstallSub": "バックグラウンドでダウンロードして検証し、次にアプリを開いたときに新しいバージョンで起動します"
     },
@@ -848,7 +779,6 @@
       "launcherDefault": "ランチャー既定",
       "dualsense": "DualSense",
       "yourRating": "あなたの評価",
-      "jumpTo": "移動先",
       "section": {
         "profile": "コントローラープロファイル",
         "setup": "セットアップ",
@@ -959,11 +889,26 @@
       "size": "ディスク使用量",
       "updated": "最終更新",
       "fixedIn": "{{version}} で修正:",
-      "fix": {},
       "staleFix": "このゲームの問題を修正した DS5 Dongle {{version}} より前に評価しました。",
       "staleUpdateOn": "{{date}} のゲーム更新より前に評価しました。",
       "staleUpdate": "ゲームの最新の更新より前に評価しました。",
-      "stillAccurate": "今も正確"
+      "stillAccurate": "今も正確",
+      "sort": "並べ替え",
+      "sorts": {
+        "name": "名前",
+        "recent": "最近プレイ",
+        "played": "プレイ時間順"
+      },
+      "filterHint": {
+        "all": "インストール済みのすべてのゲーム",
+        "profile": "専用のコントローラープロファイルがあるゲーム",
+        "dualsense": "アダプティブトリガーまたは HD ハプティクスにネイティブ対応のゲーム",
+        "attention": "設定の変更待ちがあるゲーム"
+      },
+      "summary": "{{games}} 本のゲーム · DualSense 機能対応 {{dualsense}} 本 · プロファイルあり {{profiles}} 本",
+      "recent": "最近プレイ",
+      "tierLegend": "ランクの意味",
+      "compatHint": "アダプティブトリガーと HD ハプティクスは、DualSense 版 Proton を使ったときだけ Windows ゲームに届きます。"
     },
     "dongleConsole": {
       "title": "ドングルコンソール",

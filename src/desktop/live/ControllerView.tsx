@@ -2,7 +2,8 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useFlagPref } from "../storage";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
@@ -73,25 +74,11 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
 
   // The settings panel can be hidden on the start view, so the controller
   // gets the whole width; opening any part (or "Settings") brings it back.
-  const [panelHidden, setPanelHidden] = useState(() => {
-    try {
-      return window.localStorage.getItem(PANEL_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  const hidePanel = (hide: boolean) => {
-    setPanelHidden(hide);
-    try {
-      window.localStorage.setItem(PANEL_KEY, hide ? "1" : "0");
-    } catch {
-      // storage blocked: lasts for this session
-    }
-  };
+  const [panelHidden, hidePanel] = useFlagPref(PANEL_KEY);
   const collapsed = panelHidden && view === "overview";
   // The tour points at the settings list, so it brings the panel back.
   useEffect(() => {
-    const show = () => setPanelHidden(false);
+    const show = () => hidePanel(false);
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
   }, []);

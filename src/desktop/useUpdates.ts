@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { errorText } from "../errorText";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { isNewer, parseVersion } from "../update/manifest";
 import type { FirmwareLookup, LatestFirmware, UpdateState } from "./api";
@@ -87,7 +88,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       // return isn't a failure: keep waiting, and ask for PS.
       timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
     } catch (cause) {
-      setState({ phase: "failed", detail: cause instanceof Error ? cause.message : String(cause) });
+      setState({ phase: "failed", detail: errorText(cause) });
     }
   }, [appUpdate.phase, bridge.client, state.phase]);
 

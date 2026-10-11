@@ -7,6 +7,7 @@
 // with no user input; the rule file is copied from the app's own resources
 // (through a temporary copy root can read).
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { errorText } from "../../src/errorText";
 import { tmpdir } from "node:os";
 import { execFile } from "node:child_process";
 import { join } from "node:path";
@@ -68,7 +69,7 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     }
     chmodSync(dir, 0o755);
   } catch (cause) {
-    return Promise.resolve({ ok: false, message: `Setup failed: ${cause instanceof Error ? cause.message : String(cause)}` });
+    return Promise.resolve({ ok: false, message: `Setup failed: ${errorText(cause)}` });
   }
   // Positional args ($1/$2 = rule source/dest, $3/$4 = profile source/dest,
   // empty when not needed) instead of string interpolation. Exit 3 = no

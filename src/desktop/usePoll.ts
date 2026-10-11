@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { errorText } from "../errorText";
 
 // Calls `read` every `intervalMs` while `enabled`, never overlapping two reads.
 // Returns the latest value and the latest error (null once a read succeeds).
@@ -22,7 +23,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
           setError(null);
         }
       } catch (cause) {
-        if (!stopped) setError(cause instanceof Error ? cause.message : String(cause));
+        if (!stopped) setError(errorText(cause));
       }
       if (!stopped) timer = setTimeout(tick, intervalMs);
     };

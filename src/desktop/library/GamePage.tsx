@@ -3,6 +3,8 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { errorText } from "../../errorText";
+import { settingsFrom } from "./useGameProfile";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls";
@@ -30,7 +32,16 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const scroller = useRef<HTMLDivElement>(null);
   const support = supportOf(game);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
-  const jump = (id: string) => scroller.current?.querySelector(`#gp-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // A stat that points at a frame: bring it into view and flash it, so the
+  // click always shows something even when the frame is already on screen.
+  const jump = (id: string) => {
+    const el = scroller.current?.querySelector<HTMLElement>(`#gp-${id}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    el.classList.remove("gp-flash");
+    void el.offsetWidth; // restart the animation
+    el.classList.add("gp-flash");
+  };
   // Scroll back to the top when another game is opened.
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
@@ -57,14 +68,6 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <Stat label={t("desktop.library.dualsense")} value={`${TIER_ICON[support.tier]} ${t(`desktop.library.tier.${support.tier}`)}`} onClick={() => jump("support")} />
         {record?.mine?.rating && <Stat label={t("desktop.library.yourRating")} value={"★".repeat(record.mine.rating)} />}
       </div>
-
-      <nav className="gp-jump" aria-label={t("desktop.library.jumpTo")}>
-        {(["profile", "setup", "rating", "reviews", "configs", "compat", "support", "notes"] as const).map((id) => (
-          <button key={id} type="button" className="dk-btn" onClick={() => jump(id)}>
-            {t(`desktop.library.section.${id}`)}
-          </button>
-        ))}
-      </nav>
 
       <div className="gp-cols">
         <div className="gp-col">
@@ -117,21 +120,6 @@ function Stat({ label, value, accent, onClick }: { label: string; value: string;
 }
 
 // ---- Controller profile ----
-function settingsFrom(c: UseDs5BridgeResult["config"]): ProfileSettings | null {
-  if (!c) return null;
-  return {
-    hapticsGain: c.hapticsGain,
-    autoHapticsEnable: c.autoHapticsEnable,
-    autoHapticsGain: c.autoHapticsGain,
-    autoHapticsLowpass: c.autoHapticsLowpass,
-    speakerVolume: c.speakerVolume,
-    lightbarMode: c.lightbarMode,
-    lbFavR: [...c.lbFavR],
-    lbFavG: [...c.lbFavG],
-    lbFavB: [...c.lbFavB],
-    btMicEnable: c.btMicEnable,
-  };
-}
 
 function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: GameEntry; record?: GameRecord; running: boolean; bridge: UseDs5BridgeResult; onLibrary: (f: LibraryFile) => void }) {
   const { t } = useTranslation();
@@ -141,7 +129,7 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
   useEffect(() => {
     setDraft(saved ?? null);
   }, [game.key, saved]);
-  const current = settingsFrom(bridge.config);
+  const current = bridge.config ? settingsFrom(bridge.config) : null;
 
   // Every edit is stored (debounced); applying it to the dongle while the
   // game runs is the profile hook's job.
@@ -252,7 +240,7 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
       setNote(r.applied.length > 0 && r.applied.every((a) => a.ok) && r.blockedBy.length === 0 ? t("desktop.library.setupDone") : t("desktop.library.setupFailed"));
       onRescan();
     } catch (cause) {
-      setNote(cause instanceof Error ? cause.message : String(cause));
+      setNote(errorText(cause));
     } finally {
       setBusy(false);
       setConfirm(false);
@@ -320,6 +308,7 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
       <Row label={t("desktop.library.recommended")} stack>
         <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
       </Row>
+      {native && <p className="dk-hint">{t("desktop.library.compatHint")}</p>}
       {game.usesOurProton ? (
         <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>
       ) : runnerFix ? (
@@ -367,6 +356,19 @@ function SupportFrame({ game }: { game: GameEntry }) {
           ))}
         </ul>
       )}
+      <details className="gp-legend">
+        <summary>{t("desktop.library.tierLegend")}</summary>
+        <ul className="dk-review">
+          {(["verified", "works", "needs-setup", "partial", "broken", "unknown"] as const).map((tier) => (
+            <li key={tier}>
+              <b>
+                {TIER_ICON[tier]} {t(`desktop.library.tier.${tier}`)}
+              </b>{" "}
+              <span className="dk-hint">{t(`desktop.library.tierHint.${tier}`)}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
       <ul className="gp-features">
         {(["triggers", "haptics", "speaker", "mic", "lightbar"] as const).map((f) => (
           <li key={f} title={t(`desktop.library.feature.${s.features[f]}`)}>

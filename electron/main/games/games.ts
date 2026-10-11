@@ -4,6 +4,7 @@
 // re-scans and resolves ids against fresh state: the renderer can never name a
 // file, a value, or a stale plan.
 import { createHash } from "node:crypto";
+import { errorText } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { parseDocument } from "yaml";
@@ -440,7 +441,7 @@ export async function applyFixes(fresh: Scan, fixIds: string[], deps: ApplyDeps)
       if (post.kind === "restart-wireplumber") await deps.restartWirePlumber();
       else await deps.setCardProfile(post.card, post.profile);
     } catch (cause) {
-      postErrors.set(key, msg(post.kind === "restart-wireplumber" ? "result.restartFailed" : "result.profileFailed", { error: cause instanceof Error ? cause.message : String(cause) }));
+      postErrors.set(key, msg(post.kind === "restart-wireplumber" ? "result.restartFailed" : "result.profileFailed", { error: errorText(cause) }));
     }
   }
   for (const p of chosen) {

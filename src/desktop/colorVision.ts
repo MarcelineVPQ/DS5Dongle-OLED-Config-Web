@@ -8,6 +8,7 @@
 // Colour never carries meaning alone anyway (line patterns, ⚠ markers,
 // shapes), so this is an extra, not the only safeguard. Kept per computer.
 import { useSyncExternalStore } from "react";
+import { readPref, writePref } from "./storage";
 
 // Named like games name them. Protanopia and deuteranopia (both red-green)
 // share one palette: Okabe–Ito is designed for both.
@@ -38,13 +39,8 @@ export const PALETTES: Record<ColorVision, Palette> = {
 export const AXIS_DASH: ReadonlyArray<number[]> = [[], [6, 4], [1.5, 3]];
 
 const KEY = "ds5.colorVision";
-let current: ColorVision = "standard";
-try {
-  const stored = window.localStorage.getItem(KEY);
-  if (stored && (COLOR_VISIONS as readonly string[]).includes(stored)) current = stored as ColorVision;
-} catch {
-  // storage unavailable: standard
-}
+const stored = readPref(KEY);
+let current: ColorVision = stored && (COLOR_VISIONS as readonly string[]).includes(stored) ? (stored as ColorVision) : "standard";
 const listeners = new Set<() => void>();
 
 // Standard sets nothing: the theme's own colours apply (CSS falls back).
@@ -67,11 +63,7 @@ apply();
 
 export function setColorVision(next: ColorVision): void {
   current = next;
-  try {
-    window.localStorage.setItem(KEY, next);
-  } catch {
-    // the choice lasts for this session
-  }
+  writePref(KEY, next);
   apply();
   listeners.forEach((l) => l());
 }

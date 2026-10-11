@@ -4,6 +4,7 @@
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
 import { homedir } from "node:os";
+import { errorText } from "../../../src/errorText";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
 import type { ArtKind, GameEntry, GameInfo } from "../../../src/desktop/games/types";
@@ -30,7 +31,7 @@ export interface GamesServiceDeps {
   onProtonProgress: (p: ProtonProgress) => void;
 }
 
-const message = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
+const message = (cause: unknown) => errorText(cause);
 
 export class GamesService {
   private readonly home = homedir();

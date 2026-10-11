@@ -5,6 +5,7 @@
 // connected; replayable from App settings. Respects reduced motion (the CSS
 // drops the glide and the pulse).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { readPref, writePref } from "../storage";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
@@ -20,20 +21,11 @@ export const TOUR_ENABLED = false;
 const PAD = 10;
 
 export function tourDone(): boolean {
-  try {
-    return window.localStorage.getItem(DONE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readPref(DONE_KEY) === "1";
 }
 
-function markDone(): void {
-  try {
-    window.localStorage.setItem(DONE_KEY, "1");
-  } catch {
-    // storage blocked: the tour may show again next time
-  }
-}
+// Storage blocked: the tour may show again next time.
+const markDone = () => writePref(DONE_KEY, "1");
 
 // App settings' "Show the tour again" asks for it through this event.
 export const TOUR_EVENT = "ds5:start-tour";

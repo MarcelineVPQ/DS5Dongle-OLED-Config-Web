@@ -3,7 +3,8 @@
 // pinned open it takes its full width. Ctrl+B pins/unpins. The bottom shows
 // the dongle's status (a colored dot plus a symbol, so it never relies on
 // color alone) and the pin.
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useFlagPref } from "./storage";
 import { useTranslation } from "react-i18next";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 
@@ -23,38 +24,17 @@ interface Props {
 
 export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, connected, connecting, firmware, deviceLabel }: Props) {
   const { t } = useTranslation();
-  const [pinned, setPinned] = useState(() => {
-    try {
-      return window.localStorage.getItem(PIN_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  const pin = (next: boolean) => {
-    setPinned(next);
-    try {
-      window.localStorage.setItem(PIN_KEY, next ? "1" : "0");
-    } catch {
-      // storage blocked: lasts for this session
-    }
-  };
+  const [pinned, pin] = useFlagPref(PIN_KEY);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
-        setPinned((p) => {
-          try {
-            window.localStorage.setItem(PIN_KEY, p ? "0" : "1");
-          } catch {
-            // ignore
-          }
-          return !p;
-        });
+        pin(!pinned);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [pinned, pin]);
 
   const link = (item: RailItem, label: string, icon: ReactNode, badge?: number) => (
     <button
@@ -66,7 +46,11 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
     >
       <span className="rail-ic" aria-hidden="true">
         {icon}
-        {badge ? <span className="rail-badge">{badge}</span> : null}
+        {badge ? (
+          <span className="rail-badge" title={t("desktop.games.attention", { count: badge })}>
+            {badge}
+          </span>
+        ) : null}
       </span>
       <span className="rail-label">{label}</span>
     </button>

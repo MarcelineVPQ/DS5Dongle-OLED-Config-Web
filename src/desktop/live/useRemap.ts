@@ -3,6 +3,7 @@
 // (the firmware writes remaps straight to flash, so there is no "save" step;
 // Apply is the commit, verified by re-reading the table and its revision).
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
@@ -40,7 +41,7 @@ export function useRemap(client: Ds5BridgeClient | null): Remap {
         setDraft(s ? s.table.slice() : identityTable());
         setError(null);
       },
-      (cause: unknown) => live && setError(cause instanceof Error ? cause.message : String(cause)),
+      (cause: unknown) => live && setError(errorText(cause)),
     );
     return () => {
       live = false;
@@ -63,7 +64,7 @@ export function useRemap(client: Ds5BridgeClient | null): Remap {
       setDraft(after.table.slice());
       void say("app_remapped");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
       // The dongle may have applied it anyway (in RAM, when only saving to
       // flash failed): show what it really has now.
       await client.readRemap().then(
