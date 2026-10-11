@@ -650,7 +650,10 @@
       "levelLive": "En directo desde el dongle.",
       "hardwareAcceleration": "Aceleración por hardware",
       "hardwareAccelerationSub": "Dibuja con la tarjeta gráfica: más fluido y necesario para el desenfoque y los efectos de cristal. Se desactiva sola si la tarjeta gráfica falla.",
-      "restartToApply": "Reinicia la app para aplicarlo"
+      "restartToApply": "Reinicia la app para aplicarlo",
+      "modelLabel": "Modelo:",
+      "colorLabel": "Color:",
+      "statusLabel": "Estado:"
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",

@@ -102,20 +102,40 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
           <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
         ) : (
           <>
-            <LiveController
-              input={input}
-              lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
-              playerLeds={on ? (id?.playerLeds ?? 0) : 0}
-              colors={on ? (look?.colors ?? null) : null}
-              selected={selected}
-              remapped={remapped}
-              onSelect={(part) => onView({ part })}
-            />
+            {/* Magazine-cover title: the model in big caps behind the drawing,
+                which overlaps its lower part; "Model:" small above it. */}
+            <div className={`live-hero${on && id?.model ? " titled" : ""}`}>
+              {on && id?.model && (
+                <div className="live-title" aria-hidden="true">
+                  <span className="live-title-label">{t("desktop.live.modelLabel")}</span>
+                  <span className="live-title-name">{modelName}</span>
+                </div>
+              )}
+              <LiveController
+                input={input}
+                lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
+                playerLeds={on ? (id?.playerLeds ?? 0) : 0}
+                colors={on ? (look?.colors ?? null) : null}
+                selected={selected}
+                remapped={remapped}
+                onSelect={(part) => onView({ part })}
+              />
+            </div>
             {on && id?.model && (
-              <div className="live-model">
-                {modelName}
-                {look ? ` · ${look.name}` : ""}
-                <span className="dk-good"> · {t("desktop.overview.connected", "Connected")}</span>
+              <div className="live-specs">
+                {look && (
+                  <span className="live-spec">
+                    <span className="live-title-label">{t("desktop.live.colorLabel")}</span>
+                    <span className="live-spec-value accent">{look.name}</span>
+                  </span>
+                )}
+                <span className="live-spec">
+                  <span className="live-title-label">{t("desktop.live.statusLabel")}</span>
+                  <span className="live-spec-value">
+                    <span className="live-spec-dot" aria-hidden="true" />
+                    {t("desktop.overview.connected", "Connected")}
+                  </span>
+                </span>
               </div>
             )}
             {on && id?.model === "edge" && (

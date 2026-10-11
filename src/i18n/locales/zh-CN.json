@@ -647,7 +647,10 @@
       "levelLive": "来自接收器的实时数据。",
       "hardwareAcceleration": "硬件加速",
       "hardwareAccelerationSub": "使用显卡绘制：更流畅，模糊和玻璃效果也需要它。显卡崩溃时会自动关闭。",
-      "restartToApply": "重启应用后生效"
+      "restartToApply": "重启应用后生效",
+      "modelLabel": "型号：",
+      "colorLabel": "配色：",
+      "statusLabel": "状态："
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",

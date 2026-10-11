@@ -2789,3 +2789,111 @@ html[data-glass] .app-rail:focus-within {
 html[data-glass] .rail-label {
   text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
 }
+
+/* ---- The model as a magazine-cover title behind the controller ---- */
+.live-hero {
+  position: relative;
+  isolation: isolate;
+}
+.live-hero.titled {
+  /* Room above the drawing for the top of the letters; the drawing then
+     overlaps their lower part. */
+  padding-top: calc(var(--title-size) * 0.42 + 24px);
+  --title-size: clamp(56px, 9.5cqi, 132px);
+}
+.live-title {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.live-title-name {
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: var(--title-size);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+/* Small white "Model:" above the name, left-aligned with it. */
+.live-title-label {
+  padding-left: 0.2em;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.live-hero > :not(.live-title) {
+  position: relative;
+  z-index: 1;
+}
+/* The specs under the drawing, in the title's style: a small label above a
+   value in chunky caps. */
+.live-specs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 36px;
+  margin-top: 2px;
+}
+.live-spec {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.live-spec .live-title-label {
+  font-size: 9.5px;
+}
+.live-spec-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.live-spec-value.accent {
+  color: var(--dk-accent);
+}
+.live-spec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cv-good, #22c55e);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--cv-good, #22c55e) 60%, transparent);
+  animation: live-spec-pulse 2.4s ease-out infinite;
+}
+@keyframes live-spec-pulse {
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-spec-dot {
+    animation: none;
+  }
+}
+/* The title takes some height: give the drawing a little less, so the page
+   still fits without scrolling. */
+.live-hero.titled .live-ctl {
+  max-height: calc(100vh - 532px);
+}

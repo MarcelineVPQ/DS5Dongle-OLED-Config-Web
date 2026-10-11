@@ -650,7 +650,10 @@
       "levelLive": "En direct depuis le dongle.",
       "hardwareAcceleration": "Accélération matérielle",
       "hardwareAccelerationSub": "Dessine avec la carte graphique : plus fluide, et nécessaire au flou et aux effets de verre. Se désactive si la carte graphique plante.",
-      "restartToApply": "Redémarrez l'app pour appliquer"
+      "restartToApply": "Redémarrez l'app pour appliquer",
+      "modelLabel": "Modèle :",
+      "colorLabel": "Couleur :",
+      "statusLabel": "État :"
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",

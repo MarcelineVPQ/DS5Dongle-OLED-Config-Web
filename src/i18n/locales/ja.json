@@ -647,7 +647,10 @@
       "levelLive": "ドングルからのライブ値。",
       "hardwareAcceleration": "ハードウェアアクセラレーション",
       "hardwareAccelerationSub": "グラフィックカードで描画します：より滑らかで、ぼかしやガラス効果に必要です。グラフィックカードがクラッシュすると自動でオフになります。",
-      "restartToApply": "アプリを再起動すると反映されます"
+      "restartToApply": "アプリを再起動すると反映されます",
+      "modelLabel": "モデル：",
+      "colorLabel": "カラー：",
+      "statusLabel": "状態："
     },
     "tour": {
       "stepOf": "ステップ {{n}} / {{total}}",

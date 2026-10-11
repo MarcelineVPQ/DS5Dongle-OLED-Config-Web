@@ -649,7 +649,10 @@
       "levelLive": "Live from the dongle.",
       "hardwareAcceleration": "Hardware acceleration",
       "hardwareAccelerationSub": "Draws with the graphics card: smoother, and needed for blur and glass effects. Turns itself off if the graphics card crashes.",
-      "restartToApply": "Restart the app to apply"
+      "restartToApply": "Restart the app to apply",
+      "modelLabel": "Model:",
+      "colorLabel": "Color:",
+      "statusLabel": "Status:"
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",
