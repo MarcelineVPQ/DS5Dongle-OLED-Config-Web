@@ -3053,3 +3053,8 @@ html[data-reduce-motion] .lib-row:hover {
   position: relative;
   z-index: 20;
 }
+/* Placeholders follow the theme's muted text (readable on any card color). */
+.dk ::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
