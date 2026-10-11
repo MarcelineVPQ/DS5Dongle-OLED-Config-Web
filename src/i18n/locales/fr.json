@@ -812,5 +812,18 @@
       "captionsSub": "Affiche ses mots pendant qu'elle parle (et les courtes confirmations en texte quand la voix est coupée)",
       "test": "Tester la voix"
     }
+  },
+  "ad": {
+    "tagline": "Ta DualSense, en direct à l'écran.",
+    "features": [
+      "Reconnaît ta manette, dans ses propres couleurs",
+      "Clique sur une partie pour la régler",
+      "Gâchettes adaptatives, retour haptique HD, haut-parleur et micro, en Bluetooth",
+      "Le firmware en un clic, même sur un Pico tout neuf",
+      "Une narratrice en 7 langues",
+      "Se met à jour tout seul, signé et vérifié"
+    ],
+    "free": "Téléchargement gratuit",
+    "credit": "Une production 42 Pixel Studios"
   }
 }

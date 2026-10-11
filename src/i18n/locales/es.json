@@ -812,5 +812,18 @@
       "captionsSub": "Muestra sus palabras mientras habla (y las confirmaciones cortas como texto cuando la voz está apagada)",
       "test": "Probar la voz"
     }
+  },
+  "ad": {
+    "tagline": "Tu DualSense, en vivo en pantalla.",
+    "features": [
+      "Reconoce tu mando, con sus propios colores",
+      "Haz clic en cualquier parte para configurarla",
+      "Gatillos adaptativos, hápticos HD, altavoz y micrófono, por Bluetooth",
+      "Firmware con un clic, incluso en un Pico nuevo",
+      "Una narradora en 7 idiomas",
+      "Se actualiza solo, firmado y verificado"
+    ],
+    "free": "Descarga gratuita",
+    "credit": "Una producción de 42 Pixel Studios"
   }
 }

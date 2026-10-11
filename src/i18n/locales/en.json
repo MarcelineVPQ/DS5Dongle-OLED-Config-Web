@@ -811,5 +811,18 @@
       "captionsSub": "Show her words on screen while she speaks (and the short confirmations as text when the voice is off)",
       "test": "Test the voice"
     }
+  },
+  "ad": {
+    "tagline": "Your DualSense, live on screen.",
+    "features": [
+      "Recognizes your controller, in its own colors",
+      "Click any part to set it up",
+      "Adaptive triggers, HD haptics, speaker and mic, over Bluetooth",
+      "One-click firmware, even for a brand-new Pico",
+      "A narrator in 7 languages",
+      "Updates itself, signed and verified"
+    ],
+    "free": "Free download",
+    "credit": "A 42 Pixel Studios production"
   }
 }

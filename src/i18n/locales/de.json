@@ -812,5 +812,18 @@
       "captionsSub": "Zeigt ihre Worte, während sie spricht (und die kurzen Bestätigungen als Text, wenn die Stimme aus ist)",
       "test": "Stimme testen"
     }
+  },
+  "ad": {
+    "tagline": "Dein DualSense, live auf dem Bildschirm.",
+    "features": [
+      "Erkennt deinen Controller – in seinen eigenen Farben",
+      "Klick auf ein Teil, um es einzustellen",
+      "Adaptive Trigger, HD-Haptik, Lautsprecher und Mikrofon – über Bluetooth",
+      "Firmware mit einem Klick – auch für einen brandneuen Pico",
+      "Eine Erzählerin in 7 Sprachen",
+      "Aktualisiert sich selbst – signiert und geprüft"
+    ],
+    "free": "Kostenlos herunterladen",
+    "credit": "Eine Produktion von 42 Pixel Studios"
   }
 }
