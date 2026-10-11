@@ -40,7 +40,8 @@ export default function LanguageToggle() {
     <div className="language-toggle" ref={ref}>
       <button type="button" className="language-toggle-button" onClick={() => setOpen((v) => !v)} aria-expanded={open} title={t("languageToggle.currentTitle", { name: current.label })}>
         <Globe size={15} />
-        <span className="language-toggle-current">{current.shortLabel}</span>
+        {/* The language's own name ("Español"), never a flag: languages aren't countries. */}
+        <span className="language-toggle-current">{current.label}</span>
       </button>
       {open && (
         // A disclosure: a plain list of buttons (a listbox role would promise

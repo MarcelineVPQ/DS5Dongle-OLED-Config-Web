@@ -20,12 +20,12 @@ import ptBR from "./locales/pt-BR.json";
 // English even when the user explicitly picked them.
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English", shortLabel: "EN" },
-  { code: "zh", label: "中文", shortLabel: "中" },
+  { code: "zh", label: "中文（简体）", shortLabel: "中" },
   { code: "es", label: "Español", shortLabel: "ES" },
   { code: "de", label: "Deutsch", shortLabel: "DE" },
   { code: "fr", label: "Français", shortLabel: "FR" },
   { code: "ja", label: "日本語", shortLabel: "JA" },
-  { code: "pt", label: "Português (BR)", shortLabel: "PT" },
+  { code: "pt", label: "Português (Brasil)", shortLabel: "PT" },
 ] as const;
 
 // Where an explicitly chosen language is remembered.
