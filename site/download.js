@@ -7,7 +7,7 @@
 const FEED = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest.json";
 const RELEASES = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest";
 // macOS builds exist but haven't been tested on a Mac yet: always labeled so.
-const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS (untested)" };
+const NAMES = { linux: "Linux", windows: "Windows (untested)", macos: "macOS (untested)" };
 const KINDS = { linux: "AppImage", windows: "portable .exe", macos: ".zip" };
 
 function detectOs() {
@@ -64,7 +64,7 @@ async function main() {
     el("dl-sub").textContent = `v${version} · ${KINDS[os]} · ${mb(mine.size)}`;
   } else {
     el("dl-title").textContent = `Download v${version}`;
-    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC: Linux or Windows" : "Linux and Windows";
+    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC (Linux; Windows and macOS untested)" : "Linux (Windows and macOS untested)";
     el("dl-main").href = RELEASES;
   }
 
@@ -80,6 +80,9 @@ async function main() {
   if (os === "linux") {
     note.hidden = false;
     note.textContent = "Make the AppImage executable (chmod +x) and run it; it adds itself to your app menu.";
+  } else if (os === "windows") {
+    note.hidden = false;
+    note.textContent = "The Windows build hasn't been tested on a Windows PC yet. Windows SmartScreen warns that it's unsigned: choose More info → Run anyway. Reports welcome!";
   } else if (os === "macos") {
     note.hidden = false;
     note.textContent = "The macOS build hasn't been tested on a Mac yet. Unzip it, move the app to Applications, and right-click → Open the first time (it isn't notarized). Reports welcome!";

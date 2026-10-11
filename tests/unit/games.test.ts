@@ -1,4 +1,4 @@
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -89,7 +89,9 @@ function snapshot(): Map<string, string> {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ds5-games-"));
+  // Real path: macOS's temp folder is a symlink (/var -> /private/var), and
+  // the launcher ids hash the resolved library path.
+  home = realpathSync(mkdtempSync(join(tmpdir(), "ds5-games-")));
   buildHome(home);
   backups = new Backups(join(home, "backups"));
 });

@@ -2,7 +2,7 @@
 
 The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, HD haptics, speaker and mic included).
 
-Linux and Windows (a macOS build is included but hasn't been tested yet). No drivers to install. It updates itself and the dongle's firmware.
+Made and tested on Linux. Windows and macOS builds are included but haven't been tested yet; reports are welcome. No drivers to install. It updates itself and the dongle's firmware.
 
 ![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
 
@@ -66,7 +66,9 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 2. Run it once. It adds itself to your application menu, and updates keep that entry working.
 3. **Press Set up USB access** on the **Dongle** page (it asks for your password once). It lets the app open the dongle, and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
 
-### Windows
+### Windows (untested)
+
+The Windows build is made by the same release workflow but hasn't been tested on a Windows PC yet. If you try it, please report how it went in the [issues](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/issues).
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
 2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.

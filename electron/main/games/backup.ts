@@ -125,7 +125,8 @@ function removeFile(path: string): void {
 }
 
 function fsyncFile(path: string): void {
-  const fd = openSync(path, "r");
+  // Read-write: Windows refuses fsync on a read-only handle (EPERM).
+  const fd = openSync(path, "r+");
   try {
     fsyncSync(fd);
   } finally {
