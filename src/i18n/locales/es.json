@@ -998,8 +998,10 @@
       "sub": "El arte de tus juegos, desenfocado y en lento movimiento, detrás del mando"
     },
     "glass": {
-      "label": "Cristal (vista previa)",
-      "sub": "Barra lateral y barra de guardado como Liquid Glass sobre el fondo"
+      "label": "Estilo",
+      "sub": "Cristal: la barra lateral, la barra de guardado y el panel de ajustes como Liquid Glass",
+      "standard": "Estándar",
+      "glass": "Cristal"
     },
     "accent": {
       "label": "Color de acento",

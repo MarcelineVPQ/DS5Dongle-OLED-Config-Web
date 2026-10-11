@@ -998,8 +998,10 @@
       "sub": "Die Grafik deiner Spiele, unscharf und langsam bewegt, hinter dem Controller"
     },
     "glass": {
-      "label": "Glas (Vorschau)",
-      "sub": "Leiste und Speicherleiste als Liquid Glass über dem Hintergrund"
+      "label": "Stil",
+      "sub": "Glas: Leiste, Speicherleiste und Einstellungsfeld als Liquid Glass",
+      "standard": "Standard",
+      "glass": "Glas"
     },
     "accent": {
       "label": "Akzentfarbe",

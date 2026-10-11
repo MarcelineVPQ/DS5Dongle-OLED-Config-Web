@@ -998,8 +998,10 @@
       "sub": "A arte dos seus jogos, desfocada e em movimento lento, atrás do controle"
     },
     "glass": {
-      "label": "Vidro (prévia)",
-      "sub": "Barra lateral e barra de salvar como Liquid Glass sobre o fundo"
+      "label": "Estilo",
+      "sub": "Vidro: a barra lateral, a barra de salvar e o painel de configurações como Liquid Glass",
+      "standard": "Padrão",
+      "glass": "Vidro"
     },
     "accent": {
       "label": "Cor de destaque",

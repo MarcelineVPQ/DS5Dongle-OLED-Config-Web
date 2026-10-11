@@ -2897,3 +2897,31 @@ html[data-glass] .rail-label {
 .live-hero.titled .live-ctl {
   max-height: calc(100vh - 532px);
 }
+/* The settings panel (inspector), regular glass: docked against the rail,
+   full height, more frost; the cards inside are standard (translucent, no
+   lensing) so there's no glass on glass. */
+html[data-glass] .live-panel {
+  position: relative;
+  margin: calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) 0;
+  padding: var(--dk-pad) 10px;
+  backdrop-filter: var(--glass-clear, blur(18px));
+  background: rgb(8 10 16 / 30%);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 22%);
+}
+html[data-glass] .live-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1.2px;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 35%), rgb(255 255 255 / 8%));
+  pointer-events: none;
+}
+html[data-glass] .live-panel .dk-card {
+  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-glass] .live-panel {
+    backdrop-filter: none !important;
+    background: var(--bg-panel);
+  }
+}

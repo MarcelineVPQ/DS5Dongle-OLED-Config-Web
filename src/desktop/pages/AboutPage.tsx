@@ -25,6 +25,7 @@ Thanks to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes
 | Live controller art | DualSense art from the Gamepad Asset Pack by AL2009man, MIT, modified (recolored, parts tagged). [github.com/AL2009man/Gamepad-Asset-Pack](https://github.com/AL2009man/Gamepad-Asset-Pack) |
 | Tray icon and web tool art | "PS5 Button Icons and Controls" by Zacksly, CC BY 3.0, modified. [zacksly.itch.io](https://zacksly.itch.io) |
 | PICOBOOT flasher | picoflash by Piers Finlayson, MIT |
+| Liquid glass technique | The displacement-map refraction follows Shu Ding's liquid-glass (MIT, [github.com/shuding/liquid-glass](https://github.com/shuding/liquid-glass)), with ideas from Max Rovensky's liquid-glass-react (MIT, [github.com/rdev/liquid-glass-react](https://github.com/rdev/liquid-glass-react)); our own implementation |
 | Fonts | Space Grotesk, DM Sans, JetBrains Mono, SIL Open Font License |
 | Icons | Lucide, ISC |
 | Runtime | Electron, React, i18next, zod, react-markdown (MIT) |

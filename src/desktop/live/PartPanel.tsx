@@ -475,10 +475,19 @@ function BackdropSetting() {
   return <Toggle label={t("desktop.backdrop.label")} sub={t("desktop.backdrop.sub")} value={!off} onChange={(on) => setOff(!on)} />;
 }
 
+// The app's style: Standard (solid surfaces) or Glass (Liquid Glass on the
+// rail, save bar and settings panel).
 function GlassSetting() {
   const { t } = useTranslation();
   const [on, setOn] = useFlagPref(GLASS_KEY);
-  return <Toggle label={t("desktop.glass.label")} sub={t("desktop.glass.sub")} value={on} onChange={setOn} />;
+  return (
+    <Row label={t("desktop.glass.label")} sub={t("desktop.glass.sub")}>
+      <select className="dk-select" aria-label={t("desktop.glass.label")} value={on ? "glass" : "standard"} onChange={(e) => setOn(e.target.value === "glass")}>
+        <option value="standard">{t("desktop.glass.standard")}</option>
+        <option value="glass">{t("desktop.glass.glass")}</option>
+      </select>
+    </Row>
+  );
 }
 
 function AccentSetting() {

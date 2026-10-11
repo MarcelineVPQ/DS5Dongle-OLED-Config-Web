@@ -998,8 +998,10 @@
       "sub": "Les visuels de vos jeux, flous et en lent mouvement, derrière la manette"
     },
     "glass": {
-      "label": "Verre (aperçu)",
-      "sub": "Barre de navigation et barre d'enregistrement en Liquid Glass sur le fond"
+      "label": "Style",
+      "sub": "Verre : la barre, la barre d'enregistrement et le panneau des réglages en Liquid Glass",
+      "standard": "Standard",
+      "glass": "Verre"
     },
     "accent": {
       "label": "Couleur d'accent",

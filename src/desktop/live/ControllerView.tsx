@@ -2,6 +2,9 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
+import { REGULAR_GLASS } from "../glass/variants";
+import { useGlass } from "../glass/useGlass";
+import { GLASS_KEY } from "../glass/glassPref";
 import { useFlagPref } from "../storage";
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -76,6 +79,10 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
   // gets the whole width; opening any part (or "Settings") brings it back.
   const [panelHidden, hidePanel] = useFlagPref(PANEL_KEY);
   const collapsed = panelHidden && view === "overview";
+  // Glass style: the settings panel is an inspector, the regular variant
+  // (more frost, for text); its cards stay standard surfaces.
+  const [glass] = useFlagPref(GLASS_KEY);
+  const panelGlass = useGlass(glass && !collapsed, REGULAR_GLASS);
 
   // The tour points at the settings list, so it brings the panel back.
   useEffect(() => {
@@ -199,7 +206,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
       </div>
       <Tour client={client} input={input} view={view} onView={onView} ready={on && liveCapable} />
       {!collapsed && (
-        <aside className="live-panel">
+        <aside className="live-panel" ref={panelGlass}>
           <PartPanel
             view={view}
             bridge={bridge}

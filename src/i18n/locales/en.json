@@ -997,8 +997,10 @@
       "sub": "Your games' artwork, blurred, slowly moving behind the controller"
     },
     "glass": {
-      "label": "Glass (preview)",
-      "sub": "Rail and save bar as Liquid Glass floating over the background"
+      "label": "Style",
+      "sub": "Glass: the rail, save bar and settings panel as Liquid Glass",
+      "standard": "Standard",
+      "glass": "Glass"
     },
     "accent": {
       "label": "Accent color",
