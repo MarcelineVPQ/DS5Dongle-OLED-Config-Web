@@ -186,6 +186,7 @@ function start(): void {
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
+    gameArtColor: (key) => linuxOnly((g) => g.artColor(key)),
     micTest: () => {
       if (process.platform !== "linux") return Promise.resolve({ ok: false, peak: 0, problem: "failed" as const });
       return micTest((level) => mainWindow?.webContents.send(IPC.micLevel, level));

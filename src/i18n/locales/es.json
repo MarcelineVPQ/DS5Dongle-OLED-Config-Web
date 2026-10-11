@@ -993,6 +993,16 @@
     "backdrop": {
       "label": "Fondo con tus juegos",
       "sub": "El arte de tus juegos, desenfocado y en lento movimiento, detrás del mando"
+    },
+    "glass": {
+      "label": "Cristal (vista previa)",
+      "sub": "Barra lateral y barra de guardado como Liquid Glass sobre el fondo"
+    },
+    "accent": {
+      "label": "Color de acento",
+      "sub": "Botones, selección y resaltados",
+      "controller": "Mando",
+      "desktop": "Escritorio"
     }
   },
   "ad": {

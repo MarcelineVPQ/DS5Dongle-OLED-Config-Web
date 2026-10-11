@@ -2,8 +2,10 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
+import { GLASS_KEY } from "../glass/glassPref";
 import { BACKDROP_KEY } from "./ArtBackdrop";
-import { useFlagPref } from "../storage";
+import { useFlagPref, usePref } from "../storage";
 import { controllerSpeaker } from "../narrator";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -287,6 +289,8 @@ function AppSettings() {
         </div>
         <ColorVisionSetting />
         <BackdropSetting />
+        <GlassSetting />
+        <AccentSetting />
       </section>
       {settings && (
         <section className="dk-card">
@@ -469,4 +473,26 @@ function BackdropSetting() {
   const { t } = useTranslation();
   const [off, setOff] = useFlagPref(BACKDROP_KEY);
   return <Toggle label={t("desktop.backdrop.label")} sub={t("desktop.backdrop.sub")} value={!off} onChange={(on) => setOff(!on)} />;
+}
+
+function GlassSetting() {
+  const { t } = useTranslation();
+  const [on, setOn] = useFlagPref(GLASS_KEY);
+  return <Toggle label={t("desktop.glass.label")} sub={t("desktop.glass.sub")} value={on} onChange={setOn} />;
+}
+
+function AccentSetting() {
+  const { t } = useTranslation();
+  const [choice, setChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
+  return (
+    <Row label={t("desktop.accent.label")} sub={t("desktop.accent.sub")}>
+      <select className="dk-select" aria-label={t("desktop.accent.label")} value={choice} onChange={(e) => setChoice(e.target.value as (typeof ACCENTS)[number])}>
+        {ACCENTS.map((a) => (
+          <option key={a} value={a}>
+            {t(`desktop.accent.${a}`)}
+          </option>
+        ))}
+      </select>
+    </Row>
+  );
 }

@@ -1,4 +1,11 @@
 import AppRail from "./AppRail";
+import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccent";
+import { CLEAR_GLASS_BAR } from "./glass/variants";
+import { useGlass } from "./glass/useGlass";
+import { GLASS_KEY } from "./glass/glassPref";
+import { useFlagPref, usePref } from "./storage";
+import { colorway } from "./live/colorways";
+import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -92,6 +99,15 @@ export default function DesktopApp() {
   // hidden (the window keeps running in the background for exactly this).
   const client = bridge.client;
   const liveIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
+  // Glass (preview): the functional layer (rail, save bar) as clear liquid
+  // glass floating over the content; content stays a plain surface.
+  const [glass] = useFlagPref(GLASS_KEY);
+  const [accentChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
+  useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice);
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-glass", glass);
+  }, [glass]);
+  const barRef = useGlass(glass, CLEAR_GLASS_BAR);
   const firmware = bridge.firmwareVersion;
   const controllerOn = Boolean(connected && liveIdentity?.controllerConnected);
   const charging = controllerOn && Boolean(liveIdentity?.charging);
@@ -164,6 +180,7 @@ export default function DesktopApp() {
 
   return (
     <div className="dk dk-one">
+      {main === "controller" && panel !== "dongle" && <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />}
       <NarratorCaption />
       <div className="dk-main">
         <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
@@ -215,7 +232,7 @@ export default function DesktopApp() {
         </main>
 
         {connected && !standalone && (
-          <footer className="dk-bar">
+          <footer className="dk-bar" ref={barRef}>
             {profiles.active ? (
               <>
                 <span className="dk-bar-note">

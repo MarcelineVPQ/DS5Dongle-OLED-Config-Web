@@ -993,6 +993,16 @@
     "backdrop": {
       "label": "Fundo com seus jogos",
       "sub": "A arte dos seus jogos, desfocada e em movimento lento, atrás do controle"
+    },
+    "glass": {
+      "label": "Vidro (prévia)",
+      "sub": "Barra lateral e barra de salvar como Liquid Glass sobre o fundo"
+    },
+    "accent": {
+      "label": "Cor de destaque",
+      "sub": "Botões, seleção e realces",
+      "controller": "Controle",
+      "desktop": "Área de trabalho"
     }
   },
   "ad": {

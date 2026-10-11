@@ -993,6 +993,16 @@
     "backdrop": {
       "label": "Fond avec les jeux",
       "sub": "Les visuels de vos jeux, flous et en lent mouvement, derrière la manette"
+    },
+    "glass": {
+      "label": "Verre (aperçu)",
+      "sub": "Barre de navigation et barre d'enregistrement en Liquid Glass sur le fond"
+    },
+    "accent": {
+      "label": "Couleur d'accent",
+      "sub": "Boutons, sélection et mises en avant",
+      "controller": "Manette",
+      "desktop": "Bureau"
     }
   },
   "ad": {

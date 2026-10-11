@@ -3,6 +3,7 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
 import { settingsFrom } from "./useGameProfile";
 import { useTranslation } from "react-i18next";
@@ -42,13 +43,27 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     void el.offsetWidth; // restart the animation
     el.classList.add("gp-flash");
   };
+  // The page takes the game's artwork color as its accent (the rest of the
+  // app keeps the controller's); same legibility rules, scoped to the page.
+  const [accent, setAccent] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    let live = true;
+    setAccent(null);
+    void window
+      .desktop!.gameArtColor(game.key)
+      .then((c) => live && setAccent(scopedAccent(c, scroller.current)))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [game.key]);
   // Scroll back to the top when another game is opened.
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
   }, [game.key]);
 
   return (
-    <div className="gp" ref={scroller}>
+    <div className="gp" ref={scroller} style={accent ?? undefined}>
       <header className={`gp-hero${has("hero") ? "" : " plain"}`} style={has("hero") ? { backgroundImage: `url("${artUrl(game.key, "hero")}")` } : undefined}>
         {has("logo") ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <h1 className="gp-title">{game.title}</h1>}
       </header>

@@ -4,6 +4,7 @@
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
 import { homedir } from "node:os";
+import { dominantColor } from "./artColor";
 import { actionUrl, availableActions } from "./actions";
 import { errorText } from "../../../src/errorText";
 import { gameDetails, type GameDetails } from "./details";
@@ -125,6 +126,18 @@ export class GamesService {
   artPath(key: string, kind: ArtKind): string | undefined {
     if (!this.deps.allowed()) return undefined;
     return this.lastDetails.get(key)?.artPaths[kind];
+  }
+
+  // A game's signature color from its art (cached per game).
+  private colors = new Map<string, string | null>();
+  artColor(key: string): string | null {
+    this.requireConsent();
+    if (this.colors.has(key)) return this.colors.get(key)!;
+    const paths = this.lastDetails.get(key)?.artPaths;
+    const file = paths?.cover ?? paths?.hero ?? paths?.header;
+    const color = file ? dominantColor(file) : null;
+    this.colors.set(key, color);
+    return color;
   }
 
   runningCandidates(): RunningCandidate[] {

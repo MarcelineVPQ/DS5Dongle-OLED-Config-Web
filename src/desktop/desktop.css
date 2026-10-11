@@ -2627,7 +2627,7 @@ html[data-theme="dark"] .dk {
 }
 .art-bd {
   position: absolute;
-  inset: calc(-1 * var(--dk-pad));
+  inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -2670,4 +2670,122 @@ html[data-theme="dark"] .dk {
   .art-bd-blobs {
     animation: none;
   }
+}
+
+/* The backdrop sits behind the whole window (the rail and the save bar float
+   over it); everything else is layered above it. */
+.dk.dk-one {
+  isolation: isolate;
+}
+.dk.dk-one > .dk-main,
+.dk.dk-one > .rail-slot {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Glass (preview), after Apple's Liquid Glass guidance: only the
+   functional layer (rail, save bar) is glass, floating above the content;
+   the clear variant (barely tinted, a light frost, strong lensing in a thin
+   rim; the refraction itself is the backdrop filter from useLiquidGlass),
+   a specular rim lit from where the pointer is, a liquid press. Content keeps
+   its plain surfaces. ---- */
+html[data-glass] .art-bd-dim {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 30%, transparent), color-mix(in srgb, var(--bg-page) 62%, transparent));
+}
+/* Docked: flush with the window edges, square corners (the user preferred
+   that to Apple's floating rounded shapes). */
+html[data-glass] .app-rail {
+  border-left: 0;
+  background: rgb(255 255 255 / 5%);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 25%);
+}
+html[data-glass] .rail-footer {
+  border-top-color: rgb(255 255 255 / 12%);
+}
+html[data-glass] .rail-divider {
+  background: rgb(255 255 255 / 12%);
+}
+html[data-glass] .dk-bar {
+  position: relative;
+  border-top: 0;
+  background: rgb(255 255 255 / 5%);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 22%);
+}
+/* The specular rim: a thin bright edge, brightest where the light (the
+   pointer) is, fading around the shape. Drawn on the border ring only. */
+html[data-glass] .app-rail::before,
+html[data-glass] .dk-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background:
+    radial-gradient(160px circle at var(--lx, 30%) var(--ly, 0%), rgb(255 255 255 / 85%), rgb(255 255 255 / 0%) 70%),
+    linear-gradient(160deg, rgb(255 255 255 / 35%), rgb(255 255 255 / 6%) 40%, rgb(255 255 255 / 4%) 60%, rgb(255 255 255 / 22%));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+/* Docked, so only the inner edge catches the light. */
+html[data-glass] .app-rail::before {
+  padding: 0 0 0 1.2px;
+}
+html[data-glass] .dk-bar::before {
+  padding: 1.2px 0 0;
+}
+/* Liquid press: glass controls give a little and spring back. */
+html[data-glass] .rail-link,
+html[data-glass] .dk-bar .dk-btn {
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s;
+}
+html[data-glass] .rail-link:active,
+html[data-glass] .dk-bar .dk-btn:active {
+  transform: scale(0.94);
+  transition-duration: 90ms;
+}
+html[data-glass] .dk-bar .dk-btn:not(.primary) {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 6%);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-glass] .rail-link:active,
+  html[data-glass] .dk-bar .dk-btn:active {
+    transform: none;
+  }
+}
+/* Reduce transparency: solid surfaces; increase contrast: a clear border. */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-glass] .app-rail,
+  html[data-glass] .dk-bar {
+    backdrop-filter: none !important;
+    background: var(--bg-panel);
+  }
+}
+@media (prefers-contrast: more) {
+  html[data-glass] .app-rail,
+  html[data-glass] .dk-bar {
+    outline: 1px solid var(--text-strong);
+  }
+}
+/* Apple: clear glass over bright content gets a dark dim (~35%) so its
+   labels stay legible. The rail's labels only show when it's open. */
+html[data-glass] .app-rail,
+html[data-glass] .dk-bar {
+  backdrop-filter: var(--glass-clear, blur(2px));
+}
+/* Open over content (text): the regular variant, more frost and a dim. */
+html[data-glass] .rail-slot.pinned .app-rail,
+html[data-glass] .app-rail:hover,
+html[data-glass] .app-rail:focus-within {
+  backdrop-filter: var(--glass-regular, blur(18px));
+  background: rgb(8 10 16 / 45%);
+}
+html[data-glass] .rail-label {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
 }

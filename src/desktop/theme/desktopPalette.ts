@@ -141,12 +141,18 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
   }
 
   const panel = p.window ?? (p.isDark ? ([27, 35, 54] as Rgb) : ([255, 255, 255] as Rgb));
-  const accent = p.accent;
+  Object.assign(vars, accentVars(p.accent, panel, p.isDark));
+  return vars;
+}
+
+// The accent tokens for one accent color on a given panel color (also used
+// for the controller's own color, theme/controllerAccent.ts).
+export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean): Record<string, string> {
   const onAccent: Rgb = contrast([255, 255, 255], accent) >= contrast([0, 0, 0], accent) ? [255, 255, 255] : [0, 0, 0];
-  const selBg = mix(panel, accent, p.isDark ? 0.22 : 0.16);
-  Object.assign(vars, {
+  const selBg = mix(panel, accent, isDark ? 0.22 : 0.16);
+  return {
     "--dk-accent": css(accent),
-    "--dk-accent-hover": css(mix(accent, p.isDark ? [255, 255, 255] : [0, 0, 0], 0.15)),
+    "--dk-accent-hover": css(mix(accent, isDark ? [255, 255, 255] : [0, 0, 0], 0.15)),
     "--dk-on-accent": css(onAccent),
     "--dk-sel-bg": css(selBg),
     "--dk-sel-border": css(accent),
@@ -157,6 +163,5 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
     "--accent-hover": css(mix(accent, [0, 0, 0], 0.15)),
     "--accent-border": css(accent),
     "--text-on-primary": css(onAccent),
-  });
-  return vars;
+  };
 }

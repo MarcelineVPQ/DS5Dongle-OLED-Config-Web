@@ -25,22 +25,30 @@ function useBackdropKeys(): string[] {
   useEffect(() => {
     if (!desktop) return;
     let live = true;
-    void desktop
-      .gamesDetails()
-      .then((d) => {
-        if (!live) return;
-        const recent = Object.entries(d)
-          .filter(([, info]) => info.art.includes("hero") && info.lastPlayed)
-          .sort(([, a], [, b]) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))
-          .slice(0, 8)
-          .map(([key]) => key);
-        setKeys(recent);
-      })
-      .catch(() => undefined); // no consent / not Linux: colors only
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // The first scan runs in the background at start: until it's done the
+    // details are empty, so ask again for a minute (no consent / not Linux:
+    // colors only).
+    const load = (tries: number) =>
+      desktop
+        .gamesDetails()
+        .then((d) => {
+          if (!live) return;
+          const recent = Object.entries(d)
+            .filter(([, info]) => info.art.includes("hero") && info.lastPlayed)
+            .sort(([, a], [, b]) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))
+            .slice(0, 8)
+            .map(([key]) => key);
+          if (recent.length > 0) setKeys(recent);
+          else if (tries > 0) timer = setTimeout(() => void load(tries - 1), 3000);
+        })
+        .catch(() => undefined);
+    void load(20);
     void desktop.gamesRunning().then(setRunning, () => undefined);
     const off = desktop.onRunningGame(setRunning);
     return () => {
       live = false;
+      clearTimeout(timer);
       off();
     };
   }, [desktop]);

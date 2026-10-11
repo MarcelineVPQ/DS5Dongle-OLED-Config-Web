@@ -65,6 +65,7 @@ export interface IpcHandlers {
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
   micTest: () => Promise<MicTestResult>;
+  gameArtColor: (gameKey: string) => string | null;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
@@ -160,6 +161,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.librarySetRestore, RestoreSchema, h.librarySetRestore);
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
   invoke(IPC.micTest, h.micTest);
+  invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

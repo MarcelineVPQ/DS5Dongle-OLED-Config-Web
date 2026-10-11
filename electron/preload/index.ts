@@ -69,6 +69,7 @@ const api: DesktopApi = {
   librarySetRestore: (restore) => ipcRenderer.invoke(IPC.librarySetRestore, restore),
   gameAction: (update) => ipcRenderer.invoke(IPC.gameAction, update),
   micTest: () => ipcRenderer.invoke(IPC.micTest),
+  gameArtColor: (gameKey) => ipcRenderer.invoke(IPC.gameArtColor, gameKey),
   onMicLevel: (listener) => {
     const handler = (_event: IpcRendererEvent, level: number) => listener(level);
     ipcRenderer.on(IPC.micLevel, handler);

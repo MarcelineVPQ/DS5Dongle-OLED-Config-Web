@@ -2,7 +2,6 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
-import ArtBackdrop from "./ArtBackdrop";
 import { useFlagPref } from "../storage";
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -77,6 +76,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
   // gets the whole width; opening any part (or "Settings") brings it back.
   const [panelHidden, hidePanel] = useFlagPref(PANEL_KEY);
   const collapsed = panelHidden && view === "overview";
+
   // The tour points at the settings list, so it brings the panel back.
   useEffect(() => {
     const show = () => hidePanel(false);
@@ -97,7 +97,6 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
 
   return (
     <div className={`live-view${collapsed ? " collapsed" : ""}`}>
-      {view !== "dongle" && <ArtBackdrop colors={look?.colors ?? null} />}
       <div className="live-stage">
         {view === "dongle" ? (
           <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />

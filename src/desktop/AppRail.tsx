@@ -4,6 +4,9 @@
 // the dongle's status (a colored dot plus a symbol, so it never relies on
 // color alone) and the pin.
 import { useEffect, type ReactNode } from "react";
+import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
+import { useGlass } from "./glass/useGlass";
+import { GLASS_KEY } from "./glass/glassPref";
 import { useFlagPref } from "./storage";
 import { useTranslation } from "react-i18next";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
@@ -25,6 +28,9 @@ interface Props {
 export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, connected, connecting, firmware, deviceLabel }: Props) {
   const { t } = useTranslation();
   const [pinned, pin] = useFlagPref(PIN_KEY);
+  const [glass] = useFlagPref(GLASS_KEY);
+  // Clear glass while collapsed; the regular variant while open over content.
+  const railRef = useGlass(glass, CLEAR_GLASS_RAIL, REGULAR_GLASS);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "b") {
@@ -65,7 +71,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
 
   return (
     <div className={`rail-slot${pinned ? " pinned" : ""}`}>
-      <nav className="app-rail" aria-label={t("desktop.rail.label")}>
+      <nav className="app-rail" ref={railRef} aria-label={t("desktop.rail.label")}>
         <div className="rail-nav">
           {link("controller", t("desktop.nav.controller"), <Gamepad2 size={20} />)}
           {link("dongle", t("desktop.nav.dongle", "Dongle"), <Usb size={20} />)}

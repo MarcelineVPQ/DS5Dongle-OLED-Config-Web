@@ -992,6 +992,16 @@
     "backdrop": {
       "label": "Game art background",
       "sub": "Your games' artwork, blurred, slowly moving behind the controller"
+    },
+    "glass": {
+      "label": "Glass (preview)",
+      "sub": "Rail and save bar as Liquid Glass floating over the background"
+    },
+    "accent": {
+      "label": "Accent color",
+      "sub": "Buttons, selection and highlights",
+      "controller": "Controller",
+      "desktop": "Desktop"
     }
   },
   "ad": {

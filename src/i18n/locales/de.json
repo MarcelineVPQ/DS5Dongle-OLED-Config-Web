@@ -993,6 +993,16 @@
     "backdrop": {
       "label": "Spielgrafik im Hintergrund",
       "sub": "Die Grafik deiner Spiele, unscharf und langsam bewegt, hinter dem Controller"
+    },
+    "glass": {
+      "label": "Glas (Vorschau)",
+      "sub": "Leiste und Speicherleiste als Liquid Glass über dem Hintergrund"
+    },
+    "accent": {
+      "label": "Akzentfarbe",
+      "sub": "Schaltflächen, Auswahl und Hervorhebungen",
+      "controller": "Controller",
+      "desktop": "Desktop"
     }
   },
   "ad": {
