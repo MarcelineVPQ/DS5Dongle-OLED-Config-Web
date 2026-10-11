@@ -123,3 +123,25 @@ describe("library IPC schemas", () => {
     expect(SetMineSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:1", title: "X", mine: { tags: ["weak-vibration"] } }).success).toBe(true);
   });
 });
+
+describe("game actions", () => {
+  it("builds each launcher's own link from scanned ids only", async () => {
+    const { actionUrl, availableActions } = await import("../../electron/main/games/actions");
+    expect(actionUrl({ launcher: "steam", store: "steam", id: "4078430" }, "play")).toBe("steam://rungameid/4078430");
+    expect(actionUrl({ launcher: "steam", store: "steam", id: "4078430" }, "steamInput")).toBe("steam://controllerconfig/4078430");
+    expect(actionUrl({ launcher: "heroic", store: "gog", id: "2049187585" }, "play")).toBe("heroic://launch?appName=2049187585&runner=gog");
+    expect(actionUrl({ launcher: "heroic", store: "epic", id: "a b&c" }, "play")).toBe("heroic://launch?appName=a%20b%26c&runner=legendary");
+    expect(actionUrl({ launcher: "lutris", store: "lutris", id: "battlenet-1" }, "play", "battlenet")).toBe("lutris:rungame/battlenet");
+    // No settings pages outside Steam; a non-numeric Steam id or an odd slug gives nothing.
+    expect(actionUrl({ launcher: "heroic", store: "gog", id: "1" }, "properties")).toBeNull();
+    expect(actionUrl({ launcher: "steam", store: "steam", id: "../x" }, "play")).toBeNull();
+    expect(actionUrl({ launcher: "lutris", store: "lutris", id: "x" }, "play", "a/b")).toBeNull();
+    expect(availableActions({ launcher: "heroic", store: "gog", id: "1" }, { installDir: true, prefixDir: false })).toEqual(["play", "installFolder"]);
+  });
+  it("accepts only a scan key and a known action over IPC", async () => {
+    const { GameActionSchema } = await import("../../electron/main/ipc");
+    expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "play" }).success).toBe(true);
+    expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "openUrl" }).success).toBe(false);
+    expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "play", url: "https://x" }).success).toBe(false);
+  });
+});

@@ -1,5 +1,5 @@
 import type { ApplyResult, GamesReport, LauncherId, Msg } from "./games/types";
-import type { GameInfo } from "./games/types";
+import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
 
@@ -126,6 +126,8 @@ export interface DesktopApi {
   libraryDeleteProfile(gameKey: string): Promise<LibraryFile>;
   librarySetMine(update: { gameKey: string; title: string; mine: Mine }): Promise<LibraryFile>;
   librarySetRestore(restore: LibraryFile["restore"] | null): Promise<LibraryFile>;
+  // Launch a game or open its launcher page / folder (resolved in main).
+  gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;
 }
 
 export const IPC = {
@@ -163,6 +165,7 @@ export const IPC = {
   libraryDeleteProfile: "desktop:library-delete-profile",
   librarySetMine: "desktop:library-set-mine",
   librarySetRestore: "desktop:library-set-restore",
+  gameAction: "desktop:game-action",
 } as const;
 
 declare global {

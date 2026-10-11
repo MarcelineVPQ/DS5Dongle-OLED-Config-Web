@@ -908,7 +908,23 @@
       "summary": "{{games}} 款游戏 · {{dualsense}} 款支持 DualSense 功能 · {{profiles}} 款有配置文件",
       "recent": "最近游玩",
       "tierLegend": "各等级的含义",
-      "compatHint": "自适应扳机和 HD 震动只有通过 DualSense Proton 版本才能传到 Windows 游戏。"
+      "compatHint": "自适应扳机和 HD 震动只有通过 DualSense Proton 版本才能传到 Windows 游戏。",
+      "action": {
+        "play": "开始游戏",
+        "starting": "正在启动…",
+        "playHint": "在 {{launcher}} 中启动游戏",
+        "properties": "Steam 属性",
+        "propertiesHint": "在 Steam 中打开游戏属性（启动选项、兼容性）",
+        "steamInput": "Steam 输入布局",
+        "steamInputHint": "在 Steam 中打开游戏的手柄布局",
+        "libraryPage": "Steam 页面",
+        "libraryPageHint": "在 Steam 库中显示该游戏",
+        "installFolder": "安装文件夹",
+        "installFolderHint": "打开游戏的安装文件夹",
+        "prefixFolder": "Proton 前缀",
+        "prefixFolderHint": "打开游戏的 Windows（Proton/Wine）文件夹：设置和存档通常在这里",
+        "failed": "无法打开。启动器已安装吗？"
+      }
     },
     "dongleConsole": {
       "title": "接收器控制台",

@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Per-game controller profiles**: haptics strength, Audio Auto Haptics, speaker level, lightbar mode and favorite colors, BT mic. A profile switches in on the dongle (RAM only) while its game runs and your normal settings come back when it closes, also after a crash or a quit mid-game (kept as a restore point on disk). While one is active the bottom bar saves to the profile, never to the dongle.
 - **Your rating and feedback** per game: stars and a checklist of what you noticed (no free text to share), stamped with the app version and game build so feedback from before a game update or one of our fixes is flagged; private notes. Saved on this PC; sharing with other players comes later.
 
+- **Play and open from a game's page.** ▶ Play starts the game through its own launcher (Steam, Heroic, Lutris); Steam games also open their Properties, Steam Input layout and library page; any game opens its install folder or its Proton/Wine prefix. Links and folders are built in the app from the scan, never taken from the page.
 - **Dongle console.** The Dongle page shows the dongle's screen pixel for pixel, live (needs firmware with protocol 1.4; works without the OLED add-on too), plus a log of what the dongle did this session. Dark in every theme, like any console.
 
 ### Changed

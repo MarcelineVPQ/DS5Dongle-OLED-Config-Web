@@ -18,6 +18,9 @@ import type { ArtKind, GameInfo } from "../../../src/desktop/games/types";
 
 export interface GameDetails extends GameInfo {
   artPaths: Partial<Record<ArtKind, string>>;
+  // Main-process only (never sent to the page): for the folder and launch actions.
+  prefixDir?: string; // the game's Wine/Proton prefix
+  lutrisSlug?: string;
 }
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
@@ -46,6 +49,8 @@ function info(d: Partial<GameDetails>): GameDetails {
     buildId: d.buildId,
     art: Object.keys(artPaths) as ArtKind[],
     artPaths,
+    prefixDir: d.prefixDir,
+    lutrisSlug: d.lutrisSlug,
   };
 }
 
@@ -78,6 +83,7 @@ function steamDetails(install: SteamInstall, out: Map<string, GameDetails>): voi
           playtimeMin: num(getString(local ?? [], ...apps, "Playtime")),
           lastPlayed: num(getString(local ?? [], ...apps, "LastPlayed")),
           artPaths: steamArt(cache, appid),
+          prefixDir: existing(join(steamapps, "compatdata", appid, "pfx")),
         }),
       );
     }
@@ -164,6 +170,7 @@ function heroicDetails(install: HeroicInstall, out: Map<string, GameDetails>): v
           installDir: installDirs.get(appName) ?? installPath,
           playtimeMin: num(t.totalPlayed),
           lastPlayed: last && Number.isFinite(last) ? last : undefined,
+          prefixDir: heroicPrefix(install.root, appName),
           artPaths: {
             hero: cached(e.art_background) ?? cached(e.art_cover),
             cover: cached(e.art_square),
@@ -175,6 +182,12 @@ function heroicDetails(install: HeroicInstall, out: Map<string, GameDetails>): v
       );
     }
   }
+}
+
+// A Heroic game's own Wine prefix (GamesConfig/<appName>.json), if it has one.
+function heroicPrefix(root: string, appName: string): string | undefined {
+  const cfg = obj(obj(readJson(join(root, "GamesConfig", `${appName}.json`)))[appName]);
+  return typeof cfg.winePrefix === "string" ? existing(cfg.winePrefix) : undefined;
 }
 
 // ---- Lutris ----
@@ -210,6 +223,7 @@ function lutrisDetails(install: LutrisInstall, home: string, out: Map<string, Ga
         installDir: r.directory ?? undefined,
         playtimeMin: r.playtime ? Math.round(r.playtime * 60) : undefined,
         lastPlayed: num(r.lastplayed),
+        lutrisSlug: r.slug,
         artPaths: { hero: art("banners"), header: art("banners"), cover: art("coverart"), icon: existing(join(icons, `lutris_${r.slug}.png`)) },
       }),
     );

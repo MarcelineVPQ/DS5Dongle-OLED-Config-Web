@@ -2509,3 +2509,17 @@ html[data-theme="dark"] .dk {
 .gp-flash {
   animation: gp-flash 1.2s ease-out;
 }
+.gp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 10px var(--dk-pad) 0;
+}
+.gp-play {
+  min-width: 110px;
+  font-weight: 700;
+}
+.gp-action-failed {
+  color: var(--cv-warn, #d97706);
+}

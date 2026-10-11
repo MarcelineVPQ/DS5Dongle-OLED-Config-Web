@@ -4,10 +4,11 @@
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
 import { homedir } from "node:os";
+import { actionUrl, availableActions } from "./actions";
 import { errorText } from "../../../src/errorText";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
-import type { ArtKind, GameEntry, GameInfo } from "../../../src/desktop/games/types";
+import type { ArtKind, GameAction, GameEntry, GameInfo } from "../../../src/desktop/games/types";
 import { join } from "node:path";
 import type { CloseLauncherResult, ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
 import type { ApplyResult, GamesReport, LauncherId } from "../../../src/desktop/games/types";
@@ -96,7 +97,27 @@ export class GamesService {
   // (from the last scan; the page asks after scanning).
   details(): Record<string, GameInfo> {
     this.requireConsent();
-    return Object.fromEntries([...this.lastDetails].map(([key, { artPaths: _paths, ...info }]) => [key, info]));
+    const games = new Map(this.lastGames.map((g) => [g.key, g]));
+    return Object.fromEntries(
+      [...this.lastDetails].map(([key, { artPaths: _paths, prefixDir, lutrisSlug, ...info }]) => {
+        const game = games.get(key);
+        const actions = game ? availableActions(game, { installDir: !!info.installDir, prefixDir: !!prefixDir, lutrisSlug }) : [];
+        return [key, { ...info, actions }];
+      }),
+    );
+  }
+
+  // A game page action, resolved here from the last scan: a launcher link to
+  // open, or a scanned folder to show. Unknown games and actions do nothing.
+  gameAction(key: string, action: GameAction): { url?: string; folder?: string } {
+    this.requireConsent();
+    const game = this.lastGames.find((g) => g.key === key);
+    const d = this.lastDetails.get(key);
+    if (!game) return {};
+    if (action === "installFolder") return d?.installDir ? { folder: d.installDir } : {};
+    if (action === "prefixFolder") return d?.prefixDir ? { folder: d.prefixDir } : {};
+    const url = actionUrl(game, action, d?.lutrisSlug);
+    return url ? { url } : {};
   }
 
   // A local art file for the ds5-art:// protocol: only files the last scan

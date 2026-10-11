@@ -164,6 +164,12 @@ function start(): void {
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
+    gameAction: async (u) => {
+      const target = linuxOnly((g) => g.gameAction(u.gameKey, u.action));
+      if (target.url) await shell.openExternal(target.url);
+      else if (target.folder && existsSync(target.folder)) return (await shell.openPath(target.folder)) === "";
+      return !!(target.url || target.folder);
+    },
     onStatus: (status) => tray?.update(status),
     onTrayIcon: (png) => tray?.setCustomIcon(png),
     getSettings: () => settings,

@@ -10,7 +10,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { useMsg } from "../pages/GamesPage";
-import type { GameEntry, GameInfo, GamesReport } from "../games/types";
+import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 
@@ -68,6 +68,8 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <Stat label={t("desktop.library.dualsense")} value={`${TIER_ICON[support.tier]} ${t(`desktop.library.tier.${support.tier}`)}`} onClick={() => jump("support")} />
         {record?.mine?.rating && <Stat label={t("desktop.library.yourRating")} value={"★".repeat(record.mine.rating)} />}
       </div>
+
+      <GameActions game={game} info={info} running={running} />
 
       <div className="gp-cols">
         <div className="gp-col">
@@ -496,5 +498,45 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
         </p>
       )}
     </section>
+  );
+}
+
+// Launch and open: the launcher's own links and the game's folders (built in
+// the main process from the scan; only the actions this game has).
+function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState<GameAction | null>(null);
+  const [failed, setFailed] = useState<GameAction | null>(null);
+  const actions = info?.actions ?? [];
+  if (actions.length === 0) return null;
+  const run = async (action: GameAction) => {
+    setBusy(action);
+    setFailed(null);
+    try {
+      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) setFailed(action);
+    } catch {
+      setFailed(action);
+    } finally {
+      // Launching takes the launcher a moment; keep the button busy briefly.
+      setTimeout(() => setBusy(null), action === "play" ? 3000 : 600);
+    }
+  };
+  const launcher = t(`desktop.library.launcherName.${game.launcher}`);
+  return (
+    <div className="gp-actions">
+      {actions.includes("play") && (
+        <button type="button" className="dk-btn primary gp-play" disabled={running || busy === "play"} onClick={() => void run("play")} title={t("desktop.library.action.playHint", { launcher })}>
+          {running ? `● ${t("desktop.library.running")}` : busy === "play" ? t("desktop.library.action.starting") : `▶ ${t("desktop.library.action.play")}`}
+        </button>
+      )}
+      {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
+        .filter((a) => actions.includes(a))
+        .map((a) => (
+          <button key={a} type="button" className="dk-btn" disabled={busy === a} title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => void run(a)}>
+            {t(`desktop.library.action.${a}`)}
+          </button>
+        ))}
+      {failed && <span className="dk-hint gp-action-failed">{t("desktop.library.action.failed")}</span>}
+    </div>
   );
 }

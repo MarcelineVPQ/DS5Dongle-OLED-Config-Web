@@ -914,7 +914,23 @@
       "summary": "{{games}} Spiele · {{dualsense}} mit DualSense-Funktionen · {{profiles}} mit Profil",
       "recent": "Zuletzt gespielt",
       "tierLegend": "Was die Stufen bedeuten",
-      "compatHint": "Adaptive Trigger und HD-Haptik erreichen Windows-Spiele nur über den DualSense-Proton-Build."
+      "compatHint": "Adaptive Trigger und HD-Haptik erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
+      "action": {
+        "play": "Spielen",
+        "starting": "Startet…",
+        "playHint": "Spiel in {{launcher}} starten",
+        "properties": "Steam-Eigenschaften",
+        "propertiesHint": "Die Eigenschaften des Spiels in Steam öffnen (Startoptionen, Kompatibilität)",
+        "steamInput": "Steam-Input-Layout",
+        "steamInputHint": "Das Controller-Layout des Spiels in Steam öffnen",
+        "libraryPage": "Steam-Seite",
+        "libraryPageHint": "Das Spiel in deiner Steam-Bibliothek zeigen",
+        "installFolder": "Installationsordner",
+        "installFolderHint": "Den Ordner öffnen, in dem das Spiel installiert ist",
+        "prefixFolder": "Proton-Präfix",
+        "prefixFolderHint": "Den Windows-Ordner (Proton/Wine) des Spiels öffnen: Einstellungen und Spielstände liegen oft hier",
+        "failed": "Konnte nicht geöffnet werden. Ist der Launcher installiert?"
+      }
     },
     "dongleConsole": {
       "title": "Dongle-Konsole",

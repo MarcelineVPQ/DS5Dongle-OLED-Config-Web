@@ -913,7 +913,23 @@
       "summary": "{{games}} games · {{dualsense}} with DualSense features · {{profiles}} with a profile",
       "recent": "Recently played",
       "tierLegend": "What the tiers mean",
-      "compatHint": "Adaptive triggers and HD haptics reach Windows games only through the DualSense Proton build."
+      "compatHint": "Adaptive triggers and HD haptics reach Windows games only through the DualSense Proton build.",
+      "action": {
+        "play": "Play",
+        "starting": "Starting…",
+        "playHint": "Start the game in {{launcher}}",
+        "properties": "Steam properties",
+        "propertiesHint": "Open the game's Properties in Steam (launch options, compatibility)",
+        "steamInput": "Steam Input layout",
+        "steamInputHint": "Open the game's controller layout in Steam",
+        "libraryPage": "Steam page",
+        "libraryPageHint": "Show the game in your Steam library",
+        "installFolder": "Install folder",
+        "installFolderHint": "Open the folder the game is installed in",
+        "prefixFolder": "Proton prefix",
+        "prefixFolderHint": "Open the game's Windows (Proton/Wine) folder: settings and saves often live here",
+        "failed": "Couldn't open that. Is the launcher installed?"
+      }
     },
     "dongleConsole": {
       "title": "Dongle console",

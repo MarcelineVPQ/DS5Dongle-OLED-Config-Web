@@ -914,7 +914,23 @@
       "summary": "{{games}} jeux · {{dualsense}} avec fonctions DualSense · {{profiles}} avec un profil",
       "recent": "Joués récemment",
       "tierLegend": "Signification des niveaux",
-      "compatHint": "Les gâchettes adaptatives et l'haptique HD n'arrivent aux jeux Windows que via la version Proton DualSense."
+      "compatHint": "Les gâchettes adaptatives et l'haptique HD n'arrivent aux jeux Windows que via la version Proton DualSense.",
+      "action": {
+        "play": "Jouer",
+        "starting": "Lancement…",
+        "playHint": "Lancer le jeu dans {{launcher}}",
+        "properties": "Propriétés Steam",
+        "propertiesHint": "Ouvrir les propriétés du jeu dans Steam (options de lancement, compatibilité)",
+        "steamInput": "Disposition Steam Input",
+        "steamInputHint": "Ouvrir la disposition de manette du jeu dans Steam",
+        "libraryPage": "Page Steam",
+        "libraryPageHint": "Afficher le jeu dans votre bibliothèque Steam",
+        "installFolder": "Dossier d'installation",
+        "installFolderHint": "Ouvrir le dossier où le jeu est installé",
+        "prefixFolder": "Préfixe Proton",
+        "prefixFolderHint": "Ouvrir le dossier Windows (Proton/Wine) du jeu : réglages et sauvegardes s'y trouvent souvent",
+        "failed": "Impossible d'ouvrir. Le lanceur est-il installé ?"
+      }
     },
     "dongleConsole": {
       "title": "Console du dongle",

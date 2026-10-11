@@ -54,6 +54,10 @@ export interface GameEntry {
 export type ArtKind = "hero" | "logo" | "cover" | "header" | "icon";
 
 // What the launchers keep on disk about a game (Games library page).
+// Game page actions (electron/main/games/actions.ts builds what they open).
+export const GAME_ACTIONS = ["play", "properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const;
+export type GameAction = (typeof GAME_ACTIONS)[number];
+
 export interface GameInfo {
   installDir?: string;
   sizeBytes?: number;
@@ -62,6 +66,7 @@ export interface GameInfo {
   lastUpdated?: number; // unix seconds
   buildId?: string; // Steam: changes with every game update
   art: ArtKind[];
+  actions?: GameAction[]; // filled in by the games service
 }
 
 export interface LauncherInfo {

@@ -914,7 +914,23 @@
       "summary": "{{games}} juegos · {{dualsense}} con funciones DualSense · {{profiles}} con perfil",
       "recent": "Jugados recientemente",
       "tierLegend": "Qué significan los niveles",
-      "compatHint": "Los gatillos adaptativos y los hápticos HD solo llegan a los juegos de Windows con la versión Proton DualSense."
+      "compatHint": "Los gatillos adaptativos y los hápticos HD solo llegan a los juegos de Windows con la versión Proton DualSense.",
+      "action": {
+        "play": "Jugar",
+        "starting": "Iniciando…",
+        "playHint": "Iniciar el juego en {{launcher}}",
+        "properties": "Propiedades de Steam",
+        "propertiesHint": "Abrir las propiedades del juego en Steam (opciones de lanzamiento, compatibilidad)",
+        "steamInput": "Configuración de Steam Input",
+        "steamInputHint": "Abrir la configuración de mando del juego en Steam",
+        "libraryPage": "Página de Steam",
+        "libraryPageHint": "Mostrar el juego en tu biblioteca de Steam",
+        "installFolder": "Carpeta de instalación",
+        "installFolderHint": "Abrir la carpeta donde está instalado el juego",
+        "prefixFolder": "Prefijo de Proton",
+        "prefixFolderHint": "Abrir la carpeta de Windows (Proton/Wine) del juego: ajustes y partidas guardadas suelen estar aquí",
+        "failed": "No se pudo abrir. ¿Está instalado el lanzador?"
+      }
     },
     "dongleConsole": {
       "title": "Consola del dongle",

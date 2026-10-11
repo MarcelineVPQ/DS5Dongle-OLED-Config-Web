@@ -908,7 +908,23 @@
       "summary": "{{games}} 本のゲーム · DualSense 機能対応 {{dualsense}} 本 · プロファイルあり {{profiles}} 本",
       "recent": "最近プレイ",
       "tierLegend": "ランクの意味",
-      "compatHint": "アダプティブトリガーと HD ハプティクスは、DualSense 版 Proton を使ったときだけ Windows ゲームに届きます。"
+      "compatHint": "アダプティブトリガーと HD ハプティクスは、DualSense 版 Proton を使ったときだけ Windows ゲームに届きます。",
+      "action": {
+        "play": "プレイ",
+        "starting": "起動中…",
+        "playHint": "{{launcher}} でゲームを起動",
+        "properties": "Steam のプロパティ",
+        "propertiesHint": "Steam でゲームのプロパティを開く（起動オプション、互換性）",
+        "steamInput": "Steam Input の配置",
+        "steamInputHint": "Steam でゲームのコントローラー配置を開く",
+        "libraryPage": "Steam ページ",
+        "libraryPageHint": "Steam ライブラリでゲームを表示",
+        "installFolder": "インストール先",
+        "installFolderHint": "ゲームがインストールされているフォルダーを開く",
+        "prefixFolder": "Proton プレフィックス",
+        "prefixFolderHint": "ゲームの Windows（Proton/Wine）フォルダーを開く：設定やセーブがよくここにあります",
+        "failed": "開けませんでした。ランチャーはインストールされていますか？"
+      }
     },
     "dongleConsole": {
       "title": "ドングルコンソール",

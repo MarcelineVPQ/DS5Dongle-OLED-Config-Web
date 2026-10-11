@@ -67,6 +67,7 @@ const api: DesktopApi = {
   libraryDeleteProfile: (gameKey) => ipcRenderer.invoke(IPC.libraryDeleteProfile, gameKey),
   librarySetMine: (update) => ipcRenderer.invoke(IPC.librarySetMine, update),
   librarySetRestore: (restore) => ipcRenderer.invoke(IPC.librarySetRestore, restore),
+  gameAction: (update) => ipcRenderer.invoke(IPC.gameAction, update),
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

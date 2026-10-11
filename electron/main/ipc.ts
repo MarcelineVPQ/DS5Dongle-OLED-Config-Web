@@ -2,7 +2,7 @@
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import { GameKeySchema, LibraryFileSchema, MineSchema, ProfileSettingsSchema, type LibraryFile, type Mine, type ProfileSettings } from "../../src/desktop/games/library";
-import type { GameInfo } from "../../src/desktop/games/types";
+import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
   IPC,
@@ -51,6 +51,7 @@ export const LauncherSchema = z.enum(["steam", "heroic", "lutris"]);
 const TitleSchema = z.string().min(1).max(300);
 export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, settings: ProfileSettingsSchema });
 export const SetMineSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, mine: MineSchema });
+export const GameActionSchema = z.strictObject({ gameKey: GameKeySchema, action: z.enum(GAME_ACTIONS) });
 export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable();
 
 export interface IpcHandlers {
@@ -61,6 +62,7 @@ export interface IpcHandlers {
   libraryDeleteProfile: (gameKey: string) => LibraryFile;
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
+  gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
@@ -154,6 +156,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.libraryDeleteProfile, GameKeySchema, h.libraryDeleteProfile);
   invokeWith(IPC.librarySetMine, SetMineSchema, h.librarySetMine);
   invokeWith(IPC.librarySetRestore, RestoreSchema, h.librarySetRestore);
+  invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

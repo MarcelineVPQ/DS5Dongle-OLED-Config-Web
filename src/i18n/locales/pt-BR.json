@@ -914,7 +914,23 @@
       "summary": "{{games}} jogos · {{dualsense}} com recursos DualSense · {{profiles}} com perfil",
       "recent": "Jogados recentemente",
       "tierLegend": "O que os níveis significam",
-      "compatHint": "Gatilhos adaptáveis e háptico HD só chegam aos jogos de Windows pela versão Proton DualSense."
+      "compatHint": "Gatilhos adaptáveis e háptico HD só chegam aos jogos de Windows pela versão Proton DualSense.",
+      "action": {
+        "play": "Jogar",
+        "starting": "Iniciando…",
+        "playHint": "Iniciar o jogo no {{launcher}}",
+        "properties": "Propriedades na Steam",
+        "propertiesHint": "Abrir as propriedades do jogo na Steam (opções de inicialização, compatibilidade)",
+        "steamInput": "Layout do Steam Input",
+        "steamInputHint": "Abrir o layout de controle do jogo na Steam",
+        "libraryPage": "Página na Steam",
+        "libraryPageHint": "Mostrar o jogo na sua biblioteca da Steam",
+        "installFolder": "Pasta de instalação",
+        "installFolderHint": "Abrir a pasta onde o jogo está instalado",
+        "prefixFolder": "Prefixo do Proton",
+        "prefixFolderHint": "Abrir a pasta do Windows (Proton/Wine) do jogo: configurações e saves costumam ficar aqui",
+        "failed": "Não deu para abrir. O launcher está instalado?"
+      }
     },
     "dongleConsole": {
       "title": "Console do dongle",
