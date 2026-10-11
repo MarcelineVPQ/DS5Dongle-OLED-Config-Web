@@ -2,36 +2,14 @@
 // Never force-kills: Steam gets its own `-shutdown`, Heroic and Lutris get
 // SIGTERM (what a normal window-manager quit sends), then we wait.
 import { execFile } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
 import type { CloseLauncherResult } from "../../../src/desktop/api";
 import type { LauncherId } from "../../../src/desktop/games/types";
+import { readProcs, type ProcView } from "./running";
 
-interface Proc {
-  pid: number;
-  comm: string;
-  args: string[];
-}
+type Proc = ProcView;
 
-function processes(): Proc[] {
-  const uid = process.getuid?.();
-  const out: Proc[] = [];
-  for (const entry of readdirSync("/proc")) {
-    if (!/^\d+$/.test(entry)) continue;
-    try {
-      const status = readFileSync(`/proc/${entry}/status`, "utf8");
-      // Only the user's own processes.
-      if (uid !== undefined && !new RegExp(`^Uid:\\s+${uid}\\b`, "m").test(status)) continue;
-      out.push({
-        pid: Number(entry),
-        comm: readFileSync(`/proc/${entry}/comm`, "utf8").trim(),
-        args: readFileSync(`/proc/${entry}/cmdline`, "utf8").split("\0").filter(Boolean),
-      });
-    } catch {
-      // process exited while we looked
-    }
-  }
-  return out;
-}
+// The user's own processes (one /proc reader for the app: running.ts).
+const processes = readProcs;
 
 const isMain = (p: Proc) => !p.args.some((a) => a.startsWith("--type="));
 

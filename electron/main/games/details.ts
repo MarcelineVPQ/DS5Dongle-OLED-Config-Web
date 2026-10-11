@@ -7,11 +7,12 @@
 // Art paths stay in the main process: the page only learns which kinds exist
 // and loads them through the ds5-art:// protocol by game key (art.ts).
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { arr, obj, readJson } from "./files";
 import { findHeroicInstalls, type HeroicInstall } from "./heroic";
 import { findLutrisInstalls, type LutrisInstall } from "./lutris";
-import { findSteamInstalls, readVdfFile, steamLibraries, type SteamInstall } from "./steam";
+import { findSteamInstalls, readVdfFile, steamAppManifests, type SteamInstall } from "./steam";
 import { getString } from "./vdf";
 import { idHash } from "./games";
 import type { ArtKind, GameInfo } from "../../../src/desktop/games/types";
@@ -23,15 +24,6 @@ export interface GameDetails extends GameInfo {
   lutrisSlug?: string;
 }
 
-const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
-const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
-function readJson(path: string): unknown {
-  try {
-    return JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    return null;
-  }
-}
 const num = (v: unknown): number | undefined => {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
   return Number.isFinite(n) && n > 0 ? n : undefined;
@@ -59,34 +51,24 @@ function steamDetails(install: SteamInstall, out: Map<string, GameDetails>): voi
   const prefix = `steam-${idHash(install.root)}`;
   const local = install.localConfigPath ? readVdfFile(install.localConfigPath) : null;
   const cache = join(install.root, "appcache", "librarycache");
-  for (const lib of steamLibraries(install)) {
-    const steamapps = join(lib, "steamapps");
-    let files: string[];
-    try {
-      files = readdirSync(steamapps).filter((f) => /^appmanifest_\d+\.acf$/.test(f));
-    } catch {
-      continue;
-    }
-    for (const f of files) {
-      const acf = readVdfFile(join(steamapps, f));
-      const appid = getString(acf ?? [], "AppState", "appid");
-      if (!appid) continue;
-      const dir = getString(acf ?? [], "AppState", "installdir");
-      const apps = ["UserLocalConfigStore", "Software", "Valve", "Steam", "apps", appid] as const;
-      out.set(
-        `${prefix}:steam:${appid}`,
-        info({
-          installDir: dir ? join(steamapps, "common", dir) : undefined,
-          sizeBytes: num(getString(acf ?? [], "AppState", "SizeOnDisk")),
-          lastUpdated: num(getString(acf ?? [], "AppState", "LastUpdated")),
-          buildId: getString(acf ?? [], "AppState", "buildid") ?? undefined,
-          playtimeMin: num(getString(local ?? [], ...apps, "Playtime")),
-          lastPlayed: num(getString(local ?? [], ...apps, "LastPlayed")),
-          artPaths: steamArt(cache, appid),
-          prefixDir: existing(join(steamapps, "compatdata", appid, "pfx")),
-        }),
-      );
-    }
+  for (const { steamapps, acf } of steamAppManifests(install)) {
+    const appid = getString(acf, "AppState", "appid");
+    if (!appid) continue;
+    const dir = getString(acf, "AppState", "installdir");
+    const apps = ["UserLocalConfigStore", "Software", "Valve", "Steam", "apps", appid] as const;
+    out.set(
+      `${prefix}:steam:${appid}`,
+      info({
+        installDir: dir ? join(steamapps, "common", dir) : undefined,
+        sizeBytes: num(getString(acf, "AppState", "SizeOnDisk")),
+        lastUpdated: num(getString(acf, "AppState", "LastUpdated")),
+        buildId: getString(acf, "AppState", "buildid") ?? undefined,
+        playtimeMin: num(getString(local ?? [], ...apps, "Playtime")),
+        lastPlayed: num(getString(local ?? [], ...apps, "LastPlayed")),
+        artPaths: steamArt(cache, appid),
+        prefixDir: existing(join(steamapps, "compatdata", appid, "pfx")),
+      }),
+    );
   }
 }
 

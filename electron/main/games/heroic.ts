@@ -1,7 +1,7 @@
 // Heroic Games Launcher (Epic via legendary, GOG, Amazon via nile, sideloaded):
 // installs, games and their Wine/Proton settings. Read side only.
 import { existsSync } from "node:fs";
-import { readParsed } from "./files";
+import { arr, obj, readJson } from "./files";
 import { join } from "node:path";
 import type { Store } from "../../../src/desktop/games/types";
 import { protonBuilds } from "./proton";
@@ -38,18 +38,6 @@ export function findHeroicInstalls(home: string): HeroicInstall[] {
     if (existsSync(join(root, "config.json"))) out.push({ root, flatpak, configPath: join(root, "config.json"), toolsDir: join(root, "tools/proton") });
   }
   return out;
-}
-
-function readJson(path: string): unknown {
-  return readParsed(path, JSON.parse);
-}
-
-function obj(v: unknown): Record<string, unknown> {
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
-}
-
-function arr(v: unknown): unknown[] {
-  return Array.isArray(v) ? v : [];
 }
 
 function wine(v: unknown): WineVersion | null {

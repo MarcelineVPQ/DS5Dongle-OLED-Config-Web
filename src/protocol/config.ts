@@ -27,6 +27,7 @@
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
 // lightbar panel (the web tool doesn't show them), and MUST always be encoded:
 // the firmware copies sizeof(Config_body) bytes, so a short body would zero them.
+import { toUint8Array } from "./bytes";
 
 export const CONFIG_BODY_SIZE = 37;
 // Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
@@ -337,12 +338,6 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     screenBrightness: u8(35, DEFAULT_CONFIG.screenBrightness),
     controllerWakesDisplay: u8(36, DEFAULT_CONFIG.controllerWakesDisplay ? 1 : 0) === 1,
   };
-}
-
-function toUint8Array(source: ArrayBuffer | DataView | Uint8Array): Uint8Array {
-  if (source instanceof Uint8Array) return source;
-  if (source instanceof DataView) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
-  return new Uint8Array(source);
 }
 
 function roundToStep(value: number, step: number): number {

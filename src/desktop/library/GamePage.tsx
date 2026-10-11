@@ -14,10 +14,9 @@ import { Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls"
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { useMsg } from "../pages/GamesPage";
 import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
+import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
-
-export const artUrl = (key: string, kind: string) => `ds5-art://art/${encodeURIComponent(key)}/${kind}`;
 
 interface Props {
   game: GameEntry;

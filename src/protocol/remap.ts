@@ -9,6 +9,7 @@
 // The table maps source index → target index; 0xFF = source disabled.
 
 import { CONFIG_BODY_SIZE, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
+import { toUint8Array } from "./bytes";
 
 export const REMAP_COUNT = 16;
 export const REMAP_PROTO_VER = 1;
@@ -94,10 +95,4 @@ export function encodeRemapSet(table: number[]): Uint8Array<ArrayBuffer> {
   report[3] = REMAP_PROTO_VER;
   report.set(table, 4);
   return report;
-}
-
-function toUint8Array(source: ArrayBuffer | DataView | Uint8Array): Uint8Array {
-  if (source instanceof Uint8Array) return source;
-  if (source instanceof DataView) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
-  return new Uint8Array(source);
 }

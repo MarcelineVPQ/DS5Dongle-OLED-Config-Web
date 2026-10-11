@@ -1,29 +1,3 @@
-/* Status colors (good / warning / bad), defined once for every theme:
-   use var(--status-*), never a literal. App settings -> Color vision sets
-   --cv-* on <html>, which take over. */
-:root {
-  --status-good: var(--cv-good, #15803d);
-  --status-warn: var(--cv-warn, #b45309);
-  --status-bad: var(--cv-bad, #dc2626);
-  /* Text on a status-colored badge or dot. */
-  --on-status: var(--cv-on-status, #fff);
-}
-html[data-theme="dark"] {
-  --status-good: var(--cv-good, #22c55e);
-  --status-warn: var(--cv-warn, #f59e0b);
-  --status-bad: var(--cv-bad, #ef4444);
-  --on-status: var(--cv-on-status, #000);
-}
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"],
-  html:not([data-theme]) {
-    --status-good: var(--cv-good, #22c55e);
-    --status-warn: var(--cv-warn, #f59e0b);
-    --status-bad: var(--cv-bad, #ef4444);
-    --on-status: var(--cv-on-status, #000);
-  }
-}
-
 /* Desktop (Electron) layout. Dense by design: a settings tool that sits next to
  * games and terminals. The shell is exactly the window: sidebar + page, with
  * only the page body scrolling, and only when the window is too small for it.
@@ -439,9 +413,6 @@ html[data-theme="dark"] .dk {
   border-color: var(--border-soft);
   background: var(--bg-segment);
 }
-.dk-btn:disabled {
-  cursor: default;
-}
 .dk-btn.primary {
   background: var(--dk-accent);
   border-color: var(--dk-accent);
@@ -458,6 +429,7 @@ html[data-theme="dark"] .dk {
   background: var(--dk-disabled-bg);
   border-color: var(--dk-disabled-bg);
   color: var(--dk-disabled-text);
+  cursor: default;
 }
 .dk-btn.danger {
   color: var(--text-error);
@@ -559,19 +531,6 @@ html[data-theme="dark"] .dk {
   font-size: 14px;
 }
 
-/* ---- Shared web components inside the desktop shell ----
- * The Remap editor (and the web form controls in general) carry the web
- * tool's roomy sizing. Re-tune them to the desktop density here instead of
- * forking the components. */
-.dk input[type="number"] {
-  min-height: 0;
-  font-weight: 500;
-}
-.dk select {
-  min-height: 0;
-  width: auto;
-}
-
 .dk-sign {
   width: 8px;
   text-align: right;
@@ -579,8 +538,6 @@ html[data-theme="dark"] .dk {
   font-variant-numeric: tabular-nums;
 }
 
-/* The language menu sits at the bottom of the sidebar: open it upward and to
- * the right so it never runs off the window. */
 /* Opens downward, its right edge on the button's, so it stays inside the
    side panel (no clipped top, no horizontal scrollbar). */
 .dk .language-toggle-menu {
@@ -892,12 +849,14 @@ html[data-theme="dark"] .dk {
   display: flex;
   justify-content: center;
   min-height: 0;
+  --ctl-press-ink: #fff; /* press tint: lighter (dark theme) or darker (light), per controller in LiveController */
 }
 .live-ctl svg {
   width: 100%;
   height: auto;
   max-height: 100%;
   overflow: visible;
+  filter: drop-shadow(0 calc(18px * var(--depth)) calc(28px * var(--depth)) rgb(0 0 0 / calc(var(--depth) * 0.45))); /* depth: scaled by --depth */
 }
 .live-ctl .bd {
   fill: var(--ctl-body);
@@ -953,9 +912,6 @@ html[data-theme="dark"] .dk {
 /* Pressed: a grayscale tint over the part's own color, darker on light
    buttons and lighter on dark ones (sticks, bumpers), so a press shows on
    every colorway; the accent could match the body (Cosmic Red). */
-.live-ctl {
-  --ctl-press-ink: #fff;
-}
 html[data-theme="light"] .live-ctl {
   --ctl-press-ink: #000;
 }
@@ -1019,6 +975,7 @@ html[data-theme="light"] .live-ctl {
 .dk.dk-one {
   /* page (+ its settings panel) | the navigation rail at the right edge */
   grid-template-columns: minmax(0, 1fr) auto;
+  isolation: isolate; /* the art backdrop stays behind everything */
 }
 .dk-icon-btn {
   padding: 0 7px;
@@ -1035,6 +992,8 @@ html[data-theme="light"] .live-ctl {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: var(--dk-gap);
+  position: relative;
+  isolation: isolate; /* the art backdrop (ArtBackdrop.tsx) layers inside it */
 }
 .live-view.collapsed {
   grid-template-columns: minmax(0, 1fr);
@@ -1052,6 +1011,7 @@ html[data-theme="light"] .live-ctl {
   justify-content: safe center;
   gap: 8px;
   padding: 8px;
+  container-type: inline-size; /* the data cards size by the stage, not the window */
 }
 /* Controller and its status stay together, centered as one block; the art
    scales with the window but leaves room for the status lines. */
@@ -1399,13 +1359,18 @@ html[data-theme="light"] .live-ctl {
 }
 
 /* Live readouts under the controller (live/LiveStrip.tsx), mirroring it. */
+/* The status strip: always four across (2 x 2 when narrow), never 3 + 1;
+   the tiles span the same width as the data cards below them. */
 .live-strip {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
-  flex-wrap: wrap;
   gap: 10px;
   margin-top: 4px;
+}
+.live-strip > .live-tile {
+  min-width: 0;
+  padding: 6px 10px;
 }
 .live-tile {
   display: grid;
@@ -1528,9 +1493,6 @@ html[data-theme="light"] .live-ctl {
 /* Live data panel (live/LiveData.tsx): all the numbers. */
 /* Six cards, columns by the panel's own width: 2, 3 or 6 per row, never a
    card alone on a row. */
-.live-stage {
-  container-type: inline-size;
-}
 /* Four equal cards: one row, or 2 x 2 when narrow. */
 .live-data {
   display: grid;
@@ -1550,6 +1512,7 @@ html[data-theme="light"] .live-ctl {
   border: 1px solid var(--border-default);
   border-radius: 10px;
   min-width: 0;
+  container-type: inline-size;
 }
 .live-data-card h3 {
   margin: 0 0 6px;
@@ -1574,6 +1537,11 @@ html[data-theme="light"] .live-ctl {
 .live-data-rows dt {
   color: var(--text-muted);
   white-space: nowrap;
+  /* a label too long for the card (some languages) shortens with "..." */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .live-data-rows dd,
 .live-data-xyz {
@@ -1603,14 +1571,6 @@ html[data-theme="light"] .live-ctl {
   width: 100%;
   height: 56px;
   margin: 6px 0 2px;
-}
-/* The tiles span the same width as the data cards below them. */
-.live-strip {
-  flex-wrap: nowrap;
-}
-.live-strip > .live-tile {
-  flex: 1 1 0;
-  min-width: 0;
 }
 
 /* Narrow (a small window with the panel open): two rows of four. */
@@ -1711,12 +1671,6 @@ html[data-theme="light"] .live-ctl {
 
 /* Card rows: the value always shows whole; a label too long for the card
    (some languages) shortens with "…" and shows in full on hover. */
-.live-data-rows dt {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .live-data-rows dd {
   flex: 0 0 auto;
   text-align: right;
@@ -1891,6 +1845,7 @@ html[data-theme="light"] .live-ctl {
   height: 20px;
   border-radius: 3px;
   object-fit: cover;
+  object-position: center top;
 }
 .lib-glyph {
   display: grid;
@@ -2126,6 +2081,7 @@ html[data-theme="light"] .live-ctl {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 12.5px;
   overflow: hidden;
+  flex: none; /* never squeezed by the dashboard: the whole OLED screen shows */
 }
 .dcon-head {
   display: flex;
@@ -2401,9 +2357,6 @@ html[data-theme="light"] .live-ctl {
   height: 24px;
   font-size: var(--dk-small);
 }
-.lib-row img {
-  object-position: center top;
-}
 .lib-home-pane .dk-stack {
   max-width: none;
 }
@@ -2538,27 +2491,16 @@ html[data-theme="light"] .live-ctl {
    right, like the other cards' rows) when it doesn't, so 4-5 digit
    accelerometer readings never spill. Follows the card's width, not the
    window's. */
-.live-data-card {
-  container-type: inline-size;
-}
 @container (max-width: 330px) {
   .live-data-xyz {
     grid-template-columns: minmax(0, 1fr);
     gap: 3px;
   }
 }
-/* The status strip: always four across (2 x 2 when narrow), never 3 + 1. */
-.live-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
 @container (max-width: 520px) {
   .live-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-.live-strip > .live-tile {
-  padding: 6px 10px;
 }
 /* Inputs card: the sticks and triggers drawn, then their numbers. */
 .live-data-sticks {
@@ -2600,10 +2542,6 @@ html[data-theme="light"] .live-ctl {
 }
 
 /* ---- Controller page backdrop (ArtBackdrop.tsx) ---- */
-.live-view {
-  position: relative;
-  isolation: isolate;
-}
 .live-view > .live-stage,
 .live-view > .live-panel {
   position: relative;
@@ -2629,8 +2567,7 @@ html[data-theme="light"] .live-ctl {
   animation: art-bd-kenburns 46s ease-in-out infinite alternate;
   will-change: transform;
 }
-.art-bd-layer.on,
-.art-bd-blobs {
+.art-bd-layer.on {
   opacity: 0.55;
 }
 .art-bd-blobs {
@@ -2665,9 +2602,6 @@ html[data-theme="light"] .live-ctl {
 
 /* The backdrop sits behind the whole window (the rail and the save bar float
    over it); everything else is layered above it. */
-.dk.dk-one {
-  isolation: isolate;
-}
 .dk.dk-one > .dk-main,
 .dk.dk-one > .rail-slot {
   position: relative;
@@ -2961,20 +2895,12 @@ html[data-cards-translucent] .live-data-card {
    anything you can click; tiles and covers wiggle once on hover. Reduce
    motion (the app's or the system's) keeps the shadows and drops the
    movement. ---- */
-:root {
-  --depth: 0.6;
-  --shadow-1: 0 1px 2px rgb(0 0 0 / calc(var(--depth) * 0.35)), 0 4px 12px rgb(0 0 0 / calc(var(--depth) * 0.22));
-  --shadow-2: 0 2px 4px rgb(0 0 0 / calc(var(--depth) * 0.4)), 0 12px 28px rgb(0 0 0 / calc(var(--depth) * 0.32));
-}
 .dk-card,
 .live-tile,
 .live-data-card,
 .lib-tile,
 .gp-hero {
   box-shadow: var(--shadow-1);
-}
-.live-ctl svg {
-  filter: drop-shadow(0 calc(18px * var(--depth)) calc(28px * var(--depth)) rgb(0 0 0 / calc(var(--depth) * 0.45)));
 }
 .live-tile-button,
 .lib-tile,
@@ -3098,6 +3024,7 @@ html[data-reduce-motion] .lib-row:hover {
   gap: 8px;
   width: min(100%, 900px);
   margin: 12px auto 0;
+  flex: none;
 }
 .dash-group {
   margin: 6px 0 0;
@@ -3295,12 +3222,6 @@ html[data-cards-translucent] .dash-card {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-/* The console never shrinks to make room for the dashboard below it (the
-   page scrolls instead), so the whole OLED screen always shows. */
-.dcon,
-.dash {
-  flex: none;
 }
 /* HDR lighting layer over the drawing (HdrGlow.tsx); beats the hero's
    "children are position: relative" rule. */

@@ -9,3 +9,9 @@ export function readParsed<T>(path: string, parse: (text: string) => T): T | nul
     return null;
   }
 }
+
+// JSON config files, read leniently: a missing or broken file reads as null,
+// and obj()/arr() turn anything unexpected into an empty object or list.
+export const readJson = (path: string): unknown => readParsed(path, JSON.parse);
+export const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);

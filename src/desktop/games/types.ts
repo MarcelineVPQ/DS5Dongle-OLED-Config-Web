@@ -102,3 +102,7 @@ export interface ApplyResult {
   backupId: string | null;
   blockedBy: LauncherId[]; // launchers that must be closed first
 }
+
+// A scanned game's artwork, served by the main process (ds5-art://, see
+// electron/main/games/artRequest.ts).
+export const artUrl = (key: string, kind: ArtKind) => `ds5-art://art/${encodeURIComponent(key)}/${kind}`;

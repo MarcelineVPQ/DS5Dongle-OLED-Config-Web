@@ -138,7 +138,7 @@ export class Updater {
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url });
     } catch (cause) {
-      return this.set({ phase: "failed", detail: `Couldn't check for updates: ${message(cause)}` });
+      return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}` });
     }
   }
 
@@ -184,7 +184,7 @@ export class Updater {
       this.installedPath = this.install(part, target);
       return this.set({ phase: "ready", version });
     } catch (cause) {
-      return this.set({ phase: "failed", detail: `${message(cause)} Your current version is untouched.` });
+      return this.set({ phase: "failed", detail: `${errorText(cause)} Your current version is untouched.` });
     } finally {
       this.busy = false;
     }
@@ -281,8 +281,4 @@ export class Updater {
     this.emit(state);
     return state;
   }
-}
-
-function message(cause: unknown): string {
-  return errorText(cause);
 }

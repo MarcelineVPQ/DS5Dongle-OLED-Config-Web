@@ -86,10 +86,11 @@ export function steamLibraries(install: SteamInstall): string[] {
   return [...libraries];
 }
 
-export function listSteamGames(install: SteamInstall): SteamGame[] {
-  const libraries = steamLibraries(install);
-  const games = new Map<string, SteamGame>();
-  for (const lib of libraries) {
+// Every installed app's manifest (appmanifest_<id>.acf) in every library,
+// with the library's steamapps folder. Shared by the game list and details.
+export function steamAppManifests(install: SteamInstall): Array<{ steamapps: string; acf: VdfNode }> {
+  const out: Array<{ steamapps: string; acf: VdfNode }> = [];
+  for (const lib of steamLibraries(install)) {
     const steamapps = join(lib, "steamapps");
     let files: string[];
     try {
@@ -99,11 +100,19 @@ export function listSteamGames(install: SteamInstall): SteamGame[] {
     }
     for (const f of files) {
       const acf = readVdfFile(join(steamapps, f));
-      const appid = getString(acf ?? [], "AppState", "appid");
-      const name = getString(acf ?? [], "AppState", "name");
-      if (!appid || !name || TOOL_APPIDS.has(appid) || TOOL_NAME.test(name)) continue;
-      games.set(appid, { appid, name });
+      if (acf) out.push({ steamapps, acf });
     }
+  }
+  return out;
+}
+
+export function listSteamGames(install: SteamInstall): SteamGame[] {
+  const games = new Map<string, SteamGame>();
+  for (const { acf } of steamAppManifests(install)) {
+    const appid = getString(acf, "AppState", "appid");
+    const name = getString(acf, "AppState", "name");
+    if (!appid || !name || TOOL_APPIDS.has(appid) || TOOL_NAME.test(name)) continue;
+    games.set(appid, { appid, name });
   }
   return [...games.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

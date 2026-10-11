@@ -33,8 +33,6 @@ export interface GamesServiceDeps {
   onProtonProgress: (p: ProtonProgress) => void;
 }
 
-const message = (cause: unknown) => errorText(cause);
-
 export class GamesService {
   private readonly home = homedir();
   private readonly backups: Backups;
@@ -163,7 +161,7 @@ export class GamesService {
         return { ok: true, restored: files.map((f) => this.tilde(f)) };
       } catch (cause) {
         if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };
-        return { ok: false, error: message(cause) };
+        return { ok: false, error: errorText(cause) };
       }
     });
   }
@@ -213,7 +211,7 @@ export class GamesService {
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);
         return { ok: true, name: build.name, installed: installed.map((p) => this.tilde(p)) };
       } catch (cause) {
-        return { ok: false, message: message(cause) };
+        return { ok: false, message: errorText(cause) };
       }
     });
   }

@@ -30,6 +30,7 @@ import {
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import type { LauncherId, Msg } from "../../../src/desktop/games/types";
+import type { GameBackup } from "../../../src/desktop/api";
 
 const KEEP = 10;
 
@@ -61,11 +62,8 @@ const ManifestSchema = z.object({
 });
 export type BackupManifest = z.infer<typeof ManifestSchema>;
 
-export interface BackupSummary {
-  id: string;
-  created: string;
-  changes: Msg[];
-  files: string[];
+// What the page lists (api.ts GameBackup), plus whether it was undone.
+export interface BackupSummary extends GameBackup {
   restored: boolean;
 }
 

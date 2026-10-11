@@ -168,10 +168,8 @@ export function rgbToHex([r, g, b]: number[]): string {
   );
 }
 
-export function hexToRgb(hex: string): [number, number, number] {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
-}
+// One #rrggbb parser for the app (theme/desktopPalette.ts).
+export { hexToRgb } from "./theme/desktopPalette";
 
 // A button for anything that waits on the dongle or the network, with the same
 // behavior as AVNetworkMonitor's Loading.action(): while the action runs it is

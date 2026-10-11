@@ -11,11 +11,10 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { useFlagPref } from "../storage";
+import { artUrl } from "../games/types";
 
 export const BACKDROP_KEY = "ds5.artBackdropOff";
 const CYCLE_MS = 20_000;
-
-const artUrl = (key: string) => `ds5-art://art/${encodeURIComponent(key)}/hero`;
 
 // A game page puts its own game behind the window while it's open.
 let pageGame: string | null = null;
@@ -118,7 +117,7 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   return (
     <div className="art-bd" aria-hidden="true">
       {keys.length > 0 ? (
-        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key)} visible={i === index} blurKnob={blur} />)
+        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />)
       ) : (
         <div className="art-bd-blobs" style={{ ["--bd-a" as string]: body, ["--bd-b" as string]: colors?.line ?? body }} />
       )}

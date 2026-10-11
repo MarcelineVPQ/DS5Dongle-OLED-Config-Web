@@ -78,6 +78,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   color-scheme: light;
+  /* Status colors (good / warning / bad): use var(--status-*), never a
+     literal. App settings -> Color vision sets --cv-* on <html>, which take over. */
+  --status-good: var(--cv-good, #15803d);
+  --status-warn: var(--cv-warn, #b45309);
+  --status-bad: var(--cv-bad, #dc2626);
+  --on-status: var(--cv-on-status, #fff); /* text on a status-colored badge or dot */
+  /* Depth (shadow strength; App settings -> Appearance -> Depth sets --depth). */
+  --depth: 0.6;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / calc(var(--depth) * 0.35)), 0 4px 12px rgb(0 0 0 / calc(var(--depth) * 0.22));
+  --shadow-2: 0 2px 4px rgb(0 0 0 / calc(var(--depth) * 0.4)), 0 12px 28px rgb(0 0 0 / calc(var(--depth) * 0.32));
 }
 
 /* Dark palette — skill-recommended "Smart Home / IoT Dashboard" set:
@@ -136,6 +146,10 @@ html[data-theme="dark"] {
   --oled-banner-text: #facc15;
 
   color-scheme: dark;
+  --status-good: var(--cv-good, #22c55e);
+  --status-warn: var(--cv-warn, #f59e0b);
+  --status-bad: var(--cv-bad, #ef4444);
+  --on-status: var(--cv-on-status, #000);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -194,6 +208,10 @@ html[data-theme="dark"] {
     --oled-banner-text: #facc15;
 
     color-scheme: dark;
+    --status-good: var(--cv-good, #22c55e);
+    --status-warn: var(--cv-warn, #f59e0b);
+    --status-bad: var(--cv-bad, #ef4444);
+    --on-status: var(--cv-on-status, #000);
   }
 }
 
@@ -247,7 +265,6 @@ h3 {
 /* Smooth theme swap — all color/background/border transitions tweened
    so light↔dark feels intentional rather than a jarring flash. */
 body,
-input[type="number"],
 .theme-toggle,
 .theme-toggle button {
   transition:
@@ -256,11 +273,6 @@ input[type="number"],
     color var(--t-slow),
     box-shadow var(--t-base),
     transform var(--t-base);
-}
-
-/* Theme-toggle active button pop on click */
-.theme-toggle button.active {
-  animation: theme-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes theme-pop {
@@ -299,17 +311,6 @@ input[type="range"]:focus::-webkit-slider-thumb {
 
 input[type="range"] {
   width: 100%;
-}
-
-input[type="number"] {
-  width: 100%;
-  min-height: 38px;
-  padding: 0 10px;
-  color: var(--text-strong);
-  background: var(--bg-input);
-  border: 1px solid var(--border-input);
-  border-radius: 6px;
-  font-weight: 750;
 }
 
 /* ---------- Language toggle ---------- */
@@ -450,6 +451,7 @@ input[type="number"] {
   background: var(--bg-elevated);
   color: var(--accent);
   box-shadow: var(--shadow-segment);
+  animation: theme-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1); /* pop on click */
 }
 
 @keyframes tab-fade-in {

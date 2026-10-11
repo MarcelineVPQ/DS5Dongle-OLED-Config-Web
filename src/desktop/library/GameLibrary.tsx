@@ -7,8 +7,9 @@ import { usePref } from "../storage";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { GameEntry, GameInfo, GamesReport } from "../games/types";
+import { artUrl } from "../games/types";
 import type { LibraryFile } from "../games/library";
-import GamePage, { artUrl } from "./GamePage";
+import GamePage from "./GamePage";
 import { supportOf } from "./support";
 
 type Filter = "all" | "profile" | "dualsense" | "attention";
