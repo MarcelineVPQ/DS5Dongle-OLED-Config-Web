@@ -282,7 +282,8 @@ export class Backups {
 }
 
 // Only for sets written before owners were recorded; those touched just these locations.
-function guessOwner(path: string): Owner {
+function guessOwner(raw: string): Owner {
+  const path = raw.replace(/\\/g, "/"); // either separator
   if (path.includes("/.config/heroic/") || path.includes("/com.heroicgameslauncher.hgl/")) return "heroic";
   if (path.includes("/lutris/")) return "lutris";
   if (path.includes("/wireplumber/") || path.includes("/pipewire/")) return "system";
