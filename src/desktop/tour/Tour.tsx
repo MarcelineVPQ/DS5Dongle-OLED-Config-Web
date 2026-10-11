@@ -13,6 +13,10 @@ import type { PanelView } from "../live/PartPanel";
 import { narratorIdle, say, setNarrator, stopNarrator, useNarrator } from "../narrator";
 
 const DONE_KEY = "ds5.tourDone";
+// Off until the guide is rebuilt for the rail / console / library layout
+// (it points at the old top bar): it neither starts on its own nor shows its
+// "Show the tour again" card.
+export const TOUR_ENABLED = false;
 const PAD = 10;
 
 export function tourDone(): boolean {
@@ -121,7 +125,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // steps only count a press that starts after the step appeared (the ✕ that
   // moved on to "press any button" mustn't tick it straight away).
   const [armedStep, setArmedStep] = useState<number | null>(null);
-  const index = chosen ?? (ready && !closed && !tourDone() ? 0 : null);
+  const index = chosen ?? (TOUR_ENABLED && ready && !closed && !tourDone() ? 0 : null);
 
   const go = useCallback(
     (next: number) => {

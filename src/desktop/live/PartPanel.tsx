@@ -13,7 +13,7 @@ import type { DesktopSettings } from "../api";
 import { BusyButton, Row, Toggle } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
-import { startTour } from "../tour/Tour";
+import { TOUR_ENABLED, startTour } from "../tour/Tour";
 import DiagnosticsPage from "../pages/DiagnosticsPage";
 import { DongleInternals } from "../pages/DongleInternals";
 import FirmwarePage from "../pages/FirmwarePage";
@@ -288,15 +288,17 @@ function AppSettings() {
         </section>
       )}
       <NarratorSettings />
-      <section className="dk-card">
-        <h2>{t("desktop.tour.helpTitle")}</h2>
-        <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
-        <div className="dk-row-btns">
-          <button type="button" className="dk-btn" onClick={startTour}>
-            {t("desktop.tour.replay")}
-          </button>
-        </div>
-      </section>
+      {TOUR_ENABLED && (
+        <section className="dk-card">
+          <h2>{t("desktop.tour.helpTitle")}</h2>
+          <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
+          <div className="dk-row-btns">
+            <button type="button" className="dk-btn" onClick={startTour}>
+              {t("desktop.tour.replay")}
+            </button>
+          </div>
+        </section>
+      )}
     </>
   );
 }

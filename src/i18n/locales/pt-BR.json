@@ -1004,7 +1004,8 @@
     "rail": {
       "label": "Navegação",
       "pin": "Manter aberto",
-      "collapse": "Recolher"
+      "collapse": "Recolher",
+      "controllerAgain": "Controle · clique de novo para mostrar ou ocultar as configurações"
     }
   },
   "ad": {

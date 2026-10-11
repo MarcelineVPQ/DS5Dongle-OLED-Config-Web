@@ -998,7 +998,8 @@
     "rail": {
       "label": "导航",
       "pin": "保持展开",
-      "collapse": "收起"
+      "collapse": "收起",
+      "controllerAgain": "手柄 · 再次点击可显示或隐藏设置"
     }
   },
   "ad": {

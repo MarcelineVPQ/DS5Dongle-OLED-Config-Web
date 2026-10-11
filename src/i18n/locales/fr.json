@@ -1004,7 +1004,8 @@
     "rail": {
       "label": "Navigation",
       "pin": "Garder ouvert",
-      "collapse": "Replier"
+      "collapse": "Replier",
+      "controllerAgain": "Manette · cliquez à nouveau pour afficher ou masquer ses réglages"
     }
   },
   "ad": {

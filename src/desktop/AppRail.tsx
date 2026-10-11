@@ -57,7 +57,13 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
   }, []);
 
   const link = (item: RailItem, label: string, icon: ReactNode, badge?: number) => (
-    <button type="button" className={`rail-link${active === item ? " active" : ""}`} aria-current={active === item ? "page" : undefined} title={label} onClick={() => onSelect(item)}>
+    <button
+      type="button"
+      className={`rail-link${active === item ? " active" : ""}`}
+      aria-current={active === item ? "page" : undefined}
+      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : label}
+      onClick={() => onSelect(item)}
+    >
       <span className="rail-ic" aria-hidden="true">
         {icon}
         {badge ? <span className="rail-badge">{badge}</span> : null}
@@ -89,7 +95,10 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
             <span className="rail-ic" aria-hidden="true">
               <span className="rail-dot">{connected ? "✓" : "…"}</span>
             </span>
-            <span className="rail-label">{status}</span>
+            <span className="rail-label rail-status-text">
+              <span>{connected ? t("desktop.status.connected", "Dongle connected") : status}</span>
+              {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
+            </span>
           </div>
           <button type="button" className="rail-link rail-pin" title={`${pinLabel} (Ctrl+B)`} aria-pressed={pinned} onClick={() => pin(!pinned)}>
             <span className="rail-ic" aria-hidden="true">

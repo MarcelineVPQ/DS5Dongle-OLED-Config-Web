@@ -1,4 +1,5 @@
 import AppRail from "./AppRail";
+import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -263,8 +264,12 @@ export default function DesktopApp() {
         onSelect={(item) => {
           if (item === "games" || item === "about") setMain(item);
           else if (item === "controller") {
-            setMain("controller");
-            setPanel("overview");
+            // Already there: show / hide its settings panel.
+            if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
+            else {
+              setMain("controller");
+              setPanel("overview");
+            }
           } else openPanel(item);
         }}
         gamesSupported={games.supported}

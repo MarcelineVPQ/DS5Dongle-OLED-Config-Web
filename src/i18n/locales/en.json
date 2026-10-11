@@ -1003,7 +1003,8 @@
     "rail": {
       "label": "Navigation",
       "pin": "Keep open",
-      "collapse": "Collapse"
+      "collapse": "Collapse",
+      "controllerAgain": "Controller · click again to show or hide its settings"
     }
   },
   "ad": {

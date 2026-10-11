@@ -1004,7 +1004,8 @@
     "rail": {
       "label": "Navigation",
       "pin": "Offen halten",
-      "collapse": "Einklappen"
+      "collapse": "Einklappen",
+      "controllerAgain": "Controller · erneut klicken, um die Einstellungen ein- oder auszublenden"
     }
   },
   "ad": {

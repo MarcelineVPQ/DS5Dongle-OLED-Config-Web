@@ -2526,3 +2526,17 @@ html[data-theme="dark"] .dk {
 .rail-status.ok .rail-label {
   color: var(--text-strong);
 }
+.rail-status-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.rail-status-text > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rail-status-sub {
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+}

@@ -1,7 +1,6 @@
 // The one screen: the live controller on the left, the selected part's
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
-import { PanelRightOpen } from "lucide-react";
 import DongleConsole from "../dongle/DongleConsole";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +21,9 @@ import { REMAP_INDEX, type PartId } from "./parts";
 import { useRemap } from "./useRemap";
 
 const PANEL_KEY = "ds5.panelHidden";
+// The rail's Controller item, clicked while already on the controller: show or
+// hide the settings panel (the panel's own hide button does the same).
+export const PANEL_TOGGLE_EVENT = "ds5:toggle-panel";
 
 interface Props {
   bridge: UseDs5BridgeResult;
@@ -93,15 +95,21 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
   }, []);
+  useEffect(() => {
+    const toggle = () => {
+      if (collapsed) hidePanel(false);
+      else {
+        hidePanel(true);
+        onView("overview");
+      }
+    };
+    window.addEventListener(PANEL_TOGGLE_EVENT, toggle);
+    return () => window.removeEventListener(PANEL_TOGGLE_EVENT, toggle);
+  });
 
   return (
     <div className={`live-view${collapsed ? " collapsed" : ""}`}>
       <div className="live-stage">
-        {collapsed && (
-          <button type="button" className="dk-btn live-show-panel" onClick={() => hidePanel(false)}>
-            <PanelRightOpen size={14} aria-hidden="true" /> {t("desktop.live.showPanel", "Settings")}
-          </button>
-        )}
         {view === "dongle" ? (
           <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
         ) : (
