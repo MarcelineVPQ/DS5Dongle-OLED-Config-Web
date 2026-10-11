@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
-import { useFlagPref } from "../storage";
+import { useFlagPref, readPref } from "../storage";
 import { artUrl } from "../games/types";
 
 export const BACKDROP_KEY = "ds5.artBackdropOff";
@@ -28,9 +28,14 @@ const subscribePage = (l: () => void) => {
   return () => pageListeners.delete(l);
 };
 
+// Screenshots only (tools/screenshot_env.mjs): one game's art everywhere,
+// named by launcher and id ("steam:4078430"), so every shot matches.
+const PIN_KEY = "ds5.dev.backdropGame";
+
 // The open game page's art, else the running game's, else the most recently
 // played games in turn.
 function useBackdropKeys(): string[] {
+  const pin = readPref(PIN_KEY);
   const page = useSyncExternalStore(subscribePage, () => pageGame);
   const desktop = window.desktop;
   const [keys, setKeys] = useState<string[]>([]);
@@ -65,6 +70,10 @@ function useBackdropKeys(): string[] {
       off();
     };
   }, [desktop]);
+  if (pin) {
+    const pinned = keys.find((k) => k.endsWith(`:${pin}`));
+    if (pinned) return [pinned];
+  }
   if (page) return [page];
   return running && keys.includes(running) ? [running] : keys;
 }

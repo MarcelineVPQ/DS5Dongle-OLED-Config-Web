@@ -23,7 +23,8 @@ const port = Number(args.includes("--port") ? args[args.indexOf("--port") + 1] :
 const PRESET = new URL("../docs/screenshots/look.json", import.meta.url);
 const BACKUP = join(tmpdir(), "ds5-screenshot-env-backup.json");
 // Look settings only (not data like play history or the update notice).
-const LOOK_KEYS = /^(ds5-bridge-theme|i18nextLng|ds5\.(accent|glass|knob\..*|artBackdropOff|colorVision|reduceMotion|railPinned|panelHidden|librarySort|dev\.model|dev\.colorway|devTools|tourDone))$/;
+const LOOK_KEYS =
+  /^(ds5-bridge-theme|i18nextLng|ds5\.(accent|glass|knob\..*|artBackdropOff|colorVision|reduceMotion|railPinned|panelHidden|librarySort|dev\.model|dev\.colorway|dev\.backdropGame|devTools|tourDone))$/;
 
 const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
 const ws = new WebSocket(pages.find((p) => p.type === "page").webSocketDebuggerUrl);

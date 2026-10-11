@@ -19,7 +19,8 @@
     "ds5.dev.model": "",
     "ds5.artBackdropOff": "0",
     "ds5.knob.cardOpacity": "60",
-    "ds5-bridge-theme": "desktop"
+    "ds5-bridge-theme": "desktop",
+    "ds5.dev.backdropGame": "steam:4078430"
   },
   "viewport": {
     "width": 1215,

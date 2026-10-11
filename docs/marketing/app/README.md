@@ -1,8 +1,8 @@
 # App screenshots (marketing)
 
 Full-resolution (2x) screenshots of the desktop app, taken live with a Cosmic
-Red DualSense on firmware v0.8. The README and the in-app Guide use half-size
-copies in `docs/screenshots/`.
+Red DualSense on firmware v0.8 (the 0.8 layout). The guide's own screenshots
+are in `docs/screenshots/`, taken in one fixed look with `tools/screenshot_env.mjs`.
 
 | File | Shows |
 | --- | --- |

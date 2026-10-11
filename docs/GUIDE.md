@@ -26,10 +26,10 @@ Step by step, from the parts on your desk to every setting in the app. Each sect
 ### Putting it together
 
 1. **Headers:** solder them on (skip this with a Pico 2 WH).
-2. **The screen:** the OLED board plugs straight onto the Pico's headers, no wiring. Line up its **USB marking with the Pico's USB connector** (Waveshare's [product photos](https://www.waveshare.com/wiki/Pico-OLED-1.3) show it seated) and press it down evenly.
+2. **The screen:** the OLED board plugs straight onto the Pico's headers, no wiring. Seat it with its **KEY0 / KEY1 buttons at the end away from the Pico's USB port** (in the photo below, the USB cable goes in on the right) and press it down evenly.
 3. **Plug it in** (next section).
 
-![The Pico 2 W with the OLED board seated on top, USB end on the left](screenshots/guide-hardware.png)
+![A finished dongle: the Pico-OLED-1.3 seated on the Pico 2 W, KEY0 and KEY1 on the left, the USB cable going in on the right](screenshots/guide-hardware.png)
 
 ### Which USB port
 
@@ -43,8 +43,6 @@ The app includes the matching firmware, so this works offline.
 
 1. **A new Pico:** just plug it in. **A Pico with other firmware on it:** hold its **BOOTSEL** button while you plug it in.
 2. The app finds it and offers to **Install the firmware**. One click; keep it plugged in until it's done (your computer may also show a drive called RP2350: you don't need to open it).
-
-![The setup screen offering to install the firmware](screenshots/guide-setup.png)
 
 ### Pair your controller
 
