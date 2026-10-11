@@ -1,7 +1,7 @@
 {
   "name": "ds5-dongle-configurator",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
