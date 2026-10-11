@@ -7,7 +7,7 @@
 // image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
 // for free, so only a slow CSS transform animates (fine with software
 // rendering). Still with "reduce motion". Toggle: App settings.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { useFlagPref } from "../storage";
@@ -17,8 +17,22 @@ const CYCLE_MS = 20_000;
 
 const artUrl = (key: string) => `ds5-art://art/${encodeURIComponent(key)}/hero`;
 
-// Hero art of the running game, else of the most recently played games.
+// A game page puts its own game behind the window while it's open.
+let pageGame: string | null = null;
+const pageListeners = new Set<() => void>();
+export function setBackdropGame(key: string | null): void {
+  pageGame = key;
+  pageListeners.forEach((l) => l());
+}
+const subscribePage = (l: () => void) => {
+  pageListeners.add(l);
+  return () => pageListeners.delete(l);
+};
+
+// The open game page's art, else the running game's, else the most recently
+// played games in turn.
 function useBackdropKeys(): string[] {
+  const page = useSyncExternalStore(subscribePage, () => pageGame);
   const desktop = window.desktop;
   const [keys, setKeys] = useState<string[]>([]);
   const [running, setRunning] = useState<string | null>(null);
@@ -52,6 +66,7 @@ function useBackdropKeys(): string[] {
       off();
     };
   }, [desktop]);
+  if (page) return [page];
   return running && keys.includes(running) ? [running] : keys;
 }
 

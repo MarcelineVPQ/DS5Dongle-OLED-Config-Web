@@ -33,14 +33,17 @@ function panelOf(el: Element): { panel: Rgb; isDark: boolean } {
   return { panel, isDark: contrast(panel, [0, 0, 0]) < contrast(panel, [255, 255, 255]) };
 }
 
-// The same accent tokens for one part of the page only (a game page takes its
-// artwork's color; the rest of the app keeps the controller's), as an inline
-// style object. null: not colorful enough, keep the inherited accent.
+// A game page's own look: its cards in the artwork's color (blended into the
+// panel), text and accent made legible; the rest of the app keeps the
+// controller's. Inline style object; null for grey art.
 export function scopedAccent(color: string | null, el: Element | null): Record<string, string> | null {
   if (!color || !el) return null;
-  const { panel, isDark } = panelOf(el);
-  const accent = legibleAccent(color, panel, isDark);
-  return accent ? accentVars(accent, panel, isDark) : null;
+  const { panel } = panelOf(el);
+  const c = hex(color);
+  if (chroma(c) < 40) return null; // grey art: keep the controller's look
+  // The page's cards take the art's color, blended into the panel so it
+  // isn't overpowering; text and accent follow the same rules as the theme.
+  return surfacesFor(mix(panel, c, 0.45), c);
 }
 
 function parse(value: string): Rgb | null {
@@ -116,13 +119,18 @@ const SURFACES: Array<[string, number]> = [
 // colorway's line color made legible on that body.
 function controllerSurfaces(code: string | null): Record<string, string> | null {
   const c = colorway(code)?.colors;
-  if (!c) return null;
-  const body = hex(c.body);
+  return c ? surfacesFor(hex(c.body), hex(c.line)) : null;
+}
+
+// Card and panel surfaces in one color, text black or white (whichever
+// reads), the accent `trim` made legible on it. Shared by the controller
+// theme and game pages.
+function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
   const dark = contrast(body, [255, 255, 255]) >= contrast(body, [0, 0, 0]); // light text on it
   const ink: Rgb = dark ? [255, 255, 255] : [0, 0, 0];
   const css = (x: Rgb) => `rgb(${x.join(", ")})`;
   const text = (target: number, soften: number) => css(ensureContrast(mix(ink, body, soften), body, target));
-  const accent = ensureContrast(hex(c.line), body, 3);
+  const accent = ensureContrast(trim, body, 3);
   return {
     "--bg-panel": css(body),
     "--bg-elevated": css(body),

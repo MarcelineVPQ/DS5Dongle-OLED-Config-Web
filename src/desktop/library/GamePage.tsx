@@ -3,6 +3,7 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { setBackdropGame } from "../live/ArtBackdrop";
 import { scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
 import { settingsFrom } from "./useGameProfile";
@@ -57,6 +58,11 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       live = false;
     };
   }, [game.key]);
+  // The window's background shows this game's art while its page is open.
+  useEffect(() => {
+    setBackdropGame(info?.art.includes("hero") ? game.key : null);
+    return () => setBackdropGame(null);
+  }, [game.key, info]);
   // Scroll back to the top when another game is opened.
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
