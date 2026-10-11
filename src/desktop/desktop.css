@@ -243,7 +243,7 @@ html[data-theme="dark"] .dk {
 }
 .dk-row.stack .dk-seg {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
   width: 100%;
 }
 .dk-row.stack .dk-seg button {
@@ -2655,7 +2655,12 @@ html[data-theme="dark"] .dk {
 .art-bd-dim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 55%, transparent), color-mix(in srgb, var(--bg-page) 80%, transparent));
+  /* Background dim knob: the page color over the art, a bit more at the bottom. */
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg-page) var(--backdrop-dim, 55%), transparent),
+    color-mix(in srgb, var(--bg-page) calc(var(--backdrop-dim, 55%) + 20%), transparent)
+  );
 }
 @keyframes art-bd-kenburns {
   from {
@@ -2689,9 +2694,6 @@ html[data-theme="dark"] .dk {
    rim; the refraction itself is the backdrop filter from useLiquidGlass),
    a specular rim lit from where the pointer is, a liquid press. Content keeps
    its plain surfaces. ---- */
-html[data-glass] .art-bd-dim {
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 30%, transparent), color-mix(in srgb, var(--bg-page) 62%, transparent));
-}
 /* Docked: flush with the window edges, square corners (the user preferred
    that to Apple's floating rounded shapes). */
 html[data-glass] .app-rail {
@@ -2799,7 +2801,6 @@ html[data-glass] .rail-label {
   /* Room above the drawing for the top of the letters; the drawing then
      overlaps their lower part. */
   padding-top: calc(var(--title-size) * 0.42 + 24px);
-  --title-size: clamp(56px, 9.5cqi, 132px);
 }
 .live-title {
   position: absolute;
@@ -2827,7 +2828,7 @@ html[data-glass] .rail-label {
 /* Small white "Model:" above the name, left-aligned with it. */
 .live-title-label {
   padding-left: 0.2em;
-  color: #fff;
+  color: var(--text-strong);
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
@@ -2938,4 +2939,33 @@ html[data-reduce-motion] [class*="active"]:active,
 html[data-reduce-motion] .rail-link:active,
 html[data-reduce-motion] .dk-bar .dk-btn:active {
   transform: none !important;
+}
+/* Pairing slots: the narrow first column must still fit its header. */
+.dk-table.slots th:first-child,
+.dk-table.slots td:first-child {
+  min-width: 3.2em;
+  white-space: nowrap;
+}
+.live-preview-badge {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--cv-warn, #d97706);
+  color: #000;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+}
+/* In the settings panel the language button sits at the left: open the menu
+   to the right, so it stays inside the panel instead of being cut off. */
+.live-panel .language-toggle-menu {
+  right: auto;
+  left: 0;
+}
+/* Card opacity (App settings -> Appearance): cards and tiles let the
+   background through, blurred a little behind them for legibility. */
+html[data-cards-translucent] .dk-card,
+html[data-cards-translucent] .live-tile,
+html[data-cards-translucent] .live-data-card {
+  background: color-mix(in srgb, var(--bg-panel) var(--card-opacity, 100%), transparent) !important;
+  backdrop-filter: blur(10px);
 }

@@ -5,7 +5,8 @@
     "system": "System folgen",
     "dark": "Dunkles Thema",
     "groupLabel": "Farbthema",
-    "desktop": "Desktop-Farben übernehmen"
+    "desktop": "Desktop-Farben übernehmen",
+    "controller": "Wie mein Controller"
   },
   "languageToggle": {
     "groupLabel": "Sprache",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "Haptik-Verstärkung",
     "audioBufferLabel": "Audio-Pufferlänge",
-    "btMicLabel": "BT-Mikrofon"
+    "btMicLabel": "BT-Mikrofon",
+    "audioBufferSub": "Niedriger: weniger Audioverzögerung. Höher: stabileres Audio, falls es knackt."
   },
   "behavior": {
-    "inactiveTimeLabel": "Inaktivitäts-Timeout (Minuten)",
+    "inactiveTimeLabel": "Inaktivitäts-Timeout",
     "screenDimTimeoutLabel": "Display-Dimm-Timeout",
     "screenOffTimeoutLabel": "Display-Aus-Timeout",
     "pollingRateLabel": "Abfragerate",
@@ -426,7 +428,7 @@
         "stick-l": "Linker Stick (L3)",
         "stick-r": "Rechter Stick (R3)",
         "ps": "PS-Taste",
-        "mute": "Stummschalten",
+        "mute": "Stummtaste & Mikro",
         "speaker": "Lautsprecher",
         "body": "Griffe (Haptik)"
       },
@@ -443,7 +445,7 @@
       "remapDefault": "Standard",
       "remapHint": "Neubelegungen werden beim Übernehmen auf den Dongle geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
       "remapApply": "Neubelegung übernehmen",
-      "remapReset": "Alle zurücksetzen",
+      "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
       "effect": "Effekt",
@@ -871,6 +873,24 @@
       "advanced": "Erweitert",
       "reduceMotion": "Bewegung reduzieren",
       "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)"
+    },
+    "dev": {
+      "title": "Entwickler",
+      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an den Dongle gesendet. Strg+Umschalt+D blendet diese Karte aus.",
+      "model": "Modell",
+      "colorway": "Farbvariante",
+      "real": "Der echte",
+      "noArt": "keine Grafik",
+      "reset": "Zurück zum echten Controller",
+      "previewBadge": "Vorschau"
+    },
+    "knobs": {
+      "cardOpacity": "Kartendeckkraft",
+      "cardOpacitySub": "Niedriger lässt den Hintergrund durch die Karten scheinen",
+      "backdropDim": "Hintergrund abdunkeln",
+      "backdropDimSub": "Wie stark die Seite die Spielgrafik abdunkelt",
+      "backdropBlur": "Hintergrund-Unschärfe",
+      "backdropBlurSub": "Weichere oder schärfere Spielgrafik hinter der Seite"
     }
   },
   "ad": {

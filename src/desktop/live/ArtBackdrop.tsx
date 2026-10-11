@@ -4,16 +4,16 @@
 // Which art: the running game's banner, else the recently played games in
 // turn (a crossfade every 20 s); without any (Games scanning off, Windows /
 // macOS), soft blobs in the controller's colors. Cheap on purpose: each
-// image is drawn once into a 48 px canvas and stretched up, which blurs it
+// image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
 // for free, so only a slow CSS transform animates (fine with software
 // rendering). Still with "reduce motion". Toggle: App settings.
 import { useEffect, useRef, useState } from "react";
+import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { useFlagPref } from "../storage";
 
 export const BACKDROP_KEY = "ds5.artBackdropOff";
 const CYCLE_MS = 20_000;
-const SMALL_W = 48;
 
 const artUrl = (key: string) => `ds5-art://art/${encodeURIComponent(key)}/hero`;
 
@@ -56,7 +56,7 @@ function useBackdropKeys(): string[] {
 }
 
 // One image, drawn small (= blurred) into a canvas.
-function BlurredArt({ src, visible }: { src: string; visible: boolean }) {
+function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean; blurKnob: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -65,19 +65,22 @@ function BlurredArt({ src, visible }: { src: string; visible: boolean }) {
       const c = ref.current;
       const ctx = c?.getContext("2d");
       if (!c || !ctx) return;
-      c.width = SMALL_W;
-      c.height = Math.max(1, Math.round((SMALL_W * img.naturalHeight) / img.naturalWidth));
+      // Background blur knob: 0 = sharpest (320 px), 100 = softest (24 px).
+      const w = Math.round(320 - (blurKnob / 100) * (320 - 24));
+      c.width = w;
+      c.height = Math.max(1, Math.round((w * img.naturalHeight) / img.naturalWidth));
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, c.width, c.height);
       setReady(true);
     };
     img.src = src;
-  }, [src]);
+  }, [src, blurKnob]);
   return <canvas ref={ref} className={`art-bd-layer${visible && ready ? " on" : ""}`} aria-hidden="true" />;
 }
 
 export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null }) {
   const [off] = useFlagPref(BACKDROP_KEY);
+  const [blur] = useKnob(knob("backdropBlur"));
   const keys = useBackdropKeys();
   const [index, setIndex] = useState(0);
   useEffect(() => {
@@ -91,7 +94,7 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   return (
     <div className="art-bd" aria-hidden="true">
       {keys.length > 0 ? (
-        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key)} visible={i === index} />)
+        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key)} visible={i === index} blurKnob={blur} />)
       ) : (
         <div className="art-bd-blobs" style={{ ["--bd-a" as string]: body, ["--bd-b" as string]: colors?.line ?? body }} />
       )}

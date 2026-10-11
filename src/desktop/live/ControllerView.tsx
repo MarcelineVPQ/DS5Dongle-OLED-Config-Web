@@ -2,11 +2,13 @@
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
 import DongleConsole from "../dongle/DongleConsole";
+import { hasColorwayColor } from "./controllerAccent";
+import { useDevPreview, useShownIdentity } from "../devPreview";
 import { REGULAR_GLASS } from "../glass/variants";
 import { useGlass } from "../glass/useGlass";
 import { GLASS_KEY } from "../glass/glassPref";
 import { useFlagPref } from "../storage";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
@@ -49,7 +51,8 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
     1000,
     Boolean(client),
   ).value;
-  const id = status?.identity;
+  const id = useShownIdentity(status?.identity);
+  const preview = useDevPreview().active;
   const on = Boolean(id?.controllerConnected);
   const look = colorway(id?.colorwayCode ?? null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
@@ -79,6 +82,22 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
   // gets the whole width; opening any part (or "Settings") brings it back.
   const [panelHidden, hidePanel] = useFlagPref(PANEL_KEY);
   const collapsed = panelHidden && view === "overview";
+  // The model title fits the gap between the drawing's triggers (~46% of its
+  // width; a bold cap is ~0.6 em), measured from the drawing as drawn.
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [ctlWidth, setCtlWidth] = useState(800);
+  useEffect(() => {
+    const ctl = heroRef.current?.querySelector(".live-ctl");
+    if (!ctl) return;
+    // The art is scaled to fit its box (aspect kept), so the drawn width is
+    // the smaller of the box width and its height times the art's aspect.
+    const vb = ctl.querySelector("svg")?.viewBox.baseVal;
+    const aspect = vb && vb.height ? vb.width / vb.height : 1.8;
+    const ro = new ResizeObserver(([e]) => setCtlWidth(Math.min(e.contentRect.width, e.contentRect.height * aspect)));
+    ro.observe(ctl);
+    return () => ro.disconnect();
+  }, [on]);
+  const titleSize = Math.round(Math.max(28, Math.min(132, ctlWidth * 0.105, (ctlWidth * 0.46) / (0.6 * modelName.length))));
   // Glass style: the settings panel is an inspector, the regular variant
   // (more frost, for text); its cards stay standard surfaces.
   const [glass] = useFlagPref(GLASS_KEY);
@@ -111,10 +130,13 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
           <>
             {/* Magazine-cover title: the model in big caps behind the drawing,
                 which overlaps its lower part; "Model:" small above it. */}
-            <div className={`live-hero${on && id?.model ? " titled" : ""}`}>
+            <div ref={heroRef} className={`live-hero${on && id?.model ? " titled" : ""}`} style={{ ["--title-size" as string]: `${titleSize}px` }}>
               {on && id?.model && (
                 <div className="live-title" aria-hidden="true">
-                  <span className="live-title-label">{t("desktop.live.modelLabel")}</span>
+                  <span className="live-title-label">
+                    {t("desktop.live.modelLabel")}
+                    {preview && <span className="live-preview-badge">{t("desktop.dev.previewBadge")}</span>}
+                  </span>
                   <span className="live-title-name">{modelName}</span>
                 </div>
               )}
@@ -133,7 +155,7 @@ export default function ControllerView({ bridge, fw, view, onView, advancedOpen 
                 {look && (
                   <span className="live-spec">
                     <span className="live-title-label">{t("desktop.live.colorLabel")}</span>
-                    <span className="live-spec-value accent">{look.name}</span>
+                    <span className={`live-spec-value${hasColorwayColor(id?.colorwayCode ?? null) ? " accent" : ""}`}>{look.name}</span>
                   </span>
                 )}
                 <span className="live-spec">

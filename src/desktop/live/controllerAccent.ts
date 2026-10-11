@@ -11,7 +11,7 @@
 // ACCENT_OVERRIDES fixes any colorway the formula gets wrong.
 import { useEffect } from "react";
 import { colorway } from "./colorways";
-import { accentVars, contrast, ensureContrast, mix, type Rgb } from "../theme/desktopPalette";
+import { accentVars, contrast, ensureContrast, luminance, mix, type Rgb } from "../theme/desktopPalette";
 
 // Per-colorway accent, by the colorway code from the controller's serial.
 // null = keep the theme accent.
@@ -51,6 +51,25 @@ function parse(value: string): Rgb | null {
 
 // The app-wide accent source: the controller's colorway (null = the theme's).
 let controllerColor: string | null = null;
+let controllerCode: string | null = null;
+
+// The controller's shade, for the "Controller" theme: a light colorway (White,
+// Pearl, Silver, Starlight Blue) gives a light app, any other a dark one;
+// null while no colorway is known (the theme then follows the system).
+let shade: "light" | "dark" | null = null;
+const shadeListeners = new Set<() => void>();
+export const controllerShade = () => shade;
+export function onControllerShade(l: () => void): () => void {
+  shadeListeners.add(l);
+  return () => shadeListeners.delete(l);
+}
+function setShade(code: string | null): void {
+  const body = colorway(code)?.colors?.body;
+  const next = body ? (luminance(hex(body)) > 0.35 ? "light" : "dark") : null;
+  if (next === shade) return;
+  shade = next;
+  shadeListeners.forEach((l) => l());
+}
 
 // A color made legible on this panel: lightened (dark theme) or darkened
 // (light theme) to 3:1 against it; neutral colors (little chroma) give none.
@@ -61,6 +80,12 @@ export function legibleAccent(color: string, panel: Rgb, isDark: boolean, allowN
   let c = base;
   for (let i = 0; i < 20 && contrast(c, panel) < 3; i++) c = mix(c, toward, 0.08);
   return ensureContrast(c, panel, 3);
+}
+
+// Whether a colorway has a color of its own to give (not white/black/grey).
+export function hasColorwayColor(code: string | null): boolean {
+  const c = colorwayAccent(code);
+  return !!c && (ACCENT_OVERRIDES[code ?? ""] !== undefined || chroma(hex(c)) >= 40);
 }
 
 // The controller's accent color (#rrggbb) for a colorway code, or null.
@@ -86,6 +111,38 @@ const SURFACES: Array<[string, number]> = [
   ["--border-subtle", 0.1],
 ];
 
+// The "Controller" theme's surfaces: cards and panels in the controller's
+// own body color, text black or white (whichever reads), the accent the
+// colorway's line color made legible on that body.
+function controllerSurfaces(code: string | null): Record<string, string> | null {
+  const c = colorway(code)?.colors;
+  if (!c) return null;
+  const body = hex(c.body);
+  const dark = contrast(body, [255, 255, 255]) >= contrast(body, [0, 0, 0]); // light text on it
+  const ink: Rgb = dark ? [255, 255, 255] : [0, 0, 0];
+  const css = (x: Rgb) => `rgb(${x.join(", ")})`;
+  const text = (target: number, soften: number) => css(ensureContrast(mix(ink, body, soften), body, target));
+  const accent = ensureContrast(hex(c.line), body, 3);
+  return {
+    "--bg-panel": css(body),
+    "--bg-elevated": css(body),
+    "--bg-inset": css(mix(body, ink, 0.08)),
+    "--bg-segment": css(mix(body, ink, 0.12)),
+    "--bg-input": css(mix(body, ink, 0.1)),
+    "--border-default": css(mix(body, ink, 0.22)),
+    "--border-subtle": css(mix(body, ink, 0.14)),
+    "--border-soft": css(mix(body, ink, 0.3)),
+    "--border-input": css(mix(body, ink, 0.3)),
+    "--switch-off-bg": css(mix(body, ink, 0.3)),
+    "--text-strong": text(7, 0),
+    "--text-body": text(7, 0.05),
+    "--text-soft": text(5.5, 0.15),
+    "--text-muted": text(4.5, 0.3),
+    "--text-eyebrow": text(4.5, 0.3),
+    ...accentVars(accent, body, dark),
+  };
+}
+
 export function applyAccent(): void {
   const old = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   // Read the theme's own tokens, without our tint (else it compounds).
@@ -95,7 +152,17 @@ export function applyAccent(): void {
   const base = getComputedStyle(root);
   const surfaces = SURFACES.map(([name, t]) => [name, parse(base.getPropertyValue(name)), t] as const);
   if (old) old.disabled = false;
+  const full = document.documentElement.hasAttribute("data-controller-theme") ? controllerSurfaces(controllerCode) : null;
   const accent = controllerColor ? legibleAccent(controllerColor, panel, isDark, true) : null;
+  if (full) {
+    const text = `html:root, html:root .dk { ${Object.entries(full)
+      .map(([k, v]) => `${k}: ${v} !important;`)
+      .join(" ")} }`;
+    if (old?.textContent === text) return;
+    const el = old ?? document.head.appendChild(Object.assign(document.createElement("style"), { id: STYLE_ID }));
+    el.textContent = text;
+    return;
+  }
   if (!accent || !controllerColor) {
     old?.remove();
     return;
@@ -117,12 +184,14 @@ export const ACCENTS = ["controller", "desktop"] as const;
 // App root: the controller layer, and reapplying when the theme changes.
 export function useControllerAccent(code: string | null, choice: (typeof ACCENTS)[number]): void {
   useEffect(() => {
+    setShade(code);
+    controllerCode = code;
     controllerColor = choice === "controller" ? colorwayAccent(code) : null;
     applyAccent();
   }, [code, choice]);
   useEffect(() => {
     const mo = new MutationObserver(applyAccent);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme"] });
     mo.observe(document.head, { childList: true, subtree: true, characterData: true });
     return () => mo.disconnect();
   }, []);

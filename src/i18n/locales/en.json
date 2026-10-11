@@ -4,7 +4,8 @@
     "system": "Follow system theme",
     "dark": "Dark theme",
     "groupLabel": "Color theme",
-    "desktop": "Match desktop colors"
+    "desktop": "Match desktop colors",
+    "controller": "Match my controller"
   },
   "languageToggle": {
     "groupLabel": "Language",
@@ -61,10 +62,11 @@
   "haptics": {
     "gainLabel": "Haptics gain",
     "audioBufferLabel": "Audio buffer length",
-    "btMicLabel": "BT microphone"
+    "btMicLabel": "BT microphone",
+    "audioBufferSub": "Lower: less audio delay. Higher: steadier audio if it crackles."
   },
   "behavior": {
-    "inactiveTimeLabel": "Inactive timeout (minutes)",
+    "inactiveTimeLabel": "Inactive timeout",
     "screenDimTimeoutLabel": "Screen dim timeout",
     "screenOffTimeoutLabel": "Screen off timeout",
     "pollingRateLabel": "Polling rate",
@@ -425,7 +427,7 @@
         "stick-l": "Left stick (L3)",
         "stick-r": "Right stick (R3)",
         "ps": "PS button",
-        "mute": "Mute",
+        "mute": "Mute button & mic",
         "speaker": "Speaker",
         "body": "Grips (haptics)"
       },
@@ -442,7 +444,7 @@
       "remapDefault": "default",
       "remapHint": "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.",
       "remapApply": "Apply remap",
-      "remapReset": "Reset all",
+      "remapReset": "Reset all buttons",
       "remapResetHint": "Every button back to itself",
       "pull": "Pull",
       "effect": "Effect",
@@ -870,6 +872,24 @@
       "advanced": "Advanced",
       "reduceMotion": "Reduce motion",
       "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)"
+    },
+    "dev": {
+      "title": "Developer",
+      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to the dongle. Ctrl+Shift+D hides this card.",
+      "model": "Model",
+      "colorway": "Colorway",
+      "real": "The real one",
+      "noArt": "no art",
+      "reset": "Back to the real controller",
+      "previewBadge": "Preview"
+    },
+    "knobs": {
+      "cardOpacity": "Card opacity",
+      "cardOpacitySub": "Lower lets the background show through the cards",
+      "backdropDim": "Background dim",
+      "backdropDimSub": "How much the page darkens the game art",
+      "backdropBlur": "Background blur",
+      "backdropBlurSub": "Softer or sharper game art behind the page"
     }
   },
   "ad": {

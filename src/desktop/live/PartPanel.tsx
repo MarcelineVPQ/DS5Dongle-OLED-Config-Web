@@ -2,6 +2,9 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { KNOBS, useKnob, type Knob } from "../lookKnobs";
+import { COLORWAYS } from "./colorways";
+import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, type DevModel } from "../devPreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
@@ -16,7 +19,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 import type { DesktopSettings } from "../api";
-import { BusyButton, Row, Toggle } from "../controls";
+import { BusyButton, Row, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { TOUR_ENABLED, startTour } from "../tour/Tour";
@@ -296,6 +299,9 @@ function AppSettings() {
         <GlassSetting />
         <AccentSetting />
         <BackdropSetting />
+        {KNOBS.map((k) => (
+          <KnobSlider key={k.key} k={k} />
+        ))}
       </section>
       <section className="dk-card">
         <h2>{t("desktop.settings2.accessibility")}</h2>
@@ -339,6 +345,7 @@ function AppSettings() {
           </section>
         </>
       )}
+      <DeveloperSettings />
       {TOUR_ENABLED && (
         <section className="dk-card">
           <h2>{t("desktop.tour.helpTitle")}</h2>
@@ -529,4 +536,66 @@ function ReduceMotionSetting() {
   const { t } = useTranslation();
   const [on, setOn] = useFlagPref(REDUCE_MOTION_KEY);
   return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
+}
+
+// Developer (Ctrl+Shift+D): preview any controller model and colorway.
+function DeveloperSettings() {
+  const { t } = useTranslation();
+  const [shown] = useFlagPref(DEV_TOOLS_KEY);
+  const dev = useDevPreview();
+  if (!shown) return null;
+  const model = dev.model || "dualsense";
+  const codes = MODEL_COLORWAYS[model];
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.dev.title")}</h2>
+      <p className="dk-hint">{t("desktop.dev.hint")}</p>
+      <Row label={t("desktop.dev.model")}>
+        <select
+          className="dk-select"
+          aria-label={t("desktop.dev.model")}
+          value={dev.model}
+          onChange={(e) => {
+            const next = e.target.value as DevModel;
+            dev.setModel(next);
+            if (next && dev.colorway && !MODEL_COLORWAYS[next].includes(dev.colorway)) dev.setColorway("");
+          }}
+        >
+          <option value="">{t("desktop.dev.real")}</option>
+          <option value="dualsense">DualSense</option>
+          <option value="edge">DualSense Edge</option>
+        </select>
+      </Row>
+      <Row label={t("desktop.dev.colorway")}>
+        <select className="dk-select" aria-label={t("desktop.dev.colorway")} value={dev.colorway} onChange={(e) => dev.setColorway(e.target.value)}>
+          <option value="">{t("desktop.dev.real")}</option>
+          {codes.map((code) => (
+            <option key={code} value={code}>
+              {COLORWAYS[code].name}
+              {COLORWAYS[code].colors ? "" : ` (${t("desktop.dev.noArt")})`}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <div className="dk-row-btns">
+        <button
+          type="button"
+          className="dk-btn"
+          disabled={!dev.active}
+          onClick={() => {
+            dev.setModel("");
+            dev.setColorway("");
+          }}
+        >
+          {t("desktop.dev.reset")}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function KnobSlider({ k }: { k: Knob }) {
+  const { t } = useTranslation();
+  const [value, setValue] = useKnob(k);
+  return <Slider label={t(`desktop.knobs.${k.key}`)} sub={t(`desktop.knobs.${k.key}Sub`)} value={value} min={k.min} max={k.max} step={k.step} unit={k.unit} onChange={setValue} />;
 }

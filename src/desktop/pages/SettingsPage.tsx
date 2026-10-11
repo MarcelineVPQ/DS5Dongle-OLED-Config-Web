@@ -23,7 +23,16 @@ export function HapticsSection({ bridge }: SectionProps) {
     <section className="dk-card">
       <h2>{t("desktop.live.haptics", "Haptics")}</h2>
       <Slider label={t("haptics.gainLabel")} value={d.hapticsGain} min={1} max={6} step={0.1} digits={1} unit="×" invalid={issue("hapticsGain")} onChange={(v) => set("hapticsGain", v)} />
-      <Slider label={t("haptics.audioBufferLabel")} value={d.audioBufferLength} min={16} max={128} step={4} invalid={issue("audioBufferLength")} onChange={(v) => set("audioBufferLength", v)} />
+      <Slider
+        label={t("haptics.audioBufferLabel")}
+        sub={t("haptics.audioBufferSub")}
+        value={d.audioBufferLength}
+        min={16}
+        max={128}
+        step={4}
+        invalid={issue("audioBufferLength")}
+        onChange={(v) => set("audioBufferLength", v)}
+      />
     </section>
   );
 }
@@ -45,7 +54,7 @@ export function AutoHapticsSection({ bridge }: SectionProps) {
         label={t("autoHaptics.lpLabel")}
         value={d.autoHapticsLowpass}
         disabled={d.autoHapticsEnable === 0}
-        options={[80, 160, 250, 400].map((hz, i) => ({ value: i as AutoHapticsLowpass, label: `${hz}` }))}
+        options={[80, 160, 250, 400].map((hz, i) => ({ value: i as AutoHapticsLowpass, label: `${hz} Hz` }))}
         onChange={(v) => set("autoHapticsLowpass", v)}
       />
       <p className="dk-hint">{t(`autoHaptics.modes.${["off", "fallback", "mix", "replace"][d.autoHapticsEnable & 3]}.hint`)}</p>
@@ -94,8 +103,8 @@ export function PowerSection({ bridge }: SectionProps) {
   return (
     <section className="dk-card">
       <h2>{t("desktop.settings.power", "Power")}</h2>
-      <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
       <Toggle label={t("desktop.settings.idleDisconnect", "Disconnect when idle")} value={!d.disableInactiveDisconnect} onChange={(v) => set("disableInactiveDisconnect", !v)} />
+      <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
       <Toggle label={t("desktop.settings.picoLed", "Pico status LED")} value={!d.disablePicoLed} onChange={(v) => set("disablePicoLed", !v)} />
     </section>
   );

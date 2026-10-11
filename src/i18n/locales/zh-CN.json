@@ -5,7 +5,8 @@
     "system": "跟随系统",
     "dark": "深色主题",
     "groupLabel": "颜色主题",
-    "desktop": "跟随桌面配色"
+    "desktop": "跟随桌面配色",
+    "controller": "跟随我的手柄"
   },
   "languageToggle": {
     "groupLabel": "语言",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "触感增益",
     "audioBufferLabel": "音频缓冲区长度",
-    "btMicLabel": "蓝牙麦克风"
+    "btMicLabel": "蓝牙麦克风",
+    "audioBufferSub": "调低：音频延迟更小。调高：有爆音时音频更稳定。"
   },
   "behavior": {
-    "inactiveTimeLabel": "空闲超时(分钟)",
+    "inactiveTimeLabel": "闲置超时",
     "screenDimTimeoutLabel": "屏幕变暗超时",
     "screenOffTimeoutLabel": "屏幕熄灭超时",
     "pollingRateLabel": "轮询率",
@@ -423,7 +425,7 @@
         "stick-l": "左摇杆 (L3)",
         "stick-r": "右摇杆 (R3)",
         "ps": "PS 键",
-        "mute": "静音",
+        "mute": "静音键与麦克风",
         "speaker": "扬声器",
         "body": "握把（触觉）"
       },
@@ -440,7 +442,7 @@
       "remapDefault": "默认",
       "remapHint": "点击“应用”后重映射会写入接收器，在任何游戏中都有效，电脑无需安装软件。",
       "remapApply": "应用重映射",
-      "remapReset": "全部重置",
+      "remapReset": "重置所有按键",
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
       "effect": "效果",
@@ -865,6 +867,24 @@
       "advanced": "高级",
       "reduceMotion": "减少动态效果",
       "reduceMotionSub": "不显示移动背景、闪烁或动画（系统要求时也会开启）"
+    },
+    "dev": {
+      "title": "开发者",
+      "hint": "预览其他手柄型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。",
+      "model": "型号",
+      "colorway": "配色",
+      "real": "真实手柄",
+      "noArt": "无图",
+      "reset": "恢复真实手柄",
+      "previewBadge": "预览"
+    },
+    "knobs": {
+      "cardOpacity": "卡片不透明度",
+      "cardOpacitySub": "调低后背景会透过卡片显示",
+      "backdropDim": "背景变暗",
+      "backdropDimSub": "页面对游戏封面图的压暗程度",
+      "backdropBlur": "背景模糊",
+      "backdropBlurSub": "页面后方的游戏封面图更柔和或更清晰"
     }
   },
   "ad": {

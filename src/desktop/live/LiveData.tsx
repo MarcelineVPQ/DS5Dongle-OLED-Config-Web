@@ -110,8 +110,8 @@ function Xyz({ values }: { values: [number, number, number] }) {
     <div className="live-data-xyz">
       {(["X", "Y", "Z"] as const).map((axis, i) => (
         <span key={axis}>
-          <b style={{ color: `var(--cv-axis-${i})` }}>
-            <svg className="axis-key" viewBox="0 0 16 4" aria-hidden="true">
+          <b>
+            <svg className="axis-key" viewBox="0 0 16 4" aria-hidden="true" style={{ color: `var(--cv-axis-${i})` }}>
               <line x1="0" y1="2" x2="16" y2="2" stroke="currentColor" strokeWidth="2" strokeDasharray={AXIS_DASH[i].join(" ") || undefined} />
             </svg>
             {axis}

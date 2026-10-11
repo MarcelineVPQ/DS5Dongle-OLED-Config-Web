@@ -5,7 +5,8 @@
     "system": "Suivre le système",
     "dark": "Thème sombre",
     "groupLabel": "Thème de couleur",
-    "desktop": "Suivre les couleurs du bureau"
+    "desktop": "Suivre les couleurs du bureau",
+    "controller": "Comme ma manette"
   },
   "languageToggle": {
     "groupLabel": "Langue",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "Gain haptique",
     "audioBufferLabel": "Longueur du tampon audio",
-    "btMicLabel": "Microphone BT"
+    "btMicLabel": "Microphone BT",
+    "audioBufferSub": "Plus bas : moins de latence audio. Plus haut : audio plus stable s'il grésille."
   },
   "behavior": {
-    "inactiveTimeLabel": "Délai d'inactivité (minutes)",
+    "inactiveTimeLabel": "Délai d'inactivité",
     "screenDimTimeoutLabel": "Délai avant atténuation",
     "screenOffTimeoutLabel": "Délai avant extinction",
     "pollingRateLabel": "Taux de polling",
@@ -426,7 +428,7 @@
         "stick-l": "Stick gauche (L3)",
         "stick-r": "Stick droit (R3)",
         "ps": "Bouton PS",
-        "mute": "Muet",
+        "mute": "Bouton muet et micro",
         "speaker": "Haut-parleur",
         "body": "Poignées (haptique)"
       },
@@ -443,7 +445,7 @@
       "remapDefault": "par défaut",
       "remapHint": "Les remappages sont écrits sur le dongle quand tu appuies sur Appliquer et marchent dans tous les jeux, sans logiciel sur le PC.",
       "remapApply": "Appliquer le remappage",
-      "remapReset": "Tout réinitialiser",
+      "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
       "effect": "Effet",
@@ -871,6 +873,24 @@
       "advanced": "Avancé",
       "reduceMotion": "Réduire les animations",
       "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)"
+    },
+    "dev": {
+      "title": "Développeur",
+      "hint": "Prévisualisez un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé au dongle. Ctrl+Maj+D masque cette carte.",
+      "model": "Modèle",
+      "colorway": "Coloris",
+      "real": "La vraie",
+      "noArt": "sans visuel",
+      "reset": "Revenir à la vraie manette",
+      "previewBadge": "Aperçu"
+    },
+    "knobs": {
+      "cardOpacity": "Opacité des cartes",
+      "cardOpacitySub": "Plus bas laisse voir le fond à travers les cartes",
+      "backdropDim": "Assombrir le fond",
+      "backdropDimSub": "À quel point la page assombrit les visuels du jeu",
+      "backdropBlur": "Flou du fond",
+      "backdropBlurSub": "Visuels du jeu plus doux ou plus nets derrière la page"
     }
   },
   "ad": {

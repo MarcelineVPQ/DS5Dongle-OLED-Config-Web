@@ -5,7 +5,8 @@
     "system": "Seguir el sistema",
     "dark": "Tema oscuro",
     "groupLabel": "Tema de color",
-    "desktop": "Usar los colores del escritorio"
+    "desktop": "Usar los colores del escritorio",
+    "controller": "Como mi mando"
   },
   "languageToggle": {
     "groupLabel": "Idioma",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "Ganancia háptica",
     "audioBufferLabel": "Longitud del búfer de audio",
-    "btMicLabel": "Micrófono BT"
+    "btMicLabel": "Micrófono BT",
+    "audioBufferSub": "Más bajo: menos retardo de audio. Más alto: audio más estable si cruje."
   },
   "behavior": {
-    "inactiveTimeLabel": "Tiempo de inactividad (minutos)",
+    "inactiveTimeLabel": "Tiempo de inactividad",
     "screenDimTimeoutLabel": "Atenuar pantalla tras",
     "screenOffTimeoutLabel": "Apagar pantalla tras",
     "pollingRateLabel": "Tasa de sondeo",
@@ -426,7 +428,7 @@
         "stick-l": "Stick izquierdo (L3)",
         "stick-r": "Stick derecho (R3)",
         "ps": "Botón PS",
-        "mute": "Silencio",
+        "mute": "Botón de silencio y micro",
         "speaker": "Altavoz",
         "body": "Empuñaduras (háptica)"
       },
@@ -443,7 +445,7 @@
       "remapDefault": "predeterminado",
       "remapHint": "Las reasignaciones se guardan en el dongle al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
       "remapApply": "Aplicar reasignación",
-      "remapReset": "Restablecer todo",
+      "remapReset": "Restablecer todos los botones",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
       "effect": "Efecto",
@@ -871,6 +873,24 @@
       "advanced": "Avanzado",
       "reduceMotion": "Reducir movimiento",
       "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)"
+    },
+    "dev": {
+      "title": "Desarrollador",
+      "hint": "Previsualiza otro modelo y color de mando para comprobar los colores de la app. Solo cambia lo que se muestra; no se envía nada al dongle. Ctrl+Mayús+D oculta esta tarjeta.",
+      "model": "Modelo",
+      "colorway": "Color",
+      "real": "El real",
+      "noArt": "sin arte",
+      "reset": "Volver al mando real",
+      "previewBadge": "Vista previa"
+    },
+    "knobs": {
+      "cardOpacity": "Opacidad de las tarjetas",
+      "cardOpacitySub": "Más bajo deja ver el fondo a través de las tarjetas",
+      "backdropDim": "Oscurecer el fondo",
+      "backdropDimSub": "Cuánto oscurece la página el arte del juego",
+      "backdropBlur": "Desenfoque del fondo",
+      "backdropBlurSub": "Arte del juego más suave o más nítido detrás de la página"
     }
   },
   "ad": {

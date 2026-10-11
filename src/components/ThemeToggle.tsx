@@ -6,12 +6,13 @@
 // exposes none) and the web tool uses "system" (follow prefers-color-scheme).
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import { Monitor, Moon, Palette, Sun } from "lucide-react";
+import { Gamepad2, Monitor, Moon, Palette, Sun } from "lucide-react";
+import { controllerShade, onControllerShade } from "../desktop/live/controllerAccent";
 import { useTranslation } from "react-i18next";
 import { isDesktop } from "../desktop/api";
 import { paletteToCssVars, type DesktopPalette } from "../desktop/theme/desktopPalette";
 
-export type Theme = "light" | "dark" | "system" | "desktop";
+export type Theme = "light" | "dark" | "system" | "desktop" | "controller";
 
 const STORAGE_KEY = "ds5-bridge-theme";
 const STYLE_ID = "ds5-desktop-palette";
@@ -25,8 +26,9 @@ function readStoredTheme(): Theme {
     // storage blocked: fall back to the default
   }
   if (stored === "light" || stored === "dark" || stored === "system") return stored;
-  if (stored === "desktop" && isDesktop()) return stored;
-  return isDesktop() ? "desktop" : "system";
+  if ((stored === "desktop" || stored === "controller") && isDesktop()) return stored;
+  // The desktop app follows the connected controller by default.
+  return isDesktop() ? "controller" : "system";
 }
 
 function clearDesktopPalette(): void {
@@ -83,7 +85,15 @@ export function useTheme(): [Theme, (next: Theme) => void] {
 export function useApplyTheme(): void {
   const [theme] = useTheme();
   const desktop = window.desktop;
+  // "Controller": light or dark from the connected controller's colorway.
+  const shade = useSyncExternalStore(onControllerShade, controllerShade);
   useEffect(() => {
+    document.documentElement.toggleAttribute("data-controller-theme", theme === "controller");
+    if (theme === "controller") {
+      clearDesktopPalette();
+      document.documentElement.setAttribute("data-theme", shade ?? "system");
+      return;
+    }
     if (theme !== "desktop" || !desktop) {
       clearDesktopPalette();
       document.documentElement.setAttribute("data-theme", theme === "desktop" ? "system" : theme);
@@ -96,7 +106,7 @@ export function useApplyTheme(): void {
       active = false;
       unsubscribe();
     };
-  }, [theme, desktop]);
+  }, [theme, desktop, shade]);
 }
 
 export default function ThemeToggle() {
@@ -117,6 +127,11 @@ export default function ThemeToggle() {
       <button type="button" className={theme === "dark" ? "active" : ""} onClick={setTo("dark")} aria-pressed={theme === "dark"} title={t("themeToggle.dark")}>
         <Moon size={15} />
       </button>
+      {desktop && (
+        <button type="button" className={theme === "controller" ? "active" : ""} onClick={setTo("controller")} aria-pressed={theme === "controller"} title={t("themeToggle.controller")}>
+          <Gamepad2 size={15} />
+        </button>
+      )}
       {desktop && (
         <button type="button" className={theme === "desktop" ? "active" : ""} onClick={setTo("desktop")} aria-pressed={theme === "desktop"} title={t("themeToggle.desktop", "Match desktop colors")}>
           <Palette size={15} />

@@ -5,7 +5,8 @@
     "system": "システムに従う",
     "dark": "ダークテーマ",
     "groupLabel": "カラーテーマ",
-    "desktop": "デスクトップの配色に合わせる"
+    "desktop": "デスクトップの配色に合わせる",
+    "controller": "コントローラーに合わせる"
   },
   "languageToggle": {
     "groupLabel": "言語",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "Haptics ゲイン",
     "audioBufferLabel": "オーディオバッファ長",
-    "btMicLabel": "Bluetooth マイク"
+    "btMicLabel": "Bluetooth マイク",
+    "audioBufferSub": "低く：音声の遅延が減ります。高く：音がプツプツするときに安定します。"
   },
   "behavior": {
-    "inactiveTimeLabel": "非アクティブタイムアウト (分)",
+    "inactiveTimeLabel": "無操作タイムアウト",
     "screenDimTimeoutLabel": "画面減光タイムアウト",
     "screenOffTimeoutLabel": "画面オフタイムアウト",
     "pollingRateLabel": "ポーリングレート",
@@ -423,7 +425,7 @@
         "stick-l": "左スティック (L3)",
         "stick-r": "右スティック (R3)",
         "ps": "PS ボタン",
-        "mute": "ミュート",
+        "mute": "ミュートボタンとマイク",
         "speaker": "スピーカー",
         "body": "グリップ（ハプティクス）"
       },
@@ -440,7 +442,7 @@
       "remapDefault": "標準",
       "remapHint": "割り当ては「適用」を押すとドングルに保存され、PC にソフトなしでどのゲームでも有効です。",
       "remapApply": "割り当てを適用",
-      "remapReset": "すべてリセット",
+      "remapReset": "すべてのボタンをリセット",
       "remapResetHint": "すべてのボタンを元に戻す",
       "pull": "押し込み",
       "effect": "効果",
@@ -865,6 +867,24 @@
       "advanced": "詳細",
       "reduceMotion": "視差効果を減らす",
       "reduceMotionSub": "動く背景、点滅、アニメーションをなくします（システムで設定している場合もオン）"
+    },
+    "dev": {
+      "title": "開発者",
+      "hint": "別のコントローラーのモデルとカラーをプレビューして、アプリの配色を確認します。表示だけが変わり、ドングルには何も送信されません。Ctrl+Shift+D でこのカードを隠します。",
+      "model": "モデル",
+      "colorway": "カラー",
+      "real": "実機",
+      "noArt": "アートなし",
+      "reset": "実機に戻す",
+      "previewBadge": "プレビュー"
+    },
+    "knobs": {
+      "cardOpacity": "カードの不透明度",
+      "cardOpacitySub": "下げるとカード越しに背景が見えます",
+      "backdropDim": "背景の暗さ",
+      "backdropDimSub": "ページがゲームアートをどれだけ暗くするか",
+      "backdropBlur": "背景のぼかし",
+      "backdropBlurSub": "ページの後ろのゲームアートをやわらかく、またはくっきり"
     }
   },
   "ad": {

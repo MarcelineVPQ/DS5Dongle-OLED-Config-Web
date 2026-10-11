@@ -8,8 +8,8 @@ import { COLORWAYS, colorway, contrast, lineOnDark } from "../../src/desktop/liv
 const painted = Object.entries(COLORWAYS).filter(([, c]) => c.colors);
 
 describe("colorways", () => {
-  it("paints the 13 standard colorways", () => {
-    expect(painted.map(([code]) => code).sort()).toEqual(["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]);
+  it("paints every known colorway (special editions are approximations)", () => {
+    expect(painted.length).toBe(Object.keys(COLORWAYS).length);
   });
 
   it.each(painted)("%s: outlines read against the body and the button caps (≥ 2:1)", (_code, { colors }) => {
@@ -22,8 +22,7 @@ describe("colorways", () => {
     expect(contrast(lineOnDark(colors!), colors!.stick)).toBeGreaterThanOrEqual(2);
   });
 
-  it("special editions and unknown codes keep the theme colors", () => {
-    expect(colorway("Z1")?.colors).toBeUndefined();
+  it("unknown codes keep the theme colors", () => {
     expect(colorway("??")).toBeNull();
     expect(colorway(null)).toBeNull();
   });

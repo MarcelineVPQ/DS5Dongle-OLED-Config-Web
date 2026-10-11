@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the **DS5 Dongle OLED Edition Configurator** (web tool and desktop app) are documented here.
+All notable changes to the **DS5 Dongle OLED Edition Configurator** (the desktop app; the retired web tool up to 0.8.0) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
@@ -20,8 +20,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Navigation rail** on the right edge replaces the top bar: Controller, Dongle, Games, App settings and About, with the dongle's status at the bottom. Icons only until you hover it (or tab into it); pin it open with the button at the bottom or Ctrl+B.
 
 - **Magazine-cover title**: the controller model in big caps behind the drawing (the triggers overlap it), with "Model:" above; the colorway (in the accent) and "Connected" (a pulsing dot) below it in the same style.
-- **Themed by your controller.** The connected controller's colorway tints the app's surfaces and gives its accent (made legible: lightened or darkened to 3:1 against the panels, black or white text on buttons); neutral colorways keep the theme's accent; App settings -> Look -> Accent color switches back to the desktop's. Each game page takes its artwork's color for its own highlights (picked in the main process).
-- **Style: Standard / Glass** in App settings -> Look. Glass also makes the settings panel the regular variant (docked against the rail; its cards stay standard surfaces).
+- **Theme: Match my controller** (the new default): cards and panels in the controller's own body color with black or white text, light or dark from the colorway, the accent from its trim. Every colorway now has colors (special editions are approximations from product photos).
+- **Look knobs** in App settings -> Appearance: card opacity (let the game art through the cards), background dim, background blur.
+- **The game art background on every page**, not just the controller.
+- **Developer preview** (Ctrl+Shift+D -> App settings -> Developer): show any controller model and colorway to check the app's colors; display only.
+- **Themed by your controller.** The connected controller's colorway tints the app's surfaces and gives its accent (made legible: lightened or darkened to 3:1 against the panels, black or white text on buttons); neutral colorways keep the theme's accent; App settings -> Appearance -> Accent color switches back to the desktop's. Each game page takes its artwork's color for its own highlights (picked in the main process).
+- **Style: Standard / Glass** in App settings -> Appearance. Glass also makes the settings panel the regular variant (docked against the rail; its cards stay standard surfaces).
 - **Glass (preview)**: the rail and the save bar as Liquid Glass (Apple's clear variant: lensing at the edge, a light frost, a specular edge that follows the pointer, a liquid press), docked to the window edges; the rail switches to the regular variant (more frost and a dim) while it's open over content. Content keeps plain surfaces. Reduce transparency / increase contrast / reduce motion are respected.
 - **Speaker and microphone tests.** The Speaker panel plays a short chime on the controller's speaker (never the PC's); the Microphone panel records 3 s from the controller's mic with a live level and plays it back on the controller (Linux; recorded in the main process, kept in memory only, the page still has no microphone access).
 - **Controller page data regrouped**: four equal cards (Inputs with the stick circles and trigger bars, Gyroscope, Accelerometer, Connection) and a four-tile status strip (battery, signal, lightbar, player and slot). Nothing repeats the drawing, and settings stay in the side panel.
@@ -34,6 +38,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- Settings panels: firmware shows "Up to date" as a status instead of a disabled button; Power puts "Disconnect when idle" before the timeout it controls; the audio buffer explains what it does; low-pass options show Hz; pairing slots' column header no longer wraps; "Mute" panel is "Mute button & mic"; "Reset all" says what it resets; the language menu opens inside the settings panel.
+- The model title fits between the triggers at every window size and model name length.
 - The game page's Play no longer warns "Couldn't open that" when the launcher started the game fine (Steam exits non-zero after passing the link on).
 - Gyroscope / accelerometer readings no longer spill out of narrow cards.
 - The haptics gain error message gave the wrong range (1.0–2.0 instead of 1.0–6.0) in every language.

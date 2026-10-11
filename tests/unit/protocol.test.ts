@@ -168,7 +168,7 @@ describe("controller model and colorway (protocol 1.2)", () => {
     const id = decodeIdentity(b);
     expect([id.model, id.colorwayCode]).toEqual(["edge", "02"]);
     expect(colorway(id.colorwayCode)?.name).toBe("Cosmic Red");
-    expect(colorway("Z2")).toEqual({ name: "Marvel's Spider-Man 2" });
+    expect(colorway("Z2")?.name).toBe("Marvel's Spider-Man 2");
     expect(colorway("QQ")).toBeNull();
     b.set([0, 0], 27);
     expect(decodeIdentity(b).colorwayCode).toBeNull();

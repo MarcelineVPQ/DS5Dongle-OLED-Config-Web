@@ -5,7 +5,8 @@
     "system": "Seguir o sistema",
     "dark": "Tema escuro",
     "groupLabel": "Tema de cor",
-    "desktop": "Usar as cores da área de trabalho"
+    "desktop": "Usar as cores da área de trabalho",
+    "controller": "Igual ao meu controle"
   },
   "languageToggle": {
     "groupLabel": "Idioma",
@@ -62,10 +63,11 @@
   "haptics": {
     "gainLabel": "Ganho háptico",
     "audioBufferLabel": "Comprimento do buffer de áudio",
-    "btMicLabel": "Microfone BT"
+    "btMicLabel": "Microfone BT",
+    "audioBufferSub": "Menor: menos atraso no áudio. Maior: áudio mais estável se estalar."
   },
   "behavior": {
-    "inactiveTimeLabel": "Tempo de inatividade (minutos)",
+    "inactiveTimeLabel": "Tempo de inatividade",
     "screenDimTimeoutLabel": "Tempo p/ escurecer tela",
     "screenOffTimeoutLabel": "Tempo p/ desligar tela",
     "pollingRateLabel": "Taxa de polling",
@@ -426,7 +428,7 @@
         "stick-l": "Analógico esquerdo (L3)",
         "stick-r": "Analógico direito (R3)",
         "ps": "Botão PS",
-        "mute": "Mudo",
+        "mute": "Botão mudo e microfone",
         "speaker": "Alto-falante",
         "body": "Pegadas (háptica)"
       },
@@ -443,7 +445,7 @@
       "remapDefault": "padrão",
       "remapHint": "Os remapeamentos são gravados no dongle ao apertar Aplicar e funcionam em todos os jogos, sem software no PC.",
       "remapApply": "Aplicar remapeamento",
-      "remapReset": "Redefinir tudo",
+      "remapReset": "Redefinir todos os botões",
       "remapResetHint": "Cada botão volta a ser ele mesmo",
       "pull": "Pressão",
       "effect": "Efeito",
@@ -871,6 +873,24 @@
       "advanced": "Avançado",
       "reduceMotion": "Reduzir movimento",
       "reduceMotionSub": "Sem fundo em movimento, pulsação ou animações (também ativo se o sistema pedir)"
+    },
+    "dev": {
+      "title": "Desenvolvedor",
+      "hint": "Visualize outro modelo e cor de controle para conferir as cores do app. Só muda o que é exibido; nada é enviado ao dongle. Ctrl+Shift+D oculta este cartão.",
+      "model": "Modelo",
+      "colorway": "Cor",
+      "real": "O real",
+      "noArt": "sem arte",
+      "reset": "Voltar ao controle real",
+      "previewBadge": "Prévia"
+    },
+    "knobs": {
+      "cardOpacity": "Opacidade dos cartões",
+      "cardOpacitySub": "Mais baixo deixa o fundo aparecer pelos cartões",
+      "backdropDim": "Escurecer o fundo",
+      "backdropDimSub": "Quanto a página escurece a arte do jogo",
+      "backdropBlur": "Desfoque do fundo",
+      "backdropBlurSub": "Arte do jogo mais suave ou mais nítida atrás da página"
     }
   },
   "ad": {

@@ -1,4 +1,6 @@
 import AppRail from "./AppRail";
+import { useLookKnobs } from "./lookKnobs";
+import { useDevToolsShortcut, useShownIdentity } from "./devPreview";
 import { useReduceMotion } from "./motion";
 import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccent";
 import { CLEAR_GLASS_BAR } from "./glass/variants";
@@ -99,10 +101,14 @@ export default function DesktopApp() {
   // Keep the tray icon/menu in step with the device, even while the window is
   // hidden (the window keeps running in the background for exactly this).
   const client = bridge.client;
-  const liveIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
+  const realIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
+  // What the UI shows (the developer preview can stand in another model/colorway).
+  const liveIdentity = useShownIdentity(realIdentity);
+  useDevToolsShortcut();
   // Glass (preview): the functional layer (rail, save bar) as clear liquid
   // glass floating over the content; content stays a plain surface.
   useReduceMotion();
+  useLookKnobs();
   const [glass] = useFlagPref(GLASS_KEY);
   const [accentChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
   useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice);
@@ -182,7 +188,7 @@ export default function DesktopApp() {
 
   return (
     <div className="dk dk-one">
-      {main === "controller" && panel !== "dongle" && <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />}
+      <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />
       <NarratorCaption />
       <div className="dk-main">
         <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
