@@ -1,16 +1,5 @@
 {
   "__comment": "Machine-translated by AI from en.json. PRs welcome for corrections — see https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
-  "header": {
-    "eyebrow": "WebHID",
-    "title": "DS5 桥接配置",
-    "titleSuffix": "OLED 版"
-  },
-  "tabs": {
-    "config": "配置",
-    "remap": "重映射",
-    "preview": "OLED 预览",
-    "flash": "刷写固件"
-  },
   "themeToggle": {
     "light": "浅色主题",
     "system": "跟随系统",
@@ -24,25 +13,10 @@
     "switchTo": "切换到 {{name}}"
   },
   "notice": {
-    "dismiss": "关闭",
-    "webusbUnavailable": "WebUSB 可在基于 Chromium 的浏览器（Chrome、Edge、Vivaldi、Brave、Opera）和桌面应用中使用。Firefox 和 Safari 不支持。配置需要 v0.8 或更新的固件。"
+    "dismiss": "关闭"
   },
   "device": {
-    "label": "设备",
-    "noDevice": "无设备",
-    "connect": "连接",
-    "connectTitle": "选择一个 DS5 桥接 HID 设备"
-  },
-  "status": {
-    "ready": "准备连接",
-    "connected": "已连接",
-    "unsavedEdits": "未保存的编辑",
-    "activeSlot": "当前槽位",
-    "configVersion": "配置版本",
-    "autoHaptics": "自动触感",
-    "slotN": "槽位 {{n}}",
-    "configVersionPrefix": "v{{n}}",
-    "empty": "插入 Pico 并配对 DualSense,然后点击上方的 <strong>连接</strong>。"
+    "noDevice": "无设备"
   },
   "statusText": {
     "webhidUnavailable": "WebHID 不可用",
@@ -59,23 +33,10 @@
     "webusbUnavailable": "WebUSB 不可用"
   },
   "actions": {
-    "title": "操作",
-    "read": "读取",
-    "readTitle": "通过报告 0xF7 读取当前配置",
-    "apply": "应用到设备",
-    "applyTitle": "通过报告 0xF6 发送命令 0x01(更新内存中的配置)",
-    "save": "保存到闪存",
-    "saveTitle": "通过报告 0xF6 发送命令 0x02(写入闪存)",
-    "saveNeedsApply": "保存前请先应用更改",
-    "reconnect": "重新连接 USB",
-    "reconnectTitle": "通过报告 0xF6 发送命令 0x03(重新连接 TinyUSB)",
-    "resetEdits": "重置编辑",
-    "resetEditsTitle": "恢复上次读取或应用的配置"
+    "reconnect": "重新连接 USB"
   },
   "autoHaptics": {
     "sectionTitle": "音频自动触感",
-    "badge": "OLED 版",
-    "blurb": "从游戏的扬声器音频中推导触感反馈,适用于不发送原生 HD 触感数据的游戏(例如 Linux + Steam 上的对马岛之鬼)。",
     "modeLabel": "模式",
     "modes": {
       "off": {
@@ -96,130 +57,24 @@
       }
     },
     "gainLabel": "自动触感增益",
-    "lpLabel": "低通截止",
-    "lpOptions": {
-      "80": "80 Hz(超低音)",
-      "160": "160 Hz(低音 / 默认)",
-      "250": "250 Hz(清脆中低音)",
-      "400": "400 Hz(临场感)"
-    }
+    "lpLabel": "低通截止"
   },
   "haptics": {
-    "sectionTitle": "触感和音频",
     "gainLabel": "触感增益",
-    "speakerVolumeLabel": "扬声器音量 (dB)",
     "audioBufferLabel": "音频缓冲区长度",
     "btMicLabel": "蓝牙麦克风"
   },
   "behavior": {
-    "sectionTitle": "高级设置",
-    "hint": "轮询率、控制器模式、LED 行为、空闲断开 — 大多数用户从不更改这些。",
     "inactiveTimeLabel": "空闲超时(分钟)",
     "screenDimTimeoutLabel": "屏幕变暗超时",
     "screenOffTimeoutLabel": "屏幕熄灭超时",
-    "screenTimeoutSuffix": "分钟，0 = 关闭",
-    "disableInactiveDisconnect": "禁用空闲断开",
-    "disablePicoLed": "禁用 Pico LED",
     "pollingRateLabel": "轮询率",
     "controllerModeLabel": "控制器模式"
   },
-  "lightbar": {
-    "sectionTitle": "灯条",
-    "blurb": "选择灯条模式和四个收藏颜色。也可在 OLED 上编辑；HOST 模式将 LED 交给游戏控制。",
-    "modeLabel": "模式"
-  },
   "remap": {
-    "sectionTitle": "按键重映射",
-    "badge": "OLED Edition",
-    "blurb": "将任意手柄按键重新分配为其他按键。映射保存在适配器上，因此在任何游戏和操作系统中都无需额外软件即可使用。点击“应用”后立即写入并保存。",
     "unsupported": "连接的固件不支持按键重映射。请在“刷写固件”选项卡中更新到最新的 OLED Edition 固件。",
-    "connectHint": "连接设备以编辑按键重映射。",
-    "applied": "重映射已应用并保存到适配器。",
-    "noChange": "— 不更改 —",
     "disabled": "禁用（无输出）",
-    "remappedTag": "已重映射",
-    "rowAria": "{{button}} 的目标按键",
-    "apply": "应用重映射",
-    "applyTitle": "将重映射表写入适配器并保存（报告 0xF6）",
-    "revert": "撤销编辑",
-    "revertTitle": "放弃编辑并恢复适配器当前的重映射",
-    "reset": "恢复默认",
-    "resetTitle": "清除所有重映射（默认）——然后点击“应用”",
-    "verifyFailed": "无法验证重映射写入——设备未确认更改。",
-    "noneRemapped": "未重映射任何按键——默认布局。",
-    "countRemapped": "已重映射按键：{{count}}",
-    "diagramHint": "点击手柄上的按键以设置其重映射。",
-    "allButtons": "所有按键"
-  },
-  "slots": {
-    "sectionTitle": "多槽配对",
-    "blurb": "可绑定多达四个 DualSense。当前槽位在启动时重新连接。",
-    "activeLabel": "当前槽位"
-  },
-  "preview": {
-    "sectionTitle": "OLED 预览",
-    "blurb": "固件 10 个 OLED 屏幕的实时模拟 — 接近物理 Pico-OLED-1.3 显示的内容,但不是逐字节完美。未连接控制器时,每 4 秒使用模拟数据自动循环。连接控制器后(点击上方的 <strong>连接</strong>),数据实时更新。分享 <code>#preview</code> 让 Discord 观众直接访问此视图。",
-    "liveDemoBanner": "实时演示 — 连接控制器以获取真实数据。",
-    "firmwareNote": "扳机触感仅在 dongle 运行 MarcelineVPQ/DS5Dongle-OLED-Edition 固件时才会触发。",
-    "mockNote": "模拟值 — Chrome WebHID 无法在标准 DualSense 描述符上暴露此报告。详见 HID 诊断。",
-    "key0": "KEY0",
-    "key1": "KEY1",
-    "key0Title": "KEY0 — 下一屏",
-    "key1Title": "KEY1 — 返回 / 在触发器测试上循环预设 / 在灯条上循环模式",
-    "screenIndicator": "屏幕 <strong>{{n}} / {{total}}</strong>:{{name}}",
-    "autoCycleOn": "自动循环 开",
-    "autoCycleOff": "自动循环 关",
-    "autoCycleOnTitle": "暂停自动循环",
-    "autoCycleOffTitle": "恢复自动循环",
-    "connectLive": "连接以进行实时预览"
-  },
-  "footer": {
-    "credits": "<0>awalol/ds5dongle-config-web</0> 的分叉,适用于 <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> 固件。音频自动触感 DSP 归功于 <2>loteran/DS5Dongle</2>。",
-    "assetCredit": "手柄与按键图形由 <0>Zacksly</0> 提供（<1>CC BY 3.0</1>，已修改）。"
-  },
-  "flash": {
-    "sectionTitle": "刷写固件",
-    "blurb": "通过 WebUSB 将 .uf2 固件镜像推送到 Pico —— 无需 picotool,无需拖放。用于升级或重新刷写,无需离开浏览器。由 piersfinlayson/picoflash 提供支持。",
-    "webusbUnavailable": "此浏览器不支持 WebUSB。请使用 Chrome、Edge、Vivaldi、Brave 或 Opera。",
-    "step1Title": "1. 选择 UF2",
-    "step1Hint": "使用本站点捆绑的最新版本,或加载本地构建 (build/ds5-bridge-oled.uf2)。",
-    "useLatest": "使用最新版本 ({{title}})",
-    "pickFile": "选择 .uf2",
-    "step2Title": "2. 将 Pico 置于 BOOTSEL 模式并连接",
-    "step2Hint": "插入 USB 时按住 BOOTSEL 按钮。浏览器将提示授权设备。",
-    "connect": "连接 Pico",
-    "reconnect": "重新连接",
-    "connectTitle": "授权 BOOTSEL 模式的 Pico",
-    "step3Title": "3. 刷写",
-    "step3Hint": "擦除闪存区域,写入新固件,然后重启 Pico。需要几秒钟。",
-    "flashButton": "立即刷写",
-    "flashingButton": "刷写中…",
-    "rebootButton": "重启 Pico",
-    "rebootingButton": "重启中…",
-    "rebootTitle": "将 Pico 退出 BOOTSEL 进入应用模式",
-    "showLogs": "显示日志",
-    "hideLogs": "隐藏日志",
-    "clearLogs": "清除",
-    "logEmpty": "暂无活动。",
-    "info": {
-      "device": "设备",
-      "serial": "序列号",
-      "state": "状态"
-    },
-    "stage": {
-      "idle": "就绪",
-      "parsing": "解析 UF2…",
-      "connecting": "连接中…",
-      "writing": "擦除 + 写入闪存…",
-      "rebooting": "重启 Pico…",
-      "done": "完成!",
-      "error": "错误"
-    },
-    "driverHelpSummary": "驱动/权限设置",
-    "driverHelpLinux": "Linux 需要一次性的 udev 规则,以便非 root 用户能访问 Pico 的 BOOTSEL 接口。在终端中粘贴:",
-    "driverHelpWindows": "Windows 需要将 WinUSB 驱动分配给 BOOTSEL 接口。使用",
-    "driverHelpMac": "无需设置。",
-    "trustWarning": "刷写的固件将以 USB 设备权限在 dongle 插入的任何主机上运行。仅刷写来自你信任来源的 UF2 文件。"
+    "verifyFailed": "无法验证重映射写入——设备未确认更改。"
   },
   "desktop": {
     "nav": {
@@ -594,8 +449,6 @@
       "finger": "手指 {{n}}",
       "speakerLevel": "当前扬声器电平",
       "hapticLevel": "当前触觉电平",
-      "look": "外观",
-      "behavior": "行为",
       "closeToTray": "关闭时最小化到托盘",
       "launchAtLogin": "登录时启动",
       "startMinimized": "启动时最小化",
@@ -743,7 +596,6 @@
       "inputs": "输入"
     },
     "narrator": {
-      "title": "旁白",
       "voice": "旁白语音",
       "voiceSub": "导览和应用事件的简短语音，只通过手柄的扬声器播放",
       "captions": "字幕",
@@ -1002,6 +854,17 @@
       "sub": "按钮、选中项和高亮",
       "controller": "手柄",
       "desktop": "桌面"
+    },
+    "settings2": {
+      "language": "语言",
+      "appearance": "外观",
+      "theme": "主题",
+      "accessibility": "辅助功能",
+      "startup": "启动与窗口",
+      "updates": "更新",
+      "advanced": "高级",
+      "reduceMotion": "减少动态效果",
+      "reduceMotionSub": "不显示移动背景、闪烁或动画（系统要求时也会开启）"
     }
   },
   "ad": {

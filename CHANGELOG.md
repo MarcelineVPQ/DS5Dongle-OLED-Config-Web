@@ -26,6 +26,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Speaker and microphone tests.** The Speaker panel plays a short chime on the controller's speaker (never the PC's); the Microphone panel records 3 s from the controller's mic with a live level and plays it back on the controller (Linux; recorded in the main process, kept in memory only, the page still has no microphone access).
 - **Controller page data regrouped**: four equal cards (Inputs with the stick circles and trigger bars, Gyroscope, Accelerometer, Connection) and a four-tile status strip (battery, signal, lightbar, player and slot). Nothing repeats the drawing, and settings stay in the side panel.
 
+- **App settings reorganized**: Language; Appearance (theme, style, accent, game art background); Accessibility (color vision, **Reduce motion** (new: no moving background, pulsing or animations, also when the system asks), narrator voice, captions); Startup and window; Updates; Advanced (hardware acceleration).
+
 ### Removed
 
 - The old browser web tool (retired with 0.8.0): its page, components, OLED emulator, WebHID preview, build script and styles. The download page is unaffected.

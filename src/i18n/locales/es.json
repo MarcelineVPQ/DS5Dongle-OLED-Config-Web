@@ -1,16 +1,5 @@
 {
   "__comment": "Machine-translated by AI from en.json. PRs welcome for corrections — see https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
-  "header": {
-    "eyebrow": "WebHID",
-    "title": "DS5 Bridge Config",
-    "titleSuffix": "Edición OLED"
-  },
-  "tabs": {
-    "config": "Config",
-    "remap": "Reasignar",
-    "preview": "Vista OLED",
-    "flash": "Grabar firmware"
-  },
   "themeToggle": {
     "light": "Tema claro",
     "system": "Seguir el sistema",
@@ -24,25 +13,10 @@
     "switchTo": "Cambiar a {{name}}"
   },
   "notice": {
-    "dismiss": "Cerrar",
-    "webusbUnavailable": "WebUSB está disponible en navegadores basados en Chromium (Chrome, Edge, Vivaldi, Brave, Opera) y en la aplicación de escritorio. Firefox y Safari no lo admiten. La configuración requiere firmware v0.8 o posterior."
+    "dismiss": "Cerrar"
   },
   "device": {
-    "label": "Dispositivo",
-    "noDevice": "Sin dispositivo",
-    "connect": "Conectar",
-    "connectTitle": "Elegir un dispositivo HID DS5 Bridge"
-  },
-  "status": {
-    "ready": "Listo para conectar",
-    "connected": "Conectado",
-    "unsavedEdits": "cambios sin guardar",
-    "activeSlot": "Slot activo",
-    "configVersion": "Versión de config",
-    "autoHaptics": "Auto Haptics",
-    "slotN": "Slot {{n}}",
-    "configVersionPrefix": "v{{n}}",
-    "empty": "Conecta tu Pico + empareja el DualSense, luego haz clic en <strong>Conectar</strong> arriba."
+    "noDevice": "Sin dispositivo"
   },
   "statusText": {
     "webhidUnavailable": "WebHID no disponible",
@@ -59,23 +33,10 @@
     "webusbUnavailable": "WebUSB no disponible"
   },
   "actions": {
-    "title": "Acciones",
-    "read": "Leer",
-    "readTitle": "Leer config actual del informe 0xF7",
-    "apply": "Aplicar al dispositivo",
-    "applyTitle": "Enviar comando 0x01 a través del informe 0xF6 (actualizar config en memoria)",
-    "save": "Guardar en Flash",
-    "saveTitle": "Enviar comando 0x02 a través del informe 0xF6 (escribir flash)",
-    "saveNeedsApply": "Aplica los cambios antes de guardar",
-    "reconnect": "Reconectar USB",
-    "reconnectTitle": "Enviar comando 0x03 a través del informe 0xF6 (reconectar TinyUSB)",
-    "resetEdits": "Restablecer ediciones",
-    "resetEditsTitle": "Restaurar la última config leída o aplicada"
+    "reconnect": "Reconectar USB"
   },
   "autoHaptics": {
     "sectionTitle": "Audio Auto Haptics",
-    "badge": "Edición OLED",
-    "blurb": "Deriva retroalimentación háptica del audio del altavoz del juego para títulos que no envían datos HD-haptic nativos (ej. Ghost of Tsushima en Linux + Steam).",
     "modeLabel": "Modo",
     "modes": {
       "off": {
@@ -96,130 +57,24 @@
       }
     },
     "gainLabel": "Ganancia Auto Haptics",
-    "lpLabel": "Corte paso-bajo",
-    "lpOptions": {
-      "80": "80 Hz (sub-grave)",
-      "160": "160 Hz (graves / predet.)",
-      "250": "250 Hz (medios-graves)",
-      "400": "400 Hz (presencia)"
-    }
+    "lpLabel": "Corte paso-bajo"
   },
   "haptics": {
-    "sectionTitle": "Hápticos y Audio",
     "gainLabel": "Ganancia háptica",
-    "speakerVolumeLabel": "Volumen del altavoz (dB)",
     "audioBufferLabel": "Longitud del búfer de audio",
     "btMicLabel": "Micrófono BT"
   },
   "behavior": {
-    "sectionTitle": "Ajustes avanzados",
-    "hint": "Tasa de sondeo, modo de controlador, comportamiento del LED, desconexión inactiva — la mayoría de los usuarios nunca los cambia.",
     "inactiveTimeLabel": "Tiempo de inactividad (minutos)",
     "screenDimTimeoutLabel": "Atenuar pantalla tras",
     "screenOffTimeoutLabel": "Apagar pantalla tras",
-    "screenTimeoutSuffix": "minutos, 0 = desactivado",
-    "disableInactiveDisconnect": "Desactivar desconexión inactiva",
-    "disablePicoLed": "Desactivar LED del Pico",
     "pollingRateLabel": "Tasa de sondeo",
     "controllerModeLabel": "Modo de controlador"
   },
-  "lightbar": {
-    "sectionTitle": "Barra de luz",
-    "blurb": "Elige el modo de la barra de luz y cuatro colores favoritos. También editable en el OLED; HOST cede el LED al juego.",
-    "modeLabel": "Modo"
-  },
   "remap": {
-    "sectionTitle": "Reasignación de botones",
-    "badge": "OLED Edition",
-    "blurb": "Reasigna cualquier botón del mando a otro. La asignación se guarda en el dongle, así que funciona en cualquier juego y sistema operativo sin software adicional. Los cambios se escriben y guardan al pulsar Aplicar.",
     "unsupported": "El firmware conectado no admite la reasignación de botones. Actualiza al firmware OLED Edition más reciente en la pestaña Flashear.",
-    "connectHint": "Conecta un dispositivo para editar la reasignación de botones.",
-    "applied": "Reasignación aplicada y guardada en el dongle.",
-    "noChange": "— Sin cambios —",
     "disabled": "Desactivado (sin salida)",
-    "remappedTag": "reasignado",
-    "rowAria": "Botón de destino para {{button}}",
-    "apply": "Aplicar reasignación",
-    "applyTitle": "Escribir la tabla de reasignación en el dongle y guardarla (informe 0xF6)",
-    "revert": "Revertir cambios",
-    "revertTitle": "Descartar los cambios y restaurar la reasignación actual del dongle",
-    "reset": "Restablecer valores",
-    "resetTitle": "Borrar toda la reasignación (identidad) — luego pulsa Aplicar",
-    "verifyFailed": "No se pudo verificar la escritura de la reasignación: el dispositivo no confirmó el cambio.",
-    "noneRemapped": "Ningún botón reasignado — disposición predeterminada.",
-    "countRemapped": "Botones reasignados: {{count}}",
-    "diagramHint": "Haz clic en un botón del mando para definir su reasignación.",
-    "allButtons": "Todos los botones"
-  },
-  "slots": {
-    "sectionTitle": "Emparejamiento multi-slot",
-    "blurb": "Empareja hasta cuatro DualSense. El slot activo se reconecta al arrancar.",
-    "activeLabel": "Slot activo"
-  },
-  "preview": {
-    "sectionTitle": "Vista OLED",
-    "blurb": "Emulación en vivo de las 10 pantallas OLED del firmware — cercana a lo que muestra el Pico-OLED-1.3 físico pero no perfecta byte por byte. Auto-rota cada 4 s con datos simulados cuando no hay controlador conectado. Con un controlador conectado (clic en <strong>Conectar</strong> arriba), los datos están en vivo. Comparte <code>#preview</code> para llevar a los espectadores de Discord directamente a esta vista.",
-    "liveDemoBanner": "Demo en vivo — conecta un controlador para valores reales.",
-    "firmwareNote": "Los hápticos de gatillo solo funcionan si tu dongle ejecuta el firmware MarcelineVPQ/DS5Dongle-OLED-Edition.",
-    "mockNote": "Valores simulados — Chrome WebHID no puede exponer este informe en un descriptor DualSense estándar. Consulta el diagnóstico HID.",
-    "key0": "KEY0",
-    "key1": "KEY1",
-    "key0Title": "KEY0 — siguiente pantalla",
-    "key1Title": "KEY1 — atrás / cicla preset en Test de gatillos / cicla modo en Barra LED",
-    "screenIndicator": "Pantalla <strong>{{n}} / {{total}}</strong>: {{name}}",
-    "autoCycleOn": "Auto-rotación ON",
-    "autoCycleOff": "Auto-rotación OFF",
-    "autoCycleOnTitle": "Pausar auto-rotación",
-    "autoCycleOffTitle": "Reanudar auto-rotación",
-    "connectLive": "Conectar para vista previa en vivo"
-  },
-  "footer": {
-    "credits": "Fork de <0>awalol/ds5dongle-config-web</0> para el firmware <1>MarcelineVPQ/DS5Dongle-OLED-Edition</1>. DSP de Audio Auto Haptics acreditado a <2>loteran/DS5Dongle</2>.",
-    "assetCredit": "Gráficos del mando y los botones por <0>Zacksly</0> (<1>CC BY 3.0</1>, modificados)."
-  },
-  "flash": {
-    "sectionTitle": "Grabar firmware",
-    "blurb": "Envía una imagen de firmware .uf2 al Pico vía WebUSB — sin picotool, sin arrastrar y soltar. Úsalo para actualizar o re-grabar sin salir del navegador. Funciona con piersfinlayson/picoflash.",
-    "webusbUnavailable": "WebUSB no está disponible en este navegador. Usa Chrome, Edge, Vivaldi, Brave u Opera.",
-    "step1Title": "1. Elige un UF2",
-    "step1Hint": "Usa la versión más reciente incluida con este sitio, o carga una compilación local (build/ds5-bridge-oled.uf2).",
-    "useLatest": "Usar versión más reciente ({{title}})",
-    "pickFile": "Elegir .uf2",
-    "step2Title": "2. Pon el Pico en BOOTSEL y conecta",
-    "step2Hint": "Mantén pulsado el botón BOOTSEL mientras conectas el USB. El navegador te pedirá autorizar el dispositivo.",
-    "connect": "Conectar al Pico",
-    "reconnect": "Reconectar",
-    "connectTitle": "Autorizar el Pico en modo BOOTSEL",
-    "step3Title": "3. Grabar",
-    "step3Hint": "Borra la región de flash, escribe el firmware nuevo y reinicia el Pico. Tarda unos segundos.",
-    "flashButton": "Grabar ahora",
-    "flashingButton": "Grabando…",
-    "rebootButton": "Reiniciar Pico",
-    "rebootingButton": "Reiniciando…",
-    "rebootTitle": "Saca al Pico de BOOTSEL al modo aplicación",
-    "showLogs": "Mostrar registros",
-    "hideLogs": "Ocultar registros",
-    "clearLogs": "Limpiar",
-    "logEmpty": "Sin actividad aún.",
-    "info": {
-      "device": "Dispositivo",
-      "serial": "Número de serie",
-      "state": "Estado"
-    },
-    "stage": {
-      "idle": "Listo",
-      "parsing": "Analizando UF2…",
-      "connecting": "Conectando…",
-      "writing": "Borrando + escribiendo flash…",
-      "rebooting": "Reiniciando Pico…",
-      "done": "¡Hecho!",
-      "error": "Error"
-    },
-    "driverHelpSummary": "Configuración de driver / permisos",
-    "driverHelpLinux": "Linux requiere una regla udev de una sola vez para que los usuarios no-root puedan acceder a la interfaz BOOTSEL del Pico. Pega esto en una terminal:",
-    "driverHelpWindows": "Windows necesita el driver WinUSB asignado a la interfaz BOOTSEL. Usa",
-    "driverHelpMac": "No requiere configuración.",
-    "trustWarning": "Vas a escribir firmware que se ejecutará con privilegios de dispositivo USB en cualquier host donde conectes el dongle. Solo graba archivos UF2 de fuentes en las que confíes."
+    "verifyFailed": "No se pudo verificar la escritura de la reasignación: el dispositivo no confirmó el cambio."
   },
   "desktop": {
     "nav": {
@@ -597,8 +452,6 @@
       "finger": "Dedo {{n}}",
       "speakerLevel": "Nivel del altavoz ahora",
       "hapticLevel": "Nivel háptico ahora",
-      "look": "Apariencia",
-      "behavior": "Comportamiento",
       "closeToTray": "Cerrar a la bandeja",
       "launchAtLogin": "Iniciar al iniciar sesión",
       "startMinimized": "Iniciar minimizado",
@@ -746,7 +599,6 @@
       "inputs": "Controles"
     },
     "narrator": {
-      "title": "Narradora",
       "voice": "Voz de la narradora",
       "voiceSub": "Frases cortas para el recorrido y los eventos de la app, solo por el altavoz de tu mando",
       "captions": "Subtítulos",
@@ -1008,6 +860,17 @@
       "sub": "Botones, selección y resaltados",
       "controller": "Mando",
       "desktop": "Escritorio"
+    },
+    "settings2": {
+      "language": "Idioma",
+      "appearance": "Apariencia",
+      "theme": "Tema",
+      "accessibility": "Accesibilidad",
+      "startup": "Inicio y ventana",
+      "updates": "Actualizaciones",
+      "advanced": "Avanzado",
+      "reduceMotion": "Reducir movimiento",
+      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)"
     }
   },
   "ad": {

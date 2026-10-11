@@ -1,4 +1,5 @@
 import AppRail from "./AppRail";
+import { useReduceMotion } from "./motion";
 import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccent";
 import { CLEAR_GLASS_BAR } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
@@ -101,6 +102,7 @@ export default function DesktopApp() {
   const liveIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
   // Glass (preview): the functional layer (rail, save bar) as clear liquid
   // glass floating over the content; content stays a plain surface.
+  useReduceMotion();
   const [glass] = useFlagPref(GLASS_KEY);
   const [accentChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
   useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice);

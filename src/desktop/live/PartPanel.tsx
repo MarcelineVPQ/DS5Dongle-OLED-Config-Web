@@ -2,6 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
 import { BACKDROP_KEY } from "./ArtBackdrop";
@@ -282,45 +283,62 @@ function AppSettings() {
   return (
     <>
       <section className="dk-card">
-        <h2>{t("desktop.live.look", "Look")}</h2>
+        <h2>{t("desktop.settings2.language")}</h2>
         <div className="dk-row-btns">
-          <ThemeToggle />
           <LanguageToggle />
         </div>
-        <ColorVisionSetting />
-        <BackdropSetting />
+      </section>
+      <section className="dk-card">
+        <h2>{t("desktop.settings2.appearance")}</h2>
+        <Row label={t("desktop.settings2.theme")}>
+          <ThemeToggle />
+        </Row>
         <GlassSetting />
         <AccentSetting />
+        <BackdropSetting />
+      </section>
+      <section className="dk-card">
+        <h2>{t("desktop.settings2.accessibility")}</h2>
+        <ColorVisionSetting />
+        <ReduceMotionSetting />
+        <NarratorSettings />
       </section>
       {settings && (
-        <section className="dk-card">
-          <h2>{t("desktop.live.behavior", "Behavior")}</h2>
-          <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
-          <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
-          <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
-          <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
-          <Toggle
-            label={t("desktop.live.autoInstall")}
-            sub={t("desktop.live.autoInstallSub")}
-            value={settings.checkForUpdates && settings.autoInstallUpdates}
-            disabled={!settings.checkForUpdates}
-            onChange={(v) => {
-              set("autoInstallUpdates", v);
-              set("updatesAsked", true);
-            }}
-          />
-          <Toggle
-            label={t("desktop.live.hardwareAcceleration")}
-            sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
-            value={settings.hardwareAcceleration}
-            onChange={(v) => {
-              setGpuChanged(true);
-              set("hardwareAcceleration", v);
-            }}
-          />
-        </section>
+        <>
+          <section className="dk-card">
+            <h2>{t("desktop.settings2.startup")}</h2>
+            <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
+            <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
+            <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
+          </section>
+          <section className="dk-card">
+            <h2>{t("desktop.settings2.updates")}</h2>
+            <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
+            <Toggle
+              label={t("desktop.live.autoInstall")}
+              sub={t("desktop.live.autoInstallSub")}
+              value={settings.checkForUpdates && settings.autoInstallUpdates}
+              disabled={!settings.checkForUpdates}
+              onChange={(v) => {
+                set("autoInstallUpdates", v);
+                set("updatesAsked", true);
+              }}
+            />
+          </section>
+          <section className="dk-card">
+            <h2>{t("desktop.settings2.advanced")}</h2>
+            <Toggle
+              label={t("desktop.live.hardwareAcceleration")}
+              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+              value={settings.hardwareAcceleration}
+              onChange={(v) => {
+                setGpuChanged(true);
+                set("hardwareAcceleration", v);
+              }}
+            />
+          </section>
+        </>
       )}
-      <NarratorSettings />
       {TOUR_ENABLED && (
         <section className="dk-card">
           <h2>{t("desktop.tour.helpTitle")}</h2>
@@ -359,8 +377,7 @@ function NarratorSettings() {
   const voice = useNarrator();
   const captions = useCaptionsOn();
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.narrator.title", "Narrator")}</h2>
+    <>
       <Toggle label={t("desktop.narrator.voice")} sub={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
       <Toggle label={t("desktop.narrator.captions")} sub={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
       <div className="dk-row-btns">
@@ -368,7 +385,7 @@ function NarratorSettings() {
           {t("desktop.narrator.test", "Test the voice")}
         </button>
       </div>
-    </section>
+    </>
   );
 }
 
@@ -504,4 +521,12 @@ function AccentSetting() {
       </select>
     </Row>
   );
+}
+
+// The app's own "reduce motion" (also on when the system asks): no moving
+// background, pulsing, wobble or animated transitions.
+function ReduceMotionSetting() {
+  const { t } = useTranslation();
+  const [on, setOn] = useFlagPref(REDUCE_MOTION_KEY);
+  return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
 }

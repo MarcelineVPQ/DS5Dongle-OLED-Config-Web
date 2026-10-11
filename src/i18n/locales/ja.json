@@ -1,16 +1,5 @@
 {
   "__comment": "Machine-translated by AI from en.json. PRs welcome for corrections — see https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web",
-  "header": {
-    "eyebrow": "WebHID",
-    "title": "DS5 Bridge Config",
-    "titleSuffix": "OLED Edition"
-  },
-  "tabs": {
-    "config": "設定",
-    "remap": "再割り当て",
-    "preview": "OLED プレビュー",
-    "flash": "ファームウェア書き込み"
-  },
   "themeToggle": {
     "light": "ライトテーマ",
     "system": "システムに従う",
@@ -24,25 +13,10 @@
     "switchTo": "{{name}} に切り替え"
   },
   "notice": {
-    "dismiss": "閉じる",
-    "webusbUnavailable": "WebUSB は Chromium ベースのブラウザー（Chrome、Edge、Vivaldi、Brave、Opera）とデスクトップアプリで利用できます。Firefox と Safari は非対応です。設定にはファームウェア v0.8 以降が必要です。"
+    "dismiss": "閉じる"
   },
   "device": {
-    "label": "デバイス",
-    "noDevice": "デバイスなし",
-    "connect": "接続",
-    "connectTitle": "DS5 Bridge HID デバイスを選択"
-  },
-  "status": {
-    "ready": "接続準備完了",
-    "connected": "接続済み",
-    "unsavedEdits": "未保存の編集",
-    "activeSlot": "アクティブなスロット",
-    "configVersion": "設定バージョン",
-    "autoHaptics": "Auto Haptics",
-    "slotN": "スロット {{n}}",
-    "configVersionPrefix": "v{{n}}",
-    "empty": "Pico を接続して DualSense をペアリングし、上の <strong>接続</strong> をクリックしてください。"
+    "noDevice": "デバイスなし"
   },
   "statusText": {
     "webhidUnavailable": "WebHID 利用不可",
@@ -59,23 +33,10 @@
     "webusbUnavailable": "WebUSB を利用できません"
   },
   "actions": {
-    "title": "アクション",
-    "read": "読み込み",
-    "readTitle": "レポート 0xF7 から現在の設定を読み込む",
-    "apply": "デバイスに適用",
-    "applyTitle": "レポート 0xF6 経由でコマンド 0x01 を送信 (メモリ内設定を更新)",
-    "save": "フラッシュに保存",
-    "saveTitle": "レポート 0xF6 経由でコマンド 0x02 を送信 (フラッシュ書き込み)",
-    "saveNeedsApply": "保存する前に変更を適用してください",
-    "reconnect": "USB 再接続",
-    "reconnectTitle": "レポート 0xF6 経由でコマンド 0x03 を送信 (TinyUSB 再接続)",
-    "resetEdits": "編集をリセット",
-    "resetEditsTitle": "最後に読み込んだまたは適用した設定を復元"
+    "reconnect": "USB 再接続"
   },
   "autoHaptics": {
     "sectionTitle": "Audio Auto Haptics",
-    "badge": "OLED Edition",
-    "blurb": "ネイティブの HD-haptic データを送信しないタイトル (例: Linux + Steam の Ghost of Tsushima) のために、ゲームのスピーカー音声から触覚フィードバックを生成します。",
     "modeLabel": "モード",
     "modes": {
       "off": {
@@ -96,130 +57,24 @@
       }
     },
     "gainLabel": "Auto Haptics ゲイン",
-    "lpLabel": "ローパスカットオフ",
-    "lpOptions": {
-      "80": "80 Hz (サブベース)",
-      "160": "160 Hz (ベース / デフォルト)",
-      "250": "250 Hz (パンチのあるミッドベース)",
-      "400": "400 Hz (プレゼンス)"
-    }
+    "lpLabel": "ローパスカットオフ"
   },
   "haptics": {
-    "sectionTitle": "Haptics & オーディオ",
     "gainLabel": "Haptics ゲイン",
-    "speakerVolumeLabel": "スピーカー音量 (dB)",
     "audioBufferLabel": "オーディオバッファ長",
     "btMicLabel": "Bluetooth マイク"
   },
   "behavior": {
-    "sectionTitle": "詳細設定",
-    "hint": "ポーリングレート、コントローラモード、LED の動作、非アクティブ時の切断 — ほとんどのユーザーはこれらを変更しません。",
     "inactiveTimeLabel": "非アクティブタイムアウト (分)",
     "screenDimTimeoutLabel": "画面減光タイムアウト",
     "screenOffTimeoutLabel": "画面オフタイムアウト",
-    "screenTimeoutSuffix": "分、0 = オフ",
-    "disableInactiveDisconnect": "非アクティブ時の切断を無効化",
-    "disablePicoLed": "Pico LED を無効化",
     "pollingRateLabel": "ポーリングレート",
     "controllerModeLabel": "コントローラモード"
   },
-  "lightbar": {
-    "sectionTitle": "ライトバー",
-    "blurb": "ライトバーのモードと4つのお気に入りカラーを選択。OLED でも編集可能。HOST はゲームに LED を委ねます。",
-    "modeLabel": "モード"
-  },
   "remap": {
-    "sectionTitle": "ボタンの再割り当て",
-    "badge": "OLED Edition",
-    "blurb": "任意のコントローラーボタンを別のボタンに割り当てます。割り当てはドングルに保存されるため、追加のソフトウェアなしであらゆるゲーム・OS で動作します。「適用」をクリックした時点で書き込み・保存されます。",
     "unsupported": "接続中のファームウェアはボタンの再割り当てに対応していません。「フラッシュ」タブで最新の OLED Edition ファームウェアに更新してください。",
-    "connectHint": "デバイスを接続するとボタンの再割り当てを編集できます。",
-    "applied": "再割り当てを適用し、ドングルに保存しました。",
-    "noChange": "— 変更なし —",
     "disabled": "無効（出力なし）",
-    "remappedTag": "再割り当て済み",
-    "rowAria": "{{button}} の割り当て先",
-    "apply": "再割り当てを適用",
-    "applyTitle": "再割り当てテーブルをドングルに書き込み、保存します（レポート 0xF6）",
-    "revert": "編集を元に戻す",
-    "revertTitle": "編集を破棄し、ドングルの現在の割り当てを復元します",
-    "reset": "デフォルトに戻す",
-    "resetTitle": "すべての再割り当てを消去（初期状態）— その後「適用」をクリック",
-    "verifyFailed": "再割り当ての書き込みを確認できませんでした。デバイスが変更を確認しませんでした。",
-    "noneRemapped": "再割り当てされたボタンはありません — デフォルト配置です。",
-    "countRemapped": "再割り当てしたボタン: {{count}}",
-    "diagramHint": "コントローラー上のボタンをクリックして再割り当てを設定します。",
-    "allButtons": "すべてのボタン"
-  },
-  "slots": {
-    "sectionTitle": "マルチスロットペアリング",
-    "blurb": "最大 4 つの DualSense をバインドします。アクティブなスロットは起動時に再接続します。",
-    "activeLabel": "アクティブなスロット"
-  },
-  "preview": {
-    "sectionTitle": "OLED プレビュー",
-    "blurb": "ファームウェアの 10 個の OLED 画面のライブエミュレーション — 物理的な Pico-OLED-1.3 が表示するものに近いですが、バイト単位で完璧ではありません。コントローラが接続されていない場合、モックデータで 4 秒ごとに自動サイクル。コントローラ接続時 (上の <strong>接続</strong> をクリック) は、データはライブです。<code>#preview</code> を共有して Discord 視聴者を直接このビューに案内できます。",
-    "liveDemoBanner": "ライブデモ — 実際の値を見るにはコントローラを接続してください。",
-    "firmwareNote": "トリガーハプティクスは、ドングルが MarcelineVPQ/DS5Dongle-OLED-Edition ファームウェアを実行している場合にのみ動作します。",
-    "mockNote": "モック値 — Chrome WebHID は標準の DualSense ディスクリプタではこのレポートを公開できません。HID 診断を参照してください。",
-    "key0": "KEY0",
-    "key1": "KEY1",
-    "key0Title": "KEY0 — 次の画面",
-    "key1Title": "KEY1 — 戻る / トリガーテストでプリセットを循環 / ライトバーでモードを循環",
-    "screenIndicator": "画面 <strong>{{n}} / {{total}}</strong>: {{name}}",
-    "autoCycleOn": "自動サイクル オン",
-    "autoCycleOff": "自動サイクル オフ",
-    "autoCycleOnTitle": "自動サイクルを一時停止",
-    "autoCycleOffTitle": "自動サイクルを再開",
-    "connectLive": "ライブプレビューに接続"
-  },
-  "footer": {
-    "credits": "<1>MarcelineVPQ/DS5Dongle-OLED-Edition</1> ファームウェア用の <0>awalol/ds5dongle-config-web</0> のフォーク。Audio Auto Haptics DSP は <2>loteran/DS5Dongle</2> のクレジット。",
-    "assetCredit": "コントローラーとボタンのアートワーク: <0>Zacksly</0>（<1>CC BY 3.0</1>、改変あり）。"
-  },
-  "flash": {
-    "sectionTitle": "ファームウェア書き込み",
-    "blurb": "WebUSB 経由で .uf2 ファームウェアイメージを Pico にプッシュ — picotool 不要、ドラッグ&ドロップ不要。ブラウザを離れずにアップグレードまたは再書き込み。piersfinlayson/picoflash により提供。",
-    "webusbUnavailable": "このブラウザでは WebUSB を利用できません。Chrome、Edge、Vivaldi、Brave、または Opera を使用してください。",
-    "step1Title": "1. UF2 を選択",
-    "step1Hint": "このサイトに同梱の最新リリースを使用するか、ローカルビルド (build/ds5-bridge-oled.uf2) を読み込みます。",
-    "useLatest": "最新リリースを使用 ({{title}})",
-    "pickFile": ".uf2 を選択",
-    "step2Title": "2. Pico を BOOTSEL モードにして接続",
-    "step2Hint": "USB を接続している間 BOOTSEL ボタンを押し続けてください。ブラウザがデバイスの認証を求めます。",
-    "connect": "Pico に接続",
-    "reconnect": "再接続",
-    "connectTitle": "BOOTSEL モードの Pico を認証",
-    "step3Title": "3. 書き込み",
-    "step3Hint": "フラッシュ領域を消去し、新しいファームウェアを書き込み、Pico を再起動します。数秒かかります。",
-    "flashButton": "今すぐ書き込み",
-    "flashingButton": "書き込み中…",
-    "rebootButton": "Pico を再起動",
-    "rebootingButton": "再起動中…",
-    "rebootTitle": "Pico を BOOTSEL からアプリケーションモードに起動",
-    "showLogs": "ログを表示",
-    "hideLogs": "ログを非表示",
-    "clearLogs": "クリア",
-    "logEmpty": "まだ活動はありません。",
-    "info": {
-      "device": "デバイス",
-      "serial": "シリアル",
-      "state": "状態"
-    },
-    "stage": {
-      "idle": "準備完了",
-      "parsing": "UF2 を解析中…",
-      "connecting": "接続中…",
-      "writing": "フラッシュを消去 + 書き込み中…",
-      "rebooting": "Pico を再起動中…",
-      "done": "完了!",
-      "error": "エラー"
-    },
-    "driverHelpSummary": "ドライバ/権限のセットアップ",
-    "driverHelpLinux": "Linux では、非 root ユーザーが Pico の BOOTSEL インターフェースにアクセスできるよう、一度だけ udev ルールを設定する必要があります。ターミナルに貼り付けてください:",
-    "driverHelpWindows": "Windows では BOOTSEL インターフェースに WinUSB ドライバを割り当てる必要があります。",
-    "driverHelpMac": "セットアップは不要です。",
-    "trustWarning": "これから書き込むファームウェアは、この dongle が接続される任意のホスト上で USB デバイス権限で実行されます。信頼できるソースの UF2 ファイルのみを書き込んでください。"
+    "verifyFailed": "再割り当ての書き込みを確認できませんでした。デバイスが変更を確認しませんでした。"
   },
   "desktop": {
     "nav": {
@@ -594,8 +449,6 @@
       "finger": "指 {{n}}",
       "speakerLevel": "現在のスピーカーレベル",
       "hapticLevel": "現在のハプティクスレベル",
-      "look": "外観",
-      "behavior": "動作",
       "closeToTray": "閉じるとトレイに格納",
       "launchAtLogin": "ログイン時に起動",
       "startMinimized": "最小化して起動",
@@ -743,7 +596,6 @@
       "inputs": "入力"
     },
     "narrator": {
-      "title": "ナレーター",
       "voice": "ナレーション音声",
       "voiceSub": "ツアーとアプリのイベントの短い音声。コントローラーのスピーカーからだけ流れます",
       "captions": "字幕",
@@ -1002,6 +854,17 @@
       "sub": "ボタン、選択、ハイライト",
       "controller": "コントローラー",
       "desktop": "デスクトップ"
+    },
+    "settings2": {
+      "language": "言語",
+      "appearance": "外観",
+      "theme": "テーマ",
+      "accessibility": "アクセシビリティ",
+      "startup": "起動とウィンドウ",
+      "updates": "アップデート",
+      "advanced": "詳細",
+      "reduceMotion": "視差効果を減らす",
+      "reduceMotionSub": "動く背景、点滅、アニメーションをなくします（システムで設定している場合もオン）"
     }
   },
   "ad": {

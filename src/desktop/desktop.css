@@ -2925,3 +2925,17 @@ html[data-glass] .live-panel .dk-card {
     background: var(--bg-panel);
   }
 }
+/* Reduce motion (App settings -> Accessibility, or the system's): no moving
+   background, pulsing, wobble or animated transitions anywhere. */
+html[data-reduce-motion] *,
+html[data-reduce-motion] *::before,
+html[data-reduce-motion] *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-reduce-motion] [class*="active"]:active,
+html[data-reduce-motion] .rail-link:active,
+html[data-reduce-motion] .dk-bar .dk-btn:active {
+  transform: none !important;
+}
