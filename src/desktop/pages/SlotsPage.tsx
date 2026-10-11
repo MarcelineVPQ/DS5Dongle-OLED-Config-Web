@@ -69,7 +69,9 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
               return (
                 <tr key={i}>
                   <td>{i}</td>
-                  <td className="dk-mono">{v ? (occupied ? formatMac(v.slots.addrs[i]) : t("desktop.slots.empty", "Empty")) : "—"}</td>
+                  <td className="dk-mono" title={v && occupied ? formatMac(v.slots.addrs[i]) : undefined}>
+                    {v ? (occupied ? formatMac(v.slots.addrs[i]) : t("desktop.slots.empty", "Empty")) : "—"}
+                  </td>
                   <td>
                     <div className="acts-cell">
                       {active ? (

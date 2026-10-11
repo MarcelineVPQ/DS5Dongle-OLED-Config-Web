@@ -294,7 +294,7 @@
       "slot": "Kopplungs-Slot",
       "signal": "Signal",
       "signalQ": {
-        "excellent": "Ausgezeichnet",
+        "excellent": "Sehr gut",
         "good": "Gut",
         "fair": "Mittel",
         "weak": "Schwach"
@@ -332,7 +332,7 @@
         "breathing": "Atmen",
         "rainbow": "Regenbogen",
         "fade": "Überblenden",
-        "live": "Neigungsfarbe",
+        "live": "Neigung",
         "fav0": "FAV0",
         "fav1": "FAV1",
         "fav2": "FAV2",

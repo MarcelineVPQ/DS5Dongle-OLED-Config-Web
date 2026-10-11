@@ -131,7 +131,7 @@ function Links({ rows }: { rows: Array<[string, string, () => void]> }) {
       {rows.map(([k, v, open]) => (
         <div key={k}>
           <dt>
-            <button type="button" className="live-data-link" onClick={open}>
+            <button type="button" className="live-data-link" title={k} onClick={open}>
               {k}
             </button>
           </dt>
@@ -161,7 +161,7 @@ function Rows({ rows }: { rows: Array<[string, string]> }) {
     <dl className="live-data-rows">
       {rows.map(([k, v]) => (
         <div key={k}>
-          <dt>{k}</dt>
+          <dt title={k}>{k}</dt>
           <dd>{v}</dd>
         </div>
       ))}

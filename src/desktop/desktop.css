@@ -292,6 +292,8 @@ html[data-theme="dark"] .dk {
 }
 .dk-row.stack .dk-seg button {
   flex: 1;
+  min-width: 0;
+  padding: 0 4px;
 }
 
 /* Pairing slots: fixed columns so the buttons never spill out of the card. */
@@ -490,6 +492,8 @@ html[data-theme="dark"] .dk {
 }
 .dk-table th,
 .dk-table td {
+  /* Long words (some languages) break instead of widening the table. */
+  overflow-wrap: anywhere;
   padding: 4px 6px;
   border-top: 1px solid var(--border-subtle);
   text-align: left;
@@ -1521,7 +1525,11 @@ html[data-theme="dark"] .dk {
 .live-tile-label {
   font-size: 11.5px;
   color: var(--text-muted);
-  white-space: nowrap;
+  /* One line when it fits; a long label (some languages) wraps, centered,
+     instead of running out of the tile. */
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 .live-stick {
   width: 60px;
@@ -1666,12 +1674,15 @@ html[data-theme="dark"] .dk {
 .live-data-rows {
   margin: 0;
   display: grid;
+  /* The column is the card's width: a long label mustn't widen it. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
 }
 .live-data-rows div {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 .live-data-rows dt {
   color: var(--text-muted);
@@ -1813,20 +1824,24 @@ html[data-theme="dark"] .dk {
   text-align: center;
 }
 
-/* Settings rows: the label keeps its width, a long value shortens with "…". */
-.live-data-links dt {
-  flex: 0 1 auto;
+/* Card rows: the value always shows whole; a label too long for the card
+   (some languages) shortens with "…" and shows in full on hover. */
+.live-data-rows dt {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.live-data-links dd {
-  flex: 1 1 0;
-  min-width: 2.5em;
+.live-data-rows dd {
+  flex: 0 0 auto;
+  text-align: right;
+}
+.live-data-links .live-data-link {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: right;
 }
 
 /* The narrator question: Skip on its own line, No / Yes side by side below. */
