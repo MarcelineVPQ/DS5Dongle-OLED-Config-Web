@@ -1,0 +1,116 @@
+// What the app shows while no dongle is connected. Two paths:
+//   - a dongle that's already set up: plug it in, it connects by itself;
+//   - a new (or non-dongle) Pico plugged in with BOOTSEL held: the app finds
+//     it and, when the user agrees, installs the firmware bundled with the app
+//     (no download needed, no files to copy). The Pico then restarts as the
+//     dongle. A dongle only appears on USB once a controller is connected (it
+//     takes on the controller's identity), so the next step is pairing.
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { PicoflashHandle } from "../flash";
+import type { LatestFirmware } from "./api";
+import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
+import UsbAccessSetup from "./UsbAccessSetup";
+
+const POLL_MS = 1000;
+
+type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "restarting"; version: string } | { phase: "failed"; detail: string };
+
+export default function SetupScreen({ supported }: { supported: boolean }) {
+  const { t } = useTranslation();
+  const [pico, setPico] = useState<PicoflashHandle | null>(null);
+  const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
+  const [install, setInstall] = useState<Install>({ phase: "idle" });
+
+  // Watch for a Pico in BOOTSEL mode (stops while installing).
+  const installing = install.phase === "running";
+  useEffect(() => {
+    if (!supported || installing) return;
+    let live = true;
+    const tick = () =>
+      void findBootloader()
+        .then((d) => live && setPico(d))
+        .catch(() => undefined);
+    tick();
+    const timer = setInterval(tick, POLL_MS);
+    return () => {
+      live = false;
+      clearInterval(timer);
+    };
+  }, [supported, installing]);
+
+  useEffect(() => {
+    if (!pico || firmware) return;
+    void window.desktop
+      ?.latestFirmware()
+      .then(setFirmware)
+      .catch(() => undefined);
+  }, [pico, firmware]);
+
+  const start = async () => {
+    if (!pico) return;
+    try {
+      const version = await installFirmware(pico, (progress) => setInstall({ phase: "running", progress }));
+      setInstall({ phase: "restarting", version });
+    } catch (cause) {
+      setInstall({ phase: "failed", detail: cause instanceof Error ? cause.message : String(cause) });
+    }
+  };
+
+  if (install.phase === "running") {
+    const p = install.progress;
+    return (
+      <Center>
+        <strong>{t("desktop.setup.installing", "Installing the firmware…")}</strong>
+        {p.step === "flashing" && <progress className="dk-progress" max={1} value={p.fraction ?? 0} />}
+        <span className="dk-hint">{t("desktop.setup.keepPlugged", "Keep the Pico plugged in.")}</span>
+      </Center>
+    );
+  }
+
+  if (install.phase === "restarting") {
+    return (
+      <Center>
+        <strong>{t("desktop.setup.restarting", { version: install.version })}</strong>
+        <span>{t("desktop.setup.restartingHint")}</span>
+      </Center>
+    );
+  }
+
+  if (pico) {
+    return (
+      <Center>
+        <strong>{t("desktop.setup.found", "A Pico is ready to set up")}</strong>
+        <span>
+          {firmware
+            ? t(firmware.source === "bundled" ? "desktop.setup.offerBundled" : "desktop.setup.offerOnline", { version: firmware.version })
+            : t("desktop.setup.noFirmware", "Looking for the firmware…")}
+        </span>
+        <span className="dk-hint">{t("desktop.setup.replaces", "This replaces whatever is on the Pico now.")}</span>
+        <span className="dk-hint">{t("desktop.setup.driveNote")}</span>
+        {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
+        <button type="button" className="dk-btn primary" disabled={!firmware} onClick={() => void start()}>
+          {t("desktop.setup.install", "Install the firmware")}
+        </button>
+      </Center>
+    );
+  }
+
+  return (
+    <Center>
+      <strong>{t("desktop.empty.title", "Plug in the DS5 Dongle")}</strong>
+      <span>{t("desktop.setup.existing", "Already set up? It connects automatically.")}</span>
+      <span>{t("desktop.setup.newPico", "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.")}</span>
+      {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
+      <UsbAccessSetup compact />
+    </Center>
+  );
+}
+
+function Center({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="dk-empty">
+      <div className="dk-setup">{children}</div>
+    </div>
+  );
+}

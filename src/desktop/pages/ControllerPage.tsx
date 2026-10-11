@@ -49,6 +49,11 @@ export default function ControllerPage({ bridge }: { bridge: UseDs5BridgeResult 
           <span className="dk-swatch" style={{ background: on && id?.lightbar ? `rgb(${id.lightbar.join(",")})` : "transparent" }} />
         </div>
       </section>
+      {id && !on && (
+        <div className="dk-notice dk-pair-hint">
+          <span>{t("desktop.controller.pairHint", "Already paired? Press the PS button. New controller? Hold PS + Create until the light bar flashes; it pairs into the current slot.")}</span>
+        </div>
+      )}
       <LightbarPage bridge={bridge} />
       <SlotsPage bridge={bridge} />
     </div>

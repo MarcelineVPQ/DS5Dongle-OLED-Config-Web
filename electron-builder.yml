@@ -1,6 +1,8 @@
 # Desktop packaging. Build with `npm run dist:linux` / `dist:win` / `dist:mac`
 # after `npm run build:desktop`. Releases are built in CI on each OS
-# (.github/workflows/release.yml); see docs/adr/0003-update-manifest.md.
+# by the release workflow on the firmware repo (MarcelineVPQ/DS5Dongle-OLED-Edition,
+# .github/workflows/release.yml), which also bundles that release's firmware in
+# resources/firmware/; see docs/adr/0005-releases-on-the-firmware-repo.md.
 appId: io.github.MarcelineVPQ.DS5DongleConfigurator
 productName: DS5 Dongle OLED Edition Configurator
 copyright: Copyright © 2026 MarcelineVPQ

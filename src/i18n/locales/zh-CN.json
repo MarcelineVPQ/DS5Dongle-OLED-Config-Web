@@ -270,8 +270,7 @@
       "waiting": "等待接收器…"
     },
     "empty": {
-      "title": "请插入 DS5 Dongle",
-      "body": "将自动连接。需要 OLED Edition 固件 v0.8 或更高版本。"
+      "title": "请插入 DS5 Dongle"
     },
     "bar": {
       "unsaved": "已应用到接收器，尚未保存：断电后更改将丢失。",
@@ -442,7 +441,8 @@
     },
     "controller": {
       "battery": "电量",
-      "charging": "充电中"
+      "charging": "充电中",
+      "pairHint": "已经配对过？按 PS 键。新手柄？按住 PS + Create 直到灯条闪烁；它会配对到当前槽位。"
     },
     "dongle": {
       "advanced": "高级"
@@ -582,6 +582,21 @@
       "stopHint": "关闭游戏设置；在你再次允许之前，不会再读取启动器设置。",
       "closeFailed": "无法请求 {{launcher}} 退出。请手动退出，然后点击“重新检查”。",
       "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。"
+    },
+    "setup": {
+      "installing": "正在安装固件…",
+      "keepPlugged": "请保持 Pico 连接。",
+      "restarting": "固件 {{version}} 已安装。现在配对你的手柄",
+      "restartingHint": "按住手柄上的 PS + Create 直到灯条闪烁。手柄连接后接收器就会出现在这里（之前配对过的手柄只需按 PS 键）。",
+      "found": "发现一个可设置的 Pico",
+      "offerBundled": "安装本应用自带的固件 {{version}}（无需下载）。",
+      "offerOnline": "安装最新发布的固件 {{version}}。",
+      "noFirmware": "正在查找固件…",
+      "replaces": "这会替换 Pico 上现有的内容。",
+      "install": "安装固件",
+      "existing": "已经设置好了？它会自动连接。",
+      "newPico": "新的 Pico？按住它的 BOOTSEL 按钮插上（全新的 Pico 不需要按）。应用会发现它并安装固件。",
+      "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。"
     }
   }
 }

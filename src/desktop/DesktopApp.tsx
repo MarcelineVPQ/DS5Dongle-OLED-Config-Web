@@ -6,6 +6,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
+import SetupScreen from "./SetupScreen";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ButtonsPage from "./pages/ButtonsPage";
@@ -13,7 +14,6 @@ import ControllerPage from "./pages/ControllerPage";
 import DonglePage from "./pages/DonglePage";
 import SettingsCards from "./pages/SettingsPage";
 import UpdateBanners from "./UpdateBanners";
-import UsbAccessSetup from "./UsbAccessSetup";
 import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
 import "./desktop.css";
@@ -196,21 +196,10 @@ export default function DesktopApp() {
               </button>
             </div>
           )}
-          {connected || current.standalone ? (
-            current.render(bridge, fw)
-          ) : (
-            <div className="dk-empty">
-              <div>
-                <strong>{t("desktop.empty.title", "Plug in the DS5 Dongle")}</strong>
-                {t("desktop.empty.body", "It connects automatically. Needs OLED Edition firmware v0.8 or newer.")}
-                {!bridge.supported && <div className="dk-bad">{t("statusText.webusbUnavailable")}</div>}
-                <UsbAccessSetup compact />
-              </div>
-            </div>
-          )}
+          {connected || current.standalone ? current.render(bridge, fw) : <SetupScreen supported={bridge.supported} />}
         </main>
 
-        {!current.standalone && (
+        {connected && !current.standalone && (
           <footer className="dk-bar">
             <span className="dk-bar-note">
               {busy

@@ -14,9 +14,11 @@ import { app, net } from "electron";
 import { Manifest, isAllowedDownloadUrl, isNewer, type Download } from "../../src/update/manifest";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
+import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
 
-const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/master/latest.json";
-const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
+// Published by the release workflow on the firmware repo, where every release
+// (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
+const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest.json";
 const FIRMWARE_CHANGELOG_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/CHANGELOG.md";
 const CHANGELOG_MAX_CHARS = 512 * 1024;
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";

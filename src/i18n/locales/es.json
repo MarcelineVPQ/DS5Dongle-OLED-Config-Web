@@ -270,8 +270,7 @@
       "waiting": "Esperando el dongle…"
     },
     "empty": {
-      "title": "Conecta el DS5 Dongle",
-      "body": "Se conecta automáticamente. Requiere firmware OLED Edition v0.8 o posterior."
+      "title": "Conecta el DS5 Dongle"
     },
     "bar": {
       "unsaved": "Aplicado al dongle, aún sin guardar: los cambios se pierden al apagarlo.",
@@ -442,7 +441,8 @@
     },
     "controller": {
       "battery": "Batería",
-      "charging": "cargando"
+      "charging": "cargando",
+      "pairHint": "¿Ya está emparejado? Pulsa el botón PS. ¿Mando nuevo? Mantén PS + Create hasta que la barra de luz parpadee; se empareja en el slot actual."
     },
     "dongle": {
       "advanced": "Avanzado"
@@ -585,6 +585,21 @@
       "stopHint": "Desactiva la configuración de juegos; no volverá a leer los ajustes de los lanzadores hasta que lo permitas.",
       "closeFailed": "No se pudo pedir a {{launcher}} que se cierre. Ciérralo tú y pulsa Volver a revisar.",
       "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios."
+    },
+    "setup": {
+      "installing": "Instalando el firmware…",
+      "keepPlugged": "Deja el Pico conectado.",
+      "restarting": "Firmware {{version}} instalado. Ahora empareja tu mando",
+      "restartingHint": "Mantén PS + Create en el mando hasta que la barra de luz parpadee. El dongle aparece aquí en cuanto el mando se conecta (un mando ya emparejado solo necesita el botón PS).",
+      "found": "Hay un Pico listo para configurar",
+      "offerBundled": "Instalar el firmware {{version}}, incluido con esta app (sin descargas).",
+      "offerOnline": "Instalar el firmware {{version}}, la versión publicada más reciente.",
+      "noFirmware": "Buscando el firmware…",
+      "replaces": "Esto reemplaza lo que haya ahora en el Pico.",
+      "install": "Instalar el firmware",
+      "existing": "¿Ya está configurado? Se conecta automáticamente.",
+      "newPico": "¿Pico nuevo? Conéctalo manteniendo pulsado su botón BOOTSEL (un Pico nuevo de fábrica no lo necesita). La app lo encuentra e instala el firmware.",
+      "driveNote": "Puede que tu equipo también lo muestre como una unidad llamada RP2350. No hace falta abrirla."
     }
   }
 }

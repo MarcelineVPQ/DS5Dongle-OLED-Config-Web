@@ -88,7 +88,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `deps`
 
 ## Versioning
 
-`package.json` `version` is the single source of truth. `node tools/update_version.mjs 1.2.3` sets it and syncs the CHANGELOG header; `node tools/update_version.mjs --verify` fails if anything disagrees (CI and `tools/publish.sh` run it).
+`package.json` `version` is the single source of truth. `node tools/update_version.mjs 1.2.3` sets it and syncs the CHANGELOG header; `node tools/update_version.mjs --verify` fails if anything disagrees (CI and the firmware repo's `tools/release.sh` run it).
 
 ## License
 

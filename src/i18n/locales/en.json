@@ -269,8 +269,7 @@
       "waiting": "Waiting for the dongle…"
     },
     "empty": {
-      "title": "Plug in the DS5 Dongle",
-      "body": "It connects automatically. Needs OLED Edition firmware v0.8 or newer."
+      "title": "Plug in the DS5 Dongle"
     },
     "bar": {
       "unsaved": "Applied to the dongle, not saved yet: changes are lost when it powers off.",
@@ -441,7 +440,8 @@
     },
     "controller": {
       "battery": "Battery",
-      "charging": "charging"
+      "charging": "charging",
+      "pairHint": "Already paired? Press the PS button. New controller? Hold PS + Create until the light bar flashes; it pairs into the current slot."
     },
     "dongle": {
       "advanced": "Advanced"
@@ -584,6 +584,21 @@
       "stopHint": "Turns game setup off; it won't read launcher settings again until you allow it.",
       "closeFailed": "{{launcher}} couldn't be asked to quit. Quit it yourself, then press Rescan.",
       "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away."
+    },
+    "setup": {
+      "installing": "Installing the firmware…",
+      "keepPlugged": "Keep the Pico plugged in.",
+      "restarting": "Firmware {{version}} installed. Now pair your controller",
+      "restartingHint": "Hold PS + Create on the controller until the light bar flashes. The dongle shows up here once the controller connects (a previously paired controller just needs the PS button).",
+      "found": "A Pico is ready to set up",
+      "offerBundled": "Install firmware {{version}}, included with this app (no download needed).",
+      "offerOnline": "Install firmware {{version}}, the newest published version.",
+      "noFirmware": "Looking for the firmware…",
+      "replaces": "This replaces whatever is on the Pico now.",
+      "install": "Install the firmware",
+      "existing": "Already set up? It connects automatically.",
+      "newPico": "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.",
+      "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it."
     }
   }
 }

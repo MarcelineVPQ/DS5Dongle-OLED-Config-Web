@@ -18,17 +18,16 @@ Changes apply to the dongle the moment you make them, so you can hear and feel t
 
 ## Requirements
 
-- A DS5 Dongle running **OLED Edition firmware v0.8 or newer**. That's the first firmware with the configurator interface.
-- **Older firmware?** Update it once by hand:
-  1. Download the latest `.uf2` from the [firmware releases](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases).
-  2. Hold the dongle's **BOOTSEL** button while plugging it in, so it shows up as a drive.
-  3. Copy the `.uf2` onto that drive.
+- A **Raspberry Pi Pico 2 W** built into a DS5 Dongle OLED Edition (see the [firmware repo](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition) for parts and wiring).
+- **No firmware yet, or an older one?** The app installs it. Each app release includes the matching firmware, so this works offline:
+  1. Plug the Pico in **while holding its BOOTSEL button** (a brand-new Pico doesn't need the button).
+  2. The app finds it and offers to install the firmware. One click, no files to copy.
 
-  From then on, the app updates the firmware for you.
+  From then on, the app keeps the firmware up to date for you.
 
 ## Install
 
-Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/releases)**.
+Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases)** on the firmware repo. Every release has the app for each system plus the firmware it was built with (the app includes that firmware, so you don't need to download it separately).
 
 ### Linux
 
@@ -79,7 +78,7 @@ npm run dist:win             # Windows portable exe (on Windows, or on Linux wit
 npm run dist:mac             # macOS zip (on a Mac)
 ```
 
-The result is in `release/`. The official downloads are built the same way by [GitHub Actions](.github/workflows/release.yml), on real Linux, Windows and macOS machines, so anyone can see exactly how each file was made.
+The result is in `release/`. The official downloads are built the same way by [GitHub Actions](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/blob/master/.github/workflows/release.yml) on the firmware repo, on real Linux, Windows and macOS machines, so anyone can see exactly how each file was made. Those builds also include the matching firmware; a build you make yourself doesn't, and downloads it from the update feed when you flash.
 
 ## For developers
 

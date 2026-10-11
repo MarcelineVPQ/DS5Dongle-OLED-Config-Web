@@ -43,6 +43,7 @@ export type UpdateState =
 export interface LatestFirmware {
   version: string;
   notesUrl?: string;
+  source: "bundled" | "online"; // bundled = shipped inside this app, works offline
 }
 
 export interface GameBackup {

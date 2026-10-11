@@ -8,6 +8,7 @@ import { isAllowedUsbDevice } from "./devices";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
+import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
@@ -94,6 +95,13 @@ function start(): void {
     return run(games);
   };
 
+  // Firmware the app offers: bundled with this release, or a newer published one.
+  const firmwareSource: FirmwareSourceDeps = {
+    bundled: () => readBundled(resourcesDir),
+    manifest: async () => updater.getManifest() ?? (await updater.fetchManifest().catch(() => null)),
+    downloadPublished: () => updater.downloadFirmware(),
+  };
+
   registerIpc({
     isTrusted,
     gamesScan: () => linuxOnly((g) => g.scan()),
@@ -113,11 +121,8 @@ function start(): void {
     getUpdateState: () => updater.getState(),
     installUpdate: () => updater.downloadAndInstall(),
     restartToUpdate: () => updater.restart(),
-    latestFirmware: async () => {
-      const manifest = updater.getManifest() ?? (await updater.fetchManifest().catch(() => null));
-      return manifest?.firmware ? { version: manifest.firmware.version, notesUrl: manifest.firmware.notes_url } : null;
-    },
-    downloadFirmware: () => updater.downloadFirmware(),
+    latestFirmware: () => latestFirmware(firmwareSource),
+    downloadFirmware: () => firmwareBytes(firmwareSource),
     getDesktopPalette: () => readDesktopPalette(),
     firmwareChangelog: () => updater.firmwareChangelog(),
   });

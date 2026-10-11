@@ -12,3 +12,6 @@ public/firmware-latest.json
 *.tsbuildinfo
 out/
 release/
+
+# Firmware bundled by the release workflow (never committed)
+resources/firmware/

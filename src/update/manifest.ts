@@ -21,6 +21,8 @@ export const Download = z.object({
 export type Download = z.infer<typeof Download>;
 
 export const Manifest = z.object({
+  // Only "stable" exists today; an opt-in development channel can be added later.
+  channel: z.string().max(32).optional(),
   app: z.object({
     version: z.string(),
     notes_url: z.string().url().optional(),

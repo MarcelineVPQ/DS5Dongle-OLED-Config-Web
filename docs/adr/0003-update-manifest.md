@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (implemented and verified end to end on Linux, 2026-10-10)
+Accepted (implemented and verified end to end on Linux, 2026-10-10). Where the feed and releases live was changed by [ADR-0005](0005-releases-on-the-firmware-repo.md).
 
 ## Date
 

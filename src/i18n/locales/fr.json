@@ -270,8 +270,7 @@
       "waiting": "En attente du dongle…"
     },
     "empty": {
-      "title": "Branche le DS5 Dongle",
-      "body": "La connexion est automatique. Nécessite le firmware OLED Edition v0.8 ou plus récent."
+      "title": "Branche le DS5 Dongle"
     },
     "bar": {
       "unsaved": "Appliqué au dongle, pas encore enregistré : les changements seront perdus à l'extinction.",
@@ -442,7 +441,8 @@
     },
     "controller": {
       "battery": "Batterie",
-      "charging": "en charge"
+      "charging": "en charge",
+      "pairHint": "Déjà appairée ? Appuie sur PS. Nouvelle manette ? Maintiens PS + Create jusqu'à ce que la barre lumineuse clignote ; elle s'appaire dans le slot actuel."
     },
     "dongle": {
       "advanced": "Avancé"
@@ -585,6 +585,21 @@
       "stopHint": "Désactive la configuration des jeux ; elle ne relira plus les réglages des lanceurs tant que tu ne l'autorises pas.",
       "closeFailed": "Impossible de demander à {{launcher}} de se fermer. Quitte-le toi-même, puis appuie sur Revérifier.",
       "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements."
+    },
+    "setup": {
+      "installing": "Installation du firmware…",
+      "keepPlugged": "Laisse le Pico branché.",
+      "restarting": "Firmware {{version}} installé. Appaire maintenant ta manette",
+      "restartingHint": "Maintiens PS + Create sur la manette jusqu'à ce que la barre lumineuse clignote. Le dongle apparaît ici dès que la manette est connectée (une manette déjà appairée n'a besoin que du bouton PS).",
+      "found": "Un Pico est prêt à être configuré",
+      "offerBundled": "Installer le firmware {{version}}, inclus avec cette app (aucun téléchargement).",
+      "offerOnline": "Installer le firmware {{version}}, la dernière version publiée.",
+      "noFirmware": "Recherche du firmware…",
+      "replaces": "Cela remplace tout ce qui se trouve sur le Pico.",
+      "install": "Installer le firmware",
+      "existing": "Déjà configuré ? Il se connecte automatiquement.",
+      "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
+      "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir."
     }
   }
 }

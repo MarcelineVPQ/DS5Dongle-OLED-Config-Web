@@ -907,3 +907,15 @@ html[data-theme="dark"] .dk {
 .dk-games-table td {
   font-size: var(--dk-small);
 }
+
+/* No dongle connected: plug-in instructions, or first-time setup of a new Pico. */
+.dk-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 460px;
+}
+.dk-setup .dk-progress {
+  width: 260px;
+}
