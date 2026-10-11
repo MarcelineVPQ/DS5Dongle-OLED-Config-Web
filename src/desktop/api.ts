@@ -38,6 +38,9 @@ export interface DesktopSettings {
   // Show her words as a caption while she speaks (and, with the voice off,
   // the short confirmations as text only).
   narratorCaptions: boolean;
+  // Draw with the graphics card (needed for blur, glass and smooth effects).
+  // Turned off automatically if the GPU process crashes; applies at restart.
+  hardwareAcceleration: boolean;
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).

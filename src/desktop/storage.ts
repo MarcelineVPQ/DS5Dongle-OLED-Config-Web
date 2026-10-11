@@ -1,7 +1,10 @@
 // Per-viewer UI preferences in localStorage (panel hidden, rail pinned, sort,
 // color vision...). Storage can be blocked or throw; then a preference just
 // lasts for this session, so reads fall back and writes are best-effort.
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+// Every component using the same preference sees a change at once.
+const PREF_EVENT = "ds5:pref";
 
 export function readPref(key: string): string | null {
   try {
@@ -17,6 +20,7 @@ export function writePref(key: string, value: string): void {
   } catch {
     // storage blocked: lasts for this session
   }
+  window.dispatchEvent(new CustomEvent(PREF_EVENT, { detail: { key, value } }));
 }
 
 // A string preference restricted to `allowed` (anything else reads as `fallback`).
@@ -25,6 +29,14 @@ export function usePref<T extends string>(key: string, fallback: T, allowed: rea
     const stored = readPref(key);
     return stored !== null && (allowed as readonly string[]).includes(stored) ? (stored as T) : fallback;
   });
+  useEffect(() => {
+    const on = (e: Event) => {
+      const { key: k, value: v } = (e as CustomEvent<{ key: string; value: string }>).detail;
+      if (k === key && (allowed as readonly string[]).includes(v)) setValue(v as T);
+    };
+    window.addEventListener(PREF_EVENT, on);
+    return () => window.removeEventListener(PREF_EVENT, on);
+  }, [key, allowed]);
   const set = useCallback(
     (next: T) => {
       setValue(next);
@@ -35,8 +47,10 @@ export function usePref<T extends string>(key: string, fallback: T, allowed: rea
   return [value, set];
 }
 
+const FLAG = ["1", "0"] as const;
+
 // A yes/no preference stored as "1" / "0".
 export function useFlagPref(key: string): [boolean, (value: boolean) => void] {
-  const [value, set] = usePref<"1" | "0">(key, "0", ["1", "0"]);
+  const [value, set] = usePref<"1" | "0">(key, "0", FLAG);
   return [value === "1", useCallback((next: boolean) => set(next ? "1" : "0"), [set])];
 }

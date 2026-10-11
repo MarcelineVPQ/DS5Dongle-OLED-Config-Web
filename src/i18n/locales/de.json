@@ -647,7 +647,10 @@
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
       "hapticSilent": "Still: gerade sendet nichts Haptik. Der Pegel bewegt sich, wenn ein Spiel HD-Haptik abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
       "speakerSilent": "Still: gerade spielt nichts auf dem Lautsprecher des Controllers.",
-      "levelLive": "Live vom Dongle."
+      "levelLive": "Live vom Dongle.",
+      "hardwareAcceleration": "Hardwarebeschleunigung",
+      "hardwareAccelerationSub": "Zeichnet mit der Grafikkarte: flüssiger und nötig für Unschärfe- und Glaseffekte. Schaltet sich ab, wenn die Grafikkarte abstürzt.",
+      "restartToApply": "Starte die App neu, um es anzuwenden"
     },
     "tour": {
       "stepOf": "Schritt {{n}} von {{total}}",
@@ -986,6 +989,10 @@
         "no-speaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
         "failed": "Der Test konnte nicht laufen. Läuft PipeWire?"
       }
+    },
+    "backdrop": {
+      "label": "Spielgrafik im Hintergrund",
+      "sub": "Die Grafik deiner Spiele, unscharf und langsam bewegt, hinter dem Controller"
     }
   },
   "ad": {

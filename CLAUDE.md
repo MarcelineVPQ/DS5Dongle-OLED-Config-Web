@@ -37,7 +37,7 @@ pre-commit run --all-files
 - **Security baseline** is gated by `.hooks/check_electron_security.sh`, `.hooks/check_dom_sinks.sh` and `tests/security/`. Changing window/session/CSP/allowlists requires updating `docs/SECURITY_AUDIT.md` and those tests.
 - **Protocol changes** land in the firmware first, then the client, the fake (`tests/support/fakeDongle.ts`) and the tests in the same change.
 - **Dependencies**: exact versions, chosen ≥ 2 weeks after release.
-- **Linux dev quirks** (ADR-0004): `--no-sandbox` (AppArmor userns restriction), software rendering on NVIDIA, zoom pinned to 100%. When restarting the app from a shell, kill by the anchored full path (`pgrep -f "^$PWD/node_modules/electron/dist/electron"`; unanchored patterns also match your own shell and kill it): it is single-instance, so a stale hidden copy blocks every new launch.
+- **Linux dev quirks** (ADR-0004): `--no-sandbox` (AppArmor userns restriction), GPU rendering on by default (App settings → Hardware acceleration; a GPU crash turns it off for the next start), zoom pinned to 100%. When restarting the app from a shell, kill by the anchored full path (`pgrep -f "^$PWD/node_modules/electron/dist/electron"`; unanchored patterns also match your own shell and kill it): it is single-instance, so a stale hidden copy blocks every new launch.
 
 ## Git Workflow
 

@@ -2,6 +2,8 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { BACKDROP_KEY } from "./ArtBackdrop";
+import { useFlagPref } from "../storage";
 import { controllerSpeaker } from "../narrator";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -270,6 +272,7 @@ function DongleSections({ bridge, fw, advancedOpen }: { bridge: UseDs5BridgeResu
 function AppSettings() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<DesktopSettings | null>(null);
+  const [gpuChanged, setGpuChanged] = useState(false);
   useEffect(() => {
     void window.desktop?.getSettings().then(setSettings);
   }, []);
@@ -283,6 +286,7 @@ function AppSettings() {
           <LanguageToggle />
         </div>
         <ColorVisionSetting />
+        <BackdropSetting />
       </section>
       {settings && (
         <section className="dk-card">
@@ -299,6 +303,15 @@ function AppSettings() {
             onChange={(v) => {
               set("autoInstallUpdates", v);
               set("updatesAsked", true);
+            }}
+          />
+          <Toggle
+            label={t("desktop.live.hardwareAcceleration")}
+            sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+            value={settings.hardwareAcceleration}
+            onChange={(v) => {
+              setGpuChanged(true);
+              set("hardwareAcceleration", v);
             }}
           />
         </section>
@@ -450,4 +463,10 @@ function MicTest() {
       {phase === "error" && <p className="dk-hint">{t(`desktop.audioTest.problem.${problem ?? "failed"}`)}</p>}
     </section>
   );
+}
+
+function BackdropSetting() {
+  const { t } = useTranslation();
+  const [off, setOff] = useFlagPref(BACKDROP_KEY);
+  return <Toggle label={t("desktop.backdrop.label")} sub={t("desktop.backdrop.sub")} value={!off} onChange={(on) => setOff(!on)} />;
 }

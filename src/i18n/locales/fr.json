@@ -647,7 +647,10 @@
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
       "hapticSilent": "Silence : rien n'envoie d'haptique en ce moment. Le niveau bouge quand un jeu joue de l'haptique HD, ou avec Audio Auto Haptics activé pendant que du son joue.",
       "speakerSilent": "Silence : rien ne joue sur le haut-parleur de la manette en ce moment.",
-      "levelLive": "En direct depuis le dongle."
+      "levelLive": "En direct depuis le dongle.",
+      "hardwareAcceleration": "Accélération matérielle",
+      "hardwareAccelerationSub": "Dessine avec la carte graphique : plus fluide, et nécessaire au flou et aux effets de verre. Se désactive si la carte graphique plante.",
+      "restartToApply": "Redémarrez l'app pour appliquer"
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",
@@ -986,6 +989,10 @@
         "no-speaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
         "failed": "Le test n'a pas pu se lancer. PipeWire est-il actif ?"
       }
+    },
+    "backdrop": {
+      "label": "Fond avec les jeux",
+      "sub": "Les visuels de vos jeux, flous et en lent mouvement, derrière la manette"
     }
   },
   "ad": {

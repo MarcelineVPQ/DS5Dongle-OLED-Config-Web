@@ -40,6 +40,13 @@ let syncRunningWatcher: () => void = () => undefined;
 
 applyLinuxWorkarounds();
 
+// GPU rendering is on by default (blur, glass and the live view's glows need
+// it; software rendering cost ~140% CPU on the controller page). It once
+// crash-looped on NVIDIA (ADR-0004); Electron 43 runs it sandboxed on native
+// Wayland. App settings can turn it off, and a GPU crash turns it off for the
+// next start (recordGpuCrash). Must be decided before the app is ready.
+if (!loadSettings().hardwareAcceleration) app.disableHardwareAcceleration();
+
 // Game artwork for the Games library: ds5-art://art/<game key>/<kind>, served
 // only from the files the last scan resolved for that game (never a path the
 // page names). Must be registered before the app is ready.
@@ -55,7 +62,20 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(start);
 }
 
+// A crashed GPU process means hardware rendering isn't safe on this PC:
+// Chromium falls back to software for the rest of this run, and the setting
+// goes off so the next start doesn't try again (the user can turn it back on).
+function recordGpuCrash(): void {
+  app.on("child-process-gone", (_event, details) => {
+    if (details.type !== "GPU" || details.reason === "clean-exit" || details.reason === "killed") return;
+    if (!settings?.hardwareAcceleration) return;
+    console.warn(`[gpu] GPU process gone (${details.reason}); software rendering from the next start`);
+    updateSetting("hardwareAcceleration", false);
+  });
+}
+
 function start(): void {
+  recordGpuCrash();
   if (process.platform === "win32") app.setAppUserModelId(APP_ID);
   settings = loadSettings();
   integrateDesktop(resourcesDir);
@@ -364,11 +384,6 @@ function applyLinuxWorkarounds(): void {
   // already started). On Ubuntu 23.10+ AppArmor blocks the namespace sandbox
   // unless a profile is installed; packaging handles that (docs/adr/0004), and
   // `npm run dev:desktop` / `start:desktop` pass --no-sandbox for local runs.
-
-  // NVIDIA proprietary driver: Electron's GPU process crash-loops (SIGTRAP on
-  // Wayland, SIGSEGV under XWayland with driver 615). A settings window has no
-  // use for GPU compositing, so render in software.
-  if (existsSync("/proc/driver/nvidia/version")) app.disableHardwareAcceleration();
 
   // Follow the desktop's (fractional) display scale on Wayland, e.g. KDE at
   // 120%. Without this Chromium guesses a device scale and text comes out too

@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   // Silent until the user says yes (the tour asks once).
   narratorVoice: "ask",
   narratorCaptions: true,
+  hardwareAcceleration: true,
 };
 
 const SettingsFile = z.object({
@@ -32,6 +33,7 @@ const SettingsFile = z.object({
   gamesScanAllowed: z.boolean().optional(),
   narratorVoice: z.enum(["ask", "on", "off"]).optional(),
   narratorCaptions: z.boolean().optional(),
+  hardwareAcceleration: z.boolean().optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [
@@ -44,6 +46,7 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("gamesScanAllowed"), value: z.boolean() }),
   z.strictObject({ key: z.literal("narratorVoice"), value: z.enum(["ask", "on", "off"]) }),
   z.strictObject({ key: z.literal("narratorCaptions"), value: z.boolean() }),
+  z.strictObject({ key: z.literal("hardwareAcceleration"), value: z.boolean() }),
 ]);
 
 function settingsPath(): string {

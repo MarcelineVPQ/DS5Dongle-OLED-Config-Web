@@ -925,7 +925,10 @@ html[data-theme="dark"] .dk {
    (on the wrapper, so the strip's clip doesn't cut the glow off). */
 .live-ctl .led-glow {
   --ctl-led-glow: color-mix(in srgb, var(--ctl-led, transparent) var(--ctl-led-pct, 100%), transparent);
-  filter: drop-shadow(0 0 2px var(--ctl-led-glow)) drop-shadow(0 0 6px var(--ctl-led-glow)) drop-shadow(0 0 12px var(--ctl-led-glow)) drop-shadow(0 0 24px var(--ctl-led-glow));
+  /* Two blurs, not four: the color changes ~30x a second, and with software
+     rendering each blur is redrawn every time (four cost ~120% CPU, two ~20%;
+     the look is nearly the same). */
+  filter: drop-shadow(0 0 3px var(--ctl-led-glow)) drop-shadow(0 0 14px var(--ctl-led-glow));
 }
 .live-ctl .hit {
   fill: transparent;
@@ -2610,4 +2613,61 @@ html[data-theme="dark"] .dk {
   border-color: var(--dk-accent);
   background: var(--dk-accent);
   box-shadow: 0 0 6px var(--dk-accent);
+}
+
+/* ---- Controller page backdrop (ArtBackdrop.tsx) ---- */
+.live-view {
+  position: relative;
+  isolation: isolate;
+}
+.live-view > .live-stage,
+.live-view > .live-panel {
+  position: relative;
+  z-index: 1;
+}
+.art-bd {
+  position: absolute;
+  inset: calc(-1 * var(--dk-pad));
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.art-bd-layer,
+.art-bd-blobs {
+  position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  opacity: 0;
+  transition: opacity 2.5s ease;
+  animation: art-bd-kenburns 46s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.art-bd-layer.on,
+.art-bd-blobs {
+  opacity: 0.55;
+}
+.art-bd-blobs {
+  background: radial-gradient(40% 50% at 25% 35%, var(--bd-a), transparent 70%), radial-gradient(35% 45% at 75% 65%, var(--bd-b), transparent 70%);
+  opacity: 0.35;
+}
+/* Keeps the data readable: the page color over the art, deeper at the bottom. */
+.art-bd-dim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 55%, transparent), color-mix(in srgb, var(--bg-page) 80%, transparent));
+}
+@keyframes art-bd-kenburns {
+  from {
+    transform: scale(1) translate(-2%, -1%);
+  }
+  to {
+    transform: scale(1.12) translate(2%, 1.5%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-bd-layer,
+  .art-bd-blobs {
+    animation: none;
+  }
 }

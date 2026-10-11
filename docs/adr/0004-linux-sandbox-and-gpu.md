@@ -22,7 +22,7 @@ Three Linux platform problems showed up on the first desktop launches (Ubuntu 26
    - **Local runs** (`npm run dev:desktop`, `start:desktop`) pass `--no-sandbox`.
    - **Packaged Linux builds** (AppImage): electron-builder's `AppRun` probes `unshare -Ur true` and adds `--no-sandbox` only when the probe fails. An AppArmor profile for our binary can't fix that, because the probe runs `/usr/bin/unshare` (verified 2026-10-10). A full sandbox on Ubuntu needs a custom `AppRun` or a .deb with a profile; tracked as SECURITY_AUDIT O1.
    - **Renderer isolation always applies:** `contextIsolation`, sandboxed renderer, strict CSP, no Node in the page, a preload that exposes a fixed object, WebUSB limited to two devices, and every other web permission denied.
-2. **GPU.** On NVIDIA (`/proc/driver/nvidia/version` exists), call `app.disableHardwareAcceleration()` and stay on native Wayland. A settings window doesn't need GPU compositing.
+2. **GPU.** ~~On NVIDIA, call `app.disableHardwareAcceleration()`.~~ **Superseded 2026-10-11:** GPU rendering is on by default everywhere, on native Wayland. Re-tested with Electron 43 and NVIDIA 615.71 (RTX 5080, KDE Plasma 6.6.6 Wayland): a packaged, fully sandboxed AppImage ran on the GPU (ANGLE/OpenGL ES 3.2) with no GPU-process crash, and software rendering had become the bottleneck (the controller page's glows cost ~140% CPU; ~10% renderer + ~13% GPU process on the GPU). Safety net: App settings → Hardware acceleration (applies at restart), and a crashed GPU process (`child-process-gone`, type GPU, not a clean exit) turns that setting off for the next start. `--disable-gpu-sandbox` is not used.
 3. **Scale.** Pin `setZoomFactor(1)` after load. Enable `WaylandFractionalScaleV1` so the desktop scale is honored.
 
 ## Consequences
@@ -37,4 +37,4 @@ Three Linux platform problems showed up on the first desktop launches (Ubuntu 26
 
 ### Neutral
 
-- Software rendering costs nothing noticeable for this UI.
+- ~~Software rendering costs nothing noticeable for this UI.~~ It did once the live view gained glows and the backdrop; see the 2026-10-11 note in Decision 2.

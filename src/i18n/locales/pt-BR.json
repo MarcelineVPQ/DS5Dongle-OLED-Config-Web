@@ -647,7 +647,10 @@
       "autoInstallSub": "Baixa e verifica em segundo plano; a nova versão abre na próxima vez que você abrir o app",
       "hapticSilent": "Silêncio: nada está enviando háptico agora. Ele se move quando um jogo toca háptico HD, ou com o Audio Auto Haptics ligado enquanto toca som.",
       "speakerSilent": "Silêncio: nada está tocando no alto-falante do controle agora.",
-      "levelLive": "Ao vivo do dongle."
+      "levelLive": "Ao vivo do dongle.",
+      "hardwareAcceleration": "Aceleração de hardware",
+      "hardwareAccelerationSub": "Desenha com a placa de vídeo: mais fluido e necessário para desfoque e efeitos de vidro. Desliga sozinha se a placa de vídeo travar.",
+      "restartToApply": "Reinicie o app para aplicar"
     },
     "tour": {
       "stepOf": "Passo {{n}} de {{total}}",
@@ -986,6 +989,10 @@
         "no-speaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
         "failed": "O teste não pôde rodar. O PipeWire está ativo?"
       }
+    },
+    "backdrop": {
+      "label": "Fundo com seus jogos",
+      "sub": "A arte dos seus jogos, desfocada e em movimento lento, atrás do controle"
     }
   },
   "ad": {

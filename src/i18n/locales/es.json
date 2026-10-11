@@ -647,7 +647,10 @@
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
       "hapticSilent": "Silencio: ahora nada envía hápticos. Se mueve cuando un juego reproduce hápticos HD, o con Audio Auto Haptics activado mientras suena audio.",
       "speakerSilent": "Silencio: ahora no suena nada en el altavoz del mando.",
-      "levelLive": "En directo desde el dongle."
+      "levelLive": "En directo desde el dongle.",
+      "hardwareAcceleration": "Aceleración por hardware",
+      "hardwareAccelerationSub": "Dibuja con la tarjeta gráfica: más fluido y necesario para el desenfoque y los efectos de cristal. Se desactiva sola si la tarjeta gráfica falla.",
+      "restartToApply": "Reinicia la app para aplicarlo"
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",
@@ -986,6 +989,10 @@
         "no-speaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
         "failed": "No se pudo hacer la prueba. ¿Está PipeWire en marcha?"
       }
+    },
+    "backdrop": {
+      "label": "Fondo con tus juegos",
+      "sub": "El arte de tus juegos, desenfocado y en lento movimiento, detrás del mando"
     }
   },
   "ad": {

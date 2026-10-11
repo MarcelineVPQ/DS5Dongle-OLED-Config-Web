@@ -646,7 +646,10 @@
       "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app",
       "hapticSilent": "Silent: nothing is sending haptics right now. It moves while a game plays HD haptics, or with Audio Auto Haptics on while sound plays.",
       "speakerSilent": "Silent: nothing is playing on the controller's speaker right now.",
-      "levelLive": "Live from the dongle."
+      "levelLive": "Live from the dongle.",
+      "hardwareAcceleration": "Hardware acceleration",
+      "hardwareAccelerationSub": "Draws with the graphics card: smoother, and needed for blur and glass effects. Turns itself off if the graphics card crashes.",
+      "restartToApply": "Restart the app to apply"
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",
@@ -985,6 +988,10 @@
         "no-speaker": "The controller's speaker isn't available as an audio output on this PC.",
         "failed": "The test couldn't run. Is PipeWire running?"
       }
+    },
+    "backdrop": {
+      "label": "Game art background",
+      "sub": "Your games' artwork, blurred, slowly moving behind the controller"
     }
   },
   "ad": {
