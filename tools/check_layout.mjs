@@ -3,11 +3,13 @@
 //   layout:   text that's cut off or spills out of its box, in every language,
 //             at a normal and at the smallest supported window size;
 //   contrast: text under WCAG AA (4.5:1, 3:1 for large text) in every theme
-//             and style (English, normal size).
+//             and style (English, normal size);
+//   names:    buttons, links, inputs and selects with no name a screen reader
+//             or a tooltip could give (no text, aria-label, title or label).
 // Mechanical, exhaustive (the AVIEW rule): nothing sampled by eye.
 //
 //   npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
-//   node tools/check_layout.mjs [--port 9333] [--mode layout|contrast|all] [--langs en,de] [--sizes 1100x900,900x650]
+//   node tools/check_layout.mjs [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650]
 //
 // Needs a dongle connected (most panels only exist then). Exits 1 on any
 // problem. A label shortened with "…" counts only if it has no tooltip. The
@@ -108,6 +110,25 @@ const CONTRAST_PROBE = `(() => {
     if (got < need) out.push({ kind: "contrast " + got.toFixed(2) + " < " + need, text: label(el) });
   }
   return { out, skipped };
+})()`;
+
+// In the page: interactive elements with no accessible name.
+const NAMES_PROBE = `(() => {
+  const out = [];
+  for (const el of document.querySelectorAll("button, a[href], input:not([type=hidden]), select, textarea, [role=button], [role=tab], [role=switch], [role=radio]")) {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || el.closest("[aria-hidden='true']")) continue;
+    const named =
+      (el.innerText || "").trim() ||
+      el.getAttribute("aria-label") ||
+      el.getAttribute("aria-labelledby") ||
+      el.title ||
+      (el.id && document.querySelector("label[for='" + el.id + "']")) ||
+      el.closest("label") ||
+      el.getAttribute("placeholder");
+    if (!named) out.push({ kind: "no name", text: el.tagName.toLowerCase() + "." + String(el.className).split(" ")[0] + " in " + (el.closest("section, nav, header, .dk-bar")?.className.split(" ")[0] ?? "?") });
+  }
+  return out;
 })()`;
 
 const click = (selector) => evaluate(`(() => { const el = document.querySelector(${JSON.stringify(selector)}); el?.dispatchEvent(new MouseEvent("click", { bubbles: true })); return !!el; })()`);
@@ -228,6 +249,16 @@ if (MODE === "contrast" || MODE === "all") {
       }
     }
   console.log(`(contrast: ${skippedTotal} text items over art, glass or translucency not judged)`);
+}
+
+if (MODE === "names" || MODE === "all") {
+  await setPrefs({ i18nextLng: "en" });
+  await sleep(5000);
+  for (const [name, open] of views()) {
+    await open();
+    await sleep(700);
+    report(`names    ${name.padEnd(28)}`, (await evaluate(NAMES_PROBE)) ?? []);
+  }
 }
 
 await setPrefs({ i18nextLng: original.lang, "ds5-bridge-theme": original.theme, "ds5.glass": original.glass });
