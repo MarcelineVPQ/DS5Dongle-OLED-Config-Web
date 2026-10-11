@@ -889,7 +889,9 @@
       "backdropDim": "Background dim",
       "backdropDimSub": "How much the page darkens the game art",
       "backdropBlur": "Background blur",
-      "backdropBlurSub": "Softer or sharper game art behind the page"
+      "backdropBlurSub": "Softer or sharper game art behind the page",
+      "depth": "Depth",
+      "depthSub": "Shadow strength under cards and the controller (0 = flat)"
     }
   },
   "ad": {

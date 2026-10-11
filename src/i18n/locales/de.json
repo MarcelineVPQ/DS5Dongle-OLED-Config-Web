@@ -890,7 +890,9 @@
       "backdropDim": "Hintergrund abdunkeln",
       "backdropDimSub": "Wie stark die Seite die Spielgrafik abdunkelt",
       "backdropBlur": "Hintergrund-Unschärfe",
-      "backdropBlurSub": "Weichere oder schärfere Spielgrafik hinter der Seite"
+      "backdropBlurSub": "Weichere oder schärfere Spielgrafik hinter der Seite",
+      "depth": "Tiefe",
+      "depthSub": "Schattenstärke unter Karten und dem Controller (0 = flach)"
     }
   },
   "ad": {

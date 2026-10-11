@@ -2969,3 +2969,79 @@ html[data-cards-translucent] .live-data-card {
   background: color-mix(in srgb, var(--bg-panel) var(--card-opacity, 100%), transparent) !important;
   backdrop-filter: blur(10px);
 }
+
+/* ---- Depth and motion: layered shadows (a tight contact shadow and a soft
+   ambient one, scaled by the Depth knob, 0 = flat) and a small lift on
+   anything you can click; tiles and covers wiggle once on hover. Reduce
+   motion (the app's or the system's) keeps the shadows and drops the
+   movement. ---- */
+:root {
+  --depth: 0.6;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / calc(var(--depth) * 0.35)), 0 4px 12px rgb(0 0 0 / calc(var(--depth) * 0.22));
+  --shadow-2: 0 2px 4px rgb(0 0 0 / calc(var(--depth) * 0.4)), 0 12px 28px rgb(0 0 0 / calc(var(--depth) * 0.32));
+}
+.dk-card,
+.live-tile,
+.live-data-card,
+.lib-tile,
+.gp-hero {
+  box-shadow: var(--shadow-1);
+}
+.live-ctl svg {
+  filter: drop-shadow(0 calc(18px * var(--depth)) calc(28px * var(--depth)) rgb(0 0 0 / calc(var(--depth) * 0.45)));
+}
+.live-tile-button,
+.lib-tile,
+.live-shortcut,
+.lib-row,
+.dk-btn {
+  transition:
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 220ms ease,
+    background 0.15s,
+    border-color 0.15s;
+}
+.live-tile-button:hover,
+.lib-tile:hover,
+.live-shortcut:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-2);
+}
+.dk-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+.lib-row:hover {
+  transform: translateX(2px);
+}
+.live-tile-button:hover,
+.lib-tile:hover {
+  animation: dk-wiggle 420ms ease-in-out 1;
+}
+@keyframes dk-wiggle {
+  25% {
+    rotate: -1.2deg;
+  }
+  60% {
+    rotate: 0.8deg;
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-tile-button:hover,
+  .lib-tile:hover,
+  .live-shortcut:hover,
+  .dk-btn:not(:disabled):hover,
+  .lib-row:hover {
+    transform: none;
+    animation: none;
+  }
+}
+html[data-reduce-motion] .live-tile-button:hover,
+html[data-reduce-motion] .lib-tile:hover,
+html[data-reduce-motion] .live-shortcut:hover,
+html[data-reduce-motion] .dk-btn:not(:disabled):hover,
+html[data-reduce-motion] .lib-row:hover {
+  transform: none !important;
+}

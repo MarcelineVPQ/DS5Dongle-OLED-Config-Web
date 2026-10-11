@@ -890,7 +890,9 @@
       "backdropDim": "Escurecer o fundo",
       "backdropDimSub": "Quanto a página escurece a arte do jogo",
       "backdropBlur": "Desfoque do fundo",
-      "backdropBlurSub": "Arte do jogo mais suave ou mais nítida atrás da página"
+      "backdropBlurSub": "Arte do jogo mais suave ou mais nítida atrás da página",
+      "depth": "Profundidade",
+      "depthSub": "Intensidade das sombras sob os cartões e o controle (0 = plano)"
     }
   },
   "ad": {

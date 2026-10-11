@@ -19,6 +19,7 @@ export const KNOBS: Knob[] = [
   { key: "cardOpacity", min: 40, max: 100, step: 5, fallback: 100, unit: "%", cssVar: "--card-opacity", css: (v) => `${v}%` },
   { key: "backdropDim", min: 0, max: 90, step: 5, fallback: 55, unit: "%", cssVar: "--backdrop-dim", css: (v) => `${v}%` },
   { key: "backdropBlur", min: 0, max: 100, step: 10, fallback: 60, unit: "%", cssVar: "--backdrop-blur", css: (v) => String(v) },
+  { key: "depth", min: 0, max: 100, step: 10, fallback: 60, unit: "%", cssVar: "--depth", css: (v) => String(v / 100) },
 ];
 
 const values = (k: Knob) => Array.from({ length: Math.round((k.max - k.min) / k.step) + 1 }, (_, i) => String(k.min + i * k.step));
@@ -30,14 +31,15 @@ export function useKnob(k: Knob): [number, (v: number) => void] {
 
 export const knob = (key: string) => KNOBS.find((k) => k.key === key)!;
 
-// App root: keeps the CSS variables in step with the knobs.
+// App root: keeps the CSS variables in step with the knobs. (KNOBS is a
+// constant list, so calling the hook per knob is a fixed number of hooks.)
 export function useLookKnobs(): void {
-  const [cards] = useKnob(KNOBS[0]);
-  const [dim] = useKnob(KNOBS[1]);
-  const [blur] = useKnob(KNOBS[2]);
+  const vals = KNOBS.map((k) => useKnob(k)[0]); // eslint-disable-line react-hooks/rules-of-hooks
+  const key = vals.join(",");
   useEffect(() => {
     const root = document.documentElement;
-    [cards, dim, blur].forEach((v, i) => root.style.setProperty(KNOBS[i].cssVar, KNOBS[i].css(v)));
-    root.toggleAttribute("data-cards-translucent", cards < 100);
-  }, [cards, dim, blur]);
+    KNOBS.forEach((k, i) => root.style.setProperty(k.cssVar, k.css(vals[i])));
+    root.toggleAttribute("data-cards-translucent", vals[0] < 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- key carries the values
+  }, [key]);
 }

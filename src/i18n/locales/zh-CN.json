@@ -884,7 +884,9 @@
       "backdropDim": "背景变暗",
       "backdropDimSub": "页面对游戏封面图的压暗程度",
       "backdropBlur": "背景模糊",
-      "backdropBlurSub": "页面后方的游戏封面图更柔和或更清晰"
+      "backdropBlurSub": "页面后方的游戏封面图更柔和或更清晰",
+      "depth": "层次感",
+      "depthSub": "卡片和手柄下方阴影的强度（0 = 平面）"
     }
   },
   "ad": {

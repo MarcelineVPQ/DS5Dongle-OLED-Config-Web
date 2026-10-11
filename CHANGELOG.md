@@ -21,7 +21,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **Magazine-cover title**: the controller model in big caps behind the drawing (the triggers overlap it), with "Model:" above; the colorway (in the accent) and "Connected" (a pulsing dot) below it in the same style.
 - **Theme: Match my controller** (the new default): cards and panels in the controller's own body color with black or white text, light or dark from the colorway, the accent from its trim. Every colorway now has colors (special editions are approximations from product photos).
-- **Look knobs** in App settings -> Appearance: card opacity (let the game art through the cards), background dim, background blur.
+- **Look knobs** in App settings -> Appearance: card opacity (let the game art through the cards), background dim, background blur, and depth (shadow strength).
+- **Depth and motion**: layered shadows on cards, tiles, game covers and under the controller; clickable tiles and covers lift and wiggle on hover, buttons lift slightly. Reduce motion keeps the shadows and drops the movement.
 - **The game art background on every page**, not just the controller.
 - **Developer preview** (Ctrl+Shift+D -> App settings -> Developer): show any controller model and colorway to check the app's colors; display only.
 - **Themed by your controller.** The connected controller's colorway tints the app's surfaces and gives its accent (made legible: lightened or darkened to 3:1 against the panels, black or white text on buttons); neutral colorways keep the theme's accent; App settings -> Appearance -> Accent color switches back to the desktop's. Each game page takes its artwork's color for its own highlights (picked in the main process).

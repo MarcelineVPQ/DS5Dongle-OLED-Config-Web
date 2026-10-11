@@ -890,7 +890,9 @@
       "backdropDim": "Assombrir le fond",
       "backdropDimSub": "À quel point la page assombrit les visuels du jeu",
       "backdropBlur": "Flou du fond",
-      "backdropBlurSub": "Visuels du jeu plus doux ou plus nets derrière la page"
+      "backdropBlurSub": "Visuels du jeu plus doux ou plus nets derrière la page",
+      "depth": "Profondeur",
+      "depthSub": "Intensité des ombres sous les cartes et la manette (0 = plat)"
     }
   },
   "ad": {

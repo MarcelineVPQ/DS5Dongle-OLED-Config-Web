@@ -884,7 +884,9 @@
       "backdropDim": "背景の暗さ",
       "backdropDimSub": "ページがゲームアートをどれだけ暗くするか",
       "backdropBlur": "背景のぼかし",
-      "backdropBlurSub": "ページの後ろのゲームアートをやわらかく、またはくっきり"
+      "backdropBlurSub": "ページの後ろのゲームアートをやわらかく、またはくっきり",
+      "depth": "奥行き",
+      "depthSub": "カードとコントローラーの影の強さ（0 = フラット）"
     }
   },
   "ad": {
