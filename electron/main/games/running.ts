@@ -8,7 +8,6 @@
 //           inside the game's install folder identifies it (also the
 //           fallback for the others).
 import { readFileSync, readdirSync, readlinkSync } from "node:fs";
-import { sep } from "node:path";
 
 export interface ProcView {
   pid: number;
@@ -71,7 +70,9 @@ export function readProcs(): ProcView[] {
   return out;
 }
 
-const inside = (path: string | null | undefined, dir: string) => !!path && (path === dir || path.startsWith(dir.endsWith(sep) ? dir : dir + sep));
+// /proc paths and the launchers' install folders are POSIX paths ("/"), on
+// whatever system the code (or its tests) runs.
+const inside = (path: string | null | undefined, dir: string) => !!path && (path === dir || path.startsWith(dir.endsWith("/") ? dir : `${dir}/`));
 // Wine passes Windows-style paths: Z:\home\user\Games\X\x.exe
 const unixPath = (arg: string) => (/^[A-Za-z]:\\/.test(arg) ? arg.slice(2).replaceAll("\\", "/") : arg);
 
