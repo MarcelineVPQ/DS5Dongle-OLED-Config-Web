@@ -40,6 +40,12 @@ export interface InputReport {
   home: boolean;
   pad: boolean;
   mute: boolean;
+  // DualSense Edge only (byte 9 bits 4..7, per SDL's hidapi_ps5 driver):
+  // the Fn buttons under the sticks and the back paddles
+  fnLeft: boolean;
+  fnRight: boolean;
+  backLeft: boolean;
+  backRight: boolean;
   // Gyro (raw int16 angular velocity)
   gyroX: number;
   gyroY: number;
@@ -50,6 +56,9 @@ export interface InputReport {
   accelZ: number;
   // Touchpad fingers (DS5 reports two)
   fingers: [Finger, Finger];
+  // Trigger effect the controller is running (0 none, 1 feedback, 2 weapon, 3 vibration)
+  triggerEffectLeft: number;
+  triggerEffectRight: number;
   // Battery (low nibble × 10 = %, high nibble = state)
   batteryRaw: number;
   batteryPct: number;
@@ -102,6 +111,10 @@ export function decodeInputReport(data: Uint8Array | DataView): InputReport {
     home: ((b9 >> 0) & 1) === 1,
     pad: ((b9 >> 1) & 1) === 1,
     mute: ((b9 >> 2) & 1) === 1,
+    fnLeft: ((b9 >> 4) & 1) === 1,
+    fnRight: ((b9 >> 5) & 1) === 1,
+    backLeft: ((b9 >> 6) & 1) === 1,
+    backRight: ((b9 >> 7) & 1) === 1,
     gyroX: i16(15),
     gyroZ: i16(17),
     gyroY: i16(19),
@@ -109,6 +122,8 @@ export function decodeInputReport(data: Uint8Array | DataView): InputReport {
     accelY: i16(23),
     accelZ: i16(25),
     fingers: [decodeFinger(32), decodeFinger(36)],
+    triggerEffectLeft: b(47) >> 4,
+    triggerEffectRight: b(47) & 0x0f,
     batteryRaw: pwr,
     batteryPct: (pwr & 0x0f) * 10,
     batteryState: (pwr >> 4) & 0x0f,
@@ -137,12 +152,18 @@ export function emptyInputReport(): InputReport {
     home: false,
     pad: false,
     mute: false,
+    fnLeft: false,
+    fnRight: false,
+    backLeft: false,
+    backRight: false,
     gyroX: 0,
     gyroY: 0,
     gyroZ: 0,
     accelX: 0,
     accelY: 8000,
     accelZ: 0, // gravity baseline (Y when flat, matches real DS5)
+    triggerEffectLeft: 0,
+    triggerEffectRight: 0,
     fingers: [
       { x: 0, y: 0, touching: false, index: 0 },
       { x: 0, y: 0, touching: false, index: 0 },

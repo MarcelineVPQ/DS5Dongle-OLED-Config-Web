@@ -10,6 +10,7 @@
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BusyButton } from "../controls";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, Fix, GameEntry, GamesReport, LauncherId, Msg } from "../games/types";
 
@@ -96,7 +97,6 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
   const desktop = window.desktop!;
   const [report, setReport] = useState<GamesReport | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const declined = useRef<Set<string>>(loadDeclined());
   const [step, setStep] = useState<Step>("pick");
@@ -122,14 +122,11 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
 
   const rescan = useCallback(
     async (keepSelection = false) => {
-      setScanning(true);
       setError(null);
       try {
         await receive(await desktop.gamesScan(), keepSelection);
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : String(cause));
-      } finally {
-        setScanning(false);
       }
     },
     [desktop, receive],
@@ -273,9 +270,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop }: Omit<GamesPageProps
             </span>
           ))}
           <span className="dk-spacer" />
-          <button type="button" className="dk-btn" onClick={() => void rescan(step !== "pick")} disabled={scanning || busy !== null}>
-            {scanning ? t("desktop.games.scanningShort", "Checking…") : t("desktop.games.rescan", "Rescan")}
-          </button>
+          <BusyButton onClick={() => rescan(step !== "pick")} disabled={busy !== null}>
+            {t("desktop.games.rescan", "Rescan")}
+          </BusyButton>
           <button type="button" className="dk-btn" onClick={onStop} disabled={busy !== null} title={t("desktop.games.stopHint")}>
             {t("desktop.games.stop")}
           </button>

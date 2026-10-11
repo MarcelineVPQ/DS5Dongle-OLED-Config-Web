@@ -43,7 +43,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     if (!pico || firmware) return;
     void window.desktop
       ?.latestFirmware()
-      .then(setFirmware)
+      .then((r) => setFirmware(r.latest))
       .catch(() => undefined);
   }, [pico, firmware]);
 

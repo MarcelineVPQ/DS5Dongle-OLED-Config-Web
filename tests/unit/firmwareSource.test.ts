@@ -19,7 +19,8 @@ function bundle(version: string, hash = sha(uf2)) {
 const published = (version: string) => ({ version, notes_url: "https://github.com/x", uf2: { url: "https://github.com/x/fw.uf2", size: 4, sha256: "0".repeat(64) } });
 const deps = (pub: ReturnType<typeof published> | null): FirmwareSourceDeps => ({
   bundled: () => readBundled(res),
-  manifest: async () => (pub ? Manifest.parse({ channel: "stable", app: { version: "0.8.0", platforms: {} }, firmware: pub }) : null),
+  manifest: async () =>
+    pub ? { manifest: Manifest.parse({ channel: "stable", app: { version: "0.8.0", platforms: {} }, firmware: pub }), problem: null } : { manifest: null, problem: "offline" as const },
   downloadPublished: async () => ({ version: pub!.version, bytes: new Uint8Array([9]) }),
 });
 
@@ -31,20 +32,20 @@ afterEach(() => rmSync(res, { recursive: true, force: true }));
 describe("firmware source", () => {
   it("uses the bundled firmware offline, and when the published one isn't newer", async () => {
     bundle("v0.8.0-oled-edition");
-    expect(await latestFirmware(deps(null))).toEqual({ version: "v0.8.0-oled-edition", source: "bundled" });
+    expect(await latestFirmware(deps(null))).toEqual({ latest: { version: "v0.8.0-oled-edition", source: "bundled" }, problem: "offline" });
     expect((await firmwareBytes(deps(published("v0.8.0-oled-edition")))).bytes).toEqual(uf2);
     expect(choose(readBundled(res), published("v0.7.0-oled-edition"))).toBe("bundled");
   });
 
   it("prefers a strictly newer published firmware", async () => {
     bundle("v0.8.0-oled-edition");
-    expect((await latestFirmware(deps(published("v0.8.1-oled-edition"))))?.source).toBe("online");
+    expect((await latestFirmware(deps(published("v0.8.1-oled-edition")))).latest?.source).toBe("online");
     expect((await firmwareBytes(deps(published("v0.8.1-oled-edition")))).bytes).toEqual(new Uint8Array([9]));
   });
 
   it("falls back to the feed when nothing is bundled (builds from source)", async () => {
     expect(readBundled(res)).toBeNull();
-    expect((await latestFirmware(deps(published("v0.8.0-oled-edition"))))?.source).toBe("online");
+    expect((await latestFirmware(deps(published("v0.8.0-oled-edition")))).latest?.source).toBe("online");
     await expect(firmwareBytes(deps(null))).rejects.toThrow(/No firmware is available/);
   });
 

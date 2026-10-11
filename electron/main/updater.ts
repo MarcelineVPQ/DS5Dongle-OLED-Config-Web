@@ -49,6 +49,13 @@ function downloadAllowed(url: string): boolean {
 
 type Platform = "linux" | "windows" | "macos";
 
+// The feed isn't there (yet): no release has been published. Not a network error.
+export class FeedMissingError extends Error {
+  constructor() {
+    super("No release has been published yet.");
+  }
+}
+
 export class Updater {
   private state: UpdateState = { phase: "idle" };
   private manifest: Manifest | null = null;
@@ -133,6 +140,7 @@ export class Updater {
 
   async fetchManifest(): Promise<Manifest> {
     const response = await net.fetch(manifestUrl(), { cache: "no-store" });
+    if (response.status === 404) throw new FeedMissingError();
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
     const parsed = Manifest.safeParse(await response.json());
     if (!parsed.success) throw new Error("the update manifest is malformed");

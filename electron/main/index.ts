@@ -13,7 +13,7 @@ import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
-import { Updater } from "./updater";
+import { Updater, FeedMissingError } from "./updater";
 import { isAllowedExternalUrl } from "./urls";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -98,7 +98,15 @@ function start(): void {
   // Firmware the app offers: bundled with this release, or a newer published one.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
-    manifest: async () => updater.getManifest() ?? (await updater.fetchManifest().catch(() => null)),
+    manifest: async () => {
+      const cached = updater.getManifest();
+      if (cached) return { manifest: cached, problem: null };
+      try {
+        return { manifest: await updater.fetchManifest(), problem: null };
+      } catch (cause) {
+        return { manifest: null, problem: cause instanceof FeedMissingError ? "unpublished" : "offline" };
+      }
+    },
     downloadPublished: () => updater.downloadFirmware(),
   };
 

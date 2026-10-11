@@ -3,8 +3,10 @@
 import { CONFIG_BODY_SIZE, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { type RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport } from "./transport";
+import { decodeInputReport, type InputReport } from "../oled/inputReport";
 
 export const REPORT = {
+  liveInput: 0xf0, // protocol 1.2+, feature bit FEATURE.liveInput
   identity: 0xf1,
   audioCounters: 0xf5,
   command: 0xf6,
@@ -40,6 +42,7 @@ export const IDENTITY_FEATURES = {
   rebootBootsel: 0x04,
   factoryReset: 0x08,
   triggerPreview: 0x10,
+  liveInput: 0x20, // 0xF0 live input report (protocol 1.2)
 } as const;
 
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
@@ -62,6 +65,18 @@ export interface BridgeIdentity {
   batteryFull: boolean;
   lightbar: [number, number, number] | null;
   battery: number | null; // percent, in 10% steps
+  // Protocol 1.2+: the player indicator LEDs the PC set (bits 0..4, left to right); 0 on older firmware.
+  playerLeds: number;
+  // Protocol 1.2+: which controller is connected, and its colorway code from
+  // the factory serial ("02" = Cosmic Red; null while unknown or unsupported).
+  model: "dualsense" | "edge" | null;
+  colorwayCode: string | null;
+}
+
+// The DualSense's player patterns (as Linux and games set them) -> player number.
+const PLAYER_PATTERNS: Record<number, number> = { 0x04: 1, 0x0a: 2, 0x15: 3, 0x1b: 4, 0x1f: 5 };
+export function playerNumber(leds: number): number | null {
+  return PLAYER_PATTERNS[leds & 0x1f] ?? null;
 }
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
@@ -85,6 +100,9 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     batteryFull: bytes.length >= 25 && (bytes[20] & 0x02) !== 0,
     lightbar: bytes.length >= 25 && bytes[18] === 1 ? [bytes[21], bytes[22], bytes[23]] : null,
     battery: bytes.length >= 25 && bytes[24] <= 10 ? bytes[24] * 10 : null,
+    playerLeds: bytes.length >= 26 ? bytes[25] & 0x1f : 0,
+    model: bytes.length >= 29 && bytes[18] === 1 ? (bytes[26] === 1 ? "edge" : "dualsense") : null,
+    colorwayCode: bytes.length >= 29 && bytes[27] && bytes[28] ? String.fromCharCode(bytes[27], bytes[28]) : null,
   };
 }
 
@@ -149,7 +167,7 @@ export class Ds5BridgeClient {
   }
 
   async identity(): Promise<BridgeIdentity> {
-    return decodeIdentity(await this.transport.getReport(REPORT.identity, 25));
+    return decodeIdentity(await this.transport.getReport(REPORT.identity, 29));
   }
 
   // Throws if the dongle speaks a protocol major this app doesn't understand.
@@ -250,6 +268,12 @@ export class Ds5BridgeClient {
     let end = bytes.indexOf(0);
     if (end < 0) end = bytes.length;
     return new TextDecoder("ascii").decode(bytes.subarray(0, end));
+  }
+
+  // The controller's raw input right now (before remapping): buttons, sticks,
+  // triggers, touchpad, motion, battery and the active trigger effects.
+  async readInput(): Promise<InputReport> {
+    return decodeInputReport(await this.transport.getReport(REPORT.liveInput, 63));
   }
 
   async readRssi(): Promise<number> {

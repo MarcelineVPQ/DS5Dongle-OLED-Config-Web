@@ -53,12 +53,13 @@ const HOTSPOTS: Hotspot[] = [
 
 // Floating shoulder/trigger glyphs. cx/cy = glyph box centre; the leader runs
 // from (lx,ly) on the glyph side to (sx,sy) on the controller shoulder.
-const GLYPH_BOX = 170;
+const GLYPH_BOX = 230; // shoulder labels at a size that matches the controller
 const FLOATS: Array<{ index: number; glyph: string; cx: number; cy: number; lx: number; ly: number; sx: number; sy: number }> = [
-  { index: 0, glyph: l2Glyph, cx: 940, cy: 420, lx: 1020, ly: 430, sx: 1330, sy: 470 }, // L2
-  { index: 1, glyph: l1Glyph, cx: 940, cy: 590, lx: 1020, ly: 580, sx: 1330, sy: 510 }, // L1
-  { index: 8, glyph: r2Glyph, cx: 3156, cy: 420, lx: 3076, ly: 430, sx: 2766, sy: 470 }, // R2
-  { index: 9, glyph: r1Glyph, cx: 3156, cy: 590, lx: 3076, ly: 580, sx: 2766, sy: 510 }, // R1
+  // Bumpers (L1/R1) above triggers (L2/R2), as on the controller.
+  { index: 1, glyph: l1Glyph, cx: 930, cy: 410, lx: 1050, ly: 430, sx: 1330, sy: 470 }, // L1
+  { index: 0, glyph: l2Glyph, cx: 930, cy: 660, lx: 1050, ly: 640, sx: 1330, sy: 510 }, // L2
+  { index: 9, glyph: r1Glyph, cx: 3166, cy: 410, lx: 3046, ly: 430, sx: 2766, sy: 470 }, // R1
+  { index: 8, glyph: r2Glyph, cx: 3166, cy: 660, lx: 3046, ly: 640, sx: 2766, sy: 510 }, // R2
 ];
 
 export interface ControllerDiagramProps {

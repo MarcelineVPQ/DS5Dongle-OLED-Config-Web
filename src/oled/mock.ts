@@ -44,12 +44,18 @@ export function mockInputReport(state: MockState): InputReport {
     home: false,
     pad: false,
     mute: false,
+    fnLeft: false,
+    fnRight: false,
+    backLeft: false,
+    backRight: false,
     gyroX: Math.round(800 * Math.sin(t * 0.5)),
     gyroY: Math.round(800 * Math.cos(t * 0.3)),
     gyroZ: 0,
     accelX: Math.round(1200 * Math.sin(t * 0.4)),
     accelY: 8000, // gravity rests on Y when flat (matches real DS5)
     accelZ: Math.round(1200 * Math.cos(t * 0.4)),
+    triggerEffectLeft: 0,
+    triggerEffectRight: 0,
     fingers: [
       { x: Math.round(960 + 800 * Math.sin(t * 0.6)), y: Math.round(540 + 400 * Math.cos(t * 0.6)), touching: finger1Touching, index: 1 },
       { x: 0, y: 0, touching: false, index: 0 },

@@ -86,6 +86,9 @@ describe("identity report (0xF1)", () => {
       batteryFull: false,
       lightbar: null,
       battery: null,
+      playerLeds: 0,
+      model: null,
+      colorwayCode: null,
     });
   });
 
@@ -94,7 +97,7 @@ describe("identity report (0xF1)", () => {
     b.set(sample());
     b.set([0x01, 170, 15, 97, 7], 20);
     const id = decodeIdentity(b);
-    expect(id).toMatchObject({ charging: true, batteryFull: false, lightbar: [170, 15, 97], battery: 70 });
+    expect(id).toMatchObject({ charging: true, batteryFull: false, lightbar: [170, 15, 97], battery: 70, playerLeds: 0 });
   });
 
   it("reports no lightbar or battery without a controller", () => {
@@ -115,5 +118,38 @@ describe("identity report (0xF1)", () => {
     const b = sample();
     b[11] = 99;
     expect(decodeIdentity(b).lastResult).toBe("failed");
+  });
+});
+
+describe("player indicator (protocol 1.2)", () => {
+  it("decodes byte 25 and names the standard player patterns", async () => {
+    const { decodeIdentity, playerNumber } = await import("../../src/protocol/bridgeClient");
+    const b = new Uint8Array(26);
+    b.set([0x44, 0x53, 0x35, 0x4f, 1, 2]);
+    b[18] = 1;
+    b[25] = 0x0a;
+    expect(decodeIdentity(b).playerLeds).toBe(0x0a);
+    expect([0x04, 0x0a, 0x15, 0x1b, 0x1f].map(playerNumber)).toEqual([1, 2, 3, 4, 5]);
+    expect(playerNumber(0)).toBeNull();
+    expect(playerNumber(0x01)).toBeNull();
+  });
+});
+
+describe("controller model and colorway (protocol 1.2)", () => {
+  it("decodes the model and the colorway code, and names known colorways", async () => {
+    const { decodeIdentity } = await import("../../src/protocol/bridgeClient");
+    const { colorway } = await import("../../src/desktop/live/colorways");
+    const b = new Uint8Array(29);
+    b.set([0x44, 0x53, 0x35, 0x4f, 1, 2]);
+    b[18] = 1;
+    b[26] = 1;
+    b.set([0x30, 0x32], 27); // "02"
+    const id = decodeIdentity(b);
+    expect([id.model, id.colorwayCode]).toEqual(["edge", "02"]);
+    expect(colorway(id.colorwayCode)?.name).toBe("Cosmic Red");
+    expect(colorway("Z2")).toEqual({ name: "Marvel's Spider-Man 2" });
+    expect(colorway("QQ")).toBeNull();
+    b.set([0, 0], 27);
+    expect(decodeIdentity(b).colorwayCode).toBeNull();
   });
 });

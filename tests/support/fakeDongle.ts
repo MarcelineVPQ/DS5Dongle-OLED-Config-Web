@@ -27,6 +27,17 @@ export class FakeDongle implements Ds5Transport {
   slots = [true, false, false, false];
   currentSlot = 0;
   lastTrigger = -1;
+  playerLeds = 0x04; // player 1
+  edge = false;
+  colorwayCode = "02"; // Cosmic Red
+  // Raw controller input report (0xF0); tests set bytes to simulate presses.
+  input = (() => {
+    const b = new Uint8Array(63);
+    b.set([128, 128, 128, 128], 0);
+    b[7] = 0x08; // d-pad released
+    b[52] = 0x08; // 80 % battery
+    return b;
+  })();
   sets: Uint8Array[] = [];
 
   private seq = 0;
@@ -49,6 +60,8 @@ export class FakeDongle implements Ds5Transport {
   async getReport(reportId: number, length: number): Promise<Uint8Array> {
     if (this.gone) throw new DeviceGoneError();
     switch (reportId) {
+      case 0xf0:
+        return this.input.slice(0, length);
       case 0xf1:
         this.tick();
         // Reboot / BOOTSEL: the device is already off the bus, nothing answers.
@@ -141,8 +154,8 @@ export class FakeDongle implements Ds5Transport {
   }
 
   private identity(): Uint8Array {
-    const out = new Uint8Array(20);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 0, CONFIG_BODY_SIZE, 0x1f]);
+    const out = new Uint8Array(29);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 2, CONFIG_BODY_SIZE, 0x3f]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
@@ -151,6 +164,13 @@ export class FakeDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
+    out[24] = 8; // 80 % battery
+    out[25] = this.playerLeds;
+    out[26] = this.edge ? 1 : 0;
+    out.set(
+      [...this.colorwayCode].map((c) => c.charCodeAt(0)),
+      27,
+    );
     return out;
   }
 

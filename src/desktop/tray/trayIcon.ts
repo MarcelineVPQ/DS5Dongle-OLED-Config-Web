@@ -1,6 +1,8 @@
 // Draws the tray icon: the DualSense silhouette (Zacksly "PS5 Button Icons and
 // Controls", CC BY 3.0) with its touchpad lit in the controller's actual
 // lightbar color, a charging bolt, and a status dot in the top-right corner.
+// Like other tray icons, the silhouette is dark on a light taskbar and light on
+// a dark one (the taskbar's colors, not the app's theme).
 // Drawn in the renderer (it has a canvas) and handed to the main process as a
 // PNG data URL.
 import controllerUrl from "./controller-solid.png";
@@ -9,11 +11,13 @@ export type TrayDot = "ok" | "away" | "none";
 
 export interface TrayIconSpec {
   dot: TrayDot;
+  darkTaskbar: boolean;
   lightbar: [number, number, number] | null;
   charging: boolean;
 }
 
 const DOT_COLORS: Record<TrayDot, string> = { ok: "#22c55e", away: "#f59e0b", none: "#64748b" };
+const INK = { onDark: "#eef0f2", onLight: "#1f2328" };
 // Touchpad box in fractions of the art (measured on the 4k source).
 const TOUCHPAD = { x0: 0.3, y0: 0.035, x1: 0.7, y1: 0.3 };
 // Lightning bolt outline in a unit box.
@@ -51,7 +55,15 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
   const cw = size * 0.94;
   const ch = (img.height * cw) / img.width;
   const oy = size - ch - size / 24;
-  ctx.drawImage(img, 0, oy, cw, ch);
+  // The silhouette in the taskbar's contrasting ink.
+  const ink = new OffscreenCanvas(size, size);
+  const ictx = ink.getContext("2d")!;
+  ictx.imageSmoothingQuality = "high";
+  ictx.drawImage(img, 0, oy, cw, ch);
+  ictx.globalCompositeOperation = "source-in";
+  ictx.fillStyle = spec.darkTaskbar ? INK.onDark : INK.onLight;
+  ictx.fillRect(0, 0, size, size);
+  ctx.drawImage(ink, 0, 0);
 
   if (spec.lightbar) {
     const [r, g, b] = spec.lightbar;

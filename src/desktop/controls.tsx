@@ -1,5 +1,5 @@
 // Compact controls for the desktop layout. Each renders one .dk-row.
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 interface RowProps {
   label: string;
@@ -159,4 +159,58 @@ export function rgbToHex([r, g, b]: number[]): string {
 export function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+}
+
+// A button for anything that waits on the dongle or the network, with the same
+// behavior as AVNetworkMonitor's Loading.action(): while the action runs it is
+// disabled and aria-busy with a spinner ring beside its label (the label and
+// any icon stay as they are); after a few seconds it also counts the seconds,
+// so a slow check doesn't look hung; and it always comes back, on success or
+// failure (the restore is in a finally). The action's own result or error is
+// shown by the caller.
+const ELAPSED_AFTER_S = 3;
+
+interface BusyButtonProps {
+  onClick: () => Promise<unknown> | unknown;
+  children: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  title?: string;
+}
+
+export function BusyButton({ onClick, children, className = "dk-btn", disabled, title }: BusyButtonProps) {
+  const [busy, setBusy] = useState(false);
+  const [secs, setSecs] = useState(0);
+  const live = useRef(true);
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!busy) return;
+    const started = Date.now();
+    const timer = setInterval(() => setSecs(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [busy]);
+  const run = async () => {
+    if (busy) return;
+    setSecs(0);
+    setBusy(true);
+    try {
+      await onClick();
+    } catch {
+      // the caller reports its own errors; the button just never sticks
+    } finally {
+      if (live.current) setBusy(false);
+    }
+  };
+  return (
+    <button type="button" className={`${className}${busy ? " dk-btn-busy" : ""}`} disabled={disabled || busy} aria-busy={busy || undefined} title={title} onClick={() => void run()}>
+      {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
+      {children}
+      {busy && secs >= ELAPSED_AFTER_S && <span className="dk-btn-elapsed"> · {secs}s</span>}
+    </button>
+  );
 }

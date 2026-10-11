@@ -8,7 +8,7 @@ import {
   type DesktopSettings,
   type DeviceStatus,
   type GameBackup,
-  type LatestFirmware,
+  type FirmwareLookup,
   type ProtonInstallResult,
   type UndoResult,
   type UpdateState,
@@ -59,7 +59,7 @@ export interface IpcHandlers {
   getUpdateState: () => UpdateState;
   installUpdate: () => Promise<UpdateState>;
   restartToUpdate: () => void;
-  latestFirmware: () => Promise<LatestFirmware | null>;
+  latestFirmware: () => Promise<FirmwareLookup>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
   getDesktopPalette: () => Promise<unknown>;
   firmwareChangelog: () => Promise<string>;

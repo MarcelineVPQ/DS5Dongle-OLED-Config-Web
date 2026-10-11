@@ -46,6 +46,13 @@ export interface LatestFirmware {
   source: "bundled" | "online"; // bundled = shipped inside this app, works offline
 }
 
+// Result of looking for firmware to offer. problem says why the feed gave no
+// answer: "unpublished" (no release in the feed yet) or "offline".
+export interface FirmwareLookup {
+  latest: LatestFirmware | null;
+  problem: "unpublished" | "offline" | null;
+}
+
 export interface GameBackup {
   id: string;
   created: string;
@@ -78,7 +85,7 @@ export interface DesktopApi {
   restartToUpdate(): void;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
-  latestFirmware(): Promise<LatestFirmware | null>;
+  latestFirmware(): Promise<FirmwareLookup>;
   // "Match desktop" theme: the desktop's colors, and changes to them.
   getDesktopPalette(): Promise<DesktopPalette | null>;
   // The firmware repo's CHANGELOG.md (fetched by the main process).

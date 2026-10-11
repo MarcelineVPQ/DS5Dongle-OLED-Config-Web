@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CommandError, Ds5BridgeClient } from "../../src/protocol/bridgeClient";
+import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { FakeDongle } from "../support/fakeDongle";
 
@@ -105,5 +106,55 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
     const slots = await client.readSlots();
     expect(slots.occupied).toEqual([true, false, false, false]);
     expect((await client.readAudioCounters()).core1Loops).toBe(1234);
+  });
+});
+
+describe("live input (0xF0, protocol 1.2)", () => {
+  it("advertises the live-input feature and reads a neutral controller", async () => {
+    const { client } = setup();
+    const id = await client.identity();
+    expect(supportsLiveInput(id)).toBe(true);
+    const input = await client.readInput();
+    expect(input.leftStick).toEqual({ x: 128, y: 128 });
+    expect(input.dpad).toBe(8);
+    expect(input.cross || input.l1 || input.r2 || input.home).toBe(false);
+    expect(input.batteryPct).toBe(80);
+  });
+
+  it("decodes every button, the analog triggers, touches and trigger effects", async () => {
+    const { dongle, client } = setup();
+    dongle.input[4] = 200; // L2 analog
+    dongle.input[5] = 37; // R2 analog
+    dongle.input[7] = 0xf0 | 2; // all face buttons, d-pad east
+    dongle.input[8] = 0xff; // L1 R1 L2 R2 Create Options L3 R3
+    dongle.input[9] = 0x07; // PS, touchpad click, mute
+    // Finger 0 touching at (960, 540): bit 7 clear = touching
+    const f = (0 & 0x7f) | (960 << 8) | (540 << 20);
+    new DataView(dongle.input.buffer).setUint32(32, f >>> 0, true);
+    new DataView(dongle.input.buffer).setUint32(36, 0x80, true); // finger 1 not touching
+    dongle.input[47] = (2 << 4) | 1; // L weapon, R feedback
+    const i = await client.readInput();
+    expect([i.triggerLeft, i.triggerRight, i.dpad]).toEqual([200, 37, 2]);
+    expect([i.square, i.cross, i.circle, i.triangle]).toEqual([true, true, true, true]);
+    expect([i.l1, i.r1, i.l2, i.r2, i.create, i.options, i.l3, i.r3]).toEqual(Array(8).fill(true));
+    expect([i.home, i.pad, i.mute]).toEqual([true, true, true]);
+    expect(i.fingers[0]).toMatchObject({ touching: true, x: 960, y: 540 });
+    expect(i.fingers[1].touching).toBe(false);
+    expect([i.triggerEffectLeft, i.triggerEffectRight]).toEqual([2, 1]);
+  });
+
+  it("treats older firmware (no feature bit) as no live input", () => {
+    expect(supportsLiveInput(null)).toBe(false);
+    expect(supportsLiveInput({ features: 0x1f } as never)).toBe(false);
+  });
+});
+
+describe("DualSense Edge extras", () => {
+  it("decodes the Fn buttons and back paddles", async () => {
+    const { dongle, client } = setup();
+    dongle.input[9] = 0xf0;
+    const i = await client.readInput();
+    expect([i.fnLeft, i.fnRight, i.backLeft, i.backRight]).toEqual([true, true, true, true]);
+    expect([i.home, i.pad, i.mute]).toEqual([false, false, false]);
   });
 });

@@ -1,68 +1,44 @@
-import { Gamepad2, Info, Joystick, type LucideIcon, Settings2, ToggleLeft, Volume2 } from "lucide-react";
+import { ArrowLeft, Info, Joystick, Settings, Usb } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import LanguageToggle from "../components/LanguageToggle";
-import ThemeToggle from "../components/ThemeToggle";
-import { useDs5Bridge, type UseDs5BridgeResult } from "../hooks/useDs5Bridge";
+import { useApplyTheme } from "../components/ThemeToggle";
+import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import SetupScreen from "./SetupScreen";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
-import ButtonsPage from "./pages/ButtonsPage";
-import ControllerPage from "./pages/ControllerPage";
-import DonglePage from "./pages/DonglePage";
-import SettingsCards from "./pages/SettingsPage";
+import ControllerView from "./live/ControllerView";
+import type { PanelView } from "./live/PartPanel";
 import UpdateBanners from "./UpdateBanners";
-import { useAppUpdate, useFirmwareUpdate, type FirmwareUpdate } from "./useUpdates";
+import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import { usePoll } from "./usePoll";
 import "./desktop.css";
 
-type PageId = "controller" | "audio" | "buttons" | "dongle" | "games" | "about";
-
-interface PageDef {
-  id: PageId;
-  label: string;
-  icon: LucideIcon;
-  badge?: number;
-  standalone?: boolean; // works without the dongle (no "plug in" screen, no save bar)
-  render: (bridge: UseDs5BridgeResult, fw: FirmwareUpdate) => JSX.Element;
-}
+// One screen: the live controller with its settings panel. Games and About
+// replace it while open (with a way back); the dongle and the app's own
+// settings open in the panel.
+type MainView = "controller" | "games" | "about";
 
 const APPLY_DEBOUNCE_MS = 150;
 
 export default function DesktopApp() {
   const { t } = useTranslation();
+  useApplyTheme();
   const bridge = useDs5Bridge();
   const appUpdate = useAppUpdate();
   const fw = useFirmwareUpdate(bridge, appUpdate);
-  const [page, setPage] = useState<PageId>("controller");
-
+  const [main, setMain] = useState<MainView>("controller");
+  const [panel, setPanel] = useState<PanelView>("overview");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
-  const pages: PageDef[] = [
-    { id: "controller", label: t("desktop.nav.controller", "Controller"), icon: Gamepad2, render: (b) => <ControllerPage bridge={b} /> },
-    { id: "audio", label: t("desktop.nav.audio", "Audio & haptics"), icon: Volume2, render: (b) => <SettingsCards bridge={b} group="audio" /> },
-    { id: "buttons", label: t("desktop.nav.buttons", "Buttons"), icon: ToggleLeft, render: (b) => <ButtonsPage bridge={b} /> },
-    { id: "dongle", label: t("desktop.nav.dongle", "Dongle"), icon: Settings2, render: (b, f) => <DonglePage bridge={b} fw={f} advancedOpen={advancedOpen} /> },
-    ...(games.supported
-      ? [
-          {
-            id: "games" as const,
-            label: t("desktop.nav.games", "Games"),
-            icon: Joystick,
-            badge: games.count,
-            standalone: true,
-            render: () => <GamesPage allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />,
-          },
-        ]
-      : []),
-    { id: "about", label: t("desktop.nav.about", "About"), icon: Info, standalone: true, render: () => <AboutPage key={aboutTab} initialTab={aboutTab} /> },
-  ];
 
-  const current = pages.find((p) => p.id === page) ?? pages[0];
+  const openPanel = (view: PanelView) => {
+    setMain("controller");
+    setPanel(view);
+  };
 
   // Edits apply to the dongle's RAM as you make them (debounced), so every
   // change is heard and felt immediately. Saving to flash is a separate step.
@@ -75,6 +51,7 @@ export default function DesktopApp() {
 
   const connected = bridge.isConnected;
   const busy = bridge.operation !== null;
+  const standalone = main !== "controller";
 
   // Keep the tray icon/menu in step with the device, even while the window is
   // hidden (the window keeps running in the background for exactly this).
@@ -98,58 +75,65 @@ export default function DesktopApp() {
   }, [connected, controllerOn, liveIdentity, firmware, charging, battery]);
 
   // Redraw the tray icon only when something it shows changes.
+  const darkTaskbar = useDarkTaskbar();
   useEffect(() => {
     if (!window.desktop) return;
     const rgb = lightbarKey ? (lightbarKey.split(",").map(Number) as [number, number, number]) : null;
     let cancelled = false;
-    void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", lightbar: rgb, charging })
+    void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", darkTaskbar, lightbar: rgb, charging })
       .then((png) => !cancelled && window.desktop?.setTrayIcon(png))
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [connected, controllerOn, charging, lightbarKey]);
+  }, [connected, controllerOn, charging, lightbarKey, darkTaskbar]);
 
   useEffect(
     () =>
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
-          // The tray's "Diagnostics" lives under Dongle → Advanced now.
+          // The tray's "Diagnostics" is under Dongle → Advanced.
           if (command.page === "diagnostics") {
-            setPage("dongle");
             setAdvancedOpen(true);
-          } else if (pages.some((p) => p.id === command.page)) setPage(command.page as PageId);
+            setMain("controller");
+            setPanel("dongle");
+          } else if (command.page === "games" || command.page === "about") setMain(command.page);
+          else {
+            setMain("controller");
+            if (command.page === "dongle") setPanel("dongle");
+          }
         } else if (command.type === "switchSlot") {
           void client?.switchSlot(command.slot).catch(() => undefined);
         }
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- pages is rebuilt every render; ids never change
     [client],
   );
 
-  return (
-    <div className="dk">
-      <aside className="dk-side">
-        {pages.map((p) => (
-          <button type="button" key={p.id} className={`dk-nav-item${p.id === page ? " active" : ""}`} aria-current={p.id === page ? "page" : undefined} onClick={() => setPage(p.id)}>
-            <p.icon size={15} />
-            {p.label}
-            {p.badge ? (
-              <span className="dk-badge" title={t("desktop.games.attention", { count: p.badge })}>
-                {p.badge}
-              </span>
-            ) : null}
-          </button>
-        ))}
-        <div className="dk-side-foot">
-          <LanguageToggle />
-          <ThemeToggle />
-        </div>
-      </aside>
+  const headerButton = (label: string, icon: JSX.Element, active: boolean, onClick: () => void, badge?: number) => (
+    <button type="button" className={`dk-top-btn${active ? " active" : ""}`} aria-pressed={active} onClick={onClick}>
+      {icon}
+      {label}
+      {badge ? (
+        <span className="dk-badge" title={t("desktop.games.attention", { count: badge })}>
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
 
+  return (
+    <div className="dk dk-one">
       <div className="dk-main">
         <header className="dk-top">
-          <h1>{current.label}</h1>
+          {standalone && (
+            <button type="button" className="dk-top-btn" onClick={() => setMain("controller")}>
+              <ArrowLeft size={15} />
+              {t("desktop.live.back", "Controller")}
+            </button>
+          )}
+          {headerButton(t("desktop.nav.dongle", "Dongle"), <Usb size={15} />, main === "controller" && panel === "dongle", () => openPanel("dongle"))}
+          {games.supported && headerButton(t("desktop.nav.games", "Games"), <Joystick size={15} />, main === "games", () => setMain("games"), games.count)}
+          {headerButton(t("desktop.nav.about", "About"), <Info size={15} />, main === "about", () => setMain("about"))}
           <span className="dk-spacer" />
           {connected ? (
             <span className="dk-chip ok" title={bridge.deviceLabel}>
@@ -163,10 +147,19 @@ export default function DesktopApp() {
               {bridge.operation === "connecting" ? t("statusText.connecting") : t("desktop.status.waiting", "Waiting for the dongle…")}
             </span>
           )}
+          <button
+            type="button"
+            className={`dk-top-btn dk-icon-btn${main === "controller" && panel === "app" ? " active" : ""}`}
+            onClick={() => openPanel("app")}
+            title={t("desktop.live.app", "App settings")}
+            aria-label={t("desktop.live.app", "App settings")}
+          >
+            <Settings size={15} />
+          </button>
         </header>
 
-        <main className="dk-body">
-          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => setPage("dongle")} />
+        <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}`}>
+          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => openPanel("dongle")} />
           {whatsNew.version && (
             <div className="dk-notice">
               <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
@@ -176,7 +169,7 @@ export default function DesktopApp() {
                 className="dk-btn"
                 onClick={() => {
                   setAboutTab("changes");
-                  setPage("about");
+                  setMain("about");
                   whatsNew.dismiss();
                 }}
               >
@@ -196,25 +189,32 @@ export default function DesktopApp() {
               </button>
             </div>
           )}
-          {connected || current.standalone ? current.render(bridge, fw) : <SetupScreen supported={bridge.supported} />}
+          {main === "games" && <GamesPage allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
+          {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
+          {main === "controller" &&
+            (connected ? (
+              <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} advancedOpen={advancedOpen} />
+            ) : panel === "app" ? (
+              <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} advancedOpen={false} />
+            ) : (
+              <SetupScreen supported={bridge.supported} />
+            ))}
         </main>
 
-        {connected && !current.standalone && (
+        {connected && !standalone && (
           <footer className="dk-bar">
             <span className="dk-bar-note">
               {busy
                 ? t(`statusText.${bridge.operation}`)
                 : bridge.hasUnsavedChanges
                   ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
-                  : connected
-                    ? t("desktop.bar.saved", "All changes saved on the dongle.")
-                    : ""}
+                  : t("desktop.bar.saved", "All changes saved on the dongle.")}
             </span>
             <span className="dk-spacer" />
-            <button type="button" className="dk-btn" disabled={!connected || busy || !bridge.hasUnsavedChanges} onClick={() => void bridge.revertToSaved()}>
+            <button type="button" className="dk-btn" disabled={busy || !bridge.hasUnsavedChanges} onClick={() => void bridge.revertToSaved()}>
               {t("desktop.bar.revert", "Revert")}
             </button>
-            <button type="button" className="dk-btn primary" disabled={!connected || busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>
+            <button type="button" className="dk-btn primary" disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty} onClick={() => void bridge.saveToFlash()}>
               {t("desktop.bar.save", "Save to dongle")}
             </button>
           </footer>
@@ -222,6 +222,29 @@ export default function DesktopApp() {
       </div>
     </div>
   );
+}
+
+// Whether the taskbar is dark, from the desktop's own colors (KDE's color
+// scheme, or the system's dark/light setting): independent of the app's theme.
+function useDarkTaskbar(): boolean {
+  const query = () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? true;
+  const [dark, setDark] = useState(query);
+  useEffect(() => {
+    const desktop = window.desktop;
+    let live = true;
+    const fromPalette = (p: { isDark: boolean } | null) => live && setDark(p ? p.isDark : query());
+    void desktop?.getDesktopPalette().then(fromPalette);
+    const off = desktop?.onDesktopPalette(fromPalette);
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    const onChange = () => void desktop?.getDesktopPalette().then(fromPalette);
+    mq?.addEventListener("change", onChange);
+    return () => {
+      live = false;
+      off?.();
+      mq?.removeEventListener("change", onChange);
+    };
+  }, []);
+  return dark;
 }
 
 // Shows "Updated to X" once after the app version changes (not on first run).

@@ -7,7 +7,7 @@ import LanguageToggle from "./components/LanguageToggle";
 import OledEmulator from "./components/OledEmulator";
 import RemapEditor from "./components/RemapEditor";
 import StatusHero from "./components/StatusHero";
-import ThemeToggle from "./components/ThemeToggle";
+import ThemeToggle, { useApplyTheme } from "./components/ThemeToggle";
 import { useDs5Bridge } from "./hooks/useDs5Bridge";
 import {
   AUTO_HAPTICS_LOWPASS_OPTIONS,
@@ -36,6 +36,7 @@ function readTabFromHash(): Tab {
 }
 
 export default function App() {
+  useApplyTheme();
   const { t } = useTranslation();
   const bridge = useDs5Bridge();
   const isBusy = bridge.operation !== null;

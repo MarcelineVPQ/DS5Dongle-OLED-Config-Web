@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import type { LatestFirmware } from "../../src/desktop/api";
+import type { FirmwareLookup } from "../../src/desktop/api";
 import { isNewer, type Manifest } from "../../src/update/manifest";
 
 export const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
@@ -53,22 +53,24 @@ export function choose(bundled: Bundled | null, published: Published | null): "b
 
 export interface FirmwareSourceDeps {
   bundled: () => Bundled | null;
-  manifest: () => Promise<Manifest | null>; // null when offline
+  // The feed, or why there's none: "unpublished" (nothing released yet) or "offline".
+  manifest: () => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"] }>;
   downloadPublished: () => Promise<{ version: string; bytes: Uint8Array }>;
 }
 
-export async function latestFirmware(deps: FirmwareSourceDeps): Promise<LatestFirmware | null> {
+export async function latestFirmware(deps: FirmwareSourceDeps): Promise<FirmwareLookup> {
   const bundled = deps.bundled();
-  const published = (await deps.manifest())?.firmware ?? null;
+  const { manifest, problem } = await deps.manifest();
+  const published = manifest?.firmware ?? null;
   const source = choose(bundled, published);
-  if (source === "online") return { version: published!.version, notesUrl: published!.notes_url, source };
-  if (source === "bundled") return { version: bundled!.version, source };
-  return null;
+  if (source === "online") return { latest: { version: published!.version, notesUrl: published!.notes_url, source }, problem: null };
+  if (source === "bundled") return { latest: { version: bundled!.version, source }, problem };
+  return { latest: null, problem: problem ?? "unpublished" };
 }
 
 export async function firmwareBytes(deps: FirmwareSourceDeps): Promise<{ version: string; bytes: Uint8Array }> {
   const bundled = deps.bundled();
-  const published = (await deps.manifest())?.firmware ?? null;
+  const published = (await deps.manifest()).manifest?.firmware ?? null;
   const source = choose(bundled, published);
   if (source === "online") return deps.downloadPublished();
   if (source === "bundled") return { version: bundled!.version, bytes: loadBundled(bundled!) };

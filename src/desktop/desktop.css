@@ -919,3 +919,309 @@ html[data-theme="dark"] .dk {
 .dk-setup .dk-progress {
   width: 260px;
 }
+
+/* ---- Live controller (src/desktop/live) ----
+   The art's colors come from the theme: body and caps from the surface
+   tokens, outlines from the text tokens, presses from the accent. */
+.live-ctl {
+  --ctl-body: var(--bg-panel);
+  --ctl-cap: var(--bg-inset);
+  /* Like the real controller: the center, triggers, bumpers and sticks are
+     darker than the body in every theme. */
+  --ctl-dark: color-mix(in srgb, #000 62%, var(--bg-panel));
+  --ctl-stick: color-mix(in srgb, #000 45%, var(--bg-panel));
+  --ctl-line: var(--text-muted);
+  --ctl-on: var(--dk-accent);
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+.live-ctl svg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  overflow: visible;
+}
+.live-ctl .bd {
+  fill: var(--ctl-body);
+}
+.live-ctl .cap {
+  fill: var(--ctl-cap);
+}
+.live-ctl .dk {
+  fill: var(--ctl-dark);
+}
+.live-ctl .stk {
+  fill: var(--ctl-stick);
+}
+.live-ctl .ln {
+  fill: var(--ctl-line);
+}
+.live-ctl .led {
+  fill: var(--ctl-led, #4061d6);
+  filter: drop-shadow(0 0 2px var(--ctl-led, transparent));
+}
+.live-ctl .hit {
+  fill: transparent;
+}
+/* Analog triggers fill from the bottom with the pull. */
+.live-ctl [data-part="l2"] .dk {
+  fill: url(#ctl-l2-fill);
+}
+.live-ctl [data-part="r2"] .dk {
+  fill: url(#ctl-r2-fill);
+}
+.live-ctl .fill-on {
+  stop-color: var(--ctl-on);
+}
+.live-ctl .fill-off {
+  stop-color: var(--ctl-dark);
+}
+/* Pressed. */
+.live-ctl .on .cap,
+.live-ctl .on .stk,
+.live-ctl [data-part="l1"].on .dk,
+.live-ctl [data-part="r1"].on .dk {
+  fill: var(--ctl-on);
+}
+.live-ctl .on .ln,
+.live-ctl .on.hit {
+  fill: var(--ctl-on);
+  fill-opacity: 0.25;
+}
+/* Selectable parts. */
+.live-ctl [data-part] {
+  cursor: pointer;
+  outline: none;
+}
+.live-ctl [data-part]:hover .ln,
+.live-ctl [data-part]:focus-visible .ln {
+  fill: var(--ctl-on);
+}
+.live-ctl .sel .ln {
+  fill: var(--ctl-on);
+  stroke: var(--ctl-on);
+  stroke-width: 0.6;
+}
+.live-ctl .sel.hit {
+  stroke: var(--ctl-on);
+  stroke-width: 1;
+  fill: color-mix(in srgb, var(--ctl-on) 12%, transparent);
+}
+.live-ctl .remapped .ln {
+  fill: #f59e0b;
+}
+.live-ctl .touches circle {
+  fill: var(--ctl-on);
+  stroke: var(--bg-panel);
+  stroke-width: 1.5;
+}
+.live-ctl [data-part="stick-l"],
+.live-ctl [data-part="stick-r"] {
+  transition: transform 40ms linear;
+}
+
+/* ---- One screen (src/desktop/live/ControllerView.tsx) ---- */
+.dk.dk-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dk-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--dk-radius);
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  cursor: pointer;
+}
+.dk-top-btn:hover {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+.dk-top-btn.active {
+  background: var(--dk-sel-bg);
+  border-color: var(--dk-sel-border);
+  color: var(--dk-sel-text);
+  font-weight: 600;
+}
+.dk-icon-btn {
+  padding: 0 7px;
+}
+.dk-top-btn .dk-badge {
+  margin-left: 2px;
+}
+/* The live screen fills the body; the panel scrolls on its own. */
+.dk-body.dk-body-live {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.live-view {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--dk-gap);
+}
+.live-stage {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+}
+/* Controller and its status stay together, centered as one block; the art
+   scales with the window but leaves room for the status lines. */
+.live-stage .live-ctl {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+.live-stage .live-ctl svg {
+  max-height: calc(100vh - 210px);
+}
+.live-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  color: var(--text-muted);
+}
+.live-status strong {
+  color: var(--text-strong);
+}
+.live-status .dk-good strong {
+  color: var(--dk-accent);
+}
+.live-hint {
+  text-align: center;
+  margin: 0;
+}
+.live-panel {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+.live-panel .dk-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.live-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-panel-head h2 {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--text-strong);
+}
+.live-meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+.live-meter span {
+  display: block;
+  height: 100%;
+  background: var(--dk-accent);
+  transition: width 60ms linear;
+}
+.dk-select {
+  height: 28px;
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+  color: var(--text-strong);
+  font: inherit;
+}
+/* Narrow windows: the panel goes under the controller. */
+@media (max-width: 860px) {
+  .dk-body.dk-body-live {
+    overflow: auto;
+  }
+  .live-view {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .live-stage .live-ctl {
+    max-height: 50vh;
+  }
+}
+
+/* Bottom light strip and player indicator (see tools/prepare_controller_art.py). */
+.live-ctl .led-edge {
+  fill: color-mix(in srgb, #fff 45%, var(--ctl-dark));
+}
+.live-ctl .pled rect {
+  fill: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+.live-ctl .pled rect.on {
+  opacity: 1;
+  filter: blur(0.6px) drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+}
+
+.live-model {
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.live-edge {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+/* The PS logo is a symbol (no button cap), so it lights as a whole. */
+.live-ctl [data-part="ps"].on {
+  fill: var(--ctl-on);
+  fill-opacity: 1;
+  filter: drop-shadow(0 0 2px var(--ctl-on));
+}
+
+/* Busy buttons (controls.tsx BusyButton; same look as AVNetworkMonitor's). */
+.dk-btn-spinner {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  min-width: 11px;
+  min-height: 11px;
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: dk-spin 0.8s linear infinite;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.dk-btn-elapsed {
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.dk-btn.dk-btn-busy:disabled {
+  cursor: progress;
+}
+@keyframes dk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-btn-spinner {
+    animation: none;
+    border-top-color: currentColor;
+    opacity: 0.5;
+  }
+}
