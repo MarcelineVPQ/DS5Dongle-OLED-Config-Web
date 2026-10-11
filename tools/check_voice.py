@@ -72,7 +72,10 @@ def main() -> None:
         if stt:
             heard, detected = transcribe(key, VOICE / lang / f"{line['key']}.mp3")
             res.update(heard=heard, detected=detected, match=round(difflib.SequenceMatcher(None, norm(heard), norm(text)).ratio(), 2))
-            if res["match"] < 0.85: res["problems"].append(f"transcript {res['match']}: heard {heard!r}")
+            # A take approved by ear on the controller can have a transcript
+            # Scribe keeps misreading (e.g. Portuguese "Slot um" heard as English).
+            if res["match"] < 0.85 and lang not in line.get("approvedByEar", []):
+                res["problems"].append(f"transcript {res['match']}: heard {heard!r}")
         return res
 
     with ThreadPoolExecutor(6) as ex:

@@ -98,6 +98,15 @@
     "zh-CN": "按任意键。来，看它亮起来。",
     "ja": "どれかボタンを押して。ほら、光るでしょ。"
   },
+  "tour_press_done": {
+    "en": "Nice. Everything you press shows up here.",
+    "de": "Super. Alles, was du drückst, erscheint hier.",
+    "fr": "Bien. Tout ce que tu appuies s'affiche ici.",
+    "es": "Genial. Todo lo que pulsas aparece aquí.",
+    "pt-BR": "Boa. Tudo o que você aperta aparece aqui.",
+    "zh-CN": "不错。你按下的一切都会显示在这里。",
+    "ja": "いいね。押したものは全部ここに出るよ。"
+  },
   "tour_trigger": {
     "en": "Now pull a trigger. All the way down.",
     "de": "Jetzt zieh einen Trigger. Ganz durch.",
@@ -106,6 +115,15 @@
     "pt-BR": "Agora puxe um gatilho. Até o fim.",
     "zh-CN": "现在按下一个扳机。按到底。",
     "ja": "次はトリガーを引いて。奥までね。"
+  },
+  "tour_trigger_done": {
+    "en": "Feel that? That's an adaptive trigger. Games use it for guns, bows and brakes, among other things.",
+    "de": "Gespürt? Das ist ein adaptiver Trigger. Spiele nutzen ihn unter anderem für Waffen, Bögen und Bremsen.",
+    "fr": "Tu l'as senti ? C'est une gâchette adaptative. Les jeux s'en servent entre autres pour les armes, les arcs et les freins.",
+    "es": "¿Lo notas? Es un gatillo adaptativo. Los juegos lo usan para armas, arcos y frenos, entre otras cosas.",
+    "pt-BR": "Sentiu? Isso é um gatilho adaptável. Os jogos usam para armas, arcos e freios, entre outras coisas.",
+    "zh-CN": "感觉到了吗？这就是自适应扳机。游戏会用它来表现枪械、弓和刹车等等。",
+    "ja": "感じた？これがアダプティブトリガー。ゲームでは銃や弓、ブレーキなどに使われるんだ。"
   },
   "tour_data": {
     "en": "Down here: everything your controller's doing, live.",
@@ -124,6 +142,15 @@
     "pt-BR": "Pegue o mouse e clique na faixa de luz.",
     "zh-CN": "拿起鼠标，点一下灯条。",
     "ja": "マウスでライトストリップをクリックして。"
+  },
+  "tour_click_done": {
+    "en": "That's the lightbar. Every part opens like this.",
+    "de": "Das ist die Lightbar. Jeder Teil öffnet sich so.",
+    "fr": "C'est la barre lumineuse. Chaque partie s'ouvre comme ça.",
+    "es": "Esa es la barra de luz. Cada parte se abre así.",
+    "pt-BR": "Essa é a barra de luz. Cada parte abre assim.",
+    "zh-CN": "这就是灯条。每个部位都是这样打开的。",
+    "ja": "これがライトバー。どの部位もこうやって開くよ。"
   },
   "tour_panel": {
     "en": "Everything opens here, and changes happen right away.",

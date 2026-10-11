@@ -215,7 +215,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   const isDone = step?.key === "press" ? pressedLabels.length >= PRESS_GOAL : !!step?.done && armedStep === index && step.done(input, view);
   useEffect(() => {
     if (!isDone || ticked || index === null) return;
-    const frame = requestAnimationFrame(() => setTickedStep(index));
+    const frame = requestAnimationFrame(() => {
+      setTickedStep(index);
+      // Her reaction (if the step has one): after the step's own line.
+      void say(`tour_${STEPS[index].key}_done`);
+    });
     return () => cancelAnimationFrame(frame);
   }, [isDone, ticked, index]);
 

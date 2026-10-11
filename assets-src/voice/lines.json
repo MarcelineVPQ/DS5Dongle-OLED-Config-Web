@@ -71,7 +71,8 @@
       "text_zh-CN": "一号位。重新开始。",
       "tagged_zh-CN": "[confidently] 一号位。重新开始。",
       "text_ja": "スロット・ワンに切り替えたよ。",
-      "tagged_ja": "[confidently] スロット・ワンに切り替えたよ。"
+      "tagged_ja": "[confidently] スロット・ワンに切り替えたよ。",
+      "approvedByEar": ["pt-BR"]
     },
     {
       "key": "fw_slot_2",
@@ -340,6 +341,25 @@
       "tagged_ja": "[confidently] どれかボタンを押して。ほら、光るでしょ。"
     },
     {
+      "key": "tour_press_done",
+      "where": "controller speaker (app tour)",
+      "event": "Tour step 2 done: 4 different buttons pressed",
+      "text": "Nice. Everything you press shows up here.",
+      "tagged": "[confidently] Nice. Everything you press shows up here.",
+      "text_de": "Super. Alles, was du drückst, erscheint hier.",
+      "tagged_de": "[confidently] Super. Alles, was du drückst, erscheint hier.",
+      "text_fr": "Bien. Tout ce que tu appuies s'affiche ici.",
+      "tagged_fr": "[confidently] Bien. Tout ce que tu appuies s'affiche ici.",
+      "text_es": "Genial. Todo lo que pulsas aparece aquí.",
+      "tagged_es": "[confidently] Genial. Todo lo que pulsas aparece aquí.",
+      "text_pt-BR": "Boa. Tudo o que você aperta aparece aqui.",
+      "tagged_pt-BR": "[confidently] Boa. Tudo o que você aperta aparece aqui.",
+      "text_zh-CN": "不错。你按下的一切都会显示在这里。",
+      "tagged_zh-CN": "[confidently] 不错。你按下的一切都会显示在这里。",
+      "text_ja": "いいね。押したものは全部ここに出るよ。",
+      "tagged_ja": "[confidently] いいね。押したものは全部ここに出るよ。"
+    },
+    {
       "key": "tour_trigger",
       "where": "controller speaker (app tour)",
       "event": "Tour step 3: pull a trigger",
@@ -357,6 +377,25 @@
       "tagged_zh-CN": "[confidently] 现在按下一个扳机。按到底。",
       "text_ja": "次はトリガーを引いて。奥までね。",
       "tagged_ja": "[confidently] 次はトリガーを引いて。奥までね。"
+    },
+    {
+      "key": "tour_trigger_done",
+      "where": "controller speaker (app tour)",
+      "event": "Tour step 3 done: trigger pulled through the Weapon effect",
+      "text": "Feel that? That's an adaptive trigger. Games use it for guns, bows and brakes, among other things.",
+      "tagged": "[confidently] Feel that? That's an adaptive trigger. Games use it for guns, bows and brakes, among other things.",
+      "text_de": "Gespürt? Das ist ein adaptiver Trigger. Spiele nutzen ihn unter anderem für Waffen, Bögen und Bremsen.",
+      "tagged_de": "[confidently] Gespürt? Das ist ein adaptiver Trigger. Spiele nutzen ihn unter anderem für Waffen, Bögen und Bremsen.",
+      "text_fr": "Tu l'as senti ? C'est une gâchette adaptative. Les jeux s'en servent entre autres pour les armes, les arcs et les freins.",
+      "tagged_fr": "[confidently] Tu l'as senti ? C'est une gâchette adaptative. Les jeux s'en servent entre autres pour les armes, les arcs et les freins.",
+      "text_es": "¿Lo notas? Es un gatillo adaptativo. Los juegos lo usan para armas, arcos y frenos, entre otras cosas.",
+      "tagged_es": "[confidently] ¿Lo notas? Es un gatillo adaptativo. Los juegos lo usan para armas, arcos y frenos, entre otras cosas.",
+      "text_pt-BR": "Sentiu? Isso é um gatilho adaptável. Os jogos usam para armas, arcos e freios, entre outras coisas.",
+      "tagged_pt-BR": "[confidently] Sentiu? Isso é um gatilho adaptável. Os jogos usam para armas, arcos e freios, entre outras coisas.",
+      "text_zh-CN": "感觉到了吗？这就是自适应扳机。游戏会用它来表现枪械、弓和刹车等等。",
+      "tagged_zh-CN": "[confidently] 感觉到了吗？这就是自适应扳机。游戏会用它来表现枪械、弓和刹车等等。",
+      "text_ja": "感じた？これがアダプティブトリガー。ゲームでは銃や弓、ブレーキなどに使われるんだ。",
+      "tagged_ja": "[confidently] 感じた？これがアダプティブトリガー。ゲームでは銃や弓、ブレーキなどに使われるんだ。"
     },
     {
       "key": "tour_data",
@@ -395,6 +434,25 @@
       "tagged_zh-CN": "[confidently] 拿起鼠标，点一下灯条。",
       "text_ja": "マウスでライトストリップをクリックして。",
       "tagged_ja": "[confidently] マウスでライトストリップをクリックして。"
+    },
+    {
+      "key": "tour_click_done",
+      "where": "controller speaker (app tour)",
+      "event": "Tour step 5 done: the lightbar panel opened",
+      "text": "That's the lightbar. Every part opens like this.",
+      "tagged": "[confidently] That's the lightbar. Every part opens like this.",
+      "text_de": "Das ist die Lightbar. Jeder Teil öffnet sich so.",
+      "tagged_de": "[confidently] Das ist die Lightbar. Jeder Teil öffnet sich so.",
+      "text_fr": "C'est la barre lumineuse. Chaque partie s'ouvre comme ça.",
+      "tagged_fr": "[confidently] C'est la barre lumineuse. Chaque partie s'ouvre comme ça.",
+      "text_es": "Esa es la barra de luz. Cada parte se abre así.",
+      "tagged_es": "[confidently] Esa es la barra de luz. Cada parte se abre así.",
+      "text_pt-BR": "Essa é a barra de luz. Cada parte abre assim.",
+      "tagged_pt-BR": "[confidently] Essa é a barra de luz. Cada parte abre assim.",
+      "text_zh-CN": "这就是灯条。每个部位都是这样打开的。",
+      "tagged_zh-CN": "[confidently] 这就是灯条。每个部位都是这样打开的。",
+      "text_ja": "これがライトバー。どの部位もこうやって開くよ。",
+      "tagged_ja": "[confidently] これがライトバー。どの部位もこうやって開くよ。"
     },
     {
       "key": "tour_panel",
