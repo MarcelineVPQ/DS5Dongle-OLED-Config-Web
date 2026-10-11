@@ -7,6 +7,7 @@
 // SHA-256, progress) -> install -> "Restart now". Nothing installs without a
 // matching checksum, nothing downgrades, and every failure is reported to the
 // user verbatim.
+import { TRUSTED_KEYS, feedSignedBy } from "./feedSignature";
 import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
@@ -38,6 +39,13 @@ function isLoopbackHttp(raw: string | undefined): boolean {
 }
 
 const testFeed = isLoopbackHttp(process.env.DS5_UPDATE_MANIFEST) ? process.env.DS5_UPDATE_MANIFEST! : null;
+
+// The test feed may be signed with a test key (DS5_UPDATE_PUBKEY, base64
+// SPKI); only together with a loopback feed, never for the real one.
+function trustedKeys(): readonly string[] {
+  const testKey = process.env.DS5_UPDATE_PUBKEY;
+  return testFeed && testKey ? [...TRUSTED_KEYS, testKey] : TRUSTED_KEYS;
+}
 
 function manifestUrl(): string {
   return testFeed ?? MANIFEST_URL;
@@ -141,10 +149,21 @@ export class Updater {
   }
 
   async fetchManifest(): Promise<Manifest> {
-    const response = await net.fetch(manifestUrl(), { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    const url = manifestUrl();
+    const response = await net.fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (response.status === 404) throw new FeedMissingError();
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
-    const parsed = Manifest.safeParse(await response.json());
+    const text = await response.text();
+    // Nothing in the feed is used before its signature checks out.
+    const sig = await net.fetch(`${url}.sig`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    if (!sig.ok || !feedSignedBy(text, await sig.text(), trustedKeys())) throw new Error("the update feed isn't signed by the developer; ignoring it");
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error("the update manifest is malformed");
+    }
+    const parsed = Manifest.safeParse(json);
     if (!parsed.success) throw new Error("the update manifest is malformed");
     return parsed.data;
   }

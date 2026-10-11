@@ -123,9 +123,22 @@ describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 
   it("runs pkexec through execFile with a fixed script and positional paths", () => {
-    expect(setupSource).toMatch(/execFile\("pkexec", \["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST\]/);
-    expect(setupSource).toMatch(/const script = 'command -v udevadm >\/dev\/null \|\| exit 3; install -m 0644 "\$1" "\$2"/);
+    expect(setupSource).toMatch(/execFile\("pkexec", \["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile \? PROFILE_DEST : ""\]/);
+    expect(setupSource).toMatch(/'command -v udevadm >\/dev\/null \|\| exit 3; install -m 0644 "\$1" "\$2"/);
+    // The sandbox profile: only fixed paths, positional ($3/$4), and only AppArmor's parser.
+    expect(setupSource).toMatch(/' && \{ \[ -z "\$3" \] \|\| \{ install -m 0644 "\$3" "\$4" && apparmor_parser -r "\$4"; \}; \}'/);
+    expect(setupSource).toMatch(/const PROFILE_DEST = "\/etc\/apparmor\.d\/ds5-dongle-configurator";/);
     expect(setupSource).not.toMatch(/\bexec\(/);
     expect(setupSource).not.toMatch(/script\s*=\s*`/);
+  });
+
+  it("ships a sandbox profile that only names the app and allows user namespaces", () => {
+    const profile = readFileSync(new URL("../../resources/linux/ds5-dongle-configurator.apparmor", import.meta.url), "utf8");
+    expect(profile).toMatch(/^profile ds5-dongle-configurator \/\{,var\/\}tmp\/\.mount_\*\/\{AppRun,ds5-dongle-configurator\} flags=\(unconfined\) \{$/m);
+    const rules = profile
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#") && !/^(abi|include|profile|\})/.test(l));
+    expect(rules).toEqual(["userns,"]);
   });
 });

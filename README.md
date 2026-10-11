@@ -64,7 +64,7 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-linux-x86_64.AppImage`, put it wherever you keep apps, and make it executable (file properties, or `chmod +x`).
 2. Run it once. It adds itself to your application menu, and updates keep that entry working.
-3. **If the app says it can't open the dongle:** open the **Dongle** page and press **Set up USB access** (asks for your password once). Users with Steam installed usually don't need this.
+3. **Press Set up USB access** on the **Dongle** page (it asks for your password once). It lets the app open the dongle, and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
 
 ### Windows
 

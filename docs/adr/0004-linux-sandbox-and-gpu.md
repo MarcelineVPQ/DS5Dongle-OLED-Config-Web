@@ -33,7 +33,7 @@ Three Linux platform problems showed up on the first desktop launches (Ubuntu 26
 
 ### Negative
 
-- Until the AppArmor profile ships, Linux runs without the OS-level Chromium sandbox. This is recorded in `docs/SECURITY_AUDIT.md`.
+- On Ubuntu 23.10+ the sandbox needs our AppArmor profile, which the one-time **Set up USB access** step installs (2026-10-10; `resources/linux/ds5-dongle-configurator.apparmor`, attached to the AppImage's `AppRun` and binary, so electron-builder's `unshare` probe passes too). Until the user runs that step the app runs without the OS-level sandbox. This is recorded in `docs/SECURITY_AUDIT.md` (O1).
 
 ### Neutral
 

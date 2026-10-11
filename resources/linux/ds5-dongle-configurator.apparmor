@@ -1,0 +1,13 @@
+# DS5 Dongle OLED Edition Configurator (AppImage): lets Chromium's sandbox use
+# user namespaces, which Ubuntu restricts to profiled apps. Like Ubuntu's own
+# profiles for Chrome, Brave, VS Code: it confines nothing else, it only gives
+# the app a name so the sandbox can run. The AppImage runs from a random
+# /tmp/.mount_* folder; AppRun is its launcher (it checks userns with unshare).
+abi <abi/4.0>,
+include <tunables/global>
+
+profile ds5-dongle-configurator /{,var/}tmp/.mount_*/{AppRun,ds5-dongle-configurator} flags=(unconfined) {
+  userns,
+
+  include if exists <local/ds5-dongle-configurator>
+}
