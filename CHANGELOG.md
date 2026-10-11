@@ -19,6 +19,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **Navigation rail** on the right edge replaces the top bar: Controller, Dongle, Games, App settings and About, with the dongle's status at the bottom. Icons only until you hover it (or tab into it); pin it open with the button at the bottom or Ctrl+B.
 
+- **Speaker and microphone tests.** The Speaker panel plays a short chime on the controller's speaker (never the PC's); the Microphone panel records 3 s from the controller's mic with a live level and plays it back on the controller (Linux; recorded in the main process, kept in memory only, the page still has no microphone access).
 - **Controller page data regrouped**: four equal cards (Inputs with the stick circles and trigger bars, Gyroscope, Accelerometer, Connection) and a four-tile status strip (battery, signal, lightbar, player and slot). Nothing repeats the drawing, and settings stay in the side panel.
 
 ### Removed

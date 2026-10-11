@@ -967,6 +967,25 @@
       "pin": "Garder ouvert",
       "collapse": "Replier",
       "controllerAgain": "Manette · cliquez à nouveau pour afficher ou masquer ses réglages"
+    },
+    "audioTest": {
+      "speakerTitle": "Test du haut-parleur",
+      "speakerHint": "Joue un court carillon sur le haut-parleur de la manette (pas celui du PC).",
+      "speakerButton": "Jouer un son de test",
+      "playing": "Lecture…",
+      "noSpeaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
+      "micTitle": "Test du micro",
+      "micHint": "Enregistre 3 secondes avec le micro de la manette, puis les rejoue sur son haut-parleur. Rien n'est enregistré sur le disque.",
+      "micButton": "Tester le micro",
+      "recording": "Enregistrement… parlez",
+      "playingBack": "Relecture…",
+      "micDone": "Entendu. Si la relecture était claire, le micro fonctionne.",
+      "micQuiet": "Enregistré, mais presque silencieux. Le micro est-il coupé (le bouton muet s'allume) ou le micro BT désactivé ?",
+      "problem": {
+        "no-mic": "Le micro de la manette n'est pas disponible comme entrée audio sur ce PC.",
+        "no-speaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
+        "failed": "Le test n'a pas pu se lancer. PipeWire est-il actif ?"
+      }
     }
   },
   "ad": {

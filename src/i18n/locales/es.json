@@ -967,6 +967,25 @@
       "pin": "Mantener abierto",
       "collapse": "Contraer",
       "controllerAgain": "Mando · vuelve a hacer clic para mostrar u ocultar sus ajustes"
+    },
+    "audioTest": {
+      "speakerTitle": "Prueba del altavoz",
+      "speakerHint": "Reproduce un breve sonido en el altavoz del mando (no en el del PC).",
+      "speakerButton": "Reproducir sonido de prueba",
+      "playing": "Reproduciendo…",
+      "noSpeaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
+      "micTitle": "Prueba del micrófono",
+      "micHint": "Graba 3 segundos con el micrófono del mando y los reproduce en su altavoz. No se guarda nada.",
+      "micButton": "Probar micrófono",
+      "recording": "Grabando… habla ahora",
+      "playingBack": "Reproduciendo…",
+      "micDone": "Te he oído. Si la reproducción sonó clara, el micrófono funciona.",
+      "micQuiet": "Grabado, pero casi en silencio. ¿Está el micrófono silenciado (el botón de silencio se ilumina) o el micrófono BT desactivado?",
+      "problem": {
+        "no-mic": "El micrófono del mando no está disponible como entrada de audio en este PC.",
+        "no-speaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
+        "failed": "No se pudo hacer la prueba. ¿Está PipeWire en marcha?"
+      }
     }
   },
   "ad": {

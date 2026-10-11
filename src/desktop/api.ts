@@ -128,6 +128,10 @@ export interface DesktopApi {
   librarySetRestore(restore: LibraryFile["restore"] | null): Promise<LibraryFile>;
   // Launch a game or open its launcher page / folder (resolved in main).
   gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;
+  // Linux: record 3 s from the controller's mic and play it back on its
+  // speaker (main process, PipeWire), with the live level as it records.
+  micTest(): Promise<{ ok: boolean; peak: number; problem?: "no-mic" | "no-speaker" | "failed" }>;
+  onMicLevel(listener: (level: number) => void): () => void;
 }
 
 export const IPC = {
@@ -166,6 +170,8 @@ export const IPC = {
   librarySetMine: "desktop:library-set-mine",
   librarySetRestore: "desktop:library-set-restore",
   gameAction: "desktop:game-action",
+  micTest: "desktop:mic-test",
+  micLevel: "desktop:mic-level",
 } as const;
 
 declare global {

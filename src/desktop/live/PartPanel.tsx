@@ -2,6 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { controllerSpeaker } from "../narrator";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
@@ -118,10 +119,12 @@ function PartSections({ part, bridge, input, remap }: { part: PartId; bridge: Us
       {part === "touchpad" && <TouchLive input={input} />}
       {part === "speaker" && <SpeakerSection bridge={bridge} />}
       {part === "speaker" && <LevelMeter bridge={bridge} which="speaker" />}
+      {part === "speaker" && <SpeakerTest />}
       {part === "body" && <HapticsSection bridge={bridge} />}
       {part === "body" && <LevelMeter bridge={bridge} which="haptic" />}
       {part === "body" && <AutoHapticsSection bridge={bridge} />}
       {part === "mute" && <MicSection bridge={bridge} />}
+      {part === "mute" && <MicTest />}
       {part === "ps" && <SlotsPage bridge={bridge} />}
       {index !== undefined && <RemapSection index={index} remap={remap} />}
     </>
@@ -348,6 +351,103 @@ function NarratorSettings() {
           {t("desktop.narrator.test", "Test the voice")}
         </button>
       </div>
+    </section>
+  );
+}
+
+// A short two-note chime on the controller's speaker (never the PC's): made
+// on the spot with Web Audio and routed to the DualSense output.
+function SpeakerTest() {
+  const { t } = useTranslation();
+  const [state, setState] = useState<"idle" | "playing" | "none">("idle");
+  const play = async () => {
+    const sink = await controllerSpeaker();
+    if (!sink) return setState("none");
+    setState("playing");
+    const ctx = new AudioContext();
+    try {
+      await (ctx as AudioContext & { setSinkId(id: string): Promise<void> }).setSinkId(sink);
+      const now = ctx.currentTime;
+      for (const [i, freq] of [660, 880, 1320].entries()) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = freq;
+        const at = now + i * 0.22;
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(0.35, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.55);
+      }
+      await new Promise((r) => setTimeout(r, 1200));
+      setState("idle");
+    } catch {
+      setState("none"); // couldn't route to the controller: stay silent
+    } finally {
+      void ctx.close();
+    }
+  };
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.audioTest.speakerTitle")}</h2>
+      <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
+      <div className="dk-row-btns">
+        <button type="button" className="dk-btn" disabled={state === "playing"} onClick={() => void play()}>
+          {state === "playing" ? t("desktop.audioTest.playing") : t("desktop.audioTest.speakerButton")}
+        </button>
+      </div>
+      {state === "none" && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
+    </section>
+  );
+}
+
+// Records 3 s from the controller's mic and plays it back on its speaker
+// (main process, Linux), with the level while recording.
+function MicTest() {
+  const { t } = useTranslation();
+  const desktop = window.desktop!;
+  const [phase, setPhase] = useState<"idle" | "recording" | "playing" | "done" | "quiet" | "error">("idle");
+  const [problem, setProblem] = useState<string | null>(null);
+  const [level, setLevel] = useState(0);
+  useEffect(() => desktop.onMicLevel(setLevel), [desktop]);
+  const run = async () => {
+    setProblem(null);
+    setPhase("recording");
+    // The main process reports levels while recording, then plays it back.
+    const playingSoon = setTimeout(() => setPhase((p) => (p === "recording" ? "playing" : p)), 3100);
+    try {
+      const r = await desktop.micTest();
+      clearTimeout(playingSoon);
+      if (!r.ok) {
+        setProblem(r.problem ?? "failed");
+        setPhase("error");
+      } else setPhase(r.peak < 0.02 ? "quiet" : "done");
+    } catch {
+      clearTimeout(playingSoon);
+      setProblem("failed");
+      setPhase("error");
+    }
+  };
+  const busy = phase === "recording" || phase === "playing";
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.audioTest.micTitle")}</h2>
+      <p className="dk-hint">{t("desktop.audioTest.micHint")}</p>
+      {phase === "recording" && (
+        <div className="live-level">
+          <Meter value={level} />
+          <span className="live-level-pct">{Math.round(level * 100)}%</span>
+        </div>
+      )}
+      <div className="dk-row-btns">
+        <button type="button" className="dk-btn" disabled={busy} onClick={() => void run()}>
+          {phase === "recording" ? t("desktop.audioTest.recording") : phase === "playing" ? t("desktop.audioTest.playingBack") : t("desktop.audioTest.micButton")}
+        </button>
+      </div>
+      {phase === "done" && <p className="dk-good">✓ {t("desktop.audioTest.micDone")}</p>}
+      {phase === "quiet" && <p className="dk-hint">{t("desktop.audioTest.micQuiet")}</p>}
+      {phase === "error" && <p className="dk-hint">{t(`desktop.audioTest.problem.${problem ?? "failed"}`)}</p>}
     </section>
   );
 }

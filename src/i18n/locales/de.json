@@ -967,6 +967,25 @@
       "pin": "Offen halten",
       "collapse": "Einklappen",
       "controllerAgain": "Controller · erneut klicken, um die Einstellungen ein- oder auszublenden"
+    },
+    "audioTest": {
+      "speakerTitle": "Lautsprechertest",
+      "speakerHint": "Spielt einen kurzen Ton auf dem Lautsprecher des Controllers (nicht des PCs).",
+      "speakerButton": "Testton abspielen",
+      "playing": "Spielt…",
+      "noSpeaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
+      "micTitle": "Mikrofontest",
+      "micHint": "Nimmt 3 Sekunden vom Mikrofon des Controllers auf und spielt sie auf seinem Lautsprecher ab. Nichts wird gespeichert.",
+      "micButton": "Mikrofon testen",
+      "recording": "Nimmt auf… sprich jetzt",
+      "playingBack": "Spielt ab…",
+      "micDone": "Gehört. Klang die Wiedergabe klar, funktioniert das Mikrofon.",
+      "micQuiet": "Aufgenommen, aber fast still. Ist das Mikrofon stumm (die Stummtaste leuchtet) oder das BT-Mikrofon aus?",
+      "problem": {
+        "no-mic": "Das Mikrofon des Controllers ist auf diesem PC nicht als Audioeingang verfügbar.",
+        "no-speaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
+        "failed": "Der Test konnte nicht laufen. Läuft PipeWire?"
+      }
     }
   },
   "ad": {

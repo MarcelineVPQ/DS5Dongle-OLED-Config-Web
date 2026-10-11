@@ -2,6 +2,7 @@
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import { GameKeySchema, LibraryFileSchema, MineSchema, ProfileSettingsSchema, type LibraryFile, type Mine, type ProfileSettings } from "../../src/desktop/games/library";
+import type { MicTestResult } from "./audioTest";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
@@ -63,6 +64,7 @@ export interface IpcHandlers {
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
+  micTest: () => Promise<MicTestResult>;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
@@ -157,6 +159,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.librarySetMine, SetMineSchema, h.librarySetMine);
   invokeWith(IPC.librarySetRestore, RestoreSchema, h.librarySetRestore);
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
+  invoke(IPC.micTest, h.micTest);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

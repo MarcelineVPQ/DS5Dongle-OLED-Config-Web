@@ -68,6 +68,12 @@ const api: DesktopApi = {
   librarySetMine: (update) => ipcRenderer.invoke(IPC.librarySetMine, update),
   librarySetRestore: (restore) => ipcRenderer.invoke(IPC.librarySetRestore, restore),
   gameAction: (update) => ipcRenderer.invoke(IPC.gameAction, update),
+  micTest: () => ipcRenderer.invoke(IPC.micTest),
+  onMicLevel: (listener) => {
+    const handler = (_event: IpcRendererEvent, level: number) => listener(level);
+    ipcRenderer.on(IPC.micLevel, handler);
+    return () => ipcRenderer.removeListener(IPC.micLevel, handler);
+  },
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

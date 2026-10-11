@@ -12,6 +12,7 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { GameKeySchema } from "../../src/desktop/games/library";
 import { hasSchemeHandler } from "./games/schemeHandler";
+import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { loadSettings, saveSettings } from "./settings";
@@ -165,6 +166,10 @@ function start(): void {
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
+    micTest: () => {
+      if (process.platform !== "linux") return Promise.resolve({ ok: false, peak: 0, problem: "failed" as const });
+      return micTest((level) => mainWindow?.webContents.send(IPC.micLevel, level));
+    },
     gameAction: async (u) => {
       const target = linuxOnly((g) => g.gameAction(u.gameKey, u.action));
       if (target.url) {

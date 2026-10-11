@@ -91,7 +91,8 @@ function voiceLang(): string {
   return LANGS.find((l) => l === want) ?? LANGS.find((l) => l.split("-")[0] === want.split("-")[0]) ?? "en";
 }
 
-async function controllerSpeaker(): Promise<string | null> {
+// The DualSense speaker's output device id, or null (never the PC's speakers).
+export async function controllerSpeaker(): Promise<string | null> {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices.find((d) => d.kind === "audiooutput" && SPEAKER.test(d.label))?.deviceId ?? null;

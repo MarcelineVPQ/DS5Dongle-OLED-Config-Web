@@ -961,6 +961,25 @@
       "pin": "保持展开",
       "collapse": "收起",
       "controllerAgain": "手柄 · 再次点击可显示或隐藏设置"
+    },
+    "audioTest": {
+      "speakerTitle": "扬声器测试",
+      "speakerHint": "在手柄扬声器（不是电脑）上播放一段短提示音。",
+      "speakerButton": "播放测试音",
+      "playing": "正在播放…",
+      "noSpeaker": "在这台电脑上找不到手柄扬声器这个音频输出。",
+      "micTitle": "麦克风测试",
+      "micHint": "用手柄麦克风录 3 秒，然后在手柄扬声器上回放。不会保存任何内容。",
+      "micButton": "测试麦克风",
+      "recording": "正在录音…请说话",
+      "playingBack": "正在回放…",
+      "micDone": "听到了。如果回放清晰，麦克风工作正常。",
+      "micQuiet": "录到了，但几乎无声。麦克风是否静音（静音键亮起），或 BT 麦克风设置已关闭？",
+      "problem": {
+        "no-mic": "在这台电脑上找不到手柄麦克风这个音频输入。",
+        "no-speaker": "在这台电脑上找不到手柄扬声器这个音频输出。",
+        "failed": "测试无法运行。PipeWire 在运行吗？"
+      }
     }
   },
   "ad": {

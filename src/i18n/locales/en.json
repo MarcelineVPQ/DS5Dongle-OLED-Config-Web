@@ -966,6 +966,25 @@
       "pin": "Keep open",
       "collapse": "Collapse",
       "controllerAgain": "Controller · click again to show or hide its settings"
+    },
+    "audioTest": {
+      "speakerTitle": "Speaker test",
+      "speakerHint": "Plays a short chime on the controller's speaker (not your PC's).",
+      "speakerButton": "Play test sound",
+      "playing": "Playing…",
+      "noSpeaker": "The controller's speaker isn't available as an audio output on this PC.",
+      "micTitle": "Microphone test",
+      "micHint": "Records 3 seconds from the controller's mic, then plays it back on the controller's speaker. Nothing is saved.",
+      "micButton": "Test microphone",
+      "recording": "Recording… speak now",
+      "playingBack": "Playing it back…",
+      "micDone": "Heard you. If the playback was clear, the mic works.",
+      "micQuiet": "Recorded, but almost silent. Is the mic muted (the mute button glows), or the BT microphone setting off?",
+      "problem": {
+        "no-mic": "The controller's microphone isn't available as an audio input on this PC.",
+        "no-speaker": "The controller's speaker isn't available as an audio output on this PC.",
+        "failed": "The test couldn't run. Is PipeWire running?"
+      }
     }
   },
   "ad": {

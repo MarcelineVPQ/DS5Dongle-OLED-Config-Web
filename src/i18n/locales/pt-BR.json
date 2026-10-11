@@ -967,6 +967,25 @@
       "pin": "Manter aberto",
       "collapse": "Recolher",
       "controllerAgain": "Controle · clique de novo para mostrar ou ocultar as configurações"
+    },
+    "audioTest": {
+      "speakerTitle": "Teste do alto-falante",
+      "speakerHint": "Toca um som curto no alto-falante do controle (não no do PC).",
+      "speakerButton": "Tocar som de teste",
+      "playing": "Tocando…",
+      "noSpeaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
+      "micTitle": "Teste do microfone",
+      "micHint": "Grava 3 segundos do microfone do controle e toca de volta no alto-falante dele. Nada é salvo.",
+      "micButton": "Testar microfone",
+      "recording": "Gravando… fale agora",
+      "playingBack": "Tocando de volta…",
+      "micDone": "Ouvi você. Se a reprodução saiu clara, o microfone funciona.",
+      "micQuiet": "Gravado, mas quase em silêncio. O microfone está mudo (o botão de mudo acende) ou o microfone BT desligado?",
+      "problem": {
+        "no-mic": "O microfone do controle não está disponível como entrada de áudio neste PC.",
+        "no-speaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
+        "failed": "O teste não pôde rodar. O PipeWire está ativo?"
+      }
     }
   },
   "ad": {
