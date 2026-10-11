@@ -11,7 +11,7 @@
 // ACCENT_OVERRIDES fixes any colorway the formula gets wrong.
 import { useEffect } from "react";
 import { colorway } from "./colorways";
-import { accentVars, contrast, ensureContrast, luminance, mix, type Rgb } from "../theme/desktopPalette";
+import { accentVars, contrast, ensureContrast, hexToRgb as hex, mix, parseColor as parse, wantsLightInk, type Rgb } from "../theme/desktopPalette";
 
 // Per-colorway accent, by the colorway code from the controller's serial.
 // null = keep the theme accent.
@@ -25,12 +25,11 @@ export const ACCENT_OVERRIDES: Record<string, string | null> = {
 
 const STYLE_ID = "ds5-controller-accent";
 
-const hex = (h: string): Rgb => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as Rgb;
 const chroma = ([r, g, b]: Rgb) => Math.max(r, g, b) - Math.min(r, g, b);
 
 function panelOf(el: Element): { panel: Rgb; isDark: boolean } {
   const panel = parse(getComputedStyle(el).getPropertyValue("--bg-panel")) ?? [27, 35, 54];
-  return { panel, isDark: contrast(panel, [0, 0, 0]) < contrast(panel, [255, 255, 255]) };
+  return { panel, isDark: wantsLightInk(panel) };
 }
 
 // A game page's own look: its cards in the artwork's color (blended into the
@@ -38,18 +37,14 @@ function panelOf(el: Element): { panel: Rgb; isDark: boolean } {
 // controller's. Inline style object; null for grey art.
 export function scopedAccent(color: string | null, el: Element | null): Record<string, string> | null {
   if (!color || !el) return null;
-  const { panel } = panelOf(el);
+  // The panel color from outside the page: the page's own style holds the
+  // previous result, which would be mixed in again on a recompute.
+  const { panel } = panelOf(el.parentElement ?? el);
   const c = hex(color);
   if (chroma(c) < 40) return null; // grey art: keep the controller's look
   // The page's cards take the art's color, blended into the panel so it
   // isn't overpowering; text and accent follow the same rules as the theme.
   return surfacesFor(mix(panel, c, 0.45), c);
-}
-
-function parse(value: string): Rgb | null {
-  const m = /rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/.exec(value);
-  if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
-  return /^#[0-9a-f]{6}$/i.test(value.trim()) ? hex(value.trim()) : null;
 }
 
 // The app-wide accent source: the controller's colorway (null = the theme's).
@@ -68,7 +63,9 @@ export function onControllerShade(l: () => void): () => void {
 }
 function setShade(code: string | null): void {
   const body = colorway(code)?.colors?.body;
-  const next = body ? (luminance(hex(body)) > 0.35 ? "light" : "dark") : null;
+  // Same rule as the ink on its surfaces (surfacesFor), so a mid-tone
+  // colorway never gets a dark theme with black text.
+  const next = body ? (wantsLightInk(hex(body)) ? "dark" : "light") : null;
   if (next === shade) return;
   shade = next;
   shadeListeners.forEach((l) => l());
@@ -117,7 +114,7 @@ const SURFACES: Array<[string, number]> = [
 // The "Controller" theme's surfaces: cards and panels in the controller's
 // own body color, text black or white (whichever reads), the accent the
 // colorway's line color made legible on that body.
-function controllerSurfaces(code: string | null): Record<string, string> | null {
+export function controllerSurfaces(code: string | null): Record<string, string> | null {
   const c = colorway(code)?.colors;
   return c ? surfacesFor(hex(c.body), hex(c.line)) : null;
 }
@@ -126,7 +123,7 @@ function controllerSurfaces(code: string | null): Record<string, string> | null 
 // reads), the accent `trim` made legible on it. Shared by the controller
 // theme and game pages.
 function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
-  const dark = contrast(body, [255, 255, 255]) >= contrast(body, [0, 0, 0]); // light text on it
+  const dark = wantsLightInk(body); // light text on it
   const ink: Rgb = dark ? [255, 255, 255] : [0, 0, 0];
   const css = (x: Rgb) => `rgb(${x.join(", ")})`;
   const text = (target: number, soften: number) => css(ensureContrast(mix(ink, body, soften), body, target));
@@ -151,6 +148,14 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
   };
 }
 
+// Told whenever the app's surfaces change (a game page re-mixes its own).
+const accentListeners = new Set<() => void>();
+export function onAccentChange(l: () => void): () => void {
+  accentListeners.add(l);
+  return () => accentListeners.delete(l);
+}
+const changed = () => accentListeners.forEach((l) => l());
+
 export function applyAccent(): void {
   const old = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   // Read the theme's own tokens, without our tint (else it compounds).
@@ -169,10 +174,14 @@ export function applyAccent(): void {
     if (old?.textContent === text) return;
     const el = old ?? document.head.appendChild(Object.assign(document.createElement("style"), { id: STYLE_ID }));
     el.textContent = text;
+    changed();
     return;
   }
   if (!accent || !controllerColor) {
-    old?.remove();
+    if (old) {
+      old.remove();
+      changed();
+    }
     return;
   }
   const tint = hex(controllerColor);
@@ -184,6 +193,7 @@ export function applyAccent(): void {
   if (old?.textContent === text) return; // unchanged: don't touch the DOM (the theme observer would loop)
   const el = old ?? document.head.appendChild(Object.assign(document.createElement("style"), { id: STYLE_ID }));
   el.textContent = text;
+  changed();
 }
 
 export const ACCENT_KEY = "ds5.accent";

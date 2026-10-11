@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 // Every component using the same preference sees a change at once.
-const PREF_EVENT = "ds5:pref";
+export const PREF_EVENT = "ds5:pref";
 
 export function readPref(key: string): string | null {
   try {

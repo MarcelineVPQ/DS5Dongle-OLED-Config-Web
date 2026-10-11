@@ -4,8 +4,12 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { detectRunning, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
 import { LibraryStore } from "../../electron/main/games/libraryStore";
+import { artRequestTarget } from "../../electron/main/games/artRequest";
 import { GameKeySchema, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
 import { SetMineSchema, SetProfileSchema } from "../../electron/main/ipc";
+import { decideProfileStep } from "../../src/desktop/library/useGameProfile";
+import { staleness, versionLess } from "../../src/desktop/library/support";
+import { EMPTY_LIBRARY, type LibraryFile } from "../../src/desktop/games/library";
 
 const proc = (p: Partial<ProcView>): ProcView => ({ pid: 1, comm: "x", args: [], cwd: null, env: {}, ...p });
 const games: RunningCandidate[] = [
@@ -56,6 +60,23 @@ describe("running game detection", () => {
     w.tick(7000);
     w.tick(20000);
     expect(changes).toEqual([games[0].key]);
+    // Games consent turned off mid-game: the game is reported over, so the profile is undone.
+    w.stop();
+    expect(changes).toEqual([games[0].key, null]);
+    expect(w.running).toBeNull();
+  });
+});
+
+describe("game artwork requests (ds5-art)", () => {
+  const key = games[0].key;
+  it("accepts only a known game key and kind", () => {
+    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/hero`)).toEqual({ key, kind: "hero" });
+    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/secrets`)).toBeNull(); // unknown kind
+    expect(artRequestTarget("ds5-art://art/not-a-key/hero")).toBeNull(); // bad key
+    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/hero/extra`)).toBeNull(); // extra segment
+    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}%2F..%2F..%2Fetc/hero`)).toBeNull(); // encoded traversal
+    expect(artRequestTarget("ds5-art://art/%E0%A4%A/hero")).toBeNull(); // broken encoding
+    expect(artRequestTarget(`file:///art/${encodeURIComponent(key)}/hero`)).toBeNull(); // other scheme
   });
 });
 
@@ -143,5 +164,58 @@ describe("game actions", () => {
     expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "play" }).success).toBe(true);
     expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "openUrl" }).success).toBe(false);
     expect(GameActionSchema.safeParse({ gameKey: "steam-1a2b3c4d:steam:4078430", action: "play", url: "https://x" }).success).toBe(false);
+  });
+});
+
+describe("game profile switching", () => {
+  const A = games[0].key;
+  const B = games[1].key;
+  const normal = { ...settings, hapticsGain: 1 };
+  const withProfiles = (restore?: LibraryFile["restore"]): LibraryFile => ({
+    ...EMPTY_LIBRARY,
+    games: { [A]: { title: "A", profile: { settings, updated: 10 } }, [B]: { title: "B", profile: { settings: { ...settings, hapticsGain: 3 }, updated: 20 } } },
+    restore,
+  });
+  const base = { appliedFor: null, failed: null, active: false };
+
+  it("applies a running game's profile, keeping the normal values first", () => {
+    expect(decideProfileStep({ ...base, running: A, library: withProfiles() })).toMatchObject({ kind: "apply", gameKey: A, restorePoint: "new", stamp: `${A}@10` });
+    // Already applied: nothing to do.
+    expect(decideProfileStep({ ...base, running: A, library: withProfiles(), appliedFor: `${A}@10` })).toEqual({ kind: "none" });
+    // Edited on its page (new version): applied again.
+    expect(decideProfileStep({ ...base, running: A, library: withProfiles(), appliedFor: `${A}@9` }).kind).toBe("apply");
+  });
+  it("keeps the first restore point when switching A -> B or after a crash", () => {
+    const restore = { gameKey: A, settings: normal };
+    expect(decideProfileStep({ ...base, running: B, library: withProfiles(restore) })).toMatchObject({ kind: "apply", gameKey: B, restorePoint: "rekey" });
+    expect(decideProfileStep({ ...base, running: A, library: withProfiles(restore) })).toMatchObject({ kind: "apply", restorePoint: "keep" });
+  });
+  it("restores the normal values when the game closes, crashed or not", () => {
+    expect(decideProfileStep({ ...base, running: null, library: withProfiles({ gameKey: A, settings: normal }) })).toEqual({ kind: "restore", settings: normal });
+    // Profile deleted mid-game: same.
+    const deleted = { ...withProfiles({ gameKey: A, settings: normal }), games: {} };
+    expect(decideProfileStep({ ...base, running: A, library: deleted }).kind).toBe("restore");
+    expect(decideProfileStep({ ...base, running: null, library: withProfiles(), active: true })).toEqual({ kind: "clear-active" });
+  });
+  it("doesn't retry a failed step until something changes", () => {
+    expect(decideProfileStep({ ...base, running: A, library: withProfiles(), failed: `${A}@10` })).toEqual({ kind: "none" });
+    expect(decideProfileStep({ ...base, running: null, library: withProfiles({ gameKey: A, settings: normal }), failed: "restore" })).toEqual({ kind: "none" });
+  });
+});
+
+describe("feedback staleness", () => {
+  it("compares versions numerically, prereleases first", () => {
+    expect(versionLess("0.9.0", "0.10.0")).toBe(true);
+    expect(versionLess("0.10.0", "0.9.0")).toBe(false);
+    expect(versionLess("0.9.0-beta.1", "0.9.0")).toBe(true);
+    expect(versionLess("0.9.0", "0.9.0-beta.1")).toBe(false);
+    expect(versionLess("1.2", "1.2.0")).toBe(false);
+  });
+  it("flags feedback older than a game update or one of our fixes", () => {
+    expect(staleness(undefined, {}, [])).toBeNull();
+    expect(staleness({ app: "0.9.0", build: "100" }, { buildId: "101", lastUpdated: 5 }, [])).toEqual({ kind: "game-update", at: 5 });
+    expect(staleness({ app: "0.9.0", gameUpdated: 5 }, { lastUpdated: 9 }, [])).toEqual({ kind: "game-update", at: 9 });
+    expect(staleness({ app: "0.9.0", build: "100" }, { buildId: "100" }, [])).toBeNull();
+    expect(staleness({ app: "0.9.0" }, {}, [{ title: "X", app: "0.9.1", note: "fixed" }])).toEqual({ kind: "our-fix", app: "0.9.1" });
   });
 });

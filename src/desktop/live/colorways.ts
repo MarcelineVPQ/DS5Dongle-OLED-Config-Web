@@ -13,6 +13,7 @@
 // (lineOnDark). tests/unit/colorways.test.ts enforces both. Galactic Purple,
 // Starlight Blue and Nova Pink use outlines darker/lighter than the art's,
 // which were too faint.
+import { contrast as rgbContrast, hexToRgb } from "../theme/desktopPalette";
 
 export interface ColorwayColors {
   body: string;
@@ -65,17 +66,7 @@ export const COLORWAYS: Record<string, Colorway> = {
 };
 
 // WCAG contrast ratio between two #rrggbb colors (1..21).
-export function contrast(a: string, b: string): number {
-  const lum = (hex: string) => {
-    const [r, g, b] = [1, 3, 5].map((i) => {
-      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
+export const contrast = (a: string, b: string) => rgbContrast(hexToRgb(a), hexToRgb(b));
 
 const LINE_ON_DARK_FALLBACK = "#9aa1a9";
 

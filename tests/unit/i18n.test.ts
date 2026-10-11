@@ -16,11 +16,20 @@ const keysOf = (file: string, root: string) => new Set(flat(load(file)[root], `$
 const locales = readdirSync(dir).filter((f) => f.endsWith(".json") && f !== "en.json");
 
 describe("translations", () => {
-  it("every locale has every desktop-app string that English has", () => {
-    const en = keysOf("en.json", "desktop");
+  it("every locale has exactly the strings English has, in every section", () => {
+    const roots = Object.keys(load("en.json"));
+    const all = (file: string) => new Set(roots.flatMap((r) => [...keysOf(file, r)]));
+    const en = all("en.json");
     for (const file of locales) {
-      const missing = [...en].filter((k) => !keysOf(file, "desktop").has(k));
-      expect(missing, file).toEqual([]);
+      const keys = all(file);
+      expect(
+        [...en].filter((k) => !keys.has(k)),
+        `${file} missing`,
+      ).toEqual([]);
+      expect(
+        [...keys].filter((k) => !en.has(k)),
+        `${file} extra`,
+      ).toEqual([]);
     }
   });
 

@@ -126,9 +126,16 @@ export class RunningGameWatcher {
     this.timer = setInterval(() => this.tick(), this.everyMs);
   }
 
+  // Stopping (Games consent turned off) also ends a running game's state, so
+  // the renderer restores the normal settings instead of keeping its profile.
   stop(): void {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.pending = null;
+    if (this.current !== null) {
+      this.current = null;
+      this.onChange(null);
+    }
   }
 
   tick(now = Date.now()): void {

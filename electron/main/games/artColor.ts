@@ -9,7 +9,11 @@ export function dominantColor(file: string): string | null {
   if (img.isEmpty()) return null;
   const small = img.resize({ width: 24, quality: "good" });
   const { width, height } = small.getSize();
-  const px = small.toBitmap(); // BGRA
+  return dominantColorOf(small.toBitmap(), width, height);
+}
+
+// The vote itself, on raw BGRA pixels (unit-tested without Electron).
+export function dominantColorOf(px: Uint8Array, width: number, height: number): string | null {
   const buckets = Array.from({ length: 12 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
   for (let i = 0; i < width * height; i++) {
     const b = px[i * 4];

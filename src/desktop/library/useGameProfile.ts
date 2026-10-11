@@ -27,6 +27,32 @@ export function settingsFrom(c: ConfigBody): ProfileSettings {
 const same = (a: ProfileSettings, b: ProfileSettings) => PROFILE_FIELDS.every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
 const withSettings = (c: ConfigBody, s: ProfileSettings): ConfigBody => ({ ...c, ...s }) as ConfigBody; // ranges checked by ProfileSettingsSchema
 
+// What the profile hook should do now (pure, so the switch/restore rules are
+// unit-tested): apply the running game's profile (keeping the normal values
+// as a restore point first), put the normal values back, or nothing. A step
+// that failed isn't retried until something changes (`failed`).
+export type ProfileStep =
+  | { kind: "apply"; gameKey: string; title: string; settings: ProfileSettings; stamp: string; restorePoint: "keep" | "new" | "rekey" }
+  | { kind: "restore"; settings: ProfileSettings }
+  | { kind: "clear-active" }
+  | { kind: "none" };
+
+export function decideProfileStep(s: { running: string | null; library: LibraryFile; appliedFor: string | null; failed: string | null; active: boolean }): ProfileStep {
+  const record = s.running ? s.library.games[s.running] : undefined;
+  const profile = record?.profile;
+  const restore = s.library.restore;
+  if (s.running && record && profile) {
+    const stamp = `${s.running}@${profile.updated}`;
+    if (s.appliedFor === stamp || s.failed === stamp) return { kind: "none" };
+    // A restore point already there (switching from another game, or the app
+    // restarted mid-game) still holds the normal values: keep it.
+    const restorePoint = !restore ? "new" : restore.gameKey !== s.running ? "rekey" : "keep";
+    return { kind: "apply", gameKey: s.running, title: record.title, settings: profile.settings, stamp, restorePoint };
+  }
+  if (restore) return s.failed === "restore" ? { kind: "none" } : { kind: "restore", settings: restore.settings };
+  return s.active ? { kind: "clear-active" } : { kind: "none" };
+}
+
 export interface GameProfileState {
   library: LibraryFile;
   setLibrary: (file: LibraryFile) => void;
@@ -45,6 +71,9 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   const [library, setLibrary] = useState<LibraryFile>(EMPTY_LIBRARY);
   const [loaded, setLoaded] = useState(false);
   const [running, setRunning] = useState<string | null>(null);
+  // Whether the running game is known yet (so a restore point isn't undone at
+  // startup before we learn the game is still running).
+  const [runningKnown, setRunningKnown] = useState(false);
   const [active, setActive] = useState<{ gameKey: string; title: string } | null>(null);
   // What this app last put on the dongle for the active profile, so a profile
   // edited on its game page is re-applied (and only then).
@@ -67,54 +96,65 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
       setLibrary(f);
       setLoaded(true);
     });
-    void desktop.gamesRunning().then(setRunning, () => undefined);
-    return desktop.onRunningGame(setRunning);
+    void desktop.gamesRunning().then(
+      (key) => {
+        setRunning(key);
+        setRunningKnown(true);
+      },
+      () => setRunningKnown(true),
+    );
+    return desktop.onRunningGame((key) => {
+      setRunning(key);
+      setRunningKnown(true);
+    });
   }, [desktop]);
 
   const { isConnected, config, operation, applyBody } = bridge;
+  // The step that failed last (an apply stamp, or "restore"), so it isn't
+  // retried on every config change; cleared when the game or connection changes.
+  const failed = useRef<string | null>(null);
   // A reconnect (dongle reboot, USB replug) loads its flash settings again.
   useEffect(() => {
     if (!isConnected) appliedFor.current = null;
-  }, [isConnected]);
+    failed.current = null;
+  }, [isConnected, running]);
 
   useEffect(() => {
-    if (!desktop || !loaded || !isConnected || !config || operation || paused) return;
-    const record = running ? library.games[running] : undefined;
-    const profile = record?.profile;
-    const restore = library.restore;
-    const stamp = profile ? `${running}@${profile.updated}` : null;
-
-    // The profile's game is running: apply it (once per profile version).
-    if (running && profile && record) {
-      if (appliedFor.current === stamp) return;
+    if (!desktop || !loaded || !runningKnown || !isConnected || !config || operation || paused) return;
+    const step = decideProfileStep({ running, library, appliedFor: appliedFor.current, failed: failed.current, active: !!active });
+    if (step.kind === "clear-active") setActive(null);
+    if (step.kind === "apply") {
       void switchOnce(async () => {
-        // Keep the player's normal values first, unless a restore point is
-        // already there (switching from another game, or the app restarted
-        // mid-game): that one still holds the normal values.
-        let file = library;
-        if (!restore) file = await desktop.librarySetRestore({ gameKey: running, settings: settingsFrom(config) });
-        else if (restore.gameKey !== running) file = await desktop.librarySetRestore({ ...restore, gameKey: running });
-        setLibrary(file);
-        if (await applyBody(withSettings(config, profile.settings))) {
-          appliedFor.current = stamp;
-          setActive({ gameKey: running, title: record.title });
+        try {
+          let file = library;
+          if (step.restorePoint === "new") file = await desktop.librarySetRestore({ gameKey: step.gameKey, settings: settingsFrom(config) });
+          else if (step.restorePoint === "rekey" && library.restore) file = await desktop.librarySetRestore({ ...library.restore, gameKey: step.gameKey });
+          setLibrary(file);
+          if (!(await applyBody(withSettings(config, step.settings)))) throw new Error("apply failed");
+          appliedFor.current = step.stamp;
+          setActive({ gameKey: step.gameKey, title: step.title });
+        } catch (cause) {
+          failed.current = step.stamp;
+          console.error("Game profile not applied", cause);
         }
       });
-      return;
     }
-
     // No profile running (the game closed, or the app started after a crash
     // mid-game): put the normal values back.
-    if (restore) {
+    if (step.kind === "restore") {
       void switchOnce(async () => {
-        if (await applyBody(withSettings(config, restore.settings))) {
+        try {
+          if (!(await applyBody(withSettings(config, step.settings)))) throw new Error("restore failed");
           setLibrary(await desktop.librarySetRestore(null));
           appliedFor.current = null;
           setActive(null);
+        } catch (cause) {
+          failed.current = "restore";
+          console.error("Normal settings not restored", cause);
         }
       });
-    } else if (active) setActive(null);
-  }, [desktop, loaded, isConnected, config, operation, paused, running, library, applyBody, active, switchOnce]);
+    }
+  }, [desktop, loaded, runningKnown, isConnected, config, operation, paused, running, library, applyBody, active, switchOnce]);
 
   const profile = active ? library.games[active.gameKey]?.profile : undefined;
   const profileDirty = !!(active && profile && config && !same(settingsFrom(config), profile.settings));

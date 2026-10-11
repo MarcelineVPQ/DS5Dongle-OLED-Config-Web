@@ -1,84 +1,117 @@
 // Calibration (protocol 1.5): stick centers, deadzones and range, trigger
-// travel and the gyro's zero, stored in the dongle and applied to what games
-// see; nothing is written to the controller. A guided run measures each from
-// the raw live input; every value can also be adjusted by hand, with the
-// corrected result previewed live. Reset puts everything back to the
-// controller's own (uncalibrated) values.
+// travel and the gyro's zero, stored in the dongle per pairing slot and
+// applied to what games see; nothing is written to the controller. A guided
+// run measures each from the raw live input (every step starts with a short
+// "get ready" pause; a step that didn't go all the way keeps the old value);
+// every value can also be adjusted by hand, with the corrected result
+// previewed live. Reset puts everything back to the controller's own
+// (uncalibrated) values.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { FEATURES2 } from "../../protocol/bridgeClient";
-import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
+import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
 import { BusyButton, Slider } from "../controls";
 
-type Step = "idle" | "center" | "edges" | "triggers" | "gyro" | "done";
-const STEP_MS: Record<Exclude<Step, "idle" | "done">, number> = { center: 2000, edges: 5000, triggers: 4000, gyro: 2500 };
-const ORDER: Array<Exclude<Step, "idle" | "done">> = ["center", "edges", "triggers", "gyro"];
+type Measure = "center" | "edges" | "triggers" | "gyro";
+type Step = "idle" | "done" | { measure: Measure; ready: boolean };
+const STEP_MS: Record<Measure, number> = { center: 2000, edges: 5000, triggers: 4000, gyro: 2500 };
+const READY_MS = 1500; // time to read the instruction and get into position
+const GYRO_SETTLE_MS = 500; // the first moments of the gyro step are ignored
+const ORDER: Measure[] = ["center", "edges", "triggers", "gyro"];
 
-export function supportsCalibration(identity: UseDs5BridgeResult["identity"]): boolean {
-  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= 5) && (identity.features2 & FEATURES2.calibration) !== 0;
-}
+export const supportsCalibration = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 5, FEATURES2.calibration);
 
 export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeResult; input: InputReport | null }) {
   const { t } = useTranslation();
   const client = bridge.client;
+  const supported = supportsCalibration(bridge.identity);
+  const [slot, setSlot] = useState(0);
   const [saved, setSaved] = useState<Cal | null>(null);
   const [draft, setDraft] = useState<Cal>(DEFAULT_CALIBRATION);
   const [step, setStep] = useState<Step>("idle");
+  const [missed, setMissed] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loadTry, setLoadTry] = useState(0);
 
+  // The slot in use now; reloads when the controller (slot) changes.
+  const currentSlot = bridge.identity?.currentSlot;
   useEffect(() => {
-    if (!client) return;
-    void client.readCalibration().then((c) => {
-      setSaved(c);
-      setDraft(c);
-    });
-  }, [client]);
+    if (!client || !supported) return;
+    let live = true;
+    client
+      .readCalibration()
+      .then(({ slot: s, calibration }) => {
+        if (!live) return;
+        setSlot(s);
+        setSaved(calibration);
+        setDraft(calibration);
+        setError(null);
+      })
+      .catch((cause) => live && setError(errorText(cause)));
+    return () => {
+      live = false;
+    };
+  }, [client, supported, currentSlot, loadTry]);
 
-  // Guided run: each step samples the raw input for a moment, then fits.
-  const samples = useRef<InputReport[]>([]);
+  // Guided run: a pause to get ready, then sample the raw input and fit.
+  const samples = useRef<Array<{ at: number; r: InputReport }>>([]);
   const latest = useRef(input);
-  latest.current = input;
+  useEffect(() => {
+    latest.current = input;
+  }, [input]);
   useEffect(() => {
     if (step === "idle" || step === "done") return;
+    const { measure, ready } = step;
+    if (!ready) {
+      const go = setTimeout(() => setStep({ measure, ready: true }), READY_MS);
+      return () => clearTimeout(go);
+    }
     samples.current = [];
-    const id = setInterval(() => latest.current && samples.current.push(latest.current), 33);
+    const start = performance.now();
+    const id = setInterval(() => latest.current && samples.current.push({ at: performance.now() - start, r: latest.current }), 33);
     const done = setTimeout(() => {
       clearInterval(id);
-      const s = samples.current;
-      if (s.length < 5) {
+      const all = samples.current.map((x) => x.r);
+      if (all.length < 5) {
         setError(t("desktop.calib.noInput"));
         setStep("idle");
         return;
       }
+      const miss: string[] = [];
       setDraft((d) => {
         const next = structuredClone(d);
-        if (step === "center") {
-          next.sticks[0] = { ...next.sticks[0], ...fitCenter(s.map((r) => [r.leftStick.x, r.leftStick.y])) };
-          next.sticks[1] = { ...next.sticks[1], ...fitCenter(s.map((r) => [r.rightStick.x, r.rightStick.y])) };
-        } else if (step === "edges") {
-          next.sticks[0].outer = fitOuter(
-            s.map((r) => [r.leftStick.x, r.leftStick.y]),
-            next.sticks[0].cx,
-            next.sticks[0].cy,
-          );
-          next.sticks[1].outer = fitOuter(
-            s.map((r) => [r.rightStick.x, r.rightStick.y]),
-            next.sticks[1].cx,
-            next.sticks[1].cy,
-          );
-        } else if (step === "triggers") {
-          next.triggers = [fitTrigger(s.map((r) => r.triggerLeft)), fitTrigger(s.map((r) => r.triggerRight))];
+        if (measure === "center") {
+          next.sticks[0] = { ...next.sticks[0], ...fitCenter(all.map((r) => [r.leftStick.x, r.leftStick.y])) };
+          next.sticks[1] = { ...next.sticks[1], ...fitCenter(all.map((r) => [r.rightStick.x, r.rightStick.y])) };
+        } else if (measure === "edges") {
+          ([0, 1] as const).forEach((i) => {
+            const pts = all.map((r): [number, number] => (i === 0 ? [r.leftStick.x, r.leftStick.y] : [r.rightStick.x, r.rightStick.y]));
+            const outer = fitOuter(pts, next.sticks[i].cx, next.sticks[i].cy);
+            if (outer === null) miss.push(t(i === 0 ? "desktop.calib.leftStick" : "desktop.calib.rightStick"));
+            else next.sticks[i].outer = outer;
+          });
+        } else if (measure === "triggers") {
+          ([0, 1] as const).forEach((i) => {
+            const fit = fitTrigger(all.map((r) => (i === 0 ? r.triggerLeft : r.triggerRight)));
+            if (fit === null) miss.push(i === 0 ? "L2" : "R2");
+            else next.triggers[i] = fit;
+          });
         } else {
-          const avg = (k: "gyroX" | "gyroY" | "gyroZ") => Math.round(s.reduce((a, r) => a + r[k], 0) / s.length);
-          next.gyro = [avg("gyroX"), avg("gyroY"), avg("gyroZ")];
+          // Report order (offsets 15, 17, 19): gyroX, gyroZ, gyroY.
+          const still = samples.current.filter((x) => x.at >= GYRO_SETTLE_MS).map(({ r }): [number, number, number] => [r.gyroX, r.gyroZ, r.gyroY]);
+          const fit = still.length >= 5 ? fitGyro(still) : null;
+          if (fit === null) miss.push(t("desktop.calib.gyro"));
+          else next.gyro = fit;
         }
         return normalizeCalibration(next);
       });
-      const i = ORDER.indexOf(step);
-      setStep(i + 1 < ORDER.length ? ORDER[i + 1] : "done");
-    }, STEP_MS[step]);
+      if (miss.length) setMissed((m) => [...m, ...miss]);
+      const i = ORDER.indexOf(measure);
+      setStep(i + 1 < ORDER.length ? { measure: ORDER[i + 1], ready: false } : "done");
+    }, STEP_MS[measure]);
     return () => {
       clearInterval(id);
       clearTimeout(done);
@@ -86,7 +119,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   }, [step, t]);
 
   if (!client) return null;
-  if (!supportsCalibration(bridge.identity)) {
+  if (!supported) {
     return (
       <section className="dk-card">
         <h2>{t("desktop.calib.title")}</h2>
@@ -99,12 +132,13 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   const save = async (c: Cal) => {
     setError(null);
     try {
-      await client.setCalibration(c);
+      await client.setCalibration(slot, c);
       const back = await client.readCalibration();
-      setSaved(back);
-      setDraft(back);
+      setSlot(back.slot);
+      setSaved(back.calibration);
+      setDraft(back.calibration);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(errorText(cause));
     }
   };
   const editStick = (i: 0 | 1, patch: Partial<Cal["sticks"][0]>) =>
@@ -113,6 +147,11 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
       next.sticks[i] = { ...next.sticks[i], ...patch };
       return normalizeCalibration(next);
     });
+  const begin = () => {
+    setMissed([]);
+    setError(null);
+    setStep({ measure: "center", ready: false });
+  };
 
   const running = step !== "idle" && step !== "done";
   return (
@@ -120,21 +159,27 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
       <section className="dk-card">
         <h2>{t("desktop.calib.title")}</h2>
         <p className="dk-hint">{t("desktop.calib.intro")}</p>
+        <p className="dk-hint">{t("desktop.calib.forSlot", { slot })}</p>
         {running ? (
           <div className="calib-step" role="status">
             <b>
-              {ORDER.indexOf(step as never) + 1}/{ORDER.length} · {t(`desktop.calib.step.${step}`)}
+              {ORDER.indexOf(step.measure) + 1}/{ORDER.length} · {t(`desktop.calib.step.${step.measure}`)}
             </b>
-            <span className="calib-progress" key={step} style={{ animationDuration: `${STEP_MS[step as keyof typeof STEP_MS]}ms` }} />
+            {step.ready ? (
+              <span className="calib-progress" key={step.measure} style={{ animationDuration: `${STEP_MS[step.measure]}ms` }} />
+            ) : (
+              <span className="dk-hint">{t("desktop.calib.getReady")}</span>
+            )}
           </div>
         ) : (
           <div className="dk-row-btns">
-            <button type="button" className="dk-btn primary" disabled={!input} onClick={() => setStep("center")}>
+            <button type="button" className="dk-btn primary" disabled={!input} onClick={begin}>
               {step === "done" ? t("desktop.calib.again") : t("desktop.calib.start")}
             </button>
           </div>
         )}
-        {step === "done" && <p className="dk-good">✓ {t("desktop.calib.measured")}</p>}
+        {step === "done" && !missed.length && <p className="dk-good">✓ {t("desktop.calib.measured")}</p>}
+        {step === "done" && missed.length > 0 && <p className="dk-bad">{t("desktop.calib.missed", { parts: missed.join(", ") })}</p>}
         {!input && <p className="dk-hint">{t("desktop.calib.needsController")}</p>}
       </section>
 
@@ -149,7 +194,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
               <StickDot label={t("desktop.calib.raw")} x={raw.x} y={raw.y} deadzone={s.deadzone} cx={s.cx} cy={s.cy} />
               <StickDot label={t("desktop.calib.corrected")} x={cxOut} y={cyOut} />
             </div>
-            <Slider label={t("desktop.calib.deadzone")} sub={t("desktop.calib.deadzoneSub")} value={s.deadzone} min={0} max={40} step={1} onChange={(v) => editStick(i as 0 | 1, { deadzone: v })} />
+            <Slider label={t("desktop.calib.deadzone")} sub={t("desktop.calib.deadzoneSub")} value={s.deadzone} min={0} max={64} step={1} onChange={(v) => editStick(i as 0 | 1, { deadzone: v })} />
             <Slider label={t("desktop.calib.outer")} sub={t("desktop.calib.outerSub")} value={s.outer} min={64} max={128} step={1} onChange={(v) => editStick(i as 0 | 1, { outer: v })} />
             <p className="dk-hint dk-mono">{t("desktop.calib.center", { x: s.cx, y: s.cy })}</p>
           </section>
@@ -169,7 +214,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         })}
         <h2>{t("desktop.calib.gyro")}</h2>
         <p className="dk-mono">
-          {t("desktop.calib.gyroZero")} {draft.gyro.join(" · ")}
+          {t("desktop.calib.gyroZero")} {draft.gyro.every((g) => g === 0) ? "—" : draft.gyro.join(" · ")}
         </p>
       </section>
 
@@ -181,12 +226,21 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           <button type="button" className="dk-btn" disabled={!changed || running} onClick={() => saved && setDraft(saved)}>
             {t("desktop.calib.revert")}
           </button>
-          <BusyButton className="dk-btn danger" disabled={running} onClick={() => save(DEFAULT_CALIBRATION)}>
+          <BusyButton className="dk-btn danger" disabled={running || saved === null} onClick={() => save(DEFAULT_CALIBRATION)}>
             {t("desktop.calib.reset")}
           </BusyButton>
         </div>
         <p className="dk-hint">{t("desktop.calib.saveHint")}</p>
-        {error && <p className="dk-hint">{error}</p>}
+        {error && (
+          <p className="dk-bad">
+            {error}{" "}
+            {saved === null && (
+              <button type="button" className="dk-btn" onClick={() => setLoadTry((n) => n + 1)}>
+                {t("desktop.calib.retry")}
+              </button>
+            )}
+          </p>
+        )}
       </section>
     </>
   );

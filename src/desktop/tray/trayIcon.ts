@@ -6,6 +6,7 @@
 // Drawn in the renderer (it has a canvas) and handed to the main process as a
 // PNG data URL.
 import controllerUrl from "./controller-solid.png";
+import { PALETTES } from "../colorVision";
 
 export type TrayDot = "ok" | "away" | "none";
 
@@ -16,7 +17,9 @@ export interface TrayIconSpec {
   charging: boolean;
 }
 
-const DOT_COLORS: Record<TrayDot, string> = { ok: "#22c55e", away: "#f59e0b", none: "#64748b" };
+// The standard status colors (the taskbar isn't themed, so no color-vision swap).
+const STATUS = PALETTES.standard;
+const DOT_COLORS: Record<TrayDot, string> = { ok: STATUS.good, away: STATUS.warn, none: STATUS.muted };
 const INK = { onDark: "#eef0f2", onLight: "#1f2328" };
 // Touchpad box in fractions of the art (measured on the 4k source).
 const TOUCHPAD = { x0: 0.3, y0: 0.035, x1: 0.7, y1: 0.3 };

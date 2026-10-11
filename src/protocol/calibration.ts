@@ -1,9 +1,10 @@
-// Stick / trigger / gyro calibration kept in the dongle (protocol 1.5): the
-// 18-byte body the firmware stores (src/calib.h there), its defaults, and the
-// same correction math, so the app can preview the result. Get 0xEE, set
-// 0xF6 func 0x0D ['C','L',ver, body].
+// Stick / trigger / gyro calibration kept in the dongle (protocol 1.5), one
+// per pairing slot: the 18-byte body the firmware stores (src/calib.h there),
+// its defaults, and the same correction math, so the app can preview the
+// result. Get 0xEE ([slot in use] + body), set 0xF6 func 0x0D
+// ['C','L',ver, slot, body].
 
-export const CALIB_PROTO_VER = 1;
+export const CALIB_PROTO_VER = 2;
 export const CALIB_BODY_SIZE = 18;
 
 export interface StickCal {
@@ -19,7 +20,11 @@ export interface TriggerCal {
 export interface Calibration {
   sticks: [StickCal, StickCal]; // left, right
   triggers: [TriggerCal, TriggerCal]; // L2, R2
-  gyro: [number, number, number]; // zero offset
+  // The raw gyro reading at rest, in report order (offsets 15, 17, 19 = the
+  // InputReport's gyroX, gyroZ, gyroY); 0, 0, 0 = not calibrated. The dongle
+  // subtracts only what's left after the controller's factory bias, which
+  // games already remove.
+  gyro: [number, number, number];
 }
 
 export const DEFAULT_CALIBRATION: Calibration = {
@@ -79,16 +84,32 @@ export function decodeCalibration(bytes: Uint8Array): Calibration {
   return { sticks: [stick(0), stick(1)], triggers: [trigger(0), trigger(1)], gyro: [0, 1, 2].map((i) => v.getInt16(12 + i * 2, true)) as [number, number, number] };
 }
 
-// The firmware's correction (src/calib.cpp), for the live preview.
+const IDENTITY_STICK: StickCal = DEFAULT_CALIBRATION.sticks[0];
+const isIdentityStick = (s: StickCal) => s.cx === 0 && s.cy === 0 && s.deadzone === 0 && s.outer === IDENTITY_STICK.outer;
+
+// The firmware's correction (src/calib.cpp stick()), for the live preview:
+// center offset, each half-axis normalized to its own reach (the side the
+// center leans toward has less travel), a radial deadzone, full tilt at 0 and
+// 255. An untouched stick passes through unchanged.
 export function correctStick(x: number, y: number, s: StickCal): [number, number] {
+  if (isIdentityStick(s)) return [x, y];
   const dx = x - 128 - s.cx;
   const dy = y - 128 - s.cy;
-  const mag = Math.hypot(dx, dy);
-  if (mag <= s.deadzone) return [128, 128];
-  const scaled = Math.min(127, ((mag - s.deadzone) / (s.outer - s.deadzone)) * 127);
-  return [clamp(128 + (dx / mag) * scaled, 0, 255), clamp(128 + (dy / mag) * scaled, 0, 255)];
+  const nx = dx / Math.min(s.outer, dx >= 0 ? 127 - s.cx : 128 + s.cx);
+  const ny = dy / Math.min(s.outer, dy >= 0 ? 127 - s.cy : 128 + s.cy);
+  const mag = Math.hypot(nx, ny);
+  const dz = s.deadzone / s.outer;
+  if (mag <= dz) return [128, 128];
+  const k = Math.min(1, (mag - dz) / (1 - dz)) / mag;
+  const out = (n: number) => clamp(128 + n * k * (n >= 0 ? 127 : 128), 0, 255);
+  return [out(nx), out(ny)];
 }
-export const correctTrigger = (v: number, t: TriggerCal) => clamp(((v - t.lo) * 255) / (t.hi - t.lo), 0, 255);
+export const correctTrigger = (v: number, t: TriggerCal) => (t.lo === 0 && t.hi === 255 ? v : clamp(((v - t.lo) * 255) / (t.hi - t.lo), 0, 255));
+
+// The least travel a guided step must see to count; less means the stick or
+// trigger wasn't pushed all the way, and the old value is kept.
+export const MIN_STICK_REACH = 100;
+export const MIN_TRIGGER_TRAVEL = 180;
 
 // From samples taken while the stick rests: its center, and a deadzone just
 // past its jitter (at least 4).
@@ -99,13 +120,27 @@ export function fitCenter(samples: Array<[number, number]>): Pick<StickCal, "cx"
   return { cx: Math.round(cx), cy: Math.round(cy), deadzone: Math.max(4, Math.ceil(jitter + 2)) };
 }
 // From samples while the stick circles its edge: the radius it actually
-// reaches (a little inside, so full tilt is reliable).
-export function fitOuter(samples: Array<[number, number]>, cx: number, cy: number): number {
+// reaches (a little inside, so full tilt is reliable); null if it never got
+// near the edge.
+export function fitOuter(samples: Array<[number, number]>, cx: number, cy: number): number | null {
   const r = Math.max(...samples.map(([x, y]) => Math.hypot(x - 128 - cx, y - 128 - cy)));
-  return clamp(r * 0.97, 64, 128);
+  return r < MIN_STICK_REACH ? null : clamp(r * 0.97, 64, 128);
 }
-export function fitTrigger(samples: number[]): TriggerCal {
+// The trigger's travel; null if it wasn't pressed all the way.
+export function fitTrigger(samples: number[]): TriggerCal | null {
   const lo = Math.min(...samples);
   const hi = Math.max(...samples);
+  if (hi - lo < MIN_TRIGGER_TRAVEL) return null;
   return { lo: lo > 0 ? lo + 2 : 0, hi: hi < 255 ? hi - 2 : 255 };
+}
+// The gyro at rest, in report order ([x, z, y] of the InputReport); null if
+// the controller moved (spread over GYRO_STILL counts on any axis).
+export const GYRO_STILL = 40;
+export function fitGyro(samples: Array<[number, number, number]>): [number, number, number] | null {
+  const axis = (i: number) => samples.map((s) => s[i]);
+  for (let i = 0; i < 3; i++) if (Math.max(...axis(i)) - Math.min(...axis(i)) > GYRO_STILL) return null;
+  const avg = [0, 1, 2].map((i) => Math.round(axis(i).reduce((a, v) => a + v, 0) / samples.length)) as [number, number, number];
+  // 0, 0, 0 means "not calibrated" to the firmware.
+  if (avg[0] === 0 && avg[1] === 0 && avg[2] === 0) avg[2] = 1;
+  return avg;
 }

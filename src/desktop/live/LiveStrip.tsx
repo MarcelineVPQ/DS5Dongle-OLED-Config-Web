@@ -25,6 +25,7 @@ export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar
   const quality = rssi === null ? null : signalQuality(rssi);
   const player = playerNumber(id.playerLeds);
   const mode = LIGHTBAR_MODES.find((m) => m.value === lightbarMode);
+  const swatch = lightbar ? `rgb(${lightbar.join(", ")})` : null; // theme-exempt: the real lightbar color
   return (
     <div className="live-strip">
       <div className="live-tile">
@@ -42,7 +43,7 @@ export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar
         <span className="live-tile-label">{t("desktop.overview.signal", "Signal")}</span>
       </div>
       <button type="button" className="live-tile live-tile-button" onClick={onLightbar} title={t("desktop.live.part.lightbar", "Lightbar")}>
-        <span className="live-swatch" aria-hidden="true" style={lightbar ? { background: `rgb(${lightbar.join(", ")})`, color: `rgb(${lightbar.join(", ")})` } : undefined} />
+        <span className="live-swatch" aria-hidden="true" style={swatch ? { background: swatch, color: swatch } : undefined} />
         <span className="live-tile-value">{mode ? t(`desktop.lightbar.modes.${mode.key}`, mode.label) : "—"}</span>
         <span className="live-tile-label">{t("desktop.live.part.lightbar", "Lightbar")}</span>
       </button>

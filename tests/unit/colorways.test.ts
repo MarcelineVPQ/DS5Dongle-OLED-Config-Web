@@ -4,6 +4,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { COLORWAYS, colorway, contrast, lineOnDark } from "../../src/desktop/live/colorways";
+import { controllerSurfaces } from "../../src/desktop/live/controllerAccent";
+import { contrast as rgbContrast, wantsLightInk } from "../../src/desktop/theme/desktopPalette";
 
 const painted = Object.entries(COLORWAYS).filter(([, c]) => c.colors);
 
@@ -35,5 +37,23 @@ describe("colorways", () => {
   it("computes contrast like WCAG", () => {
     expect(contrast("#000000", "#ffffff")).toBeCloseTo(21, 0);
     expect(contrast("#777777", "#777777")).toBe(1);
+  });
+});
+
+describe("controller theme legibility (every colorway)", () => {
+  const rgbOf = (v: string) => v.match(/\d+/g)!.slice(0, 3).map(Number) as [number, number, number];
+  it.each(Object.keys(COLORWAYS))("colorway %s: readable text and a visible accent on its own body color", (code) => {
+    const v = controllerSurfaces(code)!;
+    const panel = rgbOf(v["--bg-panel"]);
+    // 7:1 where the body allows it; mid-tone bodies can't reach it even with
+    // pure black or white, so then the best possible ink (always >= 4.5:1, WCAG AA).
+    const best = Math.max(rgbContrast([255, 255, 255], panel), rgbContrast([0, 0, 0], panel));
+    expect(rgbContrast(rgbOf(v["--text-strong"]), panel)).toBeGreaterThanOrEqual(Math.min(7, best) - 0.01);
+    expect(best).toBeGreaterThanOrEqual(4.5);
+    expect(rgbContrast(rgbOf(v["--text-muted"]), panel)).toBeGreaterThanOrEqual(4.5);
+    expect(rgbContrast(rgbOf(v["--dk-accent"]), panel)).toBeGreaterThanOrEqual(3);
+    // Text stays on the ink side the body calls for (never pushed the wrong way).
+    const ink = wantsLightInk(panel) ? 255 : 0;
+    expect(Math.abs(rgbOf(v["--text-strong"])[0] - ink)).toBeLessThan(128);
   });
 });

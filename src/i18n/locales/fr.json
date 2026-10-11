@@ -20,7 +20,6 @@
     "noDevice": "Aucun appareil"
   },
   "statusText": {
-    "webhidUnavailable": "WebHID indisponible",
     "ready": "Prêt à se connecter",
     "unsaved": "Modifications non enregistrées",
     "applied": "Appliqué à l'appareil",
@@ -925,7 +924,11 @@
       "save": "Enregistrer sur le dongle",
       "revert": "Annuler",
       "reset": "Revenir au non calibré",
-      "saveHint": "Enregistré dans la mémoire du dongle ; s'applique tout de suite à tous les jeux."
+      "saveHint": "Enregistré dans la mémoire du dongle ; s'applique tout de suite à tous les jeux.",
+      "forSlot": "Pour la manette de l'emplacement {{slot}} ; chaque emplacement garde le sien.",
+      "getReady": "Préparez-vous…",
+      "missed": "Non mesuré, les anciennes valeurs sont conservées : {{parts}}. Allez jusqu'au bout et mesurez à nouveau.",
+      "retry": "Réessayer"
     },
     "dash": {
       "pico": "Pico 2 W",
@@ -960,7 +963,8 @@
       "wakeOnInput": "Se réveille avec la manette",
       "never": "jamais",
       "yes": "oui",
-      "no": "non"
+      "no": "non",
+      "minutes": "{{n}} min"
     },
     "hdr": {
       "label": "Éclairage HDR (expérimental)",

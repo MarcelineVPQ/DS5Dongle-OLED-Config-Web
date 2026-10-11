@@ -58,7 +58,7 @@ export default function HdrTest() {
       <p className="dk-hint">{t("desktop.dev.hdrHint", { state: hdr ? t("desktop.dev.hdrYes") : t("desktop.dev.hdrNo") })}</p>
       <div className="hdr-swatches">
         <figure className="hdr-swatch">
-          <div style={{ background: "#ffffff" }} />
+          <div style={{ background: "#ffffff" /* theme-exempt: the SDR white reference */ }} />
           <figcaption>{t("desktop.dev.hdrReference")}</figcaption>
         </figure>
         <figure className="hdr-swatch">

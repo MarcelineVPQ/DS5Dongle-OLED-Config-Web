@@ -5,9 +5,8 @@
 // firmware draws the same frames whether or not a panel is fitted.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame } from "../../protocol/bridgeClient";
+import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
-import { usePoll } from "../usePoll";
 
 const FB_W = 128;
 const FB_H = 64;
@@ -17,28 +16,30 @@ const RETRY_MS = 2000;
 const ON: [number, number, number] = [220, 230, 255];
 const OFF: [number, number, number] = [6, 8, 14];
 
-export function supportsOledMirror(identity: BridgeIdentity | null): boolean {
-  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= 4) && (identity.features2 & FEATURES2.oledMirror) !== 0;
-}
+export const supportsOledMirror = (identity: BridgeIdentity | null) => supportsFeature2(identity, 4, FEATURES2.oledMirror);
 
 type Pane = "screen" | "log";
 interface LogLine {
+  id: number; // increasing, so "unread" still works once the log is full
   at: number;
   text: string;
 }
 
-export default function DongleConsole({ client, identity, controllerOn }: { client: Ds5BridgeClient | null; identity: BridgeIdentity | null; controllerOn: boolean }) {
+// `identity` is the page's own 1 Hz poll and `frame` its mirror poll
+// (useOledFrame, shared with the dashboard), so the console adds no USB
+// traffic of its own.
+export default function DongleConsole({ client, identity, controllerOn, frame }: { client: Ds5BridgeClient | null; identity: BridgeIdentity | null; controllerOn: boolean; frame: OledFrameState }) {
   const { t } = useTranslation();
   const [pane, setPane] = useState<Pane>("screen");
   const capable = supportsOledMirror(identity);
-  const frame = useOledFrame(client, capable && pane === "screen");
   const log = useDongleLog(client, identity, controllerOn);
   const [unread, setUnread] = useState(false);
   const seen = useRef(0);
+  const newest = log.at(-1)?.id ?? 0;
   useEffect(() => {
-    if (pane === "log") seen.current = log.length;
-    else if (log.length > seen.current) setUnread(true);
-  }, [log.length, pane]);
+    if (pane === "log") seen.current = newest;
+    else if (newest > seen.current) setUnread(true);
+  }, [newest, pane]);
 
   const screenName = frame.frame ? (SCREEN_NAMES[frame.frame.screen] ?? `#${frame.frame.screen}`) : null;
   const status = !client
@@ -100,8 +101,8 @@ export default function DongleConsole({ client, identity, controllerOn }: { clie
         </div>
       ) : (
         <div className="dcon-pane dcon-log" role="log" aria-live="polite">
-          {log.map((l, i) => (
-            <div key={i} className="dcon-row">
+          {log.map((l) => (
+            <div key={l.id} className="dcon-row">
               <span className="dcon-time">{new Date(l.at).toLocaleTimeString()}</span> {l.text}
             </div>
           ))}
@@ -114,7 +115,11 @@ export default function DongleConsole({ client, identity, controllerOn }: { clie
 
 // Polls the mirror while visible; after a failed read it waits before trying
 // again and keeps the last good frame (shown as "not available").
-function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean) {
+export interface OledFrameState {
+  frame: OledFrame | null;
+  error: boolean;
+}
+export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): OledFrameState {
   const [frame, setFrame] = useState<OledFrame | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -196,9 +201,13 @@ function OledCanvas({ frame }: { frame: OledFrame | null }) {
 function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity | null, controllerOn: boolean): LogLine[] {
   const { t } = useTranslation();
   const [lines, setLines] = useState<LogLine[]>([]);
-  const add = (text: string) => setLines((l) => [...l.slice(-199), { at: Date.now(), text }]);
+  const nextId = useRef(1);
+  const add = (text: string) => {
+    const id = nextId.current++;
+    setLines((l) => [...l.slice(-199), { id, at: Date.now(), text }]);
+  };
   const prev = useRef<{ client: boolean; on: boolean; slot: number | null; battery: number | null; unsaved: boolean | null; charging: boolean } | null>(null);
-  const status = usePoll(async () => (client ? client.identity() : null), 1000, Boolean(client)).value ?? identity;
+  const status = identity;
   useEffect(() => {
     const now = { client: !!client, on: controllerOn, slot: status?.currentSlot ?? null, battery: status?.battery ?? null, unsaved: status?.unsaved ?? null, charging: status?.charging ?? false };
     const p = prev.current;

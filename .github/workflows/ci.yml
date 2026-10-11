@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: $NPM ci
       - name: ESLint
-        run: npx eslint . --max-warnings=11
+        run: npx eslint . --max-warnings=1
       - name: Prettier
         run: npx prettier --check .
       - name: Electron security gate

@@ -3,8 +3,9 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
-import { scopedAccent } from "../live/controllerAccent";
+import { onAccentChange, scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
 import { settingsFrom } from "./useGameProfile";
 import { useTranslation } from "react-i18next";
@@ -33,6 +34,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement>(null);
   const support = supportOf(game);
+  const mineState = useMine(game, info, record, onLibrary);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
   // A stat that points at a frame: bring it into view and flash it, so the
   // click always shows something even when the frame is already on screen.
@@ -46,18 +48,38 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   };
   // The page takes the game's artwork color as its accent (the rest of the
   // app keeps the controller's); same legibility rules, scoped to the page.
+  // Recomputed when the theme, the controller tint or the look changes (the
+  // page's cards are mixed from the panel color those set).
+  const [artColor, setArtColor] = useState<string | null>(null);
   const [accent, setAccent] = useState<Record<string, string> | null>(null);
   useEffect(() => {
     let live = true;
-    setAccent(null);
     void window
       .desktop!.gameArtColor(game.key)
-      .then((c) => live && setAccent(scopedAccent(c, scroller.current)))
+      .then((c) => live && setArtColor(c))
       .catch(() => undefined);
     return () => {
       live = false;
     };
   }, [game.key]);
+  useEffect(() => {
+    if (!artColor) return;
+    const el = scroller.current;
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setAccent(scopedAccent(artColor, el)));
+    };
+    update();
+    const mo = new MutationObserver(update);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme"] });
+    const off = onAccentChange(update);
+    return () => {
+      mo.disconnect();
+      off();
+      cancelAnimationFrame(frame);
+    };
+  }, [artColor]);
   // The window's background shows this game's art while its page is open.
   useEffect(() => {
     setBackdropGame(info?.art.includes("hero") ? game.key : null);
@@ -96,7 +118,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <div className="gp-col">
           <ProfileFrame game={game} record={record} running={running} bridge={bridge} onLibrary={onLibrary} />
           <SetupFrame game={game} onRescan={onRescan} />
-          <RatingFrame game={game} info={info} record={record} onLibrary={onLibrary} />
+          <RatingFrame game={game} info={info} mineState={mineState} />
           <section className="dk-card" id="gp-reviews">
             <h2>{t("desktop.library.section.reviews")}</h2>
             <p className="dk-hint">{t("desktop.library.reviewsSoon")}</p>
@@ -109,7 +131,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <div className="gp-col">
           <CompatFrame game={game} report={report} onRescan={onRescan} />
           <SupportFrame game={game} />
-          <NotesFrame game={game} info={info} record={record} onLibrary={onLibrary} />
+          <NotesFrame mineState={mineState} />
           <DetailsFrame game={game} info={info} />
         </div>
       </div>
@@ -147,24 +169,28 @@ function Stat({ label, value, accent, onClick }: { label: string; value: string;
 function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: GameEntry; record?: GameRecord; running: boolean; bridge: UseDs5BridgeResult; onLibrary: (f: LibraryFile) => void }) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
-  const saved = record?.profile?.settings;
-  const [draft, setDraft] = useState<ProfileSettings | null>(saved ?? null);
-  useEffect(() => {
-    setDraft(saved ?? null);
-  }, [game.key, saved]);
   const current = bridge.config ? settingsFrom(bridge.config) : null;
 
   // Every edit is stored (debounced); applying it to the dongle while the
   // game runs is the profile hook's job.
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const edit = (patch: Partial<ProfileSettings>) => {
-    if (!draft) return;
-    const next = { ...draft, ...patch };
-    setDraft(next);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => void desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: next }).then(onLibrary), 400);
+  const {
+    value: draft,
+    set,
+    cancel,
+  } = useDebouncedSave<ProfileSettings | null>(
+    record?.profile?.settings ?? null,
+    (next) => (next ? desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: next }).then(onLibrary) : Promise.resolve()),
+    400,
+  );
+  const edit = (patch: Partial<ProfileSettings>) => draft && set({ ...draft, ...patch });
+  const create = (from: ProfileSettings) => {
+    cancel();
+    void desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: from }).then(onLibrary);
   };
-  const create = (from: ProfileSettings) => void desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: from }).then(onLibrary);
+  const remove = () => {
+    cancel();
+    void desktop.libraryDeleteProfile(game.key).then(onLibrary);
+  };
 
   return (
     <section className="dk-card" id="gp-profile">
@@ -235,7 +261,7 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
             <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create(current)}>
               {t("desktop.library.profileCopyCurrent")}
             </button>
-            <button type="button" className="dk-btn danger" onClick={() => void desktop.libraryDeleteProfile(game.key).then(onLibrary)}>
+            <button type="button" className="dk-btn danger" onClick={remove}>
               {t("desktop.library.profileDelete")}
             </button>
           </div>
@@ -252,10 +278,6 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    setConfirm(false);
-    setNote(null);
-  }, [game.key]);
   const apply = async () => {
     setBusy(true);
     try {
@@ -404,27 +426,23 @@ function SupportFrame({ game }: { game: GameEntry }) {
 }
 
 // ---- The player's own rating and notes (local; sharing comes later) ----
-function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void) {
-  const [mine, setMine] = useState<Mine>(record?.mine ?? {});
+// One copy per page, shared by the Rating and Notes frames: the library
+// stores the whole record, so two copies would overwrite each other's fields.
+type MineState = readonly [Mine, (patch: Partial<Mine>) => void];
+function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void): MineState {
   const app = window.desktop!.appVersion;
-  useEffect(() => {
-    setMine(record?.mine ?? {});
-  }, [game.key, record?.mine]);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { value: mine, set } = useDebouncedSave<Mine>(record?.mine ?? {}, (next) => window.desktop!.librarySetMine({ gameKey: game.key, title: game.title, mine: next }).then(onLibrary), 500);
   const update = (patch: Partial<Mine>) => {
     // A rating or feedback change re-stamps what it was given on.
     const stamp = ("rating" in patch || "tags" in patch) && app ? { ratedOn: { app, build: info?.buildId, gameUpdated: info?.lastUpdated, at: Math.floor(Date.now() / 1000) } } : {};
-    const next = { ...mine, ...patch, ...stamp };
-    setMine(next);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => void window.desktop!.librarySetMine({ gameKey: game.key, title: game.title, mine: next }).then(onLibrary), 500);
+    set({ ...mine, ...patch, ...stamp });
   };
   return [mine, update] as const;
 }
 
-function RatingFrame({ game, info, record, onLibrary }: { game: GameEntry; info?: GameInfo; record?: GameRecord; onLibrary: (f: LibraryFile) => void }) {
+function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
   const { t } = useTranslation();
-  const [mine, update] = useMine(game, info, record, onLibrary);
+  const [mine, update] = mineState;
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
   return (
     <section className="dk-card" id="gp-rating">
@@ -475,9 +493,9 @@ function RatingFrame({ game, info, record, onLibrary }: { game: GameEntry; info?
   );
 }
 
-function NotesFrame({ game, info, record, onLibrary }: { game: GameEntry; info?: GameInfo; record?: GameRecord; onLibrary: (f: LibraryFile) => void }) {
+function NotesFrame({ mineState }: { mineState: MineState }) {
   const { t } = useTranslation();
-  const [mine, update] = useMine(game, info, record, onLibrary);
+  const [mine, update] = mineState;
   return (
     <section className="dk-card" id="gp-notes">
       <h2>{t("desktop.library.section.notes")}</h2>

@@ -23,8 +23,8 @@ export class FakeDongle implements Ds5Transport {
   config: Uint8Array = encodeConfigBody(DEFAULT_CONFIG);
   flashConfig: Uint8Array = this.config.slice();
   remap = Array.from({ length: 16 }, (_, i) => i);
-  // Calibration body (18 bytes): identity sticks, triggers 0..255, gyro 0.
-  calibration = new Uint8Array([0, 0, 0, 128, 0, 0, 0, 128, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0]);
+  // Calibration bodies (18 bytes) per pairing slot: identity sticks, triggers 0..255, gyro 0.
+  calibration = Array.from({ length: 4 }, () => new Uint8Array([0, 0, 0, 128, 0, 0, 0, 128, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0]));
   remapRevision = 0;
   slots = [true, false, false, false];
   currentSlot = 0;
@@ -69,7 +69,7 @@ export class FakeDongle implements Ds5Transport {
       case 0xf0:
         return this.input.slice(0, length);
       case 0xee:
-        return this.calibration.slice(0, length);
+        return new Uint8Array([this.currentSlot, ...this.calibration[this.currentSlot]]).slice(0, length);
       case 0xef: {
         // OLED mirror: screen on, screen 2, full contrast, a test pattern.
         const out = new Uint8Array(4 + 1024);
@@ -129,8 +129,8 @@ export class FakeDongle implements Ds5Transport {
       this.config = payload.slice(1, 1 + CONFIG_BODY_SIZE);
       this.hostGen++;
     } else if (func === 0x0d) {
-      if (payload[1] !== 0x43 || payload[2] !== 0x4c || payload[3] !== 1 || payload.length < 22) this.lastResult = RESULT.invalid;
-      else this.calibration = payload.slice(4, 22);
+      if (payload[1] !== 0x43 || payload[2] !== 0x4c || payload[3] !== 2 || payload[4] > 3 || payload.length < 23) this.lastResult = RESULT.invalid;
+      else this.calibration[payload[4]] = payload.slice(5, 23);
     } else if (func === 0x10) {
       if (payload[1] !== 0x52 || payload[2] !== 0x4d || payload.length < 20) this.lastResult = RESULT.invalid;
       else {

@@ -75,9 +75,11 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
+    let live = true;
     const img = new Image();
     img.onload = () => {
       const c = ref.current;
+      if (!live) return; // a newer image or blur setting took over
       const ctx = c?.getContext("2d");
       if (!c || !ctx) return;
       // Background blur knob: 0 = sharpest (320 px), 100 = softest (24 px).
@@ -89,6 +91,11 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
       setReady(true);
     };
     img.src = src;
+    return () => {
+      live = false;
+      img.onload = null;
+      img.src = "";
+    };
   }, [src, blurKnob]);
   return <canvas ref={ref} className={`art-bd-layer${visible && ready ? " on" : ""}`} aria-hidden="true" />;
 }
@@ -97,15 +104,17 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   const [off] = useFlagPref(BACKDROP_KEY);
   const [blur] = useKnob(knob("backdropBlur"));
   const keys = useBackdropKeys();
-  const [index, setIndex] = useState(0);
+  // The cycle position belongs to one set of games; a new set starts at 0.
+  const sig = keys.join("|");
+  const [pos, setPos] = useState({ sig, i: 0 });
+  const index = pos.sig === sig ? pos.i : 0;
   useEffect(() => {
-    setIndex(0);
     if (keys.length < 2) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % keys.length), CYCLE_MS);
+    const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
-  }, [keys]);
+  }, [sig, keys.length]);
   if (off) return null;
-  const body = colors?.body ?? "#334155";
+  const body = colors?.body ?? "var(--bg-elevated)";
   return (
     <div className="art-bd" aria-hidden="true">
       {keys.length > 0 ? (

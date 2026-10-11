@@ -75,6 +75,11 @@ export const NARRATOR_OFF = 0xff;
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
 const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed", "busy"];
 
+// A protocol 1.x addition announced in identity [29] (FEATURES2).
+export function supportsFeature2(identity: BridgeIdentity | null, minMinor: number, bit: number): boolean {
+  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity.features2 & bit) !== 0;
+}
+
 export interface BridgeIdentity {
   protoMajor: number;
   protoMinor: number;
@@ -371,13 +376,15 @@ export class Ds5BridgeClient {
     return { setKhz: view.getUint32(0, true), measuredKhz: view.getUint32(4, true), vregCode: view.getUint8(8), tempRaw: view.getUint16(9, true) };
   }
 
-  async readCalibration(): Promise<Calibration> {
-    return decodeCalibration(await this.transport.getReport(REPORT.calibration, CALIB_BODY_SIZE));
+  // The calibration of the pairing slot in use now (each slot has its own).
+  async readCalibration(): Promise<{ slot: number; calibration: Calibration }> {
+    const bytes = await this.transport.getReport(REPORT.calibration, 1 + CALIB_BODY_SIZE);
+    return { slot: bytes[0], calibration: decodeCalibration(bytes.subarray(1)) };
   }
 
-  // Stored in the dongle's flash at once; applies to what games see.
-  async setCalibration(c: Calibration): Promise<void> {
-    await this.command(FUNC.calibration, [0x43, 0x4c, CALIB_PROTO_VER, ...encodeCalibration(c)]);
+  // Stored in the dongle's flash at once, for that slot; applies to what games see.
+  async setCalibration(slot: number, c: Calibration): Promise<void> {
+    await this.command(FUNC.calibration, [0x43, 0x4c, CALIB_PROTO_VER, slot, ...encodeCalibration(c)]);
   }
 
   async readOledFrame(): Promise<OledFrame | null> {

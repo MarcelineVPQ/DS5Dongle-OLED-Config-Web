@@ -2,16 +2,15 @@
 // Pico 2 W (chip temperature, clock and core voltage as dials; USB, Bluetooth
 // and signal as graphs over the last minute; the audio pipeline's counters,
 // with anything that went wrong lit) and the OLED (what it's doing). One poll
-// a second reads everything the firmware reports (0xFB diag, 0xFC CPU, 0xF5
-// audio counters, 0xF9 RSSI, 0xEF mirror header).
-import { useRef } from "react";
+// a second reads 0xFB diag, 0xFC CPU and 0xF5 audio counters; the signal and
+// the OLED mirror come from the page's own polls (no second read of either).
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { AUDIO_COUNTER_NAMES, type AudioCounters } from "../../protocol/bridgeClient";
+import { AUDIO_COUNTER_NAMES, type AudioCounters, type OledFrame } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { adcToCelsius, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
-import { supportsOledMirror } from "./DongleConsole";
 
 const HISTORY = 60;
 
@@ -35,21 +34,21 @@ interface Sample {
 // Core voltage codes 0..15 are 0.55 V + 0.05 V steps (the firmware's CPU screen).
 const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : null);
 
-function useDongleTelemetry(bridge: UseDs5BridgeResult) {
+function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null) {
   const client = bridge.client;
-  const mirror = supportsOledMirror(bridge.identity);
   const history = useRef<Sample[]>([]);
-  const prev = useRef<{ at: number; usb: number; bt: number; loops: number; seq: number } | null>(null);
+  // seq null = no mirror frame in that sample (then no redraw rate).
+  const prev = useRef<{ at: number; usb: number; bt: number; loops: number; seq: number | null } | null>(null);
+  const latest = useRef({ frame: frameNow, rssi: rssiNow });
+  useEffect(() => {
+    latest.current = { frame: frameNow, rssi: rssiNow };
+  }, [frameNow, rssiNow]);
   const sample = usePoll(
     async () => {
       if (!client) return null;
-      const [diag, cpu, counters, rssi, frame] = await Promise.all([
-        client.readDiag(),
-        client.readCpu(),
-        client.readAudioCounters(),
-        client.readRssi().catch(() => 0),
-        mirror ? client.readOledFrame().catch(() => null) : Promise.resolve(null),
-      ]);
+      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(), client.readAudioCounters()]);
+      const { frame, rssi: rssiRead } = latest.current;
+      const rssi = rssiRead ?? 0;
       const at = performance.now();
       const p = prev.current;
       const dt = p ? (at - p.at) / 1000 : 0;
@@ -68,21 +67,22 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult) {
         hciErrors: diag.hciErrors,
         counters,
         core1Alive: !p || counters.core1Loops !== p.loops,
-        oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p ? Math.round(rate(frame.seq + (frame.seq < (p.seq & 0xff) ? 256 : 0), p.seq & 0xff)) : 0 } : null,
+        // The frame counter is 8-bit: the difference mod 256.
+        oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p && p.seq !== null && dt > 0 ? Math.round(((frame.seq - p.seq) & 0xff) / dt) : 0 } : null,
       };
-      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, loops: counters.core1Loops, seq: frame?.seq ?? 0 };
+      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, loops: counters.core1Loops, seq: frame?.seq ?? null };
       history.current = [...history.current.slice(-(HISTORY - 1)), s];
-      return s;
+      return { s, history: history.current };
     },
     1000,
     Boolean(client),
   ).value;
-  return { sample, history: history.current };
+  return { sample: sample?.s ?? null, history: sample?.history ?? [] };
 }
 
-export default function DongleDashboard({ bridge }: { bridge: UseDs5BridgeResult }) {
+export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs5BridgeResult; frame: OledFrame | null; rssi: number | null }) {
   const { t } = useTranslation();
-  const { sample: s, history } = useDongleTelemetry(bridge);
+  const { sample: s, history } = useDongleTelemetry(bridge, frame, rssi);
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
   const series = (pick: (x: Sample) => number) => history.map(pick);
@@ -133,8 +133,8 @@ export default function DongleDashboard({ bridge }: { bridge: UseDs5BridgeResult
           <Fact label={td("oledFps")} value={s?.oled ? `${s.oled.fps} /s` : "—"} />
         </div>
         <div className="dash-card dash-facts">
-          <Fact label={td("dimAfter")} value={config ? (config.screenDimTimeout ? `${config.screenDimTimeout} min` : td("never")) : "—"} />
-          <Fact label={td("offAfter")} value={config ? (config.screenOffTimeout ? `${config.screenOffTimeout} min` : td("never")) : "—"} />
+          <Fact label={td("dimAfter")} value={config ? (config.screenDimTimeout ? td("minutes", { n: config.screenDimTimeout }) : td("never")) : "—"} />
+          <Fact label={td("offAfter")} value={config ? (config.screenOffTimeout ? td("minutes", { n: config.screenOffTimeout }) : td("never")) : "—"} />
           <Fact label={td("wakeOnInput")} value={config ? (config.controllerWakesDisplay ? td("yes") : td("no")) : "—"} />
         </div>
       </div>

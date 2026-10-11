@@ -87,6 +87,7 @@ export class GamesService {
     const report = (await this.fresh()).report;
     this.lastGames = report.games;
     this.lastDetails = gameDetails(this.home);
+    this.colors.clear(); // the art may have arrived or changed since
     return report;
   }
 

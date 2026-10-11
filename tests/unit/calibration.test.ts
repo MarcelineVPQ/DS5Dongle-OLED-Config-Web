@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CALIBRATION, correctStick, correctTrigger, decodeCalibration, encodeCalibration, fitCenter, fitOuter, fitTrigger, normalizeCalibration } from "../../src/protocol/calibration";
+import {
+  DEFAULT_CALIBRATION,
+  correctStick,
+  correctTrigger,
+  decodeCalibration,
+  encodeCalibration,
+  fitCenter,
+  fitGyro,
+  fitOuter,
+  fitTrigger,
+  normalizeCalibration,
+} from "../../src/protocol/calibration";
 import { Ds5BridgeClient, FEATURES2 } from "../../src/protocol/bridgeClient";
 import { FakeDongle } from "../support/fakeDongle";
 
@@ -36,6 +47,18 @@ describe("calibration codec (protocol 1.5)", () => {
     expect(correctTrigger(4, { lo: 4, hi: 250 })).toBe(0);
     expect(correctTrigger(250, { lo: 4, hi: 250 })).toBe(255);
   });
+  it("passes an untouched stick or trigger straight through (square corners kept)", () => {
+    const id = DEFAULT_CALIBRATION.sticks[0];
+    expect(correctStick(255, 255, id)).toEqual([255, 255]);
+    expect(correctStick(0, 37, id)).toEqual([0, 37]);
+    expect(correctTrigger(77, DEFAULT_CALIBRATION.triggers[0])).toBe(77);
+  });
+  it("reaches full tilt on both sides even when the center leans to one", () => {
+    // Center leans +20 in X: the + side only has 107 of travel, the - side 148, capped by outer.
+    const s = { cx: 20, cy: 0, deadzone: 4, outer: 128 };
+    expect(correctStick(255, 128, s)[0]).toBe(255);
+    expect(correctStick(0, 128, s)[0]).toBe(0);
+  });
   it("fits center, range and trigger travel from samples", () => {
     const rest: Array<[number, number]> = [
       [131, 127],
@@ -56,14 +79,44 @@ describe("calibration codec (protocol 1.5)", () => {
     ).toBeLessThanOrEqual(128);
     expect(fitTrigger([3, 3, 120, 248])).toEqual({ lo: 5, hi: 246 });
   });
+  it("rejects a step that didn't go all the way, or a gyro that moved", () => {
+    expect(fitTrigger([0, 40, 90])).toBeNull(); // half pressed
+    expect(
+      fitOuter(
+        [
+          [180, 128],
+          [128, 80],
+        ],
+        0,
+        0,
+      ),
+    ).toBeNull(); // never near the edge
+    expect(
+      fitGyro([
+        [10, -4, 3],
+        [12, -5, 2],
+        [11, -3, 4],
+      ]),
+    ).toEqual([11, -4, 3]);
+    expect(
+      fitGyro([
+        [10, -4, 3],
+        [300, -5, 2],
+      ]),
+    ).toBeNull(); // picked up
+    expect(fitGyro([[0, 0, 0]])).toEqual([0, 0, 1]); // 0,0,0 means "not calibrated"
+  });
   it("reads and writes through the client", async () => {
     const dongle = new FakeDongle();
     const client = new Ds5BridgeClient(dongle);
     expect((await client.identity()).features2 & FEATURES2.calibration).toBe(FEATURES2.calibration);
-    expect(await client.readCalibration()).toEqual(DEFAULT_CALIBRATION);
+    expect(await client.readCalibration()).toEqual({ slot: 0, calibration: DEFAULT_CALIBRATION });
     const next = structuredClone(DEFAULT_CALIBRATION);
     next.sticks[0] = { cx: 3, cy: -2, deadzone: 6, outer: 122 };
-    await client.setCalibration(next);
-    expect(await client.readCalibration()).toEqual(next);
+    await client.setCalibration(0, next);
+    expect(await client.readCalibration()).toEqual({ slot: 0, calibration: next });
+    // Each pairing slot keeps its own.
+    dongle.currentSlot = 2;
+    expect(await client.readCalibration()).toEqual({ slot: 2, calibration: DEFAULT_CALIBRATION });
   });
 });

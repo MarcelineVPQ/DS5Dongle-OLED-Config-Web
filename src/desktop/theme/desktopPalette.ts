@@ -93,11 +93,25 @@ export function mix(a: Rgb, b: Rgb, t: number): Rgb {
   return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t)) as Rgb;
 }
 
-// Push `fg` toward white (dark bg) or black (light bg) until it reaches the
-// target contrast against `bg`. Keeps the hue; only as far as needed.
+// #rrggbb, or a CSS rgb()/rgba() value, as Rgb (null if neither).
+export function parseColor(value: string): Rgb | null {
+  const v = value.trim();
+  const m = /rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/.exec(v);
+  if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+  return /^#[0-9a-f]{6}$/i.test(v) ? hexToRgb(v) : null;
+}
+export const hexToRgb = (h: string): Rgb => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as Rgb;
+
+// Whether white text reads better than black on `bg`. The one light/dark
+// rule for ink, contrast pushes and the controller theme's shade.
+export const wantsLightInk = (bg: Rgb) => contrast([255, 255, 255], bg) >= contrast([0, 0, 0], bg);
+
+// Push `fg` toward white or black (whichever reads better on `bg`) until it
+// reaches the target contrast against `bg`. Keeps the hue; only as far as
+// needed; at worst that black or white itself.
 export function ensureContrast(fg: Rgb, bg: Rgb, target: number): Rgb {
   if (contrast(fg, bg) >= target) return fg;
-  const toward: Rgb = luminance(bg) < 0.4 ? [255, 255, 255] : [0, 0, 0];
+  const toward: Rgb = wantsLightInk(bg) ? [255, 255, 255] : [0, 0, 0];
   for (let t = 0.05; t <= 1; t += 0.05) {
     const c = mix(fg, toward, t);
     if (contrast(c, bg) >= target) return c;

@@ -192,7 +192,17 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           {home}
         </div>
         {game && report && (
-          <GamePage game={game} info={details[game.key]} record={library.games[game.key]} running={running === game.key} report={report} bridge={bridge} onLibrary={onLibrary} onRescan={onRescan} />
+          <GamePage
+            key={game.key}
+            game={game}
+            info={details[game.key]}
+            record={library.games[game.key]}
+            running={running === game.key}
+            report={report}
+            bridge={bridge}
+            onLibrary={onLibrary}
+            onRescan={onRescan}
+          />
         )}
       </div>
     </div>

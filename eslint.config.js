@@ -14,8 +14,8 @@ export default tseslint.config(
     plugins: { "react-hooks": reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // React Compiler advisories. Warn, not fail: the inherited web components
-      // (OledEmulator, RemapEditor) predate them. See docs/LINT_SUPPRESSIONS.md.
+      // React Compiler advisories. Warn, not fail, so a new case is reviewed;
+      // the one left is listed in docs/LINT_SUPPRESSIONS.md (CI caps warnings).
       "react-hooks/refs": "warn",
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/purity": "warn",
@@ -29,7 +29,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["electron/**/*.ts", "*.config.{ts,js}", "tools/**/*.{js,mjs}"],
+    files: ["electron/**/*.ts", "*.config.{ts,js}", "tools/**/*.{js,mjs}", ".hooks/**/*.mjs"],
     languageOptions: { globals: { process: "readonly", console: "readonly", Buffer: "readonly", fetch: "readonly", URL: "readonly" } },
   },
   {

@@ -220,14 +220,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.label {
-  color: var(--text-eyebrow);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
 h1,
 h2,
 h3 {
@@ -243,10 +235,6 @@ h1 {
   line-height: 1.05;
 }
 
-/* Two-line app title: primary on top, "OLED Edition" qualifier below
-   at ~75% of the primary size, italic, slightly muted so the eye
-   reads it as a subtitle and not a runaway word from the heading. */
-
 h2 {
   font-size: 1.05rem;
   color: var(--text-strong);
@@ -256,79 +244,10 @@ h3 {
   color: var(--text-strong);
 }
 
-/* Numerics that update live should use a tabular monospaced font so the layout
-   doesn't shift as values change. Apply via `.num` to specific stat fields. */
-.num {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-.notice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 46px;
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid;
-  font-weight: 650;
-}
-
-.notice.error {
-  color: var(--text-error);
-  background: var(--notice-error-bg);
-  border-color: var(--notice-error-bd);
-}
-
-.notice.warning {
-  color: var(--text-warning);
-  background: var(--notice-warn-bg);
-  border-color: var(--notice-warn-bd);
-}
-
-.notice button {
-  margin-left: auto;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  font-weight: 800;
-}
-
-.panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: box-shadow var(--t-base);
-}
-
-/* ---------- Bento utility classes ---------- */
-
-@media (max-width: 719px) {
-  /* On mobile, every bento card is full-width */
-}
-
-/* ---------- Status hero card ---------- */
-
-/* ---------- Feature badge (Audio Auto Haptics) ---------- */
-
-/* ---------- Actions card ---------- */
-
-/* ---------- Advanced reveal ---------- */
-
-/* ---------- Hide legacy stacked spaced titles inside bento (no longer used) ---------- */
-
-/* ---------- Premium micro-interactions (Phase D) ---------- */
-
 /* Smooth theme swap — all color/background/border transitions tweened
    so light↔dark feels intentional rather than a jarring flash. */
 body,
 input[type="number"],
-.switch,
-.switch span,
-.button,
 .theme-toggle,
 .theme-toggle button {
   transition:
@@ -337,48 +256,6 @@ input[type="number"],
     color var(--t-slow),
     box-shadow var(--t-base),
     transform var(--t-base);
-}
-
-/* Tab swap — crossfade the active tab's content in via a key change.
-   App.tsx will toggle `data-tab-anim` to retrigger the animation on swap. */
-@keyframes tab-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Connect button pulse when disconnected — subtle 2 s breathe so it draws
-   attention without being annoying. Disabled when prefers-reduced-motion. */
-@keyframes connect-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-  }
-}
-
-.button.primary.pulse:not(:disabled) {
-  animation: connect-pulse 2.4s ease-in-out infinite;
-}
-
-/* Status pill connected-dot — a tiny breathing green dot signals liveness */
-@keyframes status-dot-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.85);
-  }
 }
 
 /* Theme-toggle active button pop on click */
@@ -398,8 +275,7 @@ input[type="number"],
   }
 }
 
-/* Slider thumb: smoother visual response when value changes
-   programmatically (via Apply / Read). Pure CSS, browser-native. */
+/* Slider thumb: a smoother response when the value changes. */
 input[type="range"]::-webkit-slider-thumb {
   transition:
     background-color var(--t-fast),
@@ -411,11 +287,8 @@ input[type="range"]:focus::-webkit-slider-thumb {
   transform: scale(1.15);
 }
 
-/* Hide all the pulse / animation if user prefers reduced motion */
+/* No animation when the user prefers reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  .button.primary.pulse:not(:disabled) {
-    animation: none;
-  }
   .theme-toggle button.active {
     animation: none;
   }
@@ -424,13 +297,8 @@ input[type="range"]:focus::-webkit-slider-thumb {
   }
 }
 
-.panel {
-  padding: 18px;
-}
-
 input[type="range"] {
   width: 100%;
-  accent-color: var(--accent);
 }
 
 input[type="number"] {
@@ -443,81 +311,6 @@ input[type="number"] {
   border-radius: 6px;
   font-weight: 750;
 }
-
-/* Lightbar mode dropdown + favorite-color swatches share the number-input look. */
-
-.switch {
-  justify-self: end;
-  position: relative;
-  width: 56px;
-  height: 32px;
-  padding: 3px;
-  background: var(--switch-off-bg);
-  border: 0;
-  border-radius: 999px;
-  transition: background-color 160ms ease;
-}
-
-.switch span {
-  display: block;
-  width: 26px;
-  height: 26px;
-  background: var(--switch-knob-bg);
-  border-radius: 50%;
-  box-shadow: var(--shadow-switch-knob);
-  transition: transform 160ms ease;
-}
-
-.switch.on {
-  background: var(--accent);
-}
-.switch.on span {
-  transform: translateX(24px);
-}
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  font-weight: 850;
-  transition:
-    transform 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease;
-}
-
-.button:not(:disabled):active {
-  transform: translateY(1px);
-}
-
-.button.primary {
-  color: var(--text-on-primary);
-  background: var(--accent);
-}
-.button.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.button.success {
-  color: var(--text-on-primary);
-  background: var(--success);
-}
-.button.success:hover:not(:disabled) {
-  background: var(--success-hover);
-}
-.button:disabled {
-  opacity: 0.48;
-}
-.button.wide {
-  width: 100%;
-}
-
-/* ---------- Tab nav ---------- */
 
 /* ---------- Language toggle ---------- */
 
@@ -659,43 +452,13 @@ input[type="number"] {
   box-shadow: var(--shadow-segment);
 }
 
-/* ---------- OLED Emulator ---------- */
-
-/* ---------- Pico-OLED-1.3 device frame ---------- */
-
-/* Pre-connect banner pinned above the device frame */
-
-/* ---------- Responsive ---------- */
-
-@media (max-width: 480px) {
-  .panel {
-    padding: 14px;
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-
-/* === Flasher tab === */
-
-/* === Flasher device-info strip === */
-
-/* === Flasher progress bar === */
-
-/* === Flasher action row (Flash + Reboot side-by-side) === */
-
-/* === Flasher activity log === */
-
-/* Trust-model warning shown when user picks a UF2 from disk
-   (as opposed to using the CI-bundled latest release). */
-
-/* ── Button-remap visual diagram (Remap tab) ───────────────────────────────
-   Controller art is Zacksly's CC BY 3.0 outline recolored to currentColor;
-   the hotspots overlay shares its viewBox so click targets line up exactly. */
-/* fill is painted (transparent) rather than `none` so the whole disc is
-   clickable, not just its stroke. */
-
-/* Floating shoulder/trigger glyphs (L1/L2/R1/R2) — visible button outlines in
-   the corners with a leader line to the shoulder, since they have no on-screen
-   target in a front view. */
-
-/* Contextual picker for the button selected on the diagram. */
-
-/* Full list kept as a collapsible fallback under the diagram. */

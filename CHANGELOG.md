@@ -11,31 +11,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Games library** (Linux). The Games tab lists your Steam, Heroic and Lutris games (search, filters, a Playing group); each game has a page with its artwork, play time, last played, size, the Proton it runs with and the recommended one (with a switch), its DualSense support tier and per-feature results, and its own setup fixes. Artwork comes from the launchers' local caches, served only for scanned games (`ds5-art://`); nothing is downloaded.
 - **Per-game controller profiles**: haptics strength, Audio Auto Haptics, speaker level, lightbar mode and favorite colors, BT mic. A profile switches in on the dongle (RAM only) while its game runs and your normal settings come back when it closes, also after a crash or a quit mid-game (kept as a restore point on disk). While one is active the bottom bar saves to the profile, never to the dongle.
 - **Your rating and feedback** per game: stars and a checklist of what you noticed (no free text to share), stamped with the app version and game build so feedback from before a game update or one of our fixes is flagged; private notes. Saved on this PC; sharing with other players comes later.
-
 - **Play and open from a game's page.** ▶ Play starts the game through its own launcher (Steam, Heroic, Lutris); Steam games also open their Properties, Steam Input layout and library page; any game opens its install folder or its Proton/Wine prefix. Links and folders are built in the app from the scan, never taken from the page.
 - **Dongle console.** The Dongle page shows the dongle's screen pixel for pixel, live (needs firmware with protocol 1.4; works without the OLED add-on too), plus a log of what the dongle did this session. Dark in every theme, like any console.
+- **Dongle diagnostics dashboard** under the console: Pico 2 W dials for chip temperature, CPU clock (measured vs set) and core voltage; one-minute graphs for USB audio frames, Bluetooth packets, signal and temperature; the audio pipeline's levels and counters (problems marked); the OLED's brightness, state, screen and timeouts. Replaces Dongle -> Advanced.
+- **Calibration** (needs firmware with protocol 1.5): a guided run measures stick centers and drift, how far each stick reaches, trigger travel and the gyro's zero; deadzone and full-tilt can be adjusted by hand with a raw vs "what games see" preview. Stored and applied in the dongle for every game; nothing is written to the controller; Reset undoes it.
+- **HDR lighting** (experimental, App settings -> Advanced, off by default): on an HDR display the lightbar glows brighter than paper white, at a peak brightness you set in nits. Drawn with WebGPU in extended range; the app starts in the scRGB color profile while it's on (KWin 6.6 has no "srgb" transfer function, which Chromium's default color management asks for). Everything else stays standard range.
+- **Theme: Match my controller** (the new default): cards and panels in the controller's own body color with black or white text, light or dark from the colorway, the accent from its trim. Every colorway now has colors (special editions are approximations from product photos).
+- **Look knobs** in App settings -> Appearance: card opacity (let the game art through the cards), background dim, background blur, and depth (shadow strength).
+- **Developer preview** (Ctrl+Shift+D -> App settings -> Developer): show any controller model and colorway to check the app's colors; display only.
+- **Style: Standard / Glass** in App settings -> Appearance. Glass also makes the settings panel the regular variant (docked against the rail; its cards stay standard surfaces).
+- **Glass (preview)**: the rail and the save bar as Liquid Glass (Apple's clear variant: lensing at the edge, a light frost, a specular edge that follows the pointer, a liquid press), docked to the window edges; the rail switches to the regular variant (more frost and a dim) while it's open over content. Content keeps plain surfaces. Reduce transparency / increase contrast / reduce motion are respected.
+- **Speaker and microphone tests.** The Speaker panel plays a short chime on the controller's speaker (never the PC's); the Microphone panel records 3 s from the controller's mic with a live level and plays it back on the controller (Linux; recorded in the main process, kept in memory only, the page still has no microphone access).
+- **Color vision modes** (App settings -> Accessibility): protanopia, deuteranopia and tritanopia palettes; color never carries meaning alone (every status also has a symbol or text).
 
 ### Changed
 
 - **Navigation rail** on the right edge replaces the top bar: Controller, Dongle, Games, App settings and About, with the dongle's status at the bottom. Icons only until you hover it (or tab into it); pin it open with the button at the bottom or Ctrl+B.
-
 - **Magazine-cover title**: the controller model in big caps behind the drawing (the triggers overlap it), with "Model:" above; the colorway (in the accent) and "Connected" (a pulsing dot) below it in the same style.
-- **HDR lighting** (experimental, App settings -> Advanced, off by default): on an HDR display the lightbar glows brighter than paper white, at a peak brightness you set in nits. Drawn with WebGPU in extended range; the app starts in the scRGB color profile while it's on (KWin 6.6 has no "srgb" transfer function, which Chromium's default color management asks for). Everything else stays standard range.
-- **Dongle diagnostics dashboard** under the console: Pico 2 W dials for chip temperature, CPU clock (measured vs set) and core voltage; one-minute graphs for USB audio frames, Bluetooth packets, signal and temperature; the audio pipeline's levels and counters (problems marked); the OLED's brightness, state, screen and timeouts. Replaces Dongle -> Advanced.
-- **Button presses on the drawing** use a grey tint picked per controller (darker on light buttons, lighter on dark ones), so they show on every colorway; L1/R1 and the L2/R2 fill light up light grey.
-- **Calibration** (needs firmware with protocol 1.5): a guided run measures stick centers and drift, how far each stick reaches, trigger travel and the gyro's zero; deadzone and full-tilt can be adjusted by hand with a raw vs "what games see" preview. Stored and applied in the dongle for every game; nothing is written to the controller; Reset undoes it.
-- **Theme: Match my controller** (the new default): cards and panels in the controller's own body color with black or white text, light or dark from the colorway, the accent from its trim. Every colorway now has colors (special editions are approximations from product photos).
-- **Look knobs** in App settings -> Appearance: card opacity (let the game art through the cards), background dim, background blur, and depth (shadow strength).
+- **Themed by your controller.** The connected controller's colorway tints the app's surfaces and gives its accent (made legible: lightened or darkened to 3:1 against the panels, black or white text on buttons); neutral colorways keep the theme's accent; App settings -> Appearance -> Accent color switches back to the desktop's. Each game page takes its artwork's color for its own highlights (picked in the main process).
 - **Depth and motion**: layered shadows on cards, tiles, game covers and under the controller; clickable tiles and covers lift and wiggle on hover, buttons lift slightly. Reduce motion keeps the shadows and drops the movement.
 - **The game art background on every page**, not just the controller.
-- **Developer preview** (Ctrl+Shift+D -> App settings -> Developer): show any controller model and colorway to check the app's colors; display only.
-- **Themed by your controller.** The connected controller's colorway tints the app's surfaces and gives its accent (made legible: lightened or darkened to 3:1 against the panels, black or white text on buttons); neutral colorways keep the theme's accent; App settings -> Appearance -> Accent color switches back to the desktop's. Each game page takes its artwork's color for its own highlights (picked in the main process).
-- **Style: Standard / Glass** in App settings -> Appearance. Glass also makes the settings panel the regular variant (docked against the rail; its cards stay standard surfaces).
-- **Glass (preview)**: the rail and the save bar as Liquid Glass (Apple's clear variant: lensing at the edge, a light frost, a specular edge that follows the pointer, a liquid press), docked to the window edges; the rail switches to the regular variant (more frost and a dim) while it's open over content. Content keeps plain surfaces. Reduce transparency / increase contrast / reduce motion are respected.
-- **Speaker and microphone tests.** The Speaker panel plays a short chime on the controller's speaker (never the PC's); the Microphone panel records 3 s from the controller's mic with a live level and plays it back on the controller (Linux; recorded in the main process, kept in memory only, the page still has no microphone access).
+- **Button presses on the drawing** use a grey tint picked per controller (darker on light buttons, lighter on dark ones), so they show on every colorway; L1/R1 and the L2/R2 fill light up light grey.
 - **Controller page data regrouped**: four equal cards (Inputs with the stick circles and trigger bars, Gyroscope, Accelerometer, Connection) and a four-tile status strip (battery, signal, lightbar, player and slot). Nothing repeats the drawing, and settings stay in the side panel.
-
 - **App settings reorganized**: Language; Appearance (theme, style, accent, game art background); Accessibility (color vision, **Reduce motion** (new: no moving background, pulsing or animations, also when the system asks), narrator voice, captions); Startup and window; Updates; Advanced (hardware acceleration).
+- **Hardware acceleration is on by default again** (needed for blur, glass and HDR; App settings -> Advanced turns it off, and a graphics crash turns it off for the next start).
+- **The welcome tour is off** until it is rebuilt for the new layout.
 
 ### Removed
 
@@ -47,7 +47,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - The model title fits between the triggers at every window size and model name length.
 - The game page's Play no longer warns "Couldn't open that" when the launcher started the game fine (Steam exits non-zero after passing the link on).
 - Gyroscope / accelerometer readings no longer spill out of narrow cards.
-- The haptics gain error message gave the wrong range (1.0–2.0 instead of 1.0–6.0) in every language.
 
 ## [0.8.1] — 2026-10-11
 

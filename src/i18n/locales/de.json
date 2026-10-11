@@ -20,7 +20,6 @@
     "noDevice": "Kein Gerät"
   },
   "statusText": {
-    "webhidUnavailable": "WebHID nicht verfügbar",
     "ready": "Bereit zum Verbinden",
     "unsaved": "Ungesicherte Änderungen",
     "applied": "Auf Gerät angewendet",
@@ -925,7 +924,11 @@
       "save": "Auf dem Dongle speichern",
       "revert": "Verwerfen",
       "reset": "Auf unkalibriert zurücksetzen",
-      "saveHint": "Im eigenen Speicher des Dongles gesichert; gilt sofort für jedes Spiel."
+      "saveHint": "Im eigenen Speicher des Dongles gesichert; gilt sofort für jedes Spiel.",
+      "forSlot": "Für den Controller in Kopplungsplatz {{slot}}; jeder Platz hat seine eigene.",
+      "getReady": "Mach dich bereit…",
+      "missed": "Nicht gemessen, daher wurden die alten Werte behalten: {{parts}}. Bewege sie ganz bis zum Anschlag und miss erneut.",
+      "retry": "Erneut versuchen"
     },
     "dash": {
       "pico": "Pico 2 W",
@@ -960,7 +963,8 @@
       "wakeOnInput": "Wacht bei Controller-Eingabe auf",
       "never": "nie",
       "yes": "ja",
-      "no": "nein"
+      "no": "nein",
+      "minutes": "{{n}} Min."
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",

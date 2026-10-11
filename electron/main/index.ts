@@ -1,6 +1,6 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { existsSync } from "node:fs";
+import { statSync } from "node:fs";
 import { app, BrowserWindow, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings } from "../../src/desktop/api";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
@@ -10,7 +10,7 @@ import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
-import { GameKeySchema } from "../../src/desktop/games/library";
+import { artRequestTarget } from "./games/artRequest";
 import { hasSchemeHandler } from "./games/schemeHandler";
 import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
@@ -51,11 +51,17 @@ if (!loadSettings().hardwareAcceleration) app.disableHardwareAcceleration();
 // for; scRGB (ext_linear + windows_scrgb) is the one that reaches the display.
 else if (loadSettings().hdrLighting) app.commandLine.appendSwitch("force-color-profile", "scrgb-linear");
 
-// Game artwork for the Games library: ds5-art://art/<game key>/<kind>, served
-// only from the files the last scan resolved for that game (never a path the
-// page names). Must be registered before the app is ready.
-const ART_KINDS = new Set(["hero", "logo", "cover", "header", "icon"]);
+// Game artwork for the Games library (games/artRequest.ts). Must be
+// registered before the app is ready.
 protocol.registerSchemesAsPrivileged([{ scheme: "ds5-art", privileges: { standard: true, secure: true } }]);
+
+const isDirectory = (path: string) => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
 
 // One instance: two copies would fight over the USB interface claim.
 if (!app.requestSingleInstanceLock()) {
@@ -145,16 +151,16 @@ function start(): void {
     if (!games || !watcher) return;
     if (settings.gamesScanAllowed)
       void games.scan().then(
-        () => watcher.start(),
+        // Consent may have been turned off while the scan ran.
+        () => settings.gamesScanAllowed && watcher.start(),
         () => undefined,
       );
     else watcher.stop();
   };
   syncRunningWatcher();
   protocol.handle("ds5-art", (request) => {
-    const parts = new URL(request.url).pathname.split("/").filter(Boolean).map(decodeURIComponent);
-    const [key, kind] = parts;
-    const file = parts.length === 2 && GameKeySchema.safeParse(key).success && ART_KINDS.has(kind) ? games?.artPath(key, kind as never) : undefined;
+    const target = artRequestTarget(request.url);
+    const file = target ? games?.artPath(target.key, target.kind) : undefined;
     return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
   });
 
@@ -201,11 +207,12 @@ function start(): void {
         // Launchers often exit non-zero after handing the link to their
         // running instance (Steam does), so the open result means nothing:
         // success = a handler is registered for the scheme.
-        if (!hasSchemeHandler(target.url)) return false;
+        if (!(await hasSchemeHandler(target.url))) return false;
         shell.openExternal(target.url).catch(() => undefined);
         return true;
       }
-      if (target.folder && existsSync(target.folder)) return (await shell.openPath(target.folder)) === "";
+      // Only a folder: launcher configs could name a file, which openPath would run.
+      if (target.folder && isDirectory(target.folder)) return (await shell.openPath(target.folder)) === "";
       return false;
     },
     onStatus: (status) => tray?.update(status),

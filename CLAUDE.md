@@ -32,12 +32,17 @@ pre-commit run --all-files
 ## Load-bearing rules
 
 - **Desktop UI must be compact and fill the window** (user requirement): ~13px type, tight padding, a 100vh grid shell, only the page body scrolls. No zoom hacks. Match the OLED's zero-based naming (FAV0–FAV3, slots 0–3).
+- **One theme system, many themes** (user requirement): every color comes from the theme tokens (`--bg-*`, `--text-*`, `--border-*`, `--dk-accent`, `--status-good|warn|bad`), which the themes (Light, Dark, Desktop, Controller, game pages via `scopedAccent`) and Color vision set in one place (`desktop.css` tokens, `theme/desktopPalette.ts`, `live/controllerAccent.ts`, `colorVision.ts`). New UI never hard-codes a color or styles a native control on its own (`accent-color` is set once on `.dk`). Exceptions are physical things drawn as they really look (the controller's LEDs, the OLED console, game art overlays) and the 42PS brand colors in Credits.
 - **Light theme uses its own deeper greens and greys** (`--dk-*` tokens in `desktop.css`); the web tool's pale accent is unreadable on the desktop.
 - **Never use AI-drawn or traced controller art.** Use the purchased Zacksly pack (CC BY 3.0, `assets/PS5 Button Icons and Controls/`, credit required) or the MIT AL2009man Gamepad-Asset-Pack.
 - **Security baseline** is gated by `.hooks/check_electron_security.sh`, `.hooks/check_dom_sinks.sh` and `tests/security/`. Changing window/session/CSP/allowlists requires updating `docs/SECURITY_AUDIT.md` and those tests.
 - **Protocol changes** land in the firmware first, then the client, the fake (`tests/support/fakeDongle.ts`) and the tests in the same change.
 - **Dependencies**: exact versions, chosen ≥ 2 weeks after release.
 - **Linux dev quirks** (ADR-0004): `--no-sandbox` (AppArmor userns restriction), GPU rendering on by default (App settings → Hardware acceleration; a GPU crash turns it off for the next start), zoom pinned to 100%. When restarting the app from a shell, kill by the anchored full path (`pgrep -f "^$PWD/node_modules/electron/dist/electron"`; unanchored patterns also match your own shell and kill it): it is single-instance, so a stale hidden copy blocks every new launch.
+
+## Backlog: one list
+
+[`docs/BACKLOG.md`](docs/BACKLOG.md) is the single list of open, agreed and blocked work for the app and the firmware (the AVIEW rule). When work starts, ships, or is decided against, update its row in the same commit; anything agreed in conversation gets a row the same day. Session notes and handoffs point to it and never keep a second list.
 
 ## Git Workflow
 

@@ -20,7 +20,6 @@
     "noDevice": "Nenhum dispositivo"
   },
   "statusText": {
-    "webhidUnavailable": "WebHID indisponível",
     "ready": "Pronto para conectar",
     "unsaved": "Alterações não salvas",
     "applied": "Aplicado ao dispositivo",
@@ -925,7 +924,11 @@
       "save": "Salvar no dongle",
       "revert": "Desfazer",
       "reset": "Voltar ao sem calibração",
-      "saveHint": "Salvo na memória do dongle; vale na hora para todos os jogos."
+      "saveHint": "Salvo na memória do dongle; vale na hora para todos os jogos.",
+      "forSlot": "Para o controle no slot de pareamento {{slot}}; cada slot guarda a sua.",
+      "getReady": "Prepare-se…",
+      "missed": "Não medido, os valores antigos foram mantidos: {{parts}}. Vá até o fim e meça de novo.",
+      "retry": "Tentar de novo"
     },
     "dash": {
       "pico": "Pico 2 W",
@@ -960,7 +963,8 @@
       "wakeOnInput": "Acorda com o controle",
       "never": "nunca",
       "yes": "sim",
-      "no": "não"
+      "no": "não",
+      "minutes": "{{n}} min"
     },
     "hdr": {
       "label": "Iluminação HDR (experimental)",

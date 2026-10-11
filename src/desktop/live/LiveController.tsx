@@ -11,7 +11,8 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import art from "../../assets/dualsense.svg?raw";
 import type { InputReport } from "../../oled/inputReport";
-import { lineOnDark, type ColorwayColors, contrast } from "./colorways";
+import { lineOnDark, type ColorwayColors } from "./colorways";
+import { hexToRgb, wantsLightInk } from "../theme/desktopPalette";
 import { PART_IDS, type PartId } from "./parts";
 
 const STICK_TRAVEL = 9; // viewBox units at full deflection
@@ -153,7 +154,7 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
       ["--ctl-line-dark", colors ? lineOnDark(colors) : undefined],
       // A press darkens light buttons and lightens dark ones (grayscale, so
       // it shows on every colorway, unlike an accent color).
-      ["--ctl-press-ink", colors ? (contrast(colors.cap, "#000000") > contrast(colors.cap, "#ffffff") ? "#000000" : "#ffffff") : undefined],
+      ["--ctl-press-ink", colors ? (wantsLightInk(hexToRgb(colors.cap)) ? "#ffffff" : "#000000") : undefined], // theme-exempt: the drawing's press tint
     ];
     for (const [name, value] of vars) {
       if (value) el.style.setProperty(name, value);

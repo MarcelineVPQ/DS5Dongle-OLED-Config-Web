@@ -63,11 +63,17 @@ export function fixesFor(title: string): GameFix[] {
   return GAME_FIXES.filter((f) => normalizeTitle(f.title) === n);
 }
 
-const parts = (v: string) => v.split(".").map(Number);
+// "0.9.0-beta.2" -> numbers [0, 9, 0] (missing or non-numeric parts are 0) and a prerelease flag.
+const parts = (v: string) => {
+  const [core, ...pre] = v.replace(/^v/, "").split("-");
+  const nums = core.split(".").map((p) => Number.parseInt(p, 10));
+  return { nums: [0, 1, 2].map((i) => (Number.isFinite(nums[i]) ? nums[i] : 0)), pre: pre.length > 0 };
+};
 export function versionLess(a: string, b: string): boolean {
   const [x, y] = [parts(a), parts(b)];
-  for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0);
-  return false;
+  for (let i = 0; i < 3; i++) if (x.nums[i] !== y.nums[i]) return x.nums[i] < y.nums[i];
+  // Same numbers: a prerelease (0.9.0-beta) comes before the release (0.9.0).
+  return x.pre && !y.pre;
 }
 
 // Why the player's feedback may be out of date: the game updated since, or

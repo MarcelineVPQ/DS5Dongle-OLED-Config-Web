@@ -32,7 +32,7 @@ repos:
         exclude: ^(src/flash/picoflash/|package-lock\.json)
       - id: eslint
         name: ESLint
-        entry: npx eslint --max-warnings=11
+        entry: npx eslint --max-warnings=1
         language: system
         files: \.(ts|tsx|js|mjs)$
       - id: typecheck
@@ -55,3 +55,9 @@ repos:
         language: script
         pass_filenames: false
         files: ^(electron|src)/
+      - id: theme-colors
+        name: One theme system (no literal colors)
+        entry: node .hooks/check_theme_colors.mjs
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.(css|tsx)$

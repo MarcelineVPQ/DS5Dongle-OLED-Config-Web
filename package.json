@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "start:desktop": "electron-vite preview -- --no-sandbox",
-    "gates": "./.hooks/check_electron_security.sh && ./.hooks/check_dom_sinks.sh",
+    "gates": "./.hooks/check_electron_security.sh && ./.hooks/check_dom_sinks.sh && node .hooks/check_theme_colors.mjs",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run gates && npm test",
     "dist:linux": "electron-vite build && electron-builder --linux",
     "dist:win": "electron-vite build && electron-builder --win",

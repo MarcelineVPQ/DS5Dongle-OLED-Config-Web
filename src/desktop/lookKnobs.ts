@@ -1,8 +1,8 @@
 // The look's knobs (App settings -> Appearance): one table, each knob a
 // stored number that becomes a CSS variable on <html> (desktop.css and the
 // backdrop read them). Add a knob here and it gets a slider automatically.
-import { useEffect } from "react";
-import { usePref } from "./storage";
+import { useCallback, useEffect, useState } from "react";
+import { PREF_EVENT, readPref, usePref } from "./storage";
 
 export interface Knob {
   key: string; // i18n key under desktop.knobs, and the stored preference
@@ -25,24 +25,38 @@ export const KNOBS: Knob[] = [
   { key: "hdrNits", min: 200, max: 2000, step: 50, fallback: 500, unit: "nits", cssVar: "--hdr-nits", css: (v) => String(v), hidden: true },
 ];
 
-const values = (k: Knob) => Array.from({ length: Math.round((k.max - k.min) / k.step) + 1 }, (_, i) => String(k.min + i * k.step));
+// Each knob's allowed stored values, built once (a fresh array per render
+// would re-subscribe usePref's listener every time).
+const ALLOWED = new Map(KNOBS.map((k) => [k.key, Array.from({ length: Math.round((k.max - k.min) / k.step) + 1 }, (_, i) => String(k.min + i * k.step))]));
+const prefKey = (k: Knob) => `ds5.knob.${k.key}`;
+const readKnob = (k: Knob) => {
+  const v = readPref(prefKey(k));
+  return v !== null && ALLOWED.get(k.key)!.includes(v) ? Number(v) : k.fallback;
+};
 
 export function useKnob(k: Knob): [number, (v: number) => void] {
-  const [v, set] = usePref<string>(`ds5.knob.${k.key}`, String(k.fallback), values(k));
-  return [Number(v), (n) => set(String(Math.min(k.max, Math.max(k.min, Math.round(n / k.step) * k.step))))];
+  const [v, set] = usePref<string>(prefKey(k), String(k.fallback), ALLOWED.get(k.key)!);
+  const setNumber = useCallback((n: number) => set(String(Math.min(k.max, Math.max(k.min, Math.round(n / k.step) * k.step)))), [k, set]);
+  return [Number(v), setNumber];
 }
 
 export const knob = (key: string) => KNOBS.find((k) => k.key === key)!;
 
-// App root: keeps the CSS variables in step with the knobs. (KNOBS is a
-// constant list, so calling the hook per knob is a fixed number of hooks.)
+// App root: keeps the CSS variables in step with the knobs (one listener
+// for all of them).
 export function useLookKnobs(): void {
-  const vals = KNOBS.map((k) => useKnob(k)[0]); // eslint-disable-line react-hooks/rules-of-hooks
-  const key = vals.join(",");
+  const [vals, setVals] = useState(() => KNOBS.map(readKnob));
+  useEffect(() => {
+    const on = (e: Event) => {
+      const { key } = (e as CustomEvent<{ key: string }>).detail;
+      if (key.startsWith("ds5.knob.")) setVals(KNOBS.map(readKnob));
+    };
+    window.addEventListener(PREF_EVENT, on);
+    return () => window.removeEventListener(PREF_EVENT, on);
+  }, []);
   useEffect(() => {
     const root = document.documentElement;
     KNOBS.forEach((k, i) => root.style.setProperty(k.cssVar, k.css(vals[i])));
     root.toggleAttribute("data-cards-translucent", vals[0] < 100);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- key carries the values
-  }, [key]);
+  }, [vals]);
 }

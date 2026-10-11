@@ -1,7 +1,7 @@
 // The one screen: the live controller on the left, the selected part's
 // settings on the right, the controller's status under it. Everything about
 // the controller and the dongle is configured from here.
-import DongleConsole from "../dongle/DongleConsole";
+import DongleConsole, { supportsOledMirror, useOledFrame } from "../dongle/DongleConsole";
 import { knob, useKnob } from "../lookKnobs";
 import HdrGlow from "./HdrGlow";
 import DongleDashboard from "../dongle/DongleDashboard";
@@ -59,8 +59,12 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const look = colorway(id?.colorwayCode ?? null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
   const liveCapable = supportsLiveInput(bridge.identity);
-  const input = useLiveInput(client, on && liveCapable);
-  const liveLightbar = useLiveLightbar(client, on && liveCapable);
+  // The drawing's live input isn't shown on the Dongle page: no polling there.
+  const dongleView = view === "dongle";
+  const input = useLiveInput(client, on && liveCapable && !dongleView);
+  const liveLightbar = useLiveLightbar(client, on && liveCapable && !dongleView);
+  // The OLED mirror, shared by the console and the dashboard (one poll).
+  const oled = useOledFrame(client, dongleView && supportsOledMirror(bridge.identity));
   // "There you are." when a controller connects while the app is open (not
   // for one that was already there at start).
   const wasOn = useRef<boolean | null>(null);
@@ -118,7 +122,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     const show = () => hidePanel(false);
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
-  }, []);
+  }, [hidePanel]);
   useEffect(() => {
     const toggle = () => {
       if (collapsed) hidePanel(false);
@@ -136,8 +140,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
       <div className="live-stage">
         {view === "dongle" ? (
           <>
-            <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} />
-            <DongleDashboard bridge={bridge} />
+            <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} frame={oled} />
+            <DongleDashboard bridge={bridge} frame={oled.frame} rssi={status?.rssi ?? null} />
           </>
         ) : (
           <>
@@ -162,7 +166,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 remapped={remapped}
                 onSelect={(part) => onView({ part })}
               />
-              {hdr && <HdrGlow host={heroRef.current?.querySelector<HTMLElement>(".live-ctl") ?? null} nits={hdrNits} />}
+              {hdr && <HdrGlow hero={heroRef} nits={hdrNits} />}
             </div>
             {on && id?.model && (
               <div className="live-specs">

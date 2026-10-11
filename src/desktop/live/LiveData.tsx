@@ -137,7 +137,7 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
     const w = c.width;
     const ht = c.height;
     g.clearRect(0, 0, w, ht);
-    g.strokeStyle = "rgba(128, 128, 128, 0.25)";
+    g.strokeStyle = getComputedStyle(c).getPropertyValue("--border-subtle").trim() || "transparent"; // the theme's grid line
     g.beginPath();
     g.moveTo(0, ht / 2);
     g.lineTo(w, ht / 2);

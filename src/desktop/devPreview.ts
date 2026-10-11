@@ -2,7 +2,7 @@
 // pretend another controller model / colorway is connected, to check the
 // UI's colors (drawing, title, accent, tint) for every controller without
 // owning them. Only changes what the app shows; nothing is sent to the dongle.
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type { BridgeIdentity } from "../protocol/bridgeClient";
 import { COLORWAYS } from "./live/colorways";
 import { useFlagPref, usePref } from "./storage";
@@ -27,8 +27,8 @@ export function useDevPreview() {
 // model / colorway in place while the developer preview is set.
 export function useShownIdentity<T extends BridgeIdentity | null | undefined>(id: T): T {
   const { model, colorway, active } = useDevPreview();
-  if (!id || !active) return id;
-  return { ...id, model: model || id.model, colorwayCode: colorway || id.colorwayCode };
+  // The same object until something changes (effects key on it).
+  return useMemo(() => (!id || !active ? id : { ...id, model: model || id.model, colorwayCode: colorway || id.colorwayCode }), [id, model, colorway, active]);
 }
 
 // Ctrl+Shift+D shows / hides the Developer card.

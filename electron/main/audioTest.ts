@@ -39,12 +39,29 @@ export async function dualSenseDevices(): Promise<{ mic: string | null; speaker:
   };
 }
 
-let running: ChildProcess | null = null;
+let busy = false;
+
+// Stops a child: SIGTERM, then SIGKILL if it hasn't closed a second later.
+function stop(child: ChildProcess) {
+  child.kill("SIGTERM");
+  const kill = setTimeout(() => child.kill("SIGKILL"), 1000);
+  child.once("close", () => clearTimeout(kill));
+}
 
 // Records SECONDS from the controller mic (reporting the level ~10x a
-// second), then plays it back on the controller speaker.
+// second), then plays it back on the controller speaker. One test at a time;
+// every step is bounded, so a stuck PipeWire tool can't block later tests.
 export async function micTest(onLevel: (level: number) => void): Promise<MicTestResult> {
-  if (running) return { ok: false, peak: 0, problem: "failed" };
+  if (busy) return { ok: false, peak: 0, problem: "failed" };
+  busy = true;
+  try {
+    return await run(onLevel);
+  } finally {
+    busy = false;
+  }
+}
+
+async function run(onLevel: (level: number) => void): Promise<MicTestResult> {
   const { mic, speaker } = await dualSenseDevices();
   if (!mic) return { ok: false, peak: 0, problem: "no-mic" };
   if (!speaker) return { ok: false, peak: 0, problem: "no-speaker" };
@@ -53,7 +70,6 @@ export async function micTest(onLevel: (level: number) => void): Promise<MicTest
   let peak = 0;
   const recorded = await new Promise<boolean>((resolve) => {
     const rec = spawn("pw-record", ["--target", mic, "--rate", String(RATE), "--channels", "1", "--format", "f32", "-"], { stdio: ["ignore", "pipe", "ignore"] });
-    running = rec;
     let pending = Buffer.alloc(0);
     rec.stdout.on("data", (data: Buffer) => {
       chunks.push(data);
@@ -68,7 +84,7 @@ export async function micTest(onLevel: (level: number) => void): Promise<MicTest
         onLevel(Math.min(1, max));
       }
     });
-    const timer = setTimeout(() => rec.kill("SIGTERM"), SECONDS * 1000);
+    const timer = setTimeout(() => stop(rec), SECONDS * 1000);
     rec.on("error", () => {
       clearTimeout(timer);
       resolve(false);
@@ -78,21 +94,25 @@ export async function micTest(onLevel: (level: number) => void): Promise<MicTest
       resolve(chunks.length > 0);
     });
   });
-  if (!recorded) {
-    running = null;
-    return { ok: false, peak: 0, problem: "failed" };
-  }
+  if (!recorded) return { ok: false, peak: 0, problem: "failed" };
   onLevel(0);
 
-  // Play it back on the controller speaker.
+  // Play it back on the controller speaker (bounded: clip length + 3 s).
   const played = await new Promise<boolean>((resolve) => {
     const play = spawn("pw-cat", ["--playback", "--target", speaker, "--rate", String(RATE), "--channels", "1", "--format", "f32", "-"], { stdio: ["pipe", "ignore", "ignore"] });
-    running = play;
-    play.on("error", () => resolve(false));
-    play.on("close", (code) => resolve(code === 0));
+    const timer = setTimeout(() => stop(play), (SECONDS + 3) * 1000);
+    // pw-cat may exit before taking the whole clip (EPIPE): the close handler reports it.
+    play.stdin.on("error", () => undefined);
+    play.on("error", () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+    play.on("close", (code) => {
+      clearTimeout(timer);
+      resolve(code === 0);
+    });
     play.stdin.end(Buffer.concat(chunks));
   });
-  running = null;
   chunks.length = 0;
   return { ok: played, peak, problem: played ? undefined : "failed" };
 }

@@ -9,6 +9,7 @@
 // shapes), so this is an extra, not the only safeguard. Kept per computer.
 import { useSyncExternalStore } from "react";
 import { readPref, writePref } from "./storage";
+import { contrast, hexToRgb, type Rgb } from "./theme/desktopPalette";
 
 // Named like games name them. Protanopia and deuteranopia (both red-green)
 // share one palette: Okabe–Ito is designed for both.
@@ -56,6 +57,12 @@ function apply(): void {
   ] as const) {
     if (current === "standard") root.style.removeProperty(`--cv-${name}`);
     else root.style.setProperty(`--cv-${name}`, value);
+  }
+  // Text on these status colors: the ink that reads on all three.
+  if (current === "standard") root.style.removeProperty("--cv-on-status");
+  else {
+    const worst = (ink: Rgb) => Math.min(...[p.good, p.warn, p.bad].map((c) => contrast(ink, hexToRgb(c))));
+    root.style.setProperty("--cv-on-status", worst([255, 255, 255]) >= worst([0, 0, 0]) ? "#ffffff" : "#000000");
   }
   p.axis.forEach((c, i) => root.style.setProperty(`--cv-axis-${i}`, c));
 }

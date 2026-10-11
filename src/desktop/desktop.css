@@ -1,9 +1,38 @@
+/* Status colors (good / warning / bad), defined once for every theme:
+   use var(--status-*), never a literal. App settings -> Color vision sets
+   --cv-* on <html>, which take over. */
+:root {
+  --status-good: var(--cv-good, #15803d);
+  --status-warn: var(--cv-warn, #b45309);
+  --status-bad: var(--cv-bad, #dc2626);
+  /* Text on a status-colored badge or dot. */
+  --on-status: var(--cv-on-status, #fff);
+}
+html[data-theme="dark"] {
+  --status-good: var(--cv-good, #22c55e);
+  --status-warn: var(--cv-warn, #f59e0b);
+  --status-bad: var(--cv-bad, #ef4444);
+  --on-status: var(--cv-on-status, #000);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"],
+  html:not([data-theme]) {
+    --status-good: var(--cv-good, #22c55e);
+    --status-warn: var(--cv-warn, #f59e0b);
+    --status-bad: var(--cv-bad, #ef4444);
+    --on-status: var(--cv-on-status, #000);
+  }
+}
+
 /* Desktop (Electron) layout. Dense by design: a settings tool that sits next to
  * games and terminals. The shell is exactly the window: sidebar + page, with
  * only the page body scrolling, and only when the window is too small for it.
  * Colors come from the shared theme tokens in styles.css. */
 
 .dk {
+  /* Native controls (checkboxes, radios, sliders, progress) take the theme's
+     accent everywhere; set once here, inherited, never per control. */
+  accent-color: var(--dk-accent);
   --dk-gap: 10px;
   --dk-pad: 12px;
   --dk-row-h: 30px;
@@ -164,7 +193,7 @@ html[data-theme="dark"] .dk {
   background: currentColor;
 }
 .dk-chip.warn .dot {
-  background: #f59e0b;
+  background: var(--status-warn);
 }
 
 .dk-notice {
@@ -299,7 +328,6 @@ html[data-theme="dark"] .dk {
 .dk input[type="range"] {
   flex: 1;
   min-width: 60px;
-  accent-color: var(--dk-accent);
   height: 16px;
 }
 .dk input[type="number"],
@@ -460,11 +488,7 @@ html[data-theme="dark"] .dk {
   font-size: var(--dk-small);
   border-top: 0;
 }
-.dk-table td.num {
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
+
 .dk-mono {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -547,25 +571,7 @@ html[data-theme="dark"] .dk {
   min-height: 0;
   width: auto;
 }
-.dk .notice {
-  min-height: 0;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  border-radius: var(--dk-radius);
-  font-weight: 500;
-  font-size: 12.5px;
-}
-.dk .button {
-  min-height: 26px;
-  padding: 0 10px;
-  border-radius: 5px;
-  font-weight: 500;
-  font-size: 12.5px;
-  gap: 6px;
-}
-.dk .button.wide {
-  width: auto;
-}
+
 .dk-sign {
   width: 8px;
   text-align: right;
@@ -719,13 +725,13 @@ html[data-theme="dark"] .dk {
   position: absolute;
   inset: 0 0 auto 0;
   height: 3px;
-  background: linear-gradient(90deg, #fc51fd, #40f8f0);
+  background: linear-gradient(90deg, #fc51fd, #40f8f0); /* theme-exempt: 42PS brand colors (Credits) */
 }
 .dk-studio-logo {
   flex: none;
   width: 112px;
   height: auto;
-  filter: drop-shadow(0 0 10px rgba(252, 81, 253, 0.35));
+  filter: drop-shadow(0 0 10px rgba(252, 81, 253, 0.35)); /* theme-exempt: 42PS brand colors (Credits) */
 }
 .dk-studio-text {
   display: flex;
@@ -738,7 +744,7 @@ html[data-theme="dark"] .dk {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  background: linear-gradient(90deg, #c23ac4, #1aa9a2);
+  background: linear-gradient(90deg, #c23ac4, #1aa9a2); /* theme-exempt: 42PS brand colors (Credits) */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -822,7 +828,6 @@ html[data-theme="dark"] .dk {
 }
 .dk-fix input {
   margin-top: 3px;
-  accent-color: var(--dk-accent);
 }
 .dk-fix-label {
   display: block;
@@ -857,7 +862,6 @@ html[data-theme="dark"] .dk {
 .dk-progress {
   flex: 1;
   height: 8px;
-  accent-color: var(--dk-accent);
 }
 
 /* No dongle connected: plug-in instructions, or first-time setup of a new Pico. */
@@ -917,7 +921,7 @@ html[data-theme="dark"] .dk {
 .live-ctl .led {
   /* Unlit: the grey of the light strip's plastic (same as the bottom strip). */
   --ctl-led-off: color-mix(in srgb, #fff 45%, var(--ctl-dark));
-  fill: color-mix(in srgb, var(--ctl-led, #4061d6) var(--ctl-led-pct, 100%), var(--ctl-led-off));
+  fill: color-mix(in srgb, var(--ctl-led, #4061d6) var(--ctl-led-pct, 100%), var(--ctl-led-off)); /* theme-exempt: the controller drawing: its real lights and press tints */
   /* Bridges the ~30 Hz color samples so animated modes glide. */
   transition: fill 40ms linear;
 }
@@ -941,7 +945,7 @@ html[data-theme="dark"] .dk {
   fill: url(#ctl-r2-fill);
 }
 .live-ctl .fill-on {
-  stop-color: color-mix(in srgb, var(--ctl-dark) 55%, #fff);
+  stop-color: color-mix(in srgb, var(--ctl-dark) 55%, #fff); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 .live-ctl .fill-off {
   stop-color: var(--ctl-dark);
@@ -959,12 +963,12 @@ html[data-theme="light"] .live-ctl {
   fill: color-mix(in srgb, var(--ctl-cap) 50%, var(--ctl-press-ink));
 }
 .live-ctl .on .stk {
-  fill: color-mix(in srgb, var(--ctl-stick) 50%, #fff);
+  fill: color-mix(in srgb, var(--ctl-stick) 50%, #fff); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 /* L1 / R1 and the L2 / R2 fill: a light grey over the trigger color. */
 .live-ctl [data-part="l1"].on .dk,
 .live-ctl [data-part="r1"].on .dk {
-  fill: color-mix(in srgb, var(--ctl-dark) 55%, #fff);
+  fill: color-mix(in srgb, var(--ctl-dark) 55%, #fff); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 .live-ctl .on .ln,
 .live-ctl .on.hit {
@@ -976,7 +980,7 @@ html[data-theme="light"] .live-ctl {
    the red-green clash). */
 [data-cv]:not([data-cv="standard"]) .live-ctl .on .cap,
 [data-cv]:not([data-cv="standard"]) .live-ctl .on .stk {
-  stroke: #fff;
+  stroke: #fff; /* theme-exempt: the controller drawing: its real lights and press tints */
   stroke-width: 3px;
 }
 /* Selectable parts. */
@@ -999,7 +1003,7 @@ html[data-theme="light"] .live-ctl {
   fill: color-mix(in srgb, var(--ctl-on) 12%, transparent);
 }
 .live-ctl .remapped .ln {
-  fill: #f59e0b;
+  fill: var(--status-warn);
 }
 .live-ctl .touches circle {
   fill: var(--ctl-on);
@@ -1160,24 +1164,17 @@ html[data-theme="light"] .live-ctl {
 
 /* Bottom light strip and player indicator (see tools/prepare_controller_art.py). */
 .live-ctl .led-edge {
-  fill: color-mix(in srgb, #fff 45%, var(--ctl-dark));
+  fill: color-mix(in srgb, #fff 45%, var(--ctl-dark)); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 .live-ctl .pled rect {
-  fill: #fff;
+  fill: #fff; /* theme-exempt: the controller drawing: its real lights and press tints */
   opacity: 0;
   pointer-events: none;
   transition: opacity 150ms;
 }
 .live-ctl .pled rect.on {
   opacity: 1;
-  filter: blur(0.6px) drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 18px rgba(255, 255, 255, 0.6));
-}
-
-.live-model {
-  text-align: center;
-  font-family: var(--font-display);
-  font-weight: 600;
-  color: var(--text-strong);
+  filter: blur(0.6px) drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 18px rgba(255, 255, 255, 0.6)); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 
 .live-edge {
@@ -1188,10 +1185,10 @@ html[data-theme="light"] .live-ctl {
 /* The mute button's light, amber while the mic is muted (a fixed status
    color, like the real controller's). */
 .live-ctl [data-part="mute"].muted .cap {
-  fill: #ffa630;
+  fill: #ffa630; /* theme-exempt: the controller drawing: its real lights and press tints */
   /* the art sets a translucent fill-opacity inline on this cap */
   fill-opacity: 1 !important;
-  filter: drop-shadow(0 0 3px #ff9a1f);
+  filter: drop-shadow(0 0 3px #ff9a1f); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 /* The PS logo is a symbol (no button cap), so it lights as a whole. */
 .live-ctl [data-part="ps"].on {
@@ -1298,7 +1295,7 @@ html[data-theme="light"] .live-ctl {
   box-shadow:
     0 0 0 2px var(--dk-accent),
     0 0 24px 4px color-mix(in srgb, var(--dk-accent) 55%, transparent),
-    0 0 0 100vmax rgba(5, 6, 8, 0.66);
+    0 0 0 100vmax rgba(5, 6, 8, 0.66); /* theme-exempt: the tour (off; rebuilt later) */
   transition:
     left 450ms cubic-bezier(0.22, 1, 0.36, 1),
     top 450ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -1306,7 +1303,7 @@ html[data-theme="light"] .live-ctl {
     height 450ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tour-hole.none {
-  box-shadow: 0 0 0 100vmax rgba(5, 6, 8, 0.66);
+  box-shadow: 0 0 0 100vmax rgba(5, 6, 8, 0.66); /* theme-exempt: the tour (off; rebuilt later) */
 }
 .tour-hole.pulse {
   animation: tour-pulse 1.6s ease-in-out infinite;
@@ -1316,7 +1313,7 @@ html[data-theme="light"] .live-ctl {
     box-shadow:
       0 0 0 3px var(--dk-accent),
       0 0 40px 10px color-mix(in srgb, var(--dk-accent) 70%, transparent),
-      0 0 0 100vmax rgba(5, 6, 8, 0.66);
+      0 0 0 100vmax rgba(5, 6, 8, 0.66); /* theme-exempt: the tour (off; rebuilt later) */
   }
 }
 .tour-card {
@@ -1376,9 +1373,9 @@ html[data-theme="light"] .live-ctl {
   animation: dk-spin 1s linear infinite;
 }
 .tour-task.ok .tour-check {
-  border-color: var(--cv-good, #22c55e);
-  background: var(--cv-good, #22c55e);
-  color: #fff;
+  border-color: var(--status-good);
+  background: var(--status-good);
+  color: var(--on-status);
   animation: tour-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes tour-pop {
@@ -1421,9 +1418,7 @@ html[data-theme="light"] .live-ctl {
   border: 1px solid var(--border-default);
   border-radius: 12px;
 }
-.live-tile-narrow {
-  min-width: 64px;
-}
+
 .live-tile-value {
   font-weight: 600;
   color: var(--text-strong);
@@ -1488,14 +1483,14 @@ html[data-theme="light"] .live-ctl {
   stroke: none;
 }
 .live-battery .level {
-  fill: var(--cv-good, #22c55e);
+  fill: var(--status-good);
 }
 .live-battery.low .level {
-  fill: var(--cv-bad, #ef4444);
+  fill: var(--status-bad);
 }
 .live-battery .bolt {
-  fill: #fde047;
-  stroke: rgba(0, 0, 0, 0.5);
+  fill: #fde047; /* theme-exempt: charging bolt glyph */
+  stroke: rgba(0, 0, 0, 0.5); /* theme-exempt: charging bolt outline */
   stroke-width: 0.8;
 }
 .live-bars {
@@ -1547,23 +1542,7 @@ html[data-theme="light"] .live-ctl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-/* Settings rows open their panel. */
-.live-data-link {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  text-decoration: underline dotted color-mix(in srgb, var(--text-muted) 50%, transparent);
-  text-underline-offset: 3px;
-}
-.live-data-link:hover,
-.live-data-link:focus-visible {
-  color: var(--dk-accent);
-  outline: none;
-}
+
 .live-data-card {
   overflow: hidden;
   padding: 8px 10px;
@@ -1633,9 +1612,7 @@ html[data-theme="light"] .live-ctl {
   flex: 1 1 0;
   min-width: 0;
 }
-.live-strip > .live-tile-narrow {
-  flex: 0.6 1 0;
-}
+
 /* Narrow (a small window with the panel open): two rows of four. */
 @container (max-width: 700px) {
   .live-strip {
@@ -1657,13 +1634,13 @@ html[data-theme="light"] .live-ctl {
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.35); /* theme-exempt: the tour (off; rebuilt later) */
 }
 .tour-glyph.cross {
-  color: #8fb4ff;
+  color: #8fb4ff; /* theme-exempt: the tour (off; rebuilt later) */
 }
 .tour-glyph.circle {
-  color: #ff7a85;
+  color: #ff7a85; /* theme-exempt: the tour (off; rebuilt later) */
 }
 
 /* The strips are thin: a wider, invisible click margin around them. */
@@ -1689,8 +1666,8 @@ html[data-theme="light"] .live-ctl {
   margin: 0;
   padding: 8px 16px;
   border-radius: 10px;
-  background: rgba(10, 11, 14, 0.88);
-  color: #fff;
+  background: rgba(10, 11, 14, 0.88); /* theme-exempt: caption: fixed high-contrast overlay over any content */
+  color: #fff; /* theme-exempt: caption: fixed high-contrast overlay over any content */
   font-size: 15px;
   line-height: 1.4;
   text-align: center;
@@ -1744,13 +1721,6 @@ html[data-theme="light"] .live-ctl {
   flex: 0 0 auto;
   text-align: right;
 }
-.live-data-links .live-data-link {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* The narrator question: Skip on its own line, No / Yes side by side below. */
 .tour-actions.asking {
@@ -1797,7 +1767,8 @@ html[data-theme="light"] .live-ctl {
 
 /* Hold-to-continue: a ring fills around the ✕ / ○ while it's held. */
 .tour-glyph.hold {
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55) 72%, transparent 74%), conic-gradient(currentColor calc(var(--hold, 0) * 360deg), rgba(255, 255, 255, 0.18) 0);
+  background:
+    radial-gradient(closest-side, rgba(0, 0, 0, 0.55) 72%, transparent 74%), conic-gradient(currentColor calc(var(--hold, 0) * 360deg), rgba(255, 255, 255, 0.18) 0); /* theme-exempt: the tour (off; rebuilt later) */
 }
 
 /* Tour step 5: the light strips pulse to show what to click. */
@@ -1806,13 +1777,13 @@ html[data-theme="light"] .live-ctl {
 }
 @keyframes strip-pulse {
   50% {
-    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px #fff) brightness(1.5);
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px #fff) brightness(1.5); /* theme-exempt: the tour (off; rebuilt later) */
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .live-ctl .tour-pulse .led-glow {
     animation: none;
-    filter: drop-shadow(0 0 8px #fff);
+    filter: drop-shadow(0 0 8px #fff); /* theme-exempt: the tour (off; rebuilt later) */
   }
 }
 
@@ -1979,7 +1950,7 @@ html[data-theme="light"] .live-ctl {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgb(0 0 0 / 55%), transparent 55%);
+  background: linear-gradient(to top, rgb(0 0 0 / 55%), transparent 55%); /* theme-exempt: scrim over game art */
   pointer-events: none;
 }
 .gp-logo {
@@ -1994,7 +1965,7 @@ html[data-theme="light"] .live-ctl {
   position: relative;
   z-index: 1;
   margin: 0;
-  color: #fff;
+  color: #fff; /* theme-exempt: title over game art */
   font-family: var(--font-display);
   font-size: 26px;
   text-shadow: 0 2px 6px rgb(0 0 0 / 70%);
@@ -2108,7 +2079,7 @@ html[data-theme="light"] .live-ctl {
   cursor: pointer;
 }
 .gp-stars button.on {
-  color: var(--cv-warn, #d97706);
+  color: var(--status-warn);
 }
 .dk-textarea {
   box-sizing: border-box;
@@ -2163,7 +2134,7 @@ html[data-theme="light"] .live-ctl {
   gap: 8px;
   padding: 6px 10px;
   border-bottom: 1px solid var(--dcon-border);
-  background: #151515;
+  background: #151515; /* theme-exempt: console: dark in every theme */
 }
 .dcon-title {
   font-weight: 600;
@@ -2198,7 +2169,7 @@ html[data-theme="light"] .live-ctl {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--status-warn);
 }
 .dcon-spacer {
   flex: 1;
@@ -2223,7 +2194,7 @@ html[data-theme="light"] .live-ctl {
 }
 .dcon-oled {
   image-rendering: pixelated;
-  border: 1px solid #1f1f1f;
+  border: 1px solid #1f1f1f; /* theme-exempt: console: dark in every theme */
   border-radius: 2px;
 }
 .dcon-line {
@@ -2377,8 +2348,8 @@ html[data-theme="light"] .live-ctl {
   height: 15px;
   padding: 0 3px;
   border-radius: 8px;
-  background: var(--cv-warn, #d97706);
-  color: #fff;
+  background: var(--status-warn);
+  color: var(--on-status);
   font-size: 10px;
   font-weight: 700;
   line-height: 15px;
@@ -2390,15 +2361,15 @@ html[data-theme="light"] .live-ctl {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  color: #fff;
+  color: var(--on-status);
   font-size: 10px;
   font-weight: 700;
 }
 .rail-status.ok .rail-dot {
-  background: var(--cv-good, #16a34a);
+  background: var(--status-good);
 }
 .rail-status.warn .rail-dot {
-  background: var(--cv-warn, #d97706);
+  background: var(--status-warn);
 }
 .rail-status.ok .rail-label {
   color: var(--text-strong);
@@ -2561,7 +2532,7 @@ html[data-theme="light"] .live-ctl {
   font-weight: 700;
 }
 .gp-action-failed {
-  color: var(--cv-warn, #d97706);
+  color: var(--status-warn);
 }
 /* X / Y / Z side by side while the card has room; stacked (label left, value
    right, like the other cards' rows) when it doesn't, so 4-5 digit
@@ -2713,19 +2684,19 @@ html[data-theme="light"] .live-ctl {
    that to Apple's floating rounded shapes). */
 html[data-glass] .app-rail {
   border-left: 0;
-  background: rgb(255 255 255 / 5%);
+  background: rgb(255 255 255 / 5%); /* theme-exempt: Liquid Glass light/shade layer */
   box-shadow: -8px 0 24px rgb(0 0 0 / 25%);
 }
 html[data-glass] .rail-footer {
-  border-top-color: rgb(255 255 255 / 12%);
+  border-top-color: rgb(255 255 255 / 12%); /* theme-exempt: Liquid Glass light/shade layer */
 }
 html[data-glass] .rail-divider {
-  background: rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 12%); /* theme-exempt: Liquid Glass light/shade layer */
 }
 html[data-glass] .dk-bar {
   position: relative;
   border-top: 0;
-  background: rgb(255 255 255 / 5%);
+  background: rgb(255 255 255 / 5%); /* theme-exempt: Liquid Glass light/shade layer */
   box-shadow: 0 -8px 24px rgb(0 0 0 / 22%);
 }
 /* The specular rim: a thin bright edge, brightest where the light (the
@@ -2739,10 +2710,10 @@ html[data-glass] .dk-bar::before {
   border-radius: inherit;
   background:
     radial-gradient(160px circle at var(--lx, 30%) var(--ly, 0%), rgb(255 255 255 / 85%), rgb(255 255 255 / 0%) 70%),
-    linear-gradient(160deg, rgb(255 255 255 / 35%), rgb(255 255 255 / 6%) 40%, rgb(255 255 255 / 4%) 60%, rgb(255 255 255 / 22%));
+    linear-gradient(160deg, rgb(255 255 255 / 35%), rgb(255 255 255 / 6%) 40%, rgb(255 255 255 / 4%) 60%, rgb(255 255 255 / 22%)); /* theme-exempt: Liquid Glass light/shade layer */
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
+    linear-gradient(#000 0 0); /* theme-exempt: mask, not a color */
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
@@ -2767,8 +2738,8 @@ html[data-glass] .dk-bar .dk-btn:active {
   transition-duration: 90ms;
 }
 html[data-glass] .dk-bar .dk-btn:not(.primary) {
-  border-color: rgb(255 255 255 / 14%);
-  background: rgb(255 255 255 / 6%);
+  border-color: rgb(255 255 255 / 14%); /* theme-exempt: Liquid Glass light/shade layer */
+  background: rgb(255 255 255 / 6%); /* theme-exempt: Liquid Glass light/shade layer */
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-glass] .rail-link:active,
@@ -2801,7 +2772,7 @@ html[data-glass] .rail-slot.pinned .app-rail,
 html[data-glass] .app-rail:hover,
 html[data-glass] .app-rail:focus-within {
   backdrop-filter: var(--glass-regular, blur(18px));
-  background: rgb(8 10 16 / 45%);
+  background: rgb(8 10 16 / 45%); /* theme-exempt: Liquid Glass light/shade layer */
 }
 html[data-glass] .rail-label {
   text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
@@ -2891,8 +2862,8 @@ html[data-glass] .rail-label {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--cv-good, #22c55e);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--cv-good, #22c55e) 60%, transparent);
+  background: var(--status-good);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-good) 60%, transparent);
   animation: live-spec-pulse 2.4s ease-out infinite;
 }
 @keyframes live-spec-pulse {
@@ -2921,7 +2892,7 @@ html[data-glass] .live-panel {
   margin: calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) 0;
   padding: var(--dk-pad) 10px;
   backdrop-filter: var(--glass-clear, blur(18px));
-  background: rgb(8 10 16 / 30%);
+  background: rgb(8 10 16 / 30%); /* theme-exempt: Liquid Glass light/shade layer */
   box-shadow: -8px 0 24px rgb(0 0 0 / 22%);
 }
 html[data-glass] .live-panel::before {
@@ -2929,7 +2900,7 @@ html[data-glass] .live-panel::before {
   position: absolute;
   inset: 0 auto 0 0;
   width: 1.2px;
-  background: linear-gradient(to bottom, rgb(255 255 255 / 35%), rgb(255 255 255 / 8%));
+  background: linear-gradient(to bottom, rgb(255 255 255 / 35%), rgb(255 255 255 / 8%)); /* theme-exempt: Liquid Glass light/shade layer */
   pointer-events: none;
 }
 html[data-glass] .live-panel .dk-card {
@@ -2965,8 +2936,8 @@ html[data-reduce-motion] .dk-bar .dk-btn:active {
   margin-left: 8px;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--cv-warn, #d97706);
-  color: #000;
+  background: var(--status-warn);
+  color: var(--on-status);
   font-size: 9.5px;
   letter-spacing: 0.08em;
 }
@@ -3188,10 +3159,10 @@ html[data-cards-translucent] .dash-card {
   filter: drop-shadow(0 0 4px color-mix(in srgb, var(--dk-accent) 60%, transparent));
 }
 .dash-gauge.warn .fill {
-  stroke: var(--cv-warn, #d97706);
+  stroke: var(--status-warn);
 }
 .dash-gauge.bad .fill {
-  stroke: var(--cv-bad, #dc2626);
+  stroke: var(--status-bad);
 }
 .dash-gauge-value {
   position: absolute;
@@ -3267,7 +3238,7 @@ html[data-cards-translucent] .dash-card {
   text-align: right;
 }
 .dash-fact.bad b {
-  color: var(--cv-warn, #d97706);
+  color: var(--status-warn);
 }
 .dash-levels {
   display: grid;

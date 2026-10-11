@@ -19,7 +19,6 @@
     "noDevice": "No device"
   },
   "statusText": {
-    "webhidUnavailable": "WebHID unavailable",
     "ready": "Ready to connect",
     "unsaved": "Unsaved edits",
     "applied": "Applied to device",
@@ -924,7 +923,11 @@
       "save": "Save to dongle",
       "revert": "Revert",
       "reset": "Reset to uncalibrated",
-      "saveHint": "Saved in the dongle's own memory; it applies to every game right away."
+      "saveHint": "Saved in the dongle's own memory; it applies to every game right away.",
+      "forSlot": "For the controller in pairing slot {{slot}}; each slot keeps its own.",
+      "getReady": "Get ready…",
+      "missed": "Not measured, so the old values were kept: {{parts}}. Go all the way on those and measure again.",
+      "retry": "Try again"
     },
     "dash": {
       "pico": "Pico 2 W",
@@ -959,7 +962,8 @@
       "wakeOnInput": "Wakes on controller input",
       "never": "never",
       "yes": "yes",
-      "no": "no"
+      "no": "no",
+      "minutes": "{{n}} min"
     },
     "hdr": {
       "label": "HDR lighting (experimental)",

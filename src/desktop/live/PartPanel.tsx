@@ -246,17 +246,27 @@ function TouchLive({ input }: { input: InputReport | null }) {
 function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "speaker" | "haptic" }) {
   const { t } = useTranslation();
   const client = bridge.client;
-  const diag = usePoll(() => client!.readDiag(), 120, Boolean(client)).value;
-  const level = (diag ? (which === "speaker" ? diag.peakSpeaker : diag.peakHaptic) : 0) / 255;
+  // The level, and its peak held for 1.5 s (kept with each reading).
   const hold = useRef({ value: 0, at: 0 });
-  const now = Date.now();
-  if (level >= hold.current.value || now - hold.current.at > 1500) hold.current = { value: level, at: now };
-  const silent = hold.current.value < 0.01;
+  const reading = usePoll(
+    async () => {
+      const diag = await client!.readDiag();
+      const level = (which === "speaker" ? diag.peakSpeaker : diag.peakHaptic) / 255;
+      const now = Date.now();
+      if (level >= hold.current.value || now - hold.current.at > 1500) hold.current = { value: level, at: now };
+      return { level, hold: hold.current.value };
+    },
+    120,
+    Boolean(client),
+  ).value;
+  const level = reading?.level ?? 0;
+  const held = reading?.hold ?? 0;
+  const silent = held < 0.01;
   return (
     <section className="dk-card">
       <h2>{which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptics level now")}</h2>
       <div className="live-level">
-        <Meter value={level} hold={hold.current.value} />
+        <Meter value={level} hold={held} />
         <span className="live-level-pct">{Math.round(level * 100)}%</span>
       </div>
       <p className="dk-hint">{silent ? t(which === "speaker" ? "desktop.live.speakerSilent" : "desktop.live.hapticSilent") : t("desktop.live.levelLive")}</p>
