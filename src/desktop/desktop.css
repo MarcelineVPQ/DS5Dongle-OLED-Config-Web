@@ -3295,3 +3295,39 @@ html[data-cards-translucent] .dash-card {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 3px 20px;
 }
+/* Developer HDR test: swatches may render brighter than SDR white. */
+.hdr-swatches {
+  display: flex;
+  gap: 12px;
+}
+.hdr-swatch {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin: 0;
+  dynamic-range-limit: no-limit;
+}
+.hdr-swatch > div,
+.hdr-swatch > canvas {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+.hdr-swatch figcaption {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.dk-subhead {
+  margin: 10px 0 4px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* The console never shrinks to make room for the dashboard below it (the
+   page scrolls instead), so the whole OLED screen always shows. */
+.dcon,
+.dash {
+  flex: none;
+}

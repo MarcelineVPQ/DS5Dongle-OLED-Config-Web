@@ -874,7 +874,12 @@
       "real": "La vraie",
       "noArt": "sans visuel",
       "reset": "Revenir à la vraie manette",
-      "previewBadge": "Aperçu"
+      "previewBadge": "Aperçu",
+      "hdrTitle": "Test HDR",
+      "hdrHint": "L'écran signale le HDR : {{state}}. Une pastille qui fonctionne brille nettement plus que le blanc de référence.",
+      "hdrYes": "oui",
+      "hdrNo": "non",
+      "hdrReference": "Blanc"
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",

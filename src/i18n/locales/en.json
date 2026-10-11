@@ -873,7 +873,12 @@
       "real": "The real one",
       "noArt": "no art",
       "reset": "Back to the real controller",
-      "previewBadge": "Preview"
+      "previewBadge": "Preview",
+      "hdrTitle": "HDR test",
+      "hdrHint": "Display reports HDR: {{state}}. A swatch that works glows clearly brighter than the white reference.",
+      "hdrYes": "yes",
+      "hdrNo": "no",
+      "hdrReference": "White"
     },
     "knobs": {
       "cardOpacity": "Card opacity",

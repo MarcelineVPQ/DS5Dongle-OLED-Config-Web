@@ -2,6 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
@@ -590,6 +591,8 @@ function DeveloperSettings() {
           {t("desktop.dev.reset")}
         </button>
       </div>
+      <h3 className="dk-subhead">{t("desktop.dev.hdrTitle")}</h3>
+      <HdrTest />
     </section>
   );
 }

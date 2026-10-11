@@ -868,7 +868,12 @@
       "real": "真实手柄",
       "noArt": "无图",
       "reset": "恢复真实手柄",
-      "previewBadge": "预览"
+      "previewBadge": "预览",
+      "hdrTitle": "HDR 测试",
+      "hdrHint": "显示器报告 HDR：{{state}}。生效的色块会明显比白色参照更亮。",
+      "hdrYes": "是",
+      "hdrNo": "否",
+      "hdrReference": "白色"
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",

@@ -874,7 +874,12 @@
       "real": "El real",
       "noArt": "sin arte",
       "reset": "Volver al mando real",
-      "previewBadge": "Vista previa"
+      "previewBadge": "Vista previa",
+      "hdrTitle": "Prueba HDR",
+      "hdrHint": "La pantalla indica HDR: {{state}}. Una muestra que funciona brilla claramente más que el blanco de referencia.",
+      "hdrYes": "sí",
+      "hdrNo": "no",
+      "hdrReference": "Blanco"
     },
     "knobs": {
       "cardOpacity": "Opacidad de las tarjetas",

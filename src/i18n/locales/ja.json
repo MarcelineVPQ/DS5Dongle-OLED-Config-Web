@@ -868,7 +868,12 @@
       "real": "実機",
       "noArt": "アートなし",
       "reset": "実機に戻す",
-      "previewBadge": "プレビュー"
+      "previewBadge": "プレビュー",
+      "hdrTitle": "HDR テスト",
+      "hdrHint": "ディスプレイの HDR：{{state}}。有効なサンプルは基準の白よりはっきり明るく光ります。",
+      "hdrYes": "はい",
+      "hdrNo": "いいえ",
+      "hdrReference": "白"
     },
     "knobs": {
       "cardOpacity": "カードの不透明度",

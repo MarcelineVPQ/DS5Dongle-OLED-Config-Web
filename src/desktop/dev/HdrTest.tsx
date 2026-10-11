@@ -1,0 +1,72 @@
+// Developer: which HDR path actually reaches this display. Three swatches,
+// each asking for light ~4x brighter than paper white, beside a normal white
+// reference. On an HDR display, a swatch that works glows clearly brighter
+// than the reference; one that doesn't looks the same (clamped to SDR).
+// Screenshots can't show it (captured as SDR), so a person has to look.
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+const BOOST = 4; // x SDR white
+
+// The few WebGPU calls used here (no @webgpu/types dependency for one test).
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Gpu = { requestAdapter(): Promise<{ requestDevice(): Promise<any> } | null> };
+type GpuContext = { configure(c: Record<string, unknown>): void; getCurrentTexture(): { createView(): unknown } };
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// WebGPU canvas in extended tone mapping: values above 1.0 are HDR.
+function GpuSwatch() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const [ok, setOk] = useState<boolean | null>(null);
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const canvas = ref.current;
+        const gpu = (navigator as Navigator & { gpu?: Gpu }).gpu;
+        const adapter = await gpu?.requestAdapter();
+        const device = await adapter?.requestDevice();
+        const ctx = canvas?.getContext("webgpu") as unknown as GpuContext | null;
+        if (!canvas || !device || !ctx || !live) return setOk(false);
+        ctx.configure({ device, format: "rgba16float", toneMapping: { mode: "extended" }, alphaMode: "opaque" });
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), clearValue: { r: BOOST, g: BOOST, b: BOOST, a: 1 }, loadOp: "clear", storeOp: "store" }] });
+        pass.end();
+        device.queue.submit([enc.finish()]);
+        setOk(true);
+      } catch {
+        if (live) setOk(false);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+  return (
+    <figure className="hdr-swatch">
+      <canvas ref={ref} width={64} height={64} />
+      <figcaption>B · WebGPU{ok === false ? " ✗" : ""}</figcaption>
+    </figure>
+  );
+}
+
+export default function HdrTest() {
+  const { t } = useTranslation();
+  const hdr = typeof matchMedia === "function" && matchMedia("(dynamic-range: high)").matches;
+  return (
+    <div className="hdr-test">
+      <p className="dk-hint">{t("desktop.dev.hdrHint", { state: hdr ? t("desktop.dev.hdrYes") : t("desktop.dev.hdrNo") })}</p>
+      <div className="hdr-swatches">
+        <figure className="hdr-swatch">
+          <div style={{ background: "#ffffff" }} />
+          <figcaption>{t("desktop.dev.hdrReference")}</figcaption>
+        </figure>
+        <figure className="hdr-swatch">
+          <div style={{ background: `color(srgb-linear ${BOOST} ${BOOST} ${BOOST})` }} />
+          <figcaption>A · CSS</figcaption>
+        </figure>
+        <GpuSwatch />
+      </div>
+    </div>
+  );
+}

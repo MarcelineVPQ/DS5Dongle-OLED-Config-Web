@@ -874,7 +874,12 @@
       "real": "Der echte",
       "noArt": "keine Grafik",
       "reset": "Zurück zum echten Controller",
-      "previewBadge": "Vorschau"
+      "previewBadge": "Vorschau",
+      "hdrTitle": "HDR-Test",
+      "hdrHint": "Display meldet HDR: {{state}}. Ein funktionierendes Feld leuchtet deutlich heller als die weiße Referenz.",
+      "hdrYes": "ja",
+      "hdrNo": "nein",
+      "hdrReference": "Weiß"
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",
