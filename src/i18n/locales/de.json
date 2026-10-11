@@ -969,6 +969,18 @@
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",
       "sub": "Die Lichtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart."
+    },
+    "grips": {
+      "link": "Links und rechts koppeln",
+      "linkSub": "Beide Griffe ändern sich gemeinsam",
+      "left": "Linker Griff",
+      "right": "Rechter Griff",
+      "test": {
+        "left": "Links testen",
+        "right": "Rechts testen",
+        "both": "Beide testen"
+      },
+      "testHint": "Ein kurzes Rumpeln am Griff mit seiner aktuellen Stärke (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
     }
   },
   "ad": {

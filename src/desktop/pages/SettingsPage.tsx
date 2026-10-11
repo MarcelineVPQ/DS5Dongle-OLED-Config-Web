@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { type AutoHapticsLowpass, type AutoHapticsMode, type ControllerMode, type PollingRateMode, fieldIssue } from "../../protocol/config";
-import { BusyButton, Segmented, Slider, Toggle } from "../controls";
+import { BusyButton, GripHaptics, Segmented, Slider, Toggle } from "../controls";
 
 // Settings sections, each a card the live view's side panel shows for the
 // part it belongs to. Changes apply to the dongle's RAM right away
@@ -22,7 +23,26 @@ export function HapticsSection({ bridge }: SectionProps) {
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.haptics", "Haptics")}</h2>
-      <Slider label={t("haptics.gainLabel")} value={d.hapticsGain} min={1} max={6} step={0.1} digits={1} unit="×" invalid={issue("hapticsGain")} onChange={(v) => set("hapticsGain", v)} />
+      <GripHaptics
+        left={d.hapticsGain}
+        right={d.hapticsGainRight}
+        split={!!bridge.client?.splitHaptics}
+        invalid={issue("hapticsGain") || issue("hapticsGainRight")}
+        onChange={(l, r) => {
+          set("hapticsGain", l);
+          set("hapticsGainRight", r);
+        }}
+      />
+      {bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest) && (
+        <div className="dk-row-btns">
+          {(["left", "right", "both"] as const).map((side) => (
+            <BusyButton key={side} className="dk-btn" disabled={!bridge.identity?.controllerConnected} onClick={() => bridge.client!.gripTest(side)}>
+              {t(`desktop.grips.test.${side}`)}
+            </BusyButton>
+          ))}
+        </div>
+      )}
+      {bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest) && <p className="dk-hint">{t("desktop.grips.testHint")}</p>}
       <Slider
         label={t("haptics.audioBufferLabel")}
         sub={t("haptics.audioBufferSub")}

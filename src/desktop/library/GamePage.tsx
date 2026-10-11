@@ -10,7 +10,7 @@ import { errorText } from "../../errorText";
 import { settingsFrom } from "./useGameProfile";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls";
+import { GripHaptics, Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { useMsg } from "../pages/GamesPage";
 import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
@@ -209,7 +209,12 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
       ) : (
         <>
           <p className="dk-hint">{t("desktop.library.profileHint")}</p>
-          <Slider label={t("desktop.library.haptics")} value={draft.hapticsGain} min={1} max={6} step={0.1} digits={1} unit="×" onChange={(v) => edit({ hapticsGain: v })} />
+          <GripHaptics
+            left={draft.hapticsGain}
+            right={draft.hapticsGainRight ?? draft.hapticsGain}
+            split={!!bridge.client?.splitHaptics}
+            onChange={(l, r) => edit({ hapticsGain: l, hapticsGainRight: r })}
+          />
           <Segmented
             label={t("desktop.library.autoHaptics")}
             value={draft.autoHapticsEnable}

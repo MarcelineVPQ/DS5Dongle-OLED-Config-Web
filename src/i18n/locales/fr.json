@@ -969,6 +969,18 @@
     "hdr": {
       "label": "Éclairage HDR (expérimental)",
       "sub": "La barre lumineuse brille plus que le blanc sur un écran HDR, comme les vraies LED. Nécessite l'accélération matérielle ; s'applique au redémarrage."
+    },
+    "grips": {
+      "link": "Lier gauche et droite",
+      "linkSub": "Les deux poignées bougent ensemble",
+      "left": "Poignée gauche",
+      "right": "Poignée droite",
+      "test": {
+        "left": "Tester gauche",
+        "right": "Tester droite",
+        "both": "Tester les deux"
+      },
+      "testHint": "Une courte vibration sur cette poignée à sa force actuelle (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
     }
   },
   "ad": {

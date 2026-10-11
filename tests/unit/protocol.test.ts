@@ -8,6 +8,15 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGain: 4.5, speakerVolume: -20, lightbarMode: 3, lbFavR: [1, 2, 3, 4], screenBrightness: 2, controllerWakesDisplay: false });
     const bytes = encodeConfigBody(cfg);
     expect(bytes.length).toBe(CONFIG_BODY_SIZE);
+    // Before protocol 1.6 there is one strength for both grips.
+    expect(decodeConfigBody(bytes)).toEqual({ ...cfg, hapticsGainRight: cfg.hapticsGain });
+  });
+
+  it("carries the right grip after the narrator byte from protocol 1.6", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGain: 2, hapticsGainRight: 5.5 });
+    const bytes = encodeConfigBody(cfg, true);
+    expect(bytes.length).toBe(42);
+    expect(bytes[37]).toBe(0xff); // the narrator byte, which a settings write never changes
     expect(decodeConfigBody(bytes)).toEqual(cfg);
   });
 

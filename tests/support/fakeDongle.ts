@@ -3,14 +3,15 @@
 // functions report PENDING until the main loop runs them, a second deferred
 // function while any one is pending is BUSY, and reboot/BOOTSEL make the device
 // vanish. Used by the integration tests in place of real hardware.
-import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, encodeConfigBody } from "../../src/protocol/config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody } from "../../src/protocol/config";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "../../src/protocol/transport";
 
-const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b]);
+const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
 
 export interface FakeDongleOptions {
   protoMajor?: number;
+  protoMinor?: number; // default 6
   // How many identity reads a deferred command stays PENDING for.
   pendingPolls?: number;
   saveFails?: boolean;
@@ -29,9 +30,15 @@ export class FakeDongle implements Ds5Transport {
   slots = [true, false, false, false];
   currentSlot = 0;
   lastTrigger = -1;
+  lastGripTest = -1; // 0 left, 1 right, 2 both
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
+  private get split() {
+    return (this.opts.protoMinor ?? 6) >= 6;
+  }
   flashNarrator = 0xff;
+  // Right grip haptics strength after the narrator (protocol 1.6), float LE.
+  rightGain = new Uint8Array(new Float32Array([1]).buffer);
   said: [number, number][] = [];
   playerLeds = 0x04; // player 1
   edge = false;
@@ -83,11 +90,15 @@ export class FakeDongle implements Ds5Transport {
         if (this.gone) throw new DeviceGoneError();
         return this.identity().subarray(0, length);
       case 0xf7: {
-        const out = new Uint8Array(59);
+        // Like the firmware: the whole Config_body (38 bytes before 1.6, 42
+        // from 1.6), then the remap block only when the request has room for it.
+        const body = this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
+        const out = new Uint8Array(body + 21);
         out.set(this.config, 0);
         out[CONFIG_BODY_SIZE] = this.narrator;
-        out.set([0x52, 0x4d, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.remap], CONFIG_BODY_SIZE + 1);
-        return out.subarray(0, Math.min(length, out.length));
+        if (this.split) out.set(this.rightGain, CONFIG_BODY_SIZE + 1);
+        out.set([0x52, 0x4d, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.remap], body);
+        return out.subarray(0, length >= out.length ? out.length : Math.min(length, body));
       }
       case 0xf8:
         return new TextEncoder().encode("0.8.0-test");
@@ -127,6 +138,10 @@ export class FakeDongle implements Ds5Transport {
     this.lastResult = RESULT.ok;
     if (func === 0x01) {
       this.config = payload.slice(1, 1 + CONFIG_BODY_SIZE);
+      // 1.6: a longer body carries the right grip (the narrator byte is kept).
+      if (this.split && payload.length >= 1 + CONFIG_BODY_SIZE_SPLIT) this.rightGain = payload.slice(1 + CONFIG_BODY_SIZE + 1, 1 + CONFIG_BODY_SIZE_SPLIT);
+      // Older firmware copies whatever reaches byte 37 into the narrator.
+      if (!this.split && payload.length > 1 + CONFIG_BODY_SIZE) this.narrator = payload[1 + CONFIG_BODY_SIZE];
       this.hostGen++;
     } else if (func === 0x0d) {
       if (payload[1] !== 0x43 || payload[2] !== 0x4c || payload[3] !== 2 || payload[4] > 3 || payload.length < 23) this.lastResult = RESULT.invalid;
@@ -138,6 +153,8 @@ export class FakeDongle implements Ds5Transport {
         this.remapRevision++;
       }
     } else if ((func === 0x04 || func === 0x05) && arg > 3) {
+      this.lastResult = RESULT.invalid;
+    } else if (func === 0x0e && arg > 2) {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x0a && arg > 6) {
       this.lastResult = RESULT.invalid;
@@ -177,6 +194,7 @@ export class FakeDongle implements Ds5Transport {
       this.flashConfig = this.config.slice();
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
+    else if (func === 0x0e) this.lastGripTest = arg;
     else if (func === 0x0b) {
       this.narrator = arg;
       this.flashNarrator = arg; // saved on its own, nothing else
@@ -185,7 +203,7 @@ export class FakeDongle implements Ds5Transport {
 
   private identity(): Uint8Array {
     const out = new Uint8Array(30);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, 4, CONFIG_BODY_SIZE + 1, 0xff]);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, this.opts.protoMinor ?? 6, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
@@ -202,7 +220,7 @@ export class FakeDongle implements Ds5Transport {
       [...this.colorwayCode].map((c) => c.charCodeAt(0)),
       27,
     );
-    out[29] = 0x01 | 0x02; // FEATURES2: OLED mirror, calibration
+    out[29] = this.split ? 0x01 | 0x02 | 0x04 : 0x01 | 0x02; // FEATURES2: OLED mirror, calibration, grip test (1.6)
     return out;
   }
 

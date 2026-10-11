@@ -30,6 +30,11 @@
 import { toUint8Array } from "./bytes";
 
 export const CONFIG_BODY_SIZE = 37;
+// Protocol 1.6 adds the right grip's haptics strength after the narrator byte
+// (37, which a settings write never changes): a float at 38, 42 bytes in all.
+// Only sent to 1.6+ firmware; older firmware would take byte 37 as the narrator.
+export const CONFIG_BODY_SIZE_SPLIT = 42;
+const RIGHT_GAIN_AT = 38;
 // Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
 // fields). We still accept that and default the missing tail, so the updated
 // UI can read older firmware without erroring.
@@ -44,7 +49,8 @@ export type AutoHapticsLowpass = 0 | 1 | 2 | 3;
 
 export interface ConfigBody {
   configVersion: number;
-  hapticsGain: number;
+  hapticsGain: number; // left grip (both, on firmware before 1.6)
+  hapticsGainRight: number; // right grip (protocol 1.6; else = hapticsGain)
   speakerVolume: number;
   inactiveTime: number;
   disableInactiveDisconnect: boolean;
@@ -80,6 +86,7 @@ export interface ConfigValidationIssue {
 export const DEFAULT_CONFIG: ConfigBody = {
   configVersion: 1,
   hapticsGain: 1.0,
+  hapticsGainRight: 1.0,
   speakerVolume: 0,
   inactiveTime: 30,
   disableInactiveDisconnect: false,
@@ -168,12 +175,12 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_MIN_SIZE}`);
 }
 
-export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
+export function encodeConfigBody(config: ConfigBody, split = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     throw new Error(issues.map((i) => i.message).join("; "));
   }
-  const bytes = new Uint8Array(new ArrayBuffer(CONFIG_BODY_SIZE));
+  const bytes = new Uint8Array(new ArrayBuffer(split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
   view.setFloat32(1, config.hapticsGain, true);
@@ -197,6 +204,10 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(34, config.btMicEnable ? 1 : 0);
   view.setUint8(35, config.screenBrightness & 0xff);
   view.setUint8(36, config.controllerWakesDisplay ? 1 : 0);
+  if (split) {
+    view.setUint8(37, 0xff); // the narrator: ignored by a settings write
+    view.setFloat32(RIGHT_GAIN_AT, config.hapticsGainRight, true);
+  }
   return bytes;
 }
 
@@ -204,6 +215,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   const issues: ConfigValidationIssue[] = [];
   if (!Number.isFinite(config.hapticsGain) || config.hapticsGain < 1 || config.hapticsGain > 6) {
     issues.push({ field: "hapticsGain", message: "Haptics gain must be between 1.0 and 6.0" });
+  }
+  if (!Number.isFinite(config.hapticsGainRight) || config.hapticsGainRight < 1 || config.hapticsGainRight > 6) {
+    issues.push({ field: "hapticsGainRight", message: "Haptics gain must be between 1.0 and 6.0" });
   }
   if (!Number.isFinite(config.speakerVolume) || config.speakerVolume < -100 || config.speakerVolume > 12) {
     issues.push({ field: "speakerVolume", message: "Speaker volume must be between -100 dB and +12 dB" });
@@ -247,6 +261,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
   return {
     configVersion: clampInteger(config.configVersion, 0, 255),
     hapticsGain: roundToStep(config.hapticsGain, 0.01),
+    hapticsGainRight: roundToStep(config.hapticsGainRight, 0.01),
     speakerVolume: roundToStep(config.speakerVolume, 1),
     inactiveTime: clampInteger(config.inactiveTime, 5, 60),
     disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
@@ -275,6 +290,7 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
   return (
     left.configVersion === right.configVersion &&
     Math.abs(left.hapticsGain - right.hapticsGain) < 0.001 &&
+    Math.abs(left.hapticsGainRight - right.hapticsGainRight) < 0.001 &&
     Math.abs(left.speakerVolume - right.speakerVolume) < 0.5 &&
     left.inactiveTime === right.inactiveTime &&
     left.disableInactiveDisconnect === right.disableInactiveDisconnect &&
@@ -309,7 +325,7 @@ export function fieldIssue(issues: ConfigValidationIssue[], field: keyof ConfigB
 function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   const avail = bytes.byteLength - offset;
   if (avail < CONFIG_BODY_MIN_SIZE) return null;
-  const len = Math.min(avail, CONFIG_BODY_SIZE);
+  const len = Math.min(avail, CONFIG_BODY_SIZE_SPLIT);
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
   // older firmware stops at offset 18, so default the rest.
@@ -317,6 +333,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   return {
     configVersion: view.getUint8(0),
     hapticsGain: view.getFloat32(1, true),
+    hapticsGainRight: len >= CONFIG_BODY_SIZE_SPLIT ? view.getFloat32(RIGHT_GAIN_AT, true) : view.getFloat32(1, true),
     speakerVolume: view.getFloat32(5, true),
     inactiveTime: view.getUint8(9),
     disableInactiveDisconnect: view.getUint8(10) === 1,

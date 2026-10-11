@@ -968,6 +968,18 @@
     "hdr": {
       "label": "HDR lighting (experimental)",
       "sub": "The lightbar glows brighter than white on an HDR display, like the real LEDs. Needs hardware acceleration; applies at restart."
+    },
+    "grips": {
+      "link": "Link left and right",
+      "linkSub": "Both grips move together",
+      "left": "Left grip",
+      "right": "Right grip",
+      "test": {
+        "left": "Test left",
+        "right": "Test right",
+        "both": "Test both"
+      },
+      "testHint": "A short rumble on that grip at its strength now (the trigger tests don't use these: L2 and R2 have their own motors)."
     }
   },
   "ad": {

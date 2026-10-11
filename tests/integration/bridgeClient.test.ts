@@ -14,7 +14,7 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
     const { client } = setup();
     const id = await client.checkCompatible();
     expect(id.protoMajor).toBe(1);
-    expect(id.configBodyLength).toBe(38); // + the narrator byte (protocol 1.3)
+    expect(id.configBodyLength).toBe(42); // + the narrator byte (1.3) and the right grip haptics (1.6)
     expect(id.slotCount).toBe(4);
   });
 
@@ -228,5 +228,44 @@ describe("OLED screen mirror (0xEF, protocol 1.4)", () => {
     expect(frame!.power).toBe("on");
     expect(frame!.screen).toBe(2);
     expect(frame!.pixels.length).toBe(1024);
+  });
+});
+
+describe("left / right grip haptics (protocol 1.6)", () => {
+  it("writes and reads both strengths, keeps the narrator, and still finds the remap block", async () => {
+    const dongle = new FakeDongle();
+    dongle.narrator = 3;
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    expect(client.splitHaptics).toBe(true);
+    await client.applyConfig({ ...(await client.readConfig()), hapticsGain: 2, hapticsGainRight: 4.5 });
+    const back = await client.readConfig();
+    expect([back.hapticsGain, back.hapticsGainRight]).toEqual([2, 4.5]);
+    expect(dongle.narrator).toBe(3);
+    expect(await client.readRemap()).not.toBeNull();
+  });
+
+  it("sends older firmware only the 37-byte body (byte 37 would be its narrator)", async () => {
+    const dongle = new FakeDongle({ protoMinor: 5 });
+    dongle.narrator = 3;
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    expect(client.splitHaptics).toBe(false);
+    const cfg = await client.readConfig();
+    expect(cfg.hapticsGainRight).toBe(cfg.hapticsGain);
+    await client.applyConfig({ ...cfg, hapticsGain: 3 });
+    expect(dongle.narrator).toBe(3);
+    expect(await client.readRemap()).not.toBeNull();
+  });
+});
+
+describe("grip test (protocol 1.6)", () => {
+  it("announces it and sends the side", async () => {
+    const dongle = new FakeDongle();
+    const client = new Ds5BridgeClient(dongle);
+    expect((await client.identity()).features2 & FEATURES2.gripTest).toBe(FEATURES2.gripTest);
+    await client.gripTest("right");
+    expect(dongle.lastGripTest).toBe(1);
+    expect((await new Ds5BridgeClient(new FakeDongle({ protoMinor: 5 })).identity()).features2 & FEATURES2.gripTest).toBe(0);
   });
 });

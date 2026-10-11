@@ -8,6 +8,8 @@ import { z } from "zod";
 // game runs; never written to the dongle's flash).
 export const ProfileSettingsSchema = z.strictObject({
   hapticsGain: z.number().min(1).max(6),
+  // Right grip (protocol 1.6); profiles made before it have one strength for both.
+  hapticsGainRight: z.number().min(1).max(6).optional(),
   autoHapticsEnable: z.number().int().min(0).max(3),
   autoHapticsGain: z.number().int().min(0).max(200),
   autoHapticsLowpass: z.number().int().min(0).max(3),

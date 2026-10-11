@@ -969,6 +969,18 @@
     "hdr": {
       "label": "Iluminación HDR (experimental)",
       "sub": "La barra de luz brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar."
+    },
+    "grips": {
+      "link": "Vincular izquierda y derecha",
+      "linkSub": "Ambas empuñaduras cambian a la vez",
+      "left": "Empuñadura izquierda",
+      "right": "Empuñadura derecha",
+      "test": {
+        "left": "Probar izquierda",
+        "right": "Probar derecha",
+        "both": "Probar ambas"
+      },
+      "testHint": "Una vibración breve en esa empuñadura con su fuerza actual (las pruebas de gatillos no la usan: L2 y R2 tienen sus propios motores)."
     }
   },
   "ad": {

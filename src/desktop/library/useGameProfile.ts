@@ -12,6 +12,7 @@ import { EMPTY_LIBRARY, PROFILE_FIELDS, type LibraryFile, type ProfileSettings }
 export function settingsFrom(c: ConfigBody): ProfileSettings {
   return {
     hapticsGain: c.hapticsGain,
+    hapticsGainRight: c.hapticsGainRight,
     autoHapticsEnable: c.autoHapticsEnable,
     autoHapticsGain: c.autoHapticsGain,
     autoHapticsLowpass: c.autoHapticsLowpass,
@@ -24,8 +25,10 @@ export function settingsFrom(c: ConfigBody): ProfileSettings {
   };
 }
 
-const same = (a: ProfileSettings, b: ProfileSettings) => PROFILE_FIELDS.every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
-const withSettings = (c: ConfigBody, s: ProfileSettings): ConfigBody => ({ ...c, ...s }) as ConfigBody; // ranges checked by ProfileSettingsSchema
+// A profile from before the left/right split has one strength for both grips.
+const filled = (s: ProfileSettings): ProfileSettings => ({ ...s, hapticsGainRight: s.hapticsGainRight ?? s.hapticsGain });
+const same = (a: ProfileSettings, b: ProfileSettings) => PROFILE_FIELDS.every((k) => JSON.stringify(filled(a)[k]) === JSON.stringify(filled(b)[k]));
+const withSettings = (c: ConfigBody, s: ProfileSettings): ConfigBody => ({ ...c, ...filled(s) }) as ConfigBody; // ranges checked by ProfileSettingsSchema
 
 // What the profile hook should do now (pure, so the switch/restore rules are
 // unit-tested): apply the running game's profile (keeping the normal values

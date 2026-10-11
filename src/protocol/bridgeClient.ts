@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { type RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
@@ -35,6 +35,7 @@ export const FUNC = {
   narrator: 0x0b,
   narratorSay: 0x0c,
   calibration: 0x0d,
+  gripTest: 0x0e,
   remap: 0x10,
 } as const;
 
@@ -56,6 +57,7 @@ export const IDENTITY_FEATURES = {
 export const FEATURES2 = {
   oledMirror: 0x01, // 0xEF: the OLED's image as last sent to the panel
   calibration: 0x02, // 0xEE get / 0xF6 0x0D set: stick, trigger, gyro calibration
+  gripTest: 0x04, // 0xF6 0x0E: buzz a grip at its haptics strength (protocol 1.6)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -205,8 +207,18 @@ export class Ds5BridgeClient {
     return this.transport.isOpen;
   }
 
+  // The firmware's protocol, as of the last identity read (decides the config layout).
+  private protocol: { major: number; minor: number } | null = null;
+
   async identity(): Promise<BridgeIdentity> {
-    return decodeIdentity(await this.transport.getReport(REPORT.identity, 30));
+    const id = decodeIdentity(await this.transport.getReport(REPORT.identity, 30));
+    this.protocol = { major: id.protoMajor, minor: id.protoMinor };
+    return id;
+  }
+
+  // Protocol 1.6+: left and right grip haptics strengths.
+  get splitHaptics(): boolean {
+    return !!this.protocol && (this.protocol.major > 1 || this.protocol.minor >= 6);
   }
 
   // Throws if the dongle speaks a protocol major this app doesn't understand.
@@ -254,12 +266,12 @@ export class Ds5BridgeClient {
   }
 
   async readConfig(): Promise<ConfigBody> {
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE));
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_SPLIT));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config);
+    const body = encodeConfigBody(config, this.splitHaptics);
     await this.command(FUNC.applyConfig, [...body]);
   }
 
@@ -308,6 +320,11 @@ export class Ds5BridgeClient {
   }
 
   // 0 = off, 1-6 = the OLED Trigger Test presets.
+  // ~0.5 s of rumble on a grip at its current haptics strength (protocol 1.6).
+  async gripTest(side: "left" | "right" | "both"): Promise<void> {
+    await this.command(FUNC.gripTest, [side === "left" ? 0 : side === "right" ? 1 : 2]);
+  }
+
   async previewTrigger(preset: number): Promise<void> {
     await this.command(FUNC.triggerPreview, [preset]);
   }

@@ -8,7 +8,7 @@
 //
 // The table maps source index → target index; 0xFF = source disabled.
 
-import { CONFIG_BODY_SIZE, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
+import { CONFIG_BODY_SIZE, FEATURE_REPORT_PAYLOAD_SIZE, CONFIG_BODY_SIZE_SPLIT } from "./config";
 import { toUint8Array } from "./bytes";
 
 export const REMAP_COUNT = 16;
@@ -69,9 +69,10 @@ export function isValidTable(table: number[]): boolean {
 // as "remapping unsupported, update firmware".
 export function decodeRemapFromConfigReport(source: ArrayBuffer | DataView | Uint8Array): RemapState | null {
   const bytes = toUint8Array(source);
-  // WebHID may or may not keep the leading report-ID byte, so the block sits at
-  // CONFIG_BODY_SIZE or CONFIG_BODY_SIZE + 1. Disambiguate by the 'RM' magic.
-  for (const base of [CONFIG_BODY_SIZE, CONFIG_BODY_SIZE + 1]) {
+  // The block follows the firmware's whole config body: 37 or 38 bytes before
+  // protocol 1.6 (with the narrator byte), 42 from 1.6 (right grip haptics).
+  // Disambiguate by the 'RM' magic.
+  for (const base of [CONFIG_BODY_SIZE, CONFIG_BODY_SIZE + 1, CONFIG_BODY_SIZE_SPLIT]) {
     if (base + 5 + REMAP_COUNT > bytes.byteLength) continue;
     if (bytes[base] !== MAGIC_R || bytes[base + 1] !== MAGIC_M) continue;
     const version = bytes[base + 2];
