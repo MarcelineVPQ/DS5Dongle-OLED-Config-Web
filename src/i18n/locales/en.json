@@ -845,7 +845,14 @@
       "label": "Navigation",
       "pin": "Keep open",
       "collapse": "Collapse",
-      "controllerAgain": "Controller · click again to show or hide its settings"
+      "controllerAgain": "Controller · click again to show or hide its settings",
+      "tip": {
+        "controller": "your controller, live. Click any part of it to set it up",
+        "dongle": "firmware, the OLED screen, power and USB",
+        "games": "your games, per-game profiles and Proton setup",
+        "app": "language, look, updates and startup",
+        "about": "the guide, what's new and credits"
+      }
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
@@ -906,7 +913,15 @@
       "hdrHint": "Display reports HDR: {{state}}. A swatch that works glows clearly brighter than the white reference.",
       "hdrYes": "yes",
       "hdrNo": "no",
-      "hdrReference": "White"
+      "hdrReference": "White",
+      "updates": "Update banners",
+      "updatesHint": "Show an app and firmware update in each state, to check how they look. Nothing is downloaded or flashed.",
+      "updatesState": {
+        "off": "Off (the real state)",
+        "available": "Available",
+        "progress": "In progress",
+        "ready": "Ready / waiting"
+      }
     },
     "knobs": {
       "cardOpacity": "Card opacity",

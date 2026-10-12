@@ -11,6 +11,11 @@
 //   npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
 //   node tools/check_layout.mjs [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650]
 //
+// Every layout and contrast pass also runs the controller and Dongle views in
+// each update state (available, in progress, ready) through the app's own
+// developer preview (src/desktop/updatePreview.ts), since a real update is
+// rarely on offer when this runs.
+//
 // Needs a dongle connected (most panels only exist then). Exits 1 on any
 // problem. A label shortened with "…" counts only if it has no tooltip. The
 // user's language, theme and style are put back at the end.
@@ -199,6 +204,24 @@ function views() {
   return list;
 }
 
+// The update states, shown through the developer preview (no reload needed:
+// the app listens for preference changes).
+const UPDATE_STATES = ["available", "progress", "ready"];
+const UPDATE_VIEWS = ["controller", "dongle (console + dashboard)"];
+const setUpdatePreview = (value) =>
+  evaluate(
+    `(() => { localStorage.setItem("ds5.dev.updates", ${JSON.stringify(value)}); window.dispatchEvent(new CustomEvent("ds5:pref", { detail: { key: "ds5.dev.updates", value: ${JSON.stringify(value)} } })); })()`,
+  );
+async function* withUpdateStates() {
+  for (const [name, open] of views()) yield [name, open];
+  const byName = new Map(views());
+  for (const state of UPDATE_STATES) {
+    await setUpdatePreview(state);
+    for (const name of UPDATE_VIEWS) yield [`${name}, update ${state}`, byName.get(name)];
+  }
+  await setUpdatePreview("");
+}
+
 let problems = 0;
 const report = (prefix, found) => {
   const seen = new Set();
@@ -211,6 +234,7 @@ const report = (prefix, found) => {
   }
 };
 const original = await evaluate(`({ lang: localStorage.getItem("i18nextLng"), theme: localStorage.getItem("ds5-bridge-theme"), glass: localStorage.getItem("ds5.glass") })`);
+await setUpdatePreview(""); // never start inside a preview
 const setPrefs = (p) =>
   evaluate(
     `(() => { ${Object.entries(p)
@@ -224,7 +248,7 @@ if (MODE === "layout" || MODE === "all") {
     await sleep(5000);
     for (const [w, h] of SIZES) {
       await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false });
-      for (const [name, open] of views()) {
+      for await (const [name, open] of withUpdateStates()) {
         await open();
         await sleep(700);
         report(`layout   ${lang.padEnd(5)} ${w}x${h} ${name.padEnd(28)}`, (await evaluate(LAYOUT_PROBE)) ?? []);
@@ -240,7 +264,7 @@ if (MODE === "contrast" || MODE === "all") {
     for (const [style, glass] of STYLES) {
       await setPrefs({ i18nextLng: "en", "ds5-bridge-theme": theme, "ds5.glass": glass });
       await sleep(5000);
-      for (const [name, open] of views()) {
+      for await (const [name, open] of withUpdateStates()) {
         await open();
         await sleep(700);
         const r = (await evaluate(CONTRAST_PROBE)) ?? { out: [], skipped: 0 };

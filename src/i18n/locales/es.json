@@ -846,7 +846,14 @@
       "label": "Navegación",
       "pin": "Mantener abierto",
       "collapse": "Contraer",
-      "controllerAgain": "Mando · vuelve a hacer clic para mostrar u ocultar sus ajustes"
+      "controllerAgain": "Mando · vuelve a hacer clic para mostrar u ocultar sus ajustes",
+      "tip": {
+        "controller": "tu mando, en directo. Haz clic en cualquier parte para configurarla",
+        "dongle": "firmware, pantalla OLED, energía y USB",
+        "games": "tus juegos, perfiles por juego y configuración de Proton",
+        "app": "idioma, aspecto, actualizaciones e inicio",
+        "about": "la guía, novedades y créditos"
+      }
     },
     "audioTest": {
       "speakerTitle": "Prueba del altavoz",
@@ -907,7 +914,15 @@
       "hdrHint": "La pantalla indica HDR: {{state}}. Una muestra que funciona brilla claramente más que el blanco de referencia.",
       "hdrYes": "sí",
       "hdrNo": "no",
-      "hdrReference": "Blanco"
+      "hdrReference": "Blanco",
+      "updates": "Avisos de actualización",
+      "updatesHint": "Muestra una actualización de la app y del firmware en cada estado, para ver cómo quedan. No se descarga ni se instala nada.",
+      "updatesState": {
+        "off": "Desactivado (estado real)",
+        "available": "Disponible",
+        "progress": "En curso",
+        "ready": "Lista / esperando"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacidad de las tarjetas",

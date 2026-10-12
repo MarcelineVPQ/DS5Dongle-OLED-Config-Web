@@ -8,6 +8,7 @@ import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
 import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, type DevModel } from "../devPreview";
+import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
@@ -590,6 +591,7 @@ function DeveloperSettings() {
   const { t } = useTranslation();
   const [shown] = useFlagPref(DEV_TOOLS_KEY);
   const dev = useDevPreview();
+  const [updatePreview, setUpdatePreview] = useUpdatePreview();
   if (!shown) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
@@ -620,6 +622,15 @@ function DeveloperSettings() {
             <option key={code} value={code}>
               {COLORWAYS[code].name}
               {COLORWAYS[code].colors ? "" : ` (${t("desktop.dev.noArt")})`}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
+        <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
+          {UPDATE_PREVIEWS.map((p) => (
+            <option key={p} value={p}>
+              {t(`desktop.dev.updatesState.${p || "off"}`)}
             </option>
           ))}
         </select>

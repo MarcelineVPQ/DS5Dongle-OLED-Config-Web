@@ -49,7 +49,8 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
       className={`rail-link${active === item ? " active" : ""}`}
       data-rail={item}
       aria-current={active === item ? "page" : undefined}
-      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : label}
+      // What's there, in one line; on Controller again, what a second click does.
+      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(`desktop.rail.tip.${item}`)}`}
       onClick={() => onSelect(item)}
     >
       <span className="rail-ic" aria-hidden="true">

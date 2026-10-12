@@ -846,7 +846,14 @@
       "label": "Navigation",
       "pin": "Garder ouvert",
       "collapse": "Replier",
-      "controllerAgain": "Manette · cliquez à nouveau pour afficher ou masquer ses réglages"
+      "controllerAgain": "Manette · cliquez à nouveau pour afficher ou masquer ses réglages",
+      "tip": {
+        "controller": "ta manette, en direct. Clique sur une partie pour la régler",
+        "dongle": "firmware, écran OLED, alimentation et USB",
+        "games": "tes jeux, profils par jeu et configuration de Proton",
+        "app": "langue, apparence, mises à jour et démarrage",
+        "about": "le guide, les nouveautés et les crédits"
+      }
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
@@ -907,7 +914,15 @@
       "hdrHint": "L'écran signale le HDR : {{state}}. Une pastille qui fonctionne brille nettement plus que le blanc de référence.",
       "hdrYes": "oui",
       "hdrNo": "non",
-      "hdrReference": "Blanc"
+      "hdrReference": "Blanc",
+      "updates": "Bandeaux de mise à jour",
+      "updatesHint": "Affiche une mise à jour de l’app et du firmware dans chaque état, pour vérifier leur rendu. Rien n’est téléchargé ni flashé.",
+      "updatesState": {
+        "off": "Désactivé (état réel)",
+        "available": "Disponible",
+        "progress": "En cours",
+        "ready": "Prête / en attente"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",

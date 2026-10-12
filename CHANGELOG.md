@@ -10,6 +10,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **The app names your hardware:** with firmware protocol 1.7 the rail, status, Dongle page, console, log and update banner say what the dongle is built on (e.g. **Pico 2 W**), as the firmware reports it, so other boards show by their own name. Older firmware shows "Dongle".
 - **Updates without a dongle:** the setup screen shows the firmware version the app installs, how to update or reinstall it without a controller (hold BOOTSEL while plugging in), and **Check for updates** for the app.
+- **Rail tooltips** say what each page holds ("Controller · your controller, live. Click any part of it to set it up").
+- **Developer preview of the update states** (App settings → Developer): shows an app and firmware update as available, in progress or ready, without a real update. `tools/check_layout.mjs` now checks every update state in every language, size, theme and style.
 - **Repair USB driver explains itself first:** the button lists, step by step, what will happen and can show the exact script; nothing runs until **Run the repair**.
 - **README: the full PowerShell behind Repair USB driver**, line by line; a test fails the build if it ever differs from what the app runs.
 

@@ -840,7 +840,14 @@
       "label": "导航",
       "pin": "保持展开",
       "collapse": "收起",
-      "controllerAgain": "手柄 · 再次点击可显示或隐藏设置"
+      "controllerAgain": "手柄 · 再次点击可显示或隐藏设置",
+      "tip": {
+        "controller": "实时显示你的手柄，点击任意部位进行设置",
+        "dongle": "固件、OLED 屏幕、电源和 USB",
+        "games": "你的游戏、按游戏的配置和 Proton 设置",
+        "app": "语言、外观、更新和启动",
+        "about": "指南、新功能和致谢"
+      }
     },
     "audioTest": {
       "speakerTitle": "扬声器测试",
@@ -901,7 +908,15 @@
       "hdrHint": "显示器报告 HDR：{{state}}。生效的色块会明显比白色参照更亮。",
       "hdrYes": "是",
       "hdrNo": "否",
-      "hdrReference": "白色"
+      "hdrReference": "白色",
+      "updates": "更新提示",
+      "updatesHint": "以各种状态显示应用和固件更新，用来检查外观。不会下载或刷写任何内容。",
+      "updatesState": {
+        "off": "关闭（真实状态）",
+        "available": "可用",
+        "progress": "进行中",
+        "ready": "就绪 / 等待"
+      }
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",

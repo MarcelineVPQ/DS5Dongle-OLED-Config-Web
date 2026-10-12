@@ -19,6 +19,7 @@ import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import { hardwareName } from "./hardwareName";
+import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
@@ -48,8 +49,11 @@ export default function DesktopApp() {
   useEffect(() => {
     if (bridge.client) writePref(HAD_DONGLE_KEY, "1");
   }, [bridge.client]);
-  const appUpdate = useAppUpdate();
-  const fw = useFirmwareUpdate(bridge, appUpdate);
+  const realAppUpdate = useAppUpdate();
+  const realFw = useFirmwareUpdate(bridge, realAppUpdate);
+  // Developer preview: update banners and buttons without a real update.
+  const [updatePreview] = useUpdatePreview();
+  const [appUpdate, fw] = previewUpdates(updatePreview, realAppUpdate, realFw);
   const [main, setMain] = useState<MainView>("controller");
   const [panel, setPanel] = useState<PanelView>("overview");
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");

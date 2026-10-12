@@ -840,7 +840,14 @@
       "label": "ナビゲーション",
       "pin": "開いたままにする",
       "collapse": "折りたたむ",
-      "controllerAgain": "コントローラー · もう一度クリックすると設定を表示／非表示"
+      "controllerAgain": "コントローラー · もう一度クリックすると設定を表示／非表示",
+      "tip": {
+        "controller": "コントローラーをライブ表示。部位をクリックして設定",
+        "dongle": "ファームウェア、OLED 画面、電源、USB",
+        "games": "ゲーム、ゲームごとのプロファイル、Proton の設定",
+        "app": "言語、外観、アップデート、起動",
+        "about": "ガイド、新機能、クレジット"
+      }
     },
     "audioTest": {
       "speakerTitle": "スピーカーテスト",
@@ -901,7 +908,15 @@
       "hdrHint": "ディスプレイの HDR：{{state}}。有効なサンプルは基準の白よりはっきり明るく光ります。",
       "hdrYes": "はい",
       "hdrNo": "いいえ",
-      "hdrReference": "白"
+      "hdrReference": "白",
+      "updates": "アップデート表示",
+      "updatesHint": "アプリとファームウェアのアップデートを各状態で表示し、見え方を確認します。ダウンロードや書き込みは行いません。",
+      "updatesState": {
+        "off": "オフ（実際の状態）",
+        "available": "利用可能",
+        "progress": "進行中",
+        "ready": "準備完了／待機中"
+      }
     },
     "knobs": {
       "cardOpacity": "カードの不透明度",
