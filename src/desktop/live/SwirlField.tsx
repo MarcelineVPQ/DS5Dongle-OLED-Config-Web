@@ -121,7 +121,7 @@ interface Renderer {
 // The GPU renderer, or null when WebGL2 isn't there (or a shader fails).
 function glRenderer(c: HTMLCanvasElement): Renderer | null {
   const gl = c.getContext("webgl2", { alpha: false, antialias: false, depth: false, powerPreference: "low-power" });
-  if (!gl) return null;
+  if (!gl || gl.isContextLost()) return null;
   const shader = (type: number, src: string) => {
     const sh = gl.createShader(type)!;
     gl.shaderSource(sh, src);
@@ -249,7 +249,14 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     const c = ref.current;
     if (!c || !mode) return;
     const renderer = mode === "gpu" ? glRenderer(c) : cpuRenderer(c);
-    if (!renderer) return;
+    // A GPU context that failed to start or was already lost before this ran
+    // (seen at cold start on Windows' basic display driver) never fires
+    // "webglcontextlost" here: fall back to the CPU swirl instead of a frozen
+    // canvas.
+    if (!renderer) {
+      if (mode === "gpu") setMode("cpu");
+      return;
+    }
     const onLost = (e: Event) => {
       e.preventDefault();
       setMode("cpu");
