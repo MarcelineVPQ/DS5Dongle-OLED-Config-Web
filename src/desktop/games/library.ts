@@ -20,6 +20,19 @@ export const ButtonLayoutSchema = z.strictObject({
 });
 export type ButtonLayout = z.infer<typeof ButtonLayoutSchema>;
 
+// A stick response curve (protocol 1.10), as src/protocol/stickCurve.ts has
+// it (that module isn't part of the main process's build, so the type list is
+// repeated here; a unit test keeps the two the same).
+export const PROFILE_CURVE_TYPES = ["linear", "precise", "steady", "aggressive", "digital", "custom"] as const;
+const CurveByte = z.number().int().min(0).max(255);
+export const ProfileCurveSchema = z
+  .strictObject({
+    type: z.enum(PROFILE_CURVE_TYPES),
+    points: z.array(z.tuple([CurveByte, CurveByte])).length(4),
+  })
+  // Custom points non-decreasing, as the firmware accepts them.
+  .refine((c) => c.type !== "custom" || c.points.every((p, i) => i === 0 || (p[0] >= c.points[i - 1][0] && p[1] >= c.points[i - 1][1])));
+
 // What a game profile can change on the dongle (in its RAM only, while the
 // game runs; never written to the dongle's flash).
 export const ProfileSettingsSchema = z.strictObject({
@@ -38,10 +51,13 @@ export const ProfileSettingsSchema = z.strictObject({
   // A saved button layout (protocol 1.8: applied for the game only, never
   // to flash); absent = the player's normal buttons.
   buttonLayout: LayoutIdSchema.optional(),
+  // Stick response curves for the game (protocol 1.10: applied for the game
+  // only, never to flash); a stick left out keeps the player's saved curve.
+  stickCurves: z.strictObject({ left: ProfileCurveSchema.optional(), right: ProfileCurveSchema.optional() }).optional(),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
-// The dongle config fields a profile sets (the layout is applied separately).
-export const PROFILE_FIELDS = (Object.keys(ProfileSettingsSchema.shape) as Array<keyof ProfileSettings>).filter((k) => k !== "buttonLayout");
+// The dongle config fields a profile sets (the layout and the stick curves are applied separately).
+export const PROFILE_FIELDS = (Object.keys(ProfileSettingsSchema.shape) as Array<keyof ProfileSettings>).filter((k) => k !== "buttonLayout" && k !== "stickCurves");
 
 // Player feedback is structured, never free text: fixed statements a player
 // ticks, so shared feedback (later) is counts per statement, with nothing to

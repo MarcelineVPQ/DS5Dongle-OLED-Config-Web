@@ -1046,6 +1046,45 @@
       "missed": "未测量，已保留旧值：{{parts}}。请推到底后重新测量。",
       "retry": "重试"
     },
+    "curves": {
+      "title": "响应曲线",
+      "intro": "每个摇杆从中心到推满之间如何响应。在接收器中于校准之后应用，因此对所有游戏都有效。",
+      "curve": "曲线",
+      "type": {
+        "linear": "线性",
+        "precise": "精准",
+        "steady": "平稳",
+        "aggressive": "激进",
+        "digital": "数字",
+        "custom": "自定义"
+      },
+      "typeHint": {
+        "linear": "直线：输出完全跟随摇杆。",
+        "precise": "起步缓慢，便于精细瞄准；接近推满时才达到全速。",
+        "steady": "较温和的缓慢起步：小幅移动更平稳。",
+        "aggressive": "快速起步：稍微推动就有很大输出。",
+        "digital": "几乎只有开和关：轻推就接近满值。",
+        "custom": "经过四个点的自定义曲线。"
+      },
+      "customHint": "拖动这些点，或选中一个点（Tab）后用方向键移动；按住 Shift 移动更多。",
+      "graph": "响应曲线：横轴为摇杆推动幅度，纵轴为输出",
+      "point": "点 {{n}}",
+      "pointValue": "推动 {{x}}% → 输出 {{y}}%",
+      "now": "当前摇杆：{{in}}% → {{out}}%",
+      "axisIn": "→ 摇杆推动幅度",
+      "axisOut": "↑ 游戏收到的值",
+      "keyLinear": "线性",
+      "keyLive": "当前摇杆位置",
+      "gameOn": "某个游戏的配置文件正在使用自己的曲线。在此保存会结束这些曲线，直到该游戏再次启动。",
+      "needsFirmware": "请更新接收器固件以使用响应曲线。",
+      "readFailed": "接收器没有返回曲线数据。",
+      "resetLinear": "恢复为线性",
+      "saveHint": "已为配对槽位 {{slot}} 中的手柄保存在接收器中；立即对所有游戏生效。",
+      "profileLeft": "左摇杆曲线",
+      "profileRight": "右摇杆曲线",
+      "profileSaved": "我保存的曲线",
+      "profileHint": "仅在游戏运行时应用。在此为每个摇杆选择预设；自定义曲线请在校准中设置。"
+    },
     "stickTest": {
       "circleTitle": "圆度测试",
       "circleHow": "将每个摇杆沿边缘慢慢转几圈。轮廓显示它在各个方向上能推到多远。",

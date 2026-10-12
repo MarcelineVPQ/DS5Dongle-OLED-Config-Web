@@ -1052,6 +1052,45 @@
       "missed": "No medido, se mantienen los valores anteriores: {{parts}}. Llega hasta el tope y vuelve a medir.",
       "retry": "Reintentar"
     },
+    "curves": {
+      "title": "Curva de respuesta",
+      "intro": "Cómo responde cada stick entre el centro y la inclinación máxima. Se aplica en el dongle después de la calibración, así que funciona en todos los juegos.",
+      "curve": "Curva",
+      "type": {
+        "linear": "Lineal",
+        "precise": "Precisa",
+        "steady": "Estable",
+        "aggressive": "Agresiva",
+        "digital": "Digital",
+        "custom": "Personalizada"
+      },
+      "typeHint": {
+        "linear": "Recta: la salida sigue exactamente al stick.",
+        "precise": "Inicio lento para apuntar con precisión; velocidad máxima solo cerca de la inclinación máxima.",
+        "steady": "Un inicio lento más suave: movimientos pequeños más tranquilos.",
+        "aggressive": "Inicio rápido: poca inclinación ya llega lejos.",
+        "digital": "Casi todo o nada: una inclinación pequeña ya es casi máxima.",
+        "custom": "Tu propia curva por cuatro puntos."
+      },
+      "customHint": "Arrastra los puntos, o selecciona uno (Tab) y muévelo con las flechas; con Mayús se mueve más.",
+      "graph": "Curva de respuesta: inclinación del stick en horizontal, salida en vertical",
+      "point": "Punto {{n}}",
+      "pointValue": "inclinación {{x}} % → salida {{y}} %",
+      "now": "Stick ahora: {{in}} % → {{out}} %",
+      "axisIn": "→ Inclinación del stick",
+      "axisOut": "↑ Lo que reciben los juegos",
+      "keyLinear": "Lineal",
+      "keyLive": "Tu stick ahora",
+      "gameOn": "El perfil de un juego tiene sus propias curvas activas ahora. Guardar aquí las desactiva hasta que ese juego vuelva a iniciarse.",
+      "needsFirmware": "Actualiza el firmware del dongle para usar curvas de respuesta.",
+      "readFailed": "El dongle no devolvió sus curvas.",
+      "resetLinear": "Volver a Lineal",
+      "saveHint": "Guardada en el dongle para el mando de la espacio de emparejamiento {{slot}}; se aplica al instante en todos los juegos.",
+      "profileLeft": "Curva del stick izquierdo",
+      "profileRight": "Curva del stick derecho",
+      "profileSaved": "Mi curva guardada",
+      "profileHint": "Solo se aplica mientras el juego está en marcha. Elige aquí un preajuste por stick; tu curva personalizada se ajusta en Calibración."
+    },
     "stickTest": {
       "circleTitle": "Prueba de circularidad",
       "circleHow": "Gira cada stick despacio por su borde unas cuantas veces. El contorno muestra hasta dónde llega en cada dirección.",

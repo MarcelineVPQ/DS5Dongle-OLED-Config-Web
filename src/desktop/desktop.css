@@ -3218,6 +3218,96 @@ html[data-reduce-motion] .lib-row:hover {
   margin: 2px 0;
 }
 
+/* Stick response curves (StickCurves.tsx): the straight reference is dashed,
+   the curve solid, custom points are squares (the selected one larger with a
+   ring) and the live stick a circle with crosshair lines, so nothing relies
+   on color alone. */
+.curve-tabs {
+  align-self: flex-start;
+  margin-bottom: 6px;
+}
+.curve-graph {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 4px 0;
+}
+.curve-graph > svg {
+  width: 200px;
+  height: 200px;
+  touch-action: none;
+  overflow: visible;
+}
+.curve-frame {
+  fill: color-mix(in srgb, var(--text-muted) 6%, transparent);
+  stroke: var(--border-default);
+  stroke-width: 1;
+}
+.curve-grid {
+  stroke: var(--border-default);
+  stroke-width: 0.5;
+}
+.curve-ref {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.curve-line {
+  fill: none;
+  stroke: var(--dk-accent);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+.curve-live line {
+  stroke: var(--text-soft);
+  stroke-width: 0.8;
+  stroke-dasharray: 1 2;
+}
+.curve-live circle,
+.curve-live-dot {
+  fill: var(--text-strong);
+  stroke: var(--bg-panel);
+  stroke-width: 1.2;
+}
+.curve-point {
+  fill: var(--bg-input);
+  stroke: var(--dk-accent);
+  stroke-width: 2;
+  cursor: grab;
+}
+.curve-point.on {
+  fill: var(--dk-accent);
+  stroke: var(--text-strong);
+}
+.curve-point:focus {
+  outline: none;
+}
+.curve-ring {
+  fill: none;
+  stroke: var(--text-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 1.5;
+}
+.curve-axes {
+  display: flex;
+  justify-content: space-between;
+  width: 200px;
+  margin: 0;
+}
+.curve-key {
+  margin: 0;
+}
+.curve-key-dot {
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.curve-now {
+  margin: 2px 0 6px;
+}
+
 /* Stick tests (StickTests.tsx): the reference circle and the X axis are
    dashed/solid as well as colored, so the lines never rely on color alone. */
 .stest-pair {

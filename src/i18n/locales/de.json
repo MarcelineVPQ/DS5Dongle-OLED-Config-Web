@@ -1052,6 +1052,45 @@
       "missed": "Nicht gemessen, daher wurden die alten Werte behalten: {{parts}}. Bewege sie ganz bis zum Anschlag und miss erneut.",
       "retry": "Erneut versuchen"
     },
+    "curves": {
+      "title": "Ansprechkurve",
+      "intro": "Wie jeder Stick zwischen Mitte und Vollausschlag reagiert. Wird im Dongle nach der Kalibrierung angewendet und wirkt so in jedem Spiel.",
+      "curve": "Kurve",
+      "type": {
+        "linear": "Linear",
+        "precise": "Präzise",
+        "steady": "Ruhig",
+        "aggressive": "Aggressiv",
+        "digital": "Digital",
+        "custom": "Eigene"
+      },
+      "typeHint": {
+        "linear": "Gerade: Die Ausgabe folgt dem Stick genau.",
+        "precise": "Langsamer Anfang zum feinen Zielen; volle Geschwindigkeit erst kurz vor Vollausschlag.",
+        "steady": "Ein sanfterer langsamer Anfang: ruhigere kleine Bewegungen.",
+        "aggressive": "Schneller Anfang: Schon ein wenig Neigung bewirkt viel.",
+        "digital": "Fast nur an oder aus: Eine kleine Neigung ist schon fast voll.",
+        "custom": "Deine eigene Kurve durch vier Punkte."
+      },
+      "customHint": "Ziehe die Punkte oder wähle einen aus (Tab) und verschiebe ihn mit den Pfeiltasten; mit Umschalt weiter.",
+      "graph": "Ansprechkurve: Stickneigung waagerecht, Ausgabe senkrecht",
+      "point": "Punkt {{n}}",
+      "pointValue": "Neigung {{x}} % → Ausgabe {{y}} %",
+      "now": "Stick jetzt: {{in}} % → {{out}} %",
+      "axisIn": "→ Stickneigung",
+      "axisOut": "↑ Was Spiele bekommen",
+      "keyLinear": "Linear",
+      "keyLive": "Dein Stick jetzt",
+      "gameOn": "Das Profil eines Spiels hat gerade eigene Kurven aktiv. Speichern hier beendet sie, bis das Spiel wieder startet.",
+      "needsFirmware": "Aktualisiere die Firmware des Dongles für Ansprechkurven.",
+      "readFailed": "Der Dongle hat seine Kurven nicht geliefert.",
+      "resetLinear": "Zurück zu Linear",
+      "saveHint": "Im Dongle gespeichert für den Controller in Kopplungsplatz {{slot}}; gilt sofort in jedem Spiel.",
+      "profileLeft": "Kurve linker Stick",
+      "profileRight": "Kurve rechter Stick",
+      "profileSaved": "Meine gespeicherte Kurve",
+      "profileHint": "Nur aktiv, solange das Spiel läuft. Wähle hier eine Vorgabe pro Stick; deine eigene Kurve stellst du in der Kalibrierung ein."
+    },
     "stickTest": {
       "circleTitle": "Rundheitstest",
       "circleHow": "Führe jeden Stick ein paar Mal langsam am Rand entlang. Der Umriss zeigt, wie weit er in jede Richtung kommt.",

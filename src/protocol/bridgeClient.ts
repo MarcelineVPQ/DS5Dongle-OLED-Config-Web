@@ -2,6 +2,7 @@
 // over any Ds5Transport. Report payloads here never include the report-id byte.
 import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
+import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
@@ -11,6 +12,7 @@ export const REPORT = {
   identity: 0xf1,
   audioCounters: 0xf5,
   remapExtra: 0xed, // protocol 1.9, vendor interface only
+  stickCurves: 0xec, // protocol 1.10, vendor interface only
   command: 0xf6,
   config: 0xf7,
   version: 0xf8,
@@ -41,6 +43,7 @@ export const FUNC = {
   remapTemporary: 0x11, // protocol 1.8: a table in RAM only (a game's layout)
   remapRevert: 0x12, // protocol 1.8: back to the saved table
   remapExtra: 0x13, // protocol 1.9: the Edge's extra-button entries
+  stickCurves: 0x14, // protocol 1.10: stick response curves (saved or temporary)
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -65,6 +68,7 @@ export const FEATURES2 = {
   boardName: 0x08, // identity [30..45]: the board's name, e.g. "Pico 2 W" (protocol 1.7)
   temporaryRemap: 0x10, // 0xF6 0x11 / 0x12 and identity [19] bit 1 (protocol 1.8)
   remapExtra: 0x20, // 0xED get / 0xF6 0x13 set: Edge Fn buttons and paddles (protocol 1.9)
+  stickCurves: 0x40, // 0xEC get / 0xF6 0x14 set, identity [19] bit 2: stick response curves (protocol 1.10)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -121,6 +125,8 @@ export interface BridgeIdentity {
   boardName: string | null;
   // Protocol 1.8+: a temporary remap (a game's layout) is active; null on older firmware.
   remapTemporary: boolean | null;
+  // Protocol 1.10+: a game's stick curves (RAM only) are on; null on older firmware.
+  curvesTemporary: boolean | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -165,6 +171,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     features2: bytes.length >= 30 ? bytes[29] : 0,
     boardName: bytes.length >= 46 && (bytes[29] & FEATURES2.boardName) !== 0 ? boardNameFrom(bytes.subarray(30, 46)) : null,
     remapTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.temporaryRemap) !== 0 ? (bytes[19] & 0x02) !== 0 : null,
+    curvesTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.stickCurves) !== 0 ? (bytes[19] & 0x04) !== 0 : null,
   };
 }
 
@@ -336,8 +343,23 @@ export class Ds5BridgeClient {
     await this.command(FUNC.remapExtra, [0x52, 0x58, 1, ...extra, temporary ? 1 : 0]);
   }
 
+  // Back to the saved remap table (protocol 1.8), and from 1.10 the saved stick curves too.
   async revertRemap(): Promise<void> {
     await this.command(FUNC.remapRevert);
+  }
+
+  // Protocol 1.10: the stick response curves of the slot in use now (saved,
+  // and what's active: a game's temporary curves while they're on).
+  async readStickCurves(): Promise<CurvesReport | null> {
+    return decodeCurvesReport(await this.transport.getReport(REPORT.stickCurves, CURVE_REPORT_BYTES));
+  }
+
+  // Saved in the dongle's flash for that slot (temporary = false; ends a
+  // game's curves), or for now only (a game's profile; RAM, ended by
+  // revertRemap(), a reboot or a saved set).
+  async applyStickCurves(slot: number, left: StickCurve, right: StickCurve, temporary: boolean): Promise<void> {
+    if (!isValidCurve(left) || !isValidCurve(right)) throw new Error("Invalid stick curve");
+    await this.command(FUNC.stickCurves, [0x43, 0x56, CURVE_PROTO_VER, slot, ...encodeCurve(left), ...encodeCurve(right), temporary ? 1 : 0]);
   }
 
   // Re-enumerates USB; the connection drops and the app reconnects on its own.

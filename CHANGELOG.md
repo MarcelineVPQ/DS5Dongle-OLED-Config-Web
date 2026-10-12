@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Stick response curves:** choose how each stick responds (Linear, Precise, Steady, Aggressive, Digital or your own curve), applied in the dongle so it works in every game, saved per controller, and per game in its profile.
 - **The DualSense Edge's Fn buttons and back paddles everywhere:** in the Buttons list (act as any button, stay themselves, or do nothing), in saved layouts and game profiles (switched in while a game runs), in the Inputs card, and clicking them on the drawing opens their row. Needs the dongle firmware from this release (protocol 1.9).
 - **Firmware update notice: Update and Details:** Update opens the Pico page's firmware card, Details opens the firmware changes.
 - **Stick tests:** a circularity test (how round each stick's range is, with the error %) and a drift test (does a stick move when you don't touch it), in Calibration.

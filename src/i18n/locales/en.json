@@ -1051,6 +1051,45 @@
       "missed": "Not measured, so the old values were kept: {{parts}}. Go all the way on those and measure again.",
       "retry": "Try again"
     },
+    "curves": {
+      "title": "Response curve",
+      "intro": "How each stick responds between center and full tilt. Applied in the dongle after calibration, so it works in every game.",
+      "curve": "Curve",
+      "type": {
+        "linear": "Linear",
+        "precise": "Precise",
+        "steady": "Steady",
+        "aggressive": "Aggressive",
+        "digital": "Digital",
+        "custom": "Custom"
+      },
+      "typeHint": {
+        "linear": "Straight: the output follows the stick exactly.",
+        "precise": "Slow start for fine aiming; full speed only near full tilt.",
+        "steady": "A milder slow start: calmer small movements.",
+        "aggressive": "Quick start: a little tilt already goes a long way.",
+        "digital": "Almost on or off: a small tilt is nearly full.",
+        "custom": "Your own curve through four points."
+      },
+      "customHint": "Drag the points, or select one (Tab) and move it with the arrow keys; Shift moves it further.",
+      "graph": "Response curve: stick tilt across, output up",
+      "point": "Point {{n}}",
+      "pointValue": "tilt {{x}}% → output {{y}}%",
+      "now": "Stick now: {{in}}% → {{out}}%",
+      "axisIn": "→ Stick tilt",
+      "axisOut": "↑ What games get",
+      "keyLinear": "Linear",
+      "keyLive": "Your stick now",
+      "gameOn": "A game's profile has its own curves on right now. Saving here ends them until that game starts again.",
+      "needsFirmware": "Update the dongle's firmware for response curves.",
+      "readFailed": "The dongle didn't answer with its curves.",
+      "resetLinear": "Back to Linear",
+      "saveHint": "Saved in the dongle for the controller in pairing slot {{slot}}; applies to every game right away.",
+      "profileLeft": "Left stick curve",
+      "profileRight": "Right stick curve",
+      "profileSaved": "My saved curve",
+      "profileHint": "Applied only while the game runs. Pick a preset per stick here; your own custom curve is set in Calibration."
+    },
     "stickTest": {
       "circleTitle": "Circularity test",
       "circleHow": "Roll each stick slowly around its edge a few times. The outline shows how far it reaches in every direction.",

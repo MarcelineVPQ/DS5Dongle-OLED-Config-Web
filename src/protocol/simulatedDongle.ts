@@ -7,6 +7,7 @@
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
 import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody } from "./config";
+import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -40,6 +41,10 @@ export class SimulatedDongle implements Ds5Transport {
   flashExtra = [0xff, 0xff, 0xff, 0xff];
   // Calibration bodies (18 bytes) per pairing slot: identity sticks, triggers 0..255, gyro 0.
   calibration = Array.from({ length: 4 }, () => new Uint8Array([0, 0, 0, 128, 0, 0, 0, 128, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0]));
+  // Stick curves (protocol 1.10): the saved pair per slot (9 bytes each, like
+  // the firmware's flash), and a temporary pair for one slot.
+  curves = Array.from({ length: 4 }, () => DEFAULT_CURVES.map((c) => encodeCurve(c)));
+  tempCurves: { slot: number; pair: number[][] } | null = null;
   remapRevision = 0;
   slots = [true, false, false, false];
   currentSlot = 0;
@@ -196,6 +201,12 @@ export class SimulatedDongle implements Ds5Transport {
         });
         return out;
       }
+      case 0xec: {
+        if ((this.opts.protoMinor ?? 6) < 10) throw new ReportStalledError(reportId);
+        const saved = this.curves[this.currentSlot];
+        const tmp = this.tempCurves?.slot === this.currentSlot ? this.tempCurves.pair : null;
+        return new Uint8Array([0x43, 0x56, 1, this.currentSlot, tmp ? 1 : 0, ...saved.flat(), ...(tmp ?? saved).flat()]).slice(0, length);
+      }
       case 0xed: {
         if ((this.opts.protoMinor ?? 6) < 9) throw new ReportStalledError(reportId);
         return new Uint8Array([0x52, 0x58, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.extra]);
@@ -266,7 +277,20 @@ export class SimulatedDongle implements Ds5Transport {
         else this.flashExtra = e.slice();
         this.remapRevision++;
       }
+    } else if (func === 0x14 && (this.opts.protoMinor ?? 6) >= 10) {
+      const pair = [0, 1].map((i) => [...payload.subarray(5 + i * CURVE_BYTES, 5 + (i + 1) * CURVE_BYTES)]);
+      const temporary = payload[5 + 2 * CURVE_BYTES];
+      // As the firmware: framing, slot, temporary flag, and each curve valid (type 0..5, custom points non-decreasing).
+      const ok =
+        payload.length >= 6 + 2 * CURVE_BYTES && payload[1] === 0x43 && payload[2] === 0x56 && payload[3] === 1 && payload[4] <= 3 && temporary <= 1 && pair.every((b) => strictCurve(b) !== null);
+      if (!ok) this.lastResult = RESULT.invalid;
+      else if (temporary === 1) this.tempCurves = { slot: payload[4], pair };
+      else {
+        this.tempCurves = null;
+        this.curves[payload[4]] = pair;
+      }
     } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
+      this.tempCurves = null; // 1.10: a game's stick curves end too
       this.extra = this.flashExtra.slice();
       this.remap = this.flashRemap.slice();
       this.remapTemporary = false;
@@ -334,7 +358,7 @@ export class SimulatedDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
-    out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0); // unsaved settings, temporary remap (1.8)
+    out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0) | (this.tempCurves ? 0x04 : 0); // unsaved settings, temporary remap (1.8), temporary curves (1.10)
     out[24] = 8; // 80 % battery
     out[25] = this.playerLeds;
     out[26] = this.edge ? 1 : 0;
@@ -347,6 +371,7 @@ export class SimulatedDongle implements Ds5Transport {
       out[29] |= 0x08; // board name (1.7)
       if (minor >= 8) out[29] |= 0x10; // temporary remap (1.8)
       if (minor >= 9) out[29] |= 0x20; // Edge extra-button remap (1.9)
+      if (minor >= 10) out[29] |= 0x40; // stick response curves (1.10)
       out.set(
         [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
         30,

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { ConfigBody } from "../../protocol/config";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import type { StickCurve } from "../../protocol/stickCurve";
 import { EMPTY_LIBRARY, PROFILE_FIELDS, type LibraryFile, type ProfileSettings } from "../games/library";
 
 export function settingsFrom(c: ConfigBody): ProfileSettings {
@@ -30,11 +31,19 @@ export function settingsFrom(c: ConfigBody): ProfileSettings {
 const filled = (s: ProfileSettings): ProfileSettings => ({ ...s, hapticsGainRight: s.hapticsGainRight ?? s.hapticsGain });
 const same = (a: ProfileSettings, b: ProfileSettings) => PROFILE_FIELDS.every((k) => JSON.stringify(filled(a)[k]) === JSON.stringify(filled(b)[k]));
 const withSettings = (c: ConfigBody, s: ProfileSettings): ConfigBody => {
-  const { buttonLayout: _layout, ...fields } = filled(s); // the layout isn't a config field
+  const { buttonLayout: _layout, stickCurves: _curves, ...fields } = filled(s); // the layout and curves aren't config fields
   return { ...c, ...fields } as ConfigBody; // ranges checked by ProfileSettingsSchema
 };
 // The profile's button layout table, if it has one that still exists.
 const layoutOf = (library: LibraryFile, s: ProfileSettings) => (s.buttonLayout ? (library.layouts?.[s.buttonLayout] ?? null) : null);
+// The profile's stick curves (left, right; undefined = that stick's saved curve), if it has any.
+type ProfileCurves = [StickCurve | undefined, StickCurve | undefined];
+const curvesOf = (s: ProfileSettings): ProfileCurves | null => (s.stickCurves && (s.stickCurves.left || s.stickCurves.right) ? ([s.stickCurves.left, s.stickCurves.right] as ProfileCurves) : null);
+// What a profile keeps that isn't on the dongle's config (kept when saving the live settings into it).
+export const nonConfigParts = (s: ProfileSettings | undefined): Partial<ProfileSettings> => ({
+  ...(s?.buttonLayout ? { buttonLayout: s.buttonLayout } : {}),
+  ...(s?.stickCurves ? { stickCurves: s.stickCurves } : {}),
+});
 
 // What the profile hook should do now (pure, so the switch/restore rules are
 // unit-tested): apply the running game's profile (keeping the normal values
@@ -137,16 +146,32 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   // Temporary remaps (protocol 1.8): a game's layout never touches flash.
   const layouts = supportsFeature2(identity, 8, FEATURES2.temporaryRemap);
   const edgeExtras = supportsFeature2(identity, 9, FEATURES2.remapExtra);
+  // Stick curves for the game (protocol 1.10), also RAM only.
+  const curvesSupported = supportsFeature2(identity, 10, FEATURES2.stickCurves);
   const remapTemporary = identity?.remapTemporary ?? false;
+  const curvesTemporary = identity?.curvesTemporary ?? false;
+  const gameTemporary = remapTemporary || curvesTemporary;
+  const slot = identity?.currentSlot ?? 0;
+  // The game's layout and stick curves (null: the saved ones). 0x12 ends a
+  // previous game's temporary layout and curves together, so whatever is on
+  // goes first and only what this profile has is applied.
   const setLayout = useCallback(
-    async (layout: { table: number[]; extra?: number[] } | null) => {
-      if (!client || !layouts) return;
-      if (layout) {
+    async (layout: { table: number[]; extra?: number[] } | null, curves: ProfileCurves | null = null) => {
+      if (!client || (!layouts && !curvesSupported)) return;
+      if (gameTemporary) await client.revertRemap(); // ends the extras and curves too
+      if (layout && layouts) {
         await client.applyRemapTemporary(layout.table);
         if (layout.extra && edgeExtras) await client.applyRemapExtra(layout.extra, true);
-      } else if (remapTemporary) await client.revertRemap(); // ends the extras too
+      }
+      if (curves && curvesSupported) {
+        // A stick the profile leaves alone keeps its saved curve (the dongle sets both).
+        const saved = !curves[0] || !curves[1] ? (await client.readStickCurves())?.saved : undefined;
+        const left = curves[0] ?? saved?.[0];
+        const right = curves[1] ?? saved?.[1];
+        if (left && right) await client.applyStickCurves(slot, left, right, true);
+      }
     },
-    [client, layouts, edgeExtras, remapTemporary],
+    [client, layouts, edgeExtras, curvesSupported, gameTemporary, slot],
   );
   // The step that failed last (an apply stamp, or "restore"), so it isn't
   // retried on every config change; cleared when the game or connection changes.
@@ -169,7 +194,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
           else if (step.restorePoint === "rekey" && library.restore) file = await desktop.librarySetRestore({ ...library.restore, gameKey: step.gameKey });
           setLibrary(file);
           if (!(await applyBody(withSettings(config, step.settings)))) throw new Error("apply failed");
-          await setLayout(layoutOf(library, step.settings));
+          await setLayout(layoutOf(library, step.settings), curvesOf(step.settings));
           appliedFor.current = step.stamp;
           setActive({ gameKey: step.gameKey, title: step.title });
         } catch (cause) {
@@ -196,17 +221,20 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     }
     // A game's layout still on the dongle with no game running (the app was
     // closed mid-game and the restore point is gone): back to the saved one.
-    if (step.kind === "none" && !restoreNeeded(wanted, library) && remapTemporary && !active) void switchOnce(() => setLayout(null).catch(() => undefined));
-  }, [desktop, loaded, runningKnown, isConnected, config, operation, paused, wanted, library, applyBody, active, switchOnce, setLayout, remapTemporary]);
+    if (step.kind === "none" && !restoreNeeded(wanted, library) && gameTemporary && !active) void switchOnce(() => setLayout(null).catch(() => undefined));
+  }, [desktop, loaded, runningKnown, isConnected, config, operation, paused, wanted, library, applyBody, active, switchOnce, setLayout, gameTemporary]);
 
   const profile = active ? library.games[active.gameKey]?.profile : undefined;
   const profileDirty = !!(active && profile && config && !same(settingsFrom(config), profile.settings));
 
   const saveToProfile = useCallback(async () => {
     if (!desktop || !active || !config) return;
-    // The profile's layout isn't on the config: keep it.
-    const buttonLayout = library.games[active.gameKey]?.profile?.settings.buttonLayout;
-    const file = await desktop.librarySetProfile({ gameKey: active.gameKey, title: active.title, settings: { ...settingsFrom(config), ...(buttonLayout ? { buttonLayout } : {}) } });
+    // The profile's layout and curves aren't on the config: keep them.
+    const file = await desktop.librarySetProfile({
+      gameKey: active.gameKey,
+      title: active.title,
+      settings: { ...settingsFrom(config), ...nonConfigParts(library.games[active.gameKey]?.profile?.settings) },
+    });
     // Already on the dongle: don't re-apply the version just saved.
     const updated = file.games[active.gameKey]?.profile?.updated;
     appliedFor.current = `${active.gameKey}@${updated}`;
