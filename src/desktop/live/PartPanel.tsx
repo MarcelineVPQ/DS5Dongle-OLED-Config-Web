@@ -7,7 +7,7 @@ import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
-import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, useFakeSlots, type DevModel } from "../devPreview";
+import { MODEL_COLORWAYS, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
@@ -599,7 +599,7 @@ function ReduceMotionSetting() {
 // Developer (Ctrl+Shift+D): preview any controller model and colorway.
 function DeveloperSettings() {
   const { t } = useTranslation();
-  const [shown] = useFlagPref(DEV_TOOLS_KEY);
+  const [shown] = useDevToolsShown();
   const dev = useDevPreview();
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
   const fakeSlots = useFakeSlots();

@@ -4,6 +4,7 @@
 // checked without a real update. Only changes what the app shows: nothing is
 // downloaded or flashed, and the firmware Update button does nothing.
 import type { UpdateState } from "./api";
+import { DEV_TOOLS_BUILT } from "./devPreview";
 import { usePref } from "./storage";
 import type { FirmwareUpdate } from "./useUpdates";
 
@@ -16,7 +17,8 @@ const APP_VERSION = "10.12.3";
 const FW_VERSION = "v10.12.3-dev.12-oled-edition";
 
 export function useUpdatePreview(): [UpdatePreview, (value: UpdatePreview) => void] {
-  return usePref<UpdatePreview>(UPDATE_PREVIEW_KEY, "", UPDATE_PREVIEWS);
+  const [value, set] = usePref<UpdatePreview>(UPDATE_PREVIEW_KEY, "", UPDATE_PREVIEWS);
+  return [DEV_TOOLS_BUILT ? value : "", set];
 }
 
 export function previewUpdates(preview: UpdatePreview, app: UpdateState, fw: FirmwareUpdate): [UpdateState, FirmwareUpdate] {

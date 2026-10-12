@@ -9,6 +9,8 @@ virtual keystrokes, checks Windows' driver state through the guest agent, and
 saves a screenshot of every step for a person to look at.
 
   tools/windows_vm_test.py --exe 'C:\\Users\\Public\\Desktop\\DS5-repair-test.exe'
+  (any build works here; check_layout.mjs against the VM needs a dev build,
+  DS5_DEV_TOOLS=1)
 
 Cases:
   new-user  Windows has never seen the dongle's IDs: WinUSB is set up by

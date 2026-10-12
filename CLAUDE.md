@@ -14,6 +14,7 @@ The firmware repo is `~/projects/DS5Dongle`; its `CLAUDE.md` documents the devic
 npx -y npm@11.6.2 ci     # install (system npm 9/10 crashes on this tree: "edgesOut")
 npm run dev:desktop      # desktop with HMR (--no-sandbox, see ADR-0004)
 npm run build:desktop && npm run start:desktop
+DS5_DEV_TOOLS=1 npm run build:desktop   # a dev build: the Developer card (previews, fake controllers, HDR test) is built in and shown; stable releases leave it out, dev-channel (X.Y.Z-dev.N) builds include it
 npm run check            # typecheck + lint + format check + security gates + tests (what CI runs)
 npm test                 # vitest: tests/{unit,integration,security}
 node tools/update_version.mjs --verify

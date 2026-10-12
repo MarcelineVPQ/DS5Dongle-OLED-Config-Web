@@ -8,6 +8,10 @@ import { COLORWAYS } from "./live/colorways";
 import { useFlagPref, usePref } from "./storage";
 
 export const DEV_TOOLS_KEY = "ds5.devTools";
+// Built into dev builds only (electron.vite.config.ts). Without it every
+// preview below is inert, so settings left over from a dev build can never
+// change what a stable release shows.
+export const DEV_TOOLS_BUILT = import.meta.env.VITE_DEV_TOOLS === "1";
 export const DEV_MODELS = ["", "dualsense", "edge"] as const;
 export type DevModel = (typeof DEV_MODELS)[number];
 // The DualSense Edge comes in White and Midnight Black; the DualSense in all.
@@ -27,7 +31,8 @@ export const FAKE_SLOTS: Record<number, { model: "dualsense" | "edge"; colorway:
 const FAKE_SLOT_VALUES = ["", "1", "2"] as const;
 
 export function useFakeSlots() {
-  const [on, setOn] = useFlagPref("ds5.dev.fakeSlots");
+  const [onPref, setOn] = useFlagPref("ds5.dev.fakeSlots");
+  const on = DEV_TOOLS_BUILT && onPref;
   const [slot, setSlot] = usePref<(typeof FAKE_SLOT_VALUES)[number]>("ds5.dev.fakeSlot", "", FAKE_SLOT_VALUES);
   const active = on && slot !== "" ? Number(slot) : null;
   return {
@@ -45,7 +50,7 @@ export function useFakeSlots() {
 export function useDevPreview() {
   const [model, setModel] = usePref<DevModel>("ds5.dev.model", "", DEV_MODELS);
   const [colorway, setColorway] = usePref<string>("ds5.dev.colorway", "", COLORWAY_CODES);
-  return { model, setModel, colorway, setColorway, active: model !== "" || colorway !== "" };
+  return { model, setModel, colorway, setColorway, active: DEV_TOOLS_BUILT && (model !== "" || colorway !== "") };
 }
 
 // The identity as the UI should see it: the real one, with the preview's
@@ -62,10 +67,18 @@ export function useShownIdentity<T extends BridgeIdentity | null | undefined>(id
   }, [id, model, colorway, active, fake]);
 }
 
+// Whether the Developer card shows: on by default in dev builds (Ctrl+Shift+D
+// hides it), never in stable releases.
+export function useDevToolsShown(): [boolean, (on: boolean) => void] {
+  const [value, set] = usePref<"1" | "0">(DEV_TOOLS_KEY, "1", ["1", "0"]);
+  return [DEV_TOOLS_BUILT && value === "1", (on: boolean) => set(on ? "1" : "0")];
+}
+
 // Ctrl+Shift+D shows / hides the Developer card.
 export function useDevToolsShortcut(): void {
-  const [on, setOn] = useFlagPref(DEV_TOOLS_KEY);
+  const [on, setOn] = useDevToolsShown();
   useEffect(() => {
+    if (!DEV_TOOLS_BUILT) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") {
         e.preventDefault();

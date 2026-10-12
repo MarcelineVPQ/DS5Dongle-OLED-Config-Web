@@ -8,7 +8,8 @@
 //             or a tooltip could give (no text, aria-label, title or label).
 // Mechanical, exhaustive (the AVIEW rule): nothing sampled by eye.
 //
-//   npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
+//   DS5_DEV_TOOLS=1 npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
+//   (a dev build: the update-state and colorway passes use its Developer previews)
 //   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650] [--themes light,dark] [--colorways off]
 //
 // Every layout and contrast pass also runs the controller and Dongle views in

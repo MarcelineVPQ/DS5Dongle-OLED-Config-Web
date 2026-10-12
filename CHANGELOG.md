@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **The Developer card is only in dev builds** (`DS5_DEV_TOOLS=1`, and Development-channel releases `X.Y.Z-dev.N`), shown there by default. Stable releases leave it out: no card, no Ctrl+Shift+D, and leftover preview settings can't change what they show.
+
 ### Fixed
 
 - **Warning counters readable in every controller color:** the Dongle page's "⚠" counters were amber on the controller-colored cards (too faint on Cosmic Red and other mid tones). Warning-colored text now uses a version the theme makes legible on its own surfaces; checked in every colorway.
