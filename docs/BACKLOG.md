@@ -21,6 +21,7 @@ _Idea_ (noted, not decided) · _Open_ (a known problem, not yet scheduled).
 
 | Item | Status | Priority | Detail |
 | --- | --- | --- | --- |
+| Simulated bootloader (firmware updates) | **Agreed (Marcy 2026-10-12).** The simulated dongle "restarts into BOOTSEL" and hands the app a simulated bootloader (the PicoflashHandle interface: connect / flashEraseAndWrite / reboot, already faked in tests/unit/firmwareFlash.test.ts), takes the firmware with real progress and comes back reporting the new version; first-time setup (a blank Pico) too. Tests the whole update UI without hardware (progress, waiting, done, failure). ~150 lines + tests, dev builds only. Real USB flashing still needs hardware now and then | Med | - |
 | Multi-controller testing (fake slots) | **In progress (Marcy 2026-10-12): Developer "Pretend more controllers" and per-slot names shipped in 0.9.3; the fake dongle tests for slots are still to do; the simulated dongle (dev builds) now runs every page without hardware.** Marcy has one controller, so: the fake dongle (tests/support/fakeDongle.ts) holds different controllers in slots 0-3 and tests switch between them (drawing, colors, per-slot calibration, the switcher); plus a Developer-card "pretend slots 1-3 are paired" to click through the UI. Real pairing into a second slot stays a manual check for whoever has two controllers | High | - |
 
 ### Agreed (decided, waiting to be built; by priority, "last" items at the end)
