@@ -6,9 +6,9 @@
 // Note: we deliberately do NOT use picoflash's uf2ToFlashBuffer helper —
 // it builds one contiguous buffer from minAddr to maxAddr, which for our
 // RP2350 UF2 (firmware at 0x10000000 + a 256-byte partition table at
-// 0x10ffff00) produces a 16 MB mostly-empty buffer. The bootloader can't
-// receive a 16 MB write in one bulk transfer. parseUf2Regions() below
-// returns each contiguous region separately, which we flash one at a time.
+// 0x10ffff00) produces a 16 MB mostly-empty buffer. parseUf2Regions() below
+// returns each contiguous region separately, which we flash one at a time,
+// and leaves out blocks that aren't firmware (that partition-table block).
 
 // @ts-expect-error — vendored JS module, no .d.ts file
 import { Picoboot } from "./picoflash/picoboot.js";
@@ -47,6 +47,13 @@ export interface Uf2Region {
 const UF2_MAGIC_START = 0x0a324655;
 const UF2_MAGIC_START2 = 0x9e5d5157;
 const UF2_MAGIC_END = 0x0ab16f30;
+const UF2_FLAG_NOT_MAIN_FLASH = 0x1;
+const UF2_FLAG_FAMILY_ID = 0x2000;
+// The RP2350's "absolute" family: SDK UF2s start with one such block at
+// 0x10ffff00 (the RP2350-E10 drag-and-drop workaround). It isn't firmware:
+// the bootloader and picotool skip it. Written over PICOBOOT it erased the
+// sector at 0x10fff000, past a 4 MB chip's end (wrapping onto its last sector).
+export const UF2_FAMILY_ABSOLUTE = 0xe48bff57;
 
 /**
  * Parse a UF2 file into the set of contiguous flash regions it specifies.
@@ -69,12 +76,16 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
     if (view.getUint32(0, true) !== UF2_MAGIC_START || view.getUint32(4, true) !== UF2_MAGIC_START2 || view.getUint32(508, true) !== UF2_MAGIC_END) {
       throw new Error(`Invalid UF2 magic at offset ${offset}`);
     }
+    const flags = view.getUint32(8, true);
+    if (flags & UF2_FLAG_NOT_MAIN_FLASH) continue;
+    if (flags & UF2_FLAG_FAMILY_ID && view.getUint32(28, true) === UF2_FAMILY_ABSOLUTE) continue;
     const address = view.getUint32(12, true);
     const payloadSize = view.getUint32(16, true);
     const payload = new Uint8Array(u8.buffer, u8.byteOffset + offset + 32, payloadSize);
     blocks.push({ address, payload });
   }
 
+  if (blocks.length === 0) throw new Error("The UF2 has no blocks to write to flash");
   blocks.sort((a, b) => a.address - b.address);
 
   // Walk sorted blocks, grouping contiguous runs.
@@ -107,8 +118,8 @@ const FLASH_SECTOR_SIZE = 0x1000; // RP2040 + RP2350
 
 /**
  * Align a region to flash-sector boundaries so picoflash's flashEraseAndWrite
- * accepts it. Some UF2 blocks (e.g. RP2350 absolute partition table at
- * 0x10ffff00) land at non-sector-aligned addresses; pre-pad with 0xFF (the
+ * accepts it. A region that starts or ends off a sector boundary gets
+ * pre-padded with 0xFF (the
  * erased-flash value) at the start, post-pad to the next sector boundary
  * at the end. The flash sectors we overwrite that aren't covered by the
  * payload are effectively erased — correct behavior for a fresh-flash UF2.
