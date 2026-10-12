@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CommandError, Ds5BridgeClient, FEATURES2, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
+import { CommandError, Ds5BridgeClient, FEATURES2, FEATURES3, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { DEFAULT_CURVES, DEFAULT_CUSTOM_POINTS, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
+import { CTRL_TEST, decodeTelemetry } from "../../src/protocol/controllerInfo";
+import { loadControllerInfo } from "../../src/desktop/live/loadControllerInfo";
 import { FakeDongle } from "../support/fakeDongle";
 
 function setup(opts = {}) {
@@ -401,5 +403,53 @@ describe("stick response curves (protocol 1.10)", () => {
     expect(oldId.features2 & FEATURES2.stickCurves).toBe(0);
     expect(oldId.curvesTemporary).toBeNull();
     await expect(old.applyStickCurves(0, precise, precise, false)).rejects.toBeInstanceOf(CommandError);
+  });
+});
+
+describe("controller health & info (protocol 1.12)", () => {
+  it("announces it in identity [46], and older firmware doesn't", async () => {
+    expect((await setup({ protoMinor: 12 }).client.identity()).features3 & FEATURES3.controllerInfo).toBe(FEATURES3.controllerInfo);
+    expect((await setup({ protoMinor: 11 }).client.identity()).features3).toBe(0);
+    await expect(setup({ protoMinor: 11 }).client.readControllerHeader()).rejects.toThrow(/refused/);
+  });
+
+  it("runs the counters command and returns its pages", async () => {
+    const { dongle, client } = setup({ protoMinor: 12 });
+    const block = await client.runControllerTest(CTRL_TEST.telemetry.dev, CTRL_TEST.telemetry.action, 4);
+    expect(dongle.sets.at(-1)).toEqual(new Uint8Array([0x16, 0x70, 1, 4]));
+    expect(block?.length).toBe(4 * 56);
+    expect(decodeTelemetry(block!, false)?.bluetoothConnects).toBe(1204);
+    expect(block!.subarray(1, 18).every((b) => b === 0)).toBe(true); // the serial's place is blank
+  });
+
+  it("loads everything for the card, DualSense and Edge", async () => {
+    const ds = await loadControllerInfo(setup({ protoMinor: 12 }).client);
+    expect(ds.millivolts).toBe(3868);
+    expect(ds.firmware?.buildDate).toBe("Jun 13 2024 10:22:31");
+    expect(ds.btPatch).toBe(0xa1b);
+    expect(ds.telemetry?.activeTime).toBe(412345);
+    expect(ds.telemetry?.buttons.mute).toBeGreaterThan(0);
+    expect(ds.tooOld).toBe(false);
+    const edgeDongle = new FakeDongle({ protoMinor: 12 });
+    edgeDongle.edge = true;
+    const edge = await loadControllerInfo(new Ds5BridgeClient(edgeDongle));
+    expect(edge.telemetry?.buttons.paddleRight).toBeGreaterThan(0);
+    expect(edge.telemetry?.sticks[1].roundTripsX).toBe(120000);
+  });
+
+  it("says when the controller's firmware is too old, keeping the play time", async () => {
+    const info = await loadControllerInfo(setup({ protoMinor: 12, controllerUpdateVersion: 1106 }).client);
+    expect(info.tooOld).toBe(true);
+    expect(info.telemetry).toBeNull();
+    expect(info.activeOnly).toBe(412345);
+  });
+
+  it("returns null when the controller doesn't answer, and refuses other commands", async () => {
+    const { client } = setup({ protoMinor: 12, controllerAnswers: false });
+    expect(await client.runControllerTest(CTRL_TEST.battery.dev, CTRL_TEST.battery.action, 1)).toBeNull();
+    await expect(client.runControllerTest(0x01, 0x13, 1)).rejects.toBeInstanceOf(CommandError); // serial number: never
+    const info = await loadControllerInfo(client);
+    expect(info.millivolts).toBeNull();
+    expect(info.telemetry).toBeNull();
   });
 });
