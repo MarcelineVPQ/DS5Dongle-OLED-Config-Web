@@ -160,7 +160,10 @@
       "switch": "Trocar para",
       "forget": "Esquecer",
       "wipeConfirm": "Esquecer os quatro controles?",
-      "wipe": "Esquecer todos"
+      "wipe": "Esquecer todos",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "simulado"
     },
     "triggers": {
       "title": "Teste dos gatilhos adaptáveis",
@@ -929,7 +932,9 @@
         "available": "Disponível",
         "progress": "Em andamento",
         "ready": "Pronta / aguardando"
-      }
+      },
+      "fakeSlots": "Simular mais controles",
+      "fakeSlotsHint": "Os slots 1 e 2 aparecem pareados (um Edge Midnight Black e um DualSense Galactic Purple). Troque para eles em Slots de pareamento: o app age como se esse controle tivesse conectado. Nada é enviado ao dongle."
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",

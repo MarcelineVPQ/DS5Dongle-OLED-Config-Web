@@ -159,7 +159,10 @@
       "switch": "Switch to",
       "forget": "Forget",
       "wipeConfirm": "Forget all four controllers?",
-      "wipe": "Forget all"
+      "wipe": "Forget all",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "pretend"
     },
     "triggers": {
       "title": "Adaptive trigger test",
@@ -928,7 +931,9 @@
         "available": "Available",
         "progress": "In progress",
         "ready": "Ready / waiting"
-      }
+      },
+      "fakeSlots": "Pretend more controllers",
+      "fakeSlotsHint": "Slots 1 and 2 show as paired (a Midnight Black Edge and a Galactic Purple DualSense). Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to the dongle."
     },
     "knobs": {
       "cardOpacity": "Card opacity",

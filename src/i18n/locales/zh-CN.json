@@ -160,7 +160,10 @@
       "switch": "切换到",
       "forget": "忘记",
       "wipeConfirm": "忘记全部四个控制器？",
-      "wipe": "全部忘记"
+      "wipe": "全部忘记",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "模拟"
     },
     "triggers": {
       "title": "自适应扳机测试",
@@ -923,7 +926,9 @@
         "available": "可用",
         "progress": "进行中",
         "ready": "就绪 / 等待"
-      }
+      },
+      "fakeSlots": "模拟更多手柄",
+      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只手柄已连接。不会向接收器发送任何内容。"
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",

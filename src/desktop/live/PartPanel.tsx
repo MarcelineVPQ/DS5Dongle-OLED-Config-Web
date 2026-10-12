@@ -7,7 +7,7 @@ import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
-import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, type DevModel } from "../devPreview";
+import { DEV_TOOLS_KEY, MODEL_COLORWAYS, useDevPreview, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
@@ -602,6 +602,7 @@ function DeveloperSettings() {
   const [shown] = useFlagPref(DEV_TOOLS_KEY);
   const dev = useDevPreview();
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
+  const fakeSlots = useFakeSlots();
   if (!shown) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
@@ -636,6 +637,7 @@ function DeveloperSettings() {
           ))}
         </select>
       </Row>
+      <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
           {UPDATE_PREVIEWS.map((p) => (

@@ -17,6 +17,31 @@ export const MODEL_COLORWAYS: Record<"dualsense" | "edge", string[]> = {
 };
 const COLORWAY_CODES = ["", ...Object.keys(COLORWAYS)];
 
+// Pretend more controllers are paired (Developer card): slots 1 and 2 hold
+// these, slot 3 stays empty. Switching to one makes the app act as if that
+// controller connected (drawing, colors, slot); nothing is sent to the dongle.
+export const FAKE_SLOTS: Record<number, { model: "dualsense" | "edge"; colorway: string }> = {
+  1: { model: "edge", colorway: "01" },
+  2: { model: "dualsense", colorway: "04" },
+};
+const FAKE_SLOT_VALUES = ["", "1", "2"] as const;
+
+export function useFakeSlots() {
+  const [on, setOn] = useFlagPref("ds5.dev.fakeSlots");
+  const [slot, setSlot] = usePref<(typeof FAKE_SLOT_VALUES)[number]>("ds5.dev.fakeSlot", "", FAKE_SLOT_VALUES);
+  const active = on && slot !== "" ? Number(slot) : null;
+  return {
+    on,
+    setOn: (next: boolean) => {
+      setOn(next);
+      if (!next) setSlot("");
+    },
+    // The fake slot shown as connected, or null (the real controller).
+    slot: active,
+    switchTo: (s: number | null) => setSlot(s === null ? "" : (String(s) as "1" | "2")),
+  };
+}
+
 export function useDevPreview() {
   const [model, setModel] = usePref<DevModel>("ds5.dev.model", "", DEV_MODELS);
   const [colorway, setColorway] = usePref<string>("ds5.dev.colorway", "", COLORWAY_CODES);
@@ -27,8 +52,14 @@ export function useDevPreview() {
 // model / colorway in place while the developer preview is set.
 export function useShownIdentity<T extends BridgeIdentity | null | undefined>(id: T): T {
   const { model, colorway, active } = useDevPreview();
+  const fake = useFakeSlots().slot;
   // The same object until something changes (effects key on it).
-  return useMemo(() => (!id || !active ? id : { ...id, model: model || id.model, colorwayCode: colorway || id.colorwayCode }), [id, model, colorway, active]);
+  return useMemo(() => {
+    if (!id) return id;
+    const slot = fake !== null ? FAKE_SLOTS[fake] : null;
+    const base = slot ? { ...id, model: slot.model, colorwayCode: slot.colorway, currentSlot: fake! } : id;
+    return !active ? base : { ...base, model: model || base.model, colorwayCode: colorway || base.colorwayCode };
+  }, [id, model, colorway, active, fake]);
 }
 
 // Ctrl+Shift+D shows / hides the Developer card.

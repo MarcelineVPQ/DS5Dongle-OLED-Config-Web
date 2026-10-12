@@ -160,7 +160,10 @@
       "switch": "Wechseln",
       "forget": "Vergessen",
       "wipeConfirm": "Alle vier Controller vergessen?",
-      "wipe": "Alle vergessen"
+      "wipe": "Alle vergessen",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "vorgetäuscht"
     },
     "triggers": {
       "title": "Test der adaptiven Trigger",
@@ -929,7 +932,9 @@
         "available": "Verfügbar",
         "progress": "Läuft",
         "ready": "Bereit / wartet"
-      }
+      },
+      "fakeSlots": "Weitere Controller vortäuschen",
+      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An den Dongle wird nichts gesendet."
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",

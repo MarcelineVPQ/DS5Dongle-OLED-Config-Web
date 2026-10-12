@@ -160,7 +160,10 @@
       "switch": "Cambiar a",
       "forget": "Olvidar",
       "wipeConfirm": "¿Olvidar los cuatro controladores?",
-      "wipe": "Olvidar todos"
+      "wipe": "Olvidar todos",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "simulado"
     },
     "triggers": {
       "title": "Prueba de gatillos adaptativos",
@@ -929,7 +932,9 @@
         "available": "Disponible",
         "progress": "En curso",
         "ready": "Lista / esperando"
-      }
+      },
+      "fakeSlots": "Simular más mandos",
+      "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada al dongle."
     },
     "knobs": {
       "cardOpacity": "Opacidad de las tarjetas",

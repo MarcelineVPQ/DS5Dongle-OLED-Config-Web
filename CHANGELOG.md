@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Pairing slots name the controller in each slot** ("DualSense · Cosmic Red"), remembered whenever it connects; the dongle itself only keeps the Bluetooth address.
+- **Developer: "Pretend more controllers"** shows two made-up controllers in slots 1 and 2 (an Edge and a second DualSense); switching to one makes the app act as if it connected (drawing, colors, slot), nothing is sent to the dongle. For testing multi-controller screens with one controller.
+
+### Changed
+
+- `tools/check_layout.mjs` turns off transitions while it measures contrast (a theme switch measured mid-fade read as a failure), and takes `--themes` / `--colorways off` for quick targeted runs.
+
 ## [0.9.3] - 2026-10-12
 
 ### Added

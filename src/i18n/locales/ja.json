@@ -160,7 +160,10 @@
       "switch": "切り替え",
       "forget": "削除",
       "wipeConfirm": "4 台すべてのコントローラーを削除しますか?",
-      "wipe": "すべて削除"
+      "wipe": "すべて削除",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "仮"
     },
     "triggers": {
       "title": "アダプティブトリガーテスト",
@@ -923,7 +926,9 @@
         "available": "利用可能",
         "progress": "進行中",
         "ready": "準備完了／待機中"
-      }
+      },
+      "fakeSlots": "ほかのコントローラーを仮表示",
+      "fakeSlotsHint": "スロット 1 と 2 をペアリング済みとして表示します（Midnight Black の Edge と Galactic Purple の DualSense）。ペアリングスロットで切り替えると、そのコントローラーが接続されたように動作します。ドングルには何も送信しません。"
     },
     "knobs": {
       "cardOpacity": "カードの不透明度",

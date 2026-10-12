@@ -9,7 +9,7 @@
 // Mechanical, exhaustive (the AVIEW rule): nothing sampled by eye.
 //
 //   npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
-//   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650]
+//   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650] [--themes light,dark] [--colorways off]
 //
 // Every layout and contrast pass also runs the controller and Dongle views in
 // each update state (available, in progress, ready) through the app's own
@@ -32,7 +32,8 @@ const LANGS = opt("langs", "en,de,fr,es,pt-BR,zh-CN,ja").split(",");
 const SIZES = opt("sizes", "1100x900,900x650")
   .split(",")
   .map((s) => s.split("x").map(Number));
-const THEMES = ["controller", "light", "dark", "desktop"];
+const THEMES = opt("themes", "controller,light,dark,desktop").split(",");
+const COLORWAY_PASS = opt("colorways", "on") !== "off";
 // Every colorway, per model, read from the app's own list
 // (src/desktop/live/colorways.ts); the Edge comes in White and Midnight Black
 // (devPreview.ts MODEL_COLORWAYS).
@@ -64,6 +65,10 @@ const send = (method, params) =>
     ws.send(JSON.stringify({ id: my, method, params }));
   });
 const evaluate = async (expression) => (await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true })).result?.value;
+// Colors ease between themes (button transitions); measured mid-way they
+// read as failures (seen on the Windows VM, which renders slowly). Switch
+// transitions and animations off for the check, again after every reload.
+const NO_TRANSITIONS = `(() => { if (document.getElementById("check-no-transitions")) return; const s = document.createElement("style"); s.id = "check-no-transitions"; s.textContent = "*, *::before, *::after { transition: none !important; animation-duration: 0s !important; }"; document.head.append(s); })()`;
 
 // In the page: clipped or spilling text in what's visible now.
 const LAYOUT_PROBE = `(() => {
@@ -104,7 +109,7 @@ const LAYOUT_PROBE = `(() => {
 // In the page: text below WCAG AA against the first opaque background behind
 // it. Text over art, glass or a translucent card can't be judged from styles
 // alone: those are counted (skipped), not guessed.
-const CONTRAST_PROBE = `(() => {
+const CONTRAST_PROBE_BODY = `(() => {
   const out = [];
   let skipped = 0;
   const parse = (c) => { const m = c.match(/[\\d.]+/g); return m ? m.map(Number) : null; };
@@ -137,6 +142,7 @@ const CONTRAST_PROBE = `(() => {
   }
   return { out, skipped };
 })()`;
+const CONTRAST_PROBE = `(${NO_TRANSITIONS}, (${CONTRAST_PROBE_BODY}))`;
 
 // In the page: interactive elements with no accessible name.
 const NAMES_PROBE = `(() => {
@@ -302,7 +308,7 @@ if (MODE === "contrast" || MODE === "all") {
       `(() => { localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)}); window.dispatchEvent(new CustomEvent("ds5:pref", { detail: { key: ${JSON.stringify(key)}, value: ${JSON.stringify(value)} } })); })()`,
     );
   const byName = new Map(views());
-  for (const [model, codes] of COLORWAY_MODELS)
+  for (const [model, codes] of COLORWAY_PASS ? COLORWAY_MODELS : [])
     for (const code of codes) {
       await setPref("ds5.dev.model", model);
       await setPref("ds5.dev.colorway", code);

@@ -160,7 +160,10 @@
       "switch": "Basculer",
       "forget": "Oublier",
       "wipeConfirm": "Oublier les quatre manettes ?",
-      "wipe": "Tout oublier"
+      "wipe": "Tout oublier",
+      "dualsense": "DualSense",
+      "edge": "DualSense Edge",
+      "pretend": "simulée"
     },
     "triggers": {
       "title": "Test des gâchettes adaptatives",
@@ -929,7 +932,9 @@
         "available": "Disponible",
         "progress": "En cours",
         "ready": "Prête / en attente"
-      }
+      },
+      "fakeSlots": "Simuler d’autres manettes",
+      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent appairés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’appairage : l’app fait comme si cette manette était connectée. Rien n’est envoyé au dongle."
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",
