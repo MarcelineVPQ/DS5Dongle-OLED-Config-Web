@@ -11,8 +11,8 @@
 // Windows has no /proc and a game's environment can't be read, so there the
 // running programs (tasklist, cheap) are matched against the program files in
 // each installed game's folder (indexed once, cached).
-import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, readlinkSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { readFileSync, readdirSync, readlinkSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { LauncherId } from "../../../src/desktop/games/types";
 
@@ -34,48 +34,110 @@ export interface RunningCandidate {
 const ENV_KEYS = ["SteamAppId", "SteamGameId", "HEROIC_APP_NAME", "HEROIC_APP_SOURCE"];
 const WINE_COMMS = /^(wine|wine64|wine-preloader|wine64-preloader|wineserver|proton|reaper|pressure-vessel|srt-bwrap)$|\.exe$/i;
 
-export function readProcs(): ProcView[] {
+// Launchers (and wrappers) whose child processes can be a game: a process
+// is only looked at closely (environment, command line, working folder) when
+// it or one of its parents is one of these or a Wine/Proton process.
+const LAUNCHER_COMMS = /^(steam|reaper|heroic|legendary|gogdl|nile|lutris|umu-run|gamescope|gamemoderun|bottles)$/;
+// A Wine process, also once it's left its launcher (reparented to init): its
+// program is Wine's loader whatever its name shows.
+const WINE_EXE = /\/(wine|wine64|wine-preloader|wine64-preloader|wineserver)$/;
+const UID_RE = (uid: number) => new RegExp(`^Uid:\\s+${uid}\\b`, "m");
+let uidRe: { uid: number; re: RegExp } | null = null;
+
+// Everything detectRunning looks at, for one process.
+function readFull(dir: string, pid: number): ProcView {
+  const env: Record<string, string> = {};
+  try {
+    for (const kv of readFileSync(`${dir}/environ`, "utf8").split("\0")) {
+      const i = kv.indexOf("=");
+      if (i > 0 && ENV_KEYS.includes(kv.slice(0, i))) env[kv.slice(0, i)] = kv.slice(i + 1);
+    }
+  } catch {
+    // environ unreadable (another session's process)
+  }
+  let cwd: string | null = null;
+  try {
+    cwd = readlinkSync(`${dir}/cwd`);
+  } catch {
+    // gone
+  }
+  return {
+    pid,
+    comm: readFileSync(`${dir}/comm`, "utf8").trim(),
+    args: readFileSync(`${dir}/cmdline`, "utf8").split("\0").filter(Boolean),
+    cwd,
+    env,
+  };
+}
+
+// The user's own processes. `gamesOnly` (the running-game watcher, every 2 s):
+// a cheap first pass reads only each process's status (name, parent, owner),
+// and the expensive reads happen only for possible games (see LAUNCHER_COMMS);
+// everything else is skipped. `root` is for the tests (a fake /proc).
+export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   const uid = process.getuid?.();
+  if (uid !== undefined && uidRe?.uid !== uid) uidRe = { uid, re: UID_RE(uid) };
   const out: ProcView[] = [];
   let entries: string[];
   try {
-    entries = readdirSync("/proc");
+    entries = readdirSync(root);
   } catch {
     return out;
   }
+  const own: Array<{ pid: number; name: string; ppid: number }> = [];
   for (const entry of entries) {
     if (!/^\d+$/.test(entry)) continue;
     try {
-      const status = readFileSync(`/proc/${entry}/status`, "utf8");
-      if (uid !== undefined && !new RegExp(`^Uid:\\s+${uid}\\b`, "m").test(status)) continue;
-      const env: Record<string, string> = {};
-      try {
-        for (const kv of readFileSync(`/proc/${entry}/environ`, "utf8").split("\0")) {
-          const i = kv.indexOf("=");
-          if (i > 0 && ENV_KEYS.includes(kv.slice(0, i))) env[kv.slice(0, i)] = kv.slice(i + 1);
-        }
-      } catch {
-        // environ unreadable (another session's process)
+      // Watcher: someone else's process (its /proc folder isn't ours) is
+      // skipped without generating its status text (the costly part).
+      if (gamesOnly && uid !== undefined && statSync(`${root}/${entry}`).uid !== uid) continue;
+      const status = readFileSync(`${root}/${entry}/status`, "utf8");
+      if (uidRe && !uidRe.re.test(status)) continue;
+      if (!gamesOnly) {
+        out.push(readFull(`${root}/${entry}`, Number(entry)));
+        continue;
       }
-      let cwd: string | null = null;
-      try {
-        cwd = readlinkSync(`/proc/${entry}/cwd`);
-      } catch {
-        // gone
-      }
-      out.push({
-        pid: Number(entry),
-        comm: readFileSync(`/proc/${entry}/comm`, "utf8").trim(),
-        args: readFileSync(`/proc/${entry}/cmdline`, "utf8").split("\0").filter(Boolean),
-        cwd,
-        env,
-      });
+      const name = /^Name:\s*(.*)$/m.exec(status)?.[1] ?? "";
+      const ppid = Number(/^PPid:\s*(\d+)/m.exec(status)?.[1] ?? 0);
+      own.push({ pid: Number(entry), name, ppid });
+    } catch {
+      // process exited while we looked
+    }
+  }
+  if (!gamesOnly) return out;
+  // Possible games: a launcher or Wine process, anything started under one,
+  // and Wine processes that outlived their launcher.
+  const byPid = new Map(own.map((p) => [p.pid, p]));
+  const memo = new Map<number, boolean>();
+  const isRoot = (name: string) => LAUNCHER_COMMS.test(name) || WINE_COMMS.test(name);
+  const underLauncher = (pid: number, depth = 0): boolean => {
+    const known = memo.get(pid);
+    if (known !== undefined) return known;
+    const p = byPid.get(pid);
+    const yes = !!p && depth < 64 && (isRoot(p.name) || underLauncher(p.ppid, depth + 1));
+    memo.set(pid, yes);
+    return yes;
+  };
+  const wineExe = (pid: number) => {
+    try {
+      return WINE_EXE.test(readlinkSync(`${root}/${pid}/exe`));
+    } catch {
+      return false;
+    }
+  };
+  for (const p of own) {
+    if (!underLauncher(p.pid) && !wineExe(p.pid)) continue;
+    try {
+      out.push(readFull(`${root}/${p.pid}`, p.pid));
     } catch {
       // process exited while we looked
     }
   }
   return out;
 }
+
+// The running-game watcher's reader on Linux: possible games only.
+export const readGameProcs = (): ProcView[] => readProcs(true);
 
 // /proc paths and the launchers' install folders are POSIX paths ("/"), on
 // whatever system the code (or its tests) runs.
@@ -112,14 +174,18 @@ export function detectRunning(procs: ProcView[], games: RunningCandidate[]): str
 // ---- Windows ----
 
 // Running programs: image names only (tasklist is fast; paths would need
-// PowerShell or WMI, too slow to run every few seconds).
-export function readWindowsProcs(): ProcView[] {
-  let csv: string;
-  try {
-    csv = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tasklist.exe"), ["/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true, timeout: 4000 });
-  } catch {
-    return [];
-  }
+// PowerShell or WMI, too slow to run every few seconds). Asynchronous, so the
+// main process never waits for it.
+export function readWindowsProcs(): Promise<ProcView[]> {
+  return new Promise((resolve) => {
+    execFile(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tasklist.exe"), ["/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true, timeout: 4000 }, (error, stdout) =>
+      resolve(error ? [] : parseTasklist(stdout)),
+    );
+  });
+}
+
+// tasklist's CSV ("image","pid",...) as processes.
+export function parseTasklist(csv: string): ProcView[] {
   const out: ProcView[] = [];
   for (const line of csv.split(/\r?\n/)) {
     const m = /^"([^"]+)","(\d+)"/.exec(line);
@@ -170,11 +236,15 @@ export class RunningGameWatcher {
   private pending: { key: string | null; since: number } | null = null;
 
   private readonly exeCache = new Map<string, Set<string>>();
+  // An asynchronous read (Windows) in flight: the next tick waits for it.
+  private reading = false;
+  // Bumped by stop(), so a read that finishes afterwards changes nothing.
+  private generation = 0;
 
   constructor(
     private readonly candidates: () => RunningCandidate[],
     private readonly onChange: (key: string | null) => void,
-    private readonly read: () => ProcView[] = process.platform === "win32" ? readWindowsProcs : readProcs,
+    private readonly read: () => ProcView[] | Promise<ProcView[]> = process.platform === "win32" ? readWindowsProcs : readGameProcs,
     private readonly settleMs = 4000,
     private readonly everyMs = process.platform === "win32" ? 3000 : 2000,
     private readonly platform: NodeJS.Platform = process.platform,
@@ -192,8 +262,8 @@ export class RunningGameWatcher {
 
   start(): void {
     if (this.timer) return;
-    this.tick();
-    this.timer = setInterval(() => this.tick(), this.everyMs);
+    void this.tick();
+    this.timer = setInterval(() => void this.tick(), this.everyMs);
   }
 
   // Stopping (Games consent turned off) also ends a running game's state, so
@@ -202,14 +272,30 @@ export class RunningGameWatcher {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.pending = null;
+    this.generation++;
     if (this.current !== null) {
       this.current = null;
       this.onChange(null);
     }
   }
 
-  tick(now = Date.now()): void {
-    const seen = this.platform === "win32" ? detectRunningWindows(this.read(), this.candidates(), this.exes) : detectRunning(this.read(), this.candidates());
+  // One look at the processes. Returns a promise when the reader is
+  // asynchronous (Windows), settled once the result is applied.
+  tick(now?: number): void | Promise<void> {
+    if (this.reading) return;
+    const procs = this.read();
+    if (!(procs instanceof Promise)) return this.apply(procs, now ?? Date.now());
+    this.reading = true;
+    const generation = this.generation;
+    return procs
+      .then((list) => {
+        if (generation === this.generation) this.apply(list, now ?? Date.now());
+      })
+      .finally(() => (this.reading = false));
+  }
+
+  private apply(procs: ProcView[], now: number): void {
+    const seen = this.platform === "win32" ? detectRunningWindows(procs, this.candidates(), this.exes) : detectRunning(procs, this.candidates());
     if (seen === this.current) {
       this.pending = null;
       return;

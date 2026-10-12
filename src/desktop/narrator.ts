@@ -20,6 +20,7 @@ import i18n from "../i18n";
 import type { DesktopSettings } from "./api";
 import captionTexts from "../assets/voice/captions.json";
 import { NARRATOR_LANGS, NARRATOR_OFF } from "../protocol/bridgeClient";
+import { isWindowShown } from "./useWindowShown";
 
 export type NarratorSetting = DesktopSettings["narratorVoice"];
 
@@ -82,9 +83,7 @@ function hideCaption(key: string): void {
 }
 
 // On screen: the page is visible and the window isn't hidden in the tray.
-let windowShown = true;
-window.desktop?.onWindowVisible((shown) => (windowShown = shown));
-const onScreen = () => windowShown && document.visibilityState === "visible";
+const onScreen = isWindowShown;
 
 function voiceLang(): string {
   const want = i18n.resolvedLanguage ?? i18n.language ?? "en";

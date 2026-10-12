@@ -938,8 +938,8 @@ html[data-theme="dark"] .dk {
   /* Unlit: the grey of the light strip's plastic (same as the bottom strip). */
   --ctl-led-off: color-mix(in srgb, #fff 45%, var(--ctl-dark));
   fill: color-mix(in srgb, var(--ctl-led, #4061d6) var(--ctl-led-pct, 100%), var(--ctl-led-off)); /* theme-exempt: the controller drawing: its real lights and press tints */
-  /* Bridges the ~30 Hz color samples so animated modes glide. */
-  transition: fill 40ms linear;
+  /* Bridges the 10 Hz color samples (useLiveLightbar) so animated modes glide. */
+  transition: fill 100ms linear;
 }
 /* Bloom: a tight core glow plus a wide soft halo, both fading with the light
    (on the wrapper, so the strip's clip doesn't cut the glow off). */
@@ -949,6 +949,10 @@ html[data-theme="dark"] .dk {
      rendering each blur is redrawn every time (four cost ~120% CPU, two ~20%;
      the look is nearly the same). */
   filter: drop-shadow(0 0 3px var(--ctl-led-glow)) drop-shadow(0 0 14px var(--ctl-led-glow));
+  /* Its own compositor layer: the glow is applied on the GPU instead of being
+     redrawn whenever the drawing around it repaints (the sticks, 30x a
+     second; measured ~6% of a core less). */
+  will-change: filter;
 }
 .live-ctl .hit {
   fill: transparent;
@@ -1198,7 +1202,11 @@ html[data-theme="light"] .live-ctl {
   display: block;
   height: 100%;
   background: var(--dk-accent);
-  transition: width 60ms linear;
+  /* The level as a scale (--level, 0..1): transform only, composited on the
+     GPU instead of a relayout and repaint per reading. */
+  transform: scaleX(var(--level, 0));
+  transform-origin: left center;
+  transition: transform 60ms linear;
 }
 .dk-select {
   height: 28px;
@@ -2761,10 +2769,10 @@ html[data-theme="light"] .live-ctl {
 .art-bd-layer.on {
   opacity: 0.55;
 }
-.art-bd-layer.art-bd-swirl.gpu {
-  /* Hardware acceleration only (SwirlField.tsx): smooths the stretched field. */
-  filter: blur(6px);
-}
+/* The swirl field (SwirlField.tsx) needs no CSS blur: the GPU shader draws it
+   at a third of the window's size (smooth when stretched), and the CPU
+   fallback runs without hardware acceleration, where a blur would cost every
+   frame. */
 .art-bd-layer.art-bd-swirl.on {
   /* No game art (Games off, or Windows / macOS for now): the swirl field
      (SwirlField.tsx), strong enough that Glass and the card opacity have
@@ -2990,23 +2998,41 @@ html[data-glass] .rail-label {
   color: var(--dk-accent-text);
 }
 .live-spec-dot {
+  position: relative;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--status-good);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-good) 60%, transparent);
+}
+/* The pulse: a ring that grows and fades, on its own compositor layer
+   (transform and opacity only: no repaint per frame, unlike an animated
+   box-shadow). Reduce motion (system or App settings) stops it. */
+.live-spec-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--status-good) 60%, transparent);
+  opacity: 0;
+  will-change: transform, opacity;
   animation: live-spec-pulse 2.4s ease-out infinite;
 }
 @keyframes live-spec-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
   70% {
-    box-shadow: 0 0 0 8px transparent;
+    opacity: 0;
+    transform: scale(2.6);
   }
   100% {
-    box-shadow: 0 0 0 0 transparent;
+    opacity: 0;
+    transform: scale(1);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .live-spec-dot {
+  .live-spec-dot::after {
     animation: none;
   }
 }

@@ -30,7 +30,6 @@ import type { PanelView } from "./live/PartPanel";
 import UpdateBanners from "./UpdateBanners";
 import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
-import { usePoll } from "./usePoll";
 import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
 import { firmwareNarratorValue, say, useNarrator } from "./narrator";
@@ -113,9 +112,11 @@ export default function DesktopApp() {
   const standalone = main !== "controller";
 
   // Keep the tray icon/menu in step with the device, even while the window is
-  // hidden (the window keeps running in the background for exactly this).
+  // hidden (the window keeps running in the background for exactly this):
+  // the connection hook's identity poll (every second, also while hidden) is
+  // the one identity poll for the whole app.
   const client = bridge.client;
-  const realIdentity = usePoll(() => client!.identity(), 2000, Boolean(client)).value;
+  const realIdentity = bridge.identity;
   // What the UI shows (the developer preview can stand in another model/colorway).
   const liveIdentity = useShownIdentity(realIdentity);
   useDevToolsShortcut();

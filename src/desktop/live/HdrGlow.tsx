@@ -78,8 +78,11 @@ const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 
 export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | null>; nits: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const peak = useRef(nits);
+  // Asks for one redraw (set once the GPU is ready).
+  const redraw = useRef<(() => void) | null>(null);
   useEffect(() => {
     peak.current = nits;
+    redraw.current?.();
   }, [nits]);
   useEffect(() => {
     const el = hero.current?.querySelector<HTMLElement>(".live-ctl") ?? null;
@@ -90,6 +93,7 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
     let frame = 0;
     let resizeFrame = 0;
     let ro: ResizeObserver | undefined;
+    let styleWatch: MutationObserver | undefined;
     // Everything the GPU holds, released on cleanup (also when cleanup ran
     // while the device was still being created).
     let device: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -118,6 +122,10 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       let bind: unknown = null;
       let last = "";
       let generation = 0;
+      let draw: () => void = () => undefined;
+      const schedule = () => {
+        if (live && !frame) frame = requestAnimationFrame(() => draw());
+      };
 
       // The mask for the drawing's current size and place. Only the newest
       // rebuild lands (resizes can overlap).
@@ -147,6 +155,7 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
           ],
         });
         last = ""; // draw again with the new mask
+        schedule();
       };
       await rebuild();
       if (!live) return release();
@@ -157,11 +166,12 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       ro.observe(el);
       if (el.parentElement) ro.observe(el.parentElement);
 
-      // Follow the live lightbar color (set on the drawing as --ctl-led / --ctl-led-pct).
-      const draw = () => {
-        if (!live) return;
-        frame = requestAnimationFrame(draw);
-        if (!bind) return;
+      // Follow the live lightbar color (set on the drawing as --ctl-led /
+      // --ctl-led-pct): redrawn only when it (or the peak, or the mask)
+      // changes, at most once a frame; nothing runs while it stays the same.
+      draw = () => {
+        frame = 0;
+        if (!live || !bind) return;
         const color = el.style.getPropertyValue("--ctl-led");
         const pct = parseFloat(el.style.getPropertyValue("--ctl-led-pct") || "0") / 100;
         const key = `${color}|${pct}|${peak.current}`;
@@ -180,10 +190,15 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
         pass.end();
         device.queue.submit([enc.finish()]);
       };
+      styleWatch = new MutationObserver(schedule);
+      styleWatch.observe(el, { attributes: true, attributeFilter: ["style"] });
+      redraw.current = schedule;
       draw();
     })();
     return () => {
       live = false;
+      redraw.current = null;
+      styleWatch?.disconnect();
       cancelAnimationFrame(frame);
       cancelAnimationFrame(resizeFrame);
       ro?.disconnect();

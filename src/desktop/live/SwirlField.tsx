@@ -3,15 +3,28 @@
 // all from the controller (its colorway, or the player's custom colors): the
 // shell, the buttons, the outlines and a deeper shade of the shell. No
 // controller known: the theme's accent and its two neighbors on the color
-// wheel (analogous colors, never a clashing opposite). Drawn tiny
-// (256 x 144) and stretched up by CSS, which blurs it for free; redrawn ~12
-// times a second, paused while the window is hidden, still with Reduce motion.
+// wheel (analogous colors, never a clashing opposite).
+//
+// With hardware acceleration (App settings) the field is a WebGL2 fragment
+// shader (the same math as swirlPixel below), drawn at a third of the
+// window's size and stretched up smoothly. Without it, or when the GPU
+// context fails or is lost, the CPU fallback draws the field tiny (128 x 72)
+// and CSS stretches it, which blurs it for free. Redrawn ~12 times a second
+// (4 while the window is behind another one), not at all while the window is
+// minimized or in the tray, and once (still) with Reduce motion.
 // The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
+import { useWindowFocused, useWindowShown } from "../useWindowShown";
 
-const W = 256;
-const H = 144;
+// The CPU fallback's size (stretched and blurred by CSS).
+export const CPU_W = 128;
+export const CPU_H = 72;
+// The GPU field: this fraction of the canvas's size on screen, capped.
+const GPU_SCALE = 1 / 3;
+const GPU_MAX_W = 960;
 const FRAME_MS = 80;
+// Behind another window: about 4 frames a second.
+const UNFOCUSED_MS = 250;
 
 type Rgb = [number, number, number];
 
@@ -72,66 +85,194 @@ const mixRgb = (a: Rgb, b: Rgb, amount: number): Rgb => [0, 1, 2].map((i) => Mat
 // The controller's parts: shell, buttons, outlines, dark parts (CSS colors).
 export type SwirlColors = { body: string; cap: string; line: string; dark: string };
 
-export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  // With hardware acceleration a light CSS blur smooths the stretched field
-  // for free (the GPU does it); in software rendering it would cost every
-  // frame, so it's left out there.
-  const [gpu, setGpu] = useState(false);
-  useEffect(() => {
-    void window.desktop?.getSettings().then((s) => setGpu(s.hardwareAcceleration));
-  }, []);
-  useEffect(() => {
-    const c = ref.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return;
-    c.width = W;
-    c.height = H;
-    const image = ctx.createImageData(W, H);
-    const weights = [0, 0, 0, 0];
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-reduce-motion");
-    const draw = (t: number) => {
+// swirlPixel in GLSL (keep the two in step): the same warps, fields and
+// weights, so both renderers draw the same picture.
+export const SWIRL_FRAGMENT = `#version 300 es
+precision highp float;
+uniform vec2 size;
+uniform float t;
+uniform vec3 palette[4];
+out vec4 color;
+void main() {
+  float x = gl_FragCoord.x / size.x;
+  float y = 1.0 - gl_FragCoord.y / size.y;
+  float u = x + 0.42 * sin(4.6 * y + t * 0.21) + 0.18 * sin(10.2 * x - t * 0.13);
+  float v = y + 0.42 * cos(3.8 * x - t * 0.17) + 0.18 * cos(8.6 * y + t * 0.11);
+  u += 0.08 * sin(17.0 * v + t * 0.29);
+  v += 0.08 * cos(15.0 * u - t * 0.23);
+  float a = atan(v - 0.5, u - 0.5);
+  float d = length(vec2(u - 0.5, v - 0.5));
+  vec4 f = vec4(sin(6.2 * u + 2.0 * sin(2.0 * a + t * 0.05)), cos(5.4 * v - 6.0 * d + t * 0.07), sin(8.0 * d - 2.0 * a + t * 0.04), cos(4.4 * (u + v) + t * 0.09));
+  vec4 w = f + 1.2;
+  w = w * w;
+  w = w * w;
+  w /= w.x + w.y + w.z + w.w;
+  color = vec4((w.x * palette[0] + w.y * palette[1] + w.z * palette[2] + w.w * palette[3]) / 255.0, 1.0);
+}`;
+const SWIRL_VERTEX = `#version 300 es
+in vec2 pos;
+void main() { gl_Position = vec4(pos, 0.0, 1.0); }`;
+
+interface Renderer {
+  draw(t: number, palette: Rgb[]): void;
+  dispose(): void;
+}
+
+// The GPU renderer, or null when WebGL2 isn't there (or a shader fails).
+function glRenderer(c: HTMLCanvasElement): Renderer | null {
+  const gl = c.getContext("webgl2", { alpha: false, antialias: false, depth: false, powerPreference: "low-power" });
+  if (!gl) return null;
+  const shader = (type: number, src: string) => {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+  };
+  const vs = shader(gl.VERTEX_SHADER, SWIRL_VERTEX);
+  const fs = shader(gl.FRAGMENT_SHADER, SWIRL_FRAGMENT);
+  if (!vs || !fs) return null;
+  const prog = gl.createProgram()!;
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+  gl.useProgram(prog);
+  // One triangle covering the canvas.
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "pos");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const uSize = gl.getUniformLocation(prog, "size");
+  const uT = gl.getUniformLocation(prog, "t");
+  const uPalette = gl.getUniformLocation(prog, "palette");
+  return {
+    draw(t, palette) {
+      // A third of the size on screen (the stretch keeps it smooth).
+      const r = c.getBoundingClientRect();
+      const w = Math.max(16, Math.min(GPU_MAX_W, Math.round(r.width * GPU_SCALE)));
+      const h = Math.max(9, Math.round((w * Math.max(1, r.height)) / Math.max(1, r.width)));
+      if (c.width !== w) c.width = w;
+      if (c.height !== h) c.height = h;
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(uSize, w, h);
+      gl.uniform1f(uT, t);
+      gl.uniform3fv(uPalette, palette.flat());
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+    dispose() {
+      gl.deleteBuffer(buf);
+      gl.deleteProgram(prog);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+    },
+  };
+}
+
+// The CPU fallback: every pixel of a tiny image in JavaScript.
+function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  c.width = CPU_W;
+  c.height = CPU_H;
+  const image = ctx.createImageData(CPU_W, CPU_H);
+  const weights = [0, 0, 0, 0];
+  return {
+    draw(t, palette) {
       const px = image.data;
-      for (let y = 0; y < H; y++)
-        for (let x = 0; x < W; x++) {
-          swirlPixel(x / W, y / H, t, weights);
-          const o = (y * W + x) * 4;
+      for (let y = 0; y < CPU_H; y++)
+        for (let x = 0; x < CPU_W; x++) {
+          swirlPixel(x / CPU_W, y / CPU_H, t, weights);
+          const o = (y * CPU_W + x) * 4;
           for (let ch = 0; ch < 3; ch++) px[o + ch] = weights[0] * palette[0][ch] + weights[1] * palette[1][ch] + weights[2] * palette[2][ch] + weights[3] * palette[3][ch];
           px[o + 3] = 255;
         }
       ctx.putImageData(image, 0, 0);
+    },
+    dispose() {},
+  };
+}
+
+type Mode = "gpu" | "cpu";
+
+// Does the shader build here? Tried once on a throwaway canvas.
+let gpuOk: boolean | null = null;
+function gpuWorks(): boolean {
+  if (gpuOk === null) {
+    const canvas = document.createElement("canvas");
+    const probe = glRenderer(canvas);
+    gpuOk = probe !== null;
+    probe?.dispose();
+    canvas.getContext("webgl2")?.getExtension("WEBGL_lose_context")?.loseContext();
+  }
+  return gpuOk;
+}
+
+// Shared across remounts and pauses, so the swirl doesn't jump back to its start.
+const swirlClock = { elapsed: 0 };
+
+export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  // GPU with hardware acceleration on; the CPU fallback without it, or once
+  // the GPU context failed or was lost (a new canvas: one can't hold both).
+  const [mode, setMode] = useState<Mode | null>(() => (window.desktop ? null : "cpu"));
+  useEffect(() => {
+    void window.desktop?.getSettings().then(
+      (s) => setMode((m) => m ?? (s.hardwareAcceleration && gpuWorks() ? "gpu" : "cpu")),
+      () => setMode("cpu"),
+    );
+  }, []);
+  const shown = useWindowShown();
+  const focused = useWindowFocused();
+  useEffect(() => {
+    const c = ref.current;
+    if (!c || !mode) return;
+    const renderer = mode === "gpu" ? glRenderer(c) : cpuRenderer(c);
+    if (!renderer) return;
+    const onLost = (e: Event) => {
+      e.preventDefault();
+      setMode("cpu");
     };
+    c.addEventListener("webglcontextlost", onLost);
+    // Colors are parsed on a scratch 2D canvas (the GPU canvas has no 2D context).
+    const scratch = document.createElement("canvas").getContext("2d");
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-reduce-motion");
     // Re-read whenever the theme changes (it sets its tokens on <html>).
     let palette: Rgb[] = [];
     const readPalette = () => {
-      const body = colors && toRgb(colors.body, ctx);
+      if (!scratch) return;
+      const body = colors && toRgb(colors.body, scratch);
       if (colors && body) {
-        const part = (css: string) => toRgb(css, ctx) ?? body;
+        const part = (css: string) => toRgb(css, scratch) ?? body;
         palette = [body, part(colors.cap), part(colors.line), mixRgb(body, part(colors.dark), 0.45)];
         return;
       }
       const accent = getComputedStyle(c).getPropertyValue("--dk-accent") || getComputedStyle(c).color;
-      const acc = toRgb(accent, ctx) ?? [0, 0, 0];
+      const acc = toRgb(accent, scratch) ?? [0, 0, 0];
       // The accent's two neighbors on the color wheel, so every band blends.
       palette = [acc, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
     };
     readPalette();
+    // The field's clock carries on where it was across pauses.
+    const start = performance.now() - swirlClock.elapsed;
+    const now = () => (swirlClock.elapsed = performance.now() - start) / 1000;
+    const draw = (t: number) => renderer.draw(t, palette);
     const themeWatch = new MutationObserver(() => {
       readPalette();
       if (still) draw(0);
     });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class", "data-theme", "data-glass"] });
-    const start = performance.now();
-    draw(0);
-    const timer = still
-      ? undefined
-      : setInterval(() => {
-          if (!document.hidden) draw((performance.now() - start) / 1000);
-        }, FRAME_MS);
+    draw(still ? 0 : now());
+    // Minimized or in the tray: nothing runs at all.
+    const timer = still || !shown ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
     return () => {
       clearInterval(timer);
       themeWatch.disconnect();
+      c.removeEventListener("webglcontextlost", onLost);
+      renderer.dispose();
     };
-  }, [colors]);
-  return <canvas ref={ref} className={`art-bd-layer art-bd-swirl on${gpu ? " gpu" : ""}`} aria-hidden="true" />;
+  }, [colors, mode, shown, focused]);
+  if (!mode) return null;
+  return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
 }

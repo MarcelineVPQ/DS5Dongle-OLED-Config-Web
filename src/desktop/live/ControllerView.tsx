@@ -17,6 +17,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
 import { signalQuality } from "../format";
 import { usePoll } from "../usePoll";
+import { useWindowShown } from "../useWindowShown";
 import { supportsLiveInput, useLiveInput, useLiveLightbar } from "../useLiveInput";
 import type { FirmwareUpdate } from "../useUpdates";
 import { colorway } from "./colorways";
@@ -45,15 +46,10 @@ interface Props {
 export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const { t } = useTranslation();
   const client = bridge.client;
-  const status = usePoll(
-    async () => {
-      if (!client) return null;
-      const [identity, rssi] = await Promise.all([client.identity(), client.readRssi()]);
-      return { identity, rssi };
-    },
-    1000,
-    Boolean(client),
-  ).value;
+  // The identity comes from the connection hook's poll (one for the app);
+  // the signal strength is read here, only while the window is on screen.
+  const rssi = usePoll(() => client!.readRssi(), 1000, Boolean(client)).value;
+  const status = bridge.identity ? { identity: bridge.identity, rssi } : null;
   const id = useShownIdentity(status?.identity);
   const preview = useDevPreview().active;
   const on = Boolean(id?.controllerConnected);
@@ -67,7 +63,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const input = useLiveInput(client, on && liveCapable && !dongleView);
   const liveLightbar = useLiveLightbar(client, on && liveCapable && !dongleView);
   // The OLED mirror, shared by the console and the dashboard (one poll).
-  const oled = useOledFrame(client, dongleView && supportsOledMirror(bridge.identity));
+  // Only while the window is on screen.
+  const shown = useWindowShown();
+  const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
   // "There you are." when a controller connects while the app is open (not
   // for one that was already there at start).
   const wasOn = useRef<boolean | null>(null);
@@ -233,7 +231,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                   </strong>
                 </span>
                 <span>
-                  {t("desktop.overview.signal", "Signal")} <strong>{on && status ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
+                  {t("desktop.overview.signal", "Signal")}{" "}
+                  <strong>{on && status && status.rssi !== null ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
                 </span>
                 {on && id && playerNumber(id.playerLeds) && (
                   <span>

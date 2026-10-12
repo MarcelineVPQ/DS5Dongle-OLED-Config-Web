@@ -445,7 +445,7 @@ function Meter({ value, hold }: { value: number; hold?: number }) {
   const pct = (v: number) => `${Math.round(Math.min(1, Math.max(0, v)) * 100)}%`;
   return (
     <div className="live-meter" aria-hidden="true">
-      <span style={{ width: pct(value) }} />
+      <span style={{ "--level": Math.min(1, Math.max(0, value)) } as React.CSSProperties} />
       {hold !== undefined && hold > 0.01 && <i style={{ left: pct(hold) }} />}
     </div>
   );

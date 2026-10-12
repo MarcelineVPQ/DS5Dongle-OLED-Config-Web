@@ -1,8 +1,8 @@
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { detectRunning, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
+import { detectRunning, readProcs, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
 import { LibraryStore } from "../../electron/main/games/libraryStore";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
 import { ButtonLayoutSchema, LayoutIdSchema, GameKeySchema, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
@@ -68,6 +68,91 @@ describe("running game detection", () => {
     w.stop();
     expect(changes).toEqual([games[0].key, null]);
     expect(w.running).toBeNull();
+  });
+});
+
+// A fake /proc: pid -> name, parent, owner, and what the full read finds.
+function fakeProc(procs: Array<{ pid: number; name: string; ppid: number; uid?: number; env?: string[]; args?: string[]; cwd?: string; exe?: string }>): string {
+  const root = mkdtempSync(join(tmpdir(), "proc-"));
+  const me = process.getuid?.() ?? 1000;
+  for (const p of procs) {
+    const dir = join(root, String(p.pid));
+    mkdirSync(dir);
+    writeFileSync(join(dir, "status"), `Name:\t${p.name}\nUmask:\t0022\nPPid:\t${p.ppid}\nUid:\t${p.uid ?? me}\t${p.uid ?? me}\t${p.uid ?? me}\t${p.uid ?? me}\n`);
+    writeFileSync(join(dir, "comm"), `${p.name}\n`);
+    writeFileSync(join(dir, "cmdline"), (p.args ?? [p.name]).join("\0") + "\0");
+    writeFileSync(join(dir, "environ"), (p.env ?? ["HOME=/home/x"]).join("\0") + "\0");
+    symlinkSync(p.cwd ?? "/home/x", join(dir, "cwd"));
+    symlinkSync(p.exe ?? `/usr/bin/${p.name}`, join(dir, "exe"));
+  }
+  writeFileSync(join(root, "uptime"), "1 1\n"); // not a process
+  return root;
+}
+
+describe("reading /proc for the running game", () => {
+  const root = fakeProc([
+    { pid: 10, name: "systemd", ppid: 0 },
+    { pid: 20, name: "steam", ppid: 10 },
+    { pid: 30, name: "reaper", ppid: 20, args: ["reaper", "SteamLaunch", "AppId=4078430", "--"] },
+    { pid: 31, name: "hl2_linux", ppid: 30, env: ["SteamAppId=4078430", "SteamGameId=4078430", "PATH=/usr/bin"] }, // a native Steam game
+    { pid: 40, name: "firefox", ppid: 10, env: ["SteamAppId=999"] }, // not under a launcher: never read closely
+    { pid: 50, name: "Witcher3Long", ppid: 10, args: ["Z:\\g\\Witcher\\bin\\Witcher3.exe"], cwd: "/g/Witcher/bin", exe: "/opt/wine/bin/wine64-preloader" }, // Wine, left its launcher
+    { pid: 60, name: "heroic", ppid: 10 },
+    { pid: 61, name: "sh", ppid: 60, env: ["HEROIC_APP_NAME=1423049311"] },
+    { pid: 70, name: "reaper", ppid: 10, uid: 4242 }, // another user's
+  ]);
+
+  it("reads only possible games closely, with the same view as a full read", () => {
+    const games = readProcs(true, root);
+    expect(games.map((p) => p.pid).sort((a, b) => a - b)).toEqual([20, 30, 31, 50, 60, 61]);
+    const full = readProcs(false, root);
+    expect(full.map((p) => p.pid).sort((a, b) => a - b)).toEqual([10, 20, 30, 31, 40, 50, 60, 61]);
+    // Each process looks exactly as the full read sees it.
+    for (const p of games) expect(p).toEqual(full.find((f) => f.pid === p.pid));
+    expect(games.find((p) => p.pid === 31)!.env).toEqual({ SteamAppId: "4078430", SteamGameId: "4078430" });
+  });
+
+  it("finds the same game as a full read", () => {
+    const candidates: RunningCandidate[] = [
+      { key: "s", launcher: "steam", id: "4078430" },
+      { key: "w", launcher: "heroic", id: "nope", installDir: "/g/Witcher" },
+    ];
+    for (const only of [true, false]) expect(detectRunning(readProcs(only, root), candidates)).toBe("s");
+    const noSteam = candidates.slice(1);
+    for (const only of [true, false]) expect(detectRunning(readProcs(only, root), noSteam)).toBe("w");
+    rmSync(root, { recursive: true, force: true });
+  });
+});
+
+describe("the running-game watcher with an asynchronous reader (Windows)", () => {
+  it("applies each read when it arrives, never two at once, and ignores reads finishing after stop", async () => {
+    const changes: Array<string | null> = [];
+    let resolve: (p: ProcView[]) => void = () => undefined;
+    let reads = 0;
+    const w = new RunningGameWatcher(
+      () => games,
+      (k) => changes.push(k),
+      () => {
+        reads++;
+        return new Promise<ProcView[]>((r) => (resolve = r));
+      },
+      0,
+    );
+    const steam = [proc({ env: { SteamAppId: "4078430" } })];
+    let t = w.tick(0);
+    expect(w.tick(0)).toBeUndefined(); // still reading: skipped
+    expect(reads).toBe(1);
+    resolve(steam);
+    await t;
+    t = w.tick(1);
+    resolve(steam);
+    await t;
+    expect(changes).toEqual([games[0].key]);
+    t = w.tick(2);
+    w.stop();
+    resolve([]);
+    await t;
+    expect(changes).toEqual([games[0].key, null]); // only stop's own report
   });
 });
 

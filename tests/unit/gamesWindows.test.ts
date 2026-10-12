@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { detectRunningWindows, gameExecutables, type ProcView } from "../../electron/main/games/running";
+import { detectRunningWindows, gameExecutables, parseTasklist, type ProcView } from "../../electron/main/games/running";
 import { findSteamInstalls, listSteamGames } from "../../electron/main/games/steam";
 import { parseEpicManifest, parseGogRegistry, readEpicGames, readGogGames, storeKey } from "../../electron/main/games/windowsStores";
 import { actionUrl } from "../../electron/main/games/actions";
@@ -42,6 +42,14 @@ describe("Games on Windows", () => {
     const exes = (dir: string) => new Set(dir.endsWith("A") ? ["a.exe"] : ["b.exe"]);
     expect(detectRunningWindows([proc("explorer.exe"), proc("B.EXE")], games, exes)).toBe("steam:b");
     expect(detectRunningWindows([proc("explorer.exe")], games, exes)).toBeNull();
+  });
+
+  it("reads tasklist's CSV", () => {
+    const csv = '"System Idle Process","0","Services","0","8 K"\r\n"B.EXE","4321","Console","1","120,000 K"\r\n\r\nINFO: junk\r\n';
+    expect(parseTasklist(csv)).toEqual([
+      { pid: 0, comm: "System Idle Process", args: [], cwd: null, env: {} },
+      { pid: 4321, comm: "B.EXE", args: [], cwd: null, env: {} },
+    ]);
   });
 });
 
