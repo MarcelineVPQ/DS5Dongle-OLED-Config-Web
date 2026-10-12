@@ -12,13 +12,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **Pairing slots name the controller in each slot** ("DualSense · Cosmic Red"), remembered whenever it connects; the dongle itself only keeps the Bluetooth address.
 - **Developer: "Pretend more controllers"** shows two made-up controllers in slots 1 and 2 (an Edge and a second DualSense); switching to one makes the app act as if it connected (drawing, colors, slot), nothing is sent to the dongle. For testing multi-controller screens with one controller.
-
-### Changed
-
-- `tools/check_layout.mjs` turns off transitions while it measures contrast (a theme switch measured mid-fade read as a failure), and takes `--themes` / `--colorways off` for quick targeted runs.
-
-### Added
-
 - **The app names your hardware:** with firmware protocol 1.7 the rail, status, Dongle page, console, log and update banner say what the dongle is built on (e.g. **Pico 2 W**), as the firmware reports it, so other boards show by their own name. Older firmware shows "Dongle".
 - **Updates without a dongle:** the setup screen shows the firmware version the app installs, how to update or reinstall it without a controller (hold BOOTSEL while plugging in), and **Check for updates** for the app.
 - **Background setting** (App settings → Appearance): **Default**, slow swirls in your controller's color, the theme's accent and the accent's neighboring hues (new installs start here); **Game art** (Linux, with Games on; the swirls when there's none); or **Off**. Glass and card opacity now have something to show through on every PC.
@@ -27,12 +20,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Repair USB driver explains itself first:** the button lists, step by step, what will happen and can show the exact script; nothing runs until **Run the repair**.
 - **README: the full PowerShell behind Repair USB driver**, line by line; a test fails the build if it ever differs from what the app runs.
 
+### Changed
+
+- `tools/check_layout.mjs` turns off transitions while it measures contrast (a theme switch measured mid-fade read as a failure), and takes `--themes` / `--colorways off` for quick targeted runs.
+
 ### Fixed
 
 - **The controller drawing covered the status tiles** on short windows (about 680 px tall, e.g. Windows laptops): its height cap was on its box, not the drawing. The page now scrolls instead, and `tools/check_layout.mjs` reports a drawing over tiles or cards.
 - **Accent-colored text is always readable:** with Windows' own accent (Desktop theme) the colorway name could be dark magenta on dark. Text in the accent color now uses a contrast-checked version.
 - **"Windows untested" removed everywhere:** tested on Linux and Windows 11; macOS stays untested; the Games page is Linux-only for now.
-
 - **Firmware update progress** now moves while the firmware is written (it stayed at 0% until the end), and the **Update to …** button shows the short version ("Update to 0.9.2") so **Check now** no longer slides off the Dongle panel.
 - **"Plug in the DS5 Dongle" when the dongle is plugged in:** the dongle stays off USB until a controller connects, so the setup screen now says how to connect or pair one (press PS, or hold PS + Create), and says **Turn on your controller** on PCs that have used a dongle before. After a firmware update it says to press PS.
 
