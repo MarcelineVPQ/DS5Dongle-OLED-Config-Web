@@ -23,9 +23,10 @@ interface Props {
   connecting: boolean;
   firmware: string | null;
   deviceLabel: string;
+  device: string; // hardwareName()
 }
 
-export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, connected, connecting, firmware, deviceLabel }: Props) {
+export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, connected, connecting, firmware, deviceLabel, device }: Props) {
   const { t } = useTranslation();
   const [pinned, pin] = useFlagPref(PIN_KEY);
   const [glass] = useFlagPref(GLASS_KEY);
@@ -64,7 +65,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
   );
 
   const status = connected
-    ? `${t("desktop.status.connected", "Dongle connected")}${firmware ? ` · ${firmware}` : ""}`
+    ? `${t("desktop.status.connected", { device })}${firmware ? ` · ${firmware}` : ""}`
     : connecting
       ? t("statusText.connecting")
       : t("desktop.status.waiting", "Waiting for the dongle…");
@@ -75,7 +76,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
       <nav className="app-rail" ref={railRef} aria-label={t("desktop.rail.label")}>
         <div className="rail-nav">
           {link("controller", t("desktop.nav.controller"), <Gamepad2 size={20} />)}
-          {link("dongle", t("desktop.nav.dongle", "Dongle"), <Usb size={20} />)}
+          {link("dongle", device, <Usb size={20} />)}
           {gamesSupported && link("games", t("desktop.nav.games", "Games"), <Joystick size={20} />, gamesBadge)}
           <div className="rail-divider" />
           {link("app", t("desktop.live.app", "App settings"), <Settings size={20} />)}
@@ -87,7 +88,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
               <span className="rail-dot">{connected ? "✓" : "…"}</span>
             </span>
             <span className="rail-label rail-status-text">
-              <span>{connected ? t("desktop.status.connected", "Dongle connected") : status}</span>
+              <span>{connected ? t("desktop.status.connected", { device }) : status}</span>
               {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
             </span>
           </div>

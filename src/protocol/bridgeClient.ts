@@ -58,6 +58,7 @@ export const FEATURES2 = {
   oledMirror: 0x01, // 0xEF: the OLED's image as last sent to the panel
   calibration: 0x02, // 0xEE get / 0xF6 0x0D set: stick, trigger, gyro calibration
   gripTest: 0x04, // 0xF6 0x0E: buzz a grip at its haptics strength (protocol 1.6)
+  boardName: 0x08, // identity [30..45]: the board's name, e.g. "Pico 2 W" (protocol 1.7)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -110,12 +111,22 @@ export interface BridgeIdentity {
   colorwayCode: string | null;
   // Protocol 1.4+: identity [29], more feature bits (FEATURES2); 0 on older firmware.
   features2: number;
+  // Protocol 1.7+: the board the firmware is built for ("Pico 2 W"); null on older firmware.
+  boardName: string | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
 const PLAYER_PATTERNS: Record<number, number> = { 0x04: 1, 0x0a: 2, 0x15: 3, 0x1b: 4, 0x1f: 5 };
 export function playerNumber(leds: number): number | null {
   return PLAYER_PATTERNS[leds & 0x1f] ?? null;
+}
+
+// ASCII, NUL-padded; printable characters only, anything else means no name.
+function boardNameFrom(raw: Uint8Array): string | null {
+  const end = raw.indexOf(0);
+  const chars = [...raw.subarray(0, end < 0 ? raw.length : end)];
+  if (!chars.length || chars.some((c) => c < 0x20 || c > 0x7e)) return null;
+  return String.fromCharCode(...chars).trim() || null;
 }
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
@@ -144,6 +155,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     model: bytes.length >= 29 && bytes[18] === 1 && bytes[26] !== 0xff ? (bytes[26] === 1 ? "edge" : "dualsense") : null,
     colorwayCode: bytes.length >= 29 && bytes[27] && bytes[28] ? String.fromCharCode(bytes[27], bytes[28]) : null,
     features2: bytes.length >= 30 ? bytes[29] : 0,
+    boardName: bytes.length >= 46 && (bytes[29] & FEATURES2.boardName) !== 0 ? boardNameFrom(bytes.subarray(30, 46)) : null,
   };
 }
 
@@ -211,7 +223,7 @@ export class Ds5BridgeClient {
   private protocol: { major: number; minor: number } | null = null;
 
   async identity(): Promise<BridgeIdentity> {
-    const id = decodeIdentity(await this.transport.getReport(REPORT.identity, 30));
+    const id = decodeIdentity(await this.transport.getReport(REPORT.identity, 46));
     this.protocol = { major: id.protoMajor, minor: id.protoMinor };
     return id;
   }

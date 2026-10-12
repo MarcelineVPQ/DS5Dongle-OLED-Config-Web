@@ -80,12 +80,14 @@
   "desktop": {
     "nav": {
       "controller": "コントローラー",
-      "dongle": "ドングル",
       "about": "情報",
       "games": "ゲーム"
     },
+    "hardware": {
+      "generic": "ドングル"
+    },
     "status": {
-      "connected": "ドングル接続済み",
+      "connected": "{{device}} 接続済み",
       "waiting": "ドングルを待機中…"
     },
     "empty": {
@@ -197,7 +199,7 @@
       "installed": "インストール済みファームウェア",
       "device": "デバイス",
       "rebooting": "再起動中… 復帰したらコントローラーの PS を押してください。",
-      "reboot": "ドングルを再起動",
+      "reboot": "{{device}} を再起動",
       "bootsel": "ドングルは RP2350 ドライブになりました。.uf2 をコピーするか、取り外してキャンセルしてください。",
       "enterBootsel": "BOOTSEL モードに入る",
       "resetDone": "設定を初期値に戻して保存しました。",
@@ -230,7 +232,17 @@
       "seen": "ドングルは接続されていますが、Windows がドライバーを設定していません。",
       "button": "USB ドライバーを修復",
       "working": "許可を待っています…",
-      "done": "修復しました。ドングルを抜いて、もう一度差し込んでください。"
+      "done": "修復しました。ドングルを抜いて、もう一度差し込んでください。",
+      "stepsTitle": "修復で行うこと",
+      "step": {
+        "admin": "Windows が管理者の許可を求めます（Windows PowerShell、Microsoft 製）。「いいえ」を選ぶと何も変わりません。",
+        "forget": "ドングルの 2 つの USB ID（054C:0CE6 と 054C:0DF2）について Windows が保存した USB 設定を消去します。レジストリのほかの部分には触れません。",
+        "entries": "この 2 つの ID について保存されたデバイス情報を削除します。Windows が自動で作り直します。",
+        "replug": "ドングルを抜いて差し直します。Windows がドライバーを一から設定し、アプリが接続します。"
+      },
+      "showScript": "スクリプトをそのまま表示",
+      "run": "修復を実行",
+      "cancel": "キャンセル"
     },
     "update": {
       "appAvailable": "アプリのアップデート {{version}} があります（{{size}}）。",
@@ -241,7 +253,7 @@
       "restart": "今すぐ再起動",
       "manual": "アップデート {{version}} はリリースページから入手できます。",
       "open": "リリースページを開く",
-      "fwAvailable": "ドングル用のファームウェア {{version}} があります。",
+      "fwAvailable": "{{device}} 用のファームウェア {{version}} があります。",
       "details": "詳細",
       "fwDontUnplug": "ファームウェアを更新中です。ドングルを抜かないでください。",
       "fwDone": "ファームウェアを {{version}} に更新しました。PS を押してコントローラーを再接続してください。",
@@ -403,7 +415,14 @@
       "driveNote": "パソコンには RP2350 という名前のドライブとしても表示されることがありますが、開く必要はありません。",
       "turnOnTitle": "コントローラーの電源を入れてください",
       "pairHint": "コントローラーの PS ボタンを押してください。新しいコントローラーは、ライトバーが点滅するまで PS + Create を長押しします（ドングルの画面に「Pair your DualSense」と表示されます）。",
-      "whyHidden": "ドングルは、コントローラーが接続されて初めてこの PC に表示されます。"
+      "whyHidden": "ドングルは、コントローラーが接続されて初めてこの PC に表示されます。",
+      "updatesTitle": "アップデート",
+      "fwReady": "このアプリはファームウェア {{version}} をインストールします。",
+      "fwHowTo": "コントローラーなしでファームウェアを更新・再インストールするには、Pico の BOOTSEL ボタンを押したままドングルを差し込みます。この画面にインストールの案内が表示されます。",
+      "checkUpdates": "アップデートを確認",
+      "checkedCurrent": "アプリは最新です（{{version}}）。",
+      "checkedNewer": "アプリ {{version}} があります。上部のお知らせを見てください。",
+      "checkFailed": "アップデートを確認できませんでした。オンラインですか？"
     },
     "live": {
       "part": {
@@ -788,7 +807,7 @@
       }
     },
     "dongleConsole": {
-      "title": "ドングルコンソール",
+      "title": "{{device}} コンソール",
       "pane": {
         "screen": "画面",
         "log": "ログ"
@@ -806,8 +825,8 @@
       "hint": "ドングルの画面の表示を1ピクセル単位でそのまま表示します。OLEDモジュールがなくても使えます。画面の切り替えはドングルの KEY0 / KEY1 で行います。",
       "logEmpty": "まだありません。",
       "log": {
-        "online": "ドングル接続（プロトコル {{version}}）",
-        "offline": "ドングル切断",
+        "online": "{{device}} 接続（プロトコル {{version}}）",
+        "offline": "{{device}} 切断",
         "controller": "コントローラー接続（スロット {{slot}}）",
         "controllerGone": "コントローラー切断",
         "slot": "スロット {{slot}} に切り替え",

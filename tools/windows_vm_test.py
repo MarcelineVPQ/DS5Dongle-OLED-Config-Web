@@ -188,7 +188,10 @@ def press_repair():
         click(w * 0.45, h * 0.3)  # above the setup text: Tab then goes to the next control below it
         time.sleep(0.5)
         keys("KEY_TAB")
-        keys("KEY_ENTER")
+        keys("KEY_ENTER")  # Repair USB driver: shows the steps and the script
+        time.sleep(1.5)
+        shot("steps")
+        keys("KEY_ENTER")  # Run the repair (it has the focus)
         for _ in range(10):
             time.sleep(1)
             if admin_prompt_open():

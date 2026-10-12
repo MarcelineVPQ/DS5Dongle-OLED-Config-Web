@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorText } from "../../errorText";
+import { hardwareName } from "../hardwareName";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
@@ -96,7 +97,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
             disabled={!client || busy}
             onClick={() => act(() => client!.reboot(), t("desktop.firmware.rebooting", "Restarting… press PS on the controller once it's back."))}
           >
-            {t("desktop.firmware.reboot", "Restart dongle")}
+            {t("desktop.firmware.reboot", { device: hardwareName(bridge.identity, t) })}
           </BusyButton>
           <BusyButton
             className="dk-btn"

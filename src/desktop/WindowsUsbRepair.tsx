@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WebUsbTransport } from "../protocol/webUsbTransport";
+import { REPAIR_SCRIPT } from "./windowsRepairScript";
 
 const POLL_MS = 2000;
+const STEPS = ["admin", "forget", "entries", "replug"] as const;
 
 // Windows only, on the "Plug in the DS5 Dongle" screen: when Windows kept an
 // old answer for the dongle's USB IDs (a real DualSense plugged in by USB
-// first), the dongle shows up but can't be opened. One button forgets that
-// answer (UAC prompt, electron/main/windowsSetup.ts); the user then replugs.
+// first), the dongle shows up but can't be opened. The button first says,
+// step by step, what the repair will do and shows the exact script; only
+// "Run the repair" runs it (UAC prompt, electron/main/windowsSetup.ts). The
+// user then replugs.
 export default function WindowsUsbRepair() {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const windows = desktop?.platform === "win32";
   const [seen, setSeen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -38,14 +43,46 @@ export default function WindowsUsbRepair() {
     setBusy(true);
     setResult(await desktop.repairWindowsUsb());
     setBusy(false);
+    setConfirming(false);
   };
 
   return (
     <div className="dk-setup-repair" data-testid="windows-usb-repair">
       <span className={seen ? "dk-bad" : "dk-hint"}>{seen ? t("desktop.windowsUsb.seen") : t("desktop.windowsUsb.hint")}</span>
-      <button type="button" className={seen ? "dk-btn primary" : "dk-btn"} disabled={busy} onClick={() => void run()}>
-        {busy ? t("desktop.windowsUsb.working") : t("desktop.windowsUsb.button")}
-      </button>
+      {confirming ? (
+        <div className="dk-setup-steps">
+          <strong>{t("desktop.windowsUsb.stepsTitle")}</strong>
+          <ol>
+            {STEPS.map((step) => (
+              <li key={step}>{t(`desktop.windowsUsb.step.${step}`)}</li>
+            ))}
+          </ol>
+          <details>
+            <summary>{t("desktop.windowsUsb.showScript")}</summary>
+            <pre className="dk-mono">{REPAIR_SCRIPT}</pre>
+          </details>
+          <div className="dk-setup-steps-actions">
+            <button type="button" className="dk-btn" disabled={busy} onClick={() => setConfirming(false)}>
+              {t("desktop.windowsUsb.cancel")}
+            </button>
+            {/* autoFocus: Enter runs it, the obvious next step after reading */}
+            <button type="button" className="dk-btn primary" disabled={busy} autoFocus onClick={() => void run()}>
+              {busy ? t("desktop.windowsUsb.working") : t("desktop.windowsUsb.run")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={seen ? "dk-btn primary" : "dk-btn"}
+          onClick={() => {
+            setResult(null);
+            setConfirming(true);
+          }}
+        >
+          {t("desktop.windowsUsb.button")}
+        </button>
+      )}
       {result && <span className={result.ok ? "dk-good" : "dk-bad"}>{result.ok ? t("desktop.windowsUsb.done") : result.message}</span>}
     </div>
   );

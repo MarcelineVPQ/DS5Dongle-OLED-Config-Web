@@ -80,12 +80,14 @@
   "desktop": {
     "nav": {
       "controller": "Controller",
-      "dongle": "Dongle",
       "about": "Über",
       "games": "Spiele"
     },
+    "hardware": {
+      "generic": "Dongle"
+    },
     "status": {
-      "connected": "Dongle verbunden",
+      "connected": "{{device}} verbunden",
       "waiting": "Warte auf den Dongle…"
     },
     "empty": {
@@ -197,7 +199,7 @@
       "installed": "Installierte Firmware",
       "device": "Gerät",
       "rebooting": "Startet neu… drück PS am Controller, sobald er wieder da ist.",
-      "reboot": "Dongle neu starten",
+      "reboot": "{{device}} neu starten",
       "bootsel": "Der Dongle ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder steck ihn ab, um abzubrechen.",
       "enterBootsel": "BOOTSEL-Modus starten",
       "resetDone": "Einstellungen auf Standard zurückgesetzt und gespeichert.",
@@ -230,7 +232,17 @@
       "seen": "Der Dongle ist eingesteckt, aber Windows hat seinen Treiber nicht eingerichtet.",
       "button": "USB-Treiber reparieren",
       "working": "Warte auf Erlaubnis…",
-      "done": "Repariert. Zieh den Dongle jetzt ab und steck ihn wieder ein."
+      "done": "Repariert. Zieh den Dongle jetzt ab und steck ihn wieder ein.",
+      "stepsTitle": "Was die Reparatur macht",
+      "step": {
+        "admin": "Windows fragt nach Administratorrechten (Windows PowerShell, von Microsoft). Wählst du Nein, ändert sich nichts.",
+        "forget": "Windows vergisst die USB-Einstellung, die es für die zwei USB-IDs des Dongles gespeichert hat (054C:0CE6 und 054C:0DF2). Sonst wird nichts in der Registry geändert.",
+        "entries": "Die gespeicherten Geräteeinträge für diese zwei IDs werden entfernt. Windows legt sie von selbst neu an.",
+        "replug": "Du ziehst den Dongle ab und steckst ihn wieder ein. Windows richtet seinen Treiber neu ein, und die App verbindet sich."
+      },
+      "showScript": "Genaues Skript anzeigen",
+      "run": "Reparatur starten",
+      "cancel": "Abbrechen"
     },
     "update": {
       "appAvailable": "App-Update {{version}} ist verfügbar ({{size}}).",
@@ -241,7 +253,7 @@
       "restart": "Jetzt neu starten",
       "manual": "App-Update {{version}} ist auf der Release-Seite verfügbar.",
       "open": "Release-Seite öffnen",
-      "fwAvailable": "Firmware {{version}} ist für deinen Dongle verfügbar.",
+      "fwAvailable": "Firmware {{version}} ist verfügbar ({{device}}).",
       "details": "Details",
       "fwDontUnplug": "Firmware wird aktualisiert, Dongle nicht abziehen.",
       "fwDone": "Firmware auf {{version}} aktualisiert. Drücke PS, um den Controller zu verbinden.",
@@ -406,7 +418,14 @@
       "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
       "turnOnTitle": "Schalte deinen Controller ein",
       "pairHint": "Drück PS am Controller. Ein neuer Controller: Halte PS + Create, bis die Lichtleiste blinkt (das Display des Dongles zeigt „Pair your DualSense“).",
-      "whyHidden": "Der Dongle erscheint an diesem PC erst, wenn ein Controller mit ihm verbunden ist."
+      "whyHidden": "Der Dongle erscheint an diesem PC erst, wenn ein Controller mit ihm verbunden ist.",
+      "updatesTitle": "Updates",
+      "fwReady": "Diese App installiert Firmware {{version}}.",
+      "fwHowTo": "Firmware ohne Controller aktualisieren oder neu installieren: Halte die BOOTSEL-Taste des Pico gedrückt, während du den Dongle einsteckst. Dieser Bildschirm bietet dann die Installation an.",
+      "checkUpdates": "Nach Updates suchen",
+      "checkedCurrent": "Die App ist aktuell ({{version}}).",
+      "checkedNewer": "App {{version}} ist verfügbar: siehe Hinweis oben.",
+      "checkFailed": "Suche nach Updates fehlgeschlagen. Bist du online?"
     },
     "live": {
       "part": {
@@ -794,7 +813,7 @@
       }
     },
     "dongleConsole": {
-      "title": "Dongle-Konsole",
+      "title": "{{device}}-Konsole",
       "pane": {
         "screen": "Display",
         "log": "Protokoll"
@@ -812,8 +831,8 @@
       "hint": "Genau das, was das Display des Dongles zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1 am Dongle.",
       "logEmpty": "Noch nichts.",
       "log": {
-        "online": "Dongle verbunden (Protokoll {{version}})",
-        "offline": "Dongle getrennt",
+        "online": "{{device}} verbunden (Protokoll {{version}})",
+        "offline": "{{device}} getrennt",
         "controller": "Controller verbunden (Slot {{slot}})",
         "controllerGone": "Controller getrennt",
         "slot": "Zu Slot {{slot}} gewechselt",

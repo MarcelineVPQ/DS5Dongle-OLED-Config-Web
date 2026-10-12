@@ -14,5 +14,5 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["electron", "src/desktop/api.ts", "src/errorText.ts", "src/desktop/theme", "src/desktop/games", "src/update"]
+  "include": ["electron", "src/desktop/api.ts", "src/errorText.ts", "src/desktop/windowsRepairScript.ts", "src/desktop/theme", "src/desktop/games", "src/update"]
 }

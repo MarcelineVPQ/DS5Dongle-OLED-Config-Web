@@ -142,6 +142,12 @@ describe("privileged Windows USB repair", () => {
     expect(source).toMatch(/execFile\(powershell, \["-NoProfile", "-NonInteractive", "-EncodedCommand"/);
     expect(source).not.toMatch(/\bexec\(|shell: true/);
   });
+
+  it("publishes the exact script in the README", async () => {
+    const { REPAIR_SCRIPT } = await import("../../src/desktop/windowsRepairScript");
+    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+    expect(readme).toContain("```powershell\n" + REPAIR_SCRIPT + "\n```");
+  });
 });
 
 describe("privileged Linux setup", () => {

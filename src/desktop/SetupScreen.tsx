@@ -12,6 +12,8 @@ import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
 import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
 import { readPref } from "./storage";
+import { BusyButton } from "./controls";
+import { shortVersion } from "../update/manifest";
 import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
 
@@ -117,7 +119,49 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
       <UsbAccessSetup compact />
       <WindowsUsbRepair />
+      <UpdatesWithoutDongle />
     </Center>
+  );
+}
+
+// Updates with no dongle connected (it stays off USB until a controller
+// connects, so the Firmware card isn't reachable): the firmware this app would
+// install, how to install it without a controller (BOOTSEL: the screen above
+// then offers it), and a check for a newer app (its banner shows up top).
+function UpdatesWithoutDongle() {
+  const { t } = useTranslation();
+  const desktop = window.desktop;
+  const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
+  const [checked, setChecked] = useState<string | null>(null);
+  useEffect(() => {
+    void desktop
+      ?.latestFirmware()
+      .then((r) => setFirmware(r.latest))
+      .catch(() => undefined);
+  }, [desktop]);
+  if (!desktop) return null;
+  const check = async () => {
+    setChecked(null);
+    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware().catch(() => null)]);
+    if (lookup?.latest) setFirmware(lookup.latest);
+    setChecked(
+      !app || app.phase === "failed"
+        ? t("desktop.setup.checkFailed")
+        : app.phase === "up-to-date"
+          ? t("desktop.setup.checkedCurrent", { version: app.version })
+          : app.phase === "idle" || app.phase === "checking"
+            ? null
+            : t("desktop.setup.checkedNewer", { version: app.version }),
+    );
+  };
+  return (
+    <div className="dk-setup-updates" data-testid="setup-updates">
+      <strong>{t("desktop.setup.updatesTitle")}</strong>
+      {firmware && <span>{t("desktop.setup.fwReady", { version: shortVersion(firmware.version) })}</span>}
+      <span className="dk-hint">{t("desktop.setup.fwHowTo")}</span>
+      <BusyButton onClick={check}>{t("desktop.setup.checkUpdates")}</BusyButton>
+      {checked && <span className="dk-hint">{checked}</span>}
+    </div>
   );
 }
 

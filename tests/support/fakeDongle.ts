@@ -202,7 +202,8 @@ export class FakeDongle implements Ds5Transport {
   }
 
   private identity(): Uint8Array {
-    const out = new Uint8Array(30);
+    const minor = this.opts.protoMinor ?? 6;
+    const out = new Uint8Array(minor >= 7 ? 46 : 30);
     out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, this.opts.protoMinor ?? 6, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
@@ -221,6 +222,13 @@ export class FakeDongle implements Ds5Transport {
       27,
     );
     out[29] = this.split ? 0x01 | 0x02 | 0x04 : 0x01 | 0x02; // FEATURES2: OLED mirror, calibration, grip test (1.6)
+    if (minor >= 7) {
+      out[29] |= 0x08; // board name (1.7)
+      out.set(
+        [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
+        30,
+      );
+    }
     return out;
   }
 

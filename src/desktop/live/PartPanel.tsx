@@ -2,6 +2,7 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
@@ -55,7 +56,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
     view === "overview"
       ? t("desktop.live.overview", "Your controller")
       : view === "dongle"
-        ? t("desktop.nav.dongle", "Dongle")
+        ? hardwareName(bridge.identity, t)
         : view === "app"
           ? t("desktop.live.app", "App settings")
           : view === "calibration"

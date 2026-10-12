@@ -80,12 +80,14 @@
   "desktop": {
     "nav": {
       "controller": "Mando",
-      "dongle": "Dongle",
       "about": "Acerca de",
       "games": "Juegos"
     },
+    "hardware": {
+      "generic": "Dongle"
+    },
     "status": {
-      "connected": "Dongle conectado",
+      "connected": "{{device}} conectado",
       "waiting": "Esperando el dongle…"
     },
     "empty": {
@@ -197,7 +199,7 @@
       "installed": "Firmware instalado",
       "device": "Dispositivo",
       "rebooting": "Reiniciando… pulsa PS en el controlador cuando vuelva.",
-      "reboot": "Reiniciar dongle",
+      "reboot": "Reiniciar {{device}}",
       "bootsel": "El dongle es ahora una unidad RP2350. Copia un .uf2 en ella o desconéctalo para cancelar.",
       "enterBootsel": "Entrar en modo BOOTSEL",
       "resetDone": "Ajustes restablecidos a los valores predeterminados y guardados.",
@@ -230,7 +232,17 @@
       "seen": "El dongle está conectado, pero Windows no ha instalado su controlador.",
       "button": "Reparar controlador USB",
       "working": "Esperando permiso…",
-      "done": "Reparado. Ahora desconecta el dongle y vuelve a conectarlo."
+      "done": "Reparado. Ahora desconecta el dongle y vuelve a conectarlo.",
+      "stepsTitle": "Qué hace la reparación",
+      "step": {
+        "admin": "Windows pide permiso de administrador (Windows PowerShell, de Microsoft). Si eliges No, no cambia nada.",
+        "forget": "Windows olvida el ajuste USB que guardó para los dos ID USB del dongle (054C:0CE6 y 054C:0DF2). No se toca nada más del registro.",
+        "entries": "Se eliminan las entradas de dispositivo guardadas para esos dos ID. Windows las vuelve a crear solo.",
+        "replug": "Desconectas el dongle y lo vuelves a conectar. Windows instala su controlador desde cero y la app se conecta."
+      },
+      "showScript": "Ver el script exacto",
+      "run": "Hacer la reparación",
+      "cancel": "Cancelar"
     },
     "update": {
       "appAvailable": "Hay una actualización de la app {{version}} ({{size}}).",
@@ -241,7 +253,7 @@
       "restart": "Reiniciar ahora",
       "manual": "La actualización {{version}} está en la página de versiones.",
       "open": "Abrir página de versiones",
-      "fwAvailable": "Hay firmware {{version}} para tu dongle.",
+      "fwAvailable": "Hay firmware {{version}} para tu {{device}}.",
       "details": "Detalles",
       "fwDontUnplug": "Actualizando el firmware, no desconectes el dongle.",
       "fwDone": "Firmware actualizado a {{version}}. Pulsa PS para reconectar el mando.",
@@ -406,7 +418,14 @@
       "driveNote": "Puede que tu equipo también lo muestre como una unidad llamada RP2350. No hace falta abrirla.",
       "turnOnTitle": "Enciende tu mando",
       "pairHint": "Pulsa PS en el mando. Un mando nuevo: mantén PS + Create hasta que la barra de luz parpadee (la pantalla del dongle muestra «Pair your DualSense»).",
-      "whyHidden": "El dongle solo aparece en este PC cuando hay un mando conectado a él."
+      "whyHidden": "El dongle solo aparece en este PC cuando hay un mando conectado a él.",
+      "updatesTitle": "Actualizaciones",
+      "fwReady": "Esta app instala el firmware {{version}}.",
+      "fwHowTo": "Para actualizar o reinstalar el firmware sin mando: mantén pulsado el botón BOOTSEL de la Pico mientras conectas el dongle. Esta pantalla te ofrecerá instalarlo.",
+      "checkUpdates": "Buscar actualizaciones",
+      "checkedCurrent": "La app está al día ({{version}}).",
+      "checkedNewer": "La app {{version}} está disponible: mira el aviso de arriba.",
+      "checkFailed": "No se pudo buscar actualizaciones. ¿Tienes conexión?"
     },
     "live": {
       "part": {
@@ -794,7 +813,7 @@
       }
     },
     "dongleConsole": {
-      "title": "Consola del dongle",
+      "title": "Consola: {{device}}",
       "pane": {
         "screen": "Pantalla",
         "log": "Registro"
@@ -812,8 +831,8 @@
       "hint": "Exactamente lo que muestra la pantalla del dongle, píxel a píxel. También funciona sin el módulo OLED. Cambia de pantalla con KEY0 / KEY1 en el dongle.",
       "logEmpty": "Nada todavía.",
       "log": {
-        "online": "Dongle conectado (protocolo {{version}})",
-        "offline": "Dongle desconectado",
+        "online": "{{device}} conectado (protocolo {{version}})",
+        "offline": "{{device}} desconectado",
         "controller": "Mando conectado (ranura {{slot}})",
         "controllerGone": "Mando desconectado",
         "slot": "Cambiado a la ranura {{slot}}",

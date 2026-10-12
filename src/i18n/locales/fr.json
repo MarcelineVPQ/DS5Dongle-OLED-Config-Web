@@ -80,12 +80,14 @@
   "desktop": {
     "nav": {
       "controller": "Manette",
-      "dongle": "Dongle",
       "about": "À propos",
       "games": "Jeux"
     },
+    "hardware": {
+      "generic": "Dongle"
+    },
     "status": {
-      "connected": "Dongle connecté",
+      "connected": "{{device}} connecté",
       "waiting": "En attente du dongle…"
     },
     "empty": {
@@ -197,7 +199,7 @@
       "installed": "Firmware installé",
       "device": "Appareil",
       "rebooting": "Redémarrage… appuie sur PS sur la manette une fois le dongle revenu.",
-      "reboot": "Redémarrer le dongle",
+      "reboot": "Redémarrer {{device}}",
       "bootsel": "Le dongle est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche-le pour annuler.",
       "enterBootsel": "Passer en mode BOOTSEL",
       "resetDone": "Paramètres réinitialisés par défaut et enregistrés.",
@@ -230,7 +232,17 @@
       "seen": "Le dongle est branché, mais Windows n’a pas installé son pilote.",
       "button": "Réparer le pilote USB",
       "working": "En attente d’autorisation…",
-      "done": "Réparé. Débranche maintenant le dongle puis rebranche-le."
+      "done": "Réparé. Débranche maintenant le dongle puis rebranche-le.",
+      "stepsTitle": "Ce que fait la réparation",
+      "step": {
+        "admin": "Windows demande l’autorisation administrateur (Windows PowerShell, de Microsoft). Choisis Non et rien ne change.",
+        "forget": "Windows oublie le réglage USB qu’il a enregistré pour les deux identifiants USB du dongle (054C:0CE6 et 054C:0DF2). Rien d’autre n’est modifié dans le registre.",
+        "entries": "Les entrées de périphérique enregistrées pour ces deux identifiants sont supprimées. Windows les recrée tout seul.",
+        "replug": "Tu débranches le dongle et le rebranches. Windows réinstalle son pilote et l’app se connecte."
+      },
+      "showScript": "Afficher le script exact",
+      "run": "Lancer la réparation",
+      "cancel": "Annuler"
     },
     "update": {
       "appAvailable": "La mise à jour {{version}} de l'app est disponible ({{size}}).",
@@ -241,7 +253,7 @@
       "restart": "Redémarrer maintenant",
       "manual": "La mise à jour {{version}} est disponible sur la page des versions.",
       "open": "Ouvrir la page des versions",
-      "fwAvailable": "Le firmware {{version}} est disponible pour ton dongle.",
+      "fwAvailable": "Le firmware {{version}} est disponible ({{device}}).",
       "details": "Détails",
       "fwDontUnplug": "Mise à jour du firmware, ne débranche pas le dongle.",
       "fwDone": "Firmware mis à jour en {{version}}. Appuie sur PS pour reconnecter la manette.",
@@ -406,7 +418,14 @@
       "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
       "turnOnTitle": "Allume ta manette",
       "pairHint": "Appuie sur PS sur la manette. Une nouvelle manette : maintiens PS + Create jusqu’à ce que la barre lumineuse clignote (l’écran du dongle affiche « Pair your DualSense »).",
-      "whyHidden": "Le dongle n’apparaît sur ce PC qu’une fois une manette connectée."
+      "whyHidden": "Le dongle n’apparaît sur ce PC qu’une fois une manette connectée.",
+      "updatesTitle": "Mises à jour",
+      "fwReady": "Cette app installe le firmware {{version}}.",
+      "fwHowTo": "Pour mettre à jour ou réinstaller le firmware sans manette : maintiens le bouton BOOTSEL de la Pico pendant que tu branches le dongle. Cet écran propose alors de l’installer.",
+      "checkUpdates": "Rechercher des mises à jour",
+      "checkedCurrent": "L’app est à jour ({{version}}).",
+      "checkedNewer": "L’app {{version}} est disponible : voir le bandeau en haut.",
+      "checkFailed": "Impossible de vérifier les mises à jour. Es-tu en ligne ?"
     },
     "live": {
       "part": {
@@ -794,7 +813,7 @@
       }
     },
     "dongleConsole": {
-      "title": "Console du dongle",
+      "title": "Console : {{device}}",
       "pane": {
         "screen": "Écran",
         "log": "Journal"
@@ -812,8 +831,8 @@
       "hint": "Exactement ce qu'affiche l'écran du dongle, pixel par pixel. Fonctionne aussi sans le module OLED. Changez d'écran avec KEY0 / KEY1 sur le dongle.",
       "logEmpty": "Rien pour l'instant.",
       "log": {
-        "online": "Dongle connecté (protocole {{version}})",
-        "offline": "Dongle déconnecté",
+        "online": "{{device}} connecté (protocole {{version}})",
+        "offline": "{{device}} déconnecté",
         "controller": "Manette connectée (emplacement {{slot}})",
         "controllerGone": "Manette déconnectée",
         "slot": "Passage à l'emplacement {{slot}}",

@@ -832,7 +832,50 @@ html[data-theme="dark"] .dk {
 .dk-setup .dk-progress {
   width: 260px;
 }
-/* Windows: Repair USB driver (WindowsUsbRepair.tsx). */
+/* No dongle: updates without one (SetupScreen.tsx UpdatesWithoutDongle). */
+.dk-setup-updates {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+}
+/* Windows: Repair USB driver (WindowsUsbRepair.tsx), its step-by-step first. */
+.dk-setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 460px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  text-align: left;
+}
+.dk-setup-steps ol {
+  margin: 0;
+  padding-left: 18px;
+}
+.dk-setup-steps li + li {
+  margin-top: 4px;
+}
+.dk-setup-steps pre {
+  margin: 6px 0 0;
+  padding: 8px;
+  overflow-x: auto;
+  font-size: 11px;
+  white-space: pre;
+  background: var(--bg-inset);
+  border-radius: 6px;
+}
+.dk-setup-steps-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .dk-setup-repair {
   display: flex;
   flex-direction: column;

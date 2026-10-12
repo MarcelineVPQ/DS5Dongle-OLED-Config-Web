@@ -44,7 +44,32 @@ The Windows build is made by the same release workflow but hasn't been tested on
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
 2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.
 3. Windows loads the USB driver for the dongle automatically.
-4. **If the dongle doesn't show up** and it was plugged into this PC before updating its firmware: unplug it and plug it back in.
+4. **If the app says "The dongle is plugged in, but Windows hasn't set up its driver"** (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. See below for exactly what it does.
+
+#### Repair USB driver: exactly what it runs
+
+The dongle uses a real DualSense's USB IDs (`054C:0CE6`, or `054C:0DF2` in DualSense Edge mode), so games treat it as one. It also asks Windows to load the standard **WinUSB** driver for the configurator's own interface. Windows asks a device for that only the **first time** it sees those IDs, and remembers the answer. If a real DualSense was ever plugged into the PC by USB, Windows remembered "no driver needed", and the app can't open the dongle.
+
+**Repair USB driver** makes Windows forget that answer. It runs this PowerShell script once, as administrator (Windows shows its admin prompt first; choose No and nothing happens). Before anything runs, the app lists these steps and can show the script itself, and you choose **Run the repair** or **Cancel**. The app contains it as fixed text ([`src/desktop/windowsRepairScript.ts`](src/desktop/windowsRepairScript.ts), run by [`electron/main/windowsSetup.ts`](electron/main/windowsSetup.ts)); nothing from the page or the internet goes into it, and a test fails the build if this copy and the app's ever differ:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+foreach ($id in @('0CE6', '0DF2')) {
+  Remove-Item "HKLM:\SYSTEM\CurrentControlSet\Control\usbflags\054C$($id)0100" -Recurse -Force -ErrorAction SilentlyContinue
+  Get-PnpDevice | Where-Object { $_.InstanceId -like "USB\VID_054C&PID_$($id)*" } | ForEach-Object {
+    & "$env:SystemRoot\System32\pnputil.exe" /remove-device "$($_.InstanceId)" | Out-Null
+  }
+}
+exit 0
+```
+
+What each part does:
+
+- **`usbflags\054C…0100`**: Windows' remembered answer for those two USB IDs (revision 0100). Deleting it makes Windows ask the dongle again on the next plug-in. Nothing else in the registry is touched.
+- **`pnputil /remove-device`**: removes Windows' cached device entries for the same two IDs only (`USB\VID_054C&PID_0CE6…` / `0DF2…`). Windows creates them again, with the right driver, when the dongle is plugged back in. A real DualSense plugged in by USB gets its entries recreated the same way.
+- Nothing is downloaded, installed or left running. The app starts it through `powershell.exe` from `%SystemRoot%\System32`, passed as `-EncodedCommand` so no shell interprets it on the way.
+
+It can come back if a real DualSense is plugged into the PC by USB again; press the button again then. To do it by hand instead: run the same script in an administrator PowerShell, then replug the dongle.
 
 ### macOS (untested)
 

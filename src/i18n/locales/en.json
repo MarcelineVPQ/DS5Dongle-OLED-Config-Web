@@ -79,12 +79,14 @@
   "desktop": {
     "nav": {
       "controller": "Controller",
-      "dongle": "Dongle",
       "about": "About",
       "games": "Games"
     },
+    "hardware": {
+      "generic": "Dongle"
+    },
     "status": {
-      "connected": "Dongle connected",
+      "connected": "{{device}} connected",
       "waiting": "Waiting for the dongle…"
     },
     "empty": {
@@ -196,7 +198,7 @@
       "installed": "Installed firmware",
       "device": "Device",
       "rebooting": "Restarting… press PS on the controller once it's back.",
-      "reboot": "Restart dongle",
+      "reboot": "Restart {{device}}",
       "bootsel": "The dongle is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
       "enterBootsel": "Enter BOOTSEL mode",
       "resetDone": "Settings reset to defaults and saved.",
@@ -229,7 +231,17 @@
       "seen": "The dongle is plugged in, but Windows hasn't set up its driver.",
       "button": "Repair USB driver",
       "working": "Waiting for permission…",
-      "done": "Repaired. Now unplug the dongle and plug it back in."
+      "done": "Repaired. Now unplug the dongle and plug it back in.",
+      "stepsTitle": "What the repair does",
+      "step": {
+        "admin": "Windows asks for administrator permission (Windows PowerShell, from Microsoft). Choose No and nothing changes.",
+        "forget": "Windows forgets the USB setting it saved for the dongle's two USB IDs (054C:0CE6 and 054C:0DF2). Nothing else in the registry is touched.",
+        "entries": "It removes Windows' saved device entries for those two IDs. Windows creates them again by itself.",
+        "replug": "You unplug the dongle and plug it back in. Windows sets up its driver from scratch, and the app connects."
+      },
+      "showScript": "Show the exact script",
+      "run": "Run the repair",
+      "cancel": "Cancel"
     },
     "update": {
       "appAvailable": "App update {{version}} is available ({{size}}).",
@@ -240,7 +252,7 @@
       "restart": "Restart now",
       "manual": "App update {{version}} is available on the release page.",
       "open": "Open release page",
-      "fwAvailable": "Firmware {{version}} is available for your dongle.",
+      "fwAvailable": "Firmware {{version}} is available for your {{device}}.",
       "details": "Details",
       "fwDontUnplug": "Updating firmware, don't unplug the dongle.",
       "fwDone": "Firmware updated to {{version}}. Press PS to reconnect the controller.",
@@ -405,7 +417,14 @@
       "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it.",
       "turnOnTitle": "Turn on your controller",
       "pairHint": "Press PS on the controller. A new controller: hold PS + Create until the light bar flashes (the dongle's screen shows \"Pair your DualSense\").",
-      "whyHidden": "The dongle only shows up on this PC once a controller is connected to it."
+      "whyHidden": "The dongle only shows up on this PC once a controller is connected to it.",
+      "updatesTitle": "Updates",
+      "fwReady": "This app installs firmware {{version}}.",
+      "fwHowTo": "To update or reinstall the firmware without a controller: hold the Pico's BOOTSEL button while you plug the dongle in. This screen then offers to install it.",
+      "checkUpdates": "Check for updates",
+      "checkedCurrent": "The app is up to date ({{version}}).",
+      "checkedNewer": "App {{version}} is available: see the banner at the top.",
+      "checkFailed": "Couldn't check for updates. Are you online?"
     },
     "live": {
       "part": {
@@ -793,7 +812,7 @@
       }
     },
     "dongleConsole": {
-      "title": "Dongle console",
+      "title": "{{device}} console",
       "pane": {
         "screen": "Screen",
         "log": "Log"
@@ -811,8 +830,8 @@
       "hint": "Exactly what the dongle's screen shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1 on the dongle.",
       "logEmpty": "Nothing yet.",
       "log": {
-        "online": "Dongle connected (protocol {{version}})",
-        "offline": "Dongle disconnected",
+        "online": "{{device}} connected (protocol {{version}})",
+        "offline": "{{device}} disconnected",
         "controller": "Controller connected (slot {{slot}})",
         "controllerGone": "Controller disconnected",
         "slot": "Switched to slot {{slot}}",

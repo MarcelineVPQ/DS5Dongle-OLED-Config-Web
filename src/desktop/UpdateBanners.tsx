@@ -24,7 +24,7 @@ const Action = ({ primary, onClick, children }: { primary?: boolean; onClick: ()
 
 // App and firmware update notices, pinned above the page. Wording is literal on
 // purpose: every state says exactly what is happening or what went wrong.
-export default function UpdateBanners({ app, fw, onShowFirmware }: { app: UpdateState; fw: FirmwareUpdate; onShowFirmware: () => void }) {
+export default function UpdateBanners({ app, fw, device, onShowFirmware }: { app: UpdateState; fw: FirmwareUpdate; device: string; onShowFirmware: () => void }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const dismiss = <Action onClick={fw.dismiss}>{t("notice.dismiss")}</Action>;
@@ -89,7 +89,7 @@ export default function UpdateBanners({ app, fw, onShowFirmware }: { app: Update
   if (s.phase === "idle" && fw.available && fw.latest)
     fwNotice = (
       <Notice action={<Action onClick={onShowFirmware}>{t("desktop.update.details", "Details")}</Action>}>
-        <span>{t("desktop.update.fwAvailable", { version: fw.latest.version, defaultValue: "Firmware {{version}} is available for your dongle." })}</span>
+        <span>{t("desktop.update.fwAvailable", { version: fw.latest.version, device })}</span>
       </Notice>
     );
   else if (s.phase === "running" || s.phase === "verifying") {

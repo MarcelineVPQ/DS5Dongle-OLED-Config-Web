@@ -11,19 +11,10 @@
 // Needs admin once (UAC prompt). The script is fixed text with no input.
 import { execFile } from "node:child_process";
 import { join } from "node:path";
+import { REPAIR_SCRIPT } from "../../src/desktop/windowsRepairScript";
 
-const IDS = ["0CE6", "0DF2"]; // DualSense, DualSense Edge mode
-
-export const REPAIR_SCRIPT = [
-  "$ErrorActionPreference = 'Stop'",
-  `foreach ($id in @(${IDS.map((p) => `'${p}'`).join(", ")})) {`,
-  '  Remove-Item "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\usbflags\\054C$($id)0100" -Recurse -Force -ErrorAction SilentlyContinue',
-  '  Get-PnpDevice | Where-Object { $_.InstanceId -like "USB\\VID_054C&PID_$($id)*" } | ForEach-Object {',
-  '    & "$env:SystemRoot\\System32\\pnputil.exe" /remove-device "$($_.InstanceId)" | Out-Null',
-  "  }",
-  "}",
-  "exit 0",
-].join("\n");
+// The script itself is shared with the page, which shows it before it runs.
+export { REPAIR_SCRIPT };
 
 const CANCELLED = 1223; // ERROR_CANCELLED: the UAC prompt was declined
 

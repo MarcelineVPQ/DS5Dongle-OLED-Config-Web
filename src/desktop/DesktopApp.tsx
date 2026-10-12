@@ -18,6 +18,7 @@ import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
+import { hardwareName } from "./hardwareName";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
@@ -195,7 +196,7 @@ export default function DesktopApp() {
       <NarratorCaption />
       <div className="dk-main">
         <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
-          <UpdateBanners app={appUpdate} fw={fw} onShowFirmware={() => openPanel("dongle")} />
+          <UpdateBanners app={appUpdate} fw={fw} device={hardwareName(bridge.identity, t)} onShowFirmware={() => openPanel("dongle")} />
           <AutoUpdateAsk />
           {whatsNew.version && (
             <div className="dk-notice">
@@ -306,6 +307,7 @@ export default function DesktopApp() {
         connecting={bridge.operation === "connecting"}
         firmware={bridge.firmwareVersion}
         deviceLabel={bridge.deviceLabel}
+        device={hardwareName(bridge.identity, t)}
       />
     </div>
   );

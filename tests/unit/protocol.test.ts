@@ -100,7 +100,23 @@ describe("identity report (0xF1)", () => {
       model: null,
       colorwayCode: null,
       features2: 0,
+      boardName: null,
     });
+  });
+
+  it("reads the board name (protocol 1.7) only when the firmware announces it", () => {
+    const b = new Uint8Array(46);
+    b.set(sample());
+    b.set(
+      [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
+      30,
+    );
+    expect(decodeIdentity(b).boardName).toBeNull(); // FEATURES2 bit 3 not set
+    b[29] = 0x08;
+    expect(decodeIdentity(b).boardName).toBe("Pico 2 W");
+    expect(decodeIdentity(b.subarray(0, 30)).boardName).toBeNull(); // older firmware: short report
+    b[31] = 0x07; // not printable
+    expect(decodeIdentity(b).boardName).toBeNull();
   });
 
   it("reports unsaved settings only when the firmware has the flag", () => {

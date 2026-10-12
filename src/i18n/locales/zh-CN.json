@@ -80,12 +80,14 @@
   "desktop": {
     "nav": {
       "controller": "手柄",
-      "dongle": "接收器",
       "about": "关于",
       "games": "游戏"
     },
+    "hardware": {
+      "generic": "接收器"
+    },
     "status": {
-      "connected": "接收器已连接",
+      "connected": "{{device}} 已连接",
       "waiting": "等待接收器…"
     },
     "empty": {
@@ -197,7 +199,7 @@
       "installed": "已安装固件",
       "device": "设备",
       "rebooting": "正在重启… 恢复后请按控制器上的 PS。",
-      "reboot": "重启接收器",
+      "reboot": "重启 {{device}}",
       "bootsel": "接收器现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
       "enterBootsel": "进入 BOOTSEL 模式",
       "resetDone": "设置已恢复默认并保存。",
@@ -230,7 +232,17 @@
       "seen": "接收器已插入，但 Windows 没有为它安装驱动。",
       "button": "修复 USB 驱动",
       "working": "正在等待授权…",
-      "done": "已修复。请拔下接收器，然后重新插入。"
+      "done": "已修复。请拔下接收器，然后重新插入。",
+      "stepsTitle": "修复会做什么",
+      "step": {
+        "admin": "Windows 会请求管理员权限（Windows PowerShell，来自 Microsoft）。选择“否”则不会有任何改动。",
+        "forget": "Windows 清除它为接收器的两个 USB ID（054C:0CE6 和 054C:0DF2）保存的 USB 设置。注册表的其他部分不会改动。",
+        "entries": "删除 Windows 为这两个 ID 保存的设备条目，Windows 会自动重新创建。",
+        "replug": "拔下接收器再重新插入。Windows 会重新安装驱动，应用随即连接。"
+      },
+      "showScript": "显示完整脚本",
+      "run": "开始修复",
+      "cancel": "取消"
     },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
@@ -241,7 +253,7 @@
       "restart": "立即重启",
       "manual": "更新 {{version}} 可在发布页面获取。",
       "open": "打开发布页面",
-      "fwAvailable": "接收器有可用固件 {{version}}。",
+      "fwAvailable": "{{device}} 有可用固件 {{version}}。",
       "details": "详情",
       "fwDontUnplug": "正在更新固件，请勿拔出接收器。",
       "fwDone": "固件已更新到 {{version}}。按 PS 重新连接手柄。",
@@ -403,7 +415,14 @@
       "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。",
       "turnOnTitle": "请打开手柄",
       "pairHint": "按下手柄上的 PS 键。新手柄：按住 PS + Create 直到灯条闪烁（接收器屏幕显示“Pair your DualSense”）。",
-      "whyHidden": "只有手柄连上接收器后，接收器才会出现在这台电脑上。"
+      "whyHidden": "只有手柄连上接收器后，接收器才会出现在这台电脑上。",
+      "updatesTitle": "更新",
+      "fwReady": "此应用会安装固件 {{version}}。",
+      "fwHowTo": "无需手柄即可更新或重装固件：按住 Pico 的 BOOTSEL 键的同时插入接收器，此界面会提示安装。",
+      "checkUpdates": "检查更新",
+      "checkedCurrent": "应用已是最新（{{version}}）。",
+      "checkedNewer": "应用 {{version}} 可用：请看顶部提示。",
+      "checkFailed": "无法检查更新。你在线吗？"
     },
     "live": {
       "part": {
@@ -788,7 +807,7 @@
       }
     },
     "dongleConsole": {
-      "title": "接收器控制台",
+      "title": "{{device}} 控制台",
       "pane": {
         "screen": "屏幕",
         "log": "日志"
@@ -806,8 +825,8 @@
       "hint": "与接收器屏幕显示的内容逐像素一致。没有 OLED 模块也能使用。在接收器上用 KEY0 / KEY1 切换屏幕。",
       "logEmpty": "暂无内容。",
       "log": {
-        "online": "接收器已连接（协议 {{version}}）",
-        "offline": "接收器已断开",
+        "online": "{{device}} 已连接（协议 {{version}}）",
+        "offline": "{{device}} 已断开",
         "controller": "手柄已连接（槽位 {{slot}}）",
         "controllerGone": "手柄已断开",
         "slot": "已切换到槽位 {{slot}}",
