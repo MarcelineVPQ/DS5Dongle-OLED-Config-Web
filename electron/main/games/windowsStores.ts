@@ -8,6 +8,7 @@
 //           MainGameAppName ≠ AppName).
 // On Linux these games come in through Heroic instead.
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AppKind } from "../../../src/desktop/games/types";
@@ -90,8 +91,11 @@ export function readEpicGames(dir = epicManifestDir()): StoreGame[] {
   return out;
 }
 
-// The library key, the same in the scan and the details.
-export const storeKey = (g: Pick<StoreGame, "launcher" | "id">) => `${g.launcher}-win:${g.launcher}:${g.id}`;
+// The library key, the same in the scan and the details, shaped like every
+// other key (`<launcher>-<8 hex>:<store>:<id>`, GameKeySchema) so profiles,
+// ratings, art and game actions accept it.
+const WIN_HASH = createHash("sha256").update("windows").digest("hex").slice(0, 8);
+export const storeKey = (g: Pick<StoreGame, "launcher" | "id">) => `${g.launcher}-${WIN_HASH}:${g.launcher}:${g.id}`;
 
 export interface WindowsStores {
   gog: { found: boolean; games: StoreGame[] };

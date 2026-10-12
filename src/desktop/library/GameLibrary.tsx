@@ -114,7 +114,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     const status = g.fixes.length || g.runnerMissing ? "⚠" : s.tier === "verified" || s.tier === "works" ? "✓" : "";
     return (
       <li key={g.key}>
-        <button type="button" data-key={g.key} className={`lib-row${selected === g.key ? " sel" : ""}`} aria-current={selected === g.key} onClick={() => setSelected(g.key)}>
+        <button type="button" data-key={g.key} data-store={g.store} className={`lib-row${selected === g.key ? " sel" : ""}`} aria-current={selected === g.key} onClick={() => setSelected(g.key)}>
           {details[g.key]?.art.includes("icon") ? (
             <img src={artUrl(g.key, "icon")} alt="" />
           ) : details[g.key]?.art.includes("cover") ? (

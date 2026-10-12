@@ -12,6 +12,7 @@ import { colorway } from "./live/colorways";
 import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
+import { LibraryContext } from "./library/libraryContext";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
@@ -196,125 +197,127 @@ export default function DesktopApp() {
   );
 
   return (
-    <div className="dk dk-one">
-      <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />
-      <NarratorCaption />
-      <div className="dk-main">
-        <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
-          <UpdateBanners app={appUpdate} fw={fw} device={hardwareName(bridge.identity, t)} onShowFirmware={() => openPanel("dongle")} />
-          <AutoUpdateAsk />
-          {whatsNew.version && (
-            <div className="dk-notice">
-              <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
-              <span className="dk-spacer" />
-              <button
-                type="button"
-                className="dk-btn"
-                onClick={() => {
-                  setAboutTab("changes");
-                  setMain("about");
-                  whatsNew.dismiss();
-                }}
-              >
-                {t("desktop.about.seeWhatsNew", "See what's new")}
-              </button>
-              <button type="button" className="dk-btn" onClick={whatsNew.dismiss}>
-                {t("notice.dismiss")}
-              </button>
-            </div>
-          )}
-          {bridge.error && (
-            <div className="dk-notice error" role="alert">
-              <span>{bridge.error}</span>
-              <span className="dk-spacer" />
-              <button type="button" className="dk-btn" onClick={bridge.clearError}>
-                {t("notice.dismiss")}
-              </button>
-            </div>
-          )}
-          {main === "games" && <GamesPage bridge={bridge} profiles={profiles} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
-          {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
-          {main === "controller" &&
-            (connected ? (
-              <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
-            ) : panel === "app" ? (
-              <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
-            ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
-              // Mid-update the dongle is a bootloader drive: the update banner
-              // shows the progress; Setup must not offer to flash it again.
-              <div className="dk-page" />
-            ) : (
-              <SetupScreen supported={bridge.supported} />
-            ))}
-        </main>
-
-        {connected && !standalone && (
-          <footer className="dk-bar" ref={barRef}>
-            {profiles.active ? (
-              <>
-                <span className="dk-bar-note">
-                  <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
-                </span>
+    <LibraryContext.Provider value={{ library: profiles.library, setLibrary: profiles.setLibrary, active: profiles.active }}>
+      <div className="dk dk-one">
+        <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />
+        <NarratorCaption />
+        <div className="dk-main">
+          <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
+            <UpdateBanners app={appUpdate} fw={fw} device={hardwareName(bridge.identity, t)} onShowFirmware={() => openPanel("dongle")} />
+            <AutoUpdateAsk />
+            {whatsNew.version && (
+              <div className="dk-notice">
+                <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
                 <span className="dk-spacer" />
-                <button type="button" className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={() => void profiles.revertToProfile()}>
-                  {t("desktop.bar.revert", "Revert")}
-                </button>
-                <button type="button" className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={() => void profiles.saveToProfile()}>
-                  {t("desktop.bar.saveProfile")}
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="dk-bar-note">
-                  {busy
-                    ? t(`statusText.${bridge.operation}`)
-                    : bridge.hasUnsavedChanges
-                      ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
-                      : t("desktop.bar.saved", "All changes saved on the dongle.")}
-                </span>
-                <span className="dk-spacer" />
-                <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
-                  {t("desktop.bar.revert", "Revert")}
-                </button>
                 <button
                   type="button"
-                  className="dk-btn primary"
-                  disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
-                  onClick={() =>
-                    void bridge.saveToFlash().then((ok) => {
-                      if (ok) void say("app_saved");
-                    })
-                  }
+                  className="dk-btn"
+                  onClick={() => {
+                    setAboutTab("changes");
+                    setMain("about");
+                    whatsNew.dismiss();
+                  }}
                 >
-                  {t("desktop.bar.save", "Save to dongle")}
+                  {t("desktop.about.seeWhatsNew", "See what's new")}
                 </button>
-              </>
+                <button type="button" className="dk-btn" onClick={whatsNew.dismiss}>
+                  {t("notice.dismiss")}
+                </button>
+              </div>
             )}
-          </footer>
-        )}
+            {bridge.error && (
+              <div className="dk-notice error" role="alert">
+                <span>{bridge.error}</span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn" onClick={bridge.clearError}>
+                  {t("notice.dismiss")}
+                </button>
+              </div>
+            )}
+            {main === "games" && <GamesPage bridge={bridge} profiles={profiles} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
+            {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
+            {main === "controller" &&
+              (connected ? (
+                <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
+              ) : panel === "app" ? (
+                <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
+              ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
+                // Mid-update the dongle is a bootloader drive: the update banner
+                // shows the progress; Setup must not offer to flash it again.
+                <div className="dk-page" />
+              ) : (
+                <SetupScreen supported={bridge.supported} />
+              ))}
+          </main>
+
+          {connected && !standalone && (
+            <footer className="dk-bar" ref={barRef}>
+              {profiles.active ? (
+                <>
+                  <span className="dk-bar-note">
+                    <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
+                  </span>
+                  <span className="dk-spacer" />
+                  <button type="button" className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={() => void profiles.revertToProfile()}>
+                    {t("desktop.bar.revert", "Revert")}
+                  </button>
+                  <button type="button" className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={() => void profiles.saveToProfile()}>
+                    {t("desktop.bar.saveProfile")}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="dk-bar-note">
+                    {busy
+                      ? t(`statusText.${bridge.operation}`)
+                      : bridge.hasUnsavedChanges
+                        ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
+                        : t("desktop.bar.saved", "All changes saved on the dongle.")}
+                  </span>
+                  <span className="dk-spacer" />
+                  <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
+                    {t("desktop.bar.revert", "Revert")}
+                  </button>
+                  <button
+                    type="button"
+                    className="dk-btn primary"
+                    disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
+                    onClick={() =>
+                      void bridge.saveToFlash().then((ok) => {
+                        if (ok) void say("app_saved");
+                      })
+                    }
+                  >
+                    {t("desktop.bar.save", "Save to dongle")}
+                  </button>
+                </>
+              )}
+            </footer>
+          )}
+        </div>
+        <AppRail
+          active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
+          onSelect={(item) => {
+            if (item === "games" || item === "about") setMain(item);
+            else if (item === "controller") {
+              // Already there: show / hide its settings panel.
+              if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
+              else {
+                setMain("controller");
+                setPanel("overview");
+              }
+            } else openPanel(item);
+          }}
+          gamesSupported={games.supported}
+          gamesBadge={games.count}
+          connected={connected}
+          connecting={bridge.operation === "connecting"}
+          firmware={bridge.firmwareVersion}
+          deviceLabel={bridge.deviceLabel}
+          device={hardwareName(bridge.identity, t)}
+        />
       </div>
-      <AppRail
-        active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
-        onSelect={(item) => {
-          if (item === "games" || item === "about") setMain(item);
-          else if (item === "controller") {
-            // Already there: show / hide its settings panel.
-            if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
-            else {
-              setMain("controller");
-              setPanel("overview");
-            }
-          } else openPanel(item);
-        }}
-        gamesSupported={games.supported}
-        gamesBadge={games.count}
-        connected={connected}
-        connecting={bridge.operation === "connecting"}
-        firmware={bridge.firmwareVersion}
-        deviceLabel={bridge.deviceLabel}
-        device={hardwareName(bridge.identity, t)}
-      />
-    </div>
+    </LibraryContext.Provider>
   );
 }
 

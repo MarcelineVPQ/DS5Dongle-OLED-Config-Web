@@ -142,6 +142,8 @@ export interface DesktopApi {
   libraryDeleteProfile(gameKey: string): Promise<LibraryFile>;
   librarySetMine(update: { gameKey: string; title: string; mine: Mine }): Promise<LibraryFile>;
   librarySetRestore(restore: LibraryFile["restore"] | null): Promise<LibraryFile>;
+  librarySetLayout(layout: { id: string; name: string; table: number[] }): Promise<LibraryFile>;
+  libraryDeleteLayout(id: string): Promise<LibraryFile>;
   // Launch a game or open its launcher page / folder (resolved in main).
   gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;
   // Linux: record 3 s from the controller's mic and play it back on its
@@ -189,6 +191,8 @@ export const IPC = {
   libraryDeleteProfile: "desktop:library-delete-profile",
   librarySetMine: "desktop:library-set-mine",
   librarySetRestore: "desktop:library-set-restore",
+  librarySetLayout: "desktop:library-set-layout",
+  libraryDeleteLayout: "desktop:library-delete-layout",
   gameAction: "desktop:game-action",
   micTest: "desktop:mic-test",
   gameArtColor: "desktop:game-art-color",

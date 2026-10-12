@@ -74,7 +74,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
     wasOn.current = on;
   }, [on, id]);
-  const remap = useRemap(client);
+  const remap = useRemap(client, bridge.identity?.remapTemporary ?? null);
 
   const remapped = useMemo(() => {
     const set = new Set<PartId>();
@@ -256,6 +256,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
             onClose={() => onView("overview")}
             onOpen={(part) => onView({ part })}
             onCalibrate={() => onView("calibration")}
+            onButtons={() => onView("buttons")}
             onHide={() => hidePanel(true)}
           />
         </aside>

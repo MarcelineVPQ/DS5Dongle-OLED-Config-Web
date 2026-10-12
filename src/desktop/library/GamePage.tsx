@@ -3,6 +3,9 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { useLibrary } from "./libraryContext";
+import { layoutSummary } from "../live/layoutSummary";
+import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { useDebouncedSave } from "./useDebouncedSave";
@@ -265,8 +268,9 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
             </div>
           </Row>
           <Toggle label={t("desktop.library.mic")} value={draft.btMicEnable} onChange={(v) => edit({ btMicEnable: v })} />
+          <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
           <div className="dk-row-btns">
-            <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create(current)}>
+            <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create({ ...current, ...(draft.buttonLayout ? { buttonLayout: draft.buttonLayout } : {}) })}>
               {t("desktop.library.profileCopyCurrent")}
             </button>
             <button type="button" className="dk-btn danger" onClick={remove}>
@@ -276,6 +280,36 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
         </>
       )}
     </section>
+  );
+}
+
+// A saved button layout for this game (switched in while it runs; never
+// written to the dongle's flash, so it needs protocol 1.8).
+function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; bridge: UseDs5BridgeResult; onChange: (id: string | undefined) => void }) {
+  const { t } = useTranslation();
+  const { library } = useLibrary();
+  const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
+  const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 8, FEATURES2.temporaryRemap);
+  return (
+    <>
+      <Row label={t("desktop.layouts.profileLabel")}>
+        <select className="dk-select" value={value ?? ""} disabled={oldFirmware || (layouts.length === 0 && !value)} onChange={(e) => onChange(e.target.value || undefined)}>
+          <option value="">{t("desktop.layouts.normal")}</option>
+          {layouts.map(([id, l]) => (
+            <option key={id} value={id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </Row>
+      {oldFirmware ? (
+        <p className="dk-hint">{t("desktop.layouts.needsFirmware")}</p>
+      ) : layouts.length === 0 ? (
+        <p className="dk-hint">{t("desktop.layouts.noneForGame")}</p>
+      ) : (
+        value && library.layouts?.[value] && <p className="dk-layout-changes">{layoutSummary(library.layouts[value].table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</p>
+      )}
+    </>
   );
 }
 

@@ -32,6 +32,8 @@ export class SimulatedDongle implements Ds5Transport {
   config: Uint8Array = encodeConfigBody(DEFAULT_CONFIG);
   flashConfig: Uint8Array = this.config.slice();
   remap = Array.from({ length: 16 }, (_, i) => i);
+  flashRemap = this.remap.slice();
+  remapTemporary = false; // protocol 1.8
   // Calibration bodies (18 bytes) per pairing slot: identity sticks, triggers 0..255, gyro 0.
   calibration = Array.from({ length: 4 }, () => new Uint8Array([0, 0, 0, 128, 0, 0, 0, 128, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0]));
   remapRevision = 0;
@@ -228,8 +230,22 @@ export class SimulatedDongle implements Ds5Transport {
       if (payload[1] !== 0x52 || payload[2] !== 0x4d || payload.length < 20) this.lastResult = RESULT.invalid;
       else {
         this.remap = [...payload.subarray(4, 20)];
+        this.flashRemap = this.remap.slice();
+        this.remapTemporary = false;
         this.remapRevision++;
       }
+    } else if (func === 0x11 && (this.opts.protoMinor ?? 6) >= 8) {
+      const table = [...payload.subarray(4, 20)];
+      if (payload[1] !== 0x52 || payload[2] !== 0x4d || payload[3] !== 1 || payload.length < 20 || table.some((v) => v > 15 && v !== 0xff)) this.lastResult = RESULT.invalid;
+      else {
+        this.remap = table;
+        this.remapTemporary = true;
+        this.remapRevision++;
+      }
+    } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
+      this.remap = this.flashRemap.slice();
+      this.remapTemporary = false;
+      this.remapRevision++;
     } else if ((func === 0x04 || func === 0x05) && arg > 3) {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x0e && arg > 2) {
@@ -293,7 +309,7 @@ export class SimulatedDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
-    out[19] = this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0; // unsaved settings
+    out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0); // unsaved settings, temporary remap (1.8)
     out[24] = 8; // 80 % battery
     out[25] = this.playerLeds;
     out[26] = this.edge ? 1 : 0;
@@ -304,6 +320,7 @@ export class SimulatedDongle implements Ds5Transport {
     out[29] = this.split ? 0x01 | 0x02 | 0x04 : 0x01 | 0x02; // FEATURES2: OLED mirror, calibration, grip test (1.6)
     if (minor >= 7) {
       out[29] |= 0x08; // board name (1.7)
+      if (minor >= 8) out[29] |= 0x10; // temporary remap (1.8)
       out.set(
         [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
         30,

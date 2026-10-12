@@ -20,9 +20,11 @@ export interface Remap {
   apply: () => Promise<void>;
   revert: () => void;
   resetAll: () => void;
+  load: (table: number[]) => void; // a saved layout into the editor
+  temporary: boolean; // a game's layout is on the dongle now (protocol 1.8)
 }
 
-export function useRemap(client: Ds5BridgeClient | null): Remap {
+export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | null = null): Remap {
   const { t } = useTranslation();
   const [state, setState] = useState<RemapState | null>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -46,7 +48,8 @@ export function useRemap(client: Ds5BridgeClient | null): Remap {
     return () => {
       live = false;
     };
-  }, [client]);
+    // Read again when a game's layout goes on or comes off.
+  }, [client, temporary]);
 
   // Stable between renders (the live view re-renders ~30 times a second).
   const device = useMemo(() => state?.table ?? identityTable(), [state]);
@@ -87,5 +90,7 @@ export function useRemap(client: Ds5BridgeClient | null): Remap {
     apply,
     revert: useCallback(() => setDraft(device.slice()), [device]),
     resetAll: useCallback(() => setDraft(identityTable()), []),
+    load: useCallback((table: number[]) => setDraft(table.slice()), []),
+    temporary: !!temporary,
   };
 }

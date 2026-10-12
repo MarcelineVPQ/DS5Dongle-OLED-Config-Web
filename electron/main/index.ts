@@ -201,6 +201,8 @@ function start(): void {
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
+    librarySetLayout: (u) => library.setLayout(u.id, u.name, u.table),
+    libraryDeleteLayout: (id) => library.deleteLayout(id),
     gameArtColor: (key) => withGames((g) => g.artColor(key)),
     micTest: () => {
       if (process.platform !== "linux") return Promise.resolve({ ok: false, peak: 0, problem: "failed" as const });

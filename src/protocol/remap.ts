@@ -85,12 +85,14 @@ export function decodeRemapFromConfigReport(source: ArrayBuffer | DataView | Uin
 
 // Build the 0xF6 SET payload (without the leading report-ID byte; WebHID
 // prepends it). Throws on an invalid table.
-export function encodeRemapSet(table: number[]): Uint8Array<ArrayBuffer> {
+// func 0x11 (protocol 1.8): the same table, applied in the dongle's RAM only.
+export const REMAP_SET_TEMPORARY_FUNC = 0x11;
+export function encodeRemapSet(table: number[], func: number = REMAP_SET_FUNC): Uint8Array<ArrayBuffer> {
   if (!isValidTable(table)) {
     throw new Error(`Invalid remap table (need ${REMAP_COUNT} entries, each 0-${REMAP_COUNT - 1} or disabled)`);
   }
   const report = new Uint8Array(new ArrayBuffer(FEATURE_REPORT_PAYLOAD_SIZE));
-  report[0] = REMAP_SET_FUNC;
+  report[0] = func;
   report[1] = MAGIC_R;
   report[2] = MAGIC_M;
   report[3] = REMAP_PROTO_VER;

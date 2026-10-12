@@ -22,6 +22,8 @@ import ThemeToggle from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
+import { useLibrary } from "../library/libraryContext";
+import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings } from "../api";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
@@ -37,7 +39,7 @@ import type { FirmwareUpdate } from "../useUpdates";
 import { REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 
-export type PanelView = "overview" | "dongle" | "app" | "calibration" | { part: PartId };
+export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
 
 interface Props {
   view: PanelView;
@@ -48,10 +50,11 @@ interface Props {
   onClose: () => void;
   onOpen: (part: PartId) => void;
   onCalibrate: () => void;
+  onButtons: () => void;
   onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onHide }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -62,7 +65,9 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
           ? t("desktop.live.app", "App settings")
           : view === "calibration"
             ? t("desktop.calib.title")
-            : partName(t, view.part);
+            : view === "buttons"
+              ? t("desktop.layouts.allTitle")
+              : partName(t, view.part);
 
   return (
     <div className="dk-stack">
@@ -79,11 +84,13 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
           </button>
         )}
       </header>
-      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} />}
+      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={onButtons} />}
+      {view === "buttons" && <AllButtonsSection remap={remap} />}
+      {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
       {view === "app" && <AppSettings />}
-      {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} />}
+      {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
     </div>
   );
 }
@@ -103,7 +110,7 @@ const SHORTCUTS: Array<[key: string, part: PartId]> = [
   ["slots", "ps"],
 ];
 
-function Overview({ onOpen, onCalibrate }: { onOpen: (part: PartId) => void; onCalibrate: () => void }) {
+function Overview({ onOpen, onCalibrate, onButtons }: { onOpen: (part: PartId) => void; onCalibrate: () => void; onButtons: () => void }) {
   const { t } = useTranslation();
   return (
     <section className="dk-card">
@@ -115,6 +122,10 @@ function Overview({ onOpen, onCalibrate }: { onOpen: (part: PartId) => void; onC
             <span>{t(`desktop.live.go.${key}.sub`)}</span>
           </button>
         ))}
+        <button type="button" className="live-shortcut" onClick={onButtons}>
+          <strong>{t("desktop.layouts.shortcutTitle")}</strong>
+          <span>{t("desktop.layouts.shortcutSub")}</span>
+        </button>
         <button type="button" className="live-shortcut" onClick={onCalibrate}>
           <strong>{t("desktop.calib.title")}</strong>
           <span>{t("desktop.calib.shortcut")}</span>
@@ -125,7 +136,7 @@ function Overview({ onOpen, onCalibrate }: { onOpen: (part: PartId) => void; onC
   );
 }
 
-function PartSections({ part, bridge, input, remap }: { part: PartId; bridge: UseDs5BridgeResult; input: InputReport | null; remap: Remap }) {
+function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId; bridge: UseDs5BridgeResult; input: InputReport | null; remap: Remap; onButtons: () => void }) {
   const index = REMAP_INDEX[part];
   return (
     <>
@@ -143,12 +154,12 @@ function PartSections({ part, bridge, input, remap }: { part: PartId; bridge: Us
       {part === "mute" && <MicSection bridge={bridge} />}
       {part === "mute" && <MicTest />}
       {part === "ps" && <SlotsPage bridge={bridge} />}
-      {index !== undefined && <RemapSection index={index} remap={remap} />}
+      {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}
     </>
   );
 }
 
-function RemapSection({ index, remap }: { index: number; remap: Remap }) {
+function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: () => void }) {
   const { t } = useTranslation();
   const target = remap.draft[index];
   return (
@@ -170,6 +181,9 @@ function RemapSection({ index, remap }: { index: number; remap: Remap }) {
             </select>
           </div>
           <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
+          <button type="button" className="dk-btn" onClick={onButtons}>
+            {t("desktop.layouts.seeAll")}
+          </button>
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
           <div className="dk-row-btns">
             <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
@@ -184,6 +198,136 @@ function RemapSection({ index, remap }: { index: number; remap: Remap }) {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+// Every button in one list (the same draft as clicking them on the drawing),
+// with what's changed from the controller's own buttons marked.
+function AllButtonsSection({ remap }: { remap: Remap }) {
+  const { t } = useTranslation();
+  if (remap.supported === false)
+    return (
+      <section className="dk-card">
+        <p className="dk-hint">{t("remap.unsupported")}</p>
+      </section>
+    );
+  const changed = remap.draft.filter((v, i) => v !== i).length;
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.layouts.allHeading")}</h2>
+      <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
+      {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
+      <div className="dk-buttons-table" role="table">
+        {remap.draft.map((target, i) => {
+          const isChanged = target !== i;
+          const pending = target !== remap.device[i];
+          return (
+            <div key={i} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}`}>
+              <label role="rowheader" htmlFor={`all-remap-${i}`}>
+                {isChanged && <span aria-hidden="true">● </span>}
+                {buttonLabel(i)}
+              </label>
+              <select
+                id={`all-remap-${i}`}
+                role="cell"
+                className="dk-select"
+                value={target}
+                disabled={remap.busy || remap.supported !== true}
+                onChange={(e) => remap.setTarget(i, Number(e.target.value))}
+              >
+                {REMAP_BUTTON_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
+                  </option>
+                ))}
+                <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
+              </select>
+              <span role="cell" className="dk-hint">
+                {pending ? t("desktop.layouts.notApplied") : isChanged ? t("desktop.layouts.changed") : ""}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {remap.error && <div className="dk-notice error">{remap.error}</div>}
+      <div className="dk-row-btns">
+        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
+          {t("desktop.live.remapApply", "Apply remap")}
+        </BusyButton>
+        <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
+          {t("desktop.bar.revert", "Revert")}
+        </button>
+        <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
+          {t("desktop.live.remapReset", "Reset all")}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// Saved button layouts: the buttons above under a name, for any game's profile.
+function ButtonLayoutsSection({ remap }: { remap: Remap }) {
+  const { t } = useTranslation();
+  const desktop = window.desktop;
+  const { library, setLibrary, active } = useLibrary();
+  const [name, setName] = useState("");
+  const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
+  const usedBy = (id: string) => Object.values(library.games).filter((g) => g.profile?.settings.buttonLayout === id).length;
+  if (!desktop) return null;
+  const save = (id: string, layoutName: string) => void desktop.librarySetLayout({ id, name: layoutName, table: remap.draft }).then(setLibrary);
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.layouts.title")}</h2>
+      <p className="dk-hint">{t("desktop.layouts.hint")}</p>
+      {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
+      {layouts.length === 0 ? (
+        <p className="dk-hint">{t("desktop.layouts.none")}</p>
+      ) : (
+        <ul className="dk-layouts">
+          {layouts.map(([id, l]) => (
+            <li key={id}>
+              <div className="dk-layout-info">
+                <span className="dk-layout-name" title={l.name}>
+                  {l.name}
+                </span>
+                {usedBy(id) > 0 && <span className="dk-hint"> · {t("desktop.layouts.usedBy", { count: usedBy(id) })}</span>}
+                <span className="dk-layout-changes">{layoutSummary(l.table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</span>
+              </div>
+              <button type="button" className="dk-btn" title={t("desktop.layouts.loadHint")} onClick={() => remap.load(l.table)}>
+                {t("desktop.layouts.load")}
+              </button>
+              <button type="button" className="dk-btn" title={t("desktop.layouts.updateHint", { name: l.name })} onClick={() => save(id, l.name)}>
+                {t("desktop.layouts.update")}
+              </button>
+              <button type="button" className="dk-btn danger" title={t("desktop.layouts.deleteHint")} onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary)}>
+                {t("desktop.layouts.delete")}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form
+        className="dk-row dk-layout-new"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!name.trim()) return;
+          save(`l-${Date.now().toString(36)}`, name.trim());
+          setName("");
+        }}
+      >
+        <input
+          className="dk-input"
+          maxLength={40}
+          placeholder={t("desktop.layouts.namePlaceholder")}
+          aria-label={t("desktop.layouts.namePlaceholder")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button type="submit" className="dk-btn primary" disabled={!name.trim()}>
+          {t("desktop.layouts.saveAs")}
+        </button>
+      </form>
     </section>
   );
 }

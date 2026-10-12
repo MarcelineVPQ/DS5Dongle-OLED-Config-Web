@@ -8,6 +8,7 @@ import { parseEpicManifest, parseGogRegistry, readEpicGames, readGogGames, store
 import { actionUrl } from "../../electron/main/games/actions";
 import { scan } from "../../electron/main/games/games";
 import { gameDetails } from "../../electron/main/games/details";
+import { GameKeySchema } from "../../src/desktop/games/library";
 
 const proc = (comm: string): ProcView => ({ pid: 1, comm, args: [], cwd: null, env: {} });
 
@@ -110,5 +111,7 @@ describe("GOG Galaxy and Epic on Windows", () => {
     ]);
     expect(report.launchers.find((l) => l.id === "gog")?.found).toBe(true);
     expect(gameDetails(home, stores.gog.games).get(storeKey(stores.gog.games[0]))?.installDir).toBe("C:\\GOG Games\\Control");
+    // Their keys pass the library's key check (profiles, ratings, art, actions).
+    for (const g of [...gog, { key: storeKey({ launcher: "epic", id: "Sifu_1" }) }]) expect(GameKeySchema.safeParse(g.key).success).toBe(true);
   });
 });

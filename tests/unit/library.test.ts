@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { detectRunning, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
 import { LibraryStore } from "../../electron/main/games/libraryStore";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
-import { GameKeySchema, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
+import { ButtonLayoutSchema, LayoutIdSchema, GameKeySchema, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
 import { SetMineSchema, SetProfileSchema } from "../../electron/main/ipc";
 import { decideProfileStep } from "../../src/desktop/library/useGameProfile";
 import { staleness, versionLess } from "../../src/desktop/library/support";
@@ -217,5 +217,45 @@ describe("feedback staleness", () => {
     expect(staleness({ app: "0.9.0", gameUpdated: 5 }, { lastUpdated: 9 }, [])).toEqual({ kind: "game-update", at: 9 });
     expect(staleness({ app: "0.9.0", build: "100" }, { buildId: "100" }, [])).toBeNull();
     expect(staleness({ app: "0.9.0" }, {}, [{ title: "X", app: "0.9.1", note: "fixed" }])).toEqual({ kind: "our-fix", app: "0.9.1" });
+  });
+});
+
+describe("saved button layouts", () => {
+  let dir: string;
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const key = "steam-1a2b3c4d:steam:1091500";
+  const racing = [1, 0, ...Array.from({ length: 14 }, (_, i) => i + 2)];
+
+  it("keeps layouts; deleting one sends its games back to normal buttons", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    const a = new LibraryStore(dir);
+    a.setLayout("l-racing", "  Racing ", racing);
+    a.setProfile(key, "Galactic Racer", { ...settings, buttonLayout: "l-racing" });
+    const b = new LibraryStore(dir).get();
+    expect(b.layouts?.["l-racing"]).toMatchObject({ name: "Racing", table: racing });
+    expect(b.games[key].profile?.settings.buttonLayout).toBe("l-racing");
+    const c = new LibraryStore(dir).deleteLayout("l-racing");
+    expect(c.layouts?.["l-racing"]).toBeUndefined();
+    expect(c.games[key].profile?.settings.buttonLayout).toBeUndefined();
+  });
+
+  it("rejects bad layouts and ids", () => {
+    expect(ButtonLayoutSchema.safeParse({ name: "X", table: [...racing.slice(0, 15), 16], updated: 1 }).success).toBe(false);
+    expect(ButtonLayoutSchema.safeParse({ name: "X", table: [...racing.slice(0, 15), 0xff], updated: 1 }).success).toBe(true);
+    expect(ButtonLayoutSchema.safeParse({ name: " ", table: racing, updated: 1 }).success).toBe(false);
+    expect(LayoutIdSchema.safeParse("../x").success).toBe(false);
+  });
+
+  it("a layout edited while its game runs is applied again", () => {
+    const A = games[0].key;
+    const lib = (updated: number): LibraryFile => ({
+      ...EMPTY_LIBRARY,
+      games: { [A]: { title: "A", profile: { settings: { ...settings, buttonLayout: "l-r" }, updated: 10 } } },
+      layouts: { "l-r": { name: "R", table: racing, updated } },
+    });
+    const first = decideProfileStep({ running: A, library: lib(5), appliedFor: null, failed: null, active: false });
+    expect(first).toMatchObject({ kind: "apply", stamp: `${A}@10+l-r@5` });
+    expect(decideProfileStep({ running: A, library: lib(5), appliedFor: `${A}@10+l-r@5`, failed: null, active: true }).kind).toBe("none");
+    expect(decideProfileStep({ running: A, library: lib(6), appliedFor: `${A}@10+l-r@5`, failed: null, active: true }).kind).toBe("apply");
   });
 });

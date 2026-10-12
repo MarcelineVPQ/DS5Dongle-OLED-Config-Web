@@ -269,3 +269,38 @@ describe("grip test (protocol 1.6)", () => {
     expect((await new Ds5BridgeClient(new FakeDongle({ protoMinor: 5 })).identity()).features2 & FEATURES2.gripTest).toBe(0);
   });
 });
+
+describe("temporary remap (protocol 1.8)", () => {
+  const swapped = [1, 0, ...Array.from({ length: 14 }, (_, i) => i + 2)];
+  const identity = Array.from({ length: 16 }, (_, i) => i);
+
+  it("applies a table in RAM only and goes back to the saved one", async () => {
+    const dongle = new FakeDongle({ protoMinor: 8 });
+    const client = new Ds5BridgeClient(dongle);
+    expect((await client.identity()).remapTemporary).toBe(false);
+    await client.applyRemapTemporary(swapped);
+    expect((await client.readRemap())?.table).toEqual(swapped);
+    expect((await client.identity()).remapTemporary).toBe(true);
+    expect(dongle.flashRemap).toEqual(identity); // flash untouched
+    await client.revertRemap();
+    expect((await client.readRemap())?.table).toEqual(identity);
+    expect((await client.identity()).remapTemporary).toBe(false);
+  });
+
+  it("a normal remap write saves and ends the temporary one", async () => {
+    const dongle = new FakeDongle({ protoMinor: 8 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.applyRemapTemporary(swapped);
+    await client.applyRemap(identity);
+    expect((await client.identity()).remapTemporary).toBe(false);
+    expect(dongle.flashRemap).toEqual(identity);
+  });
+
+  it("older firmware doesn't report it and refuses the command", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 7 }));
+    const id = await client.identity();
+    expect(id.remapTemporary).toBeNull();
+    expect((id.features2 & FEATURES2.temporaryRemap) !== 0).toBe(false);
+    await expect(client.applyRemapTemporary(swapped)).rejects.toBeInstanceOf(CommandError);
+  });
+});

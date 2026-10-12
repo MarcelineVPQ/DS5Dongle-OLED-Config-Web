@@ -37,6 +37,8 @@ export const FUNC = {
   calibration: 0x0d,
   gripTest: 0x0e,
   remap: 0x10,
+  remapTemporary: 0x11, // protocol 1.8: a table in RAM only (a game's layout)
+  remapRevert: 0x12, // protocol 1.8: back to the saved table
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -59,6 +61,7 @@ export const FEATURES2 = {
   calibration: 0x02, // 0xEE get / 0xF6 0x0D set: stick, trigger, gyro calibration
   gripTest: 0x04, // 0xF6 0x0E: buzz a grip at its haptics strength (protocol 1.6)
   boardName: 0x08, // identity [30..45]: the board's name, e.g. "Pico 2 W" (protocol 1.7)
+  temporaryRemap: 0x10, // 0xF6 0x11 / 0x12 and identity [19] bit 1 (protocol 1.8)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -113,6 +116,8 @@ export interface BridgeIdentity {
   features2: number;
   // Protocol 1.7+: the board the firmware is built for ("Pico 2 W"); null on older firmware.
   boardName: string | null;
+  // Protocol 1.8+: a temporary remap (a game's layout) is active; null on older firmware.
+  remapTemporary: boolean | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -156,6 +161,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     colorwayCode: bytes.length >= 29 && bytes[27] && bytes[28] ? String.fromCharCode(bytes[27], bytes[28]) : null,
     features2: bytes.length >= 30 ? bytes[29] : 0,
     boardName: bytes.length >= 46 && (bytes[29] & FEATURES2.boardName) !== 0 ? boardNameFrom(bytes.subarray(30, 46)) : null,
+    remapTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.temporaryRemap) !== 0 ? (bytes[19] & 0x02) !== 0 : null,
   };
 }
 
@@ -300,6 +306,18 @@ export class Ds5BridgeClient {
     const report = encodeRemapSet(table);
     const [func, ...rest] = report.subarray(0, 4 + table.length);
     await this.command(func, rest);
+  }
+
+  // Protocol 1.8: a table for now only (RAM; a reboot or revertRemap() ends
+  // it), so a game's layout never rewrites the dongle's flash.
+  async applyRemapTemporary(table: number[]): Promise<void> {
+    const report = encodeRemapSet(table, FUNC.remapTemporary);
+    const [func, ...rest] = report.subarray(0, 4 + table.length);
+    await this.command(func, rest);
+  }
+
+  async revertRemap(): Promise<void> {
+    await this.command(FUNC.remapRevert);
   }
 
   // Re-enumerates USB; the connection drops and the app reconnects on its own.

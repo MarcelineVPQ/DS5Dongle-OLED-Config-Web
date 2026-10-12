@@ -1,7 +1,17 @@
 // IPC from the renderer. Every message is checked against its sender (our own
 // window, on our own page) and its payload schema before anything acts on it.
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
-import { GameKeySchema, LibraryFileSchema, MineSchema, ProfileSettingsSchema, type LibraryFile, type Mine, type ProfileSettings } from "../../src/desktop/games/library";
+import {
+  ButtonLayoutSchema,
+  GameKeySchema,
+  LayoutIdSchema,
+  LibraryFileSchema,
+  MineSchema,
+  ProfileSettingsSchema,
+  type LibraryFile,
+  type Mine,
+  type ProfileSettings,
+} from "../../src/desktop/games/library";
 import type { MicTestResult } from "./audioTest";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
@@ -54,6 +64,7 @@ export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: 
 export const SetMineSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, mine: MineSchema });
 export const GameActionSchema = z.strictObject({ gameKey: GameKeySchema, action: z.enum(GAME_ACTIONS) });
 export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable();
+export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table });
 
 export interface IpcHandlers {
   gamesDetails: () => Record<string, GameInfo>;
@@ -63,6 +74,8 @@ export interface IpcHandlers {
   libraryDeleteProfile: (gameKey: string) => LibraryFile;
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
+  librarySetLayout: (u: { id: string; name: string; table: number[] }) => LibraryFile;
+  libraryDeleteLayout: (id: string) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
   micTest: () => Promise<MicTestResult>;
   gameArtColor: (gameKey: string) => string | null;
@@ -167,6 +180,8 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.libraryDeleteProfile, GameKeySchema, h.libraryDeleteProfile);
   invokeWith(IPC.librarySetMine, SetMineSchema, h.librarySetMine);
   invokeWith(IPC.librarySetRestore, RestoreSchema, h.librarySetRestore);
+  invokeWith(IPC.librarySetLayout, SetLayoutSchema, h.librarySetLayout);
+  invokeWith(IPC.libraryDeleteLayout, LayoutIdSchema, h.libraryDeleteLayout);
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
   invoke(IPC.micTest, h.micTest);
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);

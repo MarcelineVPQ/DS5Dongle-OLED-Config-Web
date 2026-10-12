@@ -8,6 +8,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Saved button layouts:** name your button setup ("Racing", "Southpaw") and give it to any game's profile; it switches in while the game runs and your normal buttons come back after, even if the app was closed mid-game. Layouts never touch the dongle's flash (firmware protocol 1.8: temporary remaps). Each layout shows what it changes, and a game page shows its layout's changes.
+- **All buttons in one list** (Buttons & layouts, from the controller overview or any button): every button with what it acts as and whether it's changed, editable right there; the same edits as clicking buttons on the drawing.
 - **Steam's categories in the library:** soundtracks, software, tools, videos, demos and DLC are labeled as Steam labels them, and a **Show** menu hides any category (everything shows by default). Soundtracks and software no longer get game fixes.
 - **All games as covers** on the Games Home page (like Steam's "My games"), following the list's search, filter and sort. Cover tiles show the store they come from and what the game supports (adaptive triggers, HD haptics, a profile, needs setup) as marks over the art, each with a tooltip.
 - **Launcher icons** in the Games pages: Steam, Heroic, Lutris, GOG and Epic marks (Simple Icons, CC0) next to their names, in the theme's text color.

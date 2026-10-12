@@ -4,6 +4,17 @@
 // the player's choice, through the community repo).
 import { z } from "zod";
 
+// Saved button layouts: named remap tables kept in one library ("Southpaw",
+// "Racing"), so a layout is made once and used by any game's profile (by its
+// id). Edit it in one place and every game using it follows.
+export const LayoutIdSchema = z.string().regex(/^[a-z0-9-]{1,40}$/);
+export const ButtonLayoutSchema = z.strictObject({
+  name: z.string().trim().min(1).max(40),
+  table: z.array(z.union([z.number().int().min(0).max(15), z.literal(0xff)])).length(16),
+  updated: z.number(),
+});
+export type ButtonLayout = z.infer<typeof ButtonLayoutSchema>;
+
 // What a game profile can change on the dongle (in its RAM only, while the
 // game runs; never written to the dongle's flash).
 export const ProfileSettingsSchema = z.strictObject({
@@ -19,9 +30,13 @@ export const ProfileSettingsSchema = z.strictObject({
   lbFavG: z.array(z.number().int().min(0).max(255)).length(4),
   lbFavB: z.array(z.number().int().min(0).max(255)).length(4),
   btMicEnable: z.boolean(),
+  // A saved button layout (protocol 1.8: applied for the game only, never
+  // to flash); absent = the player's normal buttons.
+  buttonLayout: LayoutIdSchema.optional(),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
-export const PROFILE_FIELDS = Object.keys(ProfileSettingsSchema.shape) as Array<keyof ProfileSettings>;
+// The dongle config fields a profile sets (the layout is applied separately).
+export const PROFILE_FIELDS = (Object.keys(ProfileSettingsSchema.shape) as Array<keyof ProfileSettings>).filter((k) => k !== "buttonLayout");
 
 // Player feedback is structured, never free text: fixed statements a player
 // ticks, so shared feedback (later) is counts per statement, with nothing to
@@ -67,7 +82,7 @@ export const GameRecordSchema = z.strictObject({
 export type GameRecord = z.infer<typeof GameRecordSchema>;
 
 // A game key from the scan (`steam-1a2b3c4d:steam:1091500`): no paths.
-export const GameKeySchema = z.string().regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(steam|epic|gog|amazon|sideload|lutris):[\w.-]{1,200}$/);
+export const GameKeySchema = z.string().regex(/^(steam|heroic|lutris|gog|epic)-[0-9a-f]{8}:(steam|epic|gog|amazon|sideload|lutris):[\w.-]{1,200}$/);
 
 export const LibraryFileSchema = z.strictObject({
   version: z.literal(1),
@@ -75,6 +90,7 @@ export const LibraryFileSchema = z.strictObject({
   // The dongle settings to put back when the game ends (persisted, so an app
   // that was closed mid-game restores them next time).
   restore: z.strictObject({ gameKey: GameKeySchema, settings: ProfileSettingsSchema }).optional(),
+  layouts: z.record(LayoutIdSchema, ButtonLayoutSchema).optional(),
 });
 export type LibraryFile = z.infer<typeof LibraryFileSchema>;
 export const EMPTY_LIBRARY: LibraryFile = { version: 1, games: {} };

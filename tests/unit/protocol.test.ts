@@ -101,6 +101,7 @@ describe("identity report (0xF1)", () => {
       colorwayCode: null,
       features2: 0,
       boardName: null,
+      remapTemporary: null,
     });
   });
 

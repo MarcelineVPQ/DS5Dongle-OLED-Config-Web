@@ -8,7 +8,9 @@
 //             or a tooltip could give (no text, aria-label, title or label).
 // Mechanical, exhaustive (the AVIEW rule): nothing sampled by eye.
 //
-//   DS5_DEV_TOOLS=1 npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
+//   tools/check_ui.sh [options]   (the usual way: its own app copy with the simulated
+//                                   dongle, never the copy you're using)
+//   or by hand: DS5_DEV_TOOLS=1 npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
 //   (a dev build: the update-state and colorway passes use its Developer previews)
 //   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650] [--themes light,dark] [--colorways off]
 //
@@ -215,10 +217,32 @@ function views() {
         await evaluate(`document.querySelectorAll('[role="tab"]')[${tab}]?.click()`);
       },
     ]);
-  list.push(["games home", () => rail("games")]);
+  // Home, not the game page the last view left open.
+  const gamesHome = async () => {
+    await rail("games");
+    await sleep(1500);
+    await click(".lib-home");
+  };
+  list.push(["games home", gamesHome]);
+  list.push([
+    "games home, cover grid",
+    async () => {
+      await gamesHome();
+      await sleep(800);
+      await evaluate(`document.querySelector(".lib-grid")?.scrollIntoView({ block: "start" })`);
+    },
+  ]);
+  list.push([
+    "games, Show menu open",
+    async () => {
+      await gamesHome();
+      await evaluate(`(() => { const d = document.querySelector(".lib-show"); if (d) d.open = true; })()`);
+    },
+  ]);
   for (const [name, pick] of [
     ["game page (profile)", `[...document.querySelectorAll(".lib-row")].find((r) => r.innerText.includes("◆"))`],
-    ["game page (GOG)", `[...document.querySelectorAll(".lib-row")].find((r) => r.querySelector(".lib-glyph")?.innerText === "G")`],
+    ["game page (GOG)", `document.querySelector('.lib-row[data-store="gog"]')`],
+    ["game page (soundtrack or software)", `[...document.querySelectorAll(".lib-row")].find((r) => r.querySelector(".lib-kind"))`],
     ["game page (first)", `document.querySelectorAll(".lib-row")[1]`],
   ])
     list.push([

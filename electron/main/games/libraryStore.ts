@@ -71,6 +71,19 @@ export class LibraryStore {
     return this.save();
   }
 
+  // Add or update a saved button layout.
+  setLayout(id: string, name: string, table: number[]): LibraryFile {
+    (this.data.layouts ??= {})[id] = { name: name.trim(), table, updated: Date.now() };
+    return this.save();
+  }
+
+  // Delete a layout; game profiles that used it go back to normal buttons.
+  deleteLayout(id: string): LibraryFile {
+    if (this.data.layouts) delete this.data.layouts[id];
+    for (const r of Object.values(this.data.games)) if (r.profile?.settings.buttonLayout === id) delete r.profile.settings.buttonLayout;
+    return this.save();
+  }
+
   setRestore(restore: LibraryFile["restore"]): LibraryFile {
     if (restore) this.data.restore = restore;
     else delete this.data.restore;
