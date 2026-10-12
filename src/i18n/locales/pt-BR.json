@@ -404,7 +404,11 @@
       "stop": "Parar de verificar",
       "stopHint": "Desliga a configuração de jogos; ela não lê mais as configurações dos launchers até você permitir de novo.",
       "closeFailed": "Não foi possível pedir para o {{launcher}} fechar. Feche você mesmo e aperte Verificar de novo.",
-      "undoConflict": "Não foi desfeito: {{files}} mudou depois de aplicar (o launcher salvou as próprias configurações). Desfazer descartaria essas mudanças."
+      "undoConflict": "Não foi desfeito: {{files}} mudou depois de aplicar (o launcher salvou as próprias configurações). Desfazer descartaria essas mudanças.",
+      "scanningWindows": "Verificando a Steam…",
+      "consentIntroWindows": "A configuração de jogos lista seus jogos da Steam e procura na Steam ajustes que impedem os gatilhos adaptáveis e os hápticos de chegarem a eles. Para isso, lê, só neste computador:",
+      "consentLaunchersWindows": "os ajustes da Steam e sua lista de jogos instalados",
+      "consentRunningWindows": "quais programas estão rodando, para notar quando um dos seus jogos começa (para o perfil de controle dele)"
     },
     "setup": {
       "installing": "Instalando o firmware…",

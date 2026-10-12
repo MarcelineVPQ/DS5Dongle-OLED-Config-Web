@@ -404,7 +404,11 @@
       "stop": "Prüfung beenden",
       "stopHint": "Schaltet die Spiele-Einrichtung ab; sie liest keine Launcher-Einstellungen mehr, bis du es wieder erlaubst.",
       "closeFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden. Beende ihn selbst und drücke dann auf Neu prüfen.",
-      "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen."
+      "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen.",
+      "scanningWindows": "Steam wird geprüft…",
+      "consentIntroWindows": "Die Spieleeinrichtung listet deine Steam-Spiele auf und prüft Steam auf Einstellungen, die adaptive Trigger und Haptik blockieren. Dafür liest sie, nur auf diesem Computer:",
+      "consentLaunchersWindows": "die Einstellungen und die Liste installierter Spiele von Steam",
+      "consentRunningWindows": "welche Programme laufen, um zu bemerken, wenn eines deiner Spiele startet (für sein Controller-Profil)"
     },
     "setup": {
       "installing": "Firmware wird installiert…",

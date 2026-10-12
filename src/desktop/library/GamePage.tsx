@@ -3,6 +3,7 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { protonApplies } from "../games/platform";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onAccentChange, scopedAccent } from "../live/controllerAccent";
@@ -102,11 +103,13 @@ export default function GamePage({ game, info, record, running, report, bridge, 
           accent={running}
         />
         <Stat label={t("desktop.library.playTime")} value={info?.playtimeMin ? hours(info.playtimeMin, t) : "—"} />
-        <Stat
-          label={t("desktop.library.runsWith")}
-          value={`${game.runnerMissing || (!game.usesOurProton && support.features.triggers === "yes") ? "⚠ " : ""}${game.runner ?? t("desktop.library.launcherDefault")}`}
-          onClick={() => jump("compat")}
-        />
+        {protonApplies() && (
+          <Stat
+            label={t("desktop.library.runsWith")}
+            value={`${game.runnerMissing || (!game.usesOurProton && support.features.triggers === "yes") ? "⚠ " : ""}${game.runner ?? t("desktop.library.launcherDefault")}`}
+            onClick={() => jump("compat")}
+          />
+        )}
         <Stat label={t("desktop.library.dualsense")} value={`${TIER_ICON[support.tier]} ${t(`desktop.library.tier.${support.tier}`)}`} onClick={() => jump("support")} />
         {record?.mine?.rating && <Stat label={t("desktop.library.yourRating")} value={"★".repeat(record.mine.rating)} />}
       </div>
@@ -128,7 +131,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
           </section>
         </div>
         <div className="gp-col">
-          <CompatFrame game={game} report={report} onRescan={onRescan} />
+          {protonApplies() && <CompatFrame game={game} report={report} onRescan={onRescan} />}
           <SupportFrame game={game} />
           <NotesFrame mineState={mineState} />
           <DetailsFrame game={game} info={info} />

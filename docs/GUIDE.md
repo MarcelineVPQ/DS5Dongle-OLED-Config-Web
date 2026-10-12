@@ -8,7 +8,7 @@ Step by step, from the parts on your desk to every setting in the app. Each sect
 - [4. Each part of the controller](#4-each-part-of-the-controller)
 - [5. Calibration](#5-calibration)
 - [6. The Dongle page](#6-the-dongle-page)
-- [7. Games (Linux)](#7-games-linux)
+- [7. Games](#7-games)
 - [8. App settings](#8-app-settings)
 - [9. Troubleshooting](#9-troubleshooting)
 
@@ -137,11 +137,11 @@ In the panel on the right:
 - **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
 - **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
 
-## 7. Games (Linux)
+## 7. Games
 
 ![The Games library](screenshots/guide-games.png)
 
-The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded).
+The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam** games for now (GOG Galaxy and Epic are planned); Proton and the system checks are Linux-only, so they don't appear there.
 
 - **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games.
 - **A game's page:**

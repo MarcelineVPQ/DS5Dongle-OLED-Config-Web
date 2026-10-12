@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Games library on Windows:** your Steam games, their pages and per-game controller profiles that switch in while a game runs (Steam found from the registry or Program Files; the running game is recognized by its program in the game's folder). Proton and the Linux system checks stay Linux-only. GOG Galaxy and Epic are planned.
 - **Dev builds say exactly what they are:** `tools/dev.sh` builds and runs the dev copy (own settings, dev tools, DevTools port) and stamps a Git build id next to the version ("0.9.3 · dev +3.a1b2c3d"). Firmware dev builds (`tools/dev_firmware.sh` in the firmware repo) report `v0.9.3-oled-edition+3.a1b2c3d` instead of a stale "dev" version.
 - **Simulated dongle** (dev builds, Developer card): every page works without hardware, with moving input, diagnostics and an OLED screen; the tests' fake dongle and the simulation are one implementation.
 

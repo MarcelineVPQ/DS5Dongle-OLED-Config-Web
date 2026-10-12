@@ -1,5 +1,6 @@
 import AppRail from "./AppRail";
 import { useLookKnobs } from "./lookKnobs";
+import { gamesSupported } from "./games/platform";
 import { useDevToolsShortcut, useShownIdentity } from "./devPreview";
 import { useReduceMotion } from "./motion";
 import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccent";
@@ -370,7 +371,7 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
 // how many recommended changes are waiting (the sidebar badge). The startup
 // check only runs once the user has allowed it.
 function useGamesAttention() {
-  const supported = window.desktop?.platform === "linux";
+  const supported = gamesSupported();
   const [allowed, setAllowedState] = useState(false);
   const [count, setCount] = useState(0);
   const last = useRef<GamesReport | null>(null);

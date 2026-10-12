@@ -70,10 +70,13 @@ export class GamesService {
 
   private async fresh(): Promise<Scan> {
     this.requireConsent();
-    const [audioCards] = await Promise.all([dualSenseCards(), this.refreshLatest()]);
+    // Windows: no Proton to look up and no PipeWire audio profile to check.
+    const linux = process.platform === "linux";
+    const [audioCards] = await Promise.all([linux ? dualSenseCards() : Promise.resolve([]), linux ? this.refreshLatest() : Promise.resolve()]);
     return scan({
       home: this.home,
-      ourProton: newestLocalBuild(this.localBuilds()),
+      // Proton is how Steam runs Windows games on Linux: nothing to offer on Windows.
+      ourProton: process.platform === "win32" ? null : newestLocalBuild(this.localBuilds()),
       latestProton: this.latest?.name ?? null,
       latestSize: this.latest?.tarball.size ?? null,
       running: runningLaunchers(),

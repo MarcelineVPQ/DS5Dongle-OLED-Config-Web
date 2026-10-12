@@ -9,6 +9,7 @@
 //   -> apply (backed up first) -> Undo.
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { protonApplies } from "../games/platform";
 import { errorText } from "../../errorText";
 import { readPref, writePref } from "../storage";
 import GameLibrary from "../library/GameLibrary";
@@ -97,11 +98,11 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
     <div className="dk-stack">
       <section className="dk-card">
         <h2>{t("desktop.games.title", "Game setup")}</h2>
-        <p>{t("desktop.games.consentIntro")}</p>
+        <p>{t(protonApplies() ? "desktop.games.consentIntro" : "desktop.games.consentIntroWindows")}</p>
         <ul className="dk-review">
-          <li>{t("desktop.games.consentLaunchers")}</li>
-          <li>{t("desktop.games.consentAudio")}</li>
-          <li>{t("desktop.games.consentProton")}</li>
+          <li>{t(protonApplies() ? "desktop.games.consentLaunchers" : "desktop.games.consentLaunchersWindows")}</li>
+          <li>{t(protonApplies() ? "desktop.games.consentAudio" : "desktop.games.consentRunningWindows")}</li>
+          {protonApplies() && <li>{t("desktop.games.consentProton")}</li>}
         </ul>
         <p className="dk-hint">{t("desktop.games.consentPromise")}</p>
         <div className="dk-row-btns">
@@ -270,7 +271,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
   if (!report) {
     return (
       <div className="dk-stack">
-        <section className="dk-card">{error ? <p className="dk-bad">{error}</p> : <p className="dk-hint">{t("desktop.games.scanning", "Checking Steam, Heroic and Lutris…")}</p>}</section>
+        <section className="dk-card">
+          {error ? <p className="dk-bad">{error}</p> : <p className="dk-hint">{t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")}</p>}
+        </section>
       </div>
     );
   }
@@ -308,40 +311,42 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
         </div>
       </section>
 
-      <section className="dk-card">
-        <h2>{t("desktop.games.protonTitle", "DualSense Proton build")}</h2>
-        {ours ? (
-          <p>
-            <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
-          </p>
-        ) : (
-          <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptics through the dongle.")}</p>
-        )}
-        {report.ourProton.updateAvailable && report.ourProton.latest && !protonConfirm && busy !== "proton" && (
-          <button type="button" className="dk-btn primary" onClick={() => setProtonConfirm(true)}>
-            {ours
-              ? t("desktop.games.protonUpdate", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })
-              : t("desktop.games.protonInstall", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })}
-          </button>
-        )}
-        {protonConfirm && (
-          <div className="dk-confirm">
-            <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
-            <div className="dk-row-btns">
-              <button type="button" className="dk-btn primary" onClick={() => void installProton()}>
-                {t("desktop.games.protonGo", "Download and install")}
-              </button>
-              <button type="button" className="dk-btn" onClick={() => setProtonConfirm(false)}>
-                {t("desktop.games.cancel", "Cancel")}
-              </button>
+      {protonApplies() && (
+        <section className="dk-card">
+          <h2>{t("desktop.games.protonTitle", "DualSense Proton build")}</h2>
+          {ours ? (
+            <p>
+              <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
+            </p>
+          ) : (
+            <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptics through the dongle.")}</p>
+          )}
+          {report.ourProton.updateAvailable && report.ourProton.latest && !protonConfirm && busy !== "proton" && (
+            <button type="button" className="dk-btn primary" onClick={() => setProtonConfirm(true)}>
+              {ours
+                ? t("desktop.games.protonUpdate", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })
+                : t("desktop.games.protonInstall", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })}
+            </button>
+          )}
+          {protonConfirm && (
+            <div className="dk-confirm">
+              <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
+              <div className="dk-row-btns">
+                <button type="button" className="dk-btn primary" onClick={() => void installProton()}>
+                  {t("desktop.games.protonGo", "Download and install")}
+                </button>
+                <button type="button" className="dk-btn" onClick={() => setProtonConfirm(false)}>
+                  {t("desktop.games.cancel", "Cancel")}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-        {busy === "proton" && <ProtonProgressView progress={protonProgress} />}
-        {protonMessage && <p className="dk-hint">{protonMessage}</p>}
-      </section>
+          )}
+          {busy === "proton" && <ProtonProgressView progress={protonProgress} />}
+          {protonMessage && <p className="dk-hint">{protonMessage}</p>}
+        </section>
+      )}
 
-      <SystemCard report={report} />
+      {protonApplies() && <SystemCard report={report} />}
 
       {closeNote && <div className="dk-notice">{closeNote}</div>}
       {error && <div className="dk-notice error">{error}</div>}

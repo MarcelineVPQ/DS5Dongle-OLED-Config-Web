@@ -126,9 +126,10 @@ function start(): void {
     settings,
   );
 
-  // Games page (Linux): launcher setup for native DualSense features.
+  // Games page (Linux and Windows): the library, per-game profiles and, on
+  // Linux, launcher / Proton setup for native DualSense features.
   const games =
-    process.platform === "linux"
+    process.platform === "linux" || process.platform === "win32"
       ? new GamesService({
           userData: app.getPath("userData"),
           allowed: () => settings.gamesScanAllowed,
@@ -137,13 +138,13 @@ function start(): void {
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
         })
       : null;
-  const linuxOnly = <T>(run: (g: GamesService) => T): T => {
-    if (!games) throw new Error("Game setup is only available on Linux.");
+  const withGames = <T>(run: (g: GamesService) => T): T => {
+    if (!games) throw new Error("The Games page isn't available on this system yet.");
     return run(games);
   };
 
   // Games library: the player's per-game data (works on every OS), the
-  // running game (Linux scan; polled only while Games is allowed).
+  // running game (polled only while Games is allowed).
   const library = new LibraryStore(app.getPath("userData"));
   const watcher = games
     ? new RunningGameWatcher(
@@ -187,26 +188,26 @@ function start(): void {
 
   registerIpc({
     isTrusted,
-    gamesScan: () => linuxOnly((g) => g.scan()),
-    gamesApply: (ids) => linuxOnly((g) => g.apply(ids)),
-    gamesUndo: (id) => linuxOnly((g) => g.undo(id)),
-    gamesBackups: () => linuxOnly((g) => g.listBackups()),
-    closeLauncher: (l) => linuxOnly((g) => g.close(l)),
-    installProton: () => linuxOnly((g) => g.installLatestProton()),
-    gamesDetails: () => linuxOnly((g) => g.details()),
+    gamesScan: () => withGames((g) => g.scan()),
+    gamesApply: (ids) => withGames((g) => g.apply(ids)),
+    gamesUndo: (id) => withGames((g) => g.undo(id)),
+    gamesBackups: () => withGames((g) => g.listBackups()),
+    closeLauncher: (l) => withGames((g) => g.close(l)),
+    installProton: () => withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
+    gamesDetails: () => withGames((g) => g.details()),
     gamesRunning: () => watcher?.running ?? null,
     libraryGet: () => library.get(),
     librarySetProfile: (u) => library.setProfile(u.gameKey, u.title, u.settings),
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
-    gameArtColor: (key) => linuxOnly((g) => g.artColor(key)),
+    gameArtColor: (key) => withGames((g) => g.artColor(key)),
     micTest: () => {
       if (process.platform !== "linux") return Promise.resolve({ ok: false, peak: 0, problem: "failed" as const });
       return micTest((level) => mainWindow?.webContents.send(IPC.micLevel, level));
     },
     gameAction: async (u) => {
-      const target = linuxOnly((g) => g.gameAction(u.gameKey, u.action));
+      const target = withGames((g) => g.gameAction(u.gameKey, u.action));
       if (target.url) {
         // Launchers often exit non-zero after handing the link to their
         // running instance (Steam does), so the open result means nothing:

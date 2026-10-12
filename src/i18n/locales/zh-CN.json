@@ -401,7 +401,11 @@
       "stop": "停止检查",
       "stopHint": "关闭游戏设置；在你再次允许之前，不会再读取启动器设置。",
       "closeFailed": "无法请求 {{launcher}} 退出。请手动退出，然后点击“重新检查”。",
-      "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。"
+      "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。",
+      "scanningWindows": "正在检查 Steam…",
+      "consentIntroWindows": "游戏设置会列出你的 Steam 游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
+      "consentLaunchersWindows": "Steam 的设置和已安装游戏列表",
+      "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的手柄配置）"
     },
     "setup": {
       "installing": "正在安装固件…",

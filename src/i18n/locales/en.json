@@ -403,7 +403,11 @@
       "stop": "Stop checking",
       "stopHint": "Turns game setup off; it won't read launcher settings again until you allow it.",
       "closeFailed": "{{launcher}} couldn't be asked to quit. Quit it yourself, then press Rescan.",
-      "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away."
+      "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away.",
+      "scanningWindows": "Checking Steam…",
+      "consentIntroWindows": "Game setup lists your Steam games and checks Steam for settings that stop adaptive triggers and haptics from reaching them. To do that it reads, on this computer only:",
+      "consentLaunchersWindows": "Steam's settings and installed-game list",
+      "consentRunningWindows": "which programs are running, to notice when one of your games starts (for its controller profile)"
     },
     "setup": {
       "installing": "Installing the firmware…",

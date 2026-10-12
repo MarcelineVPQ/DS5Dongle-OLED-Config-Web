@@ -7,7 +7,13 @@
 //           so a Wine/Proton process whose command line or working folder is
 //           inside the game's install folder identifies it (also the
 //           fallback for the others).
+//
+// Windows has no /proc and a game's environment can't be read, so there the
+// running programs (tasklist, cheap) are matched against the program files in
+// each installed game's folder (indexed once, cached).
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, readlinkSync } from "node:fs";
+import { join } from "node:path";
 
 export interface ProcView {
   pid: number;
@@ -102,6 +108,59 @@ export function detectRunning(procs: ProcView[], games: RunningCandidate[]): str
   return null;
 }
 
+// ---- Windows ----
+
+// Running programs: image names only (tasklist is fast; paths would need
+// PowerShell or WMI, too slow to run every few seconds).
+export function readWindowsProcs(): ProcView[] {
+  let csv: string;
+  try {
+    csv = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tasklist.exe"), ["/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true, timeout: 4000 });
+  } catch {
+    return [];
+  }
+  const out: ProcView[] = [];
+  for (const line of csv.split(/\r?\n/)) {
+    const m = /^"([^"]+)","(\d+)"/.exec(line);
+    if (m) out.push({ pid: Number(m[2]), comm: m[1], args: [], cwd: null, env: {} });
+  }
+  return out;
+}
+
+// Helpers that ship with many games: never evidence of which game is running.
+const GENERIC_EXE =
+  /^(unitycrashhandler(32|64)?|crashreport(er|client)?|crashpad_handler|uninst(all)?\w*|unins\d+|vc_?redist[\w.-]*|dxsetup|dotnetfx\w*|ue4prereqsetup\w*|easyanticheat\w*|be(service|launcher)\w*|launcher|setup|installer|updater)\.exe$/i;
+
+// A game folder's program files (lower case, without generic helpers), up to
+// three levels deep (bin/x64/game.exe) and a few thousand entries.
+export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 }): Set<string> {
+  const out = new Set<string>();
+  const walk = (d: string, level: number) => {
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = readdirSync(d, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (--budget.left < 0) return;
+      if (e.isDirectory() && level < depth) walk(join(d, e.name), level + 1);
+      else if (e.isFile() && /\.exe$/i.test(e.name) && !GENERIC_EXE.test(e.name)) out.add(e.name.toLowerCase());
+    }
+  };
+  walk(dir, 0);
+  return out;
+}
+
+export function detectRunningWindows(procs: ProcView[], games: RunningCandidate[], exes: (dir: string) => Set<string>): string | null {
+  const running = new Set(procs.map((p) => p.comm.toLowerCase()));
+  for (const g of games) {
+    if (!g.installDir) continue;
+    for (const exe of exes(g.installDir)) if (running.has(exe)) return g.key;
+  }
+  return null;
+}
+
 // Polls and reports changes, debounced so a launcher's short helper
 // processes don't flap it (a change has to hold for `settleMs`).
 export class RunningGameWatcher {
@@ -109,13 +168,22 @@ export class RunningGameWatcher {
   private current: string | null = null;
   private pending: { key: string | null; since: number } | null = null;
 
+  private readonly exeCache = new Map<string, Set<string>>();
+
   constructor(
     private readonly candidates: () => RunningCandidate[],
     private readonly onChange: (key: string | null) => void,
-    private readonly read: () => ProcView[] = readProcs,
+    private readonly read: () => ProcView[] = process.platform === "win32" ? readWindowsProcs : readProcs,
     private readonly settleMs = 4000,
-    private readonly everyMs = 2000,
+    private readonly everyMs = process.platform === "win32" ? 3000 : 2000,
+    private readonly platform: NodeJS.Platform = process.platform,
   ) {}
+
+  private exes = (dir: string): Set<string> => {
+    let set = this.exeCache.get(dir);
+    if (!set) this.exeCache.set(dir, (set = gameExecutables(dir)));
+    return set;
+  };
 
   get running(): string | null {
     return this.current;
@@ -140,7 +208,7 @@ export class RunningGameWatcher {
   }
 
   tick(now = Date.now()): void {
-    const seen = detectRunning(this.read(), this.candidates());
+    const seen = this.platform === "win32" ? detectRunningWindows(this.read(), this.candidates(), this.exes) : detectRunning(this.read(), this.candidates());
     if (seen === this.current) {
       this.pending = null;
       return;

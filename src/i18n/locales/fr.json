@@ -404,7 +404,11 @@
       "stop": "Arrêter la vérification",
       "stopHint": "Désactive la configuration des jeux ; elle ne relira plus les réglages des lanceurs tant que tu ne l'autorises pas.",
       "closeFailed": "Impossible de demander à {{launcher}} de se fermer. Quitte-le toi-même, puis appuie sur Revérifier.",
-      "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements."
+      "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements.",
+      "scanningWindows": "Vérification de Steam…",
+      "consentIntroWindows": "La configuration des jeux liste tes jeux Steam et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retours haptiques de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
+      "consentLaunchersWindows": "les réglages de Steam et sa liste de jeux installés",
+      "consentRunningWindows": "quels programmes tournent, pour remarquer quand l’un de tes jeux démarre (pour son profil de manette)"
     },
     "setup": {
       "installing": "Installation du firmware…",

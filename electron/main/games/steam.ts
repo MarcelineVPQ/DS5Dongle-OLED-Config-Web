@@ -1,5 +1,6 @@
 // Steam: installs, games, compatibility-tool mapping and per-game Steam Input.
 // Read side only; edits are planned in games.ts and written through backup.ts.
+import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { readParsed } from "./files";
 import { join } from "node:path";
@@ -27,15 +28,37 @@ const TOOL_NAME = /^(Proton\b|Steam Linux Runtime|Steamworks Common|SteamVR)/i;
 const STEAM_TOOL_PRIORITY_DEFAULT = "75";
 const STEAM_TOOL_PRIORITY_GAME = "250";
 
-export function findSteamInstalls(home: string): SteamInstall[] {
-  const candidates: Array<[string, boolean]> = [
-    [join(home, ".local/share/Steam"), false],
-    [join(home, ".steam/root"), false],
-    [join(home, ".steam/steam"), false],
-    [join(home, ".steam/debian-installation"), false],
-    [join(home, ".var/app/com.valvesoftware.Steam/.local/share/Steam"), true],
-    [join(home, "snap/steam/common/.steam/root"), false],
-  ];
+// Windows: where Steam is installed. The registry's SteamPath (the Steam
+// client writes it on every start), then the default install folders.
+export function windowsSteamRoots(): string[] {
+  const roots: string[] = [];
+  try {
+    const out = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"], {
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 3000,
+    });
+    const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(out);
+    if (m) roots.push(m[1].trim().replace(/\//g, "\\"));
+  } catch {
+    // no Steam in the registry
+  }
+  for (const pf of [process.env["ProgramFiles(x86)"], process.env.ProgramFiles]) if (pf) roots.push(join(pf, "Steam"));
+  return roots;
+}
+
+export function findSteamInstalls(home: string, platform: NodeJS.Platform = process.platform, winRoots: () => string[] = windowsSteamRoots): SteamInstall[] {
+  const candidates: Array<[string, boolean]> =
+    platform === "win32"
+      ? winRoots().map((r) => [r, false])
+      : [
+          [join(home, ".local/share/Steam"), false],
+          [join(home, ".steam/root"), false],
+          [join(home, ".steam/steam"), false],
+          [join(home, ".steam/debian-installation"), false],
+          [join(home, ".var/app/com.valvesoftware.Steam/.local/share/Steam"), true],
+          [join(home, "snap/steam/common/.steam/root"), false],
+        ];
   const seen = new Set<string>();
   const out: SteamInstall[] = [];
   for (const [path, flatpak] of candidates) {

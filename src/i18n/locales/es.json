@@ -404,7 +404,11 @@
       "stop": "Dejar de revisar",
       "stopHint": "Desactiva la configuración de juegos; no volverá a leer los ajustes de los lanzadores hasta que lo permitas.",
       "closeFailed": "No se pudo pedir a {{launcher}} que se cierre. Ciérralo tú y pulsa Volver a revisar.",
-      "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios."
+      "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios.",
+      "scanningWindows": "Comprobando Steam…",
+      "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam y busca en Steam ajustes que impiden que los gatillos adaptativos y los hápticos lleguen a ellos. Para ello lee, solo en este equipo:",
+      "consentLaunchersWindows": "los ajustes de Steam y su lista de juegos instalados",
+      "consentRunningWindows": "qué programas se están ejecutando, para notar cuándo empieza uno de tus juegos (para su perfil de mando)"
     },
     "setup": {
       "installing": "Instalando el firmware…",
