@@ -122,6 +122,8 @@ For stick drift, sticks that don't reach the edge, triggers that don't reach ful
 
 A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
 
+**Stick tests** (below the stick cards): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
+
 ## 6. The Dongle page
 
 ![The Dongle page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)

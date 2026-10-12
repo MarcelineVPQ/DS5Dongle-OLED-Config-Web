@@ -3174,6 +3174,92 @@ html[data-reduce-motion] .lib-row:hover {
   margin: 2px 0;
 }
 
+/* Stick tests (StickTests.tsx): the reference circle and the X axis are
+   dashed/solid as well as colored, so the lines never rely on color alone. */
+.stest-pair {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin: 6px 0;
+}
+.stest-stick {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin: 0;
+  min-width: 140px;
+}
+.stest-stick figcaption {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  text-align: center;
+}
+.stest-plot {
+  width: 120px;
+  height: 120px;
+}
+.stest-axis {
+  stroke: var(--border-default);
+  stroke-width: 0.6;
+}
+.stest-ref {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.stest-outline {
+  fill: none;
+  stroke: var(--dk-accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.stest-outline.closed {
+  fill: color-mix(in srgb, var(--dk-accent) 14%, transparent);
+}
+.stest-dot {
+  fill: var(--text-strong);
+}
+.stest-key {
+  width: 20px;
+  height: 6px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.stest-drift {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+}
+.stest-driftfig {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.stest-driftplot {
+  flex: 1;
+  min-width: 0;
+  height: 50px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+}
+.stest-x,
+.stest-y {
+  fill: none;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.stest-x {
+  stroke: var(--dk-accent);
+}
+.stest-y {
+  stroke: var(--text-muted);
+  stroke-dasharray: 4 3;
+}
+
 /* ---- Dongle diagnostics dashboard (DongleDashboard.tsx) ---- */
 .dash {
   display: flex;
