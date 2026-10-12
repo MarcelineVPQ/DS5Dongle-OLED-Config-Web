@@ -294,7 +294,32 @@
       "production": "42 Pixel Studios 出品",
       "developedBy": "开发者",
       "source": "源代码 (MIT)",
-      "issues": "报告问题"
+      "issues": "报告问题",
+      "roadmapTab": "即将推出",
+      "roadmap": {
+        "intro": "这些是计划，不是承诺：可能会变，也都没有日期。",
+        "suggest": "欢迎在 GitHub 上提出建议。",
+        "high": "高优先级",
+        "column": {
+          "next": "下个版本",
+          "progress": "进行中",
+          "planned": "已计划",
+          "ideas": "想法"
+        },
+        "area": {
+          "controller": "手柄",
+          "buttons": "按键",
+          "audio": "音频与触觉",
+          "games": "游戏",
+          "dongle": "接收器与 OLED",
+          "app": "应用",
+          "community": "社区"
+        },
+        "platform": {
+          "linux": "仅 Linux",
+          "windows": "Windows"
+        }
+      }
     },
     "games": {
       "title": "游戏设置",

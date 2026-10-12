@@ -294,7 +294,32 @@
       "production": "42 Pixel Studios 制作",
       "developedBy": "開発",
       "source": "ソースコード (MIT)",
-      "issues": "問題を報告"
+      "issues": "問題を報告",
+      "roadmapTab": "今後の予定",
+      "roadmap": {
+        "intro": "これは計画であり、約束ではありません。変わることがあり、日付もありません。",
+        "suggest": "ご提案は GitHub でどうぞ。",
+        "high": "優先度高",
+        "column": {
+          "next": "次のビルド",
+          "progress": "作業中",
+          "planned": "予定",
+          "ideas": "アイデア"
+        },
+        "area": {
+          "controller": "コントローラー",
+          "buttons": "ボタン",
+          "audio": "オーディオと触覚",
+          "games": "ゲーム",
+          "dongle": "ドングルと OLED",
+          "app": "アプリ",
+          "community": "コミュニティ"
+        },
+        "platform": {
+          "linux": "Linux のみ",
+          "windows": "Windows"
+        }
+      }
     },
     "games": {
       "title": "ゲーム設定",

@@ -293,7 +293,32 @@
       "production": "A 42 Pixel Studios production",
       "developedBy": "Developed by",
       "source": "Source code (MIT)",
-      "issues": "Report an issue"
+      "issues": "Report an issue",
+      "roadmapTab": "Coming soon",
+      "roadmap": {
+        "intro": "These are plans, not promises: they can change, and none has a date.",
+        "suggest": "Suggestions are welcome on GitHub.",
+        "high": "High priority",
+        "column": {
+          "next": "In the next build",
+          "progress": "In progress",
+          "planned": "Planned",
+          "ideas": "Ideas"
+        },
+        "area": {
+          "controller": "Controller",
+          "buttons": "Buttons",
+          "audio": "Audio & haptics",
+          "games": "Games",
+          "dongle": "Dongle & OLED",
+          "app": "App",
+          "community": "Community"
+        },
+        "platform": {
+          "linux": "Linux only",
+          "windows": "Windows"
+        }
+      }
     },
     "games": {
       "title": "Game setup",

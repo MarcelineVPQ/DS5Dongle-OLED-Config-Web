@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **About → Coming soon:** a small board of what's planned for the app and the dongle (in the next build, in progress, planned, ideas), tagged by area and platform. Plans, not promises; suggestions welcome on GitHub.
+
 ### Changed
 
 - **The app runs lean when it's not on screen:** minimized or in the tray it now uses about 0.5% of a CPU core instead of about 13%: the background swirl and every reading that only feeds the window (signal strength, the Dongle page, level meters, pairing slots, the OLED mirror) stop until the window is back. What the tray and game profiles need keeps running.

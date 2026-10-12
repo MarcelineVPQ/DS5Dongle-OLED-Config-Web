@@ -10,6 +10,10 @@ waiting on. Rows with a detail doc link to it.
   item leaves the table (the CHANGELOG has it); its detail doc (if any) moves to `docs/complete/`.
 - Something agreed in conversation gets a row the same day.
 - Session notes and handoffs point here. They never keep a second list.
+- **The app shows a public copy of this list** (About → Coming soon, `src/desktop/about/roadmap.ts`).
+  When a user-facing row is added, changes status, ships or is dropped, update its entry there in
+  the same commit (plain, short, no dates; never internal details, hosts, names, telemetry or the
+  easter egg). "In the next build" entries leave it once they're in a stable release.
 
 **Status words:** _Agreed_ (decided, not started) · _In progress_ · _Blocked_ (waiting on
 something outside the project) · _Question_ (needs an answer from Marcy before anything happens) ·
@@ -71,7 +75,7 @@ _Idea_ (noted, not decided) · _Open_ (a known problem, not yet scheduled).
 
 | Item | Notes | Detail |
 | --- | --- | --- |
-| Public roadmap ("Working on / Coming soon") | **Idea (Marcy 2026-10-12).** Show users what's planned (Windows/macOS game library, QoL items) generated from this file so there is still one list: rows marked public get a one-line plain description. Where: app About tab, README, download page (to decide) | - |
+| Public roadmap ("Working on / Coming soon") | **In the app (Unreleased):** About → Coming soon, a read-only board from the curated `src/desktop/about/roadmap.ts` (kept in sync with this file, see the top). Still to decide: README and download page | - |
 | Controller switcher in the rail | **Idea (Marcy 2026-10-12).** Under Controller in the rail: one line per pairing slot, gamepad icon + slot number (zero-based like the OLED) + the controller remembered there ("0 · Cosmic Red", "1 · Midnight Black Edge", "2 · empty"), a color dot, the connected one marked. Picking one switches slots (then press PS); an empty slot starts pairing. Collapsed rail: a pip with the number of paired controllers on the Controller icon. The app remembers model + colorway per slot itself (identity [17] + model/colorway at connect), no firmware change | - |
 | Developer colorway preview needs a dongle | **Idea (Marcy 2026-10-12), minor.** The model / colorway preview swaps the connected controller's colors, so with no dongle nothing changes. Let it fake a connected controller's colors on its own | - |
 | Ctrl+Shift+D gives no feedback | **Idea (2026-10-12).** It turns on the Developer card at the bottom of App settings, but nothing visible happens where you are. Open App settings and scroll to the card when it turns on | - |

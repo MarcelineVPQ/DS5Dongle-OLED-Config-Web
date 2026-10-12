@@ -294,7 +294,32 @@
       "production": "Uma produção 42 Pixel Studios",
       "developedBy": "Desenvolvido por",
       "source": "Código-fonte (MIT)",
-      "issues": "Relatar um problema"
+      "issues": "Relatar um problema",
+      "roadmapTab": "Em breve",
+      "roadmap": {
+        "intro": "São planos, não promessas: podem mudar e nenhum tem data.",
+        "suggest": "Sugestões são bem-vindas no GitHub.",
+        "high": "Prioridade alta",
+        "column": {
+          "next": "Na próxima versão",
+          "progress": "Em andamento",
+          "planned": "Planejado",
+          "ideas": "Ideias"
+        },
+        "area": {
+          "controller": "Controle",
+          "buttons": "Botões",
+          "audio": "Áudio e háptico",
+          "games": "Jogos",
+          "dongle": "Dongle e OLED",
+          "app": "App",
+          "community": "Comunidade"
+        },
+        "platform": {
+          "linux": "Só Linux",
+          "windows": "Windows"
+        }
+      }
     },
     "games": {
       "title": "Configuração de jogos",
