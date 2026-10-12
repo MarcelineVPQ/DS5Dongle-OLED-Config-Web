@@ -141,10 +141,28 @@ function Xyz({ values }: { values: [number, number, number] }) {
   );
 }
 
-// Three scrolling lines (X, Y, Z) of the last HISTORY samples.
+// The spark lines' theme colors (grid, three axes), read once and again only
+// when the theme changes (it sets its tokens on <html>), not on every sample.
+type SparkColors = { grid: string; axis: string[] };
+function readSparkColors(c: HTMLCanvasElement): SparkColors {
+  const css = getComputedStyle(document.documentElement);
+  return {
+    grid: getComputedStyle(c).getPropertyValue("--border-subtle").trim() || "transparent", // the theme's grid line
+    axis: [0, 1, 2].map((axis) => css.getPropertyValue(`--cv-axis-${axis}`).trim() || PALETTES.standard.axis[axis]),
+  };
+}
+
+// Three scrolling lines (X, Y, Z) of the last HISTORY samples. Canvas 2D,
+// which Chromium rasterizes on the GPU with hardware acceleration.
 function Spark({ values, range }: { values: [number, number, number]; range: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const history = useRef<Array<[number, number, number]>>([]);
+  const colors = useRef<SparkColors | null>(null);
+  useEffect(() => {
+    const watch = new MutationObserver(() => (colors.current = null));
+    watch.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class", "data-theme", "data-color-vision"] });
+    return () => watch.disconnect();
+  }, []);
   useEffect(() => {
     const h = history.current;
     h.push(values);
@@ -152,17 +170,17 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
     const c = canvas.current;
     const g = c?.getContext("2d");
     if (!c || !g) return;
+    const col = (colors.current ??= readSparkColors(c));
     const w = c.width;
     const ht = c.height;
     g.clearRect(0, 0, w, ht);
-    g.strokeStyle = getComputedStyle(c).getPropertyValue("--border-subtle").trim() || "transparent"; // the theme's grid line
+    g.strokeStyle = col.grid;
     g.beginPath();
     g.moveTo(0, ht / 2);
     g.lineTo(w, ht / 2);
     g.stroke();
-    const css = getComputedStyle(document.documentElement);
     for (let axis = 0; axis < 3; axis++) {
-      g.strokeStyle = css.getPropertyValue(`--cv-axis-${axis}`).trim() || PALETTES.standard.axis[axis];
+      g.strokeStyle = col.axis[axis];
       g.setLineDash(AXIS_DASH[axis]);
       g.lineWidth = 1.5;
       g.beginPath();
@@ -174,6 +192,7 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
       });
       g.stroke();
     }
+    g.setLineDash([]);
   }, [values, range]);
   return <canvas ref={canvas} className="live-data-spark" width={300} height={56} aria-hidden="true" />;
 }

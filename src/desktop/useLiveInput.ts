@@ -6,8 +6,12 @@
 import { useEffect, useState } from "react";
 import { IDENTITY_FEATURES, type BridgeIdentity, type Ds5BridgeClient } from "../protocol/bridgeClient";
 import type { InputReport } from "../oled/inputReport";
+import { useWindowShown } from "./useWindowShown";
 
 const POLL_MS = 33;
+// The lightbar: 10 reads a second, enough for the animated modes with the
+// strip's fill transition (desktop.css) gliding between samples.
+const LIGHTBAR_MS = 100;
 
 // How the live link is doing, for the live data panel: reads per second and
 // the round trip of the last one (updated by useLiveInput's loop).
@@ -17,25 +21,8 @@ export function supportsLiveInput(identity: BridgeIdentity | null | undefined): 
   return !!identity && (identity.features & IDENTITY_FEATURES.liveInput) !== 0;
 }
 
-// On screen: the page is visible and (desktop) the window isn't hidden in the
-// tray or minimized, which Chromium alone doesn't report here.
-function useDocumentVisible(): boolean {
-  const [visible, setVisible] = useState(() => typeof document === "undefined" || document.visibilityState === "visible");
-  const [windowShown, setWindowShown] = useState(true);
-  useEffect(() => {
-    const update = () => setVisible(document.visibilityState === "visible");
-    document.addEventListener("visibilitychange", update);
-    const off = window.desktop?.onWindowVisible(setWindowShown);
-    return () => {
-      document.removeEventListener("visibilitychange", update);
-      off?.();
-    };
-  }, []);
-  return visible && windowShown;
-}
-
 export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): InputReport | null {
-  const visible = useDocumentVisible();
+  const visible = useWindowShown();
   const [input, setInput] = useState<InputReport | null>(null);
   const active = !!client && enabled && visible;
 
@@ -83,12 +70,12 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
   return active ? input : null;
 }
 
-// The lightbar color as the controller shows it, read at the same rate as the
-// live input so animated modes (rainbow, breathing, fade) look smooth instead
-// of stepping once a second. Same gating as useLiveInput; re-renders only when
+// The lightbar color as the controller shows it, read 10 times a second so
+// animated modes (rainbow, breathing, fade) look smooth (the strip's fill
+// transition glides between samples) instead of stepping once a second. Same gating as useLiveInput; re-renders only when
 // the color changes.
 export function useLiveLightbar(client: Ds5BridgeClient | null, enabled: boolean): [number, number, number] | null {
-  const visible = useDocumentVisible();
+  const visible = useWindowShown();
   const [rgb, setRgb] = useState<[number, number, number] | null>(null);
   const active = !!client && enabled && visible;
 
@@ -108,7 +95,7 @@ export function useLiveLightbar(client: Ds5BridgeClient | null, enabled: boolean
       } catch {
         // dongle busy or gone: the connection hook handles reconnecting
       }
-      if (live) timer = setTimeout(() => void poll(), POLL_MS);
+      if (live) timer = setTimeout(() => void poll(), LIGHTBAR_MS);
     };
     void poll();
     return () => {

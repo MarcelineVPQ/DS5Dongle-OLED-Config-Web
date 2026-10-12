@@ -28,6 +28,7 @@ import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF
 import { useLibrary } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings, FirmwareLookup } from "../api";
+import ColorPicker from "../colorPicker/ColorPicker";
 import { firmwareOffer } from "../useUpdates";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
@@ -445,7 +446,7 @@ function Meter({ value, hold }: { value: number; hold?: number }) {
   const pct = (v: number) => `${Math.round(Math.min(1, Math.max(0, v)) * 100)}%`;
   return (
     <div className="live-meter" aria-hidden="true">
-      <span style={{ width: pct(value) }} />
+      <span style={{ "--level": Math.min(1, Math.max(0, value)) } as React.CSSProperties} />
       {hold !== undefined && hold > 0.01 && <i style={{ left: pct(hold) }} />}
     </div>
   );
@@ -923,7 +924,7 @@ function CustomColorsSetting() {
         <>
           {COLOR_PARTS.map((part) => (
             <Row key={part} label={t(`desktop.customColors.part.${part}`)} sub={part === "dark" || part === "cap" ? t(`desktop.customColors.partSub.${part}`) : undefined}>
-              <input type="color" aria-label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(e) => setColors({ ...colors, [part]: e.currentTarget.value })} />
+              <ColorPicker label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(hex) => setColors({ ...colors, [part]: hex })} />
             </Row>
           ))}
           {lineAdjusted && <p className="dk-hint">{t("desktop.customColors.lineAdjusted")}</p>}

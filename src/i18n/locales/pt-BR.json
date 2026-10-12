@@ -1245,6 +1245,20 @@
       "saveLayout": "Salvar no layout {{name}}",
       "saveNewLayout": "Salvar como layout deste jogo",
       "buttonsNote": "Editando {{title}}: os botões são salvos no layout deste jogo, não nos seus botões normais."
+    },
+    "colorPicker": {
+      "swatch": "{{name}}: {{hex}}. Mudar a cor",
+      "dialog": "Cor de {{name}}",
+      "square": "Saturação e brilho",
+      "squareValue": "Saturação {{s}}%, brilho {{v}}%",
+      "hue": "Matiz",
+      "hueValue": "{{h}} graus",
+      "hex": "Hex",
+      "channelR": "Vermelho",
+      "channelG": "Verde",
+      "channelB": "Azul",
+      "recent": "Cores recentes",
+      "recentColor": "Cor recente {{hex}}"
     }
   },
   "ad": {

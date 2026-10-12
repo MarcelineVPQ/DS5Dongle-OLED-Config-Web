@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { hexToRgb, rgbToHex, Row } from "../controls";
+import ColorPicker from "../colorPicker/ColorPicker";
 
 export const LIGHTBAR_MODES = [
   { value: 8, key: "host", label: "Game controls it" },
@@ -50,7 +51,7 @@ export default function LightbarPage({ bridge }: { bridge: UseDs5BridgeResult })
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>
             <span className="dk-mono">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>
-            <input type="color" aria-label={`FAV${i}`} value={rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]])} onChange={(e) => setFav(i, e.currentTarget.value)} />
+            <ColorPicker label={`FAV${i}`} value={rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]])} onChange={(hex) => setFav(i, hex)} />
           </Row>
         ))}
       </section>

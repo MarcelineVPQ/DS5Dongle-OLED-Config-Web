@@ -246,7 +246,7 @@ function Level({ label, value }: { label: string; value: number }) {
     <div className="dash-level">
       <span>{label}</span>
       <div className="live-meter">
-        <span style={{ width: `${Math.round(value * 100)}%` }} />
+        <span style={{ "--level": Math.min(1, Math.max(0, value)) } as React.CSSProperties} />
       </div>
       <b>{Math.round(value * 100)}%</b>
     </div>

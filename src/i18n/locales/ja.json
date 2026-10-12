@@ -1239,6 +1239,20 @@
       "saveLayout": "{{name}} 配置に保存",
       "saveNewLayout": "このゲームの配置として保存",
       "buttonsNote": "{{title}} を編集中：ボタンは通常のボタンではなく、このゲームの配置に保存されます。"
+    },
+    "colorPicker": {
+      "swatch": "{{name}}: {{hex}}。色を変更",
+      "dialog": "{{name}} の色",
+      "square": "彩度と明るさ",
+      "squareValue": "彩度 {{s}}%、明るさ {{v}}%",
+      "hue": "色相",
+      "hueValue": "{{h}} 度",
+      "hex": "16進",
+      "channelR": "赤",
+      "channelG": "緑",
+      "channelB": "青",
+      "recent": "最近の色",
+      "recentColor": "最近の色 {{hex}}"
     }
   },
   "ad": {

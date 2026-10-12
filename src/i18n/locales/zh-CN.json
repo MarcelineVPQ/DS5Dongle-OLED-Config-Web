@@ -1239,6 +1239,20 @@
       "saveLayout": "保存到 {{name}} 布局",
       "saveNewLayout": "保存为此游戏的布局",
       "buttonsNote": "正在编辑 {{title}}：按键会保存到此游戏的布局，而不是你的常用按键。"
+    },
+    "colorPicker": {
+      "swatch": "{{name}}：{{hex}}。更改颜色",
+      "dialog": "{{name}} 的颜色",
+      "square": "饱和度和亮度",
+      "squareValue": "饱和度 {{s}}%，亮度 {{v}}%",
+      "hue": "色相",
+      "hueValue": "{{h}} 度",
+      "hex": "十六进制",
+      "channelR": "红",
+      "channelG": "绿",
+      "channelB": "蓝",
+      "recent": "最近使用的颜色",
+      "recentColor": "最近使用的颜色 {{hex}}"
     }
   },
   "ad": {
