@@ -1245,6 +1245,20 @@
       "saveLayout": "Enregistrer dans la disposition {{name}}",
       "saveNewLayout": "Enregistrer comme disposition de ce jeu",
       "buttonsNote": "Modification de {{title}} : les boutons sont enregistrés dans la disposition de ce jeu, pas dans tes boutons habituels."
+    },
+    "colorPicker": {
+      "swatch": "{{name}} : {{hex}}. Changer la couleur",
+      "dialog": "Couleur de {{name}}",
+      "square": "Saturation et luminosité",
+      "squareValue": "Saturation {{s}} %, luminosité {{v}} %",
+      "hue": "Teinte",
+      "hueValue": "{{h}} degrés",
+      "hex": "Hex",
+      "channelR": "Rouge",
+      "channelG": "Vert",
+      "channelB": "Bleu",
+      "recent": "Couleurs récentes",
+      "recentColor": "Couleur récente {{hex}}"
     }
   },
   "ad": {

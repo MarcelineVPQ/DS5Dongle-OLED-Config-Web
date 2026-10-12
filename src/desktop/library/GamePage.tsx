@@ -23,6 +23,7 @@ import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/type
 import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
+import ColorPicker from "../colorPicker/ColorPicker";
 
 interface Props {
   game: GameEntry;
@@ -254,14 +255,13 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
           <Row label={t("desktop.library.favorites")}>
             <div className="gp-favs">
               {[0, 1, 2, 3].map((i) => (
-                <input
+                <ColorPicker
                   key={i}
-                  type="color"
-                  aria-label={`FAV${i}`}
+                  label={`FAV${i}`}
                   title={`FAV${i}`}
                   value={rgbToHex([draft.lbFavR[i], draft.lbFavG[i], draft.lbFavB[i]])}
-                  onChange={(e) => {
-                    const [r, g, b] = hexToRgb(e.target.value);
+                  onChange={(hex) => {
+                    const [r, g, b] = hexToRgb(hex);
                     const set = (a: number[], v: number) => a.map((x, j) => (j === i ? v : x));
                     edit({ lbFavR: set(draft.lbFavR, r), lbFavG: set(draft.lbFavG, g), lbFavB: set(draft.lbFavB, b) });
                   }}

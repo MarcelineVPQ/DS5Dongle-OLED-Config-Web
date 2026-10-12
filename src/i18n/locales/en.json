@@ -1244,6 +1244,20 @@
       "saveLayout": "Save to {{name}} layout",
       "saveNewLayout": "Save as this game's layout",
       "buttonsNote": "Editing {{title}}: buttons are saved into this game's layout, not your normal buttons."
+    },
+    "colorPicker": {
+      "swatch": "{{name}}: {{hex}}. Change the color",
+      "dialog": "Color for {{name}}",
+      "square": "Saturation and brightness",
+      "squareValue": "Saturation {{s}}%, brightness {{v}}%",
+      "hue": "Hue",
+      "hueValue": "{{h}} degrees",
+      "hex": "Hex",
+      "channelR": "Red",
+      "channelG": "Green",
+      "channelB": "Blue",
+      "recent": "Recent colors",
+      "recentColor": "Recent color {{hex}}"
     }
   },
   "ad": {

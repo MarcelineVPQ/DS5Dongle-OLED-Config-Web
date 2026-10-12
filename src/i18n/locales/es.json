@@ -1245,6 +1245,20 @@
       "saveLayout": "Guardar en la distribución {{name}}",
       "saveNewLayout": "Guardar como distribución de este juego",
       "buttonsNote": "Editando {{title}}: los botones se guardan en la distribución de este juego, no en tus botones normales."
+    },
+    "colorPicker": {
+      "swatch": "{{name}}: {{hex}}. Cambiar el color",
+      "dialog": "Color de {{name}}",
+      "square": "Saturación y brillo",
+      "squareValue": "Saturación {{s}} %, brillo {{v}} %",
+      "hue": "Tono",
+      "hueValue": "{{h}} grados",
+      "hex": "Hex",
+      "channelR": "Rojo",
+      "channelG": "Verde",
+      "channelB": "Azul",
+      "recent": "Colores recientes",
+      "recentColor": "Color reciente {{hex}}"
     }
   },
   "ad": {

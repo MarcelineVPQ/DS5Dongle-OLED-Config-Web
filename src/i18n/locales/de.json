@@ -1245,6 +1245,20 @@
       "saveLayout": "In Belegung {{name}} speichern",
       "saveNewLayout": "Als Belegung dieses Spiels speichern",
       "buttonsNote": "Bearbeitung {{title}}: Tasten werden in die Belegung dieses Spiels gespeichert, nicht in deine normale."
+    },
+    "colorPicker": {
+      "swatch": "{{name}}: {{hex}}. Farbe ändern",
+      "dialog": "Farbe für {{name}}",
+      "square": "Sättigung und Helligkeit",
+      "squareValue": "Sättigung {{s}} %, Helligkeit {{v}} %",
+      "hue": "Farbton",
+      "hueValue": "{{h}} Grad",
+      "hex": "Hex",
+      "channelR": "Rot",
+      "channelG": "Grün",
+      "channelB": "Blau",
+      "recent": "Zuletzt verwendet",
+      "recentColor": "Zuletzt verwendete Farbe {{hex}}"
     }
   },
   "ad": {
