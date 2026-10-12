@@ -45,7 +45,7 @@
 
 html[data-theme="dark"] .dk {
   --dk-accent: #22c55e;
-  --dk-accent-text: #2dd36a; /* the accent as text, a touch lighter: 4.49:1 on the Dongle dashboard's cards otherwise (checker) */
+  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
   --dk-accent-hover: #16a34a;
   --dk-on-accent: #052e16;
   --dk-sel-bg: #052e1f;
@@ -64,7 +64,7 @@ html[data-theme="dark"] .dk {
   html[data-theme="system"] .dk,
   html:not([data-theme]) .dk {
     --dk-accent: #22c55e;
-    --dk-accent-text: #2dd36a; /* as in the Dark theme above */
+    --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
     --dk-accent-hover: #16a34a;
     --dk-on-accent: #052e16;
     --dk-sel-bg: #052e1f;

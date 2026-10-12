@@ -195,7 +195,8 @@
         "flashFailures": "Flash write failures",
         "setFeatureCount": "Host feature writes",
         "setFeatureLast": "Last host feature write"
-      }
+      },
+      "speakerEncoderFailed": "Speaker off: the dongle didn't have enough memory for the speaker encoder when it started ({{kb}} KB free). Haptics, triggers, the mic and saving still work. Please report this on GitHub (issue #15) with your board and controller."
     },
     "firmware": {
       "installed": "Installed firmware",

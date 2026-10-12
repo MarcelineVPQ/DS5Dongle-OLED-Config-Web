@@ -304,3 +304,16 @@ describe("temporary remap (protocol 1.8)", () => {
     await expect(client.applyRemapTemporary(swapped)).rejects.toBeInstanceOf(CommandError);
   });
 });
+
+describe("core1 health in the audio counters (issue #15)", () => {
+  it("reads the speaker-encoder failure when the firmware reports it", async () => {
+    const c = await new Ds5BridgeClient(new FakeDongle({ speakerEncoderFailed: true })).readAudioCounters();
+    expect(c.core1Flags).toBe(0x03);
+    expect(c.core1FreeHeap).toBe(12 * 1024);
+  });
+  it("older firmware: no health fields, the counters still read", async () => {
+    const c = await new Ds5BridgeClient(new FakeDongle()).readAudioCounters();
+    expect(c.core1Loops).toBe(1234);
+    expect(c.core1Flags).toBeUndefined();
+  });
+});

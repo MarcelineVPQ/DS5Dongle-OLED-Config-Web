@@ -196,7 +196,8 @@
         "flashFailures": "闪存写入失败",
         "setFeatureCount": "主机 Feature 写入",
         "setFeatureLast": "最近一次主机 Feature 写入"
-      }
+      },
+      "speakerEncoderFailed": "扬声器已关闭：接收器启动时内存不足，无法创建扬声器编码器（剩余 {{kb}} KB）。触觉、扳机、麦克风和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和手柄。"
     },
     "firmware": {
       "installed": "已安装固件",

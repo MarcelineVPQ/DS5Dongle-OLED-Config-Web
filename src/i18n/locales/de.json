@@ -196,7 +196,8 @@
         "flashFailures": "Fehlgeschlagene Flash-Schreibvorgänge",
         "setFeatureCount": "Feature-Writes vom Host",
         "setFeatureLast": "Letzter Feature-Write vom Host"
-      }
+      },
+      "speakerEncoderFailed": "Lautsprecher aus: Der Dongle hatte beim Start nicht genug Speicher für den Lautsprecher-Encoder ({{kb}} KB frei). Haptik, Trigger, Mikrofon und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
     },
     "firmware": {
       "installed": "Installierte Firmware",

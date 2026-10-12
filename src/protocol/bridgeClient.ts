@@ -213,7 +213,11 @@ export const AUDIO_COUNTER_NAMES = [
   "setFeatureCount",
   "setFeatureLast",
 ] as const;
-export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number>;
+// Firmware 0.9.4+: core1's health after the counters (issue #15): flags bit0
+// started, bit1 speaker encoder failed (no memory), bit2 mic decoder failed;
+// and the free heap when core1 started. Absent on older firmware.
+export const CORE1_SPEAKER_FAILED = 0x02;
+export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number> & { core1Flags?: number; core1FreeHeap?: number };
 
 const POLL_INTERVAL_MS = 20;
 const COMMAND_TIMEOUT_MS = 3000;
@@ -441,9 +445,14 @@ export class Ds5BridgeClient {
   }
 
   async readAudioCounters(): Promise<AudioCounters> {
-    const view = toView(await this.transport.getReport(REPORT.audioCounters, AUDIO_COUNTER_NAMES.length * 4), AUDIO_COUNTER_NAMES.length * 4);
+    const base = AUDIO_COUNTER_NAMES.length * 4;
+    const view = toView(await this.transport.getReport(REPORT.audioCounters, base + 8), base);
     const out = {} as AudioCounters;
     AUDIO_COUNTER_NAMES.forEach((name, i) => (out[name] = view.getUint32(i * 4, true)));
+    if (view.byteLength >= base + 8) {
+      out.core1Flags = view.getUint32(base, true);
+      out.core1FreeHeap = view.getUint32(base + 4, true);
+    }
     return out;
   }
 }

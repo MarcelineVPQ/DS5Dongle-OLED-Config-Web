@@ -168,13 +168,15 @@ export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean): Record<str
   return {
     "--dk-accent": css(accent),
     // The accent as text (labels, values): readable on the panel whatever
-    // the accent is (a desktop accent can be any color).
-    "--dk-accent-text": css(ensureContrast(accent, panel, 4.5)),
+    // the accent is (a desktop accent can be any color). 4.6, not 4.5: cards
+    // drawn a shade off the panel (dashboard, game pages) otherwise land at
+    // 4.49 (checker, 2026-10-12).
+    "--dk-accent-text": css(ensureContrast(accent, panel, 4.6)),
     "--dk-accent-hover": css(mix(accent, isDark ? [255, 255, 255] : [0, 0, 0], 0.15)),
     "--dk-on-accent": css(onAccent),
     "--dk-sel-bg": css(selBg),
     "--dk-sel-border": css(accent),
-    "--dk-sel-text": css(ensureContrast(accent, selBg, 4.5)),
+    "--dk-sel-text": css(ensureContrast(accent, selBg, 4.6)),
     "--dk-focus": css(accent),
     // The web components (Remap editor) use the shared accent tokens.
     "--accent": css(accent),

@@ -21,6 +21,8 @@ export interface SimulatedDongleOptions {
   // For the app (not the tests): input that moves on its own, live diagnostics,
   // and this firmware version string.
   live?: boolean;
+  // Firmware 0.9.4+ diagnostics: core1 couldn't create the speaker encoder (issue #15).
+  speakerEncoderFailed?: boolean;
   version?: string;
 }
 
@@ -193,8 +195,14 @@ export class SimulatedDongle implements Ds5Transport {
         return out;
       }
       case 0xf5: {
-        const out = new Uint8Array(60);
-        new DataView(out.buffer).setUint32(5 * 4, 1234, true); // core1 loops
+        // 0.9.4+ appends core1 flags and free heap; older firmware stops at 60 bytes.
+        const out = new Uint8Array(this.opts.speakerEncoderFailed ? 68 : 60);
+        const v = new DataView(out.buffer);
+        v.setUint32(5 * 4, 1234, true); // core1 loops
+        if (this.opts.speakerEncoderFailed) {
+          v.setUint32(60, 0x01 | 0x02, true);
+          v.setUint32(64, 12 * 1024, true);
+        }
         return out;
       }
       default:

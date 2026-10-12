@@ -196,7 +196,8 @@
         "flashFailures": "Fallos de escritura en flash",
         "setFeatureCount": "Escrituras de feature del host",
         "setFeatureLast": "Última escritura de feature del host"
-      }
+      },
+      "speakerEncoderFailed": "Altavoz desactivado: el dongle no tuvo memoria suficiente para el codificador del altavoz al arrancar ({{kb}} KB libres). Hápticos, gatillos, micrófono y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
     },
     "firmware": {
       "installed": "Firmware instalado",
