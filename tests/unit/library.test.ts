@@ -89,7 +89,9 @@ function fakeProc(procs: Array<{ pid: number; name: string; ppid: number; uid?: 
   return root;
 }
 
-describe("reading /proc for the running game", () => {
+// A fake Linux /proc (symlinks, uids): the code only runs on Linux, and
+// Windows has neither process.getuid nor the same symlinks.
+describe.skipIf(process.platform === "win32")("reading /proc for the running game", () => {
   const root = fakeProc([
     { pid: 10, name: "systemd", ppid: 0 },
     { pid: 20, name: "steam", ppid: 10 },
