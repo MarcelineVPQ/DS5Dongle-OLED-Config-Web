@@ -24,7 +24,19 @@ const Action = ({ primary, onClick, children }: { primary?: boolean; onClick: ()
 
 // App and firmware update notices, pinned above the page. Wording is literal on
 // purpose: every state says exactly what is happening or what went wrong.
-export default function UpdateBanners({ app, fw, device, onShowFirmware }: { app: UpdateState; fw: FirmwareUpdate; device: string; onShowFirmware: () => void }) {
+export default function UpdateBanners({
+  app,
+  fw,
+  device,
+  onShowFirmware,
+  onFirmwareChanges,
+}: {
+  app: UpdateState;
+  fw: FirmwareUpdate;
+  device: string;
+  onShowFirmware: () => void; // the Pico page, where Update installs it
+  onFirmwareChanges: () => void; // About → Firmware changes
+}) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const dismiss = <Action onClick={fw.dismiss}>{t("notice.dismiss")}</Action>;
@@ -88,7 +100,16 @@ export default function UpdateBanners({ app, fw, device, onShowFirmware }: { app
   let fwNotice: React.ReactNode = null;
   if (s.phase === "idle" && fw.available && fw.latest)
     fwNotice = (
-      <Notice action={<Action onClick={onShowFirmware}>{t("desktop.update.details", "Details")}</Action>}>
+      <Notice
+        action={
+          <>
+            <Action onClick={onFirmwareChanges}>{t("desktop.update.details", "Details")}</Action>
+            <Action primary onClick={onShowFirmware}>
+              {t("desktop.update.fwUpdate")}
+            </Action>
+          </>
+        }
+      >
         <span>{t("desktop.update.fwAvailable", { version: fw.latest.version, device })}</span>
       </Notice>
     );

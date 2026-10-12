@@ -273,7 +273,8 @@
       "askTitle": "Garder l'app à jour ?",
       "askBody": "Les nouvelles versions peuvent se télécharger et s'installer toutes seules, vérifiées comme chaque mise à jour, et démarrer à la prochaine ouverture de l'app. Tu peux changer ça dans les réglages de l'app.",
       "askYes": "Mettre à jour automatiquement",
-      "askNo": "Me demander à chaque fois"
+      "askNo": "Me demander à chaque fois",
+      "fwUpdate": "Mettre à jour"
     },
     "controller": {
       "battery": "Batterie",

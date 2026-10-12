@@ -272,7 +272,8 @@
       "askTitle": "Keep the app up to date?",
       "askBody": "New versions can download and install by themselves, checked like every update, and start the next time you open the app. You can change this in App settings.",
       "askYes": "Update automatically",
-      "askNo": "Ask me each time"
+      "askNo": "Ask me each time",
+      "fwUpdate": "Update"
     },
     "controller": {
       "battery": "Battery",

@@ -273,7 +273,8 @@
       "askTitle": "Die App aktuell halten?",
       "askBody": "Neue Versionen können sich selbst herunterladen und installieren, geprüft wie jedes Update, und starten beim nächsten Öffnen der App. Das kannst du in den App-Einstellungen ändern.",
       "askYes": "Automatisch aktualisieren",
-      "askNo": "Jedes Mal fragen"
+      "askNo": "Jedes Mal fragen",
+      "fwUpdate": "Aktualisieren"
     },
     "controller": {
       "battery": "Akku",

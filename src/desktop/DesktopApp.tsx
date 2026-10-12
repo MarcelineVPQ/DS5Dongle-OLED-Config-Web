@@ -221,7 +221,16 @@ export default function DesktopApp() {
         <NarratorCaption />
         <div className="dk-main">
           <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
-            <UpdateBanners app={appUpdate} fw={fw} device={hardwareName(bridge.identity, t)} onShowFirmware={() => openPanel("dongle")} />
+            <UpdateBanners
+              app={appUpdate}
+              fw={fw}
+              device={hardwareName(bridge.identity, t)}
+              onShowFirmware={() => openPanel("dongle")}
+              onFirmwareChanges={() => {
+                setAboutTab("firmware");
+                setMain("about");
+              }}
+            />
             <AutoUpdateAsk />
             {whatsNew.version && (
               <div className="dk-notice">

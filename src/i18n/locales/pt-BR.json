@@ -273,7 +273,8 @@
       "askTitle": "Manter o app atualizado?",
       "askBody": "Novas versões podem se baixar e instalar sozinhas, verificadas como toda atualização, e abrem na próxima vez que você abrir o app. Você pode mudar isso nas configurações do app.",
       "askYes": "Atualizar automaticamente",
-      "askNo": "Perguntar sempre"
+      "askNo": "Perguntar sempre",
+      "fwUpdate": "Atualizar"
     },
     "controller": {
       "battery": "Bateria",
