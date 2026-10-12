@@ -1199,6 +1199,11 @@ html[data-theme="light"] .live-ctl {
   justify-content: center;
   gap: 6px;
 }
+/* The mute button is clear plastic over the dark center (not body colored):
+   the dark color, a touch lighter, see-through (the art's fill-opacity). */
+.live-ctl [data-part="mute"] .cap {
+  fill: color-mix(in srgb, #fff 22%, var(--ctl-dark)); /* theme-exempt: the controller drawing: its real lights and press tints */
+}
 /* The mute button's light, amber while the mic is muted (a fixed status
    color, like the real controller's). */
 .live-ctl [data-part="mute"].muted .cap {

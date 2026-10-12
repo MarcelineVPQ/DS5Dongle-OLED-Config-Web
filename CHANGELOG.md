@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **The mute button looks like the real one:** clear plastic over the dark center (it was drawn in the body color), lit orange while the mic is muted.
+
 ## [0.9.4] - 2026-10-12
 
 ### Added
