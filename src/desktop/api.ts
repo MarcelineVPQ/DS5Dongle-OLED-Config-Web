@@ -100,6 +100,9 @@ export interface DesktopApi {
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
   setupUsbAccess(): Promise<{ ok: boolean; message: string }>;
+  // Windows: forget Windows' cached USB setup for the dongle's IDs (one UAC
+  // prompt), so it sets up the WinUSB driver again on the next plug-in.
+  repairWindowsUsb(): Promise<{ ok: boolean; message: string }>;
   appVersion: string;
   // App updates.
   checkForUpdates(): Promise<UpdateState>;
@@ -170,6 +173,7 @@ export const IPC = {
   desktopPalette: "desktop:desktop-palette",
   windowVisible: "desktop:window-visible",
   setupUsbAccess: "desktop:setup-usb-access",
+  repairWindowsUsb: "desktop:repair-windows-usb",
   gamesScan: "desktop:games-scan",
   gamesApply: "desktop:games-apply",
   gamesUndo: "desktop:games-undo",

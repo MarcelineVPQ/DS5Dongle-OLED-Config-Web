@@ -225,6 +225,13 @@
       "working": "Esperando la contraseña…",
       "button": "Configurar acceso USB"
     },
+    "windowsUsb": {
+      "hint": "¿Conectado, con el mando encendido, y aun así nunca conecta? Puede que Windows guarde una configuración USB antigua para él.",
+      "seen": "El dongle está conectado, pero Windows no ha instalado su controlador.",
+      "button": "Reparar controlador USB",
+      "working": "Esperando permiso…",
+      "done": "Reparado. Ahora desconecta el dongle y vuelve a conectarlo."
+    },
     "update": {
       "appAvailable": "Hay una actualización de la app {{version}} ({{size}}).",
       "download": "Descargar e instalar",

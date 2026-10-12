@@ -73,6 +73,7 @@ export interface IpcHandlers {
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
   setupUsbAccess: () => Promise<{ ok: boolean; message: string }>;
+  repairWindowsUsb: () => Promise<{ ok: boolean; message: string }>;
   appVersion: () => string;
   checkForUpdates: () => Promise<UpdateState>;
   getUpdateState: () => UpdateState;
@@ -141,6 +142,11 @@ export function registerIpc(h: IpcHandlers): void {
   ipcMain.handle(IPC.setupUsbAccess, (event) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.setupUsbAccess();
+  });
+
+  ipcMain.handle(IPC.repairWindowsUsb, (event) => {
+    if (!trusted(event)) throw new Error("untrusted sender");
+    return h.repairWindowsUsb();
   });
 
   invoke(IPC.gamesScan, h.gamesScan);

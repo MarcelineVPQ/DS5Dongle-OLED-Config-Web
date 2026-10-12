@@ -48,6 +48,12 @@ export interface UseDs5BridgeResult {
   clearError: () => void;
 }
 
+// WebUSB's errors from open() / claimInterface() (DOMException NetworkError
+// or NotFoundError: "Unable to claim interface", "The device was disconnected").
+export function isOpenFailure(cause: unknown): boolean {
+  return cause instanceof DOMException && (cause.name === "NetworkError" || cause.name === "NotFoundError" || /claimInterface|open/.test(cause.message));
+}
+
 export function useDs5Bridge(): UseDs5BridgeResult {
   const { t } = useTranslation();
   const supported = webUsbAvailable();
@@ -109,7 +115,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("idle");
       setError(null);
     } catch (cause) {
-      setError(errorMessage(cause));
+      // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
+      // vanished during Repair USB driver). The setup screen explains that
+      // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
+      if (!(window.desktop?.platform === "win32" && isOpenFailure(cause))) setError(errorMessage(cause));
     } finally {
       setOperation(null);
     }

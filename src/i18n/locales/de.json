@@ -225,6 +225,13 @@
       "working": "Warte auf Passwort…",
       "button": "USB-Zugriff einrichten"
     },
+    "windowsUsb": {
+      "hint": "Eingesteckt, Controller an, und trotzdem keine Verbindung? Windows hat dafür vielleicht noch eine alte USB-Einstellung gespeichert.",
+      "seen": "Der Dongle ist eingesteckt, aber Windows hat seinen Treiber nicht eingerichtet.",
+      "button": "USB-Treiber reparieren",
+      "working": "Warte auf Erlaubnis…",
+      "done": "Repariert. Zieh den Dongle jetzt ab und steck ihn wieder ein."
+    },
     "update": {
       "appAvailable": "App-Update {{version}} ist verfügbar ({{size}}).",
       "download": "Herunterladen und installieren",

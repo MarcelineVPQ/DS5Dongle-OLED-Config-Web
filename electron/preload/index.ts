@@ -20,6 +20,7 @@ const api: DesktopApi = {
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),
+  repairWindowsUsb: () => ipcRenderer.invoke(IPC.repairWindowsUsb),
   appVersion: ipcRenderer.sendSync(IPC.appVersion) as string,
   checkForUpdates: () => ipcRenderer.invoke(IPC.checkForUpdates),
   getUpdateState: () => ipcRenderer.invoke(IPC.getUpdateState),

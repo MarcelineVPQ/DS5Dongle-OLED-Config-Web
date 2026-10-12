@@ -224,6 +224,13 @@
       "working": "Waiting for password…",
       "button": "Set up USB access"
     },
+    "windowsUsb": {
+      "hint": "Plugged in, the controller is on, and it still never connects? Windows may be holding an old USB setting for it.",
+      "seen": "The dongle is plugged in, but Windows hasn't set up its driver.",
+      "button": "Repair USB driver",
+      "working": "Waiting for permission…",
+      "done": "Repaired. Now unplug the dongle and plug it back in."
+    },
     "update": {
       "appAvailable": "App update {{version}} is available ({{size}}).",
       "download": "Download and install",

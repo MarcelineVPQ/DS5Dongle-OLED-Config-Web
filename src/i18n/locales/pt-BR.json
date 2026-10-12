@@ -225,6 +225,13 @@
       "working": "Aguardando a senha…",
       "button": "Configurar acesso USB"
     },
+    "windowsUsb": {
+      "hint": "Conectado, controle ligado, e mesmo assim nunca conecta? O Windows pode estar guardando uma configuração USB antiga para ele.",
+      "seen": "O dongle está conectado, mas o Windows não configurou o driver dele.",
+      "button": "Reparar driver USB",
+      "working": "Aguardando permissão…",
+      "done": "Reparado. Agora desconecte o dongle e conecte de novo."
+    },
     "update": {
       "appAvailable": "A atualização {{version}} do app está disponível ({{size}}).",
       "download": "Baixar e instalar",

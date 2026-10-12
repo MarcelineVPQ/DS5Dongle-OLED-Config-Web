@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-12
+
+### Fixed
+
+- **Windows: the dongle stuck on "Plug in the DS5 Dongle" / "Connecting"** on PCs where a real DualSense was plugged in by USB before. The dongle shares its USB IDs, and Windows had kept "no driver needed" for them. The setup screen now spots a dongle it can't open and offers **Repair USB driver** (one admin prompt): it clears Windows' saved answer for those IDs, and after a replug Windows sets up the driver properly. The raw "claimInterface" error no longer shows on Windows. Tested in a Windows 11 VM: a new user, the repair, and declining the prompt (`tools/windows_vm_test.py`).
+
 ## [0.9.1] - 2026-10-11
 
 ### Added

@@ -225,6 +225,13 @@
       "working": "En attente du mot de passe…",
       "button": "Configurer l'accès USB"
     },
+    "windowsUsb": {
+      "hint": "Branché, manette allumée, et toujours aucune connexion ? Windows garde peut-être un ancien réglage USB pour lui.",
+      "seen": "Le dongle est branché, mais Windows n’a pas installé son pilote.",
+      "button": "Réparer le pilote USB",
+      "working": "En attente d’autorisation…",
+      "done": "Réparé. Débranche maintenant le dongle puis rebranche-le."
+    },
     "update": {
       "appAvailable": "La mise à jour {{version}} de l'app est disponible ({{size}}).",
       "download": "Télécharger et installer",

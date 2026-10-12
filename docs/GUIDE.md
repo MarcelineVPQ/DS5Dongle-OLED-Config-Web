@@ -173,6 +173,7 @@ Open with the ⚙ in the rail.
 | Problem | What to do |
 | --- | --- |
 | The light bar stays **amber** and never connects | Move the dongle to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
+| **Windows:** "The dongle is plugged in, but Windows hasn't set up its driver", or it never connects | Press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. It happens on PCs where a real DualSense was plugged in by USB before (it uses the same USB IDs); do it again if that happens again. |
 | Nothing shows up when the dongle is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
 | "Not connected" | Press **PS** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold **PS + Create**. |
 | Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |

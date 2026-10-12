@@ -12,6 +12,7 @@ import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
 import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
 import UsbAccessSetup from "./UsbAccessSetup";
+import WindowsUsbRepair from "./WindowsUsbRepair";
 
 const POLL_MS = 1000;
 
@@ -107,6 +108,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
       {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
       <UsbAccessSetup compact />
+      <WindowsUsbRepair />
     </Center>
   );
 }

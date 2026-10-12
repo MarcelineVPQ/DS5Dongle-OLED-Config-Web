@@ -119,6 +119,31 @@ describe("trusted page", () => {
   });
 });
 
+describe("privileged Windows USB repair", () => {
+  const source = readFileSync(new URL("../../electron/main/windowsSetup.ts", import.meta.url), "utf8");
+
+  it("runs a fixed script, elevated, through PowerShell by its full path", async () => {
+    const { REPAIR_SCRIPT, launcherScript, encodeCommand } = await import("../../electron/main/windowsSetup");
+    // Only the dongle's own IDs: Windows' cached answers and device entries for 054C:0CE6 / 0DF2.
+    const lines = REPAIR_SCRIPT.split("\n").map((l) => l.trim());
+    expect(lines).toContain("foreach ($id in @('0CE6', '0DF2')) {");
+    expect(REPAIR_SCRIPT).toContain('"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\usbflags\\054C$($id)0100"');
+    expect(REPAIR_SCRIPT).toContain('-like "USB\\VID_054C&PID_$($id)*"');
+    expect(REPAIR_SCRIPT).toContain('& "$env:SystemRoot\\System32\\pnputil.exe" /remove-device');
+    // Nothing else removed or run.
+    expect(REPAIR_SCRIPT.match(/Remove-Item/g)).toHaveLength(1);
+    expect(REPAIR_SCRIPT.match(/pnputil/g)).toHaveLength(1);
+    expect(REPAIR_SCRIPT).not.toMatch(/Invoke-Expression|iex |Start-Process|DownloadString|http/i);
+    const launcher = launcherScript("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", REPAIR_SCRIPT);
+    expect(launcher).toContain(`'-EncodedCommand','${encodeCommand(REPAIR_SCRIPT)}'`);
+    expect(launcher).toContain("-Verb RunAs");
+    expect(Buffer.from(encodeCommand(REPAIR_SCRIPT), "base64").toString("utf16le")).toBe(REPAIR_SCRIPT);
+    expect(source).toMatch(/join\(process\.env\.SystemRoot \?\? "C:\\\\Windows", "System32", "WindowsPowerShell", "v1\.0", "powershell\.exe"\)/);
+    expect(source).toMatch(/execFile\(powershell, \["-NoProfile", "-NonInteractive", "-EncodedCommand"/);
+    expect(source).not.toMatch(/\bexec\(|shell: true/);
+  });
+});
+
 describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 

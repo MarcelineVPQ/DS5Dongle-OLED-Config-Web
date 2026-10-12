@@ -225,6 +225,13 @@
       "working": "等待输入密码…",
       "button": "设置 USB 访问"
     },
+    "windowsUsb": {
+      "hint": "已插好、手柄也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
+      "seen": "接收器已插入，但 Windows 没有为它安装驱动。",
+      "button": "修复 USB 驱动",
+      "working": "正在等待授权…",
+      "done": "已修复。请拔下接收器，然后重新插入。"
+    },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
       "download": "下载并安装",

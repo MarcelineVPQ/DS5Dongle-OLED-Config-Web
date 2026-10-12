@@ -15,6 +15,7 @@ import { hasSchemeHandler } from "./games/schemeHandler";
 import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
+import { repairWindowsUsb } from "./windowsSetup";
 import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
@@ -224,6 +225,7 @@ function start(): void {
     setSetting: updateSetting,
     usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
     setupUsbAccess: () => installUsbRule(resourcesDir),
+    repairWindowsUsb,
     appVersion: () => app.getVersion(),
     checkForUpdates: () => updater.check(),
     getUpdateState: () => updater.getState(),

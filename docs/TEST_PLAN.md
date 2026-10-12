@@ -56,7 +56,7 @@ On the release firmware with a paired DualSense:
 8. Dongle → Advanced: counters move while audio plays; drops stay 0 (`scripts/audio_diag.py 10` agrees).
 9. Dongle → Restart and Enter BOOTSEL both return/mount as described; Check now spins, then reports the result.
 10. First-time setup: a Pico in BOOTSEL is found, the bundled firmware installs with one click, pairing brings the dongle up.
-11. Linux: the dongle connects with no driver install. Windows and macOS: untested until someone tries them; they're labelled so.
+11. Linux: the dongle connects with no driver install. **Windows:** `tools/windows_vm_test.py --exe '<path in the VM>'` in the Win11 VM (libvirt `win11-test` with the guest agent; the dongle plugged into this PC with a controller on): a new user connects; with Windows' cached "no descriptor" answer the setup screen offers **Repair USB driver**, declining changes nothing, accepting + replug connects. Check its screenshots in `tmp/windows-vm-test/`. macOS: untested.
 12. **Layout in every language:** with the dongle connected, `node tools/check_layout.mjs` opens every screen and panel in all 7 languages at 1100×900 and 900×650 and must report nothing clipped or spilling. (`tests/unit/i18nFit.test.ts` guards the tile words in CI; this covers the rest.)
 13. **Narrator:** connect, slot switch and a line over game audio play cleanly on the controller speaker.
 14. **Updater** (packaged builds, loopback feed with a test key): refuses older versions, bad checksums and unsigned feeds; installs, restarts into the new version (task #29's procedure).

@@ -832,6 +832,15 @@ html[data-theme="dark"] .dk {
 .dk-setup .dk-progress {
   width: 260px;
 }
+/* Windows: Repair USB driver (WindowsUsbRepair.tsx). */
+.dk-setup-repair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  text-align: center;
+}
 
 /* ---- Live controller (src/desktop/live) ----
    The art's colors come from the theme: body and caps from the surface
