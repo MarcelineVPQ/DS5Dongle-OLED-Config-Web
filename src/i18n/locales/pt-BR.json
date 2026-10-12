@@ -1155,7 +1155,27 @@
       "yes": "sim",
       "no": "não",
       "minutes": "{{n}} min",
-      "mic": "Quadros de áudio do microfone"
+      "mic": "Quadros de áudio do microfone",
+      "timing": {
+        "title": "Tempos",
+        "hint": "Quanto tempo cada parte do firmware leva: a média e o pior caso desde a redefinição. O pior caso mostra o jitter; o quadro do alto-falante no core1 precisa ficar bem abaixo de 10 ms por quadro, senão o áudio falha.",
+        "usTimer": "Medido com o temporizador de microssegundos (o contador de ciclos da CPU não está disponível), então etapas curtas são arredondadas.",
+        "average": "Média",
+        "worst": "Pior caso",
+        "trend": "Média ao longo do tempo",
+        "sinceReset": "Desde a redefinição",
+        "reset": "Redefinir",
+        "stages": {
+          "loop": "Loop principal (passagem inteira)",
+          "bluetooth": "Bluetooth",
+          "usb": "USB",
+          "audio": "Áudio",
+          "input": "Entradas e comandos",
+          "oled": "OLED",
+          "speaker": "Quadro do alto-falante (core1)",
+          "mic": "Quadro do microfone (core1)"
+        }
+      }
     },
     "hdr": {
       "label": "Iluminação HDR (experimental)",

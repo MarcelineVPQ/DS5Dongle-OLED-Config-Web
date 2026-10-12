@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeIdentity } from "../../src/protocol/bridgeClient";
+import { decodeCpu, decodeIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
 import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, validateConfig } from "../../src/protocol/config";
 import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
 
@@ -199,5 +199,82 @@ describe("controller model and colorway (protocol 1.2)", () => {
     expect(colorway("QQ")).toBeNull();
     b.set([0, 0], 27);
     expect(decodeIdentity(b).colorwayCode).toBeNull();
+  });
+});
+
+describe("CPU report (0xFC) and its timings (protocol 1.11)", () => {
+  // The 11 bytes every firmware sends: 320 MHz set, 319.9 MHz measured, vreg 13, temp raw 844.
+  function cpuBytes(length: number): Uint8Array {
+    const b = new Uint8Array(length);
+    const v = new DataView(b.buffer);
+    v.setUint32(0, 320000, true);
+    v.setUint32(4, 319900, true);
+    b[8] = 13;
+    v.setUint16(9, 844, true);
+    return b;
+  }
+  function withTimings(flags = 1, stages: [number, number][] = TIMING_STAGES.map((_, i) => [1000 * (i + 1), 10 * (i + 1)]), since = 125): Uint8Array {
+    const b = cpuBytes(63);
+    const v = new DataView(b.buffer);
+    b[11] = flags;
+    b[12] = stages.length;
+    v.setUint16(13, since, true);
+    stages.forEach(([avg, max], i) => {
+      v.setUint32(15 + 6 * i, avg, true);
+      v.setUint16(19 + 6 * i, max, true);
+    });
+    return b;
+  }
+
+  it("reads the old 11-byte reply with no timings", () => {
+    const c = decodeCpu(cpuBytes(11));
+    expect(c).toEqual({ setKhz: 320000, measuredKhz: 319900, vregCode: 13, tempRaw: 844, timings: null });
+  });
+
+  it("refuses a reply shorter than 11 bytes", () => {
+    expect(() => decodeCpu(cpuBytes(11).subarray(0, 10))).toThrow(/Short report/);
+  });
+
+  it("reads all eight stages of the full 63-byte reply", () => {
+    const c = decodeCpu(withTimings());
+    expect(c.tempRaw).toBe(844);
+    expect(c.timings?.timerFallback).toBe(false);
+    expect(c.timings?.sinceResetSeconds).toBe(125);
+    expect(c.timings?.stages).toHaveLength(8);
+    expect(c.timings?.stages[0]).toEqual({ avgNs: 1000, maxUs: 10 });
+    expect(c.timings?.stages[6]).toEqual({ avgNs: 7000, maxUs: 70 });
+    expect(c.timings?.stages[7]).toEqual({ avgNs: 8000, maxUs: 80 });
+  });
+
+  it("reads the microsecond-timer fallback flag (bit 7 of the layout byte)", () => {
+    const c = decodeCpu(withTimings(0x81));
+    expect(c.timings?.timerFallback).toBe(true);
+    expect(c.timings?.stages).toHaveLength(8);
+  });
+
+  it("keeps saturated values as the firmware sends them", () => {
+    const c = decodeCpu(withTimings(1, [[0xffffffff, TIMING_MAX_SATURATED], ...TIMING_STAGES.slice(1).map((): [number, number] => [1, 1])], 0xffff));
+    expect(c.timings?.sinceResetSeconds).toBe(65535);
+    expect(c.timings?.stages[0]).toEqual({ avgNs: 4294967295, maxUs: 65535 });
+  });
+
+  it("reads all-zero stages (nothing since the reset) and a zero stage count", () => {
+    const zero = decodeCpu(
+      withTimings(
+        1,
+        TIMING_STAGES.map(() => [0, 0]),
+        0,
+      ),
+    );
+    expect(zero.timings?.stages.every((s) => s.avgNs === 0 && s.maxUs === 0)).toBe(true);
+    expect(zero.timings?.sinceResetSeconds).toBe(0);
+    const none = decodeCpu(withTimings(1, []));
+    expect(none.timings?.stages).toEqual([]);
+  });
+
+  it("ignores an unknown layout version and never reads past the reply", () => {
+    expect(decodeCpu(withTimings(2)).timings).toBeNull();
+    const short = withTimings().subarray(0, 15 + 6 * 3); // claims 8 stages, carries 3
+    expect(decodeCpu(short).timings?.stages).toHaveLength(3);
   });
 });

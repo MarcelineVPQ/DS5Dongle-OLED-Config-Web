@@ -1155,7 +1155,27 @@
       "yes": "sí",
       "no": "no",
       "minutes": "{{n}} min",
-      "mic": "Tramas de audio del micrófono"
+      "mic": "Tramas de audio del micrófono",
+      "timing": {
+        "title": "Tiempos",
+        "hint": "Cuánto tarda cada parte del firmware: el promedio y el peor caso desde el reinicio. El peor caso muestra el jitter; la trama del altavoz del core1 debe quedar muy por debajo de 10 ms por trama, o el audio se corta.",
+        "usTimer": "Medido con el temporizador de microsegundos (el contador de ciclos de la CPU no está disponible), así que las etapas cortas se redondean.",
+        "average": "Promedio",
+        "worst": "Peor caso",
+        "trend": "Promedio en el tiempo",
+        "sinceReset": "Desde el reinicio",
+        "reset": "Reiniciar",
+        "stages": {
+          "loop": "Bucle principal (pasada completa)",
+          "bluetooth": "Bluetooth",
+          "usb": "USB",
+          "audio": "Audio",
+          "input": "Entradas y comandos",
+          "oled": "OLED",
+          "speaker": "Trama del altavoz (core1)",
+          "mic": "Trama del micrófono (core1)"
+        }
+      }
     },
     "hdr": {
       "label": "Iluminación HDR (experimental)",

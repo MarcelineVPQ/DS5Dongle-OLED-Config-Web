@@ -795,7 +795,7 @@ function SpeakerTest() {
         osc.frequency.value = freq;
         const at = now + i * 0.22;
         gain.gain.setValueAtTime(0, at);
-        gain.gain.linearRampToValueAtTime(0.35, at + 0.02);
+        gain.gain.linearRampToValueAtTime(0.8, at + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
         osc.connect(gain).connect(ctx.destination);
         osc.start(at);
