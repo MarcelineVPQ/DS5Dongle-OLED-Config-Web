@@ -8,7 +8,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
-- **Games library on Windows:** your Steam games, their pages and per-game controller profiles that switch in while a game runs (Steam found from the registry or Program Files; the running game is recognized by its program in the game's folder). Proton and the Linux system checks stay Linux-only. GOG Galaxy and Epic are planned.
+- **Steam's categories in the library:** soundtracks, software, tools, videos, demos and DLC are labeled as Steam labels them, and a **Show** menu hides any category (everything shows by default). Soundtracks and software no longer get game fixes.
+- **All games as covers** on the Games Home page (like Steam's "My games"), following the list's search, filter and sort. Cover tiles show the store they come from and what the game supports (adaptive triggers, HD haptics, a profile, needs setup) as marks over the art, each with a tooltip.
+- **Launcher icons** in the Games pages: Steam, Heroic, Lutris, GOG and Epic marks (Simple Icons, CC0) next to their names, in the theme's text color.
+- **Games library on Windows:** your Steam games, their pages and per-game controller profiles that switch in while a game runs (Steam found from the registry or Program Files; the running game is recognized by its program in the game's folder). Also **GOG Galaxy and Epic** games on Windows (from GOG Galaxy's registry entries and Epic's install manifests). Proton and the Linux system checks stay Linux-only.
 - **Dev builds say exactly what they are:** `tools/dev.sh` builds and runs the dev copy (own settings, dev tools, DevTools port) and stamps a Git build id next to the version ("0.9.3 · dev +3.a1b2c3d"). Firmware dev builds (`tools/dev_firmware.sh` in the firmware repo) report `v0.9.3-oled-edition+3.a1b2c3d` instead of a stale "dev" version.
 - **Simulated dongle** (dev builds, Developer card): every page works without hardware, with moving input, diagnostics and an OLED screen; the tests' fake dongle and the simulation are one implementation.
 

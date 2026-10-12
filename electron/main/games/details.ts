@@ -7,6 +7,7 @@
 // Art paths stay in the main process: the page only learns which kinds exist
 // and loads them through the ds5-art:// protocol by game key (art.ts).
 import { createHash } from "node:crypto";
+import { storeKey, type StoreGame } from "./windowsStores";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { arr, obj, readJson } from "./files";
@@ -212,8 +213,10 @@ function lutrisDetails(install: LutrisInstall, home: string, out: Map<string, Ga
   }
 }
 
-export function gameDetails(home: string): Map<string, GameDetails> {
+export function gameDetails(home: string, stores: StoreGame[] = []): Map<string, GameDetails> {
   const out = new Map<string, GameDetails>();
+  // GOG Galaxy / Epic on Windows: the install folder (no local art or play time).
+  for (const g of stores) out.set(storeKey(g), info({ installDir: g.installDir }));
   for (const s of findSteamInstalls(home)) steamDetails(s, out);
   for (const h of findHeroicInstalls(home)) heroicDetails(h, out);
   for (const l of findLutrisInstalls(home)) lutrisDetails(l, home, out);

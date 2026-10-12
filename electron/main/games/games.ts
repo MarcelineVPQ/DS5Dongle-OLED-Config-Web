@@ -15,6 +15,8 @@ import { Backups, writeFileAtomic, type Owner } from "./backup";
 import { findHeroicInstalls, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
 import { findLutrisInstalls, listLutrisGames, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
 import { hasBuild } from "./proton";
+import { steamAppTypes } from "./appinfo";
+import { storeKey, type WindowsStores } from "./windowsStores";
 import { compatMapping, findSteamInstalls, installedTools, launchOptions, listSteamGames, readVdfFile, setCompatTool, steamInputState, valveProtons, type SteamInstall } from "./steam";
 import { findGlobalSdlVars, findProAudioRules, hidrawAccess, isProAudio, sdlVarForcing, SDL_FORCING_VARS, type AudioCard } from "./system";
 
@@ -44,6 +46,7 @@ export interface ScanDeps {
   latestSize: number | null; // its download size in bytes
   running: Set<LauncherId>;
   audioCards: AudioCard[];
+  windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
 }
 
 export interface Scan {
@@ -115,8 +118,17 @@ export function scan(deps: ScanDeps): Scan {
       fixes: lfixes,
     });
 
-    for (const g of listSteamGames(install)) {
-      const support = dualSenseSupport(g.name);
+    const steamGames = listSteamGames(install);
+    const kinds = steamAppTypes(
+      install.root,
+      steamGames.map((g) => g.appid),
+    );
+    for (const g of steamGames) {
+      const kind = kinds.get(g.appid);
+      // Soundtracks, videos and software don't run as games: no controller
+      // support to show and no game fixes to suggest.
+      const playable = !kind || kind === "game" || kind === "demo";
+      const support = playable ? dualSenseSupport(g.name) : "unknown";
       const override = mapping ? (getString(mapping, g.appid, "name") ?? null) : null;
       const effective = override ?? defaultRunner;
       const input = steamInputState(local, g.appid);
@@ -183,7 +195,8 @@ export function scan(deps: ScanDeps): Scan {
         steamInput: input,
         envFlags,
         support,
-        fixes: gfixes,
+        fixes: playable ? gfixes : [],
+        ...(kind && kind !== "game" ? { kind } : {}),
       });
     }
   }
@@ -316,6 +329,29 @@ export function scan(deps: ScanDeps): Scan {
         envFlags: [],
         support,
         fixes: gfixes,
+      });
+    }
+  }
+
+  // ---- GOG Galaxy and Epic (Windows) ----
+  for (const id of ["gog", "epic"] as const) {
+    const store = deps.windowsStores?.[id];
+    if (!store) continue;
+    launchers.push({ id, found: store.found, flatpak: false, running: false, protonInstalled: false, defaultRunner: null, defaultIsOurs: false, fixes: [] });
+    for (const g of store.games) {
+      games.push({
+        key: storeKey(g),
+        launcher: id,
+        store: id,
+        id: g.id,
+        title: g.title,
+        runner: null,
+        runnerMissing: false,
+        usesOurProton: false,
+        envFlags: [],
+        support: g.kind ? "unknown" : dualSenseSupport(g.title),
+        fixes: [],
+        ...(g.kind ? { kind: g.kind } : {}),
       });
     }
   }

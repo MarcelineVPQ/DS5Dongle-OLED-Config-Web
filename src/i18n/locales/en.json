@@ -404,9 +404,9 @@
       "stopHint": "Turns game setup off; it won't read launcher settings again until you allow it.",
       "closeFailed": "{{launcher}} couldn't be asked to quit. Quit it yourself, then press Rescan.",
       "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away.",
-      "scanningWindows": "Checking Steam…",
-      "consentIntroWindows": "Game setup lists your Steam games and checks Steam for settings that stop adaptive triggers and haptics from reaching them. To do that it reads, on this computer only:",
-      "consentLaunchersWindows": "Steam's settings and installed-game list",
+      "scanningWindows": "Checking Steam, GOG Galaxy and Epic…",
+      "consentIntroWindows": "Game setup lists your Steam, GOG Galaxy and Epic games and checks Steam for settings that stop adaptive triggers and haptics from reaching them. To do that it reads, on this computer only:",
+      "consentLaunchersWindows": "the settings and installed-game lists of Steam, GOG Galaxy and Epic",
       "consentRunningWindows": "which programs are running, to notice when one of your games starts (for its controller profile)"
     },
     "setup": {
@@ -721,7 +721,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "Recommended",
       "protonNotInstalled": "DualSense Proton (not installed)",
@@ -816,7 +818,29 @@
         "prefixFolder": "Proton prefix",
         "prefixFolderHint": "Open the game's Windows (Proton/Wine) folder: settings and saves often live here",
         "failed": "Couldn't open that. Is the launcher installed?"
-      }
+      },
+      "gridFiltered": "filtered like the list",
+      "kind": {
+        "demo": "Demo",
+        "dlc": "DLC",
+        "music": "Soundtrack",
+        "tool": "Tool",
+        "application": "Software",
+        "video": "Video",
+        "game": "Game"
+      },
+      "kinds": {
+        "game": "Games",
+        "demo": "Demos",
+        "dlc": "DLC",
+        "music": "Soundtracks",
+        "tool": "Tools",
+        "application": "Software",
+        "video": "Videos"
+      },
+      "show": "Show",
+      "showHint": "Choose what the library shows: Steam's categories (games, demos, soundtracks, software, videos)",
+      "hiddenCount": "{{count}} hidden"
     },
     "dongleConsole": {
       "title": "{{device}} console",
@@ -916,7 +940,7 @@
     },
     "dev": {
       "title": "Developer",
-      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to the dongle. Ctrl+Shift+D hides this card.",
+      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to the dongle. Ctrl+Shift+D hides this card. Shown on the Development channel.",
       "model": "Model",
       "colorway": "Colorway",
       "real": "The real one",

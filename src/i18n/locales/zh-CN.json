@@ -402,9 +402,9 @@
       "stopHint": "关闭游戏设置；在你再次允许之前，不会再读取启动器设置。",
       "closeFailed": "无法请求 {{launcher}} 退出。请手动退出，然后点击“重新检查”。",
       "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。",
-      "scanningWindows": "正在检查 Steam…",
-      "consentIntroWindows": "游戏设置会列出你的 Steam 游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
-      "consentLaunchersWindows": "Steam 的设置和已安装游戏列表",
+      "scanningWindows": "正在检查 Steam、GOG Galaxy 和 Epic…",
+      "consentIntroWindows": "游戏设置会列出你在 Steam、GOG Galaxy 和 Epic 的游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
+      "consentLaunchersWindows": "Steam、GOG Galaxy 和 Epic 的设置和已安装游戏列表",
       "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的手柄配置）"
     },
     "setup": {
@@ -717,7 +717,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "推荐",
       "protonNotInstalled": "DualSense Proton(未安装)",
@@ -811,7 +813,29 @@
         "prefixFolder": "Proton 前缀",
         "prefixFolderHint": "打开游戏的 Windows（Proton/Wine）文件夹：设置和存档通常在这里",
         "failed": "无法打开。启动器已安装吗？"
-      }
+      },
+      "gridFiltered": "与列表相同的筛选",
+      "kind": {
+        "demo": "试玩版",
+        "dlc": "DLC",
+        "music": "原声音乐",
+        "tool": "工具",
+        "application": "软件",
+        "video": "视频",
+        "game": "游戏"
+      },
+      "kinds": {
+        "game": "游戏",
+        "demo": "试玩版",
+        "dlc": "DLC",
+        "music": "原声音乐",
+        "tool": "工具",
+        "application": "软件",
+        "video": "视频"
+      },
+      "show": "显示",
+      "showHint": "选择库中显示的内容：Steam 的分类（游戏、试玩版、原声音乐、软件、视频）",
+      "hiddenCount": "已隐藏 {{count}} 类"
     },
     "dongleConsole": {
       "title": "{{device}} 控制台",
@@ -911,7 +935,7 @@
     },
     "dev": {
       "title": "开发者",
-      "hint": "预览其他手柄型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。",
+      "hint": "预览其他手柄型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
       "model": "型号",
       "colorway": "配色",
       "real": "真实手柄",

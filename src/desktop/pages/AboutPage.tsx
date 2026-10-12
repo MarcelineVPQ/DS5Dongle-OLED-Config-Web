@@ -29,9 +29,10 @@ Thanks to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes
 | Liquid glass technique | The displacement-map refraction follows Shu Ding's liquid-glass (MIT, [github.com/shuding/liquid-glass](https://github.com/shuding/liquid-glass)), with ideas from Max Rovensky's liquid-glass-react (MIT, [github.com/rdev/liquid-glass-react](https://github.com/rdev/liquid-glass-react)); our own implementation |
 | Fonts | Space Grotesk, DM Sans, JetBrains Mono, SIL Open Font License |
 | Icons | Lucide, ISC |
+| Launcher marks | Steam, Heroic, Lutris, GOG and Epic marks from Simple Icons, CC0. [simpleicons.org](https://simpleicons.org) |
 | Runtime | Electron, React, i18next, zod, react-markdown (MIT) |
 
-DualSense and PlayStation are trademarks of Sony Interactive Entertainment. This project is not affiliated with Sony.
+DualSense and PlayStation are trademarks of Sony Interactive Entertainment. This project is not affiliated with Sony. Steam, Heroic, Lutris, GOG and Epic Games are trademarks of their owners, shown only to name the launcher; no affiliation.
 `;
 
 const STUDIO_LINKS = [

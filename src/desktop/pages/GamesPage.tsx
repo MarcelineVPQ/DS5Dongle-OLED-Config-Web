@@ -9,6 +9,7 @@
 //   -> apply (backed up first) -> Undo.
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LauncherIcon } from "../library/LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { errorText } from "../../errorText";
 import { readPref, writePref } from "../storage";
@@ -22,7 +23,7 @@ import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, Fix, GamesReport, LauncherId, Msg } from "../games/types";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
-const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris" };
+const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
 type Step = "pick" | "review" | "done";
 
 // Changes the user unticked stay unticked across rescans and visits until
@@ -295,9 +296,12 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
           {found.length === 0 && <span className="dk-hint">{t("desktop.games.noLaunchers", "No Steam, Heroic or Lutris installation found.")}</span>}
           {found.map((l) => (
             <span key={`${l.id}${l.flatpak}`} className={`dk-chip${l.defaultIsOurs ? " ok" : ""}`} title={l.defaultRunner ?? ""}>
-              <span className="dot" />
+              {protonApplies() && <span className="dot" />}
+              <LauncherIcon id={l.id} />
               {LAUNCHER_NAME[l.id]}
-              {l.flatpak ? " (Flatpak)" : ""} · {l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}
+              {l.flatpak ? " (Flatpak)" : ""}
+              {/* Windows: whether a launcher runs isn't checked (only needed for Linux fixes). */}
+              {protonApplies() && ` · ${l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}`}
               {l.defaultIsOurs ? ` · ${t("desktop.games.ourDefault", "our Proton is the default")}` : ""}
             </span>
           ))}
@@ -469,7 +473,10 @@ function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string
     <div className="dk-fixes">
       {groups.map(({ g, items }) => (
         <div key={g}>
-          <h3>{g === "system" ? t("desktop.games.systemTitle", "This computer") : LAUNCHER_NAME[g]}</h3>
+          <h3 className="launcher-name">
+            {g !== "system" && <LauncherIcon id={g} />}
+            {g === "system" ? t("desktop.games.systemTitle", "This computer") : LAUNCHER_NAME[g]}
+          </h3>
           {items.map((f) => (
             <label key={f.id} className="dk-fix">
               <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />

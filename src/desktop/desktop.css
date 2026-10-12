@@ -2467,11 +2467,68 @@ html[data-theme="light"] .live-ctl {
 .lib-tile:focus-visible {
   border-color: var(--dk-sel-border);
 }
-.lib-tile img {
+.lib-tile-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--dk-radius) var(--dk-radius) 0 0;
+}
+.lib-tile-art img {
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  height: 100%;
   object-fit: cover;
+}
+/* No artwork: the title on the panel, like Steam's blank covers. */
+.lib-tile-noart {
+  display: grid;
+  height: 100%;
+  padding: 10px;
+  place-items: center;
+  background: linear-gradient(160deg, var(--bg-inset), var(--bg-panel));
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+/* Marks over the art: dark glass so they read on any cover. */
+.lib-tile-marks {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lib-tile-mark,
+.lib-tile-store {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border-radius: 5px;
+  background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
+  color: #fff; /* theme-exempt: overlay on game art */
+  backdrop-filter: blur(4px);
+}
+.lib-tile-mark.warn {
+  color: #ffc24a; /* theme-exempt: overlay on game art (warning glyph also differs) */
+}
+.lib-tile-store {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+}
+/* Home: every game as a cover grid (follows the list's search, filter, sort). */
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .lib-tile-title {
   display: block;
@@ -3299,4 +3356,71 @@ html[data-cards-translucent] .dash-card {
   z-index: 2;
   pointer-events: none;
   dynamic-range-limit: no-limit;
+}
+
+/* Launcher / store marks (LauncherIcon): text color, next to the name. */
+.launcher-icon {
+  flex: none;
+  vertical-align: -2px;
+}
+.launcher-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dk-chip .launcher-icon {
+  margin-right: 4px;
+}
+
+/* Steam's categories: a label on non-game items, and the Show menu. */
+.lib-kind {
+  flex: none;
+  padding: 0 5px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+}
+.lib-tile-kind {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
+  color: #fff; /* theme-exempt: overlay on game art */
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.lib-show {
+  position: relative;
+}
+.lib-show summary {
+  height: 24px;
+  list-style: none;
+  font-size: var(--dk-small);
+}
+.lib-show summary::-webkit-details-marker {
+  display: none;
+}
+.lib-show-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  display: grid;
+  min-width: 190px;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-1);
+}
+.lib-show-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--dk-small);
+  white-space: nowrap;
 }

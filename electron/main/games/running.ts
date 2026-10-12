@@ -14,6 +14,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, readlinkSync } from "node:fs";
 import { join } from "node:path";
+import type { LauncherId } from "../../../src/desktop/games/types";
 
 export interface ProcView {
   pid: number;
@@ -25,7 +26,7 @@ export interface ProcView {
 
 export interface RunningCandidate {
   key: string;
-  launcher: "steam" | "heroic" | "lutris";
+  launcher: LauncherId;
   id: string; // Steam appid, Heroic app name, Lutris config id
   installDir?: string;
 }

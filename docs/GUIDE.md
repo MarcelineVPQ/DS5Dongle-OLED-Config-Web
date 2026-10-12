@@ -141,7 +141,7 @@ In the panel on the right:
 
 ![The Games library](screenshots/guide-games.png)
 
-The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam** games for now (GOG Galaxy and Epic are planned); Proton and the system checks are Linux-only, so they don't appear there.
+The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there.
 
 - **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games.
 - **A game's page:**

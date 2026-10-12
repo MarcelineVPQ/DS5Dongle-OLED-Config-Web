@@ -3,6 +3,7 @@
 // game's controller profile comes first: what this game changes on the dongle.
 // Community reviews and shared configs have their frames reserved (phase 2).
 import { useEffect, useRef, useState } from "react";
+import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
@@ -349,7 +350,10 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
     <section className="dk-card" id="gp-compat">
       <h2>{t("desktop.library.section.compat")}</h2>
       <Row label={t("desktop.library.store")}>
-        <span>{t(`desktop.library.storeName.${game.store}`)}</span>
+        <span className="launcher-name">
+          <LauncherIcon id={game.store} />
+          {t(`desktop.library.storeName.${game.store}`)}
+        </span>
       </Row>
       <Row label={t("desktop.library.runsWith")} invalid={game.runnerMissing} stack>
         <span className="dk-mono" title={game.runner ?? undefined}>
@@ -519,7 +523,10 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
       <dl className="live-data-rows">
         <div>
           <dt>{t("desktop.library.launcher")}</dt>
-          <dd>{t(`desktop.library.launcherName.${game.launcher}`)}</dd>
+          <dd className="launcher-name">
+            <LauncherIcon id={game.launcher} />
+            {t(`desktop.library.launcherName.${game.launcher}`)}
+          </dd>
         </div>
         <div>
           <dt>{t("desktop.library.id")}</dt>

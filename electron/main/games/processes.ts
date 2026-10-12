@@ -21,6 +21,8 @@ function matches(launcher: LauncherId, p: Proc): boolean {
       return p.comm === "heroic" || /[/]heroic$/i.test(p.args[0] ?? "");
     case "lutris":
       return p.comm === "lutris" || (/python/.test(p.comm) && p.args.some((a) => /(^|\/)lutris$/.test(a)));
+    default:
+      return false; // GOG Galaxy / Epic: Windows only, no /proc
   }
 }
 

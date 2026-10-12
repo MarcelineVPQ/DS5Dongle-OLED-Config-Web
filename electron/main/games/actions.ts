@@ -22,6 +22,9 @@ export function actionUrl(game: Pick<GameEntry, "launcher" | "store" | "id">, ac
     const runner = HEROIC_RUNNER[game.store];
     return runner ? `heroic://launch?appName=${id}&runner=${runner}` : null;
   }
+  // GOG Galaxy: its game page (it has no plain launch link); Epic: launch.
+  if (game.launcher === "gog" && /^\d+$/.test(game.id)) return action === "libraryPage" ? `goggalaxy://openGameView/${id}` : null;
+  if (game.launcher === "epic" && /^[\w.-]+$/.test(game.id)) return action === "play" ? `com.epicgames.launcher://apps/${id}?action=launch&silent=true` : null;
   if (game.launcher === "lutris" && action === "play" && lutrisSlug && /^[\w.-]+$/.test(lutrisSlug)) return `lutris:rungame/${lutrisSlug}`;
   return null;
 }

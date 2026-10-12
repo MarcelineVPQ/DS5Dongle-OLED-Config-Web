@@ -405,9 +405,9 @@
       "stopHint": "Desactiva la configuración de juegos; no volverá a leer los ajustes de los lanzadores hasta que lo permitas.",
       "closeFailed": "No se pudo pedir a {{launcher}} que se cierre. Ciérralo tú y pulsa Volver a revisar.",
       "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios.",
-      "scanningWindows": "Comprobando Steam…",
-      "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam y busca en Steam ajustes que impiden que los gatillos adaptativos y los hápticos lleguen a ellos. Para ello lee, solo en este equipo:",
-      "consentLaunchersWindows": "los ajustes de Steam y su lista de juegos instalados",
+      "scanningWindows": "Comprobando Steam, GOG Galaxy y Epic…",
+      "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam, GOG Galaxy y Epic y busca en Steam ajustes que impiden que los gatillos adaptativos y los hápticos lleguen a ellos. Para ello lee, solo en este equipo:",
+      "consentLaunchersWindows": "los ajustes y las listas de juegos instalados de Steam, GOG Galaxy y Epic",
       "consentRunningWindows": "qué programas se están ejecutando, para notar cuándo empieza uno de tus juegos (para su perfil de mando)"
     },
     "setup": {
@@ -722,7 +722,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "Recomendado",
       "protonNotInstalled": "Proton para DualSense (sin instalar)",
@@ -817,7 +819,29 @@
         "prefixFolder": "Prefijo de Proton",
         "prefixFolderHint": "Abrir la carpeta de Windows (Proton/Wine) del juego: ajustes y partidas guardadas suelen estar aquí",
         "failed": "No se pudo abrir. ¿Está instalado el lanzador?"
-      }
+      },
+      "gridFiltered": "filtrados como la lista",
+      "kind": {
+        "demo": "Demo",
+        "dlc": "DLC",
+        "music": "Banda sonora",
+        "tool": "Herramienta",
+        "application": "Software",
+        "video": "Vídeo",
+        "game": "Juego"
+      },
+      "kinds": {
+        "game": "Juegos",
+        "demo": "Demos",
+        "dlc": "DLC",
+        "music": "Bandas sonoras",
+        "tool": "Herramientas",
+        "application": "Software",
+        "video": "Vídeos"
+      },
+      "show": "Mostrar",
+      "showHint": "Elige qué muestra la biblioteca: las categorías de Steam (juegos, demos, bandas sonoras, software, vídeos)",
+      "hiddenCount": "{{count}} ocultas"
     },
     "dongleConsole": {
       "title": "Consola: {{device}}",
@@ -917,7 +941,7 @@
     },
     "dev": {
       "title": "Desarrollador",
-      "hint": "Previsualiza otro modelo y color de mando para comprobar los colores de la app. Solo cambia lo que se muestra; no se envía nada al dongle. Ctrl+Mayús+D oculta esta tarjeta.",
+      "hint": "Previsualiza otro modelo y color de mando para comprobar los colores de la app. Solo cambia lo que se muestra; no se envía nada al dongle. Ctrl+Mayús+D oculta esta tarjeta. Se muestra en el canal de desarrollo.",
       "model": "Modelo",
       "colorway": "Color",
       "real": "El real",

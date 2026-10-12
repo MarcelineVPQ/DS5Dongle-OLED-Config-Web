@@ -41,7 +41,7 @@ const MsgSchema: z.ZodType<Msg> = z.lazy(() =>
   }),
 );
 
-const Owner = z.enum(["steam", "heroic", "lutris", "system"]);
+const Owner = z.enum(["steam", "heroic", "lutris", "gog", "epic", "system"]);
 export type Owner = z.infer<typeof Owner>;
 
 const ManifestSchema = z.object({

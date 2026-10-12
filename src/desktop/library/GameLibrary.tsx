@@ -3,19 +3,40 @@
 // setup and fixes, the old Games page) or one game's page on the right.
 // Home stays mounted while a game is open, so switching back doesn't rescan.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { usePref } from "../storage";
+import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
+import { readPref, usePref, writePref } from "../storage";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import type { GameEntry, GameInfo, GamesReport } from "../games/types";
+import { APP_KINDS, type AppKind, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
 import { artUrl } from "../games/types";
 import type { LibraryFile } from "../games/library";
 import GamePage from "./GamePage";
+import { GameTile } from "./GameTile";
 import { supportOf } from "./support";
 
 type Filter = "all" | "profile" | "dualsense" | "attention";
 const SORTS = ["name", "recent", "played"] as const;
 type Sort = (typeof SORTS)[number];
 const SORT_KEY = "ds5.librarySort";
+const HIDDEN_KEY = "ds5.libraryHiddenKinds";
+export const kindOfGame = (g: GameEntry): AppKind => g.kind ?? "game";
+
+// Categories the player unticked in "Show" (everything shows by default).
+function useHiddenKinds(): [Set<AppKind>, (kind: AppKind, shown: boolean) => void] {
+  const [hidden, setHidden] = useState<Set<AppKind>>(() => {
+    const saved = (readPref(HIDDEN_KEY) ?? "").split(",");
+    return new Set(APP_KINDS.filter((k) => saved.includes(k)));
+  });
+  const toggle = (kind: AppKind, shown: boolean) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (shown) next.delete(kind);
+      else next.add(kind);
+      writePref(HIDDEN_KEY, [...next].join(","));
+      return next;
+    });
+  return [hidden, toggle];
+}
 
 interface Props {
   report: GamesReport | null;
@@ -35,6 +56,13 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = usePref<Sort>(SORT_KEY, "name", SORTS);
+  const [hiddenKinds, setKindShown] = useHiddenKinds();
+  // The categories this library has, with counts (the Show menu lists only these).
+  const kindCounts = useMemo(() => {
+    const m = new Map<AppKind, number>();
+    for (const g of report?.games ?? []) m.set(kindOfGame(g), (m.get(kindOfGame(g)) ?? 0) + 1);
+    return APP_KINDS.filter((k) => m.has(k)).map((k) => [k, m.get(k)!] as const);
+  }, [report]);
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
@@ -49,21 +77,22 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   const recent = useMemo(
     () =>
       (report?.games ?? [])
-        .filter((g) => details[g.key]?.lastPlayed && (details[g.key].art.includes("cover") || details[g.key].art.includes("header")))
+        .filter((g) => !hiddenKinds.has(kindOfGame(g)) && details[g.key]?.lastPlayed && (details[g.key].art.includes("cover") || details[g.key].art.includes("header")))
         .sort((a, b) => (details[b.key].lastPlayed ?? 0) - (details[a.key].lastPlayed ?? 0))
         .slice(0, 8),
-    [report, details],
+    [report, details, hiddenKinds],
   );
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return games.filter((g) => {
       if (q && !g.title.toLowerCase().includes(q)) return false;
+      if (hiddenKinds.has(kindOfGame(g))) return false;
       if (filter === "profile") return !!library.games[g.key]?.profile;
       if (filter === "dualsense") return g.support === "triggers" || g.support === "haptics";
       if (filter === "attention") return g.fixes.length > 0 || g.runnerMissing;
       return true;
     });
-  }, [games, query, filter, library]);
+  }, [games, query, filter, library, hiddenKinds]);
   const playing = visible.filter((g) => g.key === running);
   const withProfile = visible.filter((g) => g.key !== running && library.games[g.key]?.profile);
   const rest = visible.filter((g) => g.key !== running && !library.games[g.key]?.profile);
@@ -92,12 +121,13 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
             <img src={artUrl(g.key, "cover")} alt="" />
           ) : (
             <span className="lib-glyph" title={t(`desktop.library.storeName.${g.store}`)}>
-              {STORE_GLYPH[g.store]}
+              {hasLauncherIcon(g.store) ? <LauncherIcon id={g.store} /> : hasLauncherIcon(g.launcher) ? <LauncherIcon id={g.launcher} /> : STORE_GLYPH[g.store]}
             </span>
           )}
           <span className="lib-title" title={g.title}>
             {g.title}
           </span>
+          {g.kind && <span className="lib-kind">{t(`desktop.library.kind.${g.kind}`)}</span>}
           {g.key === running && <span className="lib-playing">{t("desktop.library.running")}</span>}
           {library.games[g.key]?.profile && (
             <span className="lib-mark" title={t("desktop.library.hasProfile")}>
@@ -154,6 +184,22 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
             ))}
           </select>
         </label>
+        {kindCounts.length > 1 && (
+          <details className="lib-show">
+            <summary className="dk-btn" title={t("desktop.library.showHint")}>
+              {t("desktop.library.show")}
+              {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
+            </summary>
+            <div className="lib-show-menu">
+              {kindCounts.map(([k, n]) => (
+                <label key={k} className="lib-show-item">
+                  <input type="checkbox" checked={!hiddenKinds.has(k)} onChange={(e) => setKindShown(k, e.target.checked)} />
+                  {t(`desktop.library.kinds.${k}`)} ({n})
+                </label>
+              ))}
+            </div>
+          </details>
+        )}
         <ul className="lib-list" ref={listRef} onKeyDown={onListKey}>
           {group(t("desktop.library.groupPlaying"), playing)}
           {group(t("desktop.library.groupProfile"), withProfile)}
@@ -178,11 +224,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                   <ul className="lib-shelf">
                     {recent.map((g) => (
                       <li key={g.key}>
-                        <button type="button" className="lib-tile" title={g.title} onClick={() => setSelected(g.key)}>
-                          <img src={artUrl(g.key, details[g.key].art.includes("cover") ? "cover" : "header")} alt="" />
-                          <span className="lib-tile-title">{g.title}</span>
-                          {g.key === running && <span className="lib-tile-badge">{t("desktop.library.running")}</span>}
-                        </button>
+                        <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
                       </li>
                     ))}
                   </ul>
@@ -191,6 +233,20 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
             </section>
           )}
           {home}
+          {report && visible.length > 0 && (
+            <section className="lib-shelf-wrap">
+              <h2 className="lib-shelf-title">
+                {t("desktop.library.groupAll")} ({visible.length}){visible.length < games.length && <span className="dk-hint"> · {t("desktop.library.gridFiltered")}</span>}
+              </h2>
+              <ul className="lib-grid">
+                {visible.map((g) => (
+                  <li key={g.key}>
+                    <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
         {game && report && (
           <GamePage

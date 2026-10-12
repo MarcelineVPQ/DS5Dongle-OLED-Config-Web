@@ -405,9 +405,9 @@
       "stopHint": "Schaltet die Spiele-Einrichtung ab; sie liest keine Launcher-Einstellungen mehr, bis du es wieder erlaubst.",
       "closeFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden. Beende ihn selbst und drücke dann auf Neu prüfen.",
       "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen.",
-      "scanningWindows": "Steam wird geprüft…",
-      "consentIntroWindows": "Die Spieleeinrichtung listet deine Steam-Spiele auf und prüft Steam auf Einstellungen, die adaptive Trigger und Haptik blockieren. Dafür liest sie, nur auf diesem Computer:",
-      "consentLaunchersWindows": "die Einstellungen und die Liste installierter Spiele von Steam",
+      "scanningWindows": "Steam, GOG Galaxy und Epic werden geprüft…",
+      "consentIntroWindows": "Die Spieleeinrichtung listet deine Spiele aus Steam, GOG Galaxy und Epic auf und prüft Steam auf Einstellungen, die adaptive Trigger und Haptik blockieren. Dafür liest sie, nur auf diesem Computer:",
+      "consentLaunchersWindows": "die Einstellungen und die Listen installierter Spiele von Steam, GOG Galaxy und Epic",
       "consentRunningWindows": "welche Programme laufen, um zu bemerken, wenn eines deiner Spiele startet (für sein Controller-Profil)"
     },
     "setup": {
@@ -722,7 +722,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "Empfohlen",
       "protonNotInstalled": "DualSense-Proton (nicht installiert)",
@@ -817,7 +819,29 @@
         "prefixFolder": "Proton-Präfix",
         "prefixFolderHint": "Den Windows-Ordner (Proton/Wine) des Spiels öffnen: Einstellungen und Spielstände liegen oft hier",
         "failed": "Konnte nicht geöffnet werden. Ist der Launcher installiert?"
-      }
+      },
+      "gridFiltered": "gefiltert wie die Liste",
+      "kind": {
+        "demo": "Demo",
+        "dlc": "DLC",
+        "music": "Soundtrack",
+        "tool": "Werkzeug",
+        "application": "Software",
+        "video": "Video",
+        "game": "Spiel"
+      },
+      "kinds": {
+        "game": "Spiele",
+        "demo": "Demos",
+        "dlc": "DLCs",
+        "music": "Soundtracks",
+        "tool": "Werkzeuge",
+        "application": "Software",
+        "video": "Videos"
+      },
+      "show": "Anzeigen",
+      "showHint": "Wähle, was die Bibliothek zeigt: die Kategorien von Steam (Spiele, Demos, Soundtracks, Software, Videos)",
+      "hiddenCount": "{{count}} ausgeblendet"
     },
     "dongleConsole": {
       "title": "{{device}}-Konsole",
@@ -917,7 +941,7 @@
     },
     "dev": {
       "title": "Entwickler",
-      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an den Dongle gesendet. Strg+Umschalt+D blendet diese Karte aus.",
+      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an den Dongle gesendet. Strg+Umschalt+D blendet diese Karte aus. Erscheint im Entwicklungskanal.",
       "model": "Modell",
       "colorway": "Farbvariante",
       "real": "Der echte",

@@ -2,7 +2,7 @@
 
 The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, HD haptics, speaker and mic included).
 
-Made on Linux, tested on Linux and Windows 11. The macOS build is included but hasn't been tested yet; reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam for now). No drivers to install. It updates itself and the dongle's firmware.
+Made on Linux, tested on Linux and Windows 11. The macOS build is included but hasn't been tested yet; reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
 
 ![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
 
@@ -13,7 +13,7 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included but h
 - **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptics strength per grip (HD haptics and rumble, with a test), Audio Auto Haptics, speaker and mic (with tests), button remapping, pairing slots.
 - **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyro, stored in the dongle per controller.
 - **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline), and one-click firmware updates.
-- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam for now; GOG and Epic are planned) with per-game controller profiles that switch in while a game runs, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
+- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) with per-game controller profiles that switch in while a game runs, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
 The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to dongle** keeps them after it powers off.
@@ -39,7 +39,7 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 
 ### Windows
 
-Tested on Windows 11, end to end in a test machine (`tools/windows_vm_test.py`) and by users. The Games page lists your Steam games with per-game profiles; Proton setup and the Linux system checks don't apply on Windows, and GOG / Epic are planned. Everything else works the same. Problems? Please report them in the [issues](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/issues).
+Tested on Windows 11, end to end in a test machine (`tools/windows_vm_test.py`) and by users. The Games page lists your Steam, GOG Galaxy and Epic games with per-game profiles; Proton setup and the Linux system checks don't apply on Windows. Everything else works the same. Problems? Please report them in the [issues](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/issues).
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
 2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.

@@ -402,9 +402,9 @@
       "stopHint": "ゲーム設定をオフにします。再び許可するまで、ランチャーの設定は読み取りません。",
       "closeFailed": "{{launcher}} に終了を依頼できませんでした。手動で終了してから「再確認」を押してください。",
       "undoConflict": "元に戻していません: 適用後に {{files}} が変更されました（ランチャーが独自の設定を保存しました）。元に戻すとその変更が失われます。",
-      "scanningWindows": "Steam を確認しています…",
-      "consentIntroWindows": "ゲーム設定は Steam のゲームを一覧にし、アダプティブトリガーやハプティクスを妨げる Steam の設定を確認します。そのため、このコンピューター上でのみ次を読み取ります：",
-      "consentLaunchersWindows": "Steam の設定とインストール済みゲームの一覧",
+      "scanningWindows": "Steam、GOG Galaxy、Epic を確認しています…",
+      "consentIntroWindows": "ゲーム設定は Steam、GOG Galaxy、Epic のゲームを一覧にし、アダプティブトリガーやハプティクスを妨げる Steam の設定を確認します。そのため、このコンピューター上でのみ次を読み取ります：",
+      "consentLaunchersWindows": "Steam、GOG Galaxy、Epic の設定とインストール済みゲームの一覧",
       "consentRunningWindows": "実行中のプログラム（ゲームの起動に気づき、そのコントローラープロファイルを使うため）"
     },
     "setup": {
@@ -717,7 +717,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "おすすめ",
       "protonNotInstalled": "DualSense 用 Proton(未インストール)",
@@ -811,7 +813,29 @@
         "prefixFolder": "Proton プレフィックス",
         "prefixFolderHint": "ゲームの Windows（Proton/Wine）フォルダーを開く：設定やセーブがよくここにあります",
         "failed": "開けませんでした。ランチャーはインストールされていますか？"
-      }
+      },
+      "gridFiltered": "リストと同じ絞り込み",
+      "kind": {
+        "demo": "体験版",
+        "dlc": "DLC",
+        "music": "サウンドトラック",
+        "tool": "ツール",
+        "application": "ソフトウェア",
+        "video": "動画",
+        "game": "ゲーム"
+      },
+      "kinds": {
+        "game": "ゲーム",
+        "demo": "体験版",
+        "dlc": "DLC",
+        "music": "サウンドトラック",
+        "tool": "ツール",
+        "application": "ソフトウェア",
+        "video": "動画"
+      },
+      "show": "表示",
+      "showHint": "ライブラリに表示するものを選びます：Steam のカテゴリ（ゲーム、体験版、サウンドトラック、ソフトウェア、動画）",
+      "hiddenCount": "{{count}} 件非表示"
     },
     "dongleConsole": {
       "title": "{{device}} コンソール",
@@ -911,7 +935,7 @@
     },
     "dev": {
       "title": "開発者",
-      "hint": "別のコントローラーのモデルとカラーをプレビューして、アプリの配色を確認します。表示だけが変わり、ドングルには何も送信されません。Ctrl+Shift+D でこのカードを隠します。",
+      "hint": "別のコントローラーのモデルとカラーをプレビューして、アプリの配色を確認します。表示だけが変わり、ドングルには何も送信されません。Ctrl+Shift+D でこのカードを隠します。開発チャンネルで表示されます。",
       "model": "モデル",
       "colorway": "カラー",
       "real": "実機",

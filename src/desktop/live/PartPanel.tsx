@@ -332,6 +332,29 @@ function AppSettings() {
             <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
           </section>
           <section className="dk-card">
+            <h2>{t("desktop.settings2.advanced")}</h2>
+            <Toggle
+              label={t("desktop.hdr.label")}
+              sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
+              value={settings.hdrLighting}
+              disabled={!settings.hardwareAcceleration}
+              onChange={(v) => {
+                setHdrChanged(true);
+                set("hdrLighting", v);
+              }}
+            />
+            {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
+            <Toggle
+              label={t("desktop.live.hardwareAcceleration")}
+              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+              value={settings.hardwareAcceleration}
+              onChange={(v) => {
+                setGpuChanged(true);
+                set("hardwareAcceleration", v);
+              }}
+            />
+          </section>
+          <section className="dk-card">
             <h2>{t("desktop.settings2.updates")}</h2>
             <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
             <Toggle
@@ -368,32 +391,9 @@ function AppSettings() {
               </div>
             )}
           </section>
-          <section className="dk-card">
-            <h2>{t("desktop.settings2.advanced")}</h2>
-            <Toggle
-              label={t("desktop.hdr.label")}
-              sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
-              value={settings.hdrLighting}
-              disabled={!settings.hardwareAcceleration}
-              onChange={(v) => {
-                setHdrChanged(true);
-                set("hdrLighting", v);
-              }}
-            />
-            {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
-            <Toggle
-              label={t("desktop.live.hardwareAcceleration")}
-              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
-              value={settings.hardwareAcceleration}
-              onChange={(v) => {
-                setGpuChanged(true);
-                set("hardwareAcceleration", v);
-              }}
-            />
-          </section>
         </>
       )}
-      <DeveloperSettings />
+      <DeveloperSettings devChannel={settings?.updateChannel === "dev"} />
       {TOUR_ENABLED && (
         <section className="dk-card">
           <h2>{t("desktop.tour.helpTitle")}</h2>
@@ -596,15 +596,17 @@ function ReduceMotionSetting() {
   return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
 }
 
-// Developer (Ctrl+Shift+D): preview any controller model and colorway.
-function DeveloperSettings() {
+// Developer (Ctrl+Shift+D): preview any controller model and colorway. Only
+// on the Development channel (and only in builds that include it), right
+// under the channel switch, so switching shows it appear.
+function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
   const { t } = useTranslation();
   const [shown] = useDevToolsShown();
   const dev = useDevPreview();
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
   const fakeSlots = useFakeSlots();
   const [simulated] = useFlagPref(SIMULATED_KEY);
-  if (!shown) return null;
+  if (!shown || !devChannel) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
   return (

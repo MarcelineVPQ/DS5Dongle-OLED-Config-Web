@@ -6,7 +6,7 @@
 // written, and confirms. Closing a launcher and downloading Proton are separate
 // explicit confirmations. Every write is backed up and can be undone.
 
-export type LauncherId = "steam" | "heroic" | "lutris";
+export type LauncherId = "steam" | "heroic" | "lutris" | "gog" | "epic"; // gog / epic: GOG Galaxy and the Epic Games Launcher on Windows
 export type Store = "steam" | "epic" | "gog" | "amazon" | "sideload" | "lutris";
 export type DualSenseSupport = "triggers" | "haptics" | "xinput" | "unknown";
 
@@ -47,7 +47,12 @@ export interface GameEntry {
   envFlags: string[]; // e.g. ["PROTON_PREFER_SDL"]
   support: DualSenseSupport;
   fixes: Fix[];
+  // What the launcher says it is (Steam's own categories); absent = a game.
+  kind?: AppKind;
 }
+
+export const APP_KINDS = ["game", "demo", "dlc", "music", "tool", "application", "video"] as const;
+export type AppKind = (typeof APP_KINDS)[number];
 
 // Local artwork a game has (the files stay in the main process; the page
 // loads them through ds5-art://<game key>/<kind>).

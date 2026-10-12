@@ -405,9 +405,9 @@
       "stopHint": "Désactive la configuration des jeux ; elle ne relira plus les réglages des lanceurs tant que tu ne l'autorises pas.",
       "closeFailed": "Impossible de demander à {{launcher}} de se fermer. Quitte-le toi-même, puis appuie sur Revérifier.",
       "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements.",
-      "scanningWindows": "Vérification de Steam…",
-      "consentIntroWindows": "La configuration des jeux liste tes jeux Steam et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retours haptiques de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
-      "consentLaunchersWindows": "les réglages de Steam et sa liste de jeux installés",
+      "scanningWindows": "Vérification de Steam, GOG Galaxy et Epic…",
+      "consentIntroWindows": "La configuration des jeux liste tes jeux Steam, GOG Galaxy et Epic et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retours haptiques de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
+      "consentLaunchersWindows": "les réglages et les listes de jeux installés de Steam, GOG Galaxy et Epic",
       "consentRunningWindows": "quels programmes tournent, pour remarquer quand l’un de tes jeux démarre (pour son profil de manette)"
     },
     "setup": {
@@ -722,7 +722,9 @@
       "launcherName": {
         "steam": "Steam",
         "heroic": "Heroic",
-        "lutris": "Lutris"
+        "lutris": "Lutris",
+        "gog": "GOG Galaxy",
+        "epic": "Epic Games"
       },
       "recommended": "Recommandé",
       "protonNotInstalled": "Proton DualSense (non installé)",
@@ -817,7 +819,29 @@
         "prefixFolder": "Préfixe Proton",
         "prefixFolderHint": "Ouvrir le dossier Windows (Proton/Wine) du jeu : réglages et sauvegardes s'y trouvent souvent",
         "failed": "Impossible d'ouvrir. Le lanceur est-il installé ?"
-      }
+      },
+      "gridFiltered": "filtrés comme la liste",
+      "kind": {
+        "demo": "Démo",
+        "dlc": "DLC",
+        "music": "Bande originale",
+        "tool": "Outil",
+        "application": "Logiciel",
+        "video": "Vidéo",
+        "game": "Jeu"
+      },
+      "kinds": {
+        "game": "Jeux",
+        "demo": "Démos",
+        "dlc": "DLC",
+        "music": "Bandes originales",
+        "tool": "Outils",
+        "application": "Logiciels",
+        "video": "Vidéos"
+      },
+      "show": "Afficher",
+      "showHint": "Choisis ce que montre la bibliothèque : les catégories de Steam (jeux, démos, bandes originales, logiciels, vidéos)",
+      "hiddenCount": "{{count}} masquées"
     },
     "dongleConsole": {
       "title": "Console : {{device}}",
@@ -917,7 +941,7 @@
     },
     "dev": {
       "title": "Développeur",
-      "hint": "Prévisualisez un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé au dongle. Ctrl+Maj+D masque cette carte.",
+      "hint": "Prévisualisez un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé au dongle. Ctrl+Maj+D masque cette carte. Affichée sur le canal de développement.",
       "model": "Modèle",
       "colorway": "Coloris",
       "real": "La vraie",

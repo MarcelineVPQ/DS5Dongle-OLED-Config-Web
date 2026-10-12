@@ -4,6 +4,7 @@
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
 import { homedir } from "node:os";
+import { readWindowsStores, type WindowsStores } from "./windowsStores";
 import { dominantColor } from "./artColor";
 import { actionUrl, availableActions } from "./actions";
 import { errorText } from "../../../src/errorText";
@@ -81,19 +82,21 @@ export class GamesService {
       latestSize: this.latest?.tarball.size ?? null,
       running: runningLaunchers(),
       audioCards,
+      windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
     });
   }
 
   async scan(): Promise<GamesReport> {
     const report = (await this.fresh()).report;
     this.lastGames = report.games;
-    this.lastDetails = gameDetails(this.home);
+    this.lastDetails = gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []);
     this.colors.clear(); // the art may have arrived or changed since
     return report;
   }
 
   // ---- Games library: details, artwork, the running game ----
   private lastGames: GameEntry[] = [];
+  private lastStores: WindowsStores | undefined;
   private lastDetails = new Map<string, GameDetails>();
 
   // Install folder, size, play time and which artwork exists, per game key

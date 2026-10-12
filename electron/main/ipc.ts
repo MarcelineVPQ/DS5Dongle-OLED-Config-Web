@@ -47,7 +47,7 @@ export const FixIdsSchema = z
   )
   .max(500);
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
-export const LauncherSchema = z.enum(["steam", "heroic", "lutris"]);
+export const LauncherSchema = z.enum(["steam", "heroic", "lutris", "gog", "epic"]);
 // Games library: keys from the scan, a title for display, schema-checked data.
 const TitleSchema = z.string().min(1).max(300);
 export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, settings: ProfileSettingsSchema });
