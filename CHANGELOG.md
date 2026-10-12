@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Stick tests:** a circularity test (how round each stick's range is, with the error %) and a drift test (does a stick move when you don't touch it), in Calibration.
 - **Joining the Development channel asks first:** what it means (newer, less tested, app and dongle firmware, back to stable any time) and what's in the newest development build (app and firmware versions and its notes), before any development update is offered.
 - **Development builds say so:** "DEVELOPMENT · 0.9.5-dev.1" along the side rail (and the exact Git build on a local dev copy); stable releases don't show it.
 - **Edit a game's profile in the controller view and feel it live:** "Edit in controller view" on a game's page puts its profile on the controller (never into the dongle's flash) with an "Editing: … profile" banner; every panel edits the profile, the Buttons list saves into the game's own layout, and Done brings your normal settings back and returns to the game's page.
