@@ -1,6 +1,7 @@
 // The Controller page's background when there's no game art (Games off, or
-// Windows / macOS for now): slow swirls of warped sine waves in four colors,
-// the controller's two, the theme's accent and its complement. Drawn tiny
+// Windows / macOS for now): slow swirls of warped sine waves in four colors:
+// the controller's body color, the theme's accent and the accent's two
+// neighbors on the color wheel (analogous colors, never a clashing opposite). Drawn tiny
 // (256 x 144) and stretched up by CSS, which blurs it for free; redrawn ~12
 // times a second, paused while the window is hidden, still with Reduce motion.
 // The colors come from the theme tokens and the colorway, never literals.
@@ -22,11 +23,24 @@ function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }
 
-// The opposite hue at the same lightness and saturation.
-export function complement([r, g, b]: Rgb): Rgb {
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  return [max + min - r, max + min - g, max + min - b];
+// The same color with its hue turned by `degrees` (lightness and saturation
+// kept). Small turns give analogous colors, which sit well together; the
+// opposite hue (complementary) clashed (pink with green).
+export function rotateHue([r, g, b]: Rgb, degrees: number): Rgb {
+  const max = Math.max(r, g, b) / 255;
+  const min = Math.min(r, g, b) / 255;
+  const l = (max + min) / 2;
+  if (max === min) return [r, g, b];
+  const d = max - min;
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const [rn, gn, bn] = [r / 255, g / 255, b / 255];
+  let h = max === rn ? ((gn - bn) / d) % 6 : max === gn ? (bn - rn) / d + 2 : (rn - gn) / d + 4;
+  h = (((h * 60 + degrees) % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  const [r1, g1, b1] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return [Math.round((r1 + m) * 255), Math.round((g1 + m) * 255), Math.round((b1 + m) * 255)];
 }
 
 // Four wave fields, domain-warped, turned into blend weights (squared, then
@@ -84,9 +98,9 @@ export default function SwirlField({ colorA, colorB }: { colorA: string; colorB:
     const readPalette = () => {
       const accent = getComputedStyle(c).getPropertyValue("--dk-accent") || getComputedStyle(c).color;
       const a = toRgb(colorA, ctx) ?? [0, 0, 0];
-      const b = toRgb(colorB, ctx) ?? a;
-      const acc = toRgb(accent, ctx) ?? b;
-      palette = [a, b, acc, complement(acc)];
+      const acc = toRgb(accent, ctx) ?? toRgb(colorB, ctx) ?? a;
+      // The accent's two neighbors on the color wheel, so every band blends.
+      palette = [a, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
     };
     readPalette();
     const themeWatch = new MutationObserver(() => {

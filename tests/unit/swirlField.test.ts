@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { complement, swirlPixel } from "../../src/desktop/live/SwirlField";
+import { rotateHue, swirlPixel } from "../../src/desktop/live/SwirlField";
 
 describe("swirl field", () => {
   it("blends four colors with weights that add up to 1", () => {
@@ -14,8 +14,13 @@ describe("swirl field", () => {
       expect(w.every((v) => v >= 0 && v <= 1)).toBe(true);
     }
   });
-  it("takes the complementary hue", () => {
-    expect(complement([255, 0, 0])).toEqual([0, 255, 255]);
-    expect(complement([170, 20, 80])).toEqual([20, 170, 110]);
+  it("turns the hue, keeping lightness and saturation", () => {
+    expect(rotateHue([255, 0, 0], 120)).toEqual([0, 255, 0]);
+    expect(rotateHue([255, 0, 0], -120)).toEqual([0, 0, 255]);
+    expect(rotateHue([128, 128, 128], 35)).toEqual([128, 128, 128]); // grey has no hue
+    // Pink's neighbors stay in the pink/red/violet family, never green.
+    const [r, g, b] = rotateHue([236, 72, 153], 35);
+    expect(g).toBeLessThan(r);
+    expect(g).toBeLessThan(Math.max(r, b));
   });
 });
