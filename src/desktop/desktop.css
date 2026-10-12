@@ -3,6 +3,16 @@
  * only the page body scrolling, and only when the window is too small for it.
  * Colors come from the shared theme tokens in styles.css. */
 
+/* Minimized or hidden in the tray (useWindowShown): every animation holds
+   still. A running animation keeps the compositor drawing frames nobody sees
+   (on Windows the window stays "visible" to Chromium: backgroundThrottling is
+   off for the tray), so the app would keep the CPU busy in the background. */
+:root[data-window-hidden] *,
+:root[data-window-hidden] *::before,
+:root[data-window-hidden] *::after {
+  animation-play-state: paused !important;
+}
+
 .dk {
   /* Native controls (checkboxes, radios, sliders, progress) take the theme's
      accent everywhere; set once here, inherited, never per control. */
