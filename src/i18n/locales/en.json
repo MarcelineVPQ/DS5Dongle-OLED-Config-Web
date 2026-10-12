@@ -433,6 +433,8 @@
       "checkUpdates": "Check for updates",
       "checkedCurrent": "The app is up to date ({{version}}).",
       "checkedNewer": "App {{version}} is available: see the banner at the top.",
+      "checkedFwNewer": "Firmware {{version}} is available for the dongle: see the banner at the top.",
+      "checkedFwCurrent": "The dongle's firmware is up to date ({{version}}).",
       "checkFailed": "Couldn't check for updates. Are you online?"
     },
     "live": {

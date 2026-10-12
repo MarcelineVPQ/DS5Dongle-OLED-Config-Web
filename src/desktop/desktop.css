@@ -3906,3 +3906,8 @@ html[data-cards-translucent] .dash-card {
   border-radius: 8px;
   background: var(--bg-inset);
 }
+
+/* Check for updates (App settings → Updates): one line each for the app and the firmware. */
+.dk-check-line {
+  display: block;
+}

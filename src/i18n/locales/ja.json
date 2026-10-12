@@ -431,6 +431,8 @@
       "checkUpdates": "アップデートを確認",
       "checkedCurrent": "アプリは最新です（{{version}}）。",
       "checkedNewer": "アプリ {{version}} があります。上部のお知らせを見てください。",
+      "checkedFwNewer": "ドングル用ファームウェア {{version}} があります。上部のバナーをご覧ください。",
+      "checkedFwCurrent": "ドングルのファームウェアは最新です（{{version}}）。",
       "checkFailed": "アップデートを確認できませんでした。オンラインですか？"
     },
     "live": {

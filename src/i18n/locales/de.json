@@ -434,6 +434,8 @@
       "checkUpdates": "Nach Updates suchen",
       "checkedCurrent": "Die App ist aktuell ({{version}}).",
       "checkedNewer": "App {{version}} ist verfügbar: siehe Hinweis oben.",
+      "checkedFwNewer": "Firmware {{version}} ist für den Dongle verfügbar: siehe Hinweis oben.",
+      "checkedFwCurrent": "Die Firmware des Dongles ist aktuell ({{version}}).",
       "checkFailed": "Suche nach Updates fehlgeschlagen. Bist du online?"
     },
     "live": {

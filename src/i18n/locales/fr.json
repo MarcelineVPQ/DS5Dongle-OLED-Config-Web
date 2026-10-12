@@ -434,6 +434,8 @@
       "checkUpdates": "Rechercher des mises à jour",
       "checkedCurrent": "L’app est à jour ({{version}}).",
       "checkedNewer": "L’app {{version}} est disponible : voir le bandeau en haut.",
+      "checkedFwNewer": "Le firmware {{version}} est disponible pour le dongle : vois le bandeau en haut.",
+      "checkedFwCurrent": "Le firmware du dongle est à jour ({{version}}).",
       "checkFailed": "Impossible de vérifier les mises à jour. Es-tu en ligne ?"
     },
     "live": {

@@ -431,6 +431,8 @@
       "checkUpdates": "检查更新",
       "checkedCurrent": "应用已是最新（{{version}}）。",
       "checkedNewer": "应用 {{version}} 可用：请看顶部提示。",
+      "checkedFwNewer": "接收器固件 {{version}} 可用：请查看顶部的横幅。",
+      "checkedFwCurrent": "接收器固件已是最新（{{version}}）。",
       "checkFailed": "无法检查更新。你在线吗？"
     },
     "live": {

@@ -27,7 +27,8 @@ import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
 import { useLibrary } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
-import type { DesktopSettings } from "../api";
+import type { DesktopSettings, FirmwareLookup } from "../api";
+import { firmwareOffer } from "../useUpdates";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
@@ -99,7 +100,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
       {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
-      {view === "app" && <AppSettings />}
+      {view === "app" && <AppSettings bridge={bridge} fw={fw} />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
     </div>
   );
@@ -563,7 +564,7 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
 }
 
 // The app's own settings (stored by the main process), plus theme and language.
-function AppSettings() {
+function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   // Joining the Development channel asks first (what it means, what's in it).
   const [joiningDev, setJoiningDev] = useState(false);
   const { t } = useTranslation();
@@ -664,7 +665,7 @@ function AppSettings() {
               />
             )}
             <p className="dk-hint">{settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}</p>
-            <CheckNow />
+            <CheckNow firmwareInstalled={bridge.firmwareVersion} refreshFirmware={fw.refreshLatest} />
             {settings.updateChannel === "dev" && (
               <div className="dk-row-btns">
                 <BusyButton
@@ -697,33 +698,44 @@ function AppSettings() {
   );
 }
 
-// Checks the chosen channel now (the app and, through the same check, the
-// dongle's firmware) instead of waiting for the next automatic check (every
-// 6 hours). Anything new shows up in the banners at the top.
-function CheckNow() {
+// Checks the chosen channel now, the app and the dongle's firmware, instead
+// of waiting for the next automatic check (every 6 hours). Anything new shows
+// up in the banners at the top; this says what was found for both.
+function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: string | null | undefined; refreshFirmware: () => Promise<FirmwareLookup> }) {
   const { t } = useTranslation();
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<string[]>([]);
   const desktop = window.desktop;
   if (!desktop) return null;
   const check = async () => {
-    setResult(null);
+    setResult([]);
     const app = await desktop.checkForUpdates().catch(() => null);
-    setResult(
-      !app || app.phase === "failed"
-        ? t("desktop.setup.checkFailed")
-        : app.phase === "up-to-date"
-          ? t("desktop.setup.checkedCurrent", { version: app.version })
-          : app.phase === "idle" || app.phase === "checking"
-            ? null
-            : t("desktop.setup.checkedNewer", { version: app.version }),
-    );
+    const lines: string[] = [];
+    if (!app || app.phase === "failed") lines.push(t("desktop.setup.checkFailed"));
+    else if (app.phase === "up-to-date") lines.push(t("desktop.setup.checkedCurrent", { version: app.version }));
+    else if (app.phase !== "idle" && app.phase !== "checking") lines.push(t("desktop.setup.checkedNewer", { version: app.version }));
+    // The firmware: only with a dongle connected (its version is what's compared).
+    if (firmwareInstalled && app && app.phase !== "failed") {
+      const lookup = await refreshFirmware();
+      const latest = lookup.latest?.version;
+      if (latest && firmwareOffer(latest, firmwareInstalled).available) lines.push(t("desktop.setup.checkedFwNewer", { version: latest }));
+      else if (lookup.latest || lookup.problem === "unpublished") lines.push(t("desktop.setup.checkedFwCurrent", { version: firmwareInstalled }));
+    }
+    setResult(lines);
   };
   return (
     <div className="dk-row-btns">
       <BusyButton className="dk-btn" onClick={check}>
         {t("desktop.setup.checkUpdates")}
       </BusyButton>
-      {result && <span className="dk-hint" role="status">{result}</span>}
+      {result.length > 0 && (
+        <span className="dk-hint" role="status">
+          {result.map((line) => (
+            <span key={line} className="dk-check-line">
+              {line}
+            </span>
+          ))}
+        </span>
+      )}
     </div>
   );
 }

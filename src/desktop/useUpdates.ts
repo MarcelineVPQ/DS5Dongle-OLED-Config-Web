@@ -26,6 +26,15 @@ export type FirmwareUpdateState =
 
 const RECONNECT_TIMEOUT_MS = 45_000;
 
+// Whether `latest` is offered to a dongle running `installed`: a newer
+// version; or, on a dongle running a development build, the stable version
+// (after "Back to stable"), even though it's older.
+export function firmwareOffer(latest: string | null | undefined, installed: string | null | undefined): { available: boolean; backToStable: boolean } {
+  if (!latest || !installed) return { available: false, backToStable: false };
+  const backToStable = devNumber(installed) !== null && devNumber(latest) === null && !sameVersion(latest, installed);
+  return { available: isNewer(latest, installed) || backToStable, backToStable };
+}
+
 export interface FirmwareUpdate {
   latest: LatestFirmware | null;
   problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, or offline
@@ -72,10 +81,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   }, [appUpdate.phase]);
 
   const installed = bridge.firmwareVersion;
-  // A newer version; or, on a dongle running a development build, the stable
-  // version offered (after "Back to stable"), even though it's older.
-  const backToStable = Boolean(latest && installed && devNumber(installed) !== null && devNumber(latest.version) === null && !sameVersion(latest.version, installed));
-  const available = Boolean(latest && installed && (isNewer(latest.version, installed) || backToStable));
+  const { available, backToStable } = firmwareOffer(latest?.version, installed);
 
   const start = useCallback(async () => {
     const client = bridge.client;
