@@ -212,6 +212,25 @@ function gpuWorks(): boolean {
 // Shared across remounts and pauses, so the swirl doesn't jump back to its start.
 const swirlClock = { elapsed: 0 };
 
+// Reduce motion (the app setting on <html>, or the system's), followed live:
+// turning it off again restarts the swirl without a reload.
+const reduceMotionNow = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-reduce-motion");
+function useReduceMotionOn(): boolean {
+  const [on, setOn] = useState(reduceMotionNow);
+  useEffect(() => {
+    const update = () => setOn(reduceMotionNow());
+    const attr = new MutationObserver(update);
+    attr.observe(document.documentElement, { attributes: true, attributeFilter: ["data-reduce-motion"] });
+    const media = matchMedia("(prefers-reduced-motion: reduce)");
+    media.addEventListener("change", update);
+    return () => {
+      attr.disconnect();
+      media.removeEventListener("change", update);
+    };
+  }, []);
+  return on;
+}
+
 export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // GPU with hardware acceleration on; the CPU fallback without it, or once
@@ -225,6 +244,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   }, []);
   const shown = useWindowShown();
   const focused = useWindowFocused();
+  const still = useReduceMotionOn();
   useEffect(() => {
     const c = ref.current;
     if (!c || !mode) return;
@@ -237,7 +257,6 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     c.addEventListener("webglcontextlost", onLost);
     // Colors are parsed on a scratch 2D canvas (the GPU canvas has no 2D context).
     const scratch = document.createElement("canvas").getContext("2d");
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-reduce-motion");
     // Re-read whenever the theme changes (it sets its tokens on <html>).
     let palette: Rgb[] = [];
     const readPalette = () => {
@@ -272,7 +291,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
       c.removeEventListener("webglcontextlost", onLost);
       renderer.dispose();
     };
-  }, [colors, mode, shown, focused]);
+  }, [colors, mode, shown, focused, still]);
   if (!mode) return null;
   return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
 }
