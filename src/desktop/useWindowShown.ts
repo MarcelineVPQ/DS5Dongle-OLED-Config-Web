@@ -8,7 +8,9 @@
 // mounts while the window is hidden starts out paused too. Everything that
 // only feeds the UI (animations, live readouts, UI-only polls) stops while
 // this is false; what the tray, game profiles and saved-state sync need keeps
-// running (see useDs5Bridge).
+// running (see useDs5Bridge). The root element carries the same signal as
+// `data-window-hidden`, so CSS can pause its infinite animations (an animation
+// keeps the compositor drawing frames even with nothing on screen).
 import { useSyncExternalStore } from "react";
 
 let windowShown = true;
@@ -17,7 +19,16 @@ let focused = typeof document === "undefined" || document.hasFocus();
 const listeners = new Set<() => void>();
 let wired = false;
 
-const notify = () => listeners.forEach((l) => l());
+// Mirror the state onto <html> for CSS (desktop.css pauses every animation).
+function reflect(): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.toggleAttribute("data-window-hidden", !isWindowShown());
+}
+
+const notify = () => {
+  reflect();
+  listeners.forEach((l) => l());
+};
 
 function wire(): void {
   if (wired || typeof window === "undefined") return;
@@ -46,9 +57,10 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-wire();
-
 export const isWindowShown = (): boolean => windowShown && pageVisible;
+
+wire();
+reflect();
 
 // True while the window is on screen (not minimized, not in the tray).
 export function useWindowShown(): boolean {

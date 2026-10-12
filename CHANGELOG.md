@@ -17,6 +17,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **About opens on the Guide**, and its tabs read Guide · App changes · Firmware changes · Coming soon · Credits ("What's new" is now "App changes"; See what's new after an update still opens it).
 - **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
 
+### Fixed
+
+- **Minimized or in the tray the app still used about 9% of a CPU on Windows:** the game-art backdrop's slow pan and the live-panel pulse kept animating where nobody could see them, so the window kept drawing frames. Every animation now holds still while the window is minimized or in the tray (and the backdrop's art cycle and the tour's hold ring wait too), and carries on when it's shown again.
+
 ## [0.9.5-dev.5] - 2026-10-12
 
 ### Changed

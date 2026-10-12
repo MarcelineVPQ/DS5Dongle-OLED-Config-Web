@@ -12,6 +12,7 @@ import type { InputReport } from "../../oled/inputReport";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import type { PanelView } from "../live/PartPanel";
 import { narratorIdle, say, setNarrator, stopNarrator, useNarrator } from "../narrator";
+import { useWindowShown } from "../useWindowShown";
 
 const DONE_KEY = "ds5.tourDone";
 // Off until the guide is rebuilt for the rail / console / library layout
@@ -224,9 +225,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   const hold = useRef<{ btn: "cross" | "circle"; since: number } | null>(null);
   const [holdProgress, setHoldProgress] = useState<{ btn: "cross" | "circle"; p: number } | null>(null);
 
-  // Follow the target (layouts move: panels open, the window resizes).
+  // Follow the target (layouts move: panels open, the window resizes), only
+  // while the window is on screen; measured again on show.
+  const shown = useWindowShown();
   useLayoutEffect(() => {
-    if (!step?.target) return;
+    if (!step?.target || !shown) return;
     const measure = () => {
       const el = document.querySelector(step.target!);
       setRect(el ? el.getBoundingClientRect() : null);
@@ -239,7 +242,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
       clearInterval(timer);
       window.removeEventListener("resize", measure);
     };
-  }, [step]);
+  }, [step, shown]);
   const spot = step?.target ? rect : null;
 
   const finish = useCallback(() => {
@@ -284,8 +287,9 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [input, go, finish, answer]);
 
   // While ✕ or ○ is held on a play step: fill the ring, then move on / back.
+  // A per-frame loop, so only while the window is on screen.
   useEffect(() => {
-    if (index === null || !STEPS[index].pad) return;
+    if (index === null || !STEPS[index].pad || !shown) return;
     let frame = 0;
     const tick = () => {
       const h = hold.current;
@@ -304,7 +308,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [index, go]);
+  }, [index, go, shown]);
 
   // A ticked mouse step moves on by itself after a moment, but never over
   // her: it waits for the current line to finish (the next step's line would

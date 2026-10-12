@@ -13,6 +13,7 @@ import type { ColorwayColors } from "./colorways";
 import { readPref, usePref } from "../storage";
 import { artUrl } from "../games/types";
 import SwirlField from "./SwirlField";
+import { useWindowShown } from "../useWindowShown";
 
 // The background: "default" (the swirl field, what a new install shows),
 // "art" (game artwork when there is some, else the swirls) or "off".
@@ -127,11 +128,14 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   const sig = keys.join("|");
   const [pos, setPos] = useState({ sig, i: 0 });
   const index = pos.sig === sig ? pos.i : 0;
+  // The art cycles only while the window is on screen (a crossfade nobody sees
+  // still costs frames).
+  const shown = useWindowShown();
   useEffect(() => {
-    if (keys.length < 2) return;
+    if (keys.length < 2 || !shown) return;
     const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
-  }, [sig, keys.length]);
+  }, [sig, keys.length, shown]);
   if (background === "off") return null;
   const art = background === "art" && keys.length > 0;
   return (
