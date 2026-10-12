@@ -4,8 +4,10 @@
 //
 // Colors: the six with AL2009man art (Gamepad-Asset-Pack Theme SVGs) use that
 // art's exact colors; the other plain colorways use close flat approximations.
-// Special editions have printed artwork, so they keep the theme colors and
-// only show their name.
+// Special editions are painted in their real colors, part by part (e.g.
+// Genshin Impact's teal center, triggers and sticks on an ivory shell with gold
+// symbols): colors only, never their artwork, logos or motifs. Only Spider-Man 2
+// and Monster Hunter Wilds keep stock black parts, as the real ones do.
 //
 // Outlines must stay readable: at least 2:1 against the body and the button
 // caps, and 3:1 (WCAG non-text contrast) on the black parts, where a light
@@ -31,6 +33,9 @@ export interface Colorway {
 const DARK = "#171b20";
 const STICK = "#333333";
 const plain = (body: string, cap: string, line: string, dark = DARK): ColorwayColors => ({ body, cap, dark, stick: STICK, line });
+// A special edition whose "black" parts (center, triggers, bumpers) and sticks
+// come in their own colors.
+const twoTone = (body: string, cap: string, line: string, dark: string, stick: string): ColorwayColors => ({ body, cap, dark, stick, line });
 
 export const COLORWAYS: Record<string, Colorway> = {
   "00": { name: "White", colors: plain("#ebeef0", "#e1e3e6", "#707373") },
@@ -51,18 +56,26 @@ export const COLORWAYS: Record<string, Colorway> = {
   "13": { name: "HyperPop Techno Red", colors: plain("#d8202e", "#c41b28", "#ffd0d4") },
   "14": { name: "HyperPop Remix Green", colors: plain("#3fbf4a", "#36aa40", "#0f3d13") },
   "15": { name: "HyperPop Rhythm Blue", colors: plain("#2b6fe0", "#255fc4", "#cfe0ff") },
-  "30": { name: "30th Anniversary", colors: plain("#b9b7b2", "#a9a7a2", "#4a4946") },
-  Z1: { name: "God of War Ragnarök", colors: plain("#dde6ee", "#cdd9e4", "#2c3e5c") },
+  // Special editions: colors by eye from the official product photos, only
+  // the base colors of each part (never the printed artwork). Where a "black"
+  // part is light (GoW Ragnarök's white center, The Last of Us), the outline
+  // is a mid tone that reads on both.
+  "30": { name: "30th Anniversary", colors: twoTone("#9a9da3", "#4a4c50", "#e4e6e8", "#5d6066", "#3e4044") },
+  Z1: { name: "God of War Ragnarök", colors: twoTone("#2b3a8c", "#1c1d21", "#787da3", "#e4e6f2", "#26272b") },
   Z2: { name: "Marvel's Spider-Man 2", colors: plain("#b3141c", "#1c1c20", "#f2c9cb") },
-  Z3: { name: "Astro Bot", colors: plain("#ebeef0", "#dfe3e7", "#2f6fd6") },
-  Z4: { name: "Fortnite", colors: plain("#7a4fd6", "#6a42c2", "#e2d6ff") },
-  Z6: { name: "The Last of Us", colors: plain("#4d5b5c", "#424f50", "#d9a441") },
-  Z7: { name: "Ghost of Yōtei", colors: plain("#2a2b2e", "#202124", "#c9a24a") },
-  ZA: { name: "God of War 20th Anniversary", colors: plain("#3b3b3d", "#2f2f31", "#c9a24a") },
-  ZB: { name: "Icon Blue", colors: plain("#1f5fd6", "#1a52bd", "#d3e1ff") },
-  ZD: { name: "Marathon", colors: plain("#c6f23a", "#b3dc30", "#26310a") },
-  ZE: { name: "Genshin Impact", colors: plain("#eef0f2", "#e2e5e8", "#5b7f8c") },
-  ZF: { name: "007 First Light", colors: plain("#1f2023", "#17181a", "#c9a24a") },
+  Z3: { name: "Astro Bot", colors: twoTone("#eef0f3", "#e6e9ee", "#2f6fd6", "#e4e7eb", "#d3d7db") },
+  Z4: { name: "Fortnite", colors: twoTone("#5cb3e8", "#8cc8f0", "#234a8a", "#1b2233", "#23293a") },
+  Z5: { name: "Monster Hunter Wilds", colors: plain("#8f1d24", "#86191f", "#d6d6da") },
+  Z6: { name: "The Last of Us", colors: twoTone("#26272a", "#1c1d20", "#7c8187", "#e8eaec", "#d8dadc") },
+  Z7: { name: "Ghost of Yōtei Gold", colors: twoTone("#f0efea", "#f3f2ee", "#7d5d14", "#c4c6c8", "#b0b3b5") },
+  ZA: { name: "God of War 20th Anniversary", colors: twoTone("#eceef0", "#f2f3f5", "#d8262f", "#e4e6e8", "#2e3034") },
+  ZB: { name: "Icon Blue", colors: twoTone("#1f4fc8", "#1e48b8", "#a9c8ff", "#1a3fa8", "#2550c0") },
+  // ZC: daidr/dualsense-tester (two owner reports with serials); the
+  // dualshock-tools map lists ZC as Ghost of Yōtei, which owners report as Z7.
+  ZC: { name: "Astro Bot Joyful", colors: twoTone("#eef0f3", "#e6e9ee", "#2f6fd6", "#e4e7eb", "#d3d7db") },
+  ZD: { name: "Marathon", colors: twoTone("#eceef0", "#e3e6e9", "#6e7277", "#e6e8eb", "#2a2c30") },
+  ZE: { name: "Genshin Impact", colors: twoTone("#ece6dc", "#f0ebe1", "#a8843a", "#22536c", "#2a5f78") },
+  ZF: { name: "007 First Light", colors: twoTone("#c9a868", "#1c1d20", "#7a6230", "#171b20", "#25272b") },
 };
 
 // WCAG contrast ratio between two #rrggbb colors (1..21).
