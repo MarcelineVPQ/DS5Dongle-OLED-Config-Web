@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-10-12
+
 ### Added
 
 - **Saved button layouts:** name your button setup ("Racing", "Southpaw") and give it to any game's profile; it switches in while the game runs and your normal buttons come back after, even if the app was closed mid-game. Layouts never touch the dongle's flash (firmware protocol 1.8: temporary remaps). Each layout shows what it changes, and a game page shows its layout's changes.
