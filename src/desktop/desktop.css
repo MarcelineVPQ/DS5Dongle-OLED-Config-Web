@@ -3556,7 +3556,8 @@ html[data-cards-translucent] .dash-card {
 /* All buttons: one row per button (name, acts as, changed / not applied). */
 .dk-buttons-table {
   display: grid;
-  grid-template-columns: minmax(84px, auto) minmax(0, 1fr) auto;
+  /* name (with its changed / not applied note under it), then the picker */
+  grid-template-columns: minmax(84px, auto) minmax(0, 1fr);
   gap: 4px 8px;
   align-items: center;
   margin-bottom: 8px;
@@ -3566,6 +3567,16 @@ html[data-cards-translucent] .dash-card {
 }
 .dk-buttons-row.changed label {
   font-weight: 700;
+}
+.dk-buttons-row label small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 400;
+}
+.dk-buttons-row select {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Trigger pull: L2 and R2 side by side in the card; the picked one first, in bold. */

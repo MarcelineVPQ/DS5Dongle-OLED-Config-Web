@@ -230,6 +230,7 @@ function AllButtonsSection({ remap }: { remap: Remap }) {
               <label role="rowheader" htmlFor={`all-remap-${i}`}>
                 {isChanged && <span aria-hidden="true">● </span>}
                 {buttonLabel(i)}
+                {(pending || isChanged) && <small>{pending ? t("desktop.layouts.notApplied") : t("desktop.layouts.changed")}</small>}
               </label>
               <select
                 id={`all-remap-${i}`}
@@ -246,9 +247,6 @@ function AllButtonsSection({ remap }: { remap: Remap }) {
                 ))}
                 <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
               </select>
-              <span role="cell" className="dk-hint">
-                {pending ? t("desktop.layouts.notApplied") : isChanged ? t("desktop.layouts.changed") : ""}
-              </span>
             </div>
           );
         })}

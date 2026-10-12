@@ -6,10 +6,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
-### Fixed
-
-- **The mute button looks like the real one:** clear plastic over the dark center (it was drawn in the body color), lit orange while the mic is muted.
-
 ## [0.9.4] - 2026-10-12
 
 ### Added
@@ -29,6 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **The mute button looks like the real one:** clear plastic over the dark center (it was drawn in the body color), lit orange while the mic is muted.
+- **All buttons list fits the side panel:** "changed" / "not applied yet" sit under the button's name instead of over its picker, and each picker uses the full width.
 - **Dongle page cards line up:** they come in 4, 2 or 1 columns (never a lone card on a row of 3), a short row's last card fills it, and the firmware version fits its card (full version in the tooltip). The chip temperature's trend line is now inside its gauge (it was shown twice), and the freed card shows **mic audio frames per second**.
 - **The Dongle page says when the speaker is off because the dongle ran out of memory at start** (firmware 0.9.4, issue #15), instead of sound just missing.
 - **Warning counters readable in every controller color:** the Dongle page's "⚠" counters were amber on the controller-colored cards (too faint on Cosmic Red and other mid tones). Warning-colored text now uses a version the theme makes legible on its own surfaces; checked in every colorway.

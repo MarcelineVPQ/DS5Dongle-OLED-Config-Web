@@ -10,10 +10,10 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included but h
 
 **The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptics strength per grip (HD haptics and rumble, with a test), Audio Auto Haptics, speaker and mic (with tests), button remapping, pairing slots.
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptics strength per grip (HD haptics and rumble, with a test), Audio Auto Haptics, speaker and mic (with tests), button remapping (every button in one list, plus **saved button layouts** you can give to games), pairing slots.
 - **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyro, stored in the dongle per controller.
 - **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline), and one-click firmware updates.
-- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) with per-game controller profiles that switch in while a game runs, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
+- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that switch in while a game runs, including a **button layout** for that game, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
 The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to dongle** keeps them after it powers off.
