@@ -1162,7 +1162,15 @@
       "playedOnly": "Gespielt: {{value}}.",
       "noCounters": "Dieser Controller hat keine Lebenszeit-Zähler gesendet.",
       "privacy": "Vom Controller selbst gespeichert. Nur gelesen: Nichts wird geändert, und seine Seriennummer wird nie in die App gelesen.",
-      "refresh": "Aktualisieren"
+      "refresh": "Aktualisieren",
+      "officialCurrent": "Aktuell",
+      "officialNewer": "Neuere offizielle Firmware {{version}} verfügbar",
+      "howToUpdate": "So aktualisierst du",
+      "howToPc": "Schließe den Controller mit einem USB-C-Kabel an einen Windows-PC an und aktualisiere ihn mit Sonys App PlayStation Accessories (früher „Firmware-Updater für DualSense Wireless-Controller“).",
+      "sonyPage": "Sonys Seite",
+      "howToPs5": "Oder an einer PS5: per USB-Kabel anschließen, dann Einstellungen → Zubehör → Controller.",
+      "howToCable": "Das Update geht nicht über den Dongle. Danach den Controller erneut mit dem Dongle koppeln, falls er sich nicht wieder verbindet.",
+      "windowsOnly": "Sonys Updater läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden."
     },
     "stickTest": {
       "circleTitle": "Rundheitstest",

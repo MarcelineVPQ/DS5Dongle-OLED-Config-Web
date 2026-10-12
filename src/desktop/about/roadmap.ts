@@ -41,6 +41,13 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["controller"],
   },
 
+  {
+    column: "progress",
+    title: "Is your controller's firmware up to date?",
+    text: "Controller info says whether Sony has newer firmware for your DualSense or Edge, and how to update it with Sony's own tools.",
+    areas: ["controller"],
+  },
+
   // Planned
   {
     column: "next",

@@ -14,6 +14,7 @@ import { artRequestTarget } from "./games/artRequest";
 import { hasSchemeHandler } from "./games/schemeHandler";
 import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
+import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
 import { loadSettings, saveSettings } from "./settings";
@@ -169,6 +170,11 @@ function start(): void {
     return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
   });
 
+  // Sony's controller firmware versions: with automatic checks on, or when asked.
+  const officialFirmware = new OfficialFirmwareSource(
+    (url, init) => net.fetch(url, init),
+    () => settings.checkForUpdates,
+  );
   // Firmware the app offers: bundled with this release, or a newer published one.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
@@ -249,6 +255,7 @@ function start(): void {
     },
     restartToUpdate: () => updater.restart(),
     latestFirmware: () => latestFirmware(firmwareSource),
+    officialControllerFirmware: (asked) => officialFirmware.lookup(asked),
     downloadFirmware: () => firmwareBytes(firmwareSource),
     getDesktopPalette: () => readDesktopPalette(),
     firmwareChangelog: () => updater.firmwareChangelog(),

@@ -9,6 +9,8 @@ import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
 import { chargeState, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
+import { compareOfficial } from "../../protocol/officialFirmware";
+import type { OfficialFirmwareLookup } from "../api";
 import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInfo";
 
 export const supportsControllerInfo = (identity: UseDs5BridgeResult["identity"]) => supportsFeature3(identity, 12, FEATURES3.controllerInfo);
@@ -77,6 +79,7 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [loadTry, setLoadTry] = useState(0);
+  const [official, setOfficial] = useState<OfficialFirmwareLookup | null>(null);
 
   // Once per controller connection, and again on Refresh. (While none is
   // connected the card shows no numbers; a new one starts from blank.)
@@ -89,6 +92,13 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
           setInfo(null);
           setError(null);
           setLoading(true);
+          setOfficial(null);
+          // Sony's latest versions, alongside (main process; only with
+          // automatic checks on, or now that Refresh was pressed).
+          void window.desktop
+            ?.officialControllerFirmware(loadTry > 0)
+            .then((lookup) => live && setOfficial(lookup))
+            .catch(() => undefined);
         }
         return loadControllerInfo(client);
       })
@@ -111,6 +121,8 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
     const charge = batteryState === null ? null : chargeState(batteryState);
     const chargeBad = charge === "voltageError" || charge === "temperatureError" || charge === "chargeError";
     const fw = info?.firmware;
+    const edge = info?.edge ?? null;
+    const officialStatus = fw && edge !== null && official?.latest ? compareOfficial(fw.updateVersion, edge, official.latest) : null;
     const tm = info?.telemetry;
     const errors = tm ? tm.chargeErrors.voltage + tm.chargeErrors.temperature + tm.chargeErrors.pmic : 0;
     body = (
@@ -121,7 +133,19 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
           <dt>{t("desktop.ctrlInfo.charge")}</dt>
           <dd className={chargeBad ? "dk-bad" : undefined}>{charge ? t(`desktop.ctrlInfo.chargeState.${charge}`) : "—"}</dd>
           <dt>{t("desktop.ctrlInfo.firmware")}</dt>
-          <dd className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</dd>
+          <dd>
+            <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>
+            {officialStatus && (
+              <span className={officialStatus.status === "current" ? "dk-good dk-fw-note" : "dk-fw-note"}>
+                {officialStatus.status === "current" ? t("desktop.ctrlInfo.officialCurrent") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
+              </span>
+            )}
+          </dd>
+          {officialStatus?.status === "newer" && (
+            <dd className="dk-fw-howto">
+              <HowToUpdate />
+            </dd>
+          )}
           {fw && (
             <>
               <dt>{t("desktop.ctrlInfo.built")}</dt>
@@ -210,6 +234,32 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
       {body}
       {error && <div className="dk-notice error">{error}</div>}
     </section>
+  );
+}
+
+// Sony's official links, where Sony has the page in the app's language.
+const SONY_PAGE_LANG: Record<string, string> = { de: "de", es: "es", fr: "fr", ja: "jp", "pt-BR": "pt" };
+const sonyUpdaterPage = (lang: string | undefined) => `https://controller.dl.playstation.net/controller/lang/${SONY_PAGE_LANG[lang ?? ""] ?? "en"}/2100004.html`;
+
+// Sony's route for a newer official firmware. The app only checks: Sony's
+// firmware is installed with Sony's own tools, never by this app.
+function HowToUpdate() {
+  const { t, i18n } = useTranslation();
+  return (
+    <details className="dk-advanced">
+      <summary>{t("desktop.ctrlInfo.howToUpdate")}</summary>
+      <ul className="dk-hint dk-fw-steps">
+        <li>
+          {t("desktop.ctrlInfo.howToPc")}{" "}
+          <a href={sonyUpdaterPage(i18n.resolvedLanguage)} target="_blank" rel="noreferrer noopener">
+            {t("desktop.ctrlInfo.sonyPage")}
+          </a>
+        </li>
+        <li>{t("desktop.ctrlInfo.howToPs5")}</li>
+        <li>{t("desktop.ctrlInfo.howToCable")}</li>
+        {window.desktop?.platform !== "win32" && <li>{t("desktop.ctrlInfo.windowsOnly")}</li>}
+      </ul>
+    </details>
   );
 }
 

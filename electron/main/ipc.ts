@@ -23,6 +23,7 @@ import {
   type DeviceStatus,
   type GameBackup,
   type FirmwareLookup,
+  type OfficialFirmwareLookup,
   type ProtonInstallResult,
   type UndoResult,
   type UpdateState,
@@ -96,6 +97,7 @@ export interface IpcHandlers {
   devChannelPreview: () => Promise<DevChannelPreview | null>;
   restartToUpdate: () => void;
   latestFirmware: () => Promise<FirmwareLookup>;
+  officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
   getDesktopPalette: () => Promise<unknown>;
   firmwareChangelog: () => Promise<string>;
@@ -188,6 +190,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
   invoke(IPC.micTest, h.micTest);
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
+  invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

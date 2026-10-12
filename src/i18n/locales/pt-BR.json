@@ -1162,7 +1162,15 @@
       "playedOnly": "Jogado: {{value}}.",
       "noCounters": "Este controle não enviou contadores.",
       "privacy": "Guardado pelo próprio controle. Só leitura: nada é alterado e o número de série nunca é lido pelo app.",
-      "refresh": "Atualizar"
+      "refresh": "Atualizar",
+      "officialCurrent": "Atualizado",
+      "officialNewer": "Firmware oficial mais recente disponível: {{version}}",
+      "howToUpdate": "Como atualizar",
+      "howToPc": "Conecte o controle a um PC com Windows com um cabo USB-C e atualize-o com o app PlayStation Accessories da Sony (antes \"Atualizador de firmware para o controle sem fio DualSense\").",
+      "sonyPage": "Página da Sony",
+      "howToPs5": "Ou em um PS5: conecte-o com um cabo USB e vá em Configurações → Acessórios → Controles.",
+      "howToCable": "A atualização não passa pelo dongle. Depois, pareie o controle com o dongle de novo se ele não reconectar.",
+      "windowsOnly": "O atualizador da Sony só funciona no Windows: no Linux e no macOS, use um PC com Windows ou um PS5."
     },
     "stickTest": {
       "circleTitle": "Teste de circularidade",
