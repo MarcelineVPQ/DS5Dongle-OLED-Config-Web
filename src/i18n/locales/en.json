@@ -458,6 +458,10 @@
         "ps": "PS button",
         "mute": "Mute button & mic",
         "speaker": "Speaker",
+        "fn-l": "Left Fn button",
+        "fn-r": "Right Fn button",
+        "paddle-l": "Left back paddle",
+        "paddle-r": "Right back paddle",
         "body": "Grips (haptics)"
       },
       "pickHint": "Click any part of the drawing to set it up.",
@@ -496,6 +500,11 @@
       "edgeButtons": "Edge buttons",
       "backLeft": "Back L",
       "backRight": "Back R",
+      "edgePart": {
+        "fn": "The DualSense Edge's Fn button. Hold it with other buttons to switch the controller's profiles. It lights up here when you press it.",
+        "paddle": "One of the DualSense Edge's back buttons. The controller's profiles can make it act as any button. It lights up here when you press it.",
+        "soon": "Remapping it from this app is coming."
+      },
       "go": {
         "intro": "Click a part of the drawing with your mouse, or pick a setting here:",
         "lightbar": {

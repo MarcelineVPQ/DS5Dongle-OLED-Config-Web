@@ -124,6 +124,7 @@ The result is in `release/`. The official downloads are built the same way by [G
 - **Audio:** The clean controller speaker and Bluetooth mic are [awalol](https://github.com/awalol/DS5Dongle)'s work upstream: the audio path that runs from RAM, the packed audio reports and the mic decoding (and finding the bit that turns the mic on).
 - **Thanks** to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes, Audio Auto Haptics DSP) and [zurce/DS5Dongle-OLED](https://github.com/zurce/DS5Dongle-OLED) (multi-slot pairing).
 - **Live controller art:** DualSense art from the [Gamepad Asset Pack](https://github.com/AL2009man/Gamepad-Asset-Pack) by AL2009man, MIT, modified (recolored and tagged by `tools/prepare_controller_art.py`; license in `src/assets/AL2009MAN-LICENSE.txt`).
+- **DualSense Edge art:** from [dualsense-tester](https://github.com/daidr/dualsense-tester) by Xuezhou Dai (daidr), MIT, modified (Sony marks removed, regions filled, recolored and parts tagged by `tools/prepare_edge_art.py`; license in `src/assets/DAIDR-LICENSE.txt`).
 - **Tray icon and web tool art:** "PS5 Button Icons and Controls" by [Zacksly](https://zacksly.itch.io), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), modified.
 - **PICOBOOT flasher:** picoflash by Piers Finlayson (MIT).
 

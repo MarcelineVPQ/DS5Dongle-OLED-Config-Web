@@ -1,6 +1,7 @@
 // Parts of the controller you can select in the live view. The ids match the
-// data-part attributes in src/assets/dualsense.svg, plus "body" (the grips:
-// haptics) which is any click on the controller's shell.
+// data-part attributes in src/assets/dualsense.svg and
+// src/assets/dualsense-edge.svg, plus "body" (the grips: haptics) which is any
+// click on the controller's shell.
 
 export const PART_IDS = [
   "l1",
@@ -24,9 +25,18 @@ export const PART_IDS = [
   "ps",
   "mute",
   "speaker",
+  // DualSense Edge only: the Fn buttons under the sticks and the back paddles.
+  "fn-l",
+  "fn-r",
+  "paddle-l",
+  "paddle-r",
 ] as const;
 
 export type PartId = (typeof PART_IDS)[number] | "body";
+
+// The Edge's own parts (only its drawing has them). Not remappable yet: their
+// panel says what they are (PartPanel).
+export const EDGE_PARTS: ReadonlySet<PartId> = new Set<PartId>(["fn-l", "fn-r", "paddle-l", "paddle-r"]);
 
 // Which remap slot a part is (firmware remap table order, src/protocol/remap.ts).
 // Buttons whose panel would be nothing but Remap: a click on the drawing

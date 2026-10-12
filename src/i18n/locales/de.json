@@ -459,6 +459,10 @@
         "ps": "PS-Taste",
         "mute": "Stummtaste & Mikro",
         "speaker": "Lautsprecher",
+        "fn-l": "Linke Fn-Taste",
+        "fn-r": "Rechte Fn-Taste",
+        "paddle-l": "Linke Rücktaste",
+        "paddle-r": "Rechte Rücktaste",
         "body": "Griffe (Haptik)"
       },
       "pickHint": "Klicke auf einen Teil der Abbildung, um ihn einzurichten.",
@@ -491,6 +495,11 @@
       "edgeButtons": "Edge-Tasten",
       "backLeft": "Rück L",
       "backRight": "Rück R",
+      "edgePart": {
+        "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
+        "paddle": "Eine der Rücktasten des DualSense Edge. Die Profile des Controllers können sie als jede Taste belegen. Sie leuchtet hier auf, wenn du sie drückst.",
+        "soon": "Die Belegung in dieser App kommt noch."
+      },
       "effects": {
         "0": "keiner",
         "1": "Widerstand",

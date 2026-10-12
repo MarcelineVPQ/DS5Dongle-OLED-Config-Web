@@ -14,7 +14,7 @@
 // per-controller settings), see docs/BACKLOG.md.
 import { useCallback, useMemo } from "react";
 import { useFlagPref, useRawPref } from "../storage";
-import { COLORWAYS, colorway, legibleOn, type ColorwayColors } from "./colorways";
+import { COLORWAYS, drawingColors, legibleOn, type ColorwayColors, type Model } from "./colorways";
 
 export type ColorPart = keyof ColorwayColors;
 export type CustomColors = Partial<ColorwayColors>;
@@ -83,8 +83,9 @@ export function useCustomColors(): {
   return { on, setOn, colors, setColors, active };
 }
 
-// The drawing's colors for a colorway code, with the player's on top.
-export function useControllerColors(code: string | null): ColorwayColors | null {
+// The drawing's colors for a colorway code (and model: the Edge has its own),
+// with the player's on top.
+export function useControllerColors(code: string | null, model: Model | null = null): ColorwayColors | null {
   const { active } = useCustomColors();
-  return useMemo(() => mergeColors(colorway(code)?.colors ?? null, active), [code, active]);
+  return useMemo(() => mergeColors(drawingColors(code, model), active), [code, model, active]);
 }

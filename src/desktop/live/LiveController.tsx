@@ -1,5 +1,7 @@
 // The live DualSense: AL2009man's art (src/assets/dualsense.svg, prepared by
-// tools/prepare_controller_art.py) with the controller's state painted on it.
+// tools/prepare_controller_art.py), or for a DualSense Edge daidr's
+// (src/assets/dualsense-edge.svg, tools/prepare_edge_art.py), with the
+// controller's state painted on it.
 // Pressed buttons light up, L2/R2 fill with the pull, sticks move, touches
 // show on the touchpad and the lightbar takes the controller's color. Every
 // part is a button that selects it for the side panel.
@@ -9,7 +11,8 @@
 // 30 times a second.
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import art from "../../assets/dualsense.svg?raw";
+import dualsenseArt from "../../assets/dualsense.svg?raw";
+import edgeArt from "../../assets/dualsense-edge.svg?raw";
 import type { InputReport } from "../../oled/inputReport";
 import { lineOnDark, type ColorwayColors } from "./colorways";
 import { hexToRgb, wantsLightInk } from "../theme/desktopPalette";
@@ -20,6 +23,7 @@ const TOUCH_W = 1920;
 const TOUCH_H = 1080;
 
 interface Props {
+  model: "dualsense" | "edge" | null; // which drawing (null: the standard one)
   input: InputReport | null;
   lightbar: [number, number, number] | null;
   playerLeds: number; // bits 0..4, left to right (as the PC set them)
@@ -59,12 +63,24 @@ function pressed(input: InputReport): Set<PartId> {
     [input.home, "ps"],
     [input.pad, "touchpad"],
     [input.mute, "mute"],
+    // DualSense Edge only (always false on a standard DualSense)
+    [input.fnLeft, "fn-l"],
+    [input.fnRight, "fn-r"],
+    [input.backLeft, "paddle-l"],
+    [input.backRight, "paddle-r"],
   ];
   for (const [down, part] of map) if (down) on.add(part);
   return on;
 }
 
-export default function LiveController({ input, lightbar, playerLeds, colors, selected, remapped, onSelect }: Props) {
+// One drawing per model; another model mounts its drawing afresh (the parts
+// are indexed once per drawing).
+export default function LiveController(props: Props) {
+  const edge = props.model === "edge";
+  return <LiveArt key={edge ? "edge" : "dualsense"} art={edge ? edgeArt : dualsenseArt} {...props} />;
+}
+
+function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped, onSelect }: Props & { art: string }) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const parts = useRef(new Map<PartId, SVGGraphicsElement>());
@@ -235,7 +251,7 @@ export default function LiveController({ input, lightbar, playerLeds, colors, se
           pick(e.target);
         }
       }}
-      dangerouslySetInnerHTML={{ __html: art /* sink-allowed: bundled build-time SVG asset (src/assets/dualsense.svg) */ }}
+      dangerouslySetInnerHTML={{ __html: art /* sink-allowed: bundled build-time SVG asset (src/assets/dualsense.svg or dualsense-edge.svg) */ }}
     />
   );
 }

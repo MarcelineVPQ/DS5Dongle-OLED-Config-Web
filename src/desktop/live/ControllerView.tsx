@@ -57,9 +57,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const id = useShownIdentity(status?.identity);
   const preview = useDevPreview().active;
   const on = Boolean(id?.controllerConnected);
-  const look = colorway(id?.colorwayCode ?? null);
+  const look = colorway(id?.colorwayCode ?? null, id?.model ?? null);
   // Its colors, with the player's own on top (App settings).
-  const lookColors = useControllerColors(id?.colorwayCode ?? null);
+  const lookColors = useControllerColors(id?.colorwayCode ?? null, id?.model ?? null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
   const liveCapable = supportsLiveInput(bridge.identity);
   // The drawing's live input isn't shown on the Dongle page: no polling there.
@@ -177,6 +177,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 </div>
               )}
               <LiveController
+                model={on ? (id?.model ?? null) : null}
                 input={input}
                 lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
                 playerLeds={on ? (id?.playerLeds ?? 0) : 0}

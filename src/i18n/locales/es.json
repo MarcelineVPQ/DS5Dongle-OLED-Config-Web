@@ -459,6 +459,10 @@
         "ps": "Botón PS",
         "mute": "Botón de silencio y micro",
         "speaker": "Altavoz",
+        "fn-l": "Botón Fn izquierdo",
+        "fn-r": "Botón Fn derecho",
+        "paddle-l": "Botón trasero izquierdo",
+        "paddle-r": "Botón trasero derecho",
         "body": "Empuñaduras (háptica)"
       },
       "pickHint": "Haz clic en cualquier parte del dibujo para configurarla.",
@@ -491,6 +495,11 @@
       "edgeButtons": "Botones Edge",
       "backLeft": "Trasero I",
       "backRight": "Trasero D",
+      "edgePart": {
+        "fn": "El botón Fn del DualSense Edge. Junto con otros botones cambia los perfiles del mando. Se ilumina aquí cuando lo pulsas.",
+        "paddle": "Uno de los botones traseros del DualSense Edge. Los perfiles del mando pueden hacer que actúe como cualquier botón. Se ilumina aquí cuando lo pulsas.",
+        "soon": "Pronto podrás reasignarlo desde esta app."
+      },
       "effects": {
         "0": "ninguno",
         "1": "resistencia",

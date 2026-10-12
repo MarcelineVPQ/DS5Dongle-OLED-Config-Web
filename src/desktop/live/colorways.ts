@@ -117,6 +117,25 @@ export function lineOnDark(colors: ColorwayColors): string {
   return legibleOn(colors.line, needs);
 }
 
-export function colorway(code: string | null): Colorway | null {
-  return code ? (COLORWAYS[code] ?? null) : null;
+// The DualSense Edge's colorways where they differ from the standard
+// controller's under the same code: Edge White has black face buttons, d-pad
+// and sticks on the white shell (the black center and touchpad are its dark
+// parts); Midnight Black is dark all over. Other codes use the standard map.
+export const EDGE_COLORWAYS: Record<string, Colorway> = {
+  "00": { name: "White", colors: twoTone("#ebeef0", "#1c1d20", "#8a8e93", DARK, "#2a2c30") },
+  "01": { name: "Midnight Black", colors: COLORWAYS["01"].colors },
+};
+
+export type Model = "dualsense" | "edge";
+
+export function colorway(code: string | null, model: Model | null = null): Colorway | null {
+  if (!code) return null;
+  return (model === "edge" ? EDGE_COLORWAYS[code] : undefined) ?? COLORWAYS[code] ?? null;
+}
+
+// The drawing's colors for a controller: its colorway's; an Edge whose code
+// isn't known is drawn as the stock Edge (White), a standard DualSense keeps
+// the theme colors (null).
+export function drawingColors(code: string | null, model: Model | null = null): ColorwayColors | null {
+  return colorway(code, model)?.colors ?? (model === "edge" ? EDGE_COLORWAYS["00"].colors! : null);
 }

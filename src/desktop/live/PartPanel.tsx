@@ -39,7 +39,7 @@ import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
 import type { FirmwareUpdate } from "../useUpdates";
-import { REMAP_INDEX, type PartId } from "./parts";
+import { EDGE_PARTS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 
 export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
@@ -163,6 +163,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
       {part === "mute" && <MicSection bridge={bridge} />}
       {part === "mute" && <MicTest />}
       {part === "ps" && <SlotsPage bridge={bridge} />}
+      {EDGE_PARTS.has(part) && <EdgePartInfo part={part} />}
       {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}
     </>
   );
@@ -453,6 +454,19 @@ function StickLive({ input, side }: { input: InputReport | null; side: "stick-l"
       <p className="dk-mono">
         X {pct(s.x)}% · Y {pct(s.y)}%
       </p>
+    </section>
+  );
+}
+
+// The DualSense Edge's Fn buttons and back paddles: what they are; they light
+// up on the drawing when pressed, remapping them comes later.
+function EdgePartInfo({ part }: { part: PartId }) {
+  const { t } = useTranslation();
+  const kind = part === "fn-l" || part === "fn-r" ? "fn" : "paddle";
+  return (
+    <section className="dk-card">
+      <p>{t(`desktop.live.edgePart.${kind}`)}</p>
+      <p className="dk-hint">{t("desktop.live.edgePart.soon")}</p>
     </section>
   );
 }
