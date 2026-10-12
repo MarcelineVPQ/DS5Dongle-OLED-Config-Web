@@ -34,20 +34,27 @@ export const ProfileCurveSchema = z
   .refine((c) => c.type !== "custom" || c.points.every((p, i) => i === 0 || (p[0] >= c.points[i - 1][0] && p[1] >= c.points[i - 1][1])));
 
 // What a game profile can change on the dongle (in its RAM only, while the
-// game runs; never written to the dongle's flash).
+// game runs or its profile is edited; never written to the dongle's flash).
+// Format 2 (`format: 2`): a setting left out means "use my normal setting".
+// Profiles made before it (no `format`) hold every config setting, and one
+// strength for both grips when the right grip is missing; they load and keep
+// working as they did (profileValues.ts upgrades them).
 export const ProfileSettingsSchema = z.strictObject({
-  hapticsGain: z.number().min(1).max(6),
-  // Right grip (protocol 1.6); profiles made before it have one strength for both.
+  format: z.literal(2).optional(),
+  hapticsGain: z.number().min(1).max(6).optional(),
+  // Right grip (protocol 1.6).
   hapticsGainRight: z.number().min(1).max(6).optional(),
-  autoHapticsEnable: z.number().int().min(0).max(3),
-  autoHapticsGain: z.number().int().min(0).max(200),
-  autoHapticsLowpass: z.number().int().min(0).max(3),
-  speakerVolume: z.number().min(-100).max(12),
-  lightbarMode: z.number().int().min(0).max(8),
-  lbFavR: z.array(z.number().int().min(0).max(255)).length(4),
-  lbFavG: z.array(z.number().int().min(0).max(255)).length(4),
-  lbFavB: z.array(z.number().int().min(0).max(255)).length(4),
-  btMicEnable: z.boolean(),
+  autoHapticsEnable: z.number().int().min(0).max(3).optional(),
+  autoHapticsGain: z.number().int().min(0).max(200).optional(),
+  autoHapticsLowpass: z.number().int().min(0).max(3).optional(),
+  speakerVolume: z.number().min(-100).max(12).optional(),
+  lightbarMode: z.number().int().min(0).max(8).optional(),
+  lbFavR: z.array(z.number().int().min(0).max(255)).length(4).optional(),
+  lbFavG: z.array(z.number().int().min(0).max(255)).length(4).optional(),
+  lbFavB: z.array(z.number().int().min(0).max(255)).length(4).optional(),
+  btMicEnable: z.boolean().optional(),
+  // The haptics/speaker audio buffer (Haptics panel), samples.
+  audioBufferLength: z.number().int().min(16).max(128).optional(),
   // A saved button layout (protocol 1.8: applied for the game only, never
   // to flash); absent = the player's normal buttons.
   buttonLayout: LayoutIdSchema.optional(),
@@ -56,8 +63,25 @@ export const ProfileSettingsSchema = z.strictObject({
   stickCurves: z.strictObject({ left: ProfileCurveSchema.optional(), right: ProfileCurveSchema.optional() }).optional(),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
-// The dongle config fields a profile sets (the layout and the stick curves are applied separately).
-export const PROFILE_FIELDS = (Object.keys(ProfileSettingsSchema.shape) as Array<keyof ProfileSettings>).filter((k) => k !== "buttonLayout" && k !== "stickCurves");
+// The dongle config fields a profile can set (the layout and the stick curves
+// are applied separately). Dongle-wide settings (idle disconnect, the Pico's
+// LED and screen, USB polling and controller mode) and app-only ones (theme,
+// backgrounds, custom colors) aren't part of a game's profile.
+export const PROFILE_FIELDS = [
+  "hapticsGain",
+  "hapticsGainRight",
+  "autoHapticsEnable",
+  "autoHapticsGain",
+  "autoHapticsLowpass",
+  "speakerVolume",
+  "lightbarMode",
+  "lbFavR",
+  "lbFavG",
+  "lbFavB",
+  "btMicEnable",
+  "audioBufferLength",
+] as const satisfies ReadonlyArray<keyof ProfileSettings>;
+export type ProfileField = (typeof PROFILE_FIELDS)[number];
 
 // Player feedback is structured, never free text: fixed statements a player
 // ticks, so shared feedback (later) is counts per statement, with nothing to

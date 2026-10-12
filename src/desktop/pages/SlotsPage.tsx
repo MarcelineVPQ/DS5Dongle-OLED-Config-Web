@@ -6,6 +6,7 @@ import { usePoll } from "../usePoll";
 import { FAKE_SLOTS, useFakeSlots } from "../devPreview";
 import { COLORWAYS } from "../live/colorways";
 import { readPref, writePref } from "../storage";
+import { useLibrary } from "../library/libraryContext";
 
 // Which controller each pairing slot holds, remembered by its Bluetooth
 // address whenever it connects (the dongle only stores the address).
@@ -26,6 +27,8 @@ function formatMac(addr: Uint8Array): string {
 export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
   const client = bridge.client;
+  // Not client.switchSlot: a game's profile mustn't be saved into flash by the switch.
+  const { switchSlot } = useLibrary();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
@@ -114,7 +117,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
                           disabled={!client || busy}
                           onClick={() =>
                             // A pretend controller, or back from one to the real slot: shown only, nothing sent.
-                            fakeHere ? fake.switchTo(i) : fake.slot !== null && v?.identity.currentSlot === i ? fake.switchTo(null) : void act(() => client!.switchSlot(i))
+                            fakeHere ? fake.switchTo(i) : fake.slot !== null && v?.identity.currentSlot === i ? fake.switchTo(null) : void act(() => switchSlot(i))
                           }
                         >
                           {t("desktop.slots.switch", "Switch to")}

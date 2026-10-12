@@ -30,6 +30,7 @@ import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
 import { useRemap } from "./useRemap";
+import { useLibrary } from "../library/libraryContext";
 
 const PANEL_KEY = "ds5.panelHidden";
 // The rail's Controller item, clicked while already on the controller: show or
@@ -75,7 +76,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
     wasOn.current = on;
   }, [on, id]);
-  const remap = useRemap(client, bridge.identity?.remapTemporary ?? null);
+  const { appliedStamp } = useLibrary();
+  const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
 
   const remapped = useMemo(() => {
     const set = new Set<PartId>();

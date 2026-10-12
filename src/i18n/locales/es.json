@@ -700,7 +700,7 @@
         "details": "Detalles"
       },
       "activeNow": "Activo ahora",
-      "profileNone": "Este juego usa los ajustes normales de tu dongle. Un perfil cambia los hápticos, el altavoz, la barra de luz y el micrófono solo para este juego, y los restablece al cerrarlo.",
+      "profileNone": "Este juego usa tus ajustes normales. Un perfil cambia cualquier ajuste del mando (hápticos, altavoz, barra de luz, micrófono, botones, sticks) solo para este juego, y los restablece al cerrarlo.",
       "profileFromCurrent": "Crear desde los ajustes actuales",
       "profileNeedsDongle": "Conecta el dongle para partir de tus ajustes actuales.",
       "profileHint": "Los cambios se guardan en el perfil de este juego, no en el dongle.",
@@ -1244,7 +1244,21 @@
       "openHint": "Poner este perfil en el mando y editarlo con todos los paneles, notando cada cambio al momento",
       "saveLayout": "Guardar en la distribución {{name}}",
       "saveNewLayout": "Guardar como distribución de este juego",
-      "buttonsNote": "Editando {{title}}: los botones se guardan en la distribución de este juego, no en tus botones normales."
+      "buttonsNote": "Editando {{title}}: los botones se guardan en la distribución de este juego, no en tus botones normales.",
+      "dongleNote": "No forma parte del perfil de {{title}}: los ajustes del dongle siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en el dongle.",
+      "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en el dongle para todos los juegos.",
+      "curvesNote": "Editando {{title}}: las curvas se guardan en el perfil de este juego y se notan al instante; luego vuelven tus curvas normales.",
+      "curvesNormal": "Este stick usa tu curva normal en este juego."
+    },
+    "profile": {
+      "changes": "Lo que cambia este juego (todo lo demás usa tus ajustes normales):",
+      "allNormal": "Aún no hay cambios para este juego: usa tus ajustes normales. «Editar en la vista del mando» los cambia solo para este juego.",
+      "useNormal": "{{name}}. Usar mi ajuste normal",
+      "allSettings": "Todos los ajustes",
+      "normalSub": "Tu ajuste normal",
+      "on": "Activado",
+      "off": "Desactivado",
+      "copyHint": "Este juego recibe los ajustes que hay ahora en el dongle"
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Cambiar el color",

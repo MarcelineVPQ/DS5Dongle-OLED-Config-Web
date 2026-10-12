@@ -31,7 +31,7 @@ export interface Remap {
   setExtra: (index: number, value: number) => void;
 }
 
-export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | null = null): Remap {
+export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | null = null, reloadKey: string | null = null): Remap {
   const { t } = useTranslation();
   const [state, setState] = useState<RemapState | null>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -67,8 +67,8 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     return () => {
       live = false;
     };
-    // Read again when a game's layout goes on or comes off.
-  }, [client, temporary]);
+    // Read again when a game's layout goes on or comes off (or a new version of it).
+  }, [client, temporary, reloadKey]);
 
   // Stable between renders (the live view re-renders ~30 times a second).
   const device = useMemo(() => state?.table ?? identityTable(), [state]);

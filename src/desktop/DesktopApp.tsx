@@ -66,6 +66,7 @@ export default function DesktopApp() {
   // Per-game profiles switch in while their game runs (never mid-update).
   const updating = fw.state.phase === "running" || fw.state.phase === "verifying";
   const profiles = useGameProfile(bridge, updating);
+  const switchSlot = profiles.switchSlot;
 
   const openPanel = (view: PanelView) => {
     setMain("controller");
@@ -200,10 +201,10 @@ export default function DesktopApp() {
             if (command.page === "dongle") setPanel("dongle");
           }
         } else if (command.type === "switchSlot") {
-          void client?.switchSlot(command.slot).catch(() => undefined);
+          void switchSlot(command.slot).catch(() => undefined);
         }
       }),
-    [client],
+    [switchSlot],
   );
 
   return (
@@ -213,6 +214,8 @@ export default function DesktopApp() {
         setLibrary: profiles.setLibrary,
         active: profiles.active,
         editing: profiles.editing,
+        appliedStamp: profiles.appliedStamp,
+        switchSlot: profiles.switchSlot,
         editProfile: (gameKey, title) => {
           profiles.startEditing(gameKey, title);
           setMain("controller");

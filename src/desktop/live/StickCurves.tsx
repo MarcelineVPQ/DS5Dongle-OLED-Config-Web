@@ -11,7 +11,21 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
-import { CURVE_TYPES, DEFAULT_CURVES, LINEAR_CURVE, applyCurve, curveAt, curvesEqual, movePoint, tiltOf, type CurveType, type StickCurve, type StickCurvePair } from "../../protocol/stickCurve";
+import { useLibrary } from "../library/libraryContext";
+import {
+  CURVE_PRESETS,
+  CURVE_TYPES,
+  DEFAULT_CURVES,
+  LINEAR_CURVE,
+  applyCurve,
+  curveAt,
+  curvesEqual,
+  movePoint,
+  tiltOf,
+  type CurveType,
+  type StickCurve,
+  type StickCurvePair,
+} from "../../protocol/stickCurve";
 import { BusyButton, Segmented } from "../controls";
 
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
@@ -32,6 +46,21 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   const [side, setSide] = useState<0 | 1>(0);
   const [error, setError] = useState<string | null>(null);
   const [loadTry, setLoadTry] = useState(0);
+  // A game's profile on (edited, or its game running): the curves picked here
+  // go into that profile (undefined = that stick keeps the normal curve) and
+  // the profile hook puts them on the dongle for now (RAM only).
+  const { editing, active, library, setLibrary } = useLibrary();
+  const target = editing ?? active;
+  const profile = target ? library.games[target.gameKey]?.profile : undefined;
+  const stored = profile?.settings.stickCurves;
+  const storedKey = JSON.stringify(stored ?? null);
+  const [gameDraft, setGameDraft] = useState<GameCurves>(() => fromProfile(storedKey));
+  // A new version of the profile's curves (saved here or on the game page): start from it.
+  const [draftFor, setDraftFor] = useState(storedKey);
+  if (draftFor !== storedKey) {
+    setDraftFor(storedKey);
+    setGameDraft(fromProfile(storedKey));
+  }
 
   const currentSlot = bridge.identity?.currentSlot;
   useEffect(() => {
@@ -62,6 +91,27 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       </section>
     );
   }
+
+  if (profile && target)
+    return (
+      <GameStickCurves
+        title={target.title}
+        saved={saved}
+        draft={gameDraft}
+        onDraft={setGameDraft}
+        side={side}
+        onSide={setSide}
+        input={input}
+        sticks={sticks}
+        stored={fromProfile(storedKey)}
+        onSave={async (pair) => {
+          const desktop = window.desktop;
+          if (!desktop) return;
+          const stickCurves = pair[0] || pair[1] ? { ...(pair[0] ? { left: pair[0] } : {}), ...(pair[1] ? { right: pair[1] } : {}) } : undefined;
+          setLibrary(await desktop.librarySetProfile({ gameKey: target.gameKey, title: target.title, settings: { ...profile.settings, stickCurves } }));
+        }}
+      />
+    );
 
   const curve = draft[side];
   const setCurve = (c: StickCurve) => setDraft((d) => (side === 0 ? [c, d[1]] : [d[0], c]));
@@ -148,12 +198,13 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
 // The curve (solid) against a straight line (dashed), with the custom points
 // as squares (the selected one larger, with a ring) and the live stick as a
 // circle with crosshair lines: shapes and dashes carry the meaning, not color.
-function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [number, number] | null; onPoints: (p: StickCurve["points"]) => void }) {
+function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [number, number] | null; onPoints?: (p: StickCurve["points"]) => void }) {
   const { t } = useTranslation();
   const svg = useRef<SVGSVGElement>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
-  const custom = curve.type === "custom";
+  // Custom points are dragged only where they can be saved (not into a game's profile yet).
+  const custom = curve.type === "custom" && !!onPoints;
 
   const steps = 64;
   const path = Array.from({ length: steps + 1 }, (_, i) => {
@@ -169,7 +220,7 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
     const y = 1 - ((e.clientY - box.top) * scale - PAD) / SIZE;
     return [x * 255, y * 255];
   };
-  const move = (i: number, x: number, y: number) => onPoints(movePoint(curve.points, i, x, y));
+  const move = (i: number, x: number, y: number) => onPoints?.(movePoint(curve.points, i, x, y));
   const onKey = (i: number) => (e: KeyboardEvent) => {
     const step = e.shiftKey ? 10 : 1;
     const [x, y] = curve.points[i];
@@ -263,5 +314,89 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
         )}
       </p>
     </div>
+  );
+}
+
+type GameCurves = [StickCurve | undefined, StickCurve | undefined];
+const fromProfile = (key: string): GameCurves => {
+  const c = JSON.parse(key) as { left?: StickCurve; right?: StickCurve } | null;
+  return [c?.left, c?.right];
+};
+const sameGameCurve = (a: StickCurve | undefined, b: StickCurve | undefined) => (a && b ? curvesEqual(a, b) : a === b);
+
+// The curves panel while a game's profile is on: per stick, the normal
+// (saved) curve or a preset for this game, saved into the profile and felt
+// right away. Custom points per game aren't edited here (a later step).
+function GameStickCurves({
+  title,
+  saved,
+  draft,
+  onDraft,
+  side,
+  onSide,
+  input,
+  sticks,
+  stored,
+  onSave,
+}: {
+  title: string;
+  saved: StickCurvePair | null;
+  draft: GameCurves;
+  onDraft: (d: GameCurves) => void;
+  side: 0 | 1;
+  onSide: (s: 0 | 1) => void;
+  input: InputReport | null;
+  sticks: readonly [StickCal, StickCal];
+  stored: GameCurves;
+  onSave: (d: GameCurves) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const own = draft[side];
+  const curve = own ?? saved?.[side] ?? LINEAR_CURVE;
+  // "normal" first, then the presets (and custom only when the profile already has one).
+  const choices: Array<"normal" | CurveType> = ["normal", ...CURVE_PRESETS, ...(own?.type === "custom" ? (["custom"] as const) : [])];
+  const pick = (choice: "normal" | CurveType) => {
+    const next: StickCurve | undefined = choice === "normal" ? undefined : { type: choice, points: (own ?? saved?.[side] ?? LINEAR_CURVE).points };
+    onDraft(side === 0 ? [next, draft[1]] : [draft[0], next]);
+  };
+  const changed = !draft.every((c, i) => sameGameCurve(c, stored[i]));
+  const raw = input ? (side === 0 ? input.leftStick : input.rightStick) : null;
+  const calibrated = raw ? correctStick(raw.x, raw.y, sticks[side]) : null;
+  const out = calibrated ? applyCurve(calibrated[0], calibrated[1], curve) : null;
+  const tin = calibrated ? Math.min(1, tiltOf(calibrated[0], calibrated[1])) : null;
+  const tout = out ? Math.min(1, tiltOf(out[0], out[1])) : null;
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.curves.title")}</h2>
+      <div className="dk-notice">{t("desktop.editing.curvesNote", { title })}</div>
+      <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
+        {SIDES.map((s, i) => (
+          <button type="button" role="tab" key={s} className={side === i ? "on" : ""} aria-selected={side === i} onClick={() => onSide(i as 0 | 1)}>
+            {t(`desktop.calib.${s}Stick`)}
+          </button>
+        ))}
+      </div>
+      <Segmented
+        label={t("desktop.curves.curve")}
+        value={choices.indexOf(own ? own.type : "normal")}
+        options={choices.map((c, i) => ({
+          value: i,
+          label: c === "normal" ? t("desktop.curves.profileSaved") : t(`desktop.curves.type.${c}`),
+          title: c === "normal" ? undefined : t(`desktop.curves.typeHint.${c}`),
+        }))}
+        onChange={(i) => pick(choices[i])}
+      />
+      <p className="dk-hint">{own ? t(`desktop.curves.typeHint.${own.type}`) : t("desktop.editing.curvesNormal")}</p>
+      <CurveGraph curve={curve} live={tin !== null && tout !== null ? [tin, tout] : null} />
+      <p className="dk-mono curve-now">{tin !== null && tout !== null ? t("desktop.curves.now", { in: Math.round(tin * 100), out: Math.round(tout * 100) }) : t("desktop.calib.needsController")}</p>
+      <div className="dk-row-btns">
+        <BusyButton className="dk-btn primary" disabled={!changed} onClick={() => onSave(draft)}>
+          {t("desktop.bar.saveProfile")}
+        </BusyButton>
+        <button type="button" className="dk-btn" disabled={!changed} onClick={() => onDraft(stored)}>
+          {t("desktop.calib.revert")}
+        </button>
+      </div>
+    </section>
   );
 }

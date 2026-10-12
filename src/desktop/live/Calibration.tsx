@@ -15,6 +15,7 @@ import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
 import { BusyButton, Slider } from "../controls";
 import StickCurves from "./StickCurves";
+import { useLibrary } from "../library/libraryContext";
 import StickTests from "./StickTestCards";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
@@ -30,6 +31,9 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   const { t } = useTranslation();
   const client = bridge.client;
   const supported = supportsCalibration(bridge.identity);
+  // Calibration belongs to the controller, not to a game's profile (said while one is on).
+  const { editing, active } = useLibrary();
+  const target = editing ?? active;
   const [slot, setSlot] = useState(0);
   const [saved, setSaved] = useState<Cal | null>(null);
   const [draft, setDraft] = useState<Cal>(DEFAULT_CALIBRATION);
@@ -162,6 +166,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         <h2>{t("desktop.calib.title")}</h2>
         <p className="dk-hint">{t("desktop.calib.intro")}</p>
         <p className="dk-hint">{t("desktop.calib.forSlot", { slot })}</p>
+        {target && <div className="dk-notice">{t("desktop.editing.calibrationNote", { title: target.title })}</div>}
         {running ? (
           <div className="calib-step" role="status">
             <b>
