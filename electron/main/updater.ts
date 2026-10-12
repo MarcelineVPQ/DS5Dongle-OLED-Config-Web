@@ -171,8 +171,8 @@ export class Updater {
     await downloadVerified(download, path, progress);
   }
 
-  async fetchManifest(): Promise<Manifest> {
-    const url = manifestUrl(this.channel());
+  async fetchManifest(channel: UpdateChannel = this.channel()): Promise<Manifest> {
+    const url = manifestUrl(channel);
     const response = await net.fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (response.status === 404) throw new FeedMissingError();
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);

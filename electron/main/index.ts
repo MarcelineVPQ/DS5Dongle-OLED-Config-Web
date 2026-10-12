@@ -235,6 +235,14 @@ function start(): void {
     installUpdate: () => updater.downloadAndInstall(),
     // The channel first (without the routine re-check, which would race this
     // one), then the stable version on offer even though it's older.
+    devChannelPreview: async () => {
+      try {
+        const m = await updater.fetchManifest("dev");
+        return { app: m.app.version, firmware: m.firmware?.version ?? null, notes: m.app.notes ?? null, notesUrl: m.app.notes_url ?? null };
+      } catch {
+        return null; // offline or no dev build yet: the dialog says so
+      }
+    },
     backToStable: () => {
       updateSetting("updateChannel", "stable", false);
       return updater.backToStable();

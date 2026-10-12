@@ -2,6 +2,8 @@
 // selected (a part of the controller, the dongle, or the app itself). The
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
+import Markdown from "../Markdown";
+import type { DevChannelPreview } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
@@ -188,7 +190,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
             </select>
           </div>
           <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
-          <button type="button" className="dk-btn" onClick={() => onButtons(index)}>
+          <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}
           </button>
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
@@ -517,6 +519,8 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
 
 // The app's own settings (stored by the main process), plus theme and language.
 function AppSettings() {
+  // Joining the Development channel asks first (what it means, what's in it).
+  const [joiningDev, setJoiningDev] = useState(false);
   const { t } = useTranslation();
   const [settings, setSettings] = useState<DesktopSettings | null>(null);
   const [gpuChanged, setGpuChanged] = useState(false);
@@ -603,8 +607,17 @@ function AppSettings() {
                 { value: 0, label: t("desktop.channel.stable") },
                 { value: 1, label: t("desktop.channel.dev") },
               ]}
-              onChange={(v) => set("updateChannel", v === 1 ? "dev" : "stable")}
+              onChange={(v) => (v === 1 ? setJoiningDev(true) : set("updateChannel", "stable"))}
             />
+            {joiningDev && (
+              <DevChannelDialog
+                onJoin={() => {
+                  setJoiningDev(false);
+                  set("updateChannel", "dev");
+                }}
+                onCancel={() => setJoiningDev(false)}
+              />
+            )}
             <p className="dk-hint">{settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}</p>
             {settings.updateChannel === "dev" && (
               <div className="dk-row-btns">
@@ -861,6 +874,65 @@ function ReduceMotionSetting() {
   const { t } = useTranslation();
   const [on, setOn] = useFlagPref(REDUCE_MOTION_KEY);
   return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
+}
+
+// Joining the Development channel: before any dev update is offered (app or
+// dongle firmware), say what it means and what's in the newest dev build.
+function DevChannelDialog({ onJoin, onCancel }: { onJoin: () => void; onCancel: () => void }) {
+  const { t } = useTranslation();
+  const [preview, setPreview] = useState<DevChannelPreview | null | "loading">("loading");
+  useEffect(() => {
+    let live = true;
+    void window.desktop?.devChannelPreview().then(
+      (p) => live && setPreview(p),
+      () => live && setPreview(null),
+    );
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => {
+      live = false;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onCancel]);
+  return (
+    <div className="dk-dialog-backdrop" onClick={onCancel}>
+      <section className="dk-card dk-dialog" role="dialog" aria-modal="true" aria-labelledby="dev-join-title" onClick={(e) => e.stopPropagation()}>
+        <h2 id="dev-join-title">{t("desktop.channel.joinTitle")}</h2>
+        <ul className="dk-review">
+          <li>{t("desktop.channel.joinNewer")}</li>
+          <li>{t("desktop.channel.joinBoth")}</li>
+          <li>{t("desktop.channel.joinBugs")}</li>
+          <li>{t("desktop.channel.joinBack")}</li>
+        </ul>
+        <h3>{t("desktop.channel.joinLatest")}</h3>
+        {preview === "loading" ? (
+          <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
+        ) : preview ? (
+          <>
+            <p>{t("desktop.channel.joinVersions", { app: preview.app, firmware: preview.firmware ?? "—" })}</p>
+            <div className="dk-dialog-notes">{preview.notes ? <Markdown text={preview.notes} /> : <p className="dk-hint">{t("desktop.channel.joinNoNotes")}</p>}</div>
+            {preview.notesUrl && (
+              <p>
+                <a href={preview.notesUrl} target="_blank" rel="noreferrer">
+                  {t("desktop.channel.joinNotesLink")}
+                </a>
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="dk-hint">{t("desktop.channel.joinOffline")}</p>
+        )}
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn primary" onClick={onJoin}>
+            {t("desktop.channel.joinButton")}
+          </button>
+          <button type="button" className="dk-btn" onClick={onCancel} autoFocus>
+            {t("desktop.channel.stayButton")}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 // Developer (Ctrl+Shift+D): preview any controller model and colorway. Only

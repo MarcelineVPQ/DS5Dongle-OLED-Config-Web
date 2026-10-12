@@ -13,6 +13,7 @@ import {
   type ProfileSettings,
 } from "../../src/desktop/games/library";
 import type { MicTestResult } from "./audioTest";
+import type { DevChannelPreview } from "../../src/desktop/api";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
@@ -92,6 +93,7 @@ export interface IpcHandlers {
   getUpdateState: () => UpdateState;
   installUpdate: () => Promise<UpdateState>;
   backToStable: () => Promise<UpdateState>;
+  devChannelPreview: () => Promise<DevChannelPreview | null>;
   restartToUpdate: () => void;
   latestFirmware: () => Promise<FirmwareLookup>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
@@ -138,6 +140,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.getUpdateState, h.getUpdateState);
   invoke(IPC.installUpdate, h.installUpdate);
   invoke(IPC.backToStable, h.backToStable);
+  invoke(IPC.devChannelPreview, h.devChannelPreview);
   invoke(IPC.latestFirmware, h.latestFirmware);
   invoke(IPC.downloadFirmware, h.downloadFirmware);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);

@@ -1099,7 +1099,20 @@
       "dev": "Entwicklung",
       "stableHint": "Getestete Versionen, für alle.",
       "devHint": "Entwicklungsversionen von App und Firmware, vor der Veröffentlichung: neuer und weniger getestet. Jede stabile Version bekommst du auch. „Zurück zu stabil“ installiert die neueste stabile App und Firmware.",
-      "backToStable": "Zurück zu stabil"
+      "backToStable": "Zurück zu stabil",
+      "joinTitle": "Dem Entwicklungskanal beitreten?",
+      "joinNewer": "Du bekommst Builds der App und der Dongle-Firmware, bevor sie veröffentlicht sind: neue Funktionen früher.",
+      "joinBoth": "Beides wird angeboten: Die App aktualisiert sich selbst, das Firmware-Update erscheint wie gewohnt auf der Pico-Seite.",
+      "joinBugs": "Sie sind weniger getestet als stabile Versionen und können Fehler haben. Bitte melde, was dir auffällt.",
+      "joinBack": "Zurück zu Stabil (App-Einstellungen → Updates) holt jederzeit die neueste stabile App und Firmware zurück.",
+      "joinLatest": "Neuester Entwicklungs-Build",
+      "joinLoading": "Entwicklungs-Feed wird geprüft…",
+      "joinVersions": "App {{app}} · Firmware {{firmware}}",
+      "joinNoNotes": "Für diesen Build gibt es im Feed noch keine Notizen.",
+      "joinNotesLink": "Versionshinweise auf GitHub lesen",
+      "joinOffline": "Der Entwicklungs-Feed ist gerade nicht erreichbar (offline?). Du kannst trotzdem beitreten; das Update erscheint, sobald er erreichbar ist.",
+      "joinButton": "Dem Entwicklungskanal beitreten",
+      "stayButton": "Bei Stabil bleiben"
     },
     "layouts": {
       "title": "Tastenbelegungen",

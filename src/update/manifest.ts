@@ -26,6 +26,9 @@ export const Manifest = z.object({
   app: z.object({
     version: z.string(),
     notes_url: z.string().url().optional(),
+    // The release's notes for the app (Markdown, from the CHANGELOG), shown
+    // before someone joins the Development channel. Older apps ignore it.
+    notes: z.string().max(20000).optional(),
     platforms: z.object({
       linux: Download.optional(),
       windows: Download.optional(),

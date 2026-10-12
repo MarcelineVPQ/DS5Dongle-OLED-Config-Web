@@ -1093,7 +1093,20 @@
       "dev": "开发版",
       "stableHint": "经过测试的版本，适合所有人。",
       "devHint": "应用和固件发布前的开发版本：更新，但测试较少。你也会收到每个稳定版。「回到稳定版」会安装最新的稳定版应用和固件。",
-      "backToStable": "回到稳定版"
+      "backToStable": "回到稳定版",
+      "joinTitle": "加入开发通道？",
+      "joinNewer": "你会在正式发布前收到应用和接收器固件的版本：更早用上新功能。",
+      "joinBoth": "两者都会提供：应用会自动更新，固件更新照常显示在 Pico 页面。",
+      "joinBugs": "它们比稳定版测试得少，可能有问题。发现问题请反馈。",
+      "joinBack": "随时可以「回到稳定版」（应用设置 → 更新），恢复最新的稳定版应用和固件。",
+      "joinLatest": "最新开发版本",
+      "joinLoading": "正在检查开发通道…",
+      "joinVersions": "应用 {{app}} · 固件 {{firmware}}",
+      "joinNoNotes": "此版本在更新源中还没有说明。",
+      "joinNotesLink": "在 GitHub 上阅读发布说明",
+      "joinOffline": "暂时无法连接开发通道（离线？）。你仍可以加入；可连接时会显示更新。",
+      "joinButton": "加入开发通道",
+      "stayButton": "保持稳定版"
     },
     "layouts": {
       "title": "按键布局",

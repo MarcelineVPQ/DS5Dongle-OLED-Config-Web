@@ -3645,3 +3645,44 @@ html[data-cards-translucent] .dash-card {
 .dk-editing b {
   color: var(--dk-sel-text);
 }
+
+/* A button whose label may need two lines in some languages (it never
+   pushes past its card). */
+.dk-btn.dk-btn-wrap {
+  height: auto;
+  min-height: 28px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+/* A dialog over the app (joining the Development channel). */
+.dk-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg-page, #000) 55%, transparent); /* theme-exempt: fallback only */
+}
+.dk-dialog {
+  width: min(560px, 100%);
+  max-height: min(80vh, 640px);
+  overflow: auto;
+  box-shadow: var(--shadow-1);
+}
+.dk-dialog h3 {
+  margin: 10px 0 4px;
+  font-size: var(--dk-small);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dk-dialog-notes {
+  max-height: 220px;
+  overflow: auto;
+  padding: 6px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-inset);
+}

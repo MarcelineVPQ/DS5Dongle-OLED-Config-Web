@@ -1099,7 +1099,20 @@
       "dev": "Développement",
       "stableHint": "Des versions testées, pour tout le monde.",
       "devHint": "Des versions de développement de l'app et du firmware, avant leur sortie : plus récentes et moins testées. Vous recevez aussi chaque version stable. « Revenir au stable » installe la dernière app et le dernier firmware stables.",
-      "backToStable": "Revenir au stable"
+      "backToStable": "Revenir au stable",
+      "joinTitle": "Rejoindre le canal de développement ?",
+      "joinNewer": "Tu reçois des versions de l’app et du firmware du dongle avant leur sortie : les nouveautés plus tôt.",
+      "joinBoth": "Les deux sont proposés : l’app se met à jour seule, la mise à jour du firmware apparaît sur la page du Pico comme d’habitude.",
+      "joinBugs": "Elles sont moins testées que les versions stables et peuvent avoir des bugs. Signale ce que tu trouves.",
+      "joinBack": "Revenir à stable (Réglages de l’app → Mises à jour) remet la dernière app et le dernier firmware stables à tout moment.",
+      "joinLatest": "Dernière version de développement",
+      "joinLoading": "Vérification du canal de développement…",
+      "joinVersions": "App {{app}} · firmware {{firmware}}",
+      "joinNoNotes": "Pas encore de notes pour cette version dans le flux.",
+      "joinNotesLink": "Lire les notes de version sur GitHub",
+      "joinOffline": "Le canal de développement est injoignable pour l’instant (hors ligne ?). Tu peux quand même rejoindre ; la mise à jour apparaîtra dès qu’il sera joignable.",
+      "joinButton": "Rejoindre le canal de développement",
+      "stayButton": "Rester sur stable"
     },
     "layouts": {
       "title": "Dispositions des boutons",

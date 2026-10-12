@@ -1098,7 +1098,20 @@
       "dev": "Development",
       "stableHint": "Tested releases, for everyone.",
       "devHint": "Development builds of the app and the firmware, before they're released: newer, and less tested. You also get every stable release. Back to stable installs the latest stable app and firmware.",
-      "backToStable": "Back to stable"
+      "backToStable": "Back to stable",
+      "joinTitle": "Join the Development channel?",
+      "joinNewer": "You get builds of the app and the dongle firmware before they're released: newer features, sooner.",
+      "joinBoth": "Both are offered: the app updates itself, the firmware update shows on the Pico page as usual.",
+      "joinBugs": "They're less tested than stable releases and can have bugs. Please report what you find.",
+      "joinBack": "Back to stable (App settings → Updates) returns to the latest stable app and firmware at any time.",
+      "joinLatest": "Newest development build",
+      "joinLoading": "Checking the development feed…",
+      "joinVersions": "App {{app}} · firmware {{firmware}}",
+      "joinNoNotes": "No notes for this build in the feed yet.",
+      "joinNotesLink": "Read the release notes on GitHub",
+      "joinOffline": "Can't reach the development feed right now (offline?). You can still join; the update shows when it's reachable.",
+      "joinButton": "Join the Development channel",
+      "stayButton": "Stay on Stable"
     },
     "layouts": {
       "title": "Button layouts",

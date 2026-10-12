@@ -26,6 +26,7 @@ const api: DesktopApi = {
   getUpdateState: () => ipcRenderer.invoke(IPC.getUpdateState),
   installUpdate: () => ipcRenderer.invoke(IPC.installUpdate),
   backToStable: () => ipcRenderer.invoke(IPC.backToStable),
+  devChannelPreview: () => ipcRenderer.invoke(IPC.devChannelPreview),
   restartToUpdate: () => ipcRenderer.send(IPC.restartToUpdate),
   onUpdateState: (listener) => {
     const handler = (_event: IpcRendererEvent, state: UpdateState) => listener(state);

@@ -24,6 +24,13 @@ export type TrayCommand = { type: "switchSlot"; slot: number } | { type: "openPa
 
 export type UpdateChannel = "stable" | "dev";
 
+export interface DevChannelPreview {
+  app: string;
+  firmware: string | null;
+  notes: string | null; // Markdown
+  notesUrl: string | null;
+}
+
 export interface DesktopSettings {
   closeToTray: boolean;
   startMinimized: boolean;
@@ -110,6 +117,9 @@ export interface DesktopApi {
   installUpdate(): Promise<UpdateState>;
   // Switch to the stable channel and offer its latest version, even if older.
   backToStable(): Promise<UpdateState>;
+  // The newest development build (app and firmware versions, the app's notes)
+  // from the signed dev feed, shown before joining the Development channel.
+  devChannelPreview(): Promise<DevChannelPreview | null>;
   restartToUpdate(): void;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
@@ -166,6 +176,7 @@ export const IPC = {
   getUpdateState: "desktop:get-update-state",
   installUpdate: "desktop:install-update",
   backToStable: "desktop:back-to-stable",
+  devChannelPreview: "desktop:dev-channel-preview",
   restartToUpdate: "desktop:restart-to-update",
   updateState: "desktop:update-state",
   latestFirmware: "desktop:latest-firmware",
