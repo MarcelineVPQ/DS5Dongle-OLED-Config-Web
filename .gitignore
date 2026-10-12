@@ -25,3 +25,6 @@ __pycache__/
 
 # Local scratch (dev runs, VM test screenshots)
 tmp/
+
+# Source art kept locally only (purchased Zacksly pack, stock photos): not redistributable
+assets/
