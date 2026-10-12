@@ -1,13 +1,13 @@
 // The Controller page's background when there's no game art (Games off, or
 // Windows / macOS for now): slow swirls of warped sine waves in four colors,
 // the controller's two, the theme's accent and its complement. Drawn tiny
-// (96 x 54) and stretched up by CSS, which blurs it for free; redrawn ~12
+// (256 x 144) and stretched up by CSS, which blurs it for free; redrawn ~12
 // times a second, paused while the window is hidden, still with Reduce motion.
 // The colors come from the theme tokens and the colorway, never literals.
 import { useEffect, useRef } from "react";
 
-const W = 96;
-const H = 54;
+const W = 256;
+const H = 144;
 const FRAME_MS = 80;
 
 type Rgb = [number, number, number];
@@ -32,14 +32,18 @@ export function complement([r, g, b]: Rgb): Rgb {
 // Four wave fields, domain-warped, turned into blend weights (squared, then
 // normalized): each pixel mostly one color, with soft swirling borders.
 export function swirlPixel(x: number, y: number, t: number, out: number[]): void {
-  const u = x + 0.42 * Math.sin(2.3 * y + t * 0.21) + 0.18 * Math.sin(5.1 * x - t * 0.13);
-  const v = y + 0.42 * Math.cos(1.9 * x - t * 0.17) + 0.18 * Math.cos(4.3 * y + t * 0.11);
+  // Three layers of warping (coarse, medium, fine) for dense, curling bands.
+  let u = x + 0.42 * Math.sin(4.6 * y + t * 0.21) + 0.18 * Math.sin(10.2 * x - t * 0.13);
+  let v = y + 0.42 * Math.cos(3.8 * x - t * 0.17) + 0.18 * Math.cos(8.6 * y + t * 0.11);
+  u += 0.08 * Math.sin(17 * v + t * 0.29);
+  v += 0.08 * Math.cos(15 * u - t * 0.23);
   const a = Math.atan2(v - 0.5, u - 0.5);
   const d = Math.hypot(u - 0.5, v - 0.5);
-  const f = [Math.sin(3.1 * u + 2.0 * Math.sin(a + t * 0.05)), Math.cos(2.7 * v - 3.0 * d + t * 0.07), Math.sin(4.0 * d - a + t * 0.04), Math.cos(2.2 * (u + v) + t * 0.09)];
+  const f = [Math.sin(6.2 * u + 2.0 * Math.sin(2 * a + t * 0.05)), Math.cos(5.4 * v - 6.0 * d + t * 0.07), Math.sin(8.0 * d - 2 * a + t * 0.04), Math.cos(4.4 * (u + v) + t * 0.09)];
   let sum = 0;
   for (let i = 0; i < 4; i++) {
-    const w = (f[i] + 1.2) ** 3;
+    // Power 4: each band mostly one color, so they don't average into grey.
+    const w = (f[i] + 1.2) ** 4;
     out[i] = w;
     sum += w;
   }

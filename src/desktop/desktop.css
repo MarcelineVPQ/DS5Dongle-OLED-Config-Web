@@ -2633,7 +2633,7 @@ html[data-theme="light"] .live-ctl {
   /* No game art (Games off, or Windows / macOS for now): the swirl field
      (SwirlField.tsx), strong enough that Glass and the card opacity have
      something to show through. */
-  opacity: 0.7;
+  opacity: 0.85;
 }
 /* Keeps the data readable: the page color over the art, deeper at the bottom. */
 .art-bd-dim {
