@@ -314,11 +314,30 @@ describe("core1 health in the audio counters (issue #15)", () => {
     expect(c.core1Flags).toBe(0x03);
     expect(c.core1FreeHeap).toBe(12 * 1024);
   });
-  it("older firmware: no health fields, the counters still read", async () => {
-    const c = await new Ds5BridgeClient(new FakeDongle()).readAudioCounters();
-    expect(c.core1Loops).toBe(1234);
-    expect(c.core1Flags).toBeUndefined();
+  it("a healthy core1: started, its free heap, and loops that move", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle());
+    const a = await client.readAudioCounters();
+    const b = await client.readAudioCounters();
+    expect(a.core1Flags).toBe(0x01);
+    expect(a.core1FreeHeap).toBe(184 * 1024);
+    expect(b.core1Loops).not.toBe(a.core1Loops);
   });
+  it("asks for no more than the 63 bytes a reply can carry", async () => {
+    const dongle = new FakeDongle();
+    const lengths: number[] = [];
+    const get = dongle.getReport.bind(dongle);
+    dongle.getReport = (id, length) => (lengths.push(length), get(id, length));
+    await new Ds5BridgeClient(dongle).readAudioCounters();
+    expect(lengths).toEqual([63]);
+  });
+  for (const legacy of ["none", "cut"] as const) {
+    it(`older firmware (${legacy}): no health fields, the counters still read`, async () => {
+      const c = await new Ds5BridgeClient(new FakeDongle({ audioCountersLegacy: legacy, speakerEncoderFailed: true })).readAudioCounters();
+      expect(c.core1Loops).toBe(1234);
+      expect(c.core1Flags).toBeUndefined();
+      expect(c.core1FreeHeap).toBeUndefined();
+    });
+  }
 });
 
 describe("Edge extra-button remap (protocol 1.9)", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeCpu, decodeIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
 import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, validateConfig } from "../../src/protocol/config";
 import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
 
@@ -285,5 +285,62 @@ describe("CPU report (0xFC) and its timings (protocol 1.11)", () => {
     expect(decodeCpu(withTimings(2)).timings).toBeNull();
     const short = withTimings().subarray(0, 15 + 6 * 3); // claims 8 stages, carries 3
     expect(decodeCpu(short).timings?.stages).toHaveLength(3);
+  });
+});
+
+describe("0xF5 audio counters and core1 health", () => {
+  // The 15 u32 counters hold 100 + i, so a shifted offset shows.
+  const counters = (len: number) => {
+    const b = new Uint8Array(len);
+    const v = new DataView(b.buffer);
+    for (let i = 0; i < 15 && i * 4 + 4 <= len; i++) v.setUint32(i * 4, 100 + i, true);
+    return b;
+  };
+  const expectCounters = (c: ReturnType<typeof decodeAudioCounters>) => AUDIO_COUNTER_NAMES.forEach((name, i) => expect(c[name]).toBe(100 + i));
+
+  it("reads the 63-byte layout: flags at [60], free heap in KiB at [61..62]", () => {
+    const b = counters(63);
+    b[60] = 0x80 | 0x01 | 0x02;
+    b[61] = 12;
+    b[62] = 0; // 12 KiB
+    const c = decodeAudioCounters(b);
+    expectCounters(c);
+    expect(c.core1Flags).toBe(0x03);
+    expect(c.core1FreeHeap).toBe(12 * 1024);
+  });
+
+  it("reads a large free heap from both bytes", () => {
+    const b = counters(63);
+    b[60] = 0x81;
+    b[61] = 0x2c;
+    b[62] = 0x01; // 300 KiB
+    expect(decodeAudioCounters(b).core1FreeHeap).toBe(300 * 1024);
+  });
+
+  it("free heap 0 = not known yet (core1 hasn't started)", () => {
+    const b = counters(63);
+    b[60] = 0x80;
+    const c = decodeAudioCounters(b);
+    expect(c.core1Flags).toBe(0);
+    expect(c.core1FreeHeap).toBeUndefined();
+  });
+
+  it("0.9.4 to 0.9.5-dev.5: the 68-byte reply cut to 63 reads as before (no health fields)", () => {
+    const b = counters(63);
+    b[60] = 0x03; // the old u32 flags' low byte, no layout bit
+    const c = decodeAudioCounters(b);
+    expectCounters(c);
+    expect(c.core1Flags).toBeUndefined();
+    expect(c.core1FreeHeap).toBeUndefined();
+  });
+
+  it("before 0.9.4: 60 bytes, the counters only", () => {
+    const c = decodeAudioCounters(counters(60));
+    expectCounters(c);
+    expect(c.core1Flags).toBeUndefined();
+  });
+
+  it("refuses a reply shorter than the counters", () => {
+    expect(() => decodeAudioCounters(counters(59))).toThrow(/Short report/);
   });
 });

@@ -17,6 +17,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **About opens on the Guide**, and its tabs read Guide · App changes · Firmware changes · Coming soon · Credits ("What's new" is now "App changes"; See what's new after an update still opens it).
 - **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
 
+### Fixed
+
+- **The Dongle page now gets core1's health:** the "Speaker off: not enough memory" warning (issue #15) never appeared, because the dongle's reply carrying it was longer than a reply can be and lost its end. With dongle firmware from this release the warning shows when it applies, with the real free memory. Older firmware works as before. In dev builds the simulated dongle no longer reports "Core1 stopped" all the time.
+
 ## [0.9.5-dev.5] - 2026-10-12
 
 ### Changed
