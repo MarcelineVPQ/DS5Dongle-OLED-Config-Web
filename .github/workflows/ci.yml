@@ -62,6 +62,18 @@ jobs:
   # The release builds the app on Windows and macOS too and runs the tests
   # there first; running them on Windows on every push catches a
   # Windows-only failure before a release tag does (0.9.4: Games tests).
+  # Same on macOS (no Mac to test on by hand: this and the release build are it).
+  test-macos:
+    name: Test (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npx -y npm@11.6.2 ci
+      - run: npx vitest run
+
   test-windows:
     name: Test (Windows)
     runs-on: windows-latest

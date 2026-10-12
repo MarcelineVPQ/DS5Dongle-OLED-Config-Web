@@ -2298,7 +2298,9 @@ html[data-theme="light"] .live-ctl {
    read bottom to top. */
 .rail-dev {
   overflow: hidden;
-  margin: auto auto 4px;
+  /* the rail's right edge, collapsed or open (the icons' column when collapsed) */
+  align-self: flex-end;
+  margin: auto 9px 4px 0;
   color: var(--dk-accent-text);
   font-size: 11px;
   font-weight: 500;

@@ -46,11 +46,12 @@ interface Props {
   library: LibraryFile;
   onLibrary: (file: LibraryFile) => void;
   running: string | null;
-  openGame?: string | null; // open this game's page once (back from editing its profile)
-  onOpenedGame?: () => void;
+  // Open this game's page once (back from editing its profile); a new
+  // request object each time, so the same game can be asked for again.
+  openGame?: { key: string } | null;
 }
 
-export default function GameLibrary({ report, home, bridge, onRescan, library, onLibrary, running, openGame, onOpenedGame }: Props) {
+export default function GameLibrary({ report, home, bridge, onRescan, library, onLibrary, running, openGame }: Props) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [details, setDetails] = useState<Record<string, GameInfo>>({});
@@ -66,11 +67,12 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     return APP_KINDS.filter((k) => m.has(k)).map((k) => [k, m.get(k)!] as const);
   }, [report]);
   const listRef = useRef<HTMLUListElement>(null);
-  useEffect(() => {
-    if (!openGame) return;
-    setSelected(openGame);
-    onOpenedGame?.();
-  }, [openGame, onOpenedGame]);
+  // Adjusting state on a prop change during render (React's pattern), not in an effect.
+  const [handledOpen, setHandledOpen] = useState<{ key: string } | null>(null);
+  if (openGame && openGame !== handledOpen) {
+    setHandledOpen(openGame);
+    setSelected(openGame.key);
+  }
 
   useEffect(() => {
     if (report) void desktop.gamesDetails().then(setDetails, () => undefined);

@@ -60,7 +60,7 @@ export default function DesktopApp() {
   const [main, setMain] = useState<MainView>("controller");
   const [panel, setPanel] = useState<PanelView>("overview");
   // A game page to open when the Games page shows next (after editing its profile).
-  const [openGame, setOpenGame] = useState<string | null>(null);
+  const [openGame, setOpenGame] = useState<{ key: string } | null>(null);
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
@@ -253,16 +253,7 @@ export default function DesktopApp() {
               </div>
             )}
             {main === "games" && (
-              <GamesPage
-                bridge={bridge}
-                profiles={profiles}
-                openGame={openGame}
-                onOpenedGame={() => setOpenGame(null)}
-                allowed={games.allowed}
-                onAllowedChange={games.setAllowed}
-                onScanned={games.update}
-                onDeclinedChange={games.recount}
-              />
+              <GamesPage bridge={bridge} profiles={profiles} openGame={openGame} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />
             )}
             {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
             {main === "controller" && profiles.editing && (
@@ -276,7 +267,7 @@ export default function DesktopApp() {
                   className="dk-btn primary"
                   onClick={() => {
                     // Back to the game page the editing started from.
-                    setOpenGame(profiles.editing?.gameKey ?? null);
+                    if (profiles.editing) setOpenGame({ key: profiles.editing.gameKey });
                     profiles.stopEditing();
                     setMain("games");
                   }}

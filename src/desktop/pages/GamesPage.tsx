@@ -64,11 +64,10 @@ interface GamesPageProps {
   onAllowedChange: (allowed: boolean) => void;
   onScanned?: (report: GamesReport) => void;
   onDeclinedChange?: () => void;
-  openGame?: string | null; // a game page to open (back from editing its profile)
-  onOpenedGame?: () => void;
+  openGame?: { key: string } | null; // a game page to open (back from editing its profile)
 }
 
-export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, onScanned, openGame, onOpenedGame, ...rest }: GamesPageProps) {
+export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, onScanned, openGame, ...rest }: GamesPageProps) {
   // The library shows the games of the latest scan; Home (setup and fixes)
   // runs the scans, and rescans when a game page applied something.
   const [report, setReport] = useState<GamesReport | null>(null);
@@ -89,7 +88,6 @@ export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, 
       onLibrary={profiles.setLibrary}
       running={profiles.running}
       openGame={openGame}
-      onOpenedGame={onOpenedGame}
       onRescan={() => setRescanToken((n) => n + 1)}
       home={<GamesSetup {...rest} rescanToken={rescanToken} onScanned={scanned} onStop={() => onAllowedChange(false)} />}
     />
