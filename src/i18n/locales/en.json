@@ -264,7 +264,7 @@
         "downloading": "Downloading and checking the firmware…",
         "rebooting": "Restarting the dongle into its bootloader…",
         "waiting-bootloader": "Waiting for the bootloader…",
-        "flashing": "Writing firmware",
+        "flashing": "Writing firmware directly; ignore the RP2350 drive if it pops up",
         "restarting": "Restarting the dongle…",
         "verifying": "Waiting for the dongle: press PS on the controller to reconnect it.",
         "verifyingPress": "Flashed. Press PS on the controller: the dongle comes back once a controller connects. If it stays dark, unplug it and plug it back in."

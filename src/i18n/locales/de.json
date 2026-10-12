@@ -265,7 +265,7 @@
         "downloading": "Firmware wird geladen und geprüft…",
         "rebooting": "Dongle startet in den Bootloader…",
         "waiting-bootloader": "Warte auf den Bootloader…",
-        "flashing": "Firmware wird geschrieben",
+        "flashing": "Firmware wird direkt geschrieben; ignoriere das Laufwerk RP2350, falls es erscheint",
         "restarting": "Dongle startet neu…",
         "verifying": "Warte auf den Dongle: Drück PS am Controller, um ihn wieder zu verbinden.",
         "verifyingPress": "Geflasht. Drücke PS am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."

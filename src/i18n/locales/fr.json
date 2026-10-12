@@ -265,7 +265,7 @@
         "downloading": "Téléchargement et vérification du firmware…",
         "rebooting": "Redémarrage du dongle dans son bootloader…",
         "waiting-bootloader": "En attente du bootloader…",
-        "flashing": "Écriture du firmware",
+        "flashing": "Écriture directe du firmware ; ignore le lecteur RP2350 s'il apparaît",
         "restarting": "Redémarrage du dongle…",
         "verifying": "En attente du dongle : appuie sur PS sur la manette pour la reconnecter.",
         "verifyingPress": "Flashé. Appuie sur PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."

@@ -265,7 +265,7 @@
         "downloading": "Baixando e verificando o firmware…",
         "rebooting": "Reiniciando o dongle no bootloader…",
         "waiting-bootloader": "Aguardando o bootloader…",
-        "flashing": "Gravando o firmware",
+        "flashing": "Gravando o firmware diretamente; ignore a unidade RP2350 se ela aparecer",
         "restarting": "Reiniciando o dongle…",
         "verifying": "Aguardando o dongle: aperte PS no controle para reconectá-lo.",
         "verifyingPress": "Gravado. Aperte PS no controle: o dongle volta assim que um controle se conecta. Se continuar apagado, desconecte e conecte de novo."

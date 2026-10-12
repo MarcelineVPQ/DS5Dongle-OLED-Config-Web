@@ -265,7 +265,7 @@
         "downloading": "Descargando y comprobando el firmware…",
         "rebooting": "Reiniciando el dongle en su bootloader…",
         "waiting-bootloader": "Esperando al bootloader…",
-        "flashing": "Escribiendo el firmware",
+        "flashing": "Escribiendo el firmware directamente; ignora la unidad RP2350 si aparece",
         "restarting": "Reiniciando el dongle…",
         "verifying": "Esperando al dongle: pulsa PS en el mando para volver a conectarlo.",
         "verifyingPress": "Flasheado. Pulsa PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."

@@ -265,7 +265,7 @@
         "downloading": "正在下载并校验固件…",
         "rebooting": "正在将接收器重启到引导程序…",
         "waiting-bootloader": "正在等待引导程序…",
-        "flashing": "正在写入固件",
+        "flashing": "正在直接写入固件；如果弹出 RP2350 驱动器，请忽略",
         "restarting": "正在重启接收器…",
         "verifying": "正在等待接收器：按下手柄上的 PS 键重新连接。",
         "verifyingPress": "已写入。请按手柄上的 PS 键：手柄连接后接收器才会重新出现。如果一直没有反应，请拔下后重新插入。"
