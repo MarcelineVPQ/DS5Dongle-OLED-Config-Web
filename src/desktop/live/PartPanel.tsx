@@ -24,7 +24,7 @@ import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, tablesEqual } from "../../protocol/remap";
+import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
 import { useLibrary } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings } from "../api";
@@ -39,7 +39,7 @@ import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
 import type { FirmwareUpdate } from "../useUpdates";
-import { EDGE_PARTS, REMAP_INDEX, type PartId } from "./parts";
+import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 
 export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
@@ -58,10 +58,11 @@ interface Props {
   buttonFocus: number | null;
   onButtonFocus: (index: number | null) => void;
   onButtonHover: (index: number | null) => void;
+  edge: boolean; // a DualSense Edge (or its preview): the Buttons list adds its Fn buttons and paddles
   onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, buttonFocus, onButtonFocus, onButtonHover, onHide }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, buttonFocus, onButtonFocus, onButtonHover, edge, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -94,7 +95,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
         )}
       </header>
       {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
-      {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} />}
+      {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
       {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
@@ -214,7 +215,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
 
 // Every button in one list (the same draft as clicking them on the drawing),
 // with what's changed from the controller's own buttons marked.
-function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; focus: number | null; onFocus: (i: number | null) => void; onHover: (i: number | null) => void }) {
+function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Remap; focus: number | null; onFocus: (i: number | null) => void; onHover: (i: number | null) => void; edge: boolean }) {
   const { t } = useTranslation();
   const table = useRef<HTMLDivElement>(null);
   // A button picked on the drawing: its row scrolls into view and its picker
@@ -226,7 +227,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; f
     sel?.focus({ preventScroll: true });
   }, [focus]);
   useEffect(() => () => onHover(null), [onHover]);
-  const changed = remap.draft.filter((v, i) => v !== i).length;
+  const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
   // Editing a game's profile: the buttons go into that game's layout (switched
   // in while it plays), never into the normal buttons on the dongle.
   const { editing, library, setLibrary } = useLibrary();
@@ -237,11 +238,11 @@ function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; f
     const desktop = window.desktop;
     if (!desktop || !editing || !profile) return;
     if (layoutId && gameLayout) {
-      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft }));
+      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) }));
       return;
     }
     const id = `l-${Date.now().toString(36)}`;
-    await desktop.librarySetLayout({ id, name: editing.title.slice(0, 40), table: remap.draft });
+    await desktop.librarySetLayout({ id, name: editing.title.slice(0, 40), table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) });
     setLibrary(await desktop.librarySetProfile({ gameKey: editing.gameKey, title: editing.title, settings: { ...profile.settings, buttonLayout: id } }));
   };
   if (remap.supported === false)
@@ -286,6 +287,32 @@ function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; f
             </div>
           );
         })}
+        {edge &&
+          remap.extraDevice &&
+          EDGE_REMAP_ROWS.map((part, n) => {
+            const i = 16 + n;
+            const value = remap.extraDraft[n];
+            const isChanged = value !== REMAP_EXTRA_SELF;
+            const pending = value !== remap.extraDevice?.[n];
+            return (
+              <div key={part} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
+                <label role="rowheader" htmlFor={`all-remap-${i}`}>
+                  {isChanged && <span aria-hidden="true">● </span>}
+                  {t(`desktop.live.part.${part}`)}
+                  {(pending || isChanged) && <small>{pending ? t("desktop.layouts.notApplied") : t("desktop.layouts.changed")}</small>}
+                </label>
+                <select id={`all-remap-${i}`} role="cell" className="dk-select" value={value} disabled={remap.busy} onChange={(e) => remap.setExtra(n, Number(e.target.value))}>
+                  <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
+                  {REMAP_BUTTON_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                  <option value={REMAP_EXTRA_OFF}>{t("remap.disabled")}</option>
+                </select>
+              </div>
+            );
+          })}
       </div>
       {remap.error && <div className="dk-notice error">{remap.error}</div>}
       <div className="dk-row-btns">
@@ -339,7 +366,9 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
   const usedBy = (id: string) => Object.values(library.games).filter((g) => g.profile?.settings.buttonLayout === id).length;
   if (!desktop) return null;
-  const save = (id: string, layoutName: string) => void desktop.librarySetLayout({ id, name: layoutName, table: remap.draft }).then(setLibrary);
+  const extraNames = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`));
+  const save = (id: string, layoutName: string) =>
+    void desktop.librarySetLayout({ id, name: layoutName, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) }).then(setLibrary);
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.title")}</h2>
@@ -357,10 +386,12 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
                 </span>
                 {remap.loaded?.id === id && <span className="dk-chip ok">{t("desktop.layouts.loadedChip")}</span>}
                 {usedBy(id) > 0 && <span className="dk-hint"> · {t("desktop.layouts.usedBy", { count: usedBy(id) })}</span>}
-                <span className="dk-layout-changes">{layoutSummary(l.table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</span>
+                <span className="dk-layout-changes">
+                  {layoutSummary(l.table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"), l.extra ? { values: l.extra, names: extraNames } : undefined)}
+                </span>
               </div>
               <div className="dk-layout-btns">
-                <button type="button" className="dk-btn" title={t("desktop.layouts.loadHint")} onClick={() => remap.load(l.table, { id, name: l.name })}>
+                <button type="button" className="dk-btn" title={t("desktop.layouts.loadHint")} onClick={() => remap.load(l.table, { id, name: l.name }, l.extra)}>
                   {t("desktop.layouts.load")}
                 </button>
                 <button

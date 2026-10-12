@@ -27,7 +27,7 @@ import LiveStrip from "./LiveStrip";
 import { say } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
-import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex } from "./parts";
+import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
 import { useRemap } from "./useRemap";
 
 const PANEL_KEY = "ds5.panelHidden";
@@ -99,7 +99,10 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // there (no jump away); a remap-only button opens the list at its row.
   const pickPart = (part: PartId) => {
     const index = REMAP_INDEX[part];
-    if (index !== undefined && (view === "buttons" || REMAP_ONLY.has(part))) openButtons(index);
+    // The Edge's Fn buttons and paddles live in the Buttons list too (firmware with protocol 1.9).
+    const edgeRow = remap.extraDevice ? EDGE_REMAP_ROWS.indexOf(part) : -1;
+    if (edgeRow >= 0) openButtons(16 + edgeRow);
+    else if (index !== undefined && (view === "buttons" || REMAP_ONLY.has(part))) openButtons(index);
     else onView({ part });
   };
 
@@ -205,22 +208,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 </span>
               </div>
             )}
-            {on && id?.model === "edge" && (
-              <div className="live-edge" aria-label={t("desktop.live.edgeButtons")}>
-                {(
-                  [
-                    ["backLeft", t("desktop.live.backLeft")],
-                    ["fnLeft", "Fn L"],
-                    ["fnRight", "Fn R"],
-                    ["backRight", t("desktop.live.backRight")],
-                  ] as const
-                ).map(([key, label]) => (
-                  <span key={key} className={`dk-chip${input?.[key] ? " ok" : ""}`}>
-                    {label}
-                  </span>
-                ))}
-              </div>
-            )}
             <div className="live-readouts">
               {on && id && liveCapable && (
                 <LiveStrip
@@ -231,7 +218,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                   onLightbar={() => onView({ part: "lightbar" })}
                 />
               )}
-              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} />}
+              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
             </div>
             {!(on && id && liveCapable) && (
               <div className="live-status">
@@ -278,6 +265,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
             onCalibrate={() => onView("calibration")}
             onButtons={(index) => openButtons(index ?? null)}
             buttonFocus={buttonFocus}
+            edge={id?.model === "edge"}
             onButtonFocus={setButtonFocus}
             onButtonHover={setButtonHover}
             onHide={() => hidePanel(true)}

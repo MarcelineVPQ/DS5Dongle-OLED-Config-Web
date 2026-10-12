@@ -152,7 +152,7 @@ export interface DesktopApi {
   libraryDeleteProfile(gameKey: string): Promise<LibraryFile>;
   librarySetMine(update: { gameKey: string; title: string; mine: Mine }): Promise<LibraryFile>;
   librarySetRestore(restore: LibraryFile["restore"] | null): Promise<LibraryFile>;
-  librarySetLayout(layout: { id: string; name: string; table: number[] }): Promise<LibraryFile>;
+  librarySetLayout(layout: { id: string; name: string; table: number[]; extra?: number[] }): Promise<LibraryFile>;
   libraryDeleteLayout(id: string): Promise<LibraryFile>;
   // Launch a game or open its launcher page / folder (resolved in main).
   gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;

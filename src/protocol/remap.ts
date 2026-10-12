@@ -12,6 +12,17 @@ import { CONFIG_BODY_SIZE, FEATURE_REPORT_PAYLOAD_SIZE, CONFIG_BODY_SIZE_SPLIT }
 import { toUint8Array } from "./bytes";
 
 export const REMAP_COUNT = 16;
+
+// protocol 1.9: the DualSense Edge's extra buttons as remap sources, in the
+// order the firmware stores them (input report byte 9 bits 0x10..0x80).
+// Each entry: a standard button 0..15, REMAP_EXTRA_OFF, or REMAP_EXTRA_SELF.
+export const REMAP_EXTRA_PARTS = ["fn-l", "fn-r", "paddle-l", "paddle-r"] as const;
+export const REMAP_EXTRA_COUNT = REMAP_EXTRA_PARTS.length;
+export const REMAP_EXTRA_SELF = 0xff;
+export const REMAP_EXTRA_OFF = 0xfe;
+export const defaultExtra = (): number[] => Array.from({ length: REMAP_EXTRA_COUNT }, () => REMAP_EXTRA_SELF);
+export const isValidExtra = (extra: number[]): boolean =>
+  extra.length === REMAP_EXTRA_COUNT && extra.every((v) => v === REMAP_EXTRA_SELF || v === REMAP_EXTRA_OFF || (Number.isInteger(v) && v >= 0 && v < 16));
 export const REMAP_PROTO_VER = 1;
 export const REMAP_DISABLED = 0xff;
 

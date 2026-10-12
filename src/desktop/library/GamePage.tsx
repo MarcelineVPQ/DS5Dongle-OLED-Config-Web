@@ -12,7 +12,8 @@ import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onAccentChange, scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
-import { settingsFrom } from "./useGameProfile";
+import { nonConfigParts, settingsFrom } from "./useGameProfile";
+import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { GripHaptics, Segmented, Slider, Toggle, Row, hexToRgb, rgbToHex } from "../controls";
@@ -270,11 +271,12 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
           </Row>
           <Toggle label={t("desktop.library.mic")} value={draft.btMicEnable} onChange={(v) => edit({ btMicEnable: v })} />
           <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
+          <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
           <div className="dk-row-btns">
             <button type="button" className="dk-btn primary" disabled={!bridge.isConnected} title={t("desktop.editing.openHint")} onClick={() => editProfile(game.key, game.title)}>
               {t("desktop.editing.open")}
             </button>
-            <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create({ ...current, ...(draft.buttonLayout ? { buttonLayout: draft.buttonLayout } : {}) })}>
+            <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create({ ...current, ...nonConfigParts(draft) })}>
               {t("desktop.library.profileCopyCurrent")}
             </button>
             <button type="button" className="dk-btn danger" onClick={remove}>
@@ -311,8 +313,52 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
       ) : layouts.length === 0 ? (
         <p className="dk-hint">{t("desktop.layouts.noneForGame")}</p>
       ) : (
-        value && library.layouts?.[value] && <p className="dk-layout-changes">{layoutSummary(library.layouts[value].table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</p>
+        value &&
+        library.layouts?.[value] && (
+          <p className="dk-layout-changes">
+            {layoutSummary(
+              library.layouts[value].table,
+              t("desktop.layouts.off"),
+              t("desktop.layouts.noChanges"),
+              library.layouts[value].extra ? { values: library.layouts[value].extra!, names: ["fn-l", "fn-r", "paddle-l", "paddle-r"].map((p) => t(`desktop.live.part.${p}`)) } : undefined,
+            )}
+          </p>
+        )
       )}
+    </>
+  );
+}
+
+// Stick response curves for this game (protocol 1.10; switched in while it
+// runs, never written to the dongle's flash): a preset per stick, or the
+// player's saved curve. Custom points for a game aren't edited here yet.
+type ProfileCurves = NonNullable<ProfileSettings["stickCurves"]>;
+function CurvePicker({ value, bridge, onChange }: { value: ProfileCurves | undefined; bridge: UseDs5BridgeResult; onChange: (v: ProfileCurves | undefined) => void }) {
+  const { t } = useTranslation();
+  const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 10, FEATURES2.stickCurves);
+  const pick = (side: "left" | "right", type: string) => {
+    const next: ProfileCurves = { ...value };
+    const kept = value?.[side];
+    if (type) next[side] = { type: type as (typeof CURVE_PRESETS)[number], points: kept?.points ?? DEFAULT_CUSTOM_POINTS.map((p) => [...p] as [number, number]) };
+    else delete next[side];
+    onChange(next.left || next.right ? next : undefined);
+  };
+  return (
+    <>
+      {(["left", "right"] as const).map((side) => (
+        <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")}>
+          <select className="dk-select" value={value?.[side]?.type ?? ""} disabled={oldFirmware} onChange={(e) => pick(side, e.target.value)}>
+            <option value="">{t("desktop.curves.profileSaved")}</option>
+            {CURVE_PRESETS.map((type) => (
+              <option key={type} value={type}>
+                {t(`desktop.curves.type.${type}`)}
+              </option>
+            ))}
+            {value?.[side]?.type === "custom" && <option value="custom">{t("desktop.curves.type.custom")}</option>}
+          </select>
+        </Row>
+      ))}
+      <p className="dk-hint">{oldFirmware ? t("desktop.curves.needsFirmware") : t("desktop.curves.profileHint")}</p>
     </>
   );
 }

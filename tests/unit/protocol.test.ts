@@ -102,6 +102,7 @@ describe("identity report (0xF1)", () => {
       features2: 0,
       boardName: null,
       remapTemporary: null,
+      curvesTemporary: null,
     });
   });
 

@@ -135,7 +135,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const autoConnect = useCallback(async () => {
     if (clientRef.current) return;
     if (simulatedDongleOn()) {
-      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 8, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated" }));
+      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 10, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated" }));
       return;
     }
     if (!supported) return;

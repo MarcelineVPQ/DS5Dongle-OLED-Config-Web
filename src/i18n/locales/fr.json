@@ -498,7 +498,7 @@
       "edgePart": {
         "fn": "Le bouton Fn de la DualSense Edge. Maintenu avec d'autres boutons, il change les profils de la manette. Il s'allume ici quand tu appuies dessus.",
         "paddle": "Un des boutons arrière de la DualSense Edge. Les profils de la manette peuvent lui donner le rôle de n'importe quel bouton. Il s'allume ici quand tu appuies dessus.",
-        "soon": "Le réassigner depuis cette app arrive bientôt."
+        "soon": "Pour les réassigner, il faut le dernier firmware du dongle (page Pico → Mettre à jour)."
       },
       "effects": {
         "0": "aucun",
@@ -639,7 +639,8 @@
       "leftStick": "Gauche X / Y",
       "rightStick": "Droite X / Y",
       "connection": "Connexion",
-      "inputs": "Commandes"
+      "inputs": "Commandes",
+      "paddles": "Palettes arrière G / D"
     },
     "narrator": {
       "voice": "Voix de la narratrice",
@@ -1051,6 +1052,45 @@
       "missed": "Non mesuré, les anciennes valeurs sont conservées : {{parts}}. Allez jusqu'au bout et mesurez à nouveau.",
       "retry": "Réessayer"
     },
+    "curves": {
+      "title": "Courbe de réponse",
+      "intro": "La façon dont chaque joystick répond entre le centre et l'inclinaison maximale. Appliquée dans le dongle après le calibrage, elle fonctionne donc dans tous les jeux.",
+      "curve": "Courbe",
+      "type": {
+        "linear": "Linéaire",
+        "precise": "Précise",
+        "steady": "Stable",
+        "aggressive": "Agressive",
+        "digital": "Numérique",
+        "custom": "Personnalisée"
+      },
+      "typeHint": {
+        "linear": "Droite : la sortie suit exactement le joystick.",
+        "precise": "Départ lent pour viser finement ; pleine vitesse seulement près de l'inclinaison maximale.",
+        "steady": "Un départ lent plus doux : des petits mouvements plus calmes.",
+        "aggressive": "Départ rapide : une petite inclinaison va déjà loin.",
+        "digital": "Presque tout ou rien : une petite inclinaison est presque au maximum.",
+        "custom": "Votre propre courbe, passant par quatre points."
+      },
+      "customHint": "Faites glisser les points, ou sélectionnez-en un (Tab) et déplacez-le avec les flèches ; Maj le déplace plus loin.",
+      "graph": "Courbe de réponse : inclinaison du joystick en abscisse, sortie en ordonnée",
+      "point": "Point {{n}}",
+      "pointValue": "inclinaison {{x}} % → sortie {{y}} %",
+      "now": "Stick maintenant : {{in}} % → {{out}} %",
+      "axisIn": "→ Inclinaison du joystick",
+      "axisOut": "↑ Ce que reçoivent les jeux",
+      "keyLinear": "Linéaire",
+      "keyLive": "Votre joystick maintenant",
+      "gameOn": "Le profil d'un jeu applique ses propres courbes en ce moment. Enregistrer ici les arrête jusqu'au prochain lancement de ce jeu.",
+      "needsFirmware": "Mettez à jour le firmware du dongle pour les courbes de réponse.",
+      "readFailed": "Le dongle n'a pas renvoyé ses courbes.",
+      "resetLinear": "Revenir à Linéaire",
+      "saveHint": "Enregistrée dans le dongle pour la manette de l'emplacement {{slot}} ; s'applique tout de suite à tous les jeux.",
+      "profileLeft": "Courbe du joystick gauche",
+      "profileRight": "Courbe du joystick droit",
+      "profileSaved": "Ma courbe enregistrée",
+      "profileHint": "Appliquée seulement pendant que le jeu tourne. Choisissez ici un préréglage par joystick ; votre courbe personnalisée se règle dans Calibrage."
+    },
     "stickTest": {
       "circleTitle": "Test de circularité",
       "circleHow": "Faites tourner chaque joystick lentement le long de son bord, plusieurs fois. Le contour montre jusqu'où il va dans chaque direction.",
@@ -1191,7 +1231,8 @@
         "notApplied": "Pas encore appliquée : Appliquer en fait tes boutons habituels sur le dongle.",
         "edited": "Modifiée depuis son chargement : Mettre à jour enregistre les changements dans la disposition ; Appliquer en fait tes boutons habituels.",
         "applied": "Appliquée : ce sont maintenant tes boutons habituels sur le dongle."
-      }
+      },
+      "extraSelf": "Lui-même (par défaut)"
     },
     "editing": {
       "title": "Modification : profil {{title}}",

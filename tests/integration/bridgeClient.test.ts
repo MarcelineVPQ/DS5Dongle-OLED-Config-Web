@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CommandError, Ds5BridgeClient, FEATURES2, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
+import { DEFAULT_CURVES, DEFAULT_CUSTOM_POINTS, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
 import { FakeDongle } from "../support/fakeDongle";
 
 function setup(opts = {}) {
@@ -315,5 +316,90 @@ describe("core1 health in the audio counters (issue #15)", () => {
     const c = await new Ds5BridgeClient(new FakeDongle()).readAudioCounters();
     expect(c.core1Loops).toBe(1234);
     expect(c.core1Flags).toBeUndefined();
+  });
+});
+
+describe("Edge extra-button remap (protocol 1.9)", () => {
+  it("saves and reads the four entries; temporary ones revert", async () => {
+    const dongle = new FakeDongle({ protoMinor: 9 });
+    const client = new Ds5BridgeClient(dongle);
+    expect(await client.readRemapExtra()).toEqual([0xff, 0xff, 0xff, 0xff]);
+    await client.applyRemapExtra([13, 0xfe, 0xff, 12], false); // Fn L → Cross, Fn R off, right paddle → Circle
+    expect(await client.readRemapExtra()).toEqual([13, 0xfe, 0xff, 12]);
+    await client.applyRemapExtra([0, 0, 0, 0], true);
+    expect((await client.identity()).remapTemporary).toBe(true);
+    await client.revertRemap();
+    expect(await client.readRemapExtra()).toEqual([13, 0xfe, 0xff, 12]);
+  });
+
+  it("refuses invalid entries; older firmware doesn't announce it", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 9 }));
+    await expect(client.applyRemapExtra([16, 0xff, 0xff, 0xff], false)).rejects.toThrow();
+    const old = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 8 })).identity();
+    expect((old.features2 & FEATURES2.remapExtra) !== 0).toBe(false);
+  });
+});
+
+describe("stick response curves (protocol 1.10)", () => {
+  const precise: StickCurve = { type: "precise", points: DEFAULT_CUSTOM_POINTS };
+  const custom: StickCurve = {
+    type: "custom",
+    points: [
+      [0, 40],
+      [64, 64],
+      [128, 200],
+      [255, 255],
+    ],
+  };
+
+  it("reads Linear by default, saves per slot, and announces the feature", async () => {
+    const dongle = new FakeDongle({ protoMinor: 10 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.features2 & FEATURES2.stickCurves).toBe(FEATURES2.stickCurves);
+    expect(id.curvesTemporary).toBe(false);
+    const first = await client.readStickCurves();
+    expect(first?.saved).toEqual(DEFAULT_CURVES);
+    expect(first?.temporary).toBe(false);
+    await client.applyStickCurves(0, precise, custom, false);
+    const back = await client.readStickCurves();
+    expect(back?.slot).toBe(0);
+    expect(back?.saved).toEqual([precise, custom]);
+    expect(back?.active).toEqual([precise, custom]);
+    expect(dongle.curves[1]).toEqual(DEFAULT_CURVES.map(encodeCurve)); // other slots untouched
+  });
+
+  it("temporary curves stay in RAM and end with the revert; a saved set ends them too", async () => {
+    const dongle = new FakeDongle({ protoMinor: 10 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.applyStickCurves(0, custom, custom, true);
+    let r = await client.readStickCurves();
+    expect(r?.temporary).toBe(true);
+    expect(r?.active).toEqual([custom, custom]);
+    expect(r?.saved).toEqual(DEFAULT_CURVES); // never saved
+    expect((await client.identity()).curvesTemporary).toBe(true);
+    await client.revertRemap();
+    r = await client.readStickCurves();
+    expect(r?.temporary).toBe(false);
+    expect(r?.active).toEqual(DEFAULT_CURVES);
+    await client.applyStickCurves(0, custom, custom, true);
+    await client.applyStickCurves(0, precise, precise, false);
+    r = await client.readStickCurves();
+    expect(r?.temporary).toBe(false);
+    expect(r?.active).toEqual([precise, precise]);
+  });
+
+  it("refuses decreasing custom points; older firmware refuses the command and doesn't announce it", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 10 }));
+    const bad: StickCurve = { type: "custom", points: [custom.points[1], custom.points[0], custom.points[2], custom.points[3]] };
+    await expect(client.applyStickCurves(0, bad, precise, false)).rejects.toThrow();
+    const dongle = new FakeDongle({ protoMinor: 10 });
+    await dongle.setReport(0xf6, new Uint8Array([0x14, 0x43, 0x56, 1, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, ...encodeCurve(precise), 0]));
+    expect((await new Ds5BridgeClient(dongle).identity()).lastResult).toBe("invalid"); // type 6
+    const old = new Ds5BridgeClient(new FakeDongle({ protoMinor: 9 }));
+    const oldId = await old.identity();
+    expect(oldId.features2 & FEATURES2.stickCurves).toBe(0);
+    expect(oldId.curvesTemporary).toBeNull();
+    await expect(old.applyStickCurves(0, precise, precise, false)).rejects.toBeInstanceOf(CommandError);
   });
 });

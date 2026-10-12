@@ -65,7 +65,7 @@ export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: 
 export const SetMineSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, mine: MineSchema });
 export const GameActionSchema = z.strictObject({ gameKey: GameKeySchema, action: z.enum(GAME_ACTIONS) });
 export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable();
-export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table });
+export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table, extra: ButtonLayoutSchema.shape.extra });
 
 export interface IpcHandlers {
   gamesDetails: () => Record<string, GameInfo>;
@@ -75,7 +75,7 @@ export interface IpcHandlers {
   libraryDeleteProfile: (gameKey: string) => LibraryFile;
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
-  librarySetLayout: (u: { id: string; name: string; table: number[] }) => LibraryFile;
+  librarySetLayout: (u: { id: string; name: string; table: number[]; extra?: number[] }) => LibraryFile;
   libraryDeleteLayout: (id: string) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
   micTest: () => Promise<MicTestResult>;

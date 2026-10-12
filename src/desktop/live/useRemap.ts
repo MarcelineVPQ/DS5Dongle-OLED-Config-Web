@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
-import { identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
+import { defaultExtra, identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
 import { say } from "../narrator";
 
 export interface Remap {
@@ -20,10 +20,15 @@ export interface Remap {
   apply: () => Promise<void>;
   revert: () => void;
   resetAll: () => void;
-  load: (table: number[], layout?: { id: string; name: string }) => void; // a saved layout into the editor
+  load: (table: number[], layout?: { id: string; name: string }, extra?: number[]) => void; // a saved layout into the editor
   // The saved layout last loaded into the editor (cleared by Reset all).
   loaded: { id: string; name: string; table: number[] } | null;
   temporary: boolean; // a game's layout is on the dongle now (protocol 1.8)
+  // Protocol 1.9: the Edge's Fn buttons and paddles (REMAP_EXTRA_PARTS order);
+  // null on firmware without it.
+  extraDevice: number[] | null;
+  extraDraft: number[];
+  setExtra: (index: number, value: number) => void;
 }
 
 export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | null = null): Remap {
@@ -34,10 +39,21 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState<{ id: string; name: string; table: number[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [extraDevice, setExtraDevice] = useState<number[] | null>(null);
+  const [extraDraft, setExtraDraft] = useState<number[]>(defaultExtra);
 
   useEffect(() => {
     if (!client) return;
     let live = true;
+    // Firmware without the Edge extras answers nothing (or stalls): no rows then.
+    client.readRemapExtra().then(
+      (e) => {
+        if (!live) return;
+        setExtraDevice(e);
+        setExtraDraft(e ? e.slice() : defaultExtra());
+      },
+      () => live && setExtraDevice(null),
+    );
     client.readRemap().then(
       (s) => {
         if (!live) return;
@@ -62,12 +78,17 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     setBusy(true);
     setError(null);
     try {
-      const before = state?.revision ?? -1;
-      await client.applyRemap(draft);
+      if (!tablesEqual(draft, state?.table ?? identityTable())) await client.applyRemap(draft);
+      if (extraDevice && !tablesEqual(extraDraft, extraDevice)) await client.applyRemapExtra(extraDraft, false);
       const after = await client.readRemap();
-      if (!after || !tablesEqual(after.table, draft) || after.revision === before) throw new Error(t("remap.verifyFailed"));
+      const afterExtra = extraDevice ? await client.readRemapExtra() : null;
+      if (!after || !tablesEqual(after.table, draft) || (extraDevice && (!afterExtra || !tablesEqual(afterExtra, extraDraft)))) throw new Error(t("remap.verifyFailed"));
       setState(after);
       setDraft(after.table.slice());
+      if (afterExtra) {
+        setExtraDevice(afterExtra);
+        setExtraDraft(afterExtra.slice());
+      }
       void say("app_remapped");
     } catch (cause) {
       setError(errorText(cause));
@@ -80,26 +101,34 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     } finally {
       setBusy(false);
     }
-  }, [client, draft, state, t]);
+  }, [client, draft, state, t, extraDevice, extraDraft]);
 
   return {
     supported: client ? supported : null,
     device,
     draft,
-    dirty: !tablesEqual(draft, device),
+    dirty: !tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice)),
     busy,
     error,
     setTarget: useCallback((source: number, target: number) => setDraft((d) => d.map((v, i) => (i === source ? target : v))), []),
     apply,
-    revert: useCallback(() => setDraft(device.slice()), [device]),
+    revert: useCallback(() => {
+      setDraft(device.slice());
+      if (extraDevice) setExtraDraft(extraDevice.slice());
+    }, [device, extraDevice]),
     resetAll: useCallback(() => {
       setDraft(identityTable());
+      setExtraDraft(defaultExtra());
       setLoaded(null);
     }, []),
-    load: useCallback((table: number[], layout?: { id: string; name: string }) => {
+    load: useCallback((table: number[], layout?: { id: string; name: string }, extra?: number[]) => {
       setDraft(table.slice());
+      setExtraDraft(extra ? extra.slice() : defaultExtra());
       setLoaded(layout ? { ...layout, table: table.slice() } : null);
     }, []),
+    extraDevice,
+    extraDraft,
+    setExtra: useCallback((index: number, value: number) => setExtraDraft((d) => d.map((v, i) => (i === index ? value : v))), []),
     loaded,
     temporary: !!temporary,
   };

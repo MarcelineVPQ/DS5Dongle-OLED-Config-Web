@@ -14,6 +14,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
 import { BusyButton, Slider } from "../controls";
+import StickCurves from "./StickCurves";
 import StickTests from "./StickTestCards";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
@@ -201,6 +202,8 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           </section>
         );
       })}
+
+      <StickCurves bridge={bridge} input={input} sticks={draft.sticks} />
 
       <StickTests input={input} sticks={draft.sticks} />
 

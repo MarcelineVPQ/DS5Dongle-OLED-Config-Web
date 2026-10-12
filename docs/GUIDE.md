@@ -122,7 +122,9 @@ For stick drift, sticks that don't reach the edge, triggers that don't reach ful
 
 A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
 
-**Stick tests** (below the stick cards): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
+**Response curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Aggressive** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can pick its own curve per stick (on the game's page), used only while the game runs.
+
+**Stick tests** (below the response curve): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
 
 ## 6. The Dongle page
 
