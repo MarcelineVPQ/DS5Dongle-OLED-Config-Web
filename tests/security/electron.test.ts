@@ -145,7 +145,8 @@ describe("privileged Windows USB repair", () => {
 
   it("publishes the exact script in the README", async () => {
     const { REPAIR_SCRIPT } = await import("../../src/desktop/windowsRepairScript");
-    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+    // Windows checkouts may use CRLF line endings; the script itself must match exactly.
+    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8").replace(/\r\n/g, "\n");
     expect(readme).toContain("```powershell\n" + REPAIR_SCRIPT + "\n```");
   });
 });
