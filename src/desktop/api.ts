@@ -22,6 +22,8 @@ export interface DeviceStatus {
 // Actions picked from the tray menu that need the USB connection.
 export type TrayCommand = { type: "switchSlot"; slot: number } | { type: "openPage"; page: string };
 
+export type UpdateChannel = "stable" | "dev";
+
 export interface DesktopSettings {
   closeToTray: boolean;
   startMinimized: boolean;
@@ -44,6 +46,9 @@ export interface DesktopSettings {
   // Experimental: the lightbar glow brighter than paper white on HDR displays
   // (starts the app with the scRGB color profile; applies at restart).
   hdrLighting: boolean;
+  // Which update feed the app follows: "stable" (everyone), or "dev" (opt-in
+  // development builds, which also get every stable release).
+  updateChannel: UpdateChannel;
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).
@@ -100,6 +105,8 @@ export interface DesktopApi {
   checkForUpdates(): Promise<UpdateState>;
   getUpdateState(): Promise<UpdateState>;
   installUpdate(): Promise<UpdateState>;
+  // Switch to the stable channel and offer its latest version, even if older.
+  backToStable(): Promise<UpdateState>;
   restartToUpdate(): void;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
@@ -153,6 +160,7 @@ export const IPC = {
   checkForUpdates: "desktop:check-for-updates",
   getUpdateState: "desktop:get-update-state",
   installUpdate: "desktop:install-update",
+  backToStable: "desktop:back-to-stable",
   restartToUpdate: "desktop:restart-to-update",
   updateState: "desktop:update-state",
   latestFirmware: "desktop:latest-firmware",

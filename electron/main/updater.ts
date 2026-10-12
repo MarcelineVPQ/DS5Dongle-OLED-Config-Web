@@ -13,7 +13,8 @@ import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, rea
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
-import { Manifest, isAllowedDownloadUrl, isNewer, type Download } from "../../src/update/manifest";
+import { Manifest, isAllowedDownloadUrl, isNewer, sameVersion, type Download } from "../../src/update/manifest";
+import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
@@ -21,6 +22,9 @@ import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
 const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest.json";
+// The development channel's feed (opt-in): the newest development build or
+// stable release, whichever is newer. Same signing key, same checks.
+const DEV_MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest-dev.json";
 const FIRMWARE_CHANGELOG_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/CHANGELOG.md";
 const CHANGELOG_MAX_CHARS = 512 * 1024;
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
@@ -48,8 +52,9 @@ function trustedKeys(): readonly string[] {
   return testFeed && testKey ? [...TRUSTED_KEYS, testKey] : TRUSTED_KEYS;
 }
 
-function manifestUrl(): string {
-  return testFeed ?? MANIFEST_URL;
+function manifestUrl(channel: UpdateChannel): string {
+  if (testFeed) return channel === "dev" ? testFeed.replace(/latest\.json$/, "latest-dev.json") : testFeed;
+  return channel === "dev" ? DEV_MANIFEST_URL : MANIFEST_URL;
 }
 
 function downloadAllowed(url: string): boolean {
@@ -70,8 +75,15 @@ export class Updater {
   private manifest: Manifest | null = null;
   private busy = false;
   private installedPath: string | null = null;
+  // "Back to stable" was chosen: the stable version stays on offer (even
+  // though it's older) until it's installed or the Development channel is
+  // picked again, so a routine check can't take the offer back.
+  private returningToStable = false;
 
-  constructor(private readonly emit: (state: UpdateState) => void) {}
+  constructor(
+    private readonly emit: (state: UpdateState) => void,
+    private readonly channel: () => UpdateChannel = () => "stable",
+  ) {}
 
   getState(): UpdateState {
     return this.state;
@@ -108,7 +120,7 @@ export class Updater {
         for (const f of readdirSync(dir)) {
           const full = join(dir, f);
           if (f.endsWith(".AppImage.part")) rmSync(full, { force: true });
-          const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+)-linux-x86_64\.AppImage$/.exec(f);
+          const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
       } else if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) {
@@ -121,7 +133,16 @@ export class Updater {
     }
   }
 
+  // "Back to stable": the stable version, even when it's older than this
+  // (development) build. The one path that may go backwards.
+  backToStable(): Promise<UpdateState> {
+    this.returningToStable = true;
+    return this.check();
+  }
+
   async check(): Promise<UpdateState> {
+    if (this.channel() === "dev") this.returningToStable = false;
+    const allowOlder = this.returningToStable;
     // Once an update is installed, only a restart moves on (a fresh check would
     // see the old running version and offer the same update again).
     if (this.busy || this.state.phase === "ready") return this.state;
@@ -130,7 +151,8 @@ export class Updater {
       const manifest = await this.fetchManifest();
       this.manifest = manifest;
       const remote = manifest.app.version;
-      if (!isNewer(remote, app.getVersion())) return this.set({ phase: "up-to-date", version: app.getVersion() });
+      const offer = allowOlder ? !sameVersion(remote, app.getVersion()) : isNewer(remote, app.getVersion());
+      if (!offer) return this.set({ phase: "up-to-date", version: app.getVersion() });
       const key = this.platformKey();
       const download = key ? manifest.app.platforms[key] : undefined;
       if (!download) return this.set({ phase: "failed", detail: `No ${process.platform} build is published for ${remote}.` });
@@ -150,7 +172,7 @@ export class Updater {
   }
 
   async fetchManifest(): Promise<Manifest> {
-    const url = manifestUrl();
+    const url = manifestUrl(this.channel());
     const response = await net.fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (response.status === 404) throw new FeedMissingError();
     if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
@@ -182,6 +204,7 @@ export class Updater {
       await this.downloadAsset(download, part, (got, total) => this.set({ phase: "downloading", version, got, total }));
       this.set({ phase: "installing", version });
       this.installedPath = this.install(part, target);
+      this.returningToStable = false;
       return this.set({ phase: "ready", version });
     } catch (cause) {
       return this.set({ phase: "failed", detail: `${errorText(cause)} Your current version is untouched.` });
@@ -218,7 +241,7 @@ export class Updater {
     if (process.platform === "linux") {
       const dir = dirname(realpathSync(process.env.APPIMAGE!));
       const name = basename(new URL(download.url).pathname);
-      if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
+      if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+(?:-dev\.\d+)?-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
       return join(dir, name);
     }
     return process.env.PORTABLE_EXECUTABLE_FILE!;

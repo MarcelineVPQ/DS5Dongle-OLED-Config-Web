@@ -214,7 +214,8 @@
       "checkedNewer": "Checked just now: {{version}} is available.",
       "checkedCurrent": "Checked just now: you're up to date.",
       "checkedNone": "Checked just now: no release has been published yet.",
-      "checkedOffline": "Couldn't check: the update server can't be reached (offline?)."
+      "checkedOffline": "Couldn't check: the update server can't be reached (offline?).",
+      "backToStable": "Back to stable {{version}}"
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -980,6 +981,14 @@
         "both": "Test both"
       },
       "testHint": "A short rumble on that grip at its strength now (the trigger tests don't use these: L2 and R2 have their own motors)."
+    },
+    "channel": {
+      "label": "Update channel",
+      "stable": "Stable",
+      "dev": "Development",
+      "stableHint": "Tested releases, for everyone.",
+      "devHint": "Development builds of the app and the firmware, before they're released: newer, and less tested. You also get every stable release. Back to stable installs the latest stable app and firmware.",
+      "backToStable": "Back to stable"
     }
   },
   "ad": {

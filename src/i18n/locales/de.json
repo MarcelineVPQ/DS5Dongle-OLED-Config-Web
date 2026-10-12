@@ -215,7 +215,8 @@
       "checkedNewer": "Gerade geprüft: {{version}} ist verfügbar.",
       "checkedCurrent": "Gerade geprüft: Du bist auf dem neuesten Stand.",
       "checkedNone": "Gerade geprüft: Es wurde noch kein Release veröffentlicht.",
-      "checkedOffline": "Prüfung fehlgeschlagen: Der Update-Server ist nicht erreichbar (offline?)."
+      "checkedOffline": "Prüfung fehlgeschlagen: Der Update-Server ist nicht erreichbar (offline?).",
+      "backToStable": "Zurück zu stabil {{version}}"
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
@@ -981,6 +982,14 @@
         "both": "Beide testen"
       },
       "testHint": "Ein kurzes Rumpeln am Griff mit seiner aktuellen Stärke (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
+    },
+    "channel": {
+      "label": "Update-Kanal",
+      "stable": "Stabil",
+      "dev": "Entwicklung",
+      "stableHint": "Getestete Versionen, für alle.",
+      "devHint": "Entwicklungsversionen von App und Firmware, vor der Veröffentlichung: neuer und weniger getestet. Jede stabile Version bekommst du auch. „Zurück zu stabil“ installiert die neueste stabile App und Firmware.",
+      "backToStable": "Zurück zu stabil"
     }
   },
   "ad": {

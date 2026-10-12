@@ -215,7 +215,8 @@
       "checkedNewer": "Vérifié à l'instant : {{version}} est disponible.",
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",
       "checkedNone": "Vérifié à l'instant : aucune version n'a encore été publiée.",
-      "checkedOffline": "Vérification impossible : le serveur de mises à jour est injoignable (hors ligne ?)."
+      "checkedOffline": "Vérification impossible : le serveur de mises à jour est injoignable (hors ligne ?).",
+      "backToStable": "Revenir au stable {{version}}"
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -981,6 +982,14 @@
         "both": "Tester les deux"
       },
       "testHint": "Une courte vibration sur cette poignée à sa force actuelle (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
+    },
+    "channel": {
+      "label": "Canal de mise à jour",
+      "stable": "Stable",
+      "dev": "Développement",
+      "stableHint": "Des versions testées, pour tout le monde.",
+      "devHint": "Des versions de développement de l'app et du firmware, avant leur sortie : plus récentes et moins testées. Vous recevez aussi chaque version stable. « Revenir au stable » installe la dernière app et le dernier firmware stables.",
+      "backToStable": "Revenir au stable"
     }
   },
   "ad": {

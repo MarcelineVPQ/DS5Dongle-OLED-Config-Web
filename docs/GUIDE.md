@@ -165,7 +165,7 @@ Open with the ⚙ in the rail.
 - **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).
 - **Accessibility:** **Color vision** modes (colors never carry meaning alone anyway), **Reduce motion**, the **narrator** voice and captions.
 - **Startup and window:** close to tray, start at login, start minimized.
-- **Updates:** check automatically, install automatically.
+- **Updates:** check automatically, install automatically, and the **update channel**: Stable (the default) or **Development**, which brings development builds of the app and firmware before they're released (newer, less tested), plus every stable release. **Back to stable** returns to the latest stable app and firmware.
 - **Advanced:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
 
 ## 9. Troubleshooting

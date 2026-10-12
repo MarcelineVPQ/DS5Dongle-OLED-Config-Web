@@ -77,6 +77,7 @@ export interface IpcHandlers {
   checkForUpdates: () => Promise<UpdateState>;
   getUpdateState: () => UpdateState;
   installUpdate: () => Promise<UpdateState>;
+  backToStable: () => Promise<UpdateState>;
   restartToUpdate: () => void;
   latestFirmware: () => Promise<FirmwareLookup>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
@@ -122,6 +123,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.checkForUpdates, h.checkForUpdates);
   invoke(IPC.getUpdateState, h.getUpdateState);
   invoke(IPC.installUpdate, h.installUpdate);
+  invoke(IPC.backToStable, h.backToStable);
   invoke(IPC.latestFirmware, h.latestFirmware);
   invoke(IPC.downloadFirmware, h.downloadFirmware);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);

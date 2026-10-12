@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { errorText } from "../errorText";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
-import { isNewer, parseVersion } from "../update/manifest";
+import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FirmwareLookup, LatestFirmware, UpdateState } from "./api";
 import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
 
@@ -30,6 +30,7 @@ export interface FirmwareUpdate {
   latest: LatestFirmware | null;
   problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, or offline
   available: boolean;
+  backToStable: boolean; // the offer is the stable version, older than this development build
   state: FirmwareUpdateState;
   start: () => Promise<void>;
   refreshLatest: () => Promise<FirmwareLookup>;
@@ -71,7 +72,10 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   }, [appUpdate.phase]);
 
   const installed = bridge.firmwareVersion;
-  const available = Boolean(latest && installed && isNewer(latest.version, installed));
+  // A newer version; or, on a dongle running a development build, the stable
+  // version offered (after "Back to stable"), even though it's older.
+  const backToStable = Boolean(latest && installed && devNumber(installed) !== null && devNumber(latest.version) === null && !sameVersion(latest.version, installed));
+  const available = Boolean(latest && installed && (isNewer(latest.version, installed) || backToStable));
 
   const start = useCallback(async () => {
     const client = bridge.client;
@@ -96,10 +100,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // derived from the version it reports, not stored separately.
   let shown: FirmwareUpdateState = state;
   if (state.phase === "verifying" && installed) {
-    const want = parseVersion(state.version);
-    const got = parseVersion(installed);
-    shown =
-      want && got && want.join(".") === got.join(".") ? { phase: "done", version: installed } : { phase: "failed", detail: `The dongle came back reporting ${installed}, expected ${state.version}.` };
+    shown = sameVersion(state.version, installed) ? { phase: "done", version: installed } : { phase: "failed", detail: `The dongle came back reporting ${installed}, expected ${state.version}.` };
   }
   const settled = shown !== state;
   useEffect(() => {
@@ -117,6 +118,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     problem,
     latest,
     available,
+    backToStable,
     state: shown,
     start,
     refreshLatest,

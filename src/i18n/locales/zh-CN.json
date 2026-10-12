@@ -215,7 +215,8 @@
       "checkedNewer": "刚刚检查：{{version}} 可用。",
       "checkedCurrent": "刚刚检查：已是最新版本。",
       "checkedNone": "刚刚检查：尚未发布任何版本。",
-      "checkedOffline": "无法检查：连接不到更新服务器（离线？）。"
+      "checkedOffline": "无法检查：连接不到更新服务器（离线？）。",
+      "backToStable": "回到稳定版 {{version}}"
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -975,6 +976,14 @@
         "both": "测试两侧"
       },
       "testHint": "以当前强度让该侧握把短暂震动（扳机测试不使用这些设置：L2 和 R2 有自己的马达）。"
+    },
+    "channel": {
+      "label": "更新渠道",
+      "stable": "稳定版",
+      "dev": "开发版",
+      "stableHint": "经过测试的版本，适合所有人。",
+      "devHint": "应用和固件发布前的开发版本：更新，但测试较少。你也会收到每个稳定版。「回到稳定版」会安装最新的稳定版应用和固件。",
+      "backToStable": "回到稳定版"
     }
   },
   "ad": {

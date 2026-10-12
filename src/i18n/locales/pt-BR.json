@@ -215,7 +215,8 @@
       "checkedNewer": "Verificado agora: {{version}} está disponível.",
       "checkedCurrent": "Verificado agora: você está atualizado.",
       "checkedNone": "Verificado agora: nenhuma versão foi publicada ainda.",
-      "checkedOffline": "Não foi possível verificar: o servidor de atualizações não responde (offline?)."
+      "checkedOffline": "Não foi possível verificar: o servidor de atualizações não responde (offline?).",
+      "backToStable": "Voltar ao estável {{version}}"
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -981,6 +982,14 @@
         "both": "Testar ambas"
       },
       "testHint": "Uma vibração curta nessa empunhadura com a força atual (os testes dos gatilhos não usam isso: L2 e R2 têm motores próprios)."
+    },
+    "channel": {
+      "label": "Canal de atualizações",
+      "stable": "Estável",
+      "dev": "Desenvolvimento",
+      "stableHint": "Versões testadas, para todos.",
+      "devHint": "Versões de desenvolvimento do app e do firmware, antes do lançamento: mais novas e menos testadas. Você também recebe cada versão estável. “Voltar ao estável” instala o app e o firmware estáveis mais recentes.",
+      "backToStable": "Voltar ao estável"
     }
   },
   "ad": {

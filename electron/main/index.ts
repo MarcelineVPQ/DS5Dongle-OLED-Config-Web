@@ -89,10 +89,13 @@ function start(): void {
   if (process.platform === "win32") app.setAppUserModelId(APP_ID);
   settings = loadSettings();
   integrateDesktop(resourcesDir);
-  updater = new Updater((state) => {
-    mainWindow?.webContents.send(IPC.updateState, state);
-    tray?.updateUpdateState(state);
-  });
+  updater = new Updater(
+    (state) => {
+      mainWindow?.webContents.send(IPC.updateState, state);
+      tray?.updateUpdateState(state);
+    },
+    () => settings.updateChannel,
+  );
   updater.pruneStaleFiles();
   setTimeout(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_FIRST_CHECK_MS);
   setInterval(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_INTERVAL_MS);
@@ -225,6 +228,12 @@ function start(): void {
     checkForUpdates: () => updater.check(),
     getUpdateState: () => updater.getState(),
     installUpdate: () => updater.downloadAndInstall(),
+    // The channel first (without the routine re-check, which would race this
+    // one), then the stable version on offer even though it's older.
+    backToStable: () => {
+      updateSetting("updateChannel", "stable", false);
+      return updater.backToStable();
+    },
     restartToUpdate: () => updater.restart(),
     latestFirmware: () => latestFirmware(firmwareSource),
     downloadFirmware: () => firmwareBytes(firmwareSource),
@@ -249,13 +258,15 @@ async function checkForUpdates(): Promise<void> {
   if (state.phase === "available" && settings.autoInstallUpdates) await updater.downloadAndInstall();
 }
 
-function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): DesktopSettings {
+function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K], recheck = true): DesktopSettings {
   settings = { ...settings, [key]: value };
   saveSettings(settings);
   if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
   // Turned on with an update already waiting: install it now.
   if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") void updater.downloadAndInstall();
   if (key === "gamesScanAllowed") syncRunningWatcher();
+  // A different feed: look again (a development build may now be offered).
+  if (key === "updateChannel" && recheck && updater.getState().phase !== "ready") void updater.check();
   tray?.updateSettings(settings);
   return settings;
 }

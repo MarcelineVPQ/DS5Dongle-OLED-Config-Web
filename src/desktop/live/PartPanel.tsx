@@ -21,7 +21,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 import type { DesktopSettings } from "../api";
-import { BusyButton, Row, Toggle, Slider } from "../controls";
+import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { TOUR_ENABLED, startTour } from "../tour/Tour";
@@ -342,6 +342,29 @@ function AppSettings() {
                 set("updatesAsked", true);
               }}
             />
+            <Segmented
+              label={t("desktop.channel.label")}
+              value={settings.updateChannel === "dev" ? 1 : 0}
+              options={[
+                { value: 0, label: t("desktop.channel.stable") },
+                { value: 1, label: t("desktop.channel.dev") },
+              ]}
+              onChange={(v) => set("updateChannel", v === 1 ? "dev" : "stable")}
+            />
+            <p className="dk-hint">{settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}</p>
+            {settings.updateChannel === "dev" && (
+              <div className="dk-row-btns">
+                <BusyButton
+                  className="dk-btn"
+                  onClick={async () => {
+                    await window.desktop?.backToStable();
+                    setSettings((await window.desktop?.getSettings()) ?? settings);
+                  }}
+                >
+                  {t("desktop.channel.backToStable")}
+                </BusyButton>
+              </div>
+            )}
           </section>
           <section className="dk-card">
             <h2>{t("desktop.settings2.advanced")}</h2>

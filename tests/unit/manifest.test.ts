@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Manifest, isAllowedDownloadUrl, isNewer, parseVersion } from "../../src/update/manifest";
+import { Manifest, devNumber, isAllowedDownloadUrl, isNewer, parseVersion, sameVersion } from "../../src/update/manifest";
 
 describe("parseVersion", () => {
   it("reads plain, v-prefixed and suffixed versions", () => {
@@ -66,5 +66,27 @@ describe("download host allowlist", () => {
     for (const url of ["http://github.com/a", "https://github.com.evil.example/a", "https://evil.example/github.com", "https://u:p@github.com/a", "file:///tmp/a.uf2", "nope"]) {
       expect(isAllowedDownloadUrl(url), url).toBe(false);
     }
+  });
+});
+
+describe("development builds", () => {
+  it("reads the development number", () => {
+    expect(devNumber("0.9.1-dev.3")).toBe(3);
+    expect(devNumber("v0.9.1-dev.12-oled-edition")).toBe(12);
+    expect(devNumber("0.9.1")).toBeNull();
+    expect(devNumber("v0.9.0-oled-edition")).toBeNull();
+  });
+  it("orders them before their release", () => {
+    expect(isNewer("0.9.1-dev.2", "0.9.1-dev.1")).toBe(true);
+    expect(isNewer("0.9.1", "0.9.1-dev.5")).toBe(true);
+    expect(isNewer("0.9.1-dev.1", "0.9.0")).toBe(true);
+    expect(isNewer("0.9.1-dev.1", "0.9.1")).toBe(false);
+    expect(isNewer("0.9.1-dev.1", "0.9.1-dev.1")).toBe(false);
+    expect(isNewer("v0.9.1-dev.2-oled-edition", "0.9.1-dev.1")).toBe(true);
+  });
+  it("tells versions apart by their development number", () => {
+    expect(sameVersion("v0.9.1-dev.2-oled-edition", "0.9.1-dev.2")).toBe(true);
+    expect(sameVersion("0.9.1-dev.2", "0.9.1")).toBe(false);
+    expect(sameVersion("v0.9.0-oled-edition", "0.9.0")).toBe(true);
   });
 });

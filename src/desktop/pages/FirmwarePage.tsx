@@ -52,7 +52,9 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
         <div className="dk-ctl" style={{ justifyContent: "flex-start", gap: 8, paddingBottom: 6 }}>
           {fw.available ? (
             <button type="button" className="dk-btn primary" disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"} onClick={() => void fw.start()}>
-              {t("desktop.firmware.update", { version: fw.latest?.version, defaultValue: "Update to {{version}}" })}
+              {fw.backToStable
+                ? t("desktop.firmware.backToStable", { version: fw.latest?.version })
+                : t("desktop.firmware.update", { version: fw.latest?.version, defaultValue: "Update to {{version}}" })}
             </button>
           ) : (
             <span className="dk-good">✓ {t("desktop.firmware.upToDate", "Up to date")}</span>

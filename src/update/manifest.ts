@@ -64,16 +64,30 @@ export function parseVersion(raw: string | null | undefined): [number, number, n
   return [Number(parts[0]), Number(parts[1]), Number(parts[2])];
 }
 
+// A development build's number: "0.9.1-dev.3", "v0.9.1-dev.3-oled-edition"
+// -> 3; null for a stable version.
+export function devNumber(raw: string | null | undefined): number | null {
+  const m = /-dev\.(\d+)(?:-|$)/.exec(raw?.trim() ?? "");
+  return m ? Number(m[1]) : null;
+}
+
 // Strictly newer only. Equal is not newer, and an unparseable version on
 // either side is not newer: an updater that can't read a version must do
-// nothing rather than risk moving someone backwards.
+// nothing rather than risk moving someone backwards. Development builds come
+// before their release: 0.9.1-dev.1 < 0.9.1-dev.2 < 0.9.1.
 export function isNewer(remote: string | null | undefined, local: string | null | undefined): boolean {
   const r = parseVersion(remote);
   const l = parseVersion(local);
   if (!r || !l) return false;
   for (let i = 0; i < 3; i++) if (r[i] !== l[i]) return r[i] > l[i];
-  return false;
+  const rd = devNumber(remote);
+  const ld = devNumber(local);
+  if (rd === null) return ld !== null; // a release is newer than its development builds
+  return ld !== null && rd > ld;
 }
+
+// The same version, development number included.
+export const sameVersion = (a: string | null | undefined, b: string | null | undefined) => !!parseVersion(a) && !isNewer(a, b) && !isNewer(b, a);
 
 // Hosts a manifest download may point at: GitHub release assets and the
 // redirect targets GitHub serves them from.
