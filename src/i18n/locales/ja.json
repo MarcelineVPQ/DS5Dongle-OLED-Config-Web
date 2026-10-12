@@ -1025,7 +1025,6 @@
       "usb": "USB オーディオフレーム",
       "bt": "Bluetooth パケット",
       "signal": "信号",
-      "tempHistory": "温度",
       "audio": "オーディオパイプライン",
       "speakerPeak": "スピーカーレベル",
       "hapticPeak": "ハプティクスレベル",
@@ -1045,7 +1044,8 @@
       "never": "しない",
       "yes": "はい",
       "no": "いいえ",
-      "minutes": "{{n}} 分"
+      "minutes": "{{n}} 分",
+      "mic": "マイク音声フレーム"
     },
     "hdr": {
       "label": "HDR ライティング（実験的）",

@@ -23,6 +23,7 @@ interface Sample {
   uptime: number;
   usbFps: number;
   btPps: number;
+  micFps: number; // mic audio frames decoded per second
   rssi: number;
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
@@ -38,7 +39,7 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
   const client = bridge.client;
   const history = useRef<Sample[]>([]);
   // seq null = no mirror frame in that sample (then no redraw rate).
-  const prev = useRef<{ at: number; usb: number; bt: number; loops: number; seq: number | null } | null>(null);
+  const prev = useRef<{ at: number; usb: number; bt: number; mic: number; loops: number; seq: number | null } | null>(null);
   const latest = useRef({ frame: frameNow, rssi: rssiNow });
   useEffect(() => {
     latest.current = { frame: frameNow, rssi: rssiNow };
@@ -62,6 +63,7 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
         uptime: diag.uptimeSeconds,
         usbFps: rate(diag.usbFrames, p?.usb),
         btPps: rate(diag.btPackets, p?.bt),
+        micFps: rate(counters.micFrames, p?.mic),
         rssi,
         peaks: [diag.peakSpeaker / 255, diag.peakHaptic / 255],
         hciErrors: diag.hciErrors,
@@ -70,7 +72,7 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
         // The frame counter is 8-bit: the difference mod 256.
         oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p && p.seq !== null && dt > 0 ? Math.round(((frame.seq - p.seq) & 0xff) / dt) : 0 } : null,
       };
-      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, loops: counters.core1Loops, seq: frame?.seq ?? null };
+      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, mic: counters.micFrames, loops: counters.core1Loops, seq: frame?.seq ?? null };
       history.current = [...history.current.slice(-(HISTORY - 1)), s];
       return { s, history: history.current };
     },
@@ -92,13 +94,14 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
     <div className="dash">
       <h3 className="dash-group">{td("pico")}</h3>
       <div className="dash-row">
-        <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} />
+        <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} trend={series((x) => x.tempC)} />
         <Gauge label={td("clock")} value={s?.realMhz} min={0} max={Math.max(150, Math.ceil((s?.setMhz ?? 150) * 1.1))} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
         <Gauge label={td("vcore")} value={s?.vcore ?? undefined} min={0.85} max={1.3} unit="V" digits={2} warn={1.2} bad={1.26} />
         <div className="dash-card dash-facts">
           <Fact label={td("uptime")} value={s ? formatUptime(s.uptime) : "—"} />
           <Fact label={td("protocol")} value={bridge.identity ? `${bridge.identity.protoMajor}.${bridge.identity.protoMinor}` : "—"} />
-          <Fact label={td("firmware")} value={bridge.firmwareVersion ?? "—"} />
+          {/* Every build is the OLED Edition: the short form fits the card; the tooltip has it all. */}
+          <Fact label={td("firmware")} value={bridge.firmwareVersion?.replace("-oled-edition", "") ?? "—"} title={bridge.firmwareVersion ?? undefined} />
           <Fact label={td("hciErrors")} value={s ? String(s.hciErrors) : "—"} bad={!!s?.hciErrors} />
         </div>
       </div>
@@ -106,7 +109,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
         <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
         <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={s?.btPps} />
         <Graph label={td("signal")} unit="dB" values={series((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
-        <Graph label={td("tempHistory")} unit="°C" values={series((x) => x.tempC)} now={s?.tempC} digits={1} />
+        <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={s?.micFps} />
       </div>
       <div className="dash-row">
         <div className="dash-card dash-wide">
@@ -159,6 +162,7 @@ function Gauge({
   warn,
   bad,
   sub,
+  trend,
 }: {
   label: string;
   value?: number;
@@ -169,6 +173,7 @@ function Gauge({
   warn?: number;
   bad?: number;
   sub?: string;
+  trend?: number[]; // the last minute, drawn under the gauge
 }) {
   const r = 38;
   const sweep = 240;
@@ -195,7 +200,22 @@ function Gauge({
         {label}
         {sub && <small>{sub}</small>}
       </figcaption>
+      {trend && trend.length > 1 && <Trend values={trend} />}
     </figure>
+  );
+}
+
+// A small trend line (a gauge's last minute).
+function Trend({ values }: { values: number[] }) {
+  const w = 120;
+  const h = 18;
+  const lo = Math.min(...values);
+  const hi = Math.max(...values, lo + 0.5);
+  const pts = values.map((v, i) => `${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
+  return (
+    <svg className="dash-gauge-trend" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <polyline points={pts} />
+    </svg>
   );
 }
 
@@ -233,11 +253,11 @@ function Level({ label, value }: { label: string; value: number }) {
   );
 }
 
-function Fact({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
+function Fact({ label, value, bad, title }: { label: string; value: string; bad?: boolean; title?: string }) {
   return (
     <div className={`dash-fact${bad ? " bad" : ""}`}>
       <span>{label}</span>
-      <b>
+      <b title={title}>
         {bad ? "⚠ " : ""}
         {value}
       </b>

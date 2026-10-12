@@ -1025,7 +1025,6 @@
       "usb": "USB 音频帧",
       "bt": "蓝牙数据包",
       "signal": "信号",
-      "tempHistory": "温度",
       "audio": "音频管线",
       "speakerPeak": "扬声器电平",
       "hapticPeak": "震动电平",
@@ -1045,7 +1044,8 @@
       "never": "从不",
       "yes": "是",
       "no": "否",
-      "minutes": "{{n}} 分钟"
+      "minutes": "{{n}} 分钟",
+      "mic": "麦克风音频帧"
     },
     "hdr": {
       "label": "HDR 灯光（实验性）",

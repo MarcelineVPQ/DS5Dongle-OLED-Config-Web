@@ -1031,7 +1031,6 @@
       "usb": "USB-Audio-Frames",
       "bt": "Bluetooth-Pakete",
       "signal": "Signal",
-      "tempHistory": "Temperatur",
       "audio": "Audio-Pipeline",
       "speakerPeak": "Lautsprecherpegel",
       "hapticPeak": "Haptikpegel",
@@ -1051,7 +1050,8 @@
       "never": "nie",
       "yes": "ja",
       "no": "nein",
-      "minutes": "{{n}} Min."
+      "minutes": "{{n}} Min.",
+      "mic": "Mikrofon-Audioframes"
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",

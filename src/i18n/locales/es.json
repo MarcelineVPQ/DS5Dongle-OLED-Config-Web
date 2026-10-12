@@ -1031,7 +1031,6 @@
       "usb": "Tramas de audio USB",
       "bt": "Paquetes Bluetooth",
       "signal": "Señal",
-      "tempHistory": "Temperatura",
       "audio": "Cadena de audio",
       "speakerPeak": "Nivel del altavoz",
       "hapticPeak": "Nivel háptico",
@@ -1051,7 +1050,8 @@
       "never": "nunca",
       "yes": "sí",
       "no": "no",
-      "minutes": "{{n}} min"
+      "minutes": "{{n}} min",
+      "mic": "Tramas de audio del micrófono"
     },
     "hdr": {
       "label": "Iluminación HDR (experimental)",

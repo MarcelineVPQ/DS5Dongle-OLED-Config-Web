@@ -3151,6 +3151,7 @@ html[data-reduce-motion] .lib-row:hover {
   width: min(100%, 900px);
   margin: 12px auto 0;
   flex: none;
+  container-type: inline-size;
 }
 .dash-group {
   margin: 6px 0 0;
@@ -3161,10 +3162,41 @@ html[data-reduce-motion] .lib-row:hover {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+/* Cards come in groups of four: 4 columns, else 2, else 1 (never 3, which
+   left one card alone on a row). */
 .dash-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+}
+/* A row that doesn't fill the columns: its last card takes the rest. */
+.dash-row > :last-child:nth-child(4n + 3) {
+  grid-column: span 2;
+}
+.dash-row > :last-child:nth-child(4n + 2) {
+  grid-column: span 3;
+}
+.dash-row > :last-child:nth-child(4n + 1):not(:only-child) {
+  grid-column: 1 / -1;
+}
+@container (max-width: 680px) {
+  .dash-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dash-row > :last-child:nth-child(n):not(.dash-wide) {
+    grid-column: auto;
+  }
+  .dash-row > :last-child:nth-child(odd):not(:only-child) {
+    grid-column: 1 / -1;
+  }
+}
+@container (max-width: 340px) {
+  .dash-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash-row > :last-child:nth-child(n):not(.dash-wide) {
+    grid-column: auto;
+  }
 }
 .dash-card {
   margin: 0;
@@ -3197,6 +3229,16 @@ html[data-cards-translucent] .dash-card {
 .dash-gauge svg {
   width: 100%;
   max-width: 150px;
+}
+.dash-gauge svg.dash-gauge-trend {
+  height: 18px;
+  margin-top: 4px;
+}
+.dash-gauge-trend polyline {
+  fill: none;
+  stroke: var(--dk-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
 }
 .dash-gauge .track,
 .dash-gauge .fill {
