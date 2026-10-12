@@ -291,10 +291,16 @@ export const AUDIO_COUNTER_NAMES = [
   "setFeatureCount",
   "setFeatureLast",
 ] as const;
-// Firmware 0.9.4+: core1's health after the counters (issue #15): flags bit0
-// started, bit1 speaker encoder failed (no memory), bit2 mic decoder failed;
-// and the free heap when core1 started. Absent on older firmware.
+// Core1's health after the 15 counters (issue #15), in the 63-byte reply:
+// [60] flags (bit0 started, bit1 speaker encoder failed (no memory), bit2 mic
+// decoder failed, bit7 = this layout) and [61..62] u16 free heap when core1
+// started, in KiB (0 = not known yet). Firmware 0.9.4 to 0.9.5-dev.5 sent them
+// as two more u32s (68 bytes), past the 63-byte cap, so only the flags' low
+// byte arrived, without bit7: that firmware and older read as no health fields
+// (the dashboard falls back to the loop-count check alone, as before).
 export const CORE1_SPEAKER_FAILED = 0x02;
+export const CORE1_HEALTH_LAYOUT = 0x80;
+export const AUDIO_COUNTERS_BYTES = 63;
 export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number> & { core1Flags?: number; core1FreeHeap?: number };
 
 const POLL_INTERVAL_MS = 20;
@@ -601,16 +607,24 @@ export class Ds5BridgeClient {
   }
 
   async readAudioCounters(): Promise<AudioCounters> {
-    const base = AUDIO_COUNTER_NAMES.length * 4;
-    const view = toView(await this.transport.getReport(REPORT.audioCounters, base + 8), base);
-    const out = {} as AudioCounters;
-    AUDIO_COUNTER_NAMES.forEach((name, i) => (out[name] = view.getUint32(i * 4, true)));
-    if (view.byteLength >= base + 8) {
-      out.core1Flags = view.getUint32(base, true);
-      out.core1FreeHeap = view.getUint32(base + 4, true);
-    }
-    return out;
+    return decodeAudioCounters(await this.transport.getReport(REPORT.audioCounters, AUDIO_COUNTERS_BYTES));
   }
+}
+
+// 0xF5: the 15 counters, then core1's health when the firmware sends the
+// 63-byte layout (see CORE1_HEALTH_LAYOUT). core1FreeHeap is in bytes (KiB
+// precision), undefined while not known.
+export function decodeAudioCounters(bytes: Uint8Array): AudioCounters {
+  const base = AUDIO_COUNTER_NAMES.length * 4;
+  const view = toView(bytes, base);
+  const out = {} as AudioCounters;
+  AUDIO_COUNTER_NAMES.forEach((name, i) => (out[name] = view.getUint32(i * 4, true)));
+  if (view.byteLength >= AUDIO_COUNTERS_BYTES && (bytes[base] & CORE1_HEALTH_LAYOUT) !== 0) {
+    out.core1Flags = bytes[base] & ~CORE1_HEALTH_LAYOUT;
+    const kib = view.getUint16(base + 1, true);
+    if (kib > 0) out.core1FreeHeap = kib * 1024;
+  }
+  return out;
 }
 
 function toView(bytes: Uint8Array, need: number): DataView {

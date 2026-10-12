@@ -34,8 +34,12 @@ export interface SimulatedDongleOptions {
   // For the app (not the tests): input that moves on its own, live diagnostics,
   // and this firmware version string.
   live?: boolean;
-  // Firmware 0.9.4+ diagnostics: core1 couldn't create the speaker encoder (issue #15).
+  // 0xF5 core1 health: core1 couldn't create the speaker encoder (issue #15).
   speakerEncoderFailed?: boolean;
+  // 0xF5 as older firmware sent it: "none" = before 0.9.4 (60 bytes, no
+  // health), "cut" = 0.9.4 to 0.9.5-dev.5 (68 bytes wanted, cut to 63: the
+  // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
+  audioCountersLegacy?: "none" | "cut";
   version?: string;
   // Protocol 1.12 controller info: the controller firmware's update version
   // (the counters need > 1106, Edge > 374), and whether it answers test commands.
@@ -161,6 +165,7 @@ export class SimulatedDongle implements Ds5Transport {
   private lastResult: number = RESULT.ok;
   private hostGen = 0;
   private pending: { func: number; arg: number; polls: number } | null = null;
+  private core1Loops = 1234;
 
   constructor(private readonly opts: SimulatedDongleOptions = {}) {}
 
@@ -318,15 +323,21 @@ export class SimulatedDongle implements Ds5Transport {
         return new Uint8Array([0x52, 0x58, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.extra]);
       }
       case 0xf5: {
-        // 0.9.4+ appends core1 flags and free heap; older firmware stops at 60 bytes.
-        const out = new Uint8Array(this.opts.speakerEncoderFailed ? 68 : 60);
+        // 15 u32 counters, then core1's health: [60] flags | 0x80 (layout),
+        // [61..62] free heap at core1 start in KiB (firmware cmd.cpp).
+        const legacy = this.opts.audioCountersLegacy;
+        const out = new Uint8Array(legacy === "none" ? 60 : 63);
         const v = new DataView(out.buffer);
-        v.setUint32(5 * 4, 1234, true); // core1 loops
-        if (this.opts.speakerEncoderFailed) {
-          v.setUint32(60, 0x01 | 0x02, true);
-          v.setUint32(64, 12 * 1024, true);
+        // Core1 keeps looping, so the dashboard's liveness check sees it move.
+        v.setUint32(5 * 4, this.core1Loops, true);
+        this.core1Loops = (this.core1Loops + 97_000) >>> 0;
+        const flags = 0x01 | (this.opts.speakerEncoderFailed ? 0x02 : 0);
+        if (legacy === "cut") out[60] = flags;
+        else if (!legacy) {
+          out[60] = flags | 0x80;
+          v.setUint16(61, this.opts.speakerEncoderFailed ? 12 : 184, true);
         }
-        return out;
+        return out.slice(0, length);
       }
       default:
         throw new ReportStalledError(reportId);

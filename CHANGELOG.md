@@ -20,6 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Fixed
 
 - **A single click no longer flashes the dongle:** "Update to …" on the Pico page now asks once more ("Install … now" / Cancel) before the dongle restarts and its firmware is replaced.
+- **The Dongle page now gets core1's health:** the "Speaker off: not enough memory" warning (issue #15) never appeared, because the dongle's reply carrying it was longer than a reply can be and lost its end. With dongle firmware from this release the warning shows when it applies, with the real free memory. Older firmware works as before. In dev builds the simulated dongle no longer reports "Core1 stopped" all the time.
 
 ## [0.9.5-dev.5] - 2026-10-12
 
