@@ -29,6 +29,11 @@ export const PART_IDS = [
 export type PartId = (typeof PART_IDS)[number] | "body";
 
 // Which remap slot a part is (firmware remap table order, src/protocol/remap.ts).
+// Buttons whose panel would be nothing but Remap: a click on the drawing
+// opens the Buttons list at their row instead (one place for buttons).
+export const REMAP_ONLY: ReadonlySet<PartId> = new Set<PartId>(["l1", "r1", "create", "options", "dpad-up", "dpad-down", "dpad-left", "dpad-right", "triangle", "circle", "cross", "square"]);
+export const partForRemapIndex = (i: number): PartId | null => (Object.entries(REMAP_INDEX).find(([, v]) => v === i)?.[0] as PartId | undefined) ?? null;
+
 export const REMAP_INDEX: Partial<Record<PartId, number>> = {
   l2: 0,
   l1: 1,

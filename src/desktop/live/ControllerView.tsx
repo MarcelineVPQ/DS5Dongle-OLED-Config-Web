@@ -26,7 +26,7 @@ import LiveStrip from "./LiveStrip";
 import { say } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
-import { REMAP_INDEX, type PartId } from "./parts";
+import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex } from "./parts";
 import { useRemap } from "./useRemap";
 
 const PANEL_KEY = "ds5.panelHidden";
@@ -82,7 +82,23 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     return set;
   }, [remap.device]);
 
-  const selected = typeof view === "object" ? view.part : null;
+  // The Buttons list's focused button (from the drawing or a row) and the
+  // row under the pointer: both light up on the drawing.
+  const [buttonFocus, setButtonFocus] = useState<number | null>(null);
+  const [buttonHover, setButtonHover] = useState<number | null>(null);
+  const openButtons = (index: number | null) => {
+    setButtonFocus(index);
+    onView("buttons");
+  };
+  const listPart = (i: number | null) => (i === null ? null : partForRemapIndex(i));
+  const selected = typeof view === "object" ? view.part : view === "buttons" ? (listPart(buttonHover) ?? listPart(buttonFocus)) : null;
+  // A click on the drawing: in the Buttons list a button just gets focused
+  // there (no jump away); a remap-only button opens the list at its row.
+  const pickPart = (part: PartId) => {
+    const index = REMAP_INDEX[part];
+    if (index !== undefined && (view === "buttons" || REMAP_ONLY.has(part))) openButtons(index);
+    else onView({ part });
+  };
 
   // The settings panel can be hidden on the start view, so the controller
   // gets the whole width; opening any part (or "Settings") brings it back.
@@ -164,7 +180,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 colors={on ? (look?.colors ?? null) : null}
                 selected={selected}
                 remapped={remapped}
-                onSelect={(part) => onView({ part })}
+                onSelect={pickPart}
               />
               {hdr && <HdrGlow hero={heroRef} nits={hdrNits} />}
             </div>
@@ -254,9 +270,12 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
             input={input}
             remap={remap}
             onClose={() => onView("overview")}
-            onOpen={(part) => onView({ part })}
+            onOpen={pickPart}
             onCalibrate={() => onView("calibration")}
-            onButtons={() => onView("buttons")}
+            onButtons={(index) => openButtons(index ?? null)}
+            buttonFocus={buttonFocus}
+            onButtonFocus={setButtonFocus}
+            onButtonHover={setButtonHover}
             onHide={() => hidePanel(true)}
           />
         </aside>

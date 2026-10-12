@@ -3568,6 +3568,14 @@ html[data-cards-translucent] .dash-card {
 .dk-buttons-row.changed label {
   font-weight: 700;
 }
+/* The row of the button picked on the drawing (or focused here). */
+.dk-buttons-row.focused label {
+  color: var(--dk-sel-text);
+}
+.dk-buttons-row.focused select {
+  border-color: var(--dk-sel-border);
+  box-shadow: 0 0 0 2px var(--dk-sel-bg);
+}
 .dk-buttons-row label small {
   display: block;
   color: var(--text-secondary);

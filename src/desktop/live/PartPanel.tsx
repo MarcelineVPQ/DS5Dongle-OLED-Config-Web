@@ -50,11 +50,15 @@ interface Props {
   onClose: () => void;
   onOpen: (part: PartId) => void;
   onCalibrate: () => void;
-  onButtons: () => void;
+  onButtons: (index?: number) => void;
+  // The Buttons list: the focused row (also lit on the drawing) and hovers.
+  buttonFocus: number | null;
+  onButtonFocus: (index: number | null) => void;
+  onButtonHover: (index: number | null) => void;
   onHide: () => void;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, onHide }: Props) {
+export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, buttonFocus, onButtonFocus, onButtonHover, onHide }: Props) {
   const { t } = useTranslation();
   const title =
     view === "overview"
@@ -86,8 +90,8 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
           </button>
         )}
       </header>
-      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={onButtons} />}
-      {view === "buttons" && <AllButtonsSection remap={remap} />}
+      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
+      {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} />}
       {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
@@ -138,7 +142,7 @@ function Overview({ onOpen, onCalibrate, onButtons }: { onOpen: (part: PartId) =
   );
 }
 
-function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId; bridge: UseDs5BridgeResult; input: InputReport | null; remap: Remap; onButtons: () => void }) {
+function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId; bridge: UseDs5BridgeResult; input: InputReport | null; remap: Remap; onButtons: (index?: number) => void }) {
   const index = REMAP_INDEX[part];
   return (
     <>
@@ -161,7 +165,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
   );
 }
 
-function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: () => void }) {
+function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: (index?: number) => void }) {
   const { t } = useTranslation();
   const target = remap.draft[index];
   return (
@@ -183,7 +187,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
             </select>
           </div>
           <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
-          <button type="button" className="dk-btn" onClick={onButtons}>
+          <button type="button" className="dk-btn" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}
           </button>
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
@@ -206,8 +210,18 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
 
 // Every button in one list (the same draft as clicking them on the drawing),
 // with what's changed from the controller's own buttons marked.
-function AllButtonsSection({ remap }: { remap: Remap }) {
+function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; focus: number | null; onFocus: (i: number | null) => void; onHover: (i: number | null) => void }) {
   const { t } = useTranslation();
+  const table = useRef<HTMLDivElement>(null);
+  // A button picked on the drawing: its row scrolls into view and its picker
+  // gets the focus, ready to change.
+  useEffect(() => {
+    if (focus === null) return;
+    const sel = table.current?.querySelector<HTMLSelectElement>(`#all-remap-${focus}`);
+    sel?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    sel?.focus({ preventScroll: true });
+  }, [focus]);
+  useEffect(() => () => onHover(null), [onHover]);
   if (remap.supported === false)
     return (
       <section className="dk-card">
@@ -221,12 +235,12 @@ function AllButtonsSection({ remap }: { remap: Remap }) {
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
-      <div className="dk-buttons-table" role="table">
+      <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
         {remap.draft.map((target, i) => {
           const isChanged = target !== i;
           const pending = target !== remap.device[i];
           return (
-            <div key={i} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}`}>
+            <div key={i} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
               <label role="rowheader" htmlFor={`all-remap-${i}`}>
                 {isChanged && <span aria-hidden="true">● </span>}
                 {buttonLabel(i)}
