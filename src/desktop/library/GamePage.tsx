@@ -183,6 +183,7 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
   // The normal settings: under a profile that's on now its restore point,
   // else what the dongle has.
   const normal = library.restore?.settings ?? (config ? settingsFrom(config) : null);
+  const [allOpen, setAllOpen] = useState(false);
 
   // Every edit is stored (debounced), keeping only what differs from the
   // normal settings; applying it to the dongle while the game runs (or is
@@ -234,9 +235,10 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
               {t("desktop.library.profileDelete")}
             </button>
           </div>
-          <details className="gp-legend">
+          <details className="gp-legend" onToggle={(e) => setAllOpen(e.currentTarget.open)}>
             <summary>{t("desktop.profile.allSettings")}</summary>
-            {normal ? <AllProfileSettings draft={draft} normal={normal} bridge={bridge} onChange={set} /> : <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>}
+            {/* Built only while open: closed, the controls would still be in the page (unnamed, unseen). */}
+            {allOpen && (normal ? <AllProfileSettings draft={draft} normal={normal} bridge={bridge} onChange={set} /> : <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>)}
           </details>
         </>
       )}
