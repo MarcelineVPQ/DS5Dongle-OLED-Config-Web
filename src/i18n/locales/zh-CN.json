@@ -207,6 +207,7 @@
       "bootsel": "接收器现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
       "enterBootsel": "进入 BOOTSEL 模式",
       "resetDone": "设置已恢复默认并保存。",
+      "confirmInstall": "立即安装 {{version}}",
       "confirmReset": "重置所有设置",
       "factoryReset": "恢复出厂设置…",
       "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。",

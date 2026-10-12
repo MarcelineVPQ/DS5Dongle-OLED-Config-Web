@@ -207,6 +207,7 @@
       "bootsel": "Der Dongle ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder steck ihn ab, um abzubrechen.",
       "enterBootsel": "BOOTSEL-Modus starten",
       "resetDone": "Einstellungen auf Standard zurückgesetzt und gespeichert.",
+      "confirmInstall": "{{version}} jetzt installieren",
       "confirmReset": "Alle Einstellungen zurücksetzen",
       "factoryReset": "Werkseinstellungen…",
       "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenbelegungen bleiben erhalten.",

@@ -207,6 +207,7 @@
       "bootsel": "ドングルは RP2350 ドライブになりました。.uf2 をコピーするか、取り外してキャンセルしてください。",
       "enterBootsel": "BOOTSEL モードに入る",
       "resetDone": "設定を初期値に戻して保存しました。",
+      "confirmInstall": "{{version}} を今すぐインストール",
       "confirmReset": "すべての設定をリセット",
       "factoryReset": "初期化…",
       "resetHint": "初期化すると設定が既定値に戻ります。ペアリングとボタン割り当ては保持されます。",

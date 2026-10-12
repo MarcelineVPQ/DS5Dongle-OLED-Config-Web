@@ -15,6 +15,9 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  // Flashing restarts the dongle: a second click confirms it (a stray click
+  // on the update button flashed it before).
+  const [confirmFlash, setConfirmFlash] = useState(false);
   const [checked, setChecked] = useState<string | null>(null);
   const installed = bridge.firmwareVersion;
 
@@ -51,8 +54,25 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           </dd>
         </dl>
         <div className="dk-ctl" style={{ justifyContent: "flex-start", flexWrap: "wrap", gap: 8, paddingBottom: 6 }}>
-          {fw.available ? (
-            <button type="button" className="dk-btn primary" disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"} onClick={() => void fw.start()}>
+          {fw.available && confirmFlash ? (
+            <>
+              <button type="button" className="dk-btn" onClick={() => setConfirmFlash(false)}>
+                {t("desktop.common.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                className="dk-btn primary"
+                disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"}
+                onClick={() => {
+                  setConfirmFlash(false);
+                  void fw.start();
+                }}
+              >
+                {t("desktop.firmware.confirmInstall", { version: shortVersion(fw.latest?.version), defaultValue: "Install {{version}} now" })}
+              </button>
+            </>
+          ) : fw.available ? (
+            <button type="button" className="dk-btn primary" disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"} onClick={() => setConfirmFlash(true)}>
               {fw.backToStable
                 ? t("desktop.firmware.backToStable", { version: shortVersion(fw.latest?.version) })
                 : t("desktop.firmware.update", { version: shortVersion(fw.latest?.version), defaultValue: "Update to {{version}}" })}

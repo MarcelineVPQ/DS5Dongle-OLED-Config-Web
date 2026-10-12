@@ -17,6 +17,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **About opens on the Guide**, and its tabs read Guide · App changes · Firmware changes · Coming soon · Credits ("What's new" is now "App changes"; See what's new after an update still opens it).
 - **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
 
+### Fixed
+
+- **A single click no longer flashes the dongle:** "Update to …" on the Pico page now asks once more ("Install … now" / Cancel) before the dongle restarts and its firmware is replaced.
+
 ## [0.9.5-dev.5] - 2026-10-12
 
 ### Changed

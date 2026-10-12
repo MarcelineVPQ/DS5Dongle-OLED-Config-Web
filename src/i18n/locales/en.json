@@ -206,6 +206,7 @@
       "bootsel": "The dongle is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
       "enterBootsel": "Enter BOOTSEL mode",
       "resetDone": "Settings reset to defaults and saved.",
+      "confirmInstall": "Install {{version}} now",
       "confirmReset": "Reset all settings",
       "factoryReset": "Factory reset…",
       "resetHint": "Factory reset restores default settings. Pairings and button remaps are kept.",

@@ -207,6 +207,7 @@
       "bootsel": "Le dongle est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche-le pour annuler.",
       "enterBootsel": "Passer en mode BOOTSEL",
       "resetDone": "Paramètres réinitialisés par défaut et enregistrés.",
+      "confirmInstall": "Installer {{version}} maintenant",
       "confirmReset": "Réinitialiser tous les paramètres",
       "factoryReset": "Réinitialisation d'usine…",
       "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les appairages et remappages de boutons sont conservés.",

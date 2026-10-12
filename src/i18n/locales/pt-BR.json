@@ -207,6 +207,7 @@
       "bootsel": "O dongle agora é uma unidade RP2350. Copie um .uf2 para ela ou desconecte-o para cancelar.",
       "enterBootsel": "Entrar no modo BOOTSEL",
       "resetDone": "Configurações restauradas para o padrão e salvas.",
+      "confirmInstall": "Instalar {{version}} agora",
       "confirmReset": "Redefinir todas as configurações",
       "factoryReset": "Redefinição de fábrica…",
       "resetHint": "A redefinição de fábrica restaura as configurações padrão. Pareamentos e remapeamentos de botões são mantidos.",
