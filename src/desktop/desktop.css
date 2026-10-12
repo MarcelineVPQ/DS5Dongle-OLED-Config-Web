@@ -704,6 +704,74 @@ html[data-theme="dark"] .dk {
   background: transparent;
 }
 
+/* ---- About → Coming soon: the roadmap board (about/ComingSoon.tsx).
+   Four columns side by side, stacked when the page is narrow. ---- */
+.dk-roadmap {
+  container-type: inline-size;
+}
+.dk-roadmap > .dk-hint {
+  margin: 0 0 var(--dk-gap);
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+.dk-roadmap a {
+  color: var(--dk-sel-text);
+}
+.dk-roadmap-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--dk-gap);
+  align-items: start;
+}
+@container (max-width: 700px) {
+  .dk-roadmap-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.dk-roadmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.dk-roadmap-col > h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px;
+  font-size: var(--dk-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-eyebrow);
+}
+.dk-roadmap-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.dk-roadmap .dk-card h3 {
+  margin: 0 0 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.dk-roadmap .dk-card p {
+  margin: 0 0 6px;
+  color: var(--text-body);
+  font-size: var(--dk-small);
+  line-height: 1.4;
+}
+.dk-roadmap-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dk-roadmap-tags .dk-chip {
+  height: 20px;
+  padding: 0 7px;
+  gap: 4px;
+}
+
 /* ---- Rendered Markdown (About page) ---- */
 .dk-md {
   font-size: var(--dk-font);

@@ -218,7 +218,7 @@ function views() {
       await evaluate(`(() => { const p = document.querySelector(".live-panel .dk-panel-body, .live-panel"); if (p) p.scrollTop = p.scrollHeight; })()`);
     },
   ]);
-  for (const tab of [0, 1, 2, 3])
+  for (const tab of [0, 1, 2, 3, 4])
     list.push([
       `about tab ${tab}`,
       async () => {

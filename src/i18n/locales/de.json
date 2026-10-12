@@ -294,7 +294,32 @@
       "production": "Eine Produktion von 42 Pixel Studios",
       "developedBy": "Entwickelt von",
       "source": "Quellcode (MIT)",
-      "issues": "Problem melden"
+      "issues": "Problem melden",
+      "roadmapTab": "Demnächst",
+      "roadmap": {
+        "intro": "Das sind Pläne, keine Versprechen: Sie können sich ändern und haben kein Datum.",
+        "suggest": "Vorschläge sind auf GitHub willkommen.",
+        "high": "Hohe Priorität",
+        "column": {
+          "next": "Im nächsten Build",
+          "progress": "In Arbeit",
+          "planned": "Geplant",
+          "ideas": "Ideen"
+        },
+        "area": {
+          "controller": "Controller",
+          "buttons": "Tasten",
+          "audio": "Audio & Haptik",
+          "games": "Spiele",
+          "dongle": "Dongle & OLED",
+          "app": "App",
+          "community": "Community"
+        },
+        "platform": {
+          "linux": "Nur Linux",
+          "windows": "Windows"
+        }
+      }
     },
     "games": {
       "title": "Spiele einrichten",

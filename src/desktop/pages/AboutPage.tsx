@@ -7,8 +7,9 @@ import changelog from "../../../CHANGELOG.md?raw";
 import guide from "../../../docs/GUIDE.md?raw";
 import Markdown from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
+import ComingSoon from "../about/ComingSoon";
 
-export type AboutTab = "changes" | "firmware" | "guide" | "credits";
+export type AboutTab = "changes" | "firmware" | "guide" | "roadmap" | "credits";
 
 const CREDITS = `
 ### Built on
@@ -88,6 +89,7 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
     { id: "changes", label: t("desktop.about.changes", "What's new") },
     { id: "firmware", label: t("desktop.about.firmware", "Firmware changes") },
     { id: "guide", label: t("desktop.about.guide", "Guide") },
+    { id: "roadmap", label: t("desktop.about.roadmapTab", "Coming soon") },
     { id: "credits", label: t("desktop.about.credits", "Credits") },
   ];
 
@@ -101,14 +103,18 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
         ))}
       </div>
       {tab === "credits" && <StudioCard />}
-      <section className="dk-card">
-        {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
-        {tab === "changes" && <Markdown text={changelog} />}
-        {tab === "firmware" &&
-          (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}
-        {tab === "guide" && <Markdown text={guide} />}
-        {tab === "credits" && <Markdown text={CREDITS} />}
-      </section>
+      {tab === "roadmap" ? (
+        <ComingSoon />
+      ) : (
+        <section className="dk-card">
+          {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
+          {tab === "changes" && <Markdown text={changelog} />}
+          {tab === "firmware" &&
+            (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}
+          {tab === "guide" && <Markdown text={guide} />}
+          {tab === "credits" && <Markdown text={CREDITS} />}
+        </section>
+      )}
     </div>
   );
 }

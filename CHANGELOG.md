@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **About → Coming soon:** a small board of what's planned for the app and the dongle (in the next build, in progress, planned, ideas), tagged by area and platform. Plans, not promises; suggestions welcome on GitHub.
 - **Timing card on the Dongle page:** how long each part of the dongle's firmware takes (main loop, Bluetooth, USB, audio, input and commands, OLED, and core1's speaker and mic frames), the average and the worst case since the reset with the averages' last minute as small graphs, and a Reset button. Shows where audio stutters come from (the speaker frame must stay well under 10 ms). Needs the dongle firmware from this release (protocol 1.11).
 - **Controller info** (under "Your controller", needs dongle firmware with protocol 1.12): the connected controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch), its battery (level, charge state including charging faults, voltage), and the lifetime counters it keeps itself: time played, charging and with haptics on, trigger time, charges, charging errors, Bluetooth and USB connections, and in a fold-out every button's press count and each stick's round trips. DualSense and DualSense Edge; a controller whose firmware is too old for the counters says so (and still shows its play time). Read once when a controller connects and on Refresh; read only, and the controller's serial number is never read into the app. Counter layout from daidr/dualsense-tester (MIT).
 
