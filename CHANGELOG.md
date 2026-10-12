@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-11
+
 ### Added
 
 - **Development update channel** (opt-in, App settings -> Updates -> Update channel): development builds of the app and firmware (vX.Y.Z-dev.N, published as GitHub pre-releases) before they're released, plus every stable release. **Back to stable** installs the latest stable app (and offers the stable firmware) even though it's older; the only path that goes backwards. Stable stays the default; its feed never lists development builds.
