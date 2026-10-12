@@ -26,12 +26,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Lighter while you watch, too:** with hardware acceleration the background swirl is drawn by the graphics card (the same look; without acceleration a smaller CPU version), the controller's identity is read once a second for the whole app instead of three times, the lightbar color 10 times a second instead of 30, and the status dot's pulse, the level meters and the lightbar glow no longer repaint on every frame (about 43% → 29% of a core on the controller page, 24% → 13% on the Dongle page). The HDR lighting redraws only when the color changes.
 - **Our own color picker** for the lightbar's favorite colors (Lightbar panel and game pages) and your controller's colors: a saturation/brightness square, a hue slider, hex and R/G/B fields and your recent colors, in the app's theme, and fully usable from the keyboard (arrow keys, Shift for bigger steps, Escape closes).
 - **Buttons are one place:** with the Buttons list open, clicking a button on the drawing highlights and focuses its row instead of leaving the list; buttons that only have a remap (face buttons, D-pad, L1/R1, Create, Options) open the list at their row; hovering a row lights the button on the drawing. Triggers, sticks, PS, mute and the touchpad keep their own panels, with "See all buttons" opening the list at that button.
+- **The side bar closes as soon as you pick a page** (it used to stay open until you clicked elsewhere), and focus moves into that page, or into the side panel for App settings and Pico 2 W; keyboard users still get it open while tabbing.
 - **The background swirls in your controller's colors only** (and your custom colors, if you set them); the theme's accent no longer mixes in.
 - **One name per button everywhere:** the Buttons list, the drawing, layouts and the Inputs card use the same names (Sony's for the Edge: Left back button (LB), Right back button (RB); "D-pad up"; the face buttons with their symbols).
 - **Special editions in their real colors** (e.g. Genshin Impact's teal and gold): colors only, no artwork.
 
 ### Fixed
 
+- **The background swirl stayed frozen after Reduce motion was turned off again** until the background was toggled; it now follows the setting live.
 - **The color picker's eyedropper did nothing:** the system color popup's eyedropper doesn't work in the app; our own picker replaces it (no eyedropper).
 - **Running-game detection costs less:** on Linux only launcher and Wine/Proton processes are read in detail (a scan takes about 2.6 ms instead of 9); on Windows the process list is read without blocking the app.
 - **Firmware updates no longer write past the end of the dongle's flash:** the in-app flasher skipped nothing, so the RP2350's drag-and-drop workaround block (not firmware) erased the flash's last sector on every update. Settings and pairings were never there, but it's gone now.
