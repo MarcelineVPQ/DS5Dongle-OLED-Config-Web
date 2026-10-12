@@ -2308,9 +2308,12 @@ html[data-theme="light"] .live-ctl {
   transform: rotate(180deg);
   max-height: 60%;
 }
+/* "DEVELOPMENT" in the model heading's style (display font, heavy, tight). */
 .rail-dev b {
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   text-transform: uppercase;
 }
 .rail-footer {

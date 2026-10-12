@@ -13,7 +13,7 @@
 // (lineOnDark). tests/unit/colorways.test.ts enforces both. Galactic Purple,
 // Starlight Blue and Nova Pink use outlines darker/lighter than the art's,
 // which were too faint.
-import { contrast as rgbContrast, hexToRgb } from "../theme/desktopPalette";
+import { contrast as rgbContrast, hexToRgb, mix } from "../theme/desktopPalette";
 
 export interface ColorwayColors {
   body: string;
@@ -70,10 +70,38 @@ export const contrast = (a: string, b: string) => rgbContrast(hexToRgb(a), hexTo
 
 const LINE_ON_DARK_FALLBACK = "#9aa1a9";
 
+const toHex = (c: readonly number[]) => `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+
+// `color` if it reaches every [ground, ratio] pair, else the smallest step
+// toward white or black that does, else whichever of the two comes closest
+// (two very different grounds can rule out every color). The one outline rule
+// for the colorways here and the player's own colors (customColors.ts).
+export function legibleOn(color: string, needs: ReadonlyArray<readonly [string, number]>): string {
+  const reads = (c: string) => needs.every(([ground, ratio]) => contrast(c, ground) >= ratio);
+  if (reads(color)) return color;
+  const base = hexToRgb(color);
+  const ends = ["#ffffff", "#000000"];
+  for (let step = 1; step <= 20; step++) {
+    for (const end of ends) {
+      const c = toHex(mix(base, hexToRgb(end), step / 20));
+      if (reads(c)) return c;
+    }
+  }
+  const worst = (c: string) => Math.min(...needs.map(([ground, ratio]) => contrast(c, ground) / ratio));
+  return worst(ends[0]) >= worst(ends[1]) ? ends[0] : ends[1];
+}
+
 // The outline color for lines drawn on the black parts (triggers, bumpers,
-// stick wells, center).
+// stick wells, center): 3:1 on the black parts, 2:1 on the sticks. The
+// colorway's own outline when it reads there, else a light grey, else (a
+// player's own colors) the outline pushed until it does.
 export function lineOnDark(colors: ColorwayColors): string {
-  return contrast(colors.line, colors.dark) >= 3 ? colors.line : LINE_ON_DARK_FALLBACK;
+  const needs = [
+    [colors.dark, 3],
+    [colors.stick, 2],
+  ] as const;
+  for (const c of [colors.line, LINE_ON_DARK_FALLBACK]) if (legibleOn(c, needs) === c) return c;
+  return legibleOn(colors.line, needs);
 }
 
 export function colorway(code: string | null): Colorway | null {

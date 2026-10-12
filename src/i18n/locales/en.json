@@ -933,6 +933,25 @@
       "controller": "Controller",
       "desktop": "Desktop"
     },
+    "customColors": {
+      "title": "My controller's colors",
+      "toggle": "Custom colors",
+      "toggleSub": "For custom and modded controllers: paint the drawing like yours. Parts you don't change keep your controller's colors.",
+      "part": {
+        "body": "Shell",
+        "dark": "Black parts",
+        "cap": "Buttons",
+        "stick": "Sticks",
+        "line": "Outlines"
+      },
+      "partSub": {
+        "dark": "Center, triggers, bumpers",
+        "cap": "Face buttons, D-pad"
+      },
+      "lineAdjusted": "Outlines made lighter or darker so they stay visible on these colors.",
+      "fromColorway": "Start from my colorway",
+      "reset": "Reset"
+    },
     "settings2": {
       "language": "Language",
       "appearance": "Appearance",

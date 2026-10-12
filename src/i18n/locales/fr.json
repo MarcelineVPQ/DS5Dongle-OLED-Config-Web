@@ -934,6 +934,25 @@
       "controller": "Manette",
       "desktop": "Bureau"
     },
+    "customColors": {
+      "title": "Les couleurs de ma manette",
+      "toggle": "Couleurs personnalisées",
+      "toggleSub": "Pour les manettes personnalisées et moddées : colorez le dessin comme la vôtre. Les parties non modifiées gardent les couleurs de votre manette.",
+      "part": {
+        "body": "Coque",
+        "dark": "Parties noires",
+        "cap": "Boutons",
+        "stick": "Sticks",
+        "line": "Contours"
+      },
+      "partSub": {
+        "dark": "Centre, gâchettes, boutons L/R",
+        "cap": "Boutons d'action, croix directionnelle"
+      },
+      "lineAdjusted": "Contours éclaircis ou assombris pour rester visibles sur ces couleurs.",
+      "fromColorway": "Partir de mon coloris",
+      "reset": "Réinitialiser"
+    },
     "settings2": {
       "language": "Langue",
       "appearance": "Apparence",

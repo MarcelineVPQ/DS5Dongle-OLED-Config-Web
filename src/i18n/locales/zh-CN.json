@@ -928,6 +928,25 @@
       "controller": "手柄",
       "desktop": "桌面"
     },
+    "customColors": {
+      "title": "我的手柄配色",
+      "toggle": "自定义颜色",
+      "toggleSub": "适用于定制和改装手柄：把图画涂成你手柄的样子。未更改的部分保留手柄原有颜色。",
+      "part": {
+        "body": "外壳",
+        "dark": "黑色部分",
+        "cap": "按键",
+        "stick": "摇杆",
+        "line": "轮廓线"
+      },
+      "partSub": {
+        "dark": "中部、扳机、肩键",
+        "cap": "功能键、方向键"
+      },
+      "lineAdjusted": "轮廓线已调亮或调暗，以便在这些颜色上保持清晰可见。",
+      "fromColorway": "从我的配色开始",
+      "reset": "重置"
+    },
     "settings2": {
       "language": "语言",
       "appearance": "外观",

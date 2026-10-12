@@ -6,11 +6,12 @@ import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
-import { COLORWAYS } from "./colorways";
+import { COLORWAYS, colorway } from "./colorways";
+import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "./customColors";
 import { MODEL_COLORWAYS, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
-import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
+import { ACCENT_KEY, ACCENTS, useControllerCode } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
@@ -543,6 +544,7 @@ function AppSettings() {
         {KNOBS.filter((k) => !k.hidden).map((k) => (
           <KnobSlider key={k.key} k={k} />
         ))}
+        <CustomColorsSetting />
       </section>
       <section className="dk-card">
         <h2>{t("desktop.settings2.accessibility")}</h2>
@@ -796,6 +798,44 @@ function GlassSetting() {
         <option value="glass">{t("desktop.glass.glass")}</option>
       </select>
     </Row>
+  );
+}
+
+// My controller's colors: the player's own colors for the drawing's part
+// groups (custom and modded shells), on top of the detected colorway. Only the
+// parts they change are replaced; outlines are kept readable (customColors.ts).
+function CustomColorsSetting() {
+  const { t } = useTranslation();
+  const { on, setOn, colors, setColors } = useCustomColors();
+  const detected = colorway(useControllerCode())?.colors ?? null;
+  const base = detected ?? FALLBACK_BASE;
+  const merged = mergeColors(base, colors) ?? base;
+  // The outline the player sees isn't the one they picked (or the colorway's):
+  // it was pushed lighter or darker to stay visible.
+  const lineAdjusted = merged.line !== (colors.line ?? base.line);
+  return (
+    <>
+      <h3 className="dk-subhead">{t("desktop.customColors.title")}</h3>
+      <Toggle label={t("desktop.customColors.toggle")} sub={t("desktop.customColors.toggleSub")} value={on} onChange={setOn} />
+      {on && (
+        <>
+          {COLOR_PARTS.map((part) => (
+            <Row key={part} label={t(`desktop.customColors.part.${part}`)} sub={part === "dark" || part === "cap" ? t(`desktop.customColors.partSub.${part}`) : undefined}>
+              <input type="color" aria-label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(e) => setColors({ ...colors, [part]: e.currentTarget.value })} />
+            </Row>
+          ))}
+          {lineAdjusted && <p className="dk-hint">{t("desktop.customColors.lineAdjusted")}</p>}
+          <div className="dk-row-btns">
+            <button type="button" className="dk-btn" disabled={!detected} onClick={() => detected && setColors({ ...detected })}>
+              {t("desktop.customColors.fromColorway")}
+            </button>
+            <button type="button" className="dk-btn" disabled={!hasCustomColors(colors)} onClick={() => setColors({})}>
+              {t("desktop.customColors.reset")}
+            </button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
