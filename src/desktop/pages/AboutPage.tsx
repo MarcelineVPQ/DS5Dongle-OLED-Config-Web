@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { errorText } from "../../errorText";
+import { appVersionLabel } from "../appVersion";
 import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
@@ -50,7 +51,7 @@ function StudioCard() {
         <h2 className="dk-studio-title">DS5 Dongle OLED Edition Configurator</h2>
         <p className="dk-studio-by">
           {t("desktop.about.developedBy", "Developed by")} <strong>Marcy Kuhn</strong>
-          {window.desktop && <span className="dk-studio-version"> · v{window.desktop.appVersion}</span>}
+          {window.desktop && <span className="dk-studio-version"> · v{appVersionLabel()}</span>}
         </p>
         <div className="dk-studio-links">
           {STUDIO_LINKS.map((l) => (
@@ -98,7 +99,7 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
       </div>
       {tab === "credits" && <StudioCard />}
       <section className="dk-card">
-        {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: window.desktop.appVersion, defaultValue: "You're running version {{version}}." })}</p>}
+        {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
         {tab === "changes" && <Markdown text={changelog} />}
         {tab === "firmware" &&
           (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}

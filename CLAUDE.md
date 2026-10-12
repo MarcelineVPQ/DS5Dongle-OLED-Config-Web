@@ -14,7 +14,8 @@ The firmware repo is `~/projects/DS5Dongle`; its `CLAUDE.md` documents the devic
 npx -y npm@11.6.2 ci     # install (system npm 9/10 crashes on this tree: "edgesOut")
 npm run dev:desktop      # desktop with HMR (--no-sandbox, see ADR-0004)
 npm run build:desktop && npm run start:desktop
-DS5_DEV_TOOLS=1 npm run build:desktop   # a dev build: the Developer card (previews, fake controllers, HDR test) is built in and shown; stable releases leave it out, dev-channel (X.Y.Z-dev.N) builds include it
+tools/dev.sh             # the dev copy: dev tools on, build id from Git ("0.9.3 · dev +3.a1b2c3d"), own settings in tmp/dev/home, DevTools port 9333 (--quick: no packaging; --stop)
+DS5_DEV_TOOLS=1 npm run build:desktop   # a dev build by hand: the Developer card (previews, fake controllers, simulated dongle, HDR test) is built in and shown; stable releases leave it out, dev-channel (X.Y.Z-dev.N) builds include it
 npm run check            # typecheck + lint + format check + security gates + tests (what CI runs)
 npm test                 # vitest: tests/{unit,integration,security}
 node tools/update_version.mjs --verify
@@ -37,7 +38,7 @@ pre-commit run --all-files
 - **Light theme uses its own deeper greens and greys** (`--dk-*` tokens in `desktop.css`); the web tool's pale accent is unreadable on the desktop.
 - **Never use AI-drawn or traced controller art.** Use the purchased Zacksly pack (CC BY 3.0, `assets/PS5 Button Icons and Controls/`, credit required) or the MIT AL2009man Gamepad-Asset-Pack.
 - **Security baseline** is gated by `.hooks/check_electron_security.sh`, `.hooks/check_dom_sinks.sh` and `tests/security/`. Changing window/session/CSP/allowlists requires updating `docs/SECURITY_AUDIT.md` and those tests.
-- **Protocol changes** land in the firmware first, then the client, the fake (`tests/support/fakeDongle.ts`) and the tests in the same change.
+- **Protocol changes** land in the firmware first, then the client, the simulated dongle (`src/protocol/simulatedDongle.ts`, also the tests' fake) and the tests in the same change.
 - **Dependencies**: exact versions, chosen ≥ 2 weeks after release.
 - **Linux dev quirks** (ADR-0004): `--no-sandbox` (AppArmor userns restriction), GPU rendering on by default (App settings → Hardware acceleration; a GPU crash turns it off for the next start), zoom pinned to 100%. When restarting the app from a shell, kill by the anchored full path (`pgrep -f "^$PWD/node_modules/electron/dist/electron"`; unanchored patterns also match your own shell and kill it): it is single-instance, so a stale hidden copy blocks every new launch.
 

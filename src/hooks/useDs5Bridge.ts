@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { type BridgeIdentity, Ds5BridgeClient } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
+import { SimulatedDongle } from "../protocol/simulatedDongle";
+import type { Ds5Transport } from "../protocol/transport";
+import { simulatedDongleOn } from "../desktop/devPreview";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
@@ -96,10 +99,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setSaveState("idle");
   }, []);
 
-  const attach = useCallback(async (device: USBDevice) => {
+  const attachTransport = useCallback(async (transport: Ds5Transport) => {
     setOperation("connecting");
     try {
-      const next = new Ds5BridgeClient(new WebUsbTransport(device));
+      const next = new Ds5BridgeClient(transport);
       await next.transport.open();
       const id = await next.checkCompatible();
       const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
@@ -124,13 +127,21 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, []);
 
+  const attach = useCallback((device: USBDevice) => attachTransport(new WebUsbTransport(device)), [attachTransport]);
+
   // Desktop: the main process has already granted the dongle, so this connects
   // with no prompt. Browser: works once the user has picked the dongle before.
+  // Dev builds can use the simulated dongle instead (Developer card).
   const autoConnect = useCallback(async () => {
-    if (!supported || clientRef.current) return;
+    if (clientRef.current) return;
+    if (simulatedDongleOn()) {
+      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 7, version: "v0.9.3-oled-edition+simulated" }));
+      return;
+    }
+    if (!supported) return;
     const device = await WebUsbTransport.findPermitted();
     if (device) await attach(device);
-  }, [attach, supported]);
+  }, [attach, attachTransport, supported]);
 
   const connect = useCallback(async () => {
     try {

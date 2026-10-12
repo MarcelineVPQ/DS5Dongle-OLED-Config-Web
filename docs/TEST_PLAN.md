@@ -42,6 +42,12 @@ When the firmware protocol changes, change the fake in the same commit, or the i
 - New command: a fake-dongle behavior and an integration test for success and the failure result.
 - Security-relevant change: extend `tests/security/`. Those tests intentionally read source text (window options, CSP) so the baseline can't drift unnoticed.
 
+## Dev and release builds
+
+- **Dev builds** (`tools/dev.sh`, or `DS5_DEV_TOOLS=1` by hand): the Developer card (model / colorway preview, Pretend more controllers, update-state preview, **Simulated dongle**, HDR test) and a build id from Git next to the version ("0.9.3 · dev +3.a1b2c3d[.dirty]"). Firmware dev builds: `~/projects/DS5Dongle/tools/dev_firmware.sh [--flash]`, stamped `vX.Y.Z-oled-edition+N.sha[.dirty]` on the OLED, in the app and in picotool.
+- **Release builds** (`tools/release.sh`, CI): a plain version, no Developer card; previews left in settings by a dev build do nothing.
+- **Simulated dongle** (dev builds, Developer card): the app talks to `src/protocol/simulatedDongle.ts` (the same code as the tests' fake) instead of USB, so every page works without hardware: for the Windows VM. Not simulated: haptics, audio, pairing, firmware updates.
+
 ## Hardware-in-the-loop (before a release)
 
 On the release firmware with a paired DualSense:

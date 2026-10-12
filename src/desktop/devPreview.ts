@@ -5,7 +5,7 @@
 import { useEffect, useMemo } from "react";
 import type { BridgeIdentity } from "../protocol/bridgeClient";
 import { COLORWAYS } from "./live/colorways";
-import { useFlagPref, usePref } from "./storage";
+import { readPref, useFlagPref, usePref } from "./storage";
 
 export const DEV_TOOLS_KEY = "ds5.devTools";
 // Built into dev builds only (electron.vite.config.ts). Without it every
@@ -46,6 +46,11 @@ export function useFakeSlots() {
     switchTo: (s: number | null) => setSlot(s === null ? "" : (String(s) as "1" | "2")),
   };
 }
+
+// Dev builds: the app talks to a simulated dongle instead of USB (Developer
+// card). For the Windows VM, so it needs no real dongle passed through.
+export const SIMULATED_KEY = "ds5.dev.simulated";
+export const simulatedDongleOn = (): boolean => DEV_TOOLS_BUILT && readPref(SIMULATED_KEY) === "1";
 
 export function useDevPreview() {
   const [model, setModel] = usePref<DevModel>("ds5.dev.model", "", DEV_MODELS);

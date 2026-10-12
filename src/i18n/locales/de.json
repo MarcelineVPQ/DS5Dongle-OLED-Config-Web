@@ -934,7 +934,9 @@
         "ready": "Bereit / wartet"
       },
       "fakeSlots": "Weitere Controller vortäuschen",
-      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An den Dongle wird nichts gesendet."
+      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An den Dongle wird nichts gesendet.",
+      "simulated": "Simulierter Dongle (ohne Hardware)",
+      "simulatedHint": "Die App spricht mit einem simulierten Dongle statt über USB: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu."
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",

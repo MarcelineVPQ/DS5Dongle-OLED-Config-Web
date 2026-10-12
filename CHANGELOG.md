@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Dev builds say exactly what they are:** `tools/dev.sh` builds and runs the dev copy (own settings, dev tools, DevTools port) and stamps a Git build id next to the version ("0.9.3 · dev +3.a1b2c3d"). Firmware dev builds (`tools/dev_firmware.sh` in the firmware repo) report `v0.9.3-oled-edition+3.a1b2c3d` instead of a stale "dev" version.
+- **Simulated dongle** (dev builds, Developer card): every page works without hardware, with moving input, diagnostics and an OLED screen; the tests' fake dongle and the simulation are one implementation.
+
 ### Changed
 
 - **The Developer card is only in dev builds** (`DS5_DEV_TOOLS=1`, and Development-channel releases `X.Y.Z-dev.N`), shown there by default. Stable releases leave it out: no card, no Ctrl+Shift+D, and leftover preview settings can't change what they show.

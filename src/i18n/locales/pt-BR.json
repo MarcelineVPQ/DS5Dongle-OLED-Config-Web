@@ -934,7 +934,9 @@
         "ready": "Pronta / aguardando"
       },
       "fakeSlots": "Simular mais controles",
-      "fakeSlotsHint": "Os slots 1 e 2 aparecem pareados (um Edge Midnight Black e um DualSense Galactic Purple). Troque para eles em Slots de pareamento: o app age como se esse controle tivesse conectado. Nada é enviado ao dongle."
+      "fakeSlotsHint": "Os slots 1 e 2 aparecem pareados (um Edge Midnight Black e um DualSense Galactic Purple). Troque para eles em Slots de pareamento: o app age como se esse controle tivesse conectado. Nada é enviado ao dongle.",
+      "simulated": "Dongle simulado (sem hardware)",
+      "simulatedHint": "O app conversa com um dongle simulado em vez de USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, pareamento e atualizações de firmware não são simulados. Recarrega a página."
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",

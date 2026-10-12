@@ -934,7 +934,9 @@
         "ready": "Lista / esperando"
       },
       "fakeSlots": "Simular más mandos",
-      "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada al dongle."
+      "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada al dongle.",
+      "simulated": "Dongle simulado (sin hardware)",
+      "simulatedHint": "La app habla con un dongle simulado en vez de por USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página."
     },
     "knobs": {
       "cardOpacity": "Opacidad de las tarjetas",

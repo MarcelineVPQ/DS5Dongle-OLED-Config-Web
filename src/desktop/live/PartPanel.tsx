@@ -7,13 +7,13 @@ import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS } from "./colorways";
-import { MODEL_COLORWAYS, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
+import { MODEL_COLORWAYS, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
-import { useFlagPref, usePref } from "../storage";
+import { writePref, useFlagPref, usePref } from "../storage";
 import { controllerSpeaker } from "../narrator";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -603,6 +603,7 @@ function DeveloperSettings() {
   const dev = useDevPreview();
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
   const fakeSlots = useFakeSlots();
+  const [simulated] = useFlagPref(SIMULATED_KEY);
   if (!shown) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
@@ -637,6 +638,15 @@ function DeveloperSettings() {
           ))}
         </select>
       </Row>
+      <Toggle
+        label={t("desktop.dev.simulated")}
+        sub={t("desktop.dev.simulatedHint")}
+        value={simulated}
+        onChange={(on) => {
+          writePref(SIMULATED_KEY, on ? "1" : "0");
+          location.reload(); // reconnect to the simulation or the real dongle
+        }}
+      />
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
