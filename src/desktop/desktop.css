@@ -978,9 +978,14 @@ html[data-theme="light"] .live-ctl {
 .live-ctl .on .stk {
   fill: color-mix(in srgb, var(--ctl-stick) 50%, #fff); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
-/* L1 / R1 and the L2 / R2 fill: a light grey over the trigger color. */
+/* L1 / R1 (and the Edge's Fn buttons and back paddles) and the L2 / R2 fill:
+   a light grey over the trigger color. */
 .live-ctl [data-part="l1"].on .dk,
-.live-ctl [data-part="r1"].on .dk {
+.live-ctl [data-part="r1"].on .dk,
+.live-ctl [data-part="fn-l"].on .dk,
+.live-ctl [data-part="fn-r"].on .dk,
+.live-ctl [data-part="paddle-l"].on .dk,
+.live-ctl [data-part="paddle-r"].on .dk {
   fill: color-mix(in srgb, var(--ctl-dark) 55%, #fff); /* theme-exempt: the controller drawing: its real lights and press tints */
 }
 .live-ctl .on .ln,
@@ -1026,6 +1031,45 @@ html[data-theme="light"] .live-ctl {
 .live-ctl [data-part="stick-l"],
 .live-ctl [data-part="stick-r"] {
   transition: transform 40ms linear;
+}
+/* The DualSense Edge drawing (tools/prepare_edge_art.py): outlines stroked
+   around filled parts (triggers, bumpers, sticks, Fn, PS), the glossy black
+   center and the textured touchpad. */
+.live-ctl .ol {
+  fill: none;
+  stroke: var(--ctl-line-dark);
+  stroke-width: 0.9;
+}
+.live-ctl [data-part]:hover .ol,
+.live-ctl [data-part]:focus-visible .ol,
+.live-ctl .sel .ol {
+  stroke: var(--ctl-on);
+}
+.live-ctl .sel .ol {
+  stroke-width: 1.6;
+}
+.live-ctl .remapped .ol {
+  stroke: var(--status-warn);
+}
+.live-ctl .gloss {
+  fill: url(#ctl-gloss);
+  pointer-events: none;
+}
+.live-ctl .gloss-hi {
+  stop-color: #fff; /* theme-exempt: the controller drawing: its glossy plastic */
+  stop-opacity: 0.16;
+}
+.live-ctl .gloss-lo {
+  stop-color: #fff; /* theme-exempt: the controller drawing: its glossy plastic */
+  stop-opacity: 0;
+}
+.live-ctl .tp-tex {
+  fill: url(#ctl-tp-dots);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.live-ctl .tp-dot {
+  fill: var(--ctl-line-dark);
 }
 
 /* ---- One screen (src/desktop/live/ControllerView.tsx) ---- */

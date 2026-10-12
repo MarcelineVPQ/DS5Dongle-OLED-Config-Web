@@ -458,6 +458,10 @@
         "ps": "Bouton PS",
         "mute": "Bouton muet et micro",
         "speaker": "Haut-parleur",
+        "fn-l": "Bouton Fn gauche",
+        "fn-r": "Bouton Fn droit",
+        "paddle-l": "Bouton arrière gauche",
+        "paddle-r": "Bouton arrière droit",
         "body": "Poignées (haptique)"
       },
       "pickHint": "Clique sur une partie du dessin pour la configurer.",
@@ -490,6 +494,11 @@
       "edgeButtons": "Boutons Edge",
       "backLeft": "Arrière G",
       "backRight": "Arrière D",
+      "edgePart": {
+        "fn": "Le bouton Fn de la DualSense Edge. Maintenu avec d'autres boutons, il change les profils de la manette. Il s'allume ici quand tu appuies dessus.",
+        "paddle": "Un des boutons arrière de la DualSense Edge. Les profils de la manette peuvent lui donner le rôle de n'importe quel bouton. Il s'allume ici quand tu appuies dessus.",
+        "soon": "Le réassigner depuis cette app arrive bientôt."
+      },
       "effects": {
         "0": "aucun",
         "1": "résistance",

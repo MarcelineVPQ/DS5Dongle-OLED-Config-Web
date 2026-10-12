@@ -40,6 +40,7 @@ _Idea_ (noted, not decided) · _Open_ (a known problem, not yet scheduled).
 | Per-controller settings | **Agreed (Marcy 2026-10-12).** Each controller keeps its own settings. Today haptics, lightbar, remaps, speaker are shared by every slot; only calibration is per slot. Should each controller keep its own? (Firmware config per slot vs app-side profiles per slot) | Med | - |
 | OLED Status screen controller drawing | **Agreed (Marcy 2026-10-11).** Firmware `oled.cpp` Status screen: the controller glyph's geometry is uneven (the face-button cluster sits off-center against the d-pad, the two halves don't mirror), and the Create and Options buttons are missing (they should sit by the small bars at the top, between the sticks). Redraw it symmetric, with Create/Options lighting when pressed. Check against the console mirror Also: the header "DS5 Bridge v0.9.2-oled-edition" is cut off on the OLED (seen in a Windows user's screenshot, 2026-10-12); show the short version | Low-Med | - |
 | Mic muted and headset indicators | **Agreed (Marcy 2026-10-11).** On the live controller: when the mute button glows orange, say so ("Mic muted") next to it; and show when headphones are plugged into the controller (the data is already read: Connection card "Mic muted", "Headset jack"). An icon plus a word for each, in the app's own styling (theme tokens, the magazine-title type). Possibly the OLED Status screen too | Low-Med | - |
+| Remap the Edge's Fn buttons and back paddles | **Agreed (2026-10-12).** The Edge drawing lights them up and their panel says remapping is coming. Needs the firmware's remap table (16 slots, `src/protocol/remap.ts`) extended with the four Edge buttons (input byte 9 bits 4..7), then `REMAP_INDEX` in `src/desktop/live/parts.ts` | Low | - |
 | DS5 Dongle on 42pixelstudios.com | **Agreed.** A product page on the studio site | Low | - |
 | Welcome tour rebuild | **Agreed, last.** Off (`TOUR_ENABLED = false`) until rebuilt for the new layout; near the end of development, with the promo video | Low | - |
 | 30-second promo video | **Agreed, last.** For 42pixelstudios.com | Low | - |
@@ -53,12 +54,6 @@ _Idea_ (noted, not decided) · _Open_ (a known problem, not yet scheduled).
 | Galactic Racer hangs on exit | **Open.** A game-side deadlock on quit, not a crash. `~/steam-4078430.log` (PROTON_LOG, 2026-10-11 12:07) not analysed yet | Low | - |
 | Auto-connect sets state in an effect | **Open.** The one lint warning left (`useDs5Bridge.ts`, `react-hooks/set-state-in-effect`); behavior is correct | Low | [LINT_SUPPRESSIONS.md](LINT_SUPPRESSIONS.md) |
 | Linux: "Unable to claim interface" | **Open (2026-10-12).** When another app (e.g. a second copy of the configurator) holds the dongle, the raw WebUSB error shows. Say "The dongle is in use by another app" instead | Low | - |
-
-### Parked
-
-| Item | Status | Priority | Detail |
-| --- | --- | --- | --- |
-| DualSense Edge drawing | **Parked (time sink).** The Edge reuses the DualSense art. TurboSquid 1956564 is Editorial Use Only, reference only. Needs the Edge's button names (back paddles, Fn buttons) | Low | - |
 
 ### Ideas (noted, not decided)
 

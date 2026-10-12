@@ -128,7 +128,10 @@ export default function DesktopApp() {
   // The player's own controller colors (App settings), on top of the colorway.
   const customColors = useCustomColors().active;
   useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice, customColors);
-  const controllerColors = useMemo(() => mergeColors(colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null, customColors), [liveIdentity?.colorwayCode, customColors]);
+  const controllerColors = useMemo(
+    () => mergeColors(colorway(liveIdentity?.colorwayCode ?? null, liveIdentity?.model ?? null)?.colors ?? null, customColors),
+    [liveIdentity?.colorwayCode, liveIdentity?.model, customColors],
+  );
   useEffect(() => {
     document.documentElement.toggleAttribute("data-glass", glass);
   }, [glass]);

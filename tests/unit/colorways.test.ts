@@ -3,23 +3,25 @@
 // parts (triggers, bumpers, sticks, center). See src/desktop/live/colorways.ts.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { COLORWAYS, colorway, contrast, lineOnDark } from "../../src/desktop/live/colorways";
+import { COLORWAYS, EDGE_COLORWAYS, colorway, contrast, drawingColors, lineOnDark } from "../../src/desktop/live/colorways";
 import { controllerSurfaces } from "../../src/desktop/live/controllerAccent";
 import { contrast as rgbContrast, wantsLightInk } from "../../src/desktop/theme/desktopPalette";
 
 const painted = Object.entries(COLORWAYS).filter(([, c]) => c.colors);
+// The DualSense Edge's own colorways are held to the same rules.
+const allPainted = [...painted, ...Object.entries(EDGE_COLORWAYS).map(([code, c]) => [`Edge ${code}`, c] as const)];
 
 describe("colorways", () => {
   it("paints every known colorway (special editions are approximations)", () => {
     expect(painted.length).toBe(Object.keys(COLORWAYS).length);
   });
 
-  it.each(painted)("%s: outlines read against the body and the button caps (≥ 2:1)", (_code, { colors }) => {
+  it.each(allPainted)("%s: outlines read against the body and the button caps (≥ 2:1)", (_code, { colors }) => {
     expect(contrast(colors!.line, colors!.body)).toBeGreaterThanOrEqual(2);
     expect(contrast(colors!.line, colors!.cap)).toBeGreaterThanOrEqual(2);
   });
 
-  it.each(painted)("%s: outlines on the black parts meet WCAG non-text contrast (≥ 3:1)", (_code, { colors }) => {
+  it.each(allPainted)("%s: outlines on the black parts meet WCAG non-text contrast (≥ 3:1)", (_code, { colors }) => {
     expect(contrast(lineOnDark(colors!), colors!.dark)).toBeGreaterThanOrEqual(3);
     expect(contrast(lineOnDark(colors!), colors!.stick)).toBeGreaterThanOrEqual(2);
   });
@@ -27,6 +29,20 @@ describe("colorways", () => {
   it("unknown codes keep the theme colors", () => {
     expect(colorway("??")).toBeNull();
     expect(colorway(null)).toBeNull();
+    expect(drawingColors(null, "dualsense")).toBeNull();
+  });
+
+  it("the DualSense Edge: White has black buttons, unknown is drawn as White, Midnight Black is dark all over", () => {
+    const white = colorway("00", "edge")!.colors!;
+    expect(white.body).toBe(COLORWAYS["00"].colors!.body);
+    expect(contrast(white.cap, "#000000")).toBeLessThan(1.5);
+    expect(contrast(white.stick, "#000000")).toBeLessThan(1.6);
+    expect(drawingColors(null, "edge")).toEqual(white);
+    expect(drawingColors("??", "edge")).toEqual(white);
+    for (const c of Object.values(colorway("01", "edge")!.colors!).slice(0, 4)) expect(contrast(c, "#000000")).toBeLessThan(1.8);
+    // The standard map for the standard controller and the Edge's other codes.
+    expect(colorway("00", "dualsense")).toBe(COLORWAYS["00"]);
+    expect(colorway("02", "edge")).toBe(COLORWAYS["02"]);
   });
 
   it("the art tags the lines on the black parts", () => {

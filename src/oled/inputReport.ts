@@ -40,8 +40,14 @@ export interface InputReport {
   home: boolean;
   pad: boolean;
   mute: boolean;
-  // DualSense Edge only (byte 9 bits 4..7, per SDL's hidapi_ps5 driver):
-  // the Fn buttons under the sticks and the back paddles
+  // DualSense Edge only: the Fn buttons under the sticks and the back paddles,
+  // byte 9 (the third button byte) bits 4..7: left Fn 0x10, right Fn 0x20,
+  // left paddle 0x40, right paddle 0x80. Sources: daidr/dualsense-tester
+  // src/router/DualSenseEdge/views/_ModelPanel/DSEBack.vue (digitalKeys + 2:
+  // fnL 16, fnR 32, bL 64, bR 128) and SDL's
+  // src/joystick/hidapi/SDL_hidapi_ps5.c (rgucButtonsAndHat[2]:
+  // PS5_LEFT_FUNCTION 0x10, PS5_RIGHT_FUNCTION 0x20, PS5_LEFT_PADDLE 0x40,
+  // PS5_RIGHT_PADDLE 0x80).
   fnLeft: boolean;
   fnRight: boolean;
   backLeft: boolean;

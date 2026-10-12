@@ -458,6 +458,10 @@
         "ps": "Botão PS",
         "mute": "Botão mudo e microfone",
         "speaker": "Alto-falante",
+        "fn-l": "Botão Fn esquerdo",
+        "fn-r": "Botão Fn direito",
+        "paddle-l": "Botão traseiro esquerdo",
+        "paddle-r": "Botão traseiro direito",
         "body": "Pegadas (háptica)"
       },
       "pickHint": "Clique em qualquer parte do desenho para configurá-la.",
@@ -490,6 +494,11 @@
       "edgeButtons": "Botões Edge",
       "backLeft": "Traseiro E",
       "backRight": "Traseiro D",
+      "edgePart": {
+        "fn": "O botão Fn do DualSense Edge. Junto com outros botões, ele troca os perfis do controle. Ele acende aqui quando você o aperta.",
+        "paddle": "Um dos botões traseiros do DualSense Edge. Os perfis do controle podem fazer ele agir como qualquer botão. Ele acende aqui quando você o aperta.",
+        "soon": "Em breve você poderá remapeá-lo por este app."
+      },
       "effects": {
         "0": "nenhum",
         "1": "resistência",
