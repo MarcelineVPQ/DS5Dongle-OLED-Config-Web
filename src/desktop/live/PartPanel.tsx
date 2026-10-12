@@ -664,6 +664,7 @@ function AppSettings() {
               />
             )}
             <p className="dk-hint">{settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}</p>
+            <CheckNow />
             {settings.updateChannel === "dev" && (
               <div className="dk-row-btns">
                 <BusyButton
@@ -693,6 +694,37 @@ function AppSettings() {
         </section>
       )}
     </>
+  );
+}
+
+// Checks the chosen channel now (the app and, through the same check, the
+// dongle's firmware) instead of waiting for the next automatic check (every
+// 6 hours). Anything new shows up in the banners at the top.
+function CheckNow() {
+  const { t } = useTranslation();
+  const [result, setResult] = useState<string | null>(null);
+  const desktop = window.desktop;
+  if (!desktop) return null;
+  const check = async () => {
+    setResult(null);
+    const app = await desktop.checkForUpdates().catch(() => null);
+    setResult(
+      !app || app.phase === "failed"
+        ? t("desktop.setup.checkFailed")
+        : app.phase === "up-to-date"
+          ? t("desktop.setup.checkedCurrent", { version: app.version })
+          : app.phase === "idle" || app.phase === "checking"
+            ? null
+            : t("desktop.setup.checkedNewer", { version: app.version }),
+    );
+  };
+  return (
+    <div className="dk-row-btns">
+      <BusyButton className="dk-btn" onClick={check}>
+        {t("desktop.setup.checkUpdates")}
+      </BusyButton>
+      {result && <span className="dk-hint" role="status">{result}</span>}
+    </div>
   );
 }
 
