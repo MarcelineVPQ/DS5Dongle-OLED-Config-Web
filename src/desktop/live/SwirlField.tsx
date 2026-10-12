@@ -4,7 +4,7 @@
 // (256 x 144) and stretched up by CSS, which blurs it for free; redrawn ~12
 // times a second, paused while the window is hidden, still with Reduce motion.
 // The colors come from the theme tokens and the colorway, never literals.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const W = 256;
 const H = 144;
@@ -52,6 +52,13 @@ export function swirlPixel(x: number, y: number, t: number, out: number[]): void
 
 export default function SwirlField({ colorA, colorB }: { colorA: string; colorB: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // With hardware acceleration a light CSS blur smooths the stretched field
+  // for free (the GPU does it); in software rendering it would cost every
+  // frame, so it's left out there.
+  const [gpu, setGpu] = useState(false);
+  useEffect(() => {
+    void window.desktop?.getSettings().then((s) => setGpu(s.hardwareAcceleration));
+  }, []);
   useEffect(() => {
     const c = ref.current;
     const ctx = c?.getContext("2d");
@@ -99,5 +106,5 @@ export default function SwirlField({ colorA, colorB }: { colorA: string; colorB:
       themeWatch.disconnect();
     };
   }, [colorA, colorB]);
-  return <canvas ref={ref} className="art-bd-layer art-bd-swirl on" aria-hidden="true" />;
+  return <canvas ref={ref} className={`art-bd-layer art-bd-swirl on${gpu ? " gpu" : ""}`} aria-hidden="true" />;
 }

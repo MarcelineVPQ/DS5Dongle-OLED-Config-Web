@@ -2629,6 +2629,10 @@ html[data-theme="light"] .live-ctl {
 .art-bd-layer.on {
   opacity: 0.55;
 }
+.art-bd-layer.art-bd-swirl.gpu {
+  /* Hardware acceleration only (SwirlField.tsx): smooths the stretched field. */
+  filter: blur(6px);
+}
 .art-bd-layer.art-bd-swirl.on {
   /* No game art (Games off, or Windows / macOS for now): the swirl field
      (SwirlField.tsx), strong enough that Glass and the card opacity have
