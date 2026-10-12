@@ -932,6 +932,25 @@
       "controller": "Controle",
       "desktop": "Área de trabalho"
     },
+    "customColors": {
+      "title": "As cores do meu controle",
+      "toggle": "Cores personalizadas",
+      "toggleSub": "Para controles personalizados e modificados: pinte o desenho como o seu. As partes que você não mudar mantêm as cores do seu controle.",
+      "part": {
+        "body": "Carcaça",
+        "dark": "Partes pretas",
+        "cap": "Botões",
+        "stick": "Analógicos",
+        "line": "Contornos"
+      },
+      "partSub": {
+        "dark": "Centro, gatilhos, botões superiores",
+        "cap": "Botões de ação, direcional"
+      },
+      "lineAdjusted": "Contornos clareados ou escurecidos para continuarem visíveis nessas cores.",
+      "fromColorway": "Começar pela cor do meu controle",
+      "reset": "Redefinir"
+    },
     "settings2": {
       "language": "Idioma",
       "appearance": "Aparência",

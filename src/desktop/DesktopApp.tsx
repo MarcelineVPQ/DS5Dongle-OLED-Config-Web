@@ -9,11 +9,12 @@ import { useGlass } from "./glass/useGlass";
 import { GLASS_KEY } from "./glass/glassPref";
 import { useFlagPref, usePref, writePref } from "./storage";
 import { colorway } from "./live/colorways";
+import { mergeColors, useCustomColors } from "./live/customColors";
 import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { LibraryContext } from "./library/libraryContext";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
 import { useDs5Bridge } from "../hooks/useDs5Bridge";
@@ -122,7 +123,10 @@ export default function DesktopApp() {
   useLookKnobs();
   const [glass] = useFlagPref(GLASS_KEY);
   const [accentChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
-  useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice);
+  // The player's own controller colors (App settings), on top of the colorway.
+  const customColors = useCustomColors().active;
+  useControllerAccent(liveIdentity?.colorwayCode ?? null, accentChoice, customColors);
+  const controllerColors = useMemo(() => mergeColors(colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null, customColors), [liveIdentity?.colorwayCode, customColors]);
   useEffect(() => {
     document.documentElement.toggleAttribute("data-glass", glass);
   }, [glass]);
@@ -199,7 +203,7 @@ export default function DesktopApp() {
   return (
     <LibraryContext.Provider value={{ library: profiles.library, setLibrary: profiles.setLibrary, active: profiles.active }}>
       <div className="dk dk-one">
-        <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />
+        <ArtBackdrop colors={controllerColors} />
         <NarratorCaption />
         <div className="dk-main">
           <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>

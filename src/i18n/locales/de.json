@@ -932,6 +932,25 @@
       "controller": "Controller",
       "desktop": "Desktop"
     },
+    "customColors": {
+      "title": "Farben meines Controllers",
+      "toggle": "Eigene Farben",
+      "toggleSub": "Für individuelle und gemoddete Controller: die Zeichnung wie deinen färben. Teile, die du nicht änderst, behalten die Farben deines Controllers.",
+      "part": {
+        "body": "Gehäuse",
+        "dark": "Schwarze Teile",
+        "cap": "Tasten",
+        "stick": "Sticks",
+        "line": "Umrisse"
+      },
+      "partSub": {
+        "dark": "Mitte, Trigger, Schultertasten",
+        "cap": "Aktionstasten, Steuerkreuz"
+      },
+      "lineAdjusted": "Umrisse heller oder dunkler gemacht, damit sie auf diesen Farben sichtbar bleiben.",
+      "fromColorway": "Mit meiner Farbvariante beginnen",
+      "reset": "Zurücksetzen"
+    },
     "settings2": {
       "language": "Sprache",
       "appearance": "Darstellung",

@@ -932,6 +932,25 @@
       "controller": "Mando",
       "desktop": "Escritorio"
     },
+    "customColors": {
+      "title": "Los colores de mi mando",
+      "toggle": "Colores personalizados",
+      "toggleSub": "Para mandos personalizados y modificados: pinta el dibujo como el tuyo. Las partes que no cambies mantienen los colores de tu mando.",
+      "part": {
+        "body": "Carcasa",
+        "dark": "Partes negras",
+        "cap": "Botones",
+        "stick": "Sticks",
+        "line": "Contornos"
+      },
+      "partSub": {
+        "dark": "Centro, gatillos, botones superiores",
+        "cap": "Botones de acción, cruceta"
+      },
+      "lineAdjusted": "Contornos aclarados u oscurecidos para que se sigan viendo con estos colores.",
+      "fromColorway": "Empezar con mi color",
+      "reset": "Restablecer"
+    },
     "settings2": {
       "language": "Idioma",
       "appearance": "Apariencia",

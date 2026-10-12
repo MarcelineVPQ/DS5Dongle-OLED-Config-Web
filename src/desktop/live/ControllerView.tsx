@@ -20,6 +20,7 @@ import { usePoll } from "../usePoll";
 import { supportsLiveInput, useLiveInput, useLiveLightbar } from "../useLiveInput";
 import type { FirmwareUpdate } from "../useUpdates";
 import { colorway } from "./colorways";
+import { useControllerColors } from "./customColors";
 import LiveController from "./LiveController";
 import LiveData from "./LiveData";
 import LiveStrip from "./LiveStrip";
@@ -57,6 +58,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const preview = useDevPreview().active;
   const on = Boolean(id?.controllerConnected);
   const look = colorway(id?.colorwayCode ?? null);
+  // Its colors, with the player's own on top (App settings).
+  const lookColors = useControllerColors(id?.colorwayCode ?? null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
   const liveCapable = supportsLiveInput(bridge.identity);
   // The drawing's live input isn't shown on the Dongle page: no polling there.
@@ -177,7 +180,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 input={input}
                 lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
                 playerLeds={on ? (id?.playerLeds ?? 0) : 0}
-                colors={on ? (look?.colors ?? null) : null}
+                colors={on ? lookColors : null}
                 selected={selected}
                 remapped={remapped}
                 onSelect={pickPart}

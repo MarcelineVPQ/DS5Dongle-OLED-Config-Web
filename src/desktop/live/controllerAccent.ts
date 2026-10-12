@@ -8,9 +8,12 @@
 // outlines), selection text gets 4.5:1 (accentVars), and button text is
 // black or white, whichever reads better. Neutral colorways (white, black,
 // grey, silver, pearl) have no color to give, so the theme's accent stays.
-// ACCENT_OVERRIDES fixes any colorway the formula gets wrong.
-import { useEffect } from "react";
-import { colorway } from "./colorways";
+// ACCENT_OVERRIDES fixes any colorway the formula gets wrong. The player's own
+// colors (customColors.ts) count as the controller's: their body color gives
+// the accent, the shade and the Controller theme's surfaces.
+import { useEffect, useSyncExternalStore } from "react";
+import { colorway, type ColorwayColors } from "./colorways";
+import { mergeColors, type CustomColors } from "./customColors";
 import { accentVars, contrast, ensureContrast, hexToRgb as hex, mix, parseColor as parse, wantsLightInk, type Rgb } from "../theme/desktopPalette";
 
 // Per-colorway accent, by the colorway code from the controller's serial.
@@ -50,6 +53,19 @@ export function scopedAccent(color: string | null, el: Element | null): Record<s
 // The app-wide accent source: the controller's colorway (null = the theme's).
 let controllerColor: string | null = null;
 let controllerCode: string | null = null;
+// The player's own colors while on (else null).
+let customColors: CustomColors | null = null;
+
+// The controller's colors: its colorway with the player's on top.
+const colorsOf = (code: string | null, custom: CustomColors | null = customColors): ColorwayColors | null => mergeColors(colorway(code)?.colors ?? null, custom);
+
+// The shown controller's colorway code, for the settings (null while unknown).
+const codeListeners = new Set<() => void>();
+const onCode = (l: () => void) => {
+  codeListeners.add(l);
+  return () => codeListeners.delete(l);
+};
+export const useControllerCode = (): string | null => useSyncExternalStore(onCode, () => controllerCode);
 
 // The controller's shade, for the "Controller" theme: a light colorway (White,
 // Pearl, Silver, Starlight Blue) gives a light app, any other a dark one;
@@ -62,7 +78,7 @@ export function onControllerShade(l: () => void): () => void {
   return () => shadeListeners.delete(l);
 }
 function setShade(code: string | null): void {
-  const body = colorway(code)?.colors?.body;
+  const body = colorsOf(code)?.body;
   // Same rule as the ink on its surfaces (surfacesFor), so a mid-tone
   // colorway never gets a dark theme with black text.
   const next = body ? (wantsLightInk(hex(body)) ? "dark" : "light") : null;
@@ -89,7 +105,9 @@ export function hasColorwayColor(code: string | null): boolean {
 }
 
 // The controller's accent color (#rrggbb) for a colorway code, or null.
-export function colorwayAccent(code: string | null): string | null {
+export function colorwayAccent(code: string | null, custom: CustomColors | null = customColors): string | null {
+  // The player's own body color: the accent unless it's a neutral.
+  if (custom?.body) return chroma(hex(custom.body)) >= 40 ? custom.body : null;
   if (!code) return null;
   const override = ACCENT_OVERRIDES[code];
   if (override === null) return null;
@@ -114,8 +132,8 @@ const SURFACES: Array<[string, number]> = [
 // The "Controller" theme's surfaces: cards and panels in the controller's
 // own body color, text black or white (whichever reads), the accent the
 // colorway's line color made legible on that body.
-export function controllerSurfaces(code: string | null): Record<string, string> | null {
-  const c = colorway(code)?.colors;
+export function controllerSurfaces(code: string | null, custom: CustomColors | null = customColors): Record<string, string> | null {
+  const c = colorsOf(code, custom);
   return c ? surfacesFor(hex(c.body), hex(c.line)) : null;
 }
 
@@ -217,13 +235,17 @@ export const ACCENT_KEY = "ds5.accent";
 export const ACCENTS = ["controller", "desktop"] as const;
 
 // App root: the controller layer, and reapplying when the theme changes.
-export function useControllerAccent(code: string | null, choice: (typeof ACCENTS)[number]): void {
+export function useControllerAccent(code: string | null, choice: (typeof ACCENTS)[number], custom: CustomColors | null = null): void {
   useEffect(() => {
+    customColors = custom;
     setShade(code);
-    controllerCode = code;
+    if (controllerCode !== code) {
+      controllerCode = code;
+      codeListeners.forEach((l) => l());
+    }
     controllerColor = choice === "controller" ? colorwayAccent(code) : null;
     applyAccent();
-  }, [code, choice]);
+  }, [code, choice, custom]);
   useEffect(() => {
     const mo = new MutationObserver(applyAccent);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme"] });
