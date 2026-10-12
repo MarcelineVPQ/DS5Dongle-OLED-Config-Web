@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.5] - 2026-10-12
+
 ### Changed
 
 - **The app runs lean when it's not on screen:** minimized or in the tray it now uses about 0.5% of a CPU core instead of about 13%: the background swirl and every reading that only feeds the window (signal strength, the Dongle page, level meters, pairing slots, the OLED mirror) stop until the window is back. What the tray and game profiles need keeps running.
