@@ -17,6 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Joining the Development channel asks first:** what it means (newer, less tested, app and dongle firmware, back to stable any time) and what's in the newest development build (app and firmware versions and its notes), before any development update is offered.
 - **Development builds say so:** "DEVELOPMENT · 0.9.5-dev.1" along the side rail (and the exact Git build on a local dev copy); stable releases don't show it.
 - **Edit a game's profile in the controller view and feel it live:** "Edit in controller view" on a game's page puts its profile on the controller (never into the dongle's flash) with an "Editing: … profile" banner; every panel edits the profile, the Buttons list saves into the game's own layout, and Done brings your normal settings back and returns to the game's page.
+- **Timing card on the Dongle page:** how long each part of the dongle's firmware takes (main loop, Bluetooth, USB, audio, input and commands, OLED, and core1's speaker and mic frames), the average and the worst case since the reset with the averages' last minute as small graphs, and a Reset button. Shows where audio stutters come from (the speaker frame must stay well under 10 ms). Needs the dongle firmware from this release (protocol 1.11).
 - **My controller's colors:** pick colors for the shell, the black parts, buttons, sticks and outlines, for custom and modded controllers.
 - **The DualSense Edge has its own drawing:** Fn buttons and back buttons light up as you press them.
 
@@ -29,6 +30,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **The side bar closes as soon as you pick a page** (it used to stay open until you clicked elsewhere), and focus moves into that page, or into the side panel for App settings and Pico 2 W; keyboard users still get it open while tabbing.
 - **The background swirls in your controller's colors only** (and your custom colors, if you set them); the theme's accent no longer mixes in.
 - **One name per button everywhere:** the Buttons list, the drawing, layouts and the Inputs card use the same names (Sony's for the Edge: Left back button (LB), Right back button (RB); "D-pad up"; the face buttons with their symbols).
+- **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
 - **Special editions in their real colors** (e.g. Genshin Impact's teal and gold): colors only, no artwork.
 
 ### Fixed

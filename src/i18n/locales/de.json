@@ -1155,7 +1155,27 @@
       "yes": "ja",
       "no": "nein",
       "minutes": "{{n}} Min.",
-      "mic": "Mikrofon-Audioframes"
+      "mic": "Mikrofon-Audioframes",
+      "timing": {
+        "title": "Laufzeiten",
+        "hint": "Wie lange jeder Teil der Firmware braucht: Durchschnitt und schlimmster Fall seit dem Zurücksetzen. Der schlimmste Fall zeigt Jitter; der Core1-Lautsprecherframe muss deutlich unter 10 ms pro Frame bleiben, sonst fällt Ton aus.",
+        "usTimer": "Mit dem Mikrosekunden-Timer gemessen (der Taktzähler der CPU ist nicht verfügbar), kurze Abschnitte sind daher gerundet.",
+        "average": "Durchschnitt",
+        "worst": "Schlimmster Fall",
+        "trend": "Durchschnitt im Verlauf",
+        "sinceReset": "Seit Zurücksetzen",
+        "reset": "Zurücksetzen",
+        "stages": {
+          "loop": "Hauptschleife (ganzer Durchlauf)",
+          "bluetooth": "Bluetooth",
+          "usb": "USB",
+          "audio": "Audio",
+          "input": "Eingaben & Befehle",
+          "oled": "OLED",
+          "speaker": "Core1-Lautsprecherframe",
+          "mic": "Core1-Mikrofonframe"
+        }
+      }
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",

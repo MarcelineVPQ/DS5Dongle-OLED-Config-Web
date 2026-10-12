@@ -21,3 +21,10 @@ export function signalQuality(rssi: number): "excellent" | "good" | "fair" | "we
   if (rssi >= -25) return "fair";
   return "weak";
 }
+
+// A stage's time (the dashboard's Timing card), µs or ms as fits; "≥" when the
+// firmware saturated it (a worst case of 65535 µs or more).
+export function formatMicros(us: number, saturated = false): string {
+  const text = us < 10 ? `${us.toFixed(1)} µs` : us < 1000 ? `${Math.round(us)} µs` : us < 10000 ? `${(us / 1000).toFixed(2)} ms` : `${(us / 1000).toFixed(1)} ms`;
+  return saturated ? `≥ ${text}` : text;
+}

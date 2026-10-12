@@ -132,6 +132,7 @@ A step that didn't go all the way (a trigger pressed halfway, the controller mov
 
 - **Dongle console:** the dongle's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on the dongle.
 - **The dashboard:** the Pico 2 W's chip temperature, CPU clock and core voltage; graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and the OLED's brightness, state and timeouts.
+- **Timing** (firmware with protocol 1.11): how long each part of the firmware takes, average and worst case since the last **Reset**, for tracking down audio stutters.
 
 ![The dashboard's gauges and graphs](screenshots/guide-dashboard.png)
 

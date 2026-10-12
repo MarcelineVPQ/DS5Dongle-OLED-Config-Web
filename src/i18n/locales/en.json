@@ -1154,7 +1154,27 @@
       "yes": "yes",
       "no": "no",
       "minutes": "{{n}} min",
-      "mic": "Mic audio frames"
+      "mic": "Mic audio frames",
+      "timing": {
+        "title": "Timing",
+        "hint": "How long each part of the firmware takes: the average and the worst case since the reset. The worst case shows jitter; the core1 speaker frame must stay well under 10 ms per frame, or audio drops.",
+        "usTimer": "Measured with the microsecond timer (the CPU's cycle counter isn't available), so short stages are rounded.",
+        "average": "Average",
+        "worst": "Worst case",
+        "trend": "Average, over time",
+        "sinceReset": "Since reset",
+        "reset": "Reset",
+        "stages": {
+          "loop": "Main loop (whole pass)",
+          "bluetooth": "Bluetooth",
+          "usb": "USB",
+          "audio": "Audio",
+          "input": "Input & commands",
+          "oled": "OLED",
+          "speaker": "Core1 speaker frame",
+          "mic": "Core1 mic frame"
+        }
+      }
     },
     "hdr": {
       "label": "HDR lighting (experimental)",

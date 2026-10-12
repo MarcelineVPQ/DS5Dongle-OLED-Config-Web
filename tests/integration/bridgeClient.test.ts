@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CommandError, Ds5BridgeClient, FEATURES2, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF } from "../../src/protocol/bridgeClient";
+import { CommandError, Ds5BridgeClient, FEATURES2, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF, TIMING_STAGES } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { DEFAULT_CURVES, DEFAULT_CUSTOM_POINTS, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
@@ -401,5 +401,36 @@ describe("stick response curves (protocol 1.10)", () => {
     expect(oldId.features2 & FEATURES2.stickCurves).toBe(0);
     expect(oldId.curvesTemporary).toBeNull();
     await expect(old.applyStickCurves(0, precise, precise, false)).rejects.toBeInstanceOf(CommandError);
+  });
+});
+
+describe("per-stage timings (protocol 1.11)", () => {
+  it("reads the timings from 0xFC and resets them with 0xF6 0x15", async () => {
+    const dongle = new FakeDongle({ protoMinor: 11 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.checkCompatible();
+    expect(id.features2 & FEATURES2.timings).toBe(FEATURES2.timings);
+    dongle.timingsResetAt -= 30_000;
+    const before = await client.readCpu(true);
+    expect(before.setKhz).toBe(320000);
+    expect(before.timings?.stages).toHaveLength(TIMING_STAGES.length);
+    expect(before.timings?.sinceResetSeconds).toBeGreaterThanOrEqual(30);
+    expect(before.timings?.stages.every((s) => s.avgNs > 0 && s.maxUs > 0)).toBe(true);
+    await client.resetTimings();
+    expect(dongle.sets.at(-1)?.[0]).toBe(0x15);
+    const after = await client.readCpu(true);
+    expect(after.timings?.sinceResetSeconds).toBeLessThan(2);
+    expect(after.timings!.stages[0].maxUs).toBeLessThan(before.timings!.stages[0].maxUs);
+  });
+
+  it("asks older firmware for 11 bytes and reports no timings", async () => {
+    const dongle = new FakeDongle({ protoMinor: 10, live: true });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.checkCompatible();
+    expect(id.features2 & FEATURES2.timings).toBe(0);
+    const cpu = await client.readCpu();
+    expect(cpu.timings).toBeNull();
+    expect(cpu.tempRaw).toBe(844);
+    await expect(client.resetTimings()).rejects.toBeInstanceOf(CommandError);
   });
 });

@@ -12,6 +12,17 @@ import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transp
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
+// Per stage (firmware perf.h order): average ns, worst case µs.
+const SIM_TIMINGS: [number, number][] = [
+  [48000, 1900], // main loop
+  [12000, 900], // Bluetooth
+  [6000, 420], // USB
+  [9000, 380], // audio
+  [4000, 230], // input & commands
+  [15000, 1500], // OLED
+  [2600000, 4300], // core1 speaker frame
+  [900000, 1700], // core1 mic frame
+];
 
 export interface SimulatedDongleOptions {
   protoMajor?: number;
@@ -125,6 +136,24 @@ export class SimulatedDongle implements Ds5Transport {
     return b;
   }
 
+  // Protocol 1.11 timings (0xFC [11..62]): plausible numbers at 320 MHz that
+  // drift a little, with worst cases that build up after a reset (0xF6 0x15).
+  timingsResetAt = Date.now();
+  timerFallback = false;
+  private timings(v: DataView): void {
+    const t = (Date.now() - this.started) / 1000;
+    const since = (Date.now() - this.timingsResetAt) / 1000;
+    v.setUint8(11, 1 | (this.timerFallback ? 0x80 : 0));
+    v.setUint8(12, SIM_TIMINGS.length);
+    v.setUint16(13, Math.min(0xffff, Math.floor(since)), true);
+    SIM_TIMINGS.forEach(([avgNs, maxUs], i) => {
+      const wobble = 1 + 0.08 * Math.sin(t * 0.7 + i);
+      const grown = Math.min(1, 0.25 + since / 40); // worst cases accumulate
+      v.setUint32(15 + 6 * i, Math.round(avgNs * wobble), true);
+      v.setUint16(19 + 6 * i, Math.min(0xffff, Math.round(maxUs * grown)), true);
+    });
+  }
+
   async open(): Promise<void> {
     if (this.gone) throw new DeviceGoneError();
     this.isOpen = true;
@@ -183,14 +212,17 @@ export class SimulatedDongle implements Ds5Transport {
         return out.subarray(0, length);
       }
       case 0xfc: {
-        if (!this.opts.live) throw new ReportStalledError(reportId);
-        // 320 MHz at 1.20 V (vreg code 13), about 42 °C.
-        const out = new Uint8Array(11);
+        const timings = (this.opts.protoMinor ?? 6) >= 11;
+        if (!this.opts.live && !timings) throw new ReportStalledError(reportId);
+        // 320 MHz at 1.20 V (vreg code 13), about 42 °C; protocol 1.11 adds
+        // the timings when asked for 63 bytes (older firmware stops at 11).
+        const out = new Uint8Array(timings && length >= 63 ? 63 : 11);
         const v = new DataView(out.buffer);
         v.setUint32(0, 320000, true);
         v.setUint32(4, 320000, true);
         out[8] = 13;
         v.setUint16(9, 844, true);
+        if (out.length === 63) this.timings(v);
         return out.subarray(0, length);
       }
       case 0xfa: {
@@ -289,6 +321,8 @@ export class SimulatedDongle implements Ds5Transport {
         this.tempCurves = null;
         this.curves[payload[4]] = pair;
       }
+    } else if (func === 0x15 && (this.opts.protoMinor ?? 6) >= 11) {
+      this.timingsResetAt = Date.now(); // answered at once, like the firmware
     } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
       this.tempCurves = null; // 1.10: a game's stick curves end too
       this.extra = this.flashExtra.slice();
@@ -372,6 +406,7 @@ export class SimulatedDongle implements Ds5Transport {
       if (minor >= 8) out[29] |= 0x10; // temporary remap (1.8)
       if (minor >= 9) out[29] |= 0x20; // Edge extra-button remap (1.9)
       if (minor >= 10) out[29] |= 0x40; // stick response curves (1.10)
+      if (minor >= 11) out[29] |= 0x80; // per-stage timings in 0xFC, reset 0x15 (1.11)
       out.set(
         [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
         30,

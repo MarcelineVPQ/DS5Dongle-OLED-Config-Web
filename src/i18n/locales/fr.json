@@ -1155,7 +1155,27 @@
       "yes": "oui",
       "no": "non",
       "minutes": "{{n}} min",
-      "mic": "Trames audio du micro"
+      "mic": "Trames audio du micro",
+      "timing": {
+        "title": "Temps d'exécution",
+        "hint": "Le temps pris par chaque partie du firmware : la moyenne et le pire cas depuis la réinitialisation. Le pire cas montre la gigue ; la trame haut-parleur du core1 doit rester bien en dessous de 10 ms par trame, sinon le son décroche.",
+        "usTimer": "Mesuré avec le minuteur en microsecondes (le compteur de cycles du processeur n'est pas disponible) : les étapes courtes sont arrondies.",
+        "average": "Moyenne",
+        "worst": "Pire cas",
+        "trend": "Moyenne dans le temps",
+        "sinceReset": "Depuis la réinitialisation",
+        "reset": "Réinitialiser",
+        "stages": {
+          "loop": "Boucle principale (passage complet)",
+          "bluetooth": "Bluetooth",
+          "usb": "USB",
+          "audio": "Audio",
+          "input": "Entrées et commandes",
+          "oled": "OLED",
+          "speaker": "Trame haut-parleur core1",
+          "mic": "Trame micro core1"
+        }
+      }
     },
     "hdr": {
       "label": "Éclairage HDR (expérimental)",

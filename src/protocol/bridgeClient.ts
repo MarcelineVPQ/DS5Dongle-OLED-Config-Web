@@ -44,6 +44,7 @@ export const FUNC = {
   remapRevert: 0x12, // protocol 1.8: back to the saved table
   remapExtra: 0x13, // protocol 1.9: the Edge's extra-button entries
   stickCurves: 0x14, // protocol 1.10: stick response curves (saved or temporary)
+  resetTimings: 0x15, // protocol 1.11: start the 0xFC timing counters over (answered at once)
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -69,6 +70,7 @@ export const FEATURES2 = {
   temporaryRemap: 0x10, // 0xF6 0x11 / 0x12 and identity [19] bit 1 (protocol 1.8)
   remapExtra: 0x20, // 0xED get / 0xF6 0x13 set: Edge Fn buttons and paddles (protocol 1.9)
   stickCurves: 0x40, // 0xEC get / 0xF6 0x14 set, identity [19] bit 2: stick response curves (protocol 1.10)
+  timings: 0x80, // 0xFC [11..62] per-stage timings, 0xF6 0x15 resets them (protocol 1.11)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -204,6 +206,43 @@ export interface CpuInfo {
   measuredKhz: number;
   vregCode: number;
   tempRaw: number;
+  // Protocol 1.11 (FEATURES2.timings), when asked for: per-stage timings; null otherwise.
+  timings: CpuTimings | null;
+}
+
+// The firmware's timed stages (perf.h), in its order: core0's main loop and
+// its parts, then core1's audio frames.
+export const TIMING_STAGES = ["loop", "bluetooth", "usb", "audio", "input", "oled", "speaker", "mic"] as const;
+export const CPU_REPORT_BYTES = 11;
+export const CPU_TIMINGS_REPORT_BYTES = 63;
+export const TIMING_MAX_SATURATED = 0xffff; // µs: "this long or longer"
+
+export interface StageTiming {
+  avgNs: number; // average since the reset
+  maxUs: number; // worst case since the reset (TIMING_MAX_SATURATED = at least that)
+}
+
+export interface CpuTimings {
+  timerFallback: boolean; // [11] bit 7: the microsecond timer, not the cycle counter
+  sinceResetSeconds: number; // saturates at 65535
+  stages: StageTiming[]; // TIMING_STAGES order; as many as the dongle reports
+}
+
+// 0xFC: 11 bytes of CPU telemetry, then (protocol 1.11, 63 bytes asked) the
+// timings: [11] layout version 1 (bit 7 timer fallback), [12] stage count,
+// [13..14] seconds since the reset, then per stage a u32 average in ns and a
+// u16 worst case in µs. Little-endian.
+export function decodeCpu(bytes: Uint8Array): CpuInfo {
+  const view = toView(bytes, CPU_REPORT_BYTES);
+  return { setKhz: view.getUint32(0, true), measuredKhz: view.getUint32(4, true), vregCode: view.getUint8(8), tempRaw: view.getUint16(9, true), timings: decodeTimings(bytes) };
+}
+
+function decodeTimings(bytes: Uint8Array): CpuTimings | null {
+  if (bytes.length < 15 || (bytes[11] & 0x7f) !== 1) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const count = Math.min(bytes[12], Math.floor((bytes.length - 15) / 6));
+  const stages = Array.from({ length: count }, (_, i) => ({ avgNs: view.getUint32(15 + 6 * i, true), maxUs: view.getUint16(19 + 6 * i, true) }));
+  return { timerFallback: (bytes[11] & 0x80) !== 0, sinceResetSeconds: view.getUint16(13, true), stages };
 }
 
 export const AUDIO_COUNTER_NAMES = [
@@ -460,9 +499,15 @@ export class Ds5BridgeClient {
     };
   }
 
-  async readCpu(): Promise<CpuInfo> {
-    const view = toView(await this.transport.getReport(REPORT.cpu, 11), 11);
-    return { setKhz: view.getUint32(0, true), measuredKhz: view.getUint32(4, true), vregCode: view.getUint8(8), tempRaw: view.getUint16(9, true) };
+  // withTimings: protocol 1.11 (FEATURES2.timings) only; older firmware is asked for 11 bytes as before.
+  async readCpu(withTimings = false): Promise<CpuInfo> {
+    const info = decodeCpu(await this.transport.getReport(REPORT.cpu, withTimings ? CPU_TIMINGS_REPORT_BYTES : CPU_REPORT_BYTES));
+    return withTimings ? info : { ...info, timings: null };
+  }
+
+  // Protocol 1.11: starts the timing counters (0xFC [11..62]) over.
+  async resetTimings(): Promise<void> {
+    await this.command(FUNC.resetTimings);
   }
 
   // The calibration of the pairing slot in use now (each slot has its own).

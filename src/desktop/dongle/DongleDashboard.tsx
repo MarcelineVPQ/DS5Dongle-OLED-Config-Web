@@ -2,14 +2,27 @@
 // Pico 2 W (chip temperature, clock and core voltage as dials; USB, Bluetooth
 // and signal as graphs over the last minute; the audio pipeline's counters,
 // with anything that went wrong lit) and the OLED (what it's doing). One poll
-// a second reads 0xFB diag, 0xFC CPU and 0xF5 audio counters; the signal and
-// the OLED mirror come from the page's own polls (no second read of either).
-import { useEffect, useRef } from "react";
+// a second reads 0xFB diag, 0xFC CPU (with the per-stage timings on protocol
+// 1.11) and 0xF5 audio counters; the signal and the OLED mirror come from the
+// page's own polls (no second read of either).
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { AUDIO_COUNTER_NAMES, CORE1_SPEAKER_FAILED, type AudioCounters, type OledFrame } from "../../protocol/bridgeClient";
+import {
+  AUDIO_COUNTER_NAMES,
+  CORE1_SPEAKER_FAILED,
+  FEATURES2,
+  supportsFeature2,
+  TIMING_MAX_SATURATED,
+  TIMING_STAGES,
+  type AudioCounters,
+  type CpuTimings,
+  type OledFrame,
+} from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
-import { adcToCelsius, formatUptime, signalQuality } from "../format";
+import { errorText } from "../../errorText";
+import { BusyButton } from "../controls";
+import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 
 const HISTORY = 60;
@@ -30,6 +43,7 @@ interface Sample {
   counters: AudioCounters;
   core1Alive: boolean;
   oled: { power: string; screen: number; contrast: number; fps: number } | null;
+  timings: CpuTimings | null; // protocol 1.11
 }
 
 // Core voltage codes 0..15 are 0.55 V + 0.05 V steps (the firmware's CPU screen).
@@ -37,6 +51,7 @@ const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : nu
 
 function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null) {
   const client = bridge.client;
+  const withTimings = supportsFeature2(bridge.identity, 11, FEATURES2.timings);
   const history = useRef<Sample[]>([]);
   // seq null = no mirror frame in that sample (then no redraw rate).
   const prev = useRef<{ at: number; usb: number; bt: number; mic: number; loops: number; seq: number | null } | null>(null);
@@ -47,7 +62,7 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
   const sample = usePoll(
     async () => {
       if (!client) return null;
-      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(), client.readAudioCounters()]);
+      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters()]);
       const { frame, rssi: rssiRead } = latest.current;
       const rssi = rssiRead ?? 0;
       const at = performance.now();
@@ -70,6 +85,7 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
         counters,
         core1Alive: !p || counters.core1Loops !== p.loops,
         // The frame counter is 8-bit: the difference mod 256.
+        timings: cpu.timings,
         oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p && p.seq !== null && dt > 0 ? Math.round(((frame.seq - p.seq) & 0xff) / dt) : 0 } : null,
       };
       prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, mic: counters.micFrames, loops: counters.core1Loops, seq: frame?.seq ?? null };
@@ -130,6 +146,8 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
         </div>
       </div>
 
+      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
+
       <h3 className="dash-group">{td("oled")}</h3>
       <div className="dash-row">
         <Gauge label={td("brightness")} value={s?.oled ? Math.round((s.oled.contrast / 255) * 100) : undefined} min={0} max={100} unit="%" />
@@ -145,6 +163,70 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
         </div>
       </div>
     </div>
+  );
+}
+
+// The core1 speaker frame has 10 ms of audio to encode in; a worst case at
+// that or above means a dropped frame.
+const SPEAKER_FRAME_US = 10000;
+
+// Protocol 1.11: how long each stage of the firmware takes (average and worst
+// case since the reset), the averages' last minute, and a Reset.
+function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[] }) {
+  const { t } = useTranslation();
+  const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.timing.${k}`, o);
+  // The graphs start over at a reset, like the numbers.
+  const [resetAt, setResetAt] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const recent = history.filter((x) => x.at >= resetAt && x.timings);
+  const reset = async () => {
+    try {
+      setError(null);
+      await client.resetTimings();
+      setResetAt(performance.now());
+    } catch (cause) {
+      setError(errorText(cause));
+    }
+  };
+  return (
+    <div className="dash-row">
+      <div className="dash-card dash-wide">
+        <h4>{td("title")}</h4>
+        <p className="dk-hint">{td("hint")}</p>
+        {timings.timerFallback && <p className="dk-hint">{td("usTimer")}</p>}
+        {error && <div className="dk-notice error">{error}</div>}
+        <div className="dash-timings">
+          <span />
+          <span>{td("average")}</span>
+          <span>{td("worst")}</span>
+          <span>{td("trend")}</span>
+          {timings.stages.slice(0, TIMING_STAGES.length).map((st, i) => {
+            const saturated = st.maxUs >= TIMING_MAX_SATURATED;
+            const bad = TIMING_STAGES[i] === "speaker" && st.maxUs >= SPEAKER_FRAME_US;
+            const trend = recent.map((x) => (x.timings?.stages[i]?.avgNs ?? 0) / 1000);
+            return <TimingRow key={TIMING_STAGES[i]} label={td(`stages.${TIMING_STAGES[i]}`)} avg={formatMicros(st.avgNs / 1000)} worst={formatMicros(st.maxUs, saturated)} bad={bad} trend={trend} />;
+          })}
+        </div>
+        <div className="dash-timing-foot">
+          <Fact label={td("sinceReset")} value={`${timings.sinceResetSeconds >= 0xffff ? "≥ " : ""}${formatUptime(timings.sinceResetSeconds)}`} />
+          <BusyButton onClick={reset}>{td("reset")}</BusyButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimingRow({ label, avg, worst, bad, trend }: { label: string; avg: string; worst: string; bad: boolean; trend: number[] }) {
+  return (
+    <>
+      <span>{label}</span>
+      <b>{avg}</b>
+      <b className={bad ? "bad" : undefined}>
+        {bad ? "⚠ " : ""}
+        {worst}
+      </b>
+      {trend.length > 1 ? <Trend values={trend} /> : <span />}
+    </>
   );
 }
 

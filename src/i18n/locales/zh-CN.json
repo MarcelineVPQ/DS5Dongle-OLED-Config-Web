@@ -1149,7 +1149,27 @@
       "yes": "是",
       "no": "否",
       "minutes": "{{n}} 分钟",
-      "mic": "麦克风音频帧"
+      "mic": "麦克风音频帧",
+      "timing": {
+        "title": "耗时",
+        "hint": "固件各部分的耗时：自重置以来的平均值和最坏情况。最坏情况反映抖动；core1 扬声器帧必须远低于每帧 10 ms，否则会断音。",
+        "usTimer": "使用微秒计时器测量（CPU 周期计数器不可用），较短的阶段会被取整。",
+        "average": "平均",
+        "worst": "最坏情况",
+        "trend": "平均值走势",
+        "sinceReset": "自重置以来",
+        "reset": "重置",
+        "stages": {
+          "loop": "主循环（完整一轮）",
+          "bluetooth": "蓝牙",
+          "usb": "USB",
+          "audio": "音频",
+          "input": "输入与命令",
+          "oled": "OLED",
+          "speaker": "core1 扬声器帧",
+          "mic": "core1 麦克风帧"
+        }
+      }
     },
     "hdr": {
       "label": "HDR 灯光（实验性）",
