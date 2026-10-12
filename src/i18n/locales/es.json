@@ -927,7 +927,7 @@
       "art": "Arte de juegos",
       "off": "Desactivado",
       "sub": {
-        "default": "Remolinos lentos con los colores de tu mando y del tema",
+        "default": "Remolinos lentos con los colores de tu mando",
         "art": "El arte de tus juegos, difuminado y en movimiento lento (Linux, con Juegos activado); si no hay, los remolinos",
         "off": "Un fondo liso"
       }

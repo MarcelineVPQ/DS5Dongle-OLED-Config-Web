@@ -1,10 +1,12 @@
 // The Controller page's background when there's no game art (Games off, or
-// Windows / macOS for now): slow swirls of warped sine waves in four colors:
-// the controller's body color, the theme's accent and the accent's two
-// neighbors on the color wheel (analogous colors, never a clashing opposite). Drawn tiny
+// Windows / macOS for now): slow swirls of warped sine waves in four colors,
+// all from the controller (its colorway, or the player's custom colors): the
+// shell, the buttons, the outlines and a deeper shade of the shell. No
+// controller known: the theme's accent and its two neighbors on the color
+// wheel (analogous colors, never a clashing opposite). Drawn tiny
 // (256 x 144) and stretched up by CSS, which blurs it for free; redrawn ~12
 // times a second, paused while the window is hidden, still with Reduce motion.
-// The colors come from the theme tokens and the colorway, never literals.
+// The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
 
 const W = 256;
@@ -64,7 +66,13 @@ export function swirlPixel(x: number, y: number, t: number, out: number[]): void
   for (let i = 0; i < 4; i++) out[i] /= sum;
 }
 
-export default function SwirlField({ colorA, colorB }: { colorA: string; colorB: string }) {
+// A deeper shade: `amount` of the way to the dark parts' color.
+const mixRgb = (a: Rgb, b: Rgb, amount: number): Rgb => [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * amount)) as Rgb;
+
+// The controller's parts: shell, buttons, outlines, dark parts (CSS colors).
+export type SwirlColors = { body: string; cap: string; line: string; dark: string };
+
+export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // With hardware acceleration a light CSS blur smooths the stretched field
   // for free (the GPU does it); in software rendering it would cost every
@@ -96,11 +104,16 @@ export default function SwirlField({ colorA, colorB }: { colorA: string; colorB:
     // Re-read whenever the theme changes (it sets its tokens on <html>).
     let palette: Rgb[] = [];
     const readPalette = () => {
+      const body = colors && toRgb(colors.body, ctx);
+      if (colors && body) {
+        const part = (css: string) => toRgb(css, ctx) ?? body;
+        palette = [body, part(colors.cap), part(colors.line), mixRgb(body, part(colors.dark), 0.45)];
+        return;
+      }
       const accent = getComputedStyle(c).getPropertyValue("--dk-accent") || getComputedStyle(c).color;
-      const a = toRgb(colorA, ctx) ?? [0, 0, 0];
-      const acc = toRgb(accent, ctx) ?? toRgb(colorB, ctx) ?? a;
+      const acc = toRgb(accent, ctx) ?? [0, 0, 0];
       // The accent's two neighbors on the color wheel, so every band blends.
-      palette = [a, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
+      palette = [acc, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
     };
     readPalette();
     const themeWatch = new MutationObserver(() => {
@@ -119,6 +132,6 @@ export default function SwirlField({ colorA, colorB }: { colorA: string; colorB:
       clearInterval(timer);
       themeWatch.disconnect();
     };
-  }, [colorA, colorB]);
+  }, [colors]);
   return <canvas ref={ref} className={`art-bd-layer art-bd-swirl on${gpu ? " gpu" : ""}`} aria-hidden="true" />;
 }

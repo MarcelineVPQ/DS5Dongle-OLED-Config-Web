@@ -3,7 +3,7 @@
 //
 // Which art: the running game's banner, else the recently played games in
 // turn (a crossfade every 20 s); without any (Games scanning off, Windows /
-// macOS), slow swirls in the controller's and the theme's colors (SwirlField). Cheap on purpose: each
+// macOS), slow swirls in the controller's colors (SwirlField). Cheap on purpose: each
 // image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
 // for free, so only a slow CSS transform animates (fine with software
 // rendering). Still with "reduce motion". Toggle: App settings.
@@ -134,10 +134,9 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   }, [sig, keys.length]);
   if (background === "off") return null;
   const art = background === "art" && keys.length > 0;
-  const body = colors?.body ?? "var(--bg-elevated)";
   return (
     <div className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
-      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />) : <SwirlField colorA={body} colorB={colors?.line ?? body} />}
+      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} />}
       <div className="art-bd-dim" />
     </div>
   );

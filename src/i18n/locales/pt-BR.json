@@ -927,7 +927,7 @@
       "art": "Arte dos jogos",
       "off": "Desligado",
       "sub": {
-        "default": "Redemoinhos lentos nas cores do seu controle e do tema",
+        "default": "Redemoinhos lentos nas cores do seu controle",
         "art": "A arte dos seus jogos, desfocada e em movimento lento (Linux, com Jogos ligado); se não houver, os redemoinhos",
         "off": "Um fundo liso"
       }

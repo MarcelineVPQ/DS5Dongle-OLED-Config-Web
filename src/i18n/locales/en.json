@@ -926,7 +926,7 @@
       "art": "Game art",
       "off": "Off",
       "sub": {
-        "default": "Slow swirls in your controller's and theme's colors",
+        "default": "Slow swirls in your controller's colors",
         "art": "Your games' artwork, blurred, slowly moving (Linux, with Games on); the swirls when there's none",
         "off": "A plain background"
       }

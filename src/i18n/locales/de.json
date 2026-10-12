@@ -927,7 +927,7 @@
       "art": "Spiele-Artwork",
       "off": "Aus",
       "sub": {
-        "default": "Langsame Wirbel in den Farben deines Controllers und Themes",
+        "default": "Langsame Wirbel in den Farben deines Controllers",
         "art": "Das Artwork deiner Spiele, weichgezeichnet und langsam bewegt (Linux, mit Spielen an); sonst die Wirbel",
         "off": "Ein schlichter Hintergrund"
       }
