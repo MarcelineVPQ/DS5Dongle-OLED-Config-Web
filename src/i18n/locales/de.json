@@ -875,8 +875,15 @@
       }
     },
     "backdrop": {
-      "label": "Spielgrafik im Hintergrund",
-      "sub": "Die Grafik deiner Spiele, unscharf und langsam bewegt, hinter dem Controller"
+      "label": "Hintergrund",
+      "default": "Standard",
+      "art": "Spiele-Artwork",
+      "off": "Aus",
+      "sub": {
+        "default": "Langsame Wirbel in den Farben deines Controllers und Themes",
+        "art": "Das Artwork deiner Spiele, weichgezeichnet und langsam bewegt (Linux, mit Spielen an); sonst die Wirbel",
+        "off": "Ein schlichter Hintergrund"
+      }
     },
     "glass": {
       "label": "Stil",

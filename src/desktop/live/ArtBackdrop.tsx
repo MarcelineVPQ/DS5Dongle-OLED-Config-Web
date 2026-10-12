@@ -3,17 +3,28 @@
 //
 // Which art: the running game's banner, else the recently played games in
 // turn (a crossfade every 20 s); without any (Games scanning off, Windows /
-// macOS), soft blobs in the controller's colors. Cheap on purpose: each
+// macOS), slow swirls in the controller's and the theme's colors (SwirlField). Cheap on purpose: each
 // image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
 // for free, so only a slow CSS transform animates (fine with software
 // rendering). Still with "reduce motion". Toggle: App settings.
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
-import { useFlagPref, readPref } from "../storage";
+import { readPref, usePref } from "../storage";
 import { artUrl } from "../games/types";
+import SwirlField from "./SwirlField";
 
-export const BACKDROP_KEY = "ds5.artBackdropOff";
+// The background: "default" (the swirl field, what a new install shows),
+// "art" (game artwork when there is some, else the swirls) or "off".
+export const BACKGROUND_KEY = "ds5.background";
+export const BACKGROUNDS = ["default", "art", "off"] as const;
+export type Background = (typeof BACKGROUNDS)[number];
+// The older on/off switch: someone who turned it off keeps "off".
+const OLD_OFF_KEY = "ds5.artBackdropOff";
+
+export function useBackground(): [Background, (value: Background) => void] {
+  return usePref<Background>(BACKGROUND_KEY, readPref(OLD_OFF_KEY) === "1" ? "off" : "default", BACKGROUNDS);
+}
 const CYCLE_MS = 20_000;
 
 // A game page puts its own game behind the window while it's open.
@@ -109,7 +120,7 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
 }
 
 export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null }) {
-  const [off] = useFlagPref(BACKDROP_KEY);
+  const [background] = useBackground();
   const [blur] = useKnob(knob("backdropBlur"));
   const keys = useBackdropKeys();
   // The cycle position belongs to one set of games; a new set starts at 0.
@@ -121,15 +132,12 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
     const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
   }, [sig, keys.length]);
-  if (off) return null;
+  if (background === "off") return null;
+  const art = background === "art" && keys.length > 0;
   const body = colors?.body ?? "var(--bg-elevated)";
   return (
-    <div className="art-bd" aria-hidden="true">
-      {keys.length > 0 ? (
-        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />)
-      ) : (
-        <div className="art-bd-blobs" style={{ ["--bd-a" as string]: body, ["--bd-b" as string]: colors?.line ?? body }} />
-      )}
+    <div className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
+      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />) : <SwirlField colorA={body} colorB={colors?.line ?? body} />}
       <div className="art-bd-dim" />
     </div>
   );

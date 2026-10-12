@@ -875,8 +875,15 @@
       }
     },
     "backdrop": {
-      "label": "Fond avec les jeux",
-      "sub": "Les visuels de vos jeux, flous et en lent mouvement, derrière la manette"
+      "label": "Arrière-plan",
+      "default": "Par défaut",
+      "art": "Illustrations des jeux",
+      "off": "Désactivé",
+      "sub": {
+        "default": "Des volutes lentes aux couleurs de ta manette et du thème",
+        "art": "Les illustrations de tes jeux, floutées et en léger mouvement (Linux, avec Jeux activé) ; sinon les volutes",
+        "off": "Un fond uni"
+      }
     },
     "glass": {
       "label": "Style",

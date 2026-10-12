@@ -874,8 +874,15 @@
       }
     },
     "backdrop": {
-      "label": "Game art background",
-      "sub": "Your games' artwork, blurred, slowly moving behind the controller"
+      "label": "Background",
+      "default": "Default",
+      "art": "Game art",
+      "off": "Off",
+      "sub": {
+        "default": "Slow swirls in your controller's and theme's colors",
+        "art": "Your games' artwork, blurred, slowly moving (Linux, with Games on); the swirls when there's none",
+        "off": "A plain background"
+      }
     },
     "glass": {
       "label": "Style",

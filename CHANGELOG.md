@@ -10,12 +10,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **The app names your hardware:** with firmware protocol 1.7 the rail, status, Dongle page, console, log and update banner say what the dongle is built on (e.g. **Pico 2 W**), as the firmware reports it, so other boards show by their own name. Older firmware shows "Dongle".
 - **Updates without a dongle:** the setup screen shows the firmware version the app installs, how to update or reinstall it without a controller (hold BOOTSEL while plugging in), and **Check for updates** for the app.
+- **Background setting** (App settings → Appearance): **Default**, slow swirls in your controller's and theme's colors plus their complement (new installs start here); **Game art** (Linux, with Games on; the swirls when there's none); or **Off**. Glass and card opacity now have something to show through on every PC.
 - **Rail tooltips** say what each page holds ("Controller · your controller, live. Click any part of it to set it up").
 - **Developer preview of the update states** (App settings → Developer): shows an app and firmware update as available, in progress or ready, without a real update. `tools/check_layout.mjs` now checks every update state in every language, size, theme and style.
 - **Repair USB driver explains itself first:** the button lists, step by step, what will happen and can show the exact script; nothing runs until **Run the repair**.
 - **README: the full PowerShell behind Repair USB driver**, line by line; a test fails the build if it ever differs from what the app runs.
 
 ### Fixed
+
+- **The controller drawing covered the status tiles** on short windows (about 680 px tall, e.g. Windows laptops): its height cap was on its box, not the drawing. The page now scrolls instead, and `tools/check_layout.mjs` reports a drawing over tiles or cards.
+- **Accent-colored text is always readable:** with Windows' own accent (Desktop theme) the colorway name could be dark magenta on dark. Text in the accent color now uses a contrast-checked version.
+- **"Windows untested" removed everywhere:** tested on Linux and Windows 11; macOS stays untested; the Games page is Linux-only for now.
 
 - **Firmware update progress** now moves while the firmware is written (it stayed at 0% until the end), and the **Update to …** button shows the short version ("Update to 0.9.2") so **Check now** no longer slides off the Dongle panel.
 - **"Plug in the DS5 Dongle" when the dongle is plugged in:** the dongle stays off USB until a controller connects, so the setup screen now says how to connect or pair one (press PS, or hold PS + Create), and says **Turn on your controller** on PCs that have used a dongle before. After a firmware update it says to press PS.

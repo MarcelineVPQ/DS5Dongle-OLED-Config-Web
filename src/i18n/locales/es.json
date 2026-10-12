@@ -875,8 +875,15 @@
       }
     },
     "backdrop": {
-      "label": "Fondo con tus juegos",
-      "sub": "El arte de tus juegos, desenfocado y en lento movimiento, detrás del mando"
+      "label": "Fondo",
+      "default": "Predeterminado",
+      "art": "Arte de juegos",
+      "off": "Desactivado",
+      "sub": {
+        "default": "Remolinos lentos con los colores de tu mando y del tema",
+        "art": "El arte de tus juegos, difuminado y en movimiento lento (Linux, con Juegos activado); si no hay, los remolinos",
+        "off": "Un fondo liso"
+      }
     },
     "glass": {
       "label": "Estilo",

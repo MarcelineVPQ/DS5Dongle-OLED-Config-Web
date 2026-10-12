@@ -9,7 +9,7 @@
 // Mechanical, exhaustive (the AVIEW rule): nothing sampled by eye.
 //
 //   npm run build:desktop && ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port=9333
-//   node tools/check_layout.mjs [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650]
+//   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9333] [--mode layout|contrast|names|all] [--langs en,de] [--sizes 1100x900,900x650]
 //
 // Every layout and contrast pass also runs the controller and Dongle views in
 // each update state (available, in progress, ready) through the app's own
@@ -20,23 +20,33 @@
 // problem. A label shortened with "…" counts only if it has no tooltip. The
 // user's language, theme and style are put back at the end.
 /* global WebSocket -- Node 22's built-in client */
+import { readFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 
 const args = process.argv.slice(2);
 const opt = (name, fallback) => (args.includes(`--${name}`) ? args[args.indexOf(`--${name}`) + 1] : fallback);
 const port = Number(opt("port", "9333"));
+const host = opt("host", "127.0.0.1"); // e.g. the Windows VM (tools/windows_vm_test.py)
 const MODE = opt("mode", "all");
 const LANGS = opt("langs", "en,de,fr,es,pt-BR,zh-CN,ja").split(",");
 const SIZES = opt("sizes", "1100x900,900x650")
   .split(",")
   .map((s) => s.split("x").map(Number));
 const THEMES = ["controller", "light", "dark", "desktop"];
+// Every colorway, per model, read from the app's own list
+// (src/desktop/live/colorways.ts); the Edge comes in White and Midnight Black
+// (devPreview.ts MODEL_COLORWAYS).
+const COLORWAY_CODES = [...readFileSync(new URL("../src/desktop/live/colorways.ts", import.meta.url), "utf8").matchAll(/^ {2}"(\w\w)": \{ name:/gm)].map((m) => m[1]);
+const COLORWAY_MODELS = [
+  ["dualsense", COLORWAY_CODES],
+  ["edge", ["00", "01"]],
+];
 const STYLES = [
   ["standard", null],
   ["glass", "1"],
 ];
 
-const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+const pages = await (await fetch(`http://${host}:${port}/json`)).json();
 const ws = new WebSocket(pages.find((p) => p.type === "page").webSocketDebuggerUrl);
 await new Promise((r) => ws.addEventListener("open", r));
 let id = 0;
@@ -77,6 +87,17 @@ const LAYOUT_PROBE = `(() => {
     }
   }
   if (document.documentElement.scrollWidth > innerWidth + 1) out.push({ kind: "page scrolls sideways", text: "" });
+  // The controller drawing must never be drawn over the tiles and cards below
+  // it (it did on short windows: its height limit didn't reach the svg).
+  const art = document.querySelector(".live-ctl svg");
+  if (art && visible(art)) {
+    const a = art.getBoundingClientRect();
+    for (const el of document.querySelectorAll(".live-tile, .live-data-card")) {
+      if (!visible(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (Math.min(a.bottom, r.bottom) - Math.max(a.top, r.top) > 4 && Math.min(a.right, r.right) - Math.max(a.left, r.left) > 4) out.push({ kind: "drawing covers", text: label(el) });
+    }
+  }
   return out;
 })()`;
 
@@ -272,6 +293,29 @@ if (MODE === "contrast" || MODE === "all") {
         report(`contrast ${theme.padEnd(10)} ${style.padEnd(8)} ${name.padEnd(28)}`, r.out);
       }
     }
+  // "Match my controller" in every colorway of both models, through the
+  // developer preview (src/desktop/devPreview.ts), on the views it colors.
+  await setPrefs({ i18nextLng: "en", "ds5-bridge-theme": "controller", "ds5.glass": null });
+  await sleep(5000);
+  const setPref = (key, value) =>
+    evaluate(
+      `(() => { localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)}); window.dispatchEvent(new CustomEvent("ds5:pref", { detail: { key: ${JSON.stringify(key)}, value: ${JSON.stringify(value)} } })); })()`,
+    );
+  const byName = new Map(views());
+  for (const [model, codes] of COLORWAY_MODELS)
+    for (const code of codes) {
+      await setPref("ds5.dev.model", model);
+      await setPref("ds5.dev.colorway", code);
+      for (const name of ["controller", "dongle (console + dashboard)", "app settings"]) {
+        await byName.get(name)();
+        await sleep(700);
+        const r = (await evaluate(CONTRAST_PROBE)) ?? { out: [], skipped: 0 };
+        skippedTotal += r.skipped;
+        report(`contrast colorway ${model} ${code} ${name.padEnd(28)}`, r.out);
+      }
+    }
+  await setPref("ds5.dev.model", "");
+  await setPref("ds5.dev.colorway", "");
   console.log(`(contrast: ${skippedTotal} text items over art, glass or translucency not judged)`);
 }
 

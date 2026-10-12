@@ -167,6 +167,9 @@ export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean): Record<str
   const selBg = mix(panel, accent, isDark ? 0.22 : 0.16);
   return {
     "--dk-accent": css(accent),
+    // The accent as text (labels, values): readable on the panel whatever
+    // the accent is (a desktop accent can be any color).
+    "--dk-accent-text": css(ensureContrast(accent, panel, 4.5)),
     "--dk-accent-hover": css(mix(accent, isDark ? [255, 255, 255] : [0, 0, 0], 0.15)),
     "--dk-on-accent": css(onAccent),
     "--dk-sel-bg": css(selBg),

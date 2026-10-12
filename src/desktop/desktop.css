@@ -17,6 +17,7 @@
   /* Selection / action colors. Light theme uses a deeper green than the web
    * tool's accent so selected states read clearly on white. */
   --dk-accent: #15803d;
+  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
   --dk-accent-hover: #166534;
   --dk-on-accent: #ffffff;
   --dk-sel-bg: #dcfce7;
@@ -44,6 +45,7 @@
 
 html[data-theme="dark"] .dk {
   --dk-accent: #22c55e;
+  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
   --dk-accent-hover: #16a34a;
   --dk-on-accent: #052e16;
   --dk-sel-bg: #052e1f;
@@ -62,6 +64,7 @@ html[data-theme="dark"] .dk {
   html[data-theme="system"] .dk,
   html:not([data-theme]) .dk {
     --dk-accent: #22c55e;
+    --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
     --dk-accent-hover: #16a34a;
     --dk-on-accent: #052e16;
     --dk-sel-bg: #052e1f;
@@ -474,7 +477,7 @@ html[data-theme="dark"] .dk {
   content: "⚠ ";
 }
 .dk-good {
-  color: var(--cv-good, var(--dk-accent));
+  color: var(--cv-good, var(--dk-accent-text));
 }
 .axis-key {
   width: 14px;
@@ -1088,7 +1091,7 @@ html[data-theme="light"] .live-ctl {
   color: var(--text-strong);
 }
 .live-status .dk-good strong {
-  color: var(--dk-accent);
+  color: var(--dk-accent-text);
 }
 .live-hint {
   text-align: center;
@@ -1915,7 +1918,7 @@ html[data-theme="light"] .live-ctl {
   white-space: nowrap;
 }
 .lib-playing {
-  color: var(--dk-accent);
+  color: var(--dk-accent-text);
   font-size: var(--dk-small);
   font-weight: 600;
 }
@@ -2611,8 +2614,7 @@ html[data-theme="light"] .live-ctl {
   overflow: hidden;
   pointer-events: none;
 }
-.art-bd-layer,
-.art-bd-blobs {
+.art-bd-layer {
   position: absolute;
   inset: -10%;
   width: 120%;
@@ -2627,20 +2629,23 @@ html[data-theme="light"] .live-ctl {
 .art-bd-layer.on {
   opacity: 0.55;
 }
-.art-bd-blobs {
-  background: radial-gradient(40% 50% at 25% 35%, var(--bd-a), transparent 70%), radial-gradient(35% 45% at 75% 65%, var(--bd-b), transparent 70%);
-  opacity: 0.35;
+.art-bd-layer.art-bd-swirl.on {
+  /* No game art (Games off, or Windows / macOS for now): the swirl field
+     (SwirlField.tsx), strong enough that Glass and the card opacity have
+     something to show through. */
+  opacity: 0.7;
 }
 /* Keeps the data readable: the page color over the art, deeper at the bottom. */
 .art-bd-dim {
   position: absolute;
   inset: 0;
+  --bd-dim: var(--backdrop-dim, 55%);
   /* Background dim knob: the page color over the art, a bit more at the bottom. */
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--bg-page) var(--backdrop-dim, 55%), transparent),
-    color-mix(in srgb, var(--bg-page) calc(var(--backdrop-dim, 55%) + 20%), transparent)
-  );
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) var(--bd-dim), transparent), color-mix(in srgb, var(--bg-page) calc(var(--bd-dim) + 20%), transparent));
+}
+/* The soft shapes need less dimming than game art to keep text readable. */
+.art-bd.blobs .art-bd-dim {
+  --bd-dim: calc(var(--backdrop-dim, 55%) * 0.5);
 }
 @keyframes art-bd-kenburns {
   from {
@@ -2651,8 +2656,7 @@ html[data-theme="light"] .live-ctl {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .art-bd-layer,
-  .art-bd-blobs {
+  .art-bd-layer {
     animation: none;
   }
 }
@@ -2847,7 +2851,7 @@ html[data-glass] .rail-label {
   text-transform: uppercase;
 }
 .live-spec-value.accent {
-  color: var(--dk-accent);
+  color: var(--dk-accent-text);
 }
 .live-spec-dot {
   width: 10px;
@@ -2872,8 +2876,12 @@ html[data-glass] .rail-label {
 }
 /* The title takes some height: give the drawing a little less, so the page
    still fits without scrolling. */
-.live-hero.titled .live-ctl {
-  max-height: calc(100vh - 532px);
+/* With the title, a bit less room for the drawing. The limit is on the svg,
+   never on its box: the svg keeps its 260 px minimum (.live-stage rule
+   above), and a capped box let it spill over the tiles on short windows
+   (about 680 px); now the box grows with it and the column scrolls. */
+.live-hero.titled .live-ctl svg {
+  max-height: max(260px, calc(100vh - 532px));
 }
 /* The settings panel (inspector), regular glass: docked against the rail,
    full height, more frost; the cards inside are standard (translucent, no

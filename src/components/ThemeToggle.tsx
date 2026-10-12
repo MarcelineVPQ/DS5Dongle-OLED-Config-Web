@@ -2,8 +2,8 @@
 // (the desktop's own colors: KDE's color scheme, or the system accent).
 // The theme is applied by useApplyTheme() at the app root, not by the toggle.
 // Persists the user's choice in localStorage. With no stored choice the desktop
-// app matches the desktop's colors (falling back to "system" when the desktop
-// exposes none) and the web tool uses "system" (follow prefers-color-scheme).
+// app follows the connected controller ("controller") and the web tool uses
+// "system" (follow prefers-color-scheme).
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { Gamepad2, Monitor, Moon, Palette, Sun } from "lucide-react";
@@ -27,7 +27,7 @@ function readStoredTheme(): Theme {
   }
   if (stored === "light" || stored === "dark" || stored === "system") return stored;
   if ((stored === "desktop" || stored === "controller") && isDesktop()) return stored;
-  // The desktop app follows the connected controller by default.
+  // No choice yet: the desktop app follows the connected controller's colors.
   return isDesktop() ? "controller" : "system";
 }
 

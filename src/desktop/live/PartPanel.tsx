@@ -12,7 +12,7 @@ import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../update
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
-import { BACKDROP_KEY } from "./ArtBackdrop";
+import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { useFlagPref, usePref } from "../storage";
 import { controllerSpeaker } from "../narrator";
 import { useEffect, useState, useRef } from "react";
@@ -543,8 +543,18 @@ function MicTest() {
 
 function BackdropSetting() {
   const { t } = useTranslation();
-  const [off, setOff] = useFlagPref(BACKDROP_KEY);
-  return <Toggle label={t("desktop.backdrop.label")} sub={t("desktop.backdrop.sub")} value={!off} onChange={(on) => setOff(!on)} />;
+  const [background, setBackground] = useBackground();
+  return (
+    <Row label={t("desktop.backdrop.label")} sub={t(`desktop.backdrop.sub.${background}`)}>
+      <select className="dk-select" aria-label={t("desktop.backdrop.label")} value={background} onChange={(e) => setBackground(e.target.value as Background)}>
+        {BACKGROUNDS.map((b) => (
+          <option key={b} value={b}>
+            {t(`desktop.backdrop.${b}`)}
+          </option>
+        ))}
+      </select>
+    </Row>
+  );
 }
 
 // The app's style: Standard (solid surfaces) or Glass (Liquid Glass on the
