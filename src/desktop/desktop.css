@@ -3911,3 +3911,10 @@ html[data-cards-translucent] .dash-card {
 .dk-check-line {
   display: block;
 }
+
+/* Focus moved here after picking a page in the rail (DesktopApp): no ring for
+   a pointer pick; keyboard users still see :focus-visible. */
+main.dk-body:focus:not(:focus-visible),
+.live-panel-head h2:focus:not(:focus-visible) {
+  outline: none;
+}

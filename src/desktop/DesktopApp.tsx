@@ -223,7 +223,7 @@ export default function DesktopApp() {
         <ArtBackdrop colors={controllerColors} />
         <NarratorCaption />
         <div className="dk-main">
-          <main className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
+          <main tabIndex={-1} className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
             <UpdateBanners
               app={appUpdate}
               fw={fw}
@@ -350,6 +350,13 @@ export default function DesktopApp() {
         <AppRail
           active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
           onSelect={(item) => {
+            // After the page or panel renders, focus moves into it (the page
+            // in the middle; App settings / Pico open in the side panel), so
+            // the keyboard and screen readers continue there, not in the rail.
+            requestAnimationFrame(() => {
+              const target = item === "dongle" || item === "app" ? document.querySelector<HTMLElement>(".live-panel-head h2") : document.querySelector<HTMLElement>("main.dk-body");
+              target?.focus({ preventScroll: true });
+            });
             if (item === "games" || item === "about") setMain(item);
             else if (item === "controller") {
               // Already there: show / hide its settings panel.

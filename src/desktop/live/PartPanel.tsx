@@ -83,7 +83,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
   return (
     <div className="dk-stack">
       <header className="live-panel-head">
-        <h2>{title}</h2>
+        <h2 tabIndex={-1}>{title}</h2>
         {view === "overview" && (
           <button type="button" className="dk-btn dk-icon-btn" onClick={onHide} title={t("desktop.live.hidePanel")} aria-label={t("desktop.live.hidePanel")}>
             <PanelRightClose size={14} />
