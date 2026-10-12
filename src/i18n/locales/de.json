@@ -888,7 +888,9 @@
         "games": "deine Spiele, Profile pro Spiel und Proton-Einrichtung",
         "app": "Sprache, Aussehen, Updates und Start",
         "about": "Anleitung, Neuigkeiten und Credits"
-      }
+      },
+      "development": "Entwicklung",
+      "devHint": "Ein Entwicklungs-Build: neuer als die stabile Version und weniger getestet"
     },
     "audioTest": {
       "speakerTitle": "Lautsprechertest",
@@ -1120,6 +1122,16 @@
         "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Belegung anwenden macht sie zu deiner normalen.",
         "applied": "Angewendet: das ist jetzt deine normale Belegung auf dem Dongle."
       }
+    },
+    "editing": {
+      "title": "Bearbeitung: Profil {{title}}",
+      "hint": "jede Änderung hier geht ins Profil dieses Spiels und ist sofort spürbar; mit Fertig kommen deine normalen Einstellungen zurück.",
+      "done": "Fertig",
+      "open": "In der Controller-Ansicht bearbeiten",
+      "openHint": "Dieses Profil auf den Controller legen und mit allen Bereichen bearbeiten, jede Änderung sofort spürbar",
+      "saveLayout": "In Belegung {{name}} speichern",
+      "saveNewLayout": "Als Belegung dieses Spiels speichern",
+      "buttonsNote": "Bearbeitung {{title}}: Tasten werden in die Belegung dieses Spiels gespeichert, nicht in deine normale."
     }
   },
   "ad": {

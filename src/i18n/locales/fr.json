@@ -888,7 +888,9 @@
         "games": "tes jeux, profils par jeu et configuration de Proton",
         "app": "langue, apparence, mises à jour et démarrage",
         "about": "le guide, les nouveautés et les crédits"
-      }
+      },
+      "development": "Développement",
+      "devHint": "Une version de développement : plus récente que la version stable et moins testée"
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
@@ -1120,6 +1122,16 @@
         "edited": "Modifiée depuis son chargement : Mettre à jour enregistre les changements dans la disposition ; Appliquer en fait tes boutons habituels.",
         "applied": "Appliquée : ce sont maintenant tes boutons habituels sur le dongle."
       }
+    },
+    "editing": {
+      "title": "Modification : profil {{title}}",
+      "hint": "chaque changement va dans le profil de ce jeu et se ressent tout de suite ; tes réglages habituels reviennent avec Terminé.",
+      "done": "Terminé",
+      "open": "Modifier dans la vue manette",
+      "openHint": "Mettre ce profil sur la manette et le modifier avec tous les panneaux, en ressentant chaque changement",
+      "saveLayout": "Enregistrer dans la disposition {{name}}",
+      "saveNewLayout": "Enregistrer comme disposition de ce jeu",
+      "buttonsNote": "Modification de {{title}} : les boutons sont enregistrés dans la disposition de ce jeu, pas dans tes boutons habituels."
     }
   },
   "ad": {

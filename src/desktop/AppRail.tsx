@@ -4,6 +4,7 @@
 // the dongle's status (a colored dot plus a symbol, so it never relies on
 // color alone) and the pin.
 import { useEffect, type ReactNode } from "react";
+import { appVersionLabel, isDevelopmentBuild } from "./appVersion";
 import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
 import { GLASS_KEY } from "./glass/glassPref";
@@ -82,6 +83,11 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
           <div className="rail-divider" />
           {link("app", t("desktop.live.app", "App settings"), <Settings size={20} />)}
           {link("about", t("desktop.nav.about", "About"), <Info size={20} />)}
+          {isDevelopmentBuild() && (
+            <div className="rail-dev" title={t("desktop.rail.devHint")}>
+              <b>{t("desktop.rail.development")}</b> · {appVersionLabel()}
+            </div>
+          )}
         </div>
         <div className="rail-footer">
           <div className={`rail-status ${connected ? "ok" : "warn"}`} title={connected ? `${status} (${deviceLabel})` : status} role="status">

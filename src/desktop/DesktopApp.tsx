@@ -197,7 +197,19 @@ export default function DesktopApp() {
   );
 
   return (
-    <LibraryContext.Provider value={{ library: profiles.library, setLibrary: profiles.setLibrary, active: profiles.active }}>
+    <LibraryContext.Provider
+      value={{
+        library: profiles.library,
+        setLibrary: profiles.setLibrary,
+        active: profiles.active,
+        editing: profiles.editing,
+        editProfile: (gameKey, title) => {
+          profiles.startEditing(gameKey, title);
+          setMain("controller");
+          setPanel("overview");
+        },
+      }}
+    >
       <div className="dk dk-one">
         <ArtBackdrop colors={colorway(liveIdentity?.colorwayCode ?? null)?.colors ?? null} />
         <NarratorCaption />
@@ -236,6 +248,17 @@ export default function DesktopApp() {
             )}
             {main === "games" && <GamesPage bridge={bridge} profiles={profiles} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
             {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
+            {main === "controller" && profiles.editing && (
+              <div className="dk-editing" role="status">
+                <span>
+                  <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
+                </span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn primary" onClick={profiles.stopEditing}>
+                  {t("desktop.editing.done")}
+                </button>
+              </div>
+            )}
             {main === "controller" &&
               (connected ? (
                 <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />

@@ -78,6 +78,12 @@ export interface GameProfileState {
   profileDirty: boolean;
   saveToProfile: () => Promise<void>;
   revertToProfile: () => Promise<void>;
+  // Editing a game's profile on purpose (game page → "Edit in controller
+  // view"): it goes onto the dongle as if the game were running, so every
+  // panel edits it and it can be felt; Done brings the normal settings back.
+  editing: { gameKey: string; title: string } | null;
+  startEditing: (gameKey: string, title: string) => void;
+  stopEditing: () => void;
 }
 
 export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): GameProfileState {
@@ -89,6 +95,10 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   // startup before we learn the game is still running).
   const [runningKnown, setRunningKnown] = useState(false);
   const [active, setActive] = useState<{ gameKey: string; title: string } | null>(null);
+  const [editing, setEditing] = useState<{ gameKey: string; title: string } | null>(null);
+  // The game whose profile should be on the dongle: the one being edited,
+  // else the one running.
+  const wanted = editing?.gameKey ?? running;
   // What this app last put on the dongle for the active profile, so a profile
   // edited on its game page is re-applied (and only then).
   const appliedFor = useRef<string | null>(null);
@@ -142,11 +152,11 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   useEffect(() => {
     if (!isConnected) appliedFor.current = null;
     failed.current = null;
-  }, [isConnected, running]);
+  }, [isConnected, wanted]);
 
   useEffect(() => {
     if (!desktop || !loaded || !runningKnown || !isConnected || !config || operation || paused) return;
-    const step = decideProfileStep({ running, library, appliedFor: appliedFor.current, failed: failed.current, active: !!active });
+    const step = decideProfileStep({ running: wanted, library, appliedFor: appliedFor.current, failed: failed.current, active: !!active });
     if (step.kind === "clear-active") setActive(null);
     if (step.kind === "apply") {
       void switchOnce(async () => {
@@ -183,8 +193,8 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     }
     // A game's layout still on the dongle with no game running (the app was
     // closed mid-game and the restore point is gone): back to the saved one.
-    if (step.kind === "none" && !restoreNeeded(running, library) && remapTemporary && !active) void switchOnce(() => setLayout(null).catch(() => undefined));
-  }, [desktop, loaded, runningKnown, isConnected, config, operation, paused, running, library, applyBody, active, switchOnce, setLayout, remapTemporary]);
+    if (step.kind === "none" && !restoreNeeded(wanted, library) && remapTemporary && !active) void switchOnce(() => setLayout(null).catch(() => undefined));
+  }, [desktop, loaded, runningKnown, isConnected, config, operation, paused, wanted, library, applyBody, active, switchOnce, setLayout, remapTemporary]);
 
   const profile = active ? library.games[active.gameKey]?.profile : undefined;
   const profileDirty = !!(active && profile && config && !same(settingsFrom(config), profile.settings));
@@ -204,5 +214,8 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     if (active && profile && config) await applyBody(withSettings(config, profile.settings));
   }, [active, profile, config, applyBody]);
 
-  return { library, setLibrary, running, active, profileDirty, saveToProfile, revertToProfile };
+  const startEditing = useCallback((gameKey: string, title: string) => setEditing({ gameKey, title }), []);
+  const stopEditing = useCallback(() => setEditing(null), []);
+
+  return { library, setLibrary, running, active, profileDirty, saveToProfile, revertToProfile, editing, startEditing, stopEditing };
 }

@@ -28,3 +28,5 @@ tmp/
 
 # Source art kept locally only (purchased Zacksly pack, stock photos): not redistributable
 assets/
+# Agents' git worktrees (whole copies of the repo)
+.claude/worktrees/

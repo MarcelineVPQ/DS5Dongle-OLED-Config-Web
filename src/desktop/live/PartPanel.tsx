@@ -222,16 +222,34 @@ function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; f
     sel?.focus({ preventScroll: true });
   }, [focus]);
   useEffect(() => () => onHover(null), [onHover]);
+  const changed = remap.draft.filter((v, i) => v !== i).length;
+  // Editing a game's profile: the buttons go into that game's layout (switched
+  // in while it plays), never into the normal buttons on the dongle.
+  const { editing, library, setLibrary } = useLibrary();
+  const profile = editing ? library.games[editing.gameKey]?.profile : undefined;
+  const layoutId = profile?.settings.buttonLayout;
+  const gameLayout = layoutId ? library.layouts?.[layoutId] : undefined;
+  const saveToGameLayout = async () => {
+    const desktop = window.desktop;
+    if (!desktop || !editing || !profile) return;
+    if (layoutId && gameLayout) {
+      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft }));
+      return;
+    }
+    const id = `l-${Date.now().toString(36)}`;
+    await desktop.librarySetLayout({ id, name: editing.title.slice(0, 40), table: remap.draft });
+    setLibrary(await desktop.librarySetProfile({ gameKey: editing.gameKey, title: editing.title, settings: { ...profile.settings, buttonLayout: id } }));
+  };
   if (remap.supported === false)
     return (
       <section className="dk-card">
         <p className="dk-hint">{t("remap.unsupported")}</p>
       </section>
     );
-  const changed = remap.draft.filter((v, i) => v !== i).length;
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.allHeading")}</h2>
+      {editing && <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: editing.title })}</div>}
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
@@ -267,9 +285,15 @@ function AllButtonsSection({ remap, focus, onFocus, onHover }: { remap: Remap; f
       </div>
       {remap.error && <div className="dk-notice error">{remap.error}</div>}
       <div className="dk-row-btns">
-        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-          {t("desktop.live.remapApply", "Apply remap")}
-        </BusyButton>
+        {editing ? (
+          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={saveToGameLayout}>
+            {gameLayout ? t("desktop.editing.saveLayout", { name: gameLayout.name }) : t("desktop.editing.saveNewLayout")}
+          </BusyButton>
+        ) : (
+          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
+            {t("desktop.live.remapApply", "Apply remap")}
+          </BusyButton>
+        )}
         <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
           {t("desktop.bar.revert", "Revert")}
         </button>

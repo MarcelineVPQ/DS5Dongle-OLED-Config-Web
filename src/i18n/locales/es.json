@@ -888,7 +888,9 @@
         "games": "tus juegos, perfiles por juego y configuración de Proton",
         "app": "idioma, aspecto, actualizaciones e inicio",
         "about": "la guía, novedades y créditos"
-      }
+      },
+      "development": "Desarrollo",
+      "devHint": "Una versión de desarrollo: más nueva que la estable y menos probada"
     },
     "audioTest": {
       "speakerTitle": "Prueba del altavoz",
@@ -1120,6 +1122,16 @@
         "edited": "Cambiada desde que la cargaste: Actualizar guarda los cambios en la distribución; Aplicar los convierte en tus botones normales.",
         "applied": "Aplicada: ahora son tus botones normales en el dongle."
       }
+    },
+    "editing": {
+      "title": "Editando: perfil de {{title}}",
+      "hint": "cada cambio va al perfil de este juego y lo notas al momento; tus ajustes normales vuelven con Listo.",
+      "done": "Listo",
+      "open": "Editar en la vista del mando",
+      "openHint": "Poner este perfil en el mando y editarlo con todos los paneles, notando cada cambio al momento",
+      "saveLayout": "Guardar en la distribución {{name}}",
+      "saveNewLayout": "Guardar como distribución de este juego",
+      "buttonsNote": "Editando {{title}}: los botones se guardan en la distribución de este juego, no en tus botones normales."
     }
   },
   "ad": {

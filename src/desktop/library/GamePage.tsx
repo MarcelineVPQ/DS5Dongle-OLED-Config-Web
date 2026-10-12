@@ -174,6 +174,7 @@ function Stat({ label, value, accent, onClick }: { label: string; value: string;
 
 function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: GameEntry; record?: GameRecord; running: boolean; bridge: UseDs5BridgeResult; onLibrary: (f: LibraryFile) => void }) {
   const { t } = useTranslation();
+  const { editProfile } = useLibrary();
   const desktop = window.desktop!;
   const current = bridge.config ? settingsFrom(bridge.config) : null;
 
@@ -270,6 +271,9 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
           <Toggle label={t("desktop.library.mic")} value={draft.btMicEnable} onChange={(v) => edit({ btMicEnable: v })} />
           <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
           <div className="dk-row-btns">
+            <button type="button" className="dk-btn primary" disabled={!bridge.isConnected} title={t("desktop.editing.openHint")} onClick={() => editProfile(game.key, game.title)}>
+              {t("desktop.editing.open")}
+            </button>
             <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create({ ...current, ...(draft.buttonLayout ? { buttonLayout: draft.buttonLayout } : {}) })}>
               {t("desktop.library.profileCopyCurrent")}
             </button>

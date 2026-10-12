@@ -6,7 +6,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "out/**", "release/**", "coverage/**", "node_modules/**", "src/flash/picoflash/**"] },
+  { ignores: ["dist/**", "out/**", "release/**", "coverage/**", "node_modules/**", "src/flash/picoflash/**", ".claude/**", "tmp/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

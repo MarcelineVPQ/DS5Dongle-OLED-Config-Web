@@ -4,6 +4,13 @@
 // plain window.desktop.appVersion.
 export const BUILD_ID: string = import.meta.env.VITE_BUILD_ID ?? "";
 
+// A development build: a local dev copy (built with a Git build id) or a
+// Development-channel release (X.Y.Z-dev.N). The rail says so.
+export function isDevelopmentBuild(version?: string): boolean {
+  const v = version ?? (typeof window === "undefined" ? undefined : window.desktop?.appVersion);
+  return BUILD_ID !== "" || /-dev\.\d+/.test(v ?? "");
+}
+
 export function appVersionLabel(version?: string): string {
   const v = version ?? (typeof window === "undefined" ? undefined : window.desktop?.appVersion);
   if (!v) return "";

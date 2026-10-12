@@ -7,3 +7,5 @@ src/flash/picoflash/
 package-lock.json
 bun.lock
 *.md
+.claude/
+tmp/

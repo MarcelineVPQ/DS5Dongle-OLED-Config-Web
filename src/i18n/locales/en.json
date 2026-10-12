@@ -887,7 +887,9 @@
         "games": "your games, per-game profiles and Proton setup",
         "app": "language, look, updates and startup",
         "about": "the guide, what's new and credits"
-      }
+      },
+      "development": "Development",
+      "devHint": "A development build: newer than the stable release and less tested"
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
@@ -1119,6 +1121,16 @@
         "edited": "Changed since you loaded it: Update saves the changes into the layout; Apply remap makes them your normal buttons.",
         "applied": "Applied: these are your normal buttons on the dongle now."
       }
+    },
+    "editing": {
+      "title": "Editing: {{title}} profile",
+      "hint": "every change here goes to this game's profile and you feel it right away; your normal settings come back with Done.",
+      "done": "Done",
+      "open": "Edit in controller view",
+      "openHint": "Put this profile on the controller and edit it with every panel, feeling each change live",
+      "saveLayout": "Save to {{name}} layout",
+      "saveNewLayout": "Save as this game's layout",
+      "buttonsNote": "Editing {{title}}: buttons are saved into this game's layout, not your normal buttons."
     }
   },
   "ad": {

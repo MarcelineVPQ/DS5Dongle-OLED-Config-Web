@@ -888,7 +888,9 @@
         "games": "seus jogos, perfis por jogo e configuração do Proton",
         "app": "idioma, aparência, atualizações e inicialização",
         "about": "o guia, novidades e créditos"
-      }
+      },
+      "development": "Desenvolvimento",
+      "devHint": "Uma versão de desenvolvimento: mais nova que a estável e menos testada"
     },
     "audioTest": {
       "speakerTitle": "Teste do alto-falante",
@@ -1120,6 +1122,16 @@
         "edited": "Alterado desde que você o carregou: Atualizar salva as mudanças no layout; Aplicar as torna seus botões normais.",
         "applied": "Aplicado: estes são seus botões normais no dongle agora."
       }
+    },
+    "editing": {
+      "title": "Editando: perfil de {{title}}",
+      "hint": "cada mudança vai para o perfil deste jogo e você sente na hora; seus ajustes normais voltam com Concluir.",
+      "done": "Concluir",
+      "open": "Editar na tela do controle",
+      "openHint": "Colocar este perfil no controle e editá-lo com todos os painéis, sentindo cada mudança na hora",
+      "saveLayout": "Salvar no layout {{name}}",
+      "saveNewLayout": "Salvar como layout deste jogo",
+      "buttonsNote": "Editando {{title}}: os botões são salvos no layout deste jogo, não nos seus botões normais."
     }
   },
   "ad": {
