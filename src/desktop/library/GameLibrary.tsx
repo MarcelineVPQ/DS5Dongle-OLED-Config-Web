@@ -46,9 +46,11 @@ interface Props {
   library: LibraryFile;
   onLibrary: (file: LibraryFile) => void;
   running: string | null;
+  openGame?: string | null; // open this game's page once (back from editing its profile)
+  onOpenedGame?: () => void;
 }
 
-export default function GameLibrary({ report, home, bridge, onRescan, library, onLibrary, running }: Props) {
+export default function GameLibrary({ report, home, bridge, onRescan, library, onLibrary, running, openGame, onOpenedGame }: Props) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [details, setDetails] = useState<Record<string, GameInfo>>({});
@@ -64,6 +66,11 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     return APP_KINDS.filter((k) => m.has(k)).map((k) => [k, m.get(k)!] as const);
   }, [report]);
   const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (!openGame) return;
+    setSelected(openGame);
+    onOpenedGame?.();
+  }, [openGame, onOpenedGame]);
 
   useEffect(() => {
     if (report) void desktop.gamesDetails().then(setDetails, () => undefined);

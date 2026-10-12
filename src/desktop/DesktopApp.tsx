@@ -59,6 +59,8 @@ export default function DesktopApp() {
   const [appUpdate, fw] = previewUpdates(updatePreview, realAppUpdate, realFw);
   const [main, setMain] = useState<MainView>("controller");
   const [panel, setPanel] = useState<PanelView>("overview");
+  // A game page to open when the Games page shows next (after editing its profile).
+  const [openGame, setOpenGame] = useState<string | null>(null);
   const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
@@ -250,7 +252,18 @@ export default function DesktopApp() {
                 </button>
               </div>
             )}
-            {main === "games" && <GamesPage bridge={bridge} profiles={profiles} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />}
+            {main === "games" && (
+              <GamesPage
+                bridge={bridge}
+                profiles={profiles}
+                openGame={openGame}
+                onOpenedGame={() => setOpenGame(null)}
+                allowed={games.allowed}
+                onAllowedChange={games.setAllowed}
+                onScanned={games.update}
+                onDeclinedChange={games.recount}
+              />
+            )}
             {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
             {main === "controller" && profiles.editing && (
               <div className="dk-editing" role="status">
@@ -258,7 +271,16 @@ export default function DesktopApp() {
                   <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
                 </span>
                 <span className="dk-spacer" />
-                <button type="button" className="dk-btn primary" onClick={profiles.stopEditing}>
+                <button
+                  type="button"
+                  className="dk-btn primary"
+                  onClick={() => {
+                    // Back to the game page the editing started from.
+                    setOpenGame(profiles.editing?.gameKey ?? null);
+                    profiles.stopEditing();
+                    setMain("games");
+                  }}
+                >
                   {t("desktop.editing.done")}
                 </button>
               </div>
