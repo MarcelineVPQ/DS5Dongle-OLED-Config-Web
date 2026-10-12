@@ -71,7 +71,7 @@ function StudioCard() {
   );
 }
 
-export default function AboutPage({ initialTab = "changes" }: { initialTab?: AboutTab }) {
+export default function AboutPage({ initialTab = "guide" }: { initialTab?: AboutTab }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<AboutTab>(initialTab);
   const [firmware, setFirmware] = useState<string | null>(null);
@@ -86,9 +86,9 @@ export default function AboutPage({ initialTab = "changes" }: { initialTab?: Abo
   }, [tab, firmware]);
 
   const tabs: Array<{ id: AboutTab; label: string }> = [
-    { id: "changes", label: t("desktop.about.changes", "What's new") },
-    { id: "firmware", label: t("desktop.about.firmware", "Firmware changes") },
     { id: "guide", label: t("desktop.about.guide", "Guide") },
+    { id: "changes", label: t("desktop.about.changes", "App changes") },
+    { id: "firmware", label: t("desktop.about.firmware", "Firmware changes") },
     { id: "roadmap", label: t("desktop.about.roadmapTab", "Coming soon") },
     { id: "credits", label: t("desktop.about.credits", "Credits") },
   ];

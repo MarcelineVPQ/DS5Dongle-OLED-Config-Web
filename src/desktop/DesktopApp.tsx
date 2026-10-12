@@ -60,7 +60,7 @@ export default function DesktopApp() {
   const [panel, setPanel] = useState<PanelView>("overview");
   // A game page to open when the Games page shows next (after editing its profile).
   const [openGame, setOpenGame] = useState<{ key: string } | null>(null);
-  const [aboutTab, setAboutTab] = useState<AboutTab>("changes");
+  const [aboutTab, setAboutTab] = useState<AboutTab>("guide");
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
   // Per-game profiles switch in while their game runs (never mid-update).
