@@ -10,6 +10,10 @@ import { forcesProAudio, parseDualSenseCards } from "../../electron/main/games/s
 import { BackupIdSchema, FixIdsSchema } from "../../electron/main/ipc";
 import { dualSenseSupport } from "../../src/desktop/games/knownGames";
 import type { LauncherId } from "../../src/desktop/games/types";
+import { asLinux } from "../support/platform";
+
+// Built on Linux launcher folders: Linux behavior on every test machine.
+asLinux();
 
 const OURS = "GE-Proton11-7-DualSense";
 const fixture = (name: string) => readFileSync(new URL(`../fixtures/games/${name}`, import.meta.url), "utf8");

@@ -10,6 +10,10 @@ import { SetMineSchema, SetProfileSchema } from "../../electron/main/ipc";
 import { decideProfileStep } from "../../src/desktop/library/useGameProfile";
 import { staleness, versionLess } from "../../src/desktop/library/support";
 import { EMPTY_LIBRARY, type LibraryFile } from "../../src/desktop/games/library";
+import { asLinux } from "../support/platform";
+
+// Built on Linux launcher folders: Linux behavior on every test machine.
+asLinux();
 
 const proc = (p: Partial<ProcView>): ProcView => ({ pid: 1, comm: "x", args: [], cwd: null, env: {}, ...p });
 const games: RunningCandidate[] = [

@@ -58,6 +58,20 @@ jobs:
       - run: $NPM ci
       - name: Unit, integration and security tests with coverage
         run: npx vitest run --coverage --coverage.reporter=text --coverage.reporter=html
+
+  # The release builds the app on Windows and macOS too and runs the tests
+  # there first; running them on Windows on every push catches a
+  # Windows-only failure before a release tag does (0.9.4: Games tests).
+  test-windows:
+    name: Test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npx -y npm@11.6.2 ci
+      - run: npx vitest run
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

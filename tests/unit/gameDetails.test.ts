@@ -4,6 +4,10 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, utimesSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { asLinux } from "../support/platform";
+
+// Built on Linux launcher folders: Linux behavior on every test machine.
+asLinux();
 
 vi.mock("electron", () => ({ nativeImage: { createFromPath: () => ({ isEmpty: () => true }) } }));
 const { gameDetails } = await import("../../electron/main/games/details");
