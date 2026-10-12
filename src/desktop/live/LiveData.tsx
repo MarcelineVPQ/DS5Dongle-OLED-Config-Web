@@ -19,6 +19,11 @@ const HISTORY = 150;
 // X, Y, Z: red, green, blue as in 3D tools (or the Color vision palette), and
 // always a line pattern too (solid, dashed, dotted), so colour isn't needed.
 
+// Pressed / not pressed, as in the other rows.
+const dot = (down: boolean) => (down ? "●" : "○");
+// The D-pad's direction (0 = up, clockwise; 8 = released, shown as —).
+const DPAD_ARROWS = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+
 export default function LiveData({ input, rssi, edge = false }: Props) {
   const { t } = useTranslation();
   const tl = (key: string) => t(`desktop.liveData.${key}`);
@@ -45,12 +50,17 @@ export default function LiveData({ input, rssi, edge = false }: Props) {
           rows={[
             [tl("leftStick"), `${fmt(centered(input.leftStick.x), 4)} ${fmt(centered(input.leftStick.y), 4)}`],
             [tl("rightStick"), `${fmt(centered(input.rightStick.x), 4)} ${fmt(centered(input.rightStick.y), 4)}`],
-            ["L1 / R1", `${input.l1 ? "●" : "○"} ${input.r1 ? "●" : "○"}`],
-            // The DualSense Edge's Fn buttons and back paddles.
+            ["L1 / R1", `${dot(input.l1)} ${dot(input.r1)}`],
+            // Every other button too, by the names the Buttons list uses.
+            ["Create / Options", `${dot(input.create)} ${dot(input.options)}`],
+            ["△ ○ ✕ □", `${dot(input.triangle)} ${dot(input.circle)} ${dot(input.cross)} ${dot(input.square)}`],
+            ["D-pad", DPAD_ARROWS[input.dpad] ?? "—"],
+            ["PS / Mute / Touchpad", `${dot(input.home)} ${dot(input.mute)} ${dot(input.pad)}`],
+            // The DualSense Edge's Fn buttons and back buttons (LB / RB).
             ...(edge
               ? ([
-                  ["Fn L / R", `${input.fnLeft ? "●" : "○"} ${input.fnRight ? "●" : "○"}`],
-                  [tl("paddles"), `${input.backLeft ? "●" : "○"} ${input.backRight ? "●" : "○"}`],
+                  ["Fn L / R", `${dot(input.fnLeft)} ${dot(input.fnRight)}`],
+                  [tl("paddles"), `${dot(input.backLeft)} ${dot(input.backRight)}`],
                 ] as [string, string][])
               : []),
             ["L2 / R2", `${fmt(input.triggerLeft, 3)} ${fmt(input.triggerRight, 3)}`],

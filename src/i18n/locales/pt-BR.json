@@ -452,10 +452,10 @@
         "dpad-down": "Direcional baixo",
         "dpad-left": "Direcional esquerda",
         "dpad-right": "Direcional direita",
-        "triangle": "Triângulo",
-        "circle": "Círculo",
-        "cross": "Xis",
-        "square": "Quadrado",
+        "triangle": "Triângulo △",
+        "circle": "Círculo ○",
+        "cross": "Xis ✕",
+        "square": "Quadrado □",
         "stick-l": "Analógico esquerdo (L3)",
         "stick-r": "Analógico direito (R3)",
         "ps": "Botão PS",
@@ -463,8 +463,8 @@
         "speaker": "Alto-falante",
         "fn-l": "Botão Fn esquerdo",
         "fn-r": "Botão Fn direito",
-        "paddle-l": "Botão traseiro esquerdo",
-        "paddle-r": "Botão traseiro direito",
+        "paddle-l": "Botão traseiro esquerdo (LB)",
+        "paddle-r": "Botão traseiro direito (RB)",
         "body": "Pegadas (háptica)"
       },
       "pickHint": "Clique em qualquer parte do desenho para configurá-la.",
@@ -495,8 +495,8 @@
       "checkForUpdates": "Procurar atualizações automaticamente",
       "player": "Jogador",
       "edgeButtons": "Botões Edge",
-      "backLeft": "Traseiro E",
-      "backRight": "Traseiro D",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "O botão Fn do DualSense Edge. Junto com outros botões, ele troca os perfis do controle. Ele acende aqui quando você o aperta.",
         "paddle": "Um dos botões traseiros do DualSense Edge. Os perfis do controle podem fazer ele agir como qualquer botão. Ele acende aqui quando você o aperta.",
@@ -642,7 +642,7 @@
       "rightStick": "Direito X / Y",
       "connection": "Conexão",
       "inputs": "Controles",
-      "paddles": "Botões traseiros E / D"
+      "paddles": "Botões traseiros LB / RB"
     },
     "narrator": {
       "voice": "Voz da narradora",

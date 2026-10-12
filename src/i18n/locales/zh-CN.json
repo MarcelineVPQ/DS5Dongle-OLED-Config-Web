@@ -449,10 +449,10 @@
         "dpad-down": "方向键下",
         "dpad-left": "方向键左",
         "dpad-right": "方向键右",
-        "triangle": "三角",
-        "circle": "圆圈",
-        "cross": "叉",
-        "square": "方块",
+        "triangle": "三角 △",
+        "circle": "圆圈 ○",
+        "cross": "叉 ✕",
+        "square": "方块 □",
         "stick-l": "左摇杆 (L3)",
         "stick-r": "右摇杆 (R3)",
         "ps": "PS 键",
@@ -460,8 +460,8 @@
         "speaker": "扬声器",
         "fn-l": "左 Fn 键",
         "fn-r": "右 Fn 键",
-        "paddle-l": "左背键",
-        "paddle-r": "右背键",
+        "paddle-l": "左背键 (LB)",
+        "paddle-r": "右背键 (RB)",
         "body": "握把（触觉）"
       },
       "pickHint": "点击图中的任意部位进行设置。",
@@ -492,8 +492,8 @@
       "checkForUpdates": "自动检查更新",
       "player": "玩家",
       "edgeButtons": "Edge 按键",
-      "backLeft": "背键 左",
-      "backRight": "背键 右",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换手柄的配置文件。按下时这里会亮起。",
         "paddle": "DualSense Edge 的背键之一。手柄的配置文件可以把它设为任意按键。按下时这里会亮起。",
@@ -639,7 +639,7 @@
       "rightStick": "右 X / Y",
       "connection": "连接",
       "inputs": "输入",
-      "paddles": "背键 左 / 右"
+      "paddles": "背键 LB / RB"
     },
     "narrator": {
       "voice": "旁白语音",

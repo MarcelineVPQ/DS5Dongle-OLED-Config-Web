@@ -451,10 +451,10 @@
         "dpad-down": "D-pad down",
         "dpad-left": "D-pad left",
         "dpad-right": "D-pad right",
-        "triangle": "Triangle",
-        "circle": "Circle",
-        "cross": "Cross",
-        "square": "Square",
+        "triangle": "Triangle △",
+        "circle": "Circle ○",
+        "cross": "Cross ✕",
+        "square": "Square □",
         "stick-l": "Left stick (L3)",
         "stick-r": "Right stick (R3)",
         "ps": "PS button",
@@ -462,8 +462,8 @@
         "speaker": "Speaker",
         "fn-l": "Left Fn button",
         "fn-r": "Right Fn button",
-        "paddle-l": "Left back paddle",
-        "paddle-r": "Right back paddle",
+        "paddle-l": "Left back button (LB)",
+        "paddle-r": "Right back button (RB)",
         "body": "Grips (haptics)"
       },
       "pickHint": "Click any part of the drawing to set it up.",
@@ -500,8 +500,8 @@
       "checkForUpdates": "Check for updates automatically",
       "player": "Player",
       "edgeButtons": "Edge buttons",
-      "backLeft": "Back L",
-      "backRight": "Back R",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "The DualSense Edge's Fn button. Hold it with other buttons to switch the controller's profiles. It lights up here when you press it.",
         "paddle": "One of the DualSense Edge's back buttons. The controller's profiles can make it act as any button. It lights up here when you press it.",
@@ -641,7 +641,7 @@
       "rightStick": "Right X / Y",
       "connection": "Connection",
       "inputs": "Inputs",
-      "paddles": "Back paddles L / R"
+      "paddles": "Back buttons LB / RB"
     },
     "narrator": {
       "voice": "Narrator voice",

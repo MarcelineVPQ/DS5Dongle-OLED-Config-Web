@@ -8,20 +8,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Check for updates** in App settings → Updates: checks your channel (Stable or Development) now, for the app and the dongle's firmware, and says what it found for each; no waiting for the automatic check (every 6 hours).
+- **Every button in the Inputs card:** Create, Options, the face buttons, the D-pad, PS, Mute and the touchpad click show when pressed, next to the sticks, triggers and the Edge's extra buttons.
 - **Stick response curves:** choose how each stick responds (Linear, Precise, Steady, Aggressive, Digital or your own curve), applied in the dongle so it works in every game, saved per controller, and per game in its profile.
-- **The DualSense Edge's Fn buttons and back paddles everywhere:** in the Buttons list (act as any button, stay themselves, or do nothing), in saved layouts and game profiles (switched in while a game runs), in the Inputs card, and clicking them on the drawing opens their row. Needs the dongle firmware from this release (protocol 1.9).
+- **The DualSense Edge's Fn buttons and back buttons (LB / RB) everywhere:** in the Buttons list (act as any button, stay themselves, or do nothing), in saved layouts and game profiles (switched in while a game runs), in the Inputs card, and clicking them on the drawing opens their row. Needs the dongle firmware from this release (protocol 1.9).
 - **Firmware update notice: Update and Details:** Update opens the Pico page's firmware card, Details opens the firmware changes.
 - **Stick tests:** a circularity test (how round each stick's range is, with the error %) and a drift test (does a stick move when you don't touch it), in Calibration.
 - **Joining the Development channel asks first:** what it means (newer, less tested, app and dongle firmware, back to stable any time) and what's in the newest development build (app and firmware versions and its notes), before any development update is offered.
 - **Development builds say so:** "DEVELOPMENT · 0.9.5-dev.1" along the side rail (and the exact Git build on a local dev copy); stable releases don't show it.
 - **Edit a game's profile in the controller view and feel it live:** "Edit in controller view" on a game's page puts its profile on the controller (never into the dongle's flash) with an "Editing: … profile" banner; every panel edits the profile, the Buttons list saves into the game's own layout, and Done brings your normal settings back and returns to the game's page.
 - **My controller's colors:** pick colors for the shell, the black parts, buttons, sticks and outlines, for custom and modded controllers.
-- **The DualSense Edge has its own drawing:** Fn buttons and back paddles light up as you press them (remapping them is coming).
+- **The DualSense Edge has its own drawing:** Fn buttons and back buttons light up as you press them.
 
 ### Changed
 
 - **Buttons are one place:** with the Buttons list open, clicking a button on the drawing highlights and focuses its row instead of leaving the list; buttons that only have a remap (face buttons, D-pad, L1/R1, Create, Options) open the list at their row; hovering a row lights the button on the drawing. Triggers, sticks, PS, mute and the touchpad keep their own panels, with "See all buttons" opening the list at that button.
+- **The background swirls in your controller's colors only** (and your custom colors, if you set them); the theme's accent no longer mixes in.
+- **One name per button everywhere:** the Buttons list, the drawing, layouts and the Inputs card use the same names (Sony's for the Edge: Left back button (LB), Right back button (RB); "D-pad up"; the face buttons with their symbols).
 - **Special editions in their real colors** (e.g. Genshin Impact's teal and gold): colors only, no artwork.
+
+### Fixed
+
+- **Firmware updates no longer write past the end of the dongle's flash:** the in-app flasher skipped nothing, so the RP2350's drag-and-drop workaround block (not firmware) erased the flash's last sector on every update. Settings and pairings were never there, but it's gone now.
+- **Firmware update steps:** the "Writing firmware" step says the RP2350 drive popping up mid-write is expected (the update doesn't use it).
 
 ## [0.9.4] - 2026-10-12
 

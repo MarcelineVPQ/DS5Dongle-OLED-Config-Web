@@ -32,15 +32,16 @@ const MAGIC_M = 0x4d; // 'M'
 
 // Display labels, indexed by button value. Order MUST match RemapButton in
 // firmware src/remap.cpp. Not translated — short controller-button names, same
-// convention as LIGHTBAR_MODE_OPTIONS in config.ts.
+// convention as LIGHTBAR_MODE_OPTIONS in config.ts. The same names as the
+// drawing's parts (desktop.live.part.*): one name per button everywhere.
 export const REMAP_BUTTON_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
   { value: 0, label: "L2" },
   { value: 1, label: "L1" },
   { value: 2, label: "Create" },
-  { value: 3, label: "D-Pad Up" },
-  { value: 4, label: "D-Pad Left" },
-  { value: 5, label: "D-Pad Down" },
-  { value: 6, label: "D-Pad Right" },
+  { value: 3, label: "D-pad up" },
+  { value: 4, label: "D-pad left" },
+  { value: 5, label: "D-pad down" },
+  { value: 6, label: "D-pad right" },
   { value: 7, label: "L3" },
   { value: 8, label: "R2" },
   { value: 9, label: "R1" },

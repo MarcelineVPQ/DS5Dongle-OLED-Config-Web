@@ -452,10 +452,10 @@
         "dpad-down": "Steuerkreuz unten",
         "dpad-left": "Steuerkreuz links",
         "dpad-right": "Steuerkreuz rechts",
-        "triangle": "Dreieck",
-        "circle": "Kreis",
-        "cross": "Kreuz",
-        "square": "Quadrat",
+        "triangle": "Dreieck △",
+        "circle": "Kreis ○",
+        "cross": "Kreuz ✕",
+        "square": "Quadrat □",
         "stick-l": "Linker Stick (L3)",
         "stick-r": "Rechter Stick (R3)",
         "ps": "PS-Taste",
@@ -463,8 +463,8 @@
         "speaker": "Lautsprecher",
         "fn-l": "Linke Fn-Taste",
         "fn-r": "Rechte Fn-Taste",
-        "paddle-l": "Linke Rücktaste",
-        "paddle-r": "Rechte Rücktaste",
+        "paddle-l": "Linke Rücktaste (LB)",
+        "paddle-r": "Rechte Rücktaste (RB)",
         "body": "Griffe (Haptik)"
       },
       "pickHint": "Klicke auf einen Teil der Abbildung, um ihn einzurichten.",
@@ -495,8 +495,8 @@
       "checkForUpdates": "Automatisch nach Updates suchen",
       "player": "Spieler",
       "edgeButtons": "Edge-Tasten",
-      "backLeft": "Rück L",
-      "backRight": "Rück R",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
         "paddle": "Eine der Rücktasten des DualSense Edge. Die Profile des Controllers können sie als jede Taste belegen. Sie leuchtet hier auf, wenn du sie drückst.",
@@ -642,7 +642,7 @@
       "rightStick": "Rechts X / Y",
       "connection": "Verbindung",
       "inputs": "Eingaben",
-      "paddles": "Rücktasten L / R"
+      "paddles": "Rücktasten LB / RB"
     },
     "narrator": {
       "voice": "Erzählstimme",

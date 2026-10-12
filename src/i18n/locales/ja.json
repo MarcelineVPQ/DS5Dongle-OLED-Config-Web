@@ -449,10 +449,10 @@
         "dpad-down": "方向キー下",
         "dpad-left": "方向キー左",
         "dpad-right": "方向キー右",
-        "triangle": "三角",
-        "circle": "丸",
-        "cross": "バツ",
-        "square": "四角",
+        "triangle": "三角 △",
+        "circle": "丸 ○",
+        "cross": "バツ ✕",
+        "square": "四角 □",
         "stick-l": "左スティック (L3)",
         "stick-r": "右スティック (R3)",
         "ps": "PS ボタン",
@@ -460,8 +460,8 @@
         "speaker": "スピーカー",
         "fn-l": "左 Fn ボタン",
         "fn-r": "右 Fn ボタン",
-        "paddle-l": "左背面ボタン",
-        "paddle-r": "右背面ボタン",
+        "paddle-l": "左背面ボタン (LB)",
+        "paddle-r": "右背面ボタン (RB)",
         "body": "グリップ（ハプティクス）"
       },
       "pickHint": "図の部位をクリックして設定します。",
@@ -492,8 +492,8 @@
       "checkForUpdates": "アップデートを自動確認",
       "player": "プレイヤー",
       "edgeButtons": "Edge ボタン",
-      "backLeft": "背面 L",
-      "backRight": "背面 R",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "DualSense Edge の Fn ボタン。ほかのボタンと一緒に押すと、コントローラーのプロファイルを切り替えます。押すとここが光ります。",
         "paddle": "DualSense Edge の背面ボタンの一つ。コントローラーのプロファイルで、どのボタンとしても使えます。押すとここが光ります。",
@@ -639,7 +639,7 @@
       "rightStick": "右 X / Y",
       "connection": "接続",
       "inputs": "入力",
-      "paddles": "背面ボタン L / R"
+      "paddles": "背面ボタン LB / RB"
     },
     "narrator": {
       "voice": "ナレーション音声",

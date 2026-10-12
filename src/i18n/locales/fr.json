@@ -452,10 +452,10 @@
         "dpad-down": "Croix bas",
         "dpad-left": "Croix gauche",
         "dpad-right": "Croix droite",
-        "triangle": "Triangle",
-        "circle": "Rond",
-        "cross": "Croix",
-        "square": "Carré",
+        "triangle": "Triangle △",
+        "circle": "Rond ○",
+        "cross": "Croix ✕",
+        "square": "Carré □",
         "stick-l": "Stick gauche (L3)",
         "stick-r": "Stick droit (R3)",
         "ps": "Bouton PS",
@@ -463,8 +463,8 @@
         "speaker": "Haut-parleur",
         "fn-l": "Bouton Fn gauche",
         "fn-r": "Bouton Fn droit",
-        "paddle-l": "Bouton arrière gauche",
-        "paddle-r": "Bouton arrière droit",
+        "paddle-l": "Bouton arrière gauche (LB)",
+        "paddle-r": "Bouton arrière droit (RB)",
         "body": "Poignées (haptique)"
       },
       "pickHint": "Clique sur une partie du dessin pour la configurer.",
@@ -495,8 +495,8 @@
       "checkForUpdates": "Rechercher les mises à jour automatiquement",
       "player": "Joueur",
       "edgeButtons": "Boutons Edge",
-      "backLeft": "Arrière G",
-      "backRight": "Arrière D",
+      "backLeft": "LB",
+      "backRight": "RB",
       "edgePart": {
         "fn": "Le bouton Fn de la DualSense Edge. Maintenu avec d'autres boutons, il change les profils de la manette. Il s'allume ici quand tu appuies dessus.",
         "paddle": "Un des boutons arrière de la DualSense Edge. Les profils de la manette peuvent lui donner le rôle de n'importe quel bouton. Il s'allume ici quand tu appuies dessus.",
@@ -642,7 +642,7 @@
       "rightStick": "Droite X / Y",
       "connection": "Connexion",
       "inputs": "Commandes",
-      "paddles": "Palettes arrière G / D"
+      "paddles": "Boutons arrière LB / RB"
     },
     "narrator": {
       "voice": "Voix de la narratrice",
