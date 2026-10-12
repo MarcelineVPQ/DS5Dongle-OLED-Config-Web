@@ -141,6 +141,8 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
   const accent = ensureContrast(trim, body, 3);
   // Errors and danger buttons: red, made legible on these surfaces too.
   const error = legible(dark ? [253, 164, 175] : [159, 18, 57], 4.5);
+  // Warning-colored text (dashboard counters): amber, made legible the same way.
+  const warn = legible(dark ? [252, 211, 77] : [146, 64, 14], 4.5);
   return {
     "--bg-panel": css(body),
     "--bg-elevated": css(body),
@@ -158,6 +160,7 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
     "--text-muted": text(4.5, 0.3),
     "--text-eyebrow": text(4.5, 0.3),
     "--text-error": css(error),
+    "--text-warn": css(warn),
     ...accentVars(accent, body, dark),
   };
 }

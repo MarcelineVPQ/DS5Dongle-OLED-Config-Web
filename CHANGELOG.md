@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Warning counters readable in every controller color:** the Dongle page's "⚠" counters were amber on the controller-colored cards (too faint on Cosmic Red and other mid tones). Warning-colored text now uses a version the theme makes legible on its own surfaces; checked in every colorway.
+
 ## [0.9.3] - 2026-10-12
 
 ### Added

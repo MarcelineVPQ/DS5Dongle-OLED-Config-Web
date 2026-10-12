@@ -2545,7 +2545,7 @@ html[data-theme="light"] .live-ctl {
   font-weight: 700;
 }
 .gp-action-failed {
-  color: var(--status-warn);
+  color: var(--text-warn);
 }
 /* X / Y / Z side by side while the card has room; stacked (label left, value
    right, like the other cards' rows) when it doesn't, so 4-5 digit
@@ -3234,7 +3234,7 @@ html[data-cards-translucent] .dash-card {
   text-align: right;
 }
 .dash-fact.bad b {
-  color: var(--status-warn);
+  color: var(--text-warn);
 }
 .dash-levels {
   display: grid;
