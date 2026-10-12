@@ -254,7 +254,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     // "webglcontextlost" here: fall back to the CPU swirl instead of a frozen
     // canvas.
     if (!renderer) {
-      if (mode === "gpu") setMode("cpu");
+      if (mode === "gpu") queueMicrotask(() => setMode("cpu"));
       return;
     }
     const onLost = (e: Event) => {
