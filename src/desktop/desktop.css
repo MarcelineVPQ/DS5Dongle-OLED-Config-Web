@@ -3562,3 +3562,23 @@ html[data-cards-translucent] .dash-card {
 .dk-buttons-row.changed label {
   font-weight: 700;
 }
+
+/* Trigger pull: L2 and R2 side by side in the card; the picked one first, in bold. */
+.live-trigger-pull {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+}
+.live-trigger-pull strong {
+  grid-row: span 2;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.live-trigger-pull.picked strong {
+  color: var(--text-strong);
+  font-weight: 800;
+}
+.live-trigger-pull .dk-hint {
+  margin: 2px 0 6px;
+}

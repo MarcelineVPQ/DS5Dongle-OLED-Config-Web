@@ -377,17 +377,27 @@ function Meter({ value, hold }: { value: number; hold?: number }) {
   );
 }
 
+// Both triggers: the trigger test (and games) set effects on both, so both
+// pulls show, the one picked on the drawing first.
 function TriggerLive({ input, side }: { input: InputReport | null; side: "l2" | "r2" }) {
   const { t } = useTranslation();
-  const value = input ? (side === "l2" ? input.triggerLeft : input.triggerRight) : 0;
-  const effect = input ? (side === "l2" ? input.triggerEffectLeft : input.triggerEffectRight) : 0;
+  const sides: Array<"l2" | "r2"> = side === "l2" ? ["l2", "r2"] : ["r2", "l2"];
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.pull", "Pull")}</h2>
-      <Meter value={value / 255} />
-      <p className="dk-hint">
-        {Math.round((value / 255) * 100)}% · {t("desktop.live.effect", "Effect")}: {t(`desktop.live.effects.${effect}`, String(effect))}
-      </p>
+      {sides.map((sd) => {
+        const value = input ? (sd === "l2" ? input.triggerLeft : input.triggerRight) : 0;
+        const effect = input ? (sd === "l2" ? input.triggerEffectLeft : input.triggerEffectRight) : 0;
+        return (
+          <div key={sd} className={`live-trigger-pull${sd === side ? " picked" : ""}`}>
+            <strong>{sd.toUpperCase()}</strong>
+            <Meter value={value / 255} />
+            <p className="dk-hint">
+              {Math.round((value / 255) * 100)}% · {t("desktop.live.effect", "Effect")}: {t(`desktop.live.effects.${effect}`, String(effect))}
+            </p>
+          </div>
+        );
+      })}
     </section>
   );
 }
