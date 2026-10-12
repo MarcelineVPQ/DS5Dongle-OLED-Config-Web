@@ -536,7 +536,10 @@
       "restartToApply": "Reinicia la app para aplicarlo",
       "modelLabel": "Modelo:",
       "colorLabel": "Color:",
-      "statusLabel": "Estado:"
+      "statusLabel": "Estado:",
+      "triggersTitle": "Gatillos adaptativos",
+      "remapButton": "Reasignar {{button}}",
+      "effectOther": "otro efecto ({{n}})"
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",

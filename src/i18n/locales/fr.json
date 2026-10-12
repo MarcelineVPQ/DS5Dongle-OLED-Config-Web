@@ -536,7 +536,10 @@
       "restartToApply": "Redémarrez l'app pour appliquer",
       "modelLabel": "Modèle :",
       "colorLabel": "Couleur :",
-      "statusLabel": "État :"
+      "statusLabel": "État :",
+      "triggersTitle": "Gâchettes adaptatives",
+      "remapButton": "Réassigner {{button}}",
+      "effectOther": "autre effet ({{n}})"
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",

@@ -67,7 +67,9 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
             ? t("desktop.calib.title")
             : view === "buttons"
               ? t("desktop.layouts.allTitle")
-              : partName(t, view.part);
+              : view.part === "l2" || view.part === "r2"
+                ? t("desktop.live.triggersTitle")
+                : partName(t, view.part);
 
   return (
     <div className="dk-stack">
@@ -164,7 +166,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
   const target = remap.draft[index];
   return (
     <section className="dk-card">
-      <h2>{t("desktop.live.remap", "Remap")}</h2>
+      <h2>{t("desktop.live.remapButton", { button: buttonLabel(index) })}</h2>
       {remap.supported === false ? (
         <p className="dk-hint">{t("remap.unsupported")}</p>
       ) : (
@@ -393,7 +395,7 @@ function TriggerLive({ input, side }: { input: InputReport | null; side: "l2" | 
             <strong>{sd.toUpperCase()}</strong>
             <Meter value={value / 255} />
             <p className="dk-hint">
-              {Math.round((value / 255) * 100)}% · {t("desktop.live.effect", "Effect")}: {t(`desktop.live.effects.${effect}`, String(effect))}
+              {Math.round((value / 255) * 100)}% · {t("desktop.live.effect", "Effect")}: {t(`desktop.live.effects.${effect}`, t("desktop.live.effectOther", { n: effect }))}
             </p>
           </div>
         );

@@ -533,7 +533,10 @@
       "restartToApply": "重启应用后生效",
       "modelLabel": "型号：",
       "colorLabel": "配色：",
-      "statusLabel": "状态："
+      "statusLabel": "状态：",
+      "triggersTitle": "自适应扳机",
+      "remapButton": "重新映射 {{button}}",
+      "effectOther": "其他效果（{{n}}）"
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",

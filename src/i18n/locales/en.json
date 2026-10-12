@@ -535,7 +535,10 @@
       "restartToApply": "Restart the app to apply",
       "modelLabel": "Model:",
       "colorLabel": "Color:",
-      "statusLabel": "Status:"
+      "statusLabel": "Status:",
+      "triggersTitle": "Adaptive triggers",
+      "remapButton": "Remap {{button}}",
+      "effectOther": "other effect ({{n}})"
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",

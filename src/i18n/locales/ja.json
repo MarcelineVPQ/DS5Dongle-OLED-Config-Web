@@ -533,7 +533,10 @@
       "restartToApply": "アプリを再起動すると反映されます",
       "modelLabel": "モデル：",
       "colorLabel": "カラー：",
-      "statusLabel": "状態："
+      "statusLabel": "状態：",
+      "triggersTitle": "アダプティブトリガー",
+      "remapButton": "{{button}} の割り当て",
+      "effectOther": "その他の効果（{{n}}）"
     },
     "tour": {
       "stepOf": "ステップ {{n}} / {{total}}",
