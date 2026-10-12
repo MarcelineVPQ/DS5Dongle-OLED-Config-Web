@@ -14,7 +14,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
 import { BusyButton, Slider } from "../controls";
-import StickTests from "./StickTests";
+import StickTests from "./StickTestCards";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
 type Step = "idle" | "done" | { measure: Measure; ready: boolean };

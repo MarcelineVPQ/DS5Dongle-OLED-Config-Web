@@ -73,6 +73,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npx -y npm@11.6.2 ci
       - run: npx vitest run
+      # The release builds the app here too: bundling must work on this
+      # system's file system (case-insensitive on Windows/macOS: 0.9.5-dev.3).
+      - run: npx electron-vite build
 
   test-windows:
     name: Test (Windows)
@@ -84,6 +87,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npx -y npm@11.6.2 ci
       - run: npx vitest run
+      # The release builds the app here too: bundling must work on this
+      # system's file system (case-insensitive on Windows/macOS: 0.9.5-dev.3).
+      - run: npx electron-vite build
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
