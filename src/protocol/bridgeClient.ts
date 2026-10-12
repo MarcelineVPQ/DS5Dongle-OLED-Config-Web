@@ -6,6 +6,19 @@ import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesRep
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
+import {
+  CTRL_FIRMWARE_BYTES,
+  CTRL_HEADER_BYTES,
+  CTRL_MAX_PAGES,
+  CTRL_PAGE_BYTES,
+  CTRL_PAGE_REPLY_BYTES,
+  CTRL_SEL,
+  type ControllerFirmware,
+  type CtrlHeader,
+  ctrlInfoReport,
+  decodeControllerFirmware,
+  decodeCtrlHeader,
+} from "./controllerInfo";
 
 export const REPORT = {
   liveInput: 0xf0, // protocol 1.2+, feature bit FEATURE.liveInput
@@ -22,6 +35,7 @@ export const REPORT = {
   cpu: 0xfc,
   oledMirror: 0xef, // protocol 1.4+, feature bit FEATURES2.oledMirror
   calibration: 0xee, // protocol 1.5+, feature bit FEATURES2.calibration
+  controllerInfo: 0xeb, // protocol 1.12+, feature bit FEATURES3.controllerInfo; selector in wValue's high byte
 } as const;
 
 export const FUNC = {
@@ -45,6 +59,7 @@ export const FUNC = {
   remapExtra: 0x13, // protocol 1.9: the Edge's extra-button entries
   stickCurves: 0x14, // protocol 1.10: stick response curves (saved or temporary)
   resetTimings: 0x15, // protocol 1.11: start the 0xFC timing counters over (answered at once)
+  controllerTest: 0x16, // protocol 1.12: run a read-only controller test command (answer in 0xEB)
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -73,6 +88,12 @@ export const FEATURES2 = {
   timings: 0x80, // 0xFC [11..62] per-stage timings, 0xF6 0x15 resets them (protocol 1.11)
 } as const;
 
+// Identity [46] (protocol 1.12): a third feature byte.
+export const FEATURES3 = {
+  controllerInfo: 0x01, // 0xEB get / 0xF6 0x16: controller firmware, lifetime counters, battery voltage
+} as const;
+export const IDENTITY_BYTES = 47;
+
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
 export interface OledFrame {
   power: "on" | "dim" | "off"; // dim = the idle breathing dot
@@ -89,6 +110,11 @@ export const NARRATOR_OFF = 0xff;
 
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
 const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed", "busy"];
+
+// A protocol 1.x addition announced in identity [46] (FEATURES3).
+export function supportsFeature3(identity: BridgeIdentity | null, minMinor: number, bit: number): boolean {
+  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity.features3 & bit) !== 0;
+}
 
 // A protocol 1.x addition announced in identity [29] (FEATURES2).
 export function supportsFeature2(identity: BridgeIdentity | null, minMinor: number, bit: number): boolean {
@@ -129,6 +155,8 @@ export interface BridgeIdentity {
   remapTemporary: boolean | null;
   // Protocol 1.10+: a game's stick curves (RAM only) are on; null on older firmware.
   curvesTemporary: boolean | null;
+  // Protocol 1.12+: identity [46], a third feature byte (FEATURES3); 0 on older firmware.
+  features3: number;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -174,6 +202,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     boardName: bytes.length >= 46 && (bytes[29] & FEATURES2.boardName) !== 0 ? boardNameFrom(bytes.subarray(30, 46)) : null,
     remapTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.temporaryRemap) !== 0 ? (bytes[19] & 0x02) !== 0 : null,
     curvesTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.stickCurves) !== 0 ? (bytes[19] & 0x04) !== 0 : null,
+    features3: bytes.length >= IDENTITY_BYTES ? bytes[46] : 0,
   };
 }
 
@@ -270,6 +299,10 @@ export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number>
 
 const POLL_INTERVAL_MS = 20;
 const COMMAND_TIMEOUT_MS = 3000;
+// A test command waits for the dongle's connect-time read (up to ~5 s after
+// the controller connects), then up to 3 s for the controller's answer.
+const CONTROLLER_TEST_TIMEOUT_MS = 12000;
+const CONTROLLER_TEST_POLL_MS = 60;
 
 export class Ds5BridgeClient {
   constructor(public readonly transport: Ds5Transport) {}
@@ -282,7 +315,7 @@ export class Ds5BridgeClient {
   private protocol: { major: number; minor: number } | null = null;
 
   async identity(): Promise<BridgeIdentity> {
-    const id = decodeIdentity(await this.transport.getReport(REPORT.identity, 46));
+    const id = decodeIdentity(await this.transport.getReport(REPORT.identity, IDENTITY_BYTES));
     this.protocol = { major: id.protoMajor, minor: id.protoMinor };
     return id;
   }
@@ -525,6 +558,46 @@ export class Ds5BridgeClient {
     const bytes = await this.transport.getReport(REPORT.oledMirror, OLED_MIRROR_BYTES);
     if (bytes.length < OLED_MIRROR_BYTES) return null;
     return { power: bytes[0] === 2 ? "off" : bytes[0] === 1 ? "dim" : "on", screen: bytes[1], contrast: bytes[2], seq: bytes[3], pixels: bytes.slice(4) };
+  }
+
+  // Protocol 1.12: what the dongle knows about the controller right now.
+  async readControllerHeader(): Promise<CtrlHeader | null> {
+    return decodeCtrlHeader(await this.transport.getReport(ctrlInfoReport(CTRL_SEL.header), CTRL_HEADER_BYTES));
+  }
+
+  // The controller's own firmware (its cached report 0x20); null until the
+  // controller has sent it.
+  async readControllerFirmware(): Promise<ControllerFirmware | null> {
+    return decodeControllerFirmware(await this.transport.getReport(ctrlInfoReport(CTRL_SEL.firmware), CTRL_FIRMWARE_BYTES));
+  }
+
+  // Runs a read-only controller test command (controllerInfo.ts CTRL_TEST)
+  // and returns its answer, `pages` x 56 bytes, or null when the controller
+  // doesn't answer it (older controller firmware). The dongle sends it over
+  // Bluetooth from its main loop; this polls until it's done.
+  async runControllerTest(dev: number, action: number, pages: number): Promise<Uint8Array | null> {
+    const before = await this.readControllerHeader();
+    if (!before) throw new Error("The dongle sent no controller info.");
+    await this.command(FUNC.controllerTest, [dev, action, pages]);
+    const expected = (before.request + 1) & 0xff;
+    const deadline = Date.now() + CONTROLLER_TEST_TIMEOUT_MS;
+    for (;;) {
+      const h = await this.readControllerHeader();
+      if (!h || h.request !== expected) throw new Error("Another program asked the controller at the same time. Try again.");
+      if (h.state === "done") {
+        const out = new Uint8Array(pages * CTRL_PAGE_BYTES);
+        for (let p = 0; p < Math.min(h.pages, pages, CTRL_MAX_PAGES); p++) {
+          const r = await this.transport.getReport(ctrlInfoReport(CTRL_SEL.page0 + p), CTRL_PAGE_REPLY_BYTES);
+          if (r.length < CTRL_PAGE_REPLY_BYTES || r[0] !== p || r[2] !== expected) throw new Error("Short controller answer");
+          out.set(r.subarray(3, CTRL_PAGE_REPLY_BYTES), p * CTRL_PAGE_BYTES);
+        }
+        return out;
+      }
+      if (h.state === "noAnswer") return null;
+      if (h.state !== "running") throw new Error("The controller disconnected.");
+      if (Date.now() > deadline) throw new Error("The controller did not answer in time.");
+      await sleep(CONTROLLER_TEST_POLL_MS);
+    }
   }
 
   async readAudioCounters(): Promise<AudioCounters> {

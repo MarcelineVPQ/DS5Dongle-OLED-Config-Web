@@ -9,6 +9,7 @@
 import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody } from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
+import { CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_SEL, CTRL_TEST } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
@@ -36,6 +37,73 @@ export interface SimulatedDongleOptions {
   // Firmware 0.9.4+ diagnostics: core1 couldn't create the speaker encoder (issue #15).
   speakerEncoderFailed?: boolean;
   version?: string;
+  // Protocol 1.12 controller info: the controller firmware's update version
+  // (the counters need > 1106, Edge > 374), and whether it answers test commands.
+  controllerUpdateVersion?: number;
+  controllerAnswers?: boolean;
+}
+
+// A plausible, made-up controller (no real controller's data): report 0x20
+// as the dongle passes it on (selector 0x01), counters block, battery voltage.
+function simFirmware(updateVersion: number): Uint8Array {
+  const out = new Uint8Array(60);
+  const v = new DataView(out.buffer);
+  out[0] = 1;
+  out.set(
+    [..."Jun 13 2024"].map((c) => c.charCodeAt(0)),
+    1,
+  );
+  out.set(
+    [..."10:22:31"].map((c) => c.charCodeAt(0)),
+    12,
+  );
+  v.setUint16(20, 3, true); // fw type
+  v.setUint16(22, 0x44, true); // sw series
+  v.setUint32(24, 0x00000313, true); // hw info
+  v.setUint32(28, 0x01000025, true); // main fw 1.0.37
+  v.setUint16(44, updateVersion, true);
+  v.setUint32(48, 0x01000003, true); // SBL 1.0.3
+  v.setUint32(52, 0x00340006, true); // DSP 0034_0006
+  v.setUint32(56, 0x01000007, true); // MCU DSP 1.0.7
+  return out;
+}
+
+function simTelemetry(edge: boolean): Uint8Array {
+  const block = new Uint8Array((edge ? 6 : 4) * CTRL_PAGE_BYTES);
+  const d = new DataView(block.buffer, 1); // [0] is the block's status byte; serials stay zero
+  const u32 = (o: number, x: number) => d.setUint32(o, x, true);
+  const u16 = (o: number, x: number) => d.setUint16(o, x, true);
+  u32(21, 412345); // played, s
+  u32(25, 160200); // charging
+  u32(29, 52011); // haptics
+  u32(33, 30120);
+  u32(37, 41877); // triggers L / R
+  u16(41, 212); // charge cycles
+  u16(55, 240); // charger connects
+  u16(60, 180); // full charges
+  u16(62, 12);
+  u16(64, 3);
+  u16(66, 96); // USB connects
+  u16(68, 1204); // Bluetooth connects
+  u16(70, 7); // Bluetooth timeouts
+  const buttons = edge ? [86, 90, 94, 98, 102, 106, 110, 114, 118, 134, 154, 158, 162, 166] : [110, 114, 118, 122, 126, 130, 134, 138, 142, 146, 150, 154, 158, 162, 170, 174, 178, 182, 186];
+  buttons.forEach((o, i) => u32(o, 1000 + ((i * 7919) % 60000)));
+  if (edge) {
+    [122, 126, 130, 138, 142, 146].forEach((o, i) => u32(o, 4000 + i * 900));
+    [170, 174, 178].forEach((o, i) => u16(o + 2, 300 + i * 40)); // mute, paddles
+    u32(199, 88000);
+    u32(205, 91000);
+    u32(211, 2400);
+    u32(236, 120000);
+    u32(242, 99000);
+    u32(248, 3100);
+  } else {
+    u32(86, 101000);
+    u32(92, 98000);
+    u32(98, 143000);
+    u32(104, 120500);
+  }
+  return block;
 }
 
 export class SimulatedDongle implements Ds5Transport {
@@ -63,6 +131,9 @@ export class SimulatedDongle implements Ds5Transport {
   lastGripTest = -1; // 0 left, 1 right, 2 both
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
+  private get minor() {
+    return this.opts.protoMinor ?? 6;
+  }
   private get split() {
     return (this.opts.protoMinor ?? 6) >= 6;
   }
@@ -82,6 +153,8 @@ export class SimulatedDongle implements Ds5Transport {
     return b;
   })();
   sets: Uint8Array[] = [];
+  // Protocol 1.12: the test command the firmware is running for the app.
+  ctrlTest = { state: 0, dev: 0, action: 0, pages: 0, request: 0, polls: 0, block: new Uint8Array(CTRL_MAX_PAGES * CTRL_PAGE_BYTES) };
 
   private seq = 0;
   private lastFunc = 0;
@@ -165,6 +238,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   async getReport(reportId: number, length: number): Promise<Uint8Array> {
     if (this.gone) throw new DeviceGoneError();
+    if ((reportId & 0xff) === CTRL_INFO_REPORT && this.minor >= 12) return this.controllerInfo(reportId >> 8).subarray(0, length);
     switch (reportId) {
       case 0xf0:
         return (this.opts.live ? this.liveInput() : this.input).slice(0, length);
@@ -323,6 +397,15 @@ export class SimulatedDongle implements Ds5Transport {
       }
     } else if (func === 0x15 && (this.opts.protoMinor ?? 6) >= 11) {
       this.timingsResetAt = Date.now(); // answered at once, like the firmware
+    } else if (func === 0x16 && this.minor >= 12) {
+      const [dev, action, pages] = [payload[1], payload[2], payload[3]];
+      const ok =
+        payload.length >= 4 &&
+        ((dev === CTRL_TEST.telemetry.dev && action === CTRL_TEST.telemetry.action && pages >= 1 && pages <= CTRL_MAX_PAGES) ||
+          (dev === CTRL_TEST.battery.dev && action === CTRL_TEST.battery.action && pages === 1));
+      if (!ok) this.lastResult = RESULT.invalid;
+      else if (this.ctrlTest.state === 1) this.lastResult = RESULT.busy;
+      else this.ctrlTest = { state: 1, dev, action, pages, request: (this.ctrlTest.request + 1) & 0xff, polls: this.opts.pendingPolls ?? 1, block: new Uint8Array(CTRL_MAX_PAGES * CTRL_PAGE_BYTES) };
     } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
       this.tempCurves = null; // 1.10: a game's stick curves end too
       this.extra = this.flashExtra.slice();
@@ -346,6 +429,40 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func !== 0x03) {
       this.lastResult = RESULT.invalid;
     }
+  }
+
+  // GET 0xEB: the header (which also advances a running test, like the
+  // firmware's main loop), the controller's firmware, or a result page.
+  private controllerInfo(selector: number): Uint8Array {
+    const t = this.ctrlTest;
+    if (selector === CTRL_SEL.header) {
+      if (t.state === 1 && t.polls-- <= 0) {
+        if (this.opts.controllerAnswers === false) t.state = 3;
+        else {
+          t.state = 2;
+          if (t.dev === CTRL_TEST.battery.dev) {
+            t.block[0] = 3868 & 0xff;
+            t.block[1] = 3868 >> 8;
+            t.pages = 1;
+          } else {
+            const b = simTelemetry(this.edge);
+            t.block.set(b);
+            t.pages = Math.min(t.pages, b.length / CTRL_PAGE_BYTES);
+          }
+        }
+      }
+      const out = new Uint8Array(14);
+      out.set([0x43, 0x48, 1, t.state, t.dev, t.action, t.state === 2 ? t.pages : 0, t.request, this.edge ? 1 : 0, 0x03]);
+      new DataView(out.buffer).setUint32(10, 0x00000a1b, true); // BT patch
+      return out;
+    }
+    if (selector === CTRL_SEL.firmware) return simFirmware(this.opts.controllerUpdateVersion ?? (this.edge ? 0x0215 : 0x0630));
+    const p = selector - CTRL_SEL.page0;
+    if (p < 0 || p >= CTRL_MAX_PAGES) return new Uint8Array(0);
+    const out = new Uint8Array(3 + CTRL_PAGE_BYTES);
+    out.set([p, t.state, t.request]);
+    if (t.state === 2 && p < t.pages) out.set(t.block.subarray(p * CTRL_PAGE_BYTES, (p + 1) * CTRL_PAGE_BYTES), 3);
+    return out;
   }
 
   // The firmware's cmd_task(): runs the pending command after a few polls.
@@ -382,7 +499,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   private identity(): Uint8Array {
     const minor = this.opts.protoMinor ?? 6;
-    const out = new Uint8Array(minor >= 7 ? 46 : 30);
+    const out = new Uint8Array(minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
     out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, this.opts.protoMinor ?? 6, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
@@ -412,6 +529,7 @@ export class SimulatedDongle implements Ds5Transport {
         30,
       );
     }
+    if (minor >= 12) out[46] = 0x01; // FEATURES3: controller info (1.12)
     return out;
   }
 

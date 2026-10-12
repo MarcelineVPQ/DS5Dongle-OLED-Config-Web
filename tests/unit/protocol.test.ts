@@ -103,7 +103,16 @@ describe("identity report (0xF1)", () => {
       boardName: null,
       remapTemporary: null,
       curvesTemporary: null,
+      features3: 0,
     });
+  });
+
+  it("reads the third feature byte (protocol 1.12) only from a 47-byte identity", () => {
+    const b = new Uint8Array(47);
+    b.set(sample());
+    b[46] = 0x01;
+    expect(decodeIdentity(b).features3).toBe(1);
+    expect(decodeIdentity(b.subarray(0, 46)).features3).toBe(0);
   });
 
   it("reads the board name (protocol 1.7) only when the firmware announces it", () => {
