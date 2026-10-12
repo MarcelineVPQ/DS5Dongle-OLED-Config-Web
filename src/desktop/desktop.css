@@ -2321,12 +2321,12 @@ html[data-theme="light"] .live-ctl {
     box-shadow 0.18s ease;
 }
 .rail-slot.pinned .app-rail,
-.app-rail:hover,
-.app-rail:focus-within {
+.app-rail:not(.picked):hover,
+.app-rail:has(:focus-visible) {
   width: var(--rail-w-expanded);
 }
-.rail-slot:not(.pinned) .app-rail:hover,
-.rail-slot:not(.pinned) .app-rail:focus-within {
+.rail-slot:not(.pinned) .app-rail:not(.picked):hover,
+.rail-slot:not(.pinned) .app-rail:has(:focus-visible) {
   box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
 }
 .rail-nav {
@@ -2422,8 +2422,8 @@ html[data-theme="light"] .live-ctl {
   transition: opacity 0.12s;
 }
 .rail-slot.pinned .rail-label,
-.app-rail:hover .rail-label,
-.app-rail:focus-within .rail-label {
+.app-rail:not(.picked):hover .rail-label,
+.app-rail:has(:focus-visible) .rail-label {
   opacity: 1;
 }
 .rail-divider {
@@ -2635,13 +2635,13 @@ html[data-theme="light"] .live-ctl {
   .rail-slot.pinned .rail-label {
     opacity: 0;
   }
-  .rail-slot .app-rail:hover,
-  .rail-slot .app-rail:focus-within {
+  .rail-slot .app-rail:not(.picked):hover,
+  .rail-slot .app-rail:has(:focus-visible) {
     width: var(--rail-w-expanded);
     box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
   }
-  .rail-slot .app-rail:hover .rail-label,
-  .rail-slot .app-rail:focus-within .rail-label {
+  .rail-slot .app-rail:not(.picked):hover .rail-label,
+  .rail-slot .app-rail:has(:focus-visible) .rail-label {
     opacity: 1;
   }
 }
@@ -2900,8 +2900,8 @@ html[data-glass] .dk-bar {
 }
 /* Open over content (text): the regular variant, more frost and a dim. */
 html[data-glass] .rail-slot.pinned .app-rail,
-html[data-glass] .app-rail:hover,
-html[data-glass] .app-rail:focus-within {
+html[data-glass] .app-rail:not(.picked):hover,
+html[data-glass] .app-rail:has(:focus-visible) {
   backdrop-filter: var(--glass-regular, blur(18px));
   background: rgb(8 10 16 / 45%); /* theme-exempt: Liquid Glass light/shade layer */
 }

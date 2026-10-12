@@ -1,9 +1,10 @@
 // The app's navigation rail, on the right edge (AVIEW's sidebar, mirrored):
-// icons only by default, expanding over the page on hover or keyboard focus;
+// icons only by default, expanding over the page on hover or keyboard focus
+// (closing right after a page is picked with the pointer);
 // pinned open it takes its full width. Ctrl+B pins/unpins. The bottom shows
 // the dongle's status (a colored dot plus a symbol, so it never relies on
 // color alone) and the pin.
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { appVersionLabel, isDevelopmentBuild } from "./appVersion";
 import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
@@ -33,6 +34,10 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
   const [glass] = useFlagPref(GLASS_KEY);
   // Clear glass while collapsed; the regular variant while open over content.
   const railRef = useGlass(glass, CLEAR_GLASS_RAIL, REGULAR_GLASS);
+  // Picking a page closes the rail right away, like a menu: hover doesn't
+  // reopen it until the pointer leaves the rail and comes back. Keyboard focus
+  // only opens it when it's visible focus (Tab), not after a click.
+  const [picked, setPicked] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "b") {
@@ -52,7 +57,11 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
       aria-current={active === item ? "page" : undefined}
       // What's there, in one line; on Controller again, what a second click does.
       title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(`desktop.rail.tip.${item}`)}`}
-      onClick={() => onSelect(item)}
+      onClick={(e) => {
+        onSelect(item);
+        // A pointer click (detail > 0), not Enter/Space: close the rail now.
+        if (e.detail > 0) setPicked(true);
+      }}
     >
       <span className="rail-ic" aria-hidden="true">
         {icon}
@@ -75,7 +84,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
 
   return (
     <div className={`rail-slot${pinned ? " pinned" : ""}`}>
-      <nav className="app-rail" ref={railRef} aria-label={t("desktop.rail.label")}>
+      <nav className={`app-rail${picked ? " picked" : ""}`} ref={railRef} aria-label={t("desktop.rail.label")} onPointerLeave={() => setPicked(false)}>
         <div className="rail-nav">
           {link("controller", t("desktop.nav.controller"), <Gamepad2 size={20} />)}
           {link("dongle", device, <Usb size={20} />)}
