@@ -11,6 +11,11 @@ export const LayoutIdSchema = z.string().regex(/^[a-z0-9-]{1,40}$/);
 export const ButtonLayoutSchema = z.strictObject({
   name: z.string().trim().min(1).max(40),
   table: z.array(z.union([z.number().int().min(0).max(15), z.literal(0xff)])).length(16),
+  // DualSense Edge Fn L/R and paddles L/R (protocol 1.9): a button, 0xFE off, 0xFF itself.
+  extra: z
+    .array(z.union([z.number().int().min(0).max(15), z.literal(0xfe), z.literal(0xff)]))
+    .length(4)
+    .optional(),
   updated: z.number(),
 });
 export type ButtonLayout = z.infer<typeof ButtonLayoutSchema>;

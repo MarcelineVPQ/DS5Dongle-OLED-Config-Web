@@ -317,3 +317,24 @@ describe("core1 health in the audio counters (issue #15)", () => {
     expect(c.core1Flags).toBeUndefined();
   });
 });
+
+describe("Edge extra-button remap (protocol 1.9)", () => {
+  it("saves and reads the four entries; temporary ones revert", async () => {
+    const dongle = new FakeDongle({ protoMinor: 9 });
+    const client = new Ds5BridgeClient(dongle);
+    expect(await client.readRemapExtra()).toEqual([0xff, 0xff, 0xff, 0xff]);
+    await client.applyRemapExtra([13, 0xfe, 0xff, 12], false); // Fn L → Cross, Fn R off, right paddle → Circle
+    expect(await client.readRemapExtra()).toEqual([13, 0xfe, 0xff, 12]);
+    await client.applyRemapExtra([0, 0, 0, 0], true);
+    expect((await client.identity()).remapTemporary).toBe(true);
+    await client.revertRemap();
+    expect(await client.readRemapExtra()).toEqual([13, 0xfe, 0xff, 12]);
+  });
+
+  it("refuses invalid entries; older firmware doesn't announce it", async () => {
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 9 }));
+    await expect(client.applyRemapExtra([16, 0xff, 0xff, 0xff], false)).rejects.toThrow();
+    const old = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 8 })).identity();
+    expect((old.features2 & FEATURES2.remapExtra) !== 0).toBe(false);
+  });
+});

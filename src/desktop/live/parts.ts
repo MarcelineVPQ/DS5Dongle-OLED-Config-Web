@@ -42,7 +42,10 @@ export const EDGE_PARTS: ReadonlySet<PartId> = new Set<PartId>(["fn-l", "fn-r", 
 // Buttons whose panel would be nothing but Remap: a click on the drawing
 // opens the Buttons list at their row instead (one place for buttons).
 export const REMAP_ONLY: ReadonlySet<PartId> = new Set<PartId>(["l1", "r1", "create", "options", "dpad-up", "dpad-down", "dpad-left", "dpad-right", "triangle", "circle", "cross", "square"]);
-export const partForRemapIndex = (i: number): PartId | null => (Object.entries(REMAP_INDEX).find(([, v]) => v === i)?.[0] as PartId | undefined) ?? null;
+// Rows 16..19 of the Buttons list are the Edge's Fn buttons and paddles (protocol 1.9).
+export const EDGE_REMAP_ROWS: readonly PartId[] = ["fn-l", "fn-r", "paddle-l", "paddle-r"];
+export const partForRemapIndex = (i: number): PartId | null =>
+  i >= 16 ? (EDGE_REMAP_ROWS[i - 16] ?? null) : ((Object.entries(REMAP_INDEX).find(([, v]) => v === i)?.[0] as PartId | undefined) ?? null);
 
 export const REMAP_INDEX: Partial<Record<PartId, number>> = {
   l2: 0,

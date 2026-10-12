@@ -4,11 +4,14 @@ import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
 
 export const buttonLabel = (i: number) => REMAP_BUTTON_OPTIONS[i]?.label ?? String(i);
 
-export function layoutChanges(table: number[], off: string): Array<{ from: string; to: string }> {
-  return table.flatMap((target, source) => (target === source ? [] : [{ from: buttonLabel(source), to: target === REMAP_DISABLED ? off : buttonLabel(target) }]));
+export function layoutChanges(table: number[], off: string, extra?: { values: number[]; names: string[] }): Array<{ from: string; to: string }> {
+  const base = table.flatMap((target, source) => (target === source ? [] : [{ from: buttonLabel(source), to: target === REMAP_DISABLED ? off : buttonLabel(target) }]));
+  // The Edge's Fn buttons and paddles (0xFF itself, 0xFE off).
+  const edge = (extra?.values ?? []).flatMap((v, i) => (v === 0xff ? [] : [{ from: extra!.names[i], to: v === 0xfe ? off : buttonLabel(v) }]));
+  return [...base, ...edge];
 }
 
-export function layoutSummary(table: number[], off: string, none: string): string {
-  const changes = layoutChanges(table, off);
+export function layoutSummary(table: number[], off: string, none: string, extra?: { values: number[]; names: string[] }): string {
+  const changes = layoutChanges(table, off, extra);
   return changes.length ? changes.map((c) => `${c.from} → ${c.to}`).join(" · ") : none;
 }

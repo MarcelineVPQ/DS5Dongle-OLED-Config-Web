@@ -201,7 +201,7 @@ function start(): void {
     libraryDeleteProfile: (key) => library.deleteProfile(key),
     librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => library.setRestore(r ?? undefined),
-    librarySetLayout: (u) => library.setLayout(u.id, u.name, u.table),
+    librarySetLayout: (u) => library.setLayout(u.id, u.name, u.table, u.extra),
     libraryDeleteLayout: (id) => library.deleteLayout(id),
     gameArtColor: (key) => withGames((g) => g.artColor(key)),
     micTest: () => {

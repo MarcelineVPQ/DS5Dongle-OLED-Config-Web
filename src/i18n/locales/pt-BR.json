@@ -498,7 +498,7 @@
       "edgePart": {
         "fn": "O botão Fn do DualSense Edge. Junto com outros botões, ele troca os perfis do controle. Ele acende aqui quando você o aperta.",
         "paddle": "Um dos botões traseiros do DualSense Edge. Os perfis do controle podem fazer ele agir como qualquer botão. Ele acende aqui quando você o aperta.",
-        "soon": "Em breve você poderá remapeá-lo por este app."
+        "soon": "Para remapeá-los é preciso o firmware mais recente do dongle (página do Pico → Atualizar)."
       },
       "effects": {
         "0": "nenhum",
@@ -639,7 +639,8 @@
       "leftStick": "Esquerdo X / Y",
       "rightStick": "Direito X / Y",
       "connection": "Conexão",
-      "inputs": "Controles"
+      "inputs": "Controles",
+      "paddles": "Botões traseiros E / D"
     },
     "narrator": {
       "voice": "Voz da narradora",
@@ -1191,7 +1192,8 @@
         "notApplied": "Ainda não aplicado: Aplicar o torna seus botões normais no dongle.",
         "edited": "Alterado desde que você o carregou: Atualizar salva as mudanças no layout; Aplicar as torna seus botões normais.",
         "applied": "Aplicado: estes são seus botões normais no dongle agora."
-      }
+      },
+      "extraSelf": "Ele mesmo (padrão)"
     },
     "editing": {
       "title": "Editando: perfil de {{title}}",

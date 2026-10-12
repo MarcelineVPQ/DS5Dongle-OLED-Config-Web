@@ -495,7 +495,7 @@
       "edgePart": {
         "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换手柄的配置文件。按下时这里会亮起。",
         "paddle": "DualSense Edge 的背键之一。手柄的配置文件可以把它设为任意按键。按下时这里会亮起。",
-        "soon": "即将支持在本应用中重新映射。"
+        "soon": "重新映射需要最新的接收器固件（Pico 页面 → 更新）。"
       },
       "effects": {
         "0": "无",
@@ -636,7 +636,8 @@
       "leftStick": "左 X / Y",
       "rightStick": "右 X / Y",
       "connection": "连接",
-      "inputs": "输入"
+      "inputs": "输入",
+      "paddles": "背键 左 / 右"
     },
     "narrator": {
       "voice": "旁白语音",
@@ -1185,7 +1186,8 @@
         "notApplied": "尚未应用：应用后成为接收器上的常用按键。",
         "edited": "载入后有改动：更新会把改动存入布局；应用会使其成为常用按键。",
         "applied": "已应用：现在是接收器上的常用按键。"
-      }
+      },
+      "extraSelf": "保持原样（默认）"
     },
     "editing": {
       "title": "正在编辑：{{title}} 配置",

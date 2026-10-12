@@ -498,7 +498,7 @@
       "edgePart": {
         "fn": "Le bouton Fn de la DualSense Edge. Maintenu avec d'autres boutons, il change les profils de la manette. Il s'allume ici quand tu appuies dessus.",
         "paddle": "Un des boutons arrière de la DualSense Edge. Les profils de la manette peuvent lui donner le rôle de n'importe quel bouton. Il s'allume ici quand tu appuies dessus.",
-        "soon": "Le réassigner depuis cette app arrive bientôt."
+        "soon": "Pour les réassigner, il faut le dernier firmware du dongle (page Pico → Mettre à jour)."
       },
       "effects": {
         "0": "aucun",
@@ -639,7 +639,8 @@
       "leftStick": "Gauche X / Y",
       "rightStick": "Droite X / Y",
       "connection": "Connexion",
-      "inputs": "Commandes"
+      "inputs": "Commandes",
+      "paddles": "Palettes arrière G / D"
     },
     "narrator": {
       "voice": "Voix de la narratrice",
@@ -1191,7 +1192,8 @@
         "notApplied": "Pas encore appliquée : Appliquer en fait tes boutons habituels sur le dongle.",
         "edited": "Modifiée depuis son chargement : Mettre à jour enregistre les changements dans la disposition ; Appliquer en fait tes boutons habituels.",
         "applied": "Appliquée : ce sont maintenant tes boutons habituels sur le dongle."
-      }
+      },
+      "extraSelf": "Lui-même (par défaut)"
     },
     "editing": {
       "title": "Modification : profil {{title}}",

@@ -498,7 +498,7 @@
       "edgePart": {
         "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
         "paddle": "Eine der Rücktasten des DualSense Edge. Die Profile des Controllers können sie als jede Taste belegen. Sie leuchtet hier auf, wenn du sie drückst.",
-        "soon": "Die Belegung in dieser App kommt noch."
+        "soon": "Zum Neubelegen braucht es die neueste Dongle-Firmware (Pico-Seite → Aktualisieren)."
       },
       "effects": {
         "0": "keiner",
@@ -639,7 +639,8 @@
       "leftStick": "Links X / Y",
       "rightStick": "Rechts X / Y",
       "connection": "Verbindung",
-      "inputs": "Eingaben"
+      "inputs": "Eingaben",
+      "paddles": "Rücktasten L / R"
     },
     "narrator": {
       "voice": "Erzählstimme",
@@ -1191,7 +1192,8 @@
         "notApplied": "Noch nicht angewendet: Belegung anwenden macht sie zu deiner normalen Belegung auf dem Dongle.",
         "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Belegung anwenden macht sie zu deiner normalen.",
         "applied": "Angewendet: das ist jetzt deine normale Belegung auf dem Dongle."
-      }
+      },
+      "extraSelf": "Sich selbst (Standard)"
     },
     "editing": {
       "title": "Bearbeitung: Profil {{title}}",

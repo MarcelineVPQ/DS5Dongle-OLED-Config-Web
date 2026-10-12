@@ -2,7 +2,7 @@
 // over any Ds5Transport. Report payloads here never include the report-id byte.
 import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
-import { type RemapState, decodeRemapFromConfigReport, encodeRemapSet } from "./remap";
+import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
 
@@ -10,6 +10,7 @@ export const REPORT = {
   liveInput: 0xf0, // protocol 1.2+, feature bit FEATURE.liveInput
   identity: 0xf1,
   audioCounters: 0xf5,
+  remapExtra: 0xed, // protocol 1.9, vendor interface only
   command: 0xf6,
   config: 0xf7,
   version: 0xf8,
@@ -39,6 +40,7 @@ export const FUNC = {
   remap: 0x10,
   remapTemporary: 0x11, // protocol 1.8: a table in RAM only (a game's layout)
   remapRevert: 0x12, // protocol 1.8: back to the saved table
+  remapExtra: 0x13, // protocol 1.9: the Edge's extra-button entries
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -62,6 +64,7 @@ export const FEATURES2 = {
   gripTest: 0x04, // 0xF6 0x0E: buzz a grip at its haptics strength (protocol 1.6)
   boardName: 0x08, // identity [30..45]: the board's name, e.g. "Pico 2 W" (protocol 1.7)
   temporaryRemap: 0x10, // 0xF6 0x11 / 0x12 and identity [19] bit 1 (protocol 1.8)
+  remapExtra: 0x20, // 0xED get / 0xF6 0x13 set: Edge Fn buttons and paddles (protocol 1.9)
 } as const;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
@@ -318,6 +321,19 @@ export class Ds5BridgeClient {
     const report = encodeRemapSet(table, FUNC.remapTemporary);
     const [func, ...rest] = report.subarray(0, 4 + table.length);
     await this.command(func, rest);
+  }
+
+  // Protocol 1.9: the Edge's Fn buttons and paddles (REMAP_EXTRA_PARTS order).
+  async readRemapExtra(): Promise<number[] | null> {
+    const b = await this.transport.getReport(REPORT.remapExtra, 5 + REMAP_EXTRA_COUNT);
+    if (b.length < 5 + REMAP_EXTRA_COUNT || b[0] !== 0x52 || b[1] !== 0x58) return null;
+    return Array.from(b.subarray(5, 5 + REMAP_EXTRA_COUNT));
+  }
+
+  // Saved (temporary = false) or for now only (a game's layout).
+  async applyRemapExtra(extra: number[], temporary: boolean): Promise<void> {
+    if (!isValidExtra(extra)) throw new Error("Invalid extra-button remap");
+    await this.command(FUNC.remapExtra, [0x52, 0x58, 1, ...extra, temporary ? 1 : 0]);
   }
 
   async revertRemap(): Promise<void> {

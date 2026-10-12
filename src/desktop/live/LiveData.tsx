@@ -12,13 +12,14 @@ import { liveStats } from "../useLiveInput";
 interface Props {
   input: InputReport;
   rssi: number | null;
+  edge?: boolean; // DualSense Edge: Fn buttons and paddles rows
 }
 
 const HISTORY = 150;
 // X, Y, Z: red, green, blue as in 3D tools (or the Color vision palette), and
 // always a line pattern too (solid, dashed, dotted), so colour isn't needed.
 
-export default function LiveData({ input, rssi }: Props) {
+export default function LiveData({ input, rssi, edge = false }: Props) {
   const { t } = useTranslation();
   const tl = (key: string) => t(`desktop.liveData.${key}`);
   const yn = (v: boolean) => (v ? tl("yes") : tl("no"));
@@ -45,6 +46,13 @@ export default function LiveData({ input, rssi }: Props) {
             [tl("leftStick"), `${fmt(centered(input.leftStick.x), 4)} ${fmt(centered(input.leftStick.y), 4)}`],
             [tl("rightStick"), `${fmt(centered(input.rightStick.x), 4)} ${fmt(centered(input.rightStick.y), 4)}`],
             ["L1 / R1", `${input.l1 ? "●" : "○"} ${input.r1 ? "●" : "○"}`],
+            // The DualSense Edge's Fn buttons and back paddles.
+            ...(edge
+              ? ([
+                  ["Fn L / R", `${input.fnLeft ? "●" : "○"} ${input.fnRight ? "●" : "○"}`],
+                  [tl("paddles"), `${input.backLeft ? "●" : "○"} ${input.backRight ? "●" : "○"}`],
+                ] as [string, string][])
+              : []),
             ["L2 / R2", `${fmt(input.triggerLeft, 3)} ${fmt(input.triggerRight, 3)}`],
             [tl("effect"), `${effect(input.triggerEffectLeft)} · ${effect(input.triggerEffectRight)}`],
             ...input.fingers.map((f, i): [string, string] => [t("desktop.liveData.finger", { n: i + 1 }), f.touching ? `${fmt(f.x, 4)} ${fmt(f.y, 4)}` : "—"]),

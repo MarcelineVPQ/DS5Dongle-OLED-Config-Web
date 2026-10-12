@@ -311,7 +311,17 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
       ) : layouts.length === 0 ? (
         <p className="dk-hint">{t("desktop.layouts.noneForGame")}</p>
       ) : (
-        value && library.layouts?.[value] && <p className="dk-layout-changes">{layoutSummary(library.layouts[value].table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</p>
+        value &&
+        library.layouts?.[value] && (
+          <p className="dk-layout-changes">
+            {layoutSummary(
+              library.layouts[value].table,
+              t("desktop.layouts.off"),
+              t("desktop.layouts.noChanges"),
+              library.layouts[value].extra ? { values: library.layouts[value].extra!, names: ["fn-l", "fn-r", "paddle-l", "paddle-r"].map((p) => t(`desktop.live.part.${p}`)) } : undefined,
+            )}
+          </p>
+        )
       )}
     </>
   );

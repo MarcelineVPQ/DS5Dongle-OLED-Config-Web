@@ -503,7 +503,7 @@
       "edgePart": {
         "fn": "The DualSense Edge's Fn button. Hold it with other buttons to switch the controller's profiles. It lights up here when you press it.",
         "paddle": "One of the DualSense Edge's back buttons. The controller's profiles can make it act as any button. It lights up here when you press it.",
-        "soon": "Remapping it from this app is coming."
+        "soon": "Remapping them needs the newest dongle firmware (Pico page → Update)."
       },
       "go": {
         "intro": "Click a part of the drawing with your mouse, or pick a setting here:",
@@ -638,7 +638,8 @@
       "leftStick": "Left X / Y",
       "rightStick": "Right X / Y",
       "connection": "Connection",
-      "inputs": "Inputs"
+      "inputs": "Inputs",
+      "paddles": "Back paddles L / R"
     },
     "narrator": {
       "voice": "Narrator voice",
@@ -1190,7 +1191,8 @@
         "notApplied": "Not applied yet: Apply remap makes it your normal buttons on the dongle.",
         "edited": "Changed since you loaded it: Update saves the changes into the layout; Apply remap makes them your normal buttons.",
         "applied": "Applied: these are your normal buttons on the dongle now."
-      }
+      },
+      "extraSelf": "Itself (default)"
     },
     "editing": {
       "title": "Editing: {{title}} profile",

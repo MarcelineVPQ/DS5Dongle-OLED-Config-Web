@@ -72,8 +72,8 @@ export class LibraryStore {
   }
 
   // Add or update a saved button layout.
-  setLayout(id: string, name: string, table: number[]): LibraryFile {
-    (this.data.layouts ??= {})[id] = { name: name.trim(), table, updated: Date.now() };
+  setLayout(id: string, name: string, table: number[], extra?: number[]): LibraryFile {
+    (this.data.layouts ??= {})[id] = { name: name.trim(), table, ...(extra ? { extra } : {}), updated: Date.now() };
     return this.save();
   }
 

@@ -34,7 +34,7 @@ const withSettings = (c: ConfigBody, s: ProfileSettings): ConfigBody => {
   return { ...c, ...fields } as ConfigBody; // ranges checked by ProfileSettingsSchema
 };
 // The profile's button layout table, if it has one that still exists.
-const layoutTable = (library: LibraryFile, s: ProfileSettings): number[] | null => (s.buttonLayout ? (library.layouts?.[s.buttonLayout]?.table ?? null) : null);
+const layoutOf = (library: LibraryFile, s: ProfileSettings) => (s.buttonLayout ? (library.layouts?.[s.buttonLayout] ?? null) : null);
 
 // What the profile hook should do now (pure, so the switch/restore rules are
 // unit-tested): apply the running game's profile (keeping the normal values
@@ -136,14 +136,17 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   const { isConnected, config, operation, applyBody, client, identity } = bridge;
   // Temporary remaps (protocol 1.8): a game's layout never touches flash.
   const layouts = supportsFeature2(identity, 8, FEATURES2.temporaryRemap);
+  const edgeExtras = supportsFeature2(identity, 9, FEATURES2.remapExtra);
   const remapTemporary = identity?.remapTemporary ?? false;
   const setLayout = useCallback(
-    async (table: number[] | null) => {
+    async (layout: { table: number[]; extra?: number[] } | null) => {
       if (!client || !layouts) return;
-      if (table) await client.applyRemapTemporary(table);
-      else if (remapTemporary) await client.revertRemap();
+      if (layout) {
+        await client.applyRemapTemporary(layout.table);
+        if (layout.extra && edgeExtras) await client.applyRemapExtra(layout.extra, true);
+      } else if (remapTemporary) await client.revertRemap(); // ends the extras too
     },
-    [client, layouts, remapTemporary],
+    [client, layouts, edgeExtras, remapTemporary],
   );
   // The step that failed last (an apply stamp, or "restore"), so it isn't
   // retried on every config change; cleared when the game or connection changes.
@@ -166,7 +169,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
           else if (step.restorePoint === "rekey" && library.restore) file = await desktop.librarySetRestore({ ...library.restore, gameKey: step.gameKey });
           setLibrary(file);
           if (!(await applyBody(withSettings(config, step.settings)))) throw new Error("apply failed");
-          await setLayout(layoutTable(library, step.settings));
+          await setLayout(layoutOf(library, step.settings));
           appliedFor.current = step.stamp;
           setActive({ gameKey: step.gameKey, title: step.title });
         } catch (cause) {

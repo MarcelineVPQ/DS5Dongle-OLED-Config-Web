@@ -36,6 +36,8 @@ export class SimulatedDongle implements Ds5Transport {
   remap = Array.from({ length: 16 }, (_, i) => i);
   flashRemap = this.remap.slice();
   remapTemporary = false; // protocol 1.8
+  extra = [0xff, 0xff, 0xff, 0xff]; // protocol 1.9: Edge Fn L/R, paddle L/R
+  flashExtra = [0xff, 0xff, 0xff, 0xff];
   // Calibration bodies (18 bytes) per pairing slot: identity sticks, triggers 0..255, gyro 0.
   calibration = Array.from({ length: 4 }, () => new Uint8Array([0, 0, 0, 128, 0, 0, 0, 128, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0]));
   remapRevision = 0;
@@ -194,6 +196,10 @@ export class SimulatedDongle implements Ds5Transport {
         });
         return out;
       }
+      case 0xed: {
+        if ((this.opts.protoMinor ?? 6) < 9) throw new ReportStalledError(reportId);
+        return new Uint8Array([0x52, 0x58, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.extra]);
+      }
       case 0xf5: {
         // 0.9.4+ appends core1 flags and free heap; older firmware stops at 60 bytes.
         const out = new Uint8Array(this.opts.speakerEncoderFailed ? 68 : 60);
@@ -239,6 +245,7 @@ export class SimulatedDongle implements Ds5Transport {
       else {
         this.remap = [...payload.subarray(4, 20)];
         this.flashRemap = this.remap.slice();
+        if (this.remapTemporary) this.extra = this.flashExtra.slice(); // as the firmware: a saved set ends a game's extras too
         this.remapTemporary = false;
         this.remapRevision++;
       }
@@ -250,7 +257,17 @@ export class SimulatedDongle implements Ds5Transport {
         this.remapTemporary = true;
         this.remapRevision++;
       }
+    } else if (func === 0x13 && (this.opts.protoMinor ?? 6) >= 9) {
+      const e = [...payload.subarray(4, 8)];
+      if (payload[1] !== 0x52 || payload[2] !== 0x58 || payload[3] !== 1 || payload.length < 9 || payload[8] > 1 || e.some((v) => v > 15 && v !== 0xfe && v !== 0xff)) this.lastResult = RESULT.invalid;
+      else {
+        this.extra = e;
+        if (payload[8] === 1) this.remapTemporary = true;
+        else this.flashExtra = e.slice();
+        this.remapRevision++;
+      }
     } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
+      this.extra = this.flashExtra.slice();
       this.remap = this.flashRemap.slice();
       this.remapTemporary = false;
       this.remapRevision++;
@@ -329,6 +346,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (minor >= 7) {
       out[29] |= 0x08; // board name (1.7)
       if (minor >= 8) out[29] |= 0x10; // temporary remap (1.8)
+      if (minor >= 9) out[29] |= 0x20; // Edge extra-button remap (1.9)
       out.set(
         [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
         30,
