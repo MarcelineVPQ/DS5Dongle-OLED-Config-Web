@@ -1108,7 +1108,15 @@
       "shortcutSub": "Tous les boutons dans une liste, dispositions enregistrées pour les jeux",
       "seeAll": "Voir tous les boutons et les dispositions",
       "off": "Désactivé",
-      "noChanges": "Aucune modification (les boutons de la manette)"
+      "noChanges": "Aucune modification (les boutons de la manette)",
+      "loaded": "Disposition chargée : {{name}}",
+      "loadedEdited": "modifiée",
+      "loadedChip": "Chargée",
+      "loadedState": {
+        "notApplied": "Pas encore appliquée : Appliquer en fait tes boutons habituels sur le dongle.",
+        "edited": "Modifiée depuis son chargement : Mettre à jour enregistre les changements dans la disposition ; Appliquer en fait tes boutons habituels.",
+        "applied": "Appliquée : ce sont maintenant tes boutons habituels sur le dongle."
+      }
     }
   },
   "ad": {

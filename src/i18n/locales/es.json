@@ -1108,7 +1108,15 @@
       "shortcutSub": "Todos los botones en una lista, distribuciones guardadas para juegos",
       "seeAll": "Ver todos los botones y distribuciones guardadas",
       "off": "Desactivado",
-      "noChanges": "Sin cambios (los botones del mando)"
+      "noChanges": "Sin cambios (los botones del mando)",
+      "loaded": "Distribución cargada: {{name}}",
+      "loadedEdited": "editada",
+      "loadedChip": "Cargada",
+      "loadedState": {
+        "notApplied": "Aún sin aplicar: Aplicar la convierte en tus botones normales en el dongle.",
+        "edited": "Cambiada desde que la cargaste: Actualizar guarda los cambios en la distribución; Aplicar los convierte en tus botones normales.",
+        "applied": "Aplicada: ahora son tus botones normales en el dongle."
+      }
     }
   },
   "ad": {

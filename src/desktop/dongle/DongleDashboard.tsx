@@ -257,7 +257,7 @@ function Fact({ label, value, bad, title }: { label: string; value: string; bad?
   return (
     <div className={`dash-fact${bad ? " bad" : ""}`}>
       <span>{label}</span>
-      <b title={title}>
+      <b title={title ?? value}>
         {bad ? "⚠ " : ""}
         {value}
       </b>

@@ -1108,7 +1108,15 @@
       "shortcutSub": "Alle Tasten in einer Liste, gespeicherte Belegungen für Spiele",
       "seeAll": "Alle Tasten und gespeicherten Belegungen",
       "off": "Aus",
-      "noChanges": "Keine Änderungen (die Controller-Belegung)"
+      "noChanges": "Keine Änderungen (die Controller-Belegung)",
+      "loaded": "Geladene Belegung: {{name}}",
+      "loadedEdited": "bearbeitet",
+      "loadedChip": "Geladen",
+      "loadedState": {
+        "notApplied": "Noch nicht angewendet: Belegung anwenden macht sie zu deiner normalen Belegung auf dem Dongle.",
+        "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Belegung anwenden macht sie zu deiner normalen.",
+        "applied": "Angewendet: das ist jetzt deine normale Belegung auf dem Dongle."
+      }
     }
   },
   "ad": {

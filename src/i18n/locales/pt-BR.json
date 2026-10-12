@@ -1108,7 +1108,15 @@
       "shortcutSub": "Todos os botões numa lista, layouts salvos para jogos",
       "seeAll": "Ver todos os botões e layouts salvos",
       "off": "Desligado",
-      "noChanges": "Sem alterações (os botões do controle)"
+      "noChanges": "Sem alterações (os botões do controle)",
+      "loaded": "Layout carregado: {{name}}",
+      "loadedEdited": "editado",
+      "loadedChip": "Carregado",
+      "loadedState": {
+        "notApplied": "Ainda não aplicado: Aplicar o torna seus botões normais no dongle.",
+        "edited": "Alterado desde que você o carregou: Atualizar salva as mudanças no layout; Aplicar as torna seus botões normais.",
+        "applied": "Aplicado: estes são seus botões normais no dongle agora."
+      }
     }
   },
   "ad": {

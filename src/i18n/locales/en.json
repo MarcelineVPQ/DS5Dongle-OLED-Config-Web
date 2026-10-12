@@ -1107,7 +1107,15 @@
       "shortcutSub": "Every button in one list, saved layouts for games",
       "seeAll": "See all buttons and saved layouts",
       "off": "Off",
-      "noChanges": "No changes (the controller's own buttons)"
+      "noChanges": "No changes (the controller's own buttons)",
+      "loaded": "Loaded layout: {{name}}",
+      "loadedEdited": "edited",
+      "loadedChip": "Loaded",
+      "loadedState": {
+        "notApplied": "Not applied yet: Apply remap makes it your normal buttons on the dongle.",
+        "edited": "Changed since you loaded it: Update saves the changes into the layout; Apply remap makes them your normal buttons.",
+        "applied": "Applied: these are your normal buttons on the dongle now."
+      }
     }
   },
   "ad": {

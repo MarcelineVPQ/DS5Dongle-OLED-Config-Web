@@ -208,6 +208,16 @@ function views() {
       await evaluate(`(() => { const p = document.querySelector(".live-panel .dk-panel-body, .live-panel"); if (p) p.scrollTop = p.scrollHeight; })()`);
     },
   ]);
+  list.push([
+    "buttons & layouts",
+    async () => {
+      await rail("controller");
+      await sleep(400);
+      await click('[data-view="buttons"]');
+      await sleep(500);
+      await evaluate(`(() => { const p = document.querySelector(".live-panel .dk-panel-body, .live-panel"); if (p) p.scrollTop = p.scrollHeight; })()`);
+    },
+  ]);
   for (const tab of [0, 1, 2, 3])
     list.push([
       `about tab ${tab}`,

@@ -488,7 +488,8 @@ html[data-theme="dark"] .dk {
 
 .dk-kv {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* the value column is what's left: a long version wraps, it doesn't widen the card */
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 3px 14px;
   margin: 2px 0 4px;
 }
@@ -499,6 +500,7 @@ html[data-theme="dark"] .dk {
   margin: 0;
   color: var(--text-strong);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .dk-presets {
@@ -3314,6 +3316,8 @@ html[data-cards-translucent] .dash-card {
 }
 .dash-facts {
   display: grid;
+  /* the card's width, not its longest value's */
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   gap: 4px;
 }
@@ -3324,13 +3328,20 @@ html[data-cards-translucent] .dash-card {
   font-size: var(--dk-small);
 }
 .dash-fact span {
+  flex: none;
   color: var(--text-muted);
 }
+/* A value too long for the card (a dev build's version) ends in "…"; its
+   tooltip has it all. */
 .dash-fact b {
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-strong);
   font-family: var(--font-mono, ui-monospace, monospace);
   font-weight: 500;
   text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .dash-fact.bad b {
   color: var(--text-warn);
@@ -3476,11 +3487,22 @@ html[data-cards-translucent] .dash-card {
   list-style: none;
 }
 .dk-layouts li {
+  display: grid;
+  gap: 4px;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-top-color: var(--border-default);
+  border-radius: 8px;
+}
+/* The layout in the editor: outlined, plus its "Loaded" chip. */
+.dk-layouts li.loaded {
+  border-color: var(--dk-sel-border);
+  background: var(--dk-sel-bg);
+}
+.dk-layout-btns {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  padding: 6px 0;
-  border-top: 1px solid var(--border-default);
 }
 .dk-layouts li:first-child {
   border-top: 0;
@@ -3495,9 +3517,30 @@ html[data-cards-translucent] .dash-card {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.dk-layout-new {
+  flex-wrap: wrap;
+}
 .dk-layout-new .dk-input {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 0;
+}
+/* "Loaded layout: Racing" at the top of All buttons: hard to miss. */
+.dk-loaded {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--dk-sel-border);
+  border-radius: 8px;
+  background: var(--dk-sel-bg);
+}
+.dk-loaded strong {
+  color: var(--dk-sel-text);
+  font-size: 14px;
+}
+.dk-loaded span {
+  color: var(--text-secondary);
+  font-size: var(--dk-small);
 }
 .dk-layout-changes {
   display: block;

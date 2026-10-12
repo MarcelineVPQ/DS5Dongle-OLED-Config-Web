@@ -1102,7 +1102,15 @@
       "shortcutSub": "全部按键一览，为游戏保存的布局",
       "seeAll": "查看全部按键和已保存的布局",
       "off": "关闭",
-      "noChanges": "无更改（手柄原始按键）"
+      "noChanges": "无更改（手柄原始按键）",
+      "loaded": "已载入布局：{{name}}",
+      "loadedEdited": "已修改",
+      "loadedChip": "已载入",
+      "loadedState": {
+        "notApplied": "尚未应用：应用后成为接收器上的常用按键。",
+        "edited": "载入后有改动：更新会把改动存入布局；应用会使其成为常用按键。",
+        "applied": "已应用：现在是接收器上的常用按键。"
+      }
     }
   },
   "ad": {

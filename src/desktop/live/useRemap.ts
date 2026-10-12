@@ -20,7 +20,9 @@ export interface Remap {
   apply: () => Promise<void>;
   revert: () => void;
   resetAll: () => void;
-  load: (table: number[]) => void; // a saved layout into the editor
+  load: (table: number[], layout?: { id: string; name: string }) => void; // a saved layout into the editor
+  // The saved layout last loaded into the editor (cleared by Reset all).
+  loaded: { id: string; name: string; table: number[] } | null;
   temporary: boolean; // a game's layout is on the dongle now (protocol 1.8)
 }
 
@@ -30,6 +32,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const [supported, setSupported] = useState<boolean | null>(null);
   const [draft, setDraft] = useState<number[]>(identityTable);
   const [busy, setBusy] = useState(false);
+  const [loaded, setLoaded] = useState<{ id: string; name: string; table: number[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -89,8 +92,15 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     setTarget: useCallback((source: number, target: number) => setDraft((d) => d.map((v, i) => (i === source ? target : v))), []),
     apply,
     revert: useCallback(() => setDraft(device.slice()), [device]),
-    resetAll: useCallback(() => setDraft(identityTable()), []),
-    load: useCallback((table: number[]) => setDraft(table.slice()), []),
+    resetAll: useCallback(() => {
+      setDraft(identityTable());
+      setLoaded(null);
+    }, []),
+    load: useCallback((table: number[], layout?: { id: string; name: string }) => {
+      setDraft(table.slice());
+      setLoaded(layout ? { ...layout, table: table.slice() } : null);
+    }, []),
+    loaded,
     temporary: !!temporary,
   };
 }

@@ -21,7 +21,7 @@ import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED } from "../../protocol/remap";
+import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, tablesEqual } from "../../protocol/remap";
 import { useLibrary } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings } from "../api";
@@ -122,7 +122,7 @@ function Overview({ onOpen, onCalibrate, onButtons }: { onOpen: (part: PartId) =
             <span>{t(`desktop.live.go.${key}.sub`)}</span>
           </button>
         ))}
-        <button type="button" className="live-shortcut" onClick={onButtons}>
+        <button type="button" className="live-shortcut" data-view="buttons" onClick={onButtons}>
           <strong>{t("desktop.layouts.shortcutTitle")}</strong>
           <span>{t("desktop.layouts.shortcutSub")}</span>
         </button>
@@ -216,6 +216,7 @@ function AllButtonsSection({ remap }: { remap: Remap }) {
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.allHeading")}</h2>
+      <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
       <div className="dk-buttons-table" role="table">
@@ -266,6 +267,27 @@ function AllButtonsSection({ remap }: { remap: Remap }) {
   );
 }
 
+// Which saved layout is in the editor, and where it stands, said plainly.
+function LoadedLayout({ remap }: { remap: Remap }) {
+  const { t } = useTranslation();
+  const { library } = useLibrary();
+  const l = remap.loaded;
+  if (!l) return null;
+  const name = library.layouts?.[l.id]?.name ?? l.name;
+  const edited = !tablesEqual(remap.draft, l.table);
+  const applied = !edited && tablesEqual(remap.device, l.table);
+  const state = edited ? "edited" : applied ? "applied" : "notApplied";
+  return (
+    <div className="dk-loaded" role="status">
+      <strong>
+        {t("desktop.layouts.loaded", { name })}
+        {edited && ` (${t("desktop.layouts.loadedEdited")})`}
+      </strong>
+      <span>{t(`desktop.layouts.loadedState.${state}`)}</span>
+    </div>
+  );
+}
+
 // Saved button layouts: the buttons above under a name, for any game's profile.
 function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
@@ -286,23 +308,34 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
       ) : (
         <ul className="dk-layouts">
           {layouts.map(([id, l]) => (
-            <li key={id}>
+            <li key={id} className={remap.loaded?.id === id ? "loaded" : undefined}>
               <div className="dk-layout-info">
                 <span className="dk-layout-name" title={l.name}>
                   {l.name}
                 </span>
+                {remap.loaded?.id === id && <span className="dk-chip ok">{t("desktop.layouts.loadedChip")}</span>}
                 {usedBy(id) > 0 && <span className="dk-hint"> · {t("desktop.layouts.usedBy", { count: usedBy(id) })}</span>}
                 <span className="dk-layout-changes">{layoutSummary(l.table, t("desktop.layouts.off"), t("desktop.layouts.noChanges"))}</span>
               </div>
-              <button type="button" className="dk-btn" title={t("desktop.layouts.loadHint")} onClick={() => remap.load(l.table)}>
-                {t("desktop.layouts.load")}
-              </button>
-              <button type="button" className="dk-btn" title={t("desktop.layouts.updateHint", { name: l.name })} onClick={() => save(id, l.name)}>
-                {t("desktop.layouts.update")}
-              </button>
-              <button type="button" className="dk-btn danger" title={t("desktop.layouts.deleteHint")} onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary)}>
-                {t("desktop.layouts.delete")}
-              </button>
+              <div className="dk-layout-btns">
+                <button type="button" className="dk-btn" title={t("desktop.layouts.loadHint")} onClick={() => remap.load(l.table, { id, name: l.name })}>
+                  {t("desktop.layouts.load")}
+                </button>
+                <button
+                  type="button"
+                  className="dk-btn"
+                  title={t("desktop.layouts.updateHint", { name: l.name })}
+                  onClick={() => {
+                    save(id, l.name);
+                    remap.load(remap.draft, { id, name: l.name });
+                  }}
+                >
+                  {t("desktop.layouts.update")}
+                </button>
+                <button type="button" className="dk-btn danger" title={t("desktop.layouts.deleteHint")} onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary)}>
+                  {t("desktop.layouts.delete")}
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -312,7 +345,9 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          save(`l-${Date.now().toString(36)}`, name.trim());
+          const id = `l-${Date.now().toString(36)}`;
+          save(id, name.trim());
+          remap.load(remap.draft, { id, name: name.trim() });
           setName("");
         }}
       >
