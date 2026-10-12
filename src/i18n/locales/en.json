@@ -250,7 +250,7 @@
         "waiting-bootloader": "Waiting for the bootloader…",
         "flashing": "Writing firmware",
         "restarting": "Restarting the dongle…",
-        "verifying": "Waiting for the dongle to come back…",
+        "verifying": "Waiting for the dongle: press PS on the controller to reconnect it.",
         "verifyingPress": "Flashed. Press PS on the controller: the dongle comes back once a controller connects. If it stays dark, unplug it and plug it back in."
       },
       "askTitle": "Keep the app up to date?",
@@ -401,9 +401,11 @@
       "noFirmware": "Looking for the firmware…",
       "replaces": "This replaces whatever is on the Pico now.",
       "install": "Install the firmware",
-      "existing": "Already set up? It connects automatically.",
       "newPico": "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.",
-      "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it."
+      "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it.",
+      "turnOnTitle": "Turn on your controller",
+      "pairHint": "Press PS on the controller. A new controller: hold PS + Create until the light bar flashes (the dongle's screen shows \"Pair your DualSense\").",
+      "whyHidden": "The dongle only shows up on this PC once a controller is connected to it."
     },
     "live": {
       "part": {

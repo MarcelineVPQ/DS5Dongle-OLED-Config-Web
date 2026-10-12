@@ -251,7 +251,7 @@
         "waiting-bootloader": "Aguardando o bootloader…",
         "flashing": "Gravando o firmware",
         "restarting": "Reiniciando o dongle…",
-        "verifying": "Aguardando o dongle voltar…",
+        "verifying": "Aguardando o dongle: aperte PS no controle para reconectá-lo.",
         "verifyingPress": "Gravado. Aperte PS no controle: o dongle volta assim que um controle se conecta. Se continuar apagado, desconecte e conecte de novo."
       },
       "askTitle": "Manter o app atualizado?",
@@ -402,9 +402,11 @@
       "noFirmware": "Procurando o firmware…",
       "replaces": "Isso substitui o que estiver no Pico agora.",
       "install": "Instalar o firmware",
-      "existing": "Já configurado? Ele conecta automaticamente.",
       "newPico": "Pico novo? Conecte-o segurando o botão BOOTSEL (um Pico novinho não precisa do botão). O app o encontra e instala o firmware.",
-      "driveNote": "Seu computador também pode mostrá-lo como uma unidade chamada RP2350. Não precisa abrir."
+      "driveNote": "Seu computador também pode mostrá-lo como uma unidade chamada RP2350. Não precisa abrir.",
+      "turnOnTitle": "Ligue seu controle",
+      "pairHint": "Aperte PS no controle. Um controle novo: segure PS + Create até a barra de luz piscar (a tela do dongle mostra “Pair your DualSense”).",
+      "whyHidden": "O dongle só aparece neste PC depois que um controle se conecta a ele."
     },
     "live": {
       "part": {

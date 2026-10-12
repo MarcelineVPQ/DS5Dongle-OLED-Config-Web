@@ -55,15 +55,23 @@ export async function findBootloader(): Promise<PicoflashHandle | null> {
   return (await PicoflashAPI.getDevices())[0] ?? null;
 }
 
-async function flash(device: PicoflashHandle, regions: ReturnType<typeof parseUf2Regions>, onProgress: (p: FirmwareProgress) => void): Promise<void> {
+const FLASH_CHUNK = 0x10000; // 64 KB: 16 flash sectors
+
+export async function flash(device: PicoflashHandle, regions: ReturnType<typeof parseUf2Regions>, onProgress: (p: FirmwareProgress) => void): Promise<void> {
   onProgress({ step: "flashing", fraction: 0 });
   const total = regions.reduce((n, r) => n + r.data.byteLength, 0);
   let done = 0;
   await device.connect();
+  // In pieces, so the progress moves (the firmware is usually one region).
+  // Regions are whole flash sectors (alignRegionToSector), and a piece is a
+  // whole number of sectors, so every write stays sector-aligned.
   for (const region of regions) {
-    await device.flashEraseAndWrite(region.address, region.data);
-    done += region.data.byteLength;
-    onProgress({ step: "flashing", fraction: done / total });
+    for (let offset = 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
+      const piece = region.data.subarray(offset, offset + FLASH_CHUNK);
+      await device.flashEraseAndWrite(region.address + offset, piece);
+      done += piece.byteLength;
+      onProgress({ step: "flashing", fraction: done / total });
+    }
   }
 
   onProgress({ step: "restarting" });

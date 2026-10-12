@@ -2,7 +2,7 @@ import { useState } from "react";
 import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { isNewer } from "../../update/manifest";
+import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
 import { say } from "../narrator";
@@ -49,12 +49,12 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                 : t("desktop.firmware.offline")}
           </dd>
         </dl>
-        <div className="dk-ctl" style={{ justifyContent: "flex-start", gap: 8, paddingBottom: 6 }}>
+        <div className="dk-ctl" style={{ justifyContent: "flex-start", flexWrap: "wrap", gap: 8, paddingBottom: 6 }}>
           {fw.available ? (
             <button type="button" className="dk-btn primary" disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"} onClick={() => void fw.start()}>
               {fw.backToStable
-                ? t("desktop.firmware.backToStable", { version: fw.latest?.version })
-                : t("desktop.firmware.update", { version: fw.latest?.version, defaultValue: "Update to {{version}}" })}
+                ? t("desktop.firmware.backToStable", { version: shortVersion(fw.latest?.version) })
+                : t("desktop.firmware.update", { version: shortVersion(fw.latest?.version), defaultValue: "Update to {{version}}" })}
             </button>
           ) : (
             <span className="dk-good">✓ {t("desktop.firmware.upToDate", "Up to date")}</span>

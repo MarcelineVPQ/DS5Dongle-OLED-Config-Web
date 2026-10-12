@@ -11,15 +11,20 @@ import { useTranslation } from "react-i18next";
 import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
 import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
+import { readPref } from "./storage";
 import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
 
 const POLL_MS = 1000;
 
+// Set once a dongle has connected on this PC (DesktopApp).
+export const HAD_DONGLE_KEY = "ds5.hadDongle";
+
 type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "restarting"; version: string } | { phase: "failed"; detail: string };
 
 export default function SetupScreen({ supported }: { supported: boolean }) {
   const { t } = useTranslation();
+  const [hadDongle] = useState(() => readPref(HAD_DONGLE_KEY) === "1");
   const [pico, setPico] = useState<PicoflashHandle | null>(null);
   const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
   const [install, setInstall] = useState<Install>({ phase: "idle" });
@@ -102,9 +107,12 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
 
   return (
     <Center>
-      <strong>{t("desktop.empty.title", "Plug in the DS5 Dongle")}</strong>
-      <span>{t("desktop.setup.existing", "Already set up? It connects automatically.")}</span>
-      <span>{t("desktop.setup.newPico", "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.")}</span>
+      {/* The dongle only appears on USB once a controller connects, so a
+          dongle waiting to pair looks like no dongle at all. */}
+      <strong>{t(hadDongle ? "desktop.setup.turnOnTitle" : "desktop.empty.title")}</strong>
+      <span>{t("desktop.setup.pairHint")}</span>
+      <span className="dk-hint">{t("desktop.setup.whyHidden")}</span>
+      <span>{t("desktop.setup.newPico")}</span>
       {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
       {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
       <UsbAccessSetup compact />

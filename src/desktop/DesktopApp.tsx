@@ -6,7 +6,7 @@ import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccen
 import { CLEAR_GLASS_BAR } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
 import { GLASS_KEY } from "./glass/glassPref";
-import { useFlagPref, usePref } from "./storage";
+import { useFlagPref, usePref, writePref } from "./storage";
 import { colorway } from "./live/colorways";
 import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
@@ -17,7 +17,7 @@ import { useApplyTheme } from "../components/ThemeToggle";
 import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
-import SetupScreen from "./SetupScreen";
+import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
@@ -42,6 +42,11 @@ export default function DesktopApp() {
   const { t, i18n } = useTranslation();
   useApplyTheme();
   const bridge = useDs5Bridge();
+  // Remembered so the setup screen can tell "no dongle yet" from "the dongle
+  // is waiting for its controller" (it stays off USB until one connects).
+  useEffect(() => {
+    if (bridge.client) writePref(HAD_DONGLE_KEY, "1");
+  }, [bridge.client]);
   const appUpdate = useAppUpdate();
   const fw = useFirmwareUpdate(bridge, appUpdate);
   const [main, setMain] = useState<MainView>("controller");

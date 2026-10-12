@@ -251,7 +251,7 @@
         "waiting-bootloader": "En attente du bootloader…",
         "flashing": "Écriture du firmware",
         "restarting": "Redémarrage du dongle…",
-        "verifying": "En attente du retour du dongle…",
+        "verifying": "En attente du dongle : appuie sur PS sur la manette pour la reconnecter.",
         "verifyingPress": "Flashé. Appuie sur PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
       },
       "askTitle": "Garder l'app à jour ?",
@@ -402,9 +402,11 @@
       "noFirmware": "Recherche du firmware…",
       "replaces": "Cela remplace tout ce qui se trouve sur le Pico.",
       "install": "Installer le firmware",
-      "existing": "Déjà configuré ? Il se connecte automatiquement.",
       "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
-      "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir."
+      "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
+      "turnOnTitle": "Allume ta manette",
+      "pairHint": "Appuie sur PS sur la manette. Une nouvelle manette : maintiens PS + Create jusqu’à ce que la barre lumineuse clignote (l’écran du dongle affiche « Pair your DualSense »).",
+      "whyHidden": "Le dongle n’apparaît sur ce PC qu’une fois une manette connectée."
     },
     "live": {
       "part": {

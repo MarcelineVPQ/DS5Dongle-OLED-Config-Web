@@ -251,7 +251,7 @@
         "waiting-bootloader": "Warte auf den Bootloader…",
         "flashing": "Firmware wird geschrieben",
         "restarting": "Dongle startet neu…",
-        "verifying": "Warte, bis der Dongle zurück ist…",
+        "verifying": "Warte auf den Dongle: Drück PS am Controller, um ihn wieder zu verbinden.",
         "verifyingPress": "Geflasht. Drücke PS am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
       },
       "askTitle": "Die App aktuell halten?",
@@ -402,9 +402,11 @@
       "noFirmware": "Firmware wird gesucht…",
       "replaces": "Das ersetzt alles, was gerade auf dem Pico ist.",
       "install": "Firmware installieren",
-      "existing": "Schon eingerichtet? Er verbindet sich automatisch.",
       "newPico": "Neuer Pico? Steck ihn ein, während du seinen BOOTSEL-Knopf hältst (ein fabrikneuer Pico braucht den Knopf nicht). Die App findet ihn und installiert die Firmware.",
-      "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen."
+      "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
+      "turnOnTitle": "Schalte deinen Controller ein",
+      "pairHint": "Drück PS am Controller. Ein neuer Controller: Halte PS + Create, bis die Lichtleiste blinkt (das Display des Dongles zeigt „Pair your DualSense“).",
+      "whyHidden": "Der Dongle erscheint an diesem PC erst, wenn ein Controller mit ihm verbunden ist."
     },
     "live": {
       "part": {

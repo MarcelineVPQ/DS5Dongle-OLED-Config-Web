@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Manifest, devNumber, isAllowedDownloadUrl, isNewer, parseVersion, sameVersion } from "../../src/update/manifest";
+import { Manifest, devNumber, isAllowedDownloadUrl, isNewer, parseVersion, sameVersion, shortVersion } from "../../src/update/manifest";
 
 describe("parseVersion", () => {
   it("reads plain, v-prefixed and suffixed versions", () => {
@@ -88,5 +88,14 @@ describe("development builds", () => {
     expect(sameVersion("v0.9.1-dev.2-oled-edition", "0.9.1-dev.2")).toBe(true);
     expect(sameVersion("0.9.1-dev.2", "0.9.1")).toBe(false);
     expect(sameVersion("v0.9.0-oled-edition", "0.9.0")).toBe(true);
+  });
+});
+
+describe("shortVersion", () => {
+  it("drops the v and the edition suffix", () => {
+    expect(shortVersion("v0.9.2-oled-edition")).toBe("0.9.2");
+    expect(shortVersion("v0.9.3-dev.1-oled-edition")).toBe("0.9.3-dev.1");
+    expect(shortVersion("0.9.2")).toBe("0.9.2");
+    expect(shortVersion(undefined)).toBe("");
   });
 });

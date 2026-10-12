@@ -22,3 +22,6 @@ assets-src/voice/*-speaker/
 assets-src/voice/*-preview.mp3
 assets-src/voice/check-report.json
 __pycache__/
+
+# Local scratch (dev runs, VM test screenshots)
+tmp/

@@ -87,6 +87,15 @@ export function isNewer(remote: string | null | undefined, local: string | null 
 }
 
 // The same version, development number included.
+// "v0.9.2-oled-edition" -> "0.9.2", "v0.9.3-dev.1-oled-edition" -> "0.9.3-dev.1":
+// for buttons and short labels (the full tag is shown next to them).
+export function shortVersion(raw: string | null | undefined): string {
+  const v = parseVersion(raw);
+  if (!v) return raw ?? "";
+  const dev = devNumber(raw);
+  return `${v.join(".")}${dev === null ? "" : `-dev.${dev}`}`;
+}
+
 export const sameVersion = (a: string | null | undefined, b: string | null | undefined) => !!parseVersion(a) && !isNewer(a, b) && !isNewer(b, a);
 
 // Hosts a manifest download may point at: GitHub release assets and the

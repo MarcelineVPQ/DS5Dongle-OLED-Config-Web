@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Firmware update progress** now moves while the firmware is written (it stayed at 0% until the end), and the **Update to …** button shows the short version ("Update to 0.9.2") so **Check now** no longer slides off the Dongle panel.
+- **"Plug in the DS5 Dongle" when the dongle is plugged in:** the dongle stays off USB until a controller connects, so the setup screen now says how to connect or pair one (press PS, or hold PS + Create), and says **Turn on your controller** on PCs that have used a dongle before. After a firmware update it says to press PS.
+
 ## [0.9.2] - 2026-10-12
 
 ### Fixed
