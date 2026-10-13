@@ -3,6 +3,7 @@ import { errorText } from "../errorText";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FirmwareLookup, LatestFirmware, UpdateState } from "./api";
+import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
 
 // App self-update state, mirrored from the main process.
@@ -106,7 +107,9 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // derived from the version it reports, not stored separately.
   let shown: FirmwareUpdateState = state;
   if (state.phase === "verifying" && installed) {
-    shown = sameVersion(state.version, installed) ? { phase: "done", version: installed } : { phase: "failed", detail: `The dongle came back reporting ${installed}, expected ${state.version}.` };
+    shown = sameVersion(state.version, installed)
+      ? { phase: "done", version: installed }
+      : { phase: "failed", detail: `${deviceText("{{device, capitalize}}")} came back reporting ${installed}, expected ${state.version}.` };
   }
   const settled = shown !== state;
   useEffect(() => {

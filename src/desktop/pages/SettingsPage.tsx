@@ -404,7 +404,7 @@ export function UsbSection(props: SectionProps) {
         ]}
         onChange={(v) => set("controllerMode", v)}
       />
-      <p className="dk-hint">{t("desktop.settings.usbHint", "These take effect after Reconnect USB (the PC sees the dongle unplug and replug).")}</p>
+      <p className="dk-hint">{t("desktop.settings.usbHint", "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).")}</p>
       <div className="dk-ctl" style={{ justifyContent: "flex-start", paddingBottom: 4 }}>
         <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
           {t("actions.reconnect")}

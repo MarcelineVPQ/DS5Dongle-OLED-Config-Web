@@ -267,7 +267,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
               </div>
             )}
             {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
-            {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update the dongle's firmware to see the controller move live.")}</p>}
+            {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
             {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
           </>
         )}

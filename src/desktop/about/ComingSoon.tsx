@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { deviceText } from "../hardwareName";
 import { ISSUES_URL, ROADMAP, ROADMAP_COLUMNS } from "./roadmap";
 
 /** About → Coming soon: the public roadmap (roadmap.ts) as a read-only board. */
@@ -23,8 +24,8 @@ export default function ComingSoon() {
               </h2>
               {items.map((x) => (
                 <article key={x.title} className="dk-card">
-                  <h3>{x.title}</h3>
-                  <p>{x.text}</p>
+                  <h3>{deviceText(x.title)}</h3>
+                  <p>{deviceText(x.text)}</p>
                   <div className="dk-roadmap-tags">
                     {x.high && (
                       <span className="dk-chip warn">

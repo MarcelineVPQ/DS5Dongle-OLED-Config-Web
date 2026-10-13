@@ -84,8 +84,8 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
         resolve({
           ok: true,
           message: withProfile
-            ? "USB access set up, and the app's sandbox allowed. Unplug and replug the dongle; the sandbox is on from the next start."
-            : "USB access set up. Unplug and replug the dongle.",
+            ? "USB access set up, and the app's sandbox allowed. Unplug and replug your board; the sandbox is on from the next start."
+            : "USB access set up. Unplug and replug your board.",
         });
       else if ((error as NodeJS.ErrnoException).code === "ENOENT") resolve({ ok: false, message: "pkexec isn't installed. Copy the rule manually (see the README)." });
       else if (error.code === 3) resolve({ ok: false, message: "udevadm isn't installed, so the rule can't be loaded. Copy it manually (see the README)." });

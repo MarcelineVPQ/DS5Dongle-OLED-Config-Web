@@ -82,7 +82,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
     view === "overview"
       ? t("desktop.live.overview", "Your controller")
       : view === "dongle"
-        ? hardwareName(bridge.identity, t)
+        ? hardwareName(bridge.identity)
         : view === "app"
           ? t("desktop.live.app", "App settings")
           : view === "calibration"
@@ -210,7 +210,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
           {game.target ? (
             <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: game.target.title })}</div>
           ) : (
-            <p className="dk-hint">{t("desktop.live.remapHint", "Button assignments are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
+            <p className="dk-hint">{t("desktop.live.remapHint", "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.")}</p>
           )}
           <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}

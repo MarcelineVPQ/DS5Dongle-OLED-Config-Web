@@ -58,7 +58,7 @@ export class WebUsbTransport implements Ds5Transport {
   async open(): Promise<void> {
     if (this.isOpen) return;
     const itf = configuratorInterface(this.device);
-    if (itf < 0) throw new Error("This dongle's firmware has no configurator interface. Update the firmware first.");
+    if (itf < 0) throw new Error("Your board's firmware has no configurator interface. Update the firmware first.");
     if (!this.device.opened) await this.device.open();
     if (this.device.configuration === null) await this.device.selectConfiguration(1);
     await this.device.claimInterface(itf);

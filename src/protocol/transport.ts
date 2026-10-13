@@ -19,7 +19,7 @@ export interface Ds5Transport {
 
 // A transfer failed because the device left the bus (reboot, BOOTSEL, unplug).
 export class DeviceGoneError extends Error {
-  constructor(message = "The dongle disconnected") {
+  constructor(message = "Your board disconnected") {
     super(message);
     this.name = "DeviceGoneError";
   }
@@ -29,7 +29,7 @@ export class DeviceGoneError extends Error {
 // too old to have it.
 export class ReportStalledError extends Error {
   constructor(public readonly reportId: number) {
-    super(`The dongle refused report 0x${reportId.toString(16).toUpperCase()}`);
+    super(`Your board refused report 0x${reportId.toString(16).toUpperCase()}`);
     this.name = "ReportStalledError";
   }
 }

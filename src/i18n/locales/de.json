@@ -83,22 +83,19 @@
       "about": "Über",
       "games": "Spiele"
     },
-    "hardware": {
-      "generic": "Dongle"
-    },
     "status": {
-      "connected": "{{device}} verbunden",
-      "waiting": "Warte auf {{device}}…",
+      "connected": "{{deviceName}} verbunden",
+      "waiting": "Warte auf {{device_akk}}…",
       "waitingFirst": "Warte auf Verbindung…"
     },
     "empty": {
-      "title": "DS5 Dongle anschließen"
+      "title": "{{device_akk, capitalize}} anschließen"
     },
     "bar": {
-      "unsaved": "Auf den Dongle angewendet, noch nicht gespeichert: Änderungen gehen beim Ausschalten verloren.",
-      "saved": "Alle Änderungen auf dem Dongle gespeichert.",
+      "unsaved": "Auf {{device_akk}} angewendet, noch nicht gespeichert: Änderungen gehen beim Ausschalten verloren.",
+      "saved": "Alle Änderungen auf {{device_dat}} gespeichert.",
       "revert": "Verwerfen",
-      "save": "Auf Dongle speichern",
+      "save": "Auf {{device_dat}} speichern",
       "profileActive": "Profil „{{title}}“ aktiv",
       "profileSaved": "Änderungen gehen ins Profil; beim Beenden des Spiels kommen deine normalen Einstellungen zurück.",
       "profileUnsaved": "Hier geändert, noch nicht im Profil gespeichert.",
@@ -132,7 +129,7 @@
       "zeroOff": "0 = nie",
       "controllerWakes": "Controller-Eingabe weckt das Display",
       "usb": "USB",
-      "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt).",
+      "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht {{device_akk}} kurz ab- und wieder angesteckt).",
       "speakerLevel": "Lautstärke (Lautsprecher für Controller)",
       "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern",
       "triggerIntensity": "Intensität des Trigger-Effekts",
@@ -155,9 +152,9 @@
       "sleepControllerOff": "Controller ausschalten, wenn der PC in den Ruhezustand wechselt",
       "sleepControllerOffSub": "Sobald der PC 3 Sekunden im Ruhezustand ist",
       "psWakesPc": "PC mit der PS-Taste aufwecken",
-      "psWakesPcSub": "Der PC muss USB im Ruhezustand mit Strom versorgen und der Tastatur das Aufwecken erlauben. Ohne verbundenen Controller erscheint der Dongle als „DS5 Dongle Wake Keyboard“.",
-      "pcSleepHint": "Wird sofort auf dem Dongle gespeichert.",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles, um diese Einstellungen zu nutzen.",
+      "psWakesPcSub": "Der PC muss USB im Ruhezustand mit Strom versorgen und der Tastatur das Aufwecken erlauben. Ohne verbundenen Controller erscheint {{device}} als „DS5 Dongle Wake Keyboard“.",
+      "pcSleepHint": "Wird sofort auf {{device_dat}} gespeichert.",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um diese Einstellungen zu nutzen.",
       "asGame": "Wie im Spiel",
       "choice": {
         "auto": "Auto",
@@ -180,7 +177,7 @@
         "fav2": "FAV2",
         "fav3": "FAV3"
       },
-      "hint": "Beim Laden zeigt der Dongle in jedem Modus ein bernsteinfarbenes Pulsieren.",
+      "hint": "Beim Laden zeigt {{device}} in jedem Modus ein bernsteinfarbenes Pulsieren.",
       "favorites": "Favoritenfarben",
       "favN": "FAV{{n}}"
     },
@@ -213,8 +210,8 @@
       }
     },
     "diag": {
-      "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis der Dongle neu startet.",
-      "core1StoppedAt": "Core1 gestoppt {{step}} (Startschritt {{stage}}): Der Audiopfad bleibt tot, bis der Dongle neu startet.",
+      "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis {{device}} neu startet.",
+      "core1StoppedAt": "Core1 gestoppt {{step}} (Startschritt {{stage}}): Der Audiopfad bleibt tot, bis {{device}} neu startet.",
       "core1Step": {
         "0": "vor seinem Start",
         "1": "beim Anmelden für die Flash-Sperre",
@@ -245,15 +242,15 @@
         "setFeatureCount": "Feature-Writes vom Host",
         "setFeatureLast": "Letzter Feature-Write vom Host"
       },
-      "speakerEncoderFailed": "Lautsprecher aus: Der Dongle hatte beim Start nicht genug Speicher für den Lautsprecher-Encoder ({{kb}} KB frei). Haptik, Trigger, Mikrofon und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller.",
-      "micDecoderFailed": "Mikrofon aus: Der Dongle konnte beim Start den Decoder für das Controller-Mikrofon nicht anlegen ({{kb}} KB frei). Lautsprecher, Haptik, Trigger und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
+      "speakerEncoderFailed": "Lautsprecher aus: {{device, capitalize}} hatte beim Start nicht genug Speicher für den Lautsprecher-Encoder ({{kb}} KB frei). Haptik, Trigger, Mikrofon und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller.",
+      "micDecoderFailed": "Mikrofon aus: {{device, capitalize}} konnte beim Start den Decoder für das Controller-Mikrofon nicht anlegen ({{kb}} KB frei). Lautsprecher, Haptik, Trigger und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
     },
     "firmware": {
       "installed": "Installierte Firmware",
       "device": "Gerät",
       "rebooting": "Startet neu… drück die PS-Taste am Controller, sobald er wieder da ist.",
-      "reboot": "{{device}} neu starten",
-      "bootsel": "Der Dongle ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder steck ihn ab, um abzubrechen.",
+      "reboot": "{{device_akk, capitalize}} neu starten",
+      "bootsel": "{{device, capitalize}} ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder zieh das USB-Kabel ab, um abzubrechen.",
       "enterBootsel": "BOOTSEL-Modus starten",
       "resetDone": "Einstellungen auf Standard zurückgesetzt und gespeichert.",
       "confirmInstall": "{{version}} jetzt installieren",
@@ -264,7 +261,7 @@
       "update": "Auf {{version}} aktualisieren",
       "upToDate": "Aktuell",
       "check": "Jetzt prüfen",
-      "updateHint": "Der Dongle startet in den Bootloader, wird geflasht und startet von selbst neu. Lass ihn eingesteckt; drücke danach die PS-Taste am Controller.",
+      "updateHint": "{{device, capitalize}} startet in den Bootloader, wird geflasht und startet von selbst neu. Nicht abziehen; drücke danach die PS-Taste am Controller.",
       "unpublished": "noch kein Release veröffentlicht",
       "offline": "Prüfung nicht möglich (offline)",
       "bundled": "in der App enthalten",
@@ -277,20 +274,20 @@
     "usbAccess": {
       "label": "USB-Zugriffsregel",
       "installed": "Installiert",
-      "missing": "Nicht installiert (Steams Regeln decken den Dongle eventuell schon ab)",
+      "missing": "Nicht installiert (Steams Regeln decken {{device_akk}} eventuell schon ab)",
       "button": "USB-Zugriff einrichten"
     },
     "windowsUsb": {
       "hint": "Eingesteckt, Controller an, und trotzdem keine Verbindung? Windows hat dafür vielleicht noch eine alte USB-Einstellung gespeichert.",
-      "seen": "Der Dongle ist eingesteckt, aber Windows hat seinen Treiber nicht eingerichtet.",
+      "seen": "{{device, capitalize}} ist eingesteckt, aber Windows hat den Treiber nicht eingerichtet.",
       "button": "USB-Treiber reparieren",
-      "done": "Repariert. Zieh den Dongle jetzt ab und steck ihn wieder ein.",
+      "done": "Repariert. Zieh {{device_akk}} jetzt ab und steck das USB-Kabel wieder ein.",
       "stepsTitle": "Was die Reparatur macht",
       "step": {
         "admin": "Windows fragt nach Administratorrechten (Windows PowerShell, von Microsoft). Wählst du Nein, ändert sich nichts.",
-        "forget": "Windows vergisst die USB-Einstellung, die es für die zwei USB-IDs des Dongles gespeichert hat (054C:0CE6 und 054C:0DF2). Sonst wird nichts in der Registry geändert.",
+        "forget": "Windows vergisst die USB-Einstellung, die es für die zwei USB-IDs {{device_gen}} gespeichert hat (054C:0CE6 und 054C:0DF2). Sonst wird nichts in der Registry geändert.",
         "entries": "Die gespeicherten Geräteeinträge für diese zwei IDs werden entfernt. Windows legt sie von selbst neu an.",
-        "replug": "Du ziehst den Dongle ab und steckst ihn wieder ein. Windows richtet seinen Treiber neu ein, und die App verbindet sich."
+        "replug": "Du ziehst {{device_akk}} ab und steckst das USB-Kabel wieder ein. Windows richtet den Treiber neu ein, und die App verbindet sich."
       },
       "showScript": "Genaues Skript anzeigen",
       "run": "Reparatur starten",
@@ -305,18 +302,18 @@
       "restart": "Jetzt neu starten",
       "manual": "App-Update {{version}} ist auf der Release-Seite verfügbar.",
       "open": "Release-Seite öffnen",
-      "fwAvailable": "Firmware {{version}} ist verfügbar ({{device}}).",
+      "fwAvailable": "Firmware {{version}} ist für {{device_akk}} verfügbar.",
       "details": "Details",
-      "fwDontUnplug": "Firmware wird aktualisiert, Dongle nicht abziehen.",
+      "fwDontUnplug": "Firmware wird aktualisiert, {{device_akk}} nicht abziehen.",
       "fwDone": "Firmware auf {{version}} aktualisiert. Drücke die PS-Taste, um den Controller zu verbinden.",
       "fwStep": {
         "downloading": "Firmware wird geladen und geprüft…",
-        "rebooting": "Dongle startet in den Bootloader…",
+        "rebooting": "{{device, capitalize}} startet in den Bootloader…",
         "waiting-bootloader": "Warte auf den Bootloader…",
         "flashing": "Firmware wird direkt geschrieben; ignoriere das Laufwerk RP2350, falls es erscheint",
-        "restarting": "Dongle startet neu…",
-        "verifying": "Warte auf den Dongle: Drück die PS-Taste am Controller, um ihn wieder zu verbinden.",
-        "verifyingPress": "Geflasht. Drücke die PS-Taste am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
+        "restarting": "{{device, capitalize}} startet neu…",
+        "verifying": "Warte auf {{device_akk}}: Drück die PS-Taste am Controller, um die Verbindung wiederherzustellen.",
+        "verifyingPress": "Geflasht. Drücke die PS-Taste am Controller: {{device, capitalize}} meldet sich, sobald ein Controller verbunden ist. Bleibt das Display dunkel, zieh das USB-Kabel ab und steck es wieder ein."
       },
       "askTitle": "Die App aktuell halten?",
       "askBody": "Neue Versionen können sich selbst herunterladen und installieren, geprüft wie jedes Update, und starten beim nächsten Öffnen der App. Das kannst du in den App-Einstellungen ändern.",
@@ -359,7 +356,7 @@
           "buttons": "Tasten",
           "audio": "Audio & haptisches Feedback",
           "games": "Spiele",
-          "dongle": "Dongle & OLED",
+          "dongle": "{{deviceName}} & OLED",
           "app": "App",
           "community": "Community"
         },
@@ -380,7 +377,7 @@
       "scanning": "Steam, Heroic und Lutris werden geprüft…",
       "protonTitle": "DualSense-Proton-Build",
       "protonFound": "ist installiert.",
-      "protonMissing": "Unser Proton-Build ist noch nicht installiert. Windows-Spiele brauchen ihn für adaptive Trigger und haptisches Feedback über den Dongle.",
+      "protonMissing": "Unser Proton-Build ist noch nicht installiert. Windows-Spiele brauchen ihn für adaptive Trigger und haptisches Feedback über {{device_akk}}.",
       "protonInstall": "{{name}} installieren…",
       "protonUpdate": "{{name}} installieren…",
       "protonConfirm": "Lädt {{name}} ({{size}}) aus dem GitHub-Release des Projekts, prüft die SHA-256-Prüfsumme und installiert es dort, wo deine Launcher nach Proton-Builds suchen. Vorhandene Proton-Versionen werden weder geändert noch entfernt. Danach wählst du, welche Launcher und Spiele es nutzen.",
@@ -438,7 +435,7 @@
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen"
         },
         "why": {
-          "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über den Dongle zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
+          "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über {{device_akk}} zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
           "defaultHeroic": "Heroic gibt neuen Epic-, GOG- und Amazon-Installationen derzeit {{current}}. Das betrifft nur künftig installierte Spiele; installierte Spiele behalten ihre eigene Einstellung, und diese Seite prüft sie einzeln.",
           "defaultLutris": "Lutris nutzt für Wine-Spiele derzeit {{current}}. Spiele mit eigener Wine-Version behalten sie.",
           "runner": "{{support}} Es läuft derzeit mit {{current}}, das die nativen Funktionen des Controllers nicht durchreicht.",
@@ -487,7 +484,7 @@
       "installing": "Firmware wird installiert…",
       "keepPlugged": "Lass den Pico eingesteckt.",
       "restarting": "Firmware {{version}} installiert. Jetzt den Controller koppeln",
-      "restartingHint": "Halte die Create-Taste und die PS-Taste am Controller, bis die Leuchtleiste blinkt. Der Dongle erscheint hier, sobald der Controller verbunden ist (ein schon gekoppelter Controller braucht nur die PS-Taste).",
+      "restartingHint": "Halte die Create-Taste und die PS-Taste am Controller, bis die Leuchtleiste blinkt. {{device, capitalize}} erscheint hier, sobald der Controller verbunden ist (ein schon gekoppelter Controller braucht nur die PS-Taste).",
       "found": "Ein Pico ist bereit zur Einrichtung",
       "offerBundled": "Firmware {{version}} installieren, die mit dieser App geliefert wird (kein Download nötig).",
       "offerOnline": "Firmware {{version}} installieren, die neueste veröffentlichte Version.",
@@ -497,16 +494,16 @@
       "newPico": "Neuer Pico? Steck ihn ein, während du seinen BOOTSEL-Knopf hältst (ein fabrikneuer Pico braucht den Knopf nicht). Die App findet ihn und installiert die Firmware.",
       "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
       "turnOnTitle": "Schalte deinen Controller ein",
-      "pairHint": "Drück die PS-Taste am Controller. Ein neuer Controller: Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt (das Display des Dongles zeigt „Pair your DualSense“).",
-      "whyHidden": "Der Dongle erscheint an diesem PC erst, wenn ein Controller mit ihm verbunden ist.",
+      "pairHint": "Drück die PS-Taste am Controller. Ein neuer Controller: Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt (das Display {{device_gen}} zeigt „Pair your DualSense“).",
+      "whyHidden": "{{device, capitalize}} erscheint an diesem PC erst, wenn ein Controller damit verbunden ist.",
       "updatesTitle": "Updates",
       "fwReady": "Diese App installiert Firmware {{version}}.",
-      "fwHowTo": "Firmware ohne Controller aktualisieren oder neu installieren: Halte die BOOTSEL-Taste des Pico gedrückt, während du den Dongle einsteckst. Dieser Bildschirm bietet dann die Installation an.",
+      "fwHowTo": "Firmware ohne Controller aktualisieren oder neu installieren: Halte die BOOTSEL-Taste des Pico gedrückt, während du {{device_akk}} einsteckst. Dieser Bildschirm bietet dann die Installation an.",
       "checkUpdates": "Nach Updates suchen",
       "checkedCurrent": "Die App ist aktuell ({{version}}).",
       "checkedNewer": "App {{version}} ist verfügbar: siehe Hinweis oben.",
-      "checkedFwNewer": "Firmware {{version}} ist für den Dongle verfügbar: siehe Hinweis oben.",
-      "checkedFwCurrent": "Die Firmware des Dongles ist aktuell ({{version}}).",
+      "checkedFwNewer": "Firmware {{version}} ist für {{device_akk}} verfügbar: siehe Hinweis oben.",
+      "checkedFwCurrent": "Die Firmware {{device_gen}} ist aktuell ({{version}}).",
       "checkFailed": "Suche nach Updates fehlgeschlagen. Bist du online?"
     },
     "live": {
@@ -539,7 +536,7 @@
         "body": "Haptisches Feedback"
       },
       "pickHint": "Klicke auf einen Teil der Abbildung, um ihn einzurichten.",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles, um den Controller live zu sehen.",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um den Controller live zu sehen.",
       "overview": "Dein Controller",
       "app": "App-Einstellungen",
       "close": "Schließen",
@@ -549,7 +546,7 @@
       "remap": "Tastenzuweisung",
       "remapActs": "Wirkt als",
       "remapDefault": "Standard",
-      "remapHint": "Tastenzuweisungen werden beim Übernehmen auf den Dongle geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
+      "remapHint": "Tastenzuweisungen werden beim Übernehmen auf {{device_akk}} geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
       "remapApply": "Zuweisung übernehmen",
       "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
@@ -571,7 +568,7 @@
       "edgePart": {
         "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die benutzerdefinierten Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
         "paddle": "Eine der Rücktasten des DualSense Edge. Die benutzerdefinierten Profile des Controllers können ihr jede Taste zuweisen. Sie leuchtet hier auf, wenn du sie drückst.",
-        "soon": "Für die Zuweisung braucht es die neueste Dongle-Firmware (Pico-Seite → Aktualisieren)."
+        "soon": "Für die Zuweisung braucht es die neueste Firmware auf {{device_dat}} ({{deviceName}} → Aktualisieren)."
       },
       "effects": {
         "0": "keiner",
@@ -613,7 +610,7 @@
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
       "hapticSilent": "Still: gerade sendet nichts haptisches Feedback. Der Pegel bewegt sich, wenn ein Spiel haptisches Feedback abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
       "speakerSilent": "Still: gerade spielt nichts auf dem Lautsprecher des Controllers.",
-      "levelLive": "Live vom Dongle.",
+      "levelLive": "Live {{device_vom}}.",
       "hardwareAcceleration": "Hardwarebeschleunigung",
       "hardwareAccelerationSub": "Zeichnet mit der Grafikkarte: flüssiger und nötig für Unschärfe- und Glaseffekte. Schaltet sich ab, wenn die Grafikkarte abstürzt.",
       "restartToApply": "Starte die App neu, um es anzuwenden",
@@ -658,7 +655,7 @@
       },
       "panel": {
         "title": "Hier öffnen sich Einstellungen",
-        "body": "Änderungen gehen sofort an den Dongle, du siehst, hörst und spürst sie direkt. ✕ schließt das Feld."
+        "body": "Änderungen gehen sofort an {{device_akk}}, du siehst, hörst und spürst sie direkt. ✕ schließt das Feld."
       },
       "list": {
         "title": "Oder aus der Liste wählen",
@@ -666,11 +663,11 @@
       },
       "save": {
         "title": "Behalte, was dir gefällt",
-        "body": "Änderungen wirken sofort, sind aber vorläufig. „Auf Dongle speichern“ behält sie nach dem Ausschalten; „Zurücksetzen“ kehrt zum Gespeicherten zurück."
+        "body": "Änderungen wirken sofort, sind aber vorläufig. „Auf {{device_dat}} speichern“ behält sie nach dem Ausschalten; „Zurücksetzen“ kehrt zum Gespeicherten zurück."
       },
       "top": {
-        "title": "Dongle, Spiele und Hilfe",
-        "body": "{{device}}: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
+        "title": "{{deviceName}}, Spiele und Hilfe",
+        "body": "{{deviceName}}: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
       },
       "finish": {
         "title": "Alles bereit",
@@ -774,8 +771,8 @@
       "activeNow": "Jetzt aktiv",
       "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (haptisches Feedback, Lautsprecher, Leuchtleiste, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
       "profileFromCurrent": "Aus aktuellen Einstellungen erstellen",
-      "profileNeedsDongle": "Verbinde den Dongle, um mit deinen aktuellen Einstellungen zu starten.",
-      "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf dem Dongle.",
+      "profileNeedsDongle": "Verbinde {{device_akk}}, um mit deinen aktuellen Einstellungen zu starten.",
+      "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf {{device_dat}}.",
       "profileCopyCurrent": "Aktuelle Einstellungen kopieren",
       "profileDelete": "Profil löschen",
       "haptics": "Vibrationsintensität",
@@ -829,7 +826,7 @@
         "unknown": "Unbekannt"
       },
       "tierHint": {
-        "verified": "Am Dongle getestet: Trigger und haptisches Feedback funktionieren.",
+        "verified": "Mit {{device_dat}} getestet: Trigger und haptisches Feedback funktionieren.",
         "works": "Das Spiel unterstützt DualSense-Funktionen nativ.",
         "needs-setup": "Funktioniert, sobald die Einrichtung dieses Spiels erledigt ist.",
         "partial": "Einige DualSense-Funktionen fehlen am PC. Audio Auto Haptics kann die Vibration ersetzen.",
@@ -935,13 +932,13 @@
       "lockVolume": "Lautstärke sperren"
     },
     "dongleConsole": {
-      "title": "{{device}}-Konsole",
+      "title": "Konsole: {{deviceName}}",
       "pane": {
         "screen": "Display",
         "log": "Protokoll"
       },
-      "noDongle": "Warte auf den Dongle",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles, um sein Display zu sehen",
+      "noDongle": "Warte auf {{device_akk}}",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um das Display zu sehen",
       "unavailable": "Display nicht verfügbar, neuer Versuch",
       "connecting": "Display wird gelesen…",
       "live": "Live",
@@ -950,18 +947,18 @@
       "screenN": "Seite {{n}}/{{total}}",
       "brightness": "Helligkeit {{pct}} %",
       "frame": "Bild {{n}}",
-      "hint": "Genau das, was das Display des Dongles zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1 am Dongle.",
+      "hint": "Genau das, was das Display {{device_gen}} zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1 an {{device_dat}}.",
       "logEmpty": "Noch nichts.",
       "log": {
-        "online": "{{device}} verbunden (Protokoll {{version}})",
-        "offline": "{{device}} getrennt",
+        "online": "{{deviceName}} verbunden (Protokoll {{version}})",
+        "offline": "{{deviceName}} getrennt",
         "controller": "Controller verbunden (Slot {{slot}})",
         "controllerGone": "Controller getrennt",
         "slot": "Zu Slot {{slot}} gewechselt",
         "charging": "Controller lädt",
         "notCharging": "Controller lädt nicht mehr",
         "battery": "Akku {{pct}} %",
-        "saved": "Einstellungen auf dem Dongle gespeichert"
+        "saved": "Einstellungen auf {{device_dat}} gespeichert"
       }
     },
     "rail": {
@@ -1052,7 +1049,7 @@
     },
     "dev": {
       "title": "Entwickler",
-      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an den Dongle gesendet. Strg+Umschalt+D blendet diese Karte aus. Erscheint im Entwicklungskanal.",
+      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an {{device_akk}} gesendet. Strg+Umschalt+D blendet diese Karte aus. Erscheint im Entwicklungskanal.",
       "model": "Modell",
       "colorway": "Farbvariante",
       "real": "Der echte",
@@ -1073,11 +1070,11 @@
         "ready": "Bereit / wartet"
       },
       "fakeSlots": "Weitere Controller vortäuschen",
-      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An den Dongle wird nichts gesendet.",
-      "simulated": "Simulierter Dongle (ohne Hardware)",
-      "simulatedHint": "Die App spricht mit einem simulierten Dongle statt über USB: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
+      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An {{device_akk}} wird nichts gesendet.",
+      "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
+      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",
-      "simCore1Hint": "Lässt Core1 des simulierten Dongles bei einem Startschritt anhalten, um die Warnung auf der Pico-Seite zu sehen. Startet die Seite neu.",
+      "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen. Startet die Seite neu.",
       "simCore1Runs": "Läuft normal",
       "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}"
     },
@@ -1096,8 +1093,8 @@
     "calib": {
       "title": "Kalibrierung",
       "shortcut": "Stick-Drift, Deadzones, Triggerweg, Gyroskop",
-      "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops im Dongle, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles, um zu kalibrieren.",
+      "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops {{device_im}}, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um zu kalibrieren.",
       "needsController": "Verbinde einen Controller, um zu kalibrieren.",
       "noInput": "Während dieses Schritts kam keine Eingabe vom Controller. Versuche es erneut.",
       "start": "Kalibrierung starten",
@@ -1122,10 +1119,10 @@
       "now": "jetzt {{raw}} → {{out}}",
       "gyro": "Gyroskop",
       "gyroZero": "Nullpunkt-Versatz:",
-      "save": "Auf dem Dongle speichern",
+      "save": "Auf {{device_dat}} speichern",
       "revert": "Verwerfen",
       "reset": "Auf unkalibriert zurücksetzen",
-      "saveHint": "Im eigenen Speicher des Dongles gesichert; gilt sofort für jedes Spiel.",
+      "saveHint": "Im eigenen Speicher {{device_gen}} gesichert; gilt sofort für jedes Spiel.",
       "forSlot": "Für den Controller in Kopplungsplatz {{slot}}; jeder Platz hat seine eigene.",
       "getReady": "Mach dich bereit…",
       "missed": "Nicht gemessen, daher wurden die alten Werte behalten: {{parts}}. Bewege sie ganz bis zum Anschlag und miss erneut.",
@@ -1133,7 +1130,7 @@
     },
     "curves": {
       "title": "Empfindlichkeitskurve",
-      "intro": "Wie jeder Stick zwischen Mitte und Vollausschlag reagiert. Wird im Dongle nach der Kalibrierung angewendet und wirkt so in jedem Spiel.",
+      "intro": "Wie jeder Stick zwischen Mitte und Vollausschlag reagiert. Wird {{device_im}} nach der Kalibrierung angewendet und wirkt so in jedem Spiel.",
       "curve": "Kurve",
       "type": {
         "linear": "Linear",
@@ -1161,10 +1158,10 @@
       "keyLinear": "Linear",
       "keyLive": "Dein Stick jetzt",
       "gameOn": "Das Profil eines Spiels hat gerade eigene Kurven aktiv. Speichern hier beendet sie, bis das Spiel wieder startet.",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles für Empfindlichkeitskurven.",
-      "readFailed": "Der Dongle hat seine Kurven nicht geliefert.",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}} für Empfindlichkeitskurven.",
+      "readFailed": "{{device, capitalize}} hat die Kurven nicht geliefert.",
       "resetLinear": "Zurück zu Linear",
-      "saveHint": "Im Dongle gespeichert für den Controller in Kopplungsplatz {{slot}}; gilt sofort in jedem Spiel.",
+      "saveHint": "{{device_im, capitalize}} gespeichert für den Controller in Kopplungsplatz {{slot}}; gilt sofort in jedem Spiel.",
       "profileLeft": "Kurve linker Stick",
       "profileRight": "Kurve rechter Stick",
       "profileSaved": "Meine gespeicherte Kurve",
@@ -1172,7 +1169,7 @@
     },
     "ctrlInfo": {
       "title": "Controller-Info",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles, um Firmware, Akkuspannung und Lebenszeit-Zähler des Controllers zu sehen.",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um Firmware, Akkuspannung und Lebenszeit-Zähler des Controllers zu sehen.",
       "noController": "Verbinde einen Controller, um seine Infos zu sehen.",
       "charge": "Laden",
       "chargeState": {
@@ -1218,7 +1215,7 @@
       "howToPc": "Schließe den Controller mit einem USB-C-Kabel an einen Windows-PC an und aktualisiere ihn mit Sonys App PlayStation Accessories (früher „Firmware-Updater für DualSense Wireless-Controller“).",
       "sonyPage": "Sonys Seite",
       "howToPs5": "Oder an einer PS5: per USB-Kabel anschließen, dann Einstellungen → Zubehör → Controller (Allgemein) → Gerätesoftware des DualSense Wireless-Controllers.",
-      "howToCable": "Das Update geht nicht über den Dongle. Danach den Controller erneut mit dem Dongle koppeln, falls er sich nicht wieder verbindet.",
+      "howToCable": "Das Update geht nicht über {{device_akk}}. Danach den Controller erneut mit {{device_dat}} koppeln, falls er sich nicht wieder verbindet.",
       "windowsOnly": "Sonys App „PlayStation Accessories“ läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden."
     },
     "stickTest": {
@@ -1329,8 +1326,8 @@
       "devHint": "Entwicklungsversionen von App und Firmware, vor der Veröffentlichung: neuer und weniger getestet. Jede stabile Version bekommst du auch. „Zurück zu stabil“ installiert die neueste stabile App und Firmware.",
       "backToStable": "Zurück zu stabil",
       "joinTitle": "Dem Entwicklungskanal beitreten?",
-      "joinNewer": "Du bekommst Builds der App und der Dongle-Firmware, bevor sie veröffentlicht sind: neue Funktionen früher.",
-      "joinBoth": "Beides wird angeboten: Die App aktualisiert sich selbst, das Firmware-Update erscheint wie gewohnt auf der Pico-Seite.",
+      "joinNewer": "Du bekommst Builds der App und der Firmware {{device_gen}}, bevor sie veröffentlicht sind: neue Funktionen früher.",
+      "joinBoth": "Beides wird angeboten: Die App aktualisiert sich selbst, das Firmware-Update erscheint wie gewohnt unter {{deviceName}}.",
       "joinBugs": "Sie sind weniger getestet als stabile Versionen und können Fehler haben. Bitte melde, was dir auffällt.",
       "joinBack": "Zurück zu Stabil (App-Einstellungen → Updates) holt jederzeit die neueste stabile App und Firmware zurück.",
       "joinLatest": "Neuester Entwicklungs-Build",
@@ -1344,7 +1341,7 @@
     },
     "layouts": {
       "title": "Tastenbelegungen",
-      "hint": "Speichere die Tasten oben unter einem Namen. Ein Spielprofil kann eine Belegung nutzen: Sie gilt, solange das Spiel läuft (nie auf dem Dongle gespeichert), danach kommt deine normale Belegung zurück.",
+      "hint": "Speichere die Tasten oben unter einem Namen. Ein Spielprofil kann eine Belegung nutzen: Sie gilt, solange das Spiel läuft (nie auf {{device_dat}} gespeichert), danach kommt deine normale Belegung zurück.",
       "none": "Noch keine gespeicherten Belegungen.",
       "load": "Laden",
       "loadHint": "Diese Belegung in den Editor oben laden (Zuweisung übernehmen macht sie zu deiner normalen)",
@@ -1356,11 +1353,11 @@
       "namePlaceholder": "Name, z. B. Rennen",
       "usedBy_one": "von {{count}} Spiel genutzt",
       "usedBy_other": "von {{count}} Spielen genutzt",
-      "activeNotice": "Die Tastenbelegung von {{game}} ist gerade auf dem Dongle. Zuweisung übernehmen speichert deine normale Belegung und beendet sie, bis das Spiel wieder startet.",
+      "activeNotice": "Die Tastenbelegung von {{game}} ist gerade auf {{device_dat}}. Zuweisung übernehmen speichert deine normale Belegung und beendet sie, bis das Spiel wieder startet.",
       "aGame": "Ein Spiel",
       "profileLabel": "Tastenbelegung",
       "normal": "Normale Belegung",
-      "needsFirmware": "Braucht die neueste Dongle-Firmware (Pico-Seite → Aktualisieren).",
+      "needsFirmware": "Braucht die neueste Firmware auf {{device_dat}} ({{deviceName}} → Aktualisieren).",
       "noneForGame": "Belegungen speicherst du auf der Tastenseite: wähle eine Taste am Controller.",
       "allTitle": "Tasten",
       "allHeading": "Alle Tasten",
@@ -1378,9 +1375,9 @@
       "loadedEdited": "bearbeitet",
       "loadedChip": "Geladen",
       "loadedState": {
-        "notApplied": "Noch nicht angewendet: Zuweisung übernehmen macht sie zu deiner normalen Belegung auf dem Dongle.",
+        "notApplied": "Noch nicht angewendet: Zuweisung übernehmen macht sie zu deiner normalen Belegung auf {{device_dat}}.",
         "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Zuweisung übernehmen macht sie zu deiner normalen.",
-        "applied": "Angewendet: das ist jetzt deine normale Belegung auf dem Dongle."
+        "applied": "Angewendet: das ist jetzt deine normale Belegung auf {{device_dat}}."
       },
       "extraSelf": "Sich selbst (Standard)"
     },
@@ -1394,8 +1391,8 @@
       "open": "In der Controller-Ansicht bearbeiten",
       "openHint": "Dieses Profil auf den Controller legen und mit allen Bereichen bearbeiten, jede Änderung sofort spürbar",
       "buttonsNote": "Profil von {{title}} ist aktiv: Tasten kommen mit Im Profil speichern in die Belegung dieses Spiels, nicht in deine normale.",
-      "dongleNote": "Nicht Teil des Profils von {{title}}: Dongle-Einstellungen bleiben deine normalen. Änderungen hier bleiben nach dem Profil erhalten; speichere sie dann auf dem Dongle.",
-      "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Speichern ändert sie im Dongle für jedes Spiel.",
+      "dongleNote": "Nicht Teil des Profils von {{title}}: Diese Einstellungen auf {{device_dat}} bleiben deine normalen. Änderungen hier bleiben nach dem Profil erhalten; speichere sie dann auf {{device_dat}}.",
+      "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Speichern ändert sie {{device_im}} für jedes Spiel.",
       "curvesNote": "Profil von {{title}} ist aktiv: Kurven kommen mit Im Profil speichern ins Profil dieses Spiels und sind ab dann spürbar; danach kommen deine normalen Kurven zurück.",
       "curvesNormal": "Dieser Stick nutzt in diesem Spiel deine normale Kurve."
     },
@@ -1407,11 +1404,11 @@
       "normalSub": "Deine normale Einstellung",
       "on": "An",
       "off": "Aus",
-      "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf dem Dongle sind",
-      "applyFailed": "Das Profil von {{title}} wurde nicht auf den Dongle übertragen ({{reason}}). Deine normalen Einstellungen sind aktiv.",
-      "partlyOn": "Das Profil von {{title}} ist eventuell ohne seine Tasten oder Stick-Kurven aktiv ({{reason}}). Es wird erneut versucht, wenn der Dongle sich wieder verbindet.",
+      "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf {{device_dat}} sind",
+      "applyFailed": "Das Profil von {{title}} wurde nicht auf {{device_akk}} übertragen ({{reason}}). Deine normalen Einstellungen sind aktiv.",
+      "partlyOn": "Das Profil von {{title}} ist eventuell ohne seine Tasten oder Stick-Kurven aktiv ({{reason}}). Es wird erneut versucht, wenn {{device}} sich wieder verbindet.",
       "saveFailed": "Nicht im Profil von {{title}} gespeichert: {{reason}}",
-      "notOn": "Das Profil von {{title}} ist noch nicht auf dem Dongle, daher wurde nichts darin gespeichert. Versuche es erneut, sobald es aktiv ist."
+      "notOn": "Das Profil von {{title}} ist noch nicht auf {{device_dat}}, daher wurde nichts darin gespeichert. Versuche es erneut, sobald es aktiv ist."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Farbe ändern",

@@ -22,7 +22,7 @@ import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
-import { hardwareName, rememberBoard } from "./hardwareName";
+import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
@@ -52,7 +52,7 @@ export default function DesktopApp() {
   useEffect(() => {
     if (bridge.client) writePref(HAD_DONGLE_KEY, "1");
   }, [bridge.client]);
-  useEffect(() => rememberBoard(bridge.identity), [bridge.identity]);
+  useEffect(() => trackBoard(bridge.identity), [bridge.identity]);
   const realAppUpdate = useAppUpdate();
   const realFw = useFirmwareUpdate(bridge, realAppUpdate);
   // Developer preview: update banners and buttons without a real update.
@@ -250,7 +250,6 @@ export default function DesktopApp() {
             <UpdateBanners
               app={appUpdate}
               fw={fw}
-              device={hardwareName(bridge.identity, t)}
               onShowFirmware={() => openPanel("dongle")}
               onFirmwareChanges={() => {
                 setAboutTab("firmware");
@@ -371,8 +370,8 @@ export default function DesktopApp() {
                     {busy
                       ? t(`statusText.${bridge.operation}`)
                       : bridge.hasUnsavedChanges
-                        ? t("desktop.bar.unsaved", "Applied to the dongle, not saved yet: changes are lost when it powers off.")
-                        : t("desktop.bar.saved", "All changes saved on the dongle.")}
+                        ? t("desktop.bar.unsaved", "Applied to {{device}}, not saved yet: changes are lost when it powers off.")
+                        : t("desktop.bar.saved", "All changes saved on {{device}}.")}
                   </span>
                   <span className="dk-spacer" />
                   <BusyButton className="dk-btn" disabled={busy || !bridge.canRevert} onClick={bridge.revertToSaved}>
@@ -387,7 +386,7 @@ export default function DesktopApp() {
                       })
                     }
                   >
-                    {t("desktop.bar.save", "Save to dongle")}
+                    {t("desktop.bar.save", "Save to {{device}}")}
                   </BusyButton>
                 </>
               )}
@@ -420,7 +419,7 @@ export default function DesktopApp() {
           connecting={bridge.operation === "connecting"}
           firmware={bridge.firmwareVersion}
           deviceLabel={bridge.deviceLabel}
-          device={hardwareName(bridge.identity, t)}
+          device={hardwareName(bridge.identity)}
         />
       </div>
     </LibraryContext.Provider>

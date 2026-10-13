@@ -83,22 +83,19 @@
       "about": "关于",
       "games": "游戏"
     },
-    "hardware": {
-      "generic": "接收器"
-    },
     "status": {
-      "connected": "{{device}} 已连接",
+      "connected": "{{deviceName}} 已连接",
       "waiting": "等待 {{device}}…",
       "waitingFirst": "等待连接…"
     },
     "empty": {
-      "title": "请插入 DS5 Dongle"
+      "title": "请插入{{device}}"
     },
     "bar": {
-      "unsaved": "已应用到接收器，尚未保存：断电后更改将丢失。",
-      "saved": "所有更改已保存到接收器。",
+      "unsaved": "已应用到 {{device}}，尚未保存：断电后更改将丢失。",
+      "saved": "所有更改已保存到 {{device}}。",
       "revert": "还原",
-      "save": "保存到接收器",
+      "save": "保存到 {{device}}",
       "profileActive": "{{title}} 配置文件已启用",
       "profileSaved": "更改会保存到配置文件；游戏关闭后恢复你的常规设置。",
       "profileUnsaved": "已在此更改，尚未保存到配置文件。",
@@ -132,7 +129,7 @@
       "zeroOff": "0 = 从不",
       "controllerWakes": "控制器输入时唤醒屏幕",
       "usb": "USB",
-      "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。",
+      "usbHint": "需在重新连接 USB 后生效(电脑会看到 {{device}} 拔出并重新插入)。",
       "speakerLevel": "音量（控制器的扬声器）",
       "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波",
       "triggerIntensity": "扳机效果强度",
@@ -155,9 +152,9 @@
       "sleepControllerOff": "电脑睡眠时关闭控制器",
       "sleepControllerOffSub": "电脑睡眠 3 秒后",
       "psWakesPc": "用 PS 键唤醒电脑",
-      "psWakesPcSub": "电脑睡眠时必须保持 USB 供电，并允许键盘唤醒电脑。未连接控制器时，接收器显示为“DS5 Dongle Wake Keyboard”。",
-      "pcSleepHint": "立即保存到接收器。",
-      "needsFirmware": "更新接收器固件后才能使用这些设置。",
+      "psWakesPcSub": "电脑睡眠时必须保持 USB 供电，并允许键盘唤醒电脑。未连接控制器时，{{device}} 显示为“DS5 Dongle Wake Keyboard”。",
+      "pcSleepHint": "立即保存到 {{device}}。",
+      "needsFirmware": "更新 {{device}} 的固件后才能使用这些设置。",
       "asGame": "按游戏",
       "choice": {
         "auto": "自动",
@@ -180,7 +177,7 @@
         "fav2": "FAV2",
         "fav3": "FAV3"
       },
-      "hint": "充电时，接收器在所有模式下都会显示琥珀色脉冲。",
+      "hint": "充电时，{{device}} 在所有模式下都会显示琥珀色脉冲。",
       "favorites": "收藏颜色",
       "favN": "FAV{{n}}"
     },
@@ -213,8 +210,8 @@
       }
     },
     "diag": {
-      "core1Frozen": "Core1 已停止：音频通路在接收器重启前将无法工作。",
-      "core1StoppedAt": "Core1 已停止（{{step}}，启动步骤 {{stage}}）：音频通路在接收器重启前将无法工作。",
+      "core1Frozen": "Core1 已停止：音频通路在 {{device}} 重启前将无法工作。",
+      "core1StoppedAt": "Core1 已停止（{{step}}，启动步骤 {{stage}}）：音频通路在 {{device}} 重启前将无法工作。",
       "core1Step": {
         "0": "尚未启动",
         "1": "正在注册闪存锁定时",
@@ -245,15 +242,15 @@
         "setFeatureCount": "主机 Feature 写入",
         "setFeatureLast": "最近一次主机 Feature 写入"
       },
-      "speakerEncoderFailed": "扬声器已关闭：接收器启动时内存不足，无法创建扬声器编码器（剩余 {{kb}} KB）。触觉、扳机、麦克风和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。",
-      "micDecoderFailed": "麦克风已关闭：接收器启动时无法创建控制器麦克风的解码器（剩余 {{kb}} KB）。扬声器、触觉、扳机和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。"
+      "speakerEncoderFailed": "扬声器已关闭：{{device}} 启动时内存不足，无法创建扬声器编码器（剩余 {{kb}} KB）。触觉、扳机、麦克风和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。",
+      "micDecoderFailed": "麦克风已关闭：{{device}} 启动时无法创建控制器麦克风的解码器（剩余 {{kb}} KB）。扬声器、触觉、扳机和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。"
     },
     "firmware": {
       "installed": "已安装固件",
       "device": "设备",
       "rebooting": "正在重启… 恢复后请按控制器上的 PS 键。",
       "reboot": "重启 {{device}}",
-      "bootsel": "接收器现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
+      "bootsel": "{{device}} 现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
       "enterBootsel": "进入 BOOTSEL 模式",
       "resetDone": "设置已恢复默认并保存。",
       "confirmInstall": "立即安装 {{version}}",
@@ -264,7 +261,7 @@
       "update": "更新到 {{version}}",
       "upToDate": "已是最新",
       "check": "立即检查",
-      "updateHint": "接收器会重启到引导程序、写入固件并自动重启。请保持插入；之后按控制器上的 PS 键。",
+      "updateHint": "{{device}} 会重启到引导程序、写入固件并自动重启。请保持插入；之后按控制器上的 PS 键。",
       "unpublished": "尚未发布版本",
       "offline": "无法检查（离线）",
       "bundled": "随应用附带",
@@ -277,20 +274,20 @@
     "usbAccess": {
       "label": "USB 访问规则",
       "installed": "已安装",
-      "missing": "未安装（Steam 的规则可能已覆盖接收器）",
+      "missing": "未安装（Steam 的规则可能已覆盖 {{device}}）",
       "button": "设置 USB 访问"
     },
     "windowsUsb": {
       "hint": "已插好、控制器也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
-      "seen": "接收器已插入，但 Windows 没有为它安装驱动。",
+      "seen": "{{device}} 已插入，但 Windows 没有为它安装驱动。",
       "button": "修复 USB 驱动",
-      "done": "已修复。请拔下接收器，然后重新插入。",
+      "done": "已修复。请拔下 {{device}}，然后重新插入。",
       "stepsTitle": "修复会做什么",
       "step": {
         "admin": "Windows 会请求管理员权限（Windows PowerShell，来自 Microsoft）。选择“否”则不会有任何改动。",
-        "forget": "Windows 清除它为接收器的两个 USB ID（054C:0CE6 和 054C:0DF2）保存的 USB 设置。注册表的其他部分不会改动。",
+        "forget": "Windows 清除它为 {{device}} 的两个 USB ID（054C:0CE6 和 054C:0DF2）保存的 USB 设置。注册表的其他部分不会改动。",
         "entries": "删除 Windows 为这两个 ID 保存的设备条目，Windows 会自动重新创建。",
-        "replug": "拔下接收器再重新插入。Windows 会重新安装驱动，应用随即连接。"
+        "replug": "拔下 {{device}} 再重新插入。Windows 会重新安装驱动，应用随即连接。"
       },
       "showScript": "显示完整脚本",
       "run": "开始修复",
@@ -307,16 +304,16 @@
       "open": "打开发布页面",
       "fwAvailable": "{{device}} 有可用固件 {{version}}。",
       "details": "详情",
-      "fwDontUnplug": "正在更新固件，请勿拔出接收器。",
+      "fwDontUnplug": "正在更新固件，请勿拔出 {{device}}。",
       "fwDone": "固件已更新到 {{version}}。按 PS 键 重新连接控制器。",
       "fwStep": {
         "downloading": "正在下载并校验固件…",
-        "rebooting": "正在将接收器重启到引导程序…",
+        "rebooting": "正在将 {{device}} 重启到引导程序…",
         "waiting-bootloader": "正在等待引导程序…",
         "flashing": "正在直接写入固件；如果弹出 RP2350 驱动器，请忽略",
-        "restarting": "正在重启接收器…",
-        "verifying": "正在等待接收器：按下控制器上的 PS 键重新连接。",
-        "verifyingPress": "已写入。请按控制器上的 PS 键：控制器连接后接收器才会重新出现。如果一直没有反应，请拔下后重新插入。"
+        "restarting": "正在重启 {{device}}…",
+        "verifying": "正在等待 {{device}}：按下控制器上的 PS 键重新连接。",
+        "verifyingPress": "已写入。请按控制器上的 PS 键：控制器连接后 {{device}} 才会重新出现。如果一直没有反应，请拔下后重新插入。"
       },
       "askTitle": "让应用保持最新？",
       "askBody": "新版本可以自动下载并安装（与每次更新一样经过校验），下次打开应用时启动。你可以随时在应用设置中更改。",
@@ -359,7 +356,7 @@
           "buttons": "按键",
           "audio": "音频与触觉反馈",
           "games": "游戏",
-          "dongle": "接收器与 OLED",
+          "dongle": "{{deviceName}} 与 OLED",
           "app": "应用",
           "community": "社区"
         },
@@ -380,7 +377,7 @@
       "scanning": "正在检查 Steam、Heroic 和 Lutris…",
       "protonTitle": "DualSense Proton 版本",
       "protonFound": "已安装。",
-      "protonMissing": "尚未安装我们的 Proton 版本。Windows 游戏需要它才能通过接收器使用自适应扳机和触觉反馈。",
+      "protonMissing": "尚未安装我们的 Proton 版本。Windows 游戏需要它才能通过 {{device}} 使用自适应扳机和触觉反馈。",
       "protonInstall": "安装 {{name}}…",
       "protonUpdate": "安装 {{name}}…",
       "protonConfirm": "将从项目的 GitHub Release 下载 {{name}}（{{size}}），校验 SHA-256，并安装到启动器查找 Proton 版本的位置。现有的 Proton 版本不会被修改或删除。之后由你选择哪些启动器和游戏使用它。",
@@ -435,7 +432,7 @@
           "audioProfile": "将控制器音频切换到“{{profile}}”配置"
         },
         "why": {
-          "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过接收器工作。已单独指定 Proton 的游戏保持原设置。",
+          "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过 {{device}} 工作。已单独指定 Proton 的游戏保持原设置。",
           "defaultHeroic": "Heroic 目前为新安装的 Epic、GOG 和 Amazon 游戏使用 {{current}}。这只影响今后安装的游戏；已安装的游戏保留各自的设置，本页面会逐个检查。",
           "defaultLutris": "Lutris 目前为 Wine 游戏使用 {{current}}。有自己 Wine 版本的游戏保持不变。",
           "runner": "{{support}}它目前使用 {{current}} 运行，无法传递控制器的原生功能。",
@@ -484,7 +481,7 @@
       "installing": "正在安装固件…",
       "keepPlugged": "请保持 Pico 连接。",
       "restarting": "固件 {{version}} 已安装。现在配对你的控制器",
-      "restartingHint": "同时按住控制器上的创建键和 PS 键直到光条闪烁。控制器连接后接收器就会出现在这里（之前配对过的控制器只需按 PS 键）。",
+      "restartingHint": "同时按住控制器上的创建键和 PS 键直到光条闪烁。控制器连接后 {{device}} 就会出现在这里（之前配对过的控制器只需按 PS 键）。",
       "found": "发现一个可设置的 Pico",
       "offerBundled": "安装本应用自带的固件 {{version}}（无需下载）。",
       "offerOnline": "安装最新发布的固件 {{version}}。",
@@ -494,16 +491,16 @@
       "newPico": "新的 Pico？按住它的 BOOTSEL 按钮插上（全新的 Pico 不需要按）。应用会发现它并安装固件。",
       "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。",
       "turnOnTitle": "请打开控制器",
-      "pairHint": "按下控制器上的 PS 键。新控制器：同时按住创建键和 PS 键直到光条闪烁（接收器屏幕显示“Pair your DualSense”）。",
-      "whyHidden": "只有控制器连上接收器后，接收器才会出现在这台电脑上。",
+      "pairHint": "按下控制器上的 PS 键。新控制器：同时按住创建键和 PS 键直到光条闪烁（{{device}} 的屏幕显示“Pair your DualSense”）。",
+      "whyHidden": "只有控制器连上{{device}}后，{{device}}才会出现在这台电脑上。",
       "updatesTitle": "更新",
       "fwReady": "此应用会安装固件 {{version}}。",
-      "fwHowTo": "无需控制器即可更新或重装固件：按住 Pico 的 BOOTSEL 键的同时插入接收器，此界面会提示安装。",
+      "fwHowTo": "无需控制器即可更新或重装固件：按住 Pico 的 BOOTSEL 键的同时插入 {{device}}，此界面会提示安装。",
       "checkUpdates": "检查更新",
       "checkedCurrent": "应用已是最新（{{version}}）。",
       "checkedNewer": "应用 {{version}} 可用：请看顶部提示。",
-      "checkedFwNewer": "接收器固件 {{version}} 可用：请查看顶部的横幅。",
-      "checkedFwCurrent": "接收器固件已是最新（{{version}}）。",
+      "checkedFwNewer": "{{device}} 的固件 {{version}} 可用：请查看顶部的横幅。",
+      "checkedFwCurrent": "{{device}} 的固件已是最新（{{version}}）。",
       "checkFailed": "无法检查更新。你在线吗？"
     },
     "live": {
@@ -536,7 +533,7 @@
         "body": "触觉反馈"
       },
       "pickHint": "点击图中的任意部位进行设置。",
-      "needsFirmware": "更新接收器固件即可实时看到控制器动作。",
+      "needsFirmware": "更新 {{device}} 的固件即可实时看到控制器动作。",
       "overview": "你的控制器",
       "app": "应用设置",
       "close": "关闭",
@@ -546,7 +543,7 @@
       "remap": "按键配置",
       "remapActs": "作为",
       "remapDefault": "默认",
-      "remapHint": "点击“应用”后按键配置会写入接收器，在任何游戏中都有效，电脑无需安装软件。",
+      "remapHint": "点击“应用”后按键配置会写入 {{device}}，在任何游戏中都有效，电脑无需安装软件。",
       "remapApply": "应用按键配置",
       "remapReset": "重置所有按键",
       "remapResetHint": "所有按键恢复原样",
@@ -568,7 +565,7 @@
       "edgePart": {
         "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换控制器的自定义配置文件。按下时这里会亮起。",
         "paddle": "DualSense Edge 的背面键之一。控制器的自定义配置文件可以把它设为任意按键。按下时这里会亮起。",
-        "soon": "按键配置需要最新的接收器固件（Pico 页面 → 更新）。"
+        "soon": "按键配置需要 {{device}} 的最新固件（{{deviceName}} 页面 → 更新）。"
       },
       "effects": {
         "0": "无",
@@ -610,7 +607,7 @@
       "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本",
       "hapticSilent": "静默：目前没有任何触觉反馈输入。游戏播放触觉反馈时，或开启 Audio Auto Haptics 且有声音播放时，电平才会变化。",
       "speakerSilent": "静默：控制器扬声器目前没有播放任何声音。",
-      "levelLive": "来自接收器的实时数据。",
+      "levelLive": "来自 {{device}} 的实时数据。",
       "hardwareAcceleration": "硬件加速",
       "hardwareAccelerationSub": "使用显卡绘制：更流畅，模糊和玻璃效果也需要它。显卡崩溃时会自动关闭。",
       "restartToApply": "重启应用后生效",
@@ -655,7 +652,7 @@
       },
       "panel": {
         "title": "设置在这里打开",
-        "body": "更改会立即发送到接收器，你可以马上看到、听到、感受到。✕ 关闭面板。"
+        "body": "更改会立即发送到 {{device}}，你可以马上看到、听到、感受到。✕ 关闭面板。"
       },
       "list": {
         "title": "或者从列表中选择",
@@ -663,11 +660,11 @@
       },
       "save": {
         "title": "保留你喜欢的设置",
-        "body": "更改立即生效但只是临时的。“保存到接收器”可在断电后保留；“还原”回到已保存的设置。"
+        "body": "更改立即生效但只是临时的。“保存到 {{device}}”可在断电后保留；“还原”回到已保存的设置。"
       },
       "top": {
-        "title": "接收器、游戏和帮助",
-        "body": "{{device}}：固件更新、OLED、电源和 USB。游戏：为扳机和触觉反馈配置 Steam 等启动器（Linux）。关于：更新内容和指南。⚙：应用自身的设置。"
+        "title": "{{deviceName}}、游戏和帮助",
+        "body": "{{deviceName}}：固件更新、OLED、电源和 USB。游戏：为扳机和触觉反馈配置 Steam 等启动器（Linux）。关于：更新内容和指南。⚙：应用自身的设置。"
       },
       "finish": {
         "title": "一切就绪",
@@ -769,8 +766,8 @@
       "activeNow": "当前生效",
       "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何控制器设置（触觉反馈、扬声器、光条、麦克风、按键、操作杆），游戏关闭后自动切回。",
       "profileFromCurrent": "基于当前设置创建",
-      "profileNeedsDongle": "连接接收器后才能基于当前设置开始。",
-      "profileHint": "更改保存到此游戏的配置中,而不是接收器。",
+      "profileNeedsDongle": "连接 {{device}} 后才能基于当前设置开始。",
+      "profileHint": "更改保存到此游戏的配置中,而不是 {{device}}。",
       "profileCopyCurrent": "复制当前设置",
       "profileDelete": "删除配置",
       "haptics": "振动强度",
@@ -824,7 +821,7 @@
         "unknown": "未知"
       },
       "tierHint": {
-        "verified": "已在接收器上测试:扳机和触觉反馈均可用。",
+        "verified": "已在 {{device}} 上测试:扳机和触觉反馈均可用。",
         "works": "游戏原生支持 DualSense 功能。",
         "needs-setup": "完成此游戏的设置后即可使用。",
         "partial": "PC 上缺少部分 DualSense 功能。音频自动触觉可以补上振动。",
@@ -929,13 +926,13 @@
       "lockVolume": "锁定音量"
     },
     "dongleConsole": {
-      "title": "{{device}} 控制台",
+      "title": "{{deviceName}} 控制台",
       "pane": {
         "screen": "屏幕",
         "log": "日志"
       },
-      "noDongle": "正在等待接收器",
-      "needsFirmware": "更新接收器固件后即可查看其屏幕",
+      "noDongle": "正在等待 {{device}}",
+      "needsFirmware": "更新 {{device}} 的固件后即可查看其屏幕",
       "unavailable": "屏幕暂不可用，正在重试",
       "connecting": "正在读取屏幕…",
       "live": "实时",
@@ -944,18 +941,18 @@
       "screenN": "第 {{n}}/{{total}} 屏",
       "brightness": "亮度 {{pct}}%",
       "frame": "第 {{n}} 帧",
-      "hint": "与接收器屏幕显示的内容逐像素一致。没有 OLED 模块也能使用。在接收器上用 KEY0 / KEY1 切换屏幕。",
+      "hint": "与 {{device}} 的屏幕显示的内容逐像素一致。没有 OLED 模块也能使用。在 {{device}} 上用 KEY0 / KEY1 切换屏幕。",
       "logEmpty": "暂无内容。",
       "log": {
-        "online": "{{device}} 已连接（协议 {{version}}）",
-        "offline": "{{device}} 已断开",
+        "online": "{{deviceName}} 已连接（协议 {{version}}）",
+        "offline": "{{deviceName}} 已断开",
         "controller": "控制器已连接（槽位 {{slot}}）",
         "controllerGone": "控制器已断开",
         "slot": "已切换到槽位 {{slot}}",
         "charging": "控制器正在充电",
         "notCharging": "控制器停止充电",
         "battery": "电量 {{pct}}%",
-        "saved": "设置已保存到接收器"
+        "saved": "设置已保存到 {{device}}"
       }
     },
     "rail": {
@@ -1046,7 +1043,7 @@
     },
     "dev": {
       "title": "开发者",
-      "hint": "预览其他控制器型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
+      "hint": "预览其他控制器型号和配色，检查应用的颜色。只改变显示，不会向 {{device}} 发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
       "model": "型号",
       "colorway": "配色",
       "real": "真实控制器",
@@ -1067,11 +1064,11 @@
         "ready": "就绪 / 等待"
       },
       "fakeSlots": "模拟更多控制器",
-      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向接收器发送任何内容。",
-      "simulated": "模拟接收器（无需硬件）",
-      "simulatedHint": "应用改为与模拟接收器通信而非 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
+      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
+      "simulated": "模拟{{device}}（无需硬件）",
+      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",
-      "simCore1Hint": "让模拟接收器的 Core1 停在某个启动步骤，以查看Pico 页面的警告。会重新加载页面。",
+      "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。会重新加载页面。",
       "simCore1Runs": "正常运行",
       "simCore1Stage": "停在步骤 {{stage}}：{{step}}"
     },
@@ -1090,8 +1087,8 @@
     "calib": {
       "title": "校准",
       "shortcut": "操作杆漂移、盲区、扳机行程、陀螺仪",
-      "intro": "在接收器内校正操作杆漂移、盲区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入控制器；重置即可撤销。",
-      "needsFirmware": "更新接收器固件后才能校准。",
+      "intro": "在 {{device}} 内校正操作杆漂移、盲区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入控制器；重置即可撤销。",
+      "needsFirmware": "更新 {{device}} 的固件后才能校准。",
       "needsController": "连接控制器后才能校准。",
       "noInput": "该步骤中没有收到控制器输入。请重试。",
       "start": "开始校准",
@@ -1116,10 +1113,10 @@
       "now": "当前 {{raw}} → {{out}}",
       "gyro": "陀螺仪",
       "gyroZero": "零点偏移：",
-      "save": "保存到接收器",
+      "save": "保存到 {{device}}",
       "revert": "撤销",
       "reset": "恢复为未校准",
-      "saveHint": "保存在接收器自身的存储中，立即对所有游戏生效。",
+      "saveHint": "保存在 {{device}} 自身的存储中，立即对所有游戏生效。",
       "forSlot": "适用于配对槽位 {{slot}} 中的控制器；每个槽位各自保存。",
       "getReady": "准备…",
       "missed": "未测量，已保留旧值：{{parts}}。请推到底后重新测量。",
@@ -1127,7 +1124,7 @@
     },
     "curves": {
       "title": "灵敏度曲线",
-      "intro": "每个操作杆从中心到推满之间如何响应。在接收器中于校准之后应用，因此对所有游戏都有效。",
+      "intro": "每个操作杆从中心到推满之间如何响应。在 {{device}} 中于校准之后应用，因此对所有游戏都有效。",
       "curve": "曲线",
       "type": {
         "linear": "线性",
@@ -1155,10 +1152,10 @@
       "keyLinear": "线性",
       "keyLive": "当前操作杆位置",
       "gameOn": "某个游戏的配置文件正在使用自己的曲线。在此保存会结束这些曲线，直到该游戏再次启动。",
-      "needsFirmware": "请更新接收器固件以使用灵敏度曲线。",
-      "readFailed": "接收器没有返回曲线数据。",
+      "needsFirmware": "请更新 {{device}} 的固件以使用灵敏度曲线。",
+      "readFailed": "{{device}} 没有返回曲线数据。",
       "resetLinear": "恢复为线性",
-      "saveHint": "已为配对槽位 {{slot}} 中的控制器保存在接收器中；立即对所有游戏生效。",
+      "saveHint": "已为配对槽位 {{slot}} 中的控制器保存在 {{device}} 中；立即对所有游戏生效。",
       "profileLeft": "左操作杆曲线",
       "profileRight": "右操作杆曲线",
       "profileSaved": "我保存的曲线",
@@ -1166,7 +1163,7 @@
     },
     "ctrlInfo": {
       "title": "控制器信息",
-      "needsFirmware": "更新接收器固件后即可查看控制器的固件、电池电压和使用统计。",
+      "needsFirmware": "更新 {{device}} 的固件后即可查看控制器的固件、电池电压和使用统计。",
       "noController": "连接控制器后即可查看其信息。",
       "charge": "充电",
       "chargeState": {
@@ -1212,7 +1209,7 @@
       "howToPc": "用 USB-C 数据线将控制器连接到 Windows 电脑，然后用 Sony 的 PlayStation Accessories 应用（原“DualSense 无线控制器固件更新程序”）更新。",
       "sonyPage": "Sony 页面",
       "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设定 → 周边设备 → 控制器（常规）→ DualSense无线控制器设备软件。",
-      "howToCable": "更新无法通过接收器进行。更新后如控制器未重新连接，请再次将其与接收器配对。",
+      "howToCable": "更新无法通过 {{device}} 进行。更新后如控制器未重新连接，请再次将其与 {{device}} 配对。",
       "windowsOnly": "Sony 的 PlayStation Accessories 应用仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。"
     },
     "stickTest": {
@@ -1323,8 +1320,8 @@
       "devHint": "应用和固件发布前的开发版本：更新，但测试较少。你也会收到每个稳定版。「回到稳定版」会安装最新的稳定版应用和固件。",
       "backToStable": "回到稳定版",
       "joinTitle": "加入开发通道？",
-      "joinNewer": "你会在正式发布前收到应用和接收器固件的版本：更早用上新功能。",
-      "joinBoth": "两者都会提供：应用会自动更新，固件更新照常显示在 Pico 页面。",
+      "joinNewer": "你会在正式发布前收到应用和 {{device}} 固件的版本：更早用上新功能。",
+      "joinBoth": "两者都会提供：应用会自动更新，固件更新照常显示在 {{deviceName}} 页面。",
       "joinBugs": "它们比稳定版测试得少，可能有问题。发现问题请反馈。",
       "joinBack": "随时可以「回到稳定版」（应用设置 → 更新），恢复最新的稳定版应用和固件。",
       "joinLatest": "最新开发版本",
@@ -1338,7 +1335,7 @@
     },
     "layouts": {
       "title": "按键布局",
-      "hint": "将上方的按键设置以名称保存。游戏配置可以使用某个布局：游戏运行时切换（不会保存到接收器），游戏结束后恢复你的常用按键。",
+      "hint": "将上方的按键设置以名称保存。游戏配置可以使用某个布局：游戏运行时切换（不会保存到 {{device}}），游戏结束后恢复你的常用按键。",
       "none": "还没有保存的布局。",
       "load": "载入",
       "loadHint": "将此布局载入上方编辑器（应用后成为你的常用按键）",
@@ -1350,11 +1347,11 @@
       "namePlaceholder": "布局名称，例如 赛车",
       "usedBy_one": "{{count}} 个游戏在用",
       "usedBy_other": "{{count}} 个游戏在用",
-      "activeNotice": "{{game}} 的按键布局正在接收器上生效。应用会保存你的常用按键，并在游戏再次启动前结束该布局。",
+      "activeNotice": "{{game}} 的按键布局正在 {{device}} 上生效。应用会保存你的常用按键，并在游戏再次启动前结束该布局。",
       "aGame": "某个游戏",
       "profileLabel": "按键布局",
       "normal": "常用按键",
-      "needsFirmware": "需要最新的接收器固件（Pico 页面 → 更新）。",
+      "needsFirmware": "需要 {{device}} 的最新固件（{{deviceName}} 页面 → 更新）。",
       "noneForGame": "在按键页面保存布局：在控制器上选择一个按键。",
       "allTitle": "按键",
       "allHeading": "全部按键",
@@ -1372,9 +1369,9 @@
       "loadedEdited": "已修改",
       "loadedChip": "已载入",
       "loadedState": {
-        "notApplied": "尚未应用：应用后成为接收器上的常用按键。",
+        "notApplied": "尚未应用：应用后成为 {{device}} 上的常用按键。",
         "edited": "载入后有改动：更新会把改动存入布局；应用会使其成为常用按键。",
-        "applied": "已应用：现在是接收器上的常用按键。"
+        "applied": "已应用：现在是 {{device}} 上的常用按键。"
       },
       "extraSelf": "保持原样（默认）"
     },
@@ -1388,8 +1385,8 @@
       "open": "在控制器视图中编辑",
       "openHint": "将此配置应用到控制器，并用所有面板编辑，每项改动立即可感受",
       "buttonsNote": "{{title}} 的配置已启用：按键会通过“保存到配置文件”存入此游戏的布局，而不是你的常用按键。",
-      "dongleNote": "不属于 {{title}} 的配置：接收器设置仍是你的常规设置。在这里的更改会在配置结束后保留，届时再保存到接收器。",
-      "calibrationNote": "校准属于控制器，不属于 {{title}} 的配置：保存后会在接收器中对所有游戏生效。",
+      "dongleNote": "不属于 {{title}} 的配置：{{device}} 上的设置仍是你的常规设置。在这里的更改会在配置结束后保留，届时再保存到 {{device}}。",
+      "calibrationNote": "校准属于控制器，不属于 {{title}} 的配置：保存后会在 {{device}} 中对所有游戏生效。",
       "curvesNote": "{{title}} 的配置已启用：曲线会通过“保存到配置文件”存入此游戏的配置并从此生效；之后会恢复你的常规曲线。",
       "curvesNormal": "此操作杆在这款游戏中使用你的常规曲线。"
     },
@@ -1401,11 +1398,11 @@
       "normalSub": "你的常规设置",
       "on": "开",
       "off": "关",
-      "copyHint": "此游戏使用接收器上当前的设置",
-      "applyFailed": "{{title}} 的配置文件未能应用到接收器（{{reason}}）。当前为你的常规设置。",
-      "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或操作杆曲线（{{reason}}）。接收器重新连接时会再试一次。",
+      "copyHint": "此游戏使用 {{device}} 上当前的设置",
+      "applyFailed": "{{title}} 的配置文件未能应用到 {{device}}（{{reason}}）。当前为你的常规设置。",
+      "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或操作杆曲线（{{reason}}）。{{device}} 重新连接时会再试一次。",
       "saveFailed": "未保存到 {{title}} 的配置文件：{{reason}}",
-      "notOn": "{{title}} 的配置文件尚未应用到接收器，因此没有保存任何内容。待其生效后再试。"
+      "notOn": "{{title}} 的配置文件尚未应用到 {{device}}，因此没有保存任何内容。待其生效后再试。"
     },
     "colorPicker": {
       "swatch": "{{name}}：{{hex}}。更改颜色",

@@ -13,6 +13,7 @@ import de from "./locales/de.json";
 import fr from "./locales/fr.json";
 import ja from "./locales/ja.json";
 import ptBR from "./locales/pt-BR.json";
+import { capitalize, deviceVariables } from "./deviceForms";
 
 // Use bare BCP47 language codes only. We only support one variant of
 // each, so "zh" / "pt" is enough; the previous "zh-CN" / "pt-BR" codes
@@ -32,6 +33,13 @@ export const SUPPORTED_LANGUAGES = [
 export const LANGUAGE_KEY = "i18nextLng";
 
 export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]["code"];
+
+// The board's name in every string ({{device}}, {{deviceName}}, ...; see
+// deviceForms.ts). One object, refilled in place when the board or the
+// language changes, so every t() call sees the current name without passing it.
+const deviceDefaults: Record<string, string> = {};
+let deviceBoard: string | null = null;
+const fillDevice = () => Object.assign(deviceDefaults, deviceVariables(i18n.resolvedLanguage ?? i18n.language, deviceBoard));
 
 void i18n
   .use(LanguageDetector)
@@ -54,7 +62,10 @@ void i18n
     load: "languageOnly",
     interpolation: {
       escapeValue: false, // React already escapes
+      defaultVariables: deviceDefaults,
     },
+    // Re-render translated text when the board's name changes, too.
+    react: { bindI18n: "languageChanged deviceChanged" },
     // A language the user picked (saved by LanguageToggle) wins; otherwise the
     // system language every launch. Detected languages are not saved, so a
     // later change of system language is followed.
@@ -64,5 +75,17 @@ void i18n
       lookupLocalStorage: LANGUAGE_KEY,
     },
   });
+
+fillDevice();
+i18n.on("languageChanged", fillDevice);
+i18n.services.formatter?.add("capitalize", (value: unknown) => capitalize(String(value)));
+
+/** The board strings name: the connected one, else the last one, else null ("your board"). */
+export function setDeviceBoard(name: string | null): void {
+  if (name === deviceBoard) return;
+  deviceBoard = name;
+  fillDevice();
+  i18n.emit("deviceChanged");
+}
 
 export default i18n;
