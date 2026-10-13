@@ -4,10 +4,12 @@
 // (values above 1.0 are HDR; the only path that reaches KWin here, with the
 // main process's scRGB color profile). The strip shapes are rasterized once
 // per size into a mask (sharp core + soft halo); a tiny shader paints the
-// live LED color through it at the peak set in App settings (in nits; scRGB
-// 1.0 = 80 nits). Everything else on the page stays standard range.
+// live LED color through it at the peak set in App settings (in nits; the
+// canvas is extended sRGB, 1.0 = SDR white: hdrColor.ts). Everything else on
+// the page stays standard range.
 import { useEffect, useRef, type RefObject } from "react";
 import { parseColor } from "../theme/desktopPalette";
+import { hdrBoost, ledLinear } from "./hdrColor";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Gpu = { requestAdapter(): Promise<{ requestDevice(): Promise<any> } | null>; getPreferredCanvasFormat(): string };
@@ -26,6 +28,12 @@ struct V { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
   o.uv = vec2f((p[i].x + 1) * 0.5, 1 - (p[i].y + 1) * 0.5);
   return o;
 }
+// Linear light to the canvas's extended sRGB (mirrored below 0: colors
+// outside sRGB's gamut have negative channels).
+fn enc(x: vec3f) -> vec3f {
+  let a = abs(x);
+  return sign(x) * select(a * 12.92, 1.055 * pow(a, vec3f(1.0 / 2.4)) - 0.055, a > vec3f(0.0031308));
+}
 @fragment fn fs(v: V) -> @location(0) vec4f {
   let m = textureSample(mask, samp, v.uv);
   let core = m.r;   // the strip itself
@@ -33,10 +41,13 @@ struct V { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
   let pcore = m.b;  // the lit player lights (white LEDs)
   let phalo = m.a;
   let a = max(max(core, halo * 0.55) * u.color.a, max(pcore, phalo * 0.55));
-  // premultiplied: the strips get the full boost, their halos a gentler one
-  let strip = u.color.rgb * (core * u.boost.x + halo * u.boost.y) * u.color.a;
-  let player = vec3f(1.0) * (pcore * u.boost.x + phalo * u.boost.y);
-  return vec4f(strip + player, a);
+  if (a <= 0.0) { return vec4f(0.0); }
+  // Linear light, premultiplied: the strips at the full boost, their halos a
+  // gentler one that never adds to the strip (so it can't push it past the peak).
+  let strip = u.color.rgb * max(core * u.boost.x, halo * u.boost.y) * u.color.a;
+  let player = vec3f(1.0) * max(pcore * u.boost.x, phalo * u.boost.y);
+  // encoded per pixel: un-premultiply, encode, premultiply again
+  return vec4f(enc((strip + player) / a) * a, a);
 }`;
 
 // One set of shapes (`sel`) white on transparent at the canvas size: its
@@ -84,9 +95,6 @@ async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<Imag
   }
   return out;
 }
-
-// sRGB-encoded to linear light (the canvas is linear in extended mode).
-const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 // `hero` holds the drawing (.live-ctl), which the glow sits over. `model` is
 // the drawing shown (LiveController's `model`): each model mounts its own
@@ -203,11 +211,10 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
         const key = `${color}|${pct}|${peak.current}`;
         if (key === last) return;
         last = key;
-        const rgb = parseColor(color)?.map((c) => c / 255);
+        const rgb = parseColor(color);
         const on = rgb && pct > 0 ? pct : 0;
-        const core = peak.current / 80; // the strip at the display's peak
-        const halo = Math.min(core * 0.35, 3); // the glow around it, gentler
-        device.queue.writeBuffer(uniform, 0, new Float32Array([...(rgb ?? [0, 0, 0]).map(lin), on, core, halo, 0, 0]));
+        const { core, halo } = hdrBoost(peak.current); // the strip at the display's peak, its glow gentler
+        device.queue.writeBuffer(uniform, 0, new Float32Array([...(rgb ? ledLinear(rgb) : [0, 0, 0]), on, core, halo, 0, 0]));
         const enc = device.createCommandEncoder();
         const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp: "clear", storeOp: "store" }] });
         pass.setPipeline(pipeline);

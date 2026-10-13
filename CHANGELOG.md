@@ -16,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **HDR lighting shows the light bar's own color:** with HDR lighting on, the drawing's light bar looked almost white instead of, say, the controller's magenta. The glow asked for far more light than the peak you set (its values were brightened as if linear on a canvas that reads them as standard sRGB), so the display clipped the strongest channels and the color washed out toward white. It is now worked out in linear light and encoded once: the brightest channel reaches your peak and the others keep their share, the soft glow no longer adds on top of the strip, and the LED color is read as wide gamut (Display P3), slightly more saturated than standard range can show, like the real LED. Both models; the player lights stay white.
 - **HDR lighting follows the drawing of the controller you have:** on a DualSense Edge the HDR glow was drawn in the DualSense's light strips and player lights instead of the Edge's, and after switching back to a DualSense it stayed where the other drawing had left it. Each model's drawing now gets its own glow, built from that drawing's light bar and player lights and placed over it, every time the model changes; it also moves along when the model title above the drawing changes size. The UI check (`tools/check_ui.sh`) now switches DualSense → Edge → DualSense and checks that the glow lines up with each drawing.
 
 ## [0.9.5-dev.8] - 2026-10-13
