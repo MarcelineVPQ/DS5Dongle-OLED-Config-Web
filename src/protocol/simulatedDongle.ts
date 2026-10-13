@@ -39,6 +39,9 @@ export interface SimulatedDongleOptions {
   speakerEncoderFailed?: boolean;
   // 0xF5 core1 health: core1 couldn't create the mic decoder.
   micDecoderFailed?: boolean;
+  // 0xF5 core1 health: core1 stopped during start-up at this stage (0..8,
+  // firmware audio.cpp g_c1_stage): its loop count stays 0, as in issue #15.
+  core1StuckStage?: number;
   // 0xF5 as older firmware sent it: "none" = before 0.9.4 (60 bytes, no
   // health), "cut" = 0.9.4 to 0.9.5-dev.5 (68 bytes wanted, cut to 63: the
   // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
@@ -331,19 +334,25 @@ export class SimulatedDongle implements Ds5Transport {
         return new Uint8Array([0x52, 0x58, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.extra]);
       }
       case 0xf5: {
-        // 15 u32 counters, then core1's health: [60] flags | 0x80 (layout),
-        // [61..62] free heap at core1 start in KiB (firmware cmd.cpp).
+        // 15 u32 counters, then core1's health: [60] flags | stage << 3 | 0x80
+        // (layout), [61..62] free heap at core1 start in KiB (firmware cmd.cpp).
         const legacy = this.opts.audioCountersLegacy;
         const out = new Uint8Array(legacy === "none" ? 60 : 63);
         const v = new DataView(out.buffer);
-        // Core1 keeps looping, so the dashboard's liveness check sees it move.
-        v.setUint32(5 * 4, this.core1Loops, true);
-        this.core1Loops = (this.core1Loops + 97_000) >>> 0;
-        const flags = 0x01 | (this.opts.speakerEncoderFailed ? 0x02 : 0) | (this.opts.micDecoderFailed ? 0x04 : 0);
+        // Core1 keeps looping, so the dashboard's liveness check sees it move;
+        // one stuck in start-up never loops.
+        const stuck = this.opts.core1StuckStage;
+        const stage = stuck === undefined ? 9 : stuck & 0x0f;
+        if (stuck === undefined) {
+          v.setUint32(5 * 4, this.core1Loops, true);
+          this.core1Loops = (this.core1Loops + 97_000) >>> 0;
+        }
+        // Started (bit0) from stage 3, the free heap is read right after it.
+        const flags = (stage >= 3 ? 0x01 : 0) | (this.opts.speakerEncoderFailed ? 0x02 : 0) | (this.opts.micDecoderFailed ? 0x04 : 0);
         if (legacy === "cut") out[60] = flags;
         else if (!legacy) {
-          out[60] = flags | 0x80;
-          v.setUint16(61, this.opts.speakerEncoderFailed || this.opts.micDecoderFailed ? 12 : 184, true);
+          out[60] = flags | (stage << 3) | 0x80;
+          if (stage >= 4) v.setUint16(61, this.opts.speakerEncoderFailed || this.opts.micDecoderFailed ? 12 : 184, true);
         }
         return out.slice(0, length);
       }

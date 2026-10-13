@@ -23,6 +23,7 @@ import {
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { errorText } from "../../errorText";
 import { BusyButton } from "../controls";
+import { core1StoppedText } from "./core1Status";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 
@@ -131,7 +132,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
       <div className="dash-row">
         <div className="dash-card dash-wide">
           <h4>{td("audio")}</h4>
-          {s && !s.core1Alive && <div className="dk-notice error">{t("desktop.diag.core1Frozen", "Core1 stopped: the audio path is dead until the dongle restarts.")}</div>}
+          {s && !s.core1Alive && <div className="dk-notice error">{core1StoppedText(t, s.counters)}</div>}
           {s && ((s.counters.core1Flags ?? 0) & CORE1_SPEAKER_FAILED) !== 0 && (
             <div className="dk-notice error">{t("desktop.diag.speakerEncoderFailed", { kb: Math.round((s.counters.core1FreeHeap ?? 0) / 1024) })}</div>
           )}

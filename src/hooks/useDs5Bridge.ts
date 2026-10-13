@@ -5,7 +5,7 @@ import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normal
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
-import { simulatedDongleOn } from "../desktop/devPreview";
+import { simulatedCore1Stage, simulatedDongleOn } from "../desktop/devPreview";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
@@ -135,7 +135,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const autoConnect = useCallback(async () => {
     if (clientRef.current) return;
     if (simulatedDongleOn()) {
-      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 12, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated" }));
+      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 12, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage() }));
       return;
     }
     if (!supported) return;

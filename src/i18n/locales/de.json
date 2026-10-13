@@ -180,6 +180,20 @@
     },
     "diag": {
       "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis der Dongle neu startet.",
+      "core1StoppedAt": "Core1 gestoppt {{step}} (Startschritt {{stage}}): Der Audiopfad bleibt tot, bis der Dongle neu startet.",
+      "core1Step": {
+        "0": "vor seinem Start",
+        "1": "beim Anmelden für die Flash-Sperre",
+        "2": "beim Starten seines Taktzählers",
+        "3": "beim Lesen des freien Speichers",
+        "4": "beim Erstellen des Lautsprecher-Encoders",
+        "5": "beim Einrichten von Lautsprecher-Encoder und Resampler",
+        "6": "vor dem Erstellen des Mikrofon-Decoders",
+        "7": "beim Erstellen des Mikrofon-Decoders",
+        "8": "kurz vor seiner Audioschleife",
+        "9": "nach dem Start, in seiner Audioschleife"
+      },
+      "core1FreeHeap": "Freier Speicher beim Start von Core1: {{kb}} KB.",
       "counters": {
         "usbFrames": "Eingehende USB-Audio-Frames",
         "btOut": "Über BT gesendete Audio-Reports",
@@ -1030,7 +1044,11 @@
       "fakeSlots": "Weitere Controller vortäuschen",
       "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An den Dongle wird nichts gesendet.",
       "simulated": "Simulierter Dongle (ohne Hardware)",
-      "simulatedHint": "Die App spricht mit einem simulierten Dongle statt über USB: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu."
+      "simulatedHint": "Die App spricht mit einem simulierten Dongle statt über USB: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
+      "simCore1": "Simulierter Core1",
+      "simCore1Hint": "Lässt Core1 des simulierten Dongles bei einem Startschritt anhalten, um die Warnung auf der Dongle-Seite zu sehen. Startet die Seite neu.",
+      "simCore1Runs": "Läuft normal",
+      "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}"
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",

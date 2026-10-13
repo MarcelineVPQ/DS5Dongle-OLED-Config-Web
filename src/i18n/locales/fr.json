@@ -180,6 +180,20 @@
     },
     "diag": {
       "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
+      "core1StoppedAt": "Core1 arrêté {{step}} (étape de démarrage {{stage}}) : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
+      "core1Step": {
+        "0": "avant de démarrer",
+        "1": "pendant son inscription au verrouillage flash",
+        "2": "pendant le démarrage de son compteur de cycles",
+        "3": "pendant la lecture de sa mémoire libre",
+        "4": "pendant la création de l'encodeur du haut-parleur",
+        "5": "pendant la configuration de l'encodeur du haut-parleur et du rééchantillonneur",
+        "6": "avant la création du décodeur du micro",
+        "7": "pendant la création du décodeur du micro",
+        "8": "juste avant sa boucle audio",
+        "9": "après le démarrage, dans sa boucle audio"
+      },
+      "core1FreeHeap": "Mémoire libre au démarrage de Core1 : {{kb}} Ko.",
       "counters": {
         "usbFrames": "Trames audio USB reçues",
         "btOut": "Rapports audio envoyés en BT",
@@ -1030,7 +1044,11 @@
       "fakeSlots": "Simuler d’autres manettes",
       "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent appairés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’appairage : l’app fait comme si cette manette était connectée. Rien n’est envoyé au dongle.",
       "simulated": "Dongle simulé (sans matériel)",
-      "simulatedHint": "L’app parle à un dongle simulé au lieu de l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, appairage et mises à jour du firmware ne sont pas simulés. Recharge la page."
+      "simulatedHint": "L’app parle à un dongle simulé au lieu de l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, appairage et mises à jour du firmware ne sont pas simulés. Recharge la page.",
+      "simCore1": "Core1 simulé",
+      "simCore1Hint": "Arrête le Core1 du dongle simulé à une étape de démarrage, pour voir l'avertissement de la page Dongle. Recharge la page.",
+      "simCore1Runs": "Fonctionne normalement",
+      "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}"
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",

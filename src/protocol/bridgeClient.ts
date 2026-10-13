@@ -298,11 +298,20 @@ export const AUDIO_COUNTER_NAMES = [
 // as two more u32s (68 bytes), past the 63-byte cap, so only the flags' low
 // byte arrived, without bit7: that firmware and older read as no health fields
 // (the dashboard falls back to the loop-count check alone, as before).
+// Bits 3..6 of [60]: core1's start-up stage (firmware audio.cpp g_c1_stage),
+// the last start-up step it reached: 0 never entered core1_entry, 1 entered,
+// 2 flash lockout registered, 3 cycle counter on, 4 creating the speaker
+// encoder, 5 encoder created, 6 encoder + resampler set up, 7 creating the
+// mic decoder, 8 decoder created, 9 running its loop. Every firmware with
+// bit7 sends it.
 export const CORE1_SPEAKER_FAILED = 0x02;
 export const CORE1_MIC_FAILED = 0x04;
 export const CORE1_HEALTH_LAYOUT = 0x80;
+export const CORE1_STAGE_SHIFT = 3;
+export const CORE1_STAGE_MASK = 0x78;
+export const CORE1_STAGE_RUNNING = 9;
 export const AUDIO_COUNTERS_BYTES = 63;
-export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number> & { core1Flags?: number; core1FreeHeap?: number };
+export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number> & { core1Flags?: number; core1FreeHeap?: number; core1Stage?: number };
 
 const POLL_INTERVAL_MS = 20;
 const COMMAND_TIMEOUT_MS = 3000;
@@ -614,14 +623,15 @@ export class Ds5BridgeClient {
 
 // 0xF5: the 15 counters, then core1's health when the firmware sends the
 // 63-byte layout (see CORE1_HEALTH_LAYOUT). core1FreeHeap is in bytes (KiB
-// precision), undefined while not known.
+// precision), undefined while not known; core1Stage only with that layout.
 export function decodeAudioCounters(bytes: Uint8Array): AudioCounters {
   const base = AUDIO_COUNTER_NAMES.length * 4;
   const view = toView(bytes, base);
   const out = {} as AudioCounters;
   AUDIO_COUNTER_NAMES.forEach((name, i) => (out[name] = view.getUint32(i * 4, true)));
   if (view.byteLength >= AUDIO_COUNTERS_BYTES && (bytes[base] & CORE1_HEALTH_LAYOUT) !== 0) {
-    out.core1Flags = bytes[base] & ~CORE1_HEALTH_LAYOUT;
+    out.core1Flags = bytes[base] & ~(CORE1_HEALTH_LAYOUT | CORE1_STAGE_MASK);
+    out.core1Stage = (bytes[base] & CORE1_STAGE_MASK) >> CORE1_STAGE_SHIFT;
     const kib = view.getUint16(base + 1, true);
     if (kib > 0) out.core1FreeHeap = kib * 1024;
   }
