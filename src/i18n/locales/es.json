@@ -515,7 +515,9 @@
       "restartGameRunning": "Hay un juego en marcha, así que {{launcher}} no se cerró (eso cerraría el juego). No se cambió nada. Cierra el juego y vuelve a intentarlo.",
       "restartTimeout": "{{launcher}} no se cerró en 30 segundos, así que no se cambió nada. Ciérralo tú y vuelve a intentarlo.",
       "restartFailed": "No se pudo pedir a {{launcher}} que se cierre, así que no se cambió nada. Ciérralo tú y vuelve a intentarlo.",
-      "reopenFailed": "Guardado, pero {{launcher}} no se pudo volver a abrir. Ábrelo tú."
+      "reopenFailed": "Guardado, pero {{launcher}} no se pudo volver a abrir. Ábrelo tú.",
+      "launcherStarted": "{{launcher}} se está ejecutando, así que todavía no se cambió nada. Se cerrará para este cambio y luego se volverá a abrir. Confirma de nuevo para continuar.",
+      "launcherOverwrote": "{{launcher}} revirtió un cambio aplicado aquí (estaba en ejecución). Vuelve a aplicarlo: si {{launcher}} está abierto, se cierra primero y luego se vuelve a abrir."
     },
     "setup": {
       "installing": "Instalando el firmware…",

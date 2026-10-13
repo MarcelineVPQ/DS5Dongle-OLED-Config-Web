@@ -190,6 +190,41 @@ describe("Games apply / undo", () => {
     expect(snapshot()).toEqual(before);
   });
 
+  it("a stale scan (Heroic started after it) refuses and names the launchers running now", async () => {
+    const before = snapshot();
+    const stale = scan(deps()); // the page's report: Heroic closed
+    const result = await applyFixes(stale, [`${heroicId()}:default`], [], applyDeps(["heroic"]));
+    expect(result).toEqual({ applied: [], backupId: null, blockedBy: ["heroic"] });
+    expect(snapshot()).toEqual(before);
+  });
+
+  it("writes nothing while a named launcher that didn't close runs", async () => {
+    const before = snapshot();
+    const result = await applyFixes(scan(deps(["heroic"])), [`${heroicId()}:default`], ["heroic"], applyDeps(["heroic"])); // close() fails
+    expect(result).toMatchObject({ applied: [], backupId: null, blockedBy: ["heroic"], problem: "failed" });
+    expect(snapshot()).toEqual(before);
+  });
+
+  it("writes nothing when an owner starts while the named launchers are being closed", async () => {
+    const before = snapshot();
+    // Steam is closed as asked; Heroic starts meanwhile and is running at the moment of writing.
+    let steamOpen = true;
+    let calls = 0;
+    const launchers: LauncherControl = {
+      running: () => new Set<LauncherId>([...(steamOpen ? (["steam"] as const) : []), ...(++calls > 2 ? (["heroic"] as const) : [])]),
+      gameRunning: () => false,
+      plan: () => ({ cmd: "steam", args: [] }),
+      close: async () => ((steamOpen = false), "closed"),
+      reopen: async () => ((steamOpen = true), true),
+    };
+    const fresh = scan(deps(["steam"]));
+    const ids = [`${heroicId()}:default`, ...[...fresh.plan.keys()].filter((id) => id.startsWith(steamId()))];
+    const result = await applyFixes(fresh, ids, ["steam"], { ...applyDeps(), launchers });
+    expect(result).toEqual({ applied: [], backupId: null, blockedBy: ["heroic"] });
+    expect(snapshot()).toEqual(before);
+    expect(steamOpen).toBe(true); // started again
+  });
+
   it("refuses to undo over changes made after the apply, and undoes a set only once", async () => {
     const fresh = scan(deps());
     const { backupId } = await applyFixes(fresh, [`${lutrisId()}:default`], [], applyDeps());

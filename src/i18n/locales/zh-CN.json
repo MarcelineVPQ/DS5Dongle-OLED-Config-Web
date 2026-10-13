@@ -512,7 +512,9 @@
       "restartGameRunning": "有游戏正在运行，因此未关闭 {{launcher}}（那会结束游戏）。未做任何更改。请退出游戏后重试。",
       "restartTimeout": "{{launcher}} 未在 30 秒内退出，因此未做任何更改。请手动退出后重试。",
       "restartFailed": "无法请求 {{launcher}} 退出，因此未做任何更改。请手动退出后重试。",
-      "reopenFailed": "已保存，但无法重新启动 {{launcher}}。请手动启动它。"
+      "reopenFailed": "已保存，但无法重新启动 {{launcher}}。请手动启动它。",
+      "launcherStarted": "{{launcher}} 正在运行，因此尚未做任何更改。将为此更改关闭它，之后重新打开。请再次确认以继续。",
+      "launcherOverwrote": "{{launcher}} 撤回了在此应用的更改（当时它正在运行）。请再次应用：如果 {{launcher}} 正在运行，会先关闭它，之后重新打开。"
     },
     "setup": {
       "installing": "正在安装固件…",

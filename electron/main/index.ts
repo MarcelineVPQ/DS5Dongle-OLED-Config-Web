@@ -206,6 +206,7 @@ function start(): void {
     gamesApply: (r) => withGames((g) => g.apply(r.fixIds, r.restart)),
     gamesUndo: (r) => withGames((g) => g.undo(r.backupId, r.restart)),
     gamesBackups: () => withGames((g) => g.listBackups()),
+    gamesRunningLaunchers: () => withGames((g) => g.runningLaunchers()),
     installProton: () => withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
     gamesDetails: () => withGames((g) => g.details()),
     gamesRunning: () => watcher?.running ?? null,

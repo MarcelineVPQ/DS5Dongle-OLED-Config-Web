@@ -11,13 +11,13 @@ import { actionUrl, availableActions } from "./actions";
 import { errorText } from "../../../src/errorText";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
-import type { ArtKind, GameAction, GameEntry, GameInfo } from "../../../src/desktop/games/types";
+import type { ArtKind, Fix, GameAction, GameEntry, GameInfo, LauncherId } from "../../../src/desktop/games/types";
 import { join } from "node:path";
 import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
+import { applyFixes, launchersToRestart, newestLocalBuild, scan, startedSince, type Scan } from "./games";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
 import { launcherControl, realLayer, withLaunchersClosed, type LauncherControl } from "./processes";
@@ -119,12 +119,31 @@ export class GamesService {
   // never a mix, and scans finish in the order they were asked for.
   scan(): Promise<GamesReport> {
     return this.exclusive(async () => {
-      const report = (await this.fresh()).report;
+      const report = this.shown((await this.fresh()).report);
       this.lastGames = report.games;
       this.lastDetails = gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []);
       this.colors.clear(); // the art may have arrived or changed since
       return report;
     });
+  }
+
+  // The report as the page shows it: changed files under the home folder as
+  // ~/… (a dev copy's test HOME never shows; apply works from the fresh scan).
+  private shown(report: GamesReport): GamesReport {
+    const fixes = (list: Fix[]) => list.map((f) => ({ ...f, files: f.files.map((file) => this.tilde(file)) }));
+    return {
+      ...report,
+      launchers: report.launchers.map((l) => ({ ...l, fixes: fixes(l.fixes) })),
+      system: { ...report.system, fixes: fixes(report.system.fixes) },
+      games: report.games.map((g) => ({ ...g, fixes: fixes(g.fixes) })),
+    };
+  }
+
+  // The launchers running right now (the review asks when it opens: a scan's
+  // answer may be minutes old).
+  async runningLaunchers(): Promise<LauncherId[]> {
+    this.requireConsent();
+    return [...(await this.launchers.running())];
   }
 
   // ---- Games library: details, artwork, the running game ----
@@ -195,8 +214,13 @@ export class GamesService {
         // files, so it's closed and reopened, only if the page said so.
         const { restart, blockedBy } = launchersToRestart(this.backups.owners(backupId), await this.launchers.running(), allowed);
         if (blockedBy.length) return { ok: false, blockedBy };
-        const run = await withLaunchersClosed(restart, this.launchers, () => this.backups.restore(backupId));
+        const owners = this.backups.owners(backupId);
+        const run = await withLaunchersClosed(restart, this.launchers, async () => {
+          const late = await startedSince(owners, this.launchers);
+          return late.length ? { late } : this.backups.restore(backupId);
+        });
         if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };
+        if ("late" in run.value) return { ok: false, blockedBy: run.value.late };
         if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
         return { ok: true, restored: run.value.files.map((f) => this.tilde(f)), ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}) };
       } catch (cause) {
@@ -214,7 +238,7 @@ export class GamesService {
   }
 
   private tilde(path: string): string {
-    return path.startsWith(this.home + "/") ? "~" + path.slice(this.home.length) : path;
+    return path.startsWith(this.home + "/") || path.startsWith(this.home + "\\") ? "~" + path.slice(this.home.length) : path;
   }
 
   installLatestProton(): Promise<ProtonInstallResult> {

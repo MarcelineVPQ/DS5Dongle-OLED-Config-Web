@@ -165,6 +165,7 @@ export interface DesktopApi {
   gamesApply(request: { fixIds: string[]; restart: RestartList }): Promise<ApplyResult>;
   gamesUndo(request: { backupId: string; restart: RestartList }): Promise<UndoResult>;
   gamesBackups(): Promise<GameBackup[]>;
+  gamesRunningLaunchers(): Promise<LauncherId[]>; // a fresh process check (the review asks when it opens)
   installProton(): Promise<ProtonInstallResult>;
   onProtonProgress(listener: (progress: ProtonProgress) => void): () => void;
   // Games library (Linux scan; the library file works everywhere): details
@@ -217,6 +218,7 @@ export const IPC = {
   gamesApply: "desktop:games-apply",
   gamesUndo: "desktop:games-undo",
   gamesBackups: "desktop:games-backups",
+  gamesRunningLaunchers: "desktop:games-running-launchers",
   installProton: "desktop:install-proton",
   protonProgress: "desktop:proton-progress",
   gamesDetails: "desktop:games-details",

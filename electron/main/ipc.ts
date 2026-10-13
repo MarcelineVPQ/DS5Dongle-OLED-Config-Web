@@ -27,7 +27,7 @@ import {
   type UndoResult,
   type UpdateState,
 } from "../../src/desktop/api";
-import type { ApplyResult, GamesReport, RestartList } from "../../src/desktop/games/types";
+import type { ApplyResult, GamesReport, LauncherId, RestartList } from "../../src/desktop/games/types";
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 
@@ -108,6 +108,7 @@ export interface IpcHandlers {
   gamesApply: (request: { fixIds: string[]; restart: RestartList }) => Promise<ApplyResult>;
   gamesUndo: (request: { backupId: string; restart: RestartList }) => Promise<UndoResult>;
   gamesBackups: () => GameBackup[];
+  gamesRunningLaunchers: () => Promise<LauncherId[]>;
   installProton: () => Promise<ProtonInstallResult>;
 }
 
@@ -178,6 +179,7 @@ export function registerIpc(h: IpcHandlers): void {
 
   invoke(IPC.gamesScan, h.gamesScan);
   invoke(IPC.gamesBackups, h.gamesBackups);
+  invoke(IPC.gamesRunningLaunchers, h.gamesRunningLaunchers);
   invoke(IPC.installProton, h.installProton);
   const invokeWith = <T>(channel: string, schema: z.ZodType<T>, run: (value: T) => unknown) =>
     ipcMain.handle(channel, (event, raw: unknown) => {

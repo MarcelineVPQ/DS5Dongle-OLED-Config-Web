@@ -877,9 +877,22 @@ export async function applyFixes(fresh: Scan, fixIds: string[], allowed: Restart
     allowed,
   );
   if (blockedBy.length) return { applied: [], backupId: null, blockedBy };
-  const run = await withLaunchersClosed(restart, deps.launchers, () => writeChosen(chosen, unknown, deps));
+  // Once more with the named launchers closed: one that owns a change and
+  // started meanwhile blocks the write (the page names it, then asks again).
+  const run = await withLaunchersClosed(restart, deps.launchers, async () => {
+    const late = await startedSince(
+      chosen.map((p) => p.fix.launcher),
+      deps.launchers,
+    );
+    return late.length ? { applied: [], backupId: null, blockedBy: late } : writeChosen(chosen, unknown, deps);
+  });
   if (!run.ok) return { applied: [], backupId: null, blockedBy: restart, problem: run.problem };
   return run.reopenFailed.length ? { ...run.value, reopenFailed: run.reopenFailed } : run.value;
+}
+
+// Owners of a change running right before the write (the ones named were closed by then).
+export async function startedSince(owners: Iterable<string>, launchers: LauncherControl): Promise<LauncherId[]> {
+  return launchersToRestart(owners, await launchers.running(), []).blockedBy;
 }
 
 async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps): Promise<ApplyResult> {

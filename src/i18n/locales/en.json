@@ -514,7 +514,9 @@
       "restartGameRunning": "A game is running, so {{launcher}} wasn't closed (that would end the game). Nothing was changed. Quit the game, then try again.",
       "restartTimeout": "{{launcher}} didn't quit within 30 seconds, so nothing was changed. Quit it yourself, then try again.",
       "restartFailed": "{{launcher}} couldn't be asked to quit, so nothing was changed. Quit it yourself, then try again.",
-      "reopenFailed": "Saved, but {{launcher}} couldn't be started again. Start it yourself."
+      "reopenFailed": "Saved, but {{launcher}} couldn't be started again. Start it yourself.",
+      "launcherStarted": "{{launcher}} is running now, so nothing was changed yet. It will be closed for this change and reopened afterwards. Confirm again to go ahead.",
+      "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards."
     },
     "setup": {
       "installing": "Installing the firmware…",

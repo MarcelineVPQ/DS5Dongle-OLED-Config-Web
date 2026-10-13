@@ -25,7 +25,8 @@ import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import { profileFields } from "./profileFields";
-import { RestartNotice, restartFor, useMsg, useRestartText } from "../pages/GamesPage";
+import { OverwrittenNotice, RestartNotice, useMsg, useRestartText } from "../pages/GamesPage";
+import { overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import type { GameAction, GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
 import { API_NAME } from "../games/gameArgs";
 import { artUrl } from "../games/types";
@@ -437,13 +438,18 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [mine, update] = mineState;
-  const restart = restartFor(report, game.fixes);
+  // The review checks the running launchers again when it opens (and after each scan).
+  const [reviews, setReviews] = useState(0);
+  const fresh = useFreshRunning(confirm ? `${reviews}|${report.scannedAt}` : null);
+  const restart = restartFor(report, game.fixes, fresh);
+  const tookBack = overwrittenBy(game.fixes);
   // Whatever happens, the page rescans afterwards (a launcher started since
-  // the scan is then named above Apply; a change is shown as the files say).
+  // the check is then named above Apply; a change is shown as the files say).
   const apply = async () => {
     try {
       const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: game.fixes.map((f) => f.id), restart }), onRescan);
-      if (r.blockedBy.length && !r.problem) return;
+      rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
+      if (startedSinceCheck(r)) return setNote(restartText(r)); // nothing written: the review names it, Apply asks again
       setNote(restartText(r) ?? (r.applied.length > 0 && r.applied.every((a) => a.ok) ? t("desktop.library.setupDone") : t("desktop.library.setupFailed")));
       setConfirm(false);
     } catch (cause) {
@@ -489,10 +495,11 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
               </li>
             ))}
           </ul>
+          <OverwrittenNotice launchers={tookBack} />
           {confirm && <RestartNotice launchers={restart} />}
           <div className="dk-row-btns">
             {!confirm ? (
-              <button type="button" className="dk-btn primary" onClick={() => setConfirm(true)}>
+              <button type="button" className="dk-btn primary" onClick={() => (setReviews((n) => n + 1), setConfirm(true))}>
                 {t("desktop.library.setupReview")}
               </button>
             ) : (
@@ -500,7 +507,7 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
                 <button type="button" className="dk-btn" onClick={() => setConfirm(false)}>
                   {t("desktop.library.cancel")}
                 </button>
-                <BusyButton className="dk-btn primary" onClick={apply}>
+                <BusyButton className="dk-btn primary" disabled={fresh === undefined} onClick={apply}>
                   {t("desktop.library.setupApply")}
                 </BusyButton>
               </>
@@ -556,18 +563,23 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
   const restartText = useRestartText();
   const ours = report.ourProton.name;
   const runnerFix = game.fixes.find((f) => f.kind === "set-runner");
-  const restart = runnerFix ? restartFor(report, [runnerFix]) : [];
-  // A running launcher is closed and reopened for the switch: said first, then confirmed.
+  // A running launcher is closed and reopened for the switch: said first, then
+  // confirmed. Which ones run is checked when the page opens and after each scan.
+  const fresh = useFreshRunning(runnerFix ? report.scannedAt : null);
+  const restart = runnerFix ? restartFor(report, [runnerFix], fresh) : [];
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const switchRunner = async () => {
+    let again = false;
     try {
       const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: [runnerFix!.id], restart }), onRescan);
+      rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
       setNote(restartText(r));
+      again = startedSinceCheck(r); // nothing written: the notice names it, the button asks again
     } catch (cause) {
       setNote(errorText(cause));
     }
-    setConfirm(false);
+    setConfirm(again);
   };
   const native = game.support === "triggers" || game.support === "haptics";
   return (
