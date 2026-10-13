@@ -105,6 +105,14 @@ export type CloseLauncherResult = "closed" | "not-running" | "game-running" | "t
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 export type UndoResult = { ok: true; restored: string[] } | { ok: false; blockedBy: LauncherId[] } | { ok: false; conflict: string[] } | { ok: false; error: string };
 
+// Firmware being written to the board, and what waits for it to finish
+// (electron/main/firmwareHold.ts).
+export interface FirmwareHoldState {
+  writing: boolean;
+  restartQueued: boolean;
+  quitQueued: boolean;
+}
+
 export interface DesktopApi {
   platform: string;
   reportStatus(status: DeviceStatus): void;
@@ -145,6 +153,11 @@ export interface DesktopApi {
   // stays "visible" while hidden here (background throttling is off).
   onWindowVisible(listener: (visible: boolean) => void): () => void;
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
+  // Firmware write in progress (firmwareUpdate.ts): restart, quit and the
+  // app update's install wait for it to end.
+  setFirmwareWriting(writing: boolean): void;
+  getFirmwareHold(): Promise<FirmwareHoldState>;
+  onFirmwareHold(listener: (state: FirmwareHoldState) => void): () => void;
   // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
   gamesScan(): Promise<GamesReport>;
   gamesApply(fixIds: string[]): Promise<ApplyResult>;
@@ -194,6 +207,9 @@ export const IPC = {
   latestFirmware: "desktop:latest-firmware",
   officialControllerFirmware: "desktop:official-controller-firmware",
   downloadFirmware: "desktop:download-firmware",
+  setFirmwareWriting: "desktop:set-firmware-writing",
+  getFirmwareHold: "desktop:get-firmware-hold",
+  firmwareHold: "desktop:firmware-hold",
   getDesktopPalette: "desktop:get-desktop-palette",
   firmwareChangelog: "desktop:firmware-changelog",
   desktopPalette: "desktop:desktop-palette",

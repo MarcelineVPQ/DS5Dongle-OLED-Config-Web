@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { errorText } from "../errorText";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
-import type { FirmwareLookup, LatestFirmware, UpdateState } from "./api";
+import type { FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
 import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
 
@@ -14,6 +14,18 @@ export function useAppUpdate(): UpdateState {
     if (!desktop) return;
     void desktop.getUpdateState().then(setState);
     return desktop.onUpdateState(setState);
+  }, []);
+  return state;
+}
+
+// Firmware being written, and the restart/quit waiting for it (main process).
+export function useFirmwareHold(): FirmwareHoldState {
+  const [state, setState] = useState<FirmwareHoldState>({ writing: false, restartQueued: false, quitQueued: false });
+  useEffect(() => {
+    const desktop = window.desktop;
+    if (!desktop) return;
+    void desktop.getFirmwareHold().then(setState);
+    return desktop.onFirmwareHold(setState);
   }, []);
   return state;
 }

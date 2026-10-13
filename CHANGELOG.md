@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **No restart or quit while firmware is being written:** during a firmware update (and Setup's first install), the app update's **Restart now** stayed clickable, and restarting mid-write left the board half-written (it then only recovers through BOOTSEL). Now Restart now and Download and install are disabled with "Wait for the firmware update to finish.", a restart already asked for (tray menu too) happens right after the write, closing the window, tray Quit and Ctrl+Q keep the window open with a note that the app closes when the firmware update finishes, and an automatic app update installs only after the write. One guard in the main process holds all of them.
+
 ## [0.9.5-dev.9] - 2026-10-13
 
 ### Added

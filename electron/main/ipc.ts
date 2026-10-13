@@ -22,6 +22,7 @@ import {
   type DesktopSettings,
   type DeviceStatus,
   type GameBackup,
+  type FirmwareHoldState,
   type FirmwareLookup,
   type OfficialFirmwareLookup,
   type ProtonInstallResult,
@@ -99,6 +100,8 @@ export interface IpcHandlers {
   latestFirmware: () => Promise<FirmwareLookup>;
   officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;
   downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
+  setFirmwareWriting: (writing: boolean) => void;
+  getFirmwareHold: () => FirmwareHoldState;
   getDesktopPalette: () => Promise<unknown>;
   firmwareChangelog: () => Promise<string>;
   gamesScan: () => Promise<GamesReport>;
@@ -147,6 +150,13 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.downloadFirmware, h.downloadFirmware);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
   invoke(IPC.firmwareChangelog, h.firmwareChangelog);
+
+  invoke(IPC.getFirmwareHold, h.getFirmwareHold);
+  ipcMain.on(IPC.setFirmwareWriting, (event, raw: unknown) => {
+    if (!trusted(event)) return;
+    const parsed = z.boolean().safeParse(raw);
+    if (parsed.success) h.setFirmwareWriting(parsed.data);
+  });
 
   ipcMain.on(IPC.restartToUpdate, (event) => {
     if (trusted(event)) h.restartToUpdate();

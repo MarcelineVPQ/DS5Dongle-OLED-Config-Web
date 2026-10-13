@@ -19,6 +19,18 @@ export interface FirmwareProgress {
 const BOOTLOADER_TIMEOUT_MS = 20_000;
 const REBOOT_DELAY_MS = 500;
 
+// Every firmware write goes through here: from the reboot into BOOTSEL until
+// the board restarts, the app can't restart, quit or install its own update
+// (the main process holds them; electron/main/firmwareHold.ts).
+export async function whileWriting<T>(run: () => Promise<T>): Promise<T> {
+  window.desktop?.setFirmwareWriting(true);
+  try {
+    return await run();
+  } finally {
+    window.desktop?.setFirmwareWriting(false);
+  }
+}
+
 export async function updateFirmware(client: Ds5BridgeClient, onProgress: (p: FirmwareProgress) => void): Promise<string> {
   const desktop = window.desktop;
   if (!desktop) throw new Error("Firmware updates need the desktop app.");
@@ -29,14 +41,16 @@ export async function updateFirmware(client: Ds5BridgeClient, onProgress: (p: Fi
   // the dongle is still running its current firmware.
   const regions = parseUf2Regions(bytes.slice().buffer);
 
-  onProgress({ step: "rebooting" });
-  await client.enterBootsel();
+  return whileWriting(async () => {
+    onProgress({ step: "rebooting" });
+    await client.enterBootsel();
 
-  onProgress({ step: "waiting-bootloader" });
-  const device = await waitForBootloader();
+    onProgress({ step: "waiting-bootloader" });
+    const device = await waitForBootloader();
 
-  await flash(device, regions, onProgress);
-  return version;
+    await flash(device, regions, onProgress);
+    return version;
+  });
 }
 
 // First-run setup: a Pico already in BOOTSEL mode gets the app's firmware.
@@ -46,7 +60,7 @@ export async function installFirmware(device: PicoflashHandle, onProgress: (p: F
   onProgress({ step: "downloading" });
   const { version, bytes } = await desktop.downloadFirmware();
   const regions = parseUf2Regions(bytes.slice().buffer);
-  await flash(device, regions, onProgress);
+  await whileWriting(() => flash(device, regions, onProgress));
   return version;
 }
 

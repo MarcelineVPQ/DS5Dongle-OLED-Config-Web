@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { UpdateState } from "./api";
 import { BusyButton } from "./controls";
-import type { FirmwareUpdate } from "./useUpdates";
+import { type FirmwareUpdate, useFirmwareHold } from "./useUpdates";
 
 function mb(bytes: number): string {
   return `${(bytes / 1048576).toFixed(1)} MB`;
@@ -17,8 +17,8 @@ function Notice({ error, children, action }: { error?: boolean; children: React.
     </div>
   );
 }
-const Action = ({ primary, onClick, children }: { primary?: boolean; onClick: () => void; children: React.ReactNode }) => (
-  <button type="button" className={`dk-btn${primary ? " primary" : ""}`} onClick={onClick}>
+const Action = ({ primary, onClick, disabled, title, children }: { primary?: boolean; onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode }) => (
+  <button type="button" className={`dk-btn${primary ? " primary" : ""}`} onClick={onClick} disabled={disabled} title={title}>
     {children}
   </button>
 );
@@ -39,18 +39,23 @@ export default function UpdateBanners({
   const { t } = useTranslation();
   const desktop = window.desktop;
   const dismiss = <Action onClick={fw.dismiss}>{t("notice.dismiss")}</Action>;
+  // While firmware is written, restarting or installing the app waits (the
+  // main process holds them too); the notice says why.
+  const hold = useFirmwareHold();
+  const waitHint = hold.writing ? t("desktop.update.restartWait") : undefined;
 
   let appNotice: React.ReactNode = null;
   if (app.phase === "available")
     appNotice = (
       <Notice
         action={
-          <BusyButton className="dk-btn primary" onClick={() => desktop?.installUpdate()}>
+          <BusyButton className="dk-btn primary" onClick={() => desktop?.installUpdate()} disabled={hold.writing} title={waitHint}>
             {t("desktop.update.download", "Download and install")}
           </BusyButton>
         }
       >
         <span>{t("desktop.update.appAvailable", { version: app.version, size: mb(app.size), defaultValue: "App update {{version}} is available ({{size}})." })}</span>
+        {waitHint && <span>{waitHint}</span>}
       </Notice>
     );
   else if (app.phase === "downloading")
@@ -72,12 +77,13 @@ export default function UpdateBanners({
     appNotice = (
       <Notice
         action={
-          <Action primary onClick={() => desktop?.restartToUpdate()}>
+          <Action primary onClick={() => desktop?.restartToUpdate()} disabled={hold.writing} title={waitHint}>
             {t("desktop.update.restart", "Restart now")}
           </Action>
         }
       >
         <span>{t("desktop.update.ready", { version: app.version, defaultValue: "Version {{version}} is installed." })}</span>
+        {hold.writing && <span>{t(hold.restartQueued ? "desktop.update.restartQueued" : "desktop.update.restartWait")}</span>}
       </Notice>
     );
   else if (app.phase === "manual")
@@ -137,9 +143,18 @@ export default function UpdateBanners({
       </Notice>
     );
 
-  if (!appNotice && !fwNotice) return null;
+  // Asked to quit mid-write (any firmware write, Setup's first install too):
+  // the window stays until the write ends.
+  const quitNotice = hold.writing && hold.quitQueued && (
+    <Notice>
+      <strong>{t("desktop.update.quitQueued")}</strong>
+    </Notice>
+  );
+
+  if (!appNotice && !fwNotice && !quitNotice) return null;
   return (
     <>
+      {quitNotice}
       {appNotice}
       {fwNotice}
     </>

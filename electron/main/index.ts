@@ -21,6 +21,7 @@ import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
 import { Updater, FeedMissingError } from "./updater";
+import { FirmwareHold } from "./firmwareHold";
 import { isAllowedExternalUrl } from "./urls";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -31,6 +32,8 @@ const resourcesDir = app.isPackaged ? join(process.resourcesPath, "resources") :
 let mainWindow: BrowserWindow | null = null;
 let tray: AppTray | null = null;
 let updater: Updater;
+// Restart, quit and the app update's install wait while firmware is written.
+let hold: FirmwareHold;
 const UPDATE_FIRST_CHECK_MS = 20_000;
 const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
 let settings: DesktopSettings;
@@ -99,6 +102,7 @@ function start(): void {
     () => settings.updateChannel,
   );
   updater.pruneStaleFiles();
+  hold = new FirmwareHold((state) => mainWindow?.webContents.send(IPC.firmwareHold, state));
   setTimeout(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_FIRST_CHECK_MS);
   setInterval(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_INTERVAL_MS);
   applyAutostart(settings.launchAtLogin, settings.startMinimized);
@@ -118,11 +122,9 @@ function start(): void {
         showWindow();
         void updater.check();
       },
-      restartToUpdate: () => updater.restart(),
-      quit: () => {
-        quitting = true;
-        app.quit();
-      },
+      restartToUpdate,
+      // before-quit marks it quitting, or holds it while firmware is written.
+      quit: () => app.quit(),
     },
     settings,
   );
@@ -244,7 +246,8 @@ function start(): void {
     appVersion: () => app.getVersion(),
     checkForUpdates: () => updater.check(),
     getUpdateState: () => updater.getState(),
-    installUpdate: () => updater.downloadAndInstall(),
+    // The banner's button is disabled while firmware is written; this backs it up.
+    installUpdate: () => (hold.active ? Promise.resolve(updater.getState()) : updater.downloadAndInstall()),
     // The channel first (without the routine re-check, which would race this
     // one), then the stable version on offer even though it's older.
     devChannelPreview: async () => {
@@ -259,10 +262,12 @@ function start(): void {
       updateSetting("updateChannel", "stable", false);
       return updater.backToStable();
     },
-    restartToUpdate: () => updater.restart(),
+    restartToUpdate,
     latestFirmware: () => latestFirmware(firmwareSource),
     officialControllerFirmware: (asked) => officialFirmware.lookup(asked),
     downloadFirmware: () => firmwareBytes(firmwareSource),
+    setFirmwareWriting: (writing) => hold.setWriting(writing),
+    getFirmwareHold: () => hold.state(),
     getDesktopPalette: () => readDesktopPalette(),
     firmwareChangelog: () => updater.firmwareChangelog(),
   });
@@ -270,10 +275,19 @@ function start(): void {
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
   watchDesktopPalette(() => void readDesktopPalette().then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette)));
   app.on("activate", showWindow);
-  app.on("before-quit", () => (quitting = true));
+  // Quitting (tray Quit, Ctrl+Q, logout) mid-write would leave the board
+  // half-written: show the window, which says it closes when the write ends.
+  app.on("before-quit", (event) => {
+    if (hold.allowQuit(event, () => app.quit())) quitting = true;
+    else showWindow();
+  });
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
   });
+}
+
+function restartToUpdate(): void {
+  hold.whenDone("restart", () => updater.restart());
 }
 
 // A scheduled check; with automatic updates on, a newer version is downloaded,
@@ -281,7 +295,7 @@ function start(): void {
 // button), and starts the next time the app opens.
 async function checkForUpdates(): Promise<void> {
   const state = await updater.check();
-  if (state.phase === "available" && settings.autoInstallUpdates) await updater.downloadAndInstall();
+  if (state.phase === "available" && settings.autoInstallUpdates) hold.whenDone("install", () => void updater.downloadAndInstall());
 }
 
 function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K], recheck = true): DesktopSettings {
@@ -289,7 +303,7 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   saveSettings(settings);
   if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
   // Turned on with an update already waiting: install it now.
-  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") void updater.downloadAndInstall();
+  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", () => void updater.downloadAndInstall());
   if (key === "gamesScanAllowed") syncRunningWatcher();
   // A different feed: look again (a development build may now be offered).
   if (key === "updateChannel" && recheck && updater.getState().phase !== "ready") void updater.check();
@@ -369,9 +383,18 @@ function createWindow(visible: boolean): void {
     if (settings.closeToTray && !quitting) {
       event.preventDefault();
       mainWindow?.hide();
+    } else if (!hold.allowQuit(event, () => app.quit())) {
+      // Closing quits the app: it waits for the firmware write.
+      showWindow();
     }
   });
-  mainWindow.on("closed", () => (mainWindow = null));
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+    hold.setWriting(false);
+  });
+  // A fresh or crashed page isn't writing anything any more.
+  mainWindow.webContents.on("did-finish-load", () => hold.setWriting(false));
+  mainWindow.webContents.on("render-process-gone", () => hold.setWriting(false));
   // Tell the page when it's actually on screen, so live polling stops in the tray.
   const sendVisible = () => mainWindow?.webContents.send(IPC.windowVisible, !!mainWindow && mainWindow.isVisible() && !mainWindow.isMinimized());
   for (const event of ["show", "hide", "minimize", "restore"] as const) mainWindow.on(event as "show", sendVisible);
