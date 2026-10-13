@@ -412,11 +412,19 @@ const report = (prefix, found, once = null) => {
     console.log(`${prefix} ${f.kind}: ${f.text}`);
   }
 };
-const PREF_KEYS = ["i18nextLng", "ds5-bridge-theme", "ds5.glass", "ds5.dev.model", "ds5.dev.colorway", "ds5.dev.updates", "ds5.customColors.on"];
+// The look settings a run starts from at their defaults: the checker copy's
+// settings persist between runs (tmp/check/userdata), and any of these left
+// set changes what the renders show. Accent: Desktop (controllerAccent.ts)
+// drops the simulated dongle's Cosmic Red, so every rendered sample labelled
+// Cosmic Red disagreed with the computed Cosmic Red; color vision swaps
+// status colors; the knobs (lookKnobs.ts: translucent cards, backdrop) and
+// the background change what is judged at all.
+const LOOK_KEYS = ["ds5.accent", "ds5.colorVision", "ds5.background", "ds5.artBackdropOff", ...["cardOpacity", "backdropDim", "backdropBlur", "depth", "hdrNits"].map((k) => `ds5.knob.${k}`)];
+const PREF_KEYS = ["i18nextLng", "ds5-bridge-theme", "ds5.glass", "ds5.dev.model", "ds5.dev.colorway", "ds5.dev.updates", "ds5.customColors.on", ...LOOK_KEYS];
 const original = await evaluate(`(${JSON.stringify(PREF_KEYS)}).reduce((o, k) => ({ ...o, [k]: localStorage.getItem(k) }), {})`);
 // Never start inside a preview; the player's own colors off (the colorway
-// check covers them).
-await setPrefs({ "ds5.dev.model": null, "ds5.dev.colorway": null, "ds5.dev.updates": null, "ds5.customColors.on": null });
+// check covers them); the look at its defaults.
+await setPrefs({ "ds5.dev.model": null, "ds5.dev.colorway": null, "ds5.dev.updates": null, "ds5.customColors.on": null, ...Object.fromEntries(LOOK_KEYS.map((k) => [k, null])) });
 const timing = {};
 const phase = async (name, fn) => {
   const t = Date.now();
