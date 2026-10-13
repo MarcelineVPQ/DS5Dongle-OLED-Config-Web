@@ -438,12 +438,12 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
 // Stick response curves for this game (protocol 1.10; switched in while it
 // runs, never written to the dongle's flash): a preset per stick, or the
 // player's saved curve. Custom points for a game aren't edited here yet.
-type ProfileCurves = NonNullable<ProfileSettings["stickCurves"]>;
-function CurvePicker({ value, bridge, onChange }: { value: ProfileCurves | undefined; bridge: UseDs5BridgeResult; onChange: (v: ProfileCurves | undefined) => void }) {
+type StickCurvesSetting = NonNullable<ProfileSettings["stickCurves"]>;
+function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | undefined; bridge: UseDs5BridgeResult; onChange: (v: StickCurvesSetting | undefined) => void }) {
   const { t } = useTranslation();
   const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 10, FEATURES2.stickCurves);
   const pick = (side: "left" | "right", type: string) => {
-    const next: ProfileCurves = { ...value };
+    const next: StickCurvesSetting = { ...value };
     const kept = value?.[side];
     if (type) next[side] = { type: type as (typeof CURVE_PRESETS)[number], points: kept?.points ?? DEFAULT_CUSTOM_POINTS.map((p) => [...p] as [number, number]) };
     else delete next[side];

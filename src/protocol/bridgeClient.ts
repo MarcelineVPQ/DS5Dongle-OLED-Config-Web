@@ -111,15 +111,13 @@ export const NARRATOR_OFF = 0xff;
 export type CommandResult = "ok" | "pending" | "invalid" | "failed" | "busy";
 const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed", "busy"];
 
-// A protocol 1.x addition announced in identity [46] (FEATURES3).
-export function supportsFeature3(identity: BridgeIdentity | null, minMinor: number, bit: number): boolean {
-  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity.features3 & bit) !== 0;
+// A protocol 1.x addition announced by a bit in one of identity's feature
+// bytes ([29] FEATURES2, [46] FEATURES3), from protocol 1.<minMinor> on.
+export function supportsFeature(identity: BridgeIdentity | null, byte: "features2" | "features3", minMinor: number, bit: number): boolean {
+  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity[byte] & bit) !== 0;
 }
-
-// A protocol 1.x addition announced in identity [29] (FEATURES2).
-export function supportsFeature2(identity: BridgeIdentity | null, minMinor: number, bit: number): boolean {
-  return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity.features2 & bit) !== 0;
-}
+export const supportsFeature2 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features2", minMinor, bit);
+export const supportsFeature3 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features3", minMinor, bit);
 
 export interface BridgeIdentity {
   protoMajor: number;

@@ -7,9 +7,8 @@
 import type { Ds5BridgeClient, BridgeIdentity } from "../../protocol/bridgeClient";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import type { ConfigBody } from "../../protocol/config";
-import type { StickCurve } from "../../protocol/stickCurve";
 import type { LibraryFile, ProfileSettings } from "../games/library";
-import { profileConfig, withSettings } from "./profileValues";
+import { profileConfig, profileCurves, withSettings, type GameCurves } from "./profileValues";
 
 export interface ProfileCaps {
   layouts: boolean; // temporary remaps (protocol 1.8)
@@ -27,17 +26,16 @@ export function profileCaps(identity: BridgeIdentity | null): ProfileCaps {
   };
 }
 
-export type ProfileCurves = [StickCurve | undefined, StickCurve | undefined];
 export interface GameParts {
   layout: { table: number[]; extra?: number[] } | null;
-  curves: ProfileCurves | null;
+  curves: GameCurves | null;
 }
 
 // The profile's button layout (if it still exists) and stick curves.
 export function gamePartsOf(library: LibraryFile, s: ProfileSettings): GameParts {
   const layout = s.buttonLayout ? (library.layouts?.[s.buttonLayout] ?? null) : null;
-  const c = s.stickCurves;
-  return { layout, curves: c && (c.left || c.right) ? ([c.left, c.right] as ProfileCurves) : null }; // 4 points each (ProfileCurveSchema)
+  const curves = profileCurves(s); // 4 points each (ProfileCurveSchema)
+  return { layout, curves: curves[0] || curves[1] ? curves : null };
 }
 
 // The game's layout and curves (null: the saved ones). Whatever a previous

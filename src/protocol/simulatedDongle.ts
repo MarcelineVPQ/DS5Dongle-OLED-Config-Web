@@ -6,11 +6,12 @@
 // real hardware) and dev builds' "Simulated dongle" (Developer card), e.g. in
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody } from "./config";
+import { IDENTITY_BYTES } from "./bridgeClient";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
-import { CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_SEL, CTRL_TEST } from "./controllerInfo";
+import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
@@ -58,7 +59,7 @@ export interface SimulatedDongleOptions {
 // A plausible, made-up controller (no real controller's data): report 0x20
 // as the dongle passes it on (selector 0x01), counters block, battery voltage.
 function simFirmware(updateVersion: number): Uint8Array {
-  const out = new Uint8Array(60);
+  const out = new Uint8Array(CTRL_FIRMWARE_BYTES);
   const v = new DataView(out.buffer);
   out[0] = 1;
   out.set(
@@ -81,7 +82,7 @@ function simFirmware(updateVersion: number): Uint8Array {
 }
 
 function simTelemetry(edge: boolean): Uint8Array {
-  const block = new Uint8Array((edge ? 6 : 4) * CTRL_PAGE_BYTES);
+  const block = new Uint8Array(telemetryPages(edge) * CTRL_PAGE_BYTES);
   const d = new DataView(block.buffer, 1); // [0] is the block's status byte; serials stay zero
   const u32 = (o: number, x: number) => d.setUint32(o, x, true);
   const u16 = (o: number, x: number) => d.setUint16(o, x, true);
@@ -147,7 +148,7 @@ export class SimulatedDongle implements Ds5Transport {
     return this.opts.protoMinor ?? 6;
   }
   private get split() {
-    return (this.opts.protoMinor ?? 6) >= 6;
+    return this.minor >= 6;
   }
   flashNarrator = 0xff;
   // Right grip haptics strength after the narrator (protocol 1.6), float LE.
@@ -302,17 +303,17 @@ export class SimulatedDongle implements Ds5Transport {
         return out.subarray(0, length);
       }
       case 0xfc: {
-        const timings = (this.opts.protoMinor ?? 6) >= 11;
+        const timings = this.minor >= 11;
         if (!this.opts.live && !timings) throw new ReportStalledError(reportId);
         // 320 MHz at 1.20 V (vreg code 13), about 42 °C; protocol 1.11 adds
         // the timings when asked for 63 bytes (older firmware stops at 11).
-        const out = new Uint8Array(timings && length >= 63 ? 63 : 11);
+        const out = new Uint8Array(timings && length >= FEATURE_REPORT_PAYLOAD_SIZE ? FEATURE_REPORT_PAYLOAD_SIZE : 11);
         const v = new DataView(out.buffer);
         v.setUint32(0, 320000, true);
         v.setUint32(4, 320000, true);
         out[8] = 13;
         v.setUint16(9, 844, true);
-        if (out.length === 63) this.timings(v);
+        if (out.length === FEATURE_REPORT_PAYLOAD_SIZE) this.timings(v);
         return out.subarray(0, length);
       }
       case 0xfa: {
@@ -324,20 +325,20 @@ export class SimulatedDongle implements Ds5Transport {
         return out;
       }
       case 0xec: {
-        if ((this.opts.protoMinor ?? 6) < 10) throw new ReportStalledError(reportId);
+        if (this.minor < 10) throw new ReportStalledError(reportId);
         const saved = this.curves[this.currentSlot];
         const tmp = this.tempCurves?.slot === this.currentSlot ? this.tempCurves.pair : null;
         return new Uint8Array([0x43, 0x56, 1, this.currentSlot, tmp ? 1 : 0, ...saved.flat(), ...(tmp ?? saved).flat()]).slice(0, length);
       }
       case 0xed: {
-        if ((this.opts.protoMinor ?? 6) < 9) throw new ReportStalledError(reportId);
+        if (this.minor < 9) throw new ReportStalledError(reportId);
         return new Uint8Array([0x52, 0x58, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.extra]);
       }
       case 0xf5: {
         // 15 u32 counters, then core1's health: [60] flags | stage << 3 | 0x80
         // (layout), [61..62] free heap at core1 start in KiB (firmware cmd.cpp).
         const legacy = this.opts.audioCountersLegacy;
-        const out = new Uint8Array(legacy === "none" ? 60 : 63);
+        const out = new Uint8Array(legacy === "none" ? 60 : FEATURE_REPORT_PAYLOAD_SIZE);
         const v = new DataView(out.buffer);
         // Core1 keeps looping, so the dashboard's liveness check sees it move;
         // one stuck in start-up never loops.
@@ -394,7 +395,7 @@ export class SimulatedDongle implements Ds5Transport {
         this.remapTemporary = false;
         this.remapRevision++;
       }
-    } else if (func === 0x11 && (this.opts.protoMinor ?? 6) >= 8) {
+    } else if (func === 0x11 && this.minor >= 8) {
       const table = [...payload.subarray(4, 20)];
       if (payload[1] !== 0x52 || payload[2] !== 0x4d || payload[3] !== 1 || payload.length < 20 || table.some((v) => v > 15 && v !== 0xff)) this.lastResult = RESULT.invalid;
       else {
@@ -402,7 +403,7 @@ export class SimulatedDongle implements Ds5Transport {
         this.remapTemporary = true;
         this.remapRevision++;
       }
-    } else if (func === 0x13 && (this.opts.protoMinor ?? 6) >= 9) {
+    } else if (func === 0x13 && this.minor >= 9) {
       const e = [...payload.subarray(4, 8)];
       if (payload[1] !== 0x52 || payload[2] !== 0x58 || payload[3] !== 1 || payload.length < 9 || payload[8] > 1 || e.some((v) => v > 15 && v !== 0xfe && v !== 0xff)) this.lastResult = RESULT.invalid;
       else {
@@ -411,7 +412,7 @@ export class SimulatedDongle implements Ds5Transport {
         else this.flashExtra = e.slice();
         this.remapRevision++;
       }
-    } else if (func === 0x14 && (this.opts.protoMinor ?? 6) >= 10) {
+    } else if (func === 0x14 && this.minor >= 10) {
       const pair = [0, 1].map((i) => [...payload.subarray(5 + i * CURVE_BYTES, 5 + (i + 1) * CURVE_BYTES)]);
       const temporary = payload[5 + 2 * CURVE_BYTES];
       // As the firmware: framing, slot, temporary flag, and each curve valid (type 0..5, custom points non-decreasing).
@@ -423,7 +424,7 @@ export class SimulatedDongle implements Ds5Transport {
         this.tempCurves = null;
         this.curves[payload[4]] = pair;
       }
-    } else if (func === 0x15 && (this.opts.protoMinor ?? 6) >= 11) {
+    } else if (func === 0x15 && this.minor >= 11) {
       this.timingsResetAt = Date.now(); // answered at once, like the firmware
     } else if (func === 0x16 && this.minor >= 12) {
       const [dev, action, pages] = [payload[1], payload[2], payload[3]];
@@ -434,7 +435,7 @@ export class SimulatedDongle implements Ds5Transport {
       if (!ok) this.lastResult = RESULT.invalid;
       else if (this.ctrlTest.state === 1) this.lastResult = RESULT.busy;
       else this.ctrlTest = { state: 1, dev, action, pages, request: (this.ctrlTest.request + 1) & 0xff, polls: this.opts.pendingPolls ?? 1, block: new Uint8Array(CTRL_MAX_PAGES * CTRL_PAGE_BYTES) };
-    } else if (func === 0x12 && (this.opts.protoMinor ?? 6) >= 8) {
+    } else if (func === 0x12 && this.minor >= 8) {
       this.tempCurves = null; // 1.10: a game's stick curves end too
       this.extra = this.flashExtra.slice();
       this.remap = this.flashRemap.slice();
@@ -479,7 +480,7 @@ export class SimulatedDongle implements Ds5Transport {
           }
         }
       }
-      const out = new Uint8Array(14);
+      const out = new Uint8Array(CTRL_HEADER_BYTES);
       out.set([0x43, 0x48, 1, t.state, t.dev, t.action, t.state === 2 ? t.pages : 0, t.request, this.edge ? 1 : 0, 0x03]);
       new DataView(out.buffer).setUint32(10, 0x00000a1b, true); // BT patch
       return out;
@@ -487,7 +488,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (selector === CTRL_SEL.firmware) return simFirmware(this.opts.controllerUpdateVersion ?? (this.edge ? 0x0215 : 0x0620));
     const p = selector - CTRL_SEL.page0;
     if (p < 0 || p >= CTRL_MAX_PAGES) return new Uint8Array(0);
-    const out = new Uint8Array(3 + CTRL_PAGE_BYTES);
+    const out = new Uint8Array(CTRL_PAGE_REPLY_BYTES);
     out.set([p, t.state, t.request]);
     if (t.state === 2 && p < t.pages) out.set(t.block.subarray(p * CTRL_PAGE_BYTES, (p + 1) * CTRL_PAGE_BYTES), 3);
     return out;
@@ -526,9 +527,9 @@ export class SimulatedDongle implements Ds5Transport {
   }
 
   private identity(): Uint8Array {
-    const minor = this.opts.protoMinor ?? 6;
-    const out = new Uint8Array(minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, this.opts.protoMinor ?? 6, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
+    const minor = this.minor;
+    const out = new Uint8Array(minor >= 12 ? IDENTITY_BYTES : minor >= 7 ? 46 : 30);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;

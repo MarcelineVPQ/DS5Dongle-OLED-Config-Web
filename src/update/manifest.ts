@@ -102,14 +102,6 @@ export function shortVersion(raw: string | null | undefined): string {
 export const sameVersion = (a: string | null | undefined, b: string | null | undefined) => !!parseVersion(a) && !isNewer(a, b) && !isNewer(b, a);
 
 // Hosts a manifest download may point at: GitHub release assets and the
-// redirect targets GitHub serves them from.
-export const DOWNLOAD_HOSTS = new Set(["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"]);
-
-export function isAllowedDownloadUrl(raw: string): boolean {
-  try {
-    const url = new URL(raw);
-    return url.protocol === "https:" && DOWNLOAD_HOSTS.has(url.hostname) && url.username === "" && url.password === "";
-  } catch {
-    return false;
-  }
-}
+// redirect targets GitHub serves them from (checked by isAllowedDownloadUrl,
+// electron/main/urls.ts).
+export const DOWNLOAD_HOSTS: ReadonlySet<string> = new Set(["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"]);

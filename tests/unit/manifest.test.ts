@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Manifest, devNumber, isAllowedDownloadUrl, isNewer, parseVersion, sameVersion, shortVersion } from "../../src/update/manifest";
+import { isAllowedDownloadUrl } from "../../electron/main/urls";
+import { Manifest, devNumber, isNewer, parseVersion, sameVersion, shortVersion } from "../../src/update/manifest";
 
 describe("parseVersion", () => {
   it("reads plain, v-prefixed and suffixed versions", () => {
@@ -63,7 +64,15 @@ describe("download host allowlist", () => {
   });
 
   it("refuses everything else", () => {
-    for (const url of ["http://github.com/a", "https://github.com.evil.example/a", "https://evil.example/github.com", "https://u:p@github.com/a", "file:///tmp/a.uf2", "nope"]) {
+    for (const url of [
+      "http://github.com/a",
+      "https://github.com.evil.example/a",
+      "https://evil.example/github.com",
+      "https://u:p@github.com/a",
+      "https://github.com:8443/a",
+      "file:///tmp/a.uf2",
+      "nope",
+    ]) {
       expect(isAllowedDownloadUrl(url), url).toBe(false);
     }
   });

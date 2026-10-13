@@ -9,6 +9,9 @@
 // user never sees. No dates, no promises. The text stays English like the
 // Guide and the changelog; the board's labels are translated.
 
+/** Where suggestions and bug reports go (About's Report an issue, Coming soon). */
+export const ISSUES_URL = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues";
+
 /** next: done, in the next stable release (already in Development builds). */
 export type RoadmapColumn = "next" | "progress" | "planned" | "ideas";
 export type RoadmapArea = "controller" | "buttons" | "audio" | "games" | "dongle" | "app" | "community";
