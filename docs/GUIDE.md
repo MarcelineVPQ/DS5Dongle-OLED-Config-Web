@@ -162,7 +162,7 @@ In the panel on the right:
 
 ![The Games library](screenshots/guide-games.png)
 
-The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there.
+The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there. To stop the app reading your launchers, turn off **Read my game launchers** in App settings → Privacy: your library and per-game controller profiles are hidden until you turn it back on, and nothing is deleted.
 
 - **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games. If Steam, Heroic or Lutris is running when you apply a fix, the review says so: the app closes it to save the change, then opens it again (not while a game is running).
 - **A game's page:**
@@ -235,6 +235,7 @@ Open with the ⚙ in the rail.
 - **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).
 - **Accessibility:** **Color vision** modes (colors never carry meaning alone anyway), **Reduce motion**, the **narrator** voice and captions.
 - **Startup and window:** close to tray, start at login, start minimized.
+- **Privacy** (Linux and Windows): **Read my game launchers**, the permission Games asks for the first time. Turning it off asks first, then hides your game library and per-game controller profiles until you turn it back on; nothing is deleted.
 - **Updates:** check automatically, install automatically, and the **update channel**: Stable (the default) or **Development**, which brings development builds of the app and firmware before they're released (newer, less tested), plus every stable release. **Back to stable** returns to the latest stable app and firmware.
 - **Advanced:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
 

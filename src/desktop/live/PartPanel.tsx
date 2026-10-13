@@ -53,6 +53,8 @@ import {
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
+import { gamesSupported, protonApplies } from "../games/platform";
+import { onGamesAllowed, setGamesAllowed } from "../games/consent";
 import type { FirmwareUpdate } from "../useUpdates";
 import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
@@ -641,6 +643,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
             <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
             <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
           </section>
+          {gamesSupported() && <GameLaunchersSetting />}
           <section className="dk-card">
             <h2>{t("desktop.settings2.advanced")}</h2>
             <Toggle
@@ -726,6 +729,51 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
         </section>
       )}
     </>
+  );
+}
+
+// Privacy: whether Games may read the game launchers (its first-visit consent).
+// Turning it off asks first, since the library and per-game controller profiles
+// hide until it's back on; turning it on is the same as "Check my launchers".
+export function GameLaunchersSetting() {
+  const { t } = useTranslation();
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [confirmOff, setConfirmOff] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void window.desktop?.getSettings().then((s) => live && setAllowed(s.gamesScanAllowed));
+    const off = onGamesAllowed(setAllowed);
+    return () => {
+      live = false;
+      off();
+    };
+  }, []);
+  if (allowed === null) return null;
+  const reads = t("desktop.games.readLaunchersSub", { what: t(protonApplies() ? "desktop.games.consentLaunchers" : "desktop.games.consentLaunchersWindows") });
+  const offText = t("desktop.games.readLaunchersOff");
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.settings2.privacy")}</h2>
+      <Toggle label={t("desktop.games.readLaunchers")} sub={`${reads} ${offText}`} value={allowed} disabled={confirmOff} onChange={(v) => (v ? setGamesAllowed(true) : setConfirmOff(true))} />
+      {confirmOff && (
+        <div className="dk-row-btns" role="alert">
+          <span className="dk-bad">{offText}</span>
+          <span className="dk-spacer" />
+          <button type="button" className="dk-btn" onClick={() => setConfirmOff(false)}>
+            {t("desktop.common.cancel")}
+          </button>
+          <BusyButton
+            className="dk-btn danger"
+            onClick={async () => {
+              await setGamesAllowed(false);
+              setConfirmOff(false);
+            }}
+          >
+            {t("desktop.games.readLaunchersTurnOff")}
+          </BusyButton>
+        </div>
+      )}
+    </section>
   );
 }
 

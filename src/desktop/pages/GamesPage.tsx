@@ -131,7 +131,7 @@ export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, 
       running={profiles.running}
       openGame={openGame}
       onRescan={() => setRescanToken((n) => n + 1)}
-      home={<GamesSetup {...rest} rescanToken={rescanToken} onScanned={scanned} onStop={() => onAllowedChange(false)} />}
+      home={<GamesSetup {...rest} rescanToken={rescanToken} onScanned={scanned} />}
     />
   );
 }
@@ -150,6 +150,7 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
           {protonApplies() && <li>{t("desktop.games.consentProton")}</li>}
         </ul>
         <p className="dk-hint">{t("desktop.games.consentPromise")}</p>
+        <p className="dk-hint">{t("desktop.games.consentLibrary")}</p>
         <div className="dk-row-btns">
           <button type="button" className="dk-btn primary" onClick={onAllow}>
             {t("desktop.games.consentAllow")}
@@ -160,7 +161,7 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
   );
 }
 
-function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<GamesPageProps, "allowed" | "onAllowedChange" | "bridge" | "profiles"> & { onStop: () => void; rescanToken: number }) {
+function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPageProps, "allowed" | "onAllowedChange" | "bridge" | "profiles"> & { rescanToken: number }) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [report, setReport] = useState<GamesReport | null>(null);
@@ -355,9 +356,6 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
           <BusyButton onClick={() => rescan(step !== "pick")} disabled={busy !== null}>
             {t("desktop.games.rescan", "Rescan")}
           </BusyButton>
-          <button type="button" className="dk-btn" onClick={onStop} disabled={busy !== null} title={t("desktop.games.stopHint")}>
-            {t("desktop.games.stop")}
-          </button>
         </div>
       </section>
 

@@ -1,6 +1,7 @@
 import AppRail from "./AppRail";
 import { useLookKnobs } from "./lookKnobs";
 import { gamesSupported } from "./games/platform";
+import { onGamesAllowed, setGamesAllowed } from "./games/consent";
 import { useDevToolsShortcut, useShownIdentity } from "./devPreview";
 import { useReduceMotion } from "./motion";
 import { ACCENT_KEY, ACCENTS, useControllerAccent } from "./live/controllerAccent";
@@ -507,16 +508,18 @@ function useGamesAttention() {
       live = false;
     };
   }, [supported, update]);
-  const setAllowed = useCallback(
-    (value: boolean) => {
-      setAllowedState(value);
-      if (!value) {
-        last.current = null;
-        recount();
-      }
-      void window.desktop!.setSetting("gamesScanAllowed", value);
-    },
+  // Games' consent card or App settings → Privacy changed it.
+  useEffect(
+    () =>
+      onGamesAllowed((value) => {
+        setAllowedState(value);
+        if (!value) {
+          last.current = null;
+          recount();
+        }
+      }),
     [recount],
   );
+  const setAllowed = useCallback((value: boolean) => void setGamesAllowed(value), []);
   return { supported, allowed, setAllowed, count, update, recount };
 }
