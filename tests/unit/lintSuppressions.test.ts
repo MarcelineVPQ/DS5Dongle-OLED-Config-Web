@@ -3,10 +3,11 @@
 // (rule + file), and every row there still has its disable. ESLint itself
 // fails on a disable that no longer suppresses anything (eslint.config.js).
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const ROOT = new URL("../../", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 // The same trees ESLint lints (eslint.config.js ignores the rest).
 const DIRS = ["src", "electron", "tools", ".hooks", "site", "tests"];
 const IGNORED = /(^|\/)(node_modules|dist|out|release|coverage|tmp)\/|^src\/flash\/picoflash\//;
@@ -17,7 +18,7 @@ const files: string[] = [];
 const walk = (dir: string) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    const rel = relative(ROOT, p);
+    const rel = relative(ROOT, p).split(sep).join("/");
     if (IGNORED.test(rel + (statSync(p).isDirectory() ? "/" : ""))) continue;
     if (statSync(p).isDirectory()) walk(p);
     else if (/\.(ts|tsx|js|mjs)$/.test(p)) files.push(rel);
