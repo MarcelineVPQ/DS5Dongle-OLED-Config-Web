@@ -143,6 +143,8 @@ function start(): void {
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
           // Games the player marked "controller not detected" get the standard-gamepad fix.
           notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.tags?.includes("not-detected") ? [key] : []))),
+          // Games the player marked "Supports HDR" get the Turn on HDR fix (with an HDR screen).
+          hdrMarked: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.hdr ? [key] : []))),
         })
       : null;
   const withGames = <T>(run: (g: GamesService) => T): T => {

@@ -399,6 +399,15 @@
       "hidrawNo": "Spiele erreichen den Controller nicht (udev-Regel fehlt)",
       "envOk": "nichts erzwingt den Xbox-(SDL-)Weg",
       "envHint": "Diese Variablen sind außerhalb aller Launcher gesetzt, deshalb ändert die App sie nicht. Entferne sie aus der genannten Datei und melde dich ab und wieder an.",
+      "hdr": "HDR",
+      "hdrOn": "an auf {{outputs}}",
+      "hdrOff": {
+        "kde": "auf keinem Bildschirm an",
+        "other-desktop": "auf diesem Desktop nicht geprüft (nur KDE Plasma)",
+        "x11": "braucht eine Wayland-Sitzung",
+        "failed": "Prüfung fehlgeschlagen (kscreen-doctor)",
+        "unchecked": "nicht geprüft"
+      },
       "systemRule": "Eine systemweite Audio-Regel erzwingt Pro-Audio. Sie liegt außerhalb deines Home-Ordners, deshalb ändert die App sie nicht.",
       "changesTitle": "Empfohlene Änderungen",
       "allGood": "Alles ist eingerichtet. Nichts zu ändern.",
@@ -430,7 +439,8 @@
           "envHeroic": "{{vars}} aus den Umgebungsvariablen von {{game}} entfernen",
           "audioRule": "Die Audio-Regel abschalten, die den Controller auf „pro-audio“ zwingt",
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen",
-          "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben"
+          "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben",
+          "hdr": "HDR für {{game}} einschalten"
         },
         "why": {
           "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über {{device_akk}} zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
@@ -445,7 +455,10 @@
           "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen.",
           "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
           "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
-          "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}."
+          "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}.",
+          "hdr": "{{game}} unterstützt HDR. Mit PROTON_ENABLE_WAYLAND=1 und PROTON_ENABLE_HDR=1 startet Proton es als natives Wayland-Fenster, so bekommt es HDR. Spiele es auf deinem HDR-Bildschirm ({{outputs}}). Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
+          "hdrSteam": "{{game}} unterstützt HDR. Mit PROTON_ENABLE_WAYLAND=1 und PROTON_ENABLE_HDR=1 startet Proton es als natives Wayland-Fenster, so bekommt es HDR. Spiele es auf deinem HDR-Bildschirm ({{outputs}}). Das Steam-Overlay erscheint in diesem Modus eventuell nicht. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her. Die Startoptionen werden zu: {{options}}{{runner}}",
+          "hdrRunner": " Mit {{current}} geht das nicht, deshalb wechselt das Spiel auch zu {{proton}}."
         },
         "support": {
           "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und das haptische Feedback des DualSense.",
@@ -938,8 +951,20 @@
       "lockVolume": "Lautstärke sperren",
       "gamepadSet": "Der Controller kommt in diesem Spiel als Standard-Gamepad (XInput) an.",
       "gamepadSteamInput": "Steam Input ist für dieses Spiel nicht ausgeschaltet, deshalb gibt Steam ihm schon einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht.",
-      "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (-DualSense-2 oder neuer) oder ein normales GE-Proton.",
-      "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben."
+      "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (GE-Proton11-7.2-DualSense oder neuer) oder ein normales GE-Proton.",
+      "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben.",
+      "hdrSet": "HDR ist für dieses Spiel an: Es läuft als natives Wayland-Fenster.",
+      "hdrNoScreen": {
+        "kde": "Gerade hat kein Bildschirm HDR an, deshalb wird „HDR einschalten“ nicht angeboten. Schalte HDR für deinen Bildschirm in den Anzeigeeinstellungen von KDE ein und prüfe dann erneut.",
+        "other-desktop": "„HDR einschalten“ gibt es nur unter KDE Plasma (Wayland): Die App kann die HDR-Einstellung dieses Desktops nicht prüfen.",
+        "x11": "„HDR einschalten“ braucht eine Wayland-Sitzung: Dieser Desktop läuft mit X11.",
+        "failed": "Die App konnte die Bildschirmeinstellungen nicht lesen (kscreen-doctor), deshalb wird „HDR einschalten“ nicht angeboten.",
+        "unchecked": "Die Bildschirme wurden nicht geprüft, deshalb wird „HDR einschalten“ nicht angeboten."
+      },
+      "hdrNoBuild": "HDR braucht GE-Proton 10 oder neuer (auch unser DualSense-Proton), aber {{runner}} unterstützt es nicht, und keines davon ist installiert.",
+      "hdrPickRunner": "Dieses Spiel nutzt Steams Standard, {{runner}}, und das unterstützt kein HDR. Wähle in Steam unter Eigenschaften → Kompatibilität GE-Proton 10 oder neuer (oder unser DualSense-Proton) und prüfe dann erneut.",
+      "supportsHdr": "Unterstützt HDR",
+      "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App bietet dann an, HDR dafür einzuschalten, wenn ein Bildschirm HDR an hat."
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",

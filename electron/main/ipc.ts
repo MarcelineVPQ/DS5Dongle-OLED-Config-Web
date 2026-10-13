@@ -55,7 +55,7 @@ export const FixIdsSchema = z
       .string()
       .max(200)
       // Same shapes games.ts builds (a test checks every id a scan produces passes).
-      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+)$|^system:audio-(rule|profile):[0-9a-f]{8}$/),
+      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+|hdr:[\w.-]+)$|^system:audio-(rule|profile):[0-9a-f]{8}$/),
   )
   .max(500);
 export const BackupIdSchema = z.string().regex(BACKUP_ID);

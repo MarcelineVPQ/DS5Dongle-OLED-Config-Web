@@ -16,7 +16,8 @@ export type FixKind =
   | "steam-input-off" // per-game Steam Input off (Steam)
   | "remove-env" // drop PROTON_PREFER_SDL from the game's env / launch options
   | "audio-hifi" // disable a pro-audio rule for the DualSense
-  | "standard-gamepad"; // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
+  | "standard-gamepad" // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
+  | "hdr-on"; // HDR game, HDR screen: PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 (and a Proton that honours them)
 
 // An XInput-only game (our list, or the player marked "controller not
 // detected"): is the controller passed to it as a standard gamepad?
@@ -25,6 +26,27 @@ export type FixKind =
 //   steam-input  Steam Input isn't off for it: Steam already gives it an Xbox pad
 //   no-build     its Proton ignores the option and no build that honours it is installed
 export type GamepadState = "set" | "needed" | "steam-input" | "no-build";
+
+// An HDR game (our list, or the player ticked "Supports HDR"): does it run
+// with HDR (a native Wayland window, PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1)?
+//   set          both options set, with a Proton that honours them
+//   needed       a "Turn on HDR" fix is offered
+//   no-screen    no screen has HDR on right now (or it can't be checked): not offered
+//   no-build     its Proton ignores the options and none that honours them is installed
+//   pick-runner  Steam: the game follows Steam's default Proton, which ignores them;
+//                the player picks a Proton for it (it may be a native Linux game)
+export type HdrState = "set" | "needed" | "no-screen" | "no-build" | "pick-runner";
+
+// The desktop's HDR screens right now (read-only check, Linux):
+//   kde            KDE Plasma (Wayland), read with kscreen-doctor; `outputs` = screens with HDR on
+//   other-desktop  no read-only check for this desktop: HDR isn't offered
+//   x11            not a Wayland session: Proton can't run games as Wayland windows
+//   failed         kscreen-doctor didn't answer
+//   unchecked      not checked (Windows)
+export interface HdrScreens {
+  check: "kde" | "other-desktop" | "x11" | "failed" | "unchecked";
+  outputs: string[];
+}
 
 // A translatable message: the renderer looks up `desktop.games.msg.<key>`
 // and fills in params (a param can itself be a message, e.g. "no default").
@@ -56,6 +78,7 @@ export interface GameEntry {
   envFlags: string[]; // e.g. ["PROTON_PREFER_SDL"]
   support: DualSenseSupport;
   gamepad?: GamepadState; // XInput-only games (Linux) only
+  hdr?: HdrState; // HDR games (Linux) only
   fixes: Fix[];
   // What the launcher says it is (Steam's own categories); absent = a game.
   kind?: AppKind;
@@ -101,6 +124,7 @@ export interface SystemInfo {
   proAudioRules: string[]; // config files forcing pro-audio
   envWarnings: Array<{ variable: string; file: string | null }>; // file null = this session's environment
   hidrawAccess: boolean | null;
+  hdr: HdrScreens;
   fixes: Fix[];
 }
 
