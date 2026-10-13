@@ -973,7 +973,7 @@
     },
     "audioTest": {
       "speakerTitle": "扬声器测试",
-      "speakerHint": "在控制器扬声器（不是电脑）上播放一段短提示音。",
+      "speakerHint": "在控制器扬声器（不是电脑）上播放民歌《货郎》（Korobeiniki，约 40 秒）。再按一次即可停止。",
       "speakerButton": "播放测试音",
       "noSpeaker": "在这台电脑上找不到控制器扬声器这个音频输出。",
       "micTitle": "麦克风测试",

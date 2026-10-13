@@ -18,6 +18,7 @@ import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
 import { controllerSpeaker } from "../narrator";
+import { renderTune, tuneSeconds } from "./speakerTune";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
@@ -804,35 +805,50 @@ function NarratorSettings() {
   );
 }
 
-// A short two-note chime on the controller's speaker (never the PC's): made
-// on the spot with Web Audio and routed to the DualSense output.
+// Korobeiniki (speakerTune.ts) on the controller's speaker (never the PC's),
+// rendered on the spot and routed to the DualSense output. Pressing the button
+// again or closing the panel stops it right away.
 function SpeakerTest() {
   const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "none">("idle");
+  const stopRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopRef.current?.(), []);
   const play = async () => {
+    let cancelled = false;
+    stopRef.current = () => {
+      cancelled = true;
+    };
     const sink = await controllerSpeaker();
     if (!sink) return setState("none");
+    if (cancelled) return;
     const ctx = new AudioContext();
     try {
       await (ctx as AudioContext & { setSinkId(id: string): Promise<void> }).setSinkId(sink);
-      const now = ctx.currentTime;
-      for (const [i, freq] of [660, 880, 1320].entries()) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = freq;
-        const at = now + i * 0.22;
-        gain.gain.setValueAtTime(0, at);
-        gain.gain.linearRampToValueAtTime(0.8, at + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(at);
-        osc.stop(at + 0.55);
-      }
-      await new Promise((r) => setTimeout(r, 1200));
+      const pcm = renderTune(ctx.sampleRate);
+      const buffer = ctx.createBuffer(1, pcm.length, ctx.sampleRate);
+      buffer.copyToChannel(pcm, 0);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(ctx.destination);
+      await new Promise<void>((done) => {
+        src.onended = () => done();
+        stopRef.current = () => {
+          // a 20 ms fade so stopping mid-note doesn't click
+          const fade = ctx.createGain();
+          src.disconnect();
+          src.connect(fade).connect(ctx.destination);
+          fade.gain.setValueAtTime(1, ctx.currentTime);
+          fade.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.02);
+          src.stop(ctx.currentTime + 0.025);
+        };
+        if (cancelled) done();
+        else src.start();
+      });
       setState("idle");
     } catch {
       setState("none"); // couldn't route to the controller: stay silent
     } finally {
+      stopRef.current = null;
       void ctx.close();
     }
   };
@@ -841,7 +857,7 @@ function SpeakerTest() {
       <h2>{t("desktop.audioTest.speakerTitle")}</h2>
       <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
       <div className="dk-row-btns">
-        <BusyButton className="dk-btn" onClick={play}>
+        <BusyButton className="dk-btn" onClick={play} countdown={Math.ceil(tuneSeconds())} onStop={() => stopRef.current?.()}>
           {t("desktop.audioTest.speakerButton")}
         </BusyButton>
       </div>

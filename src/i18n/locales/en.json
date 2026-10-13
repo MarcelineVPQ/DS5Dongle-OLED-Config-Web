@@ -978,7 +978,7 @@
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
-      "speakerHint": "Plays a short chime on the controller's speaker (not your PC's).",
+      "speakerHint": "Plays a folk tune (Korobeiniki, about 40 s) on the controller's speaker (not your PC's). Press again to stop.",
       "speakerButton": "Play test sound",
       "noSpeaker": "The controller's speaker isn't available as an audio output on this PC.",
       "micTitle": "Microphone test",

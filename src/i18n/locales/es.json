@@ -979,7 +979,7 @@
     },
     "audioTest": {
       "speakerTitle": "Prueba del altavoz",
-      "speakerHint": "Reproduce un breve sonido en el altavoz del mando (no en el del PC).",
+      "speakerHint": "Reproduce una canción popular (Korobeiniki, unos 40 s) en el altavoz del mando (no en el del PC). Pulsa otra vez para detenerla.",
       "speakerButton": "Reproducir sonido de prueba",
       "noSpeaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
       "micTitle": "Prueba del micrófono",
