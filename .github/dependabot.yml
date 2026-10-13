@@ -13,6 +13,12 @@ updates:
     # CLAUDE.md: a version is chosen >= 2 weeks after its release (F46).
     cooldown:
       default-days: 14
+    # Majors need migration work and fail CI as automatic PRs: only patch and
+    # minor updates come from Dependabot; a major upgrade is a planned task
+    # (docs/BACKLOG.md "Major dependency upgrades").
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "javascript"
@@ -45,6 +51,12 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 14
+    # Majors need migration work and fail CI as automatic PRs: only patch and
+    # minor updates come from Dependabot; a major upgrade is a planned task
+    # (docs/BACKLOG.md "Major dependency upgrades").
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "github-actions"
