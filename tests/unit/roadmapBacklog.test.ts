@@ -40,7 +40,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Per-controller settings": "Per-controller settings",
   "Edge on-controller profiles": "Edge on-controller profiles",
   "Limited-edition looks": "Limited-edition looks",
-  "A whole tune for the speaker test": "Easter egg: Korobeiniki",
+  "A whole tune for the speaker test": "Speaker test: a whole tune",
   "One Update button": "One Update flow",
   "The board's OLED settings in the app": "Board's OLED settings in the app",
   "OLED screens in Sony's words": "OLED screens use Sony's names",
