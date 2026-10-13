@@ -241,3 +241,83 @@ describe("privileged Linux setup", () => {
     expect(rules).toEqual(["userns,"]);
   });
 });
+
+// Helper programs the main process runs (SECURITY_AUDIT.md rows "Proton
+// install", "Audio fix follow-ups", "Updater relaunch", "Menu entry refresh",
+// "Desktop accent read"): fixed argv through execFile/spawn, never a shell.
+describe("helper programs", () => {
+  const read = (path: string) => readFileSync(new URL(`../../electron/main/${path}`, import.meta.url), "utf8");
+  const noShell = /(?<!\.)\bexec\(|execSync\(|shell: true/;
+
+  it("Proton install: lists before it unpacks, never keeps the archive's owners, copies with cp -a", async () => {
+    const source = read("games/proton.ts");
+    expect(source).toContain("const run = promisify(execFile);");
+    expect(source).toContain('run("tar", ["-tzf", archive]');
+    expect(source).toContain('run("tar", ["-xzf", archive, "-C", out, "--no-same-owner"]');
+    expect(source).toContain('run("cp", ["-a", join(primary, build.name), join(staging, build.name)])');
+    expect(source.indexOf("checkArchiveEntries(stdout")).toBeLessThan(source.indexOf('run("tar", ["-xzf"'));
+    expect(source).not.toMatch(noShell);
+    const { checkArchiveEntries } = await import("../../electron/main/games/proton");
+    expect(checkArchiveEntries(["GE-Proton11-7-DualSense/", "GE-Proton11-7-DualSense/proton"], "GE-Proton11-7-DualSense")).toBeNull();
+    for (const bad of ["/etc/passwd", "GE-Proton11-7-DualSense/../../x", "other/file"]) expect(checkArchiveEntries([bad], "GE-Proton11-7-DualSense"), bad).not.toBeNull();
+  });
+
+  it("audio follow-ups: the user's WirePlumber and DualSense cards only", () => {
+    const source = read("games/system.ts");
+    expect(source).toContain('run("systemctl", ["--user", "restart", "wireplumber"], { timeout: 15_000 })');
+    expect(source).toMatch(/if \(!DS5_CARD\.test\(card\)\) throw new Error\("Not a DualSense audio card\."\);\n\s+await run\("pactl", \["set-card-profile", card, profile\]/);
+    expect(source).not.toMatch(noShell);
+  });
+
+  it("updater relaunch: the installed file, an environment allowlist, the path never in a shell string", () => {
+    const source = read("updater.ts");
+    expect(source).toContain('execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, ...setenv, "--", target]');
+    expect(source).toContain(`spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env })`);
+    expect(source).toContain('spawn(target, [], { detached: true, stdio: "ignore" })');
+    expect(source).toContain("const target = this.installedPath;");
+    expect(source).not.toMatch(noShell);
+  });
+
+  it("menu refresh and the desktop accent: fixed programs and arguments", () => {
+    const integration = read("integration.ts");
+    expect(integration).toContain('execFile("update-desktop-database", [appsDir], () => undefined);');
+    expect(integration).toContain('execFile("kbuildsycoca6", () => execFile("kbuildsycoca5", () => undefined));');
+    expect(integration).not.toMatch(noShell);
+    const theme = read("desktopTheme.ts");
+    expect(theme).toMatch(
+      /execFile\(\s*"gdbus",\s*\[\s*"call",\s*"--session",\s*"--dest",\s*"org\.freedesktop\.portal\.Desktop",\s*"--object-path",\s*"\/org\/freedesktop\/portal\/desktop",\s*"--method",\s*"org\.freedesktop\.portal\.Settings\.ReadOne",\s*"org\.freedesktop\.appearance",\s*"accent-color",\s*\]/,
+    );
+    expect(theme).not.toMatch(noShell);
+  });
+});
+
+// SECURITY_AUDIT.md "XInput fix files": the variable and its value are constants,
+// and the page can only pick a scanned fix id.
+describe("XInput fix", () => {
+  it("writes only PROTON_PREFER_SDL=1, from a fix id", async () => {
+    const source = readFileSync(new URL("../../electron/main/games/games.ts", import.meta.url), "utf8");
+    expect(source).toContain('export const PREFER_SDL = "PROTON_PREFER_SDL";');
+    expect(source).toContain('cfg.enviromentOptions = [...list, { key: PREFER_SDL, value: "1" }];');
+    expect(source).toContain('doc.setIn(["system", "env", PREFER_SDL], "1")');
+    const { withPreferSdl } = await import("../../electron/main/games/games");
+    expect(withPreferSdl("")).toBe("PROTON_PREFER_SDL=1 %command%");
+    expect(withPreferSdl("PROTON_PREFER_SDL=0 %command% -dx11")).toBe("PROTON_PREFER_SDL=1 %command% -dx11");
+    const { FixIdsSchema } = await import("../../electron/main/ipc");
+    for (const bad of [["steam-1234abcd:xinput:1; rm -rf ~"], ["../../etc/passwd"], [{ file: "x" }]]) expect(FixIdsSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
+  });
+});
+
+// SECURITY_AUDIT.md "Firmware-write hold": every restart, install and quit path
+// in the main process goes through the one hold.
+describe("no restart or quit while firmware is written", () => {
+  it("routes restart, install and quit through FirmwareHold", () => {
+    expect(mainSource).toContain('hold.whenDone("restart", () => updater.restart())');
+    expect(mainSource.match(/updater\.restart\(\)/g)).toHaveLength(1);
+    expect(mainSource).toContain("installUpdate: () => (hold.active ? Promise.resolve(updater.getState()) : updater.downloadAndInstall()),");
+    expect(mainSource.match(/updater\.downloadAndInstall\(\)/g)).toHaveLength(3);
+    expect(mainSource.match(/hold\.whenDone\("install", \(\) => void updater\.downloadAndInstall\(\)\)/g)).toHaveLength(2);
+    expect(mainSource).toMatch(/app\.on\("before-quit", \(event\) => \{\n\s+if \(hold\.allowQuit\(event, \(\) => app\.quit\(\)\)\)/);
+    expect(mainSource).toContain("} else if (!hold.allowQuit(event, () => app.quit())) {");
+    expect(mainSource).not.toMatch(/app\.(relaunch|exit)\(/);
+  });
+});
