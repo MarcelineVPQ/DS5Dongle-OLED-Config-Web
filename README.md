@@ -10,13 +10,13 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included; we c
 
 **The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (with tests), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers (with **Trigger Effect Intensity** to make games' resistance weaker), haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (**Speaker boost**, **Lock volume**, **Audio output** and **Microphone used**, with a speaker test, and a mic test on Linux), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
 - **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per pairing slot; a **sensitivity curve** per stick; circularity and drift tests.
-- **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline, how long each part of the firmware takes), and one-click firmware updates.
+- **Your board's page** (named after the board, for example **Pico 2 W**): its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline, how long each part of the firmware takes) with the board's and the screen's specs, one-click firmware updates, **PC sleep** (turn the controller off when the PC sleeps, wake the PC with the PS button) and a **Status pin** (a Pico pin that shows the controller connection, for an LED or a PC's power-button header).
 - **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that hold every controller setting the game changes (including a **button layout** and stick curves), edited live in the controller view and switched in while the game runs, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
-The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to dongle** keeps them after it powers off.
+The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to the Pico 2 W** (the button names your board) keeps them after it powers off.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-linux-x86_64.AppImage`, put it wherever you keep apps, and make it executable (file properties, or `chmod +x`).
 2. Run it once. It adds itself to your application menu, and updates keep that entry working.
-3. **Press Set up USB access** on the **Dongle** page (it asks for your password once). It lets the app open the dongle, and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
+3. **Press Set up USB access** on your board's page (the side bar names it after the board, for example **Pico 2 W**; it asks for your password once). It lets the app open the dongle, and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
 
 ### Windows
 
@@ -44,7 +44,7 @@ Tested on Windows 11, end to end in a test machine (`tools/windows_vm_test.py`) 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
 2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.
 3. Windows loads the USB driver for the dongle automatically.
-4. **If the app says "The dongle is plugged in, but Windows hasn't set up its driver"** (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. See below for exactly what it does.
+4. **If the app says "The Pico 2 W is plugged in, but Windows hasn't set up its driver"** (it names your board) (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. See below for exactly what it does.
 
 #### Repair USB driver: exactly what it runs
 
@@ -80,7 +80,7 @@ Download the `.zip`, unzip it, and move the app to *Applications*. The build isn
 ## Updates
 
 - **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off in ⚙ App settings or the tray menu.
-- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear under **Dongle** (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
+- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear on your board's page (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
 
 ## Privacy
 
