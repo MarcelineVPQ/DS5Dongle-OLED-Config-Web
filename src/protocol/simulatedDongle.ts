@@ -142,7 +142,9 @@ export class SimulatedDongle implements Ds5Transport {
   currentSlot = 0;
   lastTrigger = -1;
   lastGripTest = -1; // 0 left, 1 right, 2 both
-  gripTests = 0; // grip test (0x0E) commands run
+  gripTests = 0; // grip test (0x0E) commands run (not counting stops)
+  lastGripTenths = -1; // its duration in tenths (5 = 0.5 s, all before protocol 1.15)
+  gripStops = 0; // 0x0E [side, 0] stops (protocol 1.15)
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
   private get minor() {
@@ -184,7 +186,7 @@ export class SimulatedDongle implements Ds5Transport {
   private lastFunc = 0;
   private lastResult: number = RESULT.ok;
   private hostGen = 0;
-  private pending: { func: number; arg: number; polls: number } | null = null;
+  private pending: { func: number; arg: number; arg2?: number; polls: number } | null = null;
   private core1Loops = 1234;
 
   constructor(private readonly opts: SimulatedDongleOptions = {}) {}
@@ -464,8 +466,14 @@ export class SimulatedDongle implements Ds5Transport {
       this.remapRevision++;
     } else if ((func === 0x04 || func === 0x05) && arg > 3) {
       this.lastResult = RESULT.invalid;
-    } else if (func === 0x0e && arg > 2) {
-      this.lastResult = RESULT.invalid;
+    } else if (func === 0x0e) {
+      // [side, tenths] (1.15; no duration byte = 0.5 s, 0 = stop, max 5 s).
+      if (arg > 2) this.lastResult = RESULT.invalid;
+      else {
+        const arg2 = this.minor >= 15 && payload.length >= 3 ? Math.min(payload[2], 50) : 5;
+        this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
+        this.lastResult = RESULT.pending;
+      }
     } else if (func === 0x0a && arg > 6) {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x17) {
@@ -526,7 +534,7 @@ export class SimulatedDongle implements Ds5Transport {
   private tick(): void {
     if (!this.pending) return;
     if (this.pending.polls-- > 0) return;
-    const { func, arg } = this.pending;
+    const { func, arg, arg2 } = this.pending;
     this.pending = null;
     this.lastFunc = func; // reported under its own id
     this.lastResult = RESULT.ok;
@@ -555,8 +563,12 @@ export class SimulatedDongle implements Ds5Transport {
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
     else if (func === 0x0e) {
-      this.lastGripTest = arg;
-      this.gripTests++;
+      if (arg2 === 0) this.gripStops++;
+      else {
+        this.lastGripTest = arg;
+        this.lastGripTenths = arg2 ?? 5;
+        this.gripTests++;
+      }
     } else if (func === 0x0b) {
       this.narrator = arg;
       this.flashNarrator = arg; // saved on its own, nothing else
@@ -604,6 +616,7 @@ export class SimulatedDongle implements Ds5Transport {
       out[46] |= 0x04; // FEATURES3: PC sleep options (1.14)
       out[47] = this.powerFlags;
     }
+    if (minor >= 15) out[46] |= 0x08; // FEATURES3: timed grip test (1.15)
     return out;
   }
 

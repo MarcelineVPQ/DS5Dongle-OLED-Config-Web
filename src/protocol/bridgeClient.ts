@@ -94,6 +94,7 @@ export const FEATURES3 = {
   controllerInfo: 0x01, // 0xEB get / 0xF6 0x16: controller firmware, lifetime counters, battery voltage
   configTail: 0x02, // protocol 1.13: trigger reduction, speaker boost, volume lock, mic / speaker choice, status pin (config body 49 bytes)
   pcSleep: 0x04, // protocol 1.14: what the dongle does when the PC sleeps (identity [47], 0xF6 0x17)
+  timedGripTest: 0x08, // protocol 1.15: 0xF6 0x0E [side, tenths] holds the grip test steadily (0 stops)
 } as const;
 // Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
 export const POWER_FLAGS = {
@@ -508,9 +509,12 @@ export class Ds5BridgeClient {
   }
 
   // 0 = off, 1-6 = the OLED Trigger Test presets.
-  // ~0.5 s of rumble on a grip at its current haptics strength (protocol 1.6).
-  async gripTest(side: "left" | "right" | "both"): Promise<void> {
-    await this.command(FUNC.gripTest, [side === "left" ? 0 : side === "right" ? 1 : 2]);
+  // Rumble on a grip at its current haptics strength (protocol 1.6): ~0.5 s,
+  // or, with FEATURES3.timedGripTest (1.15), held steadily for `seconds`
+  // (0.1..5; 0 stops a running test, and a new test replaces it).
+  async gripTest(side: "left" | "right" | "both", seconds?: number): Promise<void> {
+    const s = side === "left" ? 0 : side === "right" ? 1 : 2;
+    await this.command(FUNC.gripTest, seconds === undefined ? [s] : [s, Math.max(0, Math.min(50, Math.round(seconds * 10)))]);
   }
 
   async previewTrigger(preset: number): Promise<void> {

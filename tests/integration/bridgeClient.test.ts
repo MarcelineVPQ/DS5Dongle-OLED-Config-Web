@@ -365,6 +365,24 @@ describe("grip test (protocol 1.6)", () => {
   });
 });
 
+describe("timed grip test (protocol 1.15)", () => {
+  it("announces it, sends the duration in tenths (clamped to 5 s) and stops with 0", async () => {
+    const dongle = new FakeDongle({ protoMinor: 15 });
+    const client = new Ds5BridgeClient(dongle);
+    expect((await client.identity()).features3 & FEATURES3.timedGripTest).toBe(FEATURES3.timedGripTest);
+    await client.gripTest("left", 3);
+    expect([dongle.lastGripTest, dongle.lastGripTenths]).toEqual([0, 30]);
+    await client.gripTest("both", 9);
+    expect([dongle.lastGripTest, dongle.lastGripTenths]).toEqual([2, 50]);
+    await client.gripTest("both", 0);
+    expect(dongle.gripStops).toBe(1);
+    expect(dongle.gripTests).toBe(2);
+    await client.gripTest("right"); // no duration: the 0.5 s of older apps
+    expect([dongle.lastGripTest, dongle.lastGripTenths]).toEqual([1, 5]);
+    expect((await new Ds5BridgeClient(new FakeDongle({ protoMinor: 14 })).identity()).features3 & FEATURES3.timedGripTest).toBe(0);
+  });
+});
+
 describe("temporary remap (protocol 1.8)", () => {
   const swapped = [1, 0, ...Array.from({ length: 14 }, (_, i) => i + 2)];
   const identity = Array.from({ length: 16 }, (_, i) => i);
