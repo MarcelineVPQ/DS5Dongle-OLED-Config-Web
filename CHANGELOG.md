@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **Dongle firmware: the Pico 2 W now runs at its rated 150 MHz and default 1.10 V**, like upstream awalol's firmware, instead of overclocked at 320 MHz and 1.20 V (above the chip's 1.16 V rating). The flash is set up explicitly at boot, which fixes the speaker and haptics never starting and saves failing on some boards (issue #15), and more of the firmware runs from RAM, so it's as quick as before: the timings stay well inside their budgets. A heatsink is no longer needed (the guide's parts list drops it). The Pico 2 W page's clock reads 150 MHz.
+
+### Fixed
+
+- **The CPU clock gauge has a fixed scale:** 0–320 MHz on the Pico 2 W and 0–200 MHz on the Pico W, so the clock reads as what it is instead of filling the dial at any setting.
+- **HDR lighting sits on the lightbar:** the experimental HDR glow (App settings → Advanced) drew a copy of the lightbar strips about 64 px off the real ones; it now lines up with the drawing.
+
+### Added
+
+- **HDR lighting covers the player lights:** the lit player indicator lights glow white at the same HDR peak as the lightbar.
+
 ## [0.9.5-dev.7] - 2026-10-13
 
 ### Changed

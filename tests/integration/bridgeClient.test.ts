@@ -485,7 +485,7 @@ describe("per-stage timings (protocol 1.11)", () => {
     expect(id.features2 & FEATURES2.timings).toBe(FEATURES2.timings);
     dongle.timingsResetAt -= 30_000;
     const before = await client.readCpu(true);
-    expect(before.setKhz).toBe(320000);
+    expect(before.setKhz).toBe(150000);
     expect(before.timings?.stages).toHaveLength(TIMING_STAGES.length);
     expect(before.timings?.sinceResetSeconds).toBeGreaterThanOrEqual(30);
     expect(before.timings?.stages.every((s) => s.avgNs > 0 && s.maxUs > 0)).toBe(true);

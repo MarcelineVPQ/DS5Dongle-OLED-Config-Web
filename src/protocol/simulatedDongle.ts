@@ -226,7 +226,7 @@ export class SimulatedDongle implements Ds5Transport {
     return b;
   }
 
-  // Protocol 1.11 timings (0xFC [11..62]): plausible numbers at 320 MHz that
+  // Protocol 1.11 timings (0xFC [11..62]): plausible numbers at 150 MHz that
   // drift a little, with worst cases that build up after a reset (0xF6 0x15).
   timingsResetAt = Date.now();
   timerFallback = false;
@@ -305,13 +305,13 @@ export class SimulatedDongle implements Ds5Transport {
       case 0xfc: {
         const timings = this.minor >= 11;
         if (!this.opts.live && !timings) throw new ReportStalledError(reportId);
-        // 320 MHz at 1.20 V (vreg code 13), about 42 °C; protocol 1.11 adds
+        // 150 MHz at 1.10 V (vreg code 11, the stock setup since 0.9.5-dev.8), about 42 °C; protocol 1.11 adds
         // the timings when asked for 63 bytes (older firmware stops at 11).
         const out = new Uint8Array(timings && length >= FEATURE_REPORT_PAYLOAD_SIZE ? FEATURE_REPORT_PAYLOAD_SIZE : 11);
         const v = new DataView(out.buffer);
-        v.setUint32(0, 320000, true);
-        v.setUint32(4, 320000, true);
-        out[8] = 13;
+        v.setUint32(0, 150000, true);
+        v.setUint32(4, 150000, true);
+        out[8] = 11;
         v.setUint16(9, 844, true);
         if (out.length === FEATURE_REPORT_PAYLOAD_SIZE) this.timings(v);
         return out.subarray(0, length);

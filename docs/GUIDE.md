@@ -21,7 +21,6 @@ Step by step, from the parts on your desk to every setting in the app. Each sect
 | **Raspberry Pi Pico 2 W** | The **Pico 2 WH** has the pin headers already soldered on; the plain Pico 2 W needs two 20-pin headers soldered. The original Pico W (not 2) works without audio. |
 | **Waveshare Pico-OLED-1.3** (optional) | The 128×64 screen with two buttons (KEY0 / KEY1). SKU HIPI1798. Everything works without it; the app shows the screen either way. |
 | **A USB cable that carries data** | Micro-USB on the Pico's end. Charge-only cables power the Pico but your computer never sees it: if nothing appears, try another cable first. |
-| A small heatsink (optional) | The chip runs overclocked (320 MHz at 1.20 V, which Bluetooth needs); a stick-on heatsink keeps it cool in long sessions. |
 
 ### Putting it together
 
