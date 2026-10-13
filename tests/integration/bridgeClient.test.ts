@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   CommandError,
   CORE1_MIC_FAILED,
+  CORE1_STAGE_RUNNING,
   CORE1_SPEAKER_FAILED,
   Ds5BridgeClient,
+  decodeAudioCounters,
   FEATURES2,
   FEATURES3,
   IDENTITY_FEATURES,
@@ -355,8 +357,39 @@ describe("core1 health in the audio counters (issue #15)", () => {
       expect(c.core1Loops).toBe(1234);
       expect(c.core1Flags).toBeUndefined();
       expect(c.core1FreeHeap).toBeUndefined();
+      expect(c.core1Stage).toBeUndefined();
     });
   }
+  it("a running core1 reports start-up stage 9, apart from the flags", async () => {
+    const c = await new Ds5BridgeClient(new FakeDongle({ speakerEncoderFailed: true })).readAudioCounters();
+    expect(c.core1Stage).toBe(CORE1_STAGE_RUNNING);
+    expect(c.core1Flags).toBe(0x03);
+  });
+  it("a core1 stuck in start-up: the stage, loops that never move, heap only once read", async () => {
+    for (let stage = 0; stage <= 8; stage++) {
+      const client = new Ds5BridgeClient(new FakeDongle({ core1StuckStage: stage }));
+      const a = await client.readAudioCounters();
+      const b = await client.readAudioCounters();
+      expect(a.core1Stage).toBe(stage);
+      expect(a.core1Loops).toBe(0);
+      expect(b.core1Loops).toBe(0);
+      expect(a.core1Flags).toBe(stage >= 3 ? 0x01 : 0);
+      expect(a.core1FreeHeap).toBe(stage >= 4 ? 184 * 1024 : undefined);
+    }
+  });
+  it("decodes every stage from raw [60] bytes, flags untouched", () => {
+    for (let stage = 0; stage < 16; stage++) {
+      const bytes = new Uint8Array(63);
+      bytes[60] = 0x80 | (stage << 3) | 0x05;
+      const c = decodeAudioCounters(bytes);
+      expect(c.core1Stage).toBe(stage);
+      expect(c.core1Flags).toBe(0x05);
+    }
+    // Without bit7 (0.9.4 to 0.9.5-dev.5) the same bits are not a stage.
+    const old = new Uint8Array(63);
+    old[60] = 0x01 | (4 << 3);
+    expect(decodeAudioCounters(old).core1Stage).toBeUndefined();
+  });
 });
 
 describe("Edge extra-button remap (protocol 1.9)", () => {

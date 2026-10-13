@@ -180,6 +180,20 @@
     },
     "diag": {
       "core1Frozen": "Core1 parou: o áudio não funcionará até o dongle reiniciar.",
+      "core1StoppedAt": "Core1 parou {{step}} (etapa de inicialização {{stage}}): o áudio não funcionará até o dongle reiniciar.",
+      "core1Step": {
+        "0": "antes de iniciar",
+        "1": "ao se registrar para o bloqueio da flash",
+        "2": "ao iniciar seu contador de ciclos",
+        "3": "ao ler sua memória livre",
+        "4": "ao criar o codificador do alto-falante",
+        "5": "ao configurar o codificador do alto-falante e o reamostrador",
+        "6": "antes de criar o decodificador do microfone",
+        "7": "ao criar o decodificador do microfone",
+        "8": "logo antes do seu loop de áudio",
+        "9": "após a inicialização, no seu loop de áudio"
+      },
+      "core1FreeHeap": "Memória livre quando o Core1 iniciou: {{kb}} KB.",
       "counters": {
         "usbFrames": "Quadros de áudio USB recebidos",
         "btOut": "Relatórios de áudio enviados por BT",
@@ -1030,7 +1044,11 @@
       "fakeSlots": "Simular mais controles",
       "fakeSlotsHint": "Os slots 1 e 2 aparecem pareados (um Edge Midnight Black e um DualSense Galactic Purple). Troque para eles em Slots de pareamento: o app age como se esse controle tivesse conectado. Nada é enviado ao dongle.",
       "simulated": "Dongle simulado (sem hardware)",
-      "simulatedHint": "O app conversa com um dongle simulado em vez de USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, pareamento e atualizações de firmware não são simulados. Recarrega a página."
+      "simulatedHint": "O app conversa com um dongle simulado em vez de USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, pareamento e atualizações de firmware não são simulados. Recarrega a página.",
+      "simCore1": "Core1 simulado",
+      "simCore1Hint": "Faz o Core1 do dongle simulado parar em uma etapa de inicialização, para ver o aviso da página Dongle. Recarrega a página.",
+      "simCore1Runs": "Funciona normalmente",
+      "simCore1Stage": "Para na etapa {{stage}}: {{step}}"
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",

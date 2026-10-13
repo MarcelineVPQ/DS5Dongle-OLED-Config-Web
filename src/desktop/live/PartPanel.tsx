@@ -10,7 +10,7 @@ import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "./colorways";
 import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "./customColors";
-import { MODEL_COLORWAYS, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
+import { MODEL_COLORWAYS, SIM_CORE1_KEY, SIM_CORE1_STAGES, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
 import { ACCENT_KEY, ACCENTS, useControllerCode } from "./controllerAccent";
@@ -1068,6 +1068,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
   const fakeSlots = useFakeSlots();
   const [simulated] = useFlagPref(SIMULATED_KEY);
+  const [simCore1] = usePref<(typeof SIM_CORE1_STAGES)[number]>(SIM_CORE1_KEY, "", SIM_CORE1_STAGES);
   if (!shown || !devChannel) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
@@ -1111,6 +1112,25 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
           location.reload(); // reconnect to the simulation or the real dongle
         }}
       />
+      {simulated && (
+        <Row label={t("desktop.dev.simCore1")} sub={t("desktop.dev.simCore1Hint")}>
+          <select
+            className="dk-select"
+            aria-label={t("desktop.dev.simCore1")}
+            value={simCore1}
+            onChange={(e) => {
+              writePref(SIM_CORE1_KEY, e.target.value);
+              location.reload(); // the simulated dongle takes it when it connects
+            }}
+          >
+            {SIM_CORE1_STAGES.map((v) => (
+              <option key={v} value={v}>
+                {v === "" ? t("desktop.dev.simCore1Runs") : t("desktop.dev.simCore1Stage", { stage: v, step: t(`desktop.diag.core1Step.${v}`) })}
+              </option>
+            ))}
+          </select>
+        </Row>
+      )}
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>

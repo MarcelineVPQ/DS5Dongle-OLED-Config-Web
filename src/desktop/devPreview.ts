@@ -51,6 +51,14 @@ export function useFakeSlots() {
 // card). For the Windows VM, so it needs no real dongle passed through.
 export const SIMULATED_KEY = "ds5.dev.simulated";
 export const simulatedDongleOn = (): boolean => DEV_TOOLS_BUILT && readPref(SIMULATED_KEY) === "1";
+// The simulated dongle's core1 stuck at a start-up stage ("" = runs normally;
+// "0".."8", firmware audio.cpp), to see the dashboard's "Core1 stopped" notice.
+export const SIM_CORE1_KEY = "ds5.dev.simCore1Stage";
+export const SIM_CORE1_STAGES = ["", "0", "1", "2", "3", "4", "5", "6", "7", "8"] as const;
+export function simulatedCore1Stage(): number | undefined {
+  const v = readPref(SIM_CORE1_KEY);
+  return v && (SIM_CORE1_STAGES as readonly string[]).includes(v) ? Number(v) : undefined;
+}
 
 export function useDevPreview() {
   const [model, setModel] = usePref<DevModel>("ds5.dev.model", "", DEV_MODELS);

@@ -180,6 +180,20 @@
     },
     "diag": {
       "core1Frozen": "Core1 detenido: el audio no funcionará hasta que el dongle se reinicie.",
+      "core1StoppedAt": "Core1 detenido {{step}} (paso de arranque {{stage}}): el audio no funcionará hasta que el dongle se reinicie.",
+      "core1Step": {
+        "0": "antes de arrancar",
+        "1": "al registrarse para el bloqueo de flash",
+        "2": "al iniciar su contador de ciclos",
+        "3": "al leer su memoria libre",
+        "4": "al crear el codificador del altavoz",
+        "5": "al configurar el codificador del altavoz y el remuestreador",
+        "6": "antes de crear el decodificador del micrófono",
+        "7": "al crear el decodificador del micrófono",
+        "8": "justo antes de su bucle de audio",
+        "9": "tras el arranque, en su bucle de audio"
+      },
+      "core1FreeHeap": "Memoria libre al arrancar Core1: {{kb}} KB.",
       "counters": {
         "usbFrames": "Tramas de audio USB recibidas",
         "btOut": "Informes de audio enviados por BT",
@@ -1030,7 +1044,11 @@
       "fakeSlots": "Simular más mandos",
       "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada al dongle.",
       "simulated": "Dongle simulado (sin hardware)",
-      "simulatedHint": "La app habla con un dongle simulado en vez de por USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página."
+      "simulatedHint": "La app habla con un dongle simulado en vez de por USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página.",
+      "simCore1": "Core1 simulado",
+      "simCore1Hint": "Hace que el Core1 del dongle simulado se detenga en un paso de arranque, para ver el aviso de la página Dongle. Recarga la página.",
+      "simCore1Runs": "Funciona con normalidad",
+      "simCore1Stage": "Se detiene en el paso {{stage}}: {{step}}"
     },
     "knobs": {
       "cardOpacity": "Opacidad de las tarjetas",
