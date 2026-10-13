@@ -4260,3 +4260,40 @@ main.dk-body:focus:not(:focus-visible),
     grid-auto-flow: row;
   }
 }
+/* HDR in games (Linux): the requirements checklist (HdrChecklist.tsx). A ✗
+   item says what to install or turn on, so colour isn't the only sign. */
+.hdr-check {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+.hdr-check li {
+  display: flex;
+  gap: 6px;
+  margin: 3px 0;
+}
+.hdr-ok {
+  color: var(--cv-good, var(--dk-accent-text));
+}
+.hdr-no {
+  color: var(--cv-bad, var(--text-error));
+}
+.hdr-game h3 {
+  margin: 8px 0 2px;
+  font-size: var(--dk-small);
+}
+.hdr-line {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 4px 0;
+}
+.hdr-line .dk-textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+}
+.hdr-row summary {
+  color: inherit;
+  font-size: inherit;
+}

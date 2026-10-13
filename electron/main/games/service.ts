@@ -14,7 +14,7 @@ import type { RunningCandidate } from "./running";
 import type { ArtKind, GameAction, GameEntry, GameInfo } from "../../../src/desktop/games/types";
 import { join } from "node:path";
 import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
-import type { ApplyResult, GamesReport, HdrScreens, RestartList } from "../../../src/desktop/games/types";
+import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
 import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
@@ -24,9 +24,10 @@ import { launcherControl, realLayer, withLaunchersClosed, type LauncherControl }
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools } from "./steam";
 import { dualSenseCards, restartWirePlumber, setCardProfile, type AudioCard } from "./system";
-import { hdrScreens } from "./hdr";
+import { hdrSystem } from "./hdr";
 
 const MANIFEST_TIMEOUT_MS = 5000;
+const HDR_CACHE_MS = 3000;
 
 export interface GamesServiceDeps {
   userData: string;
@@ -38,7 +39,7 @@ export interface GamesServiceDeps {
   hdrMarked: () => Set<string>; // game keys the player marked "Supports HDR"
   launchers?: LauncherControl; // tests: a fake process layer
   gameRunning?: () => boolean; // the library sees a game running (Windows: launchers aren't closed then)
-  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrScreens> }; // tests: no pactl / kscreen-doctor
+  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem> }; // tests: no pactl / kscreen-doctor / gdbus / gamescope
 }
 
 export class GamesService {
@@ -78,14 +79,24 @@ export class GamesService {
     }
   }
 
+  // The HDR check (screens, gamescope, its layer) runs again whenever a page
+  // scans, e.g. when the Games page or an HDR game's page opens; a scan within
+  // a few seconds of the last one reuses its answer.
+  private hdrCache: { at: number; value: Promise<HdrSystem> } | null = null;
+  private hdrCheck(probe: () => Promise<HdrSystem>): Promise<HdrSystem> {
+    const now = Date.now();
+    if (!this.hdrCache || now - this.hdrCache.at > HDR_CACHE_MS) this.hdrCache = { at: now, value: probe() };
+    return this.hdrCache.value;
+  }
+
   private async fresh(): Promise<Scan> {
     this.requireConsent();
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
-    const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrScreens() };
+    const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrSystem() };
     const [audioCards, hdr] = await Promise.all([
       linux ? probes.audioCards() : Promise.resolve([]),
-      linux ? probes.hdr() : Promise.resolve(undefined),
+      linux ? this.hdrCheck(probes.hdr) : Promise.resolve(undefined),
       linux ? this.refreshLatest() : Promise.resolve(),
     ]);
     return scan({

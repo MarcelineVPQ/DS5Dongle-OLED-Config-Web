@@ -171,14 +171,57 @@ The first time, the app asks before reading anything; it then lists your **Steam
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
   - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, speaker boost, lock volume, trigger effect intensity, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in your board's memory only, never saved to its flash.
-  - **Setup:** this game's recommended fixes, applied with a backup you can undo. If the game doesn't react to the controller, tick **Controller not detected** there; if it has HDR on PC and isn't on our list, tick **Supports HDR**.
+  - **Setup:** this game's recommended fixes, applied with a backup you can undo. If the game doesn't react to the controller, tick **Controller not detected** there; if it has HDR on PC and isn't on our list, tick **Supports HDR** (see [HDR in games on Linux](#hdr-in-games-on-linux)).
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
   - **Your rating** and a checklist of what you noticed, and private **notes**. Sharing with other players comes later.
 
 **XInput-only games (Linux).** Some games only know Xbox controllers (Ghostrunner, Control, and others): with our DualSense Proton they see no controller. For those, Games recommends passing the controller as a **standard gamepad (XInput)**: it sets PROTON_PREFER_SDL=1 for that game only, so the game gets an ordinary gamepad with rumble (such games have no adaptive triggers anyway). Our DualSense Proton builds before GE-Proton11-7.2-DualSense ignore this option, so the change also moves the game to a build that honours it (our GE-Proton11-7.2-DualSense or later, else stock GE-Proton). On Steam it's only needed when Steam Input is off for the game; with Steam Input on, Steam already hands the game an Xbox controller. For a game not on our list, tick **Controller not detected** in its Setup to get the same change.
 
-**HDR games (Linux, KDE Plasma).** Proton normally runs games through XWayland, which has no HDR, so a game like Indiana Jones and the Great Circle says HDR isn't supported even with HDR on in KDE. When a screen has HDR on (the app reads KDE's display settings, nothing more), Games recommends **Turn on HDR** for HDR games on our list and any game you mark **Supports HDR**: it sets PROTON_ENABLE_WAYLAND=1 and PROTON_ENABLE_HDR=1 for that game only (on Heroic it turns on the game's own **Enable Wine-Wayland** and **Enable HDR** settings, which do the same), your other options kept, and moves it to a Proton that supports this (GE-Proton 10 or later, ours included) if needed. The game then runs as a native Wayland window: play it on the HDR screen the change names; the Steam overlay may not show. If the game misbehaves, Undo it. Other desktops aren't checked yet, so the page says HDR isn't offered there.
+### HDR in games on Linux
+
+Proton normally runs games through XWayland, which has no HDR, so a game like Indiana Jones and the Great Circle says HDR isn't supported even with HDR on for your screen. The way that works is to run the game inside **gamescope**, Valve's compositor (the one the Steam Deck uses), with HDR on. Windows games on Windows do HDR themselves, so all of this is Linux only.
+
+**What the app does.** For HDR games on our list, and any game you mark **Supports HDR** in its page's Setup, Games recommends **Turn on HDR for …** once your computer has everything it needs. It runs the game inside gamescope, full screen at your HDR screen's current resolution, and moves it to our **DualSense Proton** so the controller's adaptive triggers and haptic feedback work together with HDR. Your other launch options stay. Then start the game and turn on HDR in its own display settings. If the game misbehaves, **Undo** puts everything back. A gamescope line you set up yourself counts as done: the app leaves it alone.
+
+**The checklist.** Each HDR game's page shows what HDR needs, each item ✓ or ✗, and every ✗ says what to install or turn on. **Home → This computer → HDR** opens the same list for your computer. The app checks again whenever you open the page (it only reads your settings, it never changes your desktop):
+
+- **A Wayland session.** On the login screen, pick the Wayland session (on KDE Plasma 6 and GNOME it's the default).
+- **HDR on for a screen.** KDE Plasma 6: System Settings → Display & Monitor → High Dynamic Range. GNOME 48 or later: Settings → Displays → HDR. The app reads this on KDE Plasma and GNOME only; on other desktops it doesn't offer the change, but the manual way below can still work. (We've tested on KDE Plasma; the GNOME check follows GNOME's documented display settings interface but hasn't been tried on a GNOME machine yet.)
+- **gamescope 3.15 or later** (3.16.5 or later on GNOME), with its **HDR layer** (the Vulkan layer `VkLayer_FROG_gamescope_wsi`, which comes with gamescope):
+  - Ubuntu and Debian: `sudo apt install gamescope` (checked on Ubuntu 26.04: gamescope 3.16.20, layer included).
+  - Arch: `sudo pacman -S gamescope` (in the extra repository, layer included).
+  - Fedora: `sudo dnf install gamescope` (the package exists; we haven't checked the version or the layer on each Fedora release: the checklist tells you).
+  - Steam, Heroic or Lutris installed as a **Flatpak**: they can't use the system's gamescope. Install the Flatpak one with `flatpak install flathub org.freedesktop.Platform.VulkanLayer.gamescope` and pick the branch that matches the launcher's runtime.
+- **Our DualSense Proton** (Games → Home → Proton card). Other Proton builds may work with gamescope too, but ours is the one we test, and it gives you the controller's triggers and haptics with HDR.
+- **A graphics driver gamescope works with.** Tested: NVIDIA RTX 5080 with driver 615 on KDE Plasma 6. Gamescope needs NVIDIA 515 or later at all; we haven't checked the minimum NVIDIA or Mesa (AMD, Intel) version for HDR.
+- **A game with HDR** (its own HDR setting on PC).
+
+**Doing it yourself.** The game page's **Set it up yourself** shows these steps with your screen's resolution filled in and a line to copy.
+
+1. Use our DualSense Proton for the game. Steam: the game's Properties → Compatibility → tick **Force the use of a specific Steam Play compatibility tool** → pick it. Heroic: the game's Settings → **Wine Version**. Lutris: Configure → Runner options → **Wine version**.
+2. Steam: in Properties → General → **Launch Options**, put:
+
+   `ENABLE_GAMESCOPE_WSI=1 gamescope --backend wayland --hdr-enabled -f -W 3840 -H 2160 --force-grab-cursor -- %command%`
+
+   - `ENABLE_GAMESCOPE_WSI=1` turns on gamescope's Vulkan layer for the game, which is how the game's picture reaches gamescope in HDR.
+   - `gamescope … --` runs the game inside gamescope; everything after `--` is the game.
+   - `--backend wayland` makes gamescope a window of your desktop (a Wayland window, which can be HDR), and `--hdr-enabled` turns HDR on in gamescope.
+   - `-f` full screen; `-W 3840 -H 2160` gamescope's size: **use your own screen's resolution** (the app fills in the current mode of your HDR screen).
+   - `--force-grab-cursor` keeps the mouse inside the game (some games otherwise lose the mouse or the camera points at the floor).
+   - `%command%` is the game itself. Variables you already use (for example `PROTON_PREFER_SDL=1`) go at the very start; other tools (`mangohud`, `gamemoderun`) go after `--`; game arguments go after `%command%`.
+
+   Heroic: the game's Settings → **Gamescope**: turn on **Enables Upscaling**, set Game Width / Upscale Width and Game Height / Upscale Height to your resolution, window type **Fullscreen**, and **Additional Options** `--backend wayland --hdr-enabled --force-grab-cursor`; in Settings → Advanced → **Environment Variables** add `ENABLE_GAMESCOPE_WSI` = `1`. Lutris (0.5.17 or later): Configure → System options (tick **Advanced**) → Gamescope: **Enable Gamescope**, **Enable HDR**, **Relative Mouse Mode**, Output and Game Resolution your resolution, Window Mode **Fullscreen**, **Custom Settings** `--backend wayland`; in System options → **Environment variables** add `ENABLE_GAMESCOPE_WSI` = `1`.
+3. Start the game and turn on HDR in its own display settings.
+
+**DirectX games** (most Windows games, through DXVK and vkd3d-proton) only offer HDR when `DXVK_HDR=1` is set. You don't need to add it: gamescope sets it for the game itself when HDR is on (and Lutris's Enable HDR sets it too). DXVK leaves HDR off in DirectX 11 Unreal Engine 4 games on purpose.
+
+**If it doesn't work:**
+
+- **Black screen, no sound** with `PROTON_ENABLE_WAYLAND=1` and `PROTON_ENABLE_HDR=1` in the launch options (the app's first HDR version set these): remove both and use the gamescope line. The app offers this as **Move … HDR to gamescope** (or **Remove the old HDR setting** until gamescope is ready); on Heroic it also turns off the game's **Enable Wine-Wayland** and **Enable HDR**.
+- **The game says HDR isn't supported by the hardware:** go through the checklist on the game's page: HDR on for the screen the game shows on, gamescope new enough with its HDR layer, the gamescope line in place.
+- **The game starts on the wrong screen or at the wrong size:** gamescope opens on the screen your desktop puts new windows on; check `-W` / `-H` match that screen.
+- We haven't checked whether the Steam overlay shows inside gamescope.
 
 ## 8. App settings
 

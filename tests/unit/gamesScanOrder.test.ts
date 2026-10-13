@@ -9,7 +9,8 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { idHash, scan, type ScanDeps } from "../../electron/main/games/games";
 import type { LauncherControl } from "../../electron/main/games/processes";
-import { buildVersionKey, hdrBuild, preferSdlBuild } from "../../electron/main/games/proton";
+import { buildVersionKey, pickBuild, preferSdlBuild } from "../../electron/main/games/proton";
+import { NO_HDR_SYSTEM } from "../../src/desktop/games/hdrSetup";
 import { GamesService } from "../../electron/main/games/service";
 import { latestOnly, thenRescan } from "../../src/desktop/games/scanOrder";
 import { asLinux } from "../support/platform";
@@ -69,7 +70,7 @@ describe("choosing the build to move a game to", () => {
   it("never picks a build older than the game's own", () => {
     buildHeroic(OLD);
     expect(preferSdlBuild(["GE-Proton9-27", "GE-Proton-latest"], [tools()], OLD)).toBeNull();
-    expect(hdrBuild(["GE-Proton9-27", "GE-Proton-latest"], [tools()], false, "GE-Proton9-27")).toBe("GE-Proton-latest");
+    expect(pickBuild(["GE-Proton9-27", "GE-Proton-latest"], [tools()], () => true, "GE-Proton9-27")).toBe("GE-Proton-latest");
   });
 
   it("the owner's case: a game on our renamed build stays on it", () => {
@@ -114,7 +115,7 @@ describe("the page shows what the files say after a change", () => {
       probes: {
         // The change's own scan is slow (as when launchers are being closed).
         audioCards: () => (slow ? ((slow = false), new Promise((r) => setTimeout(() => r([]), 50))) : Promise.resolve([])),
-        hdr: async () => ({ check: "unchecked", outputs: [] }),
+        hdr: async () => NO_HDR_SYSTEM,
       },
     });
     const applying = service.apply([`${heroicId()}:xinput:ghost`], []);

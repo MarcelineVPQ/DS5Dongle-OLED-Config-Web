@@ -17,7 +17,7 @@ export type FixKind =
   | "remove-env" // drop PROTON_PREFER_SDL from the game's env / launch options
   | "audio-hifi" // disable a pro-audio rule for the DualSense
   | "standard-gamepad" // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
-  | "hdr-on"; // HDR game, HDR screen: PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 (and a Proton that honours them)
+  | "hdr-on"; // HDR game: run it inside gamescope with HDR (and move it to our Proton); also replaces the old PROTON_ENABLE_WAYLAND/HDR variant
 
 // An XInput-only game (our list, or the player marked "controller not
 // detected"): is the controller passed to it as a standard gamepad?
@@ -28,24 +28,44 @@ export type FixKind =
 export type GamepadState = "set" | "needed" | "steam-input" | "no-build";
 
 // An HDR game (our list, or the player ticked "Supports HDR"): does it run
-// with HDR (a native Wayland window, PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1)?
-//   set          both options set, with a Proton that honours them
-//   needed       a "Turn on HDR" fix is offered
-//   no-screen    no screen has HDR on right now (or it can't be checked): not offered
-//   no-build     its Proton ignores the options and none that honours them is installed
-//   pick-runner  Steam: the game follows Steam's default Proton, which ignores them;
-//                the player picks a Proton for it (it may be a native Linux game)
-export type HdrState = "set" | "needed" | "no-screen" | "no-build" | "pick-runner";
+// inside gamescope with HDR (`gamescope --backend wayland --hdr-enabled …`)?
+//   set      a gamescope line with --hdr-enabled is there (ours or written by hand)
+//   needed   a "Turn on HDR" fix is offered
+//   update   it still has the old PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR
+//            variant (black screen): a fix moves it to gamescope, or only
+//            removes the old variant while this computer can't run it yet
+//   missing  this computer doesn't meet the requirements yet (the checklist says which)
+export type HdrState = "set" | "needed" | "update" | "missing";
 
-// The desktop's HDR screens right now (read-only check, Linux):
-//   kde            KDE Plasma (Wayland), read with kscreen-doctor; `outputs` = screens with HDR on
+// The desktop, as far as HDR is concerned:
+//   kde            KDE Plasma (Wayland), read with kscreen-doctor
+//   gnome          GNOME (Wayland), read from Mutter's DisplayConfig (GNOME 48+)
 //   other-desktop  no read-only check for this desktop: HDR isn't offered
-//   x11            not a Wayland session: Proton can't run games as Wayland windows
-//   failed         kscreen-doctor didn't answer
+//   x11            not a Wayland session
+//   failed         the screen check didn't answer
 //   unchecked      not checked (Windows)
-export interface HdrScreens {
-  check: "kde" | "other-desktop" | "x11" | "failed" | "unchecked";
-  outputs: string[];
+export type HdrDesktop = "kde" | "gnome" | "other-desktop" | "x11" | "failed" | "unchecked";
+
+// A connected, enabled screen and its current mode (portrait screens swapped).
+export interface HdrScreen {
+  name: string; // connector, e.g. DP-5
+  hdr: boolean; // the desktop runs it in HDR right now
+  width: number;
+  height: number;
+  refresh: number;
+}
+
+// What this computer has for HDR in games (read-only check, Linux).
+export interface HdrSystem {
+  check: HdrDesktop;
+  screens: HdrScreen[];
+  gamescope: {
+    path: string | null; // on PATH, null = not installed
+    version: string | null; // from `gamescope --version`, null = unknown
+    min: string; // the oldest that works on this desktop
+    layer: boolean; // its WSI Vulkan layer is installed
+    flatpak: boolean; // the Flatpak extension (for Flatpak launchers) is installed
+  };
 }
 
 // A translatable message: the renderer looks up `desktop.games.msg.<key>`
@@ -124,7 +144,7 @@ export interface SystemInfo {
   proAudioRules: string[]; // config files forcing pro-audio
   envWarnings: Array<{ variable: string; file: string | null }>; // file null = this session's environment
   hidrawAccess: boolean | null;
-  hdr: HdrScreens;
+  hdr: HdrSystem;
   fixes: Fix[];
 }
 

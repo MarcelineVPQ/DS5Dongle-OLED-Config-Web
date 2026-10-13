@@ -403,9 +403,10 @@
       "hdrOn": "{{outputs}} でオン",
       "hdrOff": {
         "kde": "HDR がオンの画面はありません",
-        "other-desktop": "このデスクトップでは未確認（KDE Plasma のみ）",
+        "gnome": "HDR がオンの画面はありません",
+        "other-desktop": "このデスクトップでは確認しません（KDE Plasma と GNOME のみ）",
         "x11": "Wayland セッションが必要です",
-        "failed": "確認できませんでした（kscreen-doctor）",
+        "failed": "画面を確認できませんでした",
         "unchecked": "未確認"
       },
       "systemRule": "システム全体の音声ルールが pro-audio を強制しています。ホームフォルダーの外にあるため、このアプリでは変更しません。",
@@ -437,7 +438,9 @@
           "audioRule": "コントローラーを「pro-audio」に固定する音声ルールを無効にする",
           "audioProfile": "コントローラーの音声を「{{profile}}」プロファイルに切り替える",
           "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す",
-          "hdr": "{{game}} の HDR をオンにする"
+          "hdr": "{{game}} の HDR をオンにする",
+          "hdrUpdate": "{{game}} の HDR を gamescope 方式に切り替える",
+          "hdrRemoveOld": "{{game}} から古い HDR 設定を削除する"
         },
         "why": {
           "defaultSteam": "Steam は現在 {{current}} で Windows ゲームを実行しています。{{device}} 経由でアダプティブトリガーとハプティックフィードバックを動かすには当プロジェクトのビルドが必要です。個別に Proton を指定したゲームはその設定のままです。",
@@ -454,9 +457,13 @@
           "gamepad": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。{{runner}}",
           "gamepadSteam": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。起動オプションは次のようになります: {{options}}{{runner}}",
           "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。",
-          "hdr": "{{game}} は HDR に対応しています。PROTON_ENABLE_WAYLAND=1 と PROTON_ENABLE_HDR=1 で、Proton はゲームをネイティブの Wayland ウィンドウとして実行し、HDR が使えるようになります。HDR の画面（{{outputs}}）でプレイしてください。ゲームの動作がおかしい場合は、元に戻すで元の設定に戻せます。{{runner}}",
-          "hdrSteam": "{{game}} は HDR に対応しています。PROTON_ENABLE_WAYLAND=1 と PROTON_ENABLE_HDR=1 で、Proton はゲームをネイティブの Wayland ウィンドウとして実行し、HDR が使えるようになります。HDR の画面（{{outputs}}）でプレイしてください。このモードでは Steam オーバーレイが表示されないことがあります。ゲームの動作がおかしい場合は、元に戻すで元の設定に戻せます。起動オプションは次のようになります: {{options}}{{runner}}",
-          "hdrRunner": "{{current}} はこれに対応していないため、ゲームを {{proton}} にも切り替えます。"
+          "hdrSteam": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。起動オプションは次のようになります: {{options}}{{runner}}",
+          "hdrRunner": " また、HDR でもコントローラーのアダプティブトリガーとハプティックフィードバックが使えるよう、当アプリの DualSense Proton である {{proton}} に切り替えます。",
+          "hdrHeroic": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Heroic の Gamescope 設定を入力し、Enable Wine-Wayland と Enable HDR はオフにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
+          "hdrLutris": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Lutris の Gamescope オプションを HDR も含めてオンにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
+          "hdrNoProton": " HDR と一緒にアダプティブトリガーとハプティックフィードバックも使うには、Proton カードから当アプリの DualSense Proton をインストールしてください。",
+          "hdrOld": "{{game}} には古い HDR 設定（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR）が残っており、画面が真っ暗になることがあります。これを削除します。{{next}}",
+          "hdrOldOnly": "ゲームのページのチェックリストがすべて ✓ になると、gamescope による HDR が提案されます。"
         },
         "support": {
           "triggers": "このゲームは DualSense のアダプティブトリガーとハプティックフィードバックに対応しています。",
@@ -948,18 +955,9 @@
       "gamepadSteamInput": "このゲームでは Steam Input がオフになっていないため、Steam がすでに Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。",
       "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
       "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。",
-      "hdrSet": "このゲームは HDR がオンです。ネイティブの Wayland ウィンドウで動作します。",
-      "hdrNoScreen": {
-        "kde": "現在 HDR がオンの画面がないため、「HDR をオンにする」は表示されません。KDE のディスプレイ設定で画面の HDR をオンにしてから、再スキャンしてください。",
-        "other-desktop": "「HDR をオンにする」は KDE Plasma（Wayland）でのみ表示されます。このデスクトップの HDR 設定はアプリから確認できません。",
-        "x11": "「HDR をオンにする」には Wayland セッションが必要です。このデスクトップは X11 で動作しています。",
-        "failed": "画面の設定を読み取れなかったため（kscreen-doctor）、「HDR をオンにする」は表示されません。",
-        "unchecked": "画面を確認していないため、「HDR をオンにする」は表示されません。"
-      },
-      "hdrNoBuild": "HDR には GE-Proton 10 以降（DualSense Proton を含む）が必要ですが、{{runner}} は対応しておらず、対応する Proton もインストールされていません。",
-      "hdrPickRunner": "このゲームは Steam の既定の {{runner}} を使っていますが、HDR に対応していません。Steam の「プロパティ → 互換性」で GE-Proton 10 以降（または DualSense Proton）を選んでから、再スキャンしてください。",
       "supportsHdr": "HDR 対応",
-      "supportsHdrHint": "PC 版に HDR の設定があるゲームならチェックしてください。HDR がオンの画面があるとき、アプリがこのゲームの HDR をオンにすることを提案します。"
+      "supportsHdrHint": "PC 版に HDR 設定があるゲームならチェックしてください: HDR に必要なものが表示され、準備ができると「HDR をオンにする」が提案されます。",
+      "hdrTitle": "HDR"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",
@@ -1476,6 +1474,81 @@
       "channelB": "青",
       "recent": "最近の色",
       "recentColor": "最近の色 {{hex}}"
+    },
+    "hdrCheck": {
+      "yes": "完了",
+      "no": "不足",
+      "defaultRunner": "ランチャーの既定",
+      "wayland": {
+        "ok": "Wayland セッション",
+        "no": "Wayland セッション: このデスクトップは X11 で動いています。ログアウトし、ログイン画面で Wayland セッション（Plasma または GNOME）を選んでください。"
+      },
+      "screen": {
+        "ok": "{{screen}}（{{mode}}）で HDR がオン",
+        "off": {
+          "kde": "HDR がオンの画面がありません: システム設定 → ディスプレイとモニター（High Dynamic Range）でオンにしてください。",
+          "gnome": "HDR がオンの画面がありません: 設定 → ディスプレイ（HDR、GNOME 48 以降）でオンにしてください。"
+        },
+        "other-desktop": "アプリが HDR 設定を読めるのは KDE Plasma 6 と GNOME 48 以降だけなので、このデスクトップでは「HDR をオンにする」は提案されません。自分で設定することはできます。",
+        "x11": "HDR には Wayland セッションが必要です。",
+        "failed": "画面の設定（kscreen-doctor または GNOME のディスプレイ設定）を読めなかったため、「HDR をオンにする」は提案されません。",
+        "unchecked": "画面は確認されていません。"
+      },
+      "gamescope": {
+        "ok": "gamescope {{version}} インストール済み",
+        "no": "gamescope がインストールされていません: ディストリビューションの gamescope パッケージ（{{min}} 以降）をインストールしてください（方法はガイドにあります）。",
+        "unknown": "gamescope はインストールされていますがバージョンを返しません: HDR には {{min}} 以降が必要です。",
+        "old": "gamescope {{version}} は古すぎます: HDR には {{min}} 以降が必要です。ディストリビューションから更新してください。",
+        "flatpakOk": "Flatpak ランチャー用の gamescope インストール済み（{{ext}}）",
+        "flatpakNo": "ランチャーが Flatpak です: flatpak install flathub {{ext}} で gamescope をインストールしてください（ランチャーのランタイムに合うブランチ）。"
+      },
+      "layer": {
+        "ok": "gamescope の HDR レイヤー（WSI Vulkan レイヤー）インストール済み",
+        "no": "gamescope の HDR レイヤー（VkLayer_FROG_gamescope_wsi）がありません: 多くのディストリビューションでは gamescope に含まれます。gamescope を再インストールするか、それを含むパッケージをインストールしてください。"
+      },
+      "proton": {
+        "ok": "当アプリの DualSense Proton インストール済み（{{proton}}）",
+        "no": "当アプリの DualSense Proton がインストールされていません: HDR でアダプティブトリガーとハプティックフィードバックを使うには、Proton カードからインストールしてください。"
+      },
+      "game": {
+        "ok": "ゲームは HDR に対応"
+      },
+      "runner": {
+        "ok": "ゲームは当アプリの DualSense Proton で動作",
+        "no": "ゲームは {{runner}} で動作しています: 「HDR をオンにする」で当アプリの DualSense Proton にも切り替えます（HDR でアダプティブトリガーとハプティックフィードバック）。"
+      },
+      "setup": {
+        "set": "設定済み: ゲームは gamescope の中で HDR で動作します",
+        "needed": "未設定: 上の「HDR をオンにする」で設定します",
+        "update": "古い HDR 設定（真っ暗な画面）が残っています: 上の変更で置き換えます",
+        "missing": "未設定: 上の項目がすべて ✓ になると「HDR をオンにする」が提案されます"
+      }
+    },
+    "hdrManual": {
+      "title": "自分で設定する",
+      "intro": "「HDR をオンにする」が行う内容を手動で。ほかの Proton でも gamescope で動くことがありますが、テストしているのは当アプリの DualSense Proton です（HDR に加えてコントローラーのアダプティブトリガーとハプティックフィードバック）。",
+      "noMode": "画面を読み取れなかったため 3840×2160 を使っています: -W と -H の後をお使いの画面の解像度にしてください。",
+      "noProton": "当アプリの DualSense Proton（Proton カードからインストール）",
+      "yourScreen": "お使いの画面",
+      "lineLabel": "コピーする行",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "steam": {
+        "proton": "Steam で、ゲームのプロパティ → 互換性: 「特定の Steam Play 互換性ツールの使用を強制する」にチェックを入れ、{{proton}} を選びます。",
+        "line": "プロパティ → 一般 → 起動オプション: この行を貼り付けます（{{screen}}・{{mode}} 用。すでにある内容はそのまま残してください）:"
+      },
+      "heroic": {
+        "proton": "Heroic で、ゲームの設定 → Wine バージョン: {{proton}} を選びます。",
+        "gamescope": "設定 → Gamescope: Enables Upscaling をオン。Game Width と Upscale Width は {{width}}、Game Height と Upscale Height は {{height}}。ウィンドウの種類は Fullscreen。Additional Options:",
+        "env": "設定 → 詳細 → 環境変数: {{env}} を追加します。設定 → その他 で Enable Wine-Wayland と Enable HDR がオンならオフにします。"
+      },
+      "lutris": {
+        "proton": "Lutris で、ゲームの設定 → ランナーオプション → Wine バージョン: {{proton}} を選びます。",
+        "gamescope": "設定 → システムオプション（詳細にチェック）→ Gamescope: Enable Gamescope、Enable HDR、Relative Mouse Mode をオン。Output Resolution と Game Resolution は {{width}}x{{height}}。Window Mode は Fullscreen。Custom Settings:",
+        "env": "システムオプション → 環境変数: {{env}} を追加し、PROTON_ENABLE_WAYLAND と PROTON_ENABLE_HDR があれば削除します。"
+      },
+      "inGame": "ゲームを起動し、ゲーム内の画面設定で HDR をオンにします。",
+      "guide": "各手順の説明はガイド（情報ページ）にあります: ゲーム → Linux のゲームで HDR。"
     }
   },
   "ad": {

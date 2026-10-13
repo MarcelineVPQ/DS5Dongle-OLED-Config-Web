@@ -29,9 +29,13 @@ export interface HeroicGame {
   env: Array<{ key: string; value: string }>;
   // Heroic's own per-game switches (Settings → Other: "Enable Wine-Wayland",
   // "Enable HDR"): for a Proton runner Heroic sets PROTON_ENABLE_WAYLAND=1
-  // and, with both on, PROTON_ENABLE_HDR=1 when it starts the game.
+  // and, with both on, PROTON_ENABLE_HDR=1 when it starts the game. The
+  // old HDR fix turned them on; the gamescope one turns them off again.
   wineWayland: boolean;
   hdr: boolean;
+  // Heroic's per-game gamescope settings (Settings → Gamescope; 2.14+ has
+  // additionalOptions); Heroic only starts gamescope with enableUpscaling or enableLimiter on.
+  gamescope: Record<string, unknown> | null;
 }
 
 export function findHeroicInstalls(home: string): HeroicInstall[] {
@@ -107,7 +111,17 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
       const env = Array.isArray(cfg.enviromentOptions) // sic: Heroic's own spelling
         ? (cfg.enviromentOptions as unknown[]).map((x) => ({ key: String(obj(x).key ?? ""), value: String(obj(x).value ?? "") })).filter((x) => x.key)
         : [];
-      return { appName, title, store, configPath, wineVersion: wine(cfg.wineVersion), env, wineWayland: cfg.enableWineWayland === true, hdr: cfg.enableHDR === true };
+      return {
+        appName,
+        title,
+        store,
+        configPath,
+        wineVersion: wine(cfg.wineVersion),
+        env,
+        wineWayland: cfg.enableWineWayland === true,
+        hdr: cfg.enableHDR === true,
+        gamescope: cfg.gamescope && typeof cfg.gamescope === "object" ? obj(cfg.gamescope) : null,
+      };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
 }
