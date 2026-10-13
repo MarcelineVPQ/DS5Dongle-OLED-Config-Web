@@ -69,7 +69,7 @@ interface Row {
   section: string;
 }
 
-const backlog = readFileSync(new URL("../../docs/BACKLOG.md", import.meta.url), "utf8");
+const backlog = readFileSync(new URL("../../docs/BACKLOG.md", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const rows: Row[] = [];
 let section = "";
 for (const line of backlog.split("\n")) {

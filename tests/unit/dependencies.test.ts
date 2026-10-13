@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
-const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const pkg = JSON.parse(read("package.json")) as Record<string, Record<string, string> | undefined>;
 const SECTIONS = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"] as const;
 // An exact semver ("1.2.3", "1.2.3-beta.1"); no ranges, tags, URLs or "*".
