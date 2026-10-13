@@ -56,6 +56,11 @@ export const ProfileSettingsSchema = z.strictObject({
   btMicEnable: z.boolean().optional(),
   // The haptics/speaker audio buffer (Haptics panel), samples.
   audioBufferLength: z.number().int().min(16).max(128).optional(),
+  // Protocol 1.13: weaker adaptive triggers (0 = the game's own), the speaker
+  // amp's pre-gain (0 = the game's own), games kept from changing the volume.
+  triggerReduce: z.number().int().min(0).max(10).optional(),
+  speakerGain: z.number().int().min(0).max(7).optional(),
+  lockVolume: z.boolean().optional(),
   // A saved button layout (protocol 1.8: applied for the game only, never
   // to flash); absent = the player's normal buttons.
   buttonLayout: LayoutIdSchema.optional(),
@@ -81,6 +86,9 @@ export const PROFILE_FIELDS = [
   "lbFavB",
   "btMicEnable",
   "audioBufferLength",
+  "triggerReduce",
+  "speakerGain",
+  "lockVolume",
 ] as const satisfies ReadonlyArray<keyof ProfileSettings>;
 export type ProfileField = (typeof PROFILE_FIELDS)[number];
 

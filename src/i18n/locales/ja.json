@@ -132,7 +132,38 @@
       "usb": "USB",
       "usbHint": "USB 再接続後に反映されます (PC からはドングルが抜き差しされたように見えます)。",
       "speakerLevel": "音量（コントローラーのスピーカー）",
-      "speakerLevelSub": "0 = 変更なし。0 より上は増幅され、音割れすることがあります"
+      "speakerLevelSub": "0 = 変更なし。0 より上は増幅され、音割れすることがあります",
+      "triggerIntensity": "トリガーエフェクトの強さ",
+      "triggerReduce": "弱める段階",
+      "triggerReduceSub": "0 = ゲームの設定どおり。段階ごとに抵抗が弱くなります",
+      "speakerBoost": "スピーカーブースト",
+      "speakerBoostSub": "コントローラーのアンプ。0 = ゲームの設定どおり",
+      "lockVolume": "音量をロック",
+      "lockVolumeSub": "ゲームはコントローラーの音量やミュートを変更できません（PC からは変更できます）",
+      "audioOutput": "音声出力",
+      "micInput": "使用するマイク",
+      "statusPin": "ステータスピン",
+      "statusPinGpio": "ピン",
+      "statusPinOff": "オフ",
+      "statusPinMode": "信号",
+      "statusPinHigh": "接続中は High",
+      "statusPinPulse": "接続時にパルス",
+      "statusPinHint": "コントローラーの接続中は Pico の GPIO に 3.3 V を出力、または接続時に 0.2 秒のパルスを出力します。LED（抵抗付き）や PC の電源ボタン端子に使えます。OLED アドオン、UART、無線モジュールが使うピンは選べません。",
+      "pcSleep": "PCのスリープ",
+      "sleepControllerOff": "PCがスリープしたらコントローラーの電源を切る",
+      "sleepControllerOffSub": "PCが3秒間スリープした後",
+      "psWakesPc": "PSボタンでPCをスリープから復帰させる",
+      "psWakesPcSub": "PCはスリープ中もUSBに給電し、キーボードによる復帰を許可している必要があります。コントローラーが接続されていないとき、ドングルは「DS5 Dongle Wake Keyboard」として表示されます。",
+      "pcSleepHint": "すぐにドングルに保存されます。",
+      "needsFirmware": "これらの設定を使うにはドングルのファームウェアを更新してください。",
+      "asGame": "ゲームどおり",
+      "choice": {
+        "auto": "自動",
+        "speaker": "スピーカー",
+        "headset": "ヘッドセット",
+        "off": "オフ",
+        "builtIn": "内蔵"
+      }
     },
     "lightbar": {
       "mode": "モード",
@@ -890,7 +921,10 @@
       },
       "show": "表示",
       "showHint": "ライブラリに表示するものを選びます：Steam のカテゴリ（ゲーム、体験版、サウンドトラック、ソフトウェア、動画）",
-      "hiddenCount": "{{count}} 件非表示"
+      "hiddenCount": "{{count}} 件非表示",
+      "triggerReduce": "トリガーエフェクト",
+      "speakerBoost": "スピーカーブースト",
+      "lockVolume": "音量をロック"
     },
     "dongleConsole": {
       "title": "{{device}} コンソール",

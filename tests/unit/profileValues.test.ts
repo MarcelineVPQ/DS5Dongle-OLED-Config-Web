@@ -47,7 +47,12 @@ describe("game profile values (format 2: left out = my normal setting)", () => {
         .filter((k) => k !== "format")
         .sort(),
     ).toEqual([...PROFILE_FIELDS].sort());
-    for (const k of ["inactiveTime", "disablePicoLed", "pollingRateMode", "controllerMode", "currentSlot", "screenBrightness"]) expect(PROFILE_FIELDS as readonly string[]).not.toContain(k);
+    for (const k of ["inactiveTime", "disablePicoLed", "pollingRateMode", "controllerMode", "currentSlot", "screenBrightness", "micSelect", "speakerSelect", "statusGpioPin", "statusGpioMode"])
+      expect(PROFILE_FIELDS as readonly string[]).not.toContain(k);
+    // Protocol 1.13: a game's own trigger strength, speaker boost and volume lock.
+    for (const k of ["triggerReduce", "speakerGain", "lockVolume"]) expect(PROFILE_FIELDS as readonly string[]).toContain(k);
+    expect(gameGroups({ format: 2, triggerReduce: 3 }, normal)).toEqual(["triggers"]);
+    expect(ProfileSettingsSchema.safeParse({ format: 2, triggerReduce: 11 }).success).toBe(false);
     // Every field is in exactly one game-page group.
     expect(PROFILE_GROUPS.flatMap((g) => g.fields).sort()).toEqual([...PROFILE_FIELDS].sort());
   });

@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
-import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection } from "../pages/SettingsPage";
+import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import { profileFields } from "./profileFields";
 import { useMsg } from "../pages/GamesPage";
 import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
@@ -267,6 +267,9 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
         .map((i) => `FAV${i}`)
         .join(", "),
     mic: () => onOff(v.btMicEnable),
+    triggers: () => (v.triggerReduce ? `−${v.triggerReduce}` : t("desktop.settings.asGame")),
+    speakerBoost: () => (v.speakerGain ? `${v.speakerGain}` : t("desktop.settings.asGame")),
+    volumeLock: () => onOff(v.lockVolume),
   };
   const label: Record<ProfileGroup, string> = {
     grips: t("desktop.library.haptics"),
@@ -276,6 +279,9 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
     lightbar: t("desktop.library.lightbar"),
     favorites: t("desktop.library.favorites"),
     mic: t("desktop.library.mic"),
+    triggers: t("desktop.library.triggerReduce"),
+    speakerBoost: t("desktop.library.speakerBoost"),
+    volumeLock: t("desktop.library.lockVolume"),
   };
   const chips: Array<{ key: string; text: string; clear: () => ProfileSettings }> = gameGroups(draft, normal).map((g) => ({
     key: g,
@@ -334,6 +340,7 @@ function AllProfileSettings({ draft, normal, bridge, onChange }: { draft: Profil
       <p className="dk-hint">{t("desktop.library.profileHint")}</p>
       <HapticsSection bridge={bridge} fields={fields} />
       <AutoHapticsSection bridge={bridge} fields={fields} />
+      <TriggerIntensitySection bridge={bridge} fields={fields} />
       <SpeakerSection bridge={bridge} fields={fields} />
       <LightbarPage bridge={bridge} fields={fields} />
       <MicSection bridge={bridge} fields={fields} />

@@ -131,7 +131,38 @@
       "usb": "USB",
       "usbHint": "These take effect after Reconnect USB (the PC sees the dongle unplug and replug).",
       "speakerLevel": "Volume (Speaker for Controller)",
-      "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip"
+      "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip",
+      "triggerIntensity": "Trigger Effect Intensity",
+      "triggerReduce": "Weaker by",
+      "triggerReduceSub": "0 = as the game sets it; each step weakens the resistance",
+      "speakerBoost": "Speaker boost",
+      "speakerBoostSub": "The controller's amplifier; 0 = as the game sets it",
+      "lockVolume": "Lock volume",
+      "lockVolumeSub": "Games can't change the controller's volume or mute; the PC still can",
+      "audioOutput": "Audio output",
+      "micInput": "Microphone used",
+      "statusPin": "Status pin",
+      "statusPinGpio": "Pin",
+      "statusPinOff": "Off",
+      "statusPinMode": "Signal",
+      "statusPinHigh": "On while connected",
+      "statusPinPulse": "Pulse on connect",
+      "statusPinHint": "3.3 V on the Pico's GPIO while a controller is connected, or a 0.2 s pulse when one connects: for an LED (with a resistor) or a PC's power-button header. Pins the OLED add-on, the UART and the radio use aren't offered.",
+      "pcSleep": "PC sleep",
+      "sleepControllerOff": "Turn off the controller when the PC sleeps",
+      "sleepControllerOffSub": "Once the PC has slept for 3 seconds",
+      "psWakesPc": "Wake the PC with the PS button",
+      "psWakesPcSub": "The PC must keep USB powered while it sleeps and allow the keyboard to wake it. With no controller connected, the dongle appears as \"DS5 Dongle Wake Keyboard\".",
+      "pcSleepHint": "Saved on the dongle right away.",
+      "needsFirmware": "Update the dongle's firmware to use these settings.",
+      "asGame": "As the game",
+      "choice": {
+        "auto": "Auto",
+        "speaker": "Speaker",
+        "headset": "Headset",
+        "off": "Off",
+        "builtIn": "Built-in"
+      }
     },
     "lightbar": {
       "mode": "Mode",
@@ -895,7 +926,10 @@
       },
       "show": "Show",
       "showHint": "Choose what the library shows: Steam's categories (games, demos, soundtracks, software, videos)",
-      "hiddenCount": "{{count}} hidden"
+      "hiddenCount": "{{count}} hidden",
+      "triggerReduce": "Trigger effects",
+      "speakerBoost": "Speaker boost",
+      "lockVolume": "Lock volume"
     },
     "dongleConsole": {
       "title": "{{device}} console",

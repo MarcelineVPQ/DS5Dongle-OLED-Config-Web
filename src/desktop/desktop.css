@@ -531,6 +531,9 @@ html[data-theme="dark"] .dk {
 .dk-toggle.on::after {
   transform: translateX(16px);
 }
+.dk-toggle[aria-busy="true"] {
+  cursor: progress;
+}
 
 .dk-btn {
   display: inline-flex;

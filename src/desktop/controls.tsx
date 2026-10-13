@@ -97,18 +97,55 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
   );
 }
 
+// False once the component has unmounted, so an action that finishes late
+// doesn't set its state (BusyButton, Toggle).
+function useLive() {
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true; // (again: StrictMode mounts twice in development)
+    return () => {
+      live.current = false;
+    };
+  }, []);
+  return live;
+}
+
 interface ToggleProps {
   label: string;
   sub?: string;
   value: boolean;
   disabled?: boolean;
-  onChange: (value: boolean) => void;
+  // A promise (a write that waits on the dongle) makes the switch busy like a
+  // BusyButton until it settles: disabled, aria-busy, the spinner beside it.
+  onChange: (value: boolean) => Promise<unknown> | void;
 }
 
 export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
+  const [busy, setBusy] = useState(false);
+  const live = useLive();
+  const flip = () => {
+    const pending = onChange(!value);
+    if (!(pending instanceof Promise)) return;
+    setBusy(true);
+    void pending
+      .catch(() => undefined) // the caller reports its own errors; the switch just never sticks
+      .finally(() => {
+        if (live.current) setBusy(false);
+      });
+  };
   return (
     <Row label={label} sub={sub} wide>
-      <button type="button" role="switch" aria-checked={value} aria-label={label} className={`dk-toggle${value ? " on" : ""}`} disabled={disabled} onClick={() => onChange(!value)} />
+      {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        aria-label={label}
+        aria-busy={busy || undefined}
+        className={`dk-toggle${value ? " on" : ""}`}
+        disabled={disabled || busy}
+        onClick={flip}
+      />
     </Row>
   );
 }
@@ -197,13 +234,7 @@ interface BusyButtonProps {
 export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop, autoFocus }: BusyButtonProps) {
   const [busy, setBusy] = useState(false);
   const [secs, setSecs] = useState(0);
-  const live = useRef(true);
-  useEffect(() => {
-    live.current = true; // (again: StrictMode mounts twice in development)
-    return () => {
-      live.current = false;
-    };
-  }, []);
+  const live = useLive();
   useEffect(() => {
     if (!busy) return;
     const started = Date.now();

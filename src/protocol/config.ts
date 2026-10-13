@@ -1,5 +1,6 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 37 bytes, little-endian, packed (matches src/config.h in the firmware).
+// 37 bytes (42 from protocol 1.6, 49 from 1.13), little-endian, packed
+// (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
 //   offset 1   float32 haptics_gain                [1.0, 6.0]
@@ -23,6 +24,20 @@
 //   offset 34  uint8   bt_mic_enable               0 = off, 1 = on (default)         (BT mic, Phase I)
 //   offset 35  uint8   screen_brightness           kBrightLevels index [0, 3]        (issue #9, v0.6.11)
 //   offset 36  uint8   controller_wakes_display    0 = OLED sleeps during play, 1 = stays awake (issues #8/#9, v0.6.11)
+//   offset 37  uint8   narrator_voice              (protocol 1.3; a settings write never changes it)
+//   offset 38  float32 haptics_gain_right          [1.0, 6.0] (protocol 1.6)
+//   protocol 1.13 (upstream's settings batch; identity [46] bit 1):
+//   offset 42  uint8   trigger_reduce              0 = the game's own, 1..10 weaker adaptive triggers
+//   offset 43  uint8   speaker_gain                0 = the game's own, 1..7 the controller amp's pre-gain
+//   offset 44  uint8   lock_volume                 1 = games can't change the controller's volume / mute
+//   offset 45  uint8   mic_select                  0 auto, 1 built-in, 2 headset
+//   offset 46  uint8   speaker_select              0 auto, 1 speaker, 2 headset, 3 off
+//   offset 47  uint8   status_gpio_pin             0xFF off, else one of STATUS_GPIO_PINS
+//   offset 48  uint8   status_gpio_mode            0 high while connected, 1 200 ms pulse on connect
+//
+// The config GET (0xF7) is capped at 63 bytes: from 1.13 a 63-byte GET still
+// answers the 42-byte body with the remap block at 42 (remap.ts), and a
+// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V13.
 //
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
 // lightbar panel (the web tool doesn't show them), and MUST always be encoded:
@@ -35,6 +50,14 @@ export const CONFIG_BODY_SIZE = 37;
 // Only sent to 1.6+ firmware; older firmware would take byte 37 as the narrator.
 export const CONFIG_BODY_SIZE_SPLIT = 42;
 const RIGHT_GAIN_AT = 38;
+// Protocol 1.13 appends seven bytes (49 in all). Only sent to 1.13+ firmware
+// (older firmware would ignore them anyway: it copies at most its own size).
+export const CONFIG_BODY_SIZE_V13 = 49;
+const TAIL_AT = CONFIG_BODY_SIZE_SPLIT;
+// The status pin: the GPIOs the firmware accepts (status_gpio.h), the ones
+// nothing else on the dongle uses (not the UART, the OLED add-on or the radio).
+export const STATUS_GPIO_OFF = 0xff;
+export const STATUS_GPIO_PINS = [2, 3, 4, 5, 6, 7, 13, 14, 16, 18, 19, 20, 21, 22, 26, 27, 28] as const;
 // Pre-v0.6.5 firmware returns a 19-byte body (no lightbar / screen-timeout
 // fields). We still accept that and default the missing tail, so the updated
 // UI can read older firmware without erroring.
@@ -46,6 +69,9 @@ export type ControllerMode = 0 | 1 | 2;
 export type SlotIndex = 0 | 1 | 2 | 3;
 export type AutoHapticsMode = 0 | 1 | 2 | 3;
 export type AutoHapticsLowpass = 0 | 1 | 2 | 3;
+export type MicSelect = 0 | 1 | 2; // auto, built-in, headset
+export type SpeakerSelect = 0 | 1 | 2 | 3; // auto, speaker, headset, off
+export type StatusGpioMode = 0 | 1; // high while connected, pulse on connect
 
 export interface ConfigBody {
   configVersion: number;
@@ -76,6 +102,14 @@ export interface ConfigBody {
   // config save from zeroing them. Issues #8 / #9 (v0.6.11).
   screenBrightness: number; // kBrightLevels index [0, 3]
   controllerWakesDisplay: boolean; // false = OLED sleeps during play
+  // Protocol 1.13 (defaults on older firmware, and not sent to it).
+  triggerReduce: number; // 0 = the game's own, 1..10 weaker
+  speakerGain: number; // 0 = the game's own, 1..7
+  lockVolume: boolean;
+  micSelect: MicSelect;
+  speakerSelect: SpeakerSelect;
+  statusGpioPin: number; // STATUS_GPIO_OFF or one of STATUS_GPIO_PINS
+  statusGpioMode: StatusGpioMode;
 }
 
 export interface ConfigValidationIssue {
@@ -91,7 +125,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   inactiveTime: 30,
   disableInactiveDisconnect: false,
   disablePicoLed: false,
-  pollingRateMode: 0,
+  pollingRateMode: 1, // 500 Hz (firmware default for a fresh config since protocol 1.13)
   audioBufferLength: 64,
   controllerMode: 2,
   currentSlot: 0,
@@ -107,6 +141,13 @@ export const DEFAULT_CONFIG: ConfigBody = {
   btMicEnable: true, // mic over BT on by default (firmware default)
   screenBrightness: 0, // full brightness (firmware default)
   controllerWakesDisplay: true, // controller activity wakes OLED (firmware default)
+  triggerReduce: 0,
+  speakerGain: 0,
+  lockVolume: false,
+  micSelect: 0,
+  speakerSelect: 0,
+  statusGpioPin: STATUS_GPIO_OFF,
+  statusGpioMode: 0,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -175,12 +216,14 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_MIN_SIZE}`);
 }
 
-export function encodeConfigBody(config: ConfigBody, split = false): Uint8Array<ArrayBuffer> {
+// split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split).
+export function encodeConfigBody(config: ConfigBody, split = false, tail = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     throw new Error(issues.map((i) => i.message).join("; "));
   }
-  const bytes = new Uint8Array(new ArrayBuffer(split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
+  split ||= tail;
+  const bytes = new Uint8Array(new ArrayBuffer(tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
   view.setFloat32(1, config.hapticsGain, true);
@@ -207,6 +250,15 @@ export function encodeConfigBody(config: ConfigBody, split = false): Uint8Array<
   if (split) {
     view.setUint8(37, 0xff); // the narrator: ignored by a settings write
     view.setFloat32(RIGHT_GAIN_AT, config.hapticsGainRight, true);
+  }
+  if (tail) {
+    view.setUint8(TAIL_AT, config.triggerReduce);
+    view.setUint8(TAIL_AT + 1, config.speakerGain);
+    view.setUint8(TAIL_AT + 2, config.lockVolume ? 1 : 0);
+    view.setUint8(TAIL_AT + 3, config.micSelect);
+    view.setUint8(TAIL_AT + 4, config.speakerSelect);
+    view.setUint8(TAIL_AT + 5, config.statusGpioPin);
+    view.setUint8(TAIL_AT + 6, config.statusGpioMode);
   }
   return bytes;
 }
@@ -252,6 +304,24 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.screenOffTimeout) || config.screenOffTimeout < 0 || config.screenOffTimeout > 250) {
     issues.push({ field: "screenOffTimeout", message: "Screen off timeout must be 0-250 minutes (0 = disabled)" });
   }
+  if (!Number.isInteger(config.triggerReduce) || config.triggerReduce < 0 || config.triggerReduce > 10) {
+    issues.push({ field: "triggerReduce", message: "Trigger effect reduction must be 0-10" });
+  }
+  if (!Number.isInteger(config.speakerGain) || config.speakerGain < 0 || config.speakerGain > 7) {
+    issues.push({ field: "speakerGain", message: "Speaker boost must be 0-7" });
+  }
+  if (!Number.isInteger(config.micSelect) || config.micSelect < 0 || config.micSelect > 2) {
+    issues.push({ field: "micSelect", message: "Microphone must be 0 (auto), 1 (built-in) or 2 (headset)" });
+  }
+  if (!Number.isInteger(config.speakerSelect) || config.speakerSelect < 0 || config.speakerSelect > 3) {
+    issues.push({ field: "speakerSelect", message: "Audio output must be 0-3 (auto, speaker, headset, off)" });
+  }
+  if (config.statusGpioPin !== STATUS_GPIO_OFF && !(STATUS_GPIO_PINS as readonly number[]).includes(config.statusGpioPin)) {
+    issues.push({ field: "statusGpioPin", message: "Status pin must be off or a free GPIO" });
+  }
+  if (config.statusGpioMode !== 0 && config.statusGpioMode !== 1) {
+    issues.push({ field: "statusGpioMode", message: "Status pin mode must be 0 or 1" });
+  }
   // lightbar_mode / lb_fav_* come from fixed choices (mode list, color pickers)
   // and the firmware clamps them; normalizeConfig clamps them defensively too.
   return issues;
@@ -282,6 +352,13 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     btMicEnable: Boolean(config.btMicEnable),
     screenBrightness: clampInteger(config.screenBrightness, 0, 3),
     controllerWakesDisplay: Boolean(config.controllerWakesDisplay),
+    triggerReduce: clampInteger(config.triggerReduce, 0, 10),
+    speakerGain: clampInteger(config.speakerGain, 0, 7),
+    lockVolume: Boolean(config.lockVolume),
+    micSelect: clampInteger(config.micSelect, 0, 2) as MicSelect,
+    speakerSelect: clampInteger(config.speakerSelect, 0, 3) as SpeakerSelect,
+    statusGpioPin: (STATUS_GPIO_PINS as readonly number[]).includes(config.statusGpioPin) ? config.statusGpioPin : STATUS_GPIO_OFF,
+    statusGpioMode: config.statusGpioMode === 1 ? 1 : 0,
   };
 }
 
@@ -310,7 +387,14 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.screenOffTimeout === right.screenOffTimeout &&
     left.btMicEnable === right.btMicEnable &&
     left.screenBrightness === right.screenBrightness &&
-    left.controllerWakesDisplay === right.controllerWakesDisplay
+    left.controllerWakesDisplay === right.controllerWakesDisplay &&
+    left.triggerReduce === right.triggerReduce &&
+    left.speakerGain === right.speakerGain &&
+    left.lockVolume === right.lockVolume &&
+    left.micSelect === right.micSelect &&
+    left.speakerSelect === right.speakerSelect &&
+    left.statusGpioPin === right.statusGpioPin &&
+    left.statusGpioMode === right.statusGpioMode
   );
 }
 
@@ -325,7 +409,11 @@ export function fieldIssue(issues: ConfigValidationIssue[], field: keyof ConfigB
 function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   const avail = bytes.byteLength - offset;
   if (avail < CONFIG_BODY_MIN_SIZE) return null;
-  const len = Math.min(avail, CONFIG_BODY_SIZE_SPLIT);
+  // A 63-byte read of 1.13+ firmware has the remap block ('RM') at 42, not
+  // the 1.13 fields.
+  const remapAt42 = avail > TAIL_AT + 1 && bytes[offset + TAIL_AT] === 0x52 && bytes[offset + TAIL_AT + 1] === 0x4d;
+  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V13);
+  const tail = len >= CONFIG_BODY_SIZE_V13;
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
   // older firmware stops at offset 18, so default the rest.
@@ -354,6 +442,13 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     btMicEnable: u8(34, DEFAULT_CONFIG.btMicEnable ? 1 : 0) === 1,
     screenBrightness: u8(35, DEFAULT_CONFIG.screenBrightness),
     controllerWakesDisplay: u8(36, DEFAULT_CONFIG.controllerWakesDisplay ? 1 : 0) === 1,
+    triggerReduce: tail ? view.getUint8(TAIL_AT) : DEFAULT_CONFIG.triggerReduce,
+    speakerGain: tail ? view.getUint8(TAIL_AT + 1) : DEFAULT_CONFIG.speakerGain,
+    lockVolume: tail ? view.getUint8(TAIL_AT + 2) === 1 : DEFAULT_CONFIG.lockVolume,
+    micSelect: (tail ? view.getUint8(TAIL_AT + 3) : DEFAULT_CONFIG.micSelect) as MicSelect,
+    speakerSelect: (tail ? view.getUint8(TAIL_AT + 4) : DEFAULT_CONFIG.speakerSelect) as SpeakerSelect,
+    statusGpioPin: tail ? view.getUint8(TAIL_AT + 5) : DEFAULT_CONFIG.statusGpioPin,
+    statusGpioMode: (tail ? view.getUint8(TAIL_AT + 6) : DEFAULT_CONFIG.statusGpioMode) as StatusGpioMode,
   };
 }
 
