@@ -127,88 +127,99 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
     const errors = tm ? tm.chargeErrors.voltage + tm.chargeErrors.temperature + tm.chargeErrors.pmic : 0;
     body = (
       <>
-        <dl className="dk-kv">
-          <dt>{t("desktop.ctrlInfo.battery")}</dt>
-          <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
-          <dt>{t("desktop.ctrlInfo.charge")}</dt>
-          <dd className={chargeBad ? "dk-bad" : undefined}>{charge ? t(`desktop.ctrlInfo.chargeState.${charge}`) : "—"}</dd>
-          <dt>{t("desktop.ctrlInfo.firmware")}</dt>
-          <dd>
-            <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>
-            {officialStatus && (
-              <span className={officialStatus.status === "current" ? "dk-good dk-fw-note" : "dk-fw-note"}>
-                {officialStatus.status === "current" ? t("desktop.ctrlInfo.officialCurrent") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
-              </span>
-            )}
-          </dd>
-          {officialStatus?.status === "newer" && (
-            <dd className="dk-fw-howto">
-              <HowToUpdate />
-            </dd>
-          )}
-          {fw && (
-            <>
-              <dt>{t("desktop.ctrlInfo.built")}</dt>
-              <dd className="dk-mono">{fw.buildDate || "—"}</dd>
-              <dt>{t("desktop.ctrlInfo.hardware")}</dt>
-              <dd className="dk-mono">{formatHex32(fw.hwInfo)}</dd>
-              <dt>{t("desktop.ctrlInfo.sbl")}</dt>
-              <dd className="dk-mono">{formatThreePart(fw.sbl)}</dd>
-              <dt>{t("desktop.ctrlInfo.dsp")}</dt>
-              <dd className="dk-mono">
-                {formatDspVersion(fw.dsp)} · {formatThreePart(fw.mcuDsp)}
-              </dd>
-            </>
-          )}
-          {info?.btPatch !== null && info?.btPatch !== undefined && (
-            <>
-              <dt>{t("desktop.ctrlInfo.btPatch")}</dt>
-              <dd className="dk-mono">{formatHex32(info.btPatch)}</dd>
-            </>
-          )}
-        </dl>
-        <h3 className="dk-subhead">{t("desktop.ctrlInfo.lifetime")}</h3>
-        {tm ? (
-          <>
+        <div className="ctrl-info-cols">
+          <div>
             <dl className="dk-kv">
-              <dt>{t("desktop.ctrlInfo.played")}</dt>
-              <dd>{hours(tm.activeTime)}</dd>
-              <dt>{t("desktop.ctrlInfo.charging")}</dt>
-              <dd>{hours(tm.chargeTime)}</dd>
-              <dt>{t("desktop.ctrlInfo.haptics")}</dt>
-              <dd>{hours(tm.hapticsTime)}</dd>
-              <dt>{t("desktop.ctrlInfo.triggers")}</dt>
+              <dt>{t("desktop.ctrlInfo.battery")}</dt>
+              <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
+              <dt>{t("desktop.ctrlInfo.charge")}</dt>
+              <dd className={chargeBad ? "dk-bad" : undefined}>{charge ? t(`desktop.ctrlInfo.chargeState.${charge}`) : "—"}</dd>
+              <dt>{t("desktop.ctrlInfo.firmware")}</dt>
               <dd>
-                {hours(tm.triggerTime[0])} · {hours(tm.triggerTime[1])}
+                <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>
+                {officialStatus && (
+                  <span className={officialStatus.status === "current" ? "dk-good dk-fw-note" : "dk-fw-note"}>
+                    {officialStatus.status === "current" ? t("desktop.ctrlInfo.officialCurrent") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
+                  </span>
+                )}
               </dd>
-              <dt>{t("desktop.ctrlInfo.chargeCycles")}</dt>
-              <dd>{t("desktop.ctrlInfo.chargeCyclesValue", { cycles: num(tm.chargeCycles), full: num(tm.fullCharges) })}</dd>
-              <dt>{t("desktop.ctrlInfo.chargeErrors")}</dt>
-              <dd className={errors ? "dk-bad" : undefined}>
-                {errors
-                  ? t("desktop.ctrlInfo.chargeErrorsValue", { voltage: num(tm.chargeErrors.voltage), temperature: num(tm.chargeErrors.temperature), pmic: num(tm.chargeErrors.pmic) })
-                  : t("desktop.ctrlInfo.none")}
-              </dd>
-              <dt>{t("desktop.ctrlInfo.connections")}</dt>
-              <dd>{t("desktop.ctrlInfo.connectionsValue", { bt: num(tm.bluetoothConnects), usb: num(tm.usbConnects), timeouts: num(tm.bluetoothTimeouts) })}</dd>
+              {officialStatus?.status === "newer" && (
+                <dd className="dk-fw-howto">
+                  <HowToUpdate />
+                </dd>
+              )}
+              {fw && (
+                <>
+                  <dt>{t("desktop.ctrlInfo.built")}</dt>
+                  <dd className="dk-mono">{fw.buildDate || "—"}</dd>
+                  <dt>{t("desktop.ctrlInfo.hardware")}</dt>
+                  <dd className="dk-mono">{formatHex32(fw.hwInfo)}</dd>
+                  <dt>{t("desktop.ctrlInfo.sbl")}</dt>
+                  <dd className="dk-mono">{formatThreePart(fw.sbl)}</dd>
+                  <dt>{t("desktop.ctrlInfo.dsp")}</dt>
+                  <dd className="dk-mono">
+                    {formatDspVersion(fw.dsp)} · {formatThreePart(fw.mcuDsp)}
+                  </dd>
+                </>
+              )}
+              {info?.btPatch !== null && info?.btPatch !== undefined && (
+                <>
+                  <dt>{t("desktop.ctrlInfo.btPatch")}</dt>
+                  <dd className="dk-mono">{formatHex32(info.btPatch)}</dd>
+                </>
+              )}
             </dl>
-            <details className="dk-advanced">
-              <summary>{t("desktop.ctrlInfo.presses")}</summary>
-              <dl className="dk-kv">
-                {BUTTON_ORDER.filter((k) => k in tm.buttons).map((k) => (
-                  <Pair key={k} label={t(BUTTON_LABEL[k])} value={num(tm.buttons[k])} />
-                ))}
-                {tm.sticks.map((s, i) => (
-                  <Pair
-                    key={`stick-${i}`}
-                    label={t(i === 0 ? "desktop.ctrlInfo.stickLeft" : "desktop.ctrlInfo.stickRight")}
-                    value={t("desktop.ctrlInfo.stickValue", { x: num(s.roundTripsX), y: num(s.roundTripsY) })}
-                  />
-                ))}
-              </dl>
-            </details>
-          </>
-        ) : (
+          </div>
+          <div>
+            <h4 className="dk-subhead">{t("desktop.ctrlInfo.lifetime")}</h4>
+            {tm ? (
+              <>
+                <dl className="dk-kv">
+                  <dt>{t("desktop.ctrlInfo.played")}</dt>
+                  <dd>{hours(tm.activeTime)}</dd>
+                  <dt>{t("desktop.ctrlInfo.charging")}</dt>
+                  <dd>{hours(tm.chargeTime)}</dd>
+                  <dt>{t("desktop.ctrlInfo.haptics")}</dt>
+                  <dd>{hours(tm.hapticsTime)}</dd>
+                  <dt>{t("desktop.ctrlInfo.triggers")}</dt>
+                  <dd>
+                    {hours(tm.triggerTime[0])} · {hours(tm.triggerTime[1])}
+                  </dd>
+                  <dt>{t("desktop.ctrlInfo.chargeCycles")}</dt>
+                  <dd>{t("desktop.ctrlInfo.chargeCyclesValue", { cycles: num(tm.chargeCycles), full: num(tm.fullCharges) })}</dd>
+                  <dt>{t("desktop.ctrlInfo.chargeErrors")}</dt>
+                  <dd className={errors ? "dk-bad" : undefined}>
+                    {errors
+                      ? t("desktop.ctrlInfo.chargeErrorsValue", { voltage: num(tm.chargeErrors.voltage), temperature: num(tm.chargeErrors.temperature), pmic: num(tm.chargeErrors.pmic) })
+                      : t("desktop.ctrlInfo.none")}
+                  </dd>
+                  <dt>{t("desktop.ctrlInfo.connections")}</dt>
+                  <dd>{t("desktop.ctrlInfo.connectionsValue", { bt: num(tm.bluetoothConnects), usb: num(tm.usbConnects), timeouts: num(tm.bluetoothTimeouts) })}</dd>
+                </dl>
+              </>
+            ) : null}
+          </div>
+          {tm && (
+            <div>
+              <details className="dk-advanced">
+                <summary>{t("desktop.ctrlInfo.presses")}</summary>
+                <dl className="dk-kv">
+                  {BUTTON_ORDER.filter((k) => k in tm.buttons).map((k) => (
+                    <Pair key={k} label={t(BUTTON_LABEL[k])} value={num(tm.buttons[k])} />
+                  ))}
+                  {tm.sticks.map((s, i) => (
+                    <Pair
+                      key={`stick-${i}`}
+                      label={t(i === 0 ? "desktop.ctrlInfo.stickLeft" : "desktop.ctrlInfo.stickRight")}
+                      value={t("desktop.ctrlInfo.stickValue", { x: num(s.roundTripsX), y: num(s.roundTripsY) })}
+                    />
+                  ))}
+                </dl>
+              </details>
+            </div>
+          )}
+        </div>
+        {!tm && (
           <p className="dk-hint">
             {loading
               ? t("desktop.ctrlInfo.reading")
@@ -228,9 +239,11 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
       </>
     );
   }
+  // A full-width card under the live data (the same card look), not in the
+  // settings panel: it's something to read, not a setting.
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.ctrlInfo.title")}</h2>
+    <section className="live-data-card ctrl-info">
+      <h3>{t("desktop.ctrlInfo.title")}</h3>
       {body}
       {error && <div className="dk-notice error">{error}</div>}
     </section>

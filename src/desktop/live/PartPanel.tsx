@@ -7,7 +7,6 @@ import type { DevChannelPreview } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
-import ControllerInfo from "./ControllerInfo";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "./colorways";
 import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "./customColors";
@@ -98,7 +97,6 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
         )}
       </header>
       {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
-      {view === "overview" && <ControllerInfo bridge={bridge} batteryPct={input ? Math.min(100, input.batteryPct) : null} batteryState={input ? input.batteryState : null} />}
       {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
       {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}

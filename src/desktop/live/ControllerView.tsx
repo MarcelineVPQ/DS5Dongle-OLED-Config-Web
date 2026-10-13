@@ -24,6 +24,7 @@ import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
 import LiveController from "./LiveController";
 import LiveData from "./LiveData";
+import ControllerInfo from "./ControllerInfo";
 import LiveStrip from "./LiveStrip";
 import { say } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
@@ -217,6 +218,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 />
               )}
               {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
+              {on && liveCapable && <ControllerInfo bridge={bridge} batteryPct={input ? Math.min(100, input.batteryPct) : null} batteryState={input ? input.batteryState : null} />}
             </div>
             {!(on && id && liveCapable) && (
               <div className="live-status">

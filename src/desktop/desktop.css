@@ -4191,3 +4191,20 @@ main.dk-body:focus:not(:focus-visible),
 .live-panel-head h2:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* Controller info (ControllerInfo.tsx): full width under the live data,
+   three columns (battery & firmware · lifetime · presses), one on narrow. */
+.live-readouts > .ctrl-info {
+  margin-top: 8px;
+}
+.ctrl-info-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 24px;
+  align-items: start;
+}
+@container (max-width: 640px) {
+  .ctrl-info-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
