@@ -8,12 +8,25 @@
 //   - a token definition (a line that sets a --custom-property);
 //   - a neutral shadow: pure black with alpha in a box-/text-shadow or filter;
 //   - a line marked `theme-exempt: <reason>` (the controller's real LEDs, the
-//     OLED console, 42PS brand colors...); listed by `--list`.
+//     OLED console, 42PS brand colors...); listed by `--list`;
+//   - a token source (TOKEN_SOURCES below): the .ts files whose job is to hold
+//     the palettes the tokens are built from. Exempt by path, listed by `--list`.
+// It walks .css, .tsx and .ts (F44: .ts was skipped, so tray/trayIcon.ts drew
+// with literal colors unseen).
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOTS = ["src"];
-const SKIP = [/^src\/i18n\//, /^src\/flash\/picoflash\//, /\.test\./, /^src\/assets\//];
+const SKIP = [/^src\/i18n\//, /^src\/flash\/picoflash\//, /\.test\./, /^src\/assets\//, /\.d\.ts$/];
+// Token sources: each file here IS a palette, so a literal color in it is the
+// point, not a violation. Keep this list short; anything else marks its lines.
+const TOKEN_SOURCES = new Map([
+  ["src/desktop/theme/desktopPalette.ts", "builds the Desktop theme's tokens from the OS palette"],
+  ["src/desktop/colorVision.ts", "the Color vision status palettes (set as --status-* / --cv-* tokens)"],
+  ["src/desktop/live/colorways.ts", "the controllers' real factory colorways (the drawing shows the real controller)"],
+  // Not colors at all: user-facing prose ("the black parts") that the named-color pattern matches.
+  ["src/desktop/about/roadmap.ts", "prose only (About -> Coming soon text)"],
+]);
 const COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|(?<![\w-])(white|black|red|green|blue|orange|yellow|purple|gray|grey)(?![\w-])/;
 const SHADOW_BLACK = /\brgba?\(\s*0[ ,]+0[ ,]+0\s*(\/|,)/g;
 
@@ -22,13 +35,18 @@ const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p);
-    else if (/\.(css|tsx)$/.test(p) && !SKIP.some((r) => r.test(p))) files.push(p);
+    else if (/\.(css|tsx?)$/.test(p) && !SKIP.some((r) => r.test(p))) files.push(p);
   }
 };
 ROOTS.forEach(walk);
+const staleSources = [...TOKEN_SOURCES.keys()].filter((f) => !files.includes(f));
+if (staleSources.length) {
+  console.log(`Theme gate: TOKEN_SOURCES lists files that aren't walked (moved or deleted?): ${staleSources.join(", ")}`);
+  process.exit(1);
+}
 
 const hits = [];
-const exempt = [];
+const exempt = [...TOKEN_SOURCES].map(([file, why]) => `${file}: (whole file) token source: ${why}`);
 const check = (file, startLine, text, rawText) => {
   if (!COLOR.test(text)) return;
   const where = `${file}:${startLine}: ${rawText.trim().replace(/\s+/g, " ").slice(0, 160)}`;
@@ -41,6 +59,7 @@ const check = (file, startLine, text, rawText) => {
   hits.push(where);
 };
 for (const file of files) {
+  if (TOKEN_SOURCES.has(file)) continue;
   const source = readFileSync(file, "utf8");
   if (file.endsWith(".css")) {
     // One declaration (up to ; { or }) at a time, so a marker anywhere in a

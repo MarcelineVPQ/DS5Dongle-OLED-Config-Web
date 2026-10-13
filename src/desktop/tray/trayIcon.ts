@@ -20,7 +20,7 @@ export interface TrayIconSpec {
 // The standard status colors (the taskbar isn't themed, so no color-vision swap).
 const STATUS = PALETTES.standard;
 const DOT_COLORS: Record<TrayDot, string> = { ok: STATUS.good, away: STATUS.warn, none: STATUS.muted };
-const INK = { onDark: "#eef0f2", onLight: "#1f2328" };
+const INK = { onDark: "#eef0f2", onLight: "#1f2328" }; // theme-exempt: the taskbar's ink, not the app's theme
 // Touchpad box in fractions of the art (measured on the 4k source).
 const TOUCHPAD = { x0: 0.3, y0: 0.035, x1: 0.7, y1: 0.3 };
 // Lightning bolt outline in a unit box.
@@ -74,7 +74,7 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
     const x1 = TOUCHPAD.x1 * cw - cw * 0.012;
     const y0 = oy + TOUCHPAD.y0 * ch;
     const y1 = oy + TOUCHPAD.y1 * ch;
-    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`; // theme-exempt: the controller's real lightbar color
     ctx.beginPath();
     ctx.roundRect(x0, y0, x1 - x0, y1 - y0, size * 0.03);
     ctx.fill();
@@ -90,9 +90,9 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
     ctx.closePath();
     ctx.lineJoin = "round";
     ctx.lineWidth = Math.max(1.5, size / 26);
-    ctx.strokeStyle = "#0f172a";
+    ctx.strokeStyle = "#0f172a"; // theme-exempt: tray icon bolt outline (taskbar, not themed)
     ctx.stroke();
-    ctx.fillStyle = "#facc15";
+    ctx.fillStyle = "#facc15"; // theme-exempt: tray icon charging bolt (taskbar, not themed)
     ctx.fill();
   }
 
@@ -100,7 +100,7 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
   const ring = size / 18;
   const cx = size - r - ring;
   const cy = r + ring;
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = "#0f172a"; // theme-exempt: tray icon status-dot ring (taskbar, not themed)
   ctx.beginPath();
   ctx.arc(cx, cy, r + ring, 0, Math.PI * 2);
   ctx.fill();

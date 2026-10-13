@@ -7,6 +7,9 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   { ignores: ["dist/**", "out/**", "release/**", "coverage/**", "node_modules/**", "src/flash/picoflash/**", ".claude/**", "tmp/**"] },
+  // An eslint-disable that no longer suppresses anything is an error, so the
+  // list in docs/LINT_SUPPRESSIONS.md can't go stale (F47).
+  { linterOptions: { reportUnusedDisableDirectives: "error" } },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

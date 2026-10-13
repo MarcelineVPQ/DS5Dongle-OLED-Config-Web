@@ -58,7 +58,7 @@ export const ROADMAP: RoadmapItem[] = [
     high: true,
   },
   {
-    column: "planned",
+    column: "next",
     title: "Profiles hold every setting",
     text: "A game's profile keeps your whole setup, edited in the controller view and felt live while you edit.",
     areas: ["games"],

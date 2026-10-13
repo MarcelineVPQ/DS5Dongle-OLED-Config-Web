@@ -35,6 +35,10 @@ jobs:
         run: ./.hooks/check_dom_sinks.sh
       - name: One theme system (no literal colors)
         run: node .hooks/check_theme_colors.mjs
+      - name: Duplicates have a verdict (docs/DEDUPE_AUDIT.md)
+        run: node tools/list_duplicates.mjs --check
+      - name: No byte-identical files
+        run: node tools/check_identical_files.mjs
 
   typecheck:
     name: Typecheck

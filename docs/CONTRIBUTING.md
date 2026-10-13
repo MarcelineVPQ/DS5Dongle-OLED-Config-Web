@@ -56,6 +56,18 @@ Project-specific gates (`.hooks/`):
 
 - **`check_electron_security.sh`** blocks `nodeIntegration: true`, `contextIsolation: false`, `sandbox: false`, `webSecurity: false`, insecure content, and exposing `ipcRenderer` through `contextBridge`.
 - **`check_dom_sinks.sh`** blocks `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`/`dangerouslySetInnerHTML`/`eval`/`new Function`. A justified exception (e.g. a bundled build-time SVG) carries `sink-allowed: <reason>` on the same line.
+- **`check_theme_colors.mjs`** blocks a literal color (`#hex`, `rgb()`, `hsl()`, named) in `src/` `.css`, `.tsx` and `.ts` outside the theme tokens. The palette files are exempt by path (`TOKEN_SOURCES` in the script); any other exception carries `theme-exempt: <reason>` on the line (`--list` prints them all).
+
+Gates in `tools/` (also in `npm run gates` and CI):
+
+- **`list_duplicates.mjs --check`** fails on a duplicate candidate (CSS selector, top-level name, repeated 4-line block) with no verdict in `docs/DEDUPE_AUDIT.md`'s "Every row now" table, or a table row the lister no longer finds. Merge the copy, or add a row with its verdict.
+- **`check_identical_files.mjs`** fails on byte-identical git-tracked files. `node tools/check_identical_files.mjs ../DS5Dongle` also checks across the app and firmware repos (for the firmware's `tools/release.sh`). Allowlisted groups live in the script, each with the finding that removes it.
+
+Gates in the tests:
+
+- **`tests/unit/dependencies.test.ts`**: exact versions only (no `^`, `~`, ranges or tags), the lockfile matches, `.npmrc` `save-exact=true`, Dependabot `cooldown` ≥ 14 days.
+- **`tests/unit/lintSuppressions.test.ts`**: every inline `eslint-disable` (rule + file) is in `docs/LINT_SUPPRESSIONS.md`, and every row there still exists. ESLint itself errors on an unused disable (`reportUnusedDisableDirectives`).
+- **`tests/unit/roadmapBacklog.test.ts`**: every About → Coming soon entry (`src/desktop/about/roadmap.ts`) maps to one `docs/BACKLOG.md` row whose status matches its column. A new or renamed entry goes in the test's `BACKLOG_ROW` map.
 
 ## Testing
 

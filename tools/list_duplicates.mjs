@@ -6,6 +6,11 @@
 //   name          a top-level function / const arrow defined in more than one file
 //   block         the same 4 normalized lines in more than one place
 // Usage: node tools/list_duplicates.mjs > dupes.tsv
+//        node tools/list_duplicates.mjs --check   (in `npm run gates`)
+// --check compares the rows with docs/DEDUPE_AUDIT.md's "Every row now" table
+// (kind + what + the set of files; line numbers and counts are ignored) and
+// fails on a row with no verdict there, or a table row the lister no longer
+// finds (merged: take it out). F48: the lister used to be manual only.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -106,5 +111,52 @@ for (const [key, at] of blocks) {
   rows.push(["block", key.split("\n")[0].slice(0, 80), at.length, at.join(" ")]);
 }
 
-console.log(["kind", "what", "count", "where"].join("\t"));
-for (const r of rows) console.log(r.join("\t"));
+if (!process.argv.includes("--check")) {
+  console.log(["kind", "what", "count", "where"].join("\t"));
+  for (const r of rows) console.log(r.join("\t"));
+  process.exit(0);
+}
+
+// A row's identity: kind, what (a blank first line reads "(blank line)" in the
+// doc) and its files, without line numbers.
+const BLANK = "(blank line)";
+const keyOf = (kind, what, where) => [kind, what || BLANK, [...new Set(where.map((w) => w.replace(/:\d+$/, "")))].sort().join(" ")].join("\t");
+const DOC = join(ROOT, "docs/DEDUPE_AUDIT.md");
+const table =
+  readFileSync(DOC, "utf8")
+    .split(/^## Every row now$/m)[1]
+    ?.split(/^## /m)[0] ?? "";
+// Cells split on unescaped pipes; `\|` inside code is a literal pipe.
+const cells = (line) =>
+  line
+    .trim()
+    .replace(/^\||\|$/g, "")
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim().replace(/\\\|/g, "|"));
+const stripTicks = (c) => c.replace(/^`+ ?/, "").replace(/ ?`+$/, "");
+const documented = new Set();
+for (const line of table.split("\n")) {
+  if (!line.startsWith("|") || /^\|\s*(Kind|---)/.test(line)) continue;
+  const c = cells(line);
+  if (c.length < 6) continue;
+  const where = [...c[5].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+  documented.add(keyOf(c[0], stripTicks(c[1]), where));
+}
+const found = new Set(rows.map((r) => keyOf(r[0], r[1], r[3].split(" "))));
+const missing = rows.filter((r) => !documented.has(keyOf(r[0], r[1], r[3].split(" "))));
+const stale = [...documented].filter((k) => !found.has(k));
+if (!documented.size) {
+  console.log("Duplicates gate: no rows read from docs/DEDUPE_AUDIT.md (## Every row now)");
+  process.exit(1);
+}
+if (missing.length || stale.length) {
+  if (missing.length) {
+    console.log("Duplicates gate: new duplicate candidates with no verdict in docs/DEDUPE_AUDIT.md (merge them, or add a row):");
+    for (const r of missing) console.log(r.join("\t"));
+  }
+  if (stale.length) {
+    console.log("Duplicates gate: docs/DEDUPE_AUDIT.md rows the lister no longer finds (merged or moved: update the table):");
+    for (const k of stale) console.log(k);
+  }
+  process.exit(1);
+}

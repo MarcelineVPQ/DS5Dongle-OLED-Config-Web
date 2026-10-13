@@ -60,4 +60,15 @@ repos:
         entry: node .hooks/check_theme_colors.mjs
         language: system
         pass_filenames: false
-        files: ^src/.*\.(css|tsx)$
+        files: ^src/.*\.(css|tsx?)$
+      - id: duplicates
+        name: Duplicates have a verdict (docs/DEDUPE_AUDIT.md)
+        entry: node tools/list_duplicates.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^(src|electron|tools|\.hooks)/.*\.(css|ts|tsx|mjs)$|^docs/DEDUPE_AUDIT\.md$
+      - id: identical-files
+        name: No byte-identical files
+        entry: node tools/check_identical_files.mjs
+        language: system
+        pass_filenames: false

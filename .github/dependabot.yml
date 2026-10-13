@@ -10,6 +10,9 @@ updates:
       time: "06:00"
       timezone: "America/Denver"
     open-pull-requests-limit: 15
+    # CLAUDE.md: a version is chosen >= 2 weeks after its release (F46).
+    cooldown:
+      default-days: 14
     labels:
       - "dependencies"
       - "javascript"
@@ -40,6 +43,8 @@ updates:
       time: "06:00"
       timezone: "America/Denver"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 14
     labels:
       - "dependencies"
       - "github-actions"

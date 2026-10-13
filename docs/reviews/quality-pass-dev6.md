@@ -108,6 +108,17 @@ Findings flagged under both dedupe-app and one-framework are listed once.
 6. **App cleanup + doc drift** (app, many small edits). F26, F25, F29, F30, F31, F32, F33, F34, F35, F36, F37, F38, F39, F8 (with its fake-/proc test), F9, F10, F11. F40 stays as is.
 7. **App gates** (app). F44, F45, F46, F47, F48, plus the new gates below.
 
+## Status
+
+**Batch 7 (App gates): done on branch `qp-gates`.** `npm run check` passes with every new gate.
+
+- **F44:** the theme gate walks `.ts` too. Path-exempt token sources: `theme/desktopPalette.ts`, `colorVision.ts`, `live/colorways.ts` (palettes) and `about/roadmap.ts` (prose: "the black parts"). The 5 tray icon lines are marked `theme-exempt`. A stale `TOKEN_SOURCES` path fails the gate.
+- **F45:** the 8 `^` ranges pinned to the installed versions (no lockfile version changes), `.npmrc` `save-exact=true`, `tests/unit/dependencies.test.ts` rejects `^`/`~`/ranges/tags and checks the lockfile root matches. (`bun.lock` is a stale upstream leftover with vite 5 ranges; it isn't used by npm or CI and is left alone.)
+- **F46:** Dependabot `cooldown: default-days: 14` on npm and actions, checked by the same test.
+- **F47:** `reportUnusedDisableDirectives: "error"` (none were unused). `docs/LINT_SUPPRESSIONS.md` has an "Inline disables" table (5 rule + file rows for the 8 directives); `tests/unit/lintSuppressions.test.ts` checks it both ways and rejects a disable without a rule.
+- **F48:** `list_duplicates.mjs --check` in `npm run gates`, CI and pre-commit, against `docs/DEDUPE_AUDIT.md` (regenerated: 89 rows; 36 new since 0.9.0 got verdicts: 7 DEFERRED to F20/F23 and batch 1's remap buttons, 11 OPEN for the next pass: the Calibration/StickCurves per-slot read, StickCurves' stick math twice, SetupScreen/WindowsUsbRepair's poll loop). `tools/check_identical_files.mjs` (this repo, or with `../DS5Dongle` across both) is in `npm run gates`; the firmware's `release.sh` can run `(cd "$APP_DIR" && node tools/check_identical_files.mjs "$FW_DIR")` (not wired there: the firmware repo is batch 5's). Allowlisted: F39's screenshots (batch 6), daidr's LICENSE next to each copy of the art (intended), two identical firmware stub headers (intended), and one new copy: `docs/marketing/colorways/dualsense-colorways.mp4` = `site/media/colorways.mp4` (next pass).
+- **Roadmap ↔ BACKLOG** (`tests/unit/roadmapBacklog.test.ts`): every Coming soon entry maps to one BACKLOG row with a matching status. F36 (batch 6) is allowlisted as a known mismatch. It also found and this batch fixed: "Profiles hold every setting" was still "planned" (shipped in dev.5, now "next"); BACKLOG's "Firmware: OLED flush and Opus encoder speedups" still said Agreed (shipped in firmware dev.5, now Done); "Test copies without a tray icon" was in BACKLOG twice (the older row removed; the test now rejects duplicate rows).
+
 ## Gates to add
 
 - **Firmware repo:** a check that lib/* stay mode 160000 with no 120000 symlinks (release.sh, CI, pre-commit); host tests in release.sh and release.yml; an ELF nm check for RAM residency (F41-F43).
