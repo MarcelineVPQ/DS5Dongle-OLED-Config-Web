@@ -2204,6 +2204,9 @@ html[data-theme="light"] .live-ctl {
   min-height: 100%;
   overflow: auto;
   height: 100%;
+  /* The page sets its own text tokens (scopedAccent); inherited text must
+     resolve them here, not keep the color computed outside the page. */
+  color: var(--text-body);
 }
 .gp-hero {
   position: relative;
@@ -2344,7 +2347,7 @@ html[data-theme="light"] .live-ctl {
   cursor: pointer;
 }
 .gp-stars button.on {
-  color: var(--status-warn);
+  color: var(--text-warn);
 }
 .dk-textarea {
   box-sizing: border-box;
