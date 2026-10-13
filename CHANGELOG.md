@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.7] - 2026-10-13
+
 ### Changed
 
 - **Rules that were only prose are now checked** (developer gates, quality pass dev.6 batch 7): the one-theme-system check also covers `.ts` files (the tray icon's colors are now marked as the taskbar's, not the app's); dependencies are pinned to exact versions (8 `^` ranges pinned to what was installed, `.npmrc` `save-exact`), and Dependabot waits 14 days after a release; every inline lint suppression is listed in `docs/LINT_SUPPRESSIONS.md` and an unused one fails lint; `npm run gates` fails on a duplicate with no verdict in `docs/DEDUPE_AUDIT.md` and on byte-identical files (`tools/check_identical_files.mjs`, which can also check the firmware repo); a test keeps About → Coming soon in step with the backlog.
