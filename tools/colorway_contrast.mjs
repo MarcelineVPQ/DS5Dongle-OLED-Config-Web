@@ -30,7 +30,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 export async function loadColorwayMath() {
   const entry = `
     export { COLORWAYS, EDGE_COLORWAYS, colorway, drawingColors, lineOnDark } from "./src/desktop/live/colorways";
-    export { controllerSurfaces, legibleAccent, colorwayAccent } from "./src/desktop/live/controllerAccent";
+    export { accentTokens, controllerSurfaces, legibleAccent, colorwayAccent } from "./src/desktop/live/controllerAccent";
     export { mergeColors } from "./src/desktop/live/customColors";
     export { accentVars, contrast, mix, parseColor, hexToRgb, wantsLightInk } from "./src/desktop/theme/desktopPalette";
   `;
@@ -93,19 +93,6 @@ export const FINGERPRINT_FN = `(entries, names) => {
   return out;
 }`;
 
-// The Controller theme's base (light or dark) and the other themes' accent
-// tint: the same weights as controllerAccent.ts SURFACES (not exported there;
-// the agreement check below fails if they drift apart).
-const SURFACES = [
-  ["--bg-page", 0.07],
-  ["--bg-panel", 0.06],
-  ["--bg-elevated", 0.06],
-  ["--bg-inset", 0.05],
-  ["--bg-segment", 0.06],
-  ["--border-default", 0.12],
-  ["--border-subtle", 0.1],
-];
-
 // One controller color source: a colorway code (and model) or the player's
 // own colors on top of one.
 //   { code: "04", model: "dualsense", custom: null, label: "04 Galactic Purple" }
@@ -135,7 +122,6 @@ function customBodies() {
 // changes nothing in this theme (a neutral colorway keeps the theme accent).
 //   base: { "light": {...}, "dark": {...}, "desktop": {...}, "controller/dark": {...} }
 export function tokensFor(m, base, theme, src) {
-  const css = (x) => `rgb(${x.join(", ")})`;
   const colors = m.mergeColors(m.colorway(src.code)?.colors ?? null, src.custom);
   if (theme === "controller") {
     const full = m.controllerSurfaces(src.code, src.custom);
@@ -148,12 +134,9 @@ export function tokensFor(m, base, theme, src) {
   if (!b) return undefined;
   const color = m.colorwayAccent(src.code, src.custom);
   if (!color) return null;
-  const panel = m.parseColor(b["--bg-panel"]);
-  const isDark = m.wantsLightInk(panel);
-  const accent = m.legibleAccent(color, panel, isDark, true);
-  const tint = m.hexToRgb(color);
-  const tinted = Object.fromEntries(SURFACES.filter(([n]) => b[n]).map(([n, t]) => [n, css(m.mix(m.parseColor(b[n]), tint, t))]));
-  return { ...b, ...tinted, ...m.accentVars(accent, panel, isDark) };
+  // The app's own function (controllerAccent.ts), on the theme's base tokens.
+  const rgb = Object.fromEntries(Object.entries(b).map(([n, v]) => [n, m.parseColor(v)]));
+  return { ...b, ...m.accentTokens(color, rgb) };
 }
 
 // Where a literal color seen in a render applies: the theme, and the

@@ -114,8 +114,6 @@ export function colorwayAccent(code: string | null, custom: CustomColors | null 
   return override ?? colorway(code)?.colors?.body ?? null;
 }
 
-// Sets (or clears) the accent tokens from the highest source that's legible.
-// Wins over the desktop palette's !important tokens by specificity.
 // Surfaces tinted toward the controller's color: a little on the page and
 // panels, a bit more on borders. Text tokens are left alone, so their
 // contrast holds (the tint is too small to matter for it).
@@ -128,6 +126,21 @@ const SURFACES: Array<[string, number]> = [
   ["--border-default", 0.12],
   ["--border-subtle", 0.1],
 ];
+
+// The other themes' tokens for the controller's color (not the Controller
+// theme): the surfaces tinted toward it, the accent made legible on the
+// theme's panel, accent and selection text on every tinted surface. `base`:
+// the theme's own tokens, without our layer. Pure, so the UI checker
+// (tools/colorway_contrast.mjs) computes colorways with it.
+export function accentTokens(color: string, base: Record<string, Rgb | null | undefined>): Record<string, string> {
+  const panel = base["--bg-panel"] ?? [27, 35, 54];
+  const isDark = wantsLightInk(panel);
+  const accent = legibleAccent(color, panel, isDark, true) ?? hex(color); // allowNeutral: never null
+  const tint = hex(color);
+  const tinted = SURFACES.flatMap(([name, t]) => (base[name] ? [[name, mix(base[name], tint, t)] as const] : []));
+  const grounds = tinted.filter(([name]) => name.startsWith("--bg-")).map(([, c]) => c);
+  return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...accentVars(accent, panel, isDark, grounds.length ? grounds : [panel]) };
+}
 
 // The "Controller" theme's surfaces: cards and panels in the controller's
 // own body color, text black or white (whichever reads), the accent the
@@ -179,7 +192,7 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
     "--text-eyebrow": text(4.5, 0.3),
     "--text-error": css(error),
     "--text-warn": css(warn),
-    ...accentVars(accent, body, dark),
+    ...accentVars(accent, body, dark, grounds),
   };
 }
 
@@ -196,12 +209,10 @@ export function applyAccent(): void {
   // Read the theme's own tokens, without our tint (else it compounds).
   if (old) old.disabled = true;
   const root = document.querySelector(".dk") ?? document.documentElement;
-  const { panel, isDark } = panelOf(root);
-  const base = getComputedStyle(root);
-  const surfaces = SURFACES.map(([name, t]) => [name, parse(base.getPropertyValue(name)), t] as const);
+  const cs = getComputedStyle(root);
+  const base = Object.fromEntries(SURFACES.map(([name]) => [name, parse(cs.getPropertyValue(name))]));
   if (old) old.disabled = false;
   const full = document.documentElement.hasAttribute("data-controller-theme") ? controllerSurfaces(controllerCode) : null;
-  const accent = controllerColor ? legibleAccent(controllerColor, panel, isDark, true) : null;
   if (full) {
     const text = `html:root, html:root .dk { ${Object.entries(full)
       .map(([k, v]) => `${k}: ${v} !important;`)
@@ -212,16 +223,16 @@ export function applyAccent(): void {
     changed();
     return;
   }
-  if (!accent || !controllerColor) {
+  if (!controllerColor) {
     if (old) {
       old.remove();
       changed();
     }
     return;
   }
-  const tint = hex(controllerColor);
-  const tinted = Object.fromEntries(surfaces.filter(([, v]) => v).map(([name, v, t]) => [name, `rgb(${mix(v!, tint, t).join(", ")})`]));
-  const body = Object.entries({ ...tinted, ...accentVars(accent, panel, isDark) })
+  // Sets the accent tokens. Wins over the desktop palette's !important
+  // tokens by specificity.
+  const body = Object.entries(accentTokens(controllerColor, base))
     .map(([k, v]) => `${k}: ${v} !important;`)
     .join(" ");
   const text = `html:root, html:root .dk { ${body} }`;

@@ -160,23 +160,37 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
   return vars;
 }
 
+// `fg` pushed toward `ink` until it reaches `target` on every ground (at
+// worst the ink itself).
+function legibleOnAll(fg: Rgb, grounds: Rgb[], target: number, ink: Rgb): Rgb {
+  let c = fg;
+  for (let i = 0; i < 5 && grounds.some((g) => contrast(c, g) < target); i++) c = grounds.reduce((acc, g) => ensureContrast(acc, g, target, ink), c);
+  return c;
+}
+
 // The accent tokens for one accent color on a given panel color (also used
-// for the controller's own color, theme/controllerAccent.ts).
-export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean): Record<string, string> {
+// for the controller's own color, theme/controllerAccent.ts). `grounds`: the
+// surfaces the accent and selection colors are drawn on as text (links on
+// the page, cards and tiles too), each reaching 4.5:1 on all of them.
+export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean, grounds: Rgb[] = [panel]): Record<string, string> {
   const onAccent: Rgb = contrast([255, 255, 255], accent) >= contrast([0, 0, 0], accent) ? [255, 255, 255] : [0, 0, 0];
-  const selBg = mix(panel, accent, isDark ? 0.22 : 0.16);
+  const ink: Rgb = isDark ? [255, 255, 255] : [0, 0, 0];
+  // The selection tint, kept dark (light) enough for its text to read: on a
+  // mid-tone controller body the tint toward a light trim left no color
+  // reaching 4.5:1 on it (checker, 2026-10-12).
+  const selBg = ensureContrast(mix(panel, accent, isDark ? 0.22 : 0.16), ink, 4.6, isDark ? [0, 0, 0] : [255, 255, 255]);
   return {
     "--dk-accent": css(accent),
     // The accent as text (labels, values): readable on the panel whatever
     // the accent is (a desktop accent can be any color). 4.6, not 4.5: cards
     // drawn a shade off the panel (dashboard, game pages) otherwise land at
     // 4.49 (checker, 2026-10-12).
-    "--dk-accent-text": css(ensureContrast(accent, panel, 4.6)),
+    "--dk-accent-text": css(legibleOnAll(accent, grounds, 4.6, ink)),
     "--dk-accent-hover": css(mix(accent, isDark ? [255, 255, 255] : [0, 0, 0], 0.15)),
     "--dk-on-accent": css(onAccent),
     "--dk-sel-bg": css(selBg),
     "--dk-sel-border": css(accent),
-    "--dk-sel-text": css(ensureContrast(accent, selBg, 4.6)),
+    "--dk-sel-text": css(legibleOnAll(accent, [selBg, ...grounds], 4.6, ink)),
     "--dk-focus": css(accent),
     // The web components (Remap editor) use the shared accent tokens.
     "--accent": css(accent),
