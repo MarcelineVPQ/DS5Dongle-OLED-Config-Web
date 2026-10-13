@@ -17,6 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **About opens on the Guide**, and its tabs read Guide · App changes · Firmware changes · Coming soon · Credits ("What's new" is now "App changes"; See what's new after an update still opens it).
 - **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
+- **Developer builds: the simulated dongle's OLED shows the new Status screen**, the dongle's own symmetric controller drawing (sticks, triggers, L1/R1, Create/Options, d-pad, face buttons, the Edge's extra buttons) and battery row, moving with the simulated controller.
 
 ### Fixed
 

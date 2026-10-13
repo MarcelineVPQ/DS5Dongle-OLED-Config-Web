@@ -9,6 +9,7 @@
 import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody } from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
+import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
 import { CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_SEL, CTRL_TEST } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -173,34 +174,35 @@ export class SimulatedDongle implements Ds5Transport {
 
   constructor(private readonly opts: SimulatedDongleOptions = {}) {}
 
-  // Live mode: a Status-like OLED screen, drawn with the browser's canvas and
-  // packed like the firmware's (128 x 64, row-major, 16 bytes a row, MSB =
-  // leftmost pixel). Never real dongle data: no Bluetooth address.
+  // Live mode: the firmware's Status screen, packed like the firmware's
+  // (128 x 64, row-major, 16 bytes a row, MSB = leftmost pixel): the text
+  // drawn with the browser's canvas, the battery row and the controller glyph
+  // with the firmware's own geometry (src/oled/statusPad.ts, from oled_pad.h)
+  // and the moving input. Never real dongle data: no Bluetooth address.
   private liveScreen(): Uint8Array | null {
     if (typeof OffscreenCanvas === "undefined") return null;
     const c = new OffscreenCanvas(128, 64);
     const g = c.getContext("2d");
     if (!g) return null;
+    const input = this.liveInput();
+    const pct = Math.min(100, (input[52] & 0x0f) * 10);
+    const state = input[52] >> 4;
+    const mark = state === 1 ? "+" : state === 2 ? "*" : state >= 0xa ? "!" : " ";
     g.fillStyle = "#000"; // theme-exempt: OLED pixels off/on, not a UI color
     g.fillRect(0, 0, 128, 64);
     g.fillStyle = "#fff"; // theme-exempt: OLED pixels off/on, not a UI color
-    g.font = "bold 9px monospace";
+    g.font = "8px monospace";
     g.textBaseline = "top";
-    g.fillText("DS5 Bridge (simulated)", 0, 0);
-    g.font = "8px monospace";
-    g.fillText((this.opts.version ?? "").slice(0, 25), 0, 11);
-    g.fillRect(0, 24, 60, 10);
-    g.clearRect(1, 25, 58, 8);
-    g.fillRect(2, 26, 44, 6); // 80 %
-    g.fillRect(60, 27, 2, 4);
-    g.font = "bold 10px monospace";
-    g.fillText("80%", 70, 24);
-    g.font = "8px monospace";
-    g.fillText(`${this.edge ? "DualSense Edge" : "DualSense"} · slot ${this.currentSlot}`, 0, 40);
-    g.fillText(`frame ${this.seq & 0xffff}`, 0, 52);
+    g.fillText(`DS5 B. ${(this.opts.version ?? "").replace("-oled-edition", "")}`.slice(0, 22), 6, 1);
+    g.fillText("(simulated)", 6, 10);
+    g.fillText(`${String(pct).padStart(3)}%${mark}`, kBattTextX, kBattY);
+    if (state === 1) g.fillText("~--m", kEtaX, kBattY);
     const px = g.getImageData(0, 0, 128, 64).data;
     const out = new Uint8Array(1024);
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) if (px[(y * 128 + x) * 4] > 127) out[y * 16 + (x >> 3)] |= 0x80 >> (x & 7);
+    const fb = packedCanvas(out);
+    drawBattery(fb, pct);
+    drawPad(fb, input, this.edge);
     return out;
   }
 
