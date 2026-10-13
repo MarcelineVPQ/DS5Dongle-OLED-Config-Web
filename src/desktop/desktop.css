@@ -4234,9 +4234,16 @@ main.dk-body:focus:not(:focus-visible),
 
 /* Controller info (ControllerInfo.tsx): full width under the live data, one
    column per child (battery & firmware · lifetime), one on narrow. The
-   presses card below it lays its groups out with .dk-grid. */
+   presses card below it puts its groups on one line when they fit and
+   wraps them when they don't (each group keeps its natural width). */
 .live-readouts > .ctrl-info {
   margin-top: 8px;
+}
+.ctrl-info-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 32px;
 }
 .ctrl-info-cols {
   display: grid;

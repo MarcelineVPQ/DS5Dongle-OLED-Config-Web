@@ -154,7 +154,7 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
       presses = (
         <section className="live-data-card ctrl-info">
           <h3>{t("desktop.ctrlInfo.presses")}</h3>
-          <div className="dk-grid">
+          <div className="ctrl-info-groups">
             {groups.map((g) => (
               <div key={g.title}>
                 <h4 className="dk-subhead">{t(g.title)}</h4>
