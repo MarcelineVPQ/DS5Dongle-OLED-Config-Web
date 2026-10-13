@@ -44,6 +44,8 @@ const LAUNCHER_COMMS = /^(steam|reaper|heroic|legendary|gogdl|nile|lutris|umu-ru
 const WINE_EXE = /\/(wine|wine64|wine-preloader|wine64-preloader|wineserver)$/;
 const UID_RE = (uid: number) => new RegExp(`^Uid:\\s+${uid}\\b`, "m");
 let uidRe: { uid: number; re: RegExp } | null = null;
+// Orphans whose environment has no launch variable, by "<root>/<pid>:<name>".
+const plainOrphans = new Set<string>();
 
 // Everything detectRunning looks at, for one process.
 function readFull(dir: string, pid: number): ProcView {
@@ -128,24 +130,34 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   };
   // A native game whose launcher quit (Heroic) is reparented to init or the
   // user's systemd: such an orphan is kept when its environment carries a
-  // launch variable. Only orphans' environments are read, to keep this cheap.
+  // launch variable. Only orphans' environments are read, and one without
+  // the variables isn't read again (its environment is fixed until it runs
+  // another program, which changes its name).
   const orphan = (p: { ppid: number }) => p.ppid <= 1 || !byPid.has(p.ppid) || byPid.get(p.ppid)!.name === "systemd";
-  const launched = (pid: number) => {
+  const seenPlain = new Set<string>();
+  const launched = (p: { pid: number; name: string }) => {
+    const id = `${root}/${p.pid}:${p.name}`;
+    seenPlain.add(id);
+    if (plainOrphans.has(id)) return false;
     try {
-      const env = `\0${readFileSync(`${root}/${pid}/environ`, "utf8")}`;
-      return ENV_KEYS.some((k) => env.includes(`\0${k}=`));
+      const env = `\0${readFileSync(`${root}/${p.pid}/environ`, "utf8")}`;
+      if (ENV_KEYS.some((k) => env.includes(`\0${k}=`))) return true;
+      plainOrphans.add(id);
     } catch {
-      return false;
+      // gone, or not readable
     }
+    return false;
   };
   for (const p of own) {
-    if (!underLauncher(p.pid) && !wineExe(p.pid) && !(orphan(p) && launched(p.pid))) continue;
+    if (!underLauncher(p.pid) && !wineExe(p.pid) && !(orphan(p) && launched(p))) continue;
     try {
       out.push(readFull(`${root}/${p.pid}`, p.pid));
     } catch {
       // process exited while we looked
     }
   }
+  // Forget orphans that are gone (a new process may get the same pid).
+  for (const id of plainOrphans) if (id.startsWith(`${root}/`) && !seenPlain.has(id)) plainOrphans.delete(id);
   return out;
 }
 

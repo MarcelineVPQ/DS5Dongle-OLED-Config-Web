@@ -130,6 +130,21 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
   it("keeps a native Heroic game once Heroic quit (orphaned, launch variable in its environment)", () => {
     const heroic: RunningCandidate[] = [{ key: "h", launcher: "heroic", id: "hollow" }];
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), heroic)).toBe("h");
+  });
+
+  it("reads a plain orphan's environment once, and again for a new process on its pid", () => {
+    const env = join(root, "15", "environ");
+    readProcs(true, root); // looked at once, no launch variable
+    writeFileSync(env, "HEROIC_APP_NAME=hollow\0"); // changed in place: not read again
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(false);
+    rmSync(join(root, "15"), { recursive: true }); // gone for a look...
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(false);
+    mkdirSync(join(root, "15")); // ...then a new process on the same pid
+    writeFileSync(join(root, "15", "status"), `Name:\tplasmashell\nPPid:\t10\nUid:\t${process.getuid?.() ?? 1000}\n`);
+    writeFileSync(join(root, "15", "comm"), "plasmashell\n");
+    writeFileSync(join(root, "15", "cmdline"), "plasmashell\0");
+    writeFileSync(env, "HEROIC_APP_NAME=hollow\0");
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(true);
     rmSync(root, { recursive: true, force: true });
   });
 });
