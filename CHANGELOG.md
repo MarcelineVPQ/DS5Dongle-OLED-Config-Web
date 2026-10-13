@@ -12,6 +12,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **The haptic feedback test plays for 3 seconds:** Test left / right / both repeat the dongle's half-second test pulse for 3 s, counting down on the button; pressing it again stops it, and so do leaving the panel or the controller disconnecting (no stray pulses afterwards). The other test buttons wait while one runs.
 - **The app uses Sony's names for the controller, in all 7 languages** (from Sony's own playstation.com pages per country; the list is in `docs/GLOSSARY.md`): the haptics panel is **Haptic feedback**, its sliders **Vibration intensity (left / right)**, and its test plays "a short vibration on that side" (no more "rumble on that grip"); **Light bar**, **Touch pad**, **Create button**, **Options button**, **Mute button**, **Left stick/L3 button**, the **directional buttons**, **Built-in microphone**, **Volume (Speaker for Controller)**, **Button assignments** (was Remap), **Sensitivity curve** (was Response curve; the Aggressive preset is now Sony's **Quick**), **gyroscope**, and **the PS button** / **the Create button and the PS button** in pairing hints. Sony's PC updater is called by its name, **PlayStation Accessories**, and the PS5 path is Settings → Accessories → Controller (General). German, French, Spanish, Brazilian Portuguese, Chinese and Japanese follow Sony's own words there (for example Leuchtleiste, associer, mando, emparelhar, 光条 and 控制器, MUTEボタン).
 
+### Fixed
+
+- **HDR lighting follows the drawing of the controller you have:** on a DualSense Edge the HDR glow was drawn in the DualSense's light strips and player lights instead of the Edge's, and after switching back to a DualSense it stayed where the other drawing had left it. Each model's drawing now gets its own glow, built from that drawing's light bar and player lights and placed over it, every time the model changes; it also moves along when the model title above the drawing changes size. The UI check (`tools/check_ui.sh`) now switches DualSense → Edge → DualSense and checks that the glow lines up with each drawing.
+
 ## [0.9.5-dev.8] - 2026-10-13
 
 ### Changed

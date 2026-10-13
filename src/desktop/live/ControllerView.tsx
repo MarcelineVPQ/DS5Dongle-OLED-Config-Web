@@ -129,6 +129,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     void window.desktop?.getSettings().then((s) => setHdrSetting(s.hdrLighting && s.hardwareAcceleration));
   }, []);
   const [hdrNits] = useKnob(knob("hdrNits"));
+  // The drawing shown (LiveController), which the HDR glow follows too.
+  const shownModel = on ? (id?.model ?? null) : null;
   const hdr = hdrSetting && on && matchMedia("(dynamic-range: high)").matches && "gpu" in navigator;
   const [ctlWidth, setCtlWidth] = useState(800);
   useEffect(() => {
@@ -189,7 +191,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 </div>
               )}
               <LiveController
-                model={on ? (id?.model ?? null) : null}
+                model={shownModel}
                 input={input}
                 lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
                 playerLeds={on ? (id?.playerLeds ?? 0) : 0}
@@ -198,7 +200,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 remapped={remapped}
                 onSelect={pickPart}
               />
-              {hdr && <HdrGlow hero={heroRef} nits={hdrNits} />}
+              {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
             </div>
             {on && id?.model && (
               <div className="live-specs">
