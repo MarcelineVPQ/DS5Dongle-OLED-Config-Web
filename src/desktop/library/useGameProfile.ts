@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { EMPTY_LIBRARY, type LibraryFile, type ProfileSettings } from "../games/library";
 import { applyGameProfile, gamePartsOf, profileCaps, putGameParts, restoreNormal } from "./profileDongle";
-import { captureProfile, layoutForButtons, profileConfig, profileCurves, profileDiffers, profileToSave, sameGameCurves, settingsFrom, withSettings, type GameCurves } from "./profileValues";
+import { captureProfile, layoutForButtons, profileConfig, profileCurves, profileToSave, profileUnsaved, sameGameCurves, settingsFrom, withSettings, type GameCurves } from "./profileValues";
 
 export { nonConfigParts, settingsFrom } from "./profileValues";
 
@@ -225,7 +225,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     setCurvesDraft(null);
   }
   const curvesDirty = !!curvesDraft && !sameGameCurves(curvesDraft, storedCurves);
-  const profileDirty = !!(active && profile && config && (profileDiffers(config, normal, profile.settings) || curvesDirty || buttonsDraft));
+  const profileDirty = !!(active && profile && config && profileUnsaved({ config, normal, profile: profile.settings, curvesDraft, buttonsChanged: !!buttonsDraft }));
 
   const saveToProfile = useCallback(async () => {
     if (!desktop || !active || !config) return;

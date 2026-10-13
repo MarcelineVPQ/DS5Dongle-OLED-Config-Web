@@ -129,6 +129,14 @@ export const profileCurves = (s: ProfileSettings | undefined): GameCurves => [s?
 const sameCurve = (a: StickCurve | undefined, b: StickCurve | undefined) => (a && b ? curvesEqual(a, b) : a === b);
 export const sameGameCurves = (a: GameCurves, b: GameCurves) => sameCurve(a[0], b[0]) && sameCurve(a[1], b[1]);
 
+// Something changed for the active profile isn't saved into it yet (the
+// bottom bar's "not saved yet"; Done asks first): the dongle's settings, the
+// curves draft or the Buttons list's changes.
+export function profileUnsaved(s: { config: ConfigBody; normal: ProfileSettings | null; profile: ProfileSettings; curvesDraft: GameCurves | null; buttonsChanged: boolean }): boolean {
+  if (s.buttonsChanged || profileDiffers(s.config, s.normal, s.profile)) return true;
+  return !!s.curvesDraft && !sameGameCurves(s.curvesDraft, profileCurves(s.profile));
+}
+
 // The layout a game's buttons are saved into: its own, else a new one named after the game.
 export function layoutForButtons(settings: ProfileSettings | undefined, layouts: LibraryFile["layouts"], title: string, newId: string): { id: string; name: string } {
   const id = settings?.buttonLayout;

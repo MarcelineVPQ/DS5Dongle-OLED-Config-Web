@@ -11,6 +11,7 @@ import {
   profileCurves,
   profileDiffers,
   profileToSave,
+  profileUnsaved,
   pruneProfile,
   PROFILE_GROUPS,
   sameGameCurves,
@@ -169,5 +170,31 @@ describe("layoutForButtons", () => {
   it("makes a new layout named after the game when it has none (or it was deleted)", () => {
     expect(layoutForButtons({ format: 2 }, layouts, "Some Game", "l-new")).toEqual({ id: "l-new", name: "Some Game" });
     expect(layoutForButtons({ format: 2, buttonLayout: "l-gone" }, layouts, "x".repeat(50), "l-new")).toEqual({ id: "l-new", name: "x".repeat(40) });
+  });
+});
+
+// Done in the controller view asks first exactly when something isn't saved into the profile.
+describe("profileUnsaved", () => {
+  const curve = {
+    type: "steady" as const,
+    points: [
+      [0, 0],
+      [85, 100],
+      [170, 190],
+      [255, 255],
+    ] as [[number, number], [number, number], [number, number], [number, number]],
+  };
+  const profile: ProfileSettings = { ...settingsFrom(DEFAULT_CONFIG), stickCurves: { left: curve } };
+  const base = { config: DEFAULT_CONFIG, normal: null, profile, curvesDraft: null, buttonsChanged: false };
+
+  it("is clean when the dongle has the profile and nothing is pending", () => {
+    expect(profileUnsaved(base)).toBe(false);
+    expect(profileUnsaved({ ...base, curvesDraft: [curve, undefined] })).toBe(false);
+  });
+
+  it("counts a changed setting, a changed curve and changed buttons", () => {
+    expect(profileUnsaved({ ...base, config: { ...DEFAULT_CONFIG, speakerVolume: (DEFAULT_CONFIG.speakerVolume + 1) % 8 } })).toBe(true);
+    expect(profileUnsaved({ ...base, curvesDraft: [undefined, undefined] })).toBe(true);
+    expect(profileUnsaved({ ...base, buttonsChanged: true })).toBe(true);
   });
 });
