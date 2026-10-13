@@ -113,6 +113,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
   if (!bridge.client) return null;
   const series = (pick: (x: Sample) => number) => history.map(pick);
   const config = bridge.config;
+  const micLoss = micLossClimbing(history);
 
   return (
     <div className="dash">
@@ -151,7 +152,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
           </div>
           <div className="dash-counters">
             {AUDIO_COUNTER_NAMES.filter((k) => k !== "setFeatureLast" && k !== "core1Loops").map((k) => (
-              <Fact key={k} label={t(`desktop.diag.counters.${k}`)} value={s ? s.counters[k].toLocaleString() : "—"} bad={BAD.has(k) && !!s?.counters[k]} />
+              <Fact key={k} label={t(`desktop.diag.counters.${k}`)} value={s ? s.counters[k].toLocaleString() : "—"} bad={k === "micPlc" ? micLoss : BAD.has(k) && !!s?.counters[k]} />
             ))}
           </div>
         </div>
@@ -241,7 +242,15 @@ function TimingRow({ label, avg, worst, bad, trend }: { label: string; avg: stri
   );
 }
 
-const BAD = new Set(["dropRaw", "dropEnc", "dropHap", "micPlc", "flashFailures"]);
+const BAD = new Set(["dropRaw", "dropEnc", "dropHap", "flashFailures"]);
+
+// Mic concealment is only a warning when it keeps climbing while the mic is
+// in use: right after a controller connects it sends a couple of mic packets,
+// then core1 conceals ~33 frames (~1/3 s) before it sees the stream stopped,
+// a one-off that is benign. "In use": mic frames decoding at a real rate (a
+// stream is far above this; the connect-time packets far below).
+const MIC_IN_USE_FPS = 20;
+const micLossClimbing = (history: Sample[]): boolean => history.filter((x, i) => i > 0 && x.micFps >= MIC_IN_USE_FPS && x.counters.micPlc > history[i - 1].counters.micPlc).length >= 2;
 
 // A 240° dial; the arc turns warning / bad colors past the thresholds (the
 // number and the label carry the meaning too, never color alone).
