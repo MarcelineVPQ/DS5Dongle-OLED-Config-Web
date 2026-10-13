@@ -2,7 +2,7 @@
 
 The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, HD haptics, speaker and mic included).
 
-Made on Linux, tested on Linux and Windows 11. The macOS build is included but hasn't been tested yet; reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
+Made on Linux, tested on Linux and Windows 11. The macOS build is included; we can't test it ourselves, but it has been reported working on macOS 27.0.1 (thanks, @wfsg00098!). More reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
 
 ![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
 
@@ -71,9 +71,9 @@ What each part does:
 
 It can come back if a real DualSense is plugged into the PC by USB again; press the button again then. To do it by hand instead: run the same script in an administrator PowerShell, then replug the dongle.
 
-### macOS (untested)
+### macOS (community-tested)
 
-The macOS build hasn't been tested on a Mac yet; reports are welcome.
+We don't have a Mac to test on, but 0.9.5-dev.6 was [reported working on macOS 27.0.1](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues/17) (thanks, @wfsg00098!). More reports are welcome.
 
 
 Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time, right-click the app and choose **Open**. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
