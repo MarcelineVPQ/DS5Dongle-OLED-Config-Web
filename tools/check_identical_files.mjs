@@ -23,20 +23,12 @@ import { basename, join, resolve } from "node:path";
 // identical, and why (the review finding and the batch that removes it).
 const ALLOWED = [
   {
-    files: ["app:docs/screenshots/guide-controller.png", "app:docs/screenshots/live-controller.png", "firmware:docs/screenshots/live-controller.png"],
-    why: "F39 (quality pass dev.6, batch 6): keep the app copy; the firmware README links its raw URL and GUIDE.md uses live-controller.png",
+    files: ["app:docs/screenshots/live-controller.png", "firmware:docs/screenshots/live-controller.png"],
+    why: "F39 (quality pass dev.6): the app side is done (batch 6: GUIDE.md uses live-controller.png); the firmware repo removes its copy and its READMEs link the app copy's raw URL",
   },
   {
     files: ["app:assets-src/edge/LICENSE", "app:src/assets/DAIDR-LICENSE.txt"],
     why: "intended: daidr's MIT notice travels with each copy of the art (the source art, and the art bundled into the app)",
-  },
-  {
-    files: ["app:docs/marketing/colorways/dualsense-colorways.mp4", "app:site/media/colorways.mp4"],
-    why: "new, found by this gate (batch 7, not in the dev.6 review): keep the site copy and point docs/marketing/colorways/README.md at it, in the next quality pass",
-  },
-  {
-    files: ["firmware:tests/host/stubs/hardware/sync.h", "firmware:tests/host/stubs/pico/multicore.h"],
-    why: "intended: two 2-line host-test stub headers (#pragma once + #include) that happen to be the same text",
   },
 ];
 

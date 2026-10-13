@@ -13,6 +13,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Save to profile says which profile:** the bottom bar's button now names the game profile it saves into (the one you're editing), not only the game whose profile is on.
+- **Controller info card:** its hints are styled like every other hint, and Refresh shows it's busy while it reads the controller.
+- **Links look like links everywhere:** the Development build notes' link in the join dialog now has the link color.
+- **Leaving a profile with unsaved changes:** the buttons read Cancel, Discard, Save & close, in the same order as every other confirm.
+- **About → Coming soon:** "Better OLED status screen" moves to "In the next build" (it shipped in firmware dev.6).
 - **Native Heroic games stay detected after Heroic quits:** a native (non-Wine) Heroic game kept running after Heroic closed is still seen as running, so its game profile is no longer undone mid-game (a dev.5 regression).
 - **About → Coming soon:** "Profiles hold every setting" moves to "In the next build" (it shipped in dev.5).
 - **HDR lighting lights up:** the experimental HDR glow over the lightbar (App settings → Advanced) read the lightbar color from the wrong element, so it never showed and never followed the light. It now follows the live lightbar color, and switching between the DualSense and DualSense Edge drawings rebuilds its shape.

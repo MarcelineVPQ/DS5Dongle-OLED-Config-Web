@@ -56,7 +56,7 @@ On Linux, press **Set up USB access** on the Dongle page once (it asks for your 
 
 Your controller, drawn in its own colors, moving as you use it: buttons light up as you press them, the sticks move, the light bar shows its real color. The **rail** on the right takes you to the other pages (hover it for names; pin it open with the button at the bottom, or Ctrl+B).
 
-![The Controller page: the live drawing, the status tiles and the data cards](screenshots/guide-controller.png)
+![The Controller page: the live drawing, the status tiles and the data cards](screenshots/live-controller.png)
 
 - **Click any part of the drawing** to set it up: its settings open in the panel on the right. Or pick a setting from the list in that panel.
 - **The tiles** under the drawing: battery, signal, light bar mode, and the player light and pairing slot.

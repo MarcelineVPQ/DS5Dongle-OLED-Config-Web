@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WebUsbTransport } from "../protocol/webUsbTransport";
+import { usePoll } from "./usePoll";
 import { REPAIR_SCRIPT } from "./windowsRepairScript";
 
 const POLL_MS = 2000;
@@ -16,26 +17,13 @@ export default function WindowsUsbRepair() {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const windows = desktop?.platform === "win32";
-  const [seen, setSeen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  // Plugged in but not connected: the case this repairs.
-  useEffect(() => {
-    if (!windows) return;
-    let live = true;
-    const tick = () =>
-      void WebUsbTransport.findPermitted()
-        .then((d) => live && setSeen(!!d))
-        .catch(() => undefined);
-    tick();
-    const timer = setInterval(tick, POLL_MS);
-    return () => {
-      live = false;
-      clearInterval(timer);
-    };
-  }, [windows]);
+  // Plugged in but not connected: the case this repairs (polled only while
+  // the window is shown).
+  const seen = !!usePoll(() => WebUsbTransport.findPermitted(), POLL_MS, windows).value;
 
   if (!windows || !desktop) return null;
 
