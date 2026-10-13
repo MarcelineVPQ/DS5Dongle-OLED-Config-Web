@@ -1013,7 +1013,7 @@
     },
     "audioTest": {
       "speakerTitle": "Teste do alto-falante",
-      "speakerHint": "Toca uma canção folclórica (Korobeiniki, cerca de 80 s) no alto-falante do controle (não no do PC). Pressione de novo para parar.",
+      "speakerHint": "Toca uma canção folclórica (Korobeiniki, cerca de 77 s) no alto-falante do controle (não no do PC). Pressione de novo para parar.",
       "speakerButton": "Tocar som de teste",
       "noSpeaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
       "micTitle": "Teste do microfone",

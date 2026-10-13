@@ -1013,7 +1013,7 @@
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
-      "speakerHint": "Joue un air populaire (Korobeiniki, environ 80 s) sur le haut-parleur de la manette (pas celui du PC). Appuyez à nouveau pour arrêter.",
+      "speakerHint": "Joue un air populaire (Korobeiniki, environ 77 s) sur le haut-parleur de la manette (pas celui du PC). Appuyez à nouveau pour arrêter.",
       "speakerButton": "Jouer un son de test",
       "noSpeaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
       "micTitle": "Test du micro",

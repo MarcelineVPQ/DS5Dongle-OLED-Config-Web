@@ -1013,7 +1013,7 @@
     },
     "audioTest": {
       "speakerTitle": "Lautsprechertest",
-      "speakerHint": "Spielt ein Volkslied (Korobeiniki, etwa 80 s) auf dem Lautsprecher des Controllers (nicht des PCs). Erneut drücken zum Stoppen.",
+      "speakerHint": "Spielt ein Volkslied (Korobeiniki, etwa 77 s) auf dem Lautsprecher des Controllers (nicht des PCs). Erneut drücken zum Stoppen.",
       "speakerButton": "Testton abspielen",
       "noSpeaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
       "micTitle": "Mikrofontest",
