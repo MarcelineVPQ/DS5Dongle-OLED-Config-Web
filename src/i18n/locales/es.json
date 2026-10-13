@@ -132,7 +132,32 @@
       "usb": "USB",
       "usbHint": "Se aplican tras Reconectar USB (el PC ve el dongle desconectarse y reconectarse).",
       "speakerLevel": "Volumen (altavoz para mando)",
-      "speakerLevelSub": "0 = sin cambios; por encima de 0 amplifica y puede saturar"
+      "speakerLevelSub": "0 = sin cambios; por encima de 0 amplifica y puede saturar",
+      "triggerIntensity": "Intensidad del efecto gatillo",
+      "triggerReduce": "Más débil en",
+      "triggerReduceSub": "0 = como lo ajusta el juego; cada paso debilita la resistencia",
+      "speakerBoost": "Amplificación del altavoz",
+      "speakerBoostSub": "El amplificador del mando; 0 = como lo ajusta el juego",
+      "lockVolume": "Bloquear volumen",
+      "lockVolumeSub": "Los juegos no pueden cambiar el volumen ni el silencio del mando; el PC sí",
+      "audioOutput": "Salida de audio",
+      "micInput": "Micrófono en uso",
+      "statusPin": "Pin de estado",
+      "statusPinGpio": "Pin",
+      "statusPinOff": "Desactivado",
+      "statusPinMode": "Señal",
+      "statusPinHigh": "Activo mientras está conectado",
+      "statusPinPulse": "Pulso al conectar",
+      "statusPinHint": "3,3 V en el GPIO de la Pico mientras hay un mando conectado, o un pulso de 0,2 s cuando se conecta uno: para un LED (con resistencia) o el conector del botón de encendido de un PC. No se ofrecen los pines que usan el accesorio OLED, el UART y la radio.",
+      "needsFirmware": "Actualiza el firmware del dongle para usar estos ajustes.",
+      "asGame": "Según el juego",
+      "choice": {
+        "auto": "Auto",
+        "speaker": "Altavoz",
+        "headset": "Auriculares",
+        "off": "Desactivado",
+        "builtIn": "Integrado"
+      }
     },
     "lightbar": {
       "mode": "Modo",
@@ -896,7 +921,10 @@
       },
       "show": "Mostrar",
       "showHint": "Elige qué muestra la biblioteca: las categorías de Steam (juegos, demos, bandas sonoras, software, vídeos)",
-      "hiddenCount": "{{count}} ocultas"
+      "hiddenCount": "{{count}} ocultas",
+      "triggerReduce": "Efectos de gatillo",
+      "speakerBoost": "Amplificación del altavoz",
+      "lockVolume": "Bloquear volumen"
     },
     "dongleConsole": {
       "title": "Consola: {{device}}",

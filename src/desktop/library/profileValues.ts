@@ -23,6 +23,9 @@ export function settingsFrom(c: ConfigBody): ProfileSettings {
     lbFavB: [...c.lbFavB],
     btMicEnable: c.btMicEnable,
     audioBufferLength: c.audioBufferLength,
+    triggerReduce: c.triggerReduce,
+    speakerGain: c.speakerGain,
+    lockVolume: c.lockVolume,
   };
 }
 
@@ -98,6 +101,9 @@ export const PROFILE_GROUPS = [
   { id: "lightbar", fields: ["lightbarMode"] },
   { id: "favorites", fields: ["lbFavR", "lbFavG", "lbFavB"] },
   { id: "mic", fields: ["btMicEnable"] },
+  { id: "triggers", fields: ["triggerReduce"] },
+  { id: "speakerBoost", fields: ["speakerGain"] },
+  { id: "volumeLock", fields: ["lockVolume"] },
 ] as const satisfies ReadonlyArray<{ id: string; fields: readonly ProfileField[] }>;
 export type ProfileGroup = (typeof PROFILE_GROUPS)[number]["id"];
 

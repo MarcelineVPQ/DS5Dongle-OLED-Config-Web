@@ -132,7 +132,32 @@
       "usb": "USB",
       "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt).",
       "speakerLevel": "Lautstärke (Lautsprecher für Controller)",
-      "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern"
+      "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern",
+      "triggerIntensity": "Intensität des Trigger-Effekts",
+      "triggerReduce": "Schwächer um",
+      "triggerReduceSub": "0 = wie vom Spiel vorgegeben; jede Stufe schwächt den Widerstand",
+      "speakerBoost": "Lautsprecher-Verstärkung",
+      "speakerBoostSub": "Der Verstärker des Controllers; 0 = wie vom Spiel vorgegeben",
+      "lockVolume": "Lautstärke sperren",
+      "lockVolumeSub": "Spiele können Lautstärke und Stummschaltung des Controllers nicht ändern; der PC schon",
+      "audioOutput": "Audioausgabe",
+      "micInput": "Verwendetes Mikrofon",
+      "statusPin": "Status-Pin",
+      "statusPinGpio": "Pin",
+      "statusPinOff": "Aus",
+      "statusPinMode": "Signal",
+      "statusPinHigh": "An, solange verbunden",
+      "statusPinPulse": "Impuls beim Verbinden",
+      "statusPinHint": "3,3 V am GPIO des Pico, solange ein Controller verbunden ist, oder ein Impuls von 0,2 s, wenn sich einer verbindet: für eine LED (mit Vorwiderstand) oder den Power-Taster-Anschluss eines PCs. Pins, die das OLED-Add-on, der UART und das Funkmodul nutzen, stehen nicht zur Wahl.",
+      "needsFirmware": "Aktualisiere die Firmware des Dongles, um diese Einstellungen zu nutzen.",
+      "asGame": "Wie im Spiel",
+      "choice": {
+        "auto": "Auto",
+        "speaker": "Lautsprecher",
+        "headset": "Headset",
+        "off": "Aus",
+        "builtIn": "Integriert"
+      }
     },
     "lightbar": {
       "mode": "Modus",
@@ -896,7 +921,10 @@
       },
       "show": "Anzeigen",
       "showHint": "Wähle, was die Bibliothek zeigt: die Kategorien von Steam (Spiele, Demos, Soundtracks, Software, Videos)",
-      "hiddenCount": "{{count}} ausgeblendet"
+      "hiddenCount": "{{count}} ausgeblendet",
+      "triggerReduce": "Trigger-Effekte",
+      "speakerBoost": "Lautsprecher-Verstärkung",
+      "lockVolume": "Lautstärke sperren"
     },
     "dongleConsole": {
       "title": "{{device}}-Konsole",

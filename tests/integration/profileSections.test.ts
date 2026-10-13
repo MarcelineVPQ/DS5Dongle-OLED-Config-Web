@@ -7,14 +7,14 @@ import { act, createElement, Fragment } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
-import { FEATURES2, type BridgeIdentity } from "../../src/protocol/bridgeClient";
+import { FEATURES2, FEATURES3, type BridgeIdentity } from "../../src/protocol/bridgeClient";
 import { DEFAULT_CONFIG, validateConfig, type ConfigBody } from "../../src/protocol/config";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import type { ProfileSettings } from "../../src/desktop/games/library";
 import { settingsFrom } from "../../src/desktop/library/profileValues";
 import { profileFields } from "../../src/desktop/library/profileFields";
 import type { SectionFields } from "../../src/desktop/pages/sectionFields";
-import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection } from "../../src/desktop/pages/SettingsPage";
+import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../../src/desktop/pages/SettingsPage";
 import LightbarPage from "../../src/desktop/pages/LightbarPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -28,10 +28,10 @@ globalThis.ResizeObserver ??= class {
 const CONFIG: ConfigBody = { ...DEFAULT_CONFIG, hapticsGain: 2, hapticsGainRight: 3, autoHapticsEnable: 2, autoHapticsGain: 120, speakerVolume: -6 };
 const NORMAL = settingsFrom(CONFIG);
 
-function fakeBridge(draft: ConfigBody) {
+function fakeBridge(draft: ConfigBody, minor = 10) {
   const setDraftField = vi.fn();
   const gripTest = vi.fn(async () => undefined);
-  const identity = { protoMajor: 1, protoMinor: 10, features2: FEATURES2.gripTest, controllerConnected: true } as unknown as BridgeIdentity;
+  const identity = { protoMajor: 1, protoMinor: minor, features2: FEATURES2.gripTest, features3: minor >= 13 ? FEATURES3.configTail : 0, controllerConnected: true } as unknown as BridgeIdentity;
   const bridge = { draft, config: draft, issues: validateConfig(draft), setDraftField, client: { splitHaptics: true, gripTest }, identity } as unknown as UseDs5BridgeResult;
   return { bridge, setDraftField, gripTest };
 }
@@ -56,6 +56,7 @@ function renderSections(bridge: UseDs5BridgeResult, fields?: SectionFields): HTM
         null,
         createElement(HapticsSection, props),
         createElement(AutoHapticsSection, props),
+        createElement(TriggerIntensitySection, props),
         createElement(SpeakerSection, props),
         createElement(LightbarPage, props),
         createElement(MicSection, props),
@@ -136,6 +137,21 @@ describe("game page sections (profile draft)", () => {
     expect(sub("Volume (Speaker for Controller)")).not.toContain("Your normal setting");
     expect(sub("Vibration intensity (left)")).toContain("Your normal setting");
     expect(el.querySelectorAll("h2 .dk-chip")).toHaveLength(2); // lightbar mode + favorites
+  });
+
+  it("protocol 1.13: a profile holds trigger reduction, speaker boost and the volume lock, not the dongle's audio routing", () => {
+    const onChange = vi.fn();
+    const live = renderSections(fakeBridge(CONFIG, 13).bridge);
+    const label = (el: HTMLElement, l: string) => !!el.querySelector(`[aria-label="${l}"]`);
+    for (const l of ["Weaker by", "Speaker boost", "Audio output", "Microphone used"]) expect(label(live, l), l).toBe(true);
+    act(() => root!.unmount());
+    const { bridge, setDraftField } = fakeBridge(CONFIG, 13);
+    const el = renderSections(bridge, profileFields(CONFIG, NORMAL, { format: 2 }, onChange));
+    for (const l of ["Weaker by", "Speaker boost"]) expect(label(el, l), l).toBe(true);
+    for (const l of ["Audio output", "Microphone used"]) expect(label(el, l), l).toBe(false);
+    keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Weaker by"]')!, 4);
+    expect(onChange).toHaveBeenLastCalledWith({ format: 2, triggerReduce: 4 });
+    expect(setDraftField).not.toHaveBeenCalled();
   });
 
   it("flags an out-of-range value like the live sections", () => {

@@ -132,7 +132,32 @@
       "usb": "USB",
       "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。",
       "speakerLevel": "音量（控制器的扬声器）",
-      "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波"
+      "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波",
+      "triggerIntensity": "扳机效果强度",
+      "triggerReduce": "减弱",
+      "triggerReduceSub": "0 = 按游戏设定；每一级都会减弱阻力",
+      "speakerBoost": "扬声器增强",
+      "speakerBoostSub": "控制器的放大器；0 = 按游戏设定",
+      "lockVolume": "锁定音量",
+      "lockVolumeSub": "游戏无法更改控制器的音量或静音；电脑仍可更改",
+      "audioOutput": "音频输出",
+      "micInput": "使用的麦克风",
+      "statusPin": "状态引脚",
+      "statusPinGpio": "引脚",
+      "statusPinOff": "关",
+      "statusPinMode": "信号",
+      "statusPinHigh": "连接期间保持高电平",
+      "statusPinPulse": "连接时发出脉冲",
+      "statusPinHint": "控制器连接期间 Pico 的 GPIO 输出 3.3 V，或在控制器连接时输出 0.2 秒脉冲：可接 LED（串联电阻）或电脑的电源按钮插针。OLED 扩展板、UART 和无线模块占用的引脚不在列表中。",
+      "needsFirmware": "更新接收器固件后才能使用这些设置。",
+      "asGame": "按游戏",
+      "choice": {
+        "auto": "自动",
+        "speaker": "扬声器",
+        "headset": "耳机",
+        "off": "关",
+        "builtIn": "内置"
+      }
     },
     "lightbar": {
       "mode": "模式",
@@ -890,7 +915,10 @@
       },
       "show": "显示",
       "showHint": "选择库中显示的内容：Steam 的分类（游戏、试玩版、原声音乐、软件、视频）",
-      "hiddenCount": "已隐藏 {{count}} 类"
+      "hiddenCount": "已隐藏 {{count}} 类",
+      "triggerReduce": "扳机效果",
+      "speakerBoost": "扬声器增强",
+      "lockVolume": "锁定音量"
     },
     "dongleConsole": {
       "title": "{{device}} 控制台",

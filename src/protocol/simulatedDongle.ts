@@ -7,7 +7,7 @@
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
 import { IDENTITY_BYTES } from "./bridgeClient";
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, CONFIG_BODY_SIZE_V13, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
@@ -154,6 +154,13 @@ export class SimulatedDongle implements Ds5Transport {
   flashNarrator = 0xff;
   // Right grip haptics strength after the narrator (protocol 1.6), float LE.
   rightGain = new Uint8Array(new Float32Array([1]).buffer);
+  // The seven protocol 1.13 bytes after the right grip (trigger reduction ...
+  // status pin mode), as the firmware's defaults.
+  tail = encodeConfigBody(DEFAULT_CONFIG, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+  flashTail = this.tail.slice();
+  private get v13() {
+    return this.minor >= 13;
+  }
   said: [number, number][] = [];
   playerLeds = 0x04; // player 1
   edge = false;
@@ -279,12 +286,20 @@ export class SimulatedDongle implements Ds5Transport {
         return this.identity().subarray(0, length);
       case 0xf7: {
         // Like the firmware: the whole Config_body (38 bytes before 1.6, 42
-        // from 1.6), then the remap block only when the request has room for it.
+        // from 1.6), then the remap block only when the request has room for
+        // it. From 1.13 (49 bytes) a 63-byte GET keeps the 42-byte body + the
+        // block at 42, and a shorter one gets the whole body.
         const body = this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
         const out = new Uint8Array(body + 21);
         out.set(this.config, 0);
         out[CONFIG_BODY_SIZE] = this.narrator;
         if (this.split) out.set(this.rightGain, CONFIG_BODY_SIZE + 1);
+        if (this.v13 && length < out.length) {
+          const whole = new Uint8Array(CONFIG_BODY_SIZE_V13);
+          whole.set(out.subarray(0, body), 0);
+          whole.set(this.tail, body);
+          return whole.subarray(0, Math.min(length, whole.length));
+        }
         out.set([0x52, 0x4d, 1, this.remapRevision & 0xff, this.remapRevision >> 8, ...this.remap], body);
         return out.subarray(0, length >= out.length ? out.length : Math.min(length, body));
       }
@@ -383,6 +398,8 @@ export class SimulatedDongle implements Ds5Transport {
       if (this.split && payload.length >= 1 + CONFIG_BODY_SIZE_SPLIT) this.rightGain = payload.slice(1 + CONFIG_BODY_SIZE + 1, 1 + CONFIG_BODY_SIZE_SPLIT);
       // Older firmware copies whatever reaches byte 37 into the narrator.
       if (!this.split && payload.length > 1 + CONFIG_BODY_SIZE) this.narrator = payload[1 + CONFIG_BODY_SIZE];
+      // 1.13: the seven bytes after the right grip; a shorter body leaves them.
+      if (this.v13 && payload.length >= 1 + CONFIG_BODY_SIZE_V13) this.tail = payload.slice(1 + CONFIG_BODY_SIZE_SPLIT, 1 + CONFIG_BODY_SIZE_V13);
       this.hostGen++;
     } else if (func === 0x0d) {
       if (payload[1] !== 0x43 || payload[2] !== 0x4c || payload[3] !== 2 || payload[4] > 3 || payload.length < 23) this.lastResult = RESULT.invalid;
@@ -505,10 +522,14 @@ export class SimulatedDongle implements Ds5Transport {
     this.lastResult = RESULT.ok;
     if (func === 0x02) {
       if (this.opts.saveFails) this.lastResult = RESULT.failed;
-      else this.flashConfig = this.config.slice();
+      else {
+        this.flashConfig = this.config.slice();
+        this.flashTail = this.tail.slice();
+      }
     } else if (func === 0x04) {
       this.currentSlot = arg;
       this.flashConfig = this.config.slice(); // bt_set_slot() saves the config
+      this.flashTail = this.tail.slice();
       this.hostGen++;
     } else if (func === 0x05) this.slots[arg] = false;
     else if (func === 0x06) this.slots = [false, false, false, false];
@@ -518,6 +539,8 @@ export class SimulatedDongle implements Ds5Transport {
     else if (func === 0x09) {
       this.config = encodeConfigBody(DEFAULT_CONFIG);
       this.flashConfig = this.config.slice();
+      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+      this.flashTail = this.tail.slice();
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
     else if (func === 0x0e) {
@@ -532,7 +555,7 @@ export class SimulatedDongle implements Ds5Transport {
   private identity(): Uint8Array {
     const minor = this.minor;
     const out = new Uint8Array(minor >= 12 ? IDENTITY_BYTES : minor >= 7 ? 46 : 30);
-    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
+    out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
     out[10] = this.lastFunc;
@@ -541,7 +564,7 @@ export class SimulatedDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
-    out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0) | (this.tempCurves ? 0x04 : 0); // unsaved settings, temporary remap (1.8), temporary curves (1.10)
+    out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) || this.tail.some((b, i) => b !== this.flashTail[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0) | (this.tempCurves ? 0x04 : 0); // unsaved settings, temporary remap (1.8), temporary curves (1.10)
     out[24] = 8; // 80 % battery
     out[25] = this.playerLeds;
     out[26] = this.edge ? 1 : 0;
@@ -562,6 +585,7 @@ export class SimulatedDongle implements Ds5Transport {
       );
     }
     if (minor >= 12) out[46] = 0x01; // FEATURES3: controller info (1.12)
+    if (minor >= 13) out[46] |= 0x02; // FEATURES3: the 1.13 config fields
     return out;
   }
 

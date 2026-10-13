@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Upstream's settings batch, for dongle firmware with protocol 1.13** (awalol's "batch 3/5", ported into our firmware and app together):
+  - **Trigger Effect Intensity** (L2 / R2 panel): weaker adaptive trigger resistance in 10 steps; 0, the default, is the game's own strength. A game's profile can hold it, so a game whose triggers are too strong (#176 upstream) gets its own.
+  - **Speaker panel:** **Speaker boost** (the controller amplifier's pre-gain, 0 = as the game sets it; separate from the volume slider, which boosts the audio itself), **Lock volume** (games can't change the controller's volume or mute; the PC still can), both per game too, and **Audio output**: Auto (the headset when one is plugged in), Speaker, Headset or Off.
+  - **Microphone panel:** **Microphone used**: Auto, Built-in or Headset. The Built-in microphone switch is still the one that turns it off.
+  - **Dongle → Status pin:** a Pico GPIO that is on while a controller is connected, or pulses for 0.2 s when one connects (an LED, a PC's power-button header). Only pins nothing else uses are offered.
+  - The firmware also lights the mute button while the controller's mic is muted, passes the PC's mute switches and mic level to the controller, and a fresh or reset config polls at 500 Hz (the app's default too; a saved rate is never changed).
+  - With older firmware these controls say to update the firmware instead; the app never sends them the longer settings.
+- **The simulated dongle speaks protocol 1.13** (the new settings, the 49-byte config body and the 0xF7 rule), and the tests cover old and new firmware both ways.
+
 ### Changed
 
 - **Every button that waits shows it the same way** (spinner, then the seconds after 3 s, as on Check now): Save to dongle and Revert in the bottom bar (and Save to / Revert for a game's profile), Switch to / Forget / Forget all in Pairing slots, Retry after a failed calibration or curve read, Download and install for an app update, Install the firmware on the setup screen, Set up USB access (Linux), Run the repair (Windows), the speaker, microphone and narrator voice tests, a game's Play and open buttons, Switch to our Proton, Apply on a game's setup, and Close the launcher / Apply / Undo on the Games page. The "Waiting for password…", "Playing…", "Starting…", "Closing…" and "Applying…" labels are gone; the microphone test keeps "Recording… speak now", since it tells you when to speak.

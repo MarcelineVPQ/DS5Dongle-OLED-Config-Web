@@ -15,7 +15,7 @@ import {
   TIMING_STAGES,
 } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
-import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
+import { DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody } from "../../src/protocol/config";
 import { DEFAULT_CURVES, DEFAULT_CUSTOM_POINTS, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
 import { CTRL_TEST, decodeTelemetry } from "../../src/protocol/controllerInfo";
 import { loadControllerInfo } from "../../src/desktop/live/loadControllerInfo";
@@ -272,6 +272,49 @@ describe("left / right grip haptics (protocol 1.6)", () => {
     expect(cfg.hapticsGainRight).toBe(cfg.hapticsGain);
     await client.applyConfig({ ...cfg, hapticsGain: 3 });
     expect(dongle.narrator).toBe(3);
+    expect(await client.readRemap()).not.toBeNull();
+  });
+});
+
+describe("upstream's settings batch (protocol 1.13)", () => {
+  it("writes and reads the 1.13 settings, keeps the narrator and the remap block", async () => {
+    const dongle = new FakeDongle({ protoMinor: 13 });
+    dongle.narrator = 3;
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(49);
+    expect(id.features3 & FEATURES3.configTail).toBe(FEATURES3.configTail);
+    expect(client.configTail).toBe(true);
+    await client.applyConfig({ ...(await client.readConfig()), hapticsGainRight: 2, triggerReduce: 5, lockVolume: true, speakerSelect: 2, statusGpioPin: 16 });
+    const back = await client.readConfig();
+    expect([back.hapticsGainRight, back.triggerReduce, back.lockVolume, back.speakerSelect, back.statusGpioPin]).toEqual([2, 5, true, 2, 16]);
+    expect(dongle.narrator).toBe(3);
+    expect(await client.readRemap()).not.toBeNull();
+    expect((await client.identity()).unsaved).toBe(true);
+    await client.saveToFlash();
+    expect((await client.identity()).unsaved).toBe(false);
+  });
+
+  it("an older app's 42-byte write leaves the 1.13 settings alone", async () => {
+    const dongle = new FakeDongle({ protoMinor: 13 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    await client.applyConfig({ ...(await client.readConfig()), triggerReduce: 7 });
+    const before = await client.readConfig();
+    await client.command(0x01, [...encodeConfigBody({ ...before, inactiveTime: 45 }, true)]);
+    const after = await client.readConfig();
+    expect([after.inactiveTime, after.triggerReduce]).toEqual([45, 7]);
+  });
+
+  it("sends 1.12 firmware the 42-byte body and reads the 1.13 settings as defaults", async () => {
+    const dongle = new FakeDongle({ protoMinor: 12 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    expect(client.configTail).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), triggerReduce: 4 });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 42);
+    expect((await client.readConfig()).triggerReduce).toBe(0);
     expect(await client.readRemap()).not.toBeNull();
   });
 });

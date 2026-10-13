@@ -34,6 +34,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "More controller tests": "Small test extras",
   "Diagnostics in the app": "Diagnostics report in the app",
   "Share button layouts": "Public button layouts",
+  "Trigger strength and more audio settings": "Upstream settings batch",
   "Faster dongle firmware": "Firmware: OLED flush and Opus encoder speedups",
   "Better OLED status screen": "OLED Status screen controller drawing",
   "Clearer message when the dongle is busy": 'Linux: "Unable to claim interface"',

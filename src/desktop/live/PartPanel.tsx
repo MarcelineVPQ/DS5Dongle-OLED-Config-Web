@@ -36,7 +36,7 @@ import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../na
 import { TOUR_ENABLED, startTour } from "../tour/Tour";
 import FirmwarePage from "../pages/FirmwarePage";
 import LightbarPage from "../pages/LightbarPage";
-import { AutoHapticsSection, DisplaySection, HapticsSection, MicSection, PowerSection, SpeakerSection, UsbSection } from "../pages/SettingsPage";
+import { AutoHapticsSection, DisplaySection, HapticsSection, MicSection, PowerSection, SpeakerSection, StatusPinSection, TriggerIntensitySection, UsbSection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
@@ -154,6 +154,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
     <>
       {part === "lightbar" && <LightbarPage bridge={bridge} />}
       {(part === "l2" || part === "r2") && <TriggerLive input={input} side={part} />}
+      {(part === "l2" || part === "r2") && <TriggerIntensitySection bridge={bridge} />}
       {(part === "l2" || part === "r2") && <TriggersPage bridge={bridge} />}
       {(part === "stick-l" || part === "stick-r") && <StickLive input={input} side={part} />}
       {part === "touchpad" && <TouchLive input={input} />}
@@ -574,6 +575,7 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
       <PowerSection bridge={bridge} />
       <DisplaySection bridge={bridge} />
       <UsbSection bridge={bridge} />
+      <StatusPinSection bridge={bridge} />
     </>
   );
 }

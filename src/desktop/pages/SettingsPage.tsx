@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { FEATURES2, FEATURES3, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import type { AutoHapticsLowpass, AutoHapticsMode, ControllerMode, PollingRateMode } from "../../protocol/config";
-import { BusyButton, GripHaptics, Segmented, Slider, Toggle } from "../controls";
+import {
+  STATUS_GPIO_OFF,
+  STATUS_GPIO_PINS,
+  type AutoHapticsLowpass,
+  type AutoHapticsMode,
+  type ControllerMode,
+  type MicSelect,
+  type PollingRateMode,
+  type SpeakerSelect,
+  type StatusGpioMode,
+} from "../../protocol/config";
+import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
 
 // Settings sections, each a card the live view's side panel shows for the
@@ -58,6 +68,36 @@ function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean) {
     [client],
   );
   return { running, run, stop: () => stop.current?.() };
+}
+
+// Protocol 1.13 (upstream's settings batch): trigger reduction, speaker boost,
+// volume lock, mic and speaker choice, status pin.
+const hasV13 = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity, 13, FEATURES3.configTail);
+
+// The adaptive triggers' resistance, weaker in 10 steps (0 = the game's own).
+// Per game too (a profile can hold it).
+export function TriggerIntensitySection(props: SectionProps) {
+  const { t } = useTranslation();
+  const { d, set, issue, sub } = useFields(props);
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.settings.triggerIntensity")}</h2>
+      {hasV13(props.bridge) ? (
+        <Slider
+          label={t("desktop.settings.triggerReduce")}
+          sub={sub("triggerReduce", t("desktop.settings.triggerReduceSub"))}
+          value={d.triggerReduce}
+          min={0}
+          max={10}
+          step={1}
+          invalid={issue("triggerReduce")}
+          onChange={(v) => set("triggerReduce", v)}
+        />
+      ) : (
+        <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
+      )}
+    </section>
+  );
 }
 
 export function HapticsSection(props: SectionProps) {
@@ -136,7 +176,12 @@ export function AutoHapticsSection(props: SectionProps) {
 
 export function SpeakerSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue, sub } = useFields(props);
+  const { d, set, issue, sub, live } = useFields(props);
+  const v13 = hasV13(props.bridge);
+  const outputs: ReadonlyArray<{ value: SpeakerSelect; label: string }> = (["auto", "speaker", "headset", "off"] as const).map((k, i) => ({
+    value: i as SpeakerSelect,
+    label: t(`desktop.settings.choice.${k}`),
+  }));
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.speaker", "Speaker")}</h2>
@@ -154,17 +199,80 @@ export function SpeakerSection(props: SectionProps) {
         invalid={issue("speakerVolume")}
         onChange={(v) => set("speakerVolume", v)}
       />
+      {v13 && (
+        <>
+          <Slider
+            label={t("desktop.settings.speakerBoost")}
+            sub={sub("speakerGain", t("desktop.settings.speakerBoostSub"))}
+            value={d.speakerGain}
+            min={0}
+            max={7}
+            step={1}
+            invalid={issue("speakerGain")}
+            onChange={(v) => set("speakerGain", v)}
+          />
+          <Toggle label={t("desktop.settings.lockVolume")} sub={sub("lockVolume", t("desktop.settings.lockVolumeSub"))} value={d.lockVolume} onChange={(v) => set("lockVolume", v)} />
+          {/* Where the PC's audio plays is the dongle's, not a game's (not in profiles). */}
+          {live && <Segmented label={t("desktop.settings.audioOutput")} value={d.speakerSelect} options={outputs} onChange={(v) => set("speakerSelect", v)} />}
+        </>
+      )}
+      {!v13 && <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>}
     </section>
   );
 }
 
 export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, sub } = useFields(props);
+  const { d, set, sub, live } = useFields(props);
+  const mics: ReadonlyArray<{ value: MicSelect; label: string }> = (["auto", "builtIn", "headset"] as const).map((k, i) => ({
+    value: i as MicSelect,
+    label: t(`desktop.settings.choice.${k}`),
+  }));
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.mic", "Microphone")}</h2>
       <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
+      {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
+      {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
+    </section>
+  );
+}
+
+// A GPIO that shows the controller connection (an LED, a PC's power header).
+export function StatusPinSection(props: SectionProps) {
+  const { t } = useTranslation();
+  const { d, set } = useFields(props);
+  const off = d.statusGpioPin === STATUS_GPIO_OFF;
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.settings.statusPin")}</h2>
+      {hasV13(props.bridge) ? (
+        <>
+          <Row label={t("desktop.settings.statusPinGpio")}>
+            <select className="dk-select" aria-label={t("desktop.settings.statusPinGpio")} value={d.statusGpioPin} onChange={(e) => set("statusGpioPin", Number(e.currentTarget.value))}>
+              <option value={STATUS_GPIO_OFF}>{t("desktop.settings.statusPinOff")}</option>
+              {STATUS_GPIO_PINS.map((pin) => (
+                <option key={pin} value={pin}>
+                  GP{pin}
+                </option>
+              ))}
+            </select>
+          </Row>
+          <Segmented
+            label={t("desktop.settings.statusPinMode")}
+            value={d.statusGpioMode}
+            disabled={off}
+            options={[
+              { value: 0 as StatusGpioMode, label: t("desktop.settings.statusPinHigh") },
+              { value: 1 as StatusGpioMode, label: t("desktop.settings.statusPinPulse") },
+            ]}
+            onChange={(v) => set("statusGpioMode", v)}
+          />
+          <p className="dk-hint">{t("desktop.settings.statusPinHint")}</p>
+        </>
+      ) : (
+        <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
+      )}
     </section>
   );
 }

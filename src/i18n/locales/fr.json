@@ -132,7 +132,32 @@
       "usb": "USB",
       "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher).",
       "speakerLevel": "Volume (haut-parleur de la manette)",
-      "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer"
+      "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer",
+      "triggerIntensity": "Intensité de l'effet gâchette",
+      "triggerReduce": "Affaiblir de",
+      "triggerReduceSub": "0 = comme le jeu le règle ; chaque cran affaiblit la résistance",
+      "speakerBoost": "Amplification du haut-parleur",
+      "speakerBoostSub": "L'amplificateur de la manette ; 0 = comme le jeu le règle",
+      "lockVolume": "Verrouiller le volume",
+      "lockVolumeSub": "Les jeux ne peuvent pas changer le volume ni la sourdine de la manette ; le PC, si",
+      "audioOutput": "Sortie audio",
+      "micInput": "Microphone utilisé",
+      "statusPin": "Broche d'état",
+      "statusPinGpio": "Broche",
+      "statusPinOff": "Désactivée",
+      "statusPinMode": "Signal",
+      "statusPinHigh": "Active tant que connectée",
+      "statusPinPulse": "Impulsion à la connexion",
+      "statusPinHint": "3,3 V sur la GPIO du Pico tant qu'une manette est connectée, ou une impulsion de 0,2 s quand une manette se connecte : pour une LED (avec une résistance) ou le connecteur du bouton d'alimentation d'un PC. Les broches utilisées par l'écran OLED, l'UART et la radio ne sont pas proposées.",
+      "needsFirmware": "Mettez à jour le firmware du dongle pour utiliser ces réglages.",
+      "asGame": "Selon le jeu",
+      "choice": {
+        "auto": "Auto",
+        "speaker": "Haut-parleur",
+        "headset": "Casque",
+        "off": "Désactivé",
+        "builtIn": "Intégré"
+      }
     },
     "lightbar": {
       "mode": "Mode",
@@ -896,7 +921,10 @@
       },
       "show": "Afficher",
       "showHint": "Choisis ce que montre la bibliothèque : les catégories de Steam (jeux, démos, bandes originales, logiciels, vidéos)",
-      "hiddenCount": "{{count}} masquées"
+      "hiddenCount": "{{count}} masquées",
+      "triggerReduce": "Effets de gâchette",
+      "speakerBoost": "Amplification du haut-parleur",
+      "lockVolume": "Verrouiller le volume"
     },
     "dongleConsole": {
       "title": "Console : {{device}}",
