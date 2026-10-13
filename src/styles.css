@@ -82,7 +82,7 @@
      literal. App settings -> Color vision sets --cv-* on <html>, which take over. */
   --status-good: var(--cv-good, #15803d);
   --status-warn: var(--cv-warn, #b45309);
-  --text-warn: var(--status-warn); /* warning-colored text; the controller theme sets a legible one */
+  --text-warn: var(--status-warn); /* warning-colored text; the accent layer (controllerAccent.ts) makes it legible on every surface */
   --status-bad: var(--cv-bad, #dc2626);
   --on-status: var(--cv-on-status, #fff); /* text on a status-colored badge or dot */
   /* Depth (shadow strength; App settings -> Appearance -> Depth sets --depth). */
@@ -149,7 +149,7 @@ html[data-theme="dark"] {
   color-scheme: dark;
   --status-good: var(--cv-good, #22c55e);
   --status-warn: var(--cv-warn, #f59e0b);
-  --text-warn: var(--status-warn); /* warning-colored text; the controller theme sets a legible one */
+  --text-warn: var(--status-warn); /* warning-colored text; the accent layer (controllerAccent.ts) makes it legible on every surface */
   --status-bad: var(--cv-bad, #ef4444);
   --on-status: var(--cv-on-status, #000);
 }
@@ -212,7 +212,7 @@ html[data-theme="dark"] {
     color-scheme: dark;
     --status-good: var(--cv-good, #22c55e);
     --status-warn: var(--cv-warn, #f59e0b);
-    --text-warn: var(--status-warn); /* warning-colored text; the controller theme sets a legible one */
+    --text-warn: var(--status-warn); /* warning-colored text; the accent layer (controllerAccent.ts) makes it legible on every surface */
     --status-bad: var(--cv-bad, #ef4444);
     --on-status: var(--cv-on-status, #000);
   }

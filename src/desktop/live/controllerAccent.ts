@@ -143,10 +143,19 @@ export function accentTokens(color: string, base: Record<string, Rgb | null | un
   const tinted = SURFACES.flatMap(([name, t]) => (base[name] ? [[name, mix(base[name], tint, t)] as const] : []));
   const grounds = tinted.filter(([name]) => name.startsWith("--bg-")).map(([, c]) => c);
   const on = grounds.length ? grounds : [panel];
-  // The theme's warning text, made legible on every tinted surface (pushed toward the theme's ink).
+  return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...warnText(base, on), ...accentVars(accent, panel, isDark, on) };
+}
+
+// The theme's warning text, made legible on every surface it sits on (pushed
+// toward the theme's ink). Also without a colorway accent: Color vision's
+// warning colors (e.g. #e69f00) are only ~2:1 on the Light theme's panels.
+export function warnText(base: Record<string, Rgb | null | undefined>, grounds?: Rgb[]): Record<string, string> {
   const warn = base[WARN_TEXT];
-  const warnText: Record<string, string> = warn ? { [WARN_TEXT]: `rgb(${legibleOnAll(warn, on, 4.5, isDark ? [255, 255, 255] : [0, 0, 0]).join(", ")})` } : {};
-  return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...warnText, ...accentVars(accent, panel, isDark, on) };
+  if (!warn) return {};
+  const panel = base["--bg-panel"] ?? [27, 35, 54];
+  const on = grounds ?? SURFACES.flatMap(([name]) => (name.startsWith("--bg-") && base[name] ? [base[name]] : []));
+  const ink: Rgb = wantsLightInk(panel) ? [255, 255, 255] : [0, 0, 0];
+  return { [WARN_TEXT]: `rgb(${legibleOnAll(warn, on.length ? on : [panel], 4.5, ink).join(", ")})` };
 }
 
 // The "Controller" theme's surfaces: cards and panels in the controller's
@@ -250,16 +259,10 @@ export function applyAccent(): void {
     changed();
     return;
   }
-  if (!controllerColor) {
-    if (old) {
-      old.remove();
-      changed();
-    }
-    return;
-  }
-  // Sets the accent tokens. Wins over the desktop palette's !important
-  // tokens by specificity.
-  const body = Object.entries(accentTokens(controllerColor, base))
+  // Sets the accent tokens (or, without a colorway accent, only the legible
+  // warning text). Wins over the desktop palette's !important tokens by
+  // specificity.
+  const body = Object.entries(controllerColor ? accentTokens(controllerColor, base) : warnText(base))
     .map(([k, v]) => `${k}: ${v} !important;`)
     .join(" ");
   const text = `html:root, html:root .dk { ${body} }`;
@@ -289,6 +292,12 @@ export function useControllerAccent(code: string | null, choice: (typeof ACCENTS
     // data-cv: Color vision swaps the warning amber the warning text is made from.
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme", "data-cv"] });
     mo.observe(document.head, { childList: true, subtree: true, characterData: true });
-    return () => mo.disconnect();
+    // System follows the OS's light/dark: the tokens change with no DOM change.
+    const scheme = matchMedia("(prefers-color-scheme: dark)");
+    scheme.addEventListener("change", applyAccent);
+    return () => {
+      mo.disconnect();
+      scheme.removeEventListener("change", applyAccent);
+    };
   }, []);
 }
