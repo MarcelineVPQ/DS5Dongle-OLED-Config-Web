@@ -1026,7 +1026,7 @@
       "problem": {
         "no-mic": "Le micro de la manette n'est pas disponible comme entrée audio sur ce PC.",
         "no-speaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
-        "failed": "Le test n'a pas pu se lancer. PipeWire est-il actif ?"
+        "failed": "Le test n'a pas pu se lancer. Vérifiez dans les réglages de confidentialité de votre système que les apps peuvent utiliser le micro, puis réessayez."
       }
     },
     "backdrop": {

@@ -46,3 +46,9 @@ mac:
       arch: [universal]
   icon: build/icon.png
   category: public.app-category.utilities
+  # The microphone test records from the controller's mic: macOS asks the
+  # user once, with this reason. (No entitlements file: the Mac build isn't
+  # signed with the hardened runtime; one would need
+  # com.apple.security.device.audio-input.)
+  extendInfo:
+    NSMicrophoneUsageDescription: The microphone test records a few seconds from your controller's microphone and plays them back on its speaker. Nothing is saved.

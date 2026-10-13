@@ -5,6 +5,7 @@ import { app, BrowserWindow, net, protocol, shell, session, type WebContents } f
 import { IPC, type DesktopSettings } from "../../src/desktop/api";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
+import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
@@ -12,7 +13,6 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { artRequestTarget } from "./games/artRequest";
 import { hasSchemeHandler, openForUser } from "./games/schemeHandler";
-import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
@@ -215,10 +215,6 @@ function start(): void {
     librarySetLayout: (u) => library.setLayout(u.id, u.name, u.table, u.extra),
     libraryDeleteLayout: (id) => library.deleteLayout(id),
     gameArtColor: (key) => withGames((g) => g.artColor(key)),
-    micTest: () => {
-      if (process.platform !== "linux") return Promise.resolve({ ok: false, peak: 0, problem: "failed" as const });
-      return micTest((level) => mainWindow?.webContents.send(IPC.micLevel, level));
-    },
     gameAction: async (u) => {
       const target = withGames((g) => g.gameAction(u.gameKey, u.action));
       if (target.url) {
@@ -326,22 +322,16 @@ function toggleWindow(): void {
   else showWindow();
 }
 
-// The page gets exactly one web permission, WebUSB, and only for the app's own
-// origin and the devices in devices.ts. Everything else is refused. The one
-// check besides it: "media" for audio, so the narrator can find the
-// controller's speaker by name (Chromium hides device names otherwise). It
-// grants no capture: getUserMedia goes through the request handler, which
-// refuses everything.
+// The page gets WebUSB, only for the app's own origin and the devices in
+// devices.ts, and audio capture (the microphone test), only for the app's
+// own page; permissions.ts has the rules. Everything else is refused.
 function lockDownSession(): void {
   const ses = session.defaultSession;
 
-  ses.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  ses.setPermissionCheckHandler(
-    (_contents, permission, requestingOrigin, details) =>
-      // ("speaker-selection" isn't in Electron's type list yet; it is checked at runtime.)
-      isAppOrigin(requestingOrigin) &&
-      (permission === "usb" || (permission as string) === "speaker-selection" || (permission === "media" && (details as { mediaType?: string }).mediaType === "audio")),
+  ses.setPermissionRequestHandler((contents, permission, callback, details) =>
+    callback(allowPermissionRequest(permission, details as { mediaTypes?: string[] }, isTrusted(contents, details.requestingUrl))),
   );
+  ses.setPermissionCheckHandler((_contents, permission, requestingOrigin, details) => allowPermissionCheck(permission, details as { mediaType?: string }, isAppOrigin(requestingOrigin)));
   ses.setDevicePermissionHandler((details) => details.deviceType === "usb" && isAppOrigin(details.origin) && isAllowedUsbDevice(details.device as { vendorId?: number; productId?: number }));
 
   // navigator.usb.requestDevice() has no picker in Electron: answer it with the

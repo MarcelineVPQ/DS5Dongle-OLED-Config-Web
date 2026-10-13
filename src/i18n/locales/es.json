@@ -1026,7 +1026,7 @@
       "problem": {
         "no-mic": "El micrófono del mando no está disponible como entrada de audio en este PC.",
         "no-speaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
-        "failed": "No se pudo hacer la prueba. ¿Está PipeWire en marcha?"
+        "failed": "No se pudo hacer la prueba. Comprueba en la configuración de privacidad de tu sistema que las apps pueden usar el micrófono y vuelve a intentarlo."
       }
     },
     "backdrop": {

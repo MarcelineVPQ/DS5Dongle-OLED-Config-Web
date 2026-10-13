@@ -12,7 +12,6 @@ import {
   type Mine,
   type ProfileSettings,
 } from "../../src/desktop/games/library";
-import type { MicTestResult } from "./audioTest";
 import type { DevChannelPreview } from "../../src/desktop/api";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
@@ -82,7 +81,6 @@ export interface IpcHandlers {
   librarySetLayout: (u: { id: string; name: string; table: number[]; extra?: number[] }) => LibraryFile;
   libraryDeleteLayout: (id: string) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
-  micTest: () => Promise<MicTestResult>;
   gameArtColor: (gameKey: string) => string | null;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
@@ -198,7 +196,6 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.librarySetLayout, SetLayoutSchema, h.librarySetLayout);
   invokeWith(IPC.libraryDeleteLayout, LayoutIdSchema, h.libraryDeleteLayout);
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
-  invoke(IPC.micTest, h.micTest);
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
   invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
 

@@ -18,6 +18,7 @@ import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
+import { runMicTest } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -850,38 +851,32 @@ export function SpeakerTest() {
 }
 
 // Records 3 s from the controller's mic and plays it back on its speaker
-// (main process, Linux), with the level while recording. The recording uses
-// PipeWire's tools (electron/main/audioTest.ts), so the card is Linux-only:
-// on Windows and macOS it isn't shown (like Set up USB access), rather than a
-// button that can only fail.
+// (micTest.ts), with the level while recording. Closing the panel or hiding
+// the window stops the test (stream, level loop and playback).
 export function MicTest() {
-  return window.desktop?.platform === "linux" ? <MicTestCard /> : null;
-}
-
-function MicTestCard() {
   const { t } = useTranslation();
-  const desktop = window.desktop!;
+  const shown = useWindowShown();
   const [phase, setPhase] = useState<"idle" | "recording" | "playing" | "done" | "quiet" | "error">("idle");
   const [problem, setProblem] = useState<string | null>(null);
   const [level, setLevel] = useState(0);
-  useEffect(() => desktop.onMicLevel(setLevel), [desktop]);
+  const test = useRef<AbortController | null>(null);
+  useEffect(() => () => test.current?.abort(), []);
+  useEffect(() => {
+    if (!shown) test.current?.abort();
+  }, [shown]);
   const run = async () => {
+    test.current?.abort();
+    const current = new AbortController();
+    test.current = current;
     setProblem(null);
+    setLevel(0);
     setPhase("recording");
-    // The main process reports levels while recording, then plays it back.
-    const playingSoon = setTimeout(() => setPhase((p) => (p === "recording" ? "playing" : p)), 3100);
-    try {
-      const r = await desktop.micTest();
-      clearTimeout(playingSoon);
-      if (!r.ok) {
-        setProblem(r.problem ?? "failed");
-        setPhase("error");
-      } else setPhase(r.peak < 0.02 ? "quiet" : "done");
-    } catch {
-      clearTimeout(playingSoon);
-      setProblem("failed");
+    const r = await runMicTest({ signal: current.signal, onLevel: setLevel, onPlayback: () => setPhase("playing") });
+    if (current.signal.aborted) return setPhase("idle");
+    if (!r.ok) {
+      setProblem(r.problem ?? "failed");
       setPhase("error");
-    }
+    } else setPhase(r.peak < 0.02 ? "quiet" : "done");
   };
   return (
     <section className="dk-card">

@@ -98,7 +98,7 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 - **Audio output:** where the PC's sound plays: **Auto** (the headset when one is plugged into the controller, else the speaker), **Speaker**, **Headset** or **Off**.
 - Speaker boost and Lock volume can be set per game in its profile; Audio output is your board's setting for every game. All three need the newest firmware on your board.
 - **Speaker test:** **Play test sound** plays a folk tune, Korobeiniki, twice through (about 77 seconds) on the controller's speaker. The button counts down and a line under it fills; it keeps playing while you go to other pages. **Stop**, or a second press of the button, ends it.
-- **Microphone:** turn the controller's built-in microphone on or off (**Built-in microphone**), and choose which one is used (**Microphone used**: **Auto**, which takes a headset's mic when one is plugged in, **Built-in** or **Headset**; the Built-in microphone switch stays the one that turns it off). **Test microphone** records three seconds and plays them back on the controller (Linux only; the test isn't shown on Windows and macOS).
+- **Microphone:** turn the controller's built-in microphone on or off (**Built-in microphone**), and choose which one is used (**Microphone used**: **Auto**, which takes a headset's mic when one is plugged in, **Built-in** or **Headset**; the Built-in microphone switch stays the one that turns it off). **Test microphone** records three seconds and plays them back on the controller.
 
 ### Button assignments
 
