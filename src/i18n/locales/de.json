@@ -364,7 +364,7 @@
         },
         "platform": {
           "linux": "Nur Linux",
-          "windows": "Windows"
+          "windows": "Nur Windows"
         }
       }
     },

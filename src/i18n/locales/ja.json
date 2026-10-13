@@ -364,7 +364,7 @@
         },
         "platform": {
           "linux": "Linux のみ",
-          "windows": "Windows"
+          "windows": "Windows のみ"
         }
       }
     },

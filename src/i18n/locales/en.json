@@ -363,7 +363,7 @@
         },
         "platform": {
           "linux": "Linux only",
-          "windows": "Windows"
+          "windows": "Windows only"
         }
       }
     },

@@ -364,7 +364,7 @@
         },
         "platform": {
           "linux": "仅 Linux",
-          "windows": "Windows"
+          "windows": "仅 Windows"
         }
       }
     },
