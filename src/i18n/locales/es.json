@@ -88,7 +88,8 @@
     },
     "status": {
       "connected": "{{device}} conectado",
-      "waiting": "Esperando el dongle…"
+      "waiting": "Esperando el {{device}}…",
+      "waitingFirst": "Esperando la conexión…"
     },
     "empty": {
       "title": "Conecta el DS5 Dongle"
@@ -668,7 +669,7 @@
       },
       "top": {
         "title": "El dongle, tus juegos y la ayuda",
-        "body": "Dongle: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
+        "body": "{{device}}: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
       },
       "finish": {
         "title": "Todo listo",
@@ -1075,7 +1076,7 @@
       "simulated": "Dongle simulado (sin hardware)",
       "simulatedHint": "La app habla con un dongle simulado en vez de por USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página.",
       "simCore1": "Core1 simulado",
-      "simCore1Hint": "Hace que el Core1 del dongle simulado se detenga en un paso de arranque, para ver el aviso de la página Dongle. Recarga la página.",
+      "simCore1Hint": "Hace que el Core1 del dongle simulado se detenga en un paso de arranque, para ver el aviso de la página del Pico. Recarga la página.",
       "simCore1Runs": "Funciona con normalidad",
       "simCore1Stage": "Se detiene en el paso {{stage}}: {{step}}"
     },
@@ -1358,7 +1359,7 @@
       "aGame": "Un juego",
       "profileLabel": "Distribución de botones",
       "normal": "Botones normales",
-      "needsFirmware": "Necesita el firmware más reciente del dongle (Dongle → Firmware).",
+      "needsFirmware": "Necesita el firmware más reciente del dongle (página del Pico → Actualizar).",
       "noneForGame": "Guarda distribuciones en la página de botones: elige un botón del mando.",
       "allTitle": "Botones",
       "allHeading": "Todos los botones",

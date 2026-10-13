@@ -87,7 +87,8 @@
     },
     "status": {
       "connected": "{{device}} connected",
-      "waiting": "Waiting for the dongle…"
+      "waiting": "Waiting for the {{device}}…",
+      "waitingFirst": "Waiting to connect…"
     },
     "empty": {
       "title": "Plug in the DS5 Dongle"
@@ -667,7 +668,7 @@
       },
       "top": {
         "title": "The dongle, your games, and help",
-        "body": "Dongle: firmware updates, the OLED, power and USB. Games: get Steam and other launchers ready for triggers and haptic feedback (Linux). About: what's new and the guide. ⚙: the app's own settings."
+        "body": "{{device}}: firmware updates, the OLED, power and USB. Games: get Steam and other launchers ready for triggers and haptic feedback (Linux). About: what's new and the guide. ⚙: the app's own settings."
       },
       "finish": {
         "title": "You're all set",
@@ -1074,7 +1075,7 @@
       "simulated": "Simulated dongle (no hardware)",
       "simulatedHint": "The app talks to a simulated dongle instead of USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
       "simCore1": "Simulated core1",
-      "simCore1Hint": "Make the simulated dongle's core1 stop at a start-up step, to see the Dongle page's warning. Restarts the page.",
+      "simCore1Hint": "Make the simulated dongle's core1 stop at a start-up step, to see the Pico page's warning. Restarts the page.",
       "simCore1Runs": "Runs normally",
       "simCore1Stage": "Stops at step {{stage}}: {{step}}"
     },
@@ -1357,7 +1358,7 @@
       "aGame": "A game",
       "profileLabel": "Button layout",
       "normal": "Normal buttons",
-      "needsFirmware": "Needs the newest dongle firmware (Dongle → Firmware).",
+      "needsFirmware": "Needs the newest dongle firmware (Pico page → Update).",
       "noneForGame": "Save layouts on the Buttons page: pick a button on the controller.",
       "allTitle": "Buttons",
       "allHeading": "All buttons",

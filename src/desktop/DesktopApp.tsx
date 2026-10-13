@@ -22,7 +22,7 @@ import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage, { type AboutTab } from "./pages/AboutPage";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
-import { hardwareName } from "./hardwareName";
+import { hardwareName, rememberBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
@@ -52,6 +52,7 @@ export default function DesktopApp() {
   useEffect(() => {
     if (bridge.client) writePref(HAD_DONGLE_KEY, "1");
   }, [bridge.client]);
+  useEffect(() => rememberBoard(bridge.identity), [bridge.identity]);
   const realAppUpdate = useAppUpdate();
   const realFw = useFirmwareUpdate(bridge, realAppUpdate);
   // Developer preview: update banners and buttons without a real update.

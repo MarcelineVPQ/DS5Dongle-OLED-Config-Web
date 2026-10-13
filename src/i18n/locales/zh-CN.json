@@ -88,7 +88,8 @@
     },
     "status": {
       "connected": "{{device}} 已连接",
-      "waiting": "等待接收器…"
+      "waiting": "等待 {{device}}…",
+      "waitingFirst": "等待连接…"
     },
     "empty": {
       "title": "请插入 DS5 Dongle"
@@ -665,7 +666,7 @@
       },
       "top": {
         "title": "接收器、游戏和帮助",
-        "body": "接收器：固件更新、OLED、电源和 USB。游戏：为扳机和触觉反馈配置 Steam 等启动器（Linux）。关于：更新内容和指南。⚙：应用自身的设置。"
+        "body": "{{device}}：固件更新、OLED、电源和 USB。游戏：为扳机和触觉反馈配置 Steam 等启动器（Linux）。关于：更新内容和指南。⚙：应用自身的设置。"
       },
       "finish": {
         "title": "一切就绪",
@@ -1069,7 +1070,7 @@
       "simulated": "模拟接收器（无需硬件）",
       "simulatedHint": "应用改为与模拟接收器通信而非 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",
-      "simCore1Hint": "让模拟接收器的 Core1 停在某个启动步骤，以查看接收器页面的警告。会重新加载页面。",
+      "simCore1Hint": "让模拟接收器的 Core1 停在某个启动步骤，以查看Pico 页面的警告。会重新加载页面。",
       "simCore1Runs": "正常运行",
       "simCore1Stage": "停在步骤 {{stage}}：{{step}}"
     },
@@ -1352,7 +1353,7 @@
       "aGame": "某个游戏",
       "profileLabel": "按键布局",
       "normal": "常用按键",
-      "needsFirmware": "需要最新的接收器固件（接收器 → 固件）。",
+      "needsFirmware": "需要最新的接收器固件（Pico 页面 → 更新）。",
       "noneForGame": "在按键页面保存布局：在控制器上选择一个按键。",
       "allTitle": "按键",
       "allHeading": "全部按键",

@@ -10,6 +10,7 @@ import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
 import { GLASS_KEY } from "./glass/glassPref";
 import { useFlagPref } from "./storage";
+import { lastBoardName } from "./hardwareName";
 import { useTranslation } from "react-i18next";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 
@@ -75,11 +76,16 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
     </button>
   );
 
+  // Before the device identifies itself: the last board that connected, or a
+  // neutral line if none has yet.
+  const lastBoard = connected ? null : lastBoardName();
   const status = connected
     ? `${t("desktop.status.connected", { device })}${firmware ? ` · ${firmware}` : ""}`
     : connecting
       ? t("statusText.connecting")
-      : t("desktop.status.waiting", "Waiting for the dongle…");
+      : lastBoard
+        ? t("desktop.status.waiting", { device: lastBoard })
+        : t("desktop.status.waitingFirst");
   const pinLabel = pinned ? t("desktop.rail.collapse") : t("desktop.rail.pin");
 
   return (
