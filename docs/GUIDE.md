@@ -32,7 +32,7 @@ Step by step, from the parts on your desk to every setting in the app. Each sect
 
 ### Which USB port
 
-**Use a USB 2.0 port** (usually the black ones, not blue). USB 3.0 ports and USB 3.0 extension cables give off radio noise right in the 2.4 GHz band Bluetooth uses: the controller then gets stuck on an **amber light bar** and never connects. If you only have USB 3.0 ports nearby, use a short **USB 2.0** extension cable or a powered **USB 2.0** hub to move your board a little away from them. Your board takes its power from the USB port; it needs nothing else.
+**Use a USB 2.0 port** (usually the black ones, not blue): best a **USB 2.0 port on the back of the PC** (on the motherboard), or a powered **USB 2.0** hub. Avoid the blue USB 3.x ports: they and USB 3.0 extension cables give off radio noise right in the 2.4 GHz band Bluetooth uses, and the controller then gets stuck on an **amber light bar** and never connects. If you only have USB 3.0 ports nearby, use a short **USB 2.0** extension cable or a powered **USB 2.0** hub to move your board a little away from them. Your board takes its power from the USB port; it needs nothing else.
 
 ## 2. First start: firmware and pairing
 
@@ -198,6 +198,7 @@ Open with the ⚙ in the rail.
 | The light bar stays **amber** and never connects | Move your board to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
 | **Windows:** "The Pico 2 W is plugged in, but Windows hasn't set up its driver", or it never connects | Press **Repair USB driver** on that screen, allow the admin prompt, then unplug your board and plug it back in. It happens on PCs where a real DualSense was plugged in by USB before (it uses the same USB IDs); do it again if that happens again. |
 | Nothing shows up when your board is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
+| The controller connects, then drops right away | Charge it: a controller that disconnects straight after connecting usually has a low battery. |
 | "Not connected" | Press the **PS button** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold the **Create button** and the **PS button**. |
 | Settings reset after unplugging | They were applied but not saved: press **Save to the Pico 2 W** (your board's name). |
 | The drawing doesn't move, or a page says "update the firmware" | Update your board's firmware from your board's page. |
