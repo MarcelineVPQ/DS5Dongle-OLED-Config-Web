@@ -88,8 +88,11 @@ async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<Imag
 // sRGB-encoded to linear light (the canvas is linear in extended mode).
 const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
-// `hero` holds the drawing (.live-ctl), which the glow sits over.
-export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | null>; nits: number }) {
+// `hero` holds the drawing (.live-ctl), which the glow sits over. `model` is
+// the drawing shown (LiveController's `model`): each model mounts its own
+// .live-ctl with its own art, so a switch starts over on the new element and
+// the mask comes from that drawing's own shapes (`.led` strips, `.pled` lights).
+export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLElement | null>; model: string | null; nits: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const peak = useRef(nits);
   // Asks for one redraw (set once the GPU is ready).
@@ -183,6 +186,9 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       });
       ro.observe(el);
       if (el.parentElement) ro.observe(el.parentElement);
+      // The hero's padding (room for the model title, sized from the
+      // drawing) moves the drawing down without resizing it: its border box.
+      if (hero.current) ro.observe(hero.current, { box: "border-box" });
 
       // Follow the live lightbar color (set on the drawing's <svg> as
       // --ctl-led / --ctl-led-pct, LiveController): redrawn only when it (or
@@ -210,23 +216,16 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
         pass.end();
         device.queue.submit([enc.finish()]);
       };
-      // The <svg>'s style, and a new <svg> (the other model's drawing): a new
-      // mask for it and its style watched instead.
+      // The <svg>'s style (the live color), and the player lights the PC set
+      // (their "on" class): a new mask for those. The <svg> itself never
+      // changes here: another model mounts a new .live-ctl (see `model`).
       styleWatch = new MutationObserver(schedule);
-      const watchSvg = () => {
-        styleWatch?.disconnect();
-        const svg = el.querySelector("svg");
-        if (svg) styleWatch?.observe(svg, { attributes: true, attributeFilter: ["style"] });
-      };
-      watchSvg();
-      // A new <svg>, or the player lights the PC set (their "on" class): a new mask.
+      const svg = el.querySelector("svg");
+      if (svg) styleWatch.observe(svg, { attributes: true, attributeFilter: ["style"] });
+      // class changes elsewhere (button presses) don't touch the mask
       svgWatch = new MutationObserver((records) => {
-        const childList = records.some((m) => m.type === "childList");
-        if (childList) watchSvg();
-        // class changes elsewhere (button presses) don't touch the mask
-        if (childList || records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) void rebuild();
+        if (records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) void rebuild();
       });
-      svgWatch.observe(el, { childList: true });
       svgWatch.observe(el, { subtree: true, attributes: true, attributeFilter: ["class"] });
       redraw.current = schedule;
       draw();
@@ -241,6 +240,6 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       ro?.disconnect();
       release();
     };
-  }, [hero]);
+  }, [hero, model]);
   return <canvas ref={canvas} className="hdr-glow" aria-hidden="true" />;
 }

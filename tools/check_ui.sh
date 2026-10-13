@@ -86,5 +86,7 @@ sleep 8
 
 status=0
 node tools/check_layout.mjs --port "$PORT" "$@" || status=$?
+# HDR lighting's mask follows each model's own drawing (stubbed WebGPU).
+node tools/check_hdr_mask.mjs --port "$PORT" || status=$?
 [ "${DS5_CHECK_KEEP:-}" = 1 ] || stop
 exit "$status"

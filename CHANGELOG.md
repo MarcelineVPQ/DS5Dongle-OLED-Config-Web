@@ -14,6 +14,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **About → Coming soon catches up:** the Pico 2 W at its rated clock, the DualSense Edge fixes, lighter haptic feedback processing and Sony's names are new in "In the next build", the controller firmware check moves there too (it shipped in dev.6), and "Profiles hold every setting" is no longer marked Linux-only (game profiles work on Windows too).
 - **About → Guide is up to date:** it now covers Controller info (and Sony's firmware check), the Mic muted and Headset in labels, the DualSense Edge's Fn buttons and back buttons in Button assignments, and game profiles that hold every setting and are edited in the controller view.
 
+### Fixed
+
+- **HDR lighting follows the drawing of the controller you have:** on a DualSense Edge the HDR glow was drawn in the DualSense's light strips and player lights instead of the Edge's, and after switching back to a DualSense it stayed where the other drawing had left it. Each model's drawing now gets its own glow, built from that drawing's light bar and player lights and placed over it, every time the model changes; it also moves along when the model title above the drawing changes size. The UI check (`tools/check_ui.sh`) now switches DualSense → Edge → DualSense and checks that the glow lines up with each drawing.
+
 ## [0.9.5-dev.8] - 2026-10-13
 
 ### Changed
