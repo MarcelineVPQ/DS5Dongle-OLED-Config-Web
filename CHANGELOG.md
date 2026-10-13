@@ -22,6 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Going back to an older version keeps your game library:** the Games library now lives in its own new file (`game-library-2.json`), filled once from the old one on the first start. The old file is left exactly as it was, so "Back to stable" or an older build finds your library (as it was before this update) instead of setting it aside and starting empty.
 - **A single click no longer flashes the dongle:** "Update to …" on the Pico page now asks once more ("Install … now" / Cancel) before the dongle restarts and its firmware is replaced.
 - **The Dongle page now gets core1's health:** the "Speaker off: not enough memory" warning (issue #15) never appeared, because the dongle's reply carrying it was longer than a reply can be and lost its end. With dongle firmware from this release the warning shows when it applies, with the real free memory. Older firmware works as before. In dev builds the simulated dongle no longer reports "Core1 stopped" all the time.
 - **A failed mic decoder now shows on the Dongle page:** when the dongle couldn't set up the controller mic's decoder at start, the Audio card says "Mic off" (with the free memory), like the existing "Speaker off" warning. Needs dongle firmware from this release.

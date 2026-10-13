@@ -1,40 +1,67 @@
-// userData/game-library.json: written atomically, read leniently (a bad
+// userData/game-library-2.json: written atomically, read leniently (a bad
 // file never stops the app; it starts empty and keeps the bad file aside).
-import { readFileSync, renameSync } from "node:fs";
+//
+// Why a second file: apps before format-2 profiles (0.9.4, 0.9.5-dev.1 to
+// dev.5) read userData/game-library.json with a strict schema, and a library
+// holding format-2 profiles would make them set the whole file aside and start
+// empty. So this app keeps its library in game-library-2.json and never writes,
+// renames or removes game-library.json: on the first start without
+// game-library-2.json it copies the old library in once (old profiles load as
+// they are, profileValues.ts upgrades them), and from then on only the new file
+// is used. Going back to an older app finds its old library, as it was when
+// this app first started (stale, but intact).
+import { existsSync, readFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { EMPTY_LIBRARY, LibraryFileSchema, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../../../src/desktop/games/library";
 import { writeFileAtomic } from "./backup";
 
+// The library this app reads and writes.
+export const LIBRARY_FILE = "game-library-2.json";
+// The older apps' library: read once to migrate, never written.
+export const OLD_LIBRARY_FILE = "game-library.json";
+
+// The file parsed and validated, or null when it can't be read or is bad.
+function readLibrary(path: string): LibraryFile | null {
+  try {
+    const parsed = LibraryFileSchema.safeParse(JSON.parse(readFileSync(path, "utf8")));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export class LibraryStore {
   private data: LibraryFile;
   private readonly path: string;
+  private readonly oldPath: string;
 
   constructor(dir: string) {
-    this.path = join(dir, "game-library.json");
+    this.path = join(dir, LIBRARY_FILE);
+    this.oldPath = join(dir, OLD_LIBRARY_FILE);
     this.data = this.load();
   }
 
   private load(): LibraryFile {
-    let raw: string;
-    try {
-      raw = readFileSync(this.path, "utf8");
-    } catch {
+    if (existsSync(this.path)) {
+      const data = readLibrary(this.path);
+      if (data) return data;
+      try {
+        renameSync(this.path, `${this.path}.bad-${Date.now()}`);
+      } catch {
+        // can't move it; it gets overwritten on the next save
+      }
       return structuredClone(EMPTY_LIBRARY);
     }
-    const parsed = (() => {
-      try {
-        return LibraryFileSchema.safeParse(JSON.parse(raw));
-      } catch {
-        return null;
-      }
-    })();
-    if (parsed?.success) return parsed.data;
+    // First start of this app: bring the older apps' library over (a bad or
+    // missing old file is left where it is, and the library starts empty).
+    const old = existsSync(this.oldPath) ? readLibrary(this.oldPath) : null;
+    if (!old) return structuredClone(EMPTY_LIBRARY);
     try {
-      renameSync(this.path, `${this.path}.bad-${Date.now()}`);
+      writeFileAtomic(this.path, JSON.stringify(old, null, 2) + "\n");
     } catch {
-      // can't move it; it gets overwritten on the next save
+      // can't write it now; the next save tries again
     }
-    return structuredClone(EMPTY_LIBRARY);
+    return old;
   }
 
   private save(): LibraryFile {

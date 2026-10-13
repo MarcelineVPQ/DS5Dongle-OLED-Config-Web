@@ -1,7 +1,8 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { detectRunning, readProcs, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
 import { LibraryStore } from "../../electron/main/games/libraryStore";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
@@ -212,9 +213,174 @@ describe("library store", () => {
 
   it("sets a corrupt file aside and starts empty instead of failing", () => {
     dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
-    writeFileSync(join(dir, "game-library.json"), "{ not json");
+    writeFileSync(join(dir, "game-library-2.json"), "{ not json");
     expect(new LibraryStore(dir).get().games).toEqual({});
-    expect(readdirSync(dir).some((f) => f.startsWith("game-library.json.bad-"))).toBe(true);
+    expect(readdirSync(dir).some((f) => f.startsWith("game-library-2.json.bad-"))).toBe(true);
+  });
+});
+
+// The library as 0.9.4 reads it (a copy of its strict schema): older apps
+// (0.9.4, 0.9.5-dev.1 to dev.5, reachable through "Back to stable") must keep
+// finding their game-library.json valid and unchanged after this app ran.
+const OldLayoutId = z.string().regex(/^[a-z0-9-]{1,40}$/);
+const OldGameKey = z.string().regex(/^(steam|heroic|lutris|gog|epic)-[0-9a-f]{8}:(steam|epic|gog|amazon|sideload|lutris):[\w.-]{1,200}$/);
+const OldSettings = z.strictObject({
+  hapticsGain: z.number().min(1).max(6),
+  hapticsGainRight: z.number().min(1).max(6).optional(),
+  autoHapticsEnable: z.number().int().min(0).max(3),
+  autoHapticsGain: z.number().int().min(0).max(200),
+  autoHapticsLowpass: z.number().int().min(0).max(3),
+  speakerVolume: z.number().min(-100).max(12),
+  lightbarMode: z.number().int().min(0).max(8),
+  lbFavR: z.array(z.number().int().min(0).max(255)).length(4),
+  lbFavG: z.array(z.number().int().min(0).max(255)).length(4),
+  lbFavB: z.array(z.number().int().min(0).max(255)).length(4),
+  btMicEnable: z.boolean(),
+  buttonLayout: OldLayoutId.optional(),
+});
+const OldLibrarySchema = z.strictObject({
+  version: z.literal(1),
+  games: z.record(
+    OldGameKey,
+    z.strictObject({
+      title: z.string().max(300),
+      profile: z.strictObject({ settings: OldSettings, updated: z.number() }).optional(),
+      mine: z
+        .strictObject({
+          rating: z.number().int().min(1).max(5).optional(),
+          tags: z.array(z.string()).optional(),
+          ratedOn: z.strictObject({ app: z.string(), build: z.string().optional(), gameUpdated: z.number().optional(), at: z.number() }).optional(),
+          notes: z.string().max(5000).optional(),
+        })
+        .optional(),
+    }),
+  ),
+  restore: z.strictObject({ gameKey: OldGameKey, settings: OldSettings }).optional(),
+  layouts: z.record(OldLayoutId, z.strictObject({ name: z.string().trim().min(1).max(40), table: z.array(z.number()).length(16), updated: z.number() })).optional(),
+});
+
+describe("library file (game-library-2.json) and the older apps' file", () => {
+  let dir: string;
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const key = "steam-1a2b3c4d:steam:1091500";
+  const other = "steam-1a2b3c4d:steam:4078430";
+  const oldSettings = {
+    hapticsGain: 2,
+    autoHapticsEnable: 1,
+    autoHapticsGain: 100,
+    autoHapticsLowpass: 0,
+    speakerVolume: 0,
+    lightbarMode: 1,
+    lbFavR: [255, 0, 0, 0],
+    lbFavG: [0, 255, 0, 0],
+    lbFavB: [0, 0, 255, 0],
+    btMicEnable: false,
+  };
+  const oldFile = JSON.stringify(
+    {
+      version: 1,
+      games: { [key]: { title: "Cyberpunk 2077", profile: { settings: oldSettings, updated: 1 }, mine: { rating: 4, notes: "old" } } },
+      layouts: { "l-racing": { name: "Racing", table: Array.from({ length: 16 }, (_, i) => i), updated: 1 } },
+    },
+    null,
+    2,
+  );
+  const files = () => readdirSync(dir).sort();
+  const read = (f: string) => readFileSync(join(dir, f), "utf8");
+
+  it("fresh install: starts empty and writes only the new file", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    const s = new LibraryStore(dir);
+    expect(s.get()).toEqual(EMPTY_LIBRARY);
+    expect(files()).toEqual([]);
+    s.setProfile(key, "Cyberpunk 2077", { format: 2, hapticsGain: 3 });
+    expect(files()).toEqual(["game-library-2.json"]);
+    expect(new LibraryStore(dir).get().games[key].profile?.settings).toEqual({ format: 2, hapticsGain: 3 });
+  });
+
+  it("migrates the old file once and leaves it byte for byte unchanged", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    writeFileSync(join(dir, "game-library.json"), oldFile);
+    const s = new LibraryStore(dir);
+    expect(s.get().games[key].profile?.settings).toEqual(oldSettings);
+    expect(s.get().games[key].mine?.notes).toBe("old");
+    expect(s.get().layouts?.["l-racing"]?.name).toBe("Racing");
+    // Written at once, so the next start reads the new file even without changes.
+    expect(files()).toEqual(["game-library-2.json", "game-library.json"]);
+    expect(JSON.parse(read("game-library-2.json"))).toEqual(JSON.parse(oldFile));
+    expect(read("game-library.json")).toBe(oldFile);
+  });
+
+  it("uses the new file when both exist and never touches the old one", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    writeFileSync(join(dir, "game-library.json"), oldFile);
+    new LibraryStore(dir).setMine(other, "Galactic Racer", { rating: 5 });
+    const s = new LibraryStore(dir);
+    expect(s.get().games[other].mine?.rating).toBe(5);
+    s.deleteProfile(key);
+    s.deleteLayout("l-racing");
+    // Deleted in the new file, still there in the old: the new one wins.
+    const t = new LibraryStore(dir).get();
+    expect(t.games[key].profile).toBeUndefined();
+    expect(t.layouts?.["l-racing"]).toBeUndefined();
+    expect(read("game-library.json")).toBe(oldFile);
+  });
+
+  it("sets a corrupt new file aside and starts empty, leaving the old file alone", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    writeFileSync(join(dir, "game-library.json"), oldFile);
+    writeFileSync(join(dir, "game-library-2.json"), "{ not json");
+    const s = new LibraryStore(dir);
+    expect(s.get().games).toEqual({});
+    expect(files().some((f) => f.startsWith("game-library-2.json.bad-"))).toBe(true);
+    s.setMine(other, "Galactic Racer", { rating: 3 });
+    expect(read("game-library.json")).toBe(oldFile);
+    expect(files().filter((f) => f.startsWith("game-library.json"))).toEqual(["game-library.json"]);
+  });
+
+  it("leaves a bad old file where it is and starts empty", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    writeFileSync(join(dir, "game-library.json"), "{ not json");
+    expect(new LibraryStore(dir).get()).toEqual(EMPTY_LIBRARY);
+    expect(files()).toEqual(["game-library.json"]);
+    expect(read("game-library.json")).toBe("{ not json");
+  });
+
+  it("an older app still finds a valid library after this app saved format-2 profiles", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    writeFileSync(join(dir, "game-library.json"), oldFile);
+    expect(OldLibrarySchema.safeParse(JSON.parse(oldFile)).success).toBe(true);
+    const s = new LibraryStore(dir);
+    s.setProfile(key, "Cyberpunk 2077", {
+      format: 2,
+      hapticsGain: 4,
+      stickCurves: {
+        left: {
+          type: "precise",
+          points: [
+            [0, 0],
+            [64, 32],
+            [128, 96],
+            [255, 255],
+          ],
+        },
+      },
+    });
+    s.setProfile(other, "Galactic Racer", { format: 2, speakerVolume: -10 });
+    s.setLayout(
+      "l-south",
+      "Southpaw",
+      Array.from({ length: 16 }, (_, i) => i),
+      [0xff, 0xff, 0xfe, 0xfe],
+    );
+    s.setRestore({ gameKey: other, settings: { format: 2, speakerVolume: 0 } });
+    // The new file holds what the older app would reject...
+    expect(OldLibrarySchema.safeParse(JSON.parse(read("game-library-2.json"))).success).toBe(false);
+    // ...and the older app's own file is untouched and still valid to it.
+    expect(read("game-library.json")).toBe(oldFile);
+    const old = OldLibrarySchema.safeParse(JSON.parse(read("game-library.json")));
+    expect(old.success).toBe(true);
+    expect(old.data?.games[key].profile?.settings.hapticsGain).toBe(2);
   });
 });
 

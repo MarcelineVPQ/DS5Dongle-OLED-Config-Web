@@ -1,5 +1,6 @@
 // The Games library's own data (per game, kept on this PC by the main process
-// in userData/game-library.json): the controller profile, and the player's
+// in userData/game-library-2.json; libraryStore.ts says why not the older
+// apps' game-library.json): the controller profile, and the player's
 // own rating, review, DualSense feature checks and notes (shared later, by
 // the player's choice, through the community repo).
 import { z } from "zod";
