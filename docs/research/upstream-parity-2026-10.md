@@ -1,5 +1,7 @@
 ## Upstream parity audit: issues, Pico 2 W safety and Edge gaps (read-only)
 
+**Status (2026-10-13):** the XIP setup and 1.10 V at 150 MHz shipped in dev.8; Edge detection from report 0x20 (2efc855), the DS5-mode firmware report (ae83907) and the haptics half of 4929996 are in for dev.9. Still open, each a docs/BACKLOG.md row: PS Accessories profiles (8a2f576), SDK 2.3 / TinyUSB 0.21, the idle Bluetooth scan, the speaker buffer minimum and the guide's USB hub / low battery notes. The tables below are as audited.
+
 **Summary**
 1. **Pico safety:** we already have upstream's three hardware-safety fixes: SMPS PWM mode against coil whine (23a55da), the config moved off the RP2350-E10 sector (dbf2a71), and the boot `tud_disconnect` delay (4f9f485). The one we lack is the embedded flash (XIP) setup (99da904 + e5d99f0), which is already Stage A.
 2. **Voltage:** 1.20 V is out of spec. The RP2350 datasheet gives DVDD a 1.16 V operating maximum and a 1.21 V absolute maximum, and the regulator can be ±3% off. So we sit above the operating limit on every board, and on some boards above the absolute maximum. At 150 MHz we would run on the default 1.10 V, which is within spec.

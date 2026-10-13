@@ -1,5 +1,7 @@
 # Clock and upstream: why the OLED Edition runs at 320 MHz, and how to follow awalol
 
+**Status (2026-10-13):** done; the plan's end state (Stage E) shipped in 0.9.5-dev.8: the Pico 2 W runs at stock 150 MHz and 1.10 V with the embedded XIP flash setup, core0's hot path runs from RAM, and CI builds with ARM 14.2.Rel1 (`-DDS5_CLOCK_KHZ=320000` stays as a one-release fallback). Kept as the history of that decision.
+
 ## Summary
 1. **We never chose 320 MHz / div 5. We inherited it.** awalol set it in 372e44a (2026-04-27, "optimize overclocking") and 5e7da17 (2026-05-13), and we forked at 0ed05d3 (2026-05-17). Upstream fixed flash timing (e5d99f0, 05-24, on `dev`; it only took effect with 99da904 on 06-08) and moved to 150 MHz (a023371, 06-12) after we had stopped syncing.
 2. **The "stock clock breaks CYW43, tested" note has no surviving evidence.** It was written during the 05-17 rebase (4b6a72b) and the README line came the next day (bd2f33b). Any such test kept PIO div 5 from CMake, which gives a 30 MHz PIO at 150 MHz. Upstream and five forks have shipped 150 MHz with div 2 on the Pico 2 W since June.
