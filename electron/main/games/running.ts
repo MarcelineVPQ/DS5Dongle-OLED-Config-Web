@@ -36,7 +36,8 @@ const WINE_COMMS = /^(wine|wine64|wine-preloader|wine64-preloader|wineserver|pro
 
 // Launchers (and wrappers) whose child processes can be a game: a process
 // is only looked at closely (environment, command line, working folder) when
-// it or one of its parents is one of these or a Wine/Proton process.
+// it or one of its parents is one of these or a Wine/Proton process (or it's
+// an orphan with a launch variable, below).
 const LAUNCHER_COMMS = /^(steam|reaper|heroic|legendary|gogdl|nile|lutris|umu-run|gamescope|gamemoderun|bottles)$/;
 // A Wine process, also once it's left its launcher (reparented to init): its
 // program is Wine's loader whatever its name shows.
@@ -125,8 +126,20 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
       return false;
     }
   };
+  // A native game whose launcher quit (Heroic) is reparented to init or the
+  // user's systemd: such an orphan is kept when its environment carries a
+  // launch variable. Only orphans' environments are read, to keep this cheap.
+  const orphan = (p: { ppid: number }) => p.ppid <= 1 || !byPid.has(p.ppid) || byPid.get(p.ppid)!.name === "systemd";
+  const launched = (pid: number) => {
+    try {
+      const env = `\0${readFileSync(`${root}/${pid}/environ`, "utf8")}`;
+      return ENV_KEYS.some((k) => env.includes(`\0${k}=`));
+    } catch {
+      return false;
+    }
+  };
   for (const p of own) {
-    if (!underLauncher(p.pid) && !wineExe(p.pid)) continue;
+    if (!underLauncher(p.pid) && !wineExe(p.pid) && !(orphan(p) && launched(p.pid))) continue;
     try {
       out.push(readFull(`${root}/${p.pid}`, p.pid));
     } catch {

@@ -32,10 +32,10 @@ Line numbers below are the corrected ones from verification.
 
 | # | Title | Sev | Where | Smallest fix |
 |---|---|---|---|---|
-| F8 | Running-game watcher loses a native Heroic game once Heroic quits, so the profile is undone mid-game (regression from dev.4) | low | electron/main/games/running.ts:128-129 | Also keep processes whose environ has an ENV_KEYS entry. Add a fake-/proc test (HEROIC_APP_NAME, ppid 1) |
-| F9 | SECURITY_AUDIT says the Sony firmware check is "never at startup", but it runs when the Controller info card first mounts | low | docs/SECURITY_AUDIT.md:30; ControllerInfo.tsx:85-99 | Reword the row (or delay the first auto lookup if "never at startup" is the intent) |
-| F10 | check_ui.sh doesn't check for bwrap / xvfb-run / dbus-run-session. A missing tool means a 60 s wait, then an unrelated error | low | tools/check_ui.sh:39-59 | `command -v` precheck, and print the tail of app.log if the port never answers |
-| F11 | check_layout header says "every language at smallest size". It covers only de/es/fr/pt-BR | low | tools/check_layout.mjs:11-13 | Fix the header text |
+| F8 | Running-game watcher loses a native Heroic game once Heroic quits, so the profile is undone mid-game (regression from dev.4) | low | electron/main/games/running.ts:128-129 | Also keep processes whose environ has an ENV_KEYS entry. Add a fake-/proc test (HEROIC_APP_NAME, ppid 1) **Status: done (batch 6). The watcher also keeps an orphan (parent init or the user's systemd) whose environment has a launch variable; only orphans' environments are read. Fake-/proc test (HEROIC_APP_NAME, ppid 1) fails without the fix.** |
+| F9 | SECURITY_AUDIT says the Sony firmware check is "never at startup", but it runs when the Controller info card first mounts | low | docs/SECURITY_AUDIT.md:30; ControllerInfo.tsx:85-99 | Reword the row (or delay the first auto lookup if "never at startup" is the intent) **Status: done (batch 6). Reworded: the first automatic lookup runs when the Controller info card first shows a connected controller, not at app start on its own.** |
+| F10 | check_ui.sh doesn't check for bwrap / xvfb-run / dbus-run-session. A missing tool means a 60 s wait, then an unrelated error | low | tools/check_ui.sh:39-59 | `command -v` precheck, and print the tail of app.log if the port never answers **Status: done (batch 6). check_ui.sh checks for bwrap, dbus-run-session, curl and xvfb-run (not with CHECK_UI_SHOW=1) first, and prints the end of app.log when the port never answers.** |
+| F11 | check_layout header says "every language at smallest size". It covers only de/es/fr/pt-BR | low | tools/check_layout.mjs:11-13 | Fix the header text **Status: done (batch 6). The header names the long-translation languages (de, es, fr, pt-BR, RISKY_LANGS).** |
 
 ## Bugs: firmware
 

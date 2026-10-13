@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Native Heroic games stay detected after Heroic quits:** a native (non-Wine) Heroic game kept running after Heroic closed is still seen as running, so its game profile is no longer undone mid-game (a dev.5 regression).
 - **About → Coming soon:** "Profiles hold every setting" moves to "In the next build" (it shipped in dev.5).
 - **HDR lighting lights up:** the experimental HDR glow over the lightbar (App settings → Advanced) read the lightbar color from the wrong element, so it never showed and never followed the light. It now follows the live lightbar color, and switching between the DualSense and DualSense Edge drawings rebuilds its shape.
 - **Match desktop: accent text readable on every surface:** with a KDE color scheme, accent and selection text is now checked against the page, inset and button colors too, not only the panel.

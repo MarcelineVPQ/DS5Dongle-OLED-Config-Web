@@ -9,8 +9,9 @@
 // Mechanical, never sampled by eye (the AVIEW rule). Two plans:
 //   --plan fast (default; dev builds): layout and names on a pairwise covering
 //     array of language x size x theme x page group x model (every pair of
-//     values at least once), plus every language at the smallest size on
-//     every page and every page at every size; contrast on a pairwise array
+//     values at least once), plus the long-translation languages (de, es,
+//     fr, pt-BR: RISKY_LANGS in check_plan.mjs) at the smallest size on every
+//     page and every page at every size; contrast on a pairwise array
 //     of theme x style x page group x model; colorways computed from the
 //     app's own color code instead of rendered, cross-checked against the
 //     renders (tools/check_plan.mjs, tools/colorway_contrast.mjs). ~7 min
