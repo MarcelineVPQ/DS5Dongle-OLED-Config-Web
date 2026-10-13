@@ -30,18 +30,23 @@ struct V { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
   let m = textureSample(mask, samp, v.uv);
   let core = m.r;   // the strip itself
   let halo = m.g;   // the soft glow around it
-  let a = max(core, halo * 0.55) * u.color.a;
-  // premultiplied: the strip gets the full boost, the halo a gentler one
-  return vec4f(u.color.rgb * (core * u.boost.x + halo * u.boost.y) * u.color.a, a);
+  let pcore = m.b;  // the lit player lights (white LEDs)
+  let phalo = m.a;
+  let a = max(max(core, halo * 0.55) * u.color.a, max(pcore, phalo * 0.55));
+  // premultiplied: the strips get the full boost, their halos a gentler one
+  let strip = u.color.rgb * (core * u.boost.x + halo * u.boost.y) * u.color.a;
+  let player = vec3f(1.0) * (pcore * u.boost.x + phalo * u.boost.y);
+  return vec4f(strip + player, a);
 }`;
 
-// Draw the strip shapes white on transparent at the canvas size: R = sharp, G = blurred.
-async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<ImageData | null> {
+// One set of shapes (`sel`) white on transparent at the canvas size: its
+// sharp and blurred alpha.
+async function shapeAlpha(svg: SVGSVGElement, sel: string, w: number, h: number): Promise<[ImageData, ImageData] | null> {
   const clone = svg.cloneNode(true) as SVGSVGElement;
   clone.setAttribute("width", String(w));
   clone.setAttribute("height", String(h));
   const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
-  style.textContent = "*{fill:none!important;stroke:none!important;filter:none!important} .led, .led *{fill:#fff!important}"; // theme-exempt: a mask, not a color
+  style.textContent = `*{fill:none!important;stroke:none!important;filter:none!important} ${sel}{fill:#fff!important}`; // theme-exempt: a mask, not a color
   clone.prepend(style);
   const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}`;
   const img = new Image();
@@ -62,11 +67,20 @@ async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<Imag
   ctx.drawImage(img, 0, 0, w, h);
   ctx.drawImage(img, 0, 0, w, h);
   const soft = ctx.getImageData(0, 0, w, h);
+  return [sharp, soft];
+}
+
+// The mask: R/G = the lightbar strips (sharp/blurred), B/A = the lit player lights.
+async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<ImageData | null> {
+  const bar = await shapeAlpha(svg, ".led, .led *", w, h);
+  const player = await shapeAlpha(svg, ".pled rect.on", w, h);
+  if (!bar || !player) return null;
   const out = new ImageData(w, h);
   for (let i = 0; i < out.data.length; i += 4) {
-    out.data[i] = sharp.data[i + 3];
-    out.data[i + 1] = soft.data[i + 3];
-    out.data[i + 3] = 255;
+    out.data[i] = bar[0].data[i + 3];
+    out.data[i + 1] = bar[1].data[i + 3];
+    out.data[i + 2] = player[0].data[i + 3];
+    out.data[i + 3] = player[1].data[i + 3];
   }
   return out;
 }
@@ -205,11 +219,15 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
         if (svg) styleWatch?.observe(svg, { attributes: true, attributeFilter: ["style"] });
       };
       watchSvg();
-      svgWatch = new MutationObserver(() => {
-        watchSvg();
-        void rebuild();
+      // A new <svg>, or the player lights the PC set (their "on" class): a new mask.
+      svgWatch = new MutationObserver((records) => {
+        const childList = records.some((m) => m.type === "childList");
+        if (childList) watchSvg();
+        // class changes elsewhere (button presses) don't touch the mask
+        if (childList || records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) void rebuild();
       });
       svgWatch.observe(el, { childList: true });
+      svgWatch.observe(el, { subtree: true, attributes: true, attributeFilter: ["class"] });
       redraw.current = schedule;
       draw();
     })();
