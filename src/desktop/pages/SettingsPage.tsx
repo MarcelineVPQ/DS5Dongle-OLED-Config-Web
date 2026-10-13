@@ -15,6 +15,7 @@ import {
 } from "../../protocol/config";
 import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
+import { OLED_MODULE } from "../dongle/boardSpecs";
 
 // Settings sections, each a card the live view's side panel shows for the
 // part it belongs to. Changes apply to the dongle's RAM right away
@@ -345,7 +346,7 @@ export function DisplaySection(props: SectionProps) {
   const { d, set } = useFields(props);
   return (
     <section className="dk-card">
-      <h2>{t("desktop.settings.display", "OLED display")}</h2>
+      <h2>{OLED_MODULE.name}</h2>
       <Segmented
         label={t("desktop.settings.brightness", "Brightness")}
         value={d.screenBrightness}

@@ -124,7 +124,6 @@
       "power": "Energía",
       "idleDisconnect": "Desconectar en inactividad",
       "picoLed": "LED de estado del Pico",
-      "display": "Pantalla OLED",
       "brightness": "Brillo",
       "zeroOff": "0 = nunca",
       "controllerWakes": "Usar el mando activa la pantalla",
@@ -1263,7 +1262,6 @@
     },
     "dash": {
       "pico": "Pico 2 W",
-      "oled": "Pantalla OLED",
       "temperature": "Temperatura del chip",
       "clock": "Frecuencia de la CPU",
       "clockSet": "configurada a {{mhz}} MHz",
@@ -1315,6 +1313,23 @@
           "speaker": "Trama del altavoz (core1)",
           "mic": "Trama del micrófono (core1)"
         }
+      },
+      "specs": {
+        "title": "Especificaciones",
+        "chip": "Chip",
+        "chipValue": "{{chip}}, doble núcleo {{core}}",
+        "chipClock": "{{chip}}, doble núcleo {{core}} a {{mhz}} MHz",
+        "sram": "SRAM",
+        "flash": "Flash",
+        "wireless": "Inalámbrico",
+        "wirelessValue": "{{chip}}: Bluetooth {{bt}} (se usa Classic), Wi-Fi 4",
+        "model": "Modelo",
+        "size": "Tamaño",
+        "resolution": "Resolución",
+        "controller": "Controlador",
+        "interface": "Interfaz",
+        "keys": "Teclas",
+        "notDetected": "No se detecta: {{device}} la controla siempre que esté conectada."
       }
     },
     "hdr": {

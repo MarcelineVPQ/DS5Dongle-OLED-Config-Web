@@ -124,7 +124,6 @@
       "power": "電源",
       "idleDisconnect": "アイドル時に切断",
       "picoLed": "Pico ステータス LED",
-      "display": "OLED ディスプレイ",
       "brightness": "明るさ",
       "zeroOff": "0 = なし",
       "controllerWakes": "コントローラー入力で画面を復帰",
@@ -1257,7 +1256,6 @@
     },
     "dash": {
       "pico": "Pico 2 W",
-      "oled": "OLED ディスプレイ",
       "temperature": "チップ温度",
       "clock": "CPU クロック",
       "clockSet": "設定 {{mhz}} MHz",
@@ -1309,6 +1307,23 @@
           "speaker": "core1 スピーカーフレーム",
           "mic": "core1 マイクフレーム"
         }
+      },
+      "specs": {
+        "title": "仕様",
+        "chip": "チップ",
+        "chipValue": "{{chip}}、デュアルコア {{core}}",
+        "chipClock": "{{chip}}、デュアルコア {{core}}（{{mhz}} MHz）",
+        "sram": "SRAM",
+        "flash": "フラッシュ",
+        "wireless": "ワイヤレス",
+        "wirelessValue": "{{chip}}：Bluetooth {{bt}}（Classic を使用）、Wi-Fi 4",
+        "model": "モデル",
+        "size": "サイズ",
+        "resolution": "解像度",
+        "controller": "コントローラー IC",
+        "interface": "インターフェース",
+        "keys": "キー",
+        "notDetected": "検出はできません。取り付けられていれば {{device}} が常に駆動します。"
       }
     },
     "hdr": {
