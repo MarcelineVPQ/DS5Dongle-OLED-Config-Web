@@ -264,7 +264,7 @@ function HowToUpdate() {
       <ul className="dk-hint dk-fw-steps">
         <li>
           {t("desktop.ctrlInfo.howToPc")}{" "}
-          <a href={sonyUpdaterPage(i18n.resolvedLanguage)} target="_blank" rel="noreferrer noopener">
+          <a href={sonyUpdaterPage(i18n.resolvedLanguage)} target="_blank" rel="noreferrer noopener" aria-label={t("desktop.ctrlInfo.sonyPage")}>
             {t("desktop.ctrlInfo.sonyPage")}
           </a>
         </li>
