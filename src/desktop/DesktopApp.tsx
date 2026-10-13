@@ -14,6 +14,7 @@ import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { LibraryContext } from "./library/libraryContext";
+import { BusyButton } from "./controls";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
@@ -61,6 +62,8 @@ export default function DesktopApp() {
   // A game page to open when the Games page shows next (after editing its profile).
   const [openGame, setOpenGame] = useState<{ key: string } | null>(null);
   const [aboutTab, setAboutTab] = useState<AboutTab>("guide");
+  // Done pressed with changes not saved into the profile: ask first.
+  const [confirmDone, setConfirmDone] = useState(false);
   const whatsNew = useWhatsNew();
   const games = useGamesAttention();
   // Per-game profiles switch in while their game runs (never mid-update).
@@ -110,6 +113,14 @@ export default function DesktopApp() {
     if (fw.state.phase === "done") void say("app_fw_updated");
   }, [fw.state.phase]);
   const busy = bridge.operation !== null;
+  // Leave the profile being edited: back to the game page it started from
+  // (unsaved changes go with it; Done asks first when there are any).
+  const finishEditing = () => {
+    setConfirmDone(false);
+    if (profiles.editing) setOpenGame({ key: profiles.editing.gameKey });
+    profiles.stopEditing();
+    setMain("games");
+  };
   const standalone = main !== "controller";
 
   // Keep the tray icon/menu in step with the device, even while the window is
@@ -216,7 +227,12 @@ export default function DesktopApp() {
         editing: profiles.editing,
         appliedStamp: profiles.appliedStamp,
         switchSlot: profiles.switchSlot,
+        curvesDraft: profiles.curvesDraft,
+        setCurvesDraft: profiles.setCurvesDraft,
+        setButtonsDraft: profiles.setButtonsDraft,
+        saveToProfile: profiles.saveToProfile,
         editProfile: (gameKey, title) => {
+          setConfirmDone(false);
           profiles.startEditing(gameKey, title);
           setMain("controller");
           setPanel("overview");
@@ -274,22 +290,38 @@ export default function DesktopApp() {
             {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
             {main === "controller" && profiles.editing && (
               <div className="dk-editing" role="status">
-                <span>
-                  <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
-                </span>
-                <span className="dk-spacer" />
-                <button
-                  type="button"
-                  className="dk-btn primary"
-                  onClick={() => {
-                    // Back to the game page the editing started from.
-                    if (profiles.editing) setOpenGame({ key: profiles.editing.gameKey });
-                    profiles.stopEditing();
-                    setMain("games");
-                  }}
-                >
-                  {t("desktop.editing.done")}
-                </button>
+                {confirmDone ? (
+                  <>
+                    <span>{t("desktop.editing.unsaved", { title: profiles.editing.title })}</span>
+                    <span className="dk-spacer" />
+                    <BusyButton
+                      className="dk-btn primary"
+                      disabled={busy || bridge.isDirty}
+                      onClick={async () => {
+                        await profiles.saveToProfile();
+                        finishEditing();
+                      }}
+                    >
+                      {t("desktop.editing.saveClose")}
+                    </BusyButton>
+                    <button type="button" className="dk-btn" onClick={finishEditing}>
+                      {t("desktop.editing.discard")}
+                    </button>
+                    <button type="button" className="dk-btn" onClick={() => setConfirmDone(false)}>
+                      {t("desktop.common.cancel")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
+                    </span>
+                    <span className="dk-spacer" />
+                    <button type="button" className="dk-btn primary" onClick={() => (profiles.profileDirty || bridge.isDirty ? setConfirmDone(true) : finishEditing())}>
+                      {t("desktop.editing.done")}
+                    </button>
+                  </>
+                )}
               </div>
             )}
             {main === "controller" &&

@@ -3,6 +3,8 @@
 // Buttons page reaches a running game's profile at once.
 import { createContext, useContext } from "react";
 import { EMPTY_LIBRARY, type LibraryFile } from "../games/library";
+import type { GameCurves } from "./profileValues";
+import type { ButtonsDraft } from "./useGameProfile";
 
 export interface LibraryContextValue {
   library: LibraryFile;
@@ -18,6 +20,12 @@ export interface LibraryContextValue {
   appliedStamp: string | null;
   // Switches pairing slots without saving a game's profile into flash.
   switchSlot: (slot: number) => Promise<void>;
+  // While a profile is on, the panels with their own drafts (curves, buttons)
+  // hand them to the profile, and "Save to profile" saves everything at once.
+  curvesDraft: GameCurves | null;
+  setCurvesDraft: (curves: GameCurves | null) => void;
+  setButtonsDraft: (draft: ButtonsDraft | null) => void;
+  saveToProfile: () => Promise<void>;
 }
 
 export const LibraryContext = createContext<LibraryContextValue>({
@@ -28,5 +36,9 @@ export const LibraryContext = createContext<LibraryContextValue>({
   editing: null,
   appliedStamp: null,
   switchSlot: async () => undefined,
+  curvesDraft: null,
+  setCurvesDraft: () => undefined,
+  setButtonsDraft: () => undefined,
+  saveToProfile: async () => undefined,
 });
 export const useLibrary = () => useContext(LibraryContext);
