@@ -78,6 +78,8 @@ Pick a mode: **Game** (the game decides), one of your four **favorite colors** (
 
 Try the trigger effects games can use (resistance, weapon, vibration…) on L2 and R2. Games set their own effects while you play; this is for feeling what they do and checking the triggers work.
 
+**Trigger Effect Intensity:** makes the games' adaptive trigger resistance weaker, in 10 steps (**Weaker by**); 0, the default, is the game's own strength. It applies to both triggers, and a game's profile can have its own.
+
 ### Haptic feedback
 
 ![The Haptic feedback panel with the left and right vibration intensity and the test buttons](screenshots/guide-haptics.png)
@@ -88,16 +90,23 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 
 ### Speaker and microphone
 
-![The Speaker panel with the live meter and the chime test](screenshots/guide-speaker.png)
+![The Speaker panel with the live meter and the speaker test](screenshots/guide-speaker.png)
 
-- **Volume (Speaker for Controller)**, with a live meter of what's playing, and a test chime on the controller's speaker.
-- **Microphone:** turn the controller's built-in microphone on or off (**Built-in microphone**), and test it: it records three seconds and plays them back on the controller (Linux).
+- **Volume (Speaker for Controller)**, with a live meter of what's playing.
+- **Speaker boost:** the controller amplifier's own gain, 0 to 7; 0, the default, leaves it as the game sets it. It's separate from the volume slider, which makes the sound itself louder.
+- **Lock volume:** games can't change the controller's volume or mute; the PC's own volume and mute still work.
+- **Audio output:** where the PC's sound plays: **Auto** (the headset when one is plugged into the controller, else the speaker), **Speaker**, **Headset** or **Off**.
+- Speaker boost and Lock volume can be set per game in its profile; Audio output is your board's setting for every game. All three need the newest firmware on your board.
+- **Speaker test:** **Play test sound** plays a folk tune, Korobeiniki, twice through (about 77 seconds) on the controller's speaker. The button counts down and a line under it fills; it keeps playing while you go to other pages. **Stop**, or a second press of the button, ends it.
+- **Microphone:** turn the controller's built-in microphone on or off (**Built-in microphone**), and choose which one is used (**Microphone used**: **Auto**, which takes a headset's mic when one is plugged in, **Built-in** or **Headset**; the Built-in microphone switch stays the one that turns it off). **Test microphone** records three seconds and plays them back on the controller (Linux only; the test isn't shown on Windows and macOS).
 
 ### Button assignments
 
 ![Assigning a button](screenshots/guide-remap.png)
 
 Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in your board and work in every game, on any computer.
+
+**DualSense Edge in PlayStation Accessories:** Sony's PlayStation Accessories app (Windows) sees the Edge's own profiles through your board, and a profile you save there shows right away. With **Controller mode** set to **DS5** (USB, on your board's page) it no longer offers a firmware update that then fails.
 
 **Saved button layouts:** save the buttons under a name ("Racing", "Southpaw") and give a layout to any game's profile. It switches in while that game runs (never written to your board's memory, so nothing wears out) and your normal buttons come back when it ends. Each layout lists what it changes ("Cross → Circle · L1 → R1"); edit it once and every game using it follows. Needs the newest firmware on your board.
 
@@ -134,19 +143,20 @@ The side bar names this page after your board (**Pico 2 W**, for example), and t
 ![Your board's page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)
 
 - **Console:** your board's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on your board.
-- **The dashboard:** the Pico 2 W's chip temperature, CPU clock and core voltage; graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and the OLED's brightness, state and timeouts.
+- **The dashboard:** your board's chip temperature, CPU clock and core voltage, and a **Specs** card with its chip (and the clock it runs at), SRAM, flash and wireless chip (Pico 2 W and Pico W); graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and, under **Waveshare Pico-OLED-1.3** (the supported screen add-on), its brightness, state and timeouts, with a **Specs** card for the module (size, resolution, controller, interface, keys). The app can't tell whether the screen is attached: your board drives it whenever it is.
 - **Timing** (firmware with protocol 1.11): how long each part of the firmware takes, average and worst case since the last **Reset**, for tracking down audio stutters.
 
 ![The dashboard's gauges and graphs](screenshots/guide-dashboard.png)
 
 In the panel on the right:
 
-- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards).
+- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards). While firmware is being written, the app doesn't restart or quit: an app update's **Restart now** waits ("Wait for the firmware update to finish."), and closing the window or quitting from the tray waits until the write is done, then the app closes.
 - **Device:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
-- **Power:** disconnect the controller when idle, the timeout, the Pico's status light.
+- **Power:** disconnect the controller when idle, the timeout, the Pico's status LED.
 - **PC sleep:** turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
-- **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
+- **Waveshare Pico-OLED-1.3:** the screen's brightness, dim and off timeouts, whether controller input wakes it.
 - **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
+- **Status pin:** a Pico pin (GPIO) that gives 3.3 V while a controller is connected (**On while connected**), or a 0.2 s pulse when one connects (**Pulse on connect**): for an LED (with a resistor) or a PC case's power-button header. Only pins nothing else uses are offered. Needs the newest firmware on your board.
 
 ## 7. Games
 
@@ -160,7 +170,7 @@ The first time, the app asks before reading anything; it then lists your **Steam
 ![A game page](screenshots/guide-game-page.png)
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
-  - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in your board's memory only, never saved to its flash.
+  - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, speaker boost, lock volume, trigger effect intensity, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in your board's memory only, never saved to its flash.
   - **Setup:** this game's recommended fixes, applied with a backup you can undo. If the game doesn't react to the controller, tick **Controller not detected** there.
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
