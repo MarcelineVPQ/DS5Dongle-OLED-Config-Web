@@ -5,15 +5,15 @@ describe("speaker test tune (Korobeiniki)", () => {
   const rate = 48000;
   const pcm = renderTune(rate);
 
-  it("plays the whole melody, A B A, about 38 s", () => {
-    expect(TUNE.reduce((s, [, b]) => s + b, 0)).toBe(96);
+  it("plays the whole melody, A B A, twice, about 77 s", () => {
+    expect(TUNE.reduce((s, [, b]) => s + b, 0)).toBe(192);
     expect(pcm.length / rate).toBeCloseTo(tuneSeconds(), 3);
-    expect(pcm.length / rate).toBeGreaterThan(37);
-    expect(pcm.length / rate).toBeLessThan(40);
+    expect(pcm.length / rate).toBeGreaterThan(76);
+    expect(pcm.length / rate).toBeLessThan(78);
   });
 
-  it("has 90 notes (37 + 16 + 37)", () => {
-    expect(noteCount()).toBe(90);
+  it("has 180 notes (37 + 16 + 37, twice)", () => {
+    expect(noteCount()).toBe(180);
   });
 
   it("never clips and peaks at the test sound's level", () => {

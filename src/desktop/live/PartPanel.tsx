@@ -19,6 +19,7 @@ import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
 import { controllerSpeaker } from "../narrator";
 import { renderTune, tuneSeconds } from "./speakerTune";
+import { useWindowShown } from "../useWindowShown";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
@@ -806,13 +807,28 @@ function NarratorSettings() {
 }
 
 // Korobeiniki (speakerTune.ts) on the controller's speaker (never the PC's),
-// rendered on the spot and routed to the DualSense output. Pressing the button
+// rendered on the spot and routed to the DualSense output. Stop, pressing Play
 // again or closing the panel stops it right away.
 function SpeakerTest() {
   const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "none">("idle");
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1 of the tune played
+  const startedAt = useRef(0); // performance.now() when the tune started
+  const shown = useWindowShown();
   const stopRef = useRef<(() => void) | null>(null);
   useEffect(() => () => stopRef.current?.(), []);
+  // The song-length line: one frame loop only while playing and on screen;
+  // it catches up from the start time when the window comes back.
+  useEffect(() => {
+    if (!playing || !shown) return;
+    const length = tuneSeconds() * 1000;
+    let frame = requestAnimationFrame(function tick() {
+      if (startedAt.current) setProgress(Math.min(1, Math.round(((performance.now() - startedAt.current) / length) * 1000) / 1000));
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [playing, shown]);
   const play = async () => {
     let cancelled = false;
     stopRef.current = () => {
@@ -822,6 +838,7 @@ function SpeakerTest() {
     if (!sink) return setState("none");
     if (cancelled) return;
     const ctx = new AudioContext();
+    setPlaying(true);
     try {
       await (ctx as AudioContext & { setSinkId(id: string): Promise<void> }).setSinkId(sink);
       const pcm = renderTune(ctx.sampleRate);
@@ -842,13 +859,19 @@ function SpeakerTest() {
           src.stop(ctx.currentTime + 0.025);
         };
         if (cancelled) done();
-        else src.start();
+        else {
+          src.start();
+          startedAt.current = performance.now();
+        }
       });
       setState("idle");
     } catch {
       setState("none"); // couldn't route to the controller: stay silent
     } finally {
       stopRef.current = null;
+      startedAt.current = 0;
+      setPlaying(false);
+      setProgress(0);
       void ctx.close();
     }
   };
@@ -860,6 +883,14 @@ function SpeakerTest() {
         <BusyButton className="dk-btn" onClick={play} countdown={Math.ceil(tuneSeconds())} onStop={() => stopRef.current?.()}>
           {t("desktop.audioTest.speakerButton")}
         </BusyButton>
+        {playing && (
+          <button type="button" className="dk-btn" onClick={() => stopRef.current?.()}>
+            {t("desktop.common.stop", "Stop")}
+          </button>
+        )}
+      </div>
+      <div className="live-level" role="progressbar" aria-label={t("desktop.audioTest.speakerTitle")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+        <Meter value={progress} />
       </div>
       {state === "none" && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
     </section>

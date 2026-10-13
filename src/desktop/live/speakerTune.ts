@@ -1,6 +1,7 @@
 // The speaker test tune: Korobeiniki, the 19th-century Russian folk song
 // (public domain), in our own plain chiptune arrangement: the melody alone,
-// parts A, B, A once through. Rendered here to PCM so it is the same on every
+// parts A, B, A, played twice (one buffer, so the join can't click; part A
+// ends on a rest, so the repeat lands on the beat). Rendered here to PCM so it is the same on every
 // platform and testable; SpeakerTest plays the buffer on the controller.
 
 // [note, beats]; null is a rest. One beat is a quarter note.
@@ -68,7 +69,8 @@ const PART_B: Step[] = [
   ["G#5", 4],
 ];
 
-export const TUNE: readonly Step[] = [...PART_A, ...PART_B, ...PART_A];
+const ONCE: Step[] = [...PART_A, ...PART_B, ...PART_A];
+export const TUNE: readonly Step[] = [...ONCE, ...ONCE];
 
 export const BEAT_S = 0.4; // 150 beats a minute
 export const PEAK = 0.8; // the dev.6 test sound's level
