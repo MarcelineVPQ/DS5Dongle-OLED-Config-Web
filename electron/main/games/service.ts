@@ -20,7 +20,7 @@ import { Backups, UndoConflictError, type BackupSummary } from "./backup";
 import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
-import { launcherControl, withLaunchersClosed, type LauncherControl } from "./processes";
+import { launcherControl, realLayer, withLaunchersClosed, type LauncherControl } from "./processes";
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools } from "./steam";
 import { dualSenseCards, restartWirePlumber, setCardProfile, type AudioCard } from "./system";
@@ -37,6 +37,7 @@ export interface GamesServiceDeps {
   notDetected: () => Set<string>; // game keys the player marked "controller not detected"
   hdrMarked: () => Set<string>; // game keys the player marked "Supports HDR"
   launchers?: LauncherControl; // tests: a fake process layer
+  gameRunning?: () => boolean; // the library sees a game running (Windows: launchers aren't closed then)
   probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrScreens> }; // tests: no pactl / kscreen-doctor
 }
 
@@ -50,7 +51,7 @@ export class GamesService {
 
   constructor(private readonly deps: GamesServiceDeps) {
     this.backups = new Backups(join(deps.userData, "game-setup-backups"));
-    this.launchers = deps.launchers ?? launcherControl();
+    this.launchers = deps.launchers ?? launcherControl(realLayer(() => deps.gameRunning?.() ?? false));
   }
 
   private exclusive<T>(run: () => Promise<T>): Promise<T> {
@@ -93,7 +94,7 @@ export class GamesService {
       ourProton: process.platform === "win32" ? null : newestLocalBuild(this.localBuilds()),
       latestProton: this.latest?.name ?? null,
       latestSize: this.latest?.tarball.size ?? null,
-      running: this.launchers.running(),
+      running: await this.launchers.running(),
       audioCards,
       windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
       notDetected: this.deps.notDetected(),
@@ -181,7 +182,7 @@ export class GamesService {
       try {
         // Same rule as writing: a running launcher would overwrite the restored
         // files, so it's closed and reopened, only if the page said so.
-        const { restart, blockedBy } = launchersToRestart(this.backups.owners(backupId), this.launchers.running(), allowed);
+        const { restart, blockedBy } = launchersToRestart(this.backups.owners(backupId), await this.launchers.running(), allowed);
         if (blockedBy.length) return { ok: false, blockedBy };
         const run = await withLaunchersClosed(restart, this.launchers, () => this.backups.restore(backupId));
         if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };

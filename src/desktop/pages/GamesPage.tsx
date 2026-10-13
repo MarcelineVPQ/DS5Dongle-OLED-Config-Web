@@ -343,8 +343,8 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
               <LauncherIcon id={l.id} />
               {LAUNCHER_NAME[l.id]}
               {l.flatpak ? " (Flatpak)" : ""}
-              {/* Windows: whether a launcher runs isn't checked (only needed for Linux fixes). */}
-              {protonApplies() && ` · ${l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}`}
+              {/* The launchers the app closes and reopens around a change (GOG Galaxy and Epic: never). */}
+              {(l.id === "steam" || l.id === "heroic" || l.id === "lutris") && ` · ${l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}`}
               {l.defaultIsOurs ? ` · ${t("desktop.games.ourDefault", "our Proton is the default")}` : ""}
             </span>
           ))}

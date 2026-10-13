@@ -447,6 +447,7 @@
           "runnerMissing": "{{game}} は {{current}} に設定されていますが、もうインストールされていないため起動できません。",
           "steamInput": "{{support}}このゲームでは Steam Input がオンのため、Steam がコントローラーを汎用ゲームパッドに変換し、ゲームからは DualSense が見えません。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
           "envSteam": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。起動オプションは次のようになります: {{options}}",
+          "preferSdlWindows": "{{vars}} は Linux の Proton でのみ機能します。Windows では何も効果がないため、以前のバージョンが追加したこのオプションを削除します。起動オプションは次のようになります: {{options}}",
           "envHeroic": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。",
           "audioRule": "{{file}} が DualSense のサウンドカードを pro-audio プロファイルに切り替えるため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは .disabled に名前変更され（削除はされません）、音声サービス (WirePlumber) が再起動するので、音が一瞬途切れます。",
           "audioProfile": "DualSense のサウンドカードが「{{profile}}」になっているため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは変更されません。サウンド設定でプロファイルを選ぶのと同じです。",

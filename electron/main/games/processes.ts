@@ -2,29 +2,47 @@
 // around a settings change (Steam, Heroic and Lutris rewrite their settings
 // files when they quit, and Heroic keeps using a game's old settings while it
 // runs). Never force-kills: Steam gets its own `-shutdown`, Heroic and Lutris
-// get SIGTERM (what a normal window-manager quit sends), then we wait. A
+// get SIGTERM (what a normal window-manager quit sends; on Windows `taskkill
+// /PID` without /F, which asks the window to close), then we wait. A
 // launcher is only closed while no game is running (closing it could end the
 // game), and is started again afterwards the way it was running (native or
 // Flatpak). Every program runs by a fixed argv, without a shell, with the
 // user's real home (launcherEnv), so a dev copy's test HOME never reaches it.
+//
+// Windows: the processes come from tasklist (image names only, the same
+// reader the running-game watcher uses), Steam is closed and started again by
+// its own steam.exe (the registry's SteamPath), Heroic by its installed
+// Heroic.exe, and a game runs when Steam says so (RunningAppID) or the
+// library sees one.
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, isAbsolute } from "node:path";
+import { basename, isAbsolute, join } from "node:path";
 import type { CloseProblem, LauncherId } from "../../../src/desktop/games/types";
-import { readProcs, type ProcView } from "./running";
+import { readProcs, readWindowsProcs, type ProcView } from "./running";
 import { launcherEnv, realHome, startForUser } from "./schemeHandler";
+import { windowsSteamRoots } from "./steam";
 
 export type CloseLauncherResult = "closed" | "not-running" | CloseProblem;
 
+type Maybe<T> = T | Promise<T>;
+
 // What the launcher control needs from the system (a fake in the tests).
 export interface ProcLayer {
-  list(): ProcView[]; // the user's own processes
+  list(): Maybe<ProcView[]>; // the user's own processes
   env(pid: number, key: string): string | undefined; // one variable of a process
   exists(path: string): boolean;
   run(cmd: string, args: string[]): void; // a short command (steam -shutdown); result not needed
   start(cmd: string, args: string[]): Promise<boolean>; // a detached launcher; false if it couldn't start
-  signal(pid: number): void; // SIGTERM
+  signal(pid: number): void; // SIGTERM; Windows: taskkill /PID (never /F)
   sleep(ms: number): Promise<void>;
+  windows?: WindowsLaunchers; // set on Windows
+}
+
+// Windows: where the launchers' programs are, and whether a game runs.
+export interface WindowsLaunchers {
+  steamExe(): string | null; // <SteamPath>\steam.exe
+  heroicExe(): string | null; // Heroic's installed Heroic.exe
+  gameRunning(): Maybe<boolean>;
 }
 
 // How a launcher is started again: a fixed program and arguments.
@@ -37,12 +55,16 @@ const FLATPAK_ID: Record<"steam" | "heroic" | "lutris", string> = { steam: "com.
 
 const isMain = (p: ProcView) => !p.args.some((a) => a.startsWith("--type="));
 
+// A Windows image name ("steam.exe") as the Linux process name ("steam").
+const procName = (p: ProcView) => (/\.exe$/i.test(p.comm) ? p.comm.slice(0, -4).toLowerCase() : p.comm);
+
 function matches(launcher: LauncherId, p: ProcView): boolean {
+  const name = procName(p);
   switch (launcher) {
     case "steam":
-      return p.comm === "steam" || p.comm === "steamwebhelper";
+      return name === "steam" || name === "steamwebhelper";
     case "heroic":
-      return p.comm === "heroic" || /[/]heroic$/i.test(p.args[0] ?? "");
+      return name === "heroic" || /[/]heroic$/i.test(p.args[0] ?? "");
     case "lutris":
       return p.comm === "lutris" || (/python/.test(p.comm) && p.args.some((a) => /(^|\/)lutris$/.test(a)));
     default:
@@ -85,36 +107,49 @@ export function reopenPlan(launcher: LauncherId, procs: ProcView[], layer: Pick<
   return usable(script, /^lutris$/) ? { cmd: script!, args: [] } : { cmd: "lutris", args: [] };
 }
 
+// Windows: Steam by its steam.exe, Heroic by its Heroic.exe (no arguments:
+// tasklist doesn't show them), only while the launcher runs.
+export function windowsReopenPlan(launcher: LauncherId, procs: ProcView[], win: WindowsLaunchers): ReopenPlan | null {
+  if (!procs.some((p) => matches(launcher, p))) return null;
+  const exe = launcher === "steam" ? win.steamExe() : launcher === "heroic" ? win.heroicExe() : null;
+  return exe ? { cmd: exe, args: [] } : null;
+}
+
 export interface LauncherControl {
-  running(): Set<LauncherId>;
-  gameRunning(): boolean;
-  plan(launcher: LauncherId): ReopenPlan | null;
+  running(): Maybe<Set<LauncherId>>;
+  gameRunning(): Maybe<boolean>;
+  plan(launcher: LauncherId): Maybe<ReopenPlan | null>;
   close(launcher: LauncherId): Promise<CloseLauncherResult>;
   reopen(plan: ReopenPlan): Promise<boolean>;
 }
 
-export function launcherControl(layer: ProcLayer = realLayer, timeoutMs = 30_000): LauncherControl {
-  const running = () => launchersIn(layer.list());
+export function launcherControl(layer: ProcLayer = realLayer(), timeoutMs = 30_000): LauncherControl {
+  const running = async () => launchersIn(await layer.list());
+  const gameRunning = async (procs: ProcView[]) => gameIn(procs) || !!(await layer.windows?.gameRunning());
   return {
     running,
-    gameRunning: () => gameIn(layer.list()),
-    plan: (launcher) => reopenPlan(launcher, layer.list(), layer),
+    gameRunning: async () => gameRunning(await layer.list()),
+    plan: async (launcher) => (layer.windows ? windowsReopenPlan(launcher, await layer.list(), layer.windows) : reopenPlan(launcher, await layer.list(), layer)),
     reopen: (plan) => layer.start(plan.cmd, plan.args),
     async close(launcher) {
-      const procs = layer.list();
+      const procs = await layer.list();
       if (!launchersIn(procs).has(launcher)) return "not-running";
       // Quitting a launcher mid-game can end the game; the user quits the game first.
-      if (gameIn(procs)) return "game-running";
+      if (await gameRunning(procs)) return "game-running";
       if (launcher === "steam") {
         const main = procs.find((p) => p.comm === "steam");
-        if (main && inFlatpak("steam", main)) layer.run("flatpak", ["run", FLATPAK_ID.steam, "-shutdown"]);
+        if (layer.windows) {
+          const exe = layer.windows.steamExe();
+          if (!exe) return "failed";
+          layer.run(exe, ["-shutdown"]);
+        } else if (main && inFlatpak("steam", main)) layer.run("flatpak", ["run", FLATPAK_ID.steam, "-shutdown"]);
         else layer.run("steam", ["-shutdown"]);
       } else {
         for (const p of procs) if (matches(launcher, p) && isMain(p)) layer.signal(p.pid);
       }
       for (let waited = 0; waited < timeoutMs; waited += 500) {
         await layer.sleep(500);
-        if (!running().has(launcher)) {
+        if (!(await running()).has(launcher)) {
           await layer.sleep(1000); // let it finish writing its settings files
           return "closed";
         }
@@ -131,9 +166,9 @@ export type ClosedRun<T> = { ok: true; value: T; reopenFailed: LauncherId[] } | 
 // before closing anything while a game runs; if one launcher doesn't close,
 // the ones already closed are started again and nothing runs.
 export async function withLaunchersClosed<T>(launchers: LauncherId[], control: LauncherControl, work: () => T | Promise<T>): Promise<ClosedRun<T>> {
-  const running = control.running();
+  const running = await control.running();
   const toClose = [...new Set(launchers)].filter((l) => running.has(l));
-  if (toClose.length && control.gameRunning()) return { ok: false, problem: "game-running", launcher: toClose[0] };
+  if (toClose.length && (await control.gameRunning())) return { ok: false, problem: "game-running", launcher: toClose[0] };
   const closed: Array<{ launcher: LauncherId; plan: ReopenPlan | null }> = [];
   const reopenAll = async () => {
     const failed: LauncherId[] = [];
@@ -141,7 +176,7 @@ export async function withLaunchersClosed<T>(launchers: LauncherId[], control: L
     return failed;
   };
   for (const launcher of toClose) {
-    const plan = control.plan(launcher);
+    const plan = await control.plan(launcher);
     const result = await control.close(launcher).catch(() => "failed" as const);
     if (result === "closed") closed.push({ launcher, plan });
     else if (result !== "not-running") {
@@ -172,7 +207,7 @@ function envOf(pid: number, key: string): string | undefined {
   }
 }
 
-const realLayer: ProcLayer = {
+const posixLayer: ProcLayer = {
   list: () => readProcs(),
   env: envOf,
   exists: existsSync,
@@ -187,6 +222,57 @@ const realLayer: ProcLayer = {
   },
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
 };
+
+const system32 = (exe: string) => join(process.env.SystemRoot ?? "C:\\Windows", "System32", exe);
+
+// taskkill's arguments for asking one process to quit: its windows get a
+// close request, like the user closing them. Never /F (a forced kill).
+export const taskkillArgs = (pid: number): string[] => ["/PID", String(pid)];
+
+// `reg query HKCU\Software\Valve\Steam /v RunningAppID`: the game Steam has running (0x0: none).
+export const steamAppRunning = (regOutput: string): boolean => {
+  const m = /RunningAppID\s+REG_DWORD\s+0x([0-9a-f]+)/i.exec(regOutput);
+  return !!m && parseInt(m[1], 16) !== 0;
+};
+
+function steamReportsGame(): Promise<boolean> {
+  return new Promise((resolve) =>
+    execFile(system32("reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "RunningAppID"], { encoding: "utf8", windowsHide: true, timeout: 3000 }, (error, stdout) =>
+      resolve(!error && steamAppRunning(stdout)),
+    ),
+  );
+}
+
+// Steam's program in the first install folder that has one (the registry's SteamPath first).
+export const steamExeIn = (roots: string[], exists: (path: string) => boolean): string | null => roots.map((root) => join(root, "steam.exe")).find((exe) => exists(exe)) ?? null;
+
+// Heroic's Windows installer: per user (the default) or for all users.
+export function heroicExeIn(env: NodeJS.ProcessEnv, exists: (path: string) => boolean): string | null {
+  const candidates = [env.LOCALAPPDATA && join(env.LOCALAPPDATA, "Programs", "heroic", "Heroic.exe"), env.ProgramFiles && join(env.ProgramFiles, "Heroic", "Heroic.exe")];
+  return candidates.find((c): c is string => !!c && exists(c)) ?? null;
+}
+
+// `libraryGame`: whether the library's running-game watcher sees a game.
+function windowsLayer(libraryGame: () => boolean): ProcLayer {
+  return {
+    list: readWindowsProcs,
+    env: () => undefined,
+    exists: existsSync,
+    run: (cmd, args) => execFile(cmd, args, { timeout: 15_000, windowsHide: true, env: launcherEnv(process.env, realHome()) }, () => undefined),
+    start: startForUser,
+    signal: (pid) => execFile(system32("taskkill.exe"), taskkillArgs(pid), { timeout: 5000, windowsHide: true }, () => undefined),
+    sleep: posixLayer.sleep,
+    windows: {
+      steamExe: () => steamExeIn(windowsSteamRoots(), existsSync),
+      heroicExe: () => heroicExeIn(process.env, existsSync),
+      gameRunning: async () => libraryGame() || (await steamReportsGame()),
+    },
+  };
+}
+
+// The process layer of this system: Windows, or /proc and signals (macOS has
+// no Games page yet; without /proc it finds no launcher and closes nothing).
+export const realLayer = (libraryGame: () => boolean = () => false): ProcLayer => (process.platform === "win32" ? windowsLayer(libraryGame) : posixLayer);
 
 // The launchers running now (the scan's view).
 export const runningLaunchers = (): Set<LauncherId> => launchersIn(readProcs());

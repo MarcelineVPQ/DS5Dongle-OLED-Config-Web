@@ -142,6 +142,8 @@ function start(): void {
           download: (d, path, progress) => updater.downloadAsset(d, path, progress),
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
           // Games the player marked "controller not detected" get the standard-gamepad fix.
+          // Windows: no launcher is closed while the library sees a game running.
+          gameRunning: (): boolean => watcher?.running != null,
           notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.tags?.includes("not-detected") ? [key] : []))),
           // Games the player marked "Supports HDR" get the Turn on HDR fix (with an HDR screen).
           hdrMarked: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.hdr ? [key] : []))),

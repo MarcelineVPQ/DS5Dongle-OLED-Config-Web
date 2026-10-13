@@ -247,6 +247,26 @@ describe("closing and reopening game launchers (Linux)", () => {
   });
 });
 
+describe("closing and reopening game launchers (Windows)", () => {
+  const source = readFileSync(new URL("../../electron/main/games/processes.ts", import.meta.url), "utf8");
+
+  it("lists with tasklist, closes with steam.exe -shutdown or taskkill /PID (never /F), by full paths and no shell", () => {
+    // The process list: running.ts's one tasklist reader (security-tested there: full path, fixed argv).
+    expect(source).toContain("list: readWindowsProcs,");
+    expect(source).toContain('signal: (pid) => execFile(system32("taskkill.exe"), taskkillArgs(pid), { timeout: 5000, windowsHide: true }, () => undefined),');
+    expect(source).toContain('export const taskkillArgs = (pid: number): string[] => ["/PID", String(pid)];');
+    expect(source).not.toMatch(/"\/F"|"\/T"|"\/IM"/i);
+    // Steam's own shutdown: its steam.exe from the registry's SteamPath (or Program Files), checked to exist.
+    expect(source).toContain('layer.run(exe, ["-shutdown"]);');
+    expect(source).toContain("steamExe: () => steamExeIn(windowsSteamRoots(), existsSync),");
+    expect(source).toContain('roots.map((root) => join(root, "steam.exe")).find((exe) => exists(exe)) ?? null;');
+    expect(source).toContain('execFile(system32("reg.exe"), ["query", "HKCU\\\\Software\\\\Valve\\\\Steam", "/v", "RunningAppID"]');
+    expect(source).toMatch(/run: \(cmd, args\) => execFile\(cmd, args, \{ timeout: 15_000, windowsHide: true, env: launcherEnv\(process\.env, realHome\(\)\) \}/);
+    // Reopening: the same startForUser (spawn, detached, no shell), with steam.exe or Heroic.exe only.
+    expect(source).toContain("return exe ? { cmd: exe, args: [] } : null;");
+  });
+});
+
 describe("HDR screen check (Linux)", () => {
   const source = readFileSync(new URL("../../electron/main/games/hdr.ts", import.meta.url), "utf8");
 

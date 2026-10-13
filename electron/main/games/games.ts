@@ -100,6 +100,18 @@ export function withEnvVars(opts: string, vars: readonly string[]): string {
 }
 export const withPreferSdl = (opts: string) => withEnvVars(opts, [PREFER_SDL]);
 
+// Windows: Steam runs Windows games natively, so PROTON_PREFER_SDL does
+// nothing there. Earlier versions could still add it; what they put in front
+// of the options is taken out again (and "%command%" alone, which they made
+// from empty options, becomes empty again). Anything else stays.
+const OUR_PREFER_SDL = `${PREFER_SDL}=1 `;
+export const hasOurPreferSdl = (opts: string) => opts.startsWith(OUR_PREFER_SDL);
+export function withoutOurPreferSdl(opts: string): string {
+  if (!hasOurPreferSdl(opts)) return opts;
+  const rest = opts.slice(OUR_PREFER_SDL.length).trim();
+  return rest === "%command%" ? "" : rest;
+}
+
 // One Steam game's launch options, changed from what's in the file when it's
 // written (several fixes may change them in one go: each keeps the others').
 const editLaunchOptions = (file: string, appid: string, change: (opts: string) => string): Edit => ({
@@ -233,8 +245,10 @@ export function scan(deps: ScanDeps): Scan {
       let gamepad: GamepadState | undefined;
       let gamepadTo: string | null = null;
       // Steam Input off for the game: Steam leaves the controller to Proton.
-      // Otherwise Steam already gives an XInput game an Xbox pad.
-      if (playable && !nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && local && install.localConfigPath && config) {
+      // Otherwise Steam already gives an XInput game an Xbox pad. Proton only:
+      // on Windows the game sees the controller the way Windows gives it.
+      const windows = process.platform === "win32";
+      if (!windows && playable && !nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && local && install.localConfigPath && config) {
         const runner = override ?? defaultRunner;
         const p = gamepadPlan({
           envSet: hasPreferSdl(opts),
@@ -263,6 +277,19 @@ export function scan(deps: ScanDeps): Scan {
             ),
           );
         }
+      }
+      if (windows && !nativeSupport(support) && local && install.localConfigPath && hasOurPreferSdl(opts)) {
+        gfixes.push(
+          fix(
+            `${prefix}:env:${g.appid}`,
+            "remove-env",
+            "steam",
+            msg("label.envSteam", { vars: PREFER_SDL, game: g.name }),
+            msg("why.preferSdlWindows", { vars: PREFER_SDL, options: withoutOurPreferSdl(opts) || msg("fallback.empty") }),
+            true,
+            [editLaunchOptions(install.localConfigPath, g.appid, withoutOurPreferSdl)],
+          ),
+        );
       }
       if (nativeSupport(support)) {
         // Only games already set to a specific compatibility tool: those certainly run
@@ -738,7 +765,7 @@ export async function applyFixes(fresh: Scan, fixIds: string[], allowed: Restart
   const unknown = fixIds.filter((_, i) => !selected[i]);
   const chosen = selected.filter((p): p is Planned => !!p);
 
-  const running = new Set([...fresh.report.launchers.filter((l) => l.running).map((l) => l.id), ...deps.launchers.running()]);
+  const running = new Set([...fresh.report.launchers.filter((l) => l.running).map((l) => l.id), ...(await deps.launchers.running())]);
   const { restart, blockedBy } = launchersToRestart(
     chosen.map((p) => p.fix.launcher),
     running,

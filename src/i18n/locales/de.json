@@ -450,6 +450,7 @@
           "runnerMissing": "{{game}} ist auf {{current}} eingestellt, das nicht mehr installiert ist, deshalb startet das Spiel nicht.",
           "steamInput": "{{support}} Steam Input ist für dieses Spiel eingeschaltet. Steam übersetzt den Controller dann in ein generisches Gamepad, und das Spiel sieht den DualSense nie. Entspricht in Steam Eigenschaften → Controller → „Steam Input deaktivieren“.",
           "envSteam": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind. Die Startoptionen werden zu: {{options}}",
+          "preferSdlWindows": "{{vars}} wirkt nur mit Proton unter Linux. Unter Windows bewirkt es nichts, darum wird die Option, die eine frühere Version hinzugefügt hat, wieder entfernt. Die Startoptionen werden zu: {{options}}",
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
           "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
           "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen.",

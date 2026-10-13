@@ -450,6 +450,7 @@
           "runnerMissing": "{{game}} está configurado com {{current}}, que não está mais instalado, então o jogo não abre.",
           "steamInput": "{{support}} O Steam Input está ligado para este jogo, então o Steam traduz o controle para um controle genérico e o jogo nunca vê o DualSense. É o mesmo que Propriedades → Controle → \"Desativar o Steam Input\" no Steam.",
           "envSteam": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis. As opções de inicialização ficam: {{options}}",
+          "preferSdlWindows": "{{vars}} só funciona com o Proton no Linux. No Windows não faz nada, então a opção que uma versão anterior adicionou é retirada. As opções de inicialização ficam: {{options}}",
           "envHeroic": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis.",
           "audioRule": "{{file}} coloca a placa de áudio do DualSense no perfil pro-audio, o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. O arquivo é renomeado para .disabled (não é apagado) e o serviço de áudio (WirePlumber) reinicia, então o som cai por um segundo.",
           "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som.",

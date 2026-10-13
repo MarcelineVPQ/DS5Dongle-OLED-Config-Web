@@ -1,12 +1,24 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Backups } from "../../electron/main/games/backup";
 import { detectRunningWindows, gameExecutables, parseTasklist, type ProcView } from "../../electron/main/games/running";
 import { findSteamInstalls, listSteamGames } from "../../electron/main/games/steam";
 import { parseEpicManifest, parseGogRegistry, readEpicGames, readGogGames, storeKey } from "../../electron/main/games/windowsStores";
 import { actionUrl } from "../../electron/main/games/actions";
-import { scan } from "../../electron/main/games/games";
+import { applyFixes, idHash, scan, withoutOurPreferSdl } from "../../electron/main/games/games";
+import {
+  heroicExeIn,
+  launcherControl,
+  steamExeIn,
+  steamAppRunning,
+  taskkillArgs,
+  windowsReopenPlan,
+  withLaunchersClosed,
+  type LauncherControl,
+  type ProcLayer,
+} from "../../electron/main/games/processes";
 import { gameDetails } from "../../electron/main/games/details";
 import { GameKeySchema } from "../../src/desktop/games/library";
 
@@ -121,5 +133,202 @@ describe("GOG Galaxy and Epic on Windows", () => {
     expect(gameDetails(home, stores.gog.games).get(storeKey(stores.gog.games[0]))?.installDir).toBe("C:\\GOG Games\\Control");
     // Their keys pass the library's key check (profiles, ratings, art, actions).
     for (const g of [...gog, { key: storeKey({ launcher: "epic", id: "Sifu_1" }) }]) expect(GameKeySchema.safeParse(g.key).success).toBe(true);
+  });
+});
+
+// ---- Closing and reopening launchers on Windows ----
+
+const winProc = (pid: number, comm: string): ProcView => ({ pid, comm, args: [], cwd: null, env: {} });
+const STEAM_EXE = "C:\\Program Files (x86)\\Steam\\steam.exe";
+const HEROIC_EXE = "C:\\Users\\x\\AppData\\Local\\Programs\\heroic\\Heroic.exe";
+
+// A fake Windows system: tasklist's names, Steam's RunningAppID / the
+// library's running game, and every command the control runs, in order.
+function winLayer(procs: () => ProcView[], o: { game?: boolean; steamExe?: string | null; heroicExe?: string | null } = {}) {
+  const calls: string[] = [];
+  const layer: ProcLayer = {
+    list: async () => procs(),
+    env: () => undefined,
+    exists: () => true,
+    run: (cmd, args) => calls.push(`run ${[cmd, ...args].join(" ")}`),
+    start: async (cmd, args) => (calls.push(`start ${[cmd, ...args].join(" ")}`), true),
+    signal: (pid) => calls.push(`signal ${pid}`),
+    sleep: async () => undefined,
+    windows: {
+      steamExe: () => (o.steamExe === undefined ? STEAM_EXE : o.steamExe),
+      heroicExe: () => (o.heroicExe === undefined ? HEROIC_EXE : o.heroicExe),
+      gameRunning: async () => !!o.game,
+    },
+  };
+  return { layer, calls };
+}
+
+describe("closing and reopening launchers on Windows", () => {
+  const steamProcs = [winProc(10, "steam.exe"), winProc(11, "steamwebhelper.exe"), winProc(12, "explorer.exe")];
+  const heroicProcs = [winProc(20, "Heroic.exe"), winProc(21, "Heroic.exe")];
+
+  it("sees Steam and Heroic in tasklist's names", async () => {
+    const { layer } = winLayer(() => [...steamProcs, ...heroicProcs]);
+    expect([...(await launcherControl(layer).running())].sort()).toEqual(["heroic", "steam"]);
+    expect([...(await launcherControl(winLayer(() => [winProc(1, "explorer.exe")]).layer).running())]).toEqual([]);
+  });
+
+  it("asks Steam to shut down by its own steam.exe and waits for it to exit", async () => {
+    let alive = 3;
+    const { layer, calls } = winLayer(() => (alive-- > 0 ? steamProcs : []));
+    expect(await launcherControl(layer).close("steam")).toBe("closed");
+    expect(calls).toEqual([`run ${STEAM_EXE} -shutdown`]);
+  });
+
+  it("asks every Heroic process to close (taskkill without /F) and waits", async () => {
+    let alive = 2;
+    const { layer, calls } = winLayer(() => (alive-- > 0 ? heroicProcs : []));
+    expect(await launcherControl(layer).close("heroic")).toBe("closed");
+    expect(calls).toEqual(["signal 20", "signal 21"]);
+    expect(taskkillArgs(20)).toEqual(["/PID", "20"]);
+  });
+
+  it("gives up after the same timeout, never killing it", async () => {
+    const { layer, calls } = winLayer(() => steamProcs);
+    expect(await launcherControl(layer, 2000).close("steam")).toBe("timeout");
+    expect(calls).toEqual([`run ${STEAM_EXE} -shutdown`]);
+  });
+
+  it("refuses while a game runs, without closing anything", async () => {
+    const { layer, calls } = winLayer(() => steamProcs, { game: true });
+    const control = launcherControl(layer);
+    expect(await control.close("steam")).toBe("game-running");
+    const run = await withLaunchersClosed(["steam"], control, () => "written");
+    expect(run).toEqual({ ok: false, problem: "game-running", launcher: "steam" });
+    expect(calls).toEqual([]);
+  });
+
+  it("fails instead of guessing when Steam's program isn't found", async () => {
+    const { layer, calls } = winLayer(() => steamProcs, { steamExe: null });
+    expect(await launcherControl(layer).close("steam")).toBe("failed");
+    expect(calls).toEqual([]);
+  });
+
+  it("starts each launcher again by its own program, after the change", async () => {
+    let procs = [...steamProcs, ...heroicProcs];
+    const { layer, calls } = winLayer(() => procs);
+    // Closing works once the launchers are gone.
+    layer.run = (cmd, args) => (calls.push(`run ${[cmd, ...args].join(" ")}`), (procs = procs.filter((p) => !p.comm.startsWith("steam"))));
+    layer.signal = (pid) => (calls.push(`signal ${pid}`), (procs = procs.filter((p) => p.pid !== pid)));
+    const run = await withLaunchersClosed(["steam", "heroic"], launcherControl(layer), () => (calls.push("write"), "written"));
+    expect(run).toEqual({ ok: true, value: "written", reopenFailed: [] });
+    expect(calls).toEqual([`run ${STEAM_EXE} -shutdown`, "signal 20", "signal 21", "write", `start ${STEAM_EXE}`, `start ${HEROIC_EXE}`]);
+  });
+
+  it("plans a reopen only for a running launcher whose program is found", () => {
+    const win = winLayer(() => []).layer.windows!;
+    expect(windowsReopenPlan("steam", steamProcs, win)).toEqual({ cmd: STEAM_EXE, args: [] });
+    expect(windowsReopenPlan("heroic", heroicProcs, win)).toEqual({ cmd: HEROIC_EXE, args: [] });
+    expect(windowsReopenPlan("heroic", steamProcs, win)).toBeNull();
+    expect(windowsReopenPlan("heroic", heroicProcs, { ...win, heroicExe: () => null })).toBeNull();
+  });
+
+  it("reads Steam's running game and finds Heroic's installed program", () => {
+    expect(steamAppRunning("\r\nHKEY_CURRENT_USER\\Software\\Valve\\Steam\r\n    RunningAppID    REG_DWORD    0x0\r\n")).toBe(false);
+    expect(steamAppRunning("    RunningAppID    REG_DWORD    0x1159e0\r\n")).toBe(true);
+    expect(steamAppRunning("ERROR: The system was unable to find the specified registry key or value.")).toBe(false);
+    const env = { LOCALAPPDATA: "C:\\Users\\x\\AppData\\Local", ProgramFiles: "C:\\Program Files" };
+    expect(heroicExeIn(env, (p) => p.startsWith("C:\\Program Files"))).toBe(join("C:\\Program Files", "Heroic", "Heroic.exe"));
+    expect(heroicExeIn(env, () => false)).toBeNull();
+    expect(steamExeIn(["C:\\Steam", "D:\\Steam"], (p) => p.startsWith("D:"))).toBe(join("D:\\Steam", "steam.exe"));
+    expect(steamExeIn([], () => true)).toBeNull();
+  });
+});
+
+// ---- The standard-gamepad fix is Proton only ----
+
+describe("the standard-gamepad fix on Windows", () => {
+  let real: NodeJS.Platform;
+  let home: string;
+  let backups: Backups;
+  const saved = { x86: process.env["ProgramFiles(x86)"], pf: process.env.ProgramFiles };
+  const steamRoot = () => join(home, "pf", "Steam");
+  const localconfig = () => join(steamRoot(), "userdata", "1", "config", "localconfig.vdf");
+  const options = (id: string, opts: string) => `\t\t\t\t\t"${id}"\n\t\t\t\t\t{\n\t\t\t\t\t\t"LaunchOptions"\t\t"${opts}"\n\t\t\t\t\t}\n`;
+
+  beforeEach(() => {
+    real = process.platform;
+    Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+    home = realpathSync(mkdtempSync(join(tmpdir(), "ds5-win-xinput-")));
+    backups = new Backups(join(home, "backups"));
+    // Steam's install folder comes from Program Files here (no registry on the test machine).
+    process.env["ProgramFiles(x86)"] = join(home, "pf");
+    delete process.env.ProgramFiles;
+    const steam = steamRoot();
+    const w = (path: string, text: string) => (mkdirSync(join(path, ".."), { recursive: true }), writeFileSync(path, text));
+    w(join(steam, "config", "config.vdf"), '"InstallConfigStore"\n{\n}\n');
+    // Ghostrunner (XInput-only, Steam Input off): earlier versions put the option in
+    // front; Hades (marked "controller not detected"): the same on empty options;
+    // Control: the player's own options with the variable elsewhere.
+    w(
+      localconfig(),
+      `"UserLocalConfigStore"\n{\n\t"Software"\n\t{\n\t\t"Valve"\n\t\t{\n\t\t\t"Steam"\n\t\t\t{\n\t\t\t\t"apps"\n\t\t\t\t{\n${options("1139900", "PROTON_PREFER_SDL=1 %command% -dx11")}${options("1145360", "PROTON_PREFER_SDL=1 %command%")}${options("870780", "-windowed PROTON_PREFER_SDL=1")}\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\t"apps"\n\t{\n\t\t"1139900"\n\t\t{\n\t\t\t"UseSteamControllerConfig"\t\t"0"\n\t\t}\n\t\t"1145360"\n\t\t{\n\t\t\t"UseSteamControllerConfig"\t\t"0"\n\t\t}\n\t}\n}\n`,
+    );
+    w(join(steam, "steamapps", "libraryfolders.vdf"), `"libraryfolders"\n{\n\t"0"\n\t{\n\t\t"path"\t\t"${steam}"\n\t}\n}\n`);
+    for (const [id, name] of [
+      ["1139900", "Ghostrunner"],
+      ["1145360", "Hades"],
+      ["870780", "Control Ultimate Edition"],
+    ])
+      w(join(steam, "steamapps", `appmanifest_${id}.acf`), `"AppState"\n{\n\t"appid"\t\t"${id}"\n\t"name"\t\t"${name}"\n}\n`);
+  });
+  afterEach(() => {
+    Object.defineProperty(process, "platform", { value: real, configurable: true });
+    for (const [key, value] of [
+      ["ProgramFiles(x86)", saved.x86],
+      ["ProgramFiles", saved.pf],
+    ] as const)
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  const scanNow = () => scan({ home, ourProton: null, latestProton: null, latestSize: null, running: new Set(), audioCards: [], notDetected: new Set([`steam-${idHash(steamRoot())}:steam:1145360`]) });
+  const noControl: LauncherControl = { running: () => new Set(), gameRunning: () => false, plan: () => null, close: async () => "not-running", reopen: async () => true };
+
+  it("is never offered, for listed or marked games", () => {
+    const { report } = scanNow();
+    const fixes = report.games.flatMap((g) => g.fixes);
+    expect(fixes.filter((f) => f.kind === "standard-gamepad")).toEqual([]);
+    expect(report.games.every((g) => g.gamepad === undefined)).toBe(true);
+  });
+
+  it("offers to take out the option earlier versions added, recommended and undoable", async () => {
+    const before = readFileSync(localconfig(), "utf8");
+    const fresh = scanNow();
+    const cleanups = fresh.report.games.flatMap((g) => g.fixes).filter((f) => f.kind === "remove-env");
+    const prefix = `steam-${idHash(steamRoot())}`;
+    expect(cleanups.map((f) => [f.id, f.recommended])).toEqual([
+      [`${prefix}:env:1139900`, true],
+      [`${prefix}:env:1145360`, true],
+    ]);
+    expect(cleanups[0].why).toEqual({ key: "why.preferSdlWindows", params: { vars: "PROTON_PREFER_SDL", options: "%command% -dx11" } });
+    expect(cleanups[1].why).toEqual({ key: "why.preferSdlWindows", params: { vars: "PROTON_PREFER_SDL", options: { key: "fallback.empty" } } });
+    const r = await applyFixes(
+      fresh,
+      cleanups.map((f) => f.id),
+      [],
+      { backups, launchers: noControl, restartWirePlumber: async () => undefined, setCardProfile: async () => undefined },
+    );
+    expect(r.applied.every((a) => a.ok)).toBe(true);
+    const after = readFileSync(localconfig(), "utf8");
+    expect(after).toContain('"1139900"\n\t\t\t\t\t{\n\t\t\t\t\t\t"LaunchOptions"\t\t"%command% -dx11"');
+    expect(after).toContain('"1145360"\n\t\t\t\t\t{\n\t\t\t\t\t\t"LaunchOptions"\t\t""');
+    // The player's own options are never touched.
+    expect(after).toContain('"LaunchOptions"\t\t"-windowed PROTON_PREFER_SDL=1"');
+    expect(scanNow().report.games.flatMap((g) => g.fixes)).toEqual([]);
+    backups.restore(r.backupId!);
+    expect(readFileSync(localconfig(), "utf8")).toBe(before);
+  });
+
+  it("takes out only what it put in front", () => {
+    expect(withoutOurPreferSdl("PROTON_PREFER_SDL=1 gamemoderun %command%")).toBe("gamemoderun %command%");
+    expect(withoutOurPreferSdl("PROTON_PREFER_SDL=1 %command%")).toBe("");
+    expect(withoutOurPreferSdl("-x PROTON_PREFER_SDL=1 %command%")).toBe("-x PROTON_PREFER_SDL=1 %command%");
   });
 });

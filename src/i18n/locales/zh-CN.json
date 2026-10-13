@@ -447,6 +447,7 @@
           "runnerMissing": "{{game}} 被设置为 {{current}}，但它已不再安装，所以游戏无法启动。",
           "steamInput": "{{support}}此游戏开启了 Steam Input，Steam 会把控制器转换为通用控制器，游戏永远看不到 DualSense。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
           "envSteam": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。启动选项将变为：{{options}}",
+          "preferSdlWindows": "{{vars}} 仅适用于 Linux 上的 Proton。在 Windows 上它不起作用，因此会删除旧版本添加的这个选项。启动选项将变为：{{options}}",
           "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
           "audioRule": "{{file}} 会把 DualSense 的声卡切换到 pro-audio 配置，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。该文件会被重命名为 .disabled（不会删除），音频服务 (WirePlumber) 会重启，声音会中断一秒。",
           "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。",
