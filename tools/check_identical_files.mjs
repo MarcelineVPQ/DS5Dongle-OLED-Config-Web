@@ -23,10 +23,6 @@ import { basename, join, resolve } from "node:path";
 // identical, and why (the review finding and the batch that removes it).
 const ALLOWED = [
   {
-    files: ["app:docs/screenshots/live-controller.png", "firmware:docs/screenshots/live-controller.png"],
-    why: "F39 (quality pass dev.6): the app side is done (batch 6: GUIDE.md uses live-controller.png); the firmware repo removes its copy and its READMEs link the app copy's raw URL",
-  },
-  {
     files: ["app:assets-src/edge/LICENSE", "app:src/assets/DAIDR-LICENSE.txt"],
     why: "intended: daidr's MIT notice travels with each copy of the art (the source art, and the art bundled into the app)",
   },
