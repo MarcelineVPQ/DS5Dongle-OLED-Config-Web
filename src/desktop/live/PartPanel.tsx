@@ -879,18 +879,20 @@ function SpeakerTest() {
     <section className="dk-card">
       <h2>{t("desktop.audioTest.speakerTitle")}</h2>
       <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
-      <div className="dk-row-btns">
-        <BusyButton className="dk-btn" onClick={play} countdown={Math.ceil(tuneSeconds())} onStop={() => stopRef.current?.()}>
-          {t("desktop.audioTest.speakerButton")}
-        </BusyButton>
-        {playing && (
-          <button type="button" className="dk-btn" onClick={() => stopRef.current?.()}>
-            {t("desktop.common.stop", "Stop")}
-          </button>
-        )}
-      </div>
-      <div className="live-level" role="progressbar" aria-label={t("desktop.audioTest.speakerTitle")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-        <Meter value={progress} />
+      <div className="dk-stack">
+        <div className="dk-row-btns">
+          <BusyButton className="dk-btn" onClick={play} countdown={Math.ceil(tuneSeconds())} onStop={() => stopRef.current?.()}>
+            {t("desktop.audioTest.speakerButton")}
+          </BusyButton>
+          {playing && (
+            <button type="button" className="dk-btn" onClick={() => stopRef.current?.()}>
+              {t("desktop.common.stop", "Stop")}
+            </button>
+          )}
+        </div>
+        <div className="live-level" role="progressbar" aria-label={t("desktop.audioTest.speakerTitle")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+          <Meter value={progress} />
+        </div>
       </div>
       {state === "none" && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
     </section>
