@@ -47,6 +47,7 @@ function buildHome(home: string) {
   write(join(heroic, "config.json"), JSON.stringify({ defaultSettings: { wineVersion: wine("GE-Proton-latest"), keep: 1 }, version: "v0" }, null, 2));
   write(join(heroic, `tools/proton/${OURS}/proton`), "");
   write(join(heroic, "tools/proton/GE-Proton-latest/proton"), "");
+  write(join(heroic, "tools/proton/GE-Proton-latest/version"), "1791920210 GE-Proton11-10"); // newer than our build: a fine target
   write(join(heroic, "sideload_apps/library.json"), JSON.stringify({ games: [{ app_name: "bnet", title: "Battle.net", is_installed: true, install: { platform: "windows" } }] }));
   write(
     join(heroic, "GamesConfig/bnet.json"),
@@ -290,8 +291,9 @@ describe("Games safety helpers", () => {
   it("picks the newest of our builds", () => {
     expect(newestLocalBuild(["GE-Proton11-7-DualSense", "GE-Proton11-10-DualSense", "GE-Proton-latest", "GE-Proton10-20260205-DS5"])).toBe("GE-Proton11-10-DualSense");
     expect(newestLocalBuild(["GE-Proton-latest"])).toBeNull();
-    // A rebuild of the same version (-2) is newer.
-    expect(newestLocalBuild(["GE-Proton11-7-DualSense", "GE-Proton11-7-DualSense-2"])).toBe("GE-Proton11-7-DualSense-2");
+    // A rebuild of the same version (.2) is newer; a newer GE version is newer still.
+    expect(newestLocalBuild(["GE-Proton11-7-DualSense", "GE-Proton11-7.2-DualSense"])).toBe("GE-Proton11-7.2-DualSense");
+    expect(newestLocalBuild(["GE-Proton11-7.2-DualSense", "GE-Proton11-10-DualSense"])).toBe("GE-Proton11-10-DualSense");
   });
 
   it("reads the DualSense card's profile and spots pro-audio rules", () => {

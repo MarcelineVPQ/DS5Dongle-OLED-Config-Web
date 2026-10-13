@@ -399,6 +399,15 @@
       "hidrawNo": "os jogos não alcançam o controle (falta a regra udev)",
       "envOk": "nada força o modo Xbox (SDL)",
       "envHint": "Essas variáveis são definidas fora dos launchers, então o app não as altera. Remova-as do arquivo indicado e entre de novo na sessão.",
+      "hdr": "HDR",
+      "hdrOn": "ativado em {{outputs}}",
+      "hdrOff": {
+        "kde": "nenhuma tela com HDR ativado",
+        "other-desktop": "não verificado neste desktop (só KDE Plasma)",
+        "x11": "precisa de uma sessão Wayland",
+        "failed": "não foi possível verificar (kscreen-doctor)",
+        "unchecked": "não verificado"
+      },
       "systemRule": "Uma regra de áudio do sistema força pro-audio. Ela fica fora da sua pasta pessoal, então o app não a altera.",
       "changesTitle": "Mudanças recomendadas",
       "allGood": "Tudo configurado. Nada para mudar.",
@@ -430,7 +439,8 @@
           "envHeroic": "Remover {{vars}} das variáveis de ambiente de {{game}}",
           "audioRule": "Desativar a regra de áudio que força o controle para \"pro-audio\"",
           "audioProfile": "Mudar o áudio do controle para o perfil \"{{profile}}\"",
-          "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)"
+          "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)",
+          "hdr": "Ativar HDR para {{game}}"
         },
         "why": {
           "defaultSteam": "O Steam roda jogos de Windows hoje com {{current}}. É o nosso build que faz os gatilhos adaptáveis e a resposta tátil funcionarem {{device_por}}. Jogos com um Proton específico mantêm a própria configuração.",
@@ -445,7 +455,10 @@
           "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som.",
           "gamepad": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração.{{runner}}",
           "gamepadSteam": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração. As opções de inicialização ficam: {{options}}{{runner}}",
-          "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}."
+          "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}.",
+          "hdr": "{{game}} é compatível com HDR. Com PROTON_ENABLE_WAYLAND=1 e PROTON_ENABLE_HDR=1, o Proton o executa como janela nativa do Wayland, e é assim que ele ganha HDR. Jogue na sua tela HDR ({{outputs}}). Se o jogo apresentar problemas, Desfazer deixa tudo como estava.{{runner}}",
+          "hdrSteam": "{{game}} é compatível com HDR. Com PROTON_ENABLE_WAYLAND=1 e PROTON_ENABLE_HDR=1, o Proton o executa como janela nativa do Wayland, e é assim que ele ganha HDR. Jogue na sua tela HDR ({{outputs}}). O overlay da Steam pode não aparecer neste modo. Se o jogo apresentar problemas, Desfazer deixa tudo como estava. As opções de inicialização ficam: {{options}}{{runner}}",
+          "hdrRunner": " {{current}} não oferece suporte a isso, então o jogo também passa para {{proton}}."
         },
         "support": {
           "triggers": "Este jogo suporta os gatilhos adaptáveis e a resposta tátil do DualSense.",
@@ -938,8 +951,20 @@
       "lockVolume": "Travar volume",
       "gamepadSet": "O controle chega a este jogo como controle padrão (XInput).",
       "gamepadSteamInput": "O Steam Input não está desligado para este jogo, então a Steam já entrega a ele um controle de Xbox: a opção de controle padrão não é necessária.",
-      "gamepadNoBuild": "Este jogo precisa da opção de controle padrão (PROTON_PREFER_SDL), mas {{runner}} a ignora e nenhum Proton que a respeite está instalado. Instale nosso Proton DualSense mais novo (-DualSense-2 ou posterior) ou um GE-Proton comum.",
-      "notDetectedHint": "Marque isto se o jogo não reage ao controle: o app então oferece passá-lo ao jogo como controle padrão (XInput)."
+      "gamepadNoBuild": "Este jogo precisa da opção de controle padrão (PROTON_PREFER_SDL), mas {{runner}} a ignora e nenhum Proton que a respeite está instalado. Instale nosso Proton DualSense mais novo (GE-Proton11-7.2-DualSense ou posterior) ou um GE-Proton comum.",
+      "notDetectedHint": "Marque isto se o jogo não reage ao controle: o app então oferece passá-lo ao jogo como controle padrão (XInput).",
+      "hdrSet": "O HDR está ativado para este jogo: ele roda como janela nativa do Wayland.",
+      "hdrNoScreen": {
+        "kde": "Nenhuma tela está com HDR ativado agora, então \"Ativar HDR\" não é oferecido. Ative o HDR da sua tela nas configurações de tela do KDE e verifique de novo.",
+        "other-desktop": "\"Ativar HDR\" só é oferecido no KDE Plasma (Wayland): o app não consegue verificar a configuração de HDR deste desktop.",
+        "x11": "\"Ativar HDR\" precisa de uma sessão Wayland: este desktop roda em X11.",
+        "failed": "O app não conseguiu ler as configurações de tela (kscreen-doctor), então \"Ativar HDR\" não é oferecido.",
+        "unchecked": "As telas não foram verificadas, então \"Ativar HDR\" não é oferecido."
+      },
+      "hdrNoBuild": "O HDR precisa do GE-Proton 10 ou mais recente (incluindo nosso Proton DualSense), mas {{runner}} não oferece suporte e nenhum está instalado.",
+      "hdrPickRunner": "Este jogo usa o Proton padrão da Steam, {{runner}}, que não oferece suporte a HDR. Na Steam, escolha o GE-Proton 10 ou mais recente (ou nosso Proton DualSense) em Propriedades → Compatibilidade e verifique de novo.",
+      "supportsHdr": "Compatível com HDR",
+      "supportsHdrHint": "Marque isto se o jogo tem uma opção de HDR no PC: o app então oferece ativar o HDR para ele quando uma tela estiver com HDR ativado."
     },
     "dongleConsole": {
       "title": "Console: {{deviceName}}",

@@ -135,6 +135,13 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["games"],
     platform: "linux",
   },
+  {
+    column: "next",
+    title: "HDR for games",
+    text: "Games with HDR get it on KDE Plasma: when a screen has HDR on, Games offers to run them as native Wayland windows with HDR.",
+    areas: ["games"],
+    platform: "linux",
+  },
   { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"], platform: "linux" },
   { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
   { column: "planned", title: "Guide in every language", text: "The Guide translated into all the app's languages.", areas: ["app"] },

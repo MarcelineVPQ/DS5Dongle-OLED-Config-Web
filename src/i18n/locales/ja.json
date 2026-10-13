@@ -399,6 +399,15 @@
       "hidrawNo": "ゲームがコントローラーにアクセスできません（udev ルールがありません）",
       "envOk": "Xbox (SDL) モードを強制する設定はありません",
       "envHint": "これらの変数はランチャーの外で設定されているため、このアプリでは変更しません。上記のファイルから削除し、ログインし直してください。",
+      "hdr": "HDR",
+      "hdrOn": "{{outputs}} でオン",
+      "hdrOff": {
+        "kde": "HDR がオンの画面はありません",
+        "other-desktop": "このデスクトップでは未確認（KDE Plasma のみ）",
+        "x11": "Wayland セッションが必要です",
+        "failed": "確認できませんでした（kscreen-doctor）",
+        "unchecked": "未確認"
+      },
       "systemRule": "システム全体の音声ルールが pro-audio を強制しています。ホームフォルダーの外にあるため、このアプリでは変更しません。",
       "changesTitle": "おすすめの変更",
       "allGood": "すべて設定済みです。変更はありません。",
@@ -427,7 +436,8 @@
           "envHeroic": "{{game}} の環境変数から {{vars}} を削除する",
           "audioRule": "コントローラーを「pro-audio」に固定する音声ルールを無効にする",
           "audioProfile": "コントローラーの音声を「{{profile}}」プロファイルに切り替える",
-          "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す"
+          "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す",
+          "hdr": "{{game}} の HDR をオンにする"
         },
         "why": {
           "defaultSteam": "Steam は現在 {{current}} で Windows ゲームを実行しています。{{device}} 経由でアダプティブトリガーとハプティックフィードバックを動かすには当プロジェクトのビルドが必要です。個別に Proton を指定したゲームはその設定のままです。",
@@ -442,7 +452,10 @@
           "audioProfile": "DualSense のサウンドカードが「{{profile}}」になっているため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは変更されません。サウンド設定でプロファイルを選ぶのと同じです。",
           "gamepad": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。{{runner}}",
           "gamepadSteam": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。起動オプションは次のようになります: {{options}}{{runner}}",
-          "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。"
+          "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。",
+          "hdr": "{{game}} は HDR に対応しています。PROTON_ENABLE_WAYLAND=1 と PROTON_ENABLE_HDR=1 で、Proton はゲームをネイティブの Wayland ウィンドウとして実行し、HDR が使えるようになります。HDR の画面（{{outputs}}）でプレイしてください。ゲームの動作がおかしい場合は、元に戻すで元の設定に戻せます。{{runner}}",
+          "hdrSteam": "{{game}} は HDR に対応しています。PROTON_ENABLE_WAYLAND=1 と PROTON_ENABLE_HDR=1 で、Proton はゲームをネイティブの Wayland ウィンドウとして実行し、HDR が使えるようになります。HDR の画面（{{outputs}}）でプレイしてください。このモードでは Steam オーバーレイが表示されないことがあります。ゲームの動作がおかしい場合は、元に戻すで元の設定に戻せます。起動オプションは次のようになります: {{options}}{{runner}}",
+          "hdrRunner": "{{current}} はこれに対応していないため、ゲームを {{proton}} にも切り替えます。"
         },
         "support": {
           "triggers": "このゲームは DualSense のアダプティブトリガーとハプティックフィードバックに対応しています。",
@@ -932,8 +945,20 @@
       "lockVolume": "音量をロック",
       "gamepadSet": "コントローラーは標準ゲームパッド（XInput）としてこのゲームに届いています。",
       "gamepadSteamInput": "このゲームでは Steam Input がオフになっていないため、Steam がすでに Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。",
-      "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（-DualSense-2 以降）か通常の GE-Proton をインストールしてください。",
-      "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。"
+      "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
+      "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。",
+      "hdrSet": "このゲームは HDR がオンです。ネイティブの Wayland ウィンドウで動作します。",
+      "hdrNoScreen": {
+        "kde": "現在 HDR がオンの画面がないため、「HDR をオンにする」は表示されません。KDE のディスプレイ設定で画面の HDR をオンにしてから、再スキャンしてください。",
+        "other-desktop": "「HDR をオンにする」は KDE Plasma（Wayland）でのみ表示されます。このデスクトップの HDR 設定はアプリから確認できません。",
+        "x11": "「HDR をオンにする」には Wayland セッションが必要です。このデスクトップは X11 で動作しています。",
+        "failed": "画面の設定を読み取れなかったため（kscreen-doctor）、「HDR をオンにする」は表示されません。",
+        "unchecked": "画面を確認していないため、「HDR をオンにする」は表示されません。"
+      },
+      "hdrNoBuild": "HDR には GE-Proton 10 以降（DualSense Proton を含む）が必要ですが、{{runner}} は対応しておらず、対応する Proton もインストールされていません。",
+      "hdrPickRunner": "このゲームは Steam の既定の {{runner}} を使っていますが、HDR に対応していません。Steam の「プロパティ → 互換性」で GE-Proton 10 以降（または DualSense Proton）を選んでから、再スキャンしてください。",
+      "supportsHdr": "HDR 対応",
+      "supportsHdrHint": "PC 版に HDR の設定があるゲームならチェックしてください。HDR がオンの画面があるとき、アプリがこのゲームの HDR をオンにすることを提案します。"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",

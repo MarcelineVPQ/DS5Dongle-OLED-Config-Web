@@ -218,6 +218,17 @@ describe("closing and reopening game launchers (Linux)", () => {
   });
 });
 
+describe("HDR screen check (Linux)", () => {
+  const source = readFileSync(new URL("../../electron/main/games/hdr.ts", import.meta.url), "utf8");
+
+  it("runs only kscreen-doctor -o: fixed argv, no shell, a timeout, read-only", () => {
+    expect(source).toContain("const run = promisify(execFile);");
+    expect(source).toMatch(/exec\("kscreen-doctor", \["-o"\], \{ timeout: 5000, /);
+    expect(source.match(/(?<!\.)\bexec\(/g)).toHaveLength(1); // the only program it runs
+    expect(source).not.toMatch(/execSync|spawn|shell: true|writeFile|--output|\.(?:hdr|mode|enable)\./);
+  });
+});
+
 describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 

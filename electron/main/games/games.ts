@@ -8,13 +8,28 @@ import { errorText } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDocument } from "yaml";
-import { dualSenseSupport } from "../../../src/desktop/games/knownGames";
+import { dualSenseSupport, knownHdr } from "../../../src/desktop/games/knownGames";
 import { compareProtonNames, PROTON_NAME } from "../../../src/update/manifest";
-import type { ApplyResult, DualSenseSupport, Fix, FixKind, GameEntry, GamepadState, GamesReport, LauncherId, LauncherInfo, Msg, RestartList, SystemInfo } from "../../../src/desktop/games/types";
+import type {
+  ApplyResult,
+  DualSenseSupport,
+  Fix,
+  FixKind,
+  GameEntry,
+  GamepadState,
+  GamesReport,
+  HdrScreens,
+  HdrState,
+  LauncherId,
+  LauncherInfo,
+  Msg,
+  RestartList,
+  SystemInfo,
+} from "../../../src/desktop/games/types";
 import { Backups, writeFileAtomic, type Owner } from "./backup";
 import { findHeroicInstalls, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
 import { findLutrisInstalls, listLutrisGames, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
-import { buildHonoursPreferSdl, hasBuild, preferSdlBuild } from "./proton";
+import { buildHonoursHdr, buildHonoursPreferSdl, hasBuild, hdrBuild, HDR_VARS, preferSdlBuild } from "./proton";
 import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
@@ -49,6 +64,8 @@ export interface ScanDeps {
   audioCards: AudioCard[];
   windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
   notDetected?: Set<string>; // game keys the player marked "controller not detected"
+  hdrMarked?: Set<string>; // game keys the player marked "Supports HDR"
+  hdr?: HdrScreens; // the desktop's HDR screens right now (hdr.ts)
 }
 
 export interface Scan {
@@ -69,15 +86,50 @@ const nativeSupport = (s: DualSenseSupport) => s === "triggers" || s === "haptic
 // only knows XInput sees no controller; PROTON_PREFER_SDL=1 (per game) makes
 // Proton hand it over as a standard gamepad instead.
 export const PREFER_SDL = "PROTON_PREFER_SDL";
-const PREFER_SDL_ASSIGN = new RegExp(`(^|\\s)${PREFER_SDL}=\\S*`, "g");
 
 export const hasPreferSdl = (opts: string) => sdlVarsIn(opts).includes(PREFER_SDL);
-// Steam launch options with PROTON_PREFER_SDL=1 in front of %command%; the
-// player's own options stay as they are (game arguments without %command% go after it).
-export function withPreferSdl(opts: string): string {
-  const rest = opts.replace(PREFER_SDL_ASSIGN, "").trim();
-  if (!rest) return `${PREFER_SDL}=1 %command%`;
-  return rest.includes("%command%") ? `${PREFER_SDL}=1 ${rest}` : `${PREFER_SDL}=1 %command% ${rest}`;
+
+// Steam launch options with `vars`=1 in front of %command%; the player's own
+// options (and other variables) stay as they are, an earlier value of these
+// variables is replaced (game arguments without %command% go after it).
+export function withEnvVars(opts: string, vars: readonly string[]): string {
+  const rest = vars.reduce((o, v) => o.replace(new RegExp(`(^|\\s)${v}=\\S*`, "g"), ""), opts).trim();
+  const set = vars.map((v) => `${v}=1`).join(" ");
+  if (!rest) return `${set} %command%`;
+  return rest.includes("%command%") ? `${set} ${rest}` : `${set} %command% ${rest}`;
+}
+export const withPreferSdl = (opts: string) => withEnvVars(opts, [PREFER_SDL]);
+
+// One Steam game's launch options, changed from what's in the file when it's
+// written (several fixes may change them in one go: each keeps the others').
+const editLaunchOptions = (file: string, appid: string, change: (opts: string) => string): Edit => ({
+  file,
+  format: "vdf",
+  mutate: (doc) => {
+    const node = ensureNode(doc, "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", appid);
+    setKey(node, "LaunchOptions", change(getString(node, "LaunchOptions") ?? ""));
+  },
+});
+
+// ---- HDR for HDR games ----
+// Without options Proton runs games through XWayland, which has no HDR; with
+// PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 (GE-Proton 10+) the game is a
+// native Wayland window and can use the HDR screen.
+const enabled = (value: string | undefined) => value !== undefined && !["", "0"].includes(value.replace(/^(["'])(.*)\1$/, "$2"));
+const ENV_ASSIGN = /(?:^|\s)(\w+)=(\S*)/g;
+// Both HDR options set (not "0") in Steam launch options or an env list.
+export const hasHdrVars = (env: Record<string, string>) => HDR_VARS.every((v) => enabled(env[v]));
+export const steamEnv = (opts: string): Record<string, string> => Object.fromEntries([...opts.matchAll(ENV_ASSIGN)].map((m) => [m[1], m[2]]));
+export const withHdr = (opts: string) => withEnvVars(opts, HDR_VARS);
+
+// What an HDR game needs: the options (addEnv) and/or a Proton that honours
+// them (switchTo); `canSwitch` false when the runner mustn't be changed here.
+export function hdrPlan(o: { envSet: boolean; honours: boolean; target: string | null; screen: boolean; canSwitch?: boolean }): { state: HdrState; addEnv: boolean; switchTo: string | null } {
+  if (o.envSet && o.honours) return { state: "set", addEnv: false, switchTo: null };
+  if (!o.screen) return { state: "no-screen", addEnv: false, switchTo: null };
+  if (!o.honours && o.canSwitch === false) return { state: "pick-runner", addEnv: false, switchTo: null };
+  if (!o.honours && !o.target) return { state: "no-build", addEnv: false, switchTo: null };
+  return { state: "needed", addEnv: !o.envSet, switchTo: o.honours ? null : o.target };
 }
 
 // What a game wanting a standard gamepad needs: the option (addEnv) and/or a
@@ -88,6 +140,9 @@ export function gamepadPlan(o: { envSet: boolean; honours: boolean; target: stri
   if (o.envSet && o.honours) return { state: "set", addEnv: false, switchTo: null };
   return { state: "needed", addEnv: !o.envSet, switchTo: o.honours ? null : o.target };
 }
+
+// A game entry's optional states (only set for the games they apply to).
+const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined) => ({ ...(gamepad ? { gamepad } : {}), ...(hdr ? { hdr } : {}) });
 
 // Fix ids are built from what they point at (an install root, a file path),
 // never a list position, so an id from the review screen can only resolve to
@@ -100,6 +155,7 @@ const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers
 const orMsg = (value: string | null | undefined, fallbackKey: string): string | Msg => value ?? msg(fallbackKey);
 // The standard-gamepad fix's sentence about moving the game to another Proton ("" when it doesn't).
 const runnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.gamepadRunner", { current, proton: to }) : "");
+const hdrRunnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.hdrRunner", { current: current || msg("fallback.steamProton"), proton: to }) : "");
 
 // Newest of our DualSense builds installed in any launcher.
 export function newestLocalBuild(names: string[]): string | null {
@@ -112,6 +168,15 @@ export function scan(deps: ScanDeps): Scan {
   const launchers: LauncherInfo[] = [];
   const ours = deps.ourProton;
   const add = (p: Planned) => plan.set(p.fix.id, p);
+  const hdrScreens: HdrScreens = deps.hdr ?? { check: "unchecked", outputs: [] };
+  const screen = hdrScreens.outputs.length > 0;
+  const isHdrGame = (title: string, key: string) => knownHdr(title) || !!deps.hdrMarked?.has(key);
+  // The Proton an HDR game moves to: one another fix already moves it to, if
+  // that honours the options (so both write the same), else the newest that does.
+  const hdrTarget = (candidates: Array<string | null>, names: string[], dirs: string[], needsPreferSdl: boolean, current: string | null | undefined) =>
+    candidates.find((c): c is string => !!c && buildHonoursHdr(c, dirs) && (!needsPreferSdl || buildHonoursPreferSdl(c, dirs))) ?? hdrBuild(names, dirs, needsPreferSdl, current);
+  const wantsGamepad = (g: GamepadState | undefined) => g === "set" || g === "needed";
+  const planHdr = (o: Omit<Parameters<typeof hdrPlan>[0], "screen">) => hdrPlan({ ...o, screen });
   const fix = (id: string, kind: FixKind, launcher: Fix["launcher"], label: Msg, why: Msg, recommended: boolean, edits: Edit[], post?: PostAction): Fix => {
     const f: Fix = { id, kind, launcher, label, why, files: [...new Set(edits.flatMap((e) => (e.format === "disable" ? [e.file, `${e.file}.disabled`] : [e.file])))], recommended };
     add({ fix: f, edits, post });
@@ -166,6 +231,7 @@ export function scan(deps: ScanDeps): Scan {
       const key = `${prefix}:steam:${g.appid}`;
       const gfixes: Fix[] = [];
       let gamepad: GamepadState | undefined;
+      let gamepadTo: string | null = null;
       // Steam Input off for the game: Steam leaves the controller to Proton.
       // Otherwise Steam already gives an XInput game an Xbox pad.
       if (playable && !nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && local && install.localConfigPath && config) {
@@ -173,19 +239,15 @@ export function scan(deps: ScanDeps): Scan {
         const p = gamepadPlan({
           envSet: hasPreferSdl(opts),
           honours: !runner || buildHonoursPreferSdl(runner, [install.toolsDir]),
-          target: preferSdlBuild(tools, [install.toolsDir]),
+          target: preferSdlBuild(tools, [install.toolsDir], runner),
           steamInputOff: input === "off",
         });
         gamepad = p.state;
+        gamepadTo = p.switchTo;
         if (p.state === "needed") {
           const localPath = install.localConfigPath;
           const edits: Edit[] = [];
-          if (p.addEnv)
-            edits.push({
-              file: localPath,
-              format: "vdf",
-              mutate: (doc) => setKey(ensureNode(doc, "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", g.appid), "LaunchOptions", withPreferSdl(opts)),
-            });
+          if (p.addEnv) edits.push(editLaunchOptions(localPath, g.appid, withPreferSdl));
           // A per-game entry, also when the game follows the default: the
           // option only matters under Proton, so this is a Windows game.
           if (p.switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, p.switchTo!) });
@@ -239,13 +301,38 @@ export function scan(deps: ScanDeps): Scan {
               msg("label.envSteam", { vars: envFlags.join(", "), game: g.name }),
               msg("why.envSteam", { vars: envFlags.join(", "), options: stripSdlVars(opts) || msg("fallback.empty") }),
               true,
-              [
-                {
-                  file: install.localConfigPath,
-                  format: "vdf",
-                  mutate: (doc) => setKey(ensureNode(doc, "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", g.appid), "LaunchOptions", stripSdlVars(opts)),
-                },
-              ],
+              [editLaunchOptions(install.localConfigPath, g.appid, stripSdlVars)],
+            ),
+          );
+        }
+      }
+      // HDR: judged on the game's Proton now; a game that follows Steam's
+      // default is only moved for games on our list (all Windows-only): a
+      // per-game Proton would switch a native Linux game to its Windows version.
+      let hdr: HdrState | undefined;
+      if (playable && isHdrGame(g.name, key) && local && install.localConfigPath && config) {
+        const runner = override ?? defaultRunner;
+        const ourRunnerFix = nativeSupport(support) && ours && protonInstalled && override !== null && override !== ours ? ours : null;
+        const p = planHdr({
+          envSet: hasHdrVars(steamEnv(opts)),
+          honours: !!runner && buildHonoursHdr(runner, [install.toolsDir]),
+          target: hdrTarget([gamepadTo, ourRunnerFix], tools, [install.toolsDir], wantsGamepad(gamepad), runner),
+          canSwitch: override !== null || knownHdr(g.name),
+        });
+        hdr = p.state;
+        if (p.state === "needed") {
+          const edits: Edit[] = [];
+          if (p.addEnv) edits.push(editLaunchOptions(install.localConfigPath, g.appid, withHdr));
+          if (p.switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, p.switchTo!) });
+          gfixes.push(
+            fix(
+              `${prefix}:hdr:${g.appid}`,
+              "hdr-on",
+              "steam",
+              msg("label.hdr", { game: g.name }),
+              msg("why.hdrSteam", { game: g.name, outputs: hdrScreens.outputs.join(", "), options: p.addEnv ? withHdr(opts) : opts, runner: hdrRunnerSwitch(runner ?? "", p.switchTo) }),
+              true,
+              edits,
             ),
           );
         }
@@ -262,7 +349,7 @@ export function scan(deps: ScanDeps): Scan {
         steamInput: input,
         envFlags,
         support,
-        ...(gamepad ? { gamepad } : {}),
+        ...gameStates(gamepad, hdr),
         fixes: playable ? gfixes : [],
         ...(kind && kind !== "game" ? { kind } : {}),
       });
@@ -303,17 +390,19 @@ export function scan(deps: ScanDeps): Scan {
       let gamepad: GamepadState | undefined;
       let gamepadFix: Fix | null = null;
       let gamepadSwitches = false;
+      let gamepadTo: string | null = null;
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && hasConfig) {
         const runner = runnerFix ? ourWine : (g.wineVersion ?? def);
         const p = gamepadPlan({
           envSet: g.env.some((e) => e.key === PREFER_SDL && sdlVarForcing(e.key, e.value)),
           honours: !runner || buildHonoursPreferSdl(runner.name, [install.toolsDir, dirname(dirname(runner.bin))]),
-          target: preferSdlBuild(tools, [install.toolsDir]),
+          target: preferSdlBuild(tools, [install.toolsDir, ...(runner ? [dirname(dirname(runner.bin))] : [])], runner?.name),
         });
         gamepad = p.state;
         if (p.state === "needed") {
           const switchTo = p.switchTo;
           gamepadSwitches = !!switchTo;
+          gamepadTo = switchTo;
           gamepadFix = fix(
             `${prefix}:xinput:${g.appName}`,
             "standard-gamepad",
@@ -348,6 +437,39 @@ export function scan(deps: ScanDeps): Scan {
         );
       }
       if (gamepadFix) gfixes.push(gamepadFix);
+      // HDR: judged on the game's Proton now. Heroic has its own per-game
+      // switches for both options ("Enable Wine-Wayland", "Enable HDR"), so
+      // the fix turns those on rather than adding variables.
+      let hdr: HdrState | undefined;
+      if (isHdrGame(g.title, key) && hasConfig) {
+        const runner = g.wineVersion ?? def;
+        const dirs = [install.toolsDir, ...(runner ? [dirname(dirname(runner.bin))] : [])];
+        const p = planHdr({
+          envSet: (g.wineWayland && g.hdr) || hasHdrVars(Object.fromEntries(g.env.map((e) => [e.key, e.value]))),
+          honours: !!runner && !runnerMissing && buildHonoursHdr(runner.name, dirs),
+          target: hdrTarget([gamepadTo, runnerFix ? ours : null], tools, dirs, wantsGamepad(gamepad), runner?.name),
+        });
+        hdr = p.state;
+        if (p.state === "needed") {
+          const switchTo = p.switchTo;
+          gfixes.push(
+            fix(
+              `${prefix}:hdr:${g.appName}`,
+              "hdr-on",
+              "heroic",
+              msg("label.hdr", { game: g.title }),
+              msg("why.hdr", { game: g.title, outputs: hdrScreens.outputs.join(", "), runner: hdrRunnerSwitch(runner?.name ?? "", switchTo) }),
+              true,
+              [
+                editGame((cfg) => {
+                  if (p.addEnv) Object.assign(cfg, { enableWineWayland: true, enableHDR: true });
+                  if (switchTo) cfg.wineVersion = { bin: join(install.toolsDir, switchTo, "proton"), name: switchTo, type: "proton" };
+                }),
+              ],
+            ),
+          );
+        }
+      }
       if (nativeSupport(support) && envFlags.length && hasConfig) {
         gfixes.push(
           fix(`${prefix}:env:${g.appName}`, "remove-env", "heroic", msg("label.envHeroic", { vars: envFlags.join(", "), game: g.title }), msg("why.envHeroic", { vars: envFlags.join(", ") }), true, [
@@ -369,7 +491,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours && !runnerMissing,
         envFlags,
         support,
-        ...(gamepad ? { gamepad } : {}),
+        ...gameStates(gamepad, hdr),
         fixes: gfixes,
       });
     }
@@ -415,17 +537,19 @@ export function scan(deps: ScanDeps): Scan {
       let gamepad: GamepadState | undefined;
       let gamepadSwitches = false;
       let gamepadFix: Fix | null = null;
+      let gamepadTo: string | null = null;
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key))) {
         const runner = runnerFix ? ours : effective;
         const p = gamepadPlan({
           envSet: Object.entries(g.env).some(([k, v]) => k === PREFER_SDL && sdlVarForcing(k, v)),
           honours: !runner || buildHonoursPreferSdl(runner, buildDirs),
           // Lutris runs Proton builds through umu.
-          target: install.umu ? preferSdlBuild([...visible], buildDirs) : null,
+          target: install.umu ? preferSdlBuild([...visible], buildDirs, runner) : null,
         });
         gamepad = p.state;
         if (p.state === "needed") {
           gamepadSwitches = !!p.switchTo;
+          gamepadTo = p.switchTo;
           const edits: Edit[] = [];
           if (p.addEnv) edits.push({ file: g.configPath, format: "yaml", mutate: (doc) => doc.setIn(["system", "env", PREFER_SDL], "1") });
           if (p.switchTo) edits.push(setVersion(g.configPath, p.switchTo));
@@ -454,6 +578,35 @@ export function scan(deps: ScanDeps): Scan {
         );
       }
       if (gamepadFix) gfixes.push(gamepadFix);
+      // HDR: judged on the game's runner now (Lutris runs Proton builds through umu).
+      // Lutris's own switches (wine Graphics "wayland" + "proton_hdr", 0.5.18+) only take
+      // effect for builds in its own wine folder (it looks for winewayland.drv there), not
+      // for the Steam builds it lists, so the fix sets the variables in system.env.
+      let hdr: HdrState | undefined;
+      if (isHdrGame(g.name, key)) {
+        const runner = effective;
+        const p = planHdr({
+          envSet: hasHdrVars(g.env),
+          honours: !!runner && !runnerMissing && buildHonoursHdr(runner, buildDirs),
+          target: install.umu ? hdrTarget([gamepadTo, runnerFix ? ours : null], [...visible], buildDirs, wantsGamepad(gamepad), runner) : null,
+        });
+        hdr = p.state;
+        if (p.state === "needed") {
+          const edits: Edit[] = p.addEnv ? HDR_VARS.map((v): Edit => ({ file: g.configPath, format: "yaml", mutate: (doc) => doc.setIn(["system", "env", v], "1") })) : [];
+          if (p.switchTo) edits.push(setVersion(g.configPath, p.switchTo));
+          gfixes.push(
+            fix(
+              `${prefix}:hdr:${g.configId}`,
+              "hdr-on",
+              "lutris",
+              msg("label.hdr", { game: g.name }),
+              msg("why.hdr", { game: g.name, outputs: hdrScreens.outputs.join(", "), runner: hdrRunnerSwitch(runner ?? "", p.switchTo) }),
+              true,
+              edits,
+            ),
+          );
+        }
+      }
       games.push({
         key,
         launcher: "lutris",
@@ -465,7 +618,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours,
         envFlags: [],
         support,
-        ...(gamepad ? { gamepad } : {}),
+        ...gameStates(gamepad, hdr),
         fixes: gfixes,
       });
     }
@@ -541,6 +694,7 @@ export function scan(deps: ScanDeps): Scan {
     proAudioRules: rules.map((r) => r.path.replace(deps.home, "~")),
     envWarnings: findGlobalSdlVars(deps.home),
     hidrawAccess: hidrawAccess(),
+    hdr: hdrScreens,
     fixes: sfixes,
   };
 

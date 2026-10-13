@@ -125,6 +125,9 @@ export const MineSchema = z.strictObject({
     })
     .optional(),
   notes: z.string().max(5000).optional(),
+  // The player says the game has HDR on PC (games not on our list): the
+  // Games page then offers to turn HDR on for it (Linux).
+  hdr: z.boolean().optional(),
 });
 export type Mine = z.infer<typeof MineSchema>;
 
