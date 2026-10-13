@@ -198,7 +198,7 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
 
 // `fg` pushed toward `ink` until it reaches `target` on every ground (at
 // worst the ink itself).
-function legibleOnAll(fg: Rgb, grounds: Rgb[], target: number, ink: Rgb): Rgb {
+export function legibleOnAll(fg: Rgb, grounds: Rgb[], target: number, ink: Rgb): Rgb {
   let c = fg;
   for (let i = 0; i < 5 && grounds.some((g) => contrast(c, g) < target); i++) c = grounds.reduce((acc, g) => ensureContrast(acc, g, target, ink), c);
   return c;

@@ -14,7 +14,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { colorway, type ColorwayColors } from "./colorways";
 import { mergeColors, type CustomColors } from "./customColors";
-import { accentVars, contrast, ensureContrast, hexToRgb as hex, mix, parseColor as parse, wantsLightInk, type Rgb } from "../theme/desktopPalette";
+import { accentVars, contrast, ensureContrast, hexToRgb as hex, legibleOnAll, mix, parseColor as parse, wantsLightInk, type Rgb } from "../theme/desktopPalette";
 
 // Per-colorway accent, by the colorway code from the controller's serial.
 // null = keep the theme accent.
@@ -116,7 +116,9 @@ export function colorwayAccent(code: string | null, custom: CustomColors | null 
 
 // Surfaces tinted toward the controller's color: a little on the page and
 // panels, a bit more on borders. Text tokens are left alone, so their
-// contrast holds (the tint is too small to matter for it).
+// contrast holds (the tint is too small to matter for it), except the
+// warning text (WARN_TEXT): the light theme's amber has little to spare (the
+// filled rating star fell to 4.47:1 on a panel tinted dark blue, dev.7 gate).
 const SURFACES: Array<[string, number]> = [
   ["--bg-page", 0.07],
   ["--bg-panel", 0.06],
@@ -126,6 +128,7 @@ const SURFACES: Array<[string, number]> = [
   ["--border-default", 0.12],
   ["--border-subtle", 0.1],
 ];
+const WARN_TEXT = "--text-warn";
 
 // The other themes' tokens for the controller's color (not the Controller
 // theme): the surfaces tinted toward it, the accent made legible on the
@@ -139,7 +142,11 @@ export function accentTokens(color: string, base: Record<string, Rgb | null | un
   const tint = hex(color);
   const tinted = SURFACES.flatMap(([name, t]) => (base[name] ? [[name, mix(base[name], tint, t)] as const] : []));
   const grounds = tinted.filter(([name]) => name.startsWith("--bg-")).map(([, c]) => c);
-  return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...accentVars(accent, panel, isDark, grounds.length ? grounds : [panel]) };
+  const on = grounds.length ? grounds : [panel];
+  // The theme's warning text, made legible on every tinted surface (pushed toward the theme's ink).
+  const warn = base[WARN_TEXT];
+  const warnText: Record<string, string> = warn ? { [WARN_TEXT]: `rgb(${legibleOnAll(warn, on, 4.5, isDark ? [255, 255, 255] : [0, 0, 0]).join(", ")})` } : {};
+  return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...warnText, ...accentVars(accent, panel, isDark, on) };
 }
 
 // The "Controller" theme's surfaces: cards and panels in the controller's
@@ -230,7 +237,7 @@ export function applyAccent(): void {
   if (old) old.disabled = true;
   const root = document.querySelector(".dk") ?? document.documentElement;
   const cs = getComputedStyle(root);
-  const base = Object.fromEntries(SURFACES.map(([name]) => [name, parse(cs.getPropertyValue(name))]));
+  const base = Object.fromEntries([...SURFACES.map(([name]) => name), WARN_TEXT].map((name) => [name, parse(cs.getPropertyValue(name))]));
   if (old) old.disabled = false;
   const full = document.documentElement.hasAttribute("data-controller-theme") ? controllerSurfaces(controllerCode) : null;
   if (full) {
@@ -279,7 +286,8 @@ export function useControllerAccent(code: string | null, choice: (typeof ACCENTS
   }, [code, choice, custom]);
   useEffect(() => {
     const mo = new MutationObserver(applyAccent);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme"] });
+    // data-cv: Color vision swaps the warning amber the warning text is made from.
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme", "data-cv"] });
     mo.observe(document.head, { childList: true, subtree: true, characterData: true });
     return () => mo.disconnect();
   }, []);

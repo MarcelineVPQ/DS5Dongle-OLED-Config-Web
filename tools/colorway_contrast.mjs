@@ -153,6 +153,11 @@ const ratioOf = (m, tokens, fg, bg) => {
   return f && g ? m.contrast(m.parseColor(f), m.parseColor(g)) : null;
 };
 
+// Pairs the UI draws only in states a render may not reach (a rated game:
+// the test library has one, tools/seed_test_library.mjs, but a copy run by
+// hand may not), checked whether or not a render showed them.
+const KNOWN_PAIRS = [["--text-warn", "--bg-panel", 4.5, "game page, filled rating star (.gp-stars button.on)"]];
+
 // Collects the fingerprinted text elements of the contrast renders. The pairs
 // found in one theme's render are checked in every theme too (CSS rules name
 // tokens, not themes), so the fast plan needs each view only once per style.
@@ -182,7 +187,7 @@ export class ColorwayCheck {
   // fixed color, or a fixed color on a token) only where it was seen: that
   // theme, and for the Controller theme that shade.
   pairs(m) {
-    const out = new Map();
+    const out = new Map(KNOWN_PAIRS.map(([fg, bg, need, where]) => [`${fg}|${bg}|${need}|*`, where]));
     for (const s of this.samples) {
       const k = `${s.fg}|${s.bg}|${s.need}|${s.literal ? themeKey(m, s.theme, s.src) : "*"}`;
       if (!out.has(k)) out.set(k, s.where);

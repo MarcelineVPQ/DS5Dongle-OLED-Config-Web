@@ -9,6 +9,10 @@
 # controller; the GPU nodes are passed through). It draws on a virtual
 # display (xvfb-run, software rendering, WAYLAND_DISPLAY unset), never on
 # your screen; CHECK_UI_SHOW=1 shows it on your real display instead.
+# Its home folder is its own too (tmp/check/home, HOME): a fixed test game
+# library (tools/seed_test_library.mjs), rebuilt at every run with the
+# player's data for it, so the game pages always show the same states
+# (profile or not, a rating, notes, the art fallback).
 #
 #   tools/check_ui.sh                the fast plan (dev builds): pairwise
 #                                    combinations, colorways computed
@@ -46,6 +50,7 @@ fi
 
 cd "$APP"
 stop
+node tools/seed_test_library.mjs "$STATE"
 echo "== Building (dev tools on)"
 DS5_DEV_TOOLS=1 npx electron-vite build > "$STATE/build.log" 2>&1
 echo "== Starting the checker copy (port $PORT)"
@@ -56,7 +61,7 @@ done
 DISPLAY_WRAP=(xvfb-run -a -s "-screen 0 1600x1000x24" env -u WAYLAND_DISPLAY)
 OZONE=(--ozone-platform=x11)
 if [ "${CHECK_UI_SHOW:-}" = 1 ]; then DISPLAY_WRAP=() OZONE=(); fi
-setsid dbus-run-session -- "${DISPLAY_WRAP[@]}" "${SANDBOX[@]}" "$ELECTRON" . "${OZONE[@]}" --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
+setsid dbus-run-session -- "${DISPLAY_WRAP[@]}" "${SANDBOX[@]}" env HOME="$STATE/home" "$ELECTRON" . "${OZONE[@]}" --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
 up=0
 for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && up=1 && break; sleep 1; done
 if [ "$up" != 1 ]; then

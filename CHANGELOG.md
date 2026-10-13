@@ -14,6 +14,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Filled rating stars readable in every colorway:** in the light theme with the controller's colors as the accent, a dark blue or purple controller (The Last of Us, or custom colors like #0f0f8a) tinted the panels just enough to drop the game page's filled stars (the warning amber) to 4.47:1. The warning text color is now made legible on the tinted surfaces too, like the accent text, and follows a Color vision change right away.
 - **Save to profile says which profile:** the bottom bar's button now names the game profile it saves into (the one you're editing), not only the game whose profile is on.
 - **Controller info card:** its hints are styled like every other hint, and Refresh shows it's busy while it reads the controller.
 - **Links look like links everywhere:** the Development build notes' link in the join dialog now has the link color.
