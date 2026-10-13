@@ -25,7 +25,7 @@ import ThemeToggle from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
-import { useLibrary } from "../library/libraryContext";
+import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings, FirmwareLookup } from "../api";
 import ColorPicker from "../colorPicker/ColorPicker";
@@ -231,8 +231,8 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
 // together with everything else changed for it; the profile hook then puts it
 // on the dongle (temporary remap, RAM only). ControllerView hands the draft over.
 function useGameLayoutSave() {
-  const { editing, active, library, saveToProfile } = useLibrary();
-  const target = editing ?? active;
+  const { library, saveToProfile } = useLibrary();
+  const target = useProfileTarget();
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
   return { target: profile ? target : null, saveToProfile };
 }
@@ -569,8 +569,7 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
 // kept after the profile ends, to save to the dongle then).
 function ProfileDongleNote() {
   const { t } = useTranslation();
-  const { editing, active } = useLibrary();
-  const target = editing ?? active;
+  const target = useProfileTarget();
   return target ? <div className="dk-notice">{t("desktop.editing.dongleNote", { title: target.title })}</div> : null;
 }
 

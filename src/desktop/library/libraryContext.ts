@@ -25,7 +25,8 @@ export interface LibraryContextValue {
   curvesDraft: GameCurves | null;
   setCurvesDraft: (curves: GameCurves | null) => void;
   setButtonsDraft: (draft: ButtonsDraft | null) => void;
-  saveToProfile: () => Promise<void>;
+  // Resolves false when nothing was saved (the reason shows as the profile error).
+  saveToProfile: () => Promise<boolean>;
 }
 
 export const LibraryContext = createContext<LibraryContextValue>({
@@ -39,6 +40,16 @@ export const LibraryContext = createContext<LibraryContextValue>({
   curvesDraft: null,
   setCurvesDraft: () => undefined,
   setButtonsDraft: () => undefined,
-  saveToProfile: async () => undefined,
+  saveToProfile: async () => false,
 });
 export const useLibrary = () => useContext(LibraryContext);
+
+type ProfileGame = { gameKey: string; title: string };
+// The profile the controller view works on: the one being edited, else the
+// one on the dongle (its game running). One rule for every panel and for
+// "Save to profile".
+export const profileTarget = (editing: ProfileGame | null, active: ProfileGame | null): ProfileGame | null => editing ?? active;
+export function useProfileTarget(): ProfileGame | null {
+  const { editing, active } = useLibrary();
+  return profileTarget(editing, active);
+}

@@ -31,7 +31,7 @@ import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
 import { useRemap } from "./useRemap";
-import { useLibrary } from "../library/libraryContext";
+import { useLibrary, useProfileTarget } from "../library/libraryContext";
 
 const PANEL_KEY = "ds5.panelHidden";
 // The rail's Controller item, clicked while already on the controller: show or
@@ -77,10 +77,10 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
     wasOn.current = on;
   }, [on, id]);
-  const { appliedStamp, editing, active, library, setButtonsDraft } = useLibrary();
+  const { appliedStamp, library, setButtonsDraft } = useLibrary();
   const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
   // A game's profile on: button changes are part of what "Save to profile" saves.
-  const profileKey = (editing ?? active)?.gameKey;
+  const profileKey = useProfileTarget()?.gameKey;
   const inProfile = !!(profileKey && library.games[profileKey]?.profile);
   const { dirty: remapDirty, draft: remapDraft, extraDraft, extraDevice, revert: remapRevert } = remap;
   useEffect(() => {

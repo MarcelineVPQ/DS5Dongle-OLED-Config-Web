@@ -1373,7 +1373,11 @@
       "normalSub": "你的常规设置",
       "on": "开",
       "off": "关",
-      "copyHint": "此游戏使用接收器上当前的设置"
+      "copyHint": "此游戏使用接收器上当前的设置",
+      "applyFailed": "{{title}} 的配置文件未能应用到接收器（{{reason}}）。当前为你的常规设置。",
+      "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或摇杆曲线（{{reason}}）。接收器重新连接时会再试一次。",
+      "saveFailed": "未保存到 {{title}} 的配置文件：{{reason}}",
+      "notOn": "{{title}} 的配置文件尚未应用到接收器，因此没有保存任何内容。待其生效后再试。"
     },
     "colorPicker": {
       "swatch": "{{name}}：{{hex}}。更改颜色",

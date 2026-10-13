@@ -1379,7 +1379,11 @@
       "normalSub": "Ton réglage habituel",
       "on": "Activé",
       "off": "Désactivé",
-      "copyHint": "Ce jeu reçoit les réglages actuellement sur le dongle"
+      "copyHint": "Ce jeu reçoit les réglages actuellement sur le dongle",
+      "applyFailed": "Le profil de {{title}} n'a pas pu être mis sur le dongle ({{reason}}). Tes réglages normaux sont actifs.",
+      "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de stick ({{reason}}). Nouvel essai quand le dongle se reconnecte.",
+      "saveFailed": "Non enregistré dans le profil de {{title}} : {{reason}}",
+      "notOn": "Le profil de {{title}} n'est pas encore sur le dongle : rien n'y a été enregistré. Réessaie une fois qu'il est actif."
     },
     "colorPicker": {
       "swatch": "{{name}} : {{hex}}. Changer la couleur",

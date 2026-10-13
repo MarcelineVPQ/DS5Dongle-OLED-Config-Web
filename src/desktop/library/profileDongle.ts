@@ -62,6 +62,21 @@ export async function putGameParts(client: Ds5BridgeClient, caps: ProfileCaps, p
 // applyConfig: puts a config in the dongle's RAM (the bridge hook's applyBody).
 type ApplyConfig = (c: ConfigBody) => Promise<boolean>;
 
+// A profile that didn't go on, and what the dongle's RAM holds after it:
+// "normal" (the normal values went back on) or "profile" (they couldn't: the
+// game's config may be on without its layout or curves). The app must never
+// show the normal mode, whose Save to dongle writes RAM to flash, over a
+// game's config.
+export class ProfileNotApplied extends Error {
+  constructor(
+    readonly left: "normal" | "profile",
+    cause: unknown,
+  ) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.name = "ProfileNotApplied";
+  }
+}
+
 export async function applyGameProfile(o: {
   client: Ds5BridgeClient | null;
   caps: ProfileCaps;
@@ -71,8 +86,16 @@ export async function applyGameProfile(o: {
   profile: ProfileSettings;
   parts: GameParts;
 }): Promise<void> {
-  if (!(await o.applyConfig(profileConfig(o.config, o.normal, o.profile)))) throw new Error("apply failed");
-  if (o.client) await putGameParts(o.client, o.caps, o.parts);
+  try {
+    if (!(await o.applyConfig(profileConfig(o.config, o.normal, o.profile)))) throw new Error("apply failed");
+    if (o.client) await putGameParts(o.client, o.caps, o.parts);
+  } catch (cause) {
+    // The game's config may be on (it landed before the layout or curves
+    // failed, or a transfer failed after it landed): the normal values go back.
+    const back = await o.applyConfig(withSettings(o.config, o.normal)).catch(() => false);
+    if (back && o.client) await putGameParts(o.client, o.caps, null).catch(() => undefined); // whatever went on of the parts (RAM only)
+    throw new ProfileNotApplied(back ? "normal" : "profile", cause);
+  }
 }
 
 export async function restoreNormal(o: { client: Ds5BridgeClient | null; caps: ProfileCaps; applyConfig: ApplyConfig; config: ConfigBody; normal: ProfileSettings }): Promise<void> {
