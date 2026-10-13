@@ -124,7 +124,6 @@
       "power": "Alimentation",
       "idleDisconnect": "Déconnecter si inactif",
       "picoLed": "LED d'état du Pico",
-      "display": "Écran OLED",
       "brightness": "Luminosité",
       "zeroOff": "0 = jamais",
       "controllerWakes": "La manette réveille l'écran",
@@ -1265,8 +1264,7 @@
       "keyY": "Y (pointillés)"
     },
     "dash": {
-      "pico": "Pico 2 W",
-      "oled": "Écran OLED",
+      "pico": "{{deviceName}}",
       "temperature": "Température de la puce",
       "clock": "Fréquence du CPU",
       "clockSet": "réglée à {{mhz}} MHz",
@@ -1318,6 +1316,23 @@
           "speaker": "Trame haut-parleur core1",
           "mic": "Trame micro core1"
         }
+      },
+      "specs": {
+        "title": "Caractéristiques",
+        "chip": "Puce",
+        "chipValue": "{{chip}}, double cœur {{core}}",
+        "chipClock": "{{chip}}, double cœur {{core}} à {{mhz}} MHz",
+        "sram": "SRAM",
+        "flash": "Flash",
+        "wireless": "Sans fil",
+        "wirelessValue": "{{chip}} : Bluetooth {{bt}} (Classic utilisé), Wi-Fi 4",
+        "model": "Modèle",
+        "size": "Taille",
+        "resolution": "Résolution",
+        "controller": "Contrôleur",
+        "interface": "Interface",
+        "keys": "Touches",
+        "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché."
       }
     },
     "hdr": {

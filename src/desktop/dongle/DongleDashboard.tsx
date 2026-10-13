@@ -21,6 +21,7 @@ import {
   type OledFrame,
 } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
+import { boardSpecs, OLED_MODULE } from "./boardSpecs";
 import { errorText } from "../../errorText";
 import { BusyButton } from "../controls";
 import { core1StoppedText } from "./core1Status";
@@ -114,6 +115,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
   const series = (pick: (x: Sample) => number) => history.map(pick);
   const config = bridge.config;
   const micLoss = micLossClimbing(history);
+  const specs = boardSpecs(bridge.identity?.boardName);
 
   return (
     <div className="dash">
@@ -129,6 +131,21 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
           <Fact label={td("firmware")} value={bridge.firmwareVersion?.replace("-oled-edition", "") ?? "—"} title={bridge.firmwareVersion ?? undefined} />
           <Fact label={td("hciErrors")} value={s ? String(s.hciErrors) : "—"} bad={!!s?.hciErrors} />
         </div>
+        {specs && (
+          <div className="dash-card">
+            <h4>{td("specs.title")}</h4>
+            <dl className="dk-kv">
+              <dt>{td("specs.chip")}</dt>
+              <dd>{s ? td("specs.chipClock", { chip: specs.chip, core: specs.core, mhz: Math.round(s.realMhz) }) : td("specs.chipValue", { chip: specs.chip, core: specs.core })}</dd>
+              <dt>{td("specs.sram")}</dt>
+              <dd>{specs.sramKb} KB</dd>
+              <dt>{td("specs.flash")}</dt>
+              <dd>{specs.flashMb} MB</dd>
+              <dt>{td("specs.wireless")}</dt>
+              <dd>{td("specs.wirelessValue", { chip: specs.wireless, bt: specs.bluetooth })}</dd>
+            </dl>
+          </div>
+        )}
       </div>
       <div className="dash-row">
         <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
@@ -160,7 +177,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
 
       {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
 
-      <h3 className="dash-group">{td("oled")}</h3>
+      <h3 className="dash-group">{OLED_MODULE.name}</h3>
       <div className="dash-row">
         <Gauge label={td("brightness")} value={s?.oled ? Math.round((s.oled.contrast / 255) * 100) : undefined} min={0} max={100} unit="%" />
         <div className="dash-card dash-facts">
@@ -172,6 +189,24 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
           <Fact label={td("dimAfter")} value={config ? (config.screenDimTimeout ? td("minutes", { n: config.screenDimTimeout }) : td("never")) : "—"} />
           <Fact label={td("offAfter")} value={config ? (config.screenOffTimeout ? td("minutes", { n: config.screenOffTimeout }) : td("never")) : "—"} />
           <Fact label={td("wakeOnInput")} value={config ? (config.controllerWakesDisplay ? td("yes") : td("no")) : "—"} />
+        </div>
+        <div className="dash-card">
+          <h4>{td("specs.title")}</h4>
+          <dl className="dk-kv">
+            <dt>{td("specs.model")}</dt>
+            <dd>{OLED_MODULE.name}</dd>
+            <dt>{td("specs.size")}</dt>
+            <dd>{OLED_MODULE.size}</dd>
+            <dt>{td("specs.resolution")}</dt>
+            <dd>{OLED_MODULE.resolution}</dd>
+            <dt>{td("specs.controller")}</dt>
+            <dd>{OLED_MODULE.controller}</dd>
+            <dt>{td("specs.interface")}</dt>
+            <dd>{OLED_MODULE.interface}</dd>
+            <dt>{td("specs.keys")}</dt>
+            <dd>{OLED_MODULE.keys}</dd>
+          </dl>
+          <p className="dk-hint">{td("specs.notDetected")}</p>
         </div>
       </div>
     </div>

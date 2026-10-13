@@ -124,7 +124,6 @@
       "power": "电源",
       "idleDisconnect": "空闲时断开",
       "picoLed": "Pico 状态 LED",
-      "display": "OLED 屏幕",
       "brightness": "亮度",
       "zeroOff": "0 = 从不",
       "controllerWakes": "控制器输入时唤醒屏幕",
@@ -1259,8 +1258,7 @@
       "keyY": "Y（虚线）"
     },
     "dash": {
-      "pico": "Pico 2 W",
-      "oled": "OLED 屏幕",
+      "pico": "{{deviceName}}",
       "temperature": "芯片温度",
       "clock": "CPU 频率",
       "clockSet": "设定为 {{mhz}} MHz",
@@ -1312,6 +1310,23 @@
           "speaker": "core1 扬声器帧",
           "mic": "core1 麦克风帧"
         }
+      },
+      "specs": {
+        "title": "规格",
+        "chip": "芯片",
+        "chipValue": "{{chip}}，双核 {{core}}",
+        "chipClock": "{{chip}}，双核 {{core}}，{{mhz}} MHz",
+        "sram": "SRAM",
+        "flash": "闪存",
+        "wireless": "无线",
+        "wirelessValue": "{{chip}}：蓝牙 {{bt}}（使用经典蓝牙），Wi-Fi 4",
+        "model": "型号",
+        "size": "尺寸",
+        "resolution": "分辨率",
+        "controller": "驱动芯片",
+        "interface": "接口",
+        "keys": "按键",
+        "notDetected": "无法检测：只要装上，{{device}}就会驱动它。"
       }
     },
     "hdr": {

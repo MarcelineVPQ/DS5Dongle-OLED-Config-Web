@@ -123,7 +123,6 @@
       "power": "Power",
       "idleDisconnect": "Disconnect when idle",
       "picoLed": "Pico status LED",
-      "display": "OLED display",
       "brightness": "Brightness",
       "zeroOff": "0 = never",
       "controllerWakes": "Controller input wakes the screen",
@@ -1264,8 +1263,7 @@
       "keyY": "Y (dashed)"
     },
     "dash": {
-      "pico": "Pico 2 W",
-      "oled": "OLED display",
+      "pico": "{{deviceName}}",
       "temperature": "Chip temperature",
       "clock": "CPU clock",
       "clockSet": "set to {{mhz}} MHz",
@@ -1317,6 +1315,23 @@
           "speaker": "Core1 speaker frame",
           "mic": "Core1 mic frame"
         }
+      },
+      "specs": {
+        "title": "Specs",
+        "chip": "Chip",
+        "chipValue": "{{chip}}, dual-core {{core}}",
+        "chipClock": "{{chip}}, dual-core {{core}} at {{mhz}} MHz",
+        "sram": "SRAM",
+        "flash": "Flash",
+        "wireless": "Wireless",
+        "wirelessValue": "{{chip}}: Bluetooth {{bt}} (Classic in use), Wi-Fi 4",
+        "model": "Model",
+        "size": "Size",
+        "resolution": "Resolution",
+        "controller": "Controller",
+        "interface": "Interface",
+        "keys": "Keys",
+        "notDetected": "Not detected: {{device}} drives it whenever it's attached."
       }
     },
     "hdr": {

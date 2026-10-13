@@ -3825,6 +3825,9 @@ html[data-cards-translucent] .dash-card {
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
+.dash-card .dk-kv {
+  font-size: var(--dk-small);
+}
 .dash-facts {
   display: grid;
   /* the card's width, not its longest value's */

@@ -124,7 +124,6 @@
       "power": "Energie",
       "idleDisconnect": "Bei Inaktivität trennen",
       "picoLed": "Pico-Status-LED",
-      "display": "OLED-Display",
       "brightness": "Helligkeit",
       "zeroOff": "0 = nie",
       "controllerWakes": "Controller-Eingabe weckt das Display",
@@ -1265,8 +1264,7 @@
       "keyY": "Y (gestrichelt)"
     },
     "dash": {
-      "pico": "Pico 2 W",
-      "oled": "OLED-Display",
+      "pico": "{{deviceName}}",
       "temperature": "Chiptemperatur",
       "clock": "CPU-Takt",
       "clockSet": "eingestellt: {{mhz}} MHz",
@@ -1318,6 +1316,23 @@
           "speaker": "Core1-Lautsprecherframe",
           "mic": "Core1-Mikrofonframe"
         }
+      },
+      "specs": {
+        "title": "Technische Daten",
+        "chip": "Chip",
+        "chipValue": "{{chip}}, Dual-Core {{core}}",
+        "chipClock": "{{chip}}, Dual-Core {{core}} mit {{mhz}} MHz",
+        "sram": "SRAM",
+        "flash": "Flash",
+        "wireless": "Funk",
+        "wirelessValue": "{{chip}}: Bluetooth {{bt}} (Classic in Betrieb), WLAN 4",
+        "model": "Modell",
+        "size": "Größe",
+        "resolution": "Auflösung",
+        "controller": "Controller",
+        "interface": "Schnittstelle",
+        "keys": "Tasten",
+        "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist."
       }
     },
     "hdr": {
