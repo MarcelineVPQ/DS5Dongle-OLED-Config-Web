@@ -332,6 +332,7 @@
     "about": {
       "changes": "应用更新内容",
       "firmware": "固件更新内容",
+      "proton": "Proton 更新内容",
       "guide": "指南",
       "credits": "致谢",
       "version": "当前版本 {{version}}。",

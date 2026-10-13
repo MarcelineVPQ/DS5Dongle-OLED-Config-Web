@@ -331,6 +331,7 @@
     "about": {
       "changes": "App changes",
       "firmware": "Firmware changes",
+      "proton": "Proton changes",
       "guide": "Guide",
       "credits": "Credits",
       "version": "You're running version {{version}}.",

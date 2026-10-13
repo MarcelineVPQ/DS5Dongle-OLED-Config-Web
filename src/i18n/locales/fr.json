@@ -332,6 +332,7 @@
     "about": {
       "changes": "Changements de l'app",
       "firmware": "Changements du firmware",
+      "proton": "Changements de Proton",
       "guide": "Guide",
       "credits": "Crédits",
       "version": "Tu utilises la version {{version}}.",

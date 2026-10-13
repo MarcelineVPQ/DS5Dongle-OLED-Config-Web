@@ -5,12 +5,14 @@ import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
 import guide from "../../../docs/GUIDE.md?raw";
+import protonChangelog from "../../../docs/PROTON_CHANGELOG.md?raw";
 import Markdown from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
 import { ISSUES_URL } from "../about/roadmap";
+import { protonApplies } from "../games/platform";
 
-export type AboutTab = "changes" | "firmware" | "guide" | "roadmap" | "credits";
+export type AboutTab = "changes" | "firmware" | "proton" | "guide" | "roadmap" | "credits";
 
 const CREDITS = `
 ### Built on
@@ -86,10 +88,13 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
       .catch((cause) => setFirmwareError(errorText(cause)));
   }, [tab, firmware]);
 
+  // Our DualSense Proton runs Windows games on Linux: its tab shows where the
+  // Games page's Proton card does (Linux only).
   const tabs: Array<{ id: AboutTab; label: string }> = [
     { id: "guide", label: t("desktop.about.guide", "Guide") },
     { id: "changes", label: t("desktop.about.changes", "App changes") },
     { id: "firmware", label: t("desktop.about.firmware", "Firmware changes") },
+    ...(protonApplies() ? [{ id: "proton" as const, label: t("desktop.about.proton", "Proton changes") }] : []),
     { id: "roadmap", label: t("desktop.about.roadmapTab", "Coming soon") },
     { id: "credits", label: t("desktop.about.credits", "Credits") },
   ];
@@ -112,6 +117,7 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
           {tab === "changes" && <Markdown text={changelog} />}
           {tab === "firmware" &&
             (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}
+          {tab === "proton" && <Markdown text={protonChangelog} />}
           {tab === "guide" && <Markdown text={guide} />}
           {tab === "credits" && <Markdown text={CREDITS} />}
         </section>
