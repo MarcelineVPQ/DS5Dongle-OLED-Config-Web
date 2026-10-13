@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.9] - 2026-10-13
+
 ### Added
 
 - **Upstream's settings batch, for dongle firmware with protocol 1.13** (awalol's "batch 3/5", ported into our firmware and app together):
