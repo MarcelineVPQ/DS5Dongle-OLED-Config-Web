@@ -154,17 +154,19 @@ In the panel on the right:
 
 The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there.
 
-- **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games.
+- **Home:** launcher status, our **DualSense Proton** build (install or update it, make it Steam's default), system checks, and fixes it recommends across your games. If Steam, Heroic or Lutris is running when you apply a fix, the review says so: the app closes it to save the change, then opens it again (not while a game is running).
 - **A game's page:**
 
 ![A game page](screenshots/guide-game-page.png)
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
   - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in your board's memory only, never saved to its flash.
-  - **Setup:** this game's recommended fixes, applied with a backup you can undo.
+  - **Setup:** this game's recommended fixes, applied with a backup you can undo. If the game doesn't react to the controller, tick **Controller not detected** there.
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
   - **Your rating** and a checklist of what you noticed, and private **notes**. Sharing with other players comes later.
+
+**XInput-only games (Linux).** Some games only know Xbox controllers (Ghostrunner, Control, and others): with our DualSense Proton they see no controller. For those, Games recommends passing the controller as a **standard gamepad (XInput)**: it sets PROTON_PREFER_SDL=1 for that game only, so the game gets an ordinary gamepad with rumble (such games have no adaptive triggers anyway). Our DualSense Proton builds before -DualSense-2 ignore this option, so the change also moves the game to a build that honours it (our -DualSense-2 or later, else stock GE-Proton). On Steam it's only needed when Steam Input is off for the game; with Steam Input on, Steam already hands the game an Xbox controller. For a game not on our list, tick **Controller not detected** in its Setup to get the same change.
 
 ## 8. App settings
 

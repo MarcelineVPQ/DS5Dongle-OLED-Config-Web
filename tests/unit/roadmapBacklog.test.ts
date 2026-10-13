@@ -38,6 +38,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Controller off when the PC sleeps": "PC sleep: controller off",
   "Faster firmware for {{device}}": "Firmware: OLED flush and Opus encoder speedups",
   "Better OLED status screen": "OLED Status screen controller drawing",
+  "XInput games find the controller": "XInput-only games: set the Proton option automatically",
   "Clearer message when {{device}} is busy": 'Linux: "Unable to claim interface"',
   "Desktop accent color on Windows": 'Windows: Accent color "Desktop"',
   "Guide in every language": "Translate the Guide and changelogs",

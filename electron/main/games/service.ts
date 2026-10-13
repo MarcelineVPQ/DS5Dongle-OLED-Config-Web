@@ -1,5 +1,6 @@
 // Main-process side of the Games page (Linux only): owns scanning, applying
-// confirmed fixes, undo, closing launchers on request and installing our
+// confirmed fixes, undo (closing and reopening the launchers the page named),
+// and installing our
 // Proton build. The renderer only ever passes fix ids, a backup id or a
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
@@ -12,14 +13,14 @@ import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
 import type { ArtKind, GameAction, GameEntry, GameInfo } from "../../../src/desktop/games/types";
 import { join } from "node:path";
-import type { CloseLauncherResult, ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
-import type { ApplyResult, GamesReport, LauncherId } from "../../../src/desktop/games/types";
+import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
+import type { ApplyResult, GamesReport, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, newestLocalBuild, scan, type Scan } from "./games";
+import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
-import { closeLauncher, runningLaunchers } from "./processes";
+import { launcherControl, runningLaunchers, withLaunchersClosed, type LauncherControl } from "./processes";
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools } from "./steam";
 import { dualSenseCards, restartWirePlumber, setCardProfile } from "./system";
@@ -32,17 +33,21 @@ export interface GamesServiceDeps {
   fetchManifest: () => Promise<Manifest>;
   download: (d: Download, path: string, progress: (got: number, total: number) => void) => Promise<void>;
   onProtonProgress: (p: ProtonProgress) => void;
+  notDetected: () => Set<string>; // game keys the player marked "controller not detected"
+  launchers?: LauncherControl; // tests: a fake process layer
 }
 
 export class GamesService {
   private readonly home = homedir();
   private readonly backups: Backups;
+  private readonly launchers: LauncherControl;
   private latest: Manifest["proton"] | null = null;
   // Apply, undo and install never overlap (each reads and writes launcher files).
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly deps: GamesServiceDeps) {
     this.backups = new Backups(join(deps.userData, "game-setup-backups"));
+    this.launchers = deps.launchers ?? launcherControl();
   }
 
   private exclusive<T>(run: () => Promise<T>): Promise<T> {
@@ -83,6 +88,7 @@ export class GamesService {
       running: runningLaunchers(),
       audioCards,
       windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
+      notDetected: this.deps.notDetected(),
     });
   }
 
@@ -150,21 +156,22 @@ export class GamesService {
     return this.lastGames.map((g) => ({ key: g.key, launcher: g.launcher, id: g.id, installDir: this.lastDetails.get(g.key)?.installDir }));
   }
 
-  apply(fixIds: string[]): Promise<ApplyResult> {
-    return this.exclusive(async () => applyFixes(await this.fresh(), fixIds, { backups: this.backups, runningLaunchers, restartWirePlumber, setCardProfile }));
+  apply(fixIds: string[], restart: RestartList): Promise<ApplyResult> {
+    return this.exclusive(async () => applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile }));
   }
 
-  undo(backupId: string): Promise<UndoResult> {
+  undo(backupId: string, allowed: RestartList): Promise<UndoResult> {
     return this.exclusive(async () => {
       this.requireConsent();
       try {
-        // Same rule as writing: a running launcher would overwrite the restored files.
-        const running = runningLaunchers();
-        const blockedBy = this.backups.owners(backupId).filter((l) => running.has(l));
+        // Same rule as writing: a running launcher would overwrite the restored
+        // files, so it's closed and reopened, only if the page said so.
+        const { restart, blockedBy } = launchersToRestart(this.backups.owners(backupId), this.launchers.running(), allowed);
         if (blockedBy.length) return { ok: false, blockedBy };
-        const { files, after } = this.backups.restore(backupId);
-        if (after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
-        return { ok: true, restored: files.map((f) => this.tilde(f)) };
+        const run = await withLaunchersClosed(restart, this.launchers, () => this.backups.restore(backupId));
+        if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };
+        if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
+        return { ok: true, restored: run.value.files.map((f) => this.tilde(f)), ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}) };
       } catch (cause) {
         if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };
         return { ok: false, error: errorText(cause) };
@@ -181,15 +188,6 @@ export class GamesService {
 
   private tilde(path: string): string {
     return path.startsWith(this.home + "/") ? "~" + path.slice(this.home.length) : path;
-  }
-
-  async close(launcher: LauncherId): Promise<CloseLauncherResult> {
-    this.requireConsent();
-    try {
-      return await closeLauncher(launcher);
-    } catch {
-      return "failed";
-    }
   }
 
   installLatestProton(): Promise<ProtonInstallResult> {

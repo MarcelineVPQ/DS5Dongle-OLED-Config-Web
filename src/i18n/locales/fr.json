@@ -406,18 +406,13 @@
       "reviewTitle": "Relire avant d'appliquer",
       "reviewHint": "Ces fichiers vont être modifiés. Chacun est sauvegardé avant, donc Annuler le remet exactement comme il était.",
       "noFiles": "Aucun fichier ne change.",
-      "mustClose": "{{launcher}} est ouvert. Il réécrit ces réglages en se fermant, ce qui annulerait les changements : il faut donc le fermer d'abord.",
-      "closeLauncher": "Fermer {{launcher}}",
-      "closeGameRunning": "Un jeu tourne encore. Quitte d'abord le jeu, puis réessaie.",
-      "closeTimeout": "{{launcher}} ne s'est pas fermé en 30 secondes. Quitte-le toi-même, puis appuie sur Revérifier.",
       "apply_one": "Appliquer {{count}} changement",
       "apply_other": "Appliquer {{count}} changements",
       "back": "Retour",
       "doneTitle": "Terminé",
-      "doneHint": "Relance le lanceur : il prend en compte les nouveaux réglages au démarrage.",
+      "doneHint": "Chaque jeu prend en compte ses nouveaux réglages à son prochain lancement.",
       "undo": "Annuler ces changements",
       "undoShort": "Annuler",
-      "undoBlocked": "Ferme d'abord {{launchers}} : en se fermant, il écraserait les réglages restaurés.",
       "ok": "OK",
       "history": "Historique des changements",
       "attention_one": "{{count}} changement recommandé",
@@ -432,7 +427,8 @@
           "envSteam": "Retirer {{vars}} des options de lancement de {{game}}",
           "envHeroic": "Retirer {{vars}} des variables d'environnement de {{game}}",
           "audioRule": "Désactiver la règle audio qui impose « pro-audio » à la manette",
-          "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »"
+          "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »",
+          "gamepad": "Transmettre la manette à {{game}} comme manette standard (XInput)"
         },
         "why": {
           "defaultSteam": "Steam lance actuellement les jeux Windows avec {{current}}. C'est notre build qui fait marcher les gâchettes adaptatives et le retour haptique via {{device}}. Les jeux réglés sur un Proton précis gardent leur réglage.",
@@ -444,7 +440,10 @@
           "envSteam": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives. Les options de lancement deviennent : {{options}}",
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
           "audioRule": "{{file}} met la carte audio de la DualSense sur le profil pro-audio, ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Le fichier est renommé en .disabled (pas supprimé) et le service audio (WirePlumber) redémarre : le son coupe une seconde.",
-          "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio."
+          "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio.",
+          "gamepad": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations.{{runner}}",
+          "gamepadSteam": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations. Les options de lancement deviennent : {{options}}{{runner}}",
+          "gamepadRunner": " {{current}} ignore cette option, donc le jeu passe aussi à {{proton}}."
         },
         "support": {
           "triggers": "Ce jeu prend en charge les gâchettes adaptatives et le retour haptique de la DualSense.",
@@ -473,12 +472,17 @@
       "consentAllow": "Vérifier mes lanceurs",
       "stop": "Arrêter la vérification",
       "stopHint": "Désactive la configuration des jeux ; elle ne relira plus les réglages des lanceurs tant que tu ne l'autorises pas.",
-      "closeFailed": "Impossible de demander à {{launcher}} de se fermer. Quitte-le toi-même, puis appuie sur Revérifier.",
       "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements.",
       "scanningWindows": "Vérification de Steam, GOG Galaxy et Epic…",
       "consentIntroWindows": "La configuration des jeux liste tes jeux Steam, GOG Galaxy et Epic et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retour haptique de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
       "consentLaunchersWindows": "les réglages et les listes de jeux installés de Steam, GOG Galaxy et Epic",
-      "consentRunningWindows": "quels programmes tournent, pour remarquer quand l’un de tes jeux démarre (pour son profil de manette)"
+      "consentRunningWindows": "quels programmes tournent, pour remarquer quand l’un de tes jeux démarre (pour son profil de manette)",
+      "willRestart": "{{launcher}} sera fermé pour enregistrer ce changement, puis rouvert.",
+      "willRestartUndo": "{{launcher}} sera fermé pour annuler ce changement, puis rouvert.",
+      "restartGameRunning": "Un jeu est en cours, donc {{launcher}} n'a pas été fermé (cela fermerait le jeu). Rien n'a été modifié. Quitte le jeu, puis réessaie.",
+      "restartTimeout": "{{launcher}} ne s'est pas fermé en 30 secondes, donc rien n'a été modifié. Quitte-le toi-même, puis réessaie.",
+      "restartFailed": "Impossible de demander à {{launcher}} de se fermer, donc rien n'a été modifié. Quitte-le toi-même, puis réessaie.",
+      "reopenFailed": "Enregistré, mais {{launcher}} n'a pas pu être relancé. Lance-le toi-même."
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -929,7 +933,11 @@
       "hiddenCount": "{{count}} masquées",
       "triggerReduce": "Effets de gâchette",
       "speakerBoost": "Amplification du haut-parleur",
-      "lockVolume": "Verrouiller le volume"
+      "lockVolume": "Verrouiller le volume",
+      "gamepadSet": "La manette arrive dans ce jeu comme manette standard (XInput).",
+      "gamepadSteamInput": "Steam Input n'est pas désactivé pour ce jeu, donc Steam lui fournit déjà une manette Xbox : l'option manette standard n'est pas nécessaire.",
+      "gamepadNoBuild": "Ce jeu a besoin de l'option manette standard (PROTON_PREFER_SDL), mais {{runner}} l'ignore et aucun Proton qui la respecte n'est installé. Installe notre Proton DualSense plus récent (-DualSense-2 ou plus) ou un GE-Proton standard.",
+      "notDetectedHint": "Coche ceci si le jeu ne réagit pas à la manette : l'application proposera alors de la transmettre au jeu comme manette standard (XInput)."
     },
     "dongleConsole": {
       "title": "Console : {{deviceName}}",

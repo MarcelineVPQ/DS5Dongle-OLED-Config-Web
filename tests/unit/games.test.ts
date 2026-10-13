@@ -10,6 +10,7 @@ import { forcesProAudio, parseDualSenseCards } from "../../electron/main/games/s
 import { BackupIdSchema, FixIdsSchema } from "../../electron/main/ipc";
 import { dualSenseSupport } from "../../src/desktop/games/knownGames";
 import type { LauncherId } from "../../src/desktop/games/types";
+import type { LauncherControl } from "../../electron/main/games/processes";
 import { asLinux } from "../support/platform";
 
 // Built on Linux launcher folders: Linux behavior on every test machine.
@@ -73,7 +74,15 @@ function buildHome(home: string) {
 let home: string;
 let backups: Backups;
 const deps = (running: LauncherId[] = []): ScanDeps => ({ home, ourProton: OURS, latestProton: OURS, latestSize: 565186419, running: new Set(running), audioCards: [] });
-const applyDeps = (runningNow: LauncherId[] = []) => ({ backups, runningLaunchers: () => new Set(runningNow), restartWirePlumber: async () => undefined, setCardProfile: async () => undefined });
+// Launchers seen running right before the write; never closed here (nothing in the restart list).
+const control = (runningNow: LauncherId[]): LauncherControl => ({
+  running: () => new Set(runningNow),
+  gameRunning: () => false,
+  plan: () => null,
+  close: async () => "failed",
+  reopen: async () => false,
+});
+const applyDeps = (runningNow: LauncherId[] = []) => ({ backups, launchers: control(runningNow), restartWirePlumber: async () => undefined, setCardProfile: async () => undefined });
 // Ids carry a hash of the install they belong to.
 const steamId = () => `steam-${idHash(join(home, ".steam/debian-installation"))}`;
 const heroicId = () => `heroic-${idHash(join(home, ".config/heroic"))}`;
@@ -105,14 +114,19 @@ describe("Games scan (read-only)", () => {
   it("finds exactly the expected problems and leaves deliberate settings alone", () => {
     const before = snapshot();
     const { report, plan } = scan(deps());
-    expect([...plan.keys()].sort()).toEqual([`${heroicId()}:default`, `${heroicId()}:runner:bnet`, `${lutrisId()}:default`, `${steamId()}:env:2840770`, `${steamId()}:input:1462040`].sort());
+    expect([...plan.keys()].sort()).toEqual(
+      [`${heroicId()}:default`, `${heroicId()}:runner:bnet`, `${heroicId()}:xinput:2049187585`, `${lutrisId()}:default`, `${steamId()}:env:2840770`, `${steamId()}:input:1462040`].sort(),
+    );
     // Scanning never writes.
     expect(snapshot()).toEqual(before);
-    // Runtimes are not games; Control (XInput-only) keeps its PROTON_PREFER_SDL.
+    // Runtimes are not games; Control (XInput-only) keeps its PROTON_PREFER_SDL,
+    // and moves off our build, which ignores it, to the stock GE-Proton.
     expect(report.games.map((g) => g.title)).not.toContain("Steam Linux Runtime 3.0 (sniper)");
     const control = report.games.find((g) => g.title === "Control Ultimate Edition")!;
     expect(control.envFlags).toEqual(["PROTON_PREFER_SDL"]);
-    expect(control.fixes).toEqual([]);
+    expect(control.gamepad).toBe("needed");
+    expect(control.fixes.map((f) => f.kind)).toEqual(["standard-gamepad"]);
+    expect(control.fixes[0].why.params?.runner).toEqual({ key: "why.gamepadRunner", params: { current: OURS, proton: "GE-Proton-latest" } });
     expect(report.games.find((g) => g.id === "bnet")!.runnerMissing).toBe(true);
   });
 
@@ -136,7 +150,7 @@ describe("Games apply / undo", () => {
   it("edits only the targeted values, and undo restores every file byte for byte", async () => {
     const before = snapshot();
     const fresh = scan(deps());
-    const result = await applyFixes(fresh, [...fresh.plan.keys()], applyDeps());
+    const result = await applyFixes(fresh, [...fresh.plan.keys()], [], applyDeps());
     expect(result.blockedBy).toEqual([]);
     expect(result.applied.every((a) => a.ok)).toBe(true);
 
@@ -146,8 +160,13 @@ describe("Games apply / undo", () => {
     expect(JSON.parse(after.get(".config/heroic/config.json")!).defaultSettings).toMatchObject({ keep: 1, wineVersion: { name: OURS, type: "proton" } });
     expect(JSON.parse(after.get(".config/heroic/GamesConfig/bnet.json")!).bnet).toMatchObject({ other: true, wineVersion: { name: OURS } });
     expect(after.get(".local/share/lutris/runners/wine.yml")).toBe(`wine:\n  version: ${OURS}\n`);
-    // Untouched: Steam's config.vdf (default already ours), Control, the Lutris game.
-    for (const f of [".steam/debian-installation/config/config.vdf", ".config/heroic/GamesConfig/2049187585.json", ".local/share/lutris/games/tool-1.yml"]) expect(after.get(f), f).toBe(before.get(f));
+    // Control: same environment, the stock GE-Proton.
+    expect(JSON.parse(after.get(".config/heroic/GamesConfig/2049187585.json")!)["2049187585"]).toMatchObject({
+      wineVersion: { name: "GE-Proton-latest" },
+      enviromentOptions: [{ key: "PROTON_PREFER_SDL", value: "1" }],
+    });
+    // Untouched: Steam's config.vdf (default already ours), the Lutris game.
+    for (const f of [".steam/debian-installation/config/config.vdf", ".local/share/lutris/games/tool-1.yml"]) expect(after.get(f), f).toBe(before.get(f));
     // Nothing left to fix.
     expect([...scan(deps()).plan.keys()]).toEqual([]);
 
@@ -158,21 +177,21 @@ describe("Games apply / undo", () => {
   it("refuses to write while a launcher that owns a selected change is running", async () => {
     const before = snapshot();
     const fresh = scan(deps(["heroic"]));
-    const result = await applyFixes(fresh, [`${heroicId()}:default`, `${lutrisId()}:default`], applyDeps());
+    const result = await applyFixes(fresh, [`${heroicId()}:default`, `${lutrisId()}:default`], [], applyDeps());
     expect(result).toEqual({ applied: [], backupId: null, blockedBy: ["heroic"] });
     expect(snapshot()).toEqual(before);
   });
 
   it("checks again right before writing (a launcher started after the scan)", async () => {
     const before = snapshot();
-    const result = await applyFixes(scan(deps()), [`${lutrisId()}:default`], applyDeps(["lutris"]));
+    const result = await applyFixes(scan(deps()), [`${lutrisId()}:default`], [], applyDeps(["lutris"]));
     expect(result.blockedBy).toEqual(["lutris"]);
     expect(snapshot()).toEqual(before);
   });
 
   it("refuses to undo over changes made after the apply, and undoes a set only once", async () => {
     const fresh = scan(deps());
-    const { backupId } = await applyFixes(fresh, [`${lutrisId()}:default`], applyDeps());
+    const { backupId } = await applyFixes(fresh, [`${lutrisId()}:default`], [], applyDeps());
     const yml = join(home, ".local/share/lutris/runners/wine.yml");
     const ours = readFileSync(yml, "utf8");
     writeFileSync(yml, ours + "# Lutris saved something\n");
@@ -187,7 +206,7 @@ describe("Games apply / undo", () => {
 
   it("reports ids that no longer apply instead of guessing", async () => {
     const stale = `${steamId()}:input:999`;
-    const result = await applyFixes(scan(deps()), [stale], applyDeps());
+    const result = await applyFixes(scan(deps()), [stale], [], applyDeps());
     expect(result.applied).toEqual([{ id: stale, ok: false, message: { key: "result.stale" } }]);
     expect(result.backupId).toBeNull();
   });
@@ -271,6 +290,8 @@ describe("Games safety helpers", () => {
   it("picks the newest of our builds", () => {
     expect(newestLocalBuild(["GE-Proton11-7-DualSense", "GE-Proton11-10-DualSense", "GE-Proton-latest", "GE-Proton10-20260205-DS5"])).toBe("GE-Proton11-10-DualSense");
     expect(newestLocalBuild(["GE-Proton-latest"])).toBeNull();
+    // A rebuild of the same version (-2) is newer.
+    expect(newestLocalBuild(["GE-Proton11-7-DualSense", "GE-Proton11-7-DualSense-2"])).toBe("GE-Proton11-7-DualSense-2");
   });
 
   it("reads the DualSense card's profile and spots pro-audio rules", () => {

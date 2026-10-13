@@ -128,6 +128,13 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "next", title: "Faster firmware for {{device}}", text: "The OLED screen and the speaker's audio take less of {{device}}'s time.", areas: ["dongle"] },
   { column: "next", title: "Better OLED status screen", text: "A symmetric controller on the OLED's Status screen, with Create and Options, and a version line that fits.", areas: ["dongle"] },
+  {
+    column: "next",
+    title: "XInput games find the controller",
+    text: "Games that only know Xbox controllers (Ghostrunner, Control) get the controller as a standard gamepad: Games sets the Proton option for them, and closes and reopens the launcher when it has to.",
+    areas: ["games"],
+    platform: "linux",
+  },
   { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"], platform: "linux" },
   { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
   { column: "planned", title: "Guide in every language", text: "The Guide translated into all the app's languages.", areas: ["app"] },

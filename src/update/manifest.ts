@@ -8,7 +8,8 @@ const Sha256 = z.string().regex(/^[0-9a-f]{64}$/, "sha256 must be 64 lowercase h
 
 // Our Proton builds are named GE-Proton<version>-DualSense. The manifest, the
 // installer and the Games scanner all use this one rule to recognise them.
-export const PROTON_NAME = /^GE-Proton[\w.-]*DualSense$/;
+// A rebuild of the same version gets a -N suffix (GE-Proton11-7-DualSense-2).
+export const PROTON_NAME = /^GE-Proton[\w.-]*DualSense(-\d+)?$/;
 
 // Newer of two of our build names ("GE-Proton11-10-DualSense" > "GE-Proton11-7-DualSense").
 export const compareProtonNames = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });

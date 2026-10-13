@@ -405,17 +405,12 @@
       "reviewTitle": "適用前の確認",
       "reviewHint": "以下のファイルが変更されます。それぞれ事前にバックアップされるので、「元に戻す」で完全に元どおりになります。",
       "noFiles": "変更されるファイルはありません。",
-      "mustClose": "{{launcher}} が実行中です。終了時にこれらの設定を書き直して変更を上書きしてしまうため、先に終了する必要があります。",
-      "closeLauncher": "{{launcher}} を終了",
-      "closeGameRunning": "ゲームがまだ実行中です。先にゲームを終了してから、もう一度お試しください。",
-      "closeTimeout": "{{launcher}} が 30 秒以内に終了しませんでした。手動で終了してから「再確認」を押してください。",
       "apply_other": "{{count}} 件の変更を適用",
       "back": "戻る",
       "doneTitle": "完了",
-      "doneHint": "ランチャーを起動し直してください。起動時に新しい設定が読み込まれます。",
+      "doneHint": "各ゲームは次回の起動時に新しい設定を読み込みます。",
       "undo": "これらの変更を元に戻す",
       "undoShort": "元に戻す",
-      "undoBlocked": "先に {{launchers}} を終了してください。終了時に復元した設定が上書きされてしまいます。",
       "ok": "OK",
       "history": "変更履歴",
       "attention_other": "おすすめの変更 {{count}} 件",
@@ -429,7 +424,8 @@
           "envSteam": "{{game}} の起動オプションから {{vars}} を削除する",
           "envHeroic": "{{game}} の環境変数から {{vars}} を削除する",
           "audioRule": "コントローラーを「pro-audio」に固定する音声ルールを無効にする",
-          "audioProfile": "コントローラーの音声を「{{profile}}」プロファイルに切り替える"
+          "audioProfile": "コントローラーの音声を「{{profile}}」プロファイルに切り替える",
+          "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す"
         },
         "why": {
           "defaultSteam": "Steam は現在 {{current}} で Windows ゲームを実行しています。{{device}} 経由でアダプティブトリガーとハプティックフィードバックを動かすには当プロジェクトのビルドが必要です。個別に Proton を指定したゲームはその設定のままです。",
@@ -441,7 +437,10 @@
           "envSteam": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。起動オプションは次のようになります: {{options}}",
           "envHeroic": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。",
           "audioRule": "{{file}} が DualSense のサウンドカードを pro-audio プロファイルに切り替えるため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは .disabled に名前変更され（削除はされません）、音声サービス (WirePlumber) が再起動するので、音が一瞬途切れます。",
-          "audioProfile": "DualSense のサウンドカードが「{{profile}}」になっているため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは変更されません。サウンド設定でプロファイルを選ぶのと同じです。"
+          "audioProfile": "DualSense のサウンドカードが「{{profile}}」になっているため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは変更されません。サウンド設定でプロファイルを選ぶのと同じです。",
+          "gamepad": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。{{runner}}",
+          "gamepadSteam": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。起動オプションは次のようになります: {{options}}{{runner}}",
+          "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。"
         },
         "support": {
           "triggers": "このゲームは DualSense のアダプティブトリガーとハプティックフィードバックに対応しています。",
@@ -470,12 +469,17 @@
       "consentAllow": "ランチャーを確認する",
       "stop": "確認をやめる",
       "stopHint": "ゲーム設定をオフにします。再び許可するまで、ランチャーの設定は読み取りません。",
-      "closeFailed": "{{launcher}} に終了を依頼できませんでした。手動で終了してから「再確認」を押してください。",
       "undoConflict": "元に戻していません: 適用後に {{files}} が変更されました（ランチャーが独自の設定を保存しました）。元に戻すとその変更が失われます。",
       "scanningWindows": "Steam、GOG Galaxy、Epic を確認しています…",
       "consentIntroWindows": "ゲーム設定は Steam、GOG Galaxy、Epic のゲームを一覧にし、アダプティブトリガーやハプティックフィードバックを妨げる Steam の設定を確認します。そのため、このコンピューター上でのみ次を読み取ります：",
       "consentLaunchersWindows": "Steam、GOG Galaxy、Epic の設定とインストール済みゲームの一覧",
-      "consentRunningWindows": "実行中のプログラム（ゲームの起動に気づき、そのコントローラープロファイルを使うため）"
+      "consentRunningWindows": "実行中のプログラム（ゲームの起動に気づき、そのコントローラープロファイルを使うため）",
+      "willRestart": "この変更を保存するために {{launcher}} を終了し、その後もう一度開きます。",
+      "willRestartUndo": "この変更を元に戻すために {{launcher}} を終了し、その後もう一度開きます。",
+      "restartGameRunning": "ゲームが実行中のため、{{launcher}} は終了しませんでした（ゲームも終了してしまうため）。何も変更していません。ゲームを終了してから、もう一度お試しください。",
+      "restartTimeout": "{{launcher}} が 30 秒以内に終了しなかったため、何も変更していません。手動で終了してから、もう一度お試しください。",
+      "restartFailed": "{{launcher}} に終了を依頼できなかったため、何も変更していません。手動で終了してから、もう一度お試しください。",
+      "reopenFailed": "保存しましたが、{{launcher}} をもう一度起動できませんでした。手動で起動してください。"
     },
     "setup": {
       "installing": "ファームウェアをインストールしています…",
@@ -923,7 +927,11 @@
       "hiddenCount": "{{count}} 件非表示",
       "triggerReduce": "トリガーエフェクト",
       "speakerBoost": "スピーカーブースト",
-      "lockVolume": "音量をロック"
+      "lockVolume": "音量をロック",
+      "gamepadSet": "コントローラーは標準ゲームパッド（XInput）としてこのゲームに届いています。",
+      "gamepadSteamInput": "このゲームでは Steam Input がオフになっていないため、Steam がすでに Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。",
+      "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（-DualSense-2 以降）か通常の GE-Proton をインストールしてください。",
+      "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",

@@ -127,6 +127,8 @@ function start(): void {
     settings,
   );
 
+  // Games library: the player's per-game data (works on every OS).
+  const library = new LibraryStore(app.getPath("userData"));
   // Games page (Linux and Windows): the library, per-game profiles and, on
   // Linux, launcher / Proton setup for native DualSense features.
   const games =
@@ -137,6 +139,8 @@ function start(): void {
           fetchManifest: () => updater.fetchManifest(),
           download: (d, path, progress) => updater.downloadAsset(d, path, progress),
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
+          // Games the player marked "controller not detected" get the standard-gamepad fix.
+          notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.tags?.includes("not-detected") ? [key] : []))),
         })
       : null;
   const withGames = <T>(run: (g: GamesService) => T): T => {
@@ -144,9 +148,7 @@ function start(): void {
     return run(games);
   };
 
-  // Games library: the player's per-game data (works on every OS), the
-  // running game (polled only while Games is allowed).
-  const library = new LibraryStore(app.getPath("userData"));
+  // The running game (polled only while Games is allowed).
   const watcher = games
     ? new RunningGameWatcher(
         () => games.runningCandidates(),
@@ -195,10 +197,9 @@ function start(): void {
   registerIpc({
     isTrusted,
     gamesScan: () => withGames((g) => g.scan()),
-    gamesApply: (ids) => withGames((g) => g.apply(ids)),
-    gamesUndo: (id) => withGames((g) => g.undo(id)),
+    gamesApply: (r) => withGames((g) => g.apply(r.fixIds, r.restart)),
+    gamesUndo: (r) => withGames((g) => g.undo(r.backupId, r.restart)),
     gamesBackups: () => withGames((g) => g.listBackups()),
-    closeLauncher: (l) => withGames((g) => g.close(l)),
     installProton: () => withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
     gamesDetails: () => withGames((g) => g.details()),
     gamesRunning: () => watcher?.running ?? null,

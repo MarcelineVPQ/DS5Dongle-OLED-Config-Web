@@ -21,7 +21,7 @@ import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import { profileFields } from "./profileFields";
-import { useMsg } from "../pages/GamesPage";
+import { RestartNotice, restartFor, useMsg, useRestartText } from "../pages/GamesPage";
 import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
 import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
@@ -42,7 +42,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement>(null);
   const support = supportOf(game);
-  const mineState = useMine(game, info, record, onLibrary);
+  const mineState = useMine(game, info, record, onLibrary, onRescan);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
   // A stat that points at a frame: bring it into view and flash it, so the
   // click always shows something even when the frame is already on screen.
@@ -124,7 +124,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       <div className="gp-cols">
         <div className="gp-col">
           <ProfileFrame game={game} record={record} running={running} bridge={bridge} onLibrary={onLibrary} />
-          <SetupFrame game={game} onRescan={onRescan} />
+          <SetupFrame game={game} report={report} mineState={mineState} onRescan={onRescan} />
           <RatingFrame game={game} info={info} mineState={mineState} />
           <section className="dk-card" id="gp-reviews">
             <h2>{t("desktop.library.section.reviews")}</h2>
@@ -425,22 +425,36 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
 }
 
 // ---- Setup (this game's recommended fixes) ----
-function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void }) {
+function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; report: GamesReport; mineState: MineState; onRescan: () => void }) {
   const { t } = useTranslation();
   const m = useMsg();
+  const restartText = useRestartText();
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [mine, update] = mineState;
+  const restart = restartFor(report, game.fixes);
   const apply = async () => {
     try {
-      const r = await window.desktop!.gamesApply(game.fixes.map((f) => f.id));
-      setNote(r.applied.length > 0 && r.applied.every((a) => a.ok) && r.blockedBy.length === 0 ? t("desktop.library.setupDone") : t("desktop.library.setupFailed"));
+      const r = await window.desktop!.gamesApply({ fixIds: game.fixes.map((f) => f.id), restart });
+      if (r.blockedBy.length && !r.problem) {
+        // A launcher started since the scan: the rescan names it above Apply.
+        onRescan();
+        return;
+      }
+      setNote(restartText(r) ?? (r.applied.length > 0 && r.applied.every((a) => a.ok) ? t("desktop.library.setupDone") : t("desktop.library.setupFailed")));
       onRescan();
+      setConfirm(false);
     } catch (cause) {
       setNote(errorText(cause));
-    } finally {
       setConfirm(false);
     }
   };
+  // XInput-only games on our list get the standard-gamepad fix by themselves;
+  // for any other Proton game the player can say the controller isn't detected.
+  const native = game.support === "triggers" || game.support === "haptics";
+  const canMark = protonApplies() && !native && game.support !== "xinput" && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
+  const marked = !!mine.tags?.includes("not-detected");
+  const toggleMark = () => update({ tags: marked ? (mine.tags ?? []).filter((x) => x !== "not-detected") : [...(mine.tags ?? []), "not-detected"] });
   return (
     <section className="dk-card" id="gp-setup">
       <h2>{t("desktop.library.section.setup")}</h2>
@@ -458,6 +472,7 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
               </li>
             ))}
           </ul>
+          {confirm && <RestartNotice launchers={restart} />}
           <div className="dk-row-btns">
             {!confirm ? (
               <button type="button" className="dk-btn primary" onClick={() => setConfirm(true)}>
@@ -476,6 +491,18 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
           </div>
         </>
       )}
+      {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
+      {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
+      {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
+      {canMark && (
+        <label className="dk-fix">
+          <input type="checkbox" checked={marked} onChange={toggleMark} />
+          <span>
+            <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
+            <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
+          </span>
+        </label>
+      )}
       {note && <p className="dk-hint">{note}</p>}
     </section>
   );
@@ -484,8 +511,19 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
 // ---- Compatibility (Proton) ----
 function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: GamesReport; onRescan: () => void }) {
   const { t } = useTranslation();
+  const restartText = useRestartText();
   const ours = report.ourProton.name;
   const runnerFix = game.fixes.find((f) => f.kind === "set-runner");
+  const restart = runnerFix ? restartFor(report, [runnerFix]) : [];
+  // A running launcher is closed and reopened for the switch: said first, then confirmed.
+  const [confirm, setConfirm] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const switchRunner = async () => {
+    const r = await window.desktop!.gamesApply({ fixIds: [runnerFix!.id], restart });
+    setNote(restartText(r));
+    setConfirm(false);
+    onRescan();
+  };
   const native = game.support === "triggers" || game.support === "haptics";
   return (
     <section className="dk-card" id="gp-compat">
@@ -509,12 +547,21 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
       {game.usesOurProton ? (
         <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>
       ) : runnerFix ? (
-        <div className="dk-row-btns">
-          <BusyButton className="dk-btn primary" onClick={() => window.desktop!.gamesApply([runnerFix.id]).then(onRescan)}>
-            {t("desktop.library.switchTo", { name: ours })}
-          </BusyButton>
-        </div>
+        <>
+          {confirm && <RestartNotice launchers={restart} />}
+          <div className="dk-row-btns">
+            {confirm && (
+              <button type="button" className="dk-btn" onClick={() => setConfirm(false)}>
+                {t("desktop.library.cancel")}
+              </button>
+            )}
+            <BusyButton className="dk-btn primary" onClick={() => (restart.length && !confirm ? Promise.resolve(setConfirm(true)) : switchRunner())}>
+              {t("desktop.library.switchTo", { name: ours })}
+            </BusyButton>
+          </div>
+        </>
       ) : null}
+      {note && <p className="dk-hint">{note}</p>}
     </section>
   );
 }
@@ -570,9 +617,19 @@ function SupportFrame({ game }: { game: GameEntry }) {
 // One copy per page, shared by the Rating and Notes frames: the library
 // stores the whole record, so two copies would overwrite each other's fields.
 type MineState = readonly [Mine, (patch: Partial<Mine>) => void];
-function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void): MineState {
+function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void, onRescan: () => void): MineState {
   const app = window.desktop!.appVersion;
-  const { value: mine, set } = useDebouncedSave<Mine>(record?.mine ?? {}, (next) => window.desktop!.librarySetMine({ gameKey: game.key, title: game.title, mine: next }).then(onLibrary), 500);
+  const notDetected = (m?: Mine) => !!m?.tags?.includes("not-detected");
+  const { value: mine, set } = useDebouncedSave<Mine>(
+    record?.mine ?? {},
+    (next) =>
+      window.desktop!.librarySetMine({ gameKey: game.key, title: game.title, mine: next }).then((file) => {
+        onLibrary(file);
+        // "Controller not detected" decides whether the standard-gamepad fix is offered.
+        if (notDetected(next) !== notDetected(record?.mine)) onRescan();
+      }),
+    500,
+  );
   const update = (patch: Partial<Mine>) => {
     // A rating or feedback change re-stamps what it was given on.
     const stamp = ("rating" in patch || "tags" in patch) && app ? { ratedOn: { app, build: info?.buildId, gameUpdated: info?.lastUpdated, at: Math.floor(Date.now() / 1000) } } : {};

@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Games (Linux): XInput-only games find the controller.** Games that only know Xbox controllers (Ghostrunner, Control) saw no controller with our DualSense Proton. A new recommended change, **Pass the controller to … as a standard gamepad (XInput)**, sets PROTON_PREFER_SDL=1 for that game only (Steam: in front of `%command%` in its launch options, your own options kept; Heroic: its environment variables; Lutris: its system environment). It's offered on Home for every installed XInput game on our list, and on any game's page when you tick **Controller not detected** in Setup. Steam games need it only with Steam Input off for the game; otherwise the page says Steam already gives the game an Xbox controller. Our DualSense Proton builds before **-DualSense-2** ignore the option, so the change also moves the game to the newest installed build that honours it (a -DualSense-2 build, else stock GE-Proton) and says so; with neither installed, the page says what to install. If Steam, Heroic or Lutris is running, the review says it will be closed to save the change, then reopened, and the app does that itself (never while a game is running; Undo works the same way). Undo puts back the environment, the launch options and the Proton version.
+
 ## [0.9.5-dev.9] - 2026-10-13
 
 ### Added
