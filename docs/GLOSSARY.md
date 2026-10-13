@@ -97,6 +97,26 @@ zh-CN is Sony's mainland China site (`zh-hans-cn`; playstation.com.cn redirects 
 - **Battery level:** no Sony string in any language; we keep our own ("Battery").
 - **Inconsistent at Sony:** zh-CN uses 振动 (console) and 震动 (Edge); we use 振动. ja uses プレーヤーランプ and プレイヤーランプ; we use プレーヤーランプ. pt-BR uses "Manípulo" in the part list and "analógico" everywhere else; we use "analógico". de uses "Deadzone" in menus and "Totzone" in marketing; we use "Deadzone".
 
+## Our settings with no Sony name
+
+Sony's menus have no counterpart for these (they are upstream awalol's settings and ours), so the wording is our own, in the same style. From the app's locales (`desktop.settings.*`):
+
+| Term | en | de | fr | es | pt-BR | zh-CN | ja |
+|---|---|---|---|---|---|---|---|
+| Speaker boost (the controller amplifier's gain) | Speaker boost | Lautsprecher-Verstärkung | Amplification du haut-parleur | Amplificación del altavoz | Amplificação do alto-falante | 扬声器增强 | スピーカーブースト |
+| Lock volume (games can't change it) | Lock volume | Lautstärke sperren | Verrouiller le volume | Bloquear volumen | Travar volume | 锁定音量 | 音量をロック |
+| Audio output (where the PC's audio plays) | Audio output | Audioausgabe | Sortie audio | Salida de audio | Saída de áudio | 音频输出 | 音声出力 |
+| Microphone used (which mic) | Microphone used | Verwendetes Mikrofon | Microphone utilisé | Micrófono en uso | Microfone usado | 使用的麦克风 | 使用するマイク |
+| Status pin (a GPIO on the board) | Status pin | Status-Pin | Broche d'état | Pin de estado | Pino de status | 状态引脚 | ステータスピン |
+
+Their choices: Auto, Speaker, Headset, Off, Built-in (de: Auto, Lautsprecher, Headset, Aus, Integriert; fr: Auto, Haut-parleur, Casque, Désactivé, Intégré; es: Auto, Altavoz, Auriculares, Desactivado, Integrado; pt-BR: Auto, Alto-falante, Headset, Desligado, Embutido; zh-CN: 自动, 扬声器, 耳机, 关, 内置; ja: 自動, スピーカー, ヘッドセット, オフ, 内蔵). "Built-in" follows Sony's **Built-in microphone**. **Trigger Effect Intensity** is Sony's own term (above).
+
+## Naming the board
+
+The app never says "dongle" (that is the owner's slang) in any language. Every string that names the board uses the `{{device…}}` variables (`src/i18n/deviceForms.ts`): the board the firmware reports ("the Pico 2 W"), the last board that connected while none is, and **your board** before any has (Dein Board, ta carte, tu placa, sua placa, 你的开发板, お使いのボード). `{{deviceName}}` is the bare name for headings and labels ("Pico 2 W" / "Your board"), `{{device, capitalize}}` starts a sentence, and languages with articles or cases have one variable per grammatical spot (German `device_dat`, French `device_de`…). The board's page is named after the board in the side bar, and the save button reads **Save to the Pico 2 W**. Only the product's own name keeps the word: **DS5 Dongle OLED Edition**, and the firmware's USB name "DS5 Dongle Wake Keyboard". `tests/unit/deviceWording.test.ts` fails if a translation says "dongle" again.
+
 ## The OLED screen
 
 The firmware's OLED screens use short words that differ from Sony's, because the screen is 128 pixels wide. They're not changed here (firmware strings are out of scope): "Lightbar" (Sony: light bar), "Touchpad" (touch pad), "Gyro Tilt" (gyroscope), "HAP" (haptic feedback), "SPK" (speaker), "BT Mic" (built-in microphone), "DP nav" (directional buttons), "Tri=" (triangle button), "Hold Create + PS" (the Create button and the PS button).
+
+The Settings screen's entries since firmware dev.9 (`src/oled.cpp`, `format_settings_item`) are short forms too: "TrigEff" (Trigger Effect Intensity; "game" at 0, else "-1".."-10"), "SpkBoost" (Speaker boost; "game" or 1..7), "VolLock" (Lock volume), "SPK Out" (Audio output: Auto, SPK, Hset, off), "Mic In" (Microphone used: Auto, Int, Hset), "Sleep CtrlOff" (Turn off the controller when the PC sleeps) and "PS Wakes PC" (Wake the PC with the PS button). The Status pin is set from the app only. Aligning the OLED with Sony's words is a backlog row ("OLED screens use Sony's names").
