@@ -16,7 +16,8 @@ npm run dev:desktop      # desktop with HMR (--no-sandbox, see ADR-0004)
 npm run build:desktop && npm run start:desktop
 tools/dev.sh             # the dev copy: dev tools on, build id from Git ("0.9.3 · dev +3.a1b2c3d"), own settings in tmp/dev/home, DevTools port 9333 (--quick: no packaging; --stop)
 DS5_DEV_TOOLS=1 npm run build:desktop   # a dev build by hand: the Developer card (previews, fake controllers, simulated dongle, HDR test) is built in and shown; stable releases leave it out, dev-channel (X.Y.Z-dev.N) builds include it
-tools/check_ui.sh        # UI checker (layout, contrast, names) on its own app copy: simulated dongle, own settings, port 9334; never run it on the dev copy the user is using
+tools/check_ui.sh        # UI checker (layout, contrast, names) on its own app copy: simulated dongle, own settings, port 9334, virtual display (xvfb-run; CHECK_UI_SHOW=1 to see it), private D-Bus (no tray icon), no USB/hidraw (bwrap); never run it on the dev copy the user is using
+                         # default --plan fast (dev builds, ~7 min): pairwise language x size x theme x page group x model, colorways computed; --plan full (~21 min) renders everything: the release gate
 npm run check            # typecheck + lint + format check + security gates + tests (what CI runs)
 npm test                 # vitest: tests/{unit,integration,security}
 node tools/update_version.mjs --verify

@@ -16,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- `tools/check_ui.sh` runs the UI checker's fast plan by default (dev builds, about 7 minutes instead of 21): layout and names on a pairwise covering array of language × window size × theme × page group × model (de, es, fr and pt-BR on every view at the smallest size, every view at every size), contrast pairwise over theme × style × page group × model, and every colorway and a sweep of custom colors computed with the app's own color code in every theme, cross-checked against real renders. `--plan full` renders everything (the release gate) and now covers the special-edition colorways too (the colorway list skipped them). The checker copy runs on a virtual display, its own D-Bus session (no tray icon) and with no USB or hidraw devices.
 - **About opens on the Guide**, and its tabs read Guide · App changes · Firmware changes · Coming soon · Credits ("What's new" is now "App changes"; See what's new after an update still opens it).
 - **The speaker test sound is louder** (Speaker → Play test sound), so it's easy to hear on the controller.
 - **Developer builds: the simulated dongle's OLED shows the new Status screen**, the dongle's own symmetric controller drawing (sticks, triggers, L1/R1, Create/Options, d-pad, face buttons, the Edge's extra buttons) and battery row, moving with the simulated controller.
