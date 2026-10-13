@@ -13,10 +13,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Changed
 
 - **The board page names the display by its model and lists both boards' specs.** The display section and its settings card are now called **Waveshare Pico-OLED-1.3** instead of "OLED display" (the supported add-on: the firmware can't detect it, it drives it whenever it's attached). A new Specs card shows the board's chip (with the clock it runs at), SRAM, flash and wireless chip (Pico 2 W and Pico W; hidden for any other board), and one in the display section shows the module's size, resolution, controller, interface and keys.
+- **The board section of the dashboard is headed with your board's name** (for example **Pico 2 W**), like the side bar, instead of always "Pico 2 W" (a Pico W board showed the wrong name).
+- **About → Coming soon catches up with dev.9:** the speaker test's whole tune, the DualSense Edge's profiles in PlayStation Accessories, DualSense V2 reconnects, quicker OLED taps and Fallback haptics, the board by its name, the board's specs and no restart during a firmware update are in "In the next build"; the open Games, Windows and board items are listed as planned, and five ideas are added. The Community game database and the game-art ideas are no longer marked Linux-only, and Windows-only items say "Windows only".
+- **About → Guide covers dev.9:** Trigger Effect Intensity, Speaker boost, Lock volume, Audio output, Microphone used, the whole-tune speaker test, the Status pin, the Specs cards, the Edge in PlayStation Accessories, and a USB 2.0 port on the back of the PC as the first choice (a powered USB 2.0 hub works too), plus a low-battery tip in Troubleshooting.
 
 ### Fixed
 
 - **No restart or quit while firmware is being written:** during a firmware update (and Setup's first install), the app update's **Restart now** stayed clickable, and restarting mid-write left the board half-written (it then only recovers through BOOTSEL). Now Restart now and Download and install are disabled with "Wait for the firmware update to finish.", a restart already asked for (tray menu too) happens right after the write, closing the window, tray Quit and Ctrl+Q keep the window open with a note that the app closes when the firmware update finishes, and an automatic app update installs only after the write. One guard in the main process holds all of them.
+- **The microphone test only shows on Linux:** it records and plays back through PipeWire, so on Windows and macOS its button could only fail. The Built-in microphone and Microphone used settings stay on every platform.
 
 ## [0.9.5-dev.9] - 2026-10-13
 
