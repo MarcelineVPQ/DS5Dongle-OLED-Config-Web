@@ -403,9 +403,10 @@
       "hdrOn": "已在 {{outputs}} 上开启",
       "hdrOff": {
         "kde": "没有屏幕开启 HDR",
-        "other-desktop": "此桌面未检查（仅限 KDE Plasma）",
+        "gnome": "没有屏幕开启 HDR",
+        "other-desktop": "此桌面不检查（仅 KDE Plasma 和 GNOME）",
         "x11": "需要 Wayland 会话",
-        "failed": "无法检查（kscreen-doctor）",
+        "failed": "无法检查屏幕",
         "unchecked": "未检查"
       },
       "systemRule": "系统级音频规则强制使用 pro-audio。它位于你的主目录之外，本应用不会修改。",
@@ -437,7 +438,9 @@
           "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
           "audioProfile": "将控制器音频切换到“{{profile}}”配置",
           "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}",
-          "hdr": "为 {{game}} 开启 HDR"
+          "hdr": "为 {{game}} 开启 HDR",
+          "hdrUpdate": "将 {{game}} 的 HDR 改用 gamescope",
+          "hdrRemoveOld": "移除 {{game}} 的旧 HDR 设置"
         },
         "why": {
           "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过 {{device}} 工作。已单独指定 Proton 的游戏保持原设置。",
@@ -453,9 +456,13 @@
           "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
           "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
-          "hdr": "{{game}} 支持 HDR。PROTON_ENABLE_WAYLAND=1 和 PROTON_ENABLE_HDR=1 让 Proton 以原生 Wayland 窗口运行它，这样才能使用 HDR。请在你的 HDR 屏幕（{{outputs}}）上玩。如果游戏出现异常，撤销即可恢复原样。{{runner}}",
-          "hdrSteam": "{{game}} 支持 HDR。PROTON_ENABLE_WAYLAND=1 和 PROTON_ENABLE_HDR=1 让 Proton 以原生 Wayland 窗口运行它，这样才能使用 HDR。请在你的 HDR 屏幕（{{outputs}}）上玩。在此模式下 Steam 覆盖界面可能不会显示。如果游戏出现异常，撤销即可恢复原样。启动选项将变为：{{options}}{{runner}}",
-          "hdrRunner": "{{current}} 不支持此功能，因此游戏也会改用 {{proton}}。"
+          "hdrSteam": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。启动选项将变为：{{options}}{{runner}}",
+          "hdrRunner": " 它还会改用我们的 DualSense Proton {{proton}}，让手柄的自适应扳机和触觉反馈在 HDR 下也能工作。",
+          "hdrHeroic": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会填写 Heroic 中该游戏的 Gamescope 设置，并关闭 Enable Wine-Wayland 和 Enable HDR 开关。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
+          "hdrLutris": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会开启 Lutris 中该游戏的 Gamescope 选项（包括 HDR）。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
+          "hdrNoProton": " 在 Proton 卡片中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
+          "hdrOld": "{{game}} 仍有旧的 HDR 设置（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR），可能导致游戏黑屏。该设置会被移除。{{next}}",
+          "hdrOldOnly": "当游戏页面上的检查清单全部为 ✓ 时，就会提供通过 gamescope 的 HDR。"
         },
         "support": {
           "triggers": "此游戏支持 DualSense 的自适应扳机和触觉反馈。",
@@ -947,18 +954,9 @@
       "gamepadSteamInput": "此游戏未关闭 Steam Input，Steam 已经为它提供 Xbox 控制器，因此不需要标准手柄选项。",
       "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（GE-Proton11-7.2-DualSense 或更高）或普通的 GE-Proton。",
       "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。",
-      "hdrSet": "此游戏已开启 HDR：它以原生 Wayland 窗口运行。",
-      "hdrNoScreen": {
-        "kde": "目前没有屏幕开启 HDR，因此不提供“开启 HDR”。请在 KDE 的显示设置中为屏幕开启 HDR，然后重新扫描。",
-        "other-desktop": "“开启 HDR”仅在 KDE Plasma（Wayland）上提供：应用无法检查此桌面的 HDR 设置。",
-        "x11": "“开启 HDR”需要 Wayland 会话：此桌面运行在 X11 上。",
-        "failed": "应用无法读取屏幕设置（kscreen-doctor），因此不提供“开启 HDR”。",
-        "unchecked": "未检查屏幕，因此不提供“开启 HDR”。"
-      },
-      "hdrNoBuild": "HDR 需要 GE-Proton 10 或更高版本（包括我们的 DualSense Proton），但 {{runner}} 不支持，且未安装任何支持的版本。",
-      "hdrPickRunner": "此游戏使用 Steam 的默认 Proton {{runner}}，它不支持 HDR。请在 Steam 的 属性 → 兼容性 中选择 GE-Proton 10 或更高版本（或我们的 DualSense Proton），然后重新扫描。",
       "supportsHdr": "支持 HDR",
-      "supportsHdrHint": "如果游戏在 PC 上有 HDR 设置，请勾选此项：当有屏幕开启 HDR 时，应用会提供为它开启 HDR。"
+      "supportsHdrHint": "如果该游戏在 PC 上有 HDR 设置，请勾选：应用会显示 HDR 需要的条件，并在一切就绪时提供“开启 HDR”。",
+      "hdrTitle": "HDR"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",
@@ -1475,6 +1473,81 @@
       "channelB": "蓝",
       "recent": "最近使用的颜色",
       "recentColor": "最近使用的颜色 {{hex}}"
+    },
+    "hdrCheck": {
+      "yes": "已满足",
+      "no": "缺少",
+      "defaultRunner": "启动器的默认版本",
+      "wayland": {
+        "ok": "Wayland 会话",
+        "no": "Wayland 会话：此桌面运行在 X11 上。请注销，并在登录界面选择 Wayland 会话（Plasma 或 GNOME）。"
+      },
+      "screen": {
+        "ok": "{{screen}}（{{mode}}）已开启 HDR",
+        "off": {
+          "kde": "没有屏幕开启 HDR：请在 系统设置 → 显示器和监视器（高动态范围）中开启。",
+          "gnome": "没有屏幕开启 HDR：请在 设置 → 显示器（HDR，GNOME 48 或更高版本）中开启。"
+        },
+        "other-desktop": "应用只能在 KDE Plasma 6 和 GNOME 48 或更高版本上读取 HDR 设置，因此此桌面不提供“开启 HDR”。你仍可以自己设置。",
+        "x11": "HDR 需要 Wayland 会话。",
+        "failed": "应用无法读取屏幕设置（kscreen-doctor 或 GNOME 的显示设置），因此不提供“开启 HDR”。",
+        "unchecked": "未检查屏幕。"
+      },
+      "gamescope": {
+        "ok": "已安装 gamescope {{version}}",
+        "no": "未安装 gamescope：请安装发行版的 gamescope 软件包，版本 {{min}} 或更高（方法见指南）。",
+        "unknown": "已安装 gamescope，但它没有给出版本：HDR 需要 {{min}} 或更高版本。",
+        "old": "gamescope {{version}} 太旧：HDR 需要 {{min}} 或更高版本。请通过发行版更新。",
+        "flatpakOk": "已安装用于 Flatpak 启动器的 gamescope（{{ext}}）",
+        "flatpakNo": "你的启动器是 Flatpak：请用 flatpak install flathub {{ext}} 为它安装 gamescope（选择与启动器运行时匹配的分支）。"
+      },
+      "layer": {
+        "ok": "已安装 gamescope 的 HDR 层（WSI Vulkan 层）",
+        "no": "缺少 gamescope 的 HDR 层（VkLayer_FROG_gamescope_wsi）：大多数发行版随 gamescope 提供；请重新安装 gamescope，或安装包含它的软件包。"
+      },
+      "proton": {
+        "ok": "已安装我们的 DualSense Proton（{{proton}}）",
+        "no": "未安装我们的 DualSense Proton：请在 Proton 卡片中安装，以便在 HDR 下使用自适应扳机和触觉反馈。"
+      },
+      "game": {
+        "ok": "游戏支持 HDR"
+      },
+      "runner": {
+        "ok": "游戏使用我们的 DualSense Proton 运行",
+        "no": "游戏使用 {{runner}} 运行：“开启 HDR”也会将其改用我们的 DualSense Proton（HDR 下的自适应扳机和触觉反馈）。"
+      },
+      "setup": {
+        "set": "已设置：游戏在 gamescope 中以 HDR 运行",
+        "needed": "尚未设置：上方的“开启 HDR”会完成设置",
+        "update": "仍有旧的 HDR 设置（黑屏）：上方的更改会替换它",
+        "missing": "未设置：上方各项全部为 ✓ 后会提供“开启 HDR”"
+      }
+    },
+    "hdrManual": {
+      "title": "自己设置",
+      "intro": "手动完成“开启 HDR”所做的事。其他 Proton 版本配合 gamescope 也可能可用；我们测试的是我们的 DualSense Proton（HDR 加上手柄的自适应扳机和触觉反馈）。",
+      "noMode": "未读取到屏幕，因此这里使用 3840×2160：请把 -W 和 -H 后面改成你屏幕的分辨率。",
+      "noProton": "我们的 DualSense Proton（在 Proton 卡片中安装）",
+      "yourScreen": "你的屏幕",
+      "lineLabel": "要复制的行",
+      "copy": "复制",
+      "copied": "已复制",
+      "steam": {
+        "proton": "在 Steam 中，游戏的 属性 → 兼容性：勾选“强制使用特定 Steam Play 兼容性工具”，并选择 {{proton}}。",
+        "line": "属性 → 通用 → 启动选项：粘贴这一行（为 {{screen}}、{{mode}} 生成；原有内容请保留）："
+      },
+      "heroic": {
+        "proton": "在 Heroic 中，游戏的 设置 → Wine 版本：选择 {{proton}}。",
+        "gamescope": "设置 → Gamescope：开启 Enables Upscaling；Game Width 和 Upscale Width 填 {{width}}，Game Height 和 Upscale Height 填 {{height}}；窗口类型 Fullscreen；Additional Options：",
+        "env": "设置 → 高级 → 环境变量：添加 {{env}}。如果 设置 → 其他 中的 Enable Wine-Wayland 和 Enable HDR 已开启，请关闭。"
+      },
+      "lutris": {
+        "proton": "在 Lutris 中，游戏的 配置 → 运行器选项 → Wine 版本：选择 {{proton}}。",
+        "gamescope": "配置 → 系统选项（勾选高级）→ Gamescope：开启 Enable Gamescope、Enable HDR 和 Relative Mouse Mode；Output Resolution 和 Game Resolution 填 {{width}}x{{height}}；Window Mode 选 Fullscreen；Custom Settings：",
+        "env": "系统选项 → 环境变量：添加 {{env}}，如有 PROTON_ENABLE_WAYLAND 和 PROTON_ENABLE_HDR 则删除。"
+      },
+      "inGame": "启动游戏，并在游戏自己的显示设置中开启 HDR。",
+      "guide": "指南（关于页面）解释了每一步：游戏 → Linux 游戏中的 HDR。"
     }
   },
   "ad": {

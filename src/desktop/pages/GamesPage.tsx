@@ -13,6 +13,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LauncherIcon } from "../library/LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { latestOnly } from "../games/scanOrder";
+import { HdrChecklist } from "../library/HdrChecklist";
+import { hdrSystemReqs } from "../games/hdrSetup";
 import { errorText } from "../../errorText";
 import { readPref, writePref } from "../storage";
 import GameLibrary from "../library/GameLibrary";
@@ -539,6 +541,10 @@ function SystemCard({ report }: { report: GamesReport }) {
   const { t } = useTranslation();
   const s = report.system;
   const proAudio = s.proAudio;
+  const hdrScreens = s.hdr.screens.filter((x) => x.hdr).map((x) => x.name);
+  // gamescope from the Flatpak extension only when every launcher found is a Flatpak.
+  const protonLaunchers = report.launchers.filter((l) => l.found && (l.id === "steam" || l.id === "heroic" || l.id === "lutris"));
+  const flatpakOnly = protonLaunchers.length > 0 && protonLaunchers.every((l) => l.flatpak);
   return (
     <section className="dk-card">
       <h2>{t("desktop.games.systemTitle", "This computer")}</h2>
@@ -560,7 +566,12 @@ function SystemCard({ report }: { report: GamesReport }) {
             : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}
         </dd>
         <dt>{t("desktop.games.hdr")}</dt>
-        <dd>{s.hdr.outputs.length ? t("desktop.games.hdrOn", { outputs: s.hdr.outputs.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}</dd>
+        <dd>
+          <details className="gp-legend hdr-row">
+            <summary>{hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}</summary>
+            <HdrChecklist reqs={hdrSystemReqs(s.hdr, { ourProton: report.ourProton.name, flatpak: flatpakOnly })} />
+          </details>
+        </dd>
       </dl>
       {s.envWarnings.length > 0 && (
         <p className="dk-hint">

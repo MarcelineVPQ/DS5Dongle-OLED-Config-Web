@@ -9,6 +9,8 @@ import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { knownHdr } from "../games/knownGames";
+import { HdrChecklist, HdrManual } from "./HdrChecklist";
+import { hdrGameReqs } from "../games/hdrSetup";
 import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
@@ -457,7 +459,18 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
   // HDR games on our list get "Turn on HDR" by themselves; the player can mark others.
   const protonGame = protonApplies() && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
   const canMarkHdr = protonGame && !knownHdr(game.title);
-  const hdrScreens = report.system.hdr;
+  const hdrSys = report.system.hdr;
+  const flatpak = !!report.launchers.find((l) => l.id === game.launcher)?.flatpak;
+  // An HDR game's page checks again when it opens (the main process answers
+  // from a few seconds' cache): HDR turned on in the desktop's settings, or
+  // gamescope just installed, shows without a manual rescan.
+  const isHdr = protonGame && game.hdr !== undefined; // Linux only
+  const rescanned = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isHdr || rescanned.current === game.key) return;
+    rescanned.current = game.key;
+    onRescan();
+  }, [isHdr, game.key, onRescan]);
   return (
     <section className="dk-card" id="gp-setup">
       <h2>{t("desktop.library.section.setup")}</h2>
@@ -497,10 +510,13 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
       {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
       {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
       {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
-      {game.hdr === "set" && <p className="dk-good">✓ {t("desktop.library.hdrSet")}</p>}
-      {game.hdr === "no-screen" && <p className="dk-hint">{t(`desktop.library.hdrNoScreen.${hdrScreens.check}`)}</p>}
-      {game.hdr === "no-build" && <p className="dk-hint">{t("desktop.library.hdrNoBuild", { runner: game.runner ?? "" })}</p>}
-      {game.hdr === "pick-runner" && <p className="dk-hint">{t("desktop.library.hdrPickRunner", { runner: game.runner ?? t("desktop.games.msg.fallback.steamProton") })}</p>}
+      {isHdr && (
+        <div className="hdr-game">
+          <h3>{t("desktop.library.hdrTitle")}</h3>
+          <HdrChecklist reqs={hdrGameReqs(hdrSys, game, { ourProton: report.ourProton.name, flatpak })} />
+          <HdrManual game={game} sys={hdrSys} ourProton={report.ourProton.name} />
+        </div>
+      )}
       {canMark && (
         <label className="dk-fix">
           <input type="checkbox" checked={marked} onChange={toggleMark} />

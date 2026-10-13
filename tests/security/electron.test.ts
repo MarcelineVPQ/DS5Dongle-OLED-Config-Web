@@ -247,14 +247,21 @@ describe("closing and reopening game launchers (Linux)", () => {
   });
 });
 
-describe("HDR screen check (Linux)", () => {
+describe("HDR requirement check (Linux)", () => {
   const source = readFileSync(new URL("../../electron/main/games/hdr.ts", import.meta.url), "utf8");
 
-  it("runs only kscreen-doctor -o: fixed argv, no shell, a timeout, read-only", () => {
+  it("runs only kscreen-doctor -o, Mutter's GetCurrentState and gamescope --version: fixed argv, no shell, a timeout, read-only", () => {
     expect(source).toContain("const run = promisify(execFile);");
-    expect(source).toMatch(/exec\("kscreen-doctor", \["-o"\], \{ timeout: 5000, /);
-    expect(source.match(/(?<!\.)\bexec\(/g)).toHaveLength(1); // the only program it runs
-    expect(source).not.toMatch(/execSync|spawn|shell: true|writeFile|--output|\.(?:hdr|mode|enable)\./);
+    expect(source).toContain('const OPTS = (env: NodeJS.ProcessEnv) => ({ timeout: 5000, env: { ...env, LC_ALL: "C" }, maxBuffer: 1024 * 1024 });');
+    const calls = source.match(/(?<!\.)\bexec\(.*?OPTS\(env\)\)|(?<!\.)\bexec\(/g) ?? [];
+    expect(calls).toEqual(['exec("kscreen-doctor", ["-o"], OPTS(env))', 'exec("gdbus", MUTTER, OPTS(env))', 'exec(path, ["--version"], OPTS(env))']);
+    // The gdbus call is the one read-only method; nothing that applies a configuration.
+    expect(source).toContain(
+      'const MUTTER = ["call", "--session", "--dest", "org.gnome.Mutter.DisplayConfig", "--object-path", "/org/gnome/Mutter/DisplayConfig", "--method", "org.gnome.Mutter.DisplayConfig.GetCurrentState"];',
+    );
+    expect(source).not.toMatch(/ApplyMonitorsConfig|SetBacklight|execSync|spawn|shell: true|writeFile|mkdir|unlink|rename|--output|\.(?:hdr|mode|enable)\./);
+    // gamescope's path only ever comes from PATH lookup (findOnPath), never from the page.
+    expect(source).toContain('const path = findOnPath("gamescope", env);');
   });
 });
 

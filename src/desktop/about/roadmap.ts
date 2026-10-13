@@ -143,7 +143,7 @@ export const ROADMAP: RoadmapItem[] = [
   {
     column: "next",
     title: "HDR for games",
-    text: "Games with HDR get it on KDE Plasma: when a screen has HDR on, Games offers to run them as native Wayland windows with HDR.",
+    text: "Games with HDR get it on Linux: Games runs them inside gamescope with HDR, on our DualSense Proton, and shows a checklist of what HDR needs.",
     areas: ["games"],
     platform: "linux",
   },

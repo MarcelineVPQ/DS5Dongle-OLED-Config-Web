@@ -69,7 +69,7 @@ export function protonBuilds(dir: string): string[] {
 // Our builds are GE-Proton<major>-<minor>-DualSense; a rebuild of the same GE
 // version adds .N to the minor (GE-Proton11-7.2-DualSense). One reading of
 // the folder name and the build's `version` file ("<timestamp> <name>"),
-// shared by the PROTON_PREFER_SDL and HDR checks.
+// used by the PROTON_PREFER_SDL check.
 export interface BuildName {
   ours: boolean; // one of our DualSense builds
   major: number; // GE-Proton major version, 0 when not a GE-Proton name
@@ -139,36 +139,6 @@ export function pickBuild(names: string[], dirs: string[], ok: (name: string) =>
 
 // The build to move a game to when its runner ignores PROTON_PREFER_SDL.
 export const preferSdlBuild = (names: string[], dirs: string[], current?: string | null) => pickBuild(names, dirs, (n) => buildHonoursPreferSdl(n, dirs), current);
-
-// ---- PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR (HDR games) ----
-// GE-Proton 10 and later (ours included) read both from the environment in
-// their `proton` script; GE-Proton 9 and Valve's Proton (up to 11.0 and
-// Experimental, 2026-10) don't. The script decides when we can read it; a
-// build without one counts by its name (and `version` file).
-export const HDR_VARS = ["PROTON_ENABLE_WAYLAND", "PROTON_ENABLE_HDR"] as const;
-export function honoursHdr(name: string, script?: string | null, versionText?: string | null): boolean {
-  if (script) return HDR_VARS.every((v) => script.includes(`"${v}"`));
-  return dualSenseBuild(name, versionText).major >= 10;
-}
-
-// Does the build `name` (found in one of `dirs`) honour the HDR options?
-export function buildHonoursHdr(name: string, dirs: string[]): boolean {
-  let script: string | null = null;
-  for (const dir of dirs) {
-    try {
-      script = readFileSync(join(dir, name, "proton"), "utf8");
-      break;
-    } catch {
-      // not in this folder
-    }
-  }
-  return honoursHdr(name, script, buildVersion(dirs.map((d) => join(d, name))));
-}
-
-// The build to move an HDR game to: one that honours the HDR options (and
-// PROTON_PREFER_SDL, when the game needs the standard gamepad).
-export const hdrBuild = (names: string[], dirs: string[], needsPreferSdl: boolean, current?: string | null) =>
-  pickBuild(names, dirs, (n) => buildHonoursHdr(n, dirs) && (!needsPreferSdl || buildHonoursPreferSdl(n, dirs)), current);
 
 function freeBytes(dir: string): number {
   try {

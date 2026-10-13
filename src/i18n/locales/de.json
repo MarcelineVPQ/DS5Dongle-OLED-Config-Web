@@ -403,9 +403,10 @@
       "hdrOn": "an auf {{outputs}}",
       "hdrOff": {
         "kde": "auf keinem Bildschirm an",
-        "other-desktop": "auf diesem Desktop nicht geprüft (nur KDE Plasma)",
+        "gnome": "auf keinem Bildschirm an",
+        "other-desktop": "auf diesem Desktop nicht geprüft (nur KDE Plasma und GNOME)",
         "x11": "braucht eine Wayland-Sitzung",
-        "failed": "Prüfung fehlgeschlagen (kscreen-doctor)",
+        "failed": "Bildschirme konnten nicht geprüft werden",
         "unchecked": "nicht geprüft"
       },
       "systemRule": "Eine systemweite Audio-Regel erzwingt Pro-Audio. Sie liegt außerhalb deines Home-Ordners, deshalb ändert die App sie nicht.",
@@ -440,7 +441,9 @@
           "audioRule": "Die Audio-Regel abschalten, die den Controller auf „pro-audio“ zwingt",
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen",
           "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben",
-          "hdr": "HDR für {{game}} einschalten"
+          "hdr": "HDR für {{game}} einschalten",
+          "hdrUpdate": "HDR von {{game}} auf gamescope umstellen",
+          "hdrRemoveOld": "Alte HDR-Einstellung von {{game}} entfernen"
         },
         "why": {
           "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über {{device_akk}} zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
@@ -456,9 +459,13 @@
           "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
           "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}.",
-          "hdr": "{{game}} unterstützt HDR. Mit PROTON_ENABLE_WAYLAND=1 und PROTON_ENABLE_HDR=1 startet Proton es als natives Wayland-Fenster, so bekommt es HDR. Spiele es auf deinem HDR-Bildschirm ({{outputs}}). Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
-          "hdrSteam": "{{game}} unterstützt HDR. Mit PROTON_ENABLE_WAYLAND=1 und PROTON_ENABLE_HDR=1 startet Proton es als natives Wayland-Fenster, so bekommt es HDR. Spiele es auf deinem HDR-Bildschirm ({{outputs}}). Das Steam-Overlay erscheint in diesem Modus eventuell nicht. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her. Die Startoptionen werden zu: {{options}}{{runner}}",
-          "hdrRunner": " Mit {{current}} geht das nicht, deshalb wechselt das Spiel auch zu {{proton}}."
+          "hdrSteam": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her. Die Startoptionen werden zu: {{options}}{{runner}}",
+          "hdrRunner": " Außerdem wechselt es zu {{proton}}, unserem DualSense-Proton, damit Adaptive Trigger und Haptisches Feedback des Controllers mit HDR funktionieren.",
+          "hdrHeroic": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Heroics eigene Gamescope-Einstellungen für das Spiel werden ausgefüllt, und die Schalter „Enable Wine-Wayland“ und „Enable HDR“ werden ausgeschaltet. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
+          "hdrLutris": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Lutris’ eigene Gamescope-Optionen für das Spiel werden eingeschaltet, HDR inklusive. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
+          "hdrNoProton": " Installiere unser DualSense-Proton auf der Proton-Karte, um auch Adaptive Trigger und Haptisches Feedback mit HDR zu bekommen.",
+          "hdrOld": "{{game}} hat noch die alte HDR-Einstellung (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), die das Spiel bei schwarzem Bild hängen lassen kann. Sie wird entfernt. {{next}}",
+          "hdrOldOnly": "HDR über gamescope wird angeboten, sobald die Checkliste auf der Seite des Spiels überall ✓ zeigt."
         },
         "support": {
           "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und das haptische Feedback des DualSense.",
@@ -953,18 +960,9 @@
       "gamepadSteamInput": "Steam Input ist für dieses Spiel nicht ausgeschaltet, deshalb gibt Steam ihm schon einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht.",
       "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (GE-Proton11-7.2-DualSense oder neuer) oder ein normales GE-Proton.",
       "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben.",
-      "hdrSet": "HDR ist für dieses Spiel an: Es läuft als natives Wayland-Fenster.",
-      "hdrNoScreen": {
-        "kde": "Gerade hat kein Bildschirm HDR an, deshalb wird „HDR einschalten“ nicht angeboten. Schalte HDR für deinen Bildschirm in den Anzeigeeinstellungen von KDE ein und prüfe dann erneut.",
-        "other-desktop": "„HDR einschalten“ gibt es nur unter KDE Plasma (Wayland): Die App kann die HDR-Einstellung dieses Desktops nicht prüfen.",
-        "x11": "„HDR einschalten“ braucht eine Wayland-Sitzung: Dieser Desktop läuft mit X11.",
-        "failed": "Die App konnte die Bildschirmeinstellungen nicht lesen (kscreen-doctor), deshalb wird „HDR einschalten“ nicht angeboten.",
-        "unchecked": "Die Bildschirme wurden nicht geprüft, deshalb wird „HDR einschalten“ nicht angeboten."
-      },
-      "hdrNoBuild": "HDR braucht GE-Proton 10 oder neuer (auch unser DualSense-Proton), aber {{runner}} unterstützt es nicht, und keines davon ist installiert.",
-      "hdrPickRunner": "Dieses Spiel nutzt Steams Standard, {{runner}}, und das unterstützt kein HDR. Wähle in Steam unter Eigenschaften → Kompatibilität GE-Proton 10 oder neuer (oder unser DualSense-Proton) und prüfe dann erneut.",
       "supportsHdr": "Unterstützt HDR",
-      "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App bietet dann an, HDR dafür einzuschalten, wenn ein Bildschirm HDR an hat."
+      "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App zeigt dann, was HDR braucht, und bietet „HDR einschalten“ an, sobald alles bereit ist.",
+      "hdrTitle": "HDR"
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",
@@ -1481,6 +1479,81 @@
       "channelB": "Blau",
       "recent": "Zuletzt verwendet",
       "recentColor": "Zuletzt verwendete Farbe {{hex}}"
+    },
+    "hdrCheck": {
+      "yes": "erledigt",
+      "no": "fehlt",
+      "defaultRunner": "dem Standard des Launchers",
+      "wayland": {
+        "ok": "Wayland-Sitzung",
+        "no": "Wayland-Sitzung: Dieser Desktop läuft mit X11. Melde dich ab und wähle auf dem Anmeldebildschirm die Wayland-Sitzung (Plasma oder GNOME)."
+      },
+      "screen": {
+        "ok": "HDR ist an für {{screen}} ({{mode}})",
+        "off": {
+          "kde": "Kein Bildschirm hat HDR an: Schalte es in den Systemeinstellungen → Anzeige und Monitor ein (High Dynamic Range).",
+          "gnome": "Kein Bildschirm hat HDR an: Schalte es in Einstellungen → Bildschirme ein (HDR, GNOME 48 oder neuer)."
+        },
+        "other-desktop": "Die App kann die HDR-Einstellung nur unter KDE Plasma 6 und GNOME 48 oder neuer lesen, deshalb wird „HDR einschalten“ auf diesem Desktop nicht angeboten. Du kannst es trotzdem selbst einrichten.",
+        "x11": "HDR braucht eine Wayland-Sitzung.",
+        "failed": "Die App konnte die Bildschirmeinstellungen nicht lesen (kscreen-doctor oder die Anzeigeeinstellungen von GNOME), deshalb wird „HDR einschalten“ nicht angeboten.",
+        "unchecked": "Die Bildschirme wurden nicht geprüft."
+      },
+      "gamescope": {
+        "ok": "gamescope {{version}} installiert",
+        "no": "gamescope ist nicht installiert: Installiere das gamescope-Paket deiner Distribution, Version {{min}} oder neuer (wie, steht im Handbuch).",
+        "unknown": "gamescope ist installiert, nennt aber seine Version nicht: HDR braucht {{min}} oder neuer.",
+        "old": "gamescope {{version}} ist zu alt: HDR braucht {{min}} oder neuer. Aktualisiere es über deine Distribution.",
+        "flatpakOk": "gamescope für Flatpak-Launcher installiert ({{ext}})",
+        "flatpakNo": "Dein Launcher ist ein Flatpak: Installiere gamescope dafür mit flatpak install flathub {{ext}} (den Zweig, der zur Laufzeitumgebung des Launchers passt)."
+      },
+      "layer": {
+        "ok": "HDR-Layer von gamescope (WSI-Vulkan-Layer) installiert",
+        "no": "Der HDR-Layer von gamescope (VkLayer_FROG_gamescope_wsi) fehlt: Er gehört bei den meisten Distributionen zu gamescope; installiere gamescope neu oder das Paket, das ihn enthält."
+      },
+      "proton": {
+        "ok": "Unser DualSense-Proton installiert ({{proton}})",
+        "no": "Unser DualSense-Proton ist nicht installiert: Installiere es auf der Proton-Karte, für Adaptive Trigger und Haptisches Feedback mit HDR."
+      },
+      "game": {
+        "ok": "Das Spiel unterstützt HDR"
+      },
+      "runner": {
+        "ok": "Das Spiel läuft mit unserem DualSense-Proton",
+        "no": "Das Spiel läuft mit {{runner}}: „HDR einschalten“ stellt es auch auf unser DualSense-Proton um (Adaptive Trigger und Haptisches Feedback mit HDR)."
+      },
+      "setup": {
+        "set": "Eingerichtet: Das Spiel läuft in gamescope mit HDR",
+        "needed": "Noch nicht eingerichtet: „HDR einschalten“ oben erledigt das",
+        "update": "Es hat noch die alte HDR-Einstellung (schwarzes Bild): Die Änderung oben ersetzt sie",
+        "missing": "Nicht eingerichtet: „HDR einschalten“ wird angeboten, sobald oben alles ✓ ist"
+      }
+    },
+    "hdrManual": {
+      "title": "Selbst einrichten",
+      "intro": "Was „HDR einschalten“ macht, von Hand. Andere Proton-Versionen funktionieren mit gamescope vielleicht auch; unser DualSense-Proton ist das, das wir testen (HDR plus Adaptive Trigger und Haptisches Feedback des Controllers).",
+      "noMode": "Es wurde kein Bildschirm gelesen, deshalb steht hier 3840×2160: Trage hinter -W und -H die Auflösung deines Bildschirms ein.",
+      "noProton": "unser DualSense-Proton (installiere es auf der Proton-Karte)",
+      "yourScreen": "deinen Bildschirm",
+      "lineLabel": "Zeile zum Kopieren",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "steam": {
+        "proton": "In Steam, Eigenschaften des Spiels → Kompatibilität: „Die Verwendung eines bestimmten Steam Play-Kompatibilitätstools erzwingen“ anhaken und {{proton}} wählen.",
+        "line": "Eigenschaften → Allgemein → Startoptionen: Füge diese Zeile ein (gemacht für {{screen}} mit {{mode}}; was schon dort steht, bleibt):"
+      },
+      "heroic": {
+        "proton": "In Heroic, Einstellungen des Spiels → Wine-Version: {{proton}} wählen.",
+        "gamescope": "Einstellungen → Gamescope: „Enables Upscaling“ einschalten; Game Width und Upscale Width {{width}}, Game Height und Upscale Height {{height}}; Fenstertyp Fullscreen; Additional Options:",
+        "env": "Einstellungen → Erweitert → Umgebungsvariablen: {{env}} hinzufügen. Unter Einstellungen → Sonstiges „Enable Wine-Wayland“ und „Enable HDR“ ausschalten, falls sie an sind."
+      },
+      "lutris": {
+        "proton": "In Lutris, Konfigurieren des Spiels → Runner-Optionen → Wine-Version: {{proton}} wählen.",
+        "gamescope": "Konfigurieren → Systemoptionen (Erweitert anhaken) → Gamescope: „Enable Gamescope“, „Enable HDR“ und „Relative Mouse Mode“ einschalten; Output Resolution und Game Resolution {{width}}x{{height}}; Window Mode Fullscreen; Custom Settings:",
+        "env": "Systemoptionen → Umgebungsvariablen: {{env}} hinzufügen und PROTON_ENABLE_WAYLAND und PROTON_ENABLE_HDR entfernen, falls vorhanden."
+      },
+      "inGame": "Starte das Spiel und schalte HDR in seinen eigenen Anzeigeeinstellungen ein.",
+      "guide": "Das Handbuch (Seite „Über“) erklärt jeden Teil: Spiele → HDR in Spielen unter Linux."
     }
   },
   "ad": {

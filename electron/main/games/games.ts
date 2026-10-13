@@ -9,6 +9,19 @@ import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDocument } from "yaml";
 import { dualSenseSupport, knownHdr } from "../../../src/desktop/games/knownGames";
+import {
+  HEROIC_GAMESCOPE_OPTIONS,
+  LUTRIS_GAMESCOPE_FLAGS,
+  hasGamescopeHdr,
+  hasOldHdrVars,
+  hdrReady,
+  hdrScreen,
+  NO_HDR_SYSTEM,
+  OLD_HDR_VARS,
+  stripOldHdrVars,
+  withGamescopeHdr,
+  type Size,
+} from "../../../src/desktop/games/hdrSetup";
 import { compareProtonNames, PROTON_NAME } from "../../../src/update/manifest";
 import type {
   ApplyResult,
@@ -18,8 +31,8 @@ import type {
   GameEntry,
   GamepadState,
   GamesReport,
-  HdrScreens,
   HdrState,
+  HdrSystem,
   LauncherId,
   LauncherInfo,
   Msg,
@@ -29,7 +42,7 @@ import type {
 import { Backups, writeFileAtomic, type Owner } from "./backup";
 import { findHeroicInstalls, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
 import { findLutrisInstalls, listLutrisGames, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
-import { buildHonoursHdr, buildHonoursPreferSdl, hasBuild, hdrBuild, HDR_VARS, preferSdlBuild } from "./proton";
+import { buildHonoursPreferSdl, hasBuild, preferSdlBuild } from "./proton";
 import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
@@ -65,7 +78,7 @@ export interface ScanDeps {
   windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
   notDetected?: Set<string>; // game keys the player marked "controller not detected"
   hdrMarked?: Set<string>; // game keys the player marked "Supports HDR"
-  hdr?: HdrScreens; // the desktop's HDR screens right now (hdr.ts)
+  hdr?: HdrSystem; // what this computer has for HDR right now (hdr.ts)
 }
 
 export interface Scan {
@@ -111,27 +124,66 @@ const editLaunchOptions = (file: string, appid: string, change: (opts: string) =
   },
 });
 
-// ---- HDR for HDR games ----
-// Without options Proton runs games through XWayland, which has no HDR; with
-// PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 (GE-Proton 10+) the game is a
-// native Wayland window and can use the HDR screen.
-const enabled = (value: string | undefined) => value !== undefined && !["", "0"].includes(value.replace(/^(["'])(.*)\1$/, "$2"));
-const ENV_ASSIGN = /(?:^|\s)(\w+)=(\S*)/g;
-// Both HDR options set (not "0") in Steam launch options or an env list.
-export const hasHdrVars = (env: Record<string, string>) => HDR_VARS.every((v) => enabled(env[v]));
-export const steamEnv = (opts: string): Record<string, string> => Object.fromEntries([...opts.matchAll(ENV_ASSIGN)].map((m) => [m[1], m[2]]));
-export const withHdr = (opts: string) => withEnvVars(opts, HDR_VARS);
-
-// What an HDR game needs: the options (addEnv) and/or a Proton that honours
-// them (switchTo); `canSwitch` false when the runner mustn't be changed here.
-export function hdrPlan(o: { envSet: boolean; honours: boolean; target: string | null; screen: boolean; canSwitch?: boolean }): { state: HdrState; addEnv: boolean; switchTo: string | null } {
-  if (o.envSet && o.honours) return { state: "set", addEnv: false, switchTo: null };
-  if (!o.screen) return { state: "no-screen", addEnv: false, switchTo: null };
-  if (!o.honours && o.canSwitch === false) return { state: "pick-runner", addEnv: false, switchTo: null };
-  if (!o.honours && !o.target) return { state: "no-build", addEnv: false, switchTo: null };
-  return { state: "needed", addEnv: !o.envSet, switchTo: o.honours ? null : o.target };
+// ---- HDR for HDR games (src/desktop/games/hdrSetup.ts) ----
+// The game runs inside gamescope with HDR on; the fix also moves it to our
+// DualSense Proton (HDR plus triggers and haptics), and removes the old
+// PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR variant (black screen) wherever
+// it's found.
+//   gamescope  a gamescope line with HDR is there (ours or by hand)
+//   old        the old variant is there
+//   ready      this computer meets the requirements (hdrReady)
+// "update" without `ready` only removes the old variant.
+export function hdrPlan(o: { gamescope: boolean; old: boolean; ready: boolean }): { state: HdrState; gamescope: boolean; strip: boolean } {
+  if (o.gamescope && !o.old) return { state: "set", gamescope: false, strip: false };
+  if (o.old) return { state: "update", gamescope: o.ready && !o.gamescope, strip: true };
+  if (!o.ready) return { state: "missing", gamescope: false, strip: false };
+  return { state: "needed", gamescope: true, strip: false };
 }
 
+const enabled = (value: unknown) => value !== undefined && value !== null && value !== false && !["", "0", "false"].includes(String(value).replace(/^(["'])(.*)\1$/, "$2"));
+const hasOldEnv = (env: Record<string, unknown>) => OLD_HDR_VARS.some((v) => enabled(env[v]));
+
+// Heroic: its own gamescope settings at the screen's mode, our flags in
+// additionalOptions (it has no switch for the backend or HDR). Heroic only
+// starts gamescope with upscaling or the limiter on, and only passes
+// -w/-h/-W/-H/-f with upscaling on; no upscaleMethod = no filter.
+export const heroicHasGamescopeHdr = (gs: Record<string, unknown> | null) =>
+  !!gs && (gs.enableUpscaling === true || gs.enableLimiter === true) && /(^|\s)--hdr-enabled(\s|$)/.test(String(gs.additionalOptions ?? ""));
+export function heroicGamescope(gs: Record<string, unknown> | null, s: Size): Record<string, unknown> {
+  const extra = String(gs?.additionalOptions ?? "")
+    .replace(/(^|\s)--backend(?:\s+|=)\S+/g, " ")
+    .split(/\s+/)
+    .filter((o) => o && !HEROIC_GAMESCOPE_OPTIONS.includes(o));
+  const size = { width: String(s.width), height: String(s.height) };
+  return {
+    ...gs,
+    enableUpscaling: true,
+    windowType: "fullscreen",
+    gameWidth: size.width,
+    gameHeight: size.height,
+    upscaleWidth: size.width,
+    upscaleHeight: size.height,
+    additionalOptions: [...HEROIC_GAMESCOPE_OPTIONS, ...extra].join(" "),
+  };
+}
+
+// Lutris (0.5.17+): its own gamescope options, HDR switch included (which
+// also sets DXVK_HDR=1); the Wayland backend goes in its custom flags.
+export const lutrisHasGamescopeHdr = (system: Record<string, unknown>) => enabled(system.gamescope) && enabled(system.gamescope_hdr);
+export function lutrisGamescope(system: Record<string, unknown>, s: Size): Record<string, unknown> {
+  const flags = String(system.gamescope_flags ?? "")
+    .replace(/(^|\s)--backend(?:\s+|=)\S+/g, " ")
+    .trim();
+  return {
+    gamescope: true,
+    gamescope_hdr: true,
+    gamescope_force_grab_cursor: true,
+    gamescope_output_res: `${s.width}x${s.height}`,
+    gamescope_game_res: `${s.width}x${s.height}`,
+    gamescope_window_mode: "-f",
+    gamescope_flags: [LUTRIS_GAMESCOPE_FLAGS, flags].filter(Boolean).join(" "),
+  };
+}
 // What a game wanting a standard gamepad needs: the option (addEnv) and/or a
 // Proton that honours it (switchTo). `steamInputOff` only for Steam games.
 export function gamepadPlan(o: { envSet: boolean; honours: boolean; target: string | null; steamInputOff?: boolean }): { state: GamepadState; addEnv: boolean; switchTo: string | null } {
@@ -155,7 +207,8 @@ const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers
 const orMsg = (value: string | null | undefined, fallbackKey: string): string | Msg => value ?? msg(fallbackKey);
 // The standard-gamepad fix's sentence about moving the game to another Proton ("" when it doesn't).
 const runnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.gamepadRunner", { current, proton: to }) : "");
-const hdrRunnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.hdrRunner", { current: current || msg("fallback.steamProton"), proton: to }) : "");
+// The HDR fix's sentence about our Proton: it moves the game there, or says where to get it.
+const hdrRunnerSwitch = (to: string | null, oursThere: boolean): string | Msg => (to ? msg("why.hdrRunner", { proton: to }) : oursThere ? "" : msg("why.hdrNoProton"));
 
 // Newest of our DualSense builds installed in any launcher.
 export function newestLocalBuild(names: string[]): string | null {
@@ -168,15 +221,20 @@ export function scan(deps: ScanDeps): Scan {
   const launchers: LauncherInfo[] = [];
   const ours = deps.ourProton;
   const add = (p: Planned) => plan.set(p.fix.id, p);
-  const hdrScreens: HdrScreens = deps.hdr ?? { check: "unchecked", outputs: [] };
-  const screen = hdrScreens.outputs.length > 0;
-  const isHdrGame = (title: string, key: string) => knownHdr(title) || !!deps.hdrMarked?.has(key);
-  // The Proton an HDR game moves to: one another fix already moves it to, if
-  // that honours the options (so both write the same), else the newest that does.
-  const hdrTarget = (candidates: Array<string | null>, names: string[], dirs: string[], needsPreferSdl: boolean, current: string | null | undefined) =>
-    candidates.find((c): c is string => !!c && buildHonoursHdr(c, dirs) && (!needsPreferSdl || buildHonoursPreferSdl(c, dirs))) ?? hdrBuild(names, dirs, needsPreferSdl, current);
-  const wantsGamepad = (g: GamepadState | undefined) => g === "set" || g === "needed";
-  const planHdr = (o: Omit<Parameters<typeof hdrPlan>[0], "screen">) => hdrPlan({ ...o, screen });
+  const hdrSys: HdrSystem = deps.hdr ?? NO_HDR_SYSTEM;
+  const hdrScr = hdrScreen(hdrSys);
+  // HDR through gamescope is Linux-only (Windows games do HDR themselves):
+  // nothing is judged, offered or shown elsewhere.
+  const isHdrGame = (title: string, key: string) => process.platform === "linux" && (knownHdr(title) || !!deps.hdrMarked?.has(key));
+  // The Proton an HDR game moves to: the one the standard-gamepad fix moves it
+  // to if that's one of ours (both write the same), else our newest.
+  const hdrTo = (gamepadTo: string | null) => (gamepadTo && PROTON_NAME.test(gamepadTo) ? gamepadTo : ours);
+  const hdrScreenParams = () => ({ screen: hdrScr?.name ?? "", mode: hdrScr ? `${hdrScr.width}×${hdrScr.height}` : "" });
+  // The fix's label and reason: the old variant removed (and gamescope, when ready).
+  const hdrTexts = (state: HdrState, gamescope: boolean, game: string, why: Msg): { label: Msg; why: Msg } =>
+    state === "update"
+      ? { label: msg(gamescope ? "label.hdrUpdate" : "label.hdrRemoveOld", { game }), why: msg("why.hdrOld", { game, next: gamescope ? why : msg("why.hdrOldOnly") }) }
+      : { label: msg("label.hdr", { game }), why };
   const fix = (id: string, kind: FixKind, launcher: Fix["launcher"], label: Msg, why: Msg, recommended: boolean, edits: Edit[], post?: PostAction): Fix => {
     const f: Fix = { id, kind, launcher, label, why, files: [...new Set(edits.flatMap((e) => (e.format === "disable" ? [e.file, `${e.file}.disabled`] : [e.file])))], recommended };
     add({ fix: f, edits, post });
@@ -306,35 +364,27 @@ export function scan(deps: ScanDeps): Scan {
           );
         }
       }
-      // HDR: judged on the game's Proton now; a game that follows Steam's
-      // default is only moved for games on our list (all Windows-only): a
+      // HDR through gamescope. A game that follows Steam's default is only
+      // moved to our Proton when it's on our list (all Windows-only): a
       // per-game Proton would switch a native Linux game to its Windows version.
       let hdr: HdrState | undefined;
       if (playable && isHdrGame(g.name, key) && local && install.localConfigPath && config) {
         const runner = override ?? defaultRunner;
-        const ourRunnerFix = nativeSupport(support) && ours && protonInstalled && override !== null && override !== ours ? ours : null;
-        const p = planHdr({
-          envSet: hasHdrVars(steamEnv(opts)),
-          honours: !!runner && buildHonoursHdr(runner, [install.toolsDir]),
-          target: hdrTarget([gamepadTo, ourRunnerFix], tools, [install.toolsDir], wantsGamepad(gamepad), runner),
-          canSwitch: override !== null || knownHdr(g.name),
-        });
+        const p = hdrPlan({ gamescope: hasGamescopeHdr(opts), old: hasOldHdrVars(opts), ready: hdrReady(hdrSys, install.flatpak) && !!hdrScr });
         hdr = p.state;
-        if (p.state === "needed") {
-          const edits: Edit[] = [];
-          if (p.addEnv) edits.push(editLaunchOptions(install.localConfigPath, g.appid, withHdr));
-          if (p.switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, p.switchTo!) });
-          gfixes.push(
-            fix(
-              `${prefix}:hdr:${g.appid}`,
-              "hdr-on",
-              "steam",
-              msg("label.hdr", { game: g.name }),
-              msg("why.hdrSteam", { game: g.name, outputs: hdrScreens.outputs.join(", "), options: p.addEnv ? withHdr(opts) : opts, runner: hdrRunnerSwitch(runner ?? "", p.switchTo) }),
-              true,
-              edits,
-            ),
+        if (p.state === "needed" || p.state === "update") {
+          const to = hdrTo(gamepadTo);
+          const switchTo = p.gamescope && to && protonInstalled && runner !== to && (override !== null || knownHdr(g.name)) ? to : null;
+          const change = (o: string) => (p.gamescope ? withGamescopeHdr(o, hdrScr!) : stripOldHdrVars(o));
+          const edits: Edit[] = [editLaunchOptions(install.localConfigPath, g.appid, change)];
+          if (switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, switchTo) });
+          const texts = hdrTexts(
+            p.state,
+            p.gamescope,
+            g.name,
+            msg("why.hdrSteam", { game: g.name, ...hdrScreenParams(), options: change(opts) || msg("fallback.empty"), runner: hdrRunnerSwitch(switchTo, protonInstalled) }),
           );
+          gfixes.push(fix(`${prefix}:hdr:${g.appid}`, "hdr-on", "steam", texts.label, texts.why, true, edits));
         }
       }
       games.push({
@@ -437,36 +487,33 @@ export function scan(deps: ScanDeps): Scan {
         );
       }
       if (gamepadFix) gfixes.push(gamepadFix);
-      // HDR: judged on the game's Proton now. Heroic has its own per-game
-      // switches for both options ("Enable Wine-Wayland", "Enable HDR"), so
-      // the fix turns those on rather than adding variables.
+      // HDR through Heroic's own gamescope settings; its Wine-Wayland and HDR
+      // switches (the old variant) are turned off.
       let hdr: HdrState | undefined;
       if (isHdrGame(g.title, key) && hasConfig) {
         const runner = g.wineVersion ?? def;
-        const dirs = [install.toolsDir, ...(runner ? [dirname(dirname(runner.bin))] : [])];
-        const p = planHdr({
-          envSet: (g.wineWayland && g.hdr) || hasHdrVars(Object.fromEntries(g.env.map((e) => [e.key, e.value]))),
-          honours: !!runner && !runnerMissing && buildHonoursHdr(runner.name, dirs),
-          target: hdrTarget([gamepadTo, runnerFix ? ours : null], tools, dirs, wantsGamepad(gamepad), runner?.name),
-        });
+        const old = g.wineWayland || g.hdr || hasOldEnv(Object.fromEntries(g.env.map((e) => [e.key, e.value])));
+        const p = hdrPlan({ gamescope: heroicHasGamescopeHdr(g.gamescope), old, ready: hdrReady(hdrSys, install.flatpak) && !!hdrScr });
         hdr = p.state;
-        if (p.state === "needed") {
-          const switchTo = p.switchTo;
+        if (p.state === "needed" || p.state === "update") {
+          const to = p.gamescope && ourWine ? hdrTo(gamepadTo) : null;
+          const switchTo = to && (runnerMissing || runner?.name !== to) ? to : null;
+          const texts = hdrTexts(p.state, p.gamescope, g.title, msg("why.hdrHeroic", { game: g.title, ...hdrScreenParams(), runner: hdrRunnerSwitch(switchTo, !!ourWine) }));
           gfixes.push(
-            fix(
-              `${prefix}:hdr:${g.appName}`,
-              "hdr-on",
-              "heroic",
-              msg("label.hdr", { game: g.title }),
-              msg("why.hdr", { game: g.title, outputs: hdrScreens.outputs.join(", "), runner: hdrRunnerSwitch(runner?.name ?? "", switchTo) }),
-              true,
-              [
-                editGame((cfg) => {
-                  if (p.addEnv) Object.assign(cfg, { enableWineWayland: true, enableHDR: true });
-                  if (switchTo) cfg.wineVersion = { bin: join(install.toolsDir, switchTo, "proton"), name: switchTo, type: "proton" };
-                }),
-              ],
-            ),
+            fix(`${prefix}:hdr:${g.appName}`, "hdr-on", "heroic", texts.label, texts.why, true, [
+              editGame((cfg) => {
+                if (cfg.enableWineWayland === true) cfg.enableWineWayland = false;
+                if (cfg.enableHDR === true) cfg.enableHDR = false;
+                if (Array.isArray(cfg.enviromentOptions))
+                  cfg.enviromentOptions = (cfg.enviromentOptions as Array<{ key?: unknown }>).filter((e) => !(OLD_HDR_VARS as readonly string[]).includes(String(e.key)));
+                if (p.gamescope) {
+                  cfg.gamescope = heroicGamescope(cfg.gamescope && typeof cfg.gamescope === "object" ? (cfg.gamescope as Record<string, unknown>) : null, hdrScr!);
+                  const list = Array.isArray(cfg.enviromentOptions) ? (cfg.enviromentOptions as Array<{ key?: unknown }>).filter((e) => String(e.key) !== "ENABLE_GAMESCOPE_WSI") : [];
+                  cfg.enviromentOptions = [...list, { key: "ENABLE_GAMESCOPE_WSI", value: "1" }];
+                }
+                if (switchTo) cfg.wineVersion = { bin: join(install.toolsDir, switchTo, "proton"), name: switchTo, type: "proton" };
+              }),
+            ]),
           );
         }
       }
@@ -578,33 +625,31 @@ export function scan(deps: ScanDeps): Scan {
         );
       }
       if (gamepadFix) gfixes.push(gamepadFix);
-      // HDR: judged on the game's runner now (Lutris runs Proton builds through umu).
-      // Lutris's own switches (wine Graphics "wayland" + "proton_hdr", 0.5.18+) only take
-      // effect for builds in its own wine folder (it looks for winewayland.drv there), not
-      // for the Steam builds it lists, so the fix sets the variables in system.env.
+      // HDR through Lutris's own gamescope options (0.5.17+); the old
+      // variables are removed from system.env.
       let hdr: HdrState | undefined;
       if (isHdrGame(g.name, key)) {
-        const runner = effective;
-        const p = planHdr({
-          envSet: hasHdrVars(g.env),
-          honours: !!runner && !runnerMissing && buildHonoursHdr(runner, buildDirs),
-          target: install.umu ? hdrTarget([gamepadTo, runnerFix ? ours : null], [...visible], buildDirs, wantsGamepad(gamepad), runner) : null,
-        });
+        const p = hdrPlan({ gamescope: lutrisHasGamescopeHdr(g.system), old: hasOldEnv(g.env), ready: hdrReady(hdrSys, install.flatpak) && !!hdrScr });
         hdr = p.state;
-        if (p.state === "needed") {
-          const edits: Edit[] = p.addEnv ? HDR_VARS.map((v): Edit => ({ file: g.configPath, format: "yaml", mutate: (doc) => doc.setIn(["system", "env", v], "1") })) : [];
-          if (p.switchTo) edits.push(setVersion(g.configPath, p.switchTo));
-          gfixes.push(
-            fix(
-              `${prefix}:hdr:${g.configId}`,
-              "hdr-on",
-              "lutris",
-              msg("label.hdr", { game: g.name }),
-              msg("why.hdr", { game: g.name, outputs: hdrScreens.outputs.join(", "), runner: hdrRunnerSwitch(runner ?? "", p.switchTo) }),
-              true,
-              edits,
-            ),
-          );
+        if (p.state === "needed" || p.state === "update") {
+          const to = p.gamescope && protonInstalled ? hdrTo(gamepadTo) : null;
+          const switchTo = to && (runnerMissing || effective !== to) ? to : null;
+          const edits: Edit[] = [
+            {
+              file: g.configPath,
+              format: "yaml",
+              mutate: (doc) => {
+                for (const v of OLD_HDR_VARS) if (doc.hasIn(["system", "env", v])) doc.deleteIn(["system", "env", v]);
+                if (p.gamescope) {
+                  for (const [k, v] of Object.entries(lutrisGamescope(g.system, hdrScr!))) doc.setIn(["system", k], v);
+                  doc.setIn(["system", "env", "ENABLE_GAMESCOPE_WSI"], "1");
+                }
+              },
+            },
+          ];
+          if (switchTo) edits.push(setVersion(g.configPath, switchTo));
+          const texts = hdrTexts(p.state, p.gamescope, g.name, msg("why.hdrLutris", { game: g.name, ...hdrScreenParams(), runner: hdrRunnerSwitch(switchTo, protonInstalled) }));
+          gfixes.push(fix(`${prefix}:hdr:${g.configId}`, "hdr-on", "lutris", texts.label, texts.why, true, edits));
         }
       }
       games.push({
@@ -694,7 +739,7 @@ export function scan(deps: ScanDeps): Scan {
     proAudioRules: rules.map((r) => r.path.replace(deps.home, "~")),
     envWarnings: findGlobalSdlVars(deps.home),
     hidrawAccess: hidrawAccess(),
-    hdr: hdrScreens,
+    hdr: hdrSys,
     fixes: sfixes,
   };
 
