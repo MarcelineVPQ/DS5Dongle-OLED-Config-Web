@@ -28,6 +28,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **About → Coming soon catches up:** the Pico 2 W at its rated clock, the DualSense Edge fixes, lighter haptic feedback processing and Sony's names are new in "In the next build", the controller firmware check moves there too (it shipped in dev.6), and "Profiles hold every setting" is no longer marked Linux-only (game profiles work on Windows too).
 - **"Button presses and stick use" is its own card**, full width below Controller info (from the same read), instead of a fold-out squeezed in next to the Lifetime column. The counters are grouped side by side: action buttons, directional buttons, L1, R1 and triggers, sticks, other buttons, and the DualSense Edge's back buttons. It is hidden when the controller has no lifetime counters; Controller info's Refresh refreshes both.
 - **About → Guide is up to date:** it now covers Controller info (and Sony's firmware check), the Mic muted and Headset in labels, the DualSense Edge's Fn buttons and back buttons in Button assignments, and game profiles that hold every setting and are edited in the controller view.
+- **Dependabot proposes only patch and minor updates** (developer): major upgrades failed CI as automatic pull requests, so they are now planned upgrades, one at a time with their migration (docs/BACKLOG.md "Major dependency upgrades").
 
 ### Fixed
 
