@@ -60,6 +60,7 @@ export const FUNC = {
   stickCurves: 0x14, // protocol 1.10: stick response curves (saved or temporary)
   resetTimings: 0x15, // protocol 1.11: start the 0xFC timing counters over (answered at once)
   controllerTest: 0x16, // protocol 1.12: run a read-only controller test command (answer in 0xEB)
+  pcSleep: 0x17, // protocol 1.14: [POWER_FLAGS bits], saved on its own (like the narrator)
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -92,8 +93,15 @@ export const FEATURES2 = {
 export const FEATURES3 = {
   controllerInfo: 0x01, // 0xEB get / 0xF6 0x16: controller firmware, lifetime counters, battery voltage
   configTail: 0x02, // protocol 1.13: trigger reduction, speaker boost, volume lock, mic / speaker choice, status pin (config body 49 bytes)
+  pcSleep: 0x04, // protocol 1.14: what the dongle does when the PC sleeps (identity [47], 0xF6 0x17)
 } as const;
-export const IDENTITY_BYTES = 47;
+// Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
+export const POWER_FLAGS = {
+  sleepControllerOff: 0x01, // turn the controller off once the PC has slept 3 s (default on)
+  psWakesPc: 0x02, // the PS button wakes the PC (default off)
+} as const;
+// The longest identity this app reads; older firmware answers its own length.
+export const IDENTITY_BYTES = 48;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
 export interface OledFrame {
@@ -156,6 +164,8 @@ export interface BridgeIdentity {
   curvesTemporary: boolean | null;
   // Protocol 1.12+: identity [46], a third feature byte (FEATURES3); 0 on older firmware.
   features3: number;
+  // Protocol 1.14+ (FEATURES3.pcSleep): identity [47], the POWER_FLAGS bits; null on older firmware.
+  powerFlags: number | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -201,7 +211,8 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     boardName: bytes.length >= 46 && (bytes[29] & FEATURES2.boardName) !== 0 ? boardNameFrom(bytes.subarray(30, 46)) : null,
     remapTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.temporaryRemap) !== 0 ? (bytes[19] & 0x02) !== 0 : null,
     curvesTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.stickCurves) !== 0 ? (bytes[19] & 0x04) !== 0 : null,
-    features3: bytes.length >= IDENTITY_BYTES ? bytes[46] : 0,
+    features3: bytes.length >= 47 ? bytes[46] : 0,
+    powerFlags: bytes.length >= 48 && (bytes[4] > 1 || bytes[5] >= 14) && (bytes[46] & FEATURES3.pcSleep) !== 0 ? bytes[47] : null,
   };
 }
 
@@ -516,6 +527,12 @@ export class Ds5BridgeClient {
   // Saved on the dongle by itself (it never saves other unsaved edits).
   async setNarrator(value: number): Promise<void> {
     await this.command(FUNC.narrator, [value]);
+  }
+
+  // Protocol 1.14: the PC sleep options (POWER_FLAGS bits). Saved on the
+  // dongle by itself, like the narrator; resolves once the dongle has.
+  async setPowerFlags(bits: number): Promise<void> {
+    await this.command(FUNC.pcSleep, [bits & (POWER_FLAGS.sleepControllerOff | POWER_FLAGS.psWakesPc)]);
   }
 
   // Plays one of her firmware lines now, whatever the setting (a preview).

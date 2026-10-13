@@ -149,6 +149,12 @@
       "statusPinHigh": "Ligado enquanto conectado",
       "statusPinPulse": "Pulso ao conectar",
       "statusPinHint": "3,3 V no GPIO do Pico enquanto um controle está conectado, ou um pulso de 0,2 s quando um se conecta: para um LED (com resistor) ou o conector do botão liga/desliga de um PC. Os pinos usados pelo módulo OLED, pela UART e pelo rádio não aparecem.",
+      "pcSleep": "Suspensão do PC",
+      "sleepControllerOff": "Desligar o controle quando o PC entrar em suspensão",
+      "sleepControllerOffSub": "Depois de 3 segundos de suspensão do PC",
+      "psWakesPc": "Despertar o PC com o botão PS",
+      "psWakesPcSub": "O PC precisa manter a USB alimentada durante a suspensão e permitir que o teclado o desperte. Sem um controle conectado, o dongle aparece como “DS5 Dongle Wake Keyboard”.",
+      "pcSleepHint": "Salvo no dongle na hora.",
       "needsFirmware": "Atualize o firmware do dongle para usar estas configurações.",
       "asGame": "Conforme o jogo",
       "choice": {

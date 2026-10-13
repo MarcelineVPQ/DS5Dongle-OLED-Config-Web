@@ -142,6 +142,7 @@ In the panel on the right:
 - **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (the dongle restarts itself; press the PS button on the controller afterwards).
 - **Device:** restart the dongle, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
 - **Power:** disconnect the controller when idle, the timeout, the Pico's status light.
+- **PC sleep:** turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, the dongle appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on the dongle at once.
 - **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
 - **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
 

@@ -149,6 +149,12 @@
       "statusPinHigh": "An, solange verbunden",
       "statusPinPulse": "Impuls beim Verbinden",
       "statusPinHint": "3,3 V am GPIO des Pico, solange ein Controller verbunden ist, oder ein Impuls von 0,2 s, wenn sich einer verbindet: für eine LED (mit Vorwiderstand) oder den Power-Taster-Anschluss eines PCs. Pins, die das OLED-Add-on, der UART und das Funkmodul nutzen, stehen nicht zur Wahl.",
+      "pcSleep": "Ruhezustand des PCs",
+      "sleepControllerOff": "Controller ausschalten, wenn der PC in den Ruhezustand wechselt",
+      "sleepControllerOffSub": "Sobald der PC 3 Sekunden im Ruhezustand ist",
+      "psWakesPc": "PC mit der PS-Taste aufwecken",
+      "psWakesPcSub": "Der PC muss USB im Ruhezustand mit Strom versorgen und der Tastatur das Aufwecken erlauben. Ohne verbundenen Controller erscheint der Dongle als „DS5 Dongle Wake Keyboard“.",
+      "pcSleepHint": "Wird sofort auf dem Dongle gespeichert.",
       "needsFirmware": "Aktualisiere die Firmware des Dongles, um diese Einstellungen zu nutzen.",
       "asGame": "Wie im Spiel",
       "choice": {

@@ -42,6 +42,9 @@ export interface UseDs5BridgeResult {
   applyConfig: () => Promise<boolean>;
   saveToFlash: () => Promise<boolean>;
   reconnectUsb: () => Promise<boolean>;
+  // Protocol 1.14: the PC sleep options (POWER_FLAGS bits), saved on the
+  // dongle right away; identity.powerFlags shows them once it has.
+  setPowerFlags: (bits: number) => Promise<boolean>;
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
   revertToSaved: () => Promise<void>;
@@ -135,7 +138,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const autoConnect = useCallback(async () => {
     if (clientRef.current) return;
     if (simulatedDongleOn()) {
-      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 13, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage() }));
+      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 14, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage() }));
       return;
     }
     if (!supported) return;
@@ -223,6 +226,16 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   );
 
   const reconnectUsb = useCallback(() => run("reconnecting", (c) => c.reconnectUsb()), [run]);
+
+  const setPowerFlags = useCallback(
+    (bits: number) =>
+      run("saving", async (c) => {
+        await c.setPowerFlags(bits);
+        const id = await c.identity();
+        setIdentity((prev) => (sameIdentity(prev, id) ? prev : id));
+      }),
+    [run],
+  );
 
   const setDraftField = useCallback(<Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -327,6 +340,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     applyConfig,
     saveToFlash,
     reconnectUsb,
+    setPowerFlags,
     resetDraft,
     revertToSaved,
     applyBody,

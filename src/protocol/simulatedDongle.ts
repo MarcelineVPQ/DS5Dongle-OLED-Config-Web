@@ -152,6 +152,9 @@ export class SimulatedDongle implements Ds5Transport {
     return this.minor >= 6;
   }
   flashNarrator = 0xff;
+  // The PC sleep options (protocol 1.14, identity [47]): controller off on
+  // sleep (bit 0, default on), PS wakes the PC (bit 1, default off).
+  powerFlags = 0x01;
   // Right grip haptics strength after the narrator (protocol 1.6), float LE.
   rightGain = new Uint8Array(new Float32Array([1]).buffer);
   // The seven protocol 1.13 bytes after the right grip (trigger reduction ...
@@ -465,6 +468,13 @@ export class SimulatedDongle implements Ds5Transport {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x0a && arg > 6) {
       this.lastResult = RESULT.invalid;
+    } else if (func === 0x17) {
+      // 1.14 PC sleep options: two bits, saved on their own (deferred).
+      if (this.minor < 14 || payload.length < 2 || (arg & ~0x03) !== 0) this.lastResult = RESULT.invalid;
+      else {
+        this.pending = { func, arg, polls: this.opts.pendingPolls ?? 1 };
+        this.lastResult = RESULT.pending;
+      }
     } else if (func === 0x0b && arg !== 0xff && (arg < 1 || arg > 7)) {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x0c) {
@@ -541,6 +551,7 @@ export class SimulatedDongle implements Ds5Transport {
       this.flashConfig = this.config.slice();
       this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
       this.flashTail = this.tail.slice();
+      this.powerFlags = 0x01;
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
     else if (func === 0x0e) {
@@ -549,12 +560,15 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func === 0x0b) {
       this.narrator = arg;
       this.flashNarrator = arg; // saved on its own, nothing else
+    } else if (func === 0x17) {
+      if (this.opts.saveFails) this.lastResult = RESULT.failed;
+      else this.powerFlags = arg; // saved on its own, nothing else
     }
   }
 
   private identity(): Uint8Array {
     const minor = this.minor;
-    const out = new Uint8Array(minor >= 12 ? IDENTITY_BYTES : minor >= 7 ? 46 : 30);
+    const out = new Uint8Array(minor >= 14 ? IDENTITY_BYTES : minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
     out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
@@ -586,6 +600,10 @@ export class SimulatedDongle implements Ds5Transport {
     }
     if (minor >= 12) out[46] = 0x01; // FEATURES3: controller info (1.12)
     if (minor >= 13) out[46] |= 0x02; // FEATURES3: the 1.13 config fields
+    if (minor >= 14) {
+      out[46] |= 0x04; // FEATURES3: PC sleep options (1.14)
+      out[47] = this.powerFlags;
+    }
     return out;
   }
 

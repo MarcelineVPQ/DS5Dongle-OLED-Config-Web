@@ -15,7 +15,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
   - **Dongle → Status pin:** a Pico GPIO that is on while a controller is connected, or pulses for 0.2 s when one connects (an LED, a PC's power-button header). Only pins nothing else uses are offered.
   - The firmware also lights the mute button while the controller's mic is muted, passes the PC's mute switches and mic level to the controller, and a fresh or reset config polls at 500 Hz (the app's default too; a saved rate is never changed).
   - With older firmware these controls say to update the firmware instead; the app never sends them the longer settings.
-- **The simulated dongle speaks protocol 1.13** (the new settings, the 49-byte config body and the 0xF7 rule), and the tests cover old and new firmware both ways.
+- **Dongle → PC sleep, for dongle firmware with protocol 1.14** (upstream awalol's sleep and wake, ported into our firmware): **Turn off the controller when the PC sleeps** (on by default: once the PC has slept for 3 seconds) and **Wake the PC with the PS button** (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it, and with no controller connected the dongle appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on the dongle right away and is busy until the dongle has it; a change on the dongle's own Settings screen shows here too. Older firmware gets an update note.
+- **The simulated dongle speaks protocol 1.14** (the 1.13 settings, the 49-byte config body and the 0xF7 rule; the PC sleep options and 0xF6 0x17), and the tests cover old and new firmware both ways.
 
 ### Changed
 

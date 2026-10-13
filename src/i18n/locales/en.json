@@ -148,6 +148,12 @@
       "statusPinHigh": "On while connected",
       "statusPinPulse": "Pulse on connect",
       "statusPinHint": "3.3 V on the Pico's GPIO while a controller is connected, or a 0.2 s pulse when one connects: for an LED (with a resistor) or a PC's power-button header. Pins the OLED add-on, the UART and the radio use aren't offered.",
+      "pcSleep": "PC sleep",
+      "sleepControllerOff": "Turn off the controller when the PC sleeps",
+      "sleepControllerOffSub": "Once the PC has slept for 3 seconds",
+      "psWakesPc": "Wake the PC with the PS button",
+      "psWakesPcSub": "The PC must keep USB powered while it sleeps and allow the keyboard to wake it. With no controller connected, the dongle appears as \"DS5 Dongle Wake Keyboard\".",
+      "pcSleepHint": "Saved on the dongle right away.",
       "needsFirmware": "Update the dongle's firmware to use these settings.",
       "asGame": "As the game",
       "choice": {

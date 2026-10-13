@@ -36,7 +36,18 @@ import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../na
 import { TOUR_ENABLED, startTour } from "../tour/Tour";
 import FirmwarePage from "../pages/FirmwarePage";
 import LightbarPage from "../pages/LightbarPage";
-import { AutoHapticsSection, DisplaySection, HapticsSection, MicSection, PowerSection, SpeakerSection, StatusPinSection, TriggerIntensitySection, UsbSection } from "../pages/SettingsPage";
+import {
+  AutoHapticsSection,
+  DisplaySection,
+  HapticsSection,
+  MicSection,
+  PcSleepSection,
+  PowerSection,
+  SpeakerSection,
+  StatusPinSection,
+  TriggerIntensitySection,
+  UsbSection,
+} from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
@@ -573,6 +584,7 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
       <FirmwarePage bridge={bridge} fw={fw} />
       <ProfileDongleNote />
       <PowerSection bridge={bridge} />
+      <PcSleepSection bridge={bridge} />
       <DisplaySection bridge={bridge} />
       <UsbSection bridge={bridge} />
       <StatusPinSection bridge={bridge} />

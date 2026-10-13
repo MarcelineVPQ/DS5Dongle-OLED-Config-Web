@@ -149,6 +149,12 @@
       "statusPinHigh": "Active tant que connectée",
       "statusPinPulse": "Impulsion à la connexion",
       "statusPinHint": "3,3 V sur la GPIO du Pico tant qu'une manette est connectée, ou une impulsion de 0,2 s quand une manette se connecte : pour une LED (avec une résistance) ou le connecteur du bouton d'alimentation d'un PC. Les broches utilisées par l'écran OLED, l'UART et la radio ne sont pas proposées.",
+      "pcSleep": "Veille du PC",
+      "sleepControllerOff": "Éteindre la manette quand le PC se met en veille",
+      "sleepControllerOffSub": "Après 3 secondes de veille du PC",
+      "psWakesPc": "Réveiller le PC avec la touche PS",
+      "psWakesPcSub": "Le PC doit garder l'USB alimenté pendant la veille et autoriser le clavier à le réveiller. Sans manette connectée, le dongle apparaît comme « DS5 Dongle Wake Keyboard ».",
+      "pcSleepHint": "Enregistré tout de suite sur le dongle.",
       "needsFirmware": "Mettez à jour le firmware du dongle pour utiliser ces réglages.",
       "asGame": "Selon le jeu",
       "choice": {

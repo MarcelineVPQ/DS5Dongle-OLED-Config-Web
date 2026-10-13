@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FEATURES2, FEATURES3, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
+import { FEATURES2, FEATURES3, POWER_FLAGS, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
   STATUS_GPIO_OFF,
@@ -286,6 +286,44 @@ export function PowerSection(props: SectionProps) {
       <Toggle label={t("desktop.settings.idleDisconnect", "Disconnect when idle")} value={!d.disableInactiveDisconnect} onChange={(v) => set("disableInactiveDisconnect", !v)} />
       <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
       <Toggle label={t("desktop.settings.picoLed", "Pico status LED")} value={!d.disablePicoLed} onChange={(v) => set("disablePicoLed", !v)} />
+    </section>
+  );
+}
+
+// What the dongle does when the PC sleeps (protocol 1.14). Not part of the
+// config body or a game's profile: each switch is saved on the dongle at once
+// (0xF6 0x17), and shows the dongle's own bits (identity [47]), so a change
+// on the OLED shows here too.
+export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
+  const { t } = useTranslation();
+  const bits = bridge.identity?.powerFlags ?? null;
+  const flip = (bit: number, on: boolean) => (bits === null ? undefined : bridge.setPowerFlags(on ? bits | bit : bits & ~bit));
+  // One write at a time: the next one is worked out from the bits this one leaves.
+  const off = bits === null || !bridge.client || bridge.operation !== null;
+  return (
+    <section className="dk-card">
+      <h2>{t("desktop.settings.pcSleep")}</h2>
+      {bits !== null ? (
+        <>
+          <Toggle
+            label={t("desktop.settings.sleepControllerOff")}
+            sub={t("desktop.settings.sleepControllerOffSub")}
+            value={(bits & POWER_FLAGS.sleepControllerOff) !== 0}
+            disabled={off}
+            onChange={(v) => flip(POWER_FLAGS.sleepControllerOff, v)}
+          />
+          <Toggle
+            label={t("desktop.settings.psWakesPc")}
+            sub={t("desktop.settings.psWakesPcSub")}
+            value={(bits & POWER_FLAGS.psWakesPc) !== 0}
+            disabled={off}
+            onChange={(v) => flip(POWER_FLAGS.psWakesPc, v)}
+          />
+          <p className="dk-hint">{t("desktop.settings.pcSleepHint")}</p>
+        </>
+      ) : (
+        <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
+      )}
     </section>
   );
 }

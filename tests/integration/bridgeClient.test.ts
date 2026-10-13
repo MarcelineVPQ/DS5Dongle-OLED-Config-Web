@@ -12,6 +12,7 @@ import {
   NARRATOR_LANGS,
   NARRATOR_LINES,
   NARRATOR_OFF,
+  POWER_FLAGS,
   TIMING_STAGES,
 } from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
@@ -316,6 +317,40 @@ describe("upstream's settings batch (protocol 1.13)", () => {
     expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 42);
     expect((await client.readConfig()).triggerReduce).toBe(0);
     expect(await client.readRemap()).not.toBeNull();
+  });
+});
+
+describe("PC sleep options (protocol 1.14)", () => {
+  it("reads the bits from identity [47] and saves them with 0xF6 0x17", async () => {
+    const dongle = new FakeDongle({ protoMinor: 14, pendingPolls: 2 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.features3 & FEATURES3.pcSleep).toBe(FEATURES3.pcSleep);
+    expect(id.powerFlags).toBe(POWER_FLAGS.sleepControllerOff); // the firmware's defaults: off on sleep, no wake
+    await client.setPowerFlags(POWER_FLAGS.sleepControllerOff | POWER_FLAGS.psWakesPc);
+    expect(dongle.sets.at(-1)).toEqual(new Uint8Array([0x17, 0x03]));
+    expect((await client.identity()).powerFlags).toBe(0x03); // resolved after PENDING, saved
+    expect((await client.identity()).unsaved).toBe(false); // nothing else was saved or changed
+    await client.setPowerFlags(0);
+    expect((await client.identity()).powerFlags).toBe(0);
+  });
+
+  it("reports a failed save, and older firmware has none", async () => {
+    const failing = new Ds5BridgeClient(new FakeDongle({ protoMinor: 14, saveFails: true }));
+    await expect(failing.setPowerFlags(POWER_FLAGS.psWakesPc)).rejects.toBeInstanceOf(CommandError);
+    const older = new FakeDongle({ protoMinor: 13 });
+    const id = await new Ds5BridgeClient(older).identity();
+    expect(id.powerFlags).toBeNull();
+    expect(id.features3 & FEATURES3.pcSleep).toBe(0);
+    await expect(new Ds5BridgeClient(older).setPowerFlags(POWER_FLAGS.psWakesPc)).rejects.toThrow(/rejected \(invalid\)/);
+  });
+
+  it("a factory reset puts them back to the defaults", async () => {
+    const dongle = new FakeDongle({ protoMinor: 14 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.setPowerFlags(POWER_FLAGS.psWakesPc);
+    await client.factoryReset();
+    expect((await client.identity()).powerFlags).toBe(POWER_FLAGS.sleepControllerOff);
   });
 });
 

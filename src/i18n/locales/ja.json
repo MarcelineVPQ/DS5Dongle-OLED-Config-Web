@@ -149,6 +149,12 @@
       "statusPinHigh": "接続中は High",
       "statusPinPulse": "接続時にパルス",
       "statusPinHint": "コントローラーの接続中は Pico の GPIO に 3.3 V を出力、または接続時に 0.2 秒のパルスを出力します。LED（抵抗付き）や PC の電源ボタン端子に使えます。OLED アドオン、UART、無線モジュールが使うピンは選べません。",
+      "pcSleep": "PCのスリープ",
+      "sleepControllerOff": "PCがスリープしたらコントローラーの電源を切る",
+      "sleepControllerOffSub": "PCが3秒間スリープした後",
+      "psWakesPc": "PSボタンでPCをスリープから復帰させる",
+      "psWakesPcSub": "PCはスリープ中もUSBに給電し、キーボードによる復帰を許可している必要があります。コントローラーが接続されていないとき、ドングルは「DS5 Dongle Wake Keyboard」として表示されます。",
+      "pcSleepHint": "すぐにドングルに保存されます。",
       "needsFirmware": "これらの設定を使うにはドングルのファームウェアを更新してください。",
       "asGame": "ゲームどおり",
       "choice": {

@@ -149,6 +149,12 @@
       "statusPinHigh": "Activo mientras está conectado",
       "statusPinPulse": "Pulso al conectar",
       "statusPinHint": "3,3 V en el GPIO de la Pico mientras hay un mando conectado, o un pulso de 0,2 s cuando se conecta uno: para un LED (con resistencia) o el conector del botón de encendido de un PC. No se ofrecen los pines que usan el accesorio OLED, el UART y la radio.",
+      "pcSleep": "Suspensión del PC",
+      "sleepControllerOff": "Apagar el mando cuando el PC entra en suspensión",
+      "sleepControllerOffSub": "Tras 3 segundos de suspensión del PC",
+      "psWakesPc": "Reactivar el PC con el botón PS",
+      "psWakesPcSub": "El PC debe mantener la alimentación USB durante la suspensión y permitir que el teclado lo reactive. Sin un mando conectado, el dongle aparece como «DS5 Dongle Wake Keyboard».",
+      "pcSleepHint": "Se guarda en el dongle al instante.",
       "needsFirmware": "Actualiza el firmware del dongle para usar estos ajustes.",
       "asGame": "Según el juego",
       "choice": {

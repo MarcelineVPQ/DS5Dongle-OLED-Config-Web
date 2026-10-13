@@ -134,6 +134,7 @@ describe("identity report (0xF1)", () => {
       remapTemporary: null,
       curvesTemporary: null,
       features3: 0,
+      powerFlags: null,
     });
   });
 
@@ -161,6 +162,23 @@ describe("identity report (0xF1)", () => {
     b[46] = 0x01;
     expect(decodeIdentity(b).features3).toBe(1);
     expect(decodeIdentity(b.subarray(0, 46)).features3).toBe(0);
+  });
+
+  it("reads the PC sleep options (protocol 1.14) only from a 48-byte identity with bit 2", () => {
+    const b = new Uint8Array(48);
+    b.set(sample());
+    b[5] = 14;
+    b[46] = 0x07;
+    b[47] = 0x02;
+    expect(decodeIdentity(b).powerFlags).toBe(0x02);
+    expect(decodeIdentity(b.subarray(0, 47)).powerFlags).toBeNull(); // 1.12 / 1.13 answer 47 bytes
+    expect(decodeIdentity(b.subarray(0, 47)).features3).toBe(0x07);
+    const noBit = b.slice();
+    noBit[46] = 0x03;
+    expect(decodeIdentity(noBit).powerFlags).toBeNull();
+    const older = b.slice();
+    older[5] = 13;
+    expect(decodeIdentity(older).powerFlags).toBeNull();
   });
 
   it("reads the board name (protocol 1.7) only when the firmware announces it", () => {
