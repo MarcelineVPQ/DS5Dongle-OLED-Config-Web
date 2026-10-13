@@ -8,6 +8,7 @@ import { AXIS_DASH, PALETTES } from "../colorVision";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import { liveStats } from "../useLiveInput";
+import { onThemeChange } from "./controllerAccent";
 
 interface Props {
   input: InputReport;
@@ -159,9 +160,7 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
   const history = useRef<Array<[number, number, number]>>([]);
   const colors = useRef<SparkColors | null>(null);
   useEffect(() => {
-    const watch = new MutationObserver(() => (colors.current = null));
-    watch.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class", "data-theme", "data-color-vision"] });
-    return () => watch.disconnect();
+    return onThemeChange(() => (colors.current = null));
   }, []);
   useEffect(() => {
     const h = history.current;

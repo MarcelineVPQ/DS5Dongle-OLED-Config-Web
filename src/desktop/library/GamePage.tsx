@@ -10,7 +10,7 @@ import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
-import { onAccentChange, scopedAccent } from "../live/controllerAccent";
+import { onThemeChange, scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
 import { captureProfile, clearGroup, gameGroups, pruneProfile, settingsFrom, shownValues, upgradeProfile, type ProfileGroup } from "./profileValues";
 import { X } from "lucide-react";
@@ -78,11 +78,8 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       frame = requestAnimationFrame(() => setAccent(scopedAccent(artColor, el)));
     };
     update();
-    const mo = new MutationObserver(update);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme"] });
-    const off = onAccentChange(update);
+    const off = onThemeChange(update);
     return () => {
-      mo.disconnect();
       off();
       cancelAnimationFrame(frame);
     };

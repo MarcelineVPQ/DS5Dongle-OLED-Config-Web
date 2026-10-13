@@ -102,6 +102,37 @@ export function parseColor(value: string): Rgb | null {
 }
 export const hexToRgb = (h: string): Rgb => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as Rgb;
 
+// HSV: hue 0..360 (degrees), saturation and value 0..1. The app's one RGB <->
+// HSV conversion (the swirl's hue turns; the color picker's colorMath is to
+// re-export these, quality pass F20/F23).
+export type Hsv = { h: number; s: number; v: number };
+const unit = (x: number) => (Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0);
+const byte = (x: number) => Math.round(unit(x / 255) * 255);
+
+export function rgbToHsv([r, g, b]: readonly number[]): Hsv {
+  const [rn, gn, bn] = [byte(r) / 255, byte(g) / 255, byte(b) / 255];
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const d = max - min;
+  let h = 0;
+  if (d > 0) {
+    if (max === rn) h = ((gn - bn) / d) % 6;
+    else if (max === gn) h = (bn - rn) / d + 2;
+    else h = (rn - gn) / d + 4;
+    h = (h * 60 + 360) % 360;
+  }
+  return { h, s: max === 0 ? 0 : d / max, v: max };
+}
+
+export function hsvToRgb({ h, s, v }: Hsv): Rgb {
+  const hh = Number.isFinite(h) ? ((h % 360) + 360) % 360 : 0;
+  const c = unit(v) * unit(s);
+  const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+  const m = unit(v) - c;
+  const [r, g, b] = hh < 60 ? [c, x, 0] : hh < 120 ? [x, c, 0] : hh < 180 ? [0, c, x] : hh < 240 ? [0, x, c] : hh < 300 ? [x, 0, c] : [c, 0, x];
+  return [byte((r + m) * 255), byte((g + m) * 255), byte((b + m) * 255)];
+}
+
 // Whether white text reads better than black on `bg`. The one light/dark
 // rule for ink, contrast pushes and the controller theme's shade.
 export const wantsLightInk = (bg: Rgb) => contrast([255, 255, 255], bg) >= contrast([0, 0, 0], bg);
@@ -127,18 +158,23 @@ const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
 export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
   const vars: Record<string, string> = {};
 
+  // The surfaces accent and selection text is drawn on (only the panel is
+  // known for an accent-only palette: the built-in theme draws the rest).
+  let grounds: Rgb[] | undefined;
   if (p.source === "kde" && p.window && p.windowText) {
     const page = p.view ?? p.window;
     const pageText = p.viewText ?? p.windowText;
     const panel = p.window;
     const button = p.button ?? panel;
+    const inset = mix(panel, page, 0.5);
+    grounds = [page, panel, inset, button];
     const muted = ensureContrast(p.inactiveText ?? mix(pageText, page, 0.4), panel, 4.5);
     const border = mix(panel, pageText, p.isDark ? 0.14 : 0.16);
     Object.assign(vars, {
       "--bg-page": css(page),
       "--bg-panel": css(panel),
       "--bg-elevated": css(panel),
-      "--bg-inset": css(mix(panel, page, 0.5)),
+      "--bg-inset": css(inset),
       "--bg-segment": css(button),
       "--bg-input": css(button),
       "--text-strong": css(ensureContrast(pageText, panel, 7)),
@@ -156,7 +192,7 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
   }
 
   const panel = p.window ?? (p.isDark ? ([27, 35, 54] as Rgb) : ([255, 255, 255] as Rgb));
-  Object.assign(vars, accentVars(p.accent, panel, p.isDark));
+  Object.assign(vars, accentVars(p.accent, panel, p.isDark, grounds));
   return vars;
 }
 

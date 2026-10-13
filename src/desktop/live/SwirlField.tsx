@@ -15,6 +15,9 @@
 // The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
 import { useWindowFocused, useWindowShown } from "../useWindowShown";
+import { useReducedMotion } from "../motion";
+import { hsvToRgb, rgbToHsv, type Rgb } from "../theme/desktopPalette";
+import { onThemeChange } from "./controllerAccent";
 
 // The CPU fallback's size (stretched and blurred by CSS).
 export const CPU_W = 128;
@@ -26,8 +29,6 @@ const FRAME_MS = 80;
 // Behind another window: about 4 frames a second.
 const UNFOCUSED_MS = 250;
 
-type Rgb = [number, number, number];
-
 // Any CSS color the browser understands -> RGB (the canvas normalizes it).
 function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
   ctx.fillStyle = "#000"; // theme-exempt: a reset value for parsing, never drawn
@@ -38,24 +39,12 @@ function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }
 
-// The same color with its hue turned by `degrees` (lightness and saturation
-// kept). Small turns give analogous colors, which sit well together; the
-// opposite hue (complementary) clashed (pink with green).
-export function rotateHue([r, g, b]: Rgb, degrees: number): Rgb {
-  const max = Math.max(r, g, b) / 255;
-  const min = Math.min(r, g, b) / 255;
-  const l = (max + min) / 2;
-  if (max === min) return [r, g, b];
-  const d = max - min;
-  const s = d / (1 - Math.abs(2 * l - 1));
-  const [rn, gn, bn] = [r / 255, g / 255, b / 255];
-  let h = max === rn ? ((gn - bn) / d) % 6 : max === gn ? (bn - rn) / d + 2 : (rn - gn) / d + 4;
-  h = (((h * 60 + degrees) % 360) + 360) % 360;
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l - c / 2;
-  const [r1, g1, b1] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  return [Math.round((r1 + m) * 255), Math.round((g1 + m) * 255), Math.round((b1 + m) * 255)];
+// The same color with its hue turned by `degrees` (saturation and value, so
+// also lightness, kept). Small turns give analogous colors, which sit well
+// together; the opposite hue (complementary) clashed (pink with green).
+export function rotateHue(rgb: Rgb, degrees: number): Rgb {
+  const hsv = rgbToHsv(rgb);
+  return hsv.s === 0 ? rgb : hsvToRgb({ ...hsv, h: hsv.h + degrees });
 }
 
 // Four wave fields, domain-warped, turned into blend weights (squared, then
@@ -212,25 +201,6 @@ function gpuWorks(): boolean {
 // Shared across remounts and pauses, so the swirl doesn't jump back to its start.
 const swirlClock = { elapsed: 0 };
 
-// Reduce motion (the app setting on <html>, or the system's), followed live:
-// turning it off again restarts the swirl without a reload.
-const reduceMotionNow = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-reduce-motion");
-function useReduceMotionOn(): boolean {
-  const [on, setOn] = useState(reduceMotionNow);
-  useEffect(() => {
-    const update = () => setOn(reduceMotionNow());
-    const attr = new MutationObserver(update);
-    attr.observe(document.documentElement, { attributes: true, attributeFilter: ["data-reduce-motion"] });
-    const media = matchMedia("(prefers-reduced-motion: reduce)");
-    media.addEventListener("change", update);
-    return () => {
-      attr.disconnect();
-      media.removeEventListener("change", update);
-    };
-  }, []);
-  return on;
-}
-
 export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // GPU with hardware acceleration on; the CPU fallback without it, or once
@@ -244,61 +214,81 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   }, []);
   const shown = useWindowShown();
   const focused = useWindowFocused();
-  const still = useReduceMotionOn();
+  const still = useReducedMotion();
+  // The renderer lives as long as the canvas (one per mode); colors, the
+  // theme, focus and Reduce motion only change what it's handed or how often
+  // it draws, never rebuild it.
+  const renderer = useRef<Renderer | null>(null);
+  const palette = useRef<Rgb[]>([]);
+  const stillRef = useRef(still);
+  useEffect(() => {
+    stillRef.current = still;
+  }, [still]);
   useEffect(() => {
     const c = ref.current;
     if (!c || !mode) return;
-    const renderer = mode === "gpu" ? glRenderer(c) : cpuRenderer(c);
+    const r = mode === "gpu" ? glRenderer(c) : cpuRenderer(c);
     // A GPU context that failed to start or was already lost before this ran
     // (seen at cold start on Windows' basic display driver) never fires
     // "webglcontextlost" here: fall back to the CPU swirl instead of a frozen
     // canvas.
-    if (!renderer) {
+    if (!r) {
       if (mode === "gpu") queueMicrotask(() => setMode("cpu"));
       return;
     }
+    renderer.current = r;
     const onLost = (e: Event) => {
       e.preventDefault();
       setMode("cpu");
     };
     c.addEventListener("webglcontextlost", onLost);
+    return () => {
+      c.removeEventListener("webglcontextlost", onLost);
+      renderer.current = null;
+      r.dispose();
+    };
+  }, [mode]);
+  // The palette: read now, and again whenever the theme changes.
+  useEffect(() => {
+    const c = ref.current;
+    if (!c || !mode) return;
     // Colors are parsed on a scratch 2D canvas (the GPU canvas has no 2D context).
     const scratch = document.createElement("canvas").getContext("2d");
-    // Re-read whenever the theme changes (it sets its tokens on <html>).
-    let palette: Rgb[] = [];
     const readPalette = () => {
       if (!scratch) return;
       const body = colors && toRgb(colors.body, scratch);
       if (colors && body) {
         const part = (css: string) => toRgb(css, scratch) ?? body;
-        palette = [body, part(colors.cap), part(colors.line), mixRgb(body, part(colors.dark), 0.45)];
+        palette.current = [body, part(colors.cap), part(colors.line), mixRgb(body, part(colors.dark), 0.45)];
         return;
       }
       const accent = getComputedStyle(c).getPropertyValue("--dk-accent") || getComputedStyle(c).color;
       const acc = toRgb(accent, scratch) ?? [0, 0, 0];
       // The accent's two neighbors on the color wheel, so every band blends.
-      palette = [acc, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
+      palette.current = [acc, rotateHue(acc, -35), acc, rotateHue(acc, 35)];
     };
-    readPalette();
+    // Still: the one frame shown is redrawn in the new colors (moving, the
+    // next frame picks them up).
+    const update = () => {
+      readPalette();
+      if (stillRef.current) renderer.current?.draw(0, palette.current);
+    };
+    update();
+    return onThemeChange(update);
+  }, [colors, mode]);
+  // The clock: a frame now, then ~12 a second (4 behind another window), none
+  // while minimized or in the tray, and just the one with Reduce motion.
+  useEffect(() => {
+    const r = renderer.current;
+    if (!r) return;
     // The field's clock carries on where it was across pauses.
     const start = performance.now() - swirlClock.elapsed;
     const now = () => (swirlClock.elapsed = performance.now() - start) / 1000;
-    const draw = (t: number) => renderer.draw(t, palette);
-    const themeWatch = new MutationObserver(() => {
-      readPalette();
-      if (still) draw(0);
-    });
-    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class", "data-theme", "data-glass"] });
+    const draw = (t: number) => r.draw(t, palette.current);
     draw(still ? 0 : now());
-    // Minimized or in the tray: nothing runs at all.
     const timer = still || !shown ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
-    return () => {
-      clearInterval(timer);
-      themeWatch.disconnect();
-      c.removeEventListener("webglcontextlost", onLost);
-      renderer.dispose();
-    };
-  }, [colors, mode, shown, focused, still]);
+    return () => clearInterval(timer);
+  }, [mode, shown, focused, still]);
   if (!mode) return null;
   return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
 }

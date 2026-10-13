@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type BridgeIdentity, Ds5BridgeClient } from "../protocol/bridgeClient";
+import { type BridgeIdentity, Ds5BridgeClient, sameIdentity } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
@@ -261,7 +261,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       try {
         if (!operationRef.current) {
           const id = await client.identity();
-          if (!stopped) setIdentity(id);
+          if (!stopped) setIdentity((prev) => (sameIdentity(prev, id) ? prev : id));
           // Saved by something else (a slot switch, the OLED): flash = RAM now.
           if (!stopped && id.unsaved === false && !isDirtyRef.current) setSavedConfig(configRef.current);
           if (++tick % 2 === 0 && !isDirtyRef.current && !operationRef.current) {

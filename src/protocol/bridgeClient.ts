@@ -206,6 +206,17 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
   };
 }
 
+// Whether two identity reads say the same thing (field by field), so a poll
+// that brings nothing new doesn't re-render the app.
+export function sameIdentity(a: BridgeIdentity | null, b: BridgeIdentity | null): boolean {
+  if (!a || !b) return a === b;
+  return (Object.keys(a) as Array<keyof BridgeIdentity>).every((k) => {
+    const x = a[k];
+    const y = b[k];
+    return Array.isArray(x) && Array.isArray(y) ? x.length === y.length && x.every((v, i) => v === y[i]) : x === y;
+  });
+}
+
 export class CommandError extends Error {
   constructor(
     public readonly func: number,

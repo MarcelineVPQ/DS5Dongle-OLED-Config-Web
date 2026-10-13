@@ -9,10 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Changed
 
 - **Rules that were only prose are now checked** (developer gates, quality pass dev.6 batch 7): the one-theme-system check also covers `.ts` files (the tray icon's colors are now marked as the taskbar's, not the app's); dependencies are pinned to exact versions (8 `^` ranges pinned to what was installed, `.npmrc` `save-exact`), and Dependabot waits 14 days after a release; every inline lint suppression is listed in `docs/LINT_SUPPRESSIONS.md` and an unused one fails lint; `npm run gates` fails on a duplicate with no verdict in `docs/DEDUPE_AUDIT.md` and on byte-identical files (`tools/check_identical_files.mjs`, which can also check the firmware repo); a test keeps About → Coming soon in step with the backlog.
+- **Lighter Controller page:** the swirl background no longer rebuilds its GPU program when the window gains or loses focus or while you drag a custom color (it did up to about 120 times a second); it keeps one and just hands it the new colors. The app also no longer re-renders every second while nothing about the dongle changed.
 
 ### Fixed
 
 - **About → Coming soon:** "Profiles hold every setting" moves to "In the next build" (it shipped in dev.5).
+- **HDR lighting lights up:** the experimental HDR glow over the lightbar (App settings → Advanced) read the lightbar color from the wrong element, so it never showed and never followed the light. It now follows the live lightbar color, and switching between the DualSense and DualSense Edge drawings rebuilds its shape.
+- **Match desktop: accent text readable on every surface:** with a KDE color scheme, accent and selection text is now checked against the page, inset and button colors too, not only the panel.
+- **Spark lines follow every theme change:** the Live data graphs now pick up a new accent, the Controller theme and Color vision changes, not only light/dark.
 
 ## [0.9.5-dev.6] - 2026-10-12
 

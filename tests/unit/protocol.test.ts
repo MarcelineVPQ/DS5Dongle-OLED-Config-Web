@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
 import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, validateConfig } from "../../src/protocol/config";
 import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
 
@@ -105,6 +105,24 @@ describe("identity report (0xF1)", () => {
       curvesTemporary: null,
       features3: 0,
     });
+  });
+
+  it("tells a repeated identity read from a changed one (no 1 Hz re-render)", () => {
+    const lit = () => {
+      const b = new Uint8Array(29);
+      b.set(sample());
+      b.set([0, 10, 20, 30], 20);
+      return b;
+    };
+    expect(sameIdentity(decodeIdentity(lit()), decodeIdentity(lit()))).toBe(true);
+    const other = lit();
+    other[22] = 21; // the lightbar's green
+    expect(sameIdentity(decodeIdentity(lit()), decodeIdentity(other))).toBe(false);
+    const seq = lit();
+    seq[8] = 0x35;
+    expect(sameIdentity(decodeIdentity(lit()), decodeIdentity(seq))).toBe(false);
+    expect(sameIdentity(null, decodeIdentity(lit()))).toBe(false);
+    expect(sameIdentity(null, null)).toBe(true);
   });
 
   it("reads the third feature byte (protocol 1.12) only from a 47-byte identity", () => {

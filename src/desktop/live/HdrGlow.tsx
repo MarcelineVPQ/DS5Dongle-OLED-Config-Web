@@ -94,6 +94,7 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
     let resizeFrame = 0;
     let ro: ResizeObserver | undefined;
     let styleWatch: MutationObserver | undefined;
+    let svgWatch: MutationObserver | undefined;
     // Everything the GPU holds, released on cleanup (also when cleanup ran
     // while the device was still being created).
     let device: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -166,14 +167,16 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       ro.observe(el);
       if (el.parentElement) ro.observe(el.parentElement);
 
-      // Follow the live lightbar color (set on the drawing as --ctl-led /
-      // --ctl-led-pct): redrawn only when it (or the peak, or the mask)
-      // changes, at most once a frame; nothing runs while it stays the same.
+      // Follow the live lightbar color (set on the drawing's <svg> as
+      // --ctl-led / --ctl-led-pct, LiveController): redrawn only when it (or
+      // the peak, or the mask) changes, at most once a frame; nothing runs
+      // while it stays the same.
       draw = () => {
         frame = 0;
         if (!live || !bind) return;
-        const color = el.style.getPropertyValue("--ctl-led");
-        const pct = parseFloat(el.style.getPropertyValue("--ctl-led-pct") || "0") / 100;
+        const svg = el.querySelector("svg");
+        const color = svg?.style.getPropertyValue("--ctl-led") ?? "";
+        const pct = parseFloat(svg?.style.getPropertyValue("--ctl-led-pct") || "0") / 100;
         const key = `${color}|${pct}|${peak.current}`;
         if (key === last) return;
         last = key;
@@ -190,8 +193,20 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
         pass.end();
         device.queue.submit([enc.finish()]);
       };
+      // The <svg>'s style, and a new <svg> (the other model's drawing): a new
+      // mask for it and its style watched instead.
       styleWatch = new MutationObserver(schedule);
-      styleWatch.observe(el, { attributes: true, attributeFilter: ["style"] });
+      const watchSvg = () => {
+        styleWatch?.disconnect();
+        const svg = el.querySelector("svg");
+        if (svg) styleWatch?.observe(svg, { attributes: true, attributeFilter: ["style"] });
+      };
+      watchSvg();
+      svgWatch = new MutationObserver(() => {
+        watchSvg();
+        void rebuild();
+      });
+      svgWatch.observe(el, { childList: true });
       redraw.current = schedule;
       draw();
     })();
@@ -199,6 +214,7 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
       live = false;
       redraw.current = null;
       styleWatch?.disconnect();
+      svgWatch?.disconnect();
       cancelAnimationFrame(frame);
       cancelAnimationFrame(resizeFrame);
       ro?.disconnect();

@@ -204,6 +204,26 @@ export function onAccentChange(l: () => void): () => void {
 }
 const changed = () => accentListeners.forEach((l) => l());
 
+// The one theme watcher for canvases and other readers of the tokens (spark
+// lines, the swirl, a game page's accent): calls `l` whenever any theme input
+// may have changed. The theme, the controller theme and Color vision set
+// attributes and inline tokens on <html>, Match desktop and the accent set
+// <style> elements in <head>, and System follows the OS's light/dark.
+const THEME_ATTRS = ["style", "class", "data-theme", "data-controller-theme", "data-cv", "data-glass"];
+export function onThemeChange(l: () => void): () => void {
+  const mo = new MutationObserver(() => l());
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: THEME_ATTRS });
+  mo.observe(document.head, { childList: true, subtree: true, characterData: true });
+  const scheme = matchMedia("(prefers-color-scheme: dark)");
+  scheme.addEventListener("change", l);
+  const off = onAccentChange(l);
+  return () => {
+    mo.disconnect();
+    scheme.removeEventListener("change", l);
+    off();
+  };
+}
+
 export function applyAccent(): void {
   const old = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   // Read the theme's own tokens, without our tint (else it compounds).

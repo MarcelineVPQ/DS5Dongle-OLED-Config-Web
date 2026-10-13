@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrast, ensureContrast, paletteToCssVars, parseKdeGlobals, type Rgb } from "../../src/desktop/theme/desktopPalette";
+import { contrast, ensureContrast, hsvToRgb, mix, paletteToCssVars, parseKdeGlobals, rgbToHsv, type Rgb } from "../../src/desktop/theme/desktopPalette";
 
 // A trimmed copy of a real kdeglobals (Breeze Dark with a pink accent).
 const KDE_DARK = `
@@ -63,6 +63,32 @@ describe("contrast safety", () => {
     expect(contrast(rgbOf(vars["--text-muted"]), panel)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(rgbOf(vars["--dk-sel-text"]), rgbOf(vars["--dk-sel-bg"]))).toBeGreaterThanOrEqual(4.5);
     expect(contrast(rgbOf(vars["--dk-on-accent"]), rgbOf(vars["--dk-accent"]))).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Match desktop: accent and selection text read on the page, panel, inset and button too", () => {
+    // A mid-grey accent that reads on the dark panel but not on a lighter button.
+    const kde = { ...parseKdeGlobals(KDE_DARK)!, accent: [110, 110, 110] as Rgb, button: [70, 72, 76] as Rgb };
+    const vars = paletteToCssVars(kde);
+    const grounds = [kde.view!, kde.window!, mix(kde.window!, kde.view!, 0.5), kde.button];
+    for (const g of grounds) {
+      expect(contrast(rgbOf(vars["--dk-accent-text"]), g)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(rgbOf(vars["--dk-sel-text"]), g)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("converts RGB <-> HSV both ways", () => {
+    expect(rgbToHsv([255, 0, 0])).toEqual({ h: 0, s: 1, v: 1 });
+    expect(rgbToHsv([0, 0, 255]).h).toBe(240);
+    expect(rgbToHsv([128, 128, 128]).s).toBe(0);
+    for (const c of [
+      [236, 72, 153],
+      [12, 200, 90],
+      [1, 2, 3],
+      [255, 255, 255],
+    ] as Rgb[])
+      expect(hsvToRgb(rgbToHsv(c))).toEqual(c);
+    expect(hsvToRgb({ h: 480, s: 1, v: 1 })).toEqual([0, 255, 0]); // turned past 360
+    expect(hsvToRgb({ h: -120, s: 1, v: 1 })).toEqual([0, 0, 255]);
   });
 
   it("an accent-only palette sets the accent tokens but not the backgrounds", () => {
