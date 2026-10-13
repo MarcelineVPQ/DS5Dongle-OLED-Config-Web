@@ -728,7 +728,7 @@
         "details": "Details"
       },
       "activeNow": "Jetzt aktiv",
-      "profileNone": "Dieses Spiel nutzt deine normalen Dongle-Einstellungen. Ein Profil schaltet Haptik, Lautsprecher, Lightbar und Mikrofon nur für dieses Spiel um und schaltet beim Beenden zurück.",
+      "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (Haptik, Lautsprecher, Lightbar, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
       "profileFromCurrent": "Aus aktuellen Einstellungen erstellen",
       "profileNeedsDongle": "Verbinde den Dongle, um mit deinen aktuellen Einstellungen zu starten.",
       "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf dem Dongle.",
@@ -1346,7 +1346,21 @@
       "openHint": "Dieses Profil auf den Controller legen und mit allen Bereichen bearbeiten, jede Änderung sofort spürbar",
       "saveLayout": "In Belegung {{name}} speichern",
       "saveNewLayout": "Als Belegung dieses Spiels speichern",
-      "buttonsNote": "Bearbeitung {{title}}: Tasten werden in die Belegung dieses Spiels gespeichert, nicht in deine normale."
+      "buttonsNote": "Bearbeitung {{title}}: Tasten werden in die Belegung dieses Spiels gespeichert, nicht in deine normale.",
+      "dongleNote": "Nicht Teil des Profils von {{title}}: Dongle-Einstellungen bleiben deine normalen. Änderungen hier bleiben nach dem Profil erhalten; speichere sie dann auf dem Dongle.",
+      "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Speichern ändert sie im Dongle für jedes Spiel.",
+      "curvesNote": "Bearbeitung {{title}}: Kurven werden im Profil dieses Spiels gespeichert und sofort spürbar; danach kommen deine normalen Kurven zurück.",
+      "curvesNormal": "Dieser Stick nutzt in diesem Spiel deine normale Kurve."
+    },
+    "profile": {
+      "changes": "Was dieses Spiel ändert (alles andere nutzt deine normalen Einstellungen):",
+      "allNormal": "Für dieses Spiel ist noch nichts geändert: Es nutzt deine normalen Einstellungen. Mit „In der Controller-Ansicht bearbeiten“ änderst du sie nur für dieses Spiel.",
+      "useNormal": "{{name}}. Meine normale Einstellung verwenden",
+      "allSettings": "Alle Einstellungen",
+      "normalSub": "Deine normale Einstellung",
+      "on": "An",
+      "off": "Aus",
+      "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf dem Dongle sind"
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Farbe ändern",

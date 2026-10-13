@@ -728,7 +728,7 @@
         "details": "Détails"
       },
       "activeNow": "Actif",
-      "profileNone": "Ce jeu utilise tes réglages habituels du dongle. Un profil change l'haptique, le haut-parleur, la barre lumineuse et le micro pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
+      "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (haptique, haut-parleur, barre lumineuse, micro, boutons, sticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
       "profileFromCurrent": "Créer depuis les réglages actuels",
       "profileNeedsDongle": "Connecte le dongle pour partir de tes réglages actuels.",
       "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur le dongle.",
@@ -1346,7 +1346,21 @@
       "openHint": "Mettre ce profil sur la manette et le modifier avec tous les panneaux, en ressentant chaque changement",
       "saveLayout": "Enregistrer dans la disposition {{name}}",
       "saveNewLayout": "Enregistrer comme disposition de ce jeu",
-      "buttonsNote": "Modification de {{title}} : les boutons sont enregistrés dans la disposition de ce jeu, pas dans tes boutons habituels."
+      "buttonsNote": "Modification de {{title}} : les boutons sont enregistrés dans la disposition de ce jeu, pas dans tes boutons habituels.",
+      "dongleNote": "Hors du profil de {{title}} : les réglages du dongle restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur le dongle.",
+      "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans le dongle pour tous les jeux.",
+      "curvesNote": "Modification de {{title}} : les courbes sont enregistrées dans le profil de ce jeu et se ressentent tout de suite ; tes courbes habituelles reviennent ensuite.",
+      "curvesNormal": "Ce stick utilise ta courbe habituelle dans ce jeu."
+    },
+    "profile": {
+      "changes": "Ce que ce jeu change (tout le reste utilise tes réglages habituels) :",
+      "allNormal": "Rien n'est encore changé pour ce jeu : il utilise tes réglages habituels. « Modifier dans la vue manette » les change pour ce jeu seulement.",
+      "useNormal": "{{name}}. Utiliser mon réglage habituel",
+      "allSettings": "Tous les réglages",
+      "normalSub": "Ton réglage habituel",
+      "on": "Activé",
+      "off": "Désactivé",
+      "copyHint": "Ce jeu reçoit les réglages actuellement sur le dongle"
     },
     "colorPicker": {
       "swatch": "{{name}} : {{hex}}. Changer la couleur",

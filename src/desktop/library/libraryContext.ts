@@ -13,7 +13,20 @@ export interface LibraryContextValue {
   editProfile: (gameKey: string, title: string) => void;
   // The game whose profile is being edited in the controller view, if any.
   editing: { gameKey: string; title: string } | null;
+  // Changes whenever a profile (or a new version of it) goes on or comes off
+  // the dongle, so views showing what's on it read it again.
+  appliedStamp: string | null;
+  // Switches pairing slots without saving a game's profile into flash.
+  switchSlot: (slot: number) => Promise<void>;
 }
 
-export const LibraryContext = createContext<LibraryContextValue>({ library: EMPTY_LIBRARY, setLibrary: () => undefined, active: null, editProfile: () => undefined, editing: null });
+export const LibraryContext = createContext<LibraryContextValue>({
+  library: EMPTY_LIBRARY,
+  setLibrary: () => undefined,
+  active: null,
+  editProfile: () => undefined,
+  editing: null,
+  appliedStamp: null,
+  switchSlot: async () => undefined,
+});
 export const useLibrary = () => useContext(LibraryContext);

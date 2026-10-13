@@ -175,6 +175,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
 function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: (index?: number) => void }) {
   const { t } = useTranslation();
   const target = remap.draft[index];
+  const game = useGameLayoutSave(remap);
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.remapButton", { button: buttonLabel(index) })}</h2>
@@ -193,15 +194,25 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
               <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
             </select>
           </div>
-          <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
+          {game.target ? (
+            <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: game.target.title })}</div>
+          ) : (
+            <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
+          )}
           <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}
           </button>
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
           <div className="dk-row-btns">
-            <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-              {t("desktop.live.remapApply", "Apply remap")}
-            </BusyButton>
+            {game.target ? (
+              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={game.saveToGameLayout}>
+                {game.gameLayout ? t("desktop.editing.saveLayout", { name: game.gameLayout.name }) : t("desktop.editing.saveNewLayout")}
+              </BusyButton>
+            ) : (
+              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
+                {t("desktop.live.remapApply", "Apply remap")}
+              </BusyButton>
+            )}
             <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
               {t("desktop.bar.revert", "Revert")}
             </button>
@@ -213,6 +224,30 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
       )}
     </section>
   );
+}
+
+// Buttons edited while a game's profile is on are saved into that game's own
+// layout (a new one named after the game if it has none); the profile hook
+// then puts it on the dongle (temporary remap, RAM only), so it's felt at once.
+function useGameLayoutSave(remap: Remap) {
+  const { editing, active, library, setLibrary } = useLibrary();
+  const target = editing ?? active;
+  const profile = target ? library.games[target.gameKey]?.profile : undefined;
+  const layoutId = profile?.settings.buttonLayout;
+  const gameLayout = layoutId ? library.layouts?.[layoutId] : undefined;
+  const saveToGameLayout = async () => {
+    const desktop = window.desktop;
+    if (!desktop || !target || !profile) return;
+    const extra = remap.extraDevice ? { extra: remap.extraDraft } : {};
+    if (layoutId && gameLayout) {
+      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft, ...extra }));
+      return;
+    }
+    const id = `l-${Date.now().toString(36)}`;
+    await desktop.librarySetLayout({ id, name: target.title.slice(0, 40), table: remap.draft, ...extra });
+    setLibrary(await desktop.librarySetProfile({ gameKey: target.gameKey, title: target.title, settings: { ...profile.settings, buttonLayout: id } }));
+  };
+  return { target: profile ? target : null, gameLayout, saveToGameLayout };
 }
 
 // Every button in one list (the same draft as clicking them on the drawing),
@@ -230,23 +265,10 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   }, [focus]);
   useEffect(() => () => onHover(null), [onHover]);
   const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
-  // Editing a game's profile: the buttons go into that game's layout (switched
-  // in while it plays), never into the normal buttons on the dongle.
-  const { editing, library, setLibrary } = useLibrary();
-  const profile = editing ? library.games[editing.gameKey]?.profile : undefined;
-  const layoutId = profile?.settings.buttonLayout;
-  const gameLayout = layoutId ? library.layouts?.[layoutId] : undefined;
-  const saveToGameLayout = async () => {
-    const desktop = window.desktop;
-    if (!desktop || !editing || !profile) return;
-    if (layoutId && gameLayout) {
-      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) }));
-      return;
-    }
-    const id = `l-${Date.now().toString(36)}`;
-    await desktop.librarySetLayout({ id, name: editing.title.slice(0, 40), table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) });
-    setLibrary(await desktop.librarySetProfile({ gameKey: editing.gameKey, title: editing.title, settings: { ...profile.settings, buttonLayout: id } }));
-  };
+  // A game's profile on (edited, or its game running): the buttons go into
+  // that game's layout (switched in while it plays), never into the normal
+  // buttons on the dongle.
+  const { target, gameLayout, saveToGameLayout } = useGameLayoutSave(remap);
   if (remap.supported === false)
     return (
       <section className="dk-card">
@@ -256,7 +278,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.allHeading")}</h2>
-      {editing && <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: editing.title })}</div>}
+      {target && <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: target.title })}</div>}
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
@@ -318,7 +340,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
       </div>
       {remap.error && <div className="dk-notice error">{remap.error}</div>}
       <div className="dk-row-btns">
-        {editing ? (
+        {target ? (
           <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={saveToGameLayout}>
             {gameLayout ? t("desktop.editing.saveLayout", { name: gameLayout.name }) : t("desktop.editing.saveNewLayout")}
           </BusyButton>
@@ -553,10 +575,21 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   );
 }
 
+// The dongle-wide settings aren't part of a game's profile: say so while one is
+// on, since the save bar then saves to the profile (these stay normal settings,
+// kept after the profile ends, to save to the dongle then).
+function ProfileDongleNote() {
+  const { t } = useTranslation();
+  const { editing, active } = useLibrary();
+  const target = editing ?? active;
+  return target ? <div className="dk-notice">{t("desktop.editing.dongleNote", { title: target.title })}</div> : null;
+}
+
 function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   return (
     <>
       <FirmwarePage bridge={bridge} fw={fw} />
+      <ProfileDongleNote />
       <PowerSection bridge={bridge} />
       <DisplaySection bridge={bridge} />
       <UsbSection bridge={bridge} />

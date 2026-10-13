@@ -727,7 +727,7 @@
         "details": "Details"
       },
       "activeNow": "Active now",
-      "profileNone": "This game uses your normal dongle settings. A profile switches haptics, speaker, lightbar and mic for this game only, and switches back when it closes.",
+      "profileNone": "This game uses your normal settings. A profile changes any controller setting (haptics, speaker, lightbar, mic, buttons, sticks) for this game only, and switches back when it closes.",
       "profileFromCurrent": "Create from current settings",
       "profileNeedsDongle": "Connect the dongle to start from your current settings.",
       "profileHint": "Changes are saved to this game's profile, not to the dongle.",
@@ -1345,7 +1345,21 @@
       "openHint": "Put this profile on the controller and edit it with every panel, feeling each change live",
       "saveLayout": "Save to {{name}} layout",
       "saveNewLayout": "Save as this game's layout",
-      "buttonsNote": "Editing {{title}}: buttons are saved into this game's layout, not your normal buttons."
+      "buttonsNote": "Editing {{title}}: buttons are saved into this game's layout, not your normal buttons.",
+      "dongleNote": "Not part of {{title}}'s profile: dongle settings stay your normal ones. Changes here are kept after the profile ends; save them to the dongle then.",
+      "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: saving it changes it in the dongle for every game.",
+      "curvesNote": "Editing {{title}}: curves are saved into this game's profile and felt right away; your normal curves come back after.",
+      "curvesNormal": "This stick uses your normal curve in this game."
+    },
+    "profile": {
+      "changes": "What this game changes (everything else uses your normal settings):",
+      "allNormal": "Nothing changed for this game yet: it uses your normal settings. Edit in controller view to change any of them for this game.",
+      "useNormal": "{{name}}. Use my normal setting",
+      "allSettings": "All settings",
+      "normalSub": "Your normal setting",
+      "on": "On",
+      "off": "Off",
+      "copyHint": "This game gets the settings on the dongle now"
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Change the color",

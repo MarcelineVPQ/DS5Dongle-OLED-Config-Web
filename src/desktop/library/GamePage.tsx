@@ -12,7 +12,8 @@ import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onAccentChange, scopedAccent } from "../live/controllerAccent";
 import { errorText } from "../../errorText";
-import { nonConfigParts, settingsFrom } from "./useGameProfile";
+import { captureProfile, clearGroup, gameGroups, pruneProfile, settingsFrom, shownValues, upgradeProfile, type ProfileGroup } from "./profileValues";
+import { X } from "lucide-react";
 import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -176,22 +177,26 @@ function Stat({ label, value, accent, onClick }: { label: string; value: string;
 
 function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: GameEntry; record?: GameRecord; running: boolean; bridge: UseDs5BridgeResult; onLibrary: (f: LibraryFile) => void }) {
   const { t } = useTranslation();
-  const { editProfile } = useLibrary();
+  const { editProfile, library } = useLibrary();
   const desktop = window.desktop!;
-  const current = bridge.config ? settingsFrom(bridge.config) : null;
+  const config = bridge.config;
+  // The normal settings: under a profile that's on now its restore point,
+  // else what the dongle has.
+  const normal = library.restore?.settings ?? (config ? settingsFrom(config) : null);
+  const [allOpen, setAllOpen] = useState(false);
 
-  // Every edit is stored (debounced); applying it to the dongle while the
-  // game runs is the profile hook's job.
+  // Every edit is stored (debounced), keeping only what differs from the
+  // normal settings; applying it to the dongle while the game runs (or is
+  // edited) is the profile hook's job.
   const {
     value: draft,
     set,
     cancel,
   } = useDebouncedSave<ProfileSettings | null>(
     record?.profile?.settings ?? null,
-    (next) => (next ? desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: next }).then(onLibrary) : Promise.resolve()),
+    (next) => (next ? desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: pruneProfile(next, normal) }).then(onLibrary) : Promise.resolve()),
     400,
   );
-  const edit = (patch: Partial<ProfileSettings>) => draft && set({ ...draft, ...patch });
   const create = (from: ProfileSettings) => {
     cancel();
     void desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: from }).then(onLibrary);
@@ -210,82 +215,186 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
         <>
           <p className="dk-hint">{t("desktop.library.profileNone")}</p>
           <div className="dk-row-btns">
-            <button type="button" className="dk-btn primary" disabled={!current} onClick={() => current && create(current)}>
+            <button type="button" className="dk-btn primary" disabled={!config} onClick={() => config && create(captureProfile(config, normal, undefined))}>
               {t("desktop.library.profileFromCurrent")}
             </button>
           </div>
-          {!current && <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>}
+          {!config && <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>}
         </>
       ) : (
         <>
-          <p className="dk-hint">{t("desktop.library.profileHint")}</p>
-          <GripHaptics
-            left={draft.hapticsGain}
-            right={draft.hapticsGainRight ?? draft.hapticsGain}
-            split={!!bridge.client?.splitHaptics}
-            onChange={(l, r) => edit({ hapticsGain: l, hapticsGainRight: r })}
-          />
-          <Segmented
-            label={t("desktop.library.autoHaptics")}
-            value={draft.autoHapticsEnable}
-            options={(["off", "fallback", "mix", "replace"] as const).map((k, i) => ({ value: i, label: t(`desktop.library.autoMode.${k}`) }))}
-            onChange={(v) => edit({ autoHapticsEnable: v })}
-          />
-          {draft.autoHapticsEnable > 0 && (
-            <>
-              <Slider label={t("desktop.library.autoGain")} value={draft.autoHapticsGain} min={0} max={200} step={5} unit="%" onChange={(v) => edit({ autoHapticsGain: v })} />
-              <Segmented
-                label={t("desktop.library.autoLowpass")}
-                value={draft.autoHapticsLowpass}
-                options={["80", "160", "250", "400"].map((hz, i) => ({ value: i, label: `${hz} Hz` }))}
-                onChange={(v) => edit({ autoHapticsLowpass: v })}
-              />
-            </>
-          )}
-          <Slider label={t("desktop.library.speaker")} value={draft.speakerVolume} min={-30} max={12} step={1} unit="dB" signed onChange={(v) => edit({ speakerVolume: v })} />
-          <Row label={t("desktop.library.lightbar")}>
-            <select className="dk-select" value={draft.lightbarMode} onChange={(e) => edit({ lightbarMode: Number(e.target.value) })}>
-              {LIGHTBAR_MODES.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {t(`desktop.lightbar.modes.${m.key}`, m.label)}
-                </option>
-              ))}
-            </select>
-          </Row>
-          <Row label={t("desktop.library.favorites")}>
-            <div className="gp-favs">
-              {[0, 1, 2, 3].map((i) => (
-                <ColorPicker
-                  key={i}
-                  label={`FAV${i}`}
-                  title={`FAV${i}`}
-                  value={rgbToHex([draft.lbFavR[i], draft.lbFavG[i], draft.lbFavB[i]])}
-                  onChange={(hex) => {
-                    const [r, g, b] = hexToRgb(hex);
-                    const set = (a: number[], v: number) => a.map((x, j) => (j === i ? v : x));
-                    edit({ lbFavR: set(draft.lbFavR, r), lbFavG: set(draft.lbFavG, g), lbFavB: set(draft.lbFavB, b) });
-                  }}
-                />
-              ))}
-            </div>
-          </Row>
-          <Toggle label={t("desktop.library.mic")} value={draft.btMicEnable} onChange={(v) => edit({ btMicEnable: v })} />
-          <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
-          <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
+          <ProfileSummary draft={draft} normal={normal} split={!!bridge.client?.splitHaptics} onChange={set} />
           <div className="dk-row-btns">
             <button type="button" className="dk-btn primary" disabled={!bridge.isConnected} title={t("desktop.editing.openHint")} onClick={() => editProfile(game.key, game.title)}>
               {t("desktop.editing.open")}
             </button>
-            <button type="button" className="dk-btn" disabled={!current} onClick={() => current && create({ ...current, ...nonConfigParts(draft) })}>
+            <button type="button" className="dk-btn" disabled={!config} title={t("desktop.profile.copyHint")} onClick={() => config && create(captureProfile(config, normal, draft))}>
               {t("desktop.library.profileCopyCurrent")}
             </button>
             <button type="button" className="dk-btn danger" onClick={remove}>
               {t("desktop.library.profileDelete")}
             </button>
           </div>
+          <details className="gp-legend" onToggle={(e) => setAllOpen(e.currentTarget.open)}>
+            <summary>{t("desktop.profile.allSettings")}</summary>
+            {/* Built only while open: closed, the controls would still be in the page (unnamed, unseen). */}
+            {allOpen && (normal ? <AllProfileSettings draft={draft} normal={normal} bridge={bridge} onChange={set} /> : <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>)}
+          </details>
         </>
       )}
     </section>
+  );
+}
+
+// What this game's profile changes, as small "name: value" chips (only what
+// differs from the normal settings); each one's button goes back to the
+// normal setting. Everything not listed uses the normal settings.
+function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSettings; normal: ProfileSettings | null; split: boolean; onChange: (s: ProfileSettings) => void }) {
+  const { t } = useTranslation();
+  const { library } = useLibrary();
+  const v = normal ? shownValues(draft, normal) : upgradeProfile(draft);
+  const onOff = (b: boolean | undefined) => t(b ? "desktop.profile.on" : "desktop.profile.off");
+  const value: Record<ProfileGroup, () => string> = {
+    grips: () => (split ? `${v.hapticsGain?.toFixed(1)}× / ${v.hapticsGainRight?.toFixed(1)}×` : `${v.hapticsGain?.toFixed(1)}×`),
+    autoHaptics: () => `${t(`desktop.library.autoMode.${(["off", "fallback", "mix", "replace"] as const)[v.autoHapticsEnable ?? 0]}`)}${v.autoHapticsEnable ? ` · ${v.autoHapticsGain}%` : ""}`,
+    audioBuffer: () => `${v.audioBufferLength}`,
+    speaker: () => `${(v.speakerVolume ?? 0) > 0 ? "+" : ""}${v.speakerVolume} dB`,
+    lightbar: () => {
+      const m = LIGHTBAR_MODES.find((x) => x.value === v.lightbarMode);
+      return m ? t(`desktop.lightbar.modes.${m.key}`, m.label) : "";
+    },
+    favorites: () =>
+      [0, 1, 2, 3]
+        .filter((i) => !normal || (["lbFavR", "lbFavG", "lbFavB"] as const).some((k) => v[k]?.[i] !== normal[k]?.[i]))
+        .map((i) => `FAV${i}`)
+        .join(", "),
+    mic: () => onOff(v.btMicEnable),
+  };
+  const label: Record<ProfileGroup, string> = {
+    grips: t("desktop.library.haptics"),
+    autoHaptics: t("desktop.library.autoHaptics"),
+    audioBuffer: t("haptics.audioBufferLabel"),
+    speaker: t("desktop.library.speaker"),
+    lightbar: t("desktop.library.lightbar"),
+    favorites: t("desktop.library.favorites"),
+    mic: t("desktop.library.mic"),
+  };
+  const chips: Array<{ key: string; text: string; clear: () => ProfileSettings }> = gameGroups(draft, normal).map((g) => ({
+    key: g,
+    text: `${label[g]}: ${value[g]()}`,
+    clear: () => clearGroup(draft, g),
+  }));
+  const layout = draft.buttonLayout ? library.layouts?.[draft.buttonLayout] : undefined;
+  if (draft.buttonLayout)
+    chips.push({ key: "layout", text: `${t("desktop.layouts.profileLabel")}: ${layout?.name ?? t("desktop.layouts.normal")}`, clear: () => ({ ...draft, buttonLayout: undefined }) });
+  for (const side of ["left", "right"] as const) {
+    const curve = draft.stickCurves?.[side];
+    if (!curve) continue;
+    chips.push({
+      key: `curve-${side}`,
+      text: `${t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")}: ${t(`desktop.curves.type.${curve.type}`)}`,
+      clear: () => {
+        const rest = { ...draft.stickCurves };
+        delete rest[side];
+        return { ...draft, stickCurves: rest.left || rest.right ? rest : undefined };
+      },
+    });
+  }
+  return (
+    <>
+      <p className="dk-hint">{chips.length ? t("desktop.profile.changes") : t("desktop.profile.allNormal")}</p>
+      {chips.length > 0 && (
+        <div className="lib-filters" role="group" aria-label={t("desktop.library.section.profile")}>
+          {chips.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className="dk-chip ok"
+              title={t("desktop.profile.useNormal", { name: c.text })}
+              aria-label={t("desktop.profile.useNormal", { name: c.text })}
+              onClick={() => onChange(c.clear())}
+            >
+              {c.text} <X size={12} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// Every setting a profile can hold, for quick edits on the game page (the
+// controller view edits them all, live). A setting shows the game's value or,
+// marked, the normal one; changing it makes it this game's.
+function AllProfileSettings({ draft, normal, bridge, onChange }: { draft: ProfileSettings; normal: ProfileSettings; bridge: UseDs5BridgeResult; onChange: (s: ProfileSettings) => void }) {
+  const { t } = useTranslation();
+  const v = shownValues(draft, normal);
+  const own = new Set(gameGroups(draft, normal));
+  const sub = (g: ProfileGroup) => (own.has(g) ? undefined : t("desktop.profile.normalSub"));
+  const edit = (patch: Partial<ProfileSettings>) => onChange({ ...upgradeProfile(draft), ...patch });
+  const favs = [v.lbFavR!, v.lbFavG!, v.lbFavB!];
+  return (
+    <>
+      <p className="dk-hint">{t("desktop.library.profileHint")}</p>
+      <GripHaptics left={v.hapticsGain!} right={v.hapticsGainRight ?? v.hapticsGain!} split={!!bridge.client?.splitHaptics} onChange={(l, r) => edit({ hapticsGain: l, hapticsGainRight: r })} />
+      <Slider label={t("haptics.audioBufferLabel")} sub={sub("audioBuffer")} value={v.audioBufferLength!} min={16} max={128} step={4} onChange={(x) => edit({ audioBufferLength: x })} />
+      <Segmented
+        label={t("desktop.library.autoHaptics")}
+        sub={sub("autoHaptics")}
+        value={v.autoHapticsEnable!}
+        options={(["off", "fallback", "mix", "replace"] as const).map((k, i) => ({ value: i, label: t(`desktop.library.autoMode.${k}`) }))}
+        onChange={(x) => edit({ autoHapticsEnable: x, autoHapticsGain: v.autoHapticsGain, autoHapticsLowpass: v.autoHapticsLowpass })}
+      />
+      {v.autoHapticsEnable! > 0 && (
+        <>
+          <Slider
+            label={t("desktop.library.autoGain")}
+            value={v.autoHapticsGain!}
+            min={0}
+            max={200}
+            step={5}
+            unit="%"
+            onChange={(x) => edit({ autoHapticsEnable: v.autoHapticsEnable, autoHapticsGain: x, autoHapticsLowpass: v.autoHapticsLowpass })}
+          />
+          <Segmented
+            label={t("desktop.library.autoLowpass")}
+            value={v.autoHapticsLowpass!}
+            options={["80", "160", "250", "400"].map((hz, i) => ({ value: i, label: `${hz} Hz` }))}
+            onChange={(x) => edit({ autoHapticsEnable: v.autoHapticsEnable, autoHapticsGain: v.autoHapticsGain, autoHapticsLowpass: x })}
+          />
+        </>
+      )}
+      <Slider label={t("desktop.library.speaker")} sub={sub("speaker")} value={v.speakerVolume!} min={-30} max={12} step={1} unit="dB" signed onChange={(x) => edit({ speakerVolume: x })} />
+      <Row label={t("desktop.library.lightbar")} sub={sub("lightbar")}>
+        <select className="dk-select" value={v.lightbarMode} onChange={(e) => edit({ lightbarMode: Number(e.target.value) })}>
+          {LIGHTBAR_MODES.map((m) => (
+            <option key={m.value} value={m.value}>
+              {t(`desktop.lightbar.modes.${m.key}`, m.label)}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label={t("desktop.library.favorites")} sub={sub("favorites")}>
+        <div className="gp-favs">
+          {[0, 1, 2, 3].map((i) => (
+            <ColorPicker
+              key={i}
+              label={`FAV${i}`}
+              title={`FAV${i}`}
+              value={rgbToHex([favs[0][i], favs[1][i], favs[2][i]])}
+              onChange={(hex) => {
+                const [r, g, b] = hexToRgb(hex);
+                const at = (a: number[], x: number) => a.map((y, j) => (j === i ? x : y));
+                edit({ lbFavR: at(favs[0], r), lbFavG: at(favs[1], g), lbFavB: at(favs[2], b) });
+              }}
+            />
+          ))}
+        </div>
+      </Row>
+      <Toggle label={t("desktop.library.mic")} sub={sub("mic")} value={!!v.btMicEnable} onChange={(x) => edit({ btMicEnable: x })} />
+      <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
+      <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
+    </>
   );
 }
 
