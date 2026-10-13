@@ -31,6 +31,19 @@ stop() {
   [ -n "$pids" ] && kill $pids 2>/dev/null || true
 }
 
+# The sandbox tools: a missing one would only show as a 60 s wait and an
+# unrelated error.
+TOOLS=(bwrap dbus-run-session curl)
+[ "${CHECK_UI_SHOW:-}" = 1 ] || TOOLS+=(xvfb-run)
+missing=()
+for tool in "${TOOLS[@]}"; do
+  command -v "$tool" > /dev/null || missing+=("$tool")
+done
+if [ "${#missing[@]}" -gt 0 ]; then
+  echo "check_ui.sh needs: ${missing[*]} (install them first)" >&2
+  exit 2
+fi
+
 cd "$APP"
 stop
 echo "== Building (dev tools on)"
@@ -44,7 +57,14 @@ DISPLAY_WRAP=(xvfb-run -a -s "-screen 0 1600x1000x24" env -u WAYLAND_DISPLAY)
 OZONE=(--ozone-platform=x11)
 if [ "${CHECK_UI_SHOW:-}" = 1 ]; then DISPLAY_WRAP=() OZONE=(); fi
 setsid dbus-run-session -- "${DISPLAY_WRAP[@]}" "${SANDBOX[@]}" "$ELECTRON" . "${OZONE[@]}" --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
-for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && break; sleep 1; done
+up=0
+for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && up=1 && break; sleep 1; done
+if [ "$up" != 1 ]; then
+  echo "The checker copy never answered on port $PORT. The end of $STATE/app.log:" >&2
+  tail -n 30 "$STATE/app.log" >&2 || true
+  stop
+  exit 1
+fi
 
 # Simulated dongle + Games allowed + no first-run banners, then reload.
 node --input-type=module -e '

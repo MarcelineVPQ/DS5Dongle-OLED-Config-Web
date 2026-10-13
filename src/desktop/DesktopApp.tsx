@@ -13,7 +13,7 @@ import { mergeColors, useCustomColors } from "./live/customColors";
 import ArtBackdrop from "./live/ArtBackdrop";
 import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
-import { LibraryContext } from "./library/libraryContext";
+import { LibraryContext, profileTarget } from "./library/libraryContext";
 import { BusyButton } from "./controls";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -126,7 +126,9 @@ export default function DesktopApp() {
   // Keep the tray icon/menu in step with the device, even while the window is
   // hidden (the window keeps running in the background for exactly this):
   // the connection hook's identity poll (every second, also while hidden) is
-  // the one identity poll for the whole app.
+  // the one identity poll for the whole app (Pairing slots reads it too). The
+  // one exception: the live lightbar color (useLiveLightbar) reads identity
+  // faster, only while the controller view is shown.
   const client = bridge.client;
   const realIdentity = bridge.identity;
   // What the UI shows (the developer preview can stand in another model/colorway).
@@ -303,6 +305,12 @@ export default function DesktopApp() {
                   <>
                     <span>{t("desktop.editing.unsaved", { title: profiles.editing.title })}</span>
                     <span className="dk-spacer" />
+                    <button type="button" className="dk-btn" onClick={() => setConfirmDone(false)}>
+                      {t("desktop.common.cancel")}
+                    </button>
+                    <button type="button" className="dk-btn" onClick={finishEditing}>
+                      {t("desktop.editing.discard")}
+                    </button>
                     <BusyButton
                       className="dk-btn primary"
                       disabled={busy || bridge.isDirty}
@@ -312,12 +320,6 @@ export default function DesktopApp() {
                     >
                       {t("desktop.editing.saveClose")}
                     </BusyButton>
-                    <button type="button" className="dk-btn" onClick={finishEditing}>
-                      {t("desktop.editing.discard")}
-                    </button>
-                    <button type="button" className="dk-btn" onClick={() => setConfirmDone(false)}>
-                      {t("desktop.common.cancel")}
-                    </button>
                   </>
                 ) : (
                   <>
@@ -358,7 +360,8 @@ export default function DesktopApp() {
                     {t("desktop.bar.revert", "Revert")}
                   </button>
                   <button type="button" className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={() => void profiles.saveToProfile()}>
-                    {t("desktop.bar.saveProfile")}
+                    {/* Named: it saves into the profile being edited, which needn't be the active one. */}
+                    {t("desktop.bar.saveProfileTo", { title: (profileTarget(profiles.editing, profiles.active) ?? profiles.active).title })}
                   </button>
                 </>
               ) : (

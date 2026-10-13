@@ -13,7 +13,8 @@ import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, rea
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
-import { Manifest, isAllowedDownloadUrl, isNewer, sameVersion, type Download } from "../../src/update/manifest";
+import { Manifest, isNewer, sameVersion, type Download } from "../../src/update/manifest";
+import { isAllowedDownloadUrl } from "./urls";
 import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";

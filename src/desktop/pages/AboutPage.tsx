@@ -8,6 +8,7 @@ import guide from "../../../docs/GUIDE.md?raw";
 import Markdown from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
+import { ISSUES_URL } from "../about/roadmap";
 
 export type AboutTab = "changes" | "firmware" | "guide" | "roadmap" | "credits";
 
@@ -42,7 +43,7 @@ const STUDIO_LINKS = [
   { href: "https://42pixelstudios.com/", icon: Globe, label: "42pixelstudios.com" },
   { href: "https://github.com/MarcelineVPQ", icon: Github, label: "github.com/MarcelineVPQ" },
   { href: "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web", icon: Code, labelKey: "desktop.about.source", fallback: "Source code (MIT)" },
-  { href: "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues", icon: Bug, labelKey: "desktop.about.issues", fallback: "Report an issue" },
+  { href: ISSUES_URL, icon: Bug, labelKey: "desktop.about.issues", fallback: "Report an issue" },
 ] as const;
 
 function StudioCard() {

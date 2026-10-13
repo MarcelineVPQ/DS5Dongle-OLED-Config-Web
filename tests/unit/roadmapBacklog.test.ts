@@ -61,9 +61,7 @@ const BACKLOG_ROW: Record<string, string> = {
  * Known mismatches, each with the review finding and batch that fixes it.
  * The test fails when one of these starts to match (fixed: take it out).
  */
-const KNOWN_MISMATCH: Record<string, string> = {
-  "Better OLED status screen": 'F36 (quality pass dev.6, batch 6): shipped in firmware dev.6, move it to "next"',
-};
+const KNOWN_MISMATCH: Record<string, string> = {};
 
 interface Row {
   item: string;

@@ -225,10 +225,17 @@ html[data-theme="dark"] .dk {
   letter-spacing: 0.06em;
   color: var(--text-eyebrow);
 }
-.dk-card p.dk-hint {
-  margin: 2px 0 6px;
+.dk-hint {
   color: var(--text-muted);
   font-size: var(--dk-small);
+}
+.dk-card p.dk-hint {
+  margin: 2px 0 6px;
+}
+/* Links in running text, everywhere in the app. :where() keeps it below any
+   class rule, so link-styled buttons (a.dk-btn) keep their own colors. */
+:where(.dk) a {
+  color: var(--dk-sel-text);
 }
 
 /* ---- Rows & controls ---- */
@@ -721,11 +728,6 @@ html[data-theme="dark"] .dk {
 }
 .dk-roadmap > .dk-hint {
   margin: 0 0 var(--dk-gap);
-  color: var(--text-muted);
-  font-size: var(--dk-small);
-}
-.dk-roadmap a {
-  color: var(--dk-sel-text);
 }
 .dk-roadmap-board {
   display: grid;
@@ -819,9 +821,6 @@ html[data-theme="dark"] .dk {
 }
 .dk-md li {
   margin: 2px 0;
-}
-.dk-md a {
-  color: var(--dk-sel-text);
 }
 .dk-md code {
   font-family: var(--font-mono);
@@ -3877,8 +3876,6 @@ html[data-cards-translucent] .dash-card {
 }
 .dash-card p.dk-hint {
   margin: 0 0 6px;
-  color: var(--text-muted);
-  font-size: var(--dk-small);
 }
 /* The Timing card (protocol 1.11): stage, average, worst case, last minute. */
 .dash-timings {
@@ -4217,9 +4214,6 @@ html[data-cards-translucent] .dash-card {
 .dk-fw-steps {
   margin: 0;
   padding-left: 16px;
-}
-.dk-fw-steps a {
-  color: var(--dk-sel-text);
 }
 
 /* Focus moved here after picking a page in the rail (DesktopApp): no ring for

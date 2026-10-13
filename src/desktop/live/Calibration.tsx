@@ -11,12 +11,13 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
 import { BusyButton, Slider } from "../controls";
 import StickCurves from "./StickCurves";
 import { useProfileTarget } from "../library/libraryContext";
 import StickTests from "./StickTestCards";
+import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
 type Step = "idle" | "done" | { measure: Measure; ready: boolean };
@@ -27,39 +28,17 @@ const ORDER: Measure[] = ["center", "edges", "triggers", "gyro"];
 
 export const supportsCalibration = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 5, FEATURES2.calibration);
 
+const readCal = (client: Ds5BridgeClient): Promise<SlotRead<Cal>> => client.readCalibration().then(({ slot, calibration }) => ({ slot, value: calibration }));
+
 export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeResult; input: InputReport | null }) {
   const { t } = useTranslation();
   const client = bridge.client;
   const supported = supportsCalibration(bridge.identity);
   // Calibration belongs to the controller, not to a game's profile (said while one is on).
   const target = useProfileTarget();
-  const [slot, setSlot] = useState(0);
-  const [saved, setSaved] = useState<Cal | null>(null);
-  const [draft, setDraft] = useState<Cal>(DEFAULT_CALIBRATION);
+  const { slot, saved, draft, setDraft, error, setError, loaded, retry } = useSlotSettings(bridge, supported, DEFAULT_CALIBRATION, readCal);
   const [step, setStep] = useState<Step>("idle");
   const [missed, setMissed] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loadTry, setLoadTry] = useState(0);
-
-  // The slot in use now; reloads when the controller (slot) changes.
-  const currentSlot = bridge.identity?.currentSlot;
-  useEffect(() => {
-    if (!client || !supported) return;
-    let live = true;
-    client
-      .readCalibration()
-      .then(({ slot: s, calibration }) => {
-        if (!live) return;
-        setSlot(s);
-        setSaved(calibration);
-        setDraft(calibration);
-        setError(null);
-      })
-      .catch((cause) => live && setError(errorText(cause)));
-    return () => {
-      live = false;
-    };
-  }, [client, supported, currentSlot, loadTry]);
 
   // Guided run: a pause to get ready, then sample the raw input and fit.
   const samples = useRef<Array<{ at: number; r: InputReport }>>([]);
@@ -121,7 +100,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
       clearInterval(id);
       clearTimeout(done);
     };
-  }, [step, t]);
+  }, [step, t, setDraft, setError]);
 
   if (!client) return null;
   if (!supported) {
@@ -138,10 +117,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
     setError(null);
     try {
       await client.setCalibration(slot, c);
-      const back = await client.readCalibration();
-      setSlot(back.slot);
-      setSaved(back.calibration);
-      setDraft(back.calibration);
+      loaded(await readCal(client));
     } catch (cause) {
       setError(errorText(cause));
     }
@@ -241,16 +217,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           </BusyButton>
         </div>
         <p className="dk-hint">{t("desktop.calib.saveHint")}</p>
-        {error && (
-          <p className="dk-bad">
-            {error}{" "}
-            {saved === null && (
-              <button type="button" className="dk-btn" onClick={() => setLoadTry((n) => n + 1)}>
-                {t("desktop.calib.retry")}
-              </button>
-            )}
-          </p>
-        )}
+        <SlotReadError error={error} retry={saved === null ? retry : null} />
       </section>
     </>
   );

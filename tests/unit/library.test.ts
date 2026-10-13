@@ -98,18 +98,20 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     { pid: 20, name: "steam", ppid: 10 },
     { pid: 30, name: "reaper", ppid: 20, args: ["reaper", "SteamLaunch", "AppId=4078430", "--"] },
     { pid: 31, name: "hl2_linux", ppid: 30, env: ["SteamAppId=4078430", "SteamGameId=4078430", "PATH=/usr/bin"] }, // a native Steam game
-    { pid: 40, name: "firefox", ppid: 10, env: ["SteamAppId=999"] }, // not under a launcher: never read closely
+    { pid: 15, name: "plasmashell", ppid: 10 }, // an orphan without a launch variable: skipped
+    { pid: 40, name: "firefox", ppid: 15, env: ["SteamAppId=999"] }, // not under a launcher, not an orphan: never read closely
     { pid: 50, name: "Witcher3Long", ppid: 10, args: ["Z:\\g\\Witcher\\bin\\Witcher3.exe"], cwd: "/g/Witcher/bin", exe: "/opt/wine/bin/wine64-preloader" }, // Wine, left its launcher
     { pid: 60, name: "heroic", ppid: 10 },
     { pid: 61, name: "sh", ppid: 60, env: ["HEROIC_APP_NAME=1423049311"] },
     { pid: 70, name: "reaper", ppid: 10, uid: 4242 }, // another user's
+    { pid: 80, name: "HollowKnight", ppid: 1, env: ["HEROIC_APP_NAME=hollow", "HEROIC_APP_SOURCE=gog"] }, // a native Heroic game after Heroic quit (F8)
   ]);
 
   it("reads only possible games closely, with the same view as a full read", () => {
     const games = readProcs(true, root);
-    expect(games.map((p) => p.pid).sort((a, b) => a - b)).toEqual([20, 30, 31, 50, 60, 61]);
+    expect(games.map((p) => p.pid).sort((a, b) => a - b)).toEqual([20, 30, 31, 50, 60, 61, 80]);
     const full = readProcs(false, root);
-    expect(full.map((p) => p.pid).sort((a, b) => a - b)).toEqual([10, 20, 30, 31, 40, 50, 60, 61]);
+    expect(full.map((p) => p.pid).sort((a, b) => a - b)).toEqual([10, 15, 20, 30, 31, 40, 50, 60, 61, 80]);
     // Each process looks exactly as the full read sees it.
     for (const p of games) expect(p).toEqual(full.find((f) => f.pid === p.pid));
     expect(games.find((p) => p.pid === 31)!.env).toEqual({ SteamAppId: "4078430", SteamGameId: "4078430" });
@@ -123,6 +125,26 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), candidates)).toBe("s");
     const noSteam = candidates.slice(1);
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), noSteam)).toBe("w");
+  });
+
+  it("keeps a native Heroic game once Heroic quit (orphaned, launch variable in its environment)", () => {
+    const heroic: RunningCandidate[] = [{ key: "h", launcher: "heroic", id: "hollow" }];
+    for (const only of [true, false]) expect(detectRunning(readProcs(only, root), heroic)).toBe("h");
+  });
+
+  it("reads a plain orphan's environment once, and again for a new process on its pid", () => {
+    const env = join(root, "15", "environ");
+    readProcs(true, root); // looked at once, no launch variable
+    writeFileSync(env, "HEROIC_APP_NAME=hollow\0"); // changed in place: not read again
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(false);
+    rmSync(join(root, "15"), { recursive: true }); // gone for a look...
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(false);
+    mkdirSync(join(root, "15")); // ...then a new process on the same pid
+    writeFileSync(join(root, "15", "status"), `Name:\tplasmashell\nPPid:\t10\nUid:\t${process.getuid?.() ?? 1000}\n`);
+    writeFileSync(join(root, "15", "comm"), "plasmashell\n");
+    writeFileSync(join(root, "15", "cmdline"), "plasmashell\0");
+    writeFileSync(env, "HEROIC_APP_NAME=hollow\0");
+    expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(true);
     rmSync(root, { recursive: true, force: true });
   });
 });

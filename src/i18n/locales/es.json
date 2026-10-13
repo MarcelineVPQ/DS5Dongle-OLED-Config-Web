@@ -101,7 +101,8 @@
       "profileActive": "Perfil de {{title}} activo",
       "profileSaved": "Los cambios van al perfil; tus ajustes normales vuelven al cerrar el juego.",
       "profileUnsaved": "Cambiado aquí, aún no guardado en el perfil.",
-      "saveProfile": "Guardar en el perfil"
+      "saveProfile": "Guardar en el perfil",
+      "saveProfileTo": "Guardar en el perfil de {{title}}"
     },
     "common": {
       "cancel": "Cancelar"
@@ -1143,7 +1144,6 @@
       "title": "Info del mando",
       "needsFirmware": "Actualiza el firmware del dongle para ver el firmware, el voltaje de la batería y los contadores del mando.",
       "noController": "Conecta un mando para ver su info.",
-      "battery": "Batería",
       "charge": "Carga",
       "chargeState": {
         "discharging": "Sin cargar",
@@ -1154,7 +1154,6 @@
         "chargeError": "Error de carga",
         "unknown": "Desconocido"
       },
-      "firmware": "Firmware",
       "built": "Compilado",
       "hardware": "Hardware",
       "sbl": "Bootloader",
@@ -1184,7 +1183,6 @@
       "noCounters": "Este mando no envió contadores.",
       "privacy": "Guardado por el propio mando. Solo lectura: no se cambia nada y su número de serie nunca se lee en la app.",
       "refresh": "Actualizar",
-      "officialCurrent": "Actualizado",
       "officialNewer": "Hay un firmware oficial más reciente: {{version}}",
       "howToUpdate": "Cómo actualizar",
       "howToPc": "Conecta el mando a un PC con Windows con un cable USB-C y actualízalo con la app PlayStation Accessories de Sony (antes «Actualizador de firmware para el mando inalámbrico DualSense»).",

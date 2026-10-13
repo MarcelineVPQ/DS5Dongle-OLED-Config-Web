@@ -4,12 +4,12 @@
 // against a dashed straight line, the custom points (drag them, or select one
 // and use the arrow keys) and a live dot where the stick is now: its tilt in
 // (after the calibration above) and what the dongle sends out.
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { profileCurves, sameGameCurves, type GameCurves } from "../library/profileValues";
@@ -28,6 +28,7 @@ import {
   type StickCurvePair,
 } from "../../protocol/stickCurve";
 import { BusyButton, Segmented } from "../controls";
+import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
 
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
 
@@ -37,16 +38,24 @@ const PAD = 8;
 const px = (v: number) => PAD + v * SIZE;
 const py = (v: number) => PAD + (1 - v) * SIZE;
 
+const readCurves = (client: Ds5BridgeClient): Promise<SlotRead<StickCurvePair> | null> => client.readStickCurves().then((r) => r && { slot: r.slot, value: r.saved });
+
+// The stick now, after the calibration, and what the curve makes of it: the
+// tilt in and out (0..1), or null with no controller input.
+function stickTilt(input: InputReport | null, side: 0 | 1, cal: StickCal, curve: StickCurve): [number, number] | null {
+  const raw = input ? (side === 0 ? input.leftStick : input.rightStick) : null;
+  if (!raw) return null;
+  const [x, y] = correctStick(raw.x, raw.y, cal);
+  const [ox, oy] = applyCurve(x, y, curve);
+  return [Math.min(1, tiltOf(x, y)), Math.min(1, tiltOf(ox, oy))];
+}
+
 export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5BridgeResult; input: InputReport | null; sticks: readonly [StickCal, StickCal] }) {
   const { t } = useTranslation();
   const client = bridge.client;
   const supported = supportsStickCurves(bridge.identity);
-  const [slot, setSlot] = useState(0);
-  const [saved, setSaved] = useState<StickCurvePair | null>(null);
-  const [draft, setDraft] = useState<StickCurvePair>(DEFAULT_CURVES);
+  const { slot, saved, draft, setDraft, error, setError, loaded, retry } = useSlotSettings(bridge, supported, DEFAULT_CURVES, readCurves, t("desktop.curves.readFailed"));
   const [side, setSide] = useState<0 | 1>(0);
-  const [error, setError] = useState<string | null>(null);
-  const [loadTry, setLoadTry] = useState(0);
   // A game's profile on (edited, or its game running): the curves picked here
   // go into that profile (undefined = that stick keeps the normal curve) and
   // the profile hook puts them on the dongle for now (RAM only). The draft is
@@ -55,26 +64,6 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   const target = useProfileTarget();
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
   const stored = profileCurves(profile?.settings);
-
-  const currentSlot = bridge.identity?.currentSlot;
-  useEffect(() => {
-    if (!client || !supported) return;
-    let live = true;
-    client
-      .readStickCurves()
-      .then((r) => {
-        if (!live) return;
-        if (!r) throw new Error(t("desktop.curves.readFailed"));
-        setSlot(r.slot);
-        setSaved(r.saved);
-        setDraft(r.saved);
-        setError(null);
-      })
-      .catch((cause) => live && setError(errorText(cause)));
-    return () => {
-      live = false;
-    };
-  }, [client, supported, currentSlot, loadTry, t]);
 
   if (!client) return null;
   if (!supported) {
@@ -109,23 +98,14 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
     setError(null);
     try {
       await client.applyStickCurves(slot, pair[0], pair[1], false);
-      const back = await client.readStickCurves();
-      if (back) {
-        setSlot(back.slot);
-        setSaved(back.saved);
-        setDraft(back.saved);
-      }
+      const back = await readCurves(client);
+      if (back) loaded(back);
     } catch (cause) {
       setError(errorText(cause));
     }
   };
 
-  // The stick now, after the calibration above, and what the curve makes of it.
-  const raw = input ? (side === 0 ? input.leftStick : input.rightStick) : null;
-  const calibrated = raw ? correctStick(raw.x, raw.y, sticks[side]) : null;
-  const out = calibrated ? applyCurve(calibrated[0], calibrated[1], curve) : null;
-  const tin = calibrated ? Math.min(1, tiltOf(calibrated[0], calibrated[1])) : null;
-  const tout = out ? Math.min(1, tiltOf(out[0], out[1])) : null;
+  const tilt = stickTilt(input, side, sticks[side], curve);
 
   return (
     <section className="dk-card">
@@ -145,9 +125,9 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
         onChange={(i) => setCurve({ ...curve, type: CURVE_TYPES[i] as CurveType })}
       />
       <p className="dk-hint">{t(`desktop.curves.typeHint.${curve.type}`)}</p>
-      <CurveGraph curve={curve} live={tin !== null && tout !== null ? [tin, tout] : null} onPoints={(points) => setCurve({ ...curve, points })} />
+      <CurveGraph curve={curve} live={tilt} onPoints={(points) => setCurve({ ...curve, points })} />
       {curve.type === "custom" && <p className="dk-hint">{t("desktop.curves.customHint")}</p>}
-      <p className="dk-mono curve-now">{tin !== null && tout !== null ? t("desktop.curves.now", { in: Math.round(tin * 100), out: Math.round(tout * 100) }) : t("desktop.calib.needsController")}</p>
+      <p className="dk-mono curve-now">{tilt ? t("desktop.curves.now", { in: Math.round(tilt[0] * 100), out: Math.round(tilt[1] * 100) }) : t("desktop.calib.needsController")}</p>
       {bridge.identity?.curvesTemporary && <p className="dk-hint">{t("desktop.curves.gameOn")}</p>}
       <div className="dk-row-btns">
         <BusyButton className="dk-btn primary" disabled={!changed} onClick={() => save(draft)}>
@@ -170,16 +150,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
         </BusyButton>
       </div>
       <p className="dk-hint">{t("desktop.curves.saveHint", { slot })}</p>
-      {error && (
-        <p className="dk-bad">
-          {error}{" "}
-          {saved === null && (
-            <button type="button" className="dk-btn" onClick={() => setLoadTry((n) => n + 1)}>
-              {t("desktop.calib.retry")}
-            </button>
-          )}
-        </p>
-      )}
+      <SlotReadError error={error} retry={saved === null ? retry : null} />
     </section>
   );
 }
@@ -342,11 +313,7 @@ function GameStickCurves({
     onDraft(side === 0 ? [next, draft[1]] : [draft[0], next]);
   };
   const changed = !sameGameCurves(draft, stored);
-  const raw = input ? (side === 0 ? input.leftStick : input.rightStick) : null;
-  const calibrated = raw ? correctStick(raw.x, raw.y, sticks[side]) : null;
-  const out = calibrated ? applyCurve(calibrated[0], calibrated[1], curve) : null;
-  const tin = calibrated ? Math.min(1, tiltOf(calibrated[0], calibrated[1])) : null;
-  const tout = out ? Math.min(1, tiltOf(out[0], out[1])) : null;
+  const tilt = stickTilt(input, side, sticks[side], curve);
   return (
     <section className="dk-card">
       <h2>{t("desktop.curves.title")}</h2>
@@ -369,8 +336,8 @@ function GameStickCurves({
         onChange={(i) => pick(choices[i])}
       />
       <p className="dk-hint">{own ? t(`desktop.curves.typeHint.${own.type}`) : t("desktop.editing.curvesNormal")}</p>
-      <CurveGraph curve={curve} live={tin !== null && tout !== null ? [tin, tout] : null} />
-      <p className="dk-mono curve-now">{tin !== null && tout !== null ? t("desktop.curves.now", { in: Math.round(tin * 100), out: Math.round(tout * 100) }) : t("desktop.calib.needsController")}</p>
+      <CurveGraph curve={curve} live={tilt} />
+      <p className="dk-mono curve-now">{tilt ? t("desktop.curves.now", { in: Math.round(tilt[0] * 100), out: Math.round(tilt[1] * 100) }) : t("desktop.calib.needsController")}</p>
       <div className="dk-row-btns">
         <BusyButton className="dk-btn primary" disabled={!changed} onClick={onSave}>
           {t("desktop.bar.saveProfile")}

@@ -6,6 +6,7 @@
 // network. Nothing is downloaded from Sony but this small JSON file.
 import { OFFICIAL_FIRMWARE_URL, parseOfficialInfo, type OfficialFirmware } from "../../src/protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../../src/desktop/api";
+import { isAllowedHttpsUrl } from "./urls";
 
 export const OFFICIAL_FIRMWARE_HOSTS: ReadonlySet<string> = new Set(["fwupdater.dl.playstation.net"]);
 export const OFFICIAL_FIRMWARE_MAX_BYTES = 16 * 1024;
@@ -14,15 +15,7 @@ const TIMEOUT_MS = 10_000;
 // A manual check refetches, but not more than once a minute.
 const FORCE_MIN_AGE_MS = 60_000;
 
-export function isAllowedOfficialFirmwareUrl(raw: string): boolean {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return false;
-  }
-  return url.protocol === "https:" && OFFICIAL_FIRMWARE_HOSTS.has(url.hostname) && url.port === "" && url.username === "" && url.password === "";
-}
+export const isAllowedOfficialFirmwareUrl = (raw: string): boolean => isAllowedHttpsUrl(raw, OFFICIAL_FIRMWARE_HOSTS);
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 

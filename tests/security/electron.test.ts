@@ -45,6 +45,7 @@ describe("external URL allowlist", () => {
       "https://github.com.evil.example/",
       "https://evil.example/github.com",
       "https://user:pass@github.com/",
+      "https://github.com:8443/",
       "not a url",
     ]) {
       expect(isAllowedExternalUrl(url), url).toBe(false);

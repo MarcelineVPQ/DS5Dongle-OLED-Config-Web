@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ROADMAP, ROADMAP_COLUMNS } from "./roadmap";
-
-const ISSUES = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues";
+import { ISSUES_URL, ROADMAP, ROADMAP_COLUMNS } from "./roadmap";
 
 /** About → Coming soon: the public roadmap (roadmap.ts) as a read-only board. */
 export default function ComingSoon() {
@@ -10,7 +8,7 @@ export default function ComingSoon() {
     <div className="dk-roadmap">
       <p className="dk-hint">
         {t("desktop.about.roadmap.intro", "These are plans, not promises: they can change, and none has a date.")}{" "}
-        <a href={ISSUES} target="_blank" rel="noreferrer noopener">
+        <a href={ISSUES_URL} target="_blank" rel="noreferrer noopener">
           {t("desktop.about.roadmap.suggest", "Suggestions are welcome on GitHub.")}
         </a>
       </p>

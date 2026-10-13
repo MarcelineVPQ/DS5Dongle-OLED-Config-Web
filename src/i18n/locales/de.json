@@ -101,7 +101,8 @@
       "profileActive": "Profil „{{title}}“ aktiv",
       "profileSaved": "Änderungen gehen ins Profil; beim Beenden des Spiels kommen deine normalen Einstellungen zurück.",
       "profileUnsaved": "Hier geändert, noch nicht im Profil gespeichert.",
-      "saveProfile": "Im Profil speichern"
+      "saveProfile": "Im Profil speichern",
+      "saveProfileTo": "Im Profil „{{title}}“ speichern"
     },
     "common": {
       "cancel": "Abbrechen"
@@ -1143,7 +1144,6 @@
       "title": "Controller-Info",
       "needsFirmware": "Aktualisiere die Firmware des Dongles, um Firmware, Akkuspannung und Lebenszeit-Zähler des Controllers zu sehen.",
       "noController": "Verbinde einen Controller, um seine Infos zu sehen.",
-      "battery": "Akku",
       "charge": "Laden",
       "chargeState": {
         "discharging": "Lädt nicht",
@@ -1154,7 +1154,6 @@
         "chargeError": "Ladefehler",
         "unknown": "Unbekannt"
       },
-      "firmware": "Firmware",
       "built": "Erstellt",
       "hardware": "Hardware",
       "sbl": "Bootloader",
@@ -1184,7 +1183,6 @@
       "noCounters": "Dieser Controller hat keine Lebenszeit-Zähler gesendet.",
       "privacy": "Vom Controller selbst gespeichert. Nur gelesen: Nichts wird geändert, und seine Seriennummer wird nie in die App gelesen.",
       "refresh": "Aktualisieren",
-      "officialCurrent": "Aktuell",
       "officialNewer": "Neuere offizielle Firmware {{version}} verfügbar",
       "howToUpdate": "So aktualisierst du",
       "howToPc": "Schließe den Controller mit einem USB-C-Kabel an einen Windows-PC an und aktualisiere ihn mit Sonys App PlayStation Accessories (früher „Firmware-Updater für DualSense Wireless-Controller“).",

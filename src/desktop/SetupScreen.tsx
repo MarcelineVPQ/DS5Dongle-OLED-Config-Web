@@ -13,6 +13,7 @@ import type { LatestFirmware } from "./api";
 import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
 import { readPref } from "./storage";
 import { BusyButton } from "./controls";
+import { usePoll } from "./usePoll";
 import { shortVersion } from "../update/manifest";
 import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
@@ -27,26 +28,13 @@ type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgres
 export default function SetupScreen({ supported }: { supported: boolean }) {
   const { t } = useTranslation();
   const [hadDongle] = useState(() => readPref(HAD_DONGLE_KEY) === "1");
-  const [pico, setPico] = useState<PicoflashHandle | null>(null);
   const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
   const [install, setInstall] = useState<Install>({ phase: "idle" });
 
-  // Watch for a Pico in BOOTSEL mode (stops while installing).
+  // Watch for a Pico in BOOTSEL mode (stops while installing, and while the
+  // window is hidden: it's only shown here).
   const installing = install.phase === "running";
-  useEffect(() => {
-    if (!supported || installing) return;
-    let live = true;
-    const tick = () =>
-      void findBootloader()
-        .then((d) => live && setPico(d))
-        .catch(() => undefined);
-    tick();
-    const timer = setInterval(tick, POLL_MS);
-    return () => {
-      live = false;
-      clearInterval(timer);
-    };
-  }, [supported, installing]);
+  const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
   useEffect(() => {
     if (!pico || firmware) return;
