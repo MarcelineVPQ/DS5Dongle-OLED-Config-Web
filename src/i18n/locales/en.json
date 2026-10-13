@@ -196,7 +196,8 @@
         "setFeatureCount": "Host feature writes",
         "setFeatureLast": "Last host feature write"
       },
-      "speakerEncoderFailed": "Speaker off: the dongle didn't have enough memory for the speaker encoder when it started ({{kb}} KB free). Haptics, triggers, the mic and saving still work. Please report this on GitHub (issue #15) with your board and controller."
+      "speakerEncoderFailed": "Speaker off: the dongle didn't have enough memory for the speaker encoder when it started ({{kb}} KB free). Haptics, triggers, the mic and saving still work. Please report this on GitHub (issue #15) with your board and controller.",
+      "micDecoderFailed": "Mic off: the dongle couldn't create the controller mic's decoder when it started ({{kb}} KB free). The speaker, haptics, triggers and saving still work. Please report this on GitHub (issue #15) with your board and controller."
     },
     "firmware": {
       "installed": "Installed firmware",

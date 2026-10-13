@@ -36,6 +36,8 @@ export interface SimulatedDongleOptions {
   live?: boolean;
   // 0xF5 core1 health: core1 couldn't create the speaker encoder (issue #15).
   speakerEncoderFailed?: boolean;
+  // 0xF5 core1 health: core1 couldn't create the mic decoder.
+  micDecoderFailed?: boolean;
   // 0xF5 as older firmware sent it: "none" = before 0.9.4 (60 bytes, no
   // health), "cut" = 0.9.4 to 0.9.5-dev.5 (68 bytes wanted, cut to 63: the
   // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
@@ -333,11 +335,11 @@ export class SimulatedDongle implements Ds5Transport {
         // Core1 keeps looping, so the dashboard's liveness check sees it move.
         v.setUint32(5 * 4, this.core1Loops, true);
         this.core1Loops = (this.core1Loops + 97_000) >>> 0;
-        const flags = 0x01 | (this.opts.speakerEncoderFailed ? 0x02 : 0);
+        const flags = 0x01 | (this.opts.speakerEncoderFailed ? 0x02 : 0) | (this.opts.micDecoderFailed ? 0x04 : 0);
         if (legacy === "cut") out[60] = flags;
         else if (!legacy) {
           out[60] = flags | 0x80;
-          v.setUint16(61, this.opts.speakerEncoderFailed ? 12 : 184, true);
+          v.setUint16(61, this.opts.speakerEncoderFailed || this.opts.micDecoderFailed ? 12 : 184, true);
         }
         return out.slice(0, length);
       }
