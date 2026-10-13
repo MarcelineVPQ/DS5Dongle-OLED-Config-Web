@@ -332,6 +332,7 @@
     "about": {
       "changes": "应用更新内容",
       "firmware": "固件更新内容",
+      "proton": "Proton 更新内容",
       "guide": "指南",
       "credits": "致谢",
       "version": "当前版本 {{version}}。",
@@ -440,7 +441,8 @@
           "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}",
           "hdr": "为 {{game}} 开启 HDR",
           "hdrUpdate": "将 {{game}} 的 HDR 改用 gamescope",
-          "hdrRemoveOld": "移除 {{game}} 的旧 HDR 设置"
+          "hdrRemoveOld": "移除 {{game}} 的旧 HDR 设置",
+          "mode": "以 {{api}} 启动 {{game}}，以便使用{{feature}}"
         },
         "why": {
           "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过 {{device}} 工作。已单独指定 Proton 的游戏保持原设置。",
@@ -463,7 +465,15 @@
           "hdrLutris": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会开启 Lutris 中该游戏的 Gamescope 选项（包括 HDR）。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrNoProton": " 在 Proton 卡片中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
           "hdrOld": "{{game}} 仍有旧的 HDR 设置（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR），可能导致游戏黑屏。该设置会被移除。{{next}}",
-          "hdrOldOnly": "当游戏页面上的检查清单全部为 ✓ 时，就会提供通过 gamescope 的 HDR。"
+          "hdrOldOnly": "当游戏页面上的检查清单全部为 ✓ 时，就会提供通过 gamescope 的 HDR。",
+          "modeSteam": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。启动选项将变为：{{args}}{{proton}}",
+          "modeHeroic": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Heroic 中的游戏参数将变为：{{args}}{{proton}}",
+          "modeLutris": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Lutris 中的参数将变为：{{args}}{{proton}}",
+          "modeVkd3d": " 在 Proton 下，DirectX 12 通过 vkd3d-proton 运行，因此前几次启动在构建着色器时可能更慢。"
+        },
+        "unlock": {
+          "rayTracing": "光线追踪",
+          "frameGen": "DLSS 帧生成"
         },
         "support": {
           "triggers": "此游戏支持 DualSense 的自适应扳机和触觉反馈。",
@@ -954,6 +964,8 @@
       "gamepadSet": "控制器以标准手柄（XInput）形式提供给此游戏。",
       "gamepadSteamInput": "此游戏未关闭 Steam Input，Steam 已经为它提供 Xbox 控制器，因此不需要标准手柄选项。",
       "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（GE-Proton11-7.2-DualSense 或更高）或普通的 GE-Proton。",
+      "modeSet": "以 {{api}}（{{flag}}）启动，因此可以使用{{feature}}。",
+      "modeOwn": "你自己的参数以 {{own}} 启动 {{game}}，因此保持不变。如需{{feature}}，请把 {{own}} 换成 {{flag}}。",
       "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。",
       "supportsHdr": "支持 HDR",
       "supportsHdrHint": "如果该游戏在 PC 上有 HDR 设置，请勾选：应用会显示 HDR 需要的条件，并在一切就绪时提供“开启 HDR”。",

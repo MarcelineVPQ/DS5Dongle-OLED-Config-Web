@@ -332,6 +332,7 @@
     "about": {
       "changes": "Mudanças do app",
       "firmware": "Mudanças no firmware",
+      "proton": "Mudanças no Proton",
       "guide": "Guia",
       "credits": "Créditos",
       "version": "Você está usando a versão {{version}}.",
@@ -443,7 +444,8 @@
           "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)",
           "hdr": "Ativar HDR para {{game}}",
           "hdrUpdate": "Passar o HDR de {{game}} para o gamescope",
-          "hdrRemoveOld": "Remover a configuração HDR antiga de {{game}}"
+          "hdrRemoveOld": "Remover a configuração HDR antiga de {{game}}",
+          "mode": "Iniciar {{game}} em {{api}} para poder usar {{feature}}"
         },
         "why": {
           "defaultSteam": "O Steam roda jogos de Windows hoje com {{current}}. É o nosso build que faz os gatilhos adaptáveis e a resposta tátil funcionarem {{device_por}}. Jogos com um Proton específico mantêm a própria configuração.",
@@ -466,7 +468,15 @@
           "hdrLutris": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR: as opções de Gamescope do Lutris para o jogo são ligadas, HDR incluído. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava.{{runner}}",
           "hdrNoProton": " Instale nosso Proton DualSense no cartão Proton para ter também os gatilhos adaptáveis e a resposta tátil com HDR.",
           "hdrOld": "{{game}} ainda tem a configuração HDR antiga (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), que pode deixar o jogo com a tela preta. Ela é removida. {{next}}",
-          "hdrOldOnly": "O HDR pelo gamescope é oferecido assim que a lista na página do jogo estiver toda com ✓."
+          "hdrOldOnly": "O HDR pelo gamescope é oferecido assim que a lista na página do jogo estiver toda com ✓.",
+          "modeSteam": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. As opções de inicialização ficam: {{args}}{{proton}}",
+          "modeHeroic": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos de jogo dele no Heroic ficam: {{args}}{{proton}}",
+          "modeLutris": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos dele no Lutris ficam: {{args}}{{proton}}",
+          "modeVkd3d": " No Proton, o DirectX 12 roda pelo vkd3d-proton, então as primeiras inicializações podem demorar mais enquanto os shaders são criados."
+        },
+        "unlock": {
+          "rayTracing": "o Ray Tracing",
+          "frameGen": "a Geração de Quadros DLSS"
         },
         "support": {
           "triggers": "Este jogo suporta os gatilhos adaptáveis e a resposta tátil do DualSense.",
@@ -960,6 +970,8 @@
       "gamepadSet": "O controle chega a este jogo como controle padrão (XInput).",
       "gamepadSteamInput": "O Steam Input não está desligado para este jogo, então a Steam já entrega a ele um controle de Xbox: a opção de controle padrão não é necessária.",
       "gamepadNoBuild": "Este jogo precisa da opção de controle padrão (PROTON_PREFER_SDL), mas {{runner}} a ignora e nenhum Proton que a respeite está instalado. Instale nosso Proton DualSense mais novo (GE-Proton11-7.2-DualSense ou posterior) ou um GE-Proton comum.",
+      "modeSet": "Inicia em {{api}} ({{flag}}), então {{feature}} está disponível.",
+      "modeOwn": "Seus próprios argumentos iniciam {{game}} com {{own}}, então eles ficam como estão. Para {{feature}}, troque {{own}} por {{flag}}.",
       "notDetectedHint": "Marque isto se o jogo não reage ao controle: o app então oferece passá-lo ao jogo como controle padrão (XInput).",
       "supportsHdr": "Compatível com HDR",
       "supportsHdrHint": "Marque se o jogo tem uma configuração de HDR no PC: o app mostra o que o HDR precisa e oferece Ativar HDR quando tudo estiver pronto.",

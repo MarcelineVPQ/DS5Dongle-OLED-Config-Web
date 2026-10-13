@@ -26,7 +26,8 @@ import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import { profileFields } from "./profileFields";
 import { RestartNotice, restartFor, useMsg, useRestartText } from "../pages/GamesPage";
-import type { GameAction, GameEntry, GameInfo, GamesReport } from "../games/types";
+import type { GameAction, GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
+import { API_NAME } from "../games/gameArgs";
 import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
@@ -510,6 +511,7 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
       {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
       {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
       {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
+      {game.mode && game.mode.state !== "needed" && <ModeNote game={game} mode={game.mode} />}
       {isHdr && (
         <div className="hdr-game">
           <h3>{t("desktop.library.hdrTitle")}</h3>
@@ -538,6 +540,14 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
       {note && <p className="dk-hint">{note}</p>}
     </section>
   );
+}
+
+// The game's graphics mode, when it's set or the player's own arguments pick another
+// (when it's needed, the fix above says it).
+function ModeNote({ game, mode }: { game: GameEntry; mode: ModeInfo }) {
+  const { t } = useTranslation();
+  const params = { game: game.title, api: API_NAME[mode.api], flag: mode.flag, own: mode.own ?? "", feature: t(`desktop.games.msg.unlock.${mode.unlocks}`) };
+  return mode.state === "set" ? <p className="dk-good">✓ {t("desktop.library.modeSet", params)}</p> : <p className="dk-hint">{t("desktop.library.modeOwn", params)}</p>;
 }
 
 // ---- Compatibility (Proton) ----

@@ -7,7 +7,7 @@
 // Tags:
 //   hdr:      the PC version has HDR output (Windows-only games: the Games
 //             page may move them to another Proton for it)
-import type { DualSenseSupport } from "./types";
+import type { DualSenseSupport, GraphicsApi, Store, Unlock } from "./types";
 
 type Tag = "hdr";
 const KNOWN: Array<[string, DualSenseSupport, ...Tag[]]> = [
@@ -63,3 +63,37 @@ export function dualSenseSupport(title: string): DualSenseSupport {
 
 // The game has HDR output on PC (our list; players can mark others on the game page).
 export const knownHdr = (title: string): boolean => !!TABLE.get(normalizeTitle(title))?.tags.includes("hdr");
+
+// ---- Graphics mode (DirectX 12 / Vulkan) ----
+// Games that start in another mode by default and only offer a feature in
+// DirectX 12 or Vulkan, with the game argument that starts them in it. Only
+// flags confirmed by a public source (cited per entry) or tested here.
+//   flag:    the game argument, exactly as the game takes it
+//   unlocks: what the player gets in that mode
+//   stores:  which store builds take the flag (absent: every build)
+// Not here: games that pick the mode in their own settings or config file
+// (Metro Exodus) or with a separate executable (Control's Control_DX12.exe).
+export interface GraphicsMode {
+  api: GraphicsApi;
+  flag: string;
+  unlocks: Unlock;
+  stores?: Store[];
+}
+const MODES: Array<[string, GraphicsMode]> = [
+  // Unreal Engine 4, DirectX 11 by default; Ray Tracing greys out with "The game
+  // needs to be started in DirectX12 mode". Tested 2026-10-13 (GOG via Heroic,
+  // GE-Proton, NVIDIA: Ray Tracing through vkd3d-proton). Steam discussion
+  // https://steamcommunity.com/app/1139900/discussions/0/3003297945136810853
+  ["Ghostrunner", { api: "dx12", flag: "-dx12", unlocks: "rayTracing" }],
+  // Same engine and default: Intel's support article 000100401 ("This game
+  // launches by default in DirectX 11 mode, however ray tracing requires
+  // DirectX 12" ... "Key in -dx12 in Launch Options").
+  ["Ghostrunner 2", { api: "dx12", flag: "-dx12", unlocks: "rayTracing" }],
+];
+const MODE_TABLE = new Map(MODES.map(([title, mode]) => [normalizeTitle(title), mode]));
+
+// The graphics mode a game needs for a feature, for this store's build (null: none known).
+export function graphicsMode(title: string, store: Store): GraphicsMode | null {
+  const mode = MODE_TABLE.get(normalizeTitle(title));
+  return mode && (!mode.stores || mode.stores.includes(store)) ? mode : null;
+}

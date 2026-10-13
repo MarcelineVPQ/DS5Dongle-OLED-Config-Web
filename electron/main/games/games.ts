@@ -8,7 +8,8 @@ import { errorText } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDocument } from "yaml";
-import { dualSenseSupport, knownHdr } from "../../../src/desktop/games/knownGames";
+import { dualSenseSupport, graphicsMode, knownHdr, type GraphicsMode } from "../../../src/desktop/games/knownGames";
+import { API_NAME, modeInfo, withArg } from "../../../src/desktop/games/gameArgs";
 import {
   HEROIC_GAMESCOPE_OPTIONS,
   LUTRIS_GAMESCOPE_FLAGS,
@@ -35,6 +36,7 @@ import type {
   HdrSystem,
   LauncherId,
   LauncherInfo,
+  ModeInfo,
   Msg,
   RestartList,
   SystemInfo,
@@ -136,6 +138,16 @@ const editLaunchOptions = (file: string, appid: string, change: (opts: string) =
   },
 });
 
+// One Lutris game's arguments (game.args), changed from what's in the file when it's written.
+const editLutrisArgs = (file: string, change: (args: string) => string): Edit => ({
+  file,
+  format: "yaml",
+  mutate: (doc) => {
+    const args = doc.getIn(["game", "args"]);
+    doc.setIn(["game", "args"], change(typeof args === "string" ? args : ""));
+  },
+});
+
 // ---- HDR for HDR games (src/desktop/games/hdrSetup.ts) ----
 // The game runs inside gamescope with HDR on; the fix also moves it to our
 // DualSense Proton (HDR plus triggers and haptics), and removes the old
@@ -206,7 +218,7 @@ export function gamepadPlan(o: { envSet: boolean; honours: boolean; target: stri
 }
 
 // A game entry's optional states (only set for the games they apply to).
-const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined) => ({ ...(gamepad ? { gamepad } : {}), ...(hdr ? { hdr } : {}) });
+const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined, mode?: ModeInfo) => ({ ...(gamepad ? { gamepad } : {}), ...(hdr ? { hdr } : {}), ...(mode ? { mode } : {}) });
 
 // Fix ids are built from what they point at (an install root, a file path),
 // never a list position, so an id from the review screen can only resolve to
@@ -221,6 +233,16 @@ const orMsg = (value: string | null | undefined, fallbackKey: string): string | 
 const runnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.gamepadRunner", { current, proton: to }) : "");
 // The HDR fix's sentence about our Proton: it moves the game there, or says where to get it.
 const hdrRunnerSwitch = (to: string | null, oursThere: boolean): string | Msg => (to ? msg("why.hdrRunner", { proton: to }) : oursThere ? "" : msg("why.hdrNoProton"));
+
+// ---- Graphics mode (knownGames.ts MODES) ----
+// The game's own flag added to its arguments (gameArgs.ts, the one writer):
+// works the same on every platform. Under Proton (Linux) DirectX 12 runs
+// through vkd3d-proton, which builds shaders on the first starts.
+const modeTexts = (game: string, mode: GraphicsMode, whyKey: string, line: string): { label: Msg; why: Msg } => {
+  const params = { game, api: API_NAME[mode.api], feature: msg(`unlock.${mode.unlocks}`), flag: mode.flag };
+  const proton = process.platform === "linux" && mode.api === "dx12" ? msg("why.modeVkd3d") : "";
+  return { label: msg("label.mode", params), why: msg(whyKey, { ...params, args: withArg(line, mode.flag), proton }) };
+};
 
 // Newest of our DualSense builds installed in any launcher.
 export function newestLocalBuild(names: string[]): string | null {
@@ -251,6 +273,26 @@ export function scan(deps: ScanDeps): Scan {
     const f: Fix = { id, kind, launcher, label, why, files: [...new Set(edits.flatMap((e) => (e.format === "disable" ? [e.file, `${e.file}.disabled`] : [e.file])))], recommended };
     add({ fix: f, edits, post });
     return f;
+  };
+  // A game's graphics mode from its arguments line, and the fix that adds the
+  // flag when it's needed (`edit` writes the line through withArg).
+  const modeFor = (
+    gm: GraphicsMode | null,
+    line: string,
+    game: string,
+    id: string,
+    launcher: LauncherId,
+    whyKey: string,
+    edit: (change: (line: string) => string) => Edit,
+    out: Fix[],
+  ): ModeInfo | undefined => {
+    if (!gm) return undefined;
+    const mode = modeInfo(gm, line);
+    if (mode.state === "needed") {
+      const texts = modeTexts(game, gm, whyKey, line);
+      out.push(fix(id, "graphics-mode", launcher, texts.label, texts.why, true, [edit((l) => withArg(l, gm.flag))]));
+    }
+    return mode;
   };
 
   // ---- Steam ----
@@ -414,6 +456,11 @@ export function scan(deps: ScanDeps): Scan {
           gfixes.push(fix(`${prefix}:hdr:${g.appid}`, "hdr-on", "steam", texts.label, texts.why, true, edits));
         }
       }
+      const localPath = install.localConfigPath;
+      const mode =
+        playable && local && localPath
+          ? modeFor(graphicsMode(g.name, "steam"), opts, g.name, `${prefix}:mode:${g.appid}`, "steam", "why.modeSteam", (change) => editLaunchOptions(localPath, g.appid, change), gfixes)
+          : undefined;
       games.push({
         key,
         launcher: "steam",
@@ -426,7 +473,7 @@ export function scan(deps: ScanDeps): Scan {
         steamInput: input,
         envFlags,
         support,
-        ...gameStates(gamepad, hdr),
+        ...gameStates(gamepad, hdr, mode),
         fixes: playable ? gfixes : [],
         ...(kind && kind !== "game" ? { kind } : {}),
       });
@@ -544,6 +591,18 @@ export function scan(deps: ScanDeps): Scan {
           );
         }
       }
+      const mode = hasConfig
+        ? modeFor(
+            graphicsMode(g.title, g.store),
+            g.args,
+            g.title,
+            `${prefix}:mode:${g.appName}`,
+            "heroic",
+            "why.modeHeroic",
+            (change) => editGame((cfg) => (cfg.launcherArgs = change(typeof cfg.launcherArgs === "string" ? cfg.launcherArgs : ""))),
+            gfixes,
+          )
+        : undefined;
       if (nativeSupport(support) && envFlags.length && hasConfig) {
         gfixes.push(
           fix(`${prefix}:env:${g.appName}`, "remove-env", "heroic", msg("label.envHeroic", { vars: envFlags.join(", "), game: g.title }), msg("why.envHeroic", { vars: envFlags.join(", ") }), true, [
@@ -565,7 +624,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours && !runnerMissing,
         envFlags,
         support,
-        ...gameStates(gamepad, hdr),
+        ...gameStates(gamepad, hdr, mode),
         fixes: gfixes,
       });
     }
@@ -679,6 +738,7 @@ export function scan(deps: ScanDeps): Scan {
           gfixes.push(fix(`${prefix}:hdr:${g.configId}`, "hdr-on", "lutris", texts.label, texts.why, true, edits));
         }
       }
+      const mode = modeFor(graphicsMode(g.name, "lutris"), g.args, g.name, `${prefix}:mode:${g.configId}`, "lutris", "why.modeLutris", (change) => editLutrisArgs(g.configPath, change), gfixes);
       games.push({
         key,
         launcher: "lutris",
@@ -690,7 +750,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours,
         envFlags: [],
         support,
-        ...gameStates(gamepad, hdr),
+        ...gameStates(gamepad, hdr, mode),
         fixes: gfixes,
       });
     }

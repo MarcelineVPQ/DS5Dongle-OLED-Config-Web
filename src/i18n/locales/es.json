@@ -332,6 +332,7 @@
     "about": {
       "changes": "Cambios de la app",
       "firmware": "Cambios del firmware",
+      "proton": "Cambios de Proton",
       "guide": "Guía",
       "credits": "Créditos",
       "version": "Usas la versión {{version}}.",
@@ -443,7 +444,8 @@
           "gamepad": "Pasar el mando a {{game}} como mando estándar (XInput)",
           "hdr": "Activar HDR para {{game}}",
           "hdrUpdate": "Pasar el HDR de {{game}} a gamescope",
-          "hdrRemoveOld": "Quitar el ajuste HDR antiguo de {{game}}"
+          "hdrRemoveOld": "Quitar el ajuste HDR antiguo de {{game}}",
+          "mode": "Iniciar {{game}} en {{api}} para poder usar {{feature}}"
         },
         "why": {
           "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la retroalimentación háptica a través {{device_de}}. Los juegos con un Proton concreto mantienen su ajuste.",
@@ -466,7 +468,15 @@
           "hdrLutris": "{{game}} es compatible con HDR. Se ejecutará dentro de gamescope (el compositor de Valve), a pantalla completa en {{screen}} ({{mode}}), y así tendrá HDR: se activan las opciones de Gamescope de Lutris para el juego, HDR incluido. Activa el HDR en los ajustes del propio juego. Si el juego falla, Deshacer lo deja como estaba.{{runner}}",
           "hdrNoProton": " Instala nuestro Proton DualSense en la tarjeta Proton para tener también los gatillos adaptativos y la retroalimentación háptica con HDR.",
           "hdrOld": "{{game}} aún tiene el ajuste HDR antiguo (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), que puede dejar el juego con la pantalla en negro. Se quita. {{next}}",
-          "hdrOldOnly": "El HDR con gamescope se ofrece en cuanto la lista de la página del juego esté toda en ✓."
+          "hdrOldOnly": "El HDR con gamescope se ofrece en cuanto la lista de la página del juego esté toda en ✓.",
+          "modeSteam": "{{game}} se inicia por defecto en otro modo gráfico y solo ofrece {{feature}} en {{api}}. El argumento de juego {{flag}} lo inicia en {{api}}; Deshacer lo quita de nuevo. Las opciones de lanzamiento quedan así: {{args}}{{proton}}",
+          "modeHeroic": "{{game}} se inicia por defecto en otro modo gráfico y solo ofrece {{feature}} en {{api}}. El argumento de juego {{flag}} lo inicia en {{api}}; Deshacer lo quita de nuevo. Sus argumentos de juego en Heroic quedan así: {{args}}{{proton}}",
+          "modeLutris": "{{game}} se inicia por defecto en otro modo gráfico y solo ofrece {{feature}} en {{api}}. El argumento de juego {{flag}} lo inicia en {{api}}; Deshacer lo quita de nuevo. Sus argumentos en Lutris quedan así: {{args}}{{proton}}",
+          "modeVkd3d": " Con Proton, DirectX 12 funciona a través de vkd3d-proton, así que los primeros inicios pueden tardar más mientras se crean los shaders."
+        },
+        "unlock": {
+          "rayTracing": "el trazado de rayos",
+          "frameGen": "la generación de fotogramas DLSS"
         },
         "support": {
           "triggers": "Este juego admite los gatillos adaptativos y la retroalimentación háptica del DualSense.",
@@ -960,6 +970,8 @@
       "gamepadSet": "El mando llega a este juego como mando estándar (XInput).",
       "gamepadSteamInput": "Steam Input no está desactivado para este juego, así que Steam ya le da un mando de Xbox: la opción de mando estándar no hace falta.",
       "gamepadNoBuild": "Este juego necesita la opción de mando estándar (PROTON_PREFER_SDL), pero {{runner}} la ignora y no hay instalado ningún Proton que la respete. Instala nuestro Proton DualSense más reciente (GE-Proton11-7.2-DualSense o posterior) o un GE-Proton normal.",
+      "modeSet": "Se inicia en {{api}} ({{flag}}), así que {{feature}} está disponible.",
+      "modeOwn": "Tus propios argumentos inician {{game}} con {{own}}, así que se quedan como están. Para {{feature}}, cambia {{own}} por {{flag}}.",
       "notDetectedHint": "Marca esto si el juego no reacciona al mando: la aplicación ofrecerá pasárselo al juego como mando estándar (XInput).",
       "supportsHdr": "Compatible con HDR",
       "supportsHdrHint": "Márcalo si el juego tiene un ajuste HDR en PC: la app muestra lo que necesita el HDR y ofrece Activar HDR cuando todo esté listo.",

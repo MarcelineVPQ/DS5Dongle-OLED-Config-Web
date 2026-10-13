@@ -332,6 +332,7 @@
     "about": {
       "changes": "App-Änderungen",
       "firmware": "Firmware-Änderungen",
+      "proton": "Proton-Änderungen",
       "guide": "Anleitung",
       "credits": "Mitwirkende",
       "version": "Du nutzt Version {{version}}.",
@@ -443,7 +444,8 @@
           "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben",
           "hdr": "HDR für {{game}} einschalten",
           "hdrUpdate": "HDR von {{game}} auf gamescope umstellen",
-          "hdrRemoveOld": "Alte HDR-Einstellung von {{game}} entfernen"
+          "hdrRemoveOld": "Alte HDR-Einstellung von {{game}} entfernen",
+          "mode": "{{game}} in {{api}} starten, damit {{feature}} verfügbar ist"
         },
         "why": {
           "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über {{device_akk}} zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
@@ -466,7 +468,15 @@
           "hdrLutris": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Lutris’ eigene Gamescope-Optionen für das Spiel werden eingeschaltet, HDR inklusive. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
           "hdrNoProton": " Installiere unser DualSense-Proton auf der Proton-Karte, um auch Adaptive Trigger und Haptisches Feedback mit HDR zu bekommen.",
           "hdrOld": "{{game}} hat noch die alte HDR-Einstellung (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), die das Spiel bei schwarzem Bild hängen lassen kann. Sie wird entfernt. {{next}}",
-          "hdrOldOnly": "HDR über gamescope wird angeboten, sobald die Checkliste auf der Seite des Spiels überall ✓ zeigt."
+          "hdrOldOnly": "HDR über gamescope wird angeboten, sobald die Checkliste auf der Seite des Spiels überall ✓ zeigt.",
+          "modeSteam": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Die Startoptionen werden zu: {{args}}{{proton}}",
+          "modeHeroic": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Spielargumente in Heroic werden zu: {{args}}{{proton}}",
+          "modeLutris": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Argumente in Lutris werden zu: {{args}}{{proton}}",
+          "modeVkd3d": " Unter Proton läuft DirectX 12 über vkd3d-proton, daher können die ersten Starts länger dauern, während Shader erstellt werden."
+        },
+        "unlock": {
+          "rayTracing": "Raytracing",
+          "frameGen": "DLSS Frame Generation"
         },
         "support": {
           "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und das haptische Feedback des DualSense.",
@@ -960,6 +970,8 @@
       "gamepadSet": "Der Controller kommt in diesem Spiel als Standard-Gamepad (XInput) an.",
       "gamepadSteamInput": "Steam Input ist für dieses Spiel nicht ausgeschaltet, deshalb gibt Steam ihm schon einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht.",
       "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (GE-Proton11-7.2-DualSense oder neuer) oder ein normales GE-Proton.",
+      "modeSet": "Startet in {{api}} ({{flag}}), damit ist {{feature}} verfügbar.",
+      "modeOwn": "Deine eigenen Argumente starten {{game}} mit {{own}}, daher bleiben sie, wie sie sind. Für {{feature}} ersetze {{own}} durch {{flag}}.",
       "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben.",
       "supportsHdr": "Unterstützt HDR",
       "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App zeigt dann, was HDR braucht, und bietet „HDR einschalten“ an, sobald alles bereit ist.",
