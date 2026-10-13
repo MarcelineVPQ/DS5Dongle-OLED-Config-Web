@@ -3,6 +3,10 @@
 # the one you're using: a dev build run with its own settings
 # (tmp/check/userdata), the simulated dongle (your real one stays with your
 # copy) and Games allowed, on DevTools port 9334. Stopped again at the end.
+# It runs on a private D-Bus session (dbus-run-session: no tray icon on your
+# desktop) and in a bubblewrap sandbox with a fresh /dev (bwrap --dev: no
+# /dev/bus/usb or /dev/hidraw*, so it can never reach a real dongle or
+# controller; the GPU nodes are passed through).
 #
 #   tools/check_ui.sh [check_layout options, e.g. --mode contrast --langs en]
 #   DS5_CHECK_KEEP=1 tools/check_ui.sh   leave the checker copy running
@@ -26,7 +30,11 @@ stop
 echo "== Building (dev tools on)"
 DS5_DEV_TOOLS=1 npx electron-vite build > "$STATE/build.log" 2>&1
 echo "== Starting the checker copy (port $PORT)"
-setsid "$ELECTRON" . --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
+SANDBOX=(bwrap --dev-bind / / --dev /dev)
+for node in /dev/dri /dev/nvidia*; do
+  if [ -e "$node" ]; then SANDBOX+=(--dev-bind "$node" "$node"); fi
+done
+setsid dbus-run-session -- "${SANDBOX[@]}" "$ELECTRON" . --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
 for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && break; sleep 1; done
 
 # Simulated dongle + Games allowed + no first-run banners, then reload.
