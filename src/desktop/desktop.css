@@ -4169,6 +4169,22 @@ html[data-cards-translucent] .dash-card {
   display: block;
 }
 
+/* Controller info: Sony's official firmware status under the version. */
+.dk-fw-note {
+  display: block;
+  font-size: var(--dk-small);
+}
+.dk-kv > .dk-fw-howto {
+  grid-column: 1 / -1;
+}
+.dk-fw-steps {
+  margin: 0;
+  padding-left: 16px;
+}
+.dk-fw-steps a {
+  color: var(--dk-sel-text);
+}
+
 /* Focus moved here after picking a page in the rail (DesktopApp): no ring for
    a pointer pick; keyboard users still see :focus-visible. */
 main.dk-body:focus:not(:focus-visible),

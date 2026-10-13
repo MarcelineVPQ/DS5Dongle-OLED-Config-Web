@@ -1157,7 +1157,15 @@
       "playedOnly": "游玩时长：{{value}}。",
       "noCounters": "此手柄没有发送使用统计。",
       "privacy": "由手柄自身记录。只读：不会更改任何内容，也从不把序列号读入应用。",
-      "refresh": "刷新"
+      "refresh": "刷新",
+      "officialCurrent": "已是最新",
+      "officialNewer": "有更新的官方固件 {{version}}",
+      "howToUpdate": "如何更新",
+      "howToPc": "用 USB-C 数据线将手柄连接到 Windows 电脑，然后用 Sony 的 PlayStation Accessories 应用（原“DualSense 无线控制器固件更新程序”）更新。",
+      "sonyPage": "Sony 页面",
+      "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设置 → 配件 → 控制器。",
+      "howToCable": "更新无法通过接收器进行。更新后如手柄未重新连接，请再次将其与接收器配对。",
+      "windowsOnly": "Sony 的更新程序仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。"
     },
     "stickTest": {
       "circleTitle": "圆度测试",

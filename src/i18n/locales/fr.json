@@ -1163,7 +1163,15 @@
       "playedOnly": "Temps de jeu : {{value}}.",
       "noCounters": "Cette manette n'a pas envoyé de compteurs.",
       "privacy": "Enregistré par la manette elle-même. Lecture seule : rien n'est modifié et son numéro de série n'est jamais lu par l'app.",
-      "refresh": "Actualiser"
+      "refresh": "Actualiser",
+      "officialCurrent": "À jour",
+      "officialNewer": "Firmware officiel plus récent disponible : {{version}}",
+      "howToUpdate": "Comment mettre à jour",
+      "howToPc": "Branchez la manette à un PC Windows avec un câble USB-C et mettez-la à jour avec l'application PlayStation Accessories de Sony (anciennement « Outil de mise à jour du firmware pour la manette sans fil DualSense »).",
+      "sonyPage": "Page de Sony",
+      "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manettes.",
+      "howToCable": "La mise à jour ne peut pas passer par le dongle. Ensuite, associez de nouveau la manette au dongle si elle ne se reconnecte pas.",
+      "windowsOnly": "L'outil de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5."
     },
     "stickTest": {
       "circleTitle": "Test de circularité",

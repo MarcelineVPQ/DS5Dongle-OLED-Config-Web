@@ -480,11 +480,13 @@ describe("controller health & info (protocol 1.12)", () => {
     expect(ds.telemetry?.activeTime).toBe(412345);
     expect(ds.telemetry?.buttons.mute).toBeGreaterThan(0);
     expect(ds.tooOld).toBe(false);
+    expect(ds.edge).toBe(false);
     const edgeDongle = new FakeDongle({ protoMinor: 12 });
     edgeDongle.edge = true;
     const edge = await loadControllerInfo(new Ds5BridgeClient(edgeDongle));
     expect(edge.telemetry?.buttons.paddleRight).toBeGreaterThan(0);
     expect(edge.telemetry?.sticks[1].roundTripsX).toBe(120000);
+    expect(edge.edge).toBe(true);
   });
 
   it("says when the controller's firmware is too old, keeping the play time", async () => {

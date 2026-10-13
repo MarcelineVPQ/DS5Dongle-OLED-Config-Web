@@ -1157,7 +1157,15 @@
       "playedOnly": "プレイ時間：{{value}}。",
       "noCounters": "このコントローラーは累計カウンターを送りませんでした。",
       "privacy": "コントローラー自身が記録した値です。読み取りのみ：何も変更せず、シリアル番号はアプリに読み込みません。",
-      "refresh": "更新"
+      "refresh": "更新",
+      "officialCurrent": "最新です",
+      "officialNewer": "新しい公式ファームウェア {{version}} があります",
+      "howToUpdate": "アップデートの方法",
+      "howToPc": "USB Type-Cケーブルでコントローラーを Windows PC に接続し、Sony の PlayStation Accessories アプリ（旧「DualSense ワイヤレスコントローラー ファームウェアアップデーター」）でアップデートします。",
+      "sonyPage": "Sony のページ",
+      "howToPs5": "または PS5 で：USB ケーブルで接続し、設定 → アクセサリー → コントローラー。",
+      "howToCable": "ドングル経由ではアップデートできません。アップデート後、再接続しない場合はコントローラーをドングルにもう一度ペアリングしてください。",
+      "windowsOnly": "Sony のアップデーターは Windows 専用です。Linux と macOS では Windows PC か PS5 を使ってください。"
     },
     "stickTest": {
       "circleTitle": "真円度テスト",

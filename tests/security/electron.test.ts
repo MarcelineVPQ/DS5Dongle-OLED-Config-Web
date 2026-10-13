@@ -1,10 +1,12 @@
 // Security regression tests for the desktop app. The allowlists are tested
 // directly; the window/session baseline is checked in the source so a change
 // to it has to come with a change here (and a SECURITY_AUDIT.md note).
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
 import { isAllowedExternalUrl } from "../../electron/main/urls";
+import { OFFICIAL_FIRMWARE_HOSTS, isAllowedOfficialFirmwareUrl } from "../../electron/main/officialFirmware";
+import { OFFICIAL_FIRMWARE_URL } from "../../src/protocol/officialFirmware";
 
 const mainSource = readFileSync(new URL("../../electron/main/index.ts", import.meta.url), "utf8");
 const preloadSource = readFileSync(new URL("../../electron/preload/index.ts", import.meta.url), "utf8");
@@ -31,6 +33,8 @@ describe("external URL allowlist", () => {
     expect(isAllowedExternalUrl("https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition")).toBe(true);
     expect(isAllowedExternalUrl("https://marcelinevpq.github.io/DS5Dongle-OLED-Config-Web/")).toBe(true);
     expect(isAllowedExternalUrl("https://42pixelstudios.com/")).toBe(true);
+    // Sony's PlayStation Accessories page (how to update the controller's firmware).
+    expect(isAllowedExternalUrl("https://controller.dl.playstation.net/controller/lang/en/2100004.html")).toBe(true);
   });
 
   it("refuses other schemes, hosts, look-alikes and embedded credentials", () => {
@@ -45,6 +49,32 @@ describe("external URL allowlist", () => {
     ]) {
       expect(isAllowedExternalUrl(url), url).toBe(false);
     }
+  });
+});
+
+describe("outbound requests from the main process", () => {
+  it("Sony's firmware versions: one host, HTTPS, the fixed URL", () => {
+    expect([...OFFICIAL_FIRMWARE_HOSTS]).toEqual(["fwupdater.dl.playstation.net"]);
+    expect(isAllowedOfficialFirmwareUrl(OFFICIAL_FIRMWARE_URL)).toBe(true);
+    for (const url of [
+      "http://fwupdater.dl.playstation.net/fwupdater/info.json",
+      "https://dl.playstation.net/",
+      "https://fwupdater.dl.playstation.net.evil.example/",
+      "https://a:b@fwupdater.dl.playstation.net/",
+    ]) {
+      expect(isAllowedOfficialFirmwareUrl(url), url).toBe(false);
+    }
+  });
+
+  it("only the reviewed modules call net.fetch (a new caller needs a SECURITY_AUDIT.md entry)", () => {
+    const dir = new URL("../../electron/main/", import.meta.url);
+    const callers = readdirSync(dir, { recursive: true, encoding: "utf8" })
+      .filter((f) => f.endsWith(".ts") && readFileSync(new URL(f, dir), "utf8").includes("net.fetch("))
+      .sort();
+    expect(callers).toEqual(["download.ts", "index.ts", "updater.ts"]);
+    // index.ts: the local ds5-art:// files, and Sony's info.json through OfficialFirmwareSource.
+    expect([...mainSource.matchAll(/net\.fetch\(([^,)]*)/g)].map((m) => m[1])).toEqual(["pathToFileURL(file", "url"]);
+    expect(mainSource).toMatch(/new OfficialFirmwareSource\(\s*\(url, init\) => net\.fetch\(url, init\)/);
   });
 });
 

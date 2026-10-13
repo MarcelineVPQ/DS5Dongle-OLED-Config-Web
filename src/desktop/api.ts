@@ -2,6 +2,7 @@ import type { ApplyResult, GamesReport, LauncherId, Msg } from "./games/types";
 import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
+import type { OfficialFirmware } from "../protocol/officialFirmware";
 
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
 // build, so `isDesktop()` is the switch between the two targets. Every call
@@ -83,6 +84,14 @@ export interface FirmwareLookup {
   problem: "unpublished" | "offline" | null;
 }
 
+// Sony's official controller firmware (check only): the latest version per
+// firmware line, or why there's none ("disabled": automatic checks are off
+// and the user hasn't asked; "unavailable": offline or an unexpected answer).
+export interface OfficialFirmwareLookup {
+  latest: OfficialFirmware | null;
+  problem: "disabled" | "unavailable" | null;
+}
+
 export interface GameBackup {
   id: string;
   created: string;
@@ -124,6 +133,9 @@ export interface DesktopApi {
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
   latestFirmware(): Promise<FirmwareLookup>;
+  // Sony's latest DualSense / Edge firmware versions (fetched by the main
+  // process; `asked` = the user pressed Refresh, allowed with automatic checks off).
+  officialControllerFirmware(asked: boolean): Promise<OfficialFirmwareLookup>;
   // "Match desktop" theme: the desktop's colors, and changes to them.
   getDesktopPalette(): Promise<DesktopPalette | null>;
   // The firmware repo's CHANGELOG.md (fetched by the main process).
@@ -180,6 +192,7 @@ export const IPC = {
   restartToUpdate: "desktop:restart-to-update",
   updateState: "desktop:update-state",
   latestFirmware: "desktop:latest-firmware",
+  officialControllerFirmware: "desktop:official-controller-firmware",
   downloadFirmware: "desktop:download-firmware",
   getDesktopPalette: "desktop:get-desktop-palette",
   firmwareChangelog: "desktop:firmware-changelog",

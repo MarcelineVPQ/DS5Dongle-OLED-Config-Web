@@ -1163,7 +1163,15 @@
       "playedOnly": "Jugado: {{value}}.",
       "noCounters": "Este mando no envió contadores.",
       "privacy": "Guardado por el propio mando. Solo lectura: no se cambia nada y su número de serie nunca se lee en la app.",
-      "refresh": "Actualizar"
+      "refresh": "Actualizar",
+      "officialCurrent": "Actualizado",
+      "officialNewer": "Hay un firmware oficial más reciente: {{version}}",
+      "howToUpdate": "Cómo actualizar",
+      "howToPc": "Conecta el mando a un PC con Windows con un cable USB-C y actualízalo con la app PlayStation Accessories de Sony (antes «Actualizador de firmware para el mando inalámbrico DualSense»).",
+      "sonyPage": "Página de Sony",
+      "howToPs5": "O en una PS5: conéctalo con un cable USB y ve a Ajustes → Accesorios → Mandos.",
+      "howToCable": "La actualización no puede hacerse a través del dongle. Después, vuelve a emparejar el mando con el dongle si no se reconecta.",
+      "windowsOnly": "El actualizador de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5."
     },
     "stickTest": {
       "circleTitle": "Prueba de circularidad",

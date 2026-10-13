@@ -42,7 +42,9 @@ export interface SimulatedDongleOptions {
   audioCountersLegacy?: "none" | "cut";
   version?: string;
   // Protocol 1.12 controller info: the controller firmware's update version
-  // (the counters need > 1106, Edge > 374), and whether it answers test commands.
+  // (the counters need > 1106, Edge > 374; by default a little older than
+  // Sony's latest, 6.20 / 2.15, so the card shows "newer available" in dev),
+  // and whether it answers test commands.
   controllerUpdateVersion?: number;
   controllerAnswers?: boolean;
 }
@@ -467,7 +469,7 @@ export class SimulatedDongle implements Ds5Transport {
       new DataView(out.buffer).setUint32(10, 0x00000a1b, true); // BT patch
       return out;
     }
-    if (selector === CTRL_SEL.firmware) return simFirmware(this.opts.controllerUpdateVersion ?? (this.edge ? 0x0215 : 0x0630));
+    if (selector === CTRL_SEL.firmware) return simFirmware(this.opts.controllerUpdateVersion ?? (this.edge ? 0x0215 : 0x0620));
     const p = selector - CTRL_SEL.page0;
     if (p < 0 || p >= CTRL_MAX_PAGES) return new Uint8Array(0);
     const out = new Uint8Array(3 + CTRL_PAGE_BYTES);

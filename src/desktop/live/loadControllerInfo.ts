@@ -4,6 +4,8 @@ import { CTRL_TEST, type ControllerFirmware, type Telemetry, decodeActiveTimeOnl
 
 export interface ControllerInfoData {
   firmware: ControllerFirmware | null;
+  // The model as the dongle saw it (null: it didn't say).
+  edge: boolean | null;
   btPatch: number | null;
   millivolts: number | null;
   telemetry: Telemetry | null;
@@ -24,6 +26,7 @@ export async function loadControllerInfo(client: Ds5BridgeClient): Promise<Contr
   const full = !!firmware && telemetrySupported(firmware, edge);
   return {
     firmware,
+    edge: header?.model ? header.model === "edge" : null,
     btPatch: header?.btPatch ?? null,
     millivolts: voltage ? decodeBatteryMillivolts(voltage) : null,
     telemetry: full && block ? decodeTelemetry(block, edge) : null,

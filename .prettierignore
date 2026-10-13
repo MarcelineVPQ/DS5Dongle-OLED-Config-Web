@@ -9,3 +9,5 @@ bun.lock
 *.md
 .claude/
 tmp/
+# Sony's info.json kept byte for byte
+tests/fixtures/sony/

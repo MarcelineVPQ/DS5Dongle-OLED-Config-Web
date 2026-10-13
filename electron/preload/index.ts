@@ -34,6 +34,7 @@ const api: DesktopApi = {
     return () => ipcRenderer.removeListener(IPC.updateState, handler);
   },
   latestFirmware: () => ipcRenderer.invoke(IPC.latestFirmware),
+  officialControllerFirmware: (asked) => ipcRenderer.invoke(IPC.officialControllerFirmware, asked),
   downloadFirmware: () => ipcRenderer.invoke(IPC.downloadFirmware),
   getDesktopPalette: () => ipcRenderer.invoke(IPC.getDesktopPalette),
   firmwareChangelog: () => ipcRenderer.invoke(IPC.firmwareChangelog),
