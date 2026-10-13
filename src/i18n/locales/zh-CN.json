@@ -399,6 +399,15 @@
       "hidrawNo": "游戏无法访问控制器（缺少 udev 规则）",
       "envOk": "没有强制使用 Xbox (SDL) 模式",
       "envHint": "这些变量设置在启动器之外，本应用不会修改它们。请从上面列出的文件中删除，然后注销并重新登录。",
+      "hdr": "HDR",
+      "hdrOn": "已在 {{outputs}} 上开启",
+      "hdrOff": {
+        "kde": "没有屏幕开启 HDR",
+        "other-desktop": "此桌面未检查（仅限 KDE Plasma）",
+        "x11": "需要 Wayland 会话",
+        "failed": "无法检查（kscreen-doctor）",
+        "unchecked": "未检查"
+      },
       "systemRule": "系统级音频规则强制使用 pro-audio。它位于你的主目录之外，本应用不会修改。",
       "changesTitle": "建议的更改",
       "allGood": "一切就绪，无需更改。",
@@ -427,7 +436,8 @@
           "envHeroic": "从 {{game}} 的环境变量中删除 {{vars}}",
           "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
           "audioProfile": "将控制器音频切换到“{{profile}}”配置",
-          "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}"
+          "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}",
+          "hdr": "为 {{game}} 开启 HDR"
         },
         "why": {
           "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过 {{device}} 工作。已单独指定 Proton 的游戏保持原设置。",
@@ -442,7 +452,10 @@
           "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。",
           "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
-          "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。"
+          "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
+          "hdr": "{{game}} 支持 HDR。PROTON_ENABLE_WAYLAND=1 和 PROTON_ENABLE_HDR=1 让 Proton 以原生 Wayland 窗口运行它，这样才能使用 HDR。请在你的 HDR 屏幕（{{outputs}}）上玩。如果游戏出现异常，撤销即可恢复原样。{{runner}}",
+          "hdrSteam": "{{game}} 支持 HDR。PROTON_ENABLE_WAYLAND=1 和 PROTON_ENABLE_HDR=1 让 Proton 以原生 Wayland 窗口运行它，这样才能使用 HDR。请在你的 HDR 屏幕（{{outputs}}）上玩。在此模式下 Steam 覆盖界面可能不会显示。如果游戏出现异常，撤销即可恢复原样。启动选项将变为：{{options}}{{runner}}",
+          "hdrRunner": "{{current}} 不支持此功能，因此游戏也会改用 {{proton}}。"
         },
         "support": {
           "triggers": "此游戏支持 DualSense 的自适应扳机和触觉反馈。",
@@ -932,8 +945,20 @@
       "lockVolume": "锁定音量",
       "gamepadSet": "控制器以标准手柄（XInput）形式提供给此游戏。",
       "gamepadSteamInput": "此游戏未关闭 Steam Input，Steam 已经为它提供 Xbox 控制器，因此不需要标准手柄选项。",
-      "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（-DualSense-2 或更高）或普通的 GE-Proton。",
-      "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。"
+      "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（GE-Proton11-7.2-DualSense 或更高）或普通的 GE-Proton。",
+      "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。",
+      "hdrSet": "此游戏已开启 HDR：它以原生 Wayland 窗口运行。",
+      "hdrNoScreen": {
+        "kde": "目前没有屏幕开启 HDR，因此不提供“开启 HDR”。请在 KDE 的显示设置中为屏幕开启 HDR，然后重新扫描。",
+        "other-desktop": "“开启 HDR”仅在 KDE Plasma（Wayland）上提供：应用无法检查此桌面的 HDR 设置。",
+        "x11": "“开启 HDR”需要 Wayland 会话：此桌面运行在 X11 上。",
+        "failed": "应用无法读取屏幕设置（kscreen-doctor），因此不提供“开启 HDR”。",
+        "unchecked": "未检查屏幕，因此不提供“开启 HDR”。"
+      },
+      "hdrNoBuild": "HDR 需要 GE-Proton 10 或更高版本（包括我们的 DualSense Proton），但 {{runner}} 不支持，且未安装任何支持的版本。",
+      "hdrPickRunner": "此游戏使用 Steam 的默认 Proton {{runner}}，它不支持 HDR。请在 Steam 的 属性 → 兼容性 中选择 GE-Proton 10 或更高版本（或我们的 DualSense Proton），然后重新扫描。",
+      "supportsHdr": "支持 HDR",
+      "supportsHdrHint": "如果游戏在 PC 上有 HDR 设置，请勾选此项：当有屏幕开启 HDR 时，应用会提供为它开启 HDR。"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",

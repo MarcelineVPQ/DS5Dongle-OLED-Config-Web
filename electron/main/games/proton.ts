@@ -65,16 +65,34 @@ export function protonBuilds(dir: string): string[] {
   }
 }
 
+// ---- What a build's name says ----
+// Our builds are GE-Proton<major>-<minor>-DualSense; a rebuild of the same GE
+// version adds .N to the minor (GE-Proton11-7.2-DualSense). One reading of
+// the folder name and the build's `version` file ("<timestamp> <name>"),
+// shared by the PROTON_PREFER_SDL and HDR checks.
+export interface BuildName {
+  ours: boolean; // one of our DualSense builds
+  major: number; // GE-Proton major version, 0 when not a GE-Proton name
+  revision: number; // our .N rebuild number (1 without one)
+}
+export function dualSenseBuild(name: string, versionText?: string | null): BuildName {
+  const texts = [name, versionText ?? ""];
+  const first = (re: RegExp) => texts.map((t) => re.exec(t)?.[1]).find((v) => v !== undefined);
+  return {
+    ours: texts.some((t) => /DualSense/i.test(t)),
+    major: Number(first(/GE-Proton(\d+)/) ?? 0),
+    revision: Math.max(1, ...texts.map((t) => Number(/GE-Proton\d+-\d+\.(\d+)-DualSense\b/i.exec(t)?.[1] ?? 1))),
+  };
+}
+
 // ---- PROTON_PREFER_SDL (standard gamepad for XInput-only games) ----
 // Our DualSense builds up to GE-Proton11-7-DualSense pass the DualSense raw
 // whatever the game asks for, so they ignore PROTON_PREFER_SDL; rebuilds
-// marked -DualSense-2 or later (folder name, or the build's `version` file)
-// honour it, as stock GE-Proton and Valve's Proton always have.
+// with a .2 or later revision (GE-Proton11-7.2-DualSense: folder name, or the
+// build's `version` file) honour it, as stock GE-Proton and Valve's Proton always have.
 export function honoursPreferSdl(name: string, versionText?: string | null): boolean {
-  const ours = (s: string | null | undefined) => /DualSense/i.test(s ?? "");
-  if (!ours(name) && !ours(versionText)) return true;
-  const rev = (s: string | null | undefined) => Number(/DualSense-(\d+)\b/i.exec(s ?? "")?.[1] ?? 1);
-  return Math.max(rev(name), rev(versionText)) >= 2;
+  const b = dualSenseBuild(name, versionText);
+  return !b.ours || b.revision >= 2;
 }
 
 // A build's `version` file ("<timestamp> <name>"), from the first of these
@@ -93,13 +111,64 @@ export function buildVersion(folders: string[]): string | null {
 // Does the build `name` (found in one of `dirs`) honour PROTON_PREFER_SDL?
 export const buildHonoursPreferSdl = (name: string, dirs: string[]) => honoursPreferSdl(name, buildVersion(dirs.map((d) => join(d, name))));
 
-// The build to move a game to when its runner ignores PROTON_PREFER_SDL: the
-// newest of our builds that honours it, else the newest stock GE-Proton.
-export function preferSdlBuild(names: string[], dirs: string[]): string | null {
-  const newest = (list: string[]) => [...list].sort((a, b) => compareProtonNames(b, a))[0] ?? null;
-  const ours = names.filter((n) => PROTON_NAME.test(n) && buildHonoursPreferSdl(n, dirs));
-  return newest(ours) ?? newest(names.filter((n) => /^GE-Proton/.test(n) && !/DualSense|DS5/i.test(n)));
+// A build's GE version [major, minor, our .N revision], from its `version`
+// file (GE-Proton-latest says which build it is) or else its folder name;
+// null when neither names a GE-Proton version (Valve's Proton, Wine builds).
+export function buildVersionKey(name: string, dirs: string[]): number[] | null {
+  const fromFile = buildVersion(dirs.map((d) => join(d, name)))?.split(/\s+/)[1] ?? "";
+  for (const text of [fromFile, name]) {
+    const m = /GE-Proton(\d+)-(\d+)(?:\.(\d+))?/.exec(text);
+    if (m) return [Number(m[1]), Number(m[2]), Number(m[3] ?? 1)];
+  }
+  return null;
 }
+const compareKeys = (a: number[], b: number[]) => a.reduce((d, v, i) => d || v - (b[i] ?? 0), 0);
+
+// The build to move a game to: the newest of our builds that `ok` accepts,
+// else the newest stock GE-Proton it accepts; ordered by GE version (not by
+// folder name), and never one older than the game's `current` build.
+export function pickBuild(names: string[], dirs: string[], ok: (name: string) => boolean, current?: string | null): string | null {
+  const floor = current ? buildVersionKey(current, dirs) : null;
+  const keyed = names.flatMap((n) => {
+    const key = buildVersionKey(n, dirs);
+    return key && (!floor || compareKeys(key, floor) >= 0) && ok(n) ? [{ n, key }] : [];
+  });
+  const newest = (list: typeof keyed) => [...list].sort((a, b) => compareKeys(b.key, a.key) || compareProtonNames(b.n, a.n))[0]?.n ?? null;
+  return newest(keyed.filter((b) => PROTON_NAME.test(b.n))) ?? newest(keyed.filter((b) => /^GE-Proton/.test(b.n) && !/DualSense|DS5/i.test(b.n)));
+}
+
+// The build to move a game to when its runner ignores PROTON_PREFER_SDL.
+export const preferSdlBuild = (names: string[], dirs: string[], current?: string | null) => pickBuild(names, dirs, (n) => buildHonoursPreferSdl(n, dirs), current);
+
+// ---- PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR (HDR games) ----
+// GE-Proton 10 and later (ours included) read both from the environment in
+// their `proton` script; GE-Proton 9 and Valve's Proton (up to 11.0 and
+// Experimental, 2026-10) don't. The script decides when we can read it; a
+// build without one counts by its name (and `version` file).
+export const HDR_VARS = ["PROTON_ENABLE_WAYLAND", "PROTON_ENABLE_HDR"] as const;
+export function honoursHdr(name: string, script?: string | null, versionText?: string | null): boolean {
+  if (script) return HDR_VARS.every((v) => script.includes(`"${v}"`));
+  return dualSenseBuild(name, versionText).major >= 10;
+}
+
+// Does the build `name` (found in one of `dirs`) honour the HDR options?
+export function buildHonoursHdr(name: string, dirs: string[]): boolean {
+  let script: string | null = null;
+  for (const dir of dirs) {
+    try {
+      script = readFileSync(join(dir, name, "proton"), "utf8");
+      break;
+    } catch {
+      // not in this folder
+    }
+  }
+  return honoursHdr(name, script, buildVersion(dirs.map((d) => join(d, name))));
+}
+
+// The build to move an HDR game to: one that honours the HDR options (and
+// PROTON_PREFER_SDL, when the game needs the standard gamepad).
+export const hdrBuild = (names: string[], dirs: string[], needsPreferSdl: boolean, current?: string | null) =>
+  pickBuild(names, dirs, (n) => buildHonoursHdr(n, dirs) && (!needsPreferSdl || buildHonoursPreferSdl(n, dirs)), current);
 
 function freeBytes(dir: string): number {
   try {

@@ -8,6 +8,8 @@ import { layoutSummary } from "../live/layoutSummary";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
+import { knownHdr } from "../games/knownGames";
+import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onThemeChange, scopedAccent } from "../live/controllerAccent";
@@ -433,16 +435,13 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
   const [note, setNote] = useState<string | null>(null);
   const [mine, update] = mineState;
   const restart = restartFor(report, game.fixes);
+  // Whatever happens, the page rescans afterwards (a launcher started since
+  // the scan is then named above Apply; a change is shown as the files say).
   const apply = async () => {
     try {
-      const r = await window.desktop!.gamesApply({ fixIds: game.fixes.map((f) => f.id), restart });
-      if (r.blockedBy.length && !r.problem) {
-        // A launcher started since the scan: the rescan names it above Apply.
-        onRescan();
-        return;
-      }
+      const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: game.fixes.map((f) => f.id), restart }), onRescan);
+      if (r.blockedBy.length && !r.problem) return;
       setNote(restartText(r) ?? (r.applied.length > 0 && r.applied.every((a) => a.ok) ? t("desktop.library.setupDone") : t("desktop.library.setupFailed")));
-      onRescan();
       setConfirm(false);
     } catch (cause) {
       setNote(errorText(cause));
@@ -455,6 +454,10 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
   const canMark = protonApplies() && !native && game.support !== "xinput" && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
   const marked = !!mine.tags?.includes("not-detected");
   const toggleMark = () => update({ tags: marked ? (mine.tags ?? []).filter((x) => x !== "not-detected") : [...(mine.tags ?? []), "not-detected"] });
+  // HDR games on our list get "Turn on HDR" by themselves; the player can mark others.
+  const protonGame = protonApplies() && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
+  const canMarkHdr = protonGame && !knownHdr(game.title);
+  const hdrScreens = report.system.hdr;
   return (
     <section className="dk-card" id="gp-setup">
       <h2>{t("desktop.library.section.setup")}</h2>
@@ -494,12 +497,25 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
       {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
       {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
       {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
+      {game.hdr === "set" && <p className="dk-good">✓ {t("desktop.library.hdrSet")}</p>}
+      {game.hdr === "no-screen" && <p className="dk-hint">{t(`desktop.library.hdrNoScreen.${hdrScreens.check}`)}</p>}
+      {game.hdr === "no-build" && <p className="dk-hint">{t("desktop.library.hdrNoBuild", { runner: game.runner ?? "" })}</p>}
+      {game.hdr === "pick-runner" && <p className="dk-hint">{t("desktop.library.hdrPickRunner", { runner: game.runner ?? t("desktop.games.msg.fallback.steamProton") })}</p>}
       {canMark && (
         <label className="dk-fix">
           <input type="checkbox" checked={marked} onChange={toggleMark} />
           <span>
             <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
             <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
+          </span>
+        </label>
+      )}
+      {canMarkHdr && (
+        <label className="dk-fix">
+          <input type="checkbox" checked={!!mine.hdr} onChange={() => update({ hdr: mine.hdr ? undefined : true })} />
+          <span>
+            <span className="dk-fix-label">{t("desktop.library.supportsHdr")}</span>
+            <span className="dk-fix-why">{t("desktop.library.supportsHdrHint")}</span>
           </span>
         </label>
       )}
@@ -519,10 +535,13 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const switchRunner = async () => {
-    const r = await window.desktop!.gamesApply({ fixIds: [runnerFix!.id], restart });
-    setNote(restartText(r));
+    try {
+      const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: [runnerFix!.id], restart }), onRescan);
+      setNote(restartText(r));
+    } catch (cause) {
+      setNote(errorText(cause));
+    }
     setConfirm(false);
-    onRescan();
   };
   const native = game.support === "triggers" || game.support === "haptics";
   return (
@@ -625,8 +644,9 @@ function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord
     (next) =>
       window.desktop!.librarySetMine({ gameKey: game.key, title: game.title, mine: next }).then((file) => {
         onLibrary(file);
-        // "Controller not detected" decides whether the standard-gamepad fix is offered.
-        if (notDetected(next) !== notDetected(record?.mine)) onRescan();
+        // "Controller not detected" and "Supports HDR" decide whether the
+        // standard-gamepad and HDR fixes are offered.
+        if (notDetected(next) !== notDetected(record?.mine) || !!next.hdr !== !!record?.mine?.hdr) onRescan();
       }),
     500,
   );

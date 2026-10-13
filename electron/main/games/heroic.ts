@@ -27,6 +27,11 @@ export interface HeroicGame {
   configPath: string; // GamesConfig/<appName>.json (may not exist yet)
   wineVersion: WineVersion | null; // per-game override, null = global default
   env: Array<{ key: string; value: string }>;
+  // Heroic's own per-game switches (Settings → Other: "Enable Wine-Wayland",
+  // "Enable HDR"): for a Proton runner Heroic sets PROTON_ENABLE_WAYLAND=1
+  // and, with both on, PROTON_ENABLE_HDR=1 when it starts the game.
+  wineWayland: boolean;
+  hdr: boolean;
 }
 
 export function findHeroicInstalls(home: string): HeroicInstall[] {
@@ -102,7 +107,7 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
       const env = Array.isArray(cfg.enviromentOptions) // sic: Heroic's own spelling
         ? (cfg.enviromentOptions as unknown[]).map((x) => ({ key: String(obj(x).key ?? ""), value: String(obj(x).value ?? "") })).filter((x) => x.key)
         : [];
-      return { appName, title, store, configPath, wineVersion: wine(cfg.wineVersion), env };
+      return { appName, title, store, configPath, wineVersion: wine(cfg.wineVersion), env, wineWayland: cfg.enableWineWayland === true, hdr: cfg.enableHDR === true };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
 }

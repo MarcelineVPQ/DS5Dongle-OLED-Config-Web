@@ -18,7 +18,7 @@ import { asLinux } from "../support/platform";
 asLinux();
 
 const OLD = "GE-Proton11-7-DualSense"; // ignores PROTON_PREFER_SDL
-const FIXED = "GE-Proton11-7-DualSense-2"; // honours it
+const FIXED = "GE-Proton11-7.2-DualSense"; // honours it
 
 function write(path: string, text: string) {
   mkdirSync(join(path, ".."), { recursive: true });
@@ -130,11 +130,12 @@ beforeEach(() => {
 afterEach(() => rmSync(home, { recursive: true, force: true }));
 
 describe("which Proton builds honour PROTON_PREFER_SDL", () => {
-  it("our builds only from -DualSense-2 on (name or version file); stock always", () => {
+  it("our builds only from the .2 rebuild on (name or version file); stock always", () => {
     expect(honoursPreferSdl(OLD)).toBe(false);
     expect(honoursPreferSdl(OLD, "1791920210 GE-Proton11-7")).toBe(false);
     expect(honoursPreferSdl(FIXED)).toBe(true);
-    expect(honoursPreferSdl("GE-Proton11-10-DualSense-3")).toBe(true);
+    expect(honoursPreferSdl("GE-Proton11-10.3-DualSense")).toBe(true);
+    expect(honoursPreferSdl("GE-Proton11-10-DualSense")).toBe(false); // a new GE version, not yet rebuilt
     expect(honoursPreferSdl(OLD, `1791920210 ${FIXED}`)).toBe(true); // renamed folder, marked build
     expect(honoursPreferSdl("GE-Proton10-34")).toBe(true);
     expect(honoursPreferSdl("Proton - Experimental")).toBe(true);
@@ -203,14 +204,14 @@ describe("the standard-gamepad fix per launcher", () => {
   });
 
   it("Heroic: adds the variable next to the game's own, switches the runner, Undo restores", async () => {
-    buildHome(false); // no -2 build: the stock GE-Proton
+    buildHome(true);
     const before = read(heroicGame());
     const fresh = scan(deps());
     const id = `${heroicId()}:xinput:ghost`;
     const r = await applyFixes(fresh, [id], [], applyDeps(fakeControl().ctl));
     expect(r.applied[0].ok).toBe(true);
     expect(JSON.parse(read(heroicGame())).ghost).toEqual({
-      wineVersion: { bin: join(home, ".config/heroic/tools/proton/GE-Proton10-34/proton"), name: "GE-Proton10-34", type: "proton" },
+      wineVersion: { bin: join(home, ".config/heroic/tools/proton", FIXED, "proton"), name: FIXED, type: "proton" },
       enviromentOptions: [
         { key: "DXVK_HUD", value: "fps" },
         { key: "PROTON_PREFER_SDL", value: "1" },
@@ -218,6 +219,13 @@ describe("the standard-gamepad fix per launcher", () => {
     });
     backups.restore(r.backupId!);
     expect(read(heroicGame())).toBe(before);
+  });
+
+  it("Heroic: never moves the game to an older build (GE-Proton10-34 from our 11-7)", () => {
+    buildHome(false);
+    const game = scan(deps()).report.games.find((g) => g.launcher === "heroic" && g.id === "ghost")!;
+    expect(game.gamepad).toBe("no-build");
+    expect(game.fixes.filter((f) => f.kind === "standard-gamepad")).toEqual([]);
   });
 
   it("Lutris: the game's system env, runner kept when it honours the option, Undo restores", async () => {

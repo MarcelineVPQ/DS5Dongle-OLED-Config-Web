@@ -4,34 +4,38 @@
 //   triggers: adaptive triggers (and haptics)
 //   haptics:  haptics, little or no trigger use
 //   xinput:   XInput-only on PC: rumble, never adaptive triggers (any OS)
+// Tags:
+//   hdr:      the PC version has HDR output (Windows-only games: the Games
+//             page may move them to another Proton for it)
 import type { DualSenseSupport } from "./types";
 
-const KNOWN: Array<[string, DualSenseSupport]> = [
-  ["Cyberpunk 2077", "triggers"],
-  ["The Last of Us Part I", "triggers"],
-  ["Marvel's Spider-Man Remastered", "triggers"],
-  ["Marvel's Spider-Man: Miles Morales", "triggers"],
-  ["Marvel's Spider-Man 2", "triggers"],
-  ["Uncharted: Legacy of Thieves Collection", "triggers"],
-  ["Ghost of Tsushima", "triggers"],
-  ["Hogwarts Legacy", "triggers"],
-  ["Avatar: Frontiers of Pandora", "triggers"],
-  ["Assassin's Creed Shadows", "triggers"],
-  ["Indiana Jones and the Great Circle", "triggers"],
+type Tag = "hdr";
+const KNOWN: Array<[string, DualSenseSupport, ...Tag[]]> = [
+  ["Cyberpunk 2077", "triggers", "hdr"],
+  ["The Last of Us Part I", "triggers", "hdr"],
+  ["Marvel's Spider-Man Remastered", "triggers", "hdr"],
+  ["Marvel's Spider-Man: Miles Morales", "triggers", "hdr"],
+  ["Marvel's Spider-Man 2", "triggers", "hdr"],
+  ["Uncharted: Legacy of Thieves Collection", "triggers", "hdr"],
+  ["Ghost of Tsushima", "triggers", "hdr"],
+  ["Hogwarts Legacy", "triggers", "hdr"],
+  ["Avatar: Frontiers of Pandora", "triggers", "hdr"],
+  ["Assassin's Creed Shadows", "triggers", "hdr"],
+  ["Indiana Jones and the Great Circle", "triggers", "hdr"],
   ["Star Wars: Galactic Racer", "triggers"],
   ["Star Wars Jedi: Fallen Order", "triggers"],
-  ["Star Wars Jedi: Survivor", "triggers"],
+  ["Star Wars Jedi: Survivor", "triggers", "hdr"],
   ["LEGO Star Wars: The Skywalker Saga", "triggers"],
   ["Metro Exodus", "triggers"],
   ["Marvel's Guardians of the Galaxy", "triggers"],
   ["F.I.S.T.: Forged In Shadow Torch", "triggers"],
   ["Dakar Desert Rally", "triggers"],
-  ["Death Stranding", "triggers"],
+  ["Death Stranding", "triggers", "hdr"],
   ["Death Stranding 2: On the Beach", "triggers"],
   ["Baldur's Gate 3", "haptics"],
   ["Sifu", "haptics"],
   ["The Witcher 3: Wild Hunt", "haptics"],
-  ["Forza Horizon 5", "haptics"],
+  ["Forza Horizon 5", "haptics", "hdr"],
   ["Hellblade: Senua's Sacrifice", "haptics"],
   ["Star Wars: Squadrons", "haptics"],
   ["Maneater", "haptics"],
@@ -51,8 +55,11 @@ export function normalizeTitle(title: string): string {
     .trim();
 }
 
-const TABLE = new Map(KNOWN.map(([title, support]) => [normalizeTitle(title), support]));
+const TABLE = new Map(KNOWN.map(([title, support, ...tags]) => [normalizeTitle(title), { support, tags }]));
 
 export function dualSenseSupport(title: string): DualSenseSupport {
-  return TABLE.get(normalizeTitle(title)) ?? "unknown";
+  return TABLE.get(normalizeTitle(title))?.support ?? "unknown";
 }
+
+// The game has HDR output on PC (our list; players can mark others on the game page).
+export const knownHdr = (title: string): boolean => !!TABLE.get(normalizeTitle(title))?.tags.includes("hdr");

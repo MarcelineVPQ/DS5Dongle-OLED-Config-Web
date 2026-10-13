@@ -14,16 +14,17 @@ import type { RunningCandidate } from "./running";
 import type { ArtKind, GameAction, GameEntry, GameInfo } from "../../../src/desktop/games/types";
 import { join } from "node:path";
 import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
-import type { ApplyResult, GamesReport, RestartList } from "../../../src/desktop/games/types";
+import type { ApplyResult, GamesReport, HdrScreens, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
 import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
-import { launcherControl, runningLaunchers, withLaunchersClosed, type LauncherControl } from "./processes";
+import { launcherControl, withLaunchersClosed, type LauncherControl } from "./processes";
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools } from "./steam";
-import { dualSenseCards, restartWirePlumber, setCardProfile } from "./system";
+import { dualSenseCards, restartWirePlumber, setCardProfile, type AudioCard } from "./system";
+import { hdrScreens } from "./hdr";
 
 const MANIFEST_TIMEOUT_MS = 5000;
 
@@ -34,7 +35,9 @@ export interface GamesServiceDeps {
   download: (d: Download, path: string, progress: (got: number, total: number) => void) => Promise<void>;
   onProtonProgress: (p: ProtonProgress) => void;
   notDetected: () => Set<string>; // game keys the player marked "controller not detected"
+  hdrMarked: () => Set<string>; // game keys the player marked "Supports HDR"
   launchers?: LauncherControl; // tests: a fake process layer
+  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrScreens> }; // tests: no pactl / kscreen-doctor
 }
 
 export class GamesService {
@@ -78,26 +81,38 @@ export class GamesService {
     this.requireConsent();
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
-    const [audioCards] = await Promise.all([linux ? dualSenseCards() : Promise.resolve([]), linux ? this.refreshLatest() : Promise.resolve()]);
+    const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrScreens() };
+    const [audioCards, hdr] = await Promise.all([
+      linux ? probes.audioCards() : Promise.resolve([]),
+      linux ? probes.hdr() : Promise.resolve(undefined),
+      linux ? this.refreshLatest() : Promise.resolve(),
+    ]);
     return scan({
       home: this.home,
       // Proton is how Steam runs Windows games on Linux: nothing to offer on Windows.
       ourProton: process.platform === "win32" ? null : newestLocalBuild(this.localBuilds()),
       latestProton: this.latest?.name ?? null,
       latestSize: this.latest?.tarball.size ?? null,
-      running: runningLaunchers(),
+      running: this.launchers.running(),
       audioCards,
       windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
       notDetected: this.deps.notDetected(),
+      hdrMarked: this.deps.hdrMarked(),
+      hdr,
     });
   }
 
-  async scan(): Promise<GamesReport> {
-    const report = (await this.fresh()).report;
-    this.lastGames = report.games;
-    this.lastDetails = gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []);
-    this.colors.clear(); // the art may have arrived or changed since
-    return report;
+  // In line with apply, undo and install: a scan asked for while a change is
+  // being written (launchers closing, up to 30 s) reads the files after it,
+  // never a mix, and scans finish in the order they were asked for.
+  scan(): Promise<GamesReport> {
+    return this.exclusive(async () => {
+      const report = (await this.fresh()).report;
+      this.lastGames = report.games;
+      this.lastDetails = gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []);
+      this.colors.clear(); // the art may have arrived or changed since
+      return report;
+    });
   }
 
   // ---- Games library: details, artwork, the running game ----

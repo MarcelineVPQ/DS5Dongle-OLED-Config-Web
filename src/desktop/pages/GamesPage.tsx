@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LauncherIcon } from "../library/LauncherIcon";
 import { protonApplies } from "../games/platform";
+import { latestOnly } from "../games/scanOrder";
 import { errorText } from "../../errorText";
 import { readPref, writePref } from "../storage";
 import GameLibrary from "../library/GameLibrary";
@@ -187,29 +188,32 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
     [desktop, onScanned],
   );
 
+  // Overlapping scans (Rescan, a game page's change, Undo): only the newest is shown.
+  const [latest] = useState(latestOnly);
   const rescan = useCallback(
     async (keepSelection = false) => {
       setError(null);
       try {
-        await receive(await desktop.gamesScan(), keepSelection);
+        const r = await latest(desktop.gamesScan());
+        if (r.current) await receive(r.value, keepSelection);
       } catch (cause) {
         setError(errorText(cause));
       }
     },
-    [desktop, receive],
+    [desktop, receive, latest],
   );
 
   // First scan on open (state is only set once the scan resolves).
   useEffect(() => {
     let live = true;
-    desktop.gamesScan().then(
-      (r) => live && void receive(r, false),
+    latest(desktop.gamesScan()).then(
+      (r) => live && r.current && void receive(r.value, false),
       (cause: unknown) => live && setError(errorText(cause)),
     );
     return () => {
       live = false;
     };
-  }, [desktop, receive]);
+  }, [desktop, receive, latest]);
   useEffect(() => desktop.onProtonProgress(setProtonProgress), [desktop]);
   // A game page applied a fix: rescan so Home and the library agree.
   const firstToken = useRef(rescanToken);
@@ -258,6 +262,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       await rescan();
     } catch (cause) {
       setError(errorText(cause));
+      await rescan(true); // something may have been written before it failed
     } finally {
       setBusy(null);
     }
@@ -285,6 +290,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       await rescan();
     } catch (cause) {
       setError(errorText(cause));
+      await rescan(true);
     } finally {
       setBusy(null);
     }
@@ -553,6 +559,8 @@ function SystemCard({ report }: { report: GamesReport }) {
             ? s.envWarnings.map((w) => (w.file ? t("desktop.games.envSetIn", { variable: w.variable, file: w.file }) : t("desktop.games.envSession", { variable: w.variable }))).join("; ")
             : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}
         </dd>
+        <dt>{t("desktop.games.hdr")}</dt>
+        <dd>{s.hdr.outputs.length ? t("desktop.games.hdrOn", { outputs: s.hdr.outputs.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}</dd>
       </dl>
       {s.envWarnings.length > 0 && (
         <p className="dk-hint">
