@@ -21,6 +21,7 @@ import type { DesktopSettings } from "./api";
 import captionTexts from "../assets/voice/captions.json";
 import { NARRATOR_LANGS, NARRATOR_OFF } from "../protocol/bridgeClient";
 import { isWindowShown } from "./useWindowShown";
+import { controllerAudio } from "./controllerAudio";
 
 export type NarratorSetting = DesktopSettings["narratorVoice"];
 
@@ -32,7 +33,6 @@ const URLS = new Map<string, string>(
   }),
 );
 const LANGS = [...new Set([...URLS.keys()].map((k) => k.split("/")[0]))];
-const SPEAKER = /dualsense|wireless controller/i;
 
 let setting: NarratorSetting = "ask";
 let captionsOn = true;
@@ -91,13 +91,8 @@ function voiceLang(): string {
 }
 
 // The DualSense speaker's output device id, or null (never the PC's speakers).
-export async function controllerSpeaker(): Promise<string | null> {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices.find((d) => d.kind === "audiooutput" && SPEAKER.test(d.label))?.deviceId ?? null;
-  } catch {
-    return null;
-  }
+export function controllerSpeaker(): Promise<string | null> {
+  return controllerAudio("audiooutput");
 }
 
 // What the dongle's own narrator should be set to (protocol 1.3): her

@@ -4,6 +4,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
+import { allowPermissionCheck, allowPermissionRequest } from "../../electron/main/permissions";
 import { isAllowedExternalUrl } from "../../electron/main/urls";
 import { OFFICIAL_FIRMWARE_HOSTS, isAllowedOfficialFirmwareUrl } from "../../electron/main/officialFirmware";
 import { OFFICIAL_FIRMWARE_URL } from "../../src/protocol/officialFirmware";
@@ -79,6 +80,32 @@ describe("outbound requests from the main process", () => {
   });
 });
 
+describe("web permissions", () => {
+  it("grants a capture request only for audio alone, from the app's page", () => {
+    expect(allowPermissionRequest("media", { mediaTypes: ["audio"] }, true)).toBe(true);
+  });
+
+  it("refuses the camera, audio with video, other permissions and other pages", () => {
+    expect(allowPermissionRequest("media", { mediaTypes: ["video"] }, true)).toBe(false);
+    expect(allowPermissionRequest("media", { mediaTypes: ["audio", "video"] }, true)).toBe(false);
+    expect(allowPermissionRequest("media", { mediaTypes: [] }, true)).toBe(false);
+    expect(allowPermissionRequest("media", {}, true)).toBe(false);
+    expect(allowPermissionRequest("media", { mediaTypes: ["audio"] }, false)).toBe(false);
+    for (const p of ["display-capture", "geolocation", "notifications", "usb", "hid", "serial", "clipboard-read", "openExternal", "fullscreen"])
+      expect(allowPermissionRequest(p, { mediaTypes: ["audio"] }, true)).toBe(false);
+  });
+
+  it("checks pass only for usb, speaker-selection and audio device names, from the app origin", () => {
+    expect(allowPermissionCheck("usb", {}, true)).toBe(true);
+    expect(allowPermissionCheck("speaker-selection", {}, true)).toBe(true);
+    expect(allowPermissionCheck("media", { mediaType: "audio" }, true)).toBe(true);
+    expect(allowPermissionCheck("media", { mediaType: "video" }, true)).toBe(false);
+    expect(allowPermissionCheck("hid", {}, true)).toBe(false);
+    expect(allowPermissionCheck("usb", {}, false)).toBe(false);
+    expect(allowPermissionCheck("media", { mediaType: "audio" }, false)).toBe(false);
+  });
+});
+
 describe("window and session baseline", () => {
   it("keeps the renderer isolated and sandboxed", () => {
     expect(mainSource).toMatch(/contextIsolation:\s*true/);
@@ -87,10 +114,12 @@ describe("window and session baseline", () => {
     expect(mainSource).toMatch(/webSecurity:\s*true/);
   });
 
-  it("denies every web permission request and only checks usb (and audio device names)", () => {
-    expect(mainSource).toMatch(/setPermissionRequestHandler\(\(_contents, _permission, callback\) => callback\(false\)\)/);
+  it("routes every web permission request and check through permissions.ts, with the app page/origin", () => {
     expect(mainSource).toMatch(
-      /isAppOrigin\(requestingOrigin\) &&\s*\(permission === "usb" \|\| \(permission as string\) === "speaker-selection" \|\| \(permission === "media" && \(details as \{ mediaType\?: string \}\)\.mediaType === "audio"\)\)/,
+      /setPermissionRequestHandler\(\(contents, permission, callback, details\) =>\s*callback\(allowPermissionRequest\(permission, details as \{ mediaTypes\?: string\[\] \}, isTrusted\(contents, details\.requestingUrl\)\)\)/,
+    );
+    expect(mainSource).toMatch(
+      /setPermissionCheckHandler\(\(_contents, permission, requestingOrigin, details\) =>\s*allowPermissionCheck\(permission, details as \{ mediaType\?: string \}, isAppOrigin\(requestingOrigin\)\)/,
     );
     expect(mainSource).toMatch(/setDevicePermissionHandler/);
   });

@@ -182,12 +182,8 @@ export interface DesktopApi {
   libraryDeleteLayout(id: string): Promise<LibraryFile>;
   // Launch a game or open its launcher page / folder (resolved in main).
   gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;
-  // Linux: record 3 s from the controller's mic and play it back on its
-  // speaker (main process, PipeWire), with the live level as it records.
   // A game's signature color from its artwork (#rrggbb), or null.
   gameArtColor(gameKey: string): Promise<string | null>;
-  micTest(): Promise<{ ok: boolean; peak: number; problem?: "no-mic" | "no-speaker" | "failed" }>;
-  onMicLevel(listener: (level: number) => void): () => void;
 }
 
 export const IPC = {
@@ -234,9 +230,7 @@ export const IPC = {
   librarySetLayout: "desktop:library-set-layout",
   libraryDeleteLayout: "desktop:library-delete-layout",
   gameAction: "desktop:game-action",
-  micTest: "desktop:mic-test",
   gameArtColor: "desktop:game-art-color",
-  micLevel: "desktop:mic-level",
 } as const;
 
 declare global {

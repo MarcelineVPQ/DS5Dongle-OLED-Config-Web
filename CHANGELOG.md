@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- **The microphone test works on Windows and macOS too.** It used to need PipeWire (Linux only). It now records in the app with the system's own audio capture, from the controller's microphone only (found by its name, like the speaker test's speaker; never the PC's mic), with echo cancellation, noise suppression and automatic gain off so the raw mic is tested, then plays the 3 seconds back on the controller's speaker as before. The app may use audio capture only from its own page (no camera); macOS asks once for microphone access. Closing the panel or hiding the window stops the test.
 - **The board page names the display by its model and lists both boards' specs.** The display section and its settings card are now called **Waveshare Pico-OLED-1.3** instead of "OLED display" (the supported add-on: the firmware can't detect it, it drives it whenever it's attached). A new Specs card shows the board's chip (with the clock it runs at), SRAM, flash and wireless chip (Pico 2 W and Pico W; hidden for any other board), and one in the display section shows the module's size, resolution, controller, interface and keys.
 
 ### Fixed

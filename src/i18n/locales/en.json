@@ -1025,7 +1025,7 @@
       "problem": {
         "no-mic": "The controller's microphone isn't available as an audio input on this PC.",
         "no-speaker": "The controller's speaker isn't available as an audio output on this PC.",
-        "failed": "The test couldn't run. Is PipeWire running?"
+        "failed": "The test couldn't run. Check that apps may use the microphone in your system's privacy settings, then try again."
       }
     },
     "backdrop": {

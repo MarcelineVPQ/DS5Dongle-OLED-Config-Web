@@ -1026,7 +1026,7 @@
       "problem": {
         "no-mic": "O microfone do controle não está disponível como entrada de áudio neste PC.",
         "no-speaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
-        "failed": "O teste não pôde rodar. O PipeWire está ativo?"
+        "failed": "O teste não pôde rodar. Confira nas configurações de privacidade do sistema se os apps podem usar o microfone e tente de novo."
       }
     },
     "backdrop": {
