@@ -33,7 +33,7 @@ export function launcherEnv(env: NodeJS.ProcessEnv, realHome: string): NodeJS.Pr
   return out;
 }
 
-function realHome(): string {
+export function realHome(): string {
   try {
     return userInfo().homedir; // the passwd entry, which ignores a HOME override
   } catch {
@@ -41,20 +41,26 @@ function realHome(): string {
   }
 }
 
-/** Open a link or folder the main process built (never one from the page)
- * with xdg-open, detached, with the launcher environment. Resolves once
- * xdg-open started (true) or couldn't (false). */
-export function openForUser(target: string): Promise<boolean> {
-  // Links start with their scheme, folders with "/": never an option.
-  if (target.startsWith("-")) return Promise.resolve(false);
+/** Start a program the main process chose (fixed argv, no shell), detached,
+ * with the launcher environment. Resolves once it started (true) or
+ * couldn't (false). Used for xdg-open and for reopening a launcher. */
+export function startForUser(cmd: string, args: string[]): Promise<boolean> {
   return new Promise((resolve) => {
-    const child = spawn("xdg-open", [target], { detached: true, stdio: "ignore", env: launcherEnv(process.env, realHome()) });
+    const child = spawn(cmd, args, { detached: true, stdio: "ignore", env: launcherEnv(process.env, realHome()) });
     child.once("error", () => resolve(false));
     child.once("spawn", () => {
       child.unref();
       resolve(true);
     });
   });
+}
+
+/** Open a link or folder the main process built (never one from the page)
+ * with xdg-open. */
+export function openForUser(target: string): Promise<boolean> {
+  // Links start with their scheme, folders with "/": never an option.
+  if (target.startsWith("-")) return Promise.resolve(false);
+  return startForUser("xdg-open", [target]);
 }
 
 export function hasSchemeHandler(url: string): Promise<boolean> {

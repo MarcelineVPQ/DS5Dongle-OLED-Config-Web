@@ -186,12 +186,35 @@ describe("game links and folders on Linux", () => {
   const handlerSource = readFileSync(new URL("../../electron/main/games/schemeHandler.ts", import.meta.url), "utf8");
 
   it("open through xdg-open with a fixed argv, no shell, the launcher env", () => {
-    expect(handlerSource).toMatch(/spawn\("xdg-open", \[target\], \{ detached: true, stdio: "ignore", env: launcherEnv\(process\.env, realHome\(\)\) \}\)/);
+    expect(handlerSource).toMatch(/spawn\(cmd, args, \{ detached: true, stdio: "ignore", env: launcherEnv\(process\.env, realHome\(\)\) \}\)/);
+    expect(handlerSource).toContain('return startForUser("xdg-open", [target]);');
     expect(handlerSource).not.toMatch(/(?<!\.)\bexec\(|execSync|shell: true/);
     // Only game actions use it, and only with what the main process built.
     expect(mainSource.match(/openForUser\(/g)).toHaveLength(2);
     expect(mainSource).toContain("return openForUser(target.url);");
     expect(mainSource).toContain("return openForUser(target.folder);");
+  });
+});
+
+describe("closing and reopening game launchers (Linux)", () => {
+  const source = readFileSync(new URL("../../electron/main/games/processes.ts", import.meta.url), "utf8");
+
+  it("runs fixed programs without a shell, with the launcher environment, and never force-kills", () => {
+    // Steam's own shutdown and the restart: execFile / spawn, no shell, the user's real home.
+    expect(source).toMatch(/execFile\(cmd, args, \{ timeout: 15_000, env: launcherEnv\(process\.env, realHome\(\)\) \}/);
+    expect(source).toContain("start: startForUser,"); // schemeHandler.ts: spawn, detached, no shell, the launcher env (tested above)
+    expect(source).toContain('layer.run("steam", ["-shutdown"])');
+    expect(source).toContain('layer.run("flatpak", ["run", FLATPAK_ID.steam, "-shutdown"])');
+    expect(source).not.toMatch(/(?<!\.)\bexec\(|execSync|shell: true|SIGKILL|"-9"/);
+    expect(source).toContain('process.kill(pid, "SIGTERM")');
+  });
+
+  it("closes only launchers the page named, from a schema-checked request", async () => {
+    const { ApplyRequestSchema, UndoRequestSchema } = await import("../../electron/main/ipc");
+    expect(ApplyRequestSchema.safeParse({ fixIds: [], restart: ["steam", "heroic", "lutris"] }).success).toBe(true);
+    for (const restart of [["gog"], ["steam; reboot"], ["/usr/bin/steam"], "steam"]) expect(ApplyRequestSchema.safeParse({ fixIds: [], restart }).success, String(restart)).toBe(false);
+    expect(ApplyRequestSchema.safeParse({ fixIds: [], restart: [], cmd: "steam" }).success).toBe(false);
+    expect(UndoRequestSchema.safeParse({ backupId: "../../etc", restart: [] }).success).toBe(false);
   });
 });
 

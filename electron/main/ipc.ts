@@ -18,7 +18,6 @@ import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/
 import { z } from "zod";
 import {
   IPC,
-  type CloseLauncherResult,
   type DesktopSettings,
   type DeviceStatus,
   type GameBackup,
@@ -28,7 +27,7 @@ import {
   type UndoResult,
   type UpdateState,
 } from "../../src/desktop/api";
-import type { ApplyResult, GamesReport, LauncherId } from "../../src/desktop/games/types";
+import type { ApplyResult, GamesReport, RestartList } from "../../src/desktop/games/types";
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 
@@ -55,11 +54,14 @@ export const FixIdsSchema = z
       .string()
       .max(200)
       // Same shapes games.ts builds (a test checks every id a scan produces passes).
-      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+)$|^system:audio-(rule|profile):[0-9a-f]{8}$/),
+      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+)$|^system:audio-(rule|profile):[0-9a-f]{8}$/),
   )
   .max(500);
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
-export const LauncherSchema = z.enum(["steam", "heroic", "lutris", "gog", "epic"]);
+// The running launchers the page said it will close and reopen for the change.
+const RestartSchema = z.array(z.enum(["steam", "heroic", "lutris"])).max(3);
+export const ApplyRequestSchema = z.strictObject({ fixIds: FixIdsSchema, restart: RestartSchema });
+export const UndoRequestSchema = z.strictObject({ backupId: BackupIdSchema, restart: RestartSchema });
 // Games library: keys from the scan, a title for display, schema-checked data.
 const TitleSchema = z.string().min(1).max(300);
 export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, settings: ProfileSettingsSchema });
@@ -102,10 +104,9 @@ export interface IpcHandlers {
   getDesktopPalette: () => Promise<unknown>;
   firmwareChangelog: () => Promise<string>;
   gamesScan: () => Promise<GamesReport>;
-  gamesApply: (fixIds: string[]) => Promise<ApplyResult>;
-  gamesUndo: (backupId: string) => Promise<UndoResult>;
+  gamesApply: (request: { fixIds: string[]; restart: RestartList }) => Promise<ApplyResult>;
+  gamesUndo: (request: { backupId: string; restart: RestartList }) => Promise<UndoResult>;
   gamesBackups: () => GameBackup[];
-  closeLauncher: (launcher: LauncherId) => Promise<CloseLauncherResult>;
   installProton: () => Promise<ProtonInstallResult>;
 }
 
@@ -175,9 +176,8 @@ export function registerIpc(h: IpcHandlers): void {
       if (!trusted(event)) throw new Error("untrusted sender");
       return run(schema.parse(raw));
     });
-  invokeWith(IPC.gamesApply, FixIdsSchema, h.gamesApply);
-  invokeWith(IPC.gamesUndo, BackupIdSchema, h.gamesUndo);
-  invokeWith(IPC.closeLauncher, LauncherSchema, h.closeLauncher);
+  invokeWith(IPC.gamesApply, ApplyRequestSchema, h.gamesApply);
+  invokeWith(IPC.gamesUndo, UndoRequestSchema, h.gamesUndo);
   invoke(IPC.gamesDetails, h.gamesDetails);
   invoke(IPC.gamesRunning, h.gamesRunning);
   invoke(IPC.libraryGet, h.libraryGet);

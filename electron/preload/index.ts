@@ -49,10 +49,9 @@ const api: DesktopApi = {
     return () => ipcRenderer.removeListener(IPC.windowVisible, handler);
   },
   gamesScan: () => ipcRenderer.invoke(IPC.gamesScan),
-  gamesApply: (fixIds) => ipcRenderer.invoke(IPC.gamesApply, fixIds),
-  gamesUndo: (backupId) => ipcRenderer.invoke(IPC.gamesUndo, backupId),
+  gamesApply: (request) => ipcRenderer.invoke(IPC.gamesApply, request),
+  gamesUndo: (request) => ipcRenderer.invoke(IPC.gamesUndo, request),
   gamesBackups: () => ipcRenderer.invoke(IPC.gamesBackups),
-  closeLauncher: (launcher) => ipcRenderer.invoke(IPC.closeLauncher, launcher),
   installProton: () => ipcRenderer.invoke(IPC.installProton),
   onProtonProgress: (listener) => {
     const handler = (_event: IpcRendererEvent, progress: ProtonProgress) => listener(progress);

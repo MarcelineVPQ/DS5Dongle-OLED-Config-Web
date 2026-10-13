@@ -6,11 +6,11 @@
 // launcher's directory (rename). Existing builds are never replaced or removed:
 // a new version has a new folder name.
 import { execFile } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, renameSync, rmSync, statfsSync, symlinkSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, statfsSync, symlinkSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import type { ProtonProgress } from "../../../src/desktop/api";
-import { PROTON_NAME, type Download } from "../../../src/update/manifest";
+import { compareProtonNames, PROTON_NAME, type Download } from "../../../src/update/manifest";
 
 const run = promisify(execFile);
 
@@ -63,6 +63,42 @@ export function protonBuilds(dir: string): string[] {
   } catch {
     return [];
   }
+}
+
+// ---- PROTON_PREFER_SDL (standard gamepad for XInput-only games) ----
+// Our DualSense builds up to GE-Proton11-7-DualSense pass the DualSense raw
+// whatever the game asks for, so they ignore PROTON_PREFER_SDL; rebuilds
+// marked -DualSense-2 or later (folder name, or the build's `version` file)
+// honour it, as stock GE-Proton and Valve's Proton always have.
+export function honoursPreferSdl(name: string, versionText?: string | null): boolean {
+  const ours = (s: string | null | undefined) => /DualSense/i.test(s ?? "");
+  if (!ours(name) && !ours(versionText)) return true;
+  const rev = (s: string | null | undefined) => Number(/DualSense-(\d+)\b/i.exec(s ?? "")?.[1] ?? 1);
+  return Math.max(rev(name), rev(versionText)) >= 2;
+}
+
+// A build's `version` file ("<timestamp> <name>"), from the first of these
+// build folders that has one; null when none does.
+export function buildVersion(folders: string[]): string | null {
+  for (const folder of folders) {
+    try {
+      return readFileSync(join(folder, "version"), "utf8").slice(0, 200).trim();
+    } catch {
+      // not in this folder
+    }
+  }
+  return null;
+}
+
+// Does the build `name` (found in one of `dirs`) honour PROTON_PREFER_SDL?
+export const buildHonoursPreferSdl = (name: string, dirs: string[]) => honoursPreferSdl(name, buildVersion(dirs.map((d) => join(d, name))));
+
+// The build to move a game to when its runner ignores PROTON_PREFER_SDL: the
+// newest of our builds that honours it, else the newest stock GE-Proton.
+export function preferSdlBuild(names: string[], dirs: string[]): string | null {
+  const newest = (list: string[]) => [...list].sort((a, b) => compareProtonNames(b, a))[0] ?? null;
+  const ours = names.filter((n) => PROTON_NAME.test(n) && buildHonoursPreferSdl(n, dirs));
+  return newest(ours) ?? newest(names.filter((n) => /^GE-Proton/.test(n) && !/DualSense|DS5/i.test(n)));
 }
 
 function freeBytes(dir: string): number {

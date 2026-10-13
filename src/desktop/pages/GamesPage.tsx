@@ -5,8 +5,9 @@
 // Consent flow (load-bearing, see src/desktop/games/types.ts):
 //   allow (first visit: what will be read, nothing until the user agrees)
 //   -> scan (reads only) -> pick changes (each says what, why and which files)
-//   -> review (every file listed; running launchers must be closed, on request)
-//   -> apply (backed up first) -> Undo.
+//   -> review (every file listed; a running launcher that owns a change is
+//      named there: it will be closed for the change, then reopened)
+//   -> apply (backed up first) -> Undo (the same close-and-reopen, said first).
 // Downloading Proton is its own confirmation with size and destination.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LauncherIcon } from "../library/LauncherIcon";
@@ -20,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
 import { say } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
-import type { ApplyResult, Fix, GamesReport, LauncherId, Msg } from "../games/types";
+import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -48,6 +49,43 @@ export function useMsg(): (m: Msg) => string {
     function render(m: Msg): string {
       const params = Object.fromEntries(Object.entries(m.params ?? {}).map(([k, v]) => [k, typeof v === "string" ? v : render(v)]));
       return t(`desktop.games.msg.${m.key}`, { ...params, interpolation: { escapeValue: false } });
+    },
+    [t],
+  );
+}
+
+// Running launchers that own these changes: the page says they'll be closed
+// and reopened, and names them in the request (the main process closes only those).
+export function restartFor(report: GamesReport, fixes: Fix[]): RestartList {
+  const owners = new Set<string>(fixes.map((f) => f.launcher));
+  return report.launchers.flatMap((l) => (l.running && owners.has(l.id) && (l.id === "steam" || l.id === "heroic" || l.id === "lutris") ? [l.id] : []));
+}
+
+// Said before applying (or undoing): which launchers will be closed and reopened.
+export function RestartNotice({ launchers, undo }: { launchers: LauncherId[]; undo?: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {launchers.map((l) => (
+        <div key={l} className="dk-notice">
+          {t(undo ? "desktop.games.willRestartUndo" : "desktop.games.willRestart", { launcher: LAUNCHER_NAME[l] })}
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Why a launcher wasn't closed (nothing was written), or that one wasn't started again.
+export function useRestartText(): (r: { blockedBy?: LauncherId[]; problem?: CloseProblem; reopenFailed?: LauncherId[] }) => string | null {
+  const { t } = useTranslation();
+  return useCallback(
+    (r) => {
+      const name = (list?: LauncherId[]) => (list ?? []).map((l) => LAUNCHER_NAME[l]).join(", ");
+      if (r.problem === "game-running") return t("desktop.games.restartGameRunning", { launcher: name(r.blockedBy) });
+      if (r.problem === "timeout") return t("desktop.games.restartTimeout", { launcher: name(r.blockedBy) });
+      if (r.problem) return t("desktop.games.restartFailed", { launcher: name(r.blockedBy) });
+      if (r.reopenFailed?.length) return t("desktop.games.reopenFailed", { launcher: name(r.reopenFailed) });
+      return null;
     },
     [t],
   );
@@ -130,6 +168,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
   const [result, setResult] = useState<(ApplyResult & { labels: Map<string, Msg> }) | null>(null);
   const m = useMsg();
   const [closeNote, setCloseNote] = useState<string | null>(null);
+  const restartText = useRestartText();
+  // An undo that needs running launchers closed: said first, then confirmed.
+  const [undoAsk, setUndoAsk] = useState<{ backupId: string; launchers: RestartList } | null>(null);
   const [backups, setBackups] = useState<GameBackup[]>([]);
   const [protonConfirm, setProtonConfirm] = useState(false);
   const [protonProgress, setProtonProgress] = useState<ProtonProgress | null>(null);
@@ -178,7 +219,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
   const selected = fixes.filter((f) => chosen.has(f.id));
-  const blocking = report ? [...new Set(selected.map((f) => f.launcher))].filter((l): l is LauncherId => l !== "system" && !!report.launchers.find((x) => x.id === l && x.running)) : [];
+  const restart = report ? restartFor(report, selected) : [];
 
   // Side effects (storage, the parent's count) stay out of the state updater,
   // which React may run twice.
@@ -196,31 +237,21 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
     onDeclinedChange?.();
   };
 
-  const closeLauncher = async (launcher: LauncherId) => {
-    setBusy(`close-${launcher}`);
-    setCloseNote(null);
-    try {
-      const r = await desktop.closeLauncher(launcher).catch(() => "failed" as const);
-      if (r === "failed") setCloseNote(t("desktop.games.closeFailed", { launcher: LAUNCHER_NAME[launcher] }));
-      else if (r === "game-running") setCloseNote(t("desktop.games.closeGameRunning", "A game is still running. Quit the game first, then try again."));
-      else if (r === "timeout")
-        setCloseNote(t("desktop.games.closeTimeout", { launcher: LAUNCHER_NAME[launcher], defaultValue: "{{launcher}} didn't quit within 30 seconds. Quit it yourself, then press Rescan." }));
-      await rescan(true);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const apply = async () => {
     setBusy("apply");
+    setCloseNote(null);
     try {
       // Keep the labels: after the rescan, applied fixes are no longer in the list.
       const labels = new Map(selected.map((f) => [f.id, f.label]));
-      const r = await desktop.gamesApply(selected.map((f) => f.id));
+      const r = await desktop.gamesApply({ fixIds: selected.map((f) => f.id), restart });
       if (r.blockedBy.length) {
+        // Not closed (why), or a launcher started since the scan: the rescan
+        // names it on the review, and Apply asks again.
+        setCloseNote(restartText(r));
         await rescan(true);
         return;
       }
+      setCloseNote(restartText(r));
       setResult({ ...r, labels });
       setStep("done");
       if (r.applied.length > 0 && r.applied.every((a) => a.ok)) void say("app_games_ready");
@@ -232,16 +263,20 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
     }
   };
 
-  const undo = async (backupId: string) => {
+  const undo = async (backupId: string, restart: RestartList = []) => {
     setBusy(`undo-${backupId}`);
+    setUndoAsk(null);
     try {
-      const r = await desktop.gamesUndo(backupId);
+      const r = await desktop.gamesUndo({ backupId, restart });
       setCloseNote(null);
       if (r.ok) {
+        setCloseNote(restartText(r));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {
-        setCloseNote(t("desktop.games.undoBlocked", { launchers: r.blockedBy.map((l) => LAUNCHER_NAME[l]).join(", ") }));
+        // Running launchers own these files: say they'll be closed and reopened, then ask.
+        if (r.problem) setCloseNote(restartText(r));
+        else setUndoAsk({ backupId, launchers: r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris") });
       } else if ("conflict" in r) {
         setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
       } else {
@@ -355,6 +390,19 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
       {protonApplies() && <SystemCard report={report} />}
 
       {closeNote && <div className="dk-notice">{closeNote}</div>}
+      {undoAsk && (
+        <div className="dk-confirm">
+          <RestartNotice launchers={undoAsk.launchers} undo />
+          <div className="dk-row-btns">
+            <BusyButton className="dk-btn primary" disabled={busy !== null} onClick={() => undo(undoAsk.backupId, undoAsk.launchers)}>
+              {t("desktop.games.undoShort", "Undo")}
+            </BusyButton>
+            <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setUndoAsk(null)}>
+              {t("desktop.games.cancel", "Cancel")}
+            </button>
+          </div>
+        </div>
+      )}
       {error && <div className="dk-notice error">{error}</div>}
 
       {step === "pick" && (
@@ -393,22 +441,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
               </li>
             ))}
           </ul>
-          {blocking.map((l) => (
-            <div key={l} className="dk-notice">
-              <span>
-                {t("desktop.games.mustClose", {
-                  launcher: LAUNCHER_NAME[l],
-                  defaultValue: "{{launcher}} is running. It rewrites these settings when it quits, which would undo the changes, so it has to be closed first.",
-                })}
-              </span>
-              <span className="dk-spacer" />
-              <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => closeLauncher(l)}>
-                {t("desktop.games.closeLauncher", { launcher: LAUNCHER_NAME[l], defaultValue: "Close {{launcher}}" })}
-              </BusyButton>
-            </div>
-          ))}
+          <RestartNotice launchers={restart} />
           <div className="dk-row-btns">
-            <BusyButton className="dk-btn primary" disabled={blocking.length > 0 || busy !== null || selected.length === 0} onClick={apply}>
+            <BusyButton className="dk-btn primary" disabled={busy !== null || selected.length === 0} onClick={apply}>
               {t("desktop.games.apply", { count: selected.length })}
             </BusyButton>
             <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>
@@ -430,7 +465,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
               </li>
             ))}
           </ul>
-          <p className="dk-hint">{t("desktop.games.doneHint", "Start the launcher again; it picks up the new settings when it starts.")}</p>
+          <p className="dk-hint">{t("desktop.games.doneHint")}</p>
           <div className="dk-row-btns">
             {result.backupId && (
               <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => undo(result.backupId!)}>

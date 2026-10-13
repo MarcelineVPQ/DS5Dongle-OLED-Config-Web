@@ -6,15 +6,16 @@
 import { createHash } from "node:crypto";
 import { errorText } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { parseDocument } from "yaml";
 import { dualSenseSupport } from "../../../src/desktop/games/knownGames";
 import { compareProtonNames, PROTON_NAME } from "../../../src/update/manifest";
-import type { ApplyResult, DualSenseSupport, Fix, FixKind, GameEntry, GamesReport, LauncherId, LauncherInfo, Msg, SystemInfo } from "../../../src/desktop/games/types";
+import type { ApplyResult, DualSenseSupport, Fix, FixKind, GameEntry, GamepadState, GamesReport, LauncherId, LauncherInfo, Msg, RestartList, SystemInfo } from "../../../src/desktop/games/types";
 import { Backups, writeFileAtomic, type Owner } from "./backup";
 import { findHeroicInstalls, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
 import { findLutrisInstalls, listLutrisGames, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
-import { hasBuild } from "./proton";
+import { buildHonoursPreferSdl, hasBuild, preferSdlBuild } from "./proton";
+import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
 import { compatMapping, findSteamInstalls, installedTools, launchOptions, listSteamGames, readVdfFile, setCompatTool, steamInputState, valveProtons, type SteamInstall } from "./steam";
@@ -47,6 +48,7 @@ export interface ScanDeps {
   running: Set<LauncherId>;
   audioCards: AudioCard[];
   windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
+  notDetected?: Set<string>; // game keys the player marked "controller not detected"
 }
 
 export interface Scan {
@@ -62,6 +64,31 @@ export const stripSdlVars = (opts: string) => opts.replace(SDL_ASSIGN, (whole, _
 
 const nativeSupport = (s: DualSenseSupport) => s === "triggers" || s === "haptics";
 
+// ---- Standard gamepad (XInput) for XInput-only games ----
+// Our DualSense Proton passes the controller through as itself, so a game that
+// only knows XInput sees no controller; PROTON_PREFER_SDL=1 (per game) makes
+// Proton hand it over as a standard gamepad instead.
+export const PREFER_SDL = "PROTON_PREFER_SDL";
+const PREFER_SDL_ASSIGN = new RegExp(`(^|\\s)${PREFER_SDL}=\\S*`, "g");
+
+export const hasPreferSdl = (opts: string) => sdlVarsIn(opts).includes(PREFER_SDL);
+// Steam launch options with PROTON_PREFER_SDL=1 in front of %command%; the
+// player's own options stay as they are (game arguments without %command% go after it).
+export function withPreferSdl(opts: string): string {
+  const rest = opts.replace(PREFER_SDL_ASSIGN, "").trim();
+  if (!rest) return `${PREFER_SDL}=1 %command%`;
+  return rest.includes("%command%") ? `${PREFER_SDL}=1 ${rest}` : `${PREFER_SDL}=1 %command% ${rest}`;
+}
+
+// What a game wanting a standard gamepad needs: the option (addEnv) and/or a
+// Proton that honours it (switchTo). `steamInputOff` only for Steam games.
+export function gamepadPlan(o: { envSet: boolean; honours: boolean; target: string | null; steamInputOff?: boolean }): { state: GamepadState; addEnv: boolean; switchTo: string | null } {
+  if (o.steamInputOff === false) return { state: "steam-input", addEnv: false, switchTo: null };
+  if (!o.honours && !o.target) return { state: "no-build", addEnv: false, switchTo: null };
+  if (o.envSet && o.honours) return { state: "set", addEnv: false, switchTo: null };
+  return { state: "needed", addEnv: !o.envSet, switchTo: o.honours ? null : o.target };
+}
+
 // Fix ids are built from what they point at (an install root, a file path),
 // never a list position, so an id from the review screen can only resolve to
 // the same target in the fresh scan that apply() runs.
@@ -71,6 +98,8 @@ export const idHash = (s: string) => createHash("sha256").update(s).digest("hex"
 const msg = (key: string, params?: Msg["params"]): Msg => (params ? { key, params } : { key });
 const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers" ? "support.triggers" : "support.haptics");
 const orMsg = (value: string | null | undefined, fallbackKey: string): string | Msg => value ?? msg(fallbackKey);
+// The standard-gamepad fix's sentence about moving the game to another Proton ("" when it doesn't).
+const runnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.gamepadRunner", { current, proton: to }) : "");
 
 // Newest of our DualSense builds installed in any launcher.
 export function newestLocalBuild(names: string[]): string | null {
@@ -134,7 +163,45 @@ export function scan(deps: ScanDeps): Scan {
       const input = steamInputState(local, g.appid);
       const opts = launchOptions(local, g.appid);
       const envFlags = sdlVarsIn(opts);
+      const key = `${prefix}:steam:${g.appid}`;
       const gfixes: Fix[] = [];
+      let gamepad: GamepadState | undefined;
+      // Steam Input off for the game: Steam leaves the controller to Proton.
+      // Otherwise Steam already gives an XInput game an Xbox pad.
+      if (playable && !nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && local && install.localConfigPath && config) {
+        const runner = override ?? defaultRunner;
+        const p = gamepadPlan({
+          envSet: hasPreferSdl(opts),
+          honours: !runner || buildHonoursPreferSdl(runner, [install.toolsDir]),
+          target: preferSdlBuild(tools, [install.toolsDir]),
+          steamInputOff: input === "off",
+        });
+        gamepad = p.state;
+        if (p.state === "needed") {
+          const localPath = install.localConfigPath;
+          const edits: Edit[] = [];
+          if (p.addEnv)
+            edits.push({
+              file: localPath,
+              format: "vdf",
+              mutate: (doc) => setKey(ensureNode(doc, "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", g.appid), "LaunchOptions", withPreferSdl(opts)),
+            });
+          // A per-game entry, also when the game follows the default: the
+          // option only matters under Proton, so this is a Windows game.
+          if (p.switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, p.switchTo!) });
+          gfixes.push(
+            fix(
+              `${prefix}:xinput:${g.appid}`,
+              "standard-gamepad",
+              "steam",
+              msg("label.gamepad", { game: g.name }),
+              msg("why.gamepadSteam", { game: g.name, options: p.addEnv ? withPreferSdl(opts) : opts, runner: runnerSwitch(runner ?? "", p.switchTo) }),
+              true,
+              edits,
+            ),
+          );
+        }
+      }
       if (nativeSupport(support)) {
         // Only games already set to a specific compatibility tool: those certainly run
         // through Proton. Forcing Proton on a game without one could switch a native
@@ -184,7 +251,7 @@ export function scan(deps: ScanDeps): Scan {
         }
       }
       games.push({
-        key: `${prefix}:steam:${g.appid}`,
+        key,
         launcher: "steam",
         store: "steam",
         id: g.appid,
@@ -195,6 +262,7 @@ export function scan(deps: ScanDeps): Scan {
         steamInput: input,
         envFlags,
         support,
+        ...(gamepad ? { gamepad } : {}),
         fixes: playable ? gfixes : [],
         ...(kind && kind !== "game" ? { kind } : {}),
       });
@@ -226,8 +294,47 @@ export function scan(deps: ScanDeps): Scan {
       const envFlags = [...new Set(g.env.filter((e) => sdlVarForcing(e.key, e.value)).map((e) => e.key))];
       const hasConfig = existsSync(g.configPath);
       const gfixes: Fix[] = [];
-      const setOurs: Edit = { file: g.configPath, format: "json", mutate: (doc) => (((doc[g.appName] ??= {}) as Record<string, unknown>).wineVersion = { ...ourWine }) };
-      if (ourWine && hasConfig && (runnerMissing || (nativeSupport(support) && g.wineVersion && g.wineVersion.name !== ours))) {
+      // An edit of this game's settings object in its GamesConfig file.
+      const editGame = (change: (cfg: Record<string, unknown>) => void): Edit => ({ file: g.configPath, format: "json", mutate: (doc) => change((doc[g.appName] ??= {}) as Record<string, unknown>) });
+      const setOurs = editGame((cfg) => (cfg.wineVersion = { ...ourWine }));
+      const key = `${prefix}:${g.store}:${g.appName}`;
+      const runnerFix = !!ourWine && hasConfig && (runnerMissing || (nativeSupport(support) && !!g.wineVersion && g.wineVersion.name !== ours));
+      // Standard gamepad: judged on the runner the game will have (ours, if the fix above is taken).
+      let gamepad: GamepadState | undefined;
+      let gamepadFix: Fix | null = null;
+      let gamepadSwitches = false;
+      if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && hasConfig) {
+        const runner = runnerFix ? ourWine : (g.wineVersion ?? def);
+        const p = gamepadPlan({
+          envSet: g.env.some((e) => e.key === PREFER_SDL && sdlVarForcing(e.key, e.value)),
+          honours: !runner || buildHonoursPreferSdl(runner.name, [install.toolsDir, dirname(dirname(runner.bin))]),
+          target: preferSdlBuild(tools, [install.toolsDir]),
+        });
+        gamepad = p.state;
+        if (p.state === "needed") {
+          const switchTo = p.switchTo;
+          gamepadSwitches = !!switchTo;
+          gamepadFix = fix(
+            `${prefix}:xinput:${g.appName}`,
+            "standard-gamepad",
+            "heroic",
+            msg("label.gamepad", { game: g.title }),
+            msg("why.gamepad", { game: g.title, runner: runnerSwitch(runner?.name ?? "", switchTo) }),
+            true,
+            [
+              editGame((cfg) => {
+                if (p.addEnv) {
+                  const list = Array.isArray(cfg.enviromentOptions) ? (cfg.enviromentOptions as Array<{ key?: unknown }>).filter((e) => String(e.key) !== PREFER_SDL) : [];
+                  cfg.enviromentOptions = [...list, { key: PREFER_SDL, value: "1" }];
+                }
+                if (switchTo) cfg.wineVersion = { bin: join(install.toolsDir, switchTo, "proton"), name: switchTo, type: "proton" };
+              }),
+            ],
+          );
+        }
+      }
+      // The standard-gamepad fix's own runner switch replaces the set-runner fix.
+      if (runnerFix && !gamepadSwitches) {
         gfixes.push(
           fix(
             `${prefix}:runner:${g.appName}`,
@@ -240,23 +347,19 @@ export function scan(deps: ScanDeps): Scan {
           ),
         );
       }
+      if (gamepadFix) gfixes.push(gamepadFix);
       if (nativeSupport(support) && envFlags.length && hasConfig) {
         gfixes.push(
           fix(`${prefix}:env:${g.appName}`, "remove-env", "heroic", msg("label.envHeroic", { vars: envFlags.join(", "), game: g.title }), msg("why.envHeroic", { vars: envFlags.join(", ") }), true, [
-            {
-              file: g.configPath,
-              format: "json",
-              mutate: (doc) => {
-                const cfg = (doc[g.appName] ??= {}) as Record<string, unknown>;
-                if (Array.isArray(cfg.enviromentOptions))
-                  cfg.enviromentOptions = (cfg.enviromentOptions as Array<{ key?: unknown; value?: unknown }>).filter((e) => !sdlVarForcing(String(e.key), String(e.value ?? "")));
-              },
-            },
+            editGame((cfg) => {
+              if (Array.isArray(cfg.enviromentOptions))
+                cfg.enviromentOptions = (cfg.enviromentOptions as Array<{ key?: unknown; value?: unknown }>).filter((e) => !sdlVarForcing(String(e.key), String(e.value ?? "")));
+            }),
           ]),
         );
       }
       games.push({
-        key: `${prefix}:${g.store}:${g.appName}`,
+        key,
         launcher: "heroic",
         store: g.store,
         id: g.appName,
@@ -266,6 +369,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours && !runnerMissing,
         envFlags,
         support,
+        ...(gamepad ? { gamepad } : {}),
         fixes: gfixes,
       });
     }
@@ -280,7 +384,9 @@ export function scan(deps: ScanDeps): Scan {
     const protonInstalled = !!ours && install.umu && visible.has(ours);
     const def = lutrisDefaultRunner(install);
     const lfixes: Fix[] = [];
-    const setVersion = (file: string): Edit => ({ file, format: "yaml", mutate: (doc) => doc.setIn(["wine", "version"], ours) });
+    const setVersion = (file: string, version = ours): Edit => ({ file, format: "yaml", mutate: (doc) => doc.setIn(["wine", "version"], version) });
+    // Where Lutris finds Proton builds (for their version files).
+    const buildDirs = [install.wineDir, ...(install.flatpak ? [] : steamInstalls.map((s) => s.toolsDir))];
     if (protonInstalled && def !== ours) {
       lfixes.push(
         fix(`${prefix}:default`, "set-default", "lutris", msg("label.defaultLutris", { proton: ours }), msg("why.defaultLutris", { current: orMsg(def, "fallback.lutrisDefault") }), true, [
@@ -303,8 +409,38 @@ export function scan(deps: ScanDeps): Scan {
       const support = dualSenseSupport(g.name);
       const runnerMissing = !!g.runner && !visible.has(g.runner) && !hasBuild(install.wineDir, g.runner);
       const effective = g.runner ?? def;
+      const key = `${prefix}:lutris:${g.configId}`;
       const gfixes: Fix[] = [];
-      if (protonInstalled && (runnerMissing || (nativeSupport(support) && effective !== ours))) {
+      const runnerFix = protonInstalled && (runnerMissing || (nativeSupport(support) && effective !== ours));
+      let gamepad: GamepadState | undefined;
+      let gamepadSwitches = false;
+      let gamepadFix: Fix | null = null;
+      if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key))) {
+        const runner = runnerFix ? ours : effective;
+        const p = gamepadPlan({
+          envSet: Object.entries(g.env).some(([k, v]) => k === PREFER_SDL && sdlVarForcing(k, v)),
+          honours: !runner || buildHonoursPreferSdl(runner, buildDirs),
+          // Lutris runs Proton builds through umu.
+          target: install.umu ? preferSdlBuild([...visible], buildDirs) : null,
+        });
+        gamepad = p.state;
+        if (p.state === "needed") {
+          gamepadSwitches = !!p.switchTo;
+          const edits: Edit[] = [];
+          if (p.addEnv) edits.push({ file: g.configPath, format: "yaml", mutate: (doc) => doc.setIn(["system", "env", PREFER_SDL], "1") });
+          if (p.switchTo) edits.push(setVersion(g.configPath, p.switchTo));
+          gamepadFix = fix(
+            `${prefix}:xinput:${g.configId}`,
+            "standard-gamepad",
+            "lutris",
+            msg("label.gamepad", { game: g.name }),
+            msg("why.gamepad", { game: g.name, runner: runnerSwitch(runner ?? "", p.switchTo) }),
+            true,
+            edits,
+          );
+        }
+      }
+      if (runnerFix && !gamepadSwitches) {
         gfixes.push(
           fix(
             `${prefix}:runner:${g.configId}`,
@@ -317,8 +453,9 @@ export function scan(deps: ScanDeps): Scan {
           ),
         );
       }
+      if (gamepadFix) gfixes.push(gamepadFix);
       games.push({
-        key: `${prefix}:lutris:${g.configId}`,
+        key,
         launcher: "lutris",
         store: "lutris",
         id: g.slug,
@@ -328,6 +465,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours,
         envFlags: [],
         support,
+        ...(gamepad ? { gamepad } : {}),
         fixes: gfixes,
       });
     }
@@ -426,23 +564,39 @@ export function scan(deps: ScanDeps): Scan {
 
 export interface ApplyDeps {
   backups: Backups;
-  // Checked again immediately before writing: a launcher started after the scan
+  // Closes and reopens launchers around the write (processes.ts). Checked
+  // again immediately before writing: a launcher started after the scan
   // would overwrite the changes when it quits.
-  runningLaunchers: () => Set<LauncherId>;
+  launchers: LauncherControl;
   restartWirePlumber: () => Promise<void>;
   setCardProfile: (card: string, profile: string) => Promise<void>;
 }
 
-export async function applyFixes(fresh: Scan, fixIds: string[], deps: ApplyDeps): Promise<ApplyResult> {
+// Running launchers that own one of these changes: `allowed` (the ones the
+// page said it will close and reopen) and the rest, which block.
+export function launchersToRestart(owners: Iterable<string>, running: Set<LauncherId>, allowed: RestartList): { restart: LauncherId[]; blockedBy: LauncherId[] } {
+  const busy = [...new Set(owners)].filter((l): l is LauncherId => l !== "system" && running.has(l as LauncherId));
+  return { restart: busy.filter((l) => (allowed as string[]).includes(l)), blockedBy: busy.filter((l) => !(allowed as string[]).includes(l)) };
+}
+
+export async function applyFixes(fresh: Scan, fixIds: string[], allowed: RestartList, deps: ApplyDeps): Promise<ApplyResult> {
   const selected = fixIds.map((id) => fresh.plan.get(id));
   const unknown = fixIds.filter((_, i) => !selected[i]);
   const chosen = selected.filter((p): p is Planned => !!p);
 
-  const needs = new Set(chosen.map((p) => p.fix.launcher).filter((l): l is LauncherId => l !== "system"));
-  const running = new Set([...fresh.report.launchers.filter((l) => l.running).map((l) => l.id), ...deps.runningLaunchers()]);
-  const blockedBy = [...needs].filter((l) => running.has(l));
+  const running = new Set([...fresh.report.launchers.filter((l) => l.running).map((l) => l.id), ...deps.launchers.running()]);
+  const { restart, blockedBy } = launchersToRestart(
+    chosen.map((p) => p.fix.launcher),
+    running,
+    allowed,
+  );
   if (blockedBy.length) return { applied: [], backupId: null, blockedBy };
+  const run = await withLaunchersClosed(restart, deps.launchers, () => writeChosen(chosen, unknown, deps));
+  if (!run.ok) return { applied: [], backupId: null, blockedBy: restart, problem: run.problem };
+  return run.reopenFailed.length ? { ...run.value, reopenFailed: run.reopenFailed } : run.value;
+}
 
+async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps): Promise<ApplyResult> {
   // Group edits by file (each file is read and written once), keeping its owner.
   const byFile = new Map<string, { owner: Owner; edits: Edit[] }>();
   for (const p of chosen) {

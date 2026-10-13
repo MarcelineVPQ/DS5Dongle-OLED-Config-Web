@@ -406,18 +406,13 @@
       "reviewTitle": "Revisar antes de aplicar",
       "reviewHint": "Estes arquivos serão alterados. Cada um ganha um backup antes, então Desfazer o deixa exatamente como era.",
       "noFiles": "Nenhum arquivo muda.",
-      "mustClose": "{{launcher}} está aberto. Ao fechar, ele regrava essas configurações e desfaria as mudanças, então precisa ser fechado antes.",
-      "closeLauncher": "Fechar {{launcher}}",
-      "closeGameRunning": "Ainda há um jogo aberto. Feche o jogo primeiro e tente de novo.",
-      "closeTimeout": "{{launcher}} não fechou em 30 segundos. Feche você mesmo e aperte Verificar de novo.",
       "apply_one": "Aplicar {{count}} mudança",
       "apply_other": "Aplicar {{count}} mudanças",
       "back": "Voltar",
       "doneTitle": "Pronto",
-      "doneHint": "Abra o launcher de novo; ele carrega as novas configurações ao iniciar.",
+      "doneHint": "Cada jogo carrega as novas configurações na próxima vez que iniciar.",
       "undo": "Desfazer estas mudanças",
       "undoShort": "Desfazer",
-      "undoBlocked": "Feche {{launchers}} antes: ao fechar, ele sobrescreveria as configurações restauradas.",
       "ok": "OK",
       "history": "Histórico de mudanças",
       "attention_one": "{{count}} mudança recomendada",
@@ -432,7 +427,8 @@
           "envSteam": "Remover {{vars}} das opções de inicialização de {{game}}",
           "envHeroic": "Remover {{vars}} das variáveis de ambiente de {{game}}",
           "audioRule": "Desativar a regra de áudio que força o controle para \"pro-audio\"",
-          "audioProfile": "Mudar o áudio do controle para o perfil \"{{profile}}\""
+          "audioProfile": "Mudar o áudio do controle para o perfil \"{{profile}}\"",
+          "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)"
         },
         "why": {
           "defaultSteam": "O Steam roda jogos de Windows hoje com {{current}}. É o nosso build que faz os gatilhos adaptáveis e a resposta tátil funcionarem {{device_por}}. Jogos com um Proton específico mantêm a própria configuração.",
@@ -444,7 +440,10 @@
           "envSteam": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis. As opções de inicialização ficam: {{options}}",
           "envHeroic": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis.",
           "audioRule": "{{file}} coloca a placa de áudio do DualSense no perfil pro-audio, o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. O arquivo é renomeado para .disabled (não é apagado) e o serviço de áudio (WirePlumber) reinicia, então o som cai por um segundo.",
-          "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som."
+          "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som.",
+          "gamepad": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração.{{runner}}",
+          "gamepadSteam": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração. As opções de inicialização ficam: {{options}}{{runner}}",
+          "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}."
         },
         "support": {
           "triggers": "Este jogo suporta os gatilhos adaptáveis e a resposta tátil do DualSense.",
@@ -473,12 +472,17 @@
       "consentAllow": "Verificar meus launchers",
       "stop": "Parar de verificar",
       "stopHint": "Desliga a configuração de jogos; ela não lê mais as configurações dos launchers até você permitir de novo.",
-      "closeFailed": "Não foi possível pedir para o {{launcher}} fechar. Feche você mesmo e aperte Verificar de novo.",
       "undoConflict": "Não foi desfeito: {{files}} mudou depois de aplicar (o launcher salvou as próprias configurações). Desfazer descartaria essas mudanças.",
       "scanningWindows": "Verificando Steam, GOG Galaxy e Epic…",
       "consentIntroWindows": "A configuração de jogos lista seus jogos da Steam, GOG Galaxy e Epic e procura na Steam ajustes que impedem os gatilhos adaptáveis e a resposta tátil de chegarem a eles. Para isso, lê, só neste computador:",
       "consentLaunchersWindows": "os ajustes e as listas de jogos instalados da Steam, GOG Galaxy e Epic",
-      "consentRunningWindows": "quais programas estão rodando, para notar quando um dos seus jogos começa (para o perfil de controle dele)"
+      "consentRunningWindows": "quais programas estão rodando, para notar quando um dos seus jogos começa (para o perfil de controle dele)",
+      "willRestart": "O {{launcher}} será fechado para salvar esta mudança e depois aberto de novo.",
+      "willRestartUndo": "O {{launcher}} será fechado para desfazer esta mudança e depois aberto de novo.",
+      "restartGameRunning": "Há um jogo aberto, então o {{launcher}} não foi fechado (isso fecharia o jogo). Nada foi alterado. Feche o jogo e tente de novo.",
+      "restartTimeout": "O {{launcher}} não fechou em 30 segundos, então nada foi alterado. Feche você mesmo e tente de novo.",
+      "restartFailed": "Não foi possível pedir para o {{launcher}} fechar, então nada foi alterado. Feche você mesmo e tente de novo.",
+      "reopenFailed": "Salvo, mas o {{launcher}} não pôde ser aberto de novo. Abra você mesmo."
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -929,7 +933,11 @@
       "hiddenCount": "{{count}} ocultas",
       "triggerReduce": "Efeitos de gatilho",
       "speakerBoost": "Amplificação do alto-falante",
-      "lockVolume": "Travar volume"
+      "lockVolume": "Travar volume",
+      "gamepadSet": "O controle chega a este jogo como controle padrão (XInput).",
+      "gamepadSteamInput": "O Steam Input não está desligado para este jogo, então a Steam já entrega a ele um controle de Xbox: a opção de controle padrão não é necessária.",
+      "gamepadNoBuild": "Este jogo precisa da opção de controle padrão (PROTON_PREFER_SDL), mas {{runner}} a ignora e nenhum Proton que a respeite está instalado. Instale nosso Proton DualSense mais novo (-DualSense-2 ou posterior) ou um GE-Proton comum.",
+      "notDetectedHint": "Marque isto se o jogo não reage ao controle: o app então oferece passá-lo ao jogo como controle padrão (XInput)."
     },
     "dongleConsole": {
       "title": "Console: {{deviceName}}",

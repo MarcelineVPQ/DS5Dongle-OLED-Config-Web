@@ -1,4 +1,4 @@
-import type { ApplyResult, GamesReport, LauncherId, Msg } from "./games/types";
+import type { ApplyResult, CloseProblem, GamesReport, LauncherId, Msg, RestartList } from "./games/types";
 import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
@@ -101,9 +101,10 @@ export interface GameBackup {
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
-export type CloseLauncherResult = "closed" | "not-running" | "game-running" | "timeout" | "failed";
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
-export type UndoResult = { ok: true; restored: string[] } | { ok: false; blockedBy: LauncherId[] } | { ok: false; conflict: string[] } | { ok: false; error: string };
+// blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
+export type UndoResult =
+  { ok: true; restored: string[]; reopenFailed?: LauncherId[] } | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem } | { ok: false; conflict: string[] } | { ok: false; error: string };
 
 export interface DesktopApi {
   platform: string;
@@ -147,10 +148,10 @@ export interface DesktopApi {
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
   // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
   gamesScan(): Promise<GamesReport>;
-  gamesApply(fixIds: string[]): Promise<ApplyResult>;
-  gamesUndo(backupId: string): Promise<UndoResult>;
+  // `restart`: the running launchers the page said it will close and reopen.
+  gamesApply(request: { fixIds: string[]; restart: RestartList }): Promise<ApplyResult>;
+  gamesUndo(request: { backupId: string; restart: RestartList }): Promise<UndoResult>;
   gamesBackups(): Promise<GameBackup[]>;
-  closeLauncher(launcher: LauncherId): Promise<CloseLauncherResult>;
   installProton(): Promise<ProtonInstallResult>;
   onProtonProgress(listener: (progress: ProtonProgress) => void): () => void;
   // Games library (Linux scan; the library file works everywhere): details
@@ -204,7 +205,6 @@ export const IPC = {
   gamesApply: "desktop:games-apply",
   gamesUndo: "desktop:games-undo",
   gamesBackups: "desktop:games-backups",
-  closeLauncher: "desktop:close-launcher",
   installProton: "desktop:install-proton",
   protonProgress: "desktop:proton-progress",
   gamesDetails: "desktop:games-details",

@@ -405,18 +405,13 @@
       "reviewTitle": "Review before applying",
       "reviewHint": "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.",
       "noFiles": "No files change.",
-      "mustClose": "{{launcher}} is running. It rewrites these settings when it quits, which would undo the changes, so it has to be closed first.",
-      "closeLauncher": "Close {{launcher}}",
-      "closeGameRunning": "A game is still running. Quit the game first, then try again.",
-      "closeTimeout": "{{launcher}} didn't quit within 30 seconds. Quit it yourself, then press Rescan.",
       "apply_one": "Apply {{count}} change",
       "apply_other": "Apply {{count}} changes",
       "back": "Back",
       "doneTitle": "Done",
-      "doneHint": "Start the launcher again; it picks up the new settings when it starts.",
+      "doneHint": "Each game picks up its new settings the next time it starts.",
       "undo": "Undo these changes",
       "undoShort": "Undo",
-      "undoBlocked": "Close {{launchers}} first: it would overwrite the restored settings when it quits.",
       "ok": "OK",
       "history": "Change history",
       "attention_one": "{{count}} recommended change",
@@ -431,7 +426,8 @@
           "envSteam": "Remove {{vars}} from {{game}}'s launch options",
           "envHeroic": "Remove {{vars}} from {{game}}'s environment variables",
           "audioRule": "Turn off the audio rule that forces the controller onto \"pro-audio\"",
-          "audioProfile": "Switch the controller's audio to the \"{{profile}}\" profile"
+          "audioProfile": "Switch the controller's audio to the \"{{profile}}\" profile",
+          "gamepad": "Pass the controller to {{game}} as a standard gamepad (XInput)"
         },
         "why": {
           "defaultSteam": "Steam currently runs Windows games with {{current}}. Our build is what makes adaptive triggers and haptic feedback work through {{device}}. Games you've set to a specific Proton keep their own setting.",
@@ -443,7 +439,10 @@
           "envSteam": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers. The launch options become: {{options}}",
           "envHeroic": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers.",
           "audioRule": "{{file}} switches the DualSense's audio card to the pro-audio profile, which makes GE-Proton 11 send zero-force triggers and no haptic feedback. The file is renamed to .disabled (not deleted) and the audio service (WirePlumber) restarts, so sound drops for a second.",
-          "audioProfile": "The DualSense's audio card is on \"{{profile}}\", which makes GE-Proton 11 send zero-force triggers and no haptic feedback. No files change; it's the same as picking the profile in your sound settings."
+          "audioProfile": "The DualSense's audio card is on \"{{profile}}\", which makes GE-Proton 11 send zero-force triggers and no haptic feedback. No files change; it's the same as picking the profile in your sound settings.",
+          "gamepad": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble.{{runner}}",
+          "gamepadSteam": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble. The launch options become: {{options}}{{runner}}",
+          "gamepadRunner": " {{current}} ignores this option, so the game also switches to {{proton}}."
         },
         "support": {
           "triggers": "This game supports the DualSense's adaptive triggers and haptic feedback.",
@@ -472,12 +471,17 @@
       "consentAllow": "Check my launchers",
       "stop": "Stop checking",
       "stopHint": "Turns game setup off; it won't read launcher settings again until you allow it.",
-      "closeFailed": "{{launcher}} couldn't be asked to quit. Quit it yourself, then press Rescan.",
       "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away.",
       "scanningWindows": "Checking Steam, GOG Galaxy and Epic…",
       "consentIntroWindows": "Game setup lists your Steam, GOG Galaxy and Epic games and checks Steam for settings that stop adaptive triggers and haptic feedback from reaching them. To do that it reads, on this computer only:",
       "consentLaunchersWindows": "the settings and installed-game lists of Steam, GOG Galaxy and Epic",
-      "consentRunningWindows": "which programs are running, to notice when one of your games starts (for its controller profile)"
+      "consentRunningWindows": "which programs are running, to notice when one of your games starts (for its controller profile)",
+      "willRestart": "{{launcher}} will be closed to save this change, then reopened.",
+      "willRestartUndo": "{{launcher}} will be closed to undo this change, then reopened.",
+      "restartGameRunning": "A game is running, so {{launcher}} wasn't closed (that would end the game). Nothing was changed. Quit the game, then try again.",
+      "restartTimeout": "{{launcher}} didn't quit within 30 seconds, so nothing was changed. Quit it yourself, then try again.",
+      "restartFailed": "{{launcher}} couldn't be asked to quit, so nothing was changed. Quit it yourself, then try again.",
+      "reopenFailed": "Saved, but {{launcher}} couldn't be started again. Start it yourself."
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -928,7 +932,11 @@
       "hiddenCount": "{{count}} hidden",
       "triggerReduce": "Trigger effects",
       "speakerBoost": "Speaker boost",
-      "lockVolume": "Lock volume"
+      "lockVolume": "Lock volume",
+      "gamepadSet": "The controller reaches this game as a standard gamepad (XInput).",
+      "gamepadSteamInput": "Steam Input isn't turned off for this game, so Steam already gives it an Xbox controller: the standard gamepad option isn't needed.",
+      "gamepadNoBuild": "This game needs the standard gamepad option (PROTON_PREFER_SDL), but {{runner}} ignores it and no Proton that honours it is installed. Install our newer DualSense Proton (-DualSense-2 or later) or a stock GE-Proton.",
+      "notDetectedHint": "Tick this if the game doesn't react to the controller: the app then offers to pass it to the game as a standard gamepad (XInput)."
     },
     "dongleConsole": {
       "title": "{{deviceName}} console",

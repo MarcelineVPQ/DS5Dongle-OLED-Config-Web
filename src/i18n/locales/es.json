@@ -406,18 +406,13 @@
       "reviewTitle": "Revisar antes de aplicar",
       "reviewHint": "Se cambiarán estos archivos. Cada uno se respalda antes, así que Deshacer lo deja exactamente como estaba.",
       "noFiles": "No cambia ningún archivo.",
-      "mustClose": "{{launcher}} está abierto. Al cerrarse reescribe estos ajustes y desharía los cambios, así que hay que cerrarlo primero.",
-      "closeLauncher": "Cerrar {{launcher}}",
-      "closeGameRunning": "Todavía hay un juego en marcha. Ciérralo primero y vuelve a intentarlo.",
-      "closeTimeout": "{{launcher}} no se cerró en 30 segundos. Ciérralo tú y pulsa Volver a revisar.",
       "apply_one": "Aplicar {{count}} cambio",
       "apply_other": "Aplicar {{count}} cambios",
       "back": "Atrás",
       "doneTitle": "Listo",
-      "doneHint": "Vuelve a abrir el lanzador; toma los nuevos ajustes al iniciarse.",
+      "doneHint": "Cada juego toma sus nuevos ajustes la próxima vez que se inicie.",
       "undo": "Deshacer estos cambios",
       "undoShort": "Deshacer",
-      "undoBlocked": "Cierra primero {{launchers}}: al cerrarse sobrescribiría los ajustes restaurados.",
       "ok": "Aceptar",
       "history": "Historial de cambios",
       "attention_one": "{{count}} cambio recomendado",
@@ -432,7 +427,8 @@
           "envSteam": "Quitar {{vars}} de las opciones de lanzamiento de {{game}}",
           "envHeroic": "Quitar {{vars}} de las variables de entorno de {{game}}",
           "audioRule": "Desactivar la regla de audio que fuerza el mando a «pro-audio»",
-          "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»"
+          "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»",
+          "gamepad": "Pasar el mando a {{game}} como mando estándar (XInput)"
         },
         "why": {
           "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la retroalimentación háptica a través {{device_de}}. Los juegos con un Proton concreto mantienen su ajuste.",
@@ -444,7 +440,10 @@
           "envSteam": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos. Las opciones de lanzamiento quedan así: {{options}}",
           "envHeroic": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos.",
           "audioRule": "{{file}} pone la tarjeta de audio del DualSense en el perfil pro-audio, lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. El archivo se renombra a .disabled (no se borra) y el servicio de audio (WirePlumber) se reinicia, así que el sonido se corta un segundo.",
-          "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido."
+          "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido.",
+          "gamepad": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración.{{runner}}",
+          "gamepadSteam": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración. Las opciones de lanzamiento quedan así: {{options}}{{runner}}",
+          "gamepadRunner": " {{current}} ignora esta opción, así que el juego también pasa a {{proton}}."
         },
         "support": {
           "triggers": "Este juego admite los gatillos adaptativos y la retroalimentación háptica del DualSense.",
@@ -473,12 +472,17 @@
       "consentAllow": "Revisar mis lanzadores",
       "stop": "Dejar de revisar",
       "stopHint": "Desactiva la configuración de juegos; no volverá a leer los ajustes de los lanzadores hasta que lo permitas.",
-      "closeFailed": "No se pudo pedir a {{launcher}} que se cierre. Ciérralo tú y pulsa Volver a revisar.",
       "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios.",
       "scanningWindows": "Comprobando Steam, GOG Galaxy y Epic…",
       "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam, GOG Galaxy y Epic y busca en Steam ajustes que impiden que los gatillos adaptativos y la retroalimentación háptica lleguen a ellos. Para ello lee, solo en este equipo:",
       "consentLaunchersWindows": "los ajustes y las listas de juegos instalados de Steam, GOG Galaxy y Epic",
-      "consentRunningWindows": "qué programas se están ejecutando, para notar cuándo empieza uno de tus juegos (para su perfil de mando)"
+      "consentRunningWindows": "qué programas se están ejecutando, para notar cuándo empieza uno de tus juegos (para su perfil de mando)",
+      "willRestart": "{{launcher}} se cerrará para guardar este cambio y luego se volverá a abrir.",
+      "willRestartUndo": "{{launcher}} se cerrará para deshacer este cambio y luego se volverá a abrir.",
+      "restartGameRunning": "Hay un juego en marcha, así que {{launcher}} no se cerró (eso cerraría el juego). No se cambió nada. Cierra el juego y vuelve a intentarlo.",
+      "restartTimeout": "{{launcher}} no se cerró en 30 segundos, así que no se cambió nada. Ciérralo tú y vuelve a intentarlo.",
+      "restartFailed": "No se pudo pedir a {{launcher}} que se cierre, así que no se cambió nada. Ciérralo tú y vuelve a intentarlo.",
+      "reopenFailed": "Guardado, pero {{launcher}} no se pudo volver a abrir. Ábrelo tú."
     },
     "setup": {
       "installing": "Instalando el firmware…",
@@ -929,7 +933,11 @@
       "hiddenCount": "{{count}} ocultas",
       "triggerReduce": "Efectos de gatillo",
       "speakerBoost": "Amplificación del altavoz",
-      "lockVolume": "Bloquear volumen"
+      "lockVolume": "Bloquear volumen",
+      "gamepadSet": "El mando llega a este juego como mando estándar (XInput).",
+      "gamepadSteamInput": "Steam Input no está desactivado para este juego, así que Steam ya le da un mando de Xbox: la opción de mando estándar no hace falta.",
+      "gamepadNoBuild": "Este juego necesita la opción de mando estándar (PROTON_PREFER_SDL), pero {{runner}} la ignora y no hay instalado ningún Proton que la respete. Instala nuestro Proton DualSense más reciente (-DualSense-2 o posterior) o un GE-Proton normal.",
+      "notDetectedHint": "Marca esto si el juego no reacciona al mando: la aplicación ofrecerá pasárselo al juego como mando estándar (XInput)."
     },
     "dongleConsole": {
       "title": "Consola: {{deviceName}}",

@@ -405,17 +405,12 @@
       "reviewTitle": "应用前确认",
       "reviewHint": "以下文件将被修改。每个文件都会先备份，撤销即可完全恢复原样。",
       "noFiles": "不会修改任何文件。",
-      "mustClose": "{{launcher}} 正在运行。它退出时会重写这些设置并覆盖更改，所以需要先关闭它。",
-      "closeLauncher": "关闭 {{launcher}}",
-      "closeGameRunning": "仍有游戏在运行。请先退出游戏，然后重试。",
-      "closeTimeout": "{{launcher}} 未在 30 秒内退出。请手动退出，然后点击“重新检查”。",
       "apply_other": "应用 {{count}} 项更改",
       "back": "返回",
       "doneTitle": "完成",
-      "doneHint": "重新打开启动器，它会在启动时读取新设置。",
+      "doneHint": "每个游戏会在下次启动时读取新设置。",
       "undo": "撤销这些更改",
       "undoShort": "撤销",
-      "undoBlocked": "请先关闭 {{launchers}}：它退出时会覆盖已恢复的设置。",
       "ok": "确定",
       "history": "更改记录",
       "attention_other": "{{count}} 项建议更改",
@@ -429,7 +424,8 @@
           "envSteam": "从 {{game}} 的启动选项中删除 {{vars}}",
           "envHeroic": "从 {{game}} 的环境变量中删除 {{vars}}",
           "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
-          "audioProfile": "将控制器音频切换到“{{profile}}”配置"
+          "audioProfile": "将控制器音频切换到“{{profile}}”配置",
+          "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}"
         },
         "why": {
           "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过 {{device}} 工作。已单独指定 Proton 的游戏保持原设置。",
@@ -441,7 +437,10 @@
           "envSteam": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。启动选项将变为：{{options}}",
           "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
           "audioRule": "{{file}} 会把 DualSense 的声卡切换到 pro-audio 配置，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。该文件会被重命名为 .disabled（不会删除），音频服务 (WirePlumber) 会重启，声音会中断一秒。",
-          "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。"
+          "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。",
+          "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
+          "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
+          "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。"
         },
         "support": {
           "triggers": "此游戏支持 DualSense 的自适应扳机和触觉反馈。",
@@ -470,12 +469,17 @@
       "consentAllow": "检查我的启动器",
       "stop": "停止检查",
       "stopHint": "关闭游戏设置；在你再次允许之前，不会再读取启动器设置。",
-      "closeFailed": "无法请求 {{launcher}} 退出。请手动退出，然后点击“重新检查”。",
       "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。",
       "scanningWindows": "正在检查 Steam、GOG Galaxy 和 Epic…",
       "consentIntroWindows": "游戏设置会列出你在 Steam、GOG Galaxy 和 Epic 的游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
       "consentLaunchersWindows": "Steam、GOG Galaxy 和 Epic 的设置和已安装游戏列表",
-      "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的控制器配置）"
+      "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的控制器配置）",
+      "willRestart": "将关闭 {{launcher}} 以保存此更改，然后重新打开。",
+      "willRestartUndo": "将关闭 {{launcher}} 以撤销此更改，然后重新打开。",
+      "restartGameRunning": "有游戏正在运行，因此未关闭 {{launcher}}（那会结束游戏）。未做任何更改。请退出游戏后重试。",
+      "restartTimeout": "{{launcher}} 未在 30 秒内退出，因此未做任何更改。请手动退出后重试。",
+      "restartFailed": "无法请求 {{launcher}} 退出，因此未做任何更改。请手动退出后重试。",
+      "reopenFailed": "已保存，但无法重新启动 {{launcher}}。请手动启动它。"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -923,7 +927,11 @@
       "hiddenCount": "已隐藏 {{count}} 类",
       "triggerReduce": "扳机效果",
       "speakerBoost": "扬声器增强",
-      "lockVolume": "锁定音量"
+      "lockVolume": "锁定音量",
+      "gamepadSet": "控制器以标准手柄（XInput）形式提供给此游戏。",
+      "gamepadSteamInput": "此游戏未关闭 Steam Input，Steam 已经为它提供 Xbox 控制器，因此不需要标准手柄选项。",
+      "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（-DualSense-2 或更高）或普通的 GE-Proton。",
+      "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",

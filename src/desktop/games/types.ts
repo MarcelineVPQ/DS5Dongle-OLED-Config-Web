@@ -15,7 +15,16 @@ export type FixKind =
   | "set-runner" // point this game at our Proton
   | "steam-input-off" // per-game Steam Input off (Steam)
   | "remove-env" // drop PROTON_PREFER_SDL from the game's env / launch options
-  | "audio-hifi"; // disable a pro-audio rule for the DualSense
+  | "audio-hifi" // disable a pro-audio rule for the DualSense
+  | "standard-gamepad"; // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
+
+// An XInput-only game (our list, or the player marked "controller not
+// detected"): is the controller passed to it as a standard gamepad?
+//   set          PROTON_PREFER_SDL=1, with a Proton that honours it
+//   needed       a standard-gamepad fix is offered
+//   steam-input  Steam Input isn't off for it: Steam already gives it an Xbox pad
+//   no-build     its Proton ignores the option and no build that honours it is installed
+export type GamepadState = "set" | "needed" | "steam-input" | "no-build";
 
 // A translatable message: the renderer looks up `desktop.games.msg.<key>`
 // and fills in params (a param can itself be a message, e.g. "no default").
@@ -46,6 +55,7 @@ export interface GameEntry {
   steamInput?: "off" | "global" | "on"; // Steam only
   envFlags: string[]; // e.g. ["PROTON_PREFER_SDL"]
   support: DualSenseSupport;
+  gamepad?: GamepadState; // XInput-only games (Linux) only
   fixes: Fix[];
   // What the launcher says it is (Steam's own categories); absent = a game.
   kind?: AppKind;
@@ -102,11 +112,22 @@ export interface GamesReport {
   scannedAt: string;
 }
 
+// Why a running launcher wasn't closed for a change (nothing was written).
+export type CloseProblem = "game-running" | "timeout" | "failed";
+
 export interface ApplyResult {
   applied: Array<{ id: string; ok: boolean; message?: Msg }>;
   backupId: string | null;
-  blockedBy: LauncherId[]; // launchers that must be closed first
+  // Running launchers that own a selected change: not in the request's
+  // `restart` list (the page explains and asks again), or not closed (`problem`).
+  blockedBy: LauncherId[];
+  problem?: CloseProblem;
+  reopenFailed?: LauncherId[]; // closed for the change, but couldn't be started again
 }
+
+// Apply or undo, with the running launchers the page told the user it will
+// close and reopen (Steam, Heroic and Lutris rewrite their settings on quit).
+export type RestartList = Array<"steam" | "heroic" | "lutris">;
 
 // A scanned game's artwork, served by the main process (ds5-art://, see
 // electron/main/games/artRequest.ts).

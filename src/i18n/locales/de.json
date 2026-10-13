@@ -406,18 +406,13 @@
       "reviewTitle": "Vor dem Übernehmen prüfen",
       "reviewHint": "Diese Dateien werden geändert. Jede wird vorher gesichert, damit Rückgängig sie exakt wiederherstellt.",
       "noFiles": "Keine Dateien ändern sich.",
-      "mustClose": "{{launcher}} läuft. Beim Beenden schreibt er diese Einstellungen neu und würde die Änderungen überschreiben, deshalb muss er zuerst geschlossen werden.",
-      "closeLauncher": "{{launcher}} schließen",
-      "closeGameRunning": "Ein Spiel läuft noch. Beende zuerst das Spiel und versuche es dann erneut.",
-      "closeTimeout": "{{launcher}} wurde nicht innerhalb von 30 Sekunden beendet. Beende ihn selbst und drücke dann auf Neu prüfen.",
       "apply_one": "{{count}} Änderung übernehmen",
       "apply_other": "{{count}} Änderungen übernehmen",
       "back": "Zurück",
       "doneTitle": "Fertig",
-      "doneHint": "Starte den Launcher neu; er übernimmt die neuen Einstellungen beim Start.",
+      "doneHint": "Jedes Spiel übernimmt die neuen Einstellungen beim nächsten Start.",
       "undo": "Diese Änderungen rückgängig machen",
       "undoShort": "Rückgängig",
-      "undoBlocked": "Schließe zuerst {{launchers}}: Beim Beenden würden die wiederhergestellten Einstellungen überschrieben.",
       "ok": "OK",
       "history": "Änderungsverlauf",
       "attention_one": "{{count}} empfohlene Änderung",
@@ -432,7 +427,8 @@
           "envSteam": "{{vars}} aus den Startoptionen von {{game}} entfernen",
           "envHeroic": "{{vars}} aus den Umgebungsvariablen von {{game}} entfernen",
           "audioRule": "Die Audio-Regel abschalten, die den Controller auf „pro-audio“ zwingt",
-          "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen"
+          "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen",
+          "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben"
         },
         "why": {
           "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über {{device_akk}} zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
@@ -444,7 +440,10 @@
           "envSteam": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind. Die Startoptionen werden zu: {{options}}",
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
           "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
-          "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen."
+          "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen.",
+          "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
+          "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
+          "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}."
         },
         "support": {
           "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und das haptische Feedback des DualSense.",
@@ -473,12 +472,17 @@
       "consentAllow": "Meine Launcher prüfen",
       "stop": "Prüfung beenden",
       "stopHint": "Schaltet die Spiele-Einrichtung ab; sie liest keine Launcher-Einstellungen mehr, bis du es wieder erlaubst.",
-      "closeFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden. Beende ihn selbst und drücke dann auf Neu prüfen.",
       "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen.",
       "scanningWindows": "Steam, GOG Galaxy und Epic werden geprüft…",
       "consentIntroWindows": "Die Spieleeinrichtung listet deine Spiele aus Steam, GOG Galaxy und Epic auf und prüft Steam auf Einstellungen, die adaptive Trigger und haptisches Feedback blockieren. Dafür liest sie, nur auf diesem Computer:",
       "consentLaunchersWindows": "die Einstellungen und die Listen installierter Spiele von Steam, GOG Galaxy und Epic",
-      "consentRunningWindows": "welche Programme laufen, um zu bemerken, wenn eines deiner Spiele startet (für sein Controller-Profil)"
+      "consentRunningWindows": "welche Programme laufen, um zu bemerken, wenn eines deiner Spiele startet (für sein Controller-Profil)",
+      "willRestart": "{{launcher}} wird geschlossen, um diese Änderung zu speichern, und danach wieder geöffnet.",
+      "willRestartUndo": "{{launcher}} wird geschlossen, um diese Änderung rückgängig zu machen, und danach wieder geöffnet.",
+      "restartGameRunning": "Ein Spiel läuft, deshalb wurde {{launcher}} nicht geschlossen (das würde das Spiel beenden). Es wurde nichts geändert. Beende das Spiel und versuche es dann erneut.",
+      "restartTimeout": "{{launcher}} wurde nicht innerhalb von 30 Sekunden beendet, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
+      "restartFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
+      "reopenFailed": "Gespeichert, aber {{launcher}} konnte nicht wieder gestartet werden. Starte ihn selbst."
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -929,7 +933,11 @@
       "hiddenCount": "{{count}} ausgeblendet",
       "triggerReduce": "Trigger-Effekte",
       "speakerBoost": "Lautsprecher-Verstärkung",
-      "lockVolume": "Lautstärke sperren"
+      "lockVolume": "Lautstärke sperren",
+      "gamepadSet": "Der Controller kommt in diesem Spiel als Standard-Gamepad (XInput) an.",
+      "gamepadSteamInput": "Steam Input ist für dieses Spiel nicht ausgeschaltet, deshalb gibt Steam ihm schon einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht.",
+      "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (-DualSense-2 oder neuer) oder ein normales GE-Proton.",
+      "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben."
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",
