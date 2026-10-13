@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Applying the graphics-mode change did nothing.** The app's check for actions didn't accept the new fix yet, so Apply silently stopped; it does now, with a test.
+
 ### Added
 
 - **Games: the right graphics mode per game.** Ghostrunner and Ghostrunner 2 start in DirectX 11 and grey out Ray Tracing ("The game needs to be started in DirectX12 mode"). A new recommended change, **Start … in DirectX 12 so Ray Tracing is available**, adds the game's own flag (`-dx12`) to its arguments: Steam's launch options (after `%command%`; PROTON_PREFER_SDL, the gamescope HDR line and your own arguments kept), Heroic's game arguments, Lutris's arguments. Your own mode flag (for example `-dx11`) is left alone and the game page says so; the page shows ✓ once the game starts in DirectX 12. Linux and Windows (Steam); on Linux the change mentions that DirectX 12 runs through vkd3d-proton and the first starts can take longer while shaders are built. Undo takes the flag out again.
