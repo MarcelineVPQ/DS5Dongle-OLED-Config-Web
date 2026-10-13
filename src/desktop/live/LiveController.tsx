@@ -4,13 +4,16 @@
 // controller's state painted on it.
 // Pressed buttons light up, L2/R2 fill with the pull, sticks move, touches
 // show on the touchpad and the lightbar takes the controller's color. Every
-// part is a button that selects it for the side panel.
+// part is a button that selects it for the side panel. Under the mute button,
+// by the headset jack on the bottom edge: "Mic muted" while its light is on
+// and "Headset in" while headphones are plugged into the controller.
 //
 // The art is inlined once; live updates touch the existing SVG elements
 // directly (classes, attributes) instead of re-rendering 180 KB of markup
 // 30 times a second.
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Headphones, MicOff } from "lucide-react";
 import dualsenseArt from "../../assets/dualsense.svg?raw";
 import edgeArt from "../../assets/dualsense-edge.svg?raw";
 import type { InputReport } from "../../oled/inputReport";
@@ -87,6 +90,7 @@ function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped,
   // The art's own transform per stick group; live movement is applied on top of it.
   const baseTransform = useRef(new Map<PartId, string>());
   const touchLayer = useRef<SVGGElement | null>(null);
+  const marks = useRef<HTMLDivElement>(null);
 
   // Index the parts once and make each one a keyboard-reachable button.
   useLayoutEffect(() => {
@@ -123,6 +127,32 @@ function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped,
     layer.setAttribute("class", "touches");
     root.appendChild(layer);
     touchLayer.current = layer;
+  }, []);
+
+  // The mic / headset marks sit under the mute button, just below the shell's
+  // bottom edge (where the headset jack is); placed again only when the
+  // drawing's size changes.
+  useLayoutEffect(() => {
+    const el = host.current;
+    const box = marks.current;
+    const mute = parts.current.get("mute");
+    if (!el || !box || !mute) return;
+    const shell = [...el.querySelectorAll(".bd, .dk")].filter((s): s is SVGGeometryElement => s instanceof SVGGeometryElement);
+    const place = () => {
+      const origin = el.getBoundingClientRect();
+      const m = mute.getBoundingClientRect();
+      const x = m.left + m.width / 2;
+      // Walk down from the button until no shell part is filled there.
+      const toLocal = shell.map((s) => [s, s.getScreenCTM()?.inverse()] as const);
+      const filled = (y: number) => toLocal.some(([s, inv]) => inv && s.isPointInFill(new DOMPoint(x, y).matrixTransform(inv)));
+      let y = m.bottom;
+      while (y < origin.bottom && filled(y)) y++;
+      box.style.left = `${x - origin.left}px`;
+      box.style.top = `${y + 3 - origin.top}px`;
+    };
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Accessible names follow the language.
@@ -241,17 +271,33 @@ function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped,
   };
 
   return (
-    <div
-      ref={host}
-      className="live-ctl"
-      onClick={(e) => pick(e.target)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          pick(e.target);
-        }
-      }}
-      dangerouslySetInnerHTML={{ __html: art /* sink-allowed: bundled build-time SVG asset (src/assets/dualsense.svg or dualsense-edge.svg) */ }}
-    />
+    <div className="live-ctl-wrap">
+      <div
+        ref={host}
+        className="live-ctl"
+        onClick={(e) => pick(e.target)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            pick(e.target);
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: art /* sink-allowed: bundled build-time SVG asset (src/assets/dualsense.svg or dualsense-edge.svg) */ }}
+      />
+      <div ref={marks} className="live-marks">
+        {input?.micMuted && (
+          <span className="live-mark live-title-label">
+            <MicOff size={12} aria-hidden="true" />
+            {t("desktop.liveData.muted")}
+          </span>
+        )}
+        {input?.headphones && (
+          <span className="live-mark live-title-label">
+            <Headphones size={12} aria-hidden="true" />
+            {t("desktop.live.headsetIn")}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

@@ -571,6 +571,7 @@
       "hardwareAccelerationSub": "使用显卡绘制：更流畅，模糊和玻璃效果也需要它。显卡崩溃时会自动关闭。",
       "restartToApply": "重启应用后生效",
       "modelLabel": "型号：",
+      "headsetIn": "已插耳机",
       "colorLabel": "配色：",
       "statusLabel": "状态：",
       "triggersTitle": "自适应扳机",

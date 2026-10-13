@@ -571,6 +571,7 @@
       "hardwareAccelerationSub": "グラフィックカードで描画します：より滑らかで、ぼかしやガラス効果に必要です。グラフィックカードがクラッシュすると自動でオフになります。",
       "restartToApply": "アプリを再起動すると反映されます",
       "modelLabel": "モデル：",
+      "headsetIn": "ヘッドセット接続",
       "colorLabel": "カラー：",
       "statusLabel": "状態：",
       "triggersTitle": "アダプティブトリガー",

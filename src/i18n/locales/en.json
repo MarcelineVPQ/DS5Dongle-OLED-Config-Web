@@ -573,6 +573,7 @@
       "hardwareAccelerationSub": "Draws with the graphics card: smoother, and needed for blur and glass effects. Turns itself off if the graphics card crashes.",
       "restartToApply": "Restart the app to apply",
       "modelLabel": "Model:",
+      "headsetIn": "Headset in",
       "colorLabel": "Color:",
       "statusLabel": "Status:",
       "triggersTitle": "Adaptive triggers",

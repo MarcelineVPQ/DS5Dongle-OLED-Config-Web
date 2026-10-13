@@ -574,6 +574,7 @@
       "hardwareAccelerationSub": "Dessine avec la carte graphique : plus fluide, et nécessaire au flou et aux effets de verre. Se désactive si la carte graphique plante.",
       "restartToApply": "Redémarrez l'app pour appliquer",
       "modelLabel": "Modèle :",
+      "headsetIn": "Casque branché",
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
       "triggersTitle": "Gâchettes adaptatives",

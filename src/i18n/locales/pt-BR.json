@@ -574,6 +574,7 @@
       "hardwareAccelerationSub": "Desenha com a placa de vídeo: mais fluido e necessário para desfoque e efeitos de vidro. Desliga sozinha se a placa de vídeo travar.",
       "restartToApply": "Reinicie o app para aplicar",
       "modelLabel": "Modelo:",
+      "headsetIn": "Fone conectado",
       "colorLabel": "Cor:",
       "statusLabel": "Status:",
       "triggersTitle": "Gatilhos adaptáveis",

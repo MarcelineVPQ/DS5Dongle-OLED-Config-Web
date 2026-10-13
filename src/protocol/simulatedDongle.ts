@@ -206,10 +206,12 @@ export class SimulatedDongle implements Ds5Transport {
     return out;
   }
 
-  // Live mode: sticks circle slowly, triggers breathe, battery steady.
+  // Live mode: sticks circle slowly, triggers breathe, battery steady, a
+  // headset plugged in and the mic muted (so the drawing shows its marks).
   private liveInput(): Uint8Array {
     const t = (Date.now() - this.started) / 1000;
     const b = this.input.slice();
+    b[53] |= 0x01 | 0x04;
     const axis = (v: number) => Math.round(128 + 60 * v);
     b[0] = axis(Math.cos(t * 0.8));
     b[1] = axis(Math.sin(t * 0.8));

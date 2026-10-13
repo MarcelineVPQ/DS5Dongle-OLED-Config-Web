@@ -32,6 +32,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   { column: "next", title: "Our own color picker", text: "A color picker in the app's look, with hex and R/G/B fields, recent colors and full keyboard use.", areas: ["app"], high: true },
   { column: "next", title: "Your controller's colors", text: "Pick colors for the shell, the black parts, buttons, sticks and outlines of the drawing.", areas: ["controller"] },
+  { column: "next", title: "Mic muted and headset indicators", text: "The live controller says when the mic is muted and when headphones are plugged in.", areas: ["controller", "audio"] },
 
   // In progress
   {
@@ -77,7 +78,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Per-controller settings", text: "Each paired controller keeps its own haptics, lightbar, buttons and speaker settings.", areas: ["controller"] },
   { column: "planned", title: "Edge on-controller profiles", text: "Read, edit and switch the profiles stored on a DualSense Edge.", areas: ["controller"] },
   { column: "planned", title: "Limited-edition looks", text: "Show a limited-edition controller's colors on the drawing; one edition first, to try it.", areas: ["controller"] },
-  { column: "planned", title: "Mic muted and headset indicators", text: "The live controller says when the mic is muted and when headphones are plugged in.", areas: ["controller", "audio"] },
   { column: "next", title: "Louder speaker test", text: "The speaker test chime plays about as loud as games do.", areas: ["audio"] },
   {
     column: "planned",
