@@ -850,8 +850,15 @@ export function SpeakerTest() {
 }
 
 // Records 3 s from the controller's mic and plays it back on its speaker
-// (main process, Linux), with the level while recording.
-function MicTest() {
+// (main process, Linux), with the level while recording. The recording uses
+// PipeWire's tools (electron/main/audioTest.ts), so the card is Linux-only:
+// on Windows and macOS it isn't shown (like Set up USB access), rather than a
+// button that can only fail.
+export function MicTest() {
+  return window.desktop?.platform === "linux" ? <MicTestCard /> : null;
+}
+
+function MicTestCard() {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [phase, setPhase] = useState<"idle" | "recording" | "playing" | "done" | "quiet" | "error">("idle");
