@@ -101,7 +101,8 @@
       "profileActive": "{{title}} 配置文件已启用",
       "profileSaved": "更改会保存到配置文件；游戏关闭后恢复你的常规设置。",
       "profileUnsaved": "已在此更改，尚未保存到配置文件。",
-      "saveProfile": "保存到配置文件"
+      "saveProfile": "保存到配置文件",
+      "saveProfileTo": "保存到 {{title}} 配置文件"
     },
     "common": {
       "cancel": "取消"
@@ -1137,7 +1138,6 @@
       "title": "手柄信息",
       "needsFirmware": "更新接收器固件后即可查看手柄的固件、电池电压和使用统计。",
       "noController": "连接手柄后即可查看其信息。",
-      "battery": "电池",
       "charge": "充电",
       "chargeState": {
         "discharging": "未充电",
@@ -1148,7 +1148,6 @@
         "chargeError": "充电错误",
         "unknown": "未知"
       },
-      "firmware": "固件",
       "built": "构建时间",
       "hardware": "硬件",
       "sbl": "引导程序",
@@ -1178,7 +1177,6 @@
       "noCounters": "此手柄没有发送使用统计。",
       "privacy": "由手柄自身记录。只读：不会更改任何内容，也从不把序列号读入应用。",
       "refresh": "刷新",
-      "officialCurrent": "已是最新",
       "officialNewer": "有更新的官方固件 {{version}}",
       "howToUpdate": "如何更新",
       "howToPc": "用 USB-C 数据线将手柄连接到 Windows 电脑，然后用 Sony 的 PlayStation Accessories 应用（原“DualSense 无线控制器固件更新程序”）更新。",

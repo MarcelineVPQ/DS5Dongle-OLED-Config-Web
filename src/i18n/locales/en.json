@@ -100,7 +100,8 @@
       "profileActive": "{{title}} profile is active",
       "profileSaved": "Changes go to the profile; normal settings come back when the game closes.",
       "profileUnsaved": "Changed here, not saved to the profile yet.",
-      "saveProfile": "Save to profile"
+      "saveProfile": "Save to profile",
+      "saveProfileTo": "Save to {{title}} profile"
     },
     "common": {
       "cancel": "Cancel"
@@ -1142,7 +1143,6 @@
       "title": "Controller info",
       "needsFirmware": "Update the dongle's firmware to see the controller's firmware, battery voltage and lifetime counters.",
       "noController": "Connect a controller to see its info.",
-      "battery": "Battery",
       "charge": "Charging",
       "chargeState": {
         "discharging": "Not charging",
@@ -1153,7 +1153,6 @@
         "chargeError": "Charging error",
         "unknown": "Unknown"
       },
-      "firmware": "Firmware",
       "built": "Built",
       "hardware": "Hardware",
       "sbl": "Bootloader",
@@ -1183,7 +1182,6 @@
       "noCounters": "This controller didn't send lifetime counters.",
       "privacy": "Kept by the controller itself. Read only: nothing is changed, and its serial number is never read into the app.",
       "refresh": "Refresh",
-      "officialCurrent": "Up to date",
       "officialNewer": "Newer official firmware {{version}} available",
       "howToUpdate": "How to update",
       "howToPc": "Plug the controller into a Windows PC with a USB-C cable and update it with Sony's PlayStation Accessories app (formerly \"Firmware updater for DualSense wireless controller\").",

@@ -33,11 +33,12 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const [error, setError] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
 
+  // Only the slots: the current slot comes from the connection hook's
+  // identity poll (the app's one identity poll).
   const live = usePoll(
     async () => {
       if (!client) return null;
-      const [slots, identity] = await Promise.all([client.readSlots(), client.identity()]);
-      return { slots, identity };
+      return { slots: await client.readSlots() };
     },
     1500,
     Boolean(client) && !busy,
@@ -61,8 +62,8 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   // Remember the connected controller against its slot's address.
   // Read fresh each render (the panel re-renders with every poll).
   const memory = readMemory();
-  const id = v?.identity;
-  const here = id && v.slots.occupied[id.currentSlot] ? formatMac(v.slots.addrs[id.currentSlot]) : null;
+  const id = bridge.identity;
+  const here = id && v && v.slots.occupied[id.currentSlot] ? formatMac(v.slots.addrs[id.currentSlot]) : null;
   useEffect(() => {
     if (!here || !id?.model || !id.colorwayCode || fake.slot !== null) return;
     const known = memory[here];
@@ -98,7 +99,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
           <tbody>
             {[0, 1, 2, 3].map((i) => {
               const fakeHere = fake.on && !(v?.slots.occupied[i] ?? false) ? FAKE_SLOTS[i] : undefined;
-              const active = fake.slot !== null ? fake.slot === i : v?.identity.currentSlot === i;
+              const active = fake.slot !== null ? fake.slot === i : id?.currentSlot === i;
               const occupied = (v?.slots.occupied[i] ?? false) || !!fakeHere;
               const mac = v && v.slots.occupied[i] ? formatMac(v.slots.addrs[i]) : null;
               const name = fakeHere ? `${describe(fakeHere)} (${t("desktop.slots.pretend")})` : mac ? describe(memory[mac]) : null;
@@ -117,7 +118,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
                           disabled={!client || busy}
                           onClick={() =>
                             // A pretend controller, or back from one to the real slot: shown only, nothing sent.
-                            fakeHere ? fake.switchTo(i) : fake.slot !== null && v?.identity.currentSlot === i ? fake.switchTo(null) : void act(() => switchSlot(i))
+                            fakeHere ? fake.switchTo(i) : fake.slot !== null && id?.currentSlot === i ? fake.switchTo(null) : void act(() => switchSlot(i))
                           }
                         >
                           {t("desktop.slots.switch", "Switch to")}

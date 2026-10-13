@@ -101,7 +101,8 @@
       "profileActive": "{{title}} のプロファイルが有効",
       "profileSaved": "変更はプロファイルに保存されます。ゲームを閉じると通常の設定に戻ります。",
       "profileUnsaved": "ここで変更済み。まだプロファイルに保存されていません。",
-      "saveProfile": "プロファイルに保存"
+      "saveProfile": "プロファイルに保存",
+      "saveProfileTo": "{{title}} のプロファイルに保存"
     },
     "common": {
       "cancel": "キャンセル"
@@ -1137,7 +1138,6 @@
       "title": "コントローラー情報",
       "needsFirmware": "ドングルのファームウェアを更新すると、コントローラーのファームウェア、電池電圧、累計カウンターを表示できます。",
       "noController": "コントローラーを接続すると情報を表示できます。",
-      "battery": "バッテリー",
       "charge": "充電",
       "chargeState": {
         "discharging": "充電していません",
@@ -1148,7 +1148,6 @@
         "chargeError": "充電エラー",
         "unknown": "不明"
       },
-      "firmware": "ファームウェア",
       "built": "ビルド",
       "hardware": "ハードウェア",
       "sbl": "ブートローダー",
@@ -1178,7 +1177,6 @@
       "noCounters": "このコントローラーは累計カウンターを送りませんでした。",
       "privacy": "コントローラー自身が記録した値です。読み取りのみ：何も変更せず、シリアル番号はアプリに読み込みません。",
       "refresh": "更新",
-      "officialCurrent": "最新です",
       "officialNewer": "新しい公式ファームウェア {{version}} があります",
       "howToUpdate": "アップデートの方法",
       "howToPc": "USB Type-Cケーブルでコントローラーを Windows PC に接続し、Sony の PlayStation Accessories アプリ（旧「DualSense ワイヤレスコントローラー ファームウェアアップデーター」）でアップデートします。",

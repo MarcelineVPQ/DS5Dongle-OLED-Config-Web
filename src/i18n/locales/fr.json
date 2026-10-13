@@ -101,7 +101,8 @@
       "profileActive": "Profil {{title}} actif",
       "profileSaved": "Les modifications vont dans le profil ; vos réglages habituels reviennent à la fermeture du jeu.",
       "profileUnsaved": "Modifié ici, pas encore enregistré dans le profil.",
-      "saveProfile": "Enregistrer dans le profil"
+      "saveProfile": "Enregistrer dans le profil",
+      "saveProfileTo": "Enregistrer dans le profil {{title}}"
     },
     "common": {
       "cancel": "Annuler"
@@ -1143,7 +1144,6 @@
       "title": "Infos de la manette",
       "needsFirmware": "Mettez à jour le firmware du dongle pour voir le firmware, la tension de batterie et les compteurs de la manette.",
       "noController": "Connectez une manette pour voir ses infos.",
-      "battery": "Batterie",
       "charge": "Charge",
       "chargeState": {
         "discharging": "Pas en charge",
@@ -1154,7 +1154,6 @@
         "chargeError": "Erreur de charge",
         "unknown": "Inconnu"
       },
-      "firmware": "Firmware",
       "built": "Compilé",
       "hardware": "Matériel",
       "sbl": "Bootloader",
@@ -1184,7 +1183,6 @@
       "noCounters": "Cette manette n'a pas envoyé de compteurs.",
       "privacy": "Enregistré par la manette elle-même. Lecture seule : rien n'est modifié et son numéro de série n'est jamais lu par l'app.",
       "refresh": "Actualiser",
-      "officialCurrent": "À jour",
       "officialNewer": "Firmware officiel plus récent disponible : {{version}}",
       "howToUpdate": "Comment mettre à jour",
       "howToPc": "Branchez la manette à un PC Windows avec un câble USB-C et mettez-la à jour avec l'application PlayStation Accessories de Sony (anciennement « Outil de mise à jour du firmware pour la manette sans fil DualSense »).",

@@ -3,7 +3,7 @@
 // voltage from a test command) and its lifetime counters. Read once when a
 // controller connects and on Refresh; nothing here polls. Serial numbers never
 // reach the app (the dongle blanks them), so nothing identifying is shown.
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -11,6 +11,7 @@ import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
 import { chargeState, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
 import { compareOfficial } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
+import { BusyButton } from "../controls";
 import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInfo";
 
 export const supportsControllerInfo = (identity: UseDs5BridgeResult["identity"]) => supportsFeature3(identity, 12, FEATURES3.controllerInfo);
@@ -81,11 +82,21 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
   const [loadTry, setLoadTry] = useState(0);
   const [official, setOfficial] = useState<OfficialFirmwareLookup | null>(null);
 
+  // Refresh's promise: settled when the read it started has finished.
+  const refreshDone = useRef<(() => void) | null>(null);
+  const refresh = () =>
+    new Promise<void>((resolve) => {
+      refreshDone.current = resolve;
+      setLoadTry((n) => n + 1);
+    });
+
   // Once per controller connection, and again on Refresh. (While none is
   // connected the card shows no numbers; a new one starts from blank.)
   useEffect(() => {
     if (!client || !supported || !connected) return;
     let live = true;
+    const done = refreshDone.current;
+    refreshDone.current = null;
     void Promise.resolve()
       .then(() => {
         if (live) {
@@ -104,9 +115,13 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
       })
       .then((next) => live && setInfo(next))
       .catch((cause) => live && setError(errorText(cause)))
-      .finally(() => live && setLoading(false));
+      .finally(() => {
+        if (live) setLoading(false);
+        done?.();
+      });
     return () => {
       live = false;
+      done?.();
     };
   }, [client, supported, connected, loadTry]);
 
@@ -130,16 +145,16 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
         <div className="ctrl-info-cols">
           <div>
             <dl className="dk-kv">
-              <dt>{t("desktop.ctrlInfo.battery")}</dt>
+              <dt>{t("desktop.controller.battery")}</dt>
               <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
               <dt>{t("desktop.ctrlInfo.charge")}</dt>
               <dd className={chargeBad ? "dk-bad" : undefined}>{charge ? t(`desktop.ctrlInfo.chargeState.${charge}`) : "—"}</dd>
-              <dt>{t("desktop.ctrlInfo.firmware")}</dt>
+              <dt>{t("desktop.overview.firmware")}</dt>
               <dd>
                 <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>
                 {officialStatus && (
                   <span className={officialStatus.status === "current" ? "dk-good dk-fw-note" : "dk-fw-note"}>
-                    {officialStatus.status === "current" ? t("desktop.ctrlInfo.officialCurrent") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
+                    {officialStatus.status === "current" ? t("desktop.firmware.upToDate") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
                   </span>
                 )}
               </dd>
@@ -232,9 +247,9 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
         )}
         <p className="dk-hint">{t("desktop.ctrlInfo.privacy")}</p>
         <div className="dk-row-btns">
-          <button type="button" className="dk-btn" disabled={loading} onClick={() => setLoadTry((n) => n + 1)}>
+          <BusyButton disabled={loading} onClick={refresh}>
             {t("desktop.ctrlInfo.refresh")}
-          </button>
+          </BusyButton>
         </div>
       </>
     );

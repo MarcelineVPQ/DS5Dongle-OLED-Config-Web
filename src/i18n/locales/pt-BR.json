@@ -101,7 +101,8 @@
       "profileActive": "Perfil de {{title}} ativo",
       "profileSaved": "As alterações vão para o perfil; suas configurações normais voltam quando o jogo fechar.",
       "profileUnsaved": "Alterado aqui, ainda não salvo no perfil.",
-      "saveProfile": "Salvar no perfil"
+      "saveProfile": "Salvar no perfil",
+      "saveProfileTo": "Salvar no perfil de {{title}}"
     },
     "common": {
       "cancel": "Cancelar"
@@ -1143,7 +1144,6 @@
       "title": "Info do controle",
       "needsFirmware": "Atualize o firmware do dongle para ver o firmware, a tensão da bateria e os contadores do controle.",
       "noController": "Conecte um controle para ver as infos dele.",
-      "battery": "Bateria",
       "charge": "Carga",
       "chargeState": {
         "discharging": "Não carregando",
@@ -1154,7 +1154,6 @@
         "chargeError": "Erro de carga",
         "unknown": "Desconhecido"
       },
-      "firmware": "Firmware",
       "built": "Compilado",
       "hardware": "Hardware",
       "sbl": "Bootloader",
@@ -1184,7 +1183,6 @@
       "noCounters": "Este controle não enviou contadores.",
       "privacy": "Guardado pelo próprio controle. Só leitura: nada é alterado e o número de série nunca é lido pelo app.",
       "refresh": "Atualizar",
-      "officialCurrent": "Atualizado",
       "officialNewer": "Firmware oficial mais recente disponível: {{version}}",
       "howToUpdate": "Como atualizar",
       "howToPc": "Conecte o controle a um PC com Windows com um cabo USB-C e atualize-o com o app PlayStation Accessories da Sony (antes \"Atualizador de firmware para o controle sem fio DualSense\").",
