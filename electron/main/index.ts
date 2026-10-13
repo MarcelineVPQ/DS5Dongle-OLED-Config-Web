@@ -12,7 +12,7 @@ import { GamesService } from "./games/service";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { artRequestTarget } from "./games/artRequest";
-import { hasSchemeHandler, openForUser } from "./games/schemeHandler";
+import { hasSchemeHandler, openForUser, startForUser } from "./games/schemeHandler";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
@@ -224,6 +224,11 @@ function start(): void {
         // running instance (Steam does), so the open result means nothing:
         // success = a handler is registered for the scheme.
         if (!(await hasSchemeHandler(target.url))) return false;
+        // ▶ Play with the launcher closed: it starts in the background with
+        // the game (Steam -silent, Heroic --no-gui; actions.ts), in its own
+        // unit like everything we start; if that can't start, the link.
+        const quiet = u.action === "play" ? await withGames((g) => g.quietPlay(u.gameKey)).catch(() => null) : null;
+        if (quiet && (await startForUser(quiet.cmd, quiet.args))) return true;
         // Linux: xdg-open with the real home, so a launcher that wasn't
         // running doesn't start inside the dev copy's test HOME, in its own
         // unit, so it outlives the app (schemeHandler.ts).

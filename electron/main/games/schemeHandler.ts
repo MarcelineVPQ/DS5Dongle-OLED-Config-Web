@@ -10,7 +10,9 @@
 // app's environment on, so Linux uses xdg-open directly: fixed argv, no shell.
 import { execFile, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { userInfo } from "node:os";
+import { join } from "node:path";
 import { inside } from "./running";
 
 // Variables that describe this app, never the launcher: Electron's and
@@ -178,7 +180,7 @@ export async function startIndependent(cmd: string, args: string[], deps: StartD
   return deps.spawnDetached(cmd, args, env);
 }
 
-/** Used for xdg-open and for reopening a launcher. */
+/** Used for xdg-open, for reopening a launcher and for ▶ Play starting one in the background. */
 export const startForUser = (cmd: string, args: string[]): Promise<boolean> => startIndependent(cmd, args);
 
 /** Open a link or folder the main process built (never one from the page)
@@ -189,14 +191,52 @@ export function openForUser(target: string): Promise<boolean> {
   return startForUser("xdg-open", [target]);
 }
 
+// The desktop entry registered for a link's scheme ("heroic.desktop"), or
+// null when none is or it can't be told (`err` true: no xdg-mime).
+function defaultHandler(scheme: string): Promise<{ err: boolean; entry: string | null }> {
+  const env = process.platform === "linux" ? launcherEnv(process.env, realHome()) : process.env;
+  return new Promise((resolve) =>
+    execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve({ err: !!err, entry: err ? null : out.trim() || null })),
+  );
+}
+
 export function hasSchemeHandler(url: string): Promise<boolean> {
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url)?.[1]?.toLowerCase();
   if (!scheme) return Promise.resolve(false);
-  const env = process.platform === "linux" ? launcherEnv(process.env, realHome()) : process.env;
-  return new Promise((resolve) =>
-    execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }, (err, out) =>
-      // can't tell (no xdg-mime): let the open attempt decide
-      resolve(err ? true : out.trim() !== ""),
-    ),
-  );
+  // can't tell (no xdg-mime): let the open attempt decide
+  return defaultHandler(scheme).then(({ err, entry }) => err || entry !== null);
+}
+
+/** The applications folders desktop entries are looked up in (XDG base
+ * dirs, the user's first), for this real home. */
+export function applicationDirs(env: NodeJS.ProcessEnv, home: string): string[] {
+  const dataHome = env.XDG_DATA_HOME || join(home, ".local/share");
+  const dataDirs = (env.XDG_DATA_DIRS || "/usr/local/share:/usr/share").split(":").filter(Boolean);
+  return [dataHome, ...dataDirs].map((d) => join(d, "applications"));
+}
+
+/** The Exec value in a desktop entry's [Desktop Entry] group. */
+export function desktopExec(text: string): string | null {
+  let inMain = false;
+  for (const line of text.split("\n")) {
+    const t = line.trim();
+    if (t.startsWith("[")) inMain = t === "[Desktop Entry]";
+    else if (inMain && t.startsWith("Exec=")) return t.slice(5);
+  }
+  return null;
+}
+
+/** Linux: the Exec value of the app registered for a scheme (read only;
+ * the caller decides what of it, if anything, to use), or null. */
+export async function schemeHandlerExec(scheme: string): Promise<string | null> {
+  const { entry } = await defaultHandler(scheme);
+  if (!entry || !/^[\w.-]+\.desktop$/.test(entry)) return null;
+  for (const dir of applicationDirs(launcherEnv(process.env, realHome()), realHome())) {
+    try {
+      return desktopExec(await readFile(join(dir, entry), "utf8"));
+    } catch {
+      // not in this folder
+    }
+  }
+  return null;
 }

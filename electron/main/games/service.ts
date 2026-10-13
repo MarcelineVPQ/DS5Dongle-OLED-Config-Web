@@ -4,10 +4,11 @@
 // Proton build. The renderer only ever passes fix ids, a backup id or a
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { readWindowsStores, type WindowsStores } from "./windowsStores";
 import { dominantColor } from "./artColor";
-import { actionUrl, availableActions } from "./actions";
+import { actionUrl, availableActions, execWords, quietPlay, type QuietPlaySystem } from "./actions";
 import { errorText } from "../../../src/errorText";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
@@ -17,12 +18,13 @@ import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../s
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
+import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, type Scan } from "./games";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
-import { launcherControl, realLayer, withLaunchersClosed, type LauncherControl } from "./processes";
+import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClosed, type LauncherControl, type ReopenPlan } from "./processes";
+import { schemeHandlerExec } from "./schemeHandler";
 import { installProton, type ExtraTarget } from "./proton";
-import { findSteamInstalls, installedTools } from "./steam";
+import { findSteamInstalls, installedTools, windowsSteamRoots } from "./steam";
 import { dualSenseCards, restartWirePlumber, setCardProfile, type AudioCard } from "./system";
 import { hdrSystem } from "./hdr";
 
@@ -39,8 +41,21 @@ export interface GamesServiceDeps {
   hdrMarked: () => Set<string>; // game keys the player marked "Supports HDR"
   launchers?: LauncherControl; // tests: a fake process layer
   gameRunning?: () => boolean; // the library sees a game running (Windows: launchers aren't closed then)
+  quietPlaySystem?: Omit<QuietPlaySystem, "running" | "flatpak">; // tests: no xdg-mime, registry or file checks
   probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem> }; // tests: no pactl / kscreen-doctor / gdbus / gamescope
 }
+
+// Where ▶ Play finds the launchers' programs on this system.
+const realQuietPlaySystem = (): Omit<QuietPlaySystem, "running" | "flatpak"> => ({
+  platform: process.platform,
+  heroicHandler: async () => {
+    const exec = await schemeHandlerExec("heroic");
+    return exec === null ? null : execWords(exec);
+  },
+  exists: existsSync,
+  steamExe: () => steamExeIn(windowsSteamRoots(), existsSync),
+  heroicExe: () => heroicExeIn(process.env, existsSync),
+});
 
 export class GamesService {
   private readonly home = homedir();
@@ -157,6 +172,18 @@ export class GamesService {
     if (action === "prefixFolder") return d?.prefixDir ? { folder: d.prefixDir } : {};
     const url = actionUrl(game, action, d?.lutrisSlug);
     return url ? { url } : {};
+  }
+
+  // ▶ Play while the game's launcher is closed: the launcher started in the
+  // background with the game (actions.ts quietPlay), or null to open the link.
+  async quietPlay(key: string): Promise<ReopenPlan | null> {
+    this.requireConsent();
+    const game = this.lastGames.find((g) => g.key === key);
+    const url = game && actionUrl(game, "play", this.lastDetails.get(key)?.lutrisSlug);
+    if (!game || !url) return null;
+    const installs: Array<{ root: string; flatpak: boolean }> = game.launcher === "steam" ? findSteamInstalls(this.home) : game.launcher === "heroic" ? findHeroicInstalls(this.home) : [];
+    const flatpak = installs.some((i) => i.flatpak && key.startsWith(`${game.launcher}-${idHash(i.root)}:`));
+    return quietPlay(game.launcher, url, { ...(this.deps.quietPlaySystem ?? realQuietPlaySystem()), running: () => this.launchers.running(), flatpak });
   }
 
   // A local art file for the ds5-art:// protocol: only files the last scan

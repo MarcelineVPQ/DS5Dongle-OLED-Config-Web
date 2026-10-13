@@ -135,6 +135,12 @@ export const ROADMAP: RoadmapItem[] = [
   },
   {
     column: "next",
+    title: "Play keeps the launcher in the background",
+    text: "Play on a game's page starts the game with Steam or Heroic staying in the tray when they weren't open, instead of opening their whole window.",
+    areas: ["games"],
+  },
+  {
+    column: "next",
     title: "XInput games find the controller",
     text: "Games that only know Xbox controllers (Ghostrunner, Control) get the controller as a standard gamepad: Games sets the Proton option for them, and closes and reopens the launcher when it has to.",
     areas: ["games"],

@@ -241,6 +241,33 @@ describe("game links, folders and web links on Linux", () => {
   });
 });
 
+describe("▶ Play starting a launcher in the background", () => {
+  const actionsSource = readFileSync(new URL("../../electron/main/games/actions.ts", import.meta.url), "utf8");
+  const handlerSource = readFileSync(new URL("../../electron/main/games/schemeHandler.ts", import.meta.url), "utf8");
+
+  it("starts it through startForUser with a fixed argv: the program, a fixed flag and the link we built", () => {
+    expect(mainSource).toContain('const quiet = u.action === "play" ? await withGames((g) => g.quietPlay(u.gameKey)).catch(() => null) : null;');
+    expect(mainSource).toContain("if (quiet && (await startForUser(quiet.cmd, quiet.args))) return true;");
+    expect(mainSource.match(/startForUser\(/g)).toHaveLength(1);
+    expect(actionsSource).toContain('const flag = launcher === "steam" ? "-silent" : "--no-gui";');
+    expect(actionsSource).toContain("return exe ? { cmd: exe, args: [flag, url] } : null;");
+    expect(actionsSource).toContain('if (sys.flatpak) return { cmd: "flatpak", args: ["run", FLATPAK_ID[launcher], flag, url] };');
+    expect(actionsSource).toContain("return { cmd: program.cmd, args: [...program.args, flag, url] };");
+    // Never Heroic's gui=false (it hides a window the player has open).
+    expect(actionsSource).not.toMatch(/[?&]gui=/);
+    expect(actionsSource).not.toMatch(/child_process|spawn\(|exec(File)?\(/);
+  });
+
+  it("takes only Heroic's own program from its link handler, never its arguments", () => {
+    expect(actionsSource).toContain('if (basename(prog) === "flatpak" && rest.includes(FLATPAK_ID.heroic)) return { cmd: "flatpak", args: ["run", FLATPAK_ID.heroic] };');
+    expect(actionsSource).toContain(
+      'if (isAbsolute(prog) && !prog.startsWith("/tmp/") && /^heroic(([-_.][^/]*)?\\.appimage)?$/i.test(basename(prog)) && exists(prog)) return { cmd: prog, args: [] };',
+    );
+    expect(handlerSource).toContain("if (!entry || !/^[\\w.-]+\\.desktop$/.test(entry)) return null;");
+    expect(handlerSource).toContain('execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }');
+  });
+});
+
 describe("closing and reopening game launchers (Linux)", () => {
   const source = readFileSync(new URL("../../electron/main/games/processes.ts", import.meta.url), "utf8");
 

@@ -51,7 +51,7 @@ export interface ReopenPlan {
   args: string[];
 }
 
-const FLATPAK_ID: Record<"steam" | "heroic" | "lutris", string> = { steam: "com.valvesoftware.Steam", heroic: "com.heroicgameslauncher.hgl", lutris: "net.lutris.Lutris" };
+export const FLATPAK_ID: Record<"steam" | "heroic" | "lutris", string> = { steam: "com.valvesoftware.Steam", heroic: "com.heroicgameslauncher.hgl", lutris: "net.lutris.Lutris" };
 
 const isMain = (p: ProcView) => !p.args.some((a) => a.startsWith("--type="));
 
