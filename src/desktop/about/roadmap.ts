@@ -35,6 +35,31 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   { column: "next", title: "Our own color picker", text: "A color picker in the app's look, with hex and R/G/B fields, recent colors and full keyboard use.", areas: ["app"], high: true },
   { column: "next", title: "Your controller's colors", text: "Pick colors for the shell, the black parts, buttons, sticks and outlines of the drawing.", areas: ["controller"] },
+  {
+    column: "next",
+    title: "Cooler, in-spec Pico 2 W",
+    text: "The dongle runs the Pico 2 W at its rated speed and voltage instead of overclocked, as upstream does, and sets up its flash at boot, which fixes the speaker and haptics never starting on some boards.",
+    areas: ["dongle"],
+    high: true,
+  },
+  {
+    column: "next",
+    title: "DualSense Edge fixes",
+    text: "The Edge is recognized more reliably, and in DS5 mode Sony's PlayStation Accessories app no longer offers a firmware update that fails.",
+    areas: ["controller"],
+  },
+  {
+    column: "next",
+    title: "Lighter haptic feedback processing",
+    text: "The dongle turns games' haptic feedback into the controller's format with less work, with exactly the same feel.",
+    areas: ["audio", "dongle"],
+  },
+  {
+    column: "next",
+    title: "Sony's names for everything",
+    text: "The app uses Sony's own names for the controller's parts and settings in every language, the haptic feedback test plays for 3 seconds, and buttons that wait show their progress.",
+    areas: ["app"],
+  },
   { column: "next", title: "Mic muted and headset indicators", text: "The live controller says when the mic is muted and when headphones are plugged in.", areas: ["controller", "audio"] },
 
   // In progress
@@ -46,7 +71,7 @@ export const ROADMAP: RoadmapItem[] = [
   },
 
   {
-    column: "progress",
+    column: "next",
     title: "Is your controller's firmware up to date?",
     text: "Controller info says whether Sony has newer firmware for your DualSense or Edge, and how to update it with Sony's own tools.",
     areas: ["controller"],
