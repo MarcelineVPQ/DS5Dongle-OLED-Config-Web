@@ -10,10 +10,10 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included; we c
 
 **The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (with tests), button assignments (every button in one list, plus **saved button layouts** you can give to games), pairing slots.
-- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per controller.
-- **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline), and one-click firmware updates.
-- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that switch in while a game runs, including a **button layout** for that game, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (with tests), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
+- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per pairing slot; a **sensitivity curve** per stick; circularity and drift tests.
+- **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline, how long each part of the firmware takes), and one-click firmware updates.
+- **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that hold every controller setting the game changes (including a **button layout** and stick curves), edited live in the controller view and switched in while the game runs, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
 The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to dongle** keeps them after it powers off.
@@ -75,7 +75,6 @@ It can come back if a real DualSense is plugged into the PC by USB again; press 
 
 We don't have a Mac to test on, but 0.9.5-dev.6 was [reported working on macOS 27.0.1](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues/17) (thanks, @wfsg00098!). More reports are welcome.
 
-
 Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time, right-click the app and choose **Open**. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
 
 ## Updates
@@ -85,7 +84,7 @@ Download the `.zip`, unzip it, and move the app to *Applications*. The build isn
 
 ## Privacy
 
-No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates and to load the firmware changelog. To show your controller's colors, the dongle reads the colorway code from the controller's factory serial number once when it connects; only those two characters are kept, and they never leave your PC. The Games page reads launcher settings only after you allow it. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
+No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates, to load the firmware changelog, and (with automatic update checks on, or when you press Refresh on Controller info) to read Sony's list of official controller firmware versions from `fwupdater.dl.playstation.net`: a plain request with nothing about you or your controller in it, cached for a day. The controller's serial number is never read into the app. To show your controller's colors, the dongle reads the colorway code from the controller's factory serial number once when it connects; only those two characters are kept, and they never leave your PC. The Games page reads launcher settings only after you allow it. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
 
 ## Troubleshooting
 
@@ -116,7 +115,7 @@ The result is in `release/`. The official downloads are built the same way by [G
   - [Architecture decisions](docs/adr/README.md).
   - [CLAUDE.md](CLAUDE.md): an architecture overview.
 - **Protocol:** the app talks to the dongle over a vendor USB interface using WebUSB; see [ADR-0001](docs/adr/0001-vendor-usb-transport.md) and the firmware's `CLAUDE.md`.
-- **Browser version:** this repository still builds the original browser-based config tool (`npm run dev`), but the desktop app is the supported way to configure the dongle.
+- **Browser version:** retired after 0.8.0; the desktop app is the only way to configure the dongle. Its old address now serves the download page (`site/`).
 
 ## Credits
 
