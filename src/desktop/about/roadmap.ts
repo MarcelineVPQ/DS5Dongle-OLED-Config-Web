@@ -91,7 +91,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Diagnostics in the app", text: "Run the dongle's checks in the app, see pass or fail for each, and copy the results into a GitHub issue.", areas: ["dongle", "app"] },
   { column: "planned", title: "Share button layouts", text: "Share your saved button layouts and use other players' layouts.", areas: ["buttons", "community"] },
   { column: "next", title: "Faster dongle firmware", text: "The dongle's screen and the speaker's audio take less of the dongle's time.", areas: ["dongle"] },
-  { column: "planned", title: "Better OLED status screen", text: "A symmetric controller on the OLED's Status screen, with Create and Options, and a version line that fits.", areas: ["dongle"] },
+  { column: "next", title: "Better OLED status screen", text: "A symmetric controller on the OLED's Status screen, with Create and Options, and a version line that fits.", areas: ["dongle"] },
   { column: "planned", title: "Clearer message when the dongle is busy", text: "Say that another app is using the dongle, instead of a raw USB error.", areas: ["dongle"], platform: "linux" },
   { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
   { column: "planned", title: "Guide in every language", text: "The Guide translated into all the app's languages.", areas: ["app"] },
