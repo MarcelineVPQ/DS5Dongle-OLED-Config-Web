@@ -1,25 +1,19 @@
 import { useTranslation } from "react-i18next";
-import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
-import { type AutoHapticsLowpass, type AutoHapticsMode, type ControllerMode, type PollingRateMode, fieldIssue } from "../../protocol/config";
+import type { AutoHapticsLowpass, AutoHapticsMode, ControllerMode, PollingRateMode } from "../../protocol/config";
 import { BusyButton, GripHaptics, Segmented, Slider, Toggle } from "../controls";
+import { useFields, type SectionProps } from "./sectionFields";
 
 // Settings sections, each a card the live view's side panel shows for the
 // part it belongs to. Changes apply to the dongle's RAM right away
 // (DesktopApp); "Save to dongle" in the bottom bar makes them survive a
-// power cycle.
-type SectionProps = { bridge: UseDs5BridgeResult };
-
-function useFields(bridge: UseDs5BridgeResult) {
-  const d = bridge.draft;
-  const set = bridge.setDraftField;
-  const issue = (f: Parameters<typeof fieldIssue>[1]) => Boolean(fieldIssue(bridge.issues, f));
-  return { d, set, issue };
-}
-
-export function HapticsSection({ bridge }: SectionProps) {
+// power cycle. The game page shows the profile-able ones with a game
+// profile's draft instead (`fields`, see sectionFields.tsx).
+export function HapticsSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue } = useFields(bridge);
+  const { bridge } = props;
+  const { d, set, patch, issue, sub, live } = useFields(props);
+  const gripTest = live && bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest);
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.haptics", "Haptics")}</h2>
@@ -27,13 +21,11 @@ export function HapticsSection({ bridge }: SectionProps) {
         left={d.hapticsGain}
         right={d.hapticsGainRight}
         split={!!bridge.client?.splitHaptics}
+        sub={sub("hapticsGain")}
         invalid={issue("hapticsGain") || issue("hapticsGainRight")}
-        onChange={(l, r) => {
-          set("hapticsGain", l);
-          set("hapticsGainRight", r);
-        }}
+        onChange={(l, r) => patch({ hapticsGain: l, hapticsGainRight: r })}
       />
-      {bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest) && (
+      {gripTest && (
         <div className="dk-row-btns">
           {(["left", "right", "both"] as const).map((side) => (
             <BusyButton key={side} className="dk-btn" disabled={!bridge.identity?.controllerConnected} onClick={() => bridge.client!.gripTest(side)}>
@@ -42,10 +34,10 @@ export function HapticsSection({ bridge }: SectionProps) {
           ))}
         </div>
       )}
-      {bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest) && <p className="dk-hint">{t("desktop.grips.testHint")}</p>}
+      {gripTest && <p className="dk-hint">{t("desktop.grips.testHint")}</p>}
       <Slider
         label={t("haptics.audioBufferLabel")}
-        sub={t("haptics.audioBufferSub")}
+        sub={sub("audioBufferLength", t("haptics.audioBufferSub"))}
         value={d.audioBufferLength}
         min={16}
         max={128}
@@ -57,9 +49,9 @@ export function HapticsSection({ bridge }: SectionProps) {
   );
 }
 
-export function AutoHapticsSection({ bridge }: SectionProps) {
+export function AutoHapticsSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set } = useFields(bridge);
+  const { d, set, sub } = useFields(props);
   const ahModes: ReadonlyArray<{ value: AutoHapticsMode; label: string; title: string }> = (["off", "fallback", "mix", "replace"] as const).map((k, i) => ({
     value: i as AutoHapticsMode,
     label: t(`autoHaptics.modes.${k}.label`),
@@ -68,7 +60,7 @@ export function AutoHapticsSection({ bridge }: SectionProps) {
   return (
     <section className="dk-card">
       <h2>{t("autoHaptics.sectionTitle")}</h2>
-      <Segmented label={t("autoHaptics.modeLabel")} value={d.autoHapticsEnable} options={ahModes} onChange={(v) => set("autoHapticsEnable", v)} />
+      <Segmented label={t("autoHaptics.modeLabel")} sub={sub("autoHapticsEnable")} value={d.autoHapticsEnable} options={ahModes} onChange={(v) => set("autoHapticsEnable", v)} />
       <Slider label={t("autoHaptics.gainLabel")} value={d.autoHapticsGain} min={0} max={200} step={10} unit="%" disabled={d.autoHapticsEnable === 0} onChange={(v) => set("autoHapticsGain", v)} />
       <Segmented
         label={t("autoHaptics.lpLabel")}
@@ -82,15 +74,15 @@ export function AutoHapticsSection({ bridge }: SectionProps) {
   );
 }
 
-export function SpeakerSection({ bridge }: SectionProps) {
+export function SpeakerSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue } = useFields(bridge);
+  const { d, set, issue, sub } = useFields(props);
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.speaker", "Speaker")}</h2>
       <Slider
         label={t("desktop.settings.speakerLevel", "Speaker level")}
-        sub={t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip")}
+        sub={sub("speakerVolume", t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip"))}
         value={d.speakerVolume}
         // Usual range ±12 dB; a lower level set on the OLED (down to -100)
         // still shows as it is instead of being clamped by the slider.
@@ -106,20 +98,20 @@ export function SpeakerSection({ bridge }: SectionProps) {
   );
 }
 
-export function MicSection({ bridge }: SectionProps) {
+export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set } = useFields(bridge);
+  const { d, set, sub } = useFields(props);
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.mic", "Microphone")}</h2>
-      <Toggle label={t("haptics.btMicLabel")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
+      <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
     </section>
   );
 }
 
-export function PowerSection({ bridge }: SectionProps) {
+export function PowerSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set } = useFields(bridge);
+  const { d, set } = useFields(props);
   return (
     <section className="dk-card">
       <h2>{t("desktop.settings.power", "Power")}</h2>
@@ -130,9 +122,9 @@ export function PowerSection({ bridge }: SectionProps) {
   );
 }
 
-export function DisplaySection({ bridge }: SectionProps) {
+export function DisplaySection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set } = useFields(bridge);
+  const { d, set } = useFields(props);
   return (
     <section className="dk-card">
       <h2>{t("desktop.settings.display", "OLED display")}</h2>
@@ -167,9 +159,10 @@ export function DisplaySection({ bridge }: SectionProps) {
   );
 }
 
-export function UsbSection({ bridge }: SectionProps) {
+export function UsbSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set } = useFields(bridge);
+  const { bridge } = props;
+  const { d, set } = useFields(props);
   return (
     <section className="dk-card">
       <h2>{t("desktop.settings.usb", "USB")}</h2>

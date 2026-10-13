@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import { useFields, type SectionProps } from "./sectionFields";
 import { hexToRgb, rgbToHex, Row } from "../controls";
 import ColorPicker from "../colorPicker/ColorPicker";
 
@@ -15,31 +15,27 @@ export const LIGHTBAR_MODES = [
   { value: 0, key: "live", label: "Tilt color" },
 ] as const;
 
-export default function LightbarPage({ bridge }: { bridge: UseDs5BridgeResult }) {
+// The live panel's lightbar sections; the game page shows them with a game
+// profile's draft (`fields`).
+export default function LightbarPage(props: SectionProps) {
   const { t } = useTranslation();
-  const d = bridge.draft;
+  const { d, set, patch, mark } = useFields(props);
 
   const setFav = (i: number, hex: string) => {
     const [r, g, b] = hexToRgb(hex);
     const at = (arr: number[], v: number) => arr.map((x, j) => (j === i ? v : x));
-    bridge.setDraftField("lbFavR", at(d.lbFavR, r));
-    bridge.setDraftField("lbFavG", at(d.lbFavG, g));
-    bridge.setDraftField("lbFavB", at(d.lbFavB, b));
+    patch({ lbFavR: at(d.lbFavR, r), lbFavG: at(d.lbFavG, g), lbFavB: at(d.lbFavB, b) });
   };
 
   return (
     <div className="dk-grid">
       <section className="dk-card">
-        <h2>{t("desktop.lightbar.mode", "Mode")}</h2>
+        <h2>
+          {t("desktop.lightbar.mode", "Mode")} {mark("lightbarMode")}
+        </h2>
         <div className="dk-presets">
           {LIGHTBAR_MODES.map((m) => (
-            <button
-              type="button"
-              key={m.value}
-              className={`dk-btn${d.lightbarMode === m.value ? " on" : ""}`}
-              aria-pressed={d.lightbarMode === m.value}
-              onClick={() => bridge.setDraftField("lightbarMode", m.value)}
-            >
+            <button type="button" key={m.value} className={`dk-btn${d.lightbarMode === m.value ? " on" : ""}`} aria-pressed={d.lightbarMode === m.value} onClick={() => set("lightbarMode", m.value)}>
               {t(`desktop.lightbar.modes.${m.key}`, m.label)}
             </button>
           ))}
@@ -47,7 +43,9 @@ export default function LightbarPage({ bridge }: { bridge: UseDs5BridgeResult })
         <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, the dongle shows an amber pulse in every mode.")}</p>
       </section>
       <section className="dk-card">
-        <h2>{t("desktop.lightbar.favorites", "Favorite colors")}</h2>
+        <h2>
+          {t("desktop.lightbar.favorites", "Favorite colors")} {mark("lbFavR")}
+        </h2>
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>
             <span className="dk-mono">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>

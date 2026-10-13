@@ -1350,7 +1350,8 @@ html[data-theme="light"] .live-ctl {
   overflow: auto;
   padding-right: 2px;
 }
-.live-panel .dk-grid {
+.live-panel .dk-grid,
+.gp-sections .dk-grid {
   grid-template-columns: minmax(0, 1fr);
 }
 .live-panel-head {
@@ -2303,13 +2304,22 @@ html[data-theme="light"] .live-ctl {
 .gp-col .dk-card {
   scroll-margin-top: 8px;
 }
-.gp-favs {
+/* "All settings": the controller view's own sections, flat inside the
+   profile card, one column. */
+.gp-sections {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 10px;
 }
-.gp-favs .cp-swatch {
-  width: 30px;
-  height: 24px;
+.gp-sections .dk-card {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-cards-translucent] .gp-sections .dk-card {
+  background: transparent !important; /* the card it sits in is already see-through */
 }
 .gp-tier {
   margin: 0 0 8px;
