@@ -647,6 +647,15 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
           <section className="dk-card">
             <h2>{t("desktop.settings2.advanced")}</h2>
             <Toggle
+              label={t("desktop.live.hardwareAcceleration")}
+              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+              value={settings.hardwareAcceleration}
+              onChange={(v) => {
+                setGpuChanged(true);
+                set("hardwareAcceleration", v);
+              }}
+            />
+            <Toggle
               label={t("desktop.hdr.label")}
               sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
               value={settings.hdrLighting}
@@ -657,15 +666,6 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
               }}
             />
             {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
-            <Toggle
-              label={t("desktop.live.hardwareAcceleration")}
-              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
-              value={settings.hardwareAcceleration}
-              onChange={(v) => {
-                setGpuChanged(true);
-                set("hardwareAcceleration", v);
-              }}
-            />
           </section>
           <section className="dk-card">
             <h2>{t("desktop.settings2.updates")}</h2>
