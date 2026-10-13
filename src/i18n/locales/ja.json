@@ -332,6 +332,7 @@
     "about": {
       "changes": "アプリの変更点",
       "firmware": "ファームウェアの変更点",
+      "proton": "Protonの変更点",
       "guide": "ガイド",
       "credits": "クレジット",
       "version": "バージョン {{version}} を使用中です。",

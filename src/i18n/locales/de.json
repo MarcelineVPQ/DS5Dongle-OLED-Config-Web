@@ -332,6 +332,7 @@
     "about": {
       "changes": "App-Änderungen",
       "firmware": "Firmware-Änderungen",
+      "proton": "Proton-Änderungen",
       "guide": "Anleitung",
       "credits": "Mitwirkende",
       "version": "Du nutzt Version {{version}}.",

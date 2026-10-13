@@ -6,6 +6,10 @@
 // When a roadmap entry is added or renamed, add it to BACKLOG_ROW below (the
 // start of its row's Item cell). When a row changes status, move the entry's
 // column in the same commit (BACKLOG.md "Keeping it current").
+//
+// Both ways: every row that is still to do (any status but Done / Fixed /
+// Superseded) has a Coming soon entry too, unless its Item cell ends with
+// "(internal)" (tooling, tests, hosting, naming, anything a user never sees).
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ROADMAP, type RoadmapColumn } from "../../src/desktop/about/roadmap";
@@ -87,6 +91,23 @@ const BACKLOG_ROW: Record<string, string> = {
   "Clearer pairing slot tile": "Pairing slot tile shows",
   "Brighter colors from game art": "Brighter art color on game pages",
   "Square covers in tall windows": "Square cover art for tall windows",
+  "Right controls on the standard-gamepad route": "Ghostrunner on the standard-gamepad route",
+  "Launchers stay open": "Launchers outlive the app",
+  "Easier DualSense Proton upgrades": "DualSense Proton: a smoother way to upgrade",
+  "Games on macOS": "macOS: the Games area",
+  "Heroic games on Windows and macOS": "Heroic games on Windows and macOS",
+  "Launcher check on every OS": '"Is the launcher installed?" check on every OS',
+  "Controller buttons as keyboard keys": "Controller buttons as keyboard keys",
+  "OLED mirror in HDR": "OLED mirror in HDR",
+  "Whole narrator lines": "Narrator line drops pieces",
+  "Speaker buffer that can't break up": "Firmware: speaker buffer minimum",
+  "Self-update on macOS": "macOS: self-update",
+  "Desktop shortcut on Linux": 'Linux: "Create desktop shortcut"',
+  "Start minimized on macOS": "macOS: start minimized at login",
+  "Match desktop everywhere": '"Match desktop" theme on macOS and Windows',
+  "Menu bar icon on macOS": "macOS: tray icon as a Template image",
+  "No board needed (experiment)": "Dongle-free mode",
+  "Lifelike controller drawing": "Realistic (PBR) controller",
 };
 
 /**
@@ -131,6 +152,10 @@ function columnOf(row: Row): RoadmapColumn {
 /** "next" also covers the shipped part of a row still in progress. */
 const matches = (column: RoadmapColumn, row: Row) => columnOf(row) === column || (column === "next" && /\bshipped\b/.test(row.status));
 
+/** Still to do: not shipped (Done / Fixed) and not replaced (Superseded). */
+const toDo = (row: Row) => columnOf(row) !== "next" && !/^\*\*Superseded\b/.test(row.status);
+const internal = (row: Row) => /\(internal\)$/.test(row.item);
+
 const rowFor = (title: string) => rows.filter((r) => r.item.startsWith(BACKLOG_ROW[title]));
 
 describe("roadmap ↔ BACKLOG", () => {
@@ -147,6 +172,17 @@ describe("roadmap ↔ BACKLOG", () => {
     const titles = ROADMAP.map((r) => r.title);
     expect(titles.filter((t) => !(t in BACKLOG_ROW))).toEqual([]);
     expect(Object.keys(BACKLOG_ROW).filter((t) => !titles.includes(t))).toEqual([]);
+  });
+
+  it('every user-facing row still to do has a Coming soon entry (or ends with "(internal)")', () => {
+    const starts = Object.values(BACKLOG_ROW);
+    const missing = rows.filter((r) => toDo(r) && !internal(r) && !starts.some((start) => r.item.startsWith(start)));
+    expect(missing.map((r) => `${r.section}: ${r.item}`)).toEqual([]);
+  });
+
+  it('"(internal)" rows have no Coming soon entry', () => {
+    const starts = Object.values(BACKLOG_ROW);
+    expect(rows.filter((r) => internal(r) && starts.some((start) => r.item.startsWith(start))).map((r) => r.item)).toEqual([]);
   });
 
   for (const entry of ROADMAP) {
