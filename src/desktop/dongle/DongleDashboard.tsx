@@ -100,6 +100,12 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
   return { sample: sample?.s ?? null, history: sample?.history ?? [] };
 }
 
+// The clock gauge's scale is the board's own ceiling (the fastest the dongle
+// firmware ever runs it), fixed, so 150 MHz and 320 MHz read as what they are
+// instead of each filling the dial.
+const CLOCK_MAX_MHZ: Record<string, number> = { "Pico 2 W": 320, "Pico W": 200 };
+export const clockMaxMhz = (board: string | null): number => (board && CLOCK_MAX_MHZ[board]) || 320;
+
 export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs5BridgeResult; frame: OledFrame | null; rssi: number | null }) {
   const { t } = useTranslation();
   const { sample: s, history } = useDongleTelemetry(bridge, frame, rssi);
@@ -113,7 +119,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
       <h3 className="dash-group">{td("pico")}</h3>
       <div className="dash-row">
         <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} trend={series((x) => x.tempC)} />
-        <Gauge label={td("clock")} value={s?.realMhz} min={0} max={Math.max(150, Math.ceil((s?.setMhz ?? 150) * 1.1))} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
+        <Gauge label={td("clock")} value={s?.realMhz} min={0} max={clockMaxMhz(bridge.identity?.boardName ?? null)} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
         <Gauge label={td("vcore")} value={s?.vcore ?? undefined} min={0.85} max={1.3} unit="V" digits={2} warn={1.2} bad={1.26} />
         <div className="dash-card dash-facts">
           <Fact label={td("uptime")} value={s ? formatUptime(s.uptime) : "—"} />
