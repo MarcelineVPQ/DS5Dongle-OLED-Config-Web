@@ -88,7 +88,7 @@ for (const [name, at] of names) {
 // --- Blocks: 6 normalized non-trivial lines repeated ---
 const WINDOW = 4;
 const blocks = new Map();
-for (const file of files.filter((f) => /\.(ts|tsx|mjs)$/.test(f) && !/tests?\//.test(f))) {
+for (const file of files.filter((f) => /\.(ts|tsx|mjs)$/.test(f) && !/(^|\/)tests?\//.test(rel(f)))) {
   const lines = readFileSync(file, "utf8").split("\n");
   const norm = lines.map((l) => l.trim().replace(/\s+/g, " "));
   for (let i = 0; i + WINDOW <= norm.length; i++) {
