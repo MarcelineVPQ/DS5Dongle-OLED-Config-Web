@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Backups } from "../../electron/main/games/backup";
+import { ApplyRequestSchema } from "../../electron/main/ipc";
 import { applyFixes, idHash, scan, withPreferSdl, type ScanDeps } from "../../electron/main/games/games";
 import type { LauncherControl } from "../../electron/main/games/processes";
 import { modeInfo, withArg } from "../../src/desktop/games/gameArgs";
@@ -120,6 +121,8 @@ describe("the graphics-mode fix on Linux", () => {
     const { report } = scan(deps());
     const fixes = modeFixes(report);
     expect(fixes.map((f) => f.id).sort()).toEqual([`${steamId()}:mode:1139900`, `${steamId()}:mode:2144740`, `${heroicId()}:mode:1957528513`, `${lutrisId()}:mode:ghostrunner-1`].sort());
+    // Apply takes these ids (the IPC check rejected mode ids at first: Apply did nothing)
+    expect(ApplyRequestSchema.safeParse({ fixIds: fixes.map((f) => f.id), restart: [] }).success).toBe(true);
     expect(fixes.every((f) => f.recommended)).toBe(true);
     const steam = fixes.find((f) => f.id.endsWith(":1139900"))!;
     expect(steam.label).toEqual({ key: "label.mode", params: { game: "Ghostrunner", api: "DirectX 12", feature: { key: "unlock.rayTracing" }, flag: "-dx12" } });
