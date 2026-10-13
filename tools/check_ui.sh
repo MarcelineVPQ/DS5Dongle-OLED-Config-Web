@@ -6,9 +6,15 @@
 # It runs on a private D-Bus session (dbus-run-session: no tray icon on your
 # desktop) and in a bubblewrap sandbox with a fresh /dev (bwrap --dev: no
 # /dev/bus/usb or /dev/hidraw*, so it can never reach a real dongle or
-# controller; the GPU nodes are passed through).
+# controller; the GPU nodes are passed through). It draws on a virtual
+# display (xvfb-run, software rendering, WAYLAND_DISPLAY unset), never on
+# your screen; CHECK_UI_SHOW=1 shows it on your real display instead.
 #
-#   tools/check_ui.sh [check_layout options, e.g. --mode contrast --langs en]
+#   tools/check_ui.sh                the fast plan (dev builds): pairwise
+#                                    combinations, colorways computed
+#   tools/check_ui.sh --plan full    everything rendered: the release gate
+#                                    (docs/TEST_PLAN.md)
+#   tools/check_ui.sh [other check_layout options, e.g. --mode contrast --langs en]
 #   DS5_CHECK_KEEP=1 tools/check_ui.sh   leave the checker copy running
 set -euo pipefail
 APP="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,7 +40,10 @@ SANDBOX=(bwrap --dev-bind / / --dev /dev)
 for node in /dev/dri /dev/nvidia*; do
   if [ -e "$node" ]; then SANDBOX+=(--dev-bind "$node" "$node"); fi
 done
-setsid dbus-run-session -- "${SANDBOX[@]}" "$ELECTRON" . --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
+DISPLAY_WRAP=(xvfb-run -a -s "-screen 0 1600x1000x24" env -u WAYLAND_DISPLAY)
+OZONE=(--ozone-platform=x11)
+if [ "${CHECK_UI_SHOW:-}" = 1 ]; then DISPLAY_WRAP=() OZONE=(); fi
+setsid dbus-run-session -- "${DISPLAY_WRAP[@]}" "${SANDBOX[@]}" "$ELECTRON" . "${OZONE[@]}" --no-sandbox --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" > "$STATE/app.log" 2>&1 < /dev/null &
 for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && break; sleep 1; done
 
 # Simulated dongle + Games allowed + no first-run banners, then reload.
