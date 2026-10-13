@@ -182,6 +182,19 @@ describe("privileged Windows USB repair", () => {
   });
 });
 
+describe("game links and folders on Linux", () => {
+  const handlerSource = readFileSync(new URL("../../electron/main/games/schemeHandler.ts", import.meta.url), "utf8");
+
+  it("open through xdg-open with a fixed argv, no shell, the launcher env", () => {
+    expect(handlerSource).toMatch(/spawn\("xdg-open", \[target\], \{ detached: true, stdio: "ignore", env: launcherEnv\(process\.env, realHome\(\)\) \}\)/);
+    expect(handlerSource).not.toMatch(/(?<!\.)\bexec\(|execSync|shell: true/);
+    // Only game actions use it, and only with what the main process built.
+    expect(mainSource.match(/openForUser\(/g)).toHaveLength(2);
+    expect(mainSource).toContain("return openForUser(target.url);");
+    expect(mainSource).toContain("return openForUser(target.folder);");
+  });
+});
+
 describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 

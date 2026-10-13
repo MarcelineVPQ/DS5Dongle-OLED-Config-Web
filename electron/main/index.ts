@@ -11,7 +11,7 @@ import { GamesService } from "./games/service";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { artRequestTarget } from "./games/artRequest";
-import { hasSchemeHandler } from "./games/schemeHandler";
+import { hasSchemeHandler, openForUser } from "./games/schemeHandler";
 import { micTest } from "./audioTest";
 import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { OfficialFirmwareSource } from "./officialFirmware";
@@ -221,11 +221,17 @@ function start(): void {
         // running instance (Steam does), so the open result means nothing:
         // success = a handler is registered for the scheme.
         if (!(await hasSchemeHandler(target.url))) return false;
+        // Linux: xdg-open with the real home, so a launcher that wasn't
+        // running doesn't start inside the dev copy's test HOME.
+        if (process.platform === "linux") return openForUser(target.url);
         shell.openExternal(target.url).catch(() => undefined);
         return true;
       }
       // Only a folder: launcher configs could name a file, which openPath would run.
-      if (target.folder && isDirectory(target.folder)) return (await shell.openPath(target.folder)) === "";
+      if (target.folder && isDirectory(target.folder)) {
+        if (process.platform === "linux") return openForUser(target.folder);
+        return (await shell.openPath(target.folder)) === "";
+      }
       return false;
     },
     onStatus: (status) => tray?.update(status),
