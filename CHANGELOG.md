@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.8] - 2026-10-13
+
 ### Changed
 
 - **Dongle firmware: the Pico 2 W now runs at its rated 150 MHz and default 1.10 V**, like upstream awalol's firmware, instead of overclocked at 320 MHz and 1.20 V (above the chip's 1.16 V rating). The flash is set up explicitly at boot, which fixes the speaker and haptics never starting and saves failing on some boards (issue #15), and more of the firmware runs from RAM, so it's as quick as before: the timings stay well inside their budgets. A heatsink is no longer needed (the guide's parts list drops it). The Pico 2 W page's clock reads 150 MHz.
