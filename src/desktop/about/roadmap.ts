@@ -148,6 +148,27 @@ export const ROADMAP: RoadmapItem[] = [
     platform: "linux",
   },
 
+  {
+    column: "next",
+    title: "Proton changes",
+    text: "A Proton changes tab in About lists what each build of our DualSense Proton changes on top of GE-Proton, and its known limits.",
+    areas: ["games", "app"],
+    platform: "linux",
+  },
+  {
+    column: "next",
+    title: "Right controls on the standard-gamepad route",
+    text: "Games that get the controller as a standard gamepad (Ghostrunner) see the right buttons, sticks and triggers and can make it rumble, with the newest build of our DualSense Proton.",
+    areas: ["games", "controller"],
+    platform: "linux",
+  },
+  {
+    column: "next",
+    title: "Launchers stay open",
+    text: "Steam and Heroic reopened by the app after a Games change, and games you start with Play, keep running when the app restarts, updates or quits.",
+    areas: ["games", "app"],
+  },
+
   // In progress
   {
     column: "progress",
@@ -208,11 +229,44 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "GameMode switch", text: "Turn on Feral GameMode for a game with one switch, with Undo.", areas: ["games"], platform: "linux" },
   {
     column: "planned",
-    title: "Proton changes",
-    text: "A third changelog tab in About for our DualSense Proton: what each build changes on top of GE-Proton.",
-    areas: ["games", "app"],
+    title: "Easier DualSense Proton upgrades",
+    text: "Games installs a new build of our DualSense Proton and moves your games to it, with Undo.",
+    areas: ["games"],
     platform: "linux",
   },
+  {
+    column: "planned",
+    title: "The right graphics mode per game",
+    text: "Games sees whether a game starts in DirectX 12 or Vulkan and recommends the mode a feature needs, like DirectX 12 for Ghostrunner's ray tracing.",
+    areas: ["games"],
+  },
+  { column: "planned", title: "Games on macOS", text: "The Games area on macOS too: your Steam, Heroic, Epic and GOG Galaxy games and the game that's running.", areas: ["games"] },
+  { column: "planned", title: "Heroic games on Windows and macOS", text: "Games finds your Heroic games on Windows and macOS too.", areas: ["games"] },
+  { column: "planned", title: "Launcher check on every OS", text: "Games knows whether a launcher is installed on Windows and macOS too, instead of assuming it is.", areas: ["games"] },
+  {
+    column: "planned",
+    title: "Controller buttons as keyboard keys",
+    text: "Make a controller button or combo press a keyboard key, like F5 to quicksave, with no extra software.",
+    areas: ["buttons"],
+  },
+  {
+    column: "planned",
+    title: "OLED mirror in HDR",
+    text: "On an HDR display, the app's copy of {{device}}'s OLED screen shows true black and the panel's real brightness.",
+    areas: ["dongle"],
+  },
+  { column: "planned", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
+  { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
+  { column: "planned", title: "Self-update on macOS", text: "The app downloads and installs its updates on macOS too.", areas: ["app"] },
+  { column: "planned", title: "Desktop shortcut on Linux", text: "Create desktop shortcut on Linux too, not only on Windows.", areas: ["app"] },
+  { column: "planned", title: "Start minimized on macOS", text: "Started with your Mac, the app opens hidden in the menu bar.", areas: ["app"] },
+  {
+    column: "planned",
+    title: "Match desktop everywhere",
+    text: "The Match desktop theme follows accent color changes right away on macOS, and takes more of the system's colors on macOS and Windows.",
+    areas: ["app"],
+  },
+  { column: "planned", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
   { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"] },
   { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
   {
@@ -268,4 +322,11 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "ideas", title: "Clearer pairing slot tile", text: 'Say "No player set" instead of a bare dash.', areas: ["dongle"] },
   { column: "ideas", title: "Brighter colors from game art", text: "Pick a more vivid color from a game's art for its page.", areas: ["games"] },
   { column: "ideas", title: "Square covers in tall windows", text: "Use a game's square or portrait cover when the window is tall and narrow.", areas: ["games"] },
+  {
+    column: "ideas",
+    title: "No board needed (experiment)",
+    text: "Look into doing {{device}}'s work on the PC itself, with the PC's own Bluetooth, so games and the app see the same device.",
+    areas: ["dongle"],
+  },
+  { column: "ideas", title: "Lifelike controller drawing", text: "The controller drawn with real materials and light: matte shell, glossy buttons, rubber sticks.", areas: ["controller"] },
 ];
