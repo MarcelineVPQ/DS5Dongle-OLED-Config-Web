@@ -1289,7 +1289,7 @@
         "right": "Rechts testen",
         "both": "Beide testen"
       },
-      "testHint": "Eine kurze Vibration auf dieser Seite mit ihrer aktuellen Vibrationsintensität (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
+      "testHint": "Lässt diese Seite 3 s lang mit ihrer aktuellen Vibrationsintensität vibrieren; erneut drücken beendet es früher (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
     },
     "channel": {
       "label": "Update-Kanal",

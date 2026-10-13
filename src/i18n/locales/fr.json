@@ -1289,7 +1289,7 @@
         "right": "Tester droite",
         "both": "Tester les deux"
       },
-      "testHint": "Une courte vibration de ce côté à son intensité des vibrations actuelle (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
+      "testHint": "Fait vibrer ce côté pendant 3 s à son intensité des vibrations actuelle ; appuie à nouveau pour arrêter plus tôt (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
     },
     "channel": {
       "label": "Canal de mise à jour",

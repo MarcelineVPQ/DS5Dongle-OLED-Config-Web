@@ -1,5 +1,7 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { AutoHapticsLowpass, AutoHapticsMode, ControllerMode, PollingRateMode } from "../../protocol/config";
 import { BusyButton, GripHaptics, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
@@ -9,11 +11,62 @@ import { useFields, type SectionProps } from "./sectionFields";
 // (DesktopApp); "Save to dongle" in the bottom bar makes them survive a
 // power cycle. The game page shows the profile-able ones with a game
 // profile's draft instead (`fields`, see sectionFields.tsx).
+// The firmware's grip test (0xF6 0x0E) buzzes for 0.5 s; the app repeats it
+// so a test plays for 3 s. Pressing the running button again, leaving the
+// panel, or losing the controller or dongle stops it before the next pulse.
+type GripSide = "left" | "right" | "both";
+const GRIP_TEST_S = 3;
+const GRIP_PULSE_MS = 500;
+
+function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean) {
+  const [running, setRunning] = useState<GripSide | null>(null);
+  const stop = useRef<(() => void) | null>(null);
+  // Unmount, another client or a disconnect ends a running test.
+  useEffect(() => () => stop.current?.(), [client, connected]);
+  const run = useCallback(
+    async (side: GripSide) => {
+      if (!client) return;
+      let stopped = false;
+      let wake = () => {};
+      const own = () => {
+        stopped = true;
+        wake();
+      };
+      stop.current = own;
+      const start = Date.now();
+      const until = (ms: number) =>
+        new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, Math.max(0, start + ms - Date.now()));
+          wake = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+        });
+      setRunning(side);
+      try {
+        for (let at = 0; at < GRIP_TEST_S * 1000; at += GRIP_PULSE_MS) {
+          await until(at);
+          if (stopped) break;
+          await client.gripTest(side);
+        }
+        if (!stopped) await until(GRIP_TEST_S * 1000);
+      } finally {
+        if (stop.current === own) stop.current = null;
+        setRunning((r) => (r === side ? null : r));
+      }
+    },
+    [client],
+  );
+  return { running, run, stop: () => stop.current?.() };
+}
+
 export function HapticsSection(props: SectionProps) {
   const { t } = useTranslation();
   const { bridge } = props;
   const { d, set, patch, issue, sub, live } = useFields(props);
   const gripTest = live && bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest);
+  const connected = !!bridge.identity?.controllerConnected;
+  const test = useGripTest(bridge.client, connected);
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.haptics", "Haptic feedback")}</h2>
@@ -28,7 +81,14 @@ export function HapticsSection(props: SectionProps) {
       {gripTest && (
         <div className="dk-row-btns">
           {(["left", "right", "both"] as const).map((side) => (
-            <BusyButton key={side} className="dk-btn" disabled={!bridge.identity?.controllerConnected} onClick={() => bridge.client!.gripTest(side)}>
+            <BusyButton
+              key={side}
+              className="dk-btn"
+              disabled={!connected || (test.running !== null && test.running !== side)}
+              countdown={GRIP_TEST_S}
+              onStop={test.stop}
+              onClick={() => test.run(side)}
+            >
               {t(`desktop.grips.test.${side}`)}
             </BusyButton>
           ))}

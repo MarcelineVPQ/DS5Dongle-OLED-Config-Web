@@ -178,7 +178,9 @@ export { hexToRgb } from "./theme/desktopPalette";
 // any icon stay as they are); after a few seconds it also counts the seconds,
 // so a slow check doesn't look hung; and it always comes back, on success or
 // failure (the restore is in a finally). The action's own result or error is
-// shown by the caller.
+// shown by the caller. An action with a known length (`countdown`, seconds)
+// counts down from the start instead; with `onStop` the running button stays
+// pressable, and pressing it again stops the action early.
 const ELAPSED_AFTER_S = 3;
 
 interface BusyButtonProps {
@@ -187,9 +189,11 @@ interface BusyButtonProps {
   className?: string;
   disabled?: boolean;
   title?: string;
+  countdown?: number;
+  onStop?: () => void;
 }
 
-export function BusyButton({ onClick, children, className = "dk-btn", disabled, title }: BusyButtonProps) {
+export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop }: BusyButtonProps) {
   const [busy, setBusy] = useState(false);
   const [secs, setSecs] = useState(0);
   const live = useRef(true);
@@ -206,7 +210,10 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
     return () => clearInterval(timer);
   }, [busy]);
   const run = async () => {
-    if (busy) return;
+    if (busy) {
+      onStop?.();
+      return;
+    }
     setSecs(0);
     setBusy(true);
     try {
@@ -218,10 +225,11 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
     }
   };
   return (
-    <button type="button" className={`${className}${busy ? " dk-btn-busy" : ""}`} disabled={disabled || busy} aria-busy={busy || undefined} title={title} onClick={() => void run()}>
+    <button type="button" className={`${className}${busy ? " dk-btn-busy" : ""}`} disabled={disabled || (busy && !onStop)} aria-busy={busy || undefined} title={title} onClick={() => void run()}>
       {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
       {children}
-      {busy && secs >= ELAPSED_AFTER_S && <span className="dk-btn-elapsed"> · {secs}s</span>}
+      {busy && countdown !== undefined && countdown - secs > 0 && <span className="dk-btn-elapsed"> · {countdown - secs}s</span>}
+      {busy && countdown === undefined && secs >= ELAPSED_AFTER_S && <span className="dk-btn-elapsed"> · {secs}s</span>}
     </button>
   );
 }

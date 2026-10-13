@@ -1288,7 +1288,7 @@
         "right": "Test right",
         "both": "Test both"
       },
-      "testHint": "A short vibration on that side at its vibration intensity now (the trigger tests don't use these: L2 and R2 have their own motors)."
+      "testHint": "Vibrates that side for 3 s at its vibration intensity now; press it again to stop early (the trigger tests don't use these: L2 and R2 have their own motors)."
     },
     "channel": {
       "label": "Update channel",

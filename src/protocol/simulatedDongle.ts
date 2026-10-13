@@ -142,6 +142,7 @@ export class SimulatedDongle implements Ds5Transport {
   currentSlot = 0;
   lastTrigger = -1;
   lastGripTest = -1; // 0 left, 1 right, 2 both
+  gripTests = 0; // grip test (0x0E) commands run
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
   private get minor() {
@@ -519,8 +520,10 @@ export class SimulatedDongle implements Ds5Transport {
       this.flashConfig = this.config.slice();
       this.hostGen++;
     } else if (func === 0x0a) this.lastTrigger = arg;
-    else if (func === 0x0e) this.lastGripTest = arg;
-    else if (func === 0x0b) {
+    else if (func === 0x0e) {
+      this.lastGripTest = arg;
+      this.gripTests++;
+    } else if (func === 0x0b) {
       this.narrator = arg;
       this.flashNarrator = arg; // saved on its own, nothing else
     }

@@ -1289,7 +1289,7 @@
         "right": "Testar direita",
         "both": "Testar ambas"
       },
-      "testHint": "Uma vibração curta nesse lado com a intensidade da vibração atual (os testes dos gatilhos não usam isso: L2 e R2 têm motores próprios)."
+      "testHint": "Faz esse lado vibrar por 3 s com a intensidade da vibração atual; aperte de novo para parar antes (os testes dos gatilhos não usam isso: L2 e R2 têm motores próprios)."
     },
     "channel": {
       "label": "Canal de atualizações",

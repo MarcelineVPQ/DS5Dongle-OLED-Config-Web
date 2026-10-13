@@ -81,7 +81,7 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 ![The Haptic feedback panel with the left and right vibration intensity and the test buttons](screenshots/guide-haptics.png)
 
 - **Vibration intensity**, per side: **Vibration intensity (left)** and **(right)**, with **Link left and right** to move both together. It scales both kinds of vibration games use: haptic feedback and classic vibration. (The triggers have their own motors; this doesn't change them.)
-- **Test left / Test right / Test both:** a short vibration on that side at its vibration intensity now.
+- **Test left / Test right / Test both:** vibrates that side for 3 seconds at its vibration intensity now, counting down on the button; press it again to stop early.
 - **Audio Auto Haptics:** vibration made from the game's sound, for games that send none (or to add to theirs): **Fallback** (only when the game sends nothing), **Mix**, or **Replace**, with its own strength and low-pass filter.
 
 ### Speaker and microphone
