@@ -42,10 +42,10 @@ export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar
         <span className="live-tile-value">{quality ? t(`desktop.overview.signalQ.${quality}`, quality) : "—"}</span>
         <span className="live-tile-label">{t("desktop.overview.signal", "Signal")}</span>
       </div>
-      <button type="button" className="live-tile live-tile-button" onClick={onLightbar} title={t("desktop.live.part.lightbar", "Lightbar")}>
+      <button type="button" className="live-tile live-tile-button" onClick={onLightbar} title={t("desktop.live.part.lightbar", "Light bar")}>
         <span className="live-swatch" aria-hidden="true" style={swatch ? { background: swatch, color: swatch } : undefined} />
         <span className="live-tile-value">{mode ? t(`desktop.lightbar.modes.${mode.key}`, mode.label) : "—"}</span>
-        <span className="live-tile-label">{t("desktop.live.part.lightbar", "Lightbar")}</span>
+        <span className="live-tile-label">{t("desktop.live.part.lightbar", "Light bar")}</span>
       </button>
       <div className="live-tile">
         <span className="live-pleds" aria-hidden="true">

@@ -1,6 +1,6 @@
 # DS5 Dongle OLED Edition Configurator
 
-The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, HD haptics, speaker and mic included).
+The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, haptic feedback, built-in speaker and microphone included).
 
 Made on Linux, tested on Linux and Windows 11. The macOS build is included; we can't test it ourselves, but it has been reported working on macOS 27.0.1 (thanks, @wfsg00098!). More reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
 
@@ -10,8 +10,8 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included; we c
 
 **The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptics strength per grip (HD haptics and rumble, with a test), Audio Auto Haptics, speaker and mic (with tests), button remapping (every button in one list, plus **saved button layouts** you can give to games), pairing slots.
-- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyro, stored in the dongle per controller.
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers, haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (with tests), button assignments (every button in one list, plus **saved button layouts** you can give to games), pairing slots.
+- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per controller.
 - **The dongle:** its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline), and one-click firmware updates.
 - **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that switch in while a game runs, including a **button layout** for that game, Proton setup and fixes (Linux), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
@@ -81,7 +81,7 @@ Download the `.zip`, unzip it, and move the app to *Applications*. The build isn
 ## Updates
 
 - **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off in ⚙ App settings or the tray menu.
-- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear under **Dongle** (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press **PS** on the controller afterwards.
+- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear under **Dongle** (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
 
 ## Privacy
 

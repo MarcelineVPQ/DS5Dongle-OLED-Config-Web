@@ -16,7 +16,7 @@ export function HapticsSection(props: SectionProps) {
   const gripTest = live && bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest);
   return (
     <section className="dk-card">
-      <h2>{t("desktop.live.haptics", "Haptics")}</h2>
+      <h2>{t("desktop.live.haptics", "Haptic feedback")}</h2>
       <GripHaptics
         left={d.hapticsGain}
         right={d.hapticsGainRight}
@@ -81,7 +81,7 @@ export function SpeakerSection(props: SectionProps) {
     <section className="dk-card">
       <h2>{t("desktop.live.speaker", "Speaker")}</h2>
       <Slider
-        label={t("desktop.settings.speakerLevel", "Speaker level")}
+        label={t("desktop.settings.speakerLevel", "Volume (Speaker for Controller)")}
         sub={sub("speakerVolume", t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip"))}
         value={d.speakerVolume}
         // Usual range ±12 dB; a lower level set on the OLED (down to -100)

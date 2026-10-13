@@ -104,7 +104,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           </p>
         )}
         <p className="dk-hint">
-          {t("desktop.firmware.updateHint", "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press PS on the controller afterwards.")}
+          {t("desktop.firmware.updateHint", "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.")}
         </p>
       </section>
 
@@ -115,7 +115,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           <BusyButton
             className="dk-btn"
             disabled={!client || busy}
-            onClick={() => act(() => client!.reboot(), t("desktop.firmware.rebooting", "Restarting… press PS on the controller once it's back."))}
+            onClick={() => act(() => client!.reboot(), t("desktop.firmware.rebooting", "Restarting… press the PS button on the controller once it's back."))}
           >
             {t("desktop.firmware.reboot", { device: hardwareName(bridge.identity, t) })}
           </BusyButton>
@@ -154,7 +154,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
             </button>
           )}
         </div>
-        <p className="dk-hint">{t("desktop.firmware.resetHint", "Factory reset restores default settings. Pairings and button remaps are kept.")}</p>
+        <p className="dk-hint">{t("desktop.firmware.resetHint", "Factory reset restores default settings. Pairings and button assignments are kept.")}</p>
         <UsbAccessSetup />
       </section>
     </div>

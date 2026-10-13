@@ -778,10 +778,16 @@ html[data-theme="dark"] .dk {
   flex-wrap: wrap;
   gap: 4px;
 }
+/* A long area name (Sony's "Retroalimentación háptica") wraps inside the
+   card's narrow column instead of spilling out of it. */
 .dk-roadmap-tags .dk-chip {
-  height: 20px;
-  padding: 0 7px;
+  height: auto;
+  min-height: 20px;
+  max-width: 100%;
+  padding: 1px 7px;
   gap: 4px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* ---- Rendered Markdown (About page) ---- */

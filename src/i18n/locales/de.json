@@ -41,11 +41,11 @@
     "modes": {
       "off": {
         "label": "Aus",
-        "hint": "Standard. Nur native Haptik (Kanäle 2 + 3 des USB-Audiostreams)."
+        "hint": "Standard. Nur natives haptisches Feedback (Kanäle 2 + 3 des USB-Audiostreams)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält native HD-Haptik (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
+        "hint": "Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält natives haptisches Feedback (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
       },
       "mix": {
         "label": "Mix",
@@ -60,9 +60,9 @@
     "lpLabel": "Tiefpass-Grenzfreq."
   },
   "haptics": {
-    "gainLabel": "Haptik-Verstärkung",
+    "gainLabel": "Vibrationsintensität",
     "audioBufferLabel": "Audio-Pufferlänge",
-    "btMicLabel": "BT-Mikrofon",
+    "btMicLabel": "Integriertes Mikrofon",
     "audioBufferSub": "Niedriger: weniger Audioverzögerung. Höher: stabileres Audio, falls es knackt."
   },
   "behavior": {
@@ -73,7 +73,7 @@
     "controllerModeLabel": "Controller-Modus"
   },
   "remap": {
-    "unsupported": "Die verbundene Firmware unterstützt keine Tastenbelegung. Aktualisiere im Tab „Firmware flashen“ auf die neueste OLED-Edition-Firmware.",
+    "unsupported": "Die verbundene Firmware unterstützt keine Tastenzuweisung. Aktualisiere im Tab „Firmware flashen“ auf die neueste OLED-Edition-Firmware.",
     "disabled": "Deaktiviert (keine Ausgabe)",
     "verifyFailed": "Schreiben der Belegung konnte nicht bestätigt werden — das Gerät hat die Änderung nicht bestätigt."
   },
@@ -111,7 +111,7 @@
       "firmware": "Firmware",
       "protocol": "Protokoll",
       "connected": "Verbunden",
-      "notConnected": "Nicht verbunden (PS drücken)",
+      "notConnected": "Nicht verbunden (PS-Taste drücken)",
       "slot": "Kopplungs-Slot",
       "signal": "Signal",
       "signalQ": {
@@ -131,7 +131,7 @@
       "controllerWakes": "Controller-Eingabe weckt das Display",
       "usb": "USB",
       "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht den Dongle kurz ab- und wieder angesteckt).",
-      "speakerLevel": "Lautsprecherpegel",
+      "speakerLevel": "Lautstärke (Lautsprecher für Controller)",
       "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern"
     },
     "lightbar": {
@@ -153,7 +153,7 @@
     },
     "slots": {
       "title": "Kopplungs-Slots",
-      "hint": "Jeder Slot merkt sich einen Controller. Beim Wechseln wird der aktuelle Controller getrennt; drück PS am Controller im neuen Slot. Um einen neuen Controller in einen leeren Slot zu koppeln, wechsle dorthin und halte Create + PS.",
+      "hint": "Jeder Slot merkt sich einen Controller. Beim Wechseln wird der aktuelle Controller getrennt; drück die PS-Taste am Controller im neuen Slot. Um einen neuen Controller in einen leeren Slot zu koppeln, wechsle dorthin und halte die Create-Taste und die PS-Taste.",
       "slot": "Slot",
       "controller": "Controller",
       "active": "Aktiv",
@@ -218,7 +218,7 @@
     "firmware": {
       "installed": "Installierte Firmware",
       "device": "Gerät",
-      "rebooting": "Startet neu… drück PS am Controller, sobald er wieder da ist.",
+      "rebooting": "Startet neu… drück die PS-Taste am Controller, sobald er wieder da ist.",
       "reboot": "{{device}} neu starten",
       "bootsel": "Der Dongle ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder steck ihn ab, um abzubrechen.",
       "enterBootsel": "BOOTSEL-Modus starten",
@@ -226,12 +226,12 @@
       "confirmInstall": "{{version}} jetzt installieren",
       "confirmReset": "Alle Einstellungen zurücksetzen",
       "factoryReset": "Werkseinstellungen…",
-      "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenbelegungen bleiben erhalten.",
+      "resetHint": "Das Zurücksetzen stellt die Standardeinstellungen wieder her. Kopplungen und Tastenzuweisungen bleiben erhalten.",
       "latest": "Neueste",
       "update": "Auf {{version}} aktualisieren",
       "upToDate": "Aktuell",
       "check": "Jetzt prüfen",
-      "updateHint": "Der Dongle startet in den Bootloader, wird geflasht und startet von selbst neu. Lass ihn eingesteckt; drücke danach PS am Controller.",
+      "updateHint": "Der Dongle startet in den Bootloader, wird geflasht und startet von selbst neu. Lass ihn eingesteckt; drücke danach die PS-Taste am Controller.",
       "unpublished": "noch kein Release veröffentlicht",
       "offline": "Prüfung nicht möglich (offline)",
       "bundled": "in der App enthalten",
@@ -277,15 +277,15 @@
       "fwAvailable": "Firmware {{version}} ist verfügbar ({{device}}).",
       "details": "Details",
       "fwDontUnplug": "Firmware wird aktualisiert, Dongle nicht abziehen.",
-      "fwDone": "Firmware auf {{version}} aktualisiert. Drücke PS, um den Controller zu verbinden.",
+      "fwDone": "Firmware auf {{version}} aktualisiert. Drücke die PS-Taste, um den Controller zu verbinden.",
       "fwStep": {
         "downloading": "Firmware wird geladen und geprüft…",
         "rebooting": "Dongle startet in den Bootloader…",
         "waiting-bootloader": "Warte auf den Bootloader…",
         "flashing": "Firmware wird direkt geschrieben; ignoriere das Laufwerk RP2350, falls es erscheint",
         "restarting": "Dongle startet neu…",
-        "verifying": "Warte auf den Dongle: Drück PS am Controller, um ihn wieder zu verbinden.",
-        "verifyingPress": "Geflasht. Drücke PS am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
+        "verifying": "Warte auf den Dongle: Drück die PS-Taste am Controller, um ihn wieder zu verbinden.",
+        "verifyingPress": "Geflasht. Drücke die PS-Taste am Controller: Der Dongle meldet sich, sobald ein Controller verbunden ist. Bleibt er dunkel, steck ihn aus und wieder ein."
       },
       "askTitle": "Die App aktuell halten?",
       "askBody": "Neue Versionen können sich selbst herunterladen und installieren, geprüft wie jedes Update, und starten beim nächsten Öffnen der App. Das kannst du in den App-Einstellungen ändern.",
@@ -296,7 +296,7 @@
     "controller": {
       "battery": "Akku",
       "charging": "lädt",
-      "pairHint": "Schon gekoppelt? Drück die PS-Taste. Neuer Controller? Halte PS + Create, bis die Lightbar blinkt; er wird im aktuellen Slot gekoppelt."
+      "pairHint": "Schon gekoppelt? Drück die PS-Taste. Neuer Controller? Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt; er wird im aktuellen Slot gekoppelt."
     },
     "dongle": {},
     "about": {
@@ -326,7 +326,7 @@
         "area": {
           "controller": "Controller",
           "buttons": "Tasten",
-          "audio": "Audio & Haptik",
+          "audio": "Audio & haptisches Feedback",
           "games": "Spiele",
           "dongle": "Dongle & OLED",
           "app": "App",
@@ -340,7 +340,7 @@
     },
     "games": {
       "title": "Spiele einrichten",
-      "intro": "Prüft deine Launcher auf Einstellungen, die verhindern, dass adaptive Trigger und Haptik in Spielen ankommen. Die Prüfung liest nur. Nichts ändert sich, bis du die Änderungen geprüft und auf Übernehmen gedrückt hast, und jede Änderung lässt sich rückgängig machen.",
+      "intro": "Prüft deine Launcher auf Einstellungen, die verhindern, dass adaptive Trigger und haptisches Feedback in Spielen ankommen. Die Prüfung liest nur. Nichts ändert sich, bis du die Änderungen geprüft und auf Übernehmen gedrückt hast, und jede Änderung lässt sich rückgängig machen.",
       "noLaunchers": "Keine Steam-, Heroic- oder Lutris-Installation gefunden.",
       "running": "läuft",
       "closed": "geschlossen",
@@ -349,7 +349,7 @@
       "scanning": "Steam, Heroic und Lutris werden geprüft…",
       "protonTitle": "DualSense-Proton-Build",
       "protonFound": "ist installiert.",
-      "protonMissing": "Unser Proton-Build ist noch nicht installiert. Windows-Spiele brauchen ihn für adaptive Trigger und Haptik über den Dongle.",
+      "protonMissing": "Unser Proton-Build ist noch nicht installiert. Windows-Spiele brauchen ihn für adaptive Trigger und haptisches Feedback über den Dongle.",
       "protonInstall": "{{name}} installieren…",
       "protonUpdate": "{{name}} installieren…",
       "protonConfirm": "Lädt {{name}} ({{size}}) aus dem GitHub-Release des Projekts, prüft die SHA-256-Prüfsumme und installiert es dort, wo deine Launcher nach Proton-Builds suchen. Vorhandene Proton-Versionen werden weder geändert noch entfernt. Danach wählst du, welche Launcher und Spiele es nutzen.",
@@ -409,7 +409,7 @@
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen"
         },
         "why": {
-          "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und Haptik über den Dongle zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
+          "defaultSteam": "Steam startet Windows-Spiele derzeit mit {{current}}. Erst unser Build bringt adaptive Trigger und haptisches Feedback über den Dongle zum Laufen. Spiele mit eigener Proton-Einstellung behalten sie.",
           "defaultHeroic": "Heroic gibt neuen Epic-, GOG- und Amazon-Installationen derzeit {{current}}. Das betrifft nur künftig installierte Spiele; installierte Spiele behalten ihre eigene Einstellung, und diese Seite prüft sie einzeln.",
           "defaultLutris": "Lutris nutzt für Wine-Spiele derzeit {{current}}. Spiele mit eigener Wine-Version behalten sie.",
           "runner": "{{support}} Es läuft derzeit mit {{current}}, das die nativen Funktionen des Controllers nicht durchreicht.",
@@ -417,12 +417,12 @@
           "steamInput": "{{support}} Steam Input ist für dieses Spiel eingeschaltet. Steam übersetzt den Controller dann in ein generisches Gamepad, und das Spiel sieht den DualSense nie. Entspricht in Steam Eigenschaften → Controller → „Steam Input deaktivieren“.",
           "envSteam": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind. Die Startoptionen werden zu: {{options}}",
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
-          "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und keine Haptik sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
-          "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und keine Haptik sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen."
+          "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
+          "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen."
         },
         "support": {
-          "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und die Haptik des DualSense.",
-          "haptics": "Dieses Spiel unterstützt die DualSense-Haptik."
+          "triggers": "Dieses Spiel unterstützt die adaptiven Trigger und das haptische Feedback des DualSense.",
+          "haptics": "Dieses Spiel unterstützt das haptische Feedback des DualSense."
         },
         "fallback": {
           "steamProton": "Steams eigenem Proton",
@@ -439,7 +439,7 @@
       },
       "envSetIn": "{{variable}} ist in {{file}} gesetzt",
       "envSession": "{{variable}} ist in der Umgebung dieser Sitzung gesetzt",
-      "consentIntro": "Spiele einrichten prüft Steam, Heroic und Lutris auf Einstellungen, die verhindern, dass adaptive Trigger und Haptik in deinen Spielen ankommen. Dafür liest es, nur auf diesem Computer:",
+      "consentIntro": "Spiele einrichten prüft Steam, Heroic und Lutris auf Einstellungen, die verhindern, dass adaptive Trigger und haptisches Feedback in deinen Spielen ankommen. Dafür liest es, nur auf diesem Computer:",
       "consentLaunchers": "die Einstellungen und Listen installierter Spiele von Steam, Heroic und Lutris",
       "consentAudio": "das Audioprofil und den Zugriff auf den Controller",
       "consentProton": "welcher DualSense-Proton-Build der neueste ist, aus dem Update-Feed dieses Projekts auf GitHub",
@@ -450,7 +450,7 @@
       "closeFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden. Beende ihn selbst und drücke dann auf Neu prüfen.",
       "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen.",
       "scanningWindows": "Steam, GOG Galaxy und Epic werden geprüft…",
-      "consentIntroWindows": "Die Spieleeinrichtung listet deine Spiele aus Steam, GOG Galaxy und Epic auf und prüft Steam auf Einstellungen, die adaptive Trigger und Haptik blockieren. Dafür liest sie, nur auf diesem Computer:",
+      "consentIntroWindows": "Die Spieleeinrichtung listet deine Spiele aus Steam, GOG Galaxy und Epic auf und prüft Steam auf Einstellungen, die adaptive Trigger und haptisches Feedback blockieren. Dafür liest sie, nur auf diesem Computer:",
       "consentLaunchersWindows": "die Einstellungen und die Listen installierter Spiele von Steam, GOG Galaxy und Epic",
       "consentRunningWindows": "welche Programme laufen, um zu bemerken, wenn eines deiner Spiele startet (für sein Controller-Profil)"
     },
@@ -458,7 +458,7 @@
       "installing": "Firmware wird installiert…",
       "keepPlugged": "Lass den Pico eingesteckt.",
       "restarting": "Firmware {{version}} installiert. Jetzt den Controller koppeln",
-      "restartingHint": "Halte PS + Create am Controller, bis die Lightbar blinkt. Der Dongle erscheint hier, sobald der Controller verbunden ist (ein schon gekoppelter Controller braucht nur die PS-Taste).",
+      "restartingHint": "Halte die Create-Taste und die PS-Taste am Controller, bis die Leuchtleiste blinkt. Der Dongle erscheint hier, sobald der Controller verbunden ist (ein schon gekoppelter Controller braucht nur die PS-Taste).",
       "found": "Ein Pico ist bereit zur Einrichtung",
       "offerBundled": "Firmware {{version}} installieren, die mit dieser App geliefert wird (kein Download nötig).",
       "offerOnline": "Firmware {{version}} installieren, die neueste veröffentlichte Version.",
@@ -468,7 +468,7 @@
       "newPico": "Neuer Pico? Steck ihn ein, während du seinen BOOTSEL-Knopf hältst (ein fabrikneuer Pico braucht den Knopf nicht). Die App findet ihn und installiert die Firmware.",
       "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
       "turnOnTitle": "Schalte deinen Controller ein",
-      "pairHint": "Drück PS am Controller. Ein neuer Controller: Halte PS + Create, bis die Lichtleiste blinkt (das Display des Dongles zeigt „Pair your DualSense“).",
+      "pairHint": "Drück die PS-Taste am Controller. Ein neuer Controller: Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt (das Display des Dongles zeigt „Pair your DualSense“).",
       "whyHidden": "Der Dongle erscheint an diesem PC erst, wenn ein Controller mit ihm verbunden ist.",
       "updatesTitle": "Updates",
       "fwReady": "Diese App installiert Firmware {{version}}.",
@@ -486,42 +486,42 @@
         "l2": "L2",
         "r1": "R1",
         "r2": "R2",
-        "lightbar": "Lightbar",
+        "lightbar": "Leuchtleiste",
         "touchpad": "Touchpad",
-        "create": "Create",
-        "options": "Options",
-        "dpad-up": "Steuerkreuz oben",
-        "dpad-down": "Steuerkreuz unten",
-        "dpad-left": "Steuerkreuz links",
-        "dpad-right": "Steuerkreuz rechts",
+        "create": "Create-Taste",
+        "options": "Optionstaste",
+        "dpad-up": "Richtungstaste oben",
+        "dpad-down": "Richtungstaste unten",
+        "dpad-left": "Richtungstaste links",
+        "dpad-right": "Richtungstaste rechts",
         "triangle": "Dreieck △",
         "circle": "Kreis ○",
         "cross": "Kreuz ✕",
         "square": "Quadrat □",
-        "stick-l": "Linker Stick (L3)",
-        "stick-r": "Rechter Stick (R3)",
+        "stick-l": "Linker Stick/L3-Taste",
+        "stick-r": "Rechter Stick/R3-Taste",
         "ps": "PS-Taste",
-        "mute": "Stummtaste & Mikro",
+        "mute": "Mute-Taste & Mikrofon",
         "speaker": "Lautsprecher",
         "fn-l": "Linke Fn-Taste",
         "fn-r": "Rechte Fn-Taste",
         "paddle-l": "Linke Rücktaste (LB)",
         "paddle-r": "Rechte Rücktaste (RB)",
-        "body": "Griffe (Haptik)"
+        "body": "Haptisches Feedback"
       },
       "pickHint": "Klicke auf einen Teil der Abbildung, um ihn einzurichten.",
       "needsFirmware": "Aktualisiere die Firmware des Dongles, um den Controller live zu sehen.",
       "overview": "Dein Controller",
       "app": "App-Einstellungen",
       "close": "Schließen",
-      "haptics": "Haptik",
+      "haptics": "Haptisches Feedback",
       "speaker": "Lautsprecher",
       "mic": "Mikrofon",
-      "remap": "Neubelegung",
+      "remap": "Tastenzuweisung",
       "remapActs": "Wirkt als",
       "remapDefault": "Standard",
-      "remapHint": "Neubelegungen werden beim Übernehmen auf den Dongle geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
-      "remapApply": "Neubelegung übernehmen",
+      "remapHint": "Tastenzuweisungen werden beim Übernehmen auf den Dongle geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
+      "remapApply": "Zuweisung übernehmen",
       "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
@@ -530,7 +530,7 @@
       "touchHint": "Berühre das Touchpad, um deine Finger hier zu sehen. Dafür gibt es nichts einzustellen.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Lautsprecherpegel jetzt",
-      "hapticLevel": "Haptik-Pegel jetzt",
+      "hapticLevel": "Haptisches Feedback jetzt",
       "closeToTray": "In den Infobereich schließen",
       "launchAtLogin": "Beim Anmelden starten",
       "startMinimized": "Minimiert starten",
@@ -540,9 +540,9 @@
       "backLeft": "LB",
       "backRight": "RB",
       "edgePart": {
-        "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
-        "paddle": "Eine der Rücktasten des DualSense Edge. Die Profile des Controllers können sie als jede Taste belegen. Sie leuchtet hier auf, wenn du sie drückst.",
-        "soon": "Zum Neubelegen braucht es die neueste Dongle-Firmware (Pico-Seite → Aktualisieren)."
+        "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die benutzerdefinierten Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
+        "paddle": "Eine der Rücktasten des DualSense Edge. Die benutzerdefinierten Profile des Controllers können ihr jede Taste zuweisen. Sie leuchtet hier auf, wenn du sie drückst.",
+        "soon": "Für die Zuweisung braucht es die neueste Dongle-Firmware (Pico-Seite → Aktualisieren)."
       },
       "effects": {
         "0": "keiner",
@@ -553,7 +553,7 @@
       "go": {
         "intro": "Klicke mit der Maus auf einen Teil der Abbildung oder wähle hier eine Einstellung:",
         "lightbar": {
-          "title": "Lightbar",
+          "title": "Leuchtleiste",
           "sub": "Modus und Lieblingsfarben"
         },
         "triggers": {
@@ -561,8 +561,8 @@
           "sub": "Effekte an L2 / R2 ausprobieren"
         },
         "haptics": {
-          "title": "Haptik",
-          "sub": "Stärke und Audio Auto Haptics"
+          "title": "Haptisches Feedback",
+          "sub": "Vibrationsintensität und Audio Auto Haptics"
         },
         "speaker": {
           "title": "Lautsprecher",
@@ -570,19 +570,19 @@
         },
         "mic": {
           "title": "Mikrofon",
-          "sub": "Das Bluetooth-Mikrofon des Controllers"
+          "sub": "Das integrierte Mikrofon des Controllers"
         },
         "slots": {
           "title": "Kopplungsplätze",
           "sub": "Controller wechseln oder entfernen"
         },
-        "buttons": "Um eine Taste oder einen Stick neu zu belegen, klicke in der Abbildung darauf.",
-        "bodyHint": "Haptik: Stärke und Audio Auto Haptics"
+        "buttons": "Um einer Taste oder einem Stick etwas zuzuweisen, klicke in der Abbildung darauf.",
+        "bodyHint": "Haptisches Feedback: Vibrationsintensität und Audio Auto Haptics"
       },
       "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
       "autoInstall": "Updates automatisch installieren",
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
-      "hapticSilent": "Still: gerade sendet nichts Haptik. Der Pegel bewegt sich, wenn ein Spiel HD-Haptik abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
+      "hapticSilent": "Still: gerade sendet nichts haptisches Feedback. Der Pegel bewegt sich, wenn ein Spiel haptisches Feedback abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
       "speakerSilent": "Still: gerade spielt nichts auf dem Lautsprecher des Controllers.",
       "levelLive": "Live vom Dongle.",
       "hardwareAcceleration": "Hardwarebeschleunigung",
@@ -593,7 +593,7 @@
       "colorLabel": "Farbe:",
       "statusLabel": "Status:",
       "triggersTitle": "Adaptive Trigger",
-      "remapButton": "{{button}} neu belegen",
+      "remapButton": "{{button}} zuweisen",
       "effectOther": "anderer Effekt ({{n}})"
     },
     "tour": {
@@ -624,8 +624,8 @@
       },
       "click": {
         "title": "Einrichten mit der Maus",
-        "body": "Klicke mit der Maus auf den leuchtenden Lichtstreifen neben dem Touchpad. Jeder Teil der Abbildung öffnet seine eigenen Einstellungen.",
-        "done": "Damit hast du die Lightbar-Einstellungen geöffnet."
+        "body": "Klicke mit der Maus auf die leuchtende Leuchtleiste neben dem Touchpad. Jeder Teil der Abbildung öffnet seine eigenen Einstellungen.",
+        "done": "Damit hast du die Leuchtleiste-Einstellungen geöffnet."
       },
       "panel": {
         "title": "Hier öffnen sich Einstellungen",
@@ -641,7 +641,7 @@
       },
       "top": {
         "title": "Dongle, Spiele und Hilfe",
-        "body": "Dongle: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und Haptik vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
+        "body": "Dongle: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
       },
       "finish": {
         "title": "Alles bereit",
@@ -663,13 +663,13 @@
       "title": "Live-Daten",
       "effect": "Effekt",
       "gyro": "Gyroskop",
-      "accel": "Beschleunigung",
+      "accel": "Beschleunigungsmesser",
       "tilt": "Neigung",
       "finger": "Finger {{n}}",
       "rate": "Updates",
       "roundTrip": "Antwortzeit",
       "signal": "Signal",
-      "headset": "Headset-Buchse",
+      "headset": "Headset-Anschluss",
       "mic": "Mikrofon-Buchse",
       "muted": "Mikro stumm",
       "usb": "USB-Strom",
@@ -743,13 +743,13 @@
         "details": "Details"
       },
       "activeNow": "Jetzt aktiv",
-      "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (Haptik, Lautsprecher, Lightbar, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
+      "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (haptisches Feedback, Lautsprecher, Leuchtleiste, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
       "profileFromCurrent": "Aus aktuellen Einstellungen erstellen",
       "profileNeedsDongle": "Verbinde den Dongle, um mit deinen aktuellen Einstellungen zu starten.",
       "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf dem Dongle.",
       "profileCopyCurrent": "Aktuelle Einstellungen kopieren",
       "profileDelete": "Profil löschen",
-      "haptics": "Haptik-Stärke",
+      "haptics": "Vibrationsintensität",
       "autoHaptics": "Audio Auto Haptics",
       "autoMode": {
         "off": "Aus",
@@ -759,10 +759,10 @@
       },
       "autoGain": "Auto Haptics-Verstärkung",
       "autoLowpass": "Auto Haptics-Tiefpass",
-      "speaker": "Lautsprecherpegel",
-      "lightbar": "Lightbar",
+      "speaker": "Lautstärke (Lautsprecher für Controller)",
+      "lightbar": "Leuchtleiste",
       "favorites": "Favoritenfarben",
-      "mic": "Bluetooth-Mikrofon",
+      "mic": "Integriertes Mikrofon",
       "setupNone": "Für dieses Spiel ist nichts einzurichten.",
       "setupReview": "Änderungen prüfen",
       "setupApply": "Übernehmen",
@@ -800,7 +800,7 @@
         "unknown": "Unbekannt"
       },
       "tierHint": {
-        "verified": "Am Dongle getestet: Trigger und Haptik funktionieren.",
+        "verified": "Am Dongle getestet: Trigger und haptisches Feedback funktionieren.",
         "works": "Das Spiel unterstützt DualSense-Funktionen nativ.",
         "needs-setup": "Funktioniert, sobald die Einrichtung dieses Spiels erledigt ist.",
         "partial": "Einige DualSense-Funktionen fehlen am PC. Audio Auto Haptics kann die Vibration ersetzen.",
@@ -814,23 +814,23 @@
       },
       "featureName": {
         "triggers": "Adaptive Trigger",
-        "haptics": "HD-Haptik",
+        "haptics": "Haptisches Feedback",
         "speaker": "Lautsprecher",
         "mic": "Mikrofon",
-        "lightbar": "Lightbar"
+        "lightbar": "Leuchtleiste"
       },
       "stars_one": "{{count}} Stern",
       "stars_other": "{{count}} Sterne",
       "feedbackHint": "Was ist dir aufgefallen?",
       "tag": {
         "triggers-work": "Adaptive Trigger gehen",
-        "haptics-work": "HD-Haptik geht",
+        "haptics-work": "Haptisches Feedback geht",
         "speaker-works": "Lautsprecher geht",
         "mic-works": "Mikrofon geht",
-        "lightbar-works": "Lightbar geht",
+        "lightbar-works": "Leuchtleiste geht",
         "weak-vibration": "Vibration schwach",
         "no-triggers": "Trigger gehen nicht",
-        "rumble-only": "Nur einfaches Rumble",
+        "rumble-only": "Nur einfache Vibration",
         "speaker-problems": "Lautsprecher-Probleme",
         "not-detected": "Controller nicht erkannt",
         "needs-steam-input-off": "Steam Input aus nötig",
@@ -857,13 +857,13 @@
       "filterHint": {
         "all": "Alle installierten Spiele",
         "profile": "Spiele mit eigenem Controller-Profil",
-        "dualsense": "Spiele mit nativen adaptiven Triggern oder HD-Haptik",
+        "dualsense": "Spiele mit nativen adaptiven Triggern oder haptisches Feedback",
         "attention": "Spiele mit einer ausstehenden Einrichtungsänderung"
       },
       "summary": "{{games}} Spiele · {{dualsense}} mit DualSense-Funktionen · {{profiles}} mit Profil",
       "recent": "Zuletzt gespielt",
       "tierLegend": "Was die Stufen bedeuten",
-      "compatHint": "Adaptive Trigger und HD-Haptik erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
+      "compatHint": "Adaptive Trigger und haptisches Feedback erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
       "action": {
         "play": "Spielen",
         "starting": "Startet…",
@@ -960,7 +960,7 @@
       "recording": "Nimmt auf… sprich jetzt",
       "playingBack": "Spielt ab…",
       "micDone": "Gehört. Klang die Wiedergabe klar, funktioniert das Mikrofon.",
-      "micQuiet": "Aufgenommen, aber fast still. Ist das Mikrofon stumm (die Stummtaste leuchtet) oder das BT-Mikrofon aus?",
+      "micQuiet": "Aufgenommen, aber fast still. Ist das Mikrofon stumm (die Mute-Taste leuchtet) oder „Integriertes Mikrofon“ aus?",
       "problem": {
         "no-mic": "Das Mikrofon des Controllers ist auf diesem PC nicht als Audioeingang verfügbar.",
         "no-speaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
@@ -1002,8 +1002,8 @@
         "line": "Umrisse"
       },
       "partSub": {
-        "dark": "Mitte, Trigger, Schultertasten",
-        "cap": "Aktionstasten, Steuerkreuz"
+        "dark": "Mitte, Trigger, L1- und R1-Taste",
+        "cap": "Aktionstasten, Richtungstasten"
       },
       "lineAdjusted": "Umrisse heller oder dunkler gemacht, damit sie auf diesen Farben sichtbar bleiben.",
       "fromColorway": "Mit meiner Farbvariante beginnen",
@@ -1065,8 +1065,8 @@
     },
     "calib": {
       "title": "Kalibrierung",
-      "shortcut": "Stick-Drift, Totzonen, Triggerweg, Gyro",
-      "intro": "Korrigiert Stick-Drift, Totzonen, Triggerweg und den Nullpunkt des Gyros im Dongle, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
+      "shortcut": "Stick-Drift, Deadzones, Triggerweg, Gyroskop",
+      "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops im Dongle, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
       "needsFirmware": "Aktualisiere die Firmware des Dongles, um zu kalibrieren.",
       "needsController": "Verbinde einen Controller, um zu kalibrieren.",
       "noInput": "Während dieses Schritts kam keine Eingabe vom Controller. Versuche es erneut.",
@@ -1083,14 +1083,14 @@
       "rightStick": "Rechter Stick",
       "raw": "Roh",
       "corrected": "Was Spiele sehen",
-      "deadzone": "Totzone",
+      "deadzone": "Deadzone",
       "deadzoneSub": "Bewegung nahe der Mitte, die ignoriert wird (gegen Drift)",
       "outer": "Voller Ausschlag bei",
       "outerSub": "Wie weit der Stick gehen muss, um als ganz gedrückt zu zählen",
       "center": "Mittelpunkt-Versatz: X {{x}}, Y {{y}}",
       "triggers": "Trigger",
       "now": "jetzt {{raw}} → {{out}}",
-      "gyro": "Gyro",
+      "gyro": "Gyroskop",
       "gyroZero": "Nullpunkt-Versatz:",
       "save": "Auf dem Dongle speichern",
       "revert": "Verwerfen",
@@ -1102,14 +1102,14 @@
       "retry": "Erneut versuchen"
     },
     "curves": {
-      "title": "Ansprechkurve",
+      "title": "Empfindlichkeitskurve",
       "intro": "Wie jeder Stick zwischen Mitte und Vollausschlag reagiert. Wird im Dongle nach der Kalibrierung angewendet und wirkt so in jedem Spiel.",
       "curve": "Kurve",
       "type": {
         "linear": "Linear",
         "precise": "Präzise",
-        "steady": "Ruhig",
-        "aggressive": "Aggressiv",
+        "steady": "Stetig",
+        "aggressive": "Schnell",
         "digital": "Digital",
         "custom": "Eigene"
       },
@@ -1122,7 +1122,7 @@
         "custom": "Deine eigene Kurve durch vier Punkte."
       },
       "customHint": "Ziehe die Punkte oder wähle einen aus (Tab) und verschiebe ihn mit den Pfeiltasten; mit Umschalt weiter.",
-      "graph": "Ansprechkurve: Stickneigung waagerecht, Ausgabe senkrecht",
+      "graph": "Empfindlichkeitskurve: Stickneigung waagerecht, Ausgabe senkrecht",
       "point": "Punkt {{n}}",
       "pointValue": "Neigung {{x}} % → Ausgabe {{y}} %",
       "now": "Stick jetzt: {{in}} % → {{out}} %",
@@ -1131,7 +1131,7 @@
       "keyLinear": "Linear",
       "keyLive": "Dein Stick jetzt",
       "gameOn": "Das Profil eines Spiels hat gerade eigene Kurven aktiv. Speichern hier beendet sie, bis das Spiel wieder startet.",
-      "needsFirmware": "Aktualisiere die Firmware des Dongles für Ansprechkurven.",
+      "needsFirmware": "Aktualisiere die Firmware des Dongles für Empfindlichkeitskurven.",
       "readFailed": "Der Dongle hat seine Kurven nicht geliefert.",
       "resetLinear": "Zurück zu Linear",
       "saveHint": "Im Dongle gespeichert für den Controller in Kopplungsplatz {{slot}}; gilt sofort in jedem Spiel.",
@@ -1162,7 +1162,7 @@
       "lifetime": "Lebenszeit",
       "played": "Gespielt",
       "charging": "Ladezeit",
-      "haptics": "Haptik an",
+      "haptics": "Haptisches Feedback an",
       "triggers": "Trigger L · R",
       "chargeCycles": "Ladevorgänge",
       "chargeCyclesValue": "{{cycles}} (voll {{full}})",
@@ -1175,10 +1175,10 @@
       "stickLeft": "Linker Stick, Hin und zurück",
       "stickRight": "Rechter Stick, Hin und zurück",
       "stickValue": "X {{x}} · Y {{y}}",
-      "muteButton": "Stummtaste",
+      "muteButton": "Mute-Taste",
       "hours": "{{value}} h",
       "reading": "Lese vom Controller…",
-      "tooOld": "Die Firmware dieses Controllers ist zu alt für Lebenszeit-Zähler (aktualisiere sie an einer PS5 oder mit Sonys PC-Updater).",
+      "tooOld": "Die Firmware dieses Controllers ist zu alt für Lebenszeit-Zähler (aktualisiere sie an einer PS5 oder mit Sonys App „PlayStation Accessories“).",
       "playedOnly": "Gespielt: {{value}}.",
       "noCounters": "Dieser Controller hat keine Lebenszeit-Zähler gesendet.",
       "privacy": "Vom Controller selbst gespeichert. Nur gelesen: Nichts wird geändert, und seine Seriennummer wird nie in die App gelesen.",
@@ -1187,9 +1187,9 @@
       "howToUpdate": "So aktualisierst du",
       "howToPc": "Schließe den Controller mit einem USB-C-Kabel an einen Windows-PC an und aktualisiere ihn mit Sonys App PlayStation Accessories (früher „Firmware-Updater für DualSense Wireless-Controller“).",
       "sonyPage": "Sonys Seite",
-      "howToPs5": "Oder an einer PS5: per USB-Kabel anschließen, dann Einstellungen → Zubehör → Controller.",
+      "howToPs5": "Oder an einer PS5: per USB-Kabel anschließen, dann Einstellungen → Zubehör → Controller (Allgemein) → Gerätesoftware des DualSense Wireless-Controllers.",
       "howToCable": "Das Update geht nicht über den Dongle. Danach den Controller erneut mit dem Dongle koppeln, falls er sich nicht wieder verbindet.",
-      "windowsOnly": "Sonys Updater läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden."
+      "windowsOnly": "Sonys App „PlayStation Accessories“ läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden."
     },
     "stickTest": {
       "circleTitle": "Rundheitstest",
@@ -1210,11 +1210,11 @@
       "driftStart": "Drift-Test starten",
       "driftAgain": "Erneut testen",
       "driftStats": "Max. {{max}} · im Mittel {{avg}} von der Mitte (vom vollen Ausschlag)",
-      "noDeadzone": "Keine Totzone eingestellt.",
-      "leavesDeadzone": "Verlässt die Totzone ({{dz}}).",
-      "insideDeadzone": "Bleibt in der Totzone ({{dz}}).",
-      "driftWarn": "Möglicher Stick-Drift: Er bewegt sich in Ruhe merklich. Die Kalibrierung oben kann ihn zentrieren, oder erhöhe die Totzone.",
-      "driftHidden": "Bewegt sich in Ruhe etwas, aber die Totzone verbirgt es vor Spielen.",
+      "noDeadzone": "Keine Deadzone eingestellt.",
+      "leavesDeadzone": "Verlässt die Deadzone ({{dz}}).",
+      "insideDeadzone": "Bleibt in der Deadzone ({{dz}}).",
+      "driftWarn": "Möglicher Stick-Drift: Er bewegt sich in Ruhe merklich. Die Kalibrierung oben kann ihn zentrieren, oder erhöhe die Deadzone.",
+      "driftHidden": "Bewegt sich in Ruhe etwas, aber die Deadzone verbirgt es vor Spielen.",
       "steady": "In Ruhe stabil.",
       "keyX": "X (durchgezogen)",
       "keyY": "Y (gestrichelt)"
@@ -1235,7 +1235,7 @@
       "signal": "Signal",
       "audio": "Audio-Pipeline",
       "speakerPeak": "Lautsprecherpegel",
-      "hapticPeak": "Haptikpegel",
+      "hapticPeak": "Pegel haptisches Feedback",
       "brightness": "Helligkeit",
       "oledState": "Zustand",
       "oledScreen": "Seite",
@@ -1277,19 +1277,19 @@
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",
-      "sub": "Die Lichtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart."
+      "sub": "Die Leuchtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart."
     },
     "grips": {
       "link": "Links und rechts koppeln",
-      "linkSub": "Beide Griffe ändern sich gemeinsam",
-      "left": "Linker Griff",
-      "right": "Rechter Griff",
+      "linkSub": "Links und rechts ändern sich gemeinsam",
+      "left": "Vibrationsintensität (links)",
+      "right": "Vibrationsintensität (rechts)",
       "test": {
         "left": "Links testen",
         "right": "Rechts testen",
         "both": "Beide testen"
       },
-      "testHint": "Ein kurzes Rumpeln am Griff mit seiner aktuellen Stärke (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
+      "testHint": "Eine kurze Vibration auf dieser Seite mit ihrer aktuellen Vibrationsintensität (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
     },
     "channel": {
       "label": "Update-Kanal",
@@ -1317,7 +1317,7 @@
       "hint": "Speichere die Tasten oben unter einem Namen. Ein Spielprofil kann eine Belegung nutzen: Sie gilt, solange das Spiel läuft (nie auf dem Dongle gespeichert), danach kommt deine normale Belegung zurück.",
       "none": "Noch keine gespeicherten Belegungen.",
       "load": "Laden",
-      "loadHint": "Diese Belegung in den Editor oben laden (Belegung anwenden macht sie zu deiner normalen)",
+      "loadHint": "Diese Belegung in den Editor oben laden (Zuweisung übernehmen macht sie zu deiner normalen)",
       "update": "Aktualisieren",
       "updateHint": "Die Tasten oben als {{name}} speichern",
       "delete": "Löschen",
@@ -1326,7 +1326,7 @@
       "namePlaceholder": "Name, z. B. Rennen",
       "usedBy_one": "von {{count}} Spiel genutzt",
       "usedBy_other": "von {{count}} Spielen genutzt",
-      "activeNotice": "Die Tastenbelegung von {{game}} ist gerade auf dem Dongle. Belegung anwenden speichert deine normale Belegung und beendet sie, bis das Spiel wieder startet.",
+      "activeNotice": "Die Tastenbelegung von {{game}} ist gerade auf dem Dongle. Zuweisung übernehmen speichert deine normale Belegung und beendet sie, bis das Spiel wieder startet.",
       "aGame": "Ein Spiel",
       "profileLabel": "Tastenbelegung",
       "normal": "Normale Belegung",
@@ -1348,8 +1348,8 @@
       "loadedEdited": "bearbeitet",
       "loadedChip": "Geladen",
       "loadedState": {
-        "notApplied": "Noch nicht angewendet: Belegung anwenden macht sie zu deiner normalen Belegung auf dem Dongle.",
-        "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Belegung anwenden macht sie zu deiner normalen.",
+        "notApplied": "Noch nicht angewendet: Zuweisung übernehmen macht sie zu deiner normalen Belegung auf dem Dongle.",
+        "edited": "Seit dem Laden geändert: Aktualisieren speichert die Änderungen in der Belegung; Zuweisung übernehmen macht sie zu deiner normalen.",
         "applied": "Angewendet: das ist jetzt deine normale Belegung auf dem Dongle."
       },
       "extraSelf": "Sich selbst (Standard)"
@@ -1403,7 +1403,7 @@
     "features": [
       "Erkennt deinen Controller – in seinen eigenen Farben",
       "Klick auf ein Teil, um es einzustellen",
-      "Adaptive Trigger, HD-Haptik, Lautsprecher und Mikrofon – über Bluetooth",
+      "Adaptive Trigger, haptisches Feedback, Lautsprecher und Mikrofon – über Bluetooth",
       "Firmware mit einem Klick – auch für einen brandneuen Pico",
       "Eine Erzählerin in 7 Sprachen",
       "Aktualisiert sich selbst – signiert und geprüft"

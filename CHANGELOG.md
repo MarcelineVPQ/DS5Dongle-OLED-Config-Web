@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **The app uses Sony's names for the controller, in all 7 languages** (from Sony's own playstation.com pages per country; the list is in `docs/GLOSSARY.md`): the haptics panel is **Haptic feedback**, its sliders **Vibration intensity (left / right)**, and its test plays "a short vibration on that side" (no more "rumble on that grip"); **Light bar**, **Touch pad**, **Create button**, **Options button**, **Mute button**, **Left stick/L3 button**, the **directional buttons**, **Built-in microphone**, **Volume (Speaker for Controller)**, **Button assignments** (was Remap), **Sensitivity curve** (was Response curve; the Aggressive preset is now Sony's **Quick**), **gyroscope**, and **the PS button** / **the Create button and the PS button** in pairing hints. Sony's PC updater is called by its name, **PlayStation Accessories**, and the PS5 path is Settings → Accessories → Controller (General). German, French, Spanish, Brazilian Portuguese, Chinese and Japanese follow Sony's own words there (for example Leuchtleiste, associer, mando, emparelhar, 光条 and 控制器, MUTEボタン).
+
 ## [0.9.5-dev.8] - 2026-10-13
 
 ### Changed

@@ -233,7 +233,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
             {!(on && id && liveCapable) && (
               <div className="live-status">
                 <span className={on ? "dk-good" : ""}>
-                  <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press PS)")) : "—"}</strong>
+                  <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press the PS button)")) : "—"}</strong>
                 </span>
                 <span>
                   {t("desktop.controller.battery", "Battery")}{" "}

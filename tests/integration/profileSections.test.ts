@@ -106,7 +106,7 @@ describe("game page sections (profile draft)", () => {
       fakeBridge(CONFIG).bridge,
       profileFields(CONFIG, NORMAL, { format: 2 }, () => undefined),
     );
-    const speaker = el.querySelector<HTMLInputElement>('input[type=range][aria-label="Speaker level"]')!;
+    const speaker = el.querySelector<HTMLInputElement>('input[type=range][aria-label="Volume (Speaker for Controller)"]')!;
     expect([speaker.min, speaker.max, speaker.step]).toEqual(["-12", "12", "1"]);
     const gain = [...el.querySelectorAll<HTMLInputElement>("input[type=range]")].find((i) => i.max === "200")!;
     expect(gain.step).toBe("10");
@@ -116,7 +116,7 @@ describe("game page sections (profile draft)", () => {
     const onChange = vi.fn();
     const { bridge, setDraftField, gripTest } = fakeBridge(CONFIG);
     const el = renderSections(bridge, profileFields(CONFIG, NORMAL, { format: 2, speakerVolume: 3 }, onChange));
-    keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Speaker level"]')!, 9);
+    keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Volume (Speaker for Controller)"]')!, 9);
     expect(onChange).toHaveBeenLastCalledWith({ format: 2, speakerVolume: 9 });
     const rainbow = [...el.querySelectorAll<HTMLButtonElement>(".dk-presets button")].find((b) => b.textContent === "Rainbow")!;
     act(() => rainbow.click());
@@ -133,8 +133,8 @@ describe("game page sections (profile draft)", () => {
       profileFields(CONFIG, NORMAL, { format: 2, speakerVolume: 3 }, () => undefined),
     );
     const sub = (label: string) => el.querySelector(`input[aria-label="${label}"]`)?.closest(".dk-row")?.querySelector(".dk-sub")?.textContent ?? "";
-    expect(sub("Speaker level")).not.toContain("Your normal setting");
-    expect(sub("Left grip")).toContain("Your normal setting");
+    expect(sub("Volume (Speaker for Controller)")).not.toContain("Your normal setting");
+    expect(sub("Vibration intensity (left)")).toContain("Your normal setting");
     expect(el.querySelectorAll("h2 .dk-chip")).toHaveLength(2); // lightbar mode + favorites
   });
 

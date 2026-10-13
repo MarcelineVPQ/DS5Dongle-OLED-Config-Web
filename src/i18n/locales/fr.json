@@ -41,11 +41,11 @@
     "modes": {
       "off": {
         "label": "Off",
-        "hint": "Par défaut. Haptics natifs uniquement (canaux 2 + 3 du flux audio USB)."
+        "hint": "Par défaut. Retour haptique natif uniquement (canaux 2 + 3 du flux audio USB)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~1 s. Préserve les haptics HD natifs (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
+        "hint": "Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~1 s. Préserve le retour haptique natif (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
       },
       "mix": {
         "label": "Mix",
@@ -60,9 +60,9 @@
     "lpLabel": "Coupure passe-bas"
   },
   "haptics": {
-    "gainLabel": "Gain haptique",
+    "gainLabel": "Intensité des vibrations",
     "audioBufferLabel": "Longueur du tampon audio",
-    "btMicLabel": "Microphone BT",
+    "btMicLabel": "Microphone intégré",
     "audioBufferSub": "Plus bas : moins de latence audio. Plus haut : audio plus stable s'il grésille."
   },
   "behavior": {
@@ -73,7 +73,7 @@
     "controllerModeLabel": "Mode contrôleur"
   },
   "remap": {
-    "unsupported": "Le firmware connecté ne prend pas en charge le remappage des boutons. Mettez à jour vers le dernier firmware OLED Edition dans l'onglet Flasher.",
+    "unsupported": "Le firmware connecté ne prend pas en charge l'attribution des touches. Mettez à jour vers le dernier firmware OLED Edition dans l'onglet Flasher.",
     "disabled": "Désactivé (aucune sortie)",
     "verifyFailed": "L'écriture du remappage n'a pas pu être vérifiée — l'appareil n'a pas confirmé la modification."
   },
@@ -111,8 +111,8 @@
       "firmware": "Firmware",
       "protocol": "Protocole",
       "connected": "Connectée",
-      "notConnected": "Non connectée (appuie sur PS)",
-      "slot": "Slot d'appairage",
+      "notConnected": "Non connectée (appuie sur la touche PS)",
+      "slot": "Slot d'association",
       "signal": "Signal",
       "signalQ": {
         "excellent": "Excellent",
@@ -131,7 +131,7 @@
       "controllerWakes": "La manette réveille l'écran",
       "usb": "USB",
       "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher).",
-      "speakerLevel": "Niveau du haut-parleur",
+      "speakerLevel": "Volume (haut-parleur de la manette)",
       "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer"
     },
     "lightbar": {
@@ -152,8 +152,8 @@
       "favN": "FAV{{n}}"
     },
     "slots": {
-      "title": "Slots d'appairage",
-      "hint": "Chaque slot mémorise une manette. Changer de slot déconnecte la manette actuelle ; appuie sur PS sur celle du nouveau slot. Pour appairer une nouvelle manette dans un slot vide, passe sur ce slot et maintiens Create + PS.",
+      "title": "Slots d'association",
+      "hint": "Chaque slot mémorise une manette. Changer de slot déconnecte la manette actuelle ; appuie sur la touche PS de celle du nouveau slot. Pour associer une nouvelle manette dans un slot vide, passe sur ce slot et maintiens la touche de création et la touche PS.",
       "slot": "Slot",
       "controller": "Manette",
       "active": "Actif",
@@ -218,7 +218,7 @@
     "firmware": {
       "installed": "Firmware installé",
       "device": "Appareil",
-      "rebooting": "Redémarrage… appuie sur PS sur la manette une fois le dongle revenu.",
+      "rebooting": "Redémarrage… appuie sur la touche PS sur la manette une fois le dongle revenu.",
       "reboot": "Redémarrer {{device}}",
       "bootsel": "Le dongle est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche-le pour annuler.",
       "enterBootsel": "Passer en mode BOOTSEL",
@@ -226,7 +226,7 @@
       "confirmInstall": "Installer {{version}} maintenant",
       "confirmReset": "Réinitialiser tous les paramètres",
       "factoryReset": "Réinitialisation d'usine…",
-      "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les appairages et remappages de boutons sont conservés.",
+      "resetHint": "La réinitialisation d'usine restaure les paramètres par défaut. Les associations et l'attribution des touches sont conservées.",
       "latest": "Dernière",
       "update": "Mettre à jour en {{version}}",
       "upToDate": "À jour",
@@ -277,15 +277,15 @@
       "fwAvailable": "Le firmware {{version}} est disponible ({{device}}).",
       "details": "Détails",
       "fwDontUnplug": "Mise à jour du firmware, ne débranche pas le dongle.",
-      "fwDone": "Firmware mis à jour en {{version}}. Appuie sur PS pour reconnecter la manette.",
+      "fwDone": "Firmware mis à jour en {{version}}. Appuie sur la touche PS pour reconnecter la manette.",
       "fwStep": {
         "downloading": "Téléchargement et vérification du firmware…",
         "rebooting": "Redémarrage du dongle dans son bootloader…",
         "waiting-bootloader": "En attente du bootloader…",
         "flashing": "Écriture directe du firmware ; ignore le lecteur RP2350 s'il apparaît",
         "restarting": "Redémarrage du dongle…",
-        "verifying": "En attente du dongle : appuie sur PS sur la manette pour la reconnecter.",
-        "verifyingPress": "Flashé. Appuie sur PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
+        "verifying": "En attente du dongle : appuie sur la touche PS sur la manette pour la reconnecter.",
+        "verifyingPress": "Flashé. Appuie sur la touche PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
       },
       "askTitle": "Garder l'app à jour ?",
       "askBody": "Les nouvelles versions peuvent se télécharger et s'installer toutes seules, vérifiées comme chaque mise à jour, et démarrer à la prochaine ouverture de l'app. Tu peux changer ça dans les réglages de l'app.",
@@ -296,7 +296,7 @@
     "controller": {
       "battery": "Batterie",
       "charging": "en charge",
-      "pairHint": "Déjà appairée ? Appuie sur PS. Nouvelle manette ? Maintiens PS + Create jusqu'à ce que la barre lumineuse clignote ; elle s'appaire dans le slot actuel."
+      "pairHint": "Déjà associée ? Appuie sur la touche PS. Nouvelle manette ? Maintiens la touche de création et la touche PS jusqu'à ce que la barre lumineuse clignote ; elle s'associe dans le slot actuel."
     },
     "dongle": {},
     "about": {
@@ -326,7 +326,7 @@
         "area": {
           "controller": "Manette",
           "buttons": "Boutons",
-          "audio": "Audio et haptique",
+          "audio": "Audio et retour haptique",
           "games": "Jeux",
           "dongle": "Dongle et OLED",
           "app": "App",
@@ -340,7 +340,7 @@
     },
     "games": {
       "title": "Configuration des jeux",
-      "intro": "Vérifie dans tes lanceurs les réglages qui empêchent les gâchettes adaptatives et l'haptique d'atteindre les jeux. La vérification se contente de lire. Rien ne change tant que tu n'as pas relu les changements et appuyé sur Appliquer, et chaque changement peut être annulé.",
+      "intro": "Vérifie dans tes lanceurs les réglages qui empêchent les gâchettes adaptatives et le retour haptique d'atteindre les jeux. La vérification se contente de lire. Rien ne change tant que tu n'as pas relu les changements et appuyé sur Appliquer, et chaque changement peut être annulé.",
       "noLaunchers": "Aucune installation de Steam, Heroic ou Lutris trouvée.",
       "running": "ouvert",
       "closed": "fermé",
@@ -349,7 +349,7 @@
       "scanning": "Vérification de Steam, Heroic et Lutris…",
       "protonTitle": "Build Proton DualSense",
       "protonFound": "est installé.",
-      "protonMissing": "Notre build Proton n'est pas encore installé. Les jeux Windows en ont besoin pour les gâchettes adaptatives et l'haptique via le dongle.",
+      "protonMissing": "Notre build Proton n'est pas encore installé. Les jeux Windows en ont besoin pour les gâchettes adaptatives et le retour haptique via le dongle.",
       "protonInstall": "Installer {{name}}…",
       "protonUpdate": "Installer {{name}}…",
       "protonConfirm": "Télécharge {{name}} ({{size}}) depuis la release GitHub du projet, vérifie sa somme SHA-256 et l'installe là où tes lanceurs cherchent les builds Proton. Les versions de Proton existantes ne sont ni modifiées ni supprimées. Ensuite, tu choisis quels lanceurs et jeux l'utilisent.",
@@ -409,7 +409,7 @@
           "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »"
         },
         "why": {
-          "defaultSteam": "Steam lance actuellement les jeux Windows avec {{current}}. C'est notre build qui fait marcher les gâchettes adaptatives et l'haptique via le dongle. Les jeux réglés sur un Proton précis gardent leur réglage.",
+          "defaultSteam": "Steam lance actuellement les jeux Windows avec {{current}}. C'est notre build qui fait marcher les gâchettes adaptatives et le retour haptique via le dongle. Les jeux réglés sur un Proton précis gardent leur réglage.",
           "defaultHeroic": "Heroic attribue actuellement {{current}} aux nouvelles installations Epic, GOG et Amazon. Cela ne concerne que les jeux installés à partir de maintenant ; les jeux installés gardent leur propre réglage, et cette page les vérifie un par un.",
           "defaultLutris": "Lutris utilise actuellement {{current}} pour les jeux Wine. Les jeux avec leur propre version de Wine la gardent.",
           "runner": "{{support}} Il tourne actuellement avec {{current}}, qui ne transmet pas les fonctions natives de la manette.",
@@ -417,12 +417,12 @@
           "steamInput": "{{support}} Steam Input est activé pour ce jeu : Steam traduit la manette en manette générique et le jeu ne voit jamais la DualSense. C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
           "envSteam": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives. Les options de lancement deviennent : {{options}}",
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
-          "audioRule": "{{file}} met la carte audio de la DualSense sur le profil pro-audio, ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucune haptique. Le fichier est renommé en .disabled (pas supprimé) et le service audio (WirePlumber) redémarre : le son coupe une seconde.",
-          "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucune haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio."
+          "audioRule": "{{file}} met la carte audio de la DualSense sur le profil pro-audio, ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Le fichier est renommé en .disabled (pas supprimé) et le service audio (WirePlumber) redémarre : le son coupe une seconde.",
+          "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio."
         },
         "support": {
-          "triggers": "Ce jeu prend en charge les gâchettes adaptatives et l'haptique de la DualSense.",
-          "haptics": "Ce jeu prend en charge l'haptique de la DualSense."
+          "triggers": "Ce jeu prend en charge les gâchettes adaptatives et le retour haptique de la DualSense.",
+          "haptics": "Ce jeu prend en charge le retour haptique de la DualSense."
         },
         "fallback": {
           "steamProton": "le Proton de Steam",
@@ -439,7 +439,7 @@
       },
       "envSetIn": "{{variable}} est défini dans {{file}}",
       "envSession": "{{variable}} est défini dans l'environnement de cette session",
-      "consentIntro": "La configuration des jeux vérifie dans Steam, Heroic et Lutris les réglages qui empêchent les gâchettes adaptatives et l'haptique d'atteindre tes jeux. Pour cela, elle lit, uniquement sur cet ordinateur :",
+      "consentIntro": "La configuration des jeux vérifie dans Steam, Heroic et Lutris les réglages qui empêchent les gâchettes adaptatives et le retour haptique d'atteindre tes jeux. Pour cela, elle lit, uniquement sur cet ordinateur :",
       "consentLaunchers": "les réglages et la liste des jeux installés de Steam, Heroic et Lutris",
       "consentAudio": "le profil audio de la manette et l'accès à la manette",
       "consentProton": "le build Proton DualSense le plus récent, depuis le flux de mises à jour du projet sur GitHub",
@@ -450,15 +450,15 @@
       "closeFailed": "Impossible de demander à {{launcher}} de se fermer. Quitte-le toi-même, puis appuie sur Revérifier.",
       "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements.",
       "scanningWindows": "Vérification de Steam, GOG Galaxy et Epic…",
-      "consentIntroWindows": "La configuration des jeux liste tes jeux Steam, GOG Galaxy et Epic et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retours haptiques de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
+      "consentIntroWindows": "La configuration des jeux liste tes jeux Steam, GOG Galaxy et Epic et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retour haptique de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
       "consentLaunchersWindows": "les réglages et les listes de jeux installés de Steam, GOG Galaxy et Epic",
       "consentRunningWindows": "quels programmes tournent, pour remarquer quand l’un de tes jeux démarre (pour son profil de manette)"
     },
     "setup": {
       "installing": "Installation du firmware…",
       "keepPlugged": "Laisse le Pico branché.",
-      "restarting": "Firmware {{version}} installé. Appaire maintenant ta manette",
-      "restartingHint": "Maintiens PS + Create sur la manette jusqu'à ce que la barre lumineuse clignote. Le dongle apparaît ici dès que la manette est connectée (une manette déjà appairée n'a besoin que du bouton PS).",
+      "restarting": "Firmware {{version}} installé. Associe maintenant ta manette",
+      "restartingHint": "Maintiens la touche de création et la touche PS de la manette jusqu'à ce que la barre lumineuse clignote. Le dongle apparaît ici dès que la manette est connectée (une manette déjà associée n'a besoin que de la touche PS).",
       "found": "Un Pico est prêt à être configuré",
       "offerBundled": "Installer le firmware {{version}}, inclus avec cette app (aucun téléchargement).",
       "offerOnline": "Installer le firmware {{version}}, la dernière version publiée.",
@@ -468,7 +468,7 @@
       "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
       "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
       "turnOnTitle": "Allume ta manette",
-      "pairHint": "Appuie sur PS sur la manette. Une nouvelle manette : maintiens PS + Create jusqu’à ce que la barre lumineuse clignote (l’écran du dongle affiche « Pair your DualSense »).",
+      "pairHint": "Appuie sur la touche PS de la manette. Une nouvelle manette : maintiens la touche de création et la touche PS jusqu’à ce que la barre lumineuse clignote (l’écran du dongle affiche « Pair your DualSense »).",
       "whyHidden": "Le dongle n’apparaît sur ce PC qu’une fois une manette connectée.",
       "updatesTitle": "Mises à jour",
       "fwReady": "Cette app installe le firmware {{version}}.",
@@ -488,40 +488,40 @@
         "r2": "R2",
         "lightbar": "Barre lumineuse",
         "touchpad": "Pavé tactile",
-        "create": "Create",
-        "options": "Options",
-        "dpad-up": "Croix haut",
-        "dpad-down": "Croix bas",
-        "dpad-left": "Croix gauche",
-        "dpad-right": "Croix droite",
+        "create": "Touche de création",
+        "options": "Touche d'options",
+        "dpad-up": "Touche directionnelle haut",
+        "dpad-down": "Touche directionnelle bas",
+        "dpad-left": "Touche directionnelle gauche",
+        "dpad-right": "Touche directionnelle droite",
         "triangle": "Triangle △",
         "circle": "Rond ○",
         "cross": "Croix ✕",
         "square": "Carré □",
-        "stick-l": "Stick gauche (L3)",
-        "stick-r": "Stick droit (R3)",
-        "ps": "Bouton PS",
-        "mute": "Bouton muet et micro",
+        "stick-l": "Joystick gauche/touche L3",
+        "stick-r": "Joystick droit/touche R3",
+        "ps": "Touche PS",
+        "mute": "Touche mode silencieux et microphone",
         "speaker": "Haut-parleur",
-        "fn-l": "Bouton Fn gauche",
-        "fn-r": "Bouton Fn droit",
-        "paddle-l": "Bouton arrière gauche (LB)",
-        "paddle-r": "Bouton arrière droit (RB)",
-        "body": "Poignées (haptique)"
+        "fn-l": "Touche Fn gauche",
+        "fn-r": "Touche Fn droite",
+        "paddle-l": "Touche arrière gauche (LB)",
+        "paddle-r": "Touche arrière droite (RB)",
+        "body": "Retour haptique"
       },
       "pickHint": "Clique sur une partie du dessin pour la configurer.",
       "needsFirmware": "Mets à jour le firmware du dongle pour voir la manette bouger en direct.",
       "overview": "Ta manette",
       "app": "Réglages de l'app",
       "close": "Fermer",
-      "haptics": "Haptique",
+      "haptics": "Retour haptique",
       "speaker": "Haut-parleur",
       "mic": "Micro",
-      "remap": "Remappage",
+      "remap": "Attribution des touches",
       "remapActs": "Agit comme",
       "remapDefault": "par défaut",
-      "remapHint": "Les remappages sont écrits sur le dongle quand tu appuies sur Appliquer et marchent dans tous les jeux, sans logiciel sur le PC.",
-      "remapApply": "Appliquer le remappage",
+      "remapHint": "L'attribution des touches est écrite sur le dongle quand tu appuies sur Appliquer et marche dans tous les jeux, sans logiciel sur le PC.",
+      "remapApply": "Appliquer l'attribution",
       "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
@@ -530,7 +530,7 @@
       "touchHint": "Touche le pavé tactile pour voir tes doigts ici. Il n'y a rien à régler.",
       "finger": "Doigt {{n}}",
       "speakerLevel": "Niveau du haut-parleur",
-      "hapticLevel": "Niveau haptique",
+      "hapticLevel": "Retour haptique",
       "closeToTray": "Fermer dans la zone de notification",
       "launchAtLogin": "Lancer à la connexion",
       "startMinimized": "Démarrer réduit",
@@ -540,9 +540,9 @@
       "backLeft": "LB",
       "backRight": "RB",
       "edgePart": {
-        "fn": "Le bouton Fn de la DualSense Edge. Maintenu avec d'autres boutons, il change les profils de la manette. Il s'allume ici quand tu appuies dessus.",
-        "paddle": "Un des boutons arrière de la DualSense Edge. Les profils de la manette peuvent lui donner le rôle de n'importe quel bouton. Il s'allume ici quand tu appuies dessus.",
-        "soon": "Pour les réassigner, il faut le dernier firmware du dongle (page Pico → Mettre à jour)."
+        "fn": "La touche Fn de la DualSense Edge. Maintenue avec d'autres touches, elle change les profils personnalisés de la manette. Elle s'allume ici quand tu appuies dessus.",
+        "paddle": "Une des touches arrière de la DualSense Edge. Les profils personnalisés de la manette peuvent lui attribuer n'importe quelle touche. Elle s'allume ici quand tu appuies dessus.",
+        "soon": "Pour leur attribuer une touche, il faut le dernier firmware du dongle (page Pico → Mettre à jour)."
       },
       "effects": {
         "0": "aucun",
@@ -562,7 +562,7 @@
         },
         "haptics": {
           "title": "Retour haptique",
-          "sub": "Intensité et Audio Auto Haptics"
+          "sub": "Intensité des vibrations et Audio Auto Haptics"
         },
         "speaker": {
           "title": "Haut-parleur",
@@ -570,19 +570,19 @@
         },
         "mic": {
           "title": "Micro",
-          "sub": "Le micro Bluetooth de la manette"
+          "sub": "Le microphone intégré de la manette"
         },
         "slots": {
-          "title": "Emplacements d'appairage",
+          "title": "Emplacements d'association",
           "sub": "Changer ou oublier des manettes"
         },
-        "buttons": "Pour réassigner un bouton ou un stick, clique dessus sur le dessin.",
-        "bodyHint": "Retour haptique : intensité et Audio Auto Haptics"
+        "buttons": "Pour attribuer une touche ou un joystick, clique dessus sur le dessin.",
+        "bodyHint": "Retour haptique : intensité des vibrations et Audio Auto Haptics"
       },
       "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
       "autoInstall": "Installer les mises à jour automatiquement",
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
-      "hapticSilent": "Silence : rien n'envoie d'haptique en ce moment. Le niveau bouge quand un jeu joue de l'haptique HD, ou avec Audio Auto Haptics activé pendant que du son joue.",
+      "hapticSilent": "Silence : rien n'envoie de retour haptique en ce moment. Le niveau bouge quand un jeu joue du retour haptique, ou avec Audio Auto Haptics activé pendant que du son joue.",
       "speakerSilent": "Silence : rien ne joue sur le haut-parleur de la manette en ce moment.",
       "levelLive": "En direct depuis le dongle.",
       "hardwareAcceleration": "Accélération matérielle",
@@ -593,7 +593,7 @@
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
       "triggersTitle": "Gâchettes adaptatives",
-      "remapButton": "Réassigner {{button}}",
+      "remapButton": "Attribuer {{button}}",
       "effectOther": "autre effet ({{n}})"
     },
     "tour": {
@@ -624,7 +624,7 @@
       },
       "click": {
         "title": "Tout se règle à la souris",
-        "body": "Clique avec la souris sur la bande lumineuse à côté du pavé tactile. Chaque partie du dessin ouvre ses propres réglages.",
+        "body": "Clique avec la souris sur la barre lumineuse à côté du pavé tactile. Chaque partie du dessin ouvre ses propres réglages.",
         "done": "Tu as ouvert les réglages de la barre lumineuse."
       },
       "panel": {
@@ -641,7 +641,7 @@
       },
       "top": {
         "title": "Le dongle, tes jeux et l'aide",
-        "body": "Dongle : mises à jour du firmware, OLED, alimentation et USB. Jeux : prépare Steam et les autres lanceurs pour les gâchettes et l'haptique (Linux). À propos : nouveautés et guide. ⚙ : les réglages de l'app."
+        "body": "Dongle : mises à jour du firmware, OLED, alimentation et USB. Jeux : prépare Steam et les autres lanceurs pour les gâchettes et le retour haptique (Linux). À propos : nouveautés et guide. ⚙ : les réglages de l'app."
       },
       "finish": {
         "title": "Tout est prêt",
@@ -652,7 +652,7 @@
       "voiceNo": "Non merci",
       "data": {
         "title": "Tout, en direct",
-        "body": "Ici en bas : sticks, gâchettes, mouvements, batterie et liaison, en chiffres et en courbes, au rythme de ta manette."
+        "body": "Ici en bas : joysticks, gâchettes, mouvements, batterie et liaison, en chiffres et en courbes, au rythme de ta manette."
       },
       "pressGoal": "Encore {{n}} boutons différents…",
       "pressedLabel": "Boutons appuyés jusqu'ici",
@@ -669,7 +669,7 @@
       "rate": "Mises à jour",
       "roundTrip": "Aller-retour",
       "signal": "Signal",
-      "headset": "Prise casque",
+      "headset": "Sortie casque",
       "mic": "Prise micro",
       "muted": "Micro coupé",
       "usb": "Alimentation USB",
@@ -743,13 +743,13 @@
         "details": "Détails"
       },
       "activeNow": "Actif",
-      "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (haptique, haut-parleur, barre lumineuse, micro, boutons, sticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
+      "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (retour haptique, haut-parleur, barre lumineuse, micro, touches, joysticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
       "profileFromCurrent": "Créer depuis les réglages actuels",
       "profileNeedsDongle": "Connecte le dongle pour partir de tes réglages actuels.",
       "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur le dongle.",
       "profileCopyCurrent": "Copier les réglages actuels",
       "profileDelete": "Supprimer le profil",
-      "haptics": "Intensité haptique",
+      "haptics": "Intensité des vibrations",
       "autoHaptics": "Audio Auto Haptics",
       "autoMode": {
         "off": "Off",
@@ -759,10 +759,10 @@
       },
       "autoGain": "Gain Auto Haptics",
       "autoLowpass": "Passe-bas Auto Haptics",
-      "speaker": "Niveau du haut-parleur",
+      "speaker": "Volume (haut-parleur de la manette)",
       "lightbar": "Barre lumineuse",
       "favorites": "Couleurs favorites",
-      "mic": "Microphone Bluetooth",
+      "mic": "Microphone intégré",
       "setupNone": "Rien à configurer pour ce jeu.",
       "setupReview": "Vérifier les changements",
       "setupApply": "Appliquer",
@@ -800,7 +800,7 @@
         "unknown": "Inconnu"
       },
       "tierHint": {
-        "verified": "Testé sur le dongle : gâchettes et haptique fonctionnent.",
+        "verified": "Testé sur le dongle : gâchettes et retour haptique fonctionnent.",
         "works": "Le jeu prend en charge nativement les fonctions DualSense.",
         "needs-setup": "Fonctionne une fois la configuration de ce jeu faite.",
         "partial": "Certaines fonctions DualSense manquent sur PC. Audio Auto Haptics peut compenser les vibrations.",
@@ -814,7 +814,7 @@
       },
       "featureName": {
         "triggers": "Gâchettes adaptatives",
-        "haptics": "Haptique HD",
+        "haptics": "Retour haptique",
         "speaker": "Haut-parleur",
         "mic": "Microphone",
         "lightbar": "Barre lumineuse"
@@ -824,7 +824,7 @@
       "feedbackHint": "Qu'as-tu remarqué ?",
       "tag": {
         "triggers-work": "Gâchettes adaptatives OK",
-        "haptics-work": "Haptique HD OK",
+        "haptics-work": "Retour haptique OK",
         "speaker-works": "Haut-parleur OK",
         "mic-works": "Micro OK",
         "lightbar-works": "Barre lumineuse OK",
@@ -857,13 +857,13 @@
       "filterHint": {
         "all": "Tous les jeux installés",
         "profile": "Jeux avec leur propre profil de manette",
-        "dualsense": "Jeux avec gâchettes adaptatives ou haptique HD natives",
+        "dualsense": "Jeux avec gâchettes adaptatives ou retour haptique natives",
         "attention": "Jeux avec un réglage en attente"
       },
       "summary": "{{games}} jeux · {{dualsense}} avec fonctions DualSense · {{profiles}} avec un profil",
       "recent": "Joués récemment",
       "tierLegend": "Signification des niveaux",
-      "compatHint": "Les gâchettes adaptatives et l'haptique HD n'arrivent aux jeux Windows que via la version Proton DualSense.",
+      "compatHint": "Les gâchettes adaptatives et le retour haptique n'arrivent aux jeux Windows que via la version Proton DualSense.",
       "action": {
         "play": "Jouer",
         "starting": "Lancement…",
@@ -960,7 +960,7 @@
       "recording": "Enregistrement… parlez",
       "playingBack": "Relecture…",
       "micDone": "Entendu. Si la relecture était claire, le micro fonctionne.",
-      "micQuiet": "Enregistré, mais presque silencieux. Le micro est-il coupé (le bouton muet s'allume) ou le micro BT désactivé ?",
+      "micQuiet": "Enregistré, mais presque silencieux. Le micro est-il coupé (la touche mode silencieux s'allume) ou « Microphone intégré » désactivé ?",
       "problem": {
         "no-mic": "Le micro de la manette n'est pas disponible comme entrée audio sur ce PC.",
         "no-speaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
@@ -998,12 +998,12 @@
         "body": "Coque",
         "dark": "Parties noires",
         "cap": "Boutons",
-        "stick": "Sticks",
+        "stick": "Joysticks",
         "line": "Contours"
       },
       "partSub": {
-        "dark": "Centre, gâchettes, boutons L/R",
-        "cap": "Boutons d'action, croix directionnelle"
+        "dark": "Centre, gâchettes, touches L1 et R1",
+        "cap": "Touches d'action, touches directionnelles"
       },
       "lineAdjusted": "Contours éclaircis ou assombris pour rester visibles sur ces couleurs.",
       "fromColorway": "Partir de mon coloris",
@@ -1043,9 +1043,9 @@
         "ready": "Prête / en attente"
       },
       "fakeSlots": "Simuler d’autres manettes",
-      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent appairés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’appairage : l’app fait comme si cette manette était connectée. Rien n’est envoyé au dongle.",
+      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent associés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé au dongle.",
       "simulated": "Dongle simulé (sans matériel)",
-      "simulatedHint": "L’app parle à un dongle simulé au lieu de l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, appairage et mises à jour du firmware ne sont pas simulés. Recharge la page.",
+      "simulatedHint": "L’app parle à un dongle simulé au lieu de l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
       "simCore1": "Core1 simulé",
       "simCore1Hint": "Arrête le Core1 du dongle simulé à une étape de démarrage, pour voir l'avertissement de la page Dongle. Recharge la page.",
       "simCore1Runs": "Fonctionne normalement",
@@ -1065,8 +1065,8 @@
     },
     "calib": {
       "title": "Calibrage",
-      "shortcut": "Dérive des joysticks, zones mortes, course des gâchettes, gyro",
-      "intro": "Corrige la dérive des joysticks, les zones mortes, la course des gâchettes et le zéro du gyroscope dans le dongle, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
+      "shortcut": "Dérive des joysticks, zones inertes, course des gâchettes, gyro",
+      "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans le dongle, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
       "needsFirmware": "Mettez à jour le firmware du dongle pour calibrer.",
       "needsController": "Connectez une manette pour calibrer.",
       "noInput": "Aucune entrée de la manette pendant cette étape. Réessayez.",
@@ -1102,14 +1102,14 @@
       "retry": "Réessayer"
     },
     "curves": {
-      "title": "Courbe de réponse",
+      "title": "Courbe de sensibilité",
       "intro": "La façon dont chaque joystick répond entre le centre et l'inclinaison maximale. Appliquée dans le dongle après le calibrage, elle fonctionne donc dans tous les jeux.",
       "curve": "Courbe",
       "type": {
         "linear": "Linéaire",
-        "precise": "Précise",
-        "steady": "Stable",
-        "aggressive": "Agressive",
+        "precise": "Précis",
+        "steady": "Régulier",
+        "aggressive": "Rapide",
         "digital": "Numérique",
         "custom": "Personnalisée"
       },
@@ -1122,16 +1122,16 @@
         "custom": "Votre propre courbe, passant par quatre points."
       },
       "customHint": "Faites glisser les points, ou sélectionnez-en un (Tab) et déplacez-le avec les flèches ; Maj le déplace plus loin.",
-      "graph": "Courbe de réponse : inclinaison du joystick en abscisse, sortie en ordonnée",
+      "graph": "Courbe de sensibilité : inclinaison du joystick en abscisse, sortie en ordonnée",
       "point": "Point {{n}}",
       "pointValue": "inclinaison {{x}} % → sortie {{y}} %",
-      "now": "Stick maintenant : {{in}} % → {{out}} %",
+      "now": "Joystick maintenant : {{in}} % → {{out}} %",
       "axisIn": "→ Inclinaison du joystick",
       "axisOut": "↑ Ce que reçoivent les jeux",
       "keyLinear": "Linéaire",
       "keyLive": "Votre joystick maintenant",
       "gameOn": "Le profil d'un jeu applique ses propres courbes en ce moment. Enregistrer ici les arrête jusqu'au prochain lancement de ce jeu.",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour les courbes de réponse.",
+      "needsFirmware": "Mettez à jour le firmware du dongle pour les courbes de sensibilité.",
       "readFailed": "Le dongle n'a pas renvoyé ses courbes.",
       "resetLinear": "Revenir à Linéaire",
       "saveHint": "Enregistrée dans le dongle pour la manette de l'emplacement {{slot}} ; s'applique tout de suite à tous les jeux.",
@@ -1162,7 +1162,7 @@
       "lifetime": "Depuis toujours",
       "played": "Temps de jeu",
       "charging": "Temps de charge",
-      "haptics": "Haptique active",
+      "haptics": "Retour haptique actif",
       "triggers": "Gâchettes L · R",
       "chargeCycles": "Charges",
       "chargeCyclesValue": "{{cycles}} (complètes {{full}})",
@@ -1171,14 +1171,14 @@
       "none": "Aucune",
       "connections": "Connexions",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · expirations {{timeouts}}",
-      "presses": "Appuis et usage des sticks",
-      "stickLeft": "Stick gauche, allers-retours",
-      "stickRight": "Stick droit, allers-retours",
+      "presses": "Appuis et usage des joysticks",
+      "stickLeft": "Joystick gauche, allers-retours",
+      "stickRight": "Joystick droit, allers-retours",
       "stickValue": "X {{x}} · Y {{y}}",
-      "muteButton": "Bouton muet",
+      "muteButton": "Touche mode silencieux",
       "hours": "{{value}} h",
       "reading": "Lecture depuis la manette…",
-      "tooOld": "Le firmware de cette manette est trop ancien pour les compteurs (mettez-le à jour sur une PS5 ou avec l'outil PC de Sony).",
+      "tooOld": "Le firmware de cette manette est trop ancien pour les compteurs (mettez-le à jour sur une PS5 ou avec l'application PlayStation Accessories de Sony).",
       "playedOnly": "Temps de jeu : {{value}}.",
       "noCounters": "Cette manette n'a pas envoyé de compteurs.",
       "privacy": "Enregistré par la manette elle-même. Lecture seule : rien n'est modifié et son numéro de série n'est jamais lu par l'app.",
@@ -1187,9 +1187,9 @@
       "howToUpdate": "Comment mettre à jour",
       "howToPc": "Branchez la manette à un PC Windows avec un câble USB-C et mettez-la à jour avec l'application PlayStation Accessories de Sony (anciennement « Outil de mise à jour du firmware pour la manette sans fil DualSense »).",
       "sonyPage": "Page de Sony",
-      "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manettes.",
+      "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manette (général) → Logiciel de la manette sans fil DualSense.",
       "howToCable": "La mise à jour ne peut pas passer par le dongle. Ensuite, associez de nouveau la manette au dongle si elle ne se reconnecte pas.",
-      "windowsOnly": "L'outil de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5."
+      "windowsOnly": "L'application PlayStation Accessories de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5."
     },
     "stickTest": {
       "circleTitle": "Test de circularité",
@@ -1210,11 +1210,11 @@
       "driftStart": "Lancer le test de dérive",
       "driftAgain": "Tester à nouveau",
       "driftStats": "Max {{max}} · moyenne {{avg}} depuis le centre (de l'inclinaison maximale)",
-      "noDeadzone": "Aucune zone morte réglée.",
-      "leavesDeadzone": "Sort de la zone morte ({{dz}}).",
-      "insideDeadzone": "Reste dans la zone morte ({{dz}}).",
-      "driftWarn": "Dérive possible : le joystick bouge nettement au repos. Le calibrage ci-dessus peut le recentrer, ou augmentez la zone morte.",
-      "driftHidden": "Bouge un peu au repos, mais la zone morte le cache aux jeux.",
+      "noDeadzone": "Aucune zone inerte réglée.",
+      "leavesDeadzone": "Sort de la zone inerte ({{dz}}).",
+      "insideDeadzone": "Reste dans la zone inerte ({{dz}}).",
+      "driftWarn": "Dérive possible : le joystick bouge nettement au repos. Le calibrage ci-dessus peut le recentrer, ou augmentez la zone inerte.",
+      "driftHidden": "Bouge un peu au repos, mais la zone inerte le cache aux jeux.",
       "steady": "Stable au repos.",
       "keyX": "X (trait plein)",
       "keyY": "Y (pointillés)"
@@ -1235,7 +1235,7 @@
       "signal": "Signal",
       "audio": "Chaîne audio",
       "speakerPeak": "Niveau du haut-parleur",
-      "hapticPeak": "Niveau haptique",
+      "hapticPeak": "Niveau du retour haptique",
       "brightness": "Luminosité",
       "oledState": "État",
       "oledScreen": "Écran",
@@ -1281,15 +1281,15 @@
     },
     "grips": {
       "link": "Lier gauche et droite",
-      "linkSub": "Les deux poignées bougent ensemble",
-      "left": "Poignée gauche",
-      "right": "Poignée droite",
+      "linkSub": "Gauche et droite changent ensemble",
+      "left": "Intensité des vibrations (gauche)",
+      "right": "Intensité des vibrations (droite)",
       "test": {
         "left": "Tester gauche",
         "right": "Tester droite",
         "both": "Tester les deux"
       },
-      "testHint": "Une courte vibration sur cette poignée à sa force actuelle (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
+      "testHint": "Une courte vibration de ce côté à son intensité des vibrations actuelle (les tests des gâchettes n'en dépendent pas : L2 et R2 ont leurs propres moteurs)."
     },
     "channel": {
       "label": "Canal de mise à jour",
@@ -1367,7 +1367,7 @@
       "dongleNote": "Hors du profil de {{title}} : les réglages du dongle restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur le dongle.",
       "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans le dongle pour tous les jeux.",
       "curvesNote": "Profil de {{title}} actif : les courbes vont dans le profil de ce jeu avec Enregistrer dans le profil et se ressentent dès lors ; tes courbes habituelles reviennent ensuite.",
-      "curvesNormal": "Ce stick utilise ta courbe habituelle dans ce jeu."
+      "curvesNormal": "Ce joystick utilise ta courbe habituelle dans ce jeu."
     },
     "profile": {
       "changes": "Ce que ce jeu change (tout le reste utilise tes réglages habituels) :",
@@ -1379,7 +1379,7 @@
       "off": "Désactivé",
       "copyHint": "Ce jeu reçoit les réglages actuellement sur le dongle",
       "applyFailed": "Le profil de {{title}} n'a pas pu être mis sur le dongle ({{reason}}). Tes réglages normaux sont actifs.",
-      "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de stick ({{reason}}). Nouvel essai quand le dongle se reconnecte.",
+      "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de joystick ({{reason}}). Nouvel essai quand le dongle se reconnecte.",
       "saveFailed": "Non enregistré dans le profil de {{title}} : {{reason}}",
       "notOn": "Le profil de {{title}} n'est pas encore sur le dongle : rien n'y a été enregistré. Réessaie une fois qu'il est actif."
     },
@@ -1403,7 +1403,7 @@
     "features": [
       "Reconnaît ta manette, dans ses propres couleurs",
       "Clique sur une partie pour la régler",
-      "Gâchettes adaptatives, retour haptique HD, haut-parleur et micro, en Bluetooth",
+      "Gâchettes adaptatives, retour haptique, haut-parleur et micro, en Bluetooth",
       "Le firmware en un clic, même sur un Pico tout neuf",
       "Une narratrice en 7 langues",
       "Se met à jour tout seul, signé et vérifié"

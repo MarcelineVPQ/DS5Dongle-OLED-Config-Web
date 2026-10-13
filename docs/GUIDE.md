@@ -45,7 +45,7 @@ The app includes the matching firmware, so this works offline.
 
 ### Pair your controller
 
-Hold **PS + Create** on the controller until the light bar flashes. The dongle finds it and the app shows it a moment later. A controller that was paired before only needs **PS**.
+Hold the **Create button** and the **PS button** on the controller until the light bar blinks. The dongle finds it and the app shows it a moment later. A controller that was paired before only needs the **PS button**.
 
 ### USB access (Linux)
 
@@ -66,7 +66,7 @@ Your controller, drawn in its own colors, moving as you use it: buttons light up
 
 ### Light bar
 
-![The Lightbar panel](screenshots/guide-lightbar.png)
+![The Light bar panel](screenshots/guide-lightbar.png)
 
 Pick a mode: **Game** (the game decides), one of your four **favorite colors** (FAV0–FAV3), or an effect (breathing, rainbow, fade). Set the favorites with the color pickers.
 
@@ -76,26 +76,26 @@ Pick a mode: **Game** (the game decides), one of your four **favorite colors** (
 
 Try the trigger effects games can use (resistance, weapon, vibration…) on L2 and R2. Games set their own effects while you play; this is for feeling what they do and checking the triggers work.
 
-### Haptics
+### Haptic feedback
 
-![The Haptics panel with Left and Right grip and the test buttons](screenshots/guide-haptics.png)
+![The Haptic feedback panel with the left and right vibration intensity and the test buttons](screenshots/guide-haptics.png)
 
-- **Haptics strength**, per grip: **Left grip** and **Right grip**, with **Link left and right** to move both together. It scales both kinds of vibration games use: HD haptics and classic rumble. (The triggers have their own motors; this doesn't change them.)
-- **Test left / Test right / Test both:** a short buzz on that grip at its strength now.
+- **Vibration intensity**, per side: **Vibration intensity (left)** and **(right)**, with **Link left and right** to move both together. It scales both kinds of vibration games use: haptic feedback and classic vibration. (The triggers have their own motors; this doesn't change them.)
+- **Test left / Test right / Test both:** a short vibration on that side at its vibration intensity now.
 - **Audio Auto Haptics:** vibration made from the game's sound, for games that send none (or to add to theirs): **Fallback** (only when the game sends nothing), **Mix**, or **Replace**, with its own strength and low-pass filter.
 
 ### Speaker and microphone
 
 ![The Speaker panel with the live meter and the chime test](screenshots/guide-speaker.png)
 
-- **Speaker level**, with a live meter of what's playing, and a test chime on the controller's speaker.
-- **Microphone:** turn the controller's Bluetooth mic on or off, and test it: it records three seconds and plays them back on the controller (Linux).
+- **Volume (Speaker for Controller)**, with a live meter of what's playing, and a test chime on the controller's speaker.
+- **Microphone:** turn the controller's built-in microphone on or off (**Built-in microphone**), and test it: it records three seconds and plays them back on the controller (Linux).
 
-### Buttons (remapping)
+### Button assignments
 
-![Remapping a button](screenshots/guide-remap.png)
+![Assigning a button](screenshots/guide-remap.png)
 
-Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. Remaps are stored in the dongle and work in every game, on any computer.
+Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. Button assignments are stored in the dongle and work in every game, on any computer.
 
 **Saved button layouts:** save the buttons under a name ("Racing", "Southpaw") and give a layout to any game's profile. It switches in while that game runs (never written to the dongle's memory, so nothing wears out) and your normal buttons come back when it ends. Each layout lists what it changes ("Cross → Circle · L1 → R1"); edit it once and every game using it follows. Needs the newest dongle firmware.
 
@@ -109,7 +109,7 @@ The dongle remembers up to four controllers (slots 0–3). **Switch** to another
 
 ![Calibration: the guided run and the raw vs corrected previews](screenshots/guide-calibration.png)
 
-For stick drift, sticks that don't reach the edge, triggers that don't reach full, and a gyro that creeps. Open it from the settings list (**Calibration**).
+For stick drift, sticks that don't reach the edge, triggers that don't reach full, and a gyroscope that creeps. Open it from the settings list (**Calibration**).
 
 1. **Start calibration** and follow the four steps, each with a short "get ready" pause first:
    1. let go of both sticks;
@@ -121,9 +121,9 @@ For stick drift, sticks that don't reach the edge, triggers that don't reach ful
 
 A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
 
-**Response curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Aggressive** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can pick its own curve per stick (on the game's page), used only while the game runs.
+**Sensitivity curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Quick** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can pick its own curve per stick (on the game's page), used only while the game runs.
 
-**Stick tests** (below the response curve): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
+**Stick tests** (below the sensitivity curve): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
 
 ## 6. The Dongle page
 
@@ -137,8 +137,8 @@ A step that didn't go all the way (a trigger pressed halfway, the controller mov
 
 In the panel on the right:
 
-- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (the dongle restarts itself; press PS on the controller afterwards).
-- **Device:** restart the dongle, enter BOOTSEL, factory reset (keeps pairings and remaps), USB access (Linux).
+- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (the dongle restarts itself; press the PS button on the controller afterwards).
+- **Device:** restart the dongle, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
 - **Power:** disconnect the controller when idle, the timeout, the Pico's status light.
 - **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
 - **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
@@ -155,7 +155,7 @@ The first time, the app asks before reading anything; it then lists your **Steam
 ![A game page](screenshots/guide-game-page.png)
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
-  - **Controller profile:** haptics, Audio Auto Haptics, speaker, light bar, mic and a saved **button layout** just for this game. It switches in while the game runs and your normal settings come back when it closes (also after a crash).
+  - **Controller profile:** haptic feedback, Audio Auto Haptics, speaker, light bar, mic and a saved **button layout** just for this game. It switches in while the game runs and your normal settings come back when it closes (also after a crash).
   - **Setup:** this game's recommended fixes, applied with a backup you can undo.
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
@@ -181,7 +181,7 @@ Open with the ⚙ in the rail.
 | The light bar stays **amber** and never connects | Move the dongle to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
 | **Windows:** "The dongle is plugged in, but Windows hasn't set up its driver", or it never connects | Press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. It happens on PCs where a real DualSense was plugged in by USB before (it uses the same USB IDs); do it again if that happens again. |
 | Nothing shows up when the dongle is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
-| "Not connected" | Press **PS** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold **PS + Create**. |
+| "Not connected" | Press the **PS button** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold the **Create button** and the **PS button**. |
 | Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
 | The drawing doesn't move, or a page says "update the firmware" | Update the dongle's firmware from the Dongle page. |
 | The narrator is silent | She speaks only through the controller's speaker, and only when the narrator is on (App settings → Accessibility). Check the controller's volume. |

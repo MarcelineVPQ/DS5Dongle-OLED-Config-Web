@@ -41,11 +41,11 @@
     "modes": {
       "off": {
         "label": "Off",
-        "hint": "Predeterminado. Solo hápticos nativos (canales 2 + 3 del flujo de audio USB)."
+        "hint": "Predeterminado. Solo retroalimentación háptica nativa (canales 2 + 3 del flujo de audio USB)."
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva los hápticos HD nativos (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
+        "hint": "El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva la retroalimentación háptica nativa (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
       },
       "mix": {
         "label": "Mix",
@@ -60,9 +60,9 @@
     "lpLabel": "Corte paso-bajo"
   },
   "haptics": {
-    "gainLabel": "Ganancia háptica",
+    "gainLabel": "Intensidad de la vibración",
     "audioBufferLabel": "Longitud del búfer de audio",
-    "btMicLabel": "Micrófono BT",
+    "btMicLabel": "Micrófono integrado",
     "audioBufferSub": "Más bajo: menos retardo de audio. Más alto: audio más estable si cruje."
   },
   "behavior": {
@@ -70,10 +70,10 @@
     "screenDimTimeoutLabel": "Atenuar pantalla tras",
     "screenOffTimeoutLabel": "Apagar pantalla tras",
     "pollingRateLabel": "Tasa de sondeo",
-    "controllerModeLabel": "Modo de controlador"
+    "controllerModeLabel": "Modo de mando"
   },
   "remap": {
-    "unsupported": "El firmware conectado no admite la reasignación de botones. Actualiza al firmware OLED Edition más reciente en la pestaña Flashear.",
+    "unsupported": "El firmware conectado no admite asignaciones de botones. Actualiza al firmware OLED Edition más reciente en la pestaña Flashear.",
     "disabled": "Desactivado (sin salida)",
     "verifyFailed": "No se pudo verificar la escritura de la reasignación: el dispositivo no confirmó el cambio."
   },
@@ -111,7 +111,7 @@
       "firmware": "Firmware",
       "protocol": "Protocolo",
       "connected": "Conectado",
-      "notConnected": "No conectado (pulsa PS)",
+      "notConnected": "No conectado (pulsa el botón PS)",
       "slot": "Slot de emparejamiento",
       "signal": "Señal",
       "signalQ": {
@@ -128,10 +128,10 @@
       "display": "Pantalla OLED",
       "brightness": "Brillo",
       "zeroOff": "0 = nunca",
-      "controllerWakes": "Usar el controlador activa la pantalla",
+      "controllerWakes": "Usar el mando activa la pantalla",
       "usb": "USB",
       "usbHint": "Se aplican tras Reconectar USB (el PC ve el dongle desconectarse y reconectarse).",
-      "speakerLevel": "Nivel del altavoz",
+      "speakerLevel": "Volumen (altavoz para mando)",
       "speakerLevelSub": "0 = sin cambios; por encima de 0 amplifica y puede saturar"
     },
     "lightbar": {
@@ -153,14 +153,14 @@
     },
     "slots": {
       "title": "Slots de emparejamiento",
-      "hint": "Cada slot recuerda un controlador. Al cambiar se desconecta el controlador actual; pulsa PS en el del nuevo slot. Para emparejar un controlador nuevo en un slot vacío, cambia a él y mantén Create + PS.",
+      "hint": "Cada slot recuerda un mando. Al cambiar se desconecta el mando actual; pulsa el botón PS en el del nuevo slot. Para emparejar un mando nuevo en un slot vacío, cambia a él y mantén el botón de crear y el botón PS.",
       "slot": "Slot",
-      "controller": "Controlador",
+      "controller": "Mando",
       "active": "Activo",
       "empty": "Vacío",
       "switch": "Cambiar a",
       "forget": "Olvidar",
-      "wipeConfirm": "¿Olvidar los cuatro controladores?",
+      "wipeConfirm": "¿Olvidar los cuatro mandos?",
       "wipe": "Olvidar todos",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
@@ -218,7 +218,7 @@
     "firmware": {
       "installed": "Firmware instalado",
       "device": "Dispositivo",
-      "rebooting": "Reiniciando… pulsa PS en el controlador cuando vuelva.",
+      "rebooting": "Reiniciando… pulsa el botón PS en el mando cuando vuelva.",
       "reboot": "Reiniciar {{device}}",
       "bootsel": "El dongle es ahora una unidad RP2350. Copia un .uf2 en ella o desconéctalo para cancelar.",
       "enterBootsel": "Entrar en modo BOOTSEL",
@@ -226,12 +226,12 @@
       "confirmInstall": "Instalar {{version}} ahora",
       "confirmReset": "Restablecer todos los ajustes",
       "factoryReset": "Restablecer de fábrica…",
-      "resetHint": "El restablecimiento de fábrica restaura los ajustes predeterminados. Se conservan los emparejamientos y las reasignaciones de botones.",
+      "resetHint": "El restablecimiento de fábrica restaura los ajustes predeterminados. Se conservan los emparejamientos y las asignaciones de botones.",
       "latest": "Última",
       "update": "Actualizar a {{version}}",
       "upToDate": "Actualizado",
       "check": "Comprobar ahora",
-      "updateHint": "El dongle se reinicia en su bootloader, se graba y vuelve a arrancar solo. Déjalo conectado; después pulsa PS en el mando.",
+      "updateHint": "El dongle se reinicia en su bootloader, se graba y vuelve a arrancar solo. Déjalo conectado; después pulsa el botón PS en el mando.",
       "unpublished": "aún no hay versión publicada",
       "offline": "no se puede comprobar (sin conexión)",
       "bundled": "incluido con la app",
@@ -277,15 +277,15 @@
       "fwAvailable": "Hay firmware {{version}} para tu {{device}}.",
       "details": "Detalles",
       "fwDontUnplug": "Actualizando el firmware, no desconectes el dongle.",
-      "fwDone": "Firmware actualizado a {{version}}. Pulsa PS para reconectar el mando.",
+      "fwDone": "Firmware actualizado a {{version}}. Pulsa el botón PS para reconectar el mando.",
       "fwStep": {
         "downloading": "Descargando y comprobando el firmware…",
         "rebooting": "Reiniciando el dongle en su bootloader…",
         "waiting-bootloader": "Esperando al bootloader…",
         "flashing": "Escribiendo el firmware directamente; ignora la unidad RP2350 si aparece",
         "restarting": "Reiniciando el dongle…",
-        "verifying": "Esperando al dongle: pulsa PS en el mando para volver a conectarlo.",
-        "verifyingPress": "Flasheado. Pulsa PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."
+        "verifying": "Esperando al dongle: pulsa el botón PS en el mando para volver a conectarlo.",
+        "verifyingPress": "Flasheado. Pulsa el botón PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."
       },
       "askTitle": "¿Mantener la app al día?",
       "askBody": "Las nuevas versiones pueden descargarse e instalarse solas, verificadas como cada actualización, y se inician la próxima vez que abras la app. Puedes cambiarlo en los ajustes de la app.",
@@ -296,7 +296,7 @@
     "controller": {
       "battery": "Batería",
       "charging": "cargando",
-      "pairHint": "¿Ya está emparejado? Pulsa el botón PS. ¿Mando nuevo? Mantén PS + Create hasta que la barra de luz parpadee; se empareja en el slot actual."
+      "pairHint": "¿Ya está emparejado? Pulsa el botón PS. ¿Mando nuevo? Mantén el botón de crear y el botón PS hasta que la barra luminosa parpadee; se empareja en el slot actual."
     },
     "dongle": {},
     "about": {
@@ -326,7 +326,7 @@
         "area": {
           "controller": "Mando",
           "buttons": "Botones",
-          "audio": "Audio y háptica",
+          "audio": "Audio y retroalimentación háptica",
           "games": "Juegos",
           "dongle": "Dongle y OLED",
           "app": "App",
@@ -340,7 +340,7 @@
     },
     "games": {
       "title": "Configuración de juegos",
-      "intro": "Revisa tus lanzadores en busca de ajustes que impiden que los gatillos adaptativos y la háptica lleguen a los juegos. La revisión solo lee. Nada cambia hasta que revises los cambios y pulses Aplicar, y cada cambio se puede deshacer.",
+      "intro": "Revisa tus lanzadores en busca de ajustes que impiden que los gatillos adaptativos y la retroalimentación háptica lleguen a los juegos. La revisión solo lee. Nada cambia hasta que revises los cambios y pulses Aplicar, y cada cambio se puede deshacer.",
       "noLaunchers": "No se encontró ninguna instalación de Steam, Heroic o Lutris.",
       "running": "abierto",
       "closed": "cerrado",
@@ -349,7 +349,7 @@
       "scanning": "Revisando Steam, Heroic y Lutris…",
       "protonTitle": "Build de Proton para DualSense",
       "protonFound": "está instalado.",
-      "protonMissing": "Nuestro build de Proton aún no está instalado. Los juegos de Windows lo necesitan para los gatillos adaptativos y la háptica a través del dongle.",
+      "protonMissing": "Nuestro build de Proton aún no está instalado. Los juegos de Windows lo necesitan para los gatillos adaptativos y la retroalimentación háptica a través del dongle.",
       "protonInstall": "Instalar {{name}}…",
       "protonUpdate": "Instalar {{name}}…",
       "protonConfirm": "Descarga {{name}} ({{size}}) de la release del proyecto en GitHub, comprueba su suma SHA-256 y lo instala donde tus lanzadores buscan builds de Proton. Las versiones de Proton existentes no se cambian ni se eliminan. Después eliges qué lanzadores y juegos lo usan.",
@@ -409,7 +409,7 @@
           "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»"
         },
         "why": {
-          "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la háptica a través del dongle. Los juegos con un Proton concreto mantienen su ajuste.",
+          "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la retroalimentación háptica a través del dongle. Los juegos con un Proton concreto mantienen su ajuste.",
           "defaultHeroic": "Heroic asigna ahora {{current}} a las nuevas instalaciones de Epic, GOG y Amazon. Solo afecta a los juegos que instales a partir de ahora; los instalados mantienen su propio ajuste, y esta página los revisa uno por uno.",
           "defaultLutris": "Lutris usa ahora {{current}} para los juegos de Wine. Los juegos con su propia versión de Wine la mantienen.",
           "runner": "{{support}} Ahora se ejecuta con {{current}}, que no transmite las funciones nativas del mando.",
@@ -417,12 +417,12 @@
           "steamInput": "{{support}} Steam Input está activado para este juego, así que Steam convierte el mando en un mando genérico y el juego nunca ve el DualSense. Es lo mismo que Propiedades → Mando → «Desactivar Steam Input» en Steam.",
           "envSteam": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos. Las opciones de lanzamiento quedan así: {{options}}",
           "envHeroic": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos.",
-          "audioRule": "{{file}} pone la tarjeta de audio del DualSense en el perfil pro-audio, lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de háptica. El archivo se renombra a .disabled (no se borra) y el servicio de audio (WirePlumber) se reinicia, así que el sonido se corta un segundo.",
-          "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido."
+          "audioRule": "{{file}} pone la tarjeta de audio del DualSense en el perfil pro-audio, lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. El archivo se renombra a .disabled (no se borra) y el servicio de audio (WirePlumber) se reinicia, así que el sonido se corta un segundo.",
+          "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido."
         },
         "support": {
-          "triggers": "Este juego admite los gatillos adaptativos y la háptica del DualSense.",
-          "haptics": "Este juego admite la háptica del DualSense."
+          "triggers": "Este juego admite los gatillos adaptativos y la retroalimentación háptica del DualSense.",
+          "haptics": "Este juego admite la retroalimentación háptica del DualSense."
         },
         "fallback": {
           "steamProton": "el Proton propio de Steam",
@@ -439,7 +439,7 @@
       },
       "envSetIn": "{{variable}} está definida en {{file}}",
       "envSession": "{{variable}} está definida en el entorno de esta sesión",
-      "consentIntro": "La configuración de juegos revisa Steam, Heroic y Lutris en busca de ajustes que impiden que los gatillos adaptativos y la háptica lleguen a tus juegos. Para ello lee, solo en este equipo:",
+      "consentIntro": "La configuración de juegos revisa Steam, Heroic y Lutris en busca de ajustes que impiden que los gatillos adaptativos y la retroalimentación háptica lleguen a tus juegos. Para ello lee, solo en este equipo:",
       "consentLaunchers": "los ajustes y las listas de juegos instalados de Steam, Heroic y Lutris",
       "consentAudio": "el perfil de audio del mando y el acceso al mando",
       "consentProton": "cuál es el build de Proton para DualSense más reciente, desde el canal de actualizaciones del proyecto en GitHub",
@@ -450,7 +450,7 @@
       "closeFailed": "No se pudo pedir a {{launcher}} que se cierre. Ciérralo tú y pulsa Volver a revisar.",
       "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios.",
       "scanningWindows": "Comprobando Steam, GOG Galaxy y Epic…",
-      "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam, GOG Galaxy y Epic y busca en Steam ajustes que impiden que los gatillos adaptativos y los hápticos lleguen a ellos. Para ello lee, solo en este equipo:",
+      "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam, GOG Galaxy y Epic y busca en Steam ajustes que impiden que los gatillos adaptativos y la retroalimentación háptica lleguen a ellos. Para ello lee, solo en este equipo:",
       "consentLaunchersWindows": "los ajustes y las listas de juegos instalados de Steam, GOG Galaxy y Epic",
       "consentRunningWindows": "qué programas se están ejecutando, para notar cuándo empieza uno de tus juegos (para su perfil de mando)"
     },
@@ -458,7 +458,7 @@
       "installing": "Instalando el firmware…",
       "keepPlugged": "Deja el Pico conectado.",
       "restarting": "Firmware {{version}} instalado. Ahora empareja tu mando",
-      "restartingHint": "Mantén PS + Create en el mando hasta que la barra de luz parpadee. El dongle aparece aquí en cuanto el mando se conecta (un mando ya emparejado solo necesita el botón PS).",
+      "restartingHint": "Mantén el botón de crear y el botón PS del mando hasta que la barra luminosa parpadee. El dongle aparece aquí en cuanto el mando se conecta (un mando ya emparejado solo necesita el botón PS).",
       "found": "Hay un Pico listo para configurar",
       "offerBundled": "Instalar el firmware {{version}}, incluido con esta app (sin descargas).",
       "offerOnline": "Instalar el firmware {{version}}, la versión publicada más reciente.",
@@ -468,7 +468,7 @@
       "newPico": "¿Pico nuevo? Conéctalo manteniendo pulsado su botón BOOTSEL (un Pico nuevo de fábrica no lo necesita). La app lo encuentra e instala el firmware.",
       "driveNote": "Puede que tu equipo también lo muestre como una unidad llamada RP2350. No hace falta abrirla.",
       "turnOnTitle": "Enciende tu mando",
-      "pairHint": "Pulsa PS en el mando. Un mando nuevo: mantén PS + Create hasta que la barra de luz parpadee (la pantalla del dongle muestra «Pair your DualSense»).",
+      "pairHint": "Pulsa el botón PS del mando. Un mando nuevo: mantén el botón de crear y el botón PS hasta que la barra luminosa parpadee (la pantalla del dongle muestra «Pair your DualSense»).",
       "whyHidden": "El dongle solo aparece en este PC cuando hay un mando conectado a él.",
       "updatesTitle": "Actualizaciones",
       "fwReady": "Esta app instala el firmware {{version}}.",
@@ -486,42 +486,42 @@
         "l2": "L2",
         "r1": "R1",
         "r2": "R2",
-        "lightbar": "Barra de luz",
+        "lightbar": "Barra luminosa",
         "touchpad": "Panel táctil",
-        "create": "Create",
-        "options": "Options",
-        "dpad-up": "Cruceta arriba",
-        "dpad-down": "Cruceta abajo",
-        "dpad-left": "Cruceta izquierda",
-        "dpad-right": "Cruceta derecha",
+        "create": "Botón de crear",
+        "options": "Botón de opciones",
+        "dpad-up": "Botón de dirección arriba",
+        "dpad-down": "Botón de dirección abajo",
+        "dpad-left": "Botón de dirección izquierda",
+        "dpad-right": "Botón de dirección derecha",
         "triangle": "Triángulo △",
         "circle": "Círculo ○",
         "cross": "Equis ✕",
         "square": "Cuadrado □",
-        "stick-l": "Stick izquierdo (L3)",
-        "stick-r": "Stick derecho (R3)",
+        "stick-l": "Joystick izquierdo/botón L3",
+        "stick-r": "Joystick derecho/botón R3",
         "ps": "Botón PS",
-        "mute": "Botón de silencio y micro",
+        "mute": "Botón de silenciado y micrófono",
         "speaker": "Altavoz",
         "fn-l": "Botón Fn izquierdo",
         "fn-r": "Botón Fn derecho",
-        "paddle-l": "Botón trasero izquierdo (LB)",
-        "paddle-r": "Botón trasero derecho (RB)",
-        "body": "Empuñaduras (háptica)"
+        "paddle-l": "Botón posterior izquierdo (LB)",
+        "paddle-r": "Botón posterior derecho (RB)",
+        "body": "Retroalimentación háptica"
       },
       "pickHint": "Haz clic en cualquier parte del dibujo para configurarla.",
       "needsFirmware": "Actualiza el firmware del dongle para ver el mando moverse en directo.",
       "overview": "Tu mando",
       "app": "Ajustes de la app",
       "close": "Cerrar",
-      "haptics": "Háptica",
+      "haptics": "Retroalimentación háptica",
       "speaker": "Altavoz",
       "mic": "Micrófono",
-      "remap": "Reasignar",
+      "remap": "Asignaciones de botones",
       "remapActs": "Actúa como",
       "remapDefault": "predeterminado",
-      "remapHint": "Las reasignaciones se guardan en el dongle al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
-      "remapApply": "Aplicar reasignación",
+      "remapHint": "Las asignaciones de botones se guardan en el dongle al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
+      "remapApply": "Aplicar asignaciones",
       "remapReset": "Restablecer todos los botones",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
@@ -530,7 +530,7 @@
       "touchHint": "Toca el panel táctil para ver tus dedos aquí. No hay nada que configurar.",
       "finger": "Dedo {{n}}",
       "speakerLevel": "Nivel del altavoz ahora",
-      "hapticLevel": "Nivel háptico ahora",
+      "hapticLevel": "Retroalimentación háptica ahora",
       "closeToTray": "Cerrar a la bandeja",
       "launchAtLogin": "Iniciar al iniciar sesión",
       "startMinimized": "Iniciar minimizado",
@@ -540,9 +540,9 @@
       "backLeft": "LB",
       "backRight": "RB",
       "edgePart": {
-        "fn": "El botón Fn del DualSense Edge. Junto con otros botones cambia los perfiles del mando. Se ilumina aquí cuando lo pulsas.",
-        "paddle": "Uno de los botones traseros del DualSense Edge. Los perfiles del mando pueden hacer que actúe como cualquier botón. Se ilumina aquí cuando lo pulsas.",
-        "soon": "Para reasignarlos hace falta el firmware más reciente del dongle (página del Pico → Actualizar)."
+        "fn": "El botón Fn del DualSense Edge. Junto con otros botones cambia los perfiles personalizados del mando. Se ilumina aquí cuando lo pulsas.",
+        "paddle": "Uno de los botones posteriores del DualSense Edge. Los perfiles personalizados del mando pueden hacer que actúe como cualquier botón. Se ilumina aquí cuando lo pulsas.",
+        "soon": "Para asignarlos hace falta el firmware más reciente del dongle (página del Pico → Actualizar)."
       },
       "effects": {
         "0": "ninguno",
@@ -553,7 +553,7 @@
       "go": {
         "intro": "Haz clic con el ratón en una parte del dibujo, o elige un ajuste aquí:",
         "lightbar": {
-          "title": "Barra de luz",
+          "title": "Barra luminosa",
           "sub": "Modo y colores favoritos"
         },
         "triggers": {
@@ -561,8 +561,8 @@
           "sub": "Prueba los efectos en L2 / R2"
         },
         "haptics": {
-          "title": "Hápticos",
-          "sub": "Intensidad y Audio Auto Haptics"
+          "title": "Retroalimentación háptica",
+          "sub": "Intensidad de la vibración y Audio Auto Haptics"
         },
         "speaker": {
           "title": "Altavoz",
@@ -570,19 +570,19 @@
         },
         "mic": {
           "title": "Micrófono",
-          "sub": "El micrófono Bluetooth del mando"
+          "sub": "El micrófono integrado del mando"
         },
         "slots": {
           "title": "Ranuras de emparejamiento",
           "sub": "Cambiar u olvidar mandos"
         },
-        "buttons": "Para reasignar un botón o un stick, haz clic en él en el dibujo.",
-        "bodyHint": "Hápticos: intensidad y Audio Auto Haptics"
+        "buttons": "Para asignar un botón o un joystick, haz clic en él en el dibujo.",
+        "bodyHint": "Retroalimentación háptica: intensidad de la vibración y Audio Auto Haptics"
       },
       "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
       "autoInstall": "Instalar actualizaciones automáticamente",
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
-      "hapticSilent": "Silencio: ahora nada envía hápticos. Se mueve cuando un juego reproduce hápticos HD, o con Audio Auto Haptics activado mientras suena audio.",
+      "hapticSilent": "Silencio: ahora nada envía retroalimentación háptica. Se mueve cuando un juego reproduce retroalimentación háptica, o con Audio Auto Haptics activado mientras suena audio.",
       "speakerSilent": "Silencio: ahora no suena nada en el altavoz del mando.",
       "levelLive": "En directo desde el dongle.",
       "hardwareAcceleration": "Aceleración por hardware",
@@ -593,7 +593,7 @@
       "colorLabel": "Color:",
       "statusLabel": "Estado:",
       "triggersTitle": "Gatillos adaptativos",
-      "remapButton": "Reasignar {{button}}",
+      "remapButton": "Asignar {{button}}",
       "effectOther": "otro efecto ({{n}})"
     },
     "tour": {
@@ -624,8 +624,8 @@
       },
       "click": {
         "title": "Configura con el ratón",
-        "body": "Haz clic con el ratón en la franja de luz junto al panel táctil. Cada parte del dibujo abre sus propios ajustes.",
-        "done": "Has abierto los ajustes de la barra de luz."
+        "body": "Haz clic con el ratón en la barra luminosa junto al panel táctil. Cada parte del dibujo abre sus propios ajustes.",
+        "done": "Has abierto los ajustes de la barra luminosa."
       },
       "panel": {
         "title": "Los ajustes se abren aquí",
@@ -641,7 +641,7 @@
       },
       "top": {
         "title": "El dongle, tus juegos y la ayuda",
-        "body": "Dongle: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y hápticos (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
+        "body": "Dongle: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
       },
       "finish": {
         "title": "Todo listo",
@@ -652,7 +652,7 @@
       "voiceNo": "No, gracias",
       "data": {
         "title": "Todo, en directo",
-        "body": "Aquí abajo: sticks, gatillos, movimiento, batería y conexión, en números y gráficas, mientras se mueve tu mando."
+        "body": "Aquí abajo: joysticks, gatillos, movimiento, batería y conexión, en números y gráficas, mientras se mueve tu mando."
       },
       "pressGoal": "Faltan {{n}} botones distintos…",
       "pressedLabel": "Botones pulsados hasta ahora",
@@ -669,7 +669,7 @@
       "rate": "Actualizaciones",
       "roundTrip": "Ida y vuelta",
       "signal": "Señal",
-      "headset": "Toma de auriculares",
+      "headset": "Conector para auriculares",
       "mic": "Toma de micrófono",
       "muted": "Micro silenciado",
       "usb": "Alimentación USB",
@@ -685,7 +685,7 @@
       "rightStick": "Derecho X / Y",
       "connection": "Conexión",
       "inputs": "Controles",
-      "paddles": "Botones traseros LB / RB"
+      "paddles": "Botones posteriores LB / RB"
     },
     "narrator": {
       "voice": "Voz de la narradora",
@@ -743,13 +743,13 @@
         "details": "Detalles"
       },
       "activeNow": "Activo ahora",
-      "profileNone": "Este juego usa tus ajustes normales. Un perfil cambia cualquier ajuste del mando (hápticos, altavoz, barra de luz, micrófono, botones, sticks) solo para este juego, y los restablece al cerrarlo.",
+      "profileNone": "Este juego usa tus ajustes normales. Un perfil cambia cualquier ajuste del mando (retroalimentación háptica, altavoz, barra luminosa, micrófono, botones, joysticks) solo para este juego, y los restablece al cerrarlo.",
       "profileFromCurrent": "Crear desde los ajustes actuales",
       "profileNeedsDongle": "Conecta el dongle para partir de tus ajustes actuales.",
       "profileHint": "Los cambios se guardan en el perfil de este juego, no en el dongle.",
       "profileCopyCurrent": "Copiar ajustes actuales",
       "profileDelete": "Eliminar perfil",
-      "haptics": "Intensidad háptica",
+      "haptics": "Intensidad de la vibración",
       "autoHaptics": "Audio Auto Haptics",
       "autoMode": {
         "off": "Off",
@@ -759,10 +759,10 @@
       },
       "autoGain": "Ganancia Auto Haptics",
       "autoLowpass": "Paso-bajo Auto Haptics",
-      "speaker": "Nivel del altavoz",
-      "lightbar": "Barra de luz",
+      "speaker": "Volumen (altavoz para mando)",
+      "lightbar": "Barra luminosa",
       "favorites": "Colores favoritos",
-      "mic": "Micrófono Bluetooth",
+      "mic": "Micrófono integrado",
       "setupNone": "No hay nada que configurar para este juego.",
       "setupReview": "Revisar cambios",
       "setupApply": "Aplicar",
@@ -800,7 +800,7 @@
         "unknown": "Desconocido"
       },
       "tierHint": {
-        "verified": "Probado con el dongle: gatillos y hápticos funcionan.",
+        "verified": "Probado con el dongle: gatillos y retroalimentación háptica funcionan.",
         "works": "El juego es compatible de forma nativa con las funciones del DualSense.",
         "needs-setup": "Funciona cuando se completa la configuración de este juego.",
         "partial": "Faltan algunas funciones del DualSense en PC. Audio Auto Haptics puede suplir la vibración.",
@@ -814,20 +814,20 @@
       },
       "featureName": {
         "triggers": "Gatillos adaptativos",
-        "haptics": "Hápticos HD",
+        "haptics": "Retroalimentación háptica",
         "speaker": "Altavoz",
         "mic": "Micrófono",
-        "lightbar": "Barra de luz"
+        "lightbar": "Barra luminosa"
       },
       "stars_one": "{{count}} estrella",
       "stars_other": "{{count}} estrellas",
       "feedbackHint": "¿Qué has notado?",
       "tag": {
         "triggers-work": "Gatillos adaptativos OK",
-        "haptics-work": "Hápticos HD OK",
+        "haptics-work": "Retroalimentación háptica OK",
         "speaker-works": "Altavoz OK",
         "mic-works": "Micrófono OK",
-        "lightbar-works": "Barra de luz OK",
+        "lightbar-works": "Barra luminosa OK",
         "weak-vibration": "Vibración débil",
         "no-triggers": "Gatillos sin efecto",
         "rumble-only": "Solo vibración simple",
@@ -857,13 +857,13 @@
       "filterHint": {
         "all": "Todos los juegos instalados",
         "profile": "Juegos con su propio perfil de mando",
-        "dualsense": "Juegos con gatillos adaptativos o hápticos HD nativos",
+        "dualsense": "Juegos con gatillos adaptativos o retroalimentación háptica nativa",
         "attention": "Juegos con un ajuste pendiente"
       },
       "summary": "{{games}} juegos · {{dualsense}} con funciones DualSense · {{profiles}} con perfil",
       "recent": "Jugados recientemente",
       "tierLegend": "Qué significan los niveles",
-      "compatHint": "Los gatillos adaptativos y los hápticos HD solo llegan a los juegos de Windows con la versión Proton DualSense.",
+      "compatHint": "Los gatillos adaptativos y la retroalimentación háptica solo llegan a los juegos de Windows con la versión Proton DualSense.",
       "action": {
         "play": "Jugar",
         "starting": "Iniciando…",
@@ -960,7 +960,7 @@
       "recording": "Grabando… habla ahora",
       "playingBack": "Reproduciendo…",
       "micDone": "Te he oído. Si la reproducción sonó clara, el micrófono funciona.",
-      "micQuiet": "Grabado, pero casi en silencio. ¿Está el micrófono silenciado (el botón de silencio se ilumina) o el micrófono BT desactivado?",
+      "micQuiet": "Grabado, pero casi en silencio. ¿Está el micrófono silenciado (el botón de silenciado se ilumina) o «Micrófono integrado» desactivado?",
       "problem": {
         "no-mic": "El micrófono del mando no está disponible como entrada de audio en este PC.",
         "no-speaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
@@ -998,12 +998,12 @@
         "body": "Carcasa",
         "dark": "Partes negras",
         "cap": "Botones",
-        "stick": "Sticks",
+        "stick": "Joysticks",
         "line": "Contornos"
       },
       "partSub": {
-        "dark": "Centro, gatillos, botones superiores",
-        "cap": "Botones de acción, cruceta"
+        "dark": "Centro, gatillos, botones L1 y R1",
+        "cap": "Botones de acción, botones de dirección"
       },
       "lineAdjusted": "Contornos aclarados u oscurecidos para que se sigan viendo con estos colores.",
       "fromColorway": "Empezar con mi color",
@@ -1065,8 +1065,8 @@
     },
     "calib": {
       "title": "Calibración",
-      "shortcut": "Deriva de sticks, zonas muertas, recorrido de gatillos, giroscopio",
-      "intro": "Corrige la deriva de los sticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en el dongle, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
+      "shortcut": "Deriva de joysticks, zonas muertas, recorrido de gatillos, giroscopio",
+      "intro": "Corrige la deriva de los joysticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en el dongle, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
       "needsFirmware": "Actualiza el firmware del dongle para calibrar.",
       "needsController": "Conecta un mando para calibrar.",
       "noInput": "No llegó entrada del mando durante ese paso. Inténtalo de nuevo.",
@@ -1074,19 +1074,19 @@
       "again": "Medir de nuevo",
       "measured": "Medido. Revisa las vistas previas y guarda.",
       "step": {
-        "center": "Suelta ambos sticks",
-        "edges": "Gira despacio ambos sticks por sus bordes",
+        "center": "Suelta ambos joysticks",
+        "edges": "Gira despacio ambos joysticks por sus bordes",
         "triggers": "Pulsa a fondo ambos gatillos y suéltalos",
         "gyro": "Deja el mando sobre la mesa sin tocarlo"
       },
-      "leftStick": "Stick izquierdo",
-      "rightStick": "Stick derecho",
+      "leftStick": "Joystick izquierdo",
+      "rightStick": "Joystick derecho",
       "raw": "Sin procesar",
       "corrected": "Lo que ven los juegos",
       "deadzone": "Zona muerta",
       "deadzoneSub": "Movimiento cerca del centro que se ignora (evita la deriva)",
       "outer": "Inclinación máxima en",
-      "outerSub": "Cuánto debe moverse el stick para contar como pulsado a fondo",
+      "outerSub": "Cuánto debe moverse el joystick para contar como pulsado a fondo",
       "center": "Desplazamiento del centro: X {{x}}, Y {{y}}",
       "triggers": "Gatillos",
       "now": "ahora {{raw}} → {{out}}",
@@ -1102,19 +1102,19 @@
       "retry": "Reintentar"
     },
     "curves": {
-      "title": "Curva de respuesta",
-      "intro": "Cómo responde cada stick entre el centro y la inclinación máxima. Se aplica en el dongle después de la calibración, así que funciona en todos los juegos.",
+      "title": "Curva de sensibilidad",
+      "intro": "Cómo responde cada joystick entre el centro y la inclinación máxima. Se aplica en el dongle después de la calibración, así que funciona en todos los juegos.",
       "curve": "Curva",
       "type": {
         "linear": "Lineal",
-        "precise": "Precisa",
-        "steady": "Estable",
-        "aggressive": "Agresiva",
+        "precise": "Preciso",
+        "steady": "Constante",
+        "aggressive": "Rápido",
         "digital": "Digital",
         "custom": "Personalizada"
       },
       "typeHint": {
-        "linear": "Recta: la salida sigue exactamente al stick.",
+        "linear": "Recta: la salida sigue exactamente al joystick.",
         "precise": "Inicio lento para apuntar con precisión; velocidad máxima solo cerca de la inclinación máxima.",
         "steady": "Un inicio lento más suave: movimientos pequeños más tranquilos.",
         "aggressive": "Inicio rápido: poca inclinación ya llega lejos.",
@@ -1122,23 +1122,23 @@
         "custom": "Tu propia curva por cuatro puntos."
       },
       "customHint": "Arrastra los puntos, o selecciona uno (Tab) y muévelo con las flechas; con Mayús se mueve más.",
-      "graph": "Curva de respuesta: inclinación del stick en horizontal, salida en vertical",
+      "graph": "Curva de sensibilidad: inclinación del joystick en horizontal, salida en vertical",
       "point": "Punto {{n}}",
       "pointValue": "inclinación {{x}} % → salida {{y}} %",
-      "now": "Stick ahora: {{in}} % → {{out}} %",
-      "axisIn": "→ Inclinación del stick",
+      "now": "Joystick ahora: {{in}} % → {{out}} %",
+      "axisIn": "→ Inclinación del joystick",
       "axisOut": "↑ Lo que reciben los juegos",
       "keyLinear": "Lineal",
-      "keyLive": "Tu stick ahora",
+      "keyLive": "Tu joystick ahora",
       "gameOn": "El perfil de un juego tiene sus propias curvas activas ahora. Guardar aquí las desactiva hasta que ese juego vuelva a iniciarse.",
-      "needsFirmware": "Actualiza el firmware del dongle para usar curvas de respuesta.",
+      "needsFirmware": "Actualiza el firmware del dongle para usar curvas de sensibilidad.",
       "readFailed": "El dongle no devolvió sus curvas.",
       "resetLinear": "Volver a Lineal",
       "saveHint": "Guardada en el dongle para el mando de la espacio de emparejamiento {{slot}}; se aplica al instante en todos los juegos.",
-      "profileLeft": "Curva del stick izquierdo",
-      "profileRight": "Curva del stick derecho",
+      "profileLeft": "Curva del joystick izquierdo",
+      "profileRight": "Curva del joystick derecho",
       "profileSaved": "Mi curva guardada",
-      "profileHint": "Solo se aplica mientras el juego está en marcha. Elige aquí un preajuste por stick; tu curva personalizada se ajusta en Calibración."
+      "profileHint": "Solo se aplica mientras el juego está en marcha. Elige aquí un preajuste por joystick; tu curva personalizada se ajusta en Calibración."
     },
     "ctrlInfo": {
       "title": "Info del mando",
@@ -1162,7 +1162,7 @@
       "lifetime": "Desde siempre",
       "played": "Jugado",
       "charging": "Tiempo de carga",
-      "haptics": "Hápticos activos",
+      "haptics": "Retroalimentación háptica activa",
       "triggers": "Gatillos L · R",
       "chargeCycles": "Cargas",
       "chargeCyclesValue": "{{cycles}} (completas {{full}})",
@@ -1171,14 +1171,14 @@
       "none": "Ninguno",
       "connections": "Conexiones",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · tiempos agotados {{timeouts}}",
-      "presses": "Pulsaciones y uso de sticks",
-      "stickLeft": "Stick izquierdo, idas y vueltas",
-      "stickRight": "Stick derecho, idas y vueltas",
+      "presses": "Pulsaciones y uso de joysticks",
+      "stickLeft": "Joystick izquierdo, idas y vueltas",
+      "stickRight": "Joystick derecho, idas y vueltas",
       "stickValue": "X {{x}} · Y {{y}}",
-      "muteButton": "Botón de silencio",
+      "muteButton": "Botón de silenciado",
       "hours": "{{value}} h",
       "reading": "Leyendo del mando…",
-      "tooOld": "El firmware de este mando es demasiado antiguo para los contadores (actualízalo en una PS5 o con el actualizador de Sony para PC).",
+      "tooOld": "El firmware de este mando es demasiado antiguo para los contadores (actualízalo en una PS5 o con la aplicación PlayStation Accessories de Sony).",
       "playedOnly": "Jugado: {{value}}.",
       "noCounters": "Este mando no envió contadores.",
       "privacy": "Guardado por el propio mando. Solo lectura: no se cambia nada y su número de serie nunca se lee en la app.",
@@ -1187,13 +1187,13 @@
       "howToUpdate": "Cómo actualizar",
       "howToPc": "Conecta el mando a un PC con Windows con un cable USB-C y actualízalo con la app PlayStation Accessories de Sony (antes «Actualizador de firmware para el mando inalámbrico DualSense»).",
       "sonyPage": "Página de Sony",
-      "howToPs5": "O en una PS5: conéctalo con un cable USB y ve a Ajustes → Accesorios → Mandos.",
+      "howToPs5": "O en una PS5: conéctalo con un cable USB y ve a Ajustes → Accesorios → Mando (general) → Software del mando inalámbrico DualSense.",
       "howToCable": "La actualización no puede hacerse a través del dongle. Después, vuelve a emparejar el mando con el dongle si no se reconecta.",
-      "windowsOnly": "El actualizador de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5."
+      "windowsOnly": "La aplicación PlayStation Accessories de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5."
     },
     "stickTest": {
       "circleTitle": "Prueba de circularidad",
-      "circleHow": "Gira cada stick despacio por su borde unas cuantas veces. El contorno muestra hasta dónde llega en cada dirección.",
+      "circleHow": "Gira cada joystick despacio por su borde unas cuantas veces. El contorno muestra hasta dónde llega en cada dirección.",
       "show": "Mostrar",
       "notYet": "Aún no se ha girado por el borde",
       "error": "Error medio {{pct}}",
@@ -1205,15 +1205,15 @@
       "circleGood": "El error medio indica cuánto se aleja el contorno del círculo. Menos de un 10 % aprox. es lo típico en un DualSense en buen estado.",
       "reset": "Restablecer",
       "driftTitle": "Prueba de deriva",
-      "driftHow": "No toques los sticks durante {{seconds}} segundos: se registra dónde reposan y si se mueven.",
-      "driftRunning": "No toques los sticks…",
+      "driftHow": "No toques los joysticks durante {{seconds}} segundos: se registra dónde reposan y si se mueven.",
+      "driftRunning": "No toques los joysticks…",
       "driftStart": "Iniciar prueba de deriva",
       "driftAgain": "Probar de nuevo",
       "driftStats": "Máx. {{max}} · media {{avg}} desde el centro (de la inclinación total)",
       "noDeadzone": "No hay zona muerta configurada.",
       "leavesDeadzone": "Sale de la zona muerta ({{dz}}).",
       "insideDeadzone": "Se queda dentro de la zona muerta ({{dz}}).",
-      "driftWarn": "Posible deriva del stick: se mueve claramente en reposo. La calibración de arriba puede centrarlo, o sube la zona muerta.",
+      "driftWarn": "Posible deriva del joystick: se mueve claramente en reposo. La calibración de arriba puede centrarlo, o sube la zona muerta.",
       "driftHidden": "Se mueve un poco en reposo, pero la zona muerta lo oculta a los juegos.",
       "steady": "Estable en reposo.",
       "keyX": "X (continuo)",
@@ -1235,7 +1235,7 @@
       "signal": "Señal",
       "audio": "Cadena de audio",
       "speakerPeak": "Nivel del altavoz",
-      "hapticPeak": "Nivel háptico",
+      "hapticPeak": "Nivel de retroalimentación háptica",
       "brightness": "Brillo",
       "oledState": "Estado",
       "oledScreen": "Pantalla",
@@ -1277,19 +1277,19 @@
     },
     "hdr": {
       "label": "Iluminación HDR (experimental)",
-      "sub": "La barra de luz brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar."
+      "sub": "La barra luminosa brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar."
     },
     "grips": {
       "link": "Vincular izquierda y derecha",
-      "linkSub": "Ambas empuñaduras cambian a la vez",
-      "left": "Empuñadura izquierda",
-      "right": "Empuñadura derecha",
+      "linkSub": "Izquierda y derecha cambian a la vez",
+      "left": "Intensidad de la vibración (izquierda)",
+      "right": "Intensidad de la vibración (derecha)",
       "test": {
         "left": "Probar izquierda",
         "right": "Probar derecha",
         "both": "Probar ambas"
       },
-      "testHint": "Una vibración breve en esa empuñadura con su fuerza actual (las pruebas de gatillos no la usan: L2 y R2 tienen sus propios motores)."
+      "testHint": "Una vibración breve en ese lado con su intensidad de la vibración actual (las pruebas de gatillos no la usan: L2 y R2 tienen sus propios motores)."
     },
     "channel": {
       "label": "Canal de actualizaciones",
@@ -1367,7 +1367,7 @@
       "dongleNote": "No forma parte del perfil de {{title}}: los ajustes del dongle siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en el dongle.",
       "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en el dongle para todos los juegos.",
       "curvesNote": "Perfil de {{title}} activo: las curvas van al perfil de este juego con Guardar en el perfil y se notan desde entonces; luego vuelven tus curvas normales.",
-      "curvesNormal": "Este stick usa tu curva normal en este juego."
+      "curvesNormal": "Este joystick usa tu curva normal en este juego."
     },
     "profile": {
       "changes": "Lo que cambia este juego (todo lo demás usa tus ajustes normales):",
@@ -1379,7 +1379,7 @@
       "off": "Desactivado",
       "copyHint": "Este juego recibe los ajustes que hay ahora en el dongle",
       "applyFailed": "El perfil de {{title}} no se pudo poner en el dongle ({{reason}}). Están activos tus ajustes normales.",
-      "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de stick ({{reason}}). Se volverá a intentar cuando el dongle se reconecte.",
+      "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de joystick ({{reason}}). Se volverá a intentar cuando el dongle se reconecte.",
       "saveFailed": "No se guardó en el perfil de {{title}}: {{reason}}",
       "notOn": "El perfil de {{title}} aún no está en el dongle, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo."
     },
@@ -1403,7 +1403,7 @@
     "features": [
       "Reconoce tu mando, con sus propios colores",
       "Haz clic en cualquier parte para configurarla",
-      "Gatillos adaptativos, hápticos HD, altavoz y micrófono, por Bluetooth",
+      "Gatillos adaptativos, retroalimentación háptica, altavoz y micrófono, por Bluetooth",
       "Firmware con un clic, incluso en un Pico nuevo",
       "Una narradora en 7 idiomas",
       "Se actualiza solo, firmado y verificado"

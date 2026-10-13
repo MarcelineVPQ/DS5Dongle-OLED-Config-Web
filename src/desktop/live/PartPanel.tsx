@@ -197,7 +197,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
           {game.target ? (
             <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: game.target.title })}</div>
           ) : (
-            <p className="dk-hint">{t("desktop.live.remapHint", "Remaps are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
+            <p className="dk-hint">{t("desktop.live.remapHint", "Button assignments are written to the dongle when you press Apply and work in every game, with no software on the PC.")}</p>
           )}
           <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}
@@ -222,7 +222,7 @@ function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<
         </BusyButton>
       ) : (
         <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-          {t("desktop.live.remapApply", "Apply remap")}
+          {t("desktop.live.remapApply", "Apply assignments")}
         </BusyButton>
       )}
       <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
@@ -513,7 +513,7 @@ function TouchLive({ input }: { input: InputReport | null }) {
   const touching = input?.fingers.filter((f) => f.touching) ?? [];
   return (
     <section className="dk-card">
-      <p className="dk-hint">{t("desktop.live.touchHint", "Touch the touchpad to see your fingers here. There's nothing to set up for it.")}</p>
+      <p className="dk-hint">{t("desktop.live.touchHint", "Touch the touch pad to see your fingers here. There's nothing to set up for it.")}</p>
       {touching.map((f, i) => (
         <p key={i} className="dk-mono">
           {t("desktop.live.finger", { n: i + 1, defaultValue: "Finger {{n}}" })}: {f.x}, {f.y}
@@ -547,7 +547,7 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   const silent = held < 0.01;
   return (
     <section className="dk-card">
-      <h2>{which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptics level now")}</h2>
+      <h2>{which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptic feedback now")}</h2>
       <div className="live-level">
         <Meter value={level} hold={held} />
         <span className="live-level-pct">{Math.round(level * 100)}%</span>

@@ -325,7 +325,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
               <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
             </p>
           ) : (
-            <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptics through the dongle.")}</p>
+            <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through the dongle.")}</p>
           )}
           {report.ourProton.updateAvailable && report.ourProton.latest && !protonConfirm && busy !== "proton" && (
             <button type="button" className="dk-btn primary" onClick={() => setProtonConfirm(true)}>

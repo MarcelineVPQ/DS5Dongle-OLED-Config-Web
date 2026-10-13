@@ -6,7 +6,7 @@
     "dark": "深色主题",
     "groupLabel": "颜色主题",
     "desktop": "跟随桌面配色",
-    "controller": "跟随我的手柄"
+    "controller": "跟随我的控制器"
   },
   "languageToggle": {
     "groupLabel": "语言",
@@ -41,11 +41,11 @@
     "modes": {
       "off": {
         "label": "关闭",
-        "hint": "默认。仅使用原生触感(USB 音频流的通道 2 + 3)。"
+        "hint": "默认。仅使用原生触觉反馈(USB 音频流的通道 2 + 3)。"
       },
       "fallback": {
         "label": "回退",
-        "hint": "仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生 HD 触感(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。"
+        "hint": "仅当游戏在原生触感路径上沉默约 1 秒时才触发推导触感。保留原生触觉反馈(如蜘蛛侠重制版),同时为不发送触感数据的游戏(如 Linux 上的对马岛之鬼)填补空白。"
       },
       "mix": {
         "label": "混合",
@@ -60,9 +60,9 @@
     "lpLabel": "低通截止"
   },
   "haptics": {
-    "gainLabel": "触感增益",
+    "gainLabel": "振动强度",
     "audioBufferLabel": "音频缓冲区长度",
-    "btMicLabel": "蓝牙麦克风",
+    "btMicLabel": "内置麦克风",
     "audioBufferSub": "调低：音频延迟更小。调高：有爆音时音频更稳定。"
   },
   "behavior": {
@@ -73,13 +73,13 @@
     "controllerModeLabel": "控制器模式"
   },
   "remap": {
-    "unsupported": "连接的固件不支持按键重映射。请在“刷写固件”选项卡中更新到最新的 OLED Edition 固件。",
+    "unsupported": "连接的固件不支持按键配置。请在“刷写固件”选项卡中更新到最新的 OLED Edition 固件。",
     "disabled": "禁用（无输出）",
-    "verifyFailed": "无法验证重映射写入——设备未确认更改。"
+    "verifyFailed": "无法验证按键配置写入——设备未确认更改。"
   },
   "desktop": {
     "nav": {
-      "controller": "手柄",
+      "controller": "控制器",
       "about": "关于",
       "games": "游戏"
     },
@@ -111,7 +111,7 @@
       "firmware": "固件",
       "protocol": "协议",
       "connected": "已连接",
-      "notConnected": "未连接(请按 PS)",
+      "notConnected": "未连接(请按 PS 键)",
       "slot": "配对槽位",
       "signal": "信号",
       "signalQ": {
@@ -131,7 +131,7 @@
       "controllerWakes": "控制器输入时唤醒屏幕",
       "usb": "USB",
       "usbHint": "需在重新连接 USB 后生效(电脑会看到接收器拔出并重新插入)。",
-      "speakerLevel": "扬声器电平",
+      "speakerLevel": "音量（控制器的扬声器）",
       "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波"
     },
     "lightbar": {
@@ -153,7 +153,7 @@
     },
     "slots": {
       "title": "配对槽位",
-      "hint": "每个槽位记住一个控制器。切换会断开当前控制器；请在新槽位的控制器上按 PS。要将新控制器配对到空槽位，请切换到该槽位并按住 Create + PS。",
+      "hint": "每个槽位记住一个控制器。切换会断开当前控制器；请在新槽位的控制器上按 PS 键。要将新控制器配对到空槽位，请切换到该槽位并同时按住创建键和 PS 键。",
       "slot": "槽位",
       "controller": "控制器",
       "active": "当前",
@@ -212,13 +212,13 @@
         "setFeatureCount": "主机 Feature 写入",
         "setFeatureLast": "最近一次主机 Feature 写入"
       },
-      "speakerEncoderFailed": "扬声器已关闭：接收器启动时内存不足，无法创建扬声器编码器（剩余 {{kb}} KB）。触觉、扳机、麦克风和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和手柄。",
-      "micDecoderFailed": "麦克风已关闭：接收器启动时无法创建手柄麦克风的解码器（剩余 {{kb}} KB）。扬声器、触觉、扳机和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和手柄。"
+      "speakerEncoderFailed": "扬声器已关闭：接收器启动时内存不足，无法创建扬声器编码器（剩余 {{kb}} KB）。触觉、扳机、麦克风和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。",
+      "micDecoderFailed": "麦克风已关闭：接收器启动时无法创建控制器麦克风的解码器（剩余 {{kb}} KB）。扬声器、触觉、扳机和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。"
     },
     "firmware": {
       "installed": "已安装固件",
       "device": "设备",
-      "rebooting": "正在重启… 恢复后请按控制器上的 PS。",
+      "rebooting": "正在重启… 恢复后请按控制器上的 PS 键。",
       "reboot": "重启 {{device}}",
       "bootsel": "接收器现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
       "enterBootsel": "进入 BOOTSEL 模式",
@@ -226,12 +226,12 @@
       "confirmInstall": "立即安装 {{version}}",
       "confirmReset": "重置所有设置",
       "factoryReset": "恢复出厂设置…",
-      "resetHint": "恢复出厂设置会还原默认设置。配对和按键重映射会保留。",
+      "resetHint": "恢复出厂设置会还原默认设置。配对和按键配置会保留。",
       "latest": "最新",
       "update": "更新到 {{version}}",
       "upToDate": "已是最新",
       "check": "立即检查",
-      "updateHint": "接收器会重启到引导程序、写入固件并自动重启。请保持插入；之后按手柄上的 PS。",
+      "updateHint": "接收器会重启到引导程序、写入固件并自动重启。请保持插入；之后按控制器上的 PS 键。",
       "unpublished": "尚未发布版本",
       "offline": "无法检查（离线）",
       "bundled": "随应用附带",
@@ -249,7 +249,7 @@
       "button": "设置 USB 访问"
     },
     "windowsUsb": {
-      "hint": "已插好、手柄也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
+      "hint": "已插好、控制器也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
       "seen": "接收器已插入，但 Windows 没有为它安装驱动。",
       "button": "修复 USB 驱动",
       "working": "正在等待授权…",
@@ -277,15 +277,15 @@
       "fwAvailable": "{{device}} 有可用固件 {{version}}。",
       "details": "详情",
       "fwDontUnplug": "正在更新固件，请勿拔出接收器。",
-      "fwDone": "固件已更新到 {{version}}。按 PS 重新连接手柄。",
+      "fwDone": "固件已更新到 {{version}}。按 PS 键 重新连接控制器。",
       "fwStep": {
         "downloading": "正在下载并校验固件…",
         "rebooting": "正在将接收器重启到引导程序…",
         "waiting-bootloader": "正在等待引导程序…",
         "flashing": "正在直接写入固件；如果弹出 RP2350 驱动器，请忽略",
         "restarting": "正在重启接收器…",
-        "verifying": "正在等待接收器：按下手柄上的 PS 键重新连接。",
-        "verifyingPress": "已写入。请按手柄上的 PS 键：手柄连接后接收器才会重新出现。如果一直没有反应，请拔下后重新插入。"
+        "verifying": "正在等待接收器：按下控制器上的 PS 键重新连接。",
+        "verifyingPress": "已写入。请按控制器上的 PS 键：控制器连接后接收器才会重新出现。如果一直没有反应，请拔下后重新插入。"
       },
       "askTitle": "让应用保持最新？",
       "askBody": "新版本可以自动下载并安装（与每次更新一样经过校验），下次打开应用时启动。你可以随时在应用设置中更改。",
@@ -296,7 +296,7 @@
     "controller": {
       "battery": "电量",
       "charging": "充电中",
-      "pairHint": "已经配对过？按 PS 键。新手柄？按住 PS + Create 直到灯条闪烁；它会配对到当前槽位。"
+      "pairHint": "已经配对过？按 PS 键。新控制器？同时按住创建键和 PS 键直到光条闪烁；它会配对到当前槽位。"
     },
     "dongle": {},
     "about": {
@@ -324,9 +324,9 @@
           "ideas": "想法"
         },
         "area": {
-          "controller": "手柄",
+          "controller": "控制器",
           "buttons": "按键",
-          "audio": "音频与触觉",
+          "audio": "音频与触觉反馈",
           "games": "游戏",
           "dongle": "接收器与 OLED",
           "app": "应用",
@@ -361,12 +361,12 @@
       "unpacking": "正在解压…",
       "copying": "正在为 Flatpak 启动器复制…",
       "systemTitle": "这台电脑",
-      "audio": "手柄音频",
-      "hidraw": "手柄访问",
+      "audio": "控制器音频",
+      "hidraw": "控制器访问",
       "env": "环境变量",
-      "noController": "手柄未连接",
-      "hidrawOk": "游戏可以直接与手柄通信",
-      "hidrawNo": "游戏无法访问手柄（缺少 udev 规则）",
+      "noController": "控制器未连接",
+      "hidrawOk": "游戏可以直接与控制器通信",
+      "hidrawNo": "游戏无法访问控制器（缺少 udev 规则）",
       "envOk": "没有强制使用 Xbox (SDL) 模式",
       "envHint": "这些变量设置在启动器之外，本应用不会修改它们。请从上面列出的文件中删除，然后注销并重新登录。",
       "systemRule": "系统级音频规则强制使用 pro-audio。它位于你的主目录之外，本应用不会修改。",
@@ -402,18 +402,18 @@
           "steamInput": "为 {{game}} 关闭 Steam Input",
           "envSteam": "从 {{game}} 的启动选项中删除 {{vars}}",
           "envHeroic": "从 {{game}} 的环境变量中删除 {{vars}}",
-          "audioRule": "关闭强制手柄使用“pro-audio”的音频规则",
-          "audioProfile": "将手柄音频切换到“{{profile}}”配置"
+          "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
+          "audioProfile": "将控制器音频切换到“{{profile}}”配置"
         },
         "why": {
           "defaultSteam": "Steam 目前用 {{current}} 运行 Windows 游戏。我们的版本才能让自适应扳机和触觉反馈通过接收器工作。已单独指定 Proton 的游戏保持原设置。",
           "defaultHeroic": "Heroic 目前为新安装的 Epic、GOG 和 Amazon 游戏使用 {{current}}。这只影响今后安装的游戏；已安装的游戏保留各自的设置，本页面会逐个检查。",
           "defaultLutris": "Lutris 目前为 Wine 游戏使用 {{current}}。有自己 Wine 版本的游戏保持不变。",
-          "runner": "{{support}}它目前使用 {{current}} 运行，无法传递手柄的原生功能。",
+          "runner": "{{support}}它目前使用 {{current}} 运行，无法传递控制器的原生功能。",
           "runnerMissing": "{{game}} 被设置为 {{current}}，但它已不再安装，所以游戏无法启动。",
-          "steamInput": "{{support}}此游戏开启了 Steam Input，Steam 会把手柄转换为通用手柄，游戏永远看不到 DualSense。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
-          "envSteam": "{{vars}} 会让 Proton 把手柄呈现为 Xbox 手柄，从而关闭自适应扳机。启动选项将变为：{{options}}",
-          "envHeroic": "{{vars}} 会让 Proton 把手柄呈现为 Xbox 手柄，从而关闭自适应扳机。",
+          "steamInput": "{{support}}此游戏开启了 Steam Input，Steam 会把控制器转换为通用控制器，游戏永远看不到 DualSense。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
+          "envSteam": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。启动选项将变为：{{options}}",
+          "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
           "audioRule": "{{file}} 会把 DualSense 的声卡切换到 pro-audio 配置，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。该文件会被重命名为 .disabled（不会删除），音频服务 (WirePlumber) 会重启，声音会中断一秒。",
           "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。"
         },
@@ -438,7 +438,7 @@
       "envSession": "{{variable}} 在当前会话的环境中设置",
       "consentIntro": "游戏设置会检查 Steam、Heroic 和 Lutris 中会阻止自适应扳机和触觉反馈传到游戏的设置。为此它只在这台电脑上读取：",
       "consentLaunchers": "Steam、Heroic 和 Lutris 的设置及已安装游戏列表",
-      "consentAudio": "手柄的音频配置和手柄访问权限",
+      "consentAudio": "控制器的音频配置和控制器访问权限",
       "consentProton": "本项目在 GitHub 上的更新源中最新的 DualSense Proton 版本",
       "consentPromise": "检查不会改动任何东西，也不会发送任何关于你的游戏或设置的信息。只有在你查看更改并点击“应用”之后才会修改。",
       "consentAllow": "检查我的启动器",
@@ -449,13 +449,13 @@
       "scanningWindows": "正在检查 Steam、GOG Galaxy 和 Epic…",
       "consentIntroWindows": "游戏设置会列出你在 Steam、GOG Galaxy 和 Epic 的游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
       "consentLaunchersWindows": "Steam、GOG Galaxy 和 Epic 的设置和已安装游戏列表",
-      "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的手柄配置）"
+      "consentRunningWindows": "正在运行的程序，用于发现你的游戏何时启动（以使用它的控制器配置）"
     },
     "setup": {
       "installing": "正在安装固件…",
       "keepPlugged": "请保持 Pico 连接。",
-      "restarting": "固件 {{version}} 已安装。现在配对你的手柄",
-      "restartingHint": "按住手柄上的 PS + Create 直到灯条闪烁。手柄连接后接收器就会出现在这里（之前配对过的手柄只需按 PS 键）。",
+      "restarting": "固件 {{version}} 已安装。现在配对你的控制器",
+      "restartingHint": "同时按住控制器上的创建键和 PS 键直到光条闪烁。控制器连接后接收器就会出现在这里（之前配对过的控制器只需按 PS 键）。",
       "found": "发现一个可设置的 Pico",
       "offerBundled": "安装本应用自带的固件 {{version}}（无需下载）。",
       "offerOnline": "安装最新发布的固件 {{version}}。",
@@ -464,12 +464,12 @@
       "install": "安装固件",
       "newPico": "新的 Pico？按住它的 BOOTSEL 按钮插上（全新的 Pico 不需要按）。应用会发现它并安装固件。",
       "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。",
-      "turnOnTitle": "请打开手柄",
-      "pairHint": "按下手柄上的 PS 键。新手柄：按住 PS + Create 直到灯条闪烁（接收器屏幕显示“Pair your DualSense”）。",
-      "whyHidden": "只有手柄连上接收器后，接收器才会出现在这台电脑上。",
+      "turnOnTitle": "请打开控制器",
+      "pairHint": "按下控制器上的 PS 键。新控制器：同时按住创建键和 PS 键直到光条闪烁（接收器屏幕显示“Pair your DualSense”）。",
+      "whyHidden": "只有控制器连上接收器后，接收器才会出现在这台电脑上。",
       "updatesTitle": "更新",
       "fwReady": "此应用会安装固件 {{version}}。",
-      "fwHowTo": "无需手柄即可更新或重装固件：按住 Pico 的 BOOTSEL 键的同时插入接收器，此界面会提示安装。",
+      "fwHowTo": "无需控制器即可更新或重装固件：按住 Pico 的 BOOTSEL 键的同时插入接收器，此界面会提示安装。",
       "checkUpdates": "检查更新",
       "checkedCurrent": "应用已是最新（{{version}}）。",
       "checkedNewer": "应用 {{version}} 可用：请看顶部提示。",
@@ -483,10 +483,10 @@
         "l2": "L2",
         "r1": "R1",
         "r2": "R2",
-        "lightbar": "灯条",
-        "touchpad": "触控板",
-        "create": "Create",
-        "options": "Options",
+        "lightbar": "光条",
+        "touchpad": "触摸板",
+        "create": "创建键",
+        "options": "选项键",
         "dpad-up": "方向键上",
         "dpad-down": "方向键下",
         "dpad-left": "方向键左",
@@ -495,39 +495,39 @@
         "circle": "圆圈 ○",
         "cross": "叉 ✕",
         "square": "方块 □",
-        "stick-l": "左摇杆 (L3)",
-        "stick-r": "右摇杆 (R3)",
+        "stick-l": "左操作杆/L3键",
+        "stick-r": "右操作杆/R3键",
         "ps": "PS 键",
         "mute": "静音键与麦克风",
         "speaker": "扬声器",
         "fn-l": "左 Fn 键",
         "fn-r": "右 Fn 键",
-        "paddle-l": "左背键 (LB)",
-        "paddle-r": "右背键 (RB)",
-        "body": "握把（触觉）"
+        "paddle-l": "左背面键 (LB)",
+        "paddle-r": "右背面键 (RB)",
+        "body": "触觉反馈"
       },
       "pickHint": "点击图中的任意部位进行设置。",
-      "needsFirmware": "更新接收器固件即可实时看到手柄动作。",
-      "overview": "你的手柄",
+      "needsFirmware": "更新接收器固件即可实时看到控制器动作。",
+      "overview": "你的控制器",
       "app": "应用设置",
       "close": "关闭",
-      "haptics": "触觉",
+      "haptics": "触觉反馈",
       "speaker": "扬声器",
       "mic": "麦克风",
-      "remap": "重映射",
+      "remap": "按键配置",
       "remapActs": "作为",
       "remapDefault": "默认",
-      "remapHint": "点击“应用”后重映射会写入接收器，在任何游戏中都有效，电脑无需安装软件。",
-      "remapApply": "应用重映射",
+      "remapHint": "点击“应用”后按键配置会写入接收器，在任何游戏中都有效，电脑无需安装软件。",
+      "remapApply": "应用按键配置",
       "remapReset": "重置所有按键",
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
       "effect": "效果",
       "position": "位置",
-      "touchHint": "触摸触控板即可在这里看到手指位置。触控板没有可设置的项目。",
+      "touchHint": "触摸触摸板即可在这里看到手指位置。触摸板没有可设置的项目。",
       "finger": "手指 {{n}}",
       "speakerLevel": "当前扬声器电平",
-      "hapticLevel": "当前触觉电平",
+      "hapticLevel": "当前触觉反馈电平",
       "closeToTray": "关闭时最小化到托盘",
       "launchAtLogin": "登录时启动",
       "startMinimized": "启动时最小化",
@@ -537,9 +537,9 @@
       "backLeft": "LB",
       "backRight": "RB",
       "edgePart": {
-        "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换手柄的配置文件。按下时这里会亮起。",
-        "paddle": "DualSense Edge 的背键之一。手柄的配置文件可以把它设为任意按键。按下时这里会亮起。",
-        "soon": "重新映射需要最新的接收器固件（Pico 页面 → 更新）。"
+        "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换控制器的自定义配置文件。按下时这里会亮起。",
+        "paddle": "DualSense Edge 的背面键之一。控制器的自定义配置文件可以把它设为任意按键。按下时这里会亮起。",
+        "soon": "按键配置需要最新的接收器固件（Pico 页面 → 更新）。"
       },
       "effects": {
         "0": "无",
@@ -550,7 +550,7 @@
       "go": {
         "intro": "用鼠标点击图中的部位，或在这里选择设置：",
         "lightbar": {
-          "title": "灯条",
+          "title": "光条",
           "sub": "模式和收藏颜色"
         },
         "triggers": {
@@ -559,7 +559,7 @@
         },
         "haptics": {
           "title": "触觉反馈",
-          "sub": "强度和音频自动触觉"
+          "sub": "振动强度和音频自动触觉"
         },
         "speaker": {
           "title": "扬声器",
@@ -567,20 +567,20 @@
         },
         "mic": {
           "title": "麦克风",
-          "sub": "手柄的蓝牙麦克风"
+          "sub": "控制器的内置麦克风"
         },
         "slots": {
           "title": "配对槽位",
-          "sub": "切换或移除手柄"
+          "sub": "切换或移除控制器"
         },
-        "buttons": "要重映射按键或摇杆，请在图中点击它。",
-        "bodyHint": "触觉反馈：强度和音频自动触觉"
+        "buttons": "要配置按键或操作杆，请在图中点击它。",
+        "bodyHint": "触觉反馈：振动强度和音频自动触觉"
       },
-      "hidePanel": "隐藏设置面板（手柄会变大）",
+      "hidePanel": "隐藏设置面板（控制器会变大）",
       "autoInstall": "自动安装更新",
       "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本",
-      "hapticSilent": "静默：目前没有任何震动输入。游戏播放 HD 震动时，或开启 Audio Auto Haptics 且有声音播放时，电平才会变化。",
-      "speakerSilent": "静默：手柄扬声器目前没有播放任何声音。",
+      "hapticSilent": "静默：目前没有任何触觉反馈输入。游戏播放触觉反馈时，或开启 Audio Auto Haptics 且有声音播放时，电平才会变化。",
+      "speakerSilent": "静默：控制器扬声器目前没有播放任何声音。",
       "levelLive": "来自接收器的实时数据。",
       "hardwareAcceleration": "硬件加速",
       "hardwareAccelerationSub": "使用显卡绘制：更流畅，模糊和玻璃效果也需要它。显卡崩溃时会自动关闭。",
@@ -590,7 +590,7 @@
       "colorLabel": "配色：",
       "statusLabel": "状态：",
       "triggersTitle": "自适应扳机",
-      "remapButton": "重新映射 {{button}}",
+      "remapButton": "配置 {{button}}",
       "effectOther": "其他效果（{{n}}）"
     },
     "tour": {
@@ -606,11 +606,11 @@
       "replay": "重新播放导览",
       "welcome": {
         "title": "欢迎！",
-        "body": "花一分钟快速了解一下，请把手柄拿在手里。按 ✕ 继续，按 ○ 返回。随时可以按 Esc 或“跳过导览”结束。",
-        "bodyAsk": "花一分钟快速了解一下，请把手柄拿在手里。随时可以按 Esc 或“跳过导览”结束。"
+        "body": "花一分钟快速了解一下，请把控制器拿在手里。按 ✕ 继续，按 ○ 返回。随时可以按 Esc 或“跳过导览”结束。",
+        "bodyAsk": "花一分钟快速了解一下，请把控制器拿在手里。随时可以按 Esc 或“跳过导览”结束。"
       },
       "press": {
-        "title": "这就是你的手柄，实时显示",
+        "title": "这就是你的控制器，实时显示",
         "body": "按几个不同的按键，看它们在这里亮起来。",
         "done": "不错！你按下的一切都会显示在这里。"
       },
@@ -621,8 +621,8 @@
       },
       "click": {
         "title": "用鼠标进行设置",
-        "body": "用鼠标点击触控板旁边发光的灯条。图中的每个部位都会打开自己的设置。",
-        "done": "你打开了灯条设置。"
+        "body": "用鼠标点击触摸板旁边发光的光条。图中的每个部位都会打开自己的设置。",
+        "done": "你打开了光条设置。"
       },
       "panel": {
         "title": "设置在这里打开",
@@ -630,7 +630,7 @@
       },
       "list": {
         "title": "或者从列表中选择",
-        "body": "不确定某个设置在手柄的哪里？所有设置也都在这里，点一下就到。» 可以隐藏此面板，让手柄显示得更大。"
+        "body": "不确定某个设置在控制器的哪里？所有设置也都在这里，点一下就到。» 可以隐藏此面板，让控制器显示得更大。"
       },
       "save": {
         "title": "保留你喜欢的设置",
@@ -644,12 +644,12 @@
         "title": "一切就绪",
         "body": "玩得开心！你可以随时在 ⚙ 应用设置中重新播放导览。"
       },
-      "voiceAsk": "要让她带你走一遍吗？她只会通过手柄的扬声器说话；随时可以在 ⚙ 应用设置中更改。",
+      "voiceAsk": "要让她带你走一遍吗？她只会通过控制器的扬声器说话；随时可以在 ⚙ 应用设置中更改。",
       "voiceYes": "好，带我走一遍",
       "voiceNo": "不用了",
       "data": {
         "title": "一切，实时",
-        "body": "下面这里：摇杆、扳机、体感、电量和连接，都会随着手柄的动作以数字和曲线实时显示。"
+        "body": "下面这里：操作杆、扳机、体感、电量和连接，都会随着控制器的动作以数字和曲线实时显示。"
       },
       "pressGoal": "再按 {{n}} 个不同的按键…",
       "pressedLabel": "已按下的按键",
@@ -666,7 +666,7 @@
       "rate": "更新频率",
       "roundTrip": "往返时间",
       "signal": "信号",
-      "headset": "耳机插孔",
+      "headset": "耳机组插口",
       "mic": "麦克风插孔",
       "muted": "麦克风静音",
       "usb": "USB 供电",
@@ -682,11 +682,11 @@
       "rightStick": "右 X / Y",
       "connection": "连接",
       "inputs": "输入",
-      "paddles": "背键 LB / RB"
+      "paddles": "背面键 LB / RB"
     },
     "narrator": {
       "voice": "旁白语音",
-      "voiceSub": "导览和应用事件的简短语音，只通过手柄的扬声器播放",
+      "voiceSub": "导览和应用事件的简短语音，只通过控制器的扬声器播放",
       "captions": "字幕",
       "captionsSub": "她说话时在屏幕上显示文字（语音关闭时，简短的提示也会以文字显示）",
       "test": "试听语音"
@@ -714,7 +714,7 @@
       "groupAll": "所有游戏",
       "noMatch": "没有匹配的游戏。",
       "running": "运行中",
-      "hasProfile": "已有手柄配置",
+      "hasProfile": "已有控制器配置",
       "needsAttention": "需要设置",
       "playing": "正在游玩",
       "lastPlayed": "上次游玩",
@@ -727,7 +727,7 @@
       "dualsense": "DualSense",
       "yourRating": "你的评分",
       "section": {
-        "profile": "手柄配置",
+        "profile": "控制器配置",
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
@@ -738,13 +738,13 @@
         "details": "详情"
       },
       "activeNow": "当前生效",
-      "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何手柄设置（触觉、扬声器、灯条、麦克风、按键、摇杆），游戏关闭后自动切回。",
+      "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何控制器设置（触觉反馈、扬声器、光条、麦克风、按键、操作杆），游戏关闭后自动切回。",
       "profileFromCurrent": "基于当前设置创建",
       "profileNeedsDongle": "连接接收器后才能基于当前设置开始。",
       "profileHint": "更改保存到此游戏的配置中,而不是接收器。",
       "profileCopyCurrent": "复制当前设置",
       "profileDelete": "删除配置",
-      "haptics": "触觉强度",
+      "haptics": "振动强度",
       "autoHaptics": "音频自动触觉",
       "autoMode": {
         "off": "关闭",
@@ -754,10 +754,10 @@
       },
       "autoGain": "自动触觉增益",
       "autoLowpass": "自动触觉低通",
-      "speaker": "扬声器音量",
-      "lightbar": "灯条",
+      "speaker": "音量（控制器的扬声器）",
+      "lightbar": "光条",
       "favorites": "收藏颜色",
-      "mic": "蓝牙麦克风",
+      "mic": "内置麦克风",
       "setupNone": "此游戏无需设置。",
       "setupReview": "检查更改",
       "setupApply": "应用",
@@ -795,10 +795,10 @@
         "unknown": "未知"
       },
       "tierHint": {
-        "verified": "已在接收器上测试:扳机和触觉均可用。",
+        "verified": "已在接收器上测试:扳机和触觉反馈均可用。",
         "works": "游戏原生支持 DualSense 功能。",
         "needs-setup": "完成此游戏的设置后即可使用。",
-        "partial": "PC 上缺少部分 DualSense 功能。音频自动触觉可以补上震动。",
+        "partial": "PC 上缺少部分 DualSense 功能。音频自动触觉可以补上振动。",
         "broken": "玩家反馈无法使用。",
         "unknown": "暂无反馈。"
       },
@@ -809,24 +809,24 @@
       },
       "featureName": {
         "triggers": "自适应扳机",
-        "haptics": "HD 触觉",
+        "haptics": "触觉反馈",
         "speaker": "扬声器",
         "mic": "麦克风",
-        "lightbar": "灯条"
+        "lightbar": "光条"
       },
       "stars_other": "{{count}} 星",
       "feedbackHint": "你注意到了什么?",
       "tag": {
         "triggers-work": "自适应扳机正常",
-        "haptics-work": "HD 触觉正常",
+        "haptics-work": "触觉反馈正常",
         "speaker-works": "扬声器正常",
         "mic-works": "麦克风正常",
-        "lightbar-works": "灯条正常",
-        "weak-vibration": "震动偏弱",
+        "lightbar-works": "光条正常",
+        "weak-vibration": "振动偏弱",
         "no-triggers": "扳机无效",
-        "rumble-only": "仅普通震动",
+        "rumble-only": "仅普通振动",
         "speaker-problems": "扬声器有问题",
-        "not-detected": "未检测到手柄",
+        "not-detected": "未检测到控制器",
         "needs-steam-input-off": "需关闭 Steam Input",
         "disconnects": "会断连"
       },
@@ -850,14 +850,14 @@
       },
       "filterHint": {
         "all": "所有已安装的游戏",
-        "profile": "有专属手柄配置文件的游戏",
-        "dualsense": "原生支持自适应扳机或 HD 震动的游戏",
+        "profile": "有专属控制器配置文件的游戏",
+        "dualsense": "原生支持自适应扳机或 触觉反馈的游戏",
         "attention": "有待处理设置更改的游戏"
       },
       "summary": "{{games}} 款游戏 · {{dualsense}} 款支持 DualSense 功能 · {{profiles}} 款有配置文件",
       "recent": "最近游玩",
       "tierLegend": "各等级的含义",
-      "compatHint": "自适应扳机和 HD 震动只有通过 DualSense Proton 版本才能传到 Windows 游戏。",
+      "compatHint": "自适应扳机和 触觉反馈只有通过 DualSense Proton 版本才能传到 Windows 游戏。",
       "action": {
         "play": "开始游戏",
         "starting": "正在启动…",
@@ -865,7 +865,7 @@
         "properties": "Steam 属性",
         "propertiesHint": "在 Steam 中打开游戏属性（启动选项、兼容性）",
         "steamInput": "Steam 输入布局",
-        "steamInputHint": "在 Steam 中打开游戏的手柄布局",
+        "steamInputHint": "在 Steam 中打开游戏的控制器布局",
         "libraryPage": "Steam 页面",
         "libraryPageHint": "在 Steam 库中显示该游戏",
         "installFolder": "安装文件夹",
@@ -918,11 +918,11 @@
       "log": {
         "online": "{{device}} 已连接（协议 {{version}}）",
         "offline": "{{device}} 已断开",
-        "controller": "手柄已连接（槽位 {{slot}}）",
-        "controllerGone": "手柄已断开",
+        "controller": "控制器已连接（槽位 {{slot}}）",
+        "controllerGone": "控制器已断开",
         "slot": "已切换到槽位 {{slot}}",
-        "charging": "手柄正在充电",
-        "notCharging": "手柄停止充电",
+        "charging": "控制器正在充电",
+        "notCharging": "控制器停止充电",
         "battery": "电量 {{pct}}%",
         "saved": "设置已保存到接收器"
       }
@@ -931,9 +931,9 @@
       "label": "导航",
       "pin": "保持展开",
       "collapse": "收起",
-      "controllerAgain": "手柄 · 再次点击可显示或隐藏设置",
+      "controllerAgain": "控制器 · 再次点击可显示或隐藏设置",
       "tip": {
-        "controller": "实时显示你的手柄，点击任意部位进行设置",
+        "controller": "实时显示你的控制器，点击任意部位进行设置",
         "dongle": "固件、OLED 屏幕、电源和 USB",
         "games": "你的游戏、按游戏的配置和 Proton 设置",
         "app": "语言、外观、更新和启动",
@@ -944,20 +944,20 @@
     },
     "audioTest": {
       "speakerTitle": "扬声器测试",
-      "speakerHint": "在手柄扬声器（不是电脑）上播放一段短提示音。",
+      "speakerHint": "在控制器扬声器（不是电脑）上播放一段短提示音。",
       "speakerButton": "播放测试音",
       "playing": "正在播放…",
-      "noSpeaker": "在这台电脑上找不到手柄扬声器这个音频输出。",
+      "noSpeaker": "在这台电脑上找不到控制器扬声器这个音频输出。",
       "micTitle": "麦克风测试",
-      "micHint": "用手柄麦克风录 3 秒，然后在手柄扬声器上回放。不会保存任何内容。",
+      "micHint": "用控制器麦克风录 3 秒，然后在控制器扬声器上回放。不会保存任何内容。",
       "micButton": "测试麦克风",
       "recording": "正在录音…请说话",
       "playingBack": "正在回放…",
       "micDone": "听到了。如果回放清晰，麦克风工作正常。",
-      "micQuiet": "录到了，但几乎无声。麦克风是否静音（静音键亮起），或 BT 麦克风设置已关闭？",
+      "micQuiet": "录到了，但几乎无声。麦克风是否静音（静音键亮起），或“内置麦克风”设置已关闭？",
       "problem": {
-        "no-mic": "在这台电脑上找不到手柄麦克风这个音频输入。",
-        "no-speaker": "在这台电脑上找不到手柄扬声器这个音频输出。",
+        "no-mic": "在这台电脑上找不到控制器麦克风这个音频输入。",
+        "no-speaker": "在这台电脑上找不到控制器扬声器这个音频输出。",
         "failed": "测试无法运行。PipeWire 在运行吗？"
       }
     },
@@ -967,7 +967,7 @@
       "art": "游戏插图",
       "off": "关闭",
       "sub": {
-        "default": "以手柄配色缓缓流动的漩涡",
+        "default": "以控制器配色缓缓流动的漩涡",
         "art": "游戏插图，模糊并缓慢移动（Linux，开启游戏时）；没有时显示漩涡",
         "off": "纯色背景"
       }
@@ -981,23 +981,23 @@
     "accent": {
       "label": "强调色",
       "sub": "按钮、选中项和高亮",
-      "controller": "手柄",
+      "controller": "控制器",
       "desktop": "桌面"
     },
     "customColors": {
-      "title": "我的手柄配色",
+      "title": "我的控制器配色",
       "toggle": "自定义颜色",
-      "toggleSub": "适用于定制和改装手柄：把图画涂成你手柄的样子。未更改的部分保留手柄原有颜色。",
+      "toggleSub": "适用于定制和改装控制器：把图画涂成你控制器的样子。未更改的部分保留控制器原有颜色。",
       "part": {
         "body": "外壳",
         "dark": "黑色部分",
         "cap": "按键",
-        "stick": "摇杆",
+        "stick": "操作杆",
         "line": "轮廓线"
       },
       "partSub": {
-        "dark": "中部、扳机、肩键",
-        "cap": "功能键、方向键"
+        "dark": "中部、扳机、L1/R1 键",
+        "cap": "动作键、方向键"
       },
       "lineAdjusted": "轮廓线已调亮或调暗，以便在这些颜色上保持清晰可见。",
       "fromColorway": "从我的配色开始",
@@ -1016,12 +1016,12 @@
     },
     "dev": {
       "title": "开发者",
-      "hint": "预览其他手柄型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
+      "hint": "预览其他控制器型号和配色，检查应用的颜色。只改变显示，不会向接收器发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
       "model": "型号",
       "colorway": "配色",
-      "real": "真实手柄",
+      "real": "真实控制器",
       "noArt": "无图",
-      "reset": "恢复真实手柄",
+      "reset": "恢复真实控制器",
       "previewBadge": "预览",
       "hdrTitle": "HDR 测试",
       "hdrHint": "显示器报告 HDR：{{state}}。生效的色块会明显比白色参照更亮。",
@@ -1036,8 +1036,8 @@
         "progress": "进行中",
         "ready": "就绪 / 等待"
       },
-      "fakeSlots": "模拟更多手柄",
-      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只手柄已连接。不会向接收器发送任何内容。",
+      "fakeSlots": "模拟更多控制器",
+      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向接收器发送任何内容。",
       "simulated": "模拟接收器（无需硬件）",
       "simulatedHint": "应用改为与模拟接收器通信而非 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",
@@ -1053,34 +1053,34 @@
       "backdropBlur": "背景模糊",
       "backdropBlurSub": "页面后方的游戏封面图更柔和或更清晰",
       "depth": "层次感",
-      "depthSub": "卡片和手柄下方阴影的强度（0 = 平面）",
+      "depthSub": "卡片和控制器下方阴影的强度（0 = 平面）",
       "hdrNits": "HDR 峰值亮度",
       "hdrNitsSub": "你的显示器的峰值亮度"
     },
     "calib": {
       "title": "校准",
-      "shortcut": "摇杆漂移、死区、扳机行程、陀螺仪",
-      "intro": "在接收器内校正摇杆漂移、死区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入手柄；重置即可撤销。",
+      "shortcut": "操作杆漂移、盲区、扳机行程、陀螺仪",
+      "intro": "在接收器内校正操作杆漂移、盲区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入控制器；重置即可撤销。",
       "needsFirmware": "更新接收器固件后才能校准。",
-      "needsController": "连接手柄后才能校准。",
-      "noInput": "该步骤中没有收到手柄输入。请重试。",
+      "needsController": "连接控制器后才能校准。",
+      "noInput": "该步骤中没有收到控制器输入。请重试。",
       "start": "开始校准",
       "again": "重新测量",
       "measured": "测量完成。查看预览后保存。",
       "step": {
-        "center": "松开两个摇杆",
-        "edges": "将两个摇杆沿边缘慢慢转一圈",
+        "center": "松开两个操作杆",
+        "edges": "将两个操作杆沿边缘慢慢转一圈",
         "triggers": "将两个扳机按到底后松开",
-        "gyro": "把手柄放下，不要触碰"
+        "gyro": "把控制器放下，不要触碰"
       },
-      "leftStick": "左摇杆",
-      "rightStick": "右摇杆",
+      "leftStick": "左操作杆",
+      "rightStick": "右操作杆",
       "raw": "原始",
       "corrected": "游戏看到的",
-      "deadzone": "死区",
+      "deadzone": "盲区",
       "deadzoneSub": "忽略中心附近的移动（防止漂移）",
       "outer": "满量程位置",
-      "outerSub": "摇杆需要推多远才算推到底",
+      "outerSub": "操作杆需要推多远才算推到底",
       "center": "中心偏移：X {{x}}，Y {{y}}",
       "triggers": "扳机",
       "now": "当前 {{raw}} → {{out}}",
@@ -1090,25 +1090,25 @@
       "revert": "撤销",
       "reset": "恢复为未校准",
       "saveHint": "保存在接收器自身的存储中，立即对所有游戏生效。",
-      "forSlot": "适用于配对槽位 {{slot}} 中的手柄；每个槽位各自保存。",
+      "forSlot": "适用于配对槽位 {{slot}} 中的控制器；每个槽位各自保存。",
       "getReady": "准备…",
       "missed": "未测量，已保留旧值：{{parts}}。请推到底后重新测量。",
       "retry": "重试"
     },
     "curves": {
-      "title": "响应曲线",
-      "intro": "每个摇杆从中心到推满之间如何响应。在接收器中于校准之后应用，因此对所有游戏都有效。",
+      "title": "灵敏度曲线",
+      "intro": "每个操作杆从中心到推满之间如何响应。在接收器中于校准之后应用，因此对所有游戏都有效。",
       "curve": "曲线",
       "type": {
         "linear": "线性",
-        "precise": "精准",
-        "steady": "平稳",
-        "aggressive": "激进",
+        "precise": "精确",
+        "steady": "稳定",
+        "aggressive": "快速",
         "digital": "数字",
         "custom": "自定义"
       },
       "typeHint": {
-        "linear": "直线：输出完全跟随摇杆。",
+        "linear": "直线：输出完全跟随操作杆。",
         "precise": "起步缓慢，便于精细瞄准；接近推满时才达到全速。",
         "steady": "较温和的缓慢起步：小幅移动更平稳。",
         "aggressive": "快速起步：稍微推动就有很大输出。",
@@ -1116,28 +1116,28 @@
         "custom": "经过四个点的自定义曲线。"
       },
       "customHint": "拖动这些点，或选中一个点（Tab）后用方向键移动；按住 Shift 移动更多。",
-      "graph": "响应曲线：横轴为摇杆推动幅度，纵轴为输出",
+      "graph": "灵敏度曲线：横轴为操作杆推动幅度，纵轴为输出",
       "point": "点 {{n}}",
       "pointValue": "推动 {{x}}% → 输出 {{y}}%",
-      "now": "当前摇杆：{{in}}% → {{out}}%",
-      "axisIn": "→ 摇杆推动幅度",
+      "now": "当前操作杆：{{in}}% → {{out}}%",
+      "axisIn": "→ 操作杆推动幅度",
       "axisOut": "↑ 游戏收到的值",
       "keyLinear": "线性",
-      "keyLive": "当前摇杆位置",
+      "keyLive": "当前操作杆位置",
       "gameOn": "某个游戏的配置文件正在使用自己的曲线。在此保存会结束这些曲线，直到该游戏再次启动。",
-      "needsFirmware": "请更新接收器固件以使用响应曲线。",
+      "needsFirmware": "请更新接收器固件以使用灵敏度曲线。",
       "readFailed": "接收器没有返回曲线数据。",
       "resetLinear": "恢复为线性",
-      "saveHint": "已为配对槽位 {{slot}} 中的手柄保存在接收器中；立即对所有游戏生效。",
-      "profileLeft": "左摇杆曲线",
-      "profileRight": "右摇杆曲线",
+      "saveHint": "已为配对槽位 {{slot}} 中的控制器保存在接收器中；立即对所有游戏生效。",
+      "profileLeft": "左操作杆曲线",
+      "profileRight": "右操作杆曲线",
       "profileSaved": "我保存的曲线",
-      "profileHint": "仅在游戏运行时应用。在此为每个摇杆选择预设；自定义曲线请在校准中设置。"
+      "profileHint": "仅在游戏运行时应用。在此为每个操作杆选择预设；自定义曲线请在校准中设置。"
     },
     "ctrlInfo": {
-      "title": "手柄信息",
-      "needsFirmware": "更新接收器固件后即可查看手柄的固件、电池电压和使用统计。",
-      "noController": "连接手柄后即可查看其信息。",
+      "title": "控制器信息",
+      "needsFirmware": "更新接收器固件后即可查看控制器的固件、电池电压和使用统计。",
+      "noController": "连接控制器后即可查看其信息。",
       "charge": "充电",
       "chargeState": {
         "discharging": "未充电",
@@ -1165,29 +1165,29 @@
       "none": "无",
       "connections": "连接次数",
       "connectionsValue": "蓝牙 {{bt}} · USB {{usb}} · 超时 {{timeouts}}",
-      "presses": "按键次数与摇杆使用",
-      "stickLeft": "左摇杆往返次数",
-      "stickRight": "右摇杆往返次数",
+      "presses": "按键次数与操作杆使用",
+      "stickLeft": "左操作杆往返次数",
+      "stickRight": "右操作杆往返次数",
       "stickValue": "X {{x}} · Y {{y}}",
       "muteButton": "静音键",
       "hours": "{{value}} 小时",
-      "reading": "正在读取手柄…",
-      "tooOld": "此手柄的固件太旧，无法读取使用统计（请在 PS5 或用索尼 PC 更新工具更新）。",
+      "reading": "正在读取控制器…",
+      "tooOld": "此控制器的固件太旧，无法读取使用统计（请在 PS5 上或用 Sony 的 PlayStation Accessories 应用更新）。",
       "playedOnly": "游玩时长：{{value}}。",
-      "noCounters": "此手柄没有发送使用统计。",
-      "privacy": "由手柄自身记录。只读：不会更改任何内容，也从不把序列号读入应用。",
+      "noCounters": "此控制器没有发送使用统计。",
+      "privacy": "由控制器自身记录。只读：不会更改任何内容，也从不把序列号读入应用。",
       "refresh": "刷新",
       "officialNewer": "有更新的官方固件 {{version}}",
       "howToUpdate": "如何更新",
-      "howToPc": "用 USB-C 数据线将手柄连接到 Windows 电脑，然后用 Sony 的 PlayStation Accessories 应用（原“DualSense 无线控制器固件更新程序”）更新。",
+      "howToPc": "用 USB-C 数据线将控制器连接到 Windows 电脑，然后用 Sony 的 PlayStation Accessories 应用（原“DualSense 无线控制器固件更新程序”）更新。",
       "sonyPage": "Sony 页面",
-      "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设置 → 配件 → 控制器。",
-      "howToCable": "更新无法通过接收器进行。更新后如手柄未重新连接，请再次将其与接收器配对。",
-      "windowsOnly": "Sony 的更新程序仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。"
+      "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设定 → 周边设备 → 控制器（常规）→ DualSense无线控制器设备软件。",
+      "howToCable": "更新无法通过接收器进行。更新后如控制器未重新连接，请再次将其与接收器配对。",
+      "windowsOnly": "Sony 的 PlayStation Accessories 应用仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。"
     },
     "stickTest": {
       "circleTitle": "圆度测试",
-      "circleHow": "将每个摇杆沿边缘慢慢转几圈。轮廓显示它在各个方向上能推到多远。",
+      "circleHow": "将每个操作杆沿边缘慢慢转几圈。轮廓显示它在各个方向上能推到多远。",
       "show": "显示",
       "notYet": "还没有沿边缘转动",
       "error": "平均误差 {{pct}}",
@@ -1199,16 +1199,16 @@
       "circleGood": "平均误差表示轮廓与圆的偏离程度。健康的 DualSense 通常低于约 10%。",
       "reset": "重置",
       "driftTitle": "漂移测试",
-      "driftHow": "{{seconds}} 秒内不要碰摇杆：将记录它们的静止位置以及是否移动。",
-      "driftRunning": "请不要碰摇杆…",
+      "driftHow": "{{seconds}} 秒内不要碰操作杆：将记录它们的静止位置以及是否移动。",
+      "driftRunning": "请不要碰操作杆…",
       "driftStart": "开始漂移测试",
       "driftAgain": "再测一次",
       "driftStats": "距中心最大 {{max}} · 平均 {{avg}}（相对满偏）",
-      "noDeadzone": "未设置死区。",
-      "leavesDeadzone": "超出死区（{{dz}}）。",
-      "insideDeadzone": "保持在死区内（{{dz}}）。",
-      "driftWarn": "可能存在摇杆漂移：静止时明显移动。上方的校准可以将其居中，或调大死区。",
-      "driftHidden": "静止时略有移动，但死区让游戏察觉不到。",
+      "noDeadzone": "未设置盲区。",
+      "leavesDeadzone": "超出盲区（{{dz}}）。",
+      "insideDeadzone": "保持在盲区内（{{dz}}）。",
+      "driftWarn": "可能存在操作杆漂移：静止时明显移动。上方的校准可以将其居中，或调大盲区。",
+      "driftHidden": "静止时略有移动，但盲区让游戏察觉不到。",
       "steady": "静止时稳定。",
       "keyX": "X（实线）",
       "keyY": "Y（虚线）"
@@ -1229,7 +1229,7 @@
       "signal": "信号",
       "audio": "音频管线",
       "speakerPeak": "扬声器电平",
-      "hapticPeak": "震动电平",
+      "hapticPeak": "触觉反馈电平",
       "brightness": "亮度",
       "oledState": "状态",
       "oledScreen": "屏幕",
@@ -1242,7 +1242,7 @@
       },
       "dimAfter": "调暗时间",
       "offAfter": "关闭时间",
-      "wakeOnInput": "手柄输入时唤醒",
+      "wakeOnInput": "控制器输入时唤醒",
       "never": "从不",
       "yes": "是",
       "no": "否",
@@ -1271,19 +1271,19 @@
     },
     "hdr": {
       "label": "HDR 灯光（实验性）",
-      "sub": "在 HDR 显示器上，灯条会比白色更亮，就像真实的 LED。需要硬件加速；重启后生效。"
+      "sub": "在 HDR 显示器上，光条会比白色更亮，就像真实的 LED。需要硬件加速；重启后生效。"
     },
     "grips": {
       "link": "左右联动",
-      "linkSub": "两侧握把一起调整",
-      "left": "左握把",
-      "right": "右握把",
+      "linkSub": "左右一起调整",
+      "left": "振动强度（左）",
+      "right": "振动强度（右）",
       "test": {
         "left": "测试左侧",
         "right": "测试右侧",
         "both": "测试两侧"
       },
-      "testHint": "以当前强度让该侧握把短暂震动（扳机测试不使用这些设置：L2 和 R2 有自己的马达）。"
+      "testHint": "以当前振动强度让该侧短暂振动（扳机测试不使用这些设置：L2 和 R2 有自己的马达）。"
     },
     "channel": {
       "label": "更新渠道",
@@ -1325,11 +1325,11 @@
       "profileLabel": "按键布局",
       "normal": "常用按键",
       "needsFirmware": "需要最新的接收器固件（接收器 → 固件）。",
-      "noneForGame": "在按键页面保存布局：在手柄上选择一个按键。",
+      "noneForGame": "在按键页面保存布局：在控制器上选择一个按键。",
       "allTitle": "按键",
       "allHeading": "全部按键",
-      "allHint_one": "有 {{count}} 个按键与手柄原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
-      "allHint_other": "有 {{count}} 个按键与手柄原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
+      "allHint_one": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
+      "allHint_other": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
       "changed": "已更改",
       "notApplied": "尚未应用",
       "notSaved": "尚未保存",
@@ -1337,7 +1337,7 @@
       "shortcutSub": "全部按键一览，为游戏保存的布局",
       "seeAll": "查看全部按键和已保存的布局",
       "off": "关闭",
-      "noChanges": "无更改（手柄原始按键）",
+      "noChanges": "无更改（控制器原始按键）",
       "loaded": "已载入布局：{{name}}",
       "loadedEdited": "已修改",
       "loadedChip": "已载入",
@@ -1355,17 +1355,17 @@
       "unsaved": "{{title}} 的配置有未保存的改动。",
       "saveClose": "保存并关闭",
       "discard": "放弃",
-      "open": "在手柄视图中编辑",
-      "openHint": "将此配置应用到手柄，并用所有面板编辑，每项改动立即可感受",
+      "open": "在控制器视图中编辑",
+      "openHint": "将此配置应用到控制器，并用所有面板编辑，每项改动立即可感受",
       "buttonsNote": "{{title}} 的配置已启用：按键会通过“保存到配置文件”存入此游戏的布局，而不是你的常用按键。",
       "dongleNote": "不属于 {{title}} 的配置：接收器设置仍是你的常规设置。在这里的更改会在配置结束后保留，届时再保存到接收器。",
-      "calibrationNote": "校准属于手柄，不属于 {{title}} 的配置：保存后会在接收器中对所有游戏生效。",
+      "calibrationNote": "校准属于控制器，不属于 {{title}} 的配置：保存后会在接收器中对所有游戏生效。",
       "curvesNote": "{{title}} 的配置已启用：曲线会通过“保存到配置文件”存入此游戏的配置并从此生效；之后会恢复你的常规曲线。",
-      "curvesNormal": "此摇杆在这款游戏中使用你的常规曲线。"
+      "curvesNormal": "此操作杆在这款游戏中使用你的常规曲线。"
     },
     "profile": {
       "changes": "此游戏更改的设置（其他都使用你的常规设置）：",
-      "allNormal": "此游戏还没有更改：它使用你的常规设置。用“在手柄视图中编辑”可只为此游戏更改任何设置。",
+      "allNormal": "此游戏还没有更改：它使用你的常规设置。用“在控制器视图中编辑”可只为此游戏更改任何设置。",
       "useNormal": "{{name}}。使用我的常规设置",
       "allSettings": "所有设置",
       "normalSub": "你的常规设置",
@@ -1373,7 +1373,7 @@
       "off": "关",
       "copyHint": "此游戏使用接收器上当前的设置",
       "applyFailed": "{{title}} 的配置文件未能应用到接收器（{{reason}}）。当前为你的常规设置。",
-      "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或摇杆曲线（{{reason}}）。接收器重新连接时会再试一次。",
+      "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或操作杆曲线（{{reason}}）。接收器重新连接时会再试一次。",
       "saveFailed": "未保存到 {{title}} 的配置文件：{{reason}}",
       "notOn": "{{title}} 的配置文件尚未应用到接收器，因此没有保存任何内容。待其生效后再试。"
     },
@@ -1395,9 +1395,9 @@
   "ad": {
     "tagline": "你的 DualSense，实时呈现在屏幕上。",
     "features": [
-      "识别你的手柄，呈现它本来的配色",
+      "识别你的控制器，呈现它本来的配色",
       "点击任意部位即可设置",
-      "自适应扳机、HD 触觉反馈、扬声器和麦克风，全部通过蓝牙",
+      "自适应扳机、触觉反馈、扬声器和麦克风，全部通过蓝牙",
       "一键安装固件，全新的 Pico 也可以",
       "支持 7 种语言的旁白",
       "自动更新，签名并经过校验"
