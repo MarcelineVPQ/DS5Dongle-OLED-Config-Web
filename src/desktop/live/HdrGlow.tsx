@@ -138,7 +138,10 @@ export default function HdrGlow({ hero, nits }: { hero: RefObject<HTMLElement | 
         const dpr = window.devicePixelRatio || 1;
         const w = Math.round(r.width * dpr);
         const h = Math.round(r.height * dpr);
-        Object.assign(cv.style, { left: `${el.offsetLeft}px`, top: `${el.offsetTop}px`, width: `${r.width}px`, height: `${r.height}px` });
+        // Placed over the drawing measured from the canvas's own containing
+        // block (the drawing's offsetParent can be a different element).
+        const host = (cv.offsetParent ?? document.body).getBoundingClientRect();
+        Object.assign(cv.style, { left: `${r.left - host.left}px`, top: `${r.top - host.top}px`, width: `${r.width}px`, height: `${r.height}px` });
         const mask = await buildMask(svg as SVGSVGElement, w, h);
         if (!mask || !live || mine !== generation) return;
         if (cv.width !== w) cv.width = w; // resizing clears the canvas: redrawn below
