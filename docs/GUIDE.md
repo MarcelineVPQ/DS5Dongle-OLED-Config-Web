@@ -53,13 +53,15 @@ On Linux, press **Set up USB access** on the Dongle page once (it asks for your 
 
 ## 3. The Controller page
 
-Your controller, drawn in its own colors, moving as you use it: buttons light up as you press them, the sticks move, the light bar shows its real color. The **rail** on the right takes you to the other pages (hover it for names; pin it open with the button at the bottom, or Ctrl+B).
+Your controller (a DualSense in its colorway, or a DualSense Edge with its Fn buttons and back buttons), drawn in its own colors, moving as you use it: buttons light up as you press them, the sticks move, the light bar shows its real color. The **rail** on the right takes you to the other pages (hover it for names; pin it open with the button at the bottom, or Ctrl+B).
 
 ![The Controller page: the live drawing, the status tiles and the data cards](screenshots/live-controller.png)
 
 - **Click any part of the drawing** to set it up: its settings open in the panel on the right. Or pick a setting from the list in that panel.
 - **The tiles** under the drawing: battery, signal, light bar mode, and the player light and pairing slot.
-- **The cards**: inputs (sticks, triggers, buttons, touch), gyroscope, accelerometer, and the connection (update rate, round trip, headset and mic).
+- **Under the drawing's Mute button:** **Mic muted** while the controller's mute light is on, and **Headset in** while headphones are plugged into its headset jack.
+- **The cards**: inputs (sticks, triggers, buttons, touch pad), gyroscope, accelerometer, and the connection (update rate, round trip, headset and mic).
+- **Controller info:** the controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch) with **Up to date** or **Newer official firmware available**, its battery (level, charge state, voltage), and the lifetime counters it keeps itself (time played, charging, haptic feedback and trigger time, charges, connections; in a fold-out, every button's presses and each stick's round trips). **How to update** explains Sony's way: a USB-C cable to a Windows PC with Sony's **PlayStation Accessories** app, or a PS5 (not through the dongle; pair the controller with the dongle again afterwards if needed). The app only checks Sony's version list; it never installs Sony firmware. Read only, and the controller's serial number is never read into the app.
 - **Changes apply right away.** **Save to dongle** in the bottom bar keeps them after the dongle is unplugged; **Revert** goes back to what's saved.
 
 ## 4. Each part of the controller
@@ -95,7 +97,7 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 
 ![Assigning a button](screenshots/guide-remap.png)
 
-Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. Button assignments are stored in the dongle and work in every game, on any computer.
+Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in the dongle and work in every game, on any computer.
 
 **Saved button layouts:** save the buttons under a name ("Racing", "Southpaw") and give a layout to any game's profile. It switches in while that game runs (never written to the dongle's memory, so nothing wears out) and your normal buttons come back when it ends. Each layout lists what it changes ("Cross → Circle · L1 → R1"); edit it once and every game using it follows. Needs the newest dongle firmware.
 
@@ -121,7 +123,7 @@ For stick drift, sticks that don't reach the edge, triggers that don't reach ful
 
 A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
 
-**Sensitivity curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Quick** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can pick its own curve per stick (on the game's page), used only while the game runs.
+**Sensitivity curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Quick** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can use its own curve per stick (pick it in the controller view while you edit the profile), used only while the game runs.
 
 **Stick tests** (below the sensitivity curve): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
 
@@ -155,7 +157,7 @@ The first time, the app asks before reading anything; it then lists your **Steam
 ![A game page](screenshots/guide-game-page.png)
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
-  - **Controller profile:** haptic feedback, Audio Auto Haptics, speaker, light bar, mic and a saved **button layout** just for this game. It switches in while the game runs and your normal settings come back when it closes (also after a crash).
+  - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in the dongle's memory only, never saved to its flash.
   - **Setup:** this game's recommended fixes, applied with a backup you can undo.
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
