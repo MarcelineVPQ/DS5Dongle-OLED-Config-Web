@@ -225,7 +225,8 @@ function start(): void {
         // success = a handler is registered for the scheme.
         if (!(await hasSchemeHandler(target.url))) return false;
         // Linux: xdg-open with the real home, so a launcher that wasn't
-        // running doesn't start inside the dev copy's test HOME.
+        // running doesn't start inside the dev copy's test HOME, in its own
+        // unit, so it outlives the app (schemeHandler.ts).
         if (process.platform === "linux") return openForUser(target.url);
         shell.openExternal(target.url).catch(() => undefined);
         return true;
@@ -398,18 +399,26 @@ function createWindow(visible: boolean): void {
   const contents = mainWindow.webContents;
   // External links open in the system browser, and only to allowlisted hosts.
   contents.setWindowOpenHandler(({ url }) => {
-    if (isAllowedExternalUrl(url)) void shell.openExternal(url);
+    if (isAllowedExternalUrl(url)) openExternalLink(url);
     return { action: "deny" };
   });
   contents.on("will-navigate", (event, url) => {
     if (!isAppUrl(url)) {
       event.preventDefault();
-      if (isAllowedExternalUrl(url)) void shell.openExternal(url);
+      if (isAllowedExternalUrl(url)) openExternalLink(url);
     }
   });
 
   if (devServerUrl) void mainWindow.loadURL(devServerUrl);
   else void mainWindow.loadFile(join(here, "../renderer/index.html"));
+}
+
+// An allowlisted web link in the system browser. Linux: through xdg-open in
+// its own unit (openForUser), so a browser it starts outlives the app and
+// gets the real home; elsewhere the OS starts it (LaunchServices / ShellExecute).
+function openExternalLink(url: string): void {
+  if (process.platform === "linux") void openForUser(url);
+  else void shell.openExternal(url);
 }
 
 // Exactly the app's own page: the dev server's origin, or the packaged

@@ -203,7 +203,7 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["games"],
     platform: "linux",
   },
-  { column: "planned", title: "Gyro aiming outside Steam", text: "Gyroscope aiming for Heroic and Lutris games, as Steam Input gives Steam games.", areas: ["games", "controller"], platform: "linux" },
+  { column: "planned", title: "Gyro aiming outside Steam", text: "Gyroscope aiming for Heroic and Lutris games, as Steam Input gives Steam games.", areas: ["games", "controller"] },
   { column: "planned", title: "Anti-cheat warnings", text: "A game's page says up front when its anti-cheat blocks Linux.", areas: ["games"], platform: "linux" },
   { column: "planned", title: "GameMode switch", text: "Turn on Feral GameMode for a game with one switch, with Undo.", areas: ["games"], platform: "linux" },
   {
@@ -213,7 +213,7 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["games", "app"],
     platform: "linux",
   },
-  { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"], platform: "linux" },
+  { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"] },
   { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
   {
     column: "planned",
@@ -265,7 +265,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "ideas", title: "OLED boot animation", text: "A short animated logo on {{device}}'s screen while it starts.", areas: ["dongle"] },
   { column: "ideas", title: "BOOTSEL button shortcuts", text: "Press the Pico's BOOTSEL button in a pattern to restart it for flashing without unplugging.", areas: ["dongle"] },
   { column: "ideas", title: "Wipe {{device}}'s flash", text: "Erase the Pico completely for a clean start.", areas: ["dongle"] },
-  { column: "ideas", title: "Clearer pairing slot tile", text: 'Say "No player set" instead of a bare dash.', areas: ["dongle"], platform: "windows" },
+  { column: "ideas", title: "Clearer pairing slot tile", text: 'Say "No player set" instead of a bare dash.', areas: ["dongle"] },
   { column: "ideas", title: "Brighter colors from game art", text: "Pick a more vivid color from a game's art for its page.", areas: ["games"] },
   { column: "ideas", title: "Square covers in tall windows", text: "Use a game's square or portrait cover when the window is tall and narrow.", areas: ["games"] },
 ];

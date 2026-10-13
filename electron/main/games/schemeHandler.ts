@@ -1,5 +1,5 @@
-// Handing game links (steam://, heroic://, lutris:) and folders to the desktop
-// on Linux, and asking whether the desktop has an app registered for a link's
+// Handing game links (steam://, heroic://, lutris:), folders and web links to
+// the desktop on Linux, starting launchers again, and asking whether the desktop has an app registered for a link's
 // scheme, so the game page can say "is the launcher installed?" only when it
 // really isn't.
 //
@@ -9,6 +9,7 @@
 // runtime downloads there). Electron's shell.openExternal/openPath pass the
 // app's environment on, so Linux uses xdg-open directly: fixed argv, no shell.
 import { execFile, spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { userInfo } from "node:os";
 import { inside } from "./running";
 
@@ -41,12 +42,101 @@ export function realHome(): string {
   }
 }
 
-/** Start a program the main process chose (fixed argv, no shell), detached,
- * with the launcher environment. Resolves once it started (true) or
- * couldn't (false). Used for xdg-open and for reopening a launcher. */
-export function startForUser(cmd: string, args: string[]): Promise<boolean> {
+// ---- Starting programs for the user, independent of this app ----
+//
+// Everything the app starts for the user (a launcher it reopens, xdg-open
+// for Play, launcher links, folders and web links) must outlive the app: a
+// restart, a self-update relaunch or quitting must never take it along.
+// Linux: a detached child still sits in the app's cgroup, and when the app's
+// systemd unit or scope stops (the dev copy's service, an autostart or
+// session service, the updater's relaunch unit) systemd kills the whole
+// cgroup: Steam lost its saved login that way, mid-sign-in. So on Linux the
+// program gets its own transient user unit, named the way KDE and GNOME
+// name launched apps (app-<launcher>-<app id>@<random>.service), and only
+// without a user systemd falls back to a detached spawn (setsid: its own
+// session and process group). Windows: libuv puts only non-detached children
+// in its kill-on-close job object; a detached one (DETACHED_PROCESS, new
+// process group) is in no job of ours and keeps running when the app exits.
+// macOS: a detached child is reparented to launchd when the app quits and
+// nothing kills it; links and folders there go through shell.openExternal /
+// openPath (LaunchServices, like `open`), which start apps under launchd.
+
+/** The launcher part of our unit names (systemd's desktop convention). */
+export const UNIT_PREFIX = "app-ds5configurator";
+
+// Variables systemd sets per unit itself: never copied from this process
+// (they describe the app's own unit, not the new one).
+const PER_UNIT =
+  /^(INVOCATION_ID|JOURNAL_STREAM|SYSTEMD_EXEC_PID|MANAGERPID|MAINPID|NOTIFY_SOCKET|WATCHDOG_PID|WATCHDOG_USEC|LISTEN_PID|LISTEN_FDS|LISTEN_FDNAMES|MEMORY_PRESSURE_WATCH|MEMORY_PRESSURE_WRITE|CREDENTIALS_DIRECTORY|RUNTIME_DIRECTORY|STATE_DIRECTORY|CACHE_DIRECTORY|LOGS_DIRECTORY|CONFIGURATION_DIRECTORY|TRIGGER_UNIT|TRIGGER_PATH|TRIGGER_TIMER_[A-Z_]+)$/;
+
+/** The app id in a unit name: the program's file name (or the Flatpak app
+ * id for `flatpak run <id>`), lowercase, only [a-z0-9.]. */
+export function unitAppId(cmd: string, args: string[]): string {
+  const name = cmd === "flatpak" && args[0] === "run" && args[1] ? args[1] : (cmd.split(/[\\/]/).pop() ?? cmd);
+  const id = name
+    .toLowerCase()
+    .replace(/\.(appimage|exe)$/, "")
+    .replace(/[^a-z0-9.]/g, "")
+    .slice(0, 60);
+  return id || "program";
+}
+
+/** A unit name like app-ds5configurator-steam@lq2x9k1a3f.service. */
+export const unitName = (cmd: string, args: string[], now: number, random: string): string => `${UNIT_PREFIX}-${unitAppId(cmd, args)}@${now.toString(36)}${random}.service`;
+
+/** `systemctl --user show-environment` output as a map (a value systemd
+ * quoted stays quoted, so it just differs and is passed on). */
+export function parseManagerEnv(out: string): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const line of out.split("\n")) {
+    const eq = line.indexOf("=");
+    if (eq > 0) env[line.slice(0, eq)] = line.slice(eq + 1);
+  }
+  return env;
+}
+
+/** The user's systemd: its version and the environment units start with. */
+export interface UserSystemd {
+  version: number;
+  env: Record<string, string>;
+}
+
+/** The version in `systemctl --version`'s first line ("systemd 259 (…)"). */
+export const parseSystemdVersion = (out: string): number => Number(/^systemd (\d+)/.exec(out)?.[1] ?? 0);
+
+/** systemd-run's argv for starting `cmd args` in its own transient user
+ * unit, with the launcher environment: `--setenv` for every variable whose
+ * value differs from the user manager's (the unit starts from that). */
+export function systemdRunArgs(cmd: string, args: string[], env: NodeJS.ProcessEnv, systemd: UserSystemd, unit: string): string[] {
+  const setenv = Object.entries(env)
+    .filter(([k, v]) => v !== undefined && !PER_UNIT.test(k) && systemd.env[k] !== v)
+    .map(([k, v]) => `--setenv=${k}=${v}`);
+  // Type=exec: the start fails (and we fall back) when the program can't be
+  // run. The unit lives as long as anything in it runs (xdg-open and launcher
+  // scripts exit and leave the app running): ExitType=cgroup (systemd 250+),
+  // before that KillMode=process (the unit ends, its processes stay).
+  const lifetime = systemd.version >= 250 ? "--property=ExitType=cgroup" : "--property=KillMode=process";
+  return ["--user", "--collect", "--quiet", `--unit=${unit}`, "--property=Type=exec", lifetime, ...setenv, "--", cmd, ...args];
+}
+
+export type RunResult = "ok" | "failed" | "timeout";
+
+export interface StartDeps {
+  platform: NodeJS.Platform;
+  env: () => NodeJS.ProcessEnv; // the launcher environment
+  /** The user's systemd, or null when there is none (or no session bus). */
+  userSystemd: (env: NodeJS.ProcessEnv) => Promise<UserSystemd | null>;
+  /** Run systemd-run with this argv and env and wait for it. */
+  systemdRun: (argv: string[], env: NodeJS.ProcessEnv) => Promise<RunResult>;
+  /** A detached spawn (POSIX: setsid, own process group), no shell. */
+  spawnDetached: (cmd: string, args: string[], env: NodeJS.ProcessEnv) => Promise<boolean>;
+  now: () => number;
+  random: () => string;
+}
+
+function spawnDetached(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { detached: true, stdio: "ignore", env: launcherEnv(process.env, realHome()) });
+    const child = spawn(cmd, args, { detached: true, stdio: "ignore", env });
     child.once("error", () => resolve(false));
     child.once("spawn", () => {
       child.unref();
@@ -54,6 +144,42 @@ export function startForUser(cmd: string, args: string[]): Promise<boolean> {
     });
   });
 }
+
+const realDeps: StartDeps = {
+  platform: process.platform,
+  env: () => launcherEnv(process.env, realHome()),
+  userSystemd: (env) => {
+    const run = (args: string[]) => new Promise<string | null>((resolve) => execFile("systemctl", args, { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve(err ? null : out)));
+    return Promise.all([run(["--user", "show-environment"]), run(["--version"])]).then(([vars, version]) =>
+      vars === null ? null : { env: parseManagerEnv(vars), version: parseSystemdVersion(version ?? "") },
+    );
+  },
+  systemdRun: (argv, env) =>
+    new Promise((resolve) => execFile("systemd-run", argv, { timeout: 10_000, env }, (err) => resolve(!err ? "ok" : (err as { killed?: boolean }).killed ? "timeout" : "failed"))),
+  spawnDetached,
+  now: Date.now,
+  random: () => randomBytes(3).toString("hex"),
+};
+
+/** Start a program the main process chose (fixed argv, no shell) for the
+ * user, independent of this app (above), with the launcher environment.
+ * Resolves once it started (true) or couldn't (false). */
+export async function startIndependent(cmd: string, args: string[], deps: StartDeps = realDeps): Promise<boolean> {
+  const env = deps.env();
+  if (deps.platform === "linux") {
+    const systemd = await deps.userSystemd(env);
+    if (systemd) {
+      const result = await deps.systemdRun(systemdRunArgs(cmd, args, env, systemd, unitName(cmd, args, deps.now(), deps.random())), env);
+      if (result === "ok") return true;
+      // It may still start: never risk a second copy (two Steams).
+      if (result === "timeout") return false;
+    }
+  }
+  return deps.spawnDetached(cmd, args, env);
+}
+
+/** Used for xdg-open and for reopening a launcher. */
+export const startForUser = (cmd: string, args: string[]): Promise<boolean> => startIndependent(cmd, args);
 
 /** Open a link or folder the main process built (never one from the page)
  * with xdg-open. */

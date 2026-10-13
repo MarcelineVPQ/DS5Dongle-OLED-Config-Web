@@ -212,17 +212,32 @@ describe("privileged Windows USB repair", () => {
   });
 });
 
-describe("game links and folders on Linux", () => {
+describe("game links, folders and web links on Linux", () => {
   const handlerSource = readFileSync(new URL("../../electron/main/games/schemeHandler.ts", import.meta.url), "utf8");
 
   it("open through xdg-open with a fixed argv, no shell, the launcher env", () => {
-    expect(handlerSource).toMatch(/spawn\(cmd, args, \{ detached: true, stdio: "ignore", env: launcherEnv\(process\.env, realHome\(\)\) \}\)/);
     expect(handlerSource).toContain('return startForUser("xdg-open", [target]);');
     expect(handlerSource).not.toMatch(/(?<!\.)\bexec\(|execSync|shell: true/);
-    // Only game actions use it, and only with what the main process built.
-    expect(mainSource.match(/openForUser\(/g)).toHaveLength(2);
+    // Game actions with what the main process built, and allowlisted web links.
+    expect(mainSource.match(/openForUser\(/g)).toHaveLength(3);
     expect(mainSource).toContain("return openForUser(target.url);");
     expect(mainSource).toContain("return openForUser(target.folder);");
+    expect(mainSource).toContain('if (process.platform === "linux") void openForUser(url);');
+    expect(mainSource.match(/openExternalLink\(url\)/g)).toHaveLength(2);
+    expect(mainSource).toMatch(/if \(isAllowedExternalUrl\(url\)\) openExternalLink\(url\);[\s\S]*if \(isAllowedExternalUrl\(url\)\) openExternalLink\(url\);/);
+  });
+
+  it("start programs independent of the app: own systemd user unit, else a detached spawn; fixed argv, no shell", () => {
+    // Linux: systemd-run, the program and its arguments after "--", never through a shell.
+    expect(handlerSource).toContain('execFile("systemd-run", argv, { timeout: 10_000, env }');
+    expect(handlerSource).toContain('return ["--user", "--collect", "--quiet", `--unit=${unit}`, "--property=Type=exec", lifetime, ...setenv, "--", cmd, ...args];');
+    expect(handlerSource).toContain('execFile("systemctl", args, { encoding: "utf8", timeout: 3000, env }');
+    expect(handlerSource).toContain('run(["--user", "show-environment"]), run(["--version"])');
+    // Fallback and Windows/macOS: detached spawn, no shell.
+    expect(handlerSource).toContain('spawn(cmd, args, { detached: true, stdio: "ignore", env })');
+    // Every start gets the launcher environment.
+    expect(handlerSource).toContain("env: () => launcherEnv(process.env, realHome()),");
+    expect(handlerSource).toContain("export const startForUser = (cmd: string, args: string[]): Promise<boolean> => startIndependent(cmd, args);");
   });
 });
 
@@ -232,7 +247,7 @@ describe("closing and reopening game launchers (Linux)", () => {
   it("runs fixed programs without a shell, with the launcher environment, and never force-kills", () => {
     // Steam's own shutdown and the restart: execFile / spawn, no shell, the user's real home.
     expect(source).toMatch(/execFile\(cmd, args, \{ timeout: 15_000, env: launcherEnv\(process\.env, realHome\(\)\) \}/);
-    expect(source).toContain("start: startForUser,"); // schemeHandler.ts: spawn, detached, no shell, the launcher env (tested above)
+    expect(source).toContain("start: startForUser,"); // schemeHandler.ts: own systemd unit or detached spawn, no shell, the launcher env (tested above)
     expect(source).toContain('layer.run("steam", ["-shutdown"])');
     expect(source).toContain('layer.run("flatpak", ["run", FLATPAK_ID.steam, "-shutdown"])');
     expect(source).not.toMatch(/(?<!\.)\bexec\(|execSync|shell: true|SIGKILL|"-9"/);
@@ -262,7 +277,7 @@ describe("closing and reopening game launchers (Windows)", () => {
     expect(source).toContain('roots.map((root) => join(root, "steam.exe")).find((exe) => exists(exe)) ?? null;');
     expect(source).toContain('execFile(system32("reg.exe"), ["query", "HKCU\\\\Software\\\\Valve\\\\Steam", "/v", "RunningAppID"]');
     expect(source).toMatch(/run: \(cmd, args\) => execFile\(cmd, args, \{ timeout: 15_000, windowsHide: true, env: launcherEnv\(process\.env, realHome\(\)\) \}/);
-    // Reopening: the same startForUser (spawn, detached, no shell), with steam.exe or Heroic.exe only.
+    // Reopening: the same startForUser (detached spawn, no shell), with steam.exe or Heroic.exe only.
     expect(source).toContain("return exe ? { cmd: exe, args: [] } : null;");
   });
 });

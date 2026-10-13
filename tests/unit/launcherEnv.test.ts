@@ -1,9 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 
 const spawnMock = vi.hoisted(() => vi.fn());
-vi.mock("node:child_process", async (orig) => ({ ...(await orig<typeof import("node:child_process")>()), spawn: spawnMock }));
+// No user systemd here (systemctl fails), so starts fall back to the detached spawn.
+const execFileMock = vi.hoisted(() => vi.fn((_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null, out: string) => void) => cb(new Error("no systemd"), "")));
+vi.mock("node:child_process", async (orig) => ({ ...(await orig<typeof import("node:child_process")>()), spawn: spawnMock, execFile: execFileMock }));
 
-import { launcherEnv, openForUser } from "../../electron/main/games/schemeHandler";
+import {
+  launcherEnv,
+  openForUser,
+  parseManagerEnv,
+  parseSystemdVersion,
+  startIndependent,
+  systemdRunArgs,
+  unitAppId,
+  unitName,
+  type RunResult,
+  type StartDeps,
+} from "../../electron/main/games/schemeHandler";
 
 describe("launcherEnv", () => {
   const fake = "/home/me/.claude/jobs/x/tmp/devhome";
@@ -53,7 +66,7 @@ describe("launcherEnv", () => {
 });
 
 describe("openForUser", () => {
-  it("spawns xdg-open with a fixed argv, no shell, detached, with the launcher env", async () => {
+  it("without a user systemd, spawns xdg-open with a fixed argv, no shell, detached, with the launcher env", async () => {
     const child = { once: vi.fn((ev: string, cb: () => void) => (ev === "spawn" ? cb() : undefined)), unref: vi.fn() };
     spawnMock.mockReturnValue(child);
     await expect(openForUser("heroic://launch?appName=1234&runner=gog")).resolves.toBe(true);
@@ -71,5 +84,118 @@ describe("openForUser", () => {
     spawnMock.mockClear();
     await expect(openForUser("--help")).resolves.toBe(false);
     expect(spawnMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("starting programs independent of the app", () => {
+  const ENV = { HOME: "/home/me", PATH: "/usr/bin", DISPLAY: ":0", WAYLAND_DISPLAY: "wayland-0", INVOCATION_ID: "abc", JOURNAL_STREAM: "8:9" };
+  const MANAGER = { HOME: "/home/me", PATH: "/usr/bin", DISPLAY: ":0" };
+
+  function fakes(over: Partial<StartDeps> & { run?: RunResult } = {}) {
+    const calls = { systemdRun: [] as { argv: string[]; env: NodeJS.ProcessEnv }[], spawn: [] as { cmd: string; args: string[]; env: NodeJS.ProcessEnv }[] };
+    const deps: StartDeps = {
+      platform: "linux",
+      env: () => ({ ...ENV }),
+      userSystemd: async () => ({ version: 259, env: MANAGER }),
+      systemdRun: async (argv, env) => {
+        calls.systemdRun.push({ argv, env });
+        return over.run ?? "ok";
+      },
+      spawnDetached: async (cmd, args, env) => {
+        calls.spawn.push({ cmd, args, env });
+        return true;
+      },
+      now: () => 1_760_000_000_000,
+      random: () => "a1b2c3",
+      ...over,
+    };
+    return { deps, calls };
+  }
+
+  it("names units the desktop way: app-<launcher>-<app id>@<random>.service", () => {
+    expect(unitAppId("steam", ["-silent"])).toBe("steam");
+    expect(unitAppId("/opt/Heroic/heroic", [])).toBe("heroic");
+    expect(unitAppId("/home/me/Apps/Heroic-2.15.0.AppImage", [])).toBe("heroic2.15.0");
+    expect(unitAppId("flatpak", ["run", "com.valvesoftware.Steam"])).toBe("com.valvesoftware.steam");
+    expect(unitAppId("xdg-open", ["steam://nav/games"])).toBe("xdgopen");
+    expect(unitAppId("C:\\Program Files (x86)\\Steam\\steam.exe", [])).toBe("steam");
+    expect(unitAppId("-_-", [])).toBe("program");
+    expect(unitName("steam", [], 1_760_000_000_000, "a1b2c3")).toBe(`app-ds5configurator-steam@${(1_760_000_000_000).toString(36)}a1b2c3.service`);
+  });
+
+  it("parses systemctl's environment and version", () => {
+    expect(parseManagerEnv("HOME=/home/me\nLANG=en_US.UTF-8\nX=a=b\n\n")).toEqual({ HOME: "/home/me", LANG: "en_US.UTF-8", X: "a=b" });
+    expect(parseSystemdVersion("systemd 259 (259.5-0ubuntu3.4)\n+PAM +AUDIT")).toBe(259);
+    expect(parseSystemdVersion("")).toBe(0);
+  });
+
+  it("Linux: systemd-run in its own transient unit, fixed argv, --setenv only for launcher variables that differ", async () => {
+    const { deps, calls } = fakes();
+    await expect(startIndependent("steam", ["-silent"], deps)).resolves.toBe(true);
+    expect(calls.spawn).toEqual([]);
+    expect(calls.systemdRun).toHaveLength(1);
+    const { argv, env } = calls.systemdRun[0];
+    expect(argv).toEqual([
+      "--user",
+      "--collect",
+      "--quiet",
+      `--unit=app-ds5configurator-steam@${(1_760_000_000_000).toString(36)}a1b2c3.service`,
+      "--property=Type=exec",
+      "--property=ExitType=cgroup",
+      "--setenv=WAYLAND_DISPLAY=wayland-0",
+      "--",
+      "steam",
+      "-silent",
+    ]);
+    // Never the app unit's own per-unit variables.
+    expect(argv.join(" ")).not.toMatch(/INVOCATION_ID|JOURNAL_STREAM/);
+    // systemd-run itself gets the launcher env (its session bus, PATH).
+    expect(env).toEqual(ENV);
+  });
+
+  it("Linux before systemd 250: KillMode=process keeps the program when the unit ends", () => {
+    const argv = systemdRunArgs("xdg-open", ["https://example.org"], { HOME: "/h" }, { version: 249, env: { HOME: "/h" } }, "u.service");
+    expect(argv).toContain("--property=KillMode=process");
+    expect(argv).not.toContain("--property=ExitType=cgroup");
+    expect(argv.slice(-3)).toEqual(["--", "xdg-open", "https://example.org"]);
+  });
+
+  it("Linux: --setenv carries a changed HOME and new variables, values verbatim (no shell)", () => {
+    const argv = systemdRunArgs("heroic", [], { HOME: "/home/me", A: "x; rm -rf ~", PATH: "/usr/bin" }, { version: 259, env: { HOME: "/tmp/dev", PATH: "/usr/bin" } }, "u.service");
+    expect(argv.filter((a) => a.startsWith("--setenv="))).toEqual(["--setenv=HOME=/home/me", "--setenv=A=x; rm -rf ~"]);
+  });
+
+  it("Linux without a user systemd: a detached spawn with the launcher env", async () => {
+    const { deps, calls } = fakes({ userSystemd: async () => null });
+    await expect(startIndependent("lutris", [], deps)).resolves.toBe(true);
+    expect(calls.systemdRun).toEqual([]);
+    expect(calls.spawn).toEqual([{ cmd: "lutris", args: [], env: ENV }]);
+  });
+
+  it("Linux: falls back when systemd-run fails (missing, no bus), never when it timed out (no second copy)", async () => {
+    const failed = fakes({ run: "failed" });
+    await expect(startIndependent("steam", [], failed.deps)).resolves.toBe(true);
+    expect(failed.calls.spawn).toEqual([{ cmd: "steam", args: [], env: ENV }]);
+
+    const timedOut = fakes({ run: "timeout" });
+    await expect(startIndependent("steam", [], timedOut.deps)).resolves.toBe(false);
+    expect(timedOut.calls.spawn).toEqual([]);
+  });
+
+  it("Windows and macOS: a detached spawn (no job object, reparented on exit), never systemd", async () => {
+    for (const platform of ["win32", "darwin"] as const) {
+      let asked = false;
+      const { deps, calls } = fakes({
+        platform,
+        userSystemd: async () => {
+          asked = true;
+          return null;
+        },
+      });
+      await expect(startIndependent("C:\\Steam\\steam.exe", [], deps)).resolves.toBe(true);
+      expect(asked).toBe(false);
+      expect(calls.systemdRun).toEqual([]);
+      expect(calls.spawn).toEqual([{ cmd: "C:\\Steam\\steam.exe", args: [], env: ENV }]);
+    }
   });
 });
