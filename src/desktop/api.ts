@@ -106,6 +106,14 @@ export type ProtonInstallResult = { ok: true; name: string; installed: string[] 
 export type UndoResult =
   { ok: true; restored: string[]; reopenFailed?: LauncherId[] } | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem } | { ok: false; conflict: string[] } | { ok: false; error: string };
 
+// Firmware being written to the board, and what waits for it to finish
+// (electron/main/firmwareHold.ts).
+export interface FirmwareHoldState {
+  writing: boolean;
+  restartQueued: boolean;
+  quitQueued: boolean;
+}
+
 export interface DesktopApi {
   platform: string;
   reportStatus(status: DeviceStatus): void;
@@ -146,6 +154,11 @@ export interface DesktopApi {
   // stays "visible" while hidden here (background throttling is off).
   onWindowVisible(listener: (visible: boolean) => void): () => void;
   downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
+  // Firmware write in progress (firmwareUpdate.ts): restart, quit and the
+  // app update's install wait for it to end.
+  setFirmwareWriting(writing: boolean): void;
+  getFirmwareHold(): Promise<FirmwareHoldState>;
+  onFirmwareHold(listener: (state: FirmwareHoldState) => void): () => void;
   // Linux Games page: read-only scan, apply only confirmed fix ids, undo.
   gamesScan(): Promise<GamesReport>;
   // `restart`: the running launchers the page said it will close and reopen.
@@ -195,6 +208,9 @@ export const IPC = {
   latestFirmware: "desktop:latest-firmware",
   officialControllerFirmware: "desktop:official-controller-firmware",
   downloadFirmware: "desktop:download-firmware",
+  setFirmwareWriting: "desktop:set-firmware-writing",
+  getFirmwareHold: "desktop:get-firmware-hold",
+  firmwareHold: "desktop:firmware-hold",
   getDesktopPalette: "desktop:get-desktop-palette",
   firmwareChangelog: "desktop:firmware-changelog",
   desktopPalette: "desktop:desktop-palette",

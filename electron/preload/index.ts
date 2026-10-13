@@ -4,7 +4,7 @@
 // here: the page uses WebUSB, which the main process limits to the dongle and
 // the RP2350 boot device.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import { IPC, type DesktopApi, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
+import { IPC, type DesktopApi, type FirmwareHoldState, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
 import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
@@ -36,6 +36,13 @@ const api: DesktopApi = {
   latestFirmware: () => ipcRenderer.invoke(IPC.latestFirmware),
   officialControllerFirmware: (asked) => ipcRenderer.invoke(IPC.officialControllerFirmware, asked),
   downloadFirmware: () => ipcRenderer.invoke(IPC.downloadFirmware),
+  setFirmwareWriting: (writing) => ipcRenderer.send(IPC.setFirmwareWriting, writing),
+  getFirmwareHold: () => ipcRenderer.invoke(IPC.getFirmwareHold),
+  onFirmwareHold: (listener) => {
+    const handler = (_event: IpcRendererEvent, state: FirmwareHoldState) => listener(state);
+    ipcRenderer.on(IPC.firmwareHold, handler);
+    return () => ipcRenderer.removeListener(IPC.firmwareHold, handler);
+  },
   getDesktopPalette: () => ipcRenderer.invoke(IPC.getDesktopPalette),
   firmwareChangelog: () => ipcRenderer.invoke(IPC.firmwareChangelog),
   onDesktopPalette: (listener) => {
