@@ -88,7 +88,7 @@ describe("choosing the build to move a game to", () => {
     expect(game().fixes.find((f) => f.kind === "standard-gamepad")!.why).toMatchObject({ params: { runner: { params: { proton: OURS } } } });
     rmSync(join(tools(), OURS), { recursive: true });
     expect(game().gamepad).toBe("no-build");
-    expect(game().fixes).toEqual([]);
+    expect(game().fixes.filter((f) => f.kind !== "graphics-mode")).toEqual([]); // its graphics-mode fix is its own (gamesMode.test.ts)
   });
 });
 

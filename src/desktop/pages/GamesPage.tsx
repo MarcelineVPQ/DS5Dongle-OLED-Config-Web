@@ -25,6 +25,7 @@ import { BusyButton } from "../controls";
 import { say } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
+import { allFixes } from "../games/types";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -506,9 +507,7 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
   );
 }
 
-export function allFixes(r: GamesReport): Fix[] {
-  return [...r.launchers.flatMap((l) => l.fixes), ...r.system.fixes, ...r.games.flatMap((g) => g.fixes)];
-}
+export { allFixes };
 
 function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string>; onToggle: (id: string) => void }) {
   const { t } = useTranslation();

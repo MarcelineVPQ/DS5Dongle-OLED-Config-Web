@@ -36,6 +36,8 @@ export interface HeroicGame {
   // Heroic's per-game gamescope settings (Settings → Gamescope; 2.14+ has
   // additionalOptions); Heroic only starts gamescope with enableUpscaling or enableLimiter on.
   gamescope: Record<string, unknown> | null;
+  // Settings → Game Arguments ("launcherArgs", split like a shell line).
+  args: string;
 }
 
 export function findHeroicInstalls(home: string): HeroicInstall[] {
@@ -121,6 +123,7 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
         wineWayland: cfg.enableWineWayland === true,
         hdr: cfg.enableHDR === true,
         gamescope: cfg.gamescope && typeof cfg.gamescope === "object" ? obj(cfg.gamescope) : null,
+        args: typeof cfg.launcherArgs === "string" ? cfg.launcherArgs : "",
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
