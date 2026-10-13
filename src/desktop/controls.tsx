@@ -217,7 +217,9 @@ export { hexToRgb } from "./theme/desktopPalette";
 // failure (the restore is in a finally). The action's own result or error is
 // shown by the caller. An action with a known length (`countdown`, seconds)
 // counts down from the start instead; with `onStop` the running button stays
-// pressable, and pressing it again stops the action early.
+// pressable, and pressing it again stops the action early. `since` (a
+// Date.now() time) shows an action that runs outside the button as running,
+// counting from then: a button that mounts while it plays picks it up.
 const ELAPSED_AFTER_S = 3;
 
 interface BusyButtonProps {
@@ -228,19 +230,23 @@ interface BusyButtonProps {
   title?: string;
   countdown?: number;
   onStop?: () => void;
+  since?: number | null;
   autoFocus?: boolean;
 }
 
-export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop, autoFocus }: BusyButtonProps) {
-  const [busy, setBusy] = useState(false);
+export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop, since, autoFocus }: BusyButtonProps) {
+  const [ownBusy, setBusy] = useState(false);
+  const busy = ownBusy || since != null;
   const [secs, setSecs] = useState(0);
   const live = useLive();
   useEffect(() => {
     if (!busy) return;
-    const started = Date.now();
-    const timer = setInterval(() => setSecs(Math.floor((Date.now() - started) / 1000)), 1000);
+    const started = since || Date.now();
+    const tick = () => setSecs(Math.floor((Date.now() - started) / 1000));
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [busy]);
+  }, [busy, since]);
   const run = async () => {
     if (busy) {
       onStop?.();
