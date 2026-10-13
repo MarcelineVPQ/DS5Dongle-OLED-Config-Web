@@ -93,15 +93,23 @@ describe("choosing the build to move a game to", () => {
 });
 
 describe("the page shows what the files say after a change", () => {
-  const realHome = process.env.HOME;
+  // The service's home is os.homedir(): HOME on Linux and macOS, USERPROFILE on Windows.
+  const realHome = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
   afterEach(() => {
-    process.env.HOME = realHome;
+    for (const [k, v] of Object.entries(realHome)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
   });
 
   it("a scan asked for during a change reads the files after it", async () => {
     buildHeroic(OLD);
     process.env.HOME = home;
-    let slow = true;
+    process.env.USERPROFILE = home;
+    // The change's own scan waits (as when launchers are being closed) until the page's scan is asked for.
+    let release!: () => void;
+    const held = new Promise<[]>((r) => (release = () => r([])));
+    let first = true;
     const control: LauncherControl = { running: () => new Set(), gameRunning: () => false, plan: () => null, close: async () => "closed", reopen: async () => true };
     const service = new GamesService({
       userData: join(home, "userdata"),
@@ -113,13 +121,14 @@ describe("the page shows what the files say after a change", () => {
       hdrMarked: () => new Set(),
       launchers: control,
       probes: {
-        // The change's own scan is slow (as when launchers are being closed).
-        audioCards: () => (slow ? ((slow = false), new Promise((r) => setTimeout(() => r([]), 50))) : Promise.resolve([])),
+        audioCards: () => (first ? ((first = false), held) : Promise.resolve([])),
         hdr: async () => NO_HDR_SYSTEM,
       },
     });
     const applying = service.apply([`${heroicId()}:xinput:ghost`], []);
-    const report = await service.scan();
+    const scanning = service.scan();
+    release();
+    const report = await scanning;
     expect((await applying).applied[0].ok).toBe(true);
     expect(JSON.parse(readFileSync(gameFile(), "utf8")).ghost.wineVersion.name).toBe(OURS);
     expect(report.games.find((g) => g.id === "ghost")!.runner).toBe(OURS);

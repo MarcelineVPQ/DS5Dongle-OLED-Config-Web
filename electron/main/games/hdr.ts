@@ -14,7 +14,8 @@
 import { execFile } from "node:child_process";
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+// Linux-only paths: POSIX joins on any machine (the tests run on Windows too).
+import { join } from "node:path/posix";
 import { promisify } from "node:util";
 import type { HdrDesktop, HdrScreen, HdrSystem } from "../../../src/desktop/games/types";
 import { FLATPAK_GAMESCOPE, GAMESCOPE_MIN } from "../../../src/desktop/games/hdrSetup";

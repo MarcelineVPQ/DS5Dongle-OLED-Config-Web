@@ -1,3 +1,10 @@
+# The repo is LF everywhere (Prettier's endOfLine default, and tests that read
+# source files): Windows checkouts get LF too, whatever core.autocrlf says.
+* text=auto eol=lf
+
+# A third-party license, kept byte for byte as shipped.
+src/assets/ZACKSLY-LICENSE.txt -text
+
 # Fixtures are compared byte for byte (Steam's own formatting, launcher
 # configs): never convert their line endings (Windows checkouts did).
 tests/fixtures/** -text

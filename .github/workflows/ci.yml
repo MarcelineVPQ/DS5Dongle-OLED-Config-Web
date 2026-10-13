@@ -5,6 +5,9 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  # A branch can be checked on every runner before it's merged:
+  # gh workflow run CI --ref <branch>
+  workflow_dispatch:
 
 env:
   NODE_VERSION: "22"

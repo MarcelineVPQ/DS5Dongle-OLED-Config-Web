@@ -31,7 +31,7 @@ files.push(...readdirSync(ROOT).filter((f) => /\.config\.(ts|js)$/.test(f)));
 const inCode: string[] = [];
 const bare: string[] = [];
 for (const file of files) {
-  const source = readFileSync(join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
+  const source = readFileSync(join(ROOT, file), "utf8");
   for (const m of source.matchAll(DIRECTIVE)) {
     const rules = m[1].split("--")[0].trim();
     if (!rules) bare.push(file);
@@ -43,7 +43,7 @@ for (const file of files) {
   }
 }
 
-const doc = readFileSync(join(ROOT, "docs/LINT_SUPPRESSIONS.md"), "utf8").replace(/\r\n/g, "\n");
+const doc = readFileSync(join(ROOT, "docs/LINT_SUPPRESSIONS.md"), "utf8");
 const section = doc.split(/^## Inline disables$/m)[1]?.split(/^## /m)[0] ?? "";
 const inDoc = [...section.matchAll(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/gm)].map((m) => `${m[1]} ${m[2]}`);
 

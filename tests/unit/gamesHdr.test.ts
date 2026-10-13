@@ -244,7 +244,8 @@ describe("the requirement check (hdrSystem)", () => {
     return key === "gamescope" ? { stdout: "", stderr: out[key] } : { stdout: out[key] };
   };
 
-  it("KDE: kscreen-doctor -o and gamescope --version, fixed argv, a timeout, no shell; the layer and the Flatpak extension by file", async () => {
+  // Real files on a POSIX PATH and XDG folders: Linux and macOS only (the check itself is Linux-only).
+  it.skipIf(process.platform === "win32")("KDE: kscreen-doctor -o and gamescope --version, fixed argv, a timeout, no shell; the layer and the Flatpak extension by file", async () => {
     const bin = fakeGamescope();
     layer();
     mkdirSync(join(home, ".local/share/flatpak/runtime/org.freedesktop.Platform.VulkanLayer.gamescope"), { recursive: true });

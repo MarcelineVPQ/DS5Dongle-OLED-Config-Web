@@ -4,6 +4,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
+// Imported up front: a cold import of the IPC module took over 5 s inside a test on the Windows runner.
+import { ApplyRequestSchema, FixIdsSchema, UndoRequestSchema } from "../../electron/main/ipc";
 import { allowPermissionCheck, allowPermissionRequest } from "../../electron/main/permissions";
 import { isAllowedExternalUrl } from "../../electron/main/urls";
 import { OFFICIAL_FIRMWARE_HOSTS, isAllowedOfficialFirmwareUrl } from "../../electron/main/officialFirmware";
@@ -205,8 +207,7 @@ describe("privileged Windows USB repair", () => {
 
   it("publishes the exact script in the README", async () => {
     const { REPAIR_SCRIPT } = await import("../../src/desktop/windowsRepairScript");
-    // Windows checkouts may use CRLF line endings; the script itself must match exactly.
-    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+    const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
     expect(readme).toContain("```powershell\n" + REPAIR_SCRIPT + "\n```");
   });
 });
@@ -239,7 +240,6 @@ describe("closing and reopening game launchers (Linux)", () => {
   });
 
   it("closes only launchers the page named, from a schema-checked request", async () => {
-    const { ApplyRequestSchema, UndoRequestSchema } = await import("../../electron/main/ipc");
     expect(ApplyRequestSchema.safeParse({ fixIds: [], restart: ["steam", "heroic", "lutris"] }).success).toBe(true);
     for (const restart of [["gog"], ["steam; reboot"], ["/usr/bin/steam"], "steam"]) expect(ApplyRequestSchema.safeParse({ fixIds: [], restart }).success, String(restart)).toBe(false);
     expect(ApplyRequestSchema.safeParse({ fixIds: [], restart: [], cmd: "steam" }).success).toBe(false);
@@ -369,7 +369,6 @@ describe("XInput fix", () => {
     const { withPreferSdl } = await import("../../electron/main/games/games");
     expect(withPreferSdl("")).toBe("PROTON_PREFER_SDL=1 %command%");
     expect(withPreferSdl("PROTON_PREFER_SDL=0 %command% -dx11")).toBe("PROTON_PREFER_SDL=1 %command% -dx11");
-    const { FixIdsSchema } = await import("../../electron/main/ipc");
     for (const bad of [["steam-1234abcd:xinput:1; rm -rf ~"], ["../../etc/passwd"], [{ file: "x" }]]) expect(FixIdsSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
   });
 });
