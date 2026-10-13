@@ -197,7 +197,8 @@
         "setFeatureCount": "Gravações de feature do host",
         "setFeatureLast": "Última gravação de feature do host"
       },
-      "speakerEncoderFailed": "Alto-falante desligado: o dongle não teve memória suficiente para o codificador do alto-falante ao iniciar ({{kb}} KB livres). Hápticos, gatilhos, microfone e salvar continuam funcionando. Relate no GitHub (issue #15) com sua placa e controle."
+      "speakerEncoderFailed": "Alto-falante desligado: o dongle não teve memória suficiente para o codificador do alto-falante ao iniciar ({{kb}} KB livres). Hápticos, gatilhos, microfone e salvar continuam funcionando. Relate no GitHub (issue #15) com sua placa e controle.",
+      "micDecoderFailed": "Microfone desligado: o dongle não conseguiu criar o decodificador do microfone do controle ao iniciar ({{kb}} KB livres). Alto-falante, hápticos, gatilhos e salvar continuam funcionando. Relate no GitHub (issue #15) com sua placa e controle."
     },
     "firmware": {
       "installed": "Firmware instalado",
@@ -573,6 +574,7 @@
       "hardwareAccelerationSub": "Desenha com a placa de vídeo: mais fluido e necessário para desfoque e efeitos de vidro. Desliga sozinha se a placa de vídeo travar.",
       "restartToApply": "Reinicie o app para aplicar",
       "modelLabel": "Modelo:",
+      "headsetIn": "Fone conectado",
       "colorLabel": "Cor:",
       "statusLabel": "Status:",
       "triggersTitle": "Gatilhos adaptáveis",

@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { CommandError, Ds5BridgeClient, FEATURES2, FEATURES3, IDENTITY_FEATURES, NARRATOR_LANGS, NARRATOR_LINES, NARRATOR_OFF, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import {
+  CommandError,
+  CORE1_MIC_FAILED,
+  CORE1_SPEAKER_FAILED,
+  Ds5BridgeClient,
+  FEATURES2,
+  FEATURES3,
+  IDENTITY_FEATURES,
+  NARRATOR_LANGS,
+  NARRATOR_LINES,
+  NARRATOR_OFF,
+  TIMING_STAGES,
+} from "../../src/protocol/bridgeClient";
 import { supportsLiveInput } from "../../src/desktop/useLiveInput";
 import { DEFAULT_CONFIG, decodeConfigBody } from "../../src/protocol/config";
 import { DEFAULT_CURVES, DEFAULT_CUSTOM_POINTS, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
@@ -313,6 +325,13 @@ describe("core1 health in the audio counters (issue #15)", () => {
     const c = await new Ds5BridgeClient(new FakeDongle({ speakerEncoderFailed: true })).readAudioCounters();
     expect(c.core1Flags).toBe(0x03);
     expect(c.core1FreeHeap).toBe(12 * 1024);
+  });
+  it("reads the mic-decoder failure, on its own and with the speaker's", async () => {
+    const mic = await new Ds5BridgeClient(new FakeDongle({ micDecoderFailed: true })).readAudioCounters();
+    expect(mic.core1Flags).toBe(0x01 | CORE1_MIC_FAILED);
+    expect((mic.core1Flags ?? 0) & CORE1_SPEAKER_FAILED).toBe(0);
+    const both = await new Ds5BridgeClient(new FakeDongle({ micDecoderFailed: true, speakerEncoderFailed: true })).readAudioCounters();
+    expect(both.core1Flags).toBe(0x01 | CORE1_SPEAKER_FAILED | CORE1_MIC_FAILED);
   });
   it("a healthy core1: started, its free heap, and loops that move", async () => {
     const client = new Ds5BridgeClient(new FakeDongle());

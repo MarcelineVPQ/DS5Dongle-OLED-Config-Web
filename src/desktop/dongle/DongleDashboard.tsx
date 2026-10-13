@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
   AUDIO_COUNTER_NAMES,
+  CORE1_MIC_FAILED,
   CORE1_SPEAKER_FAILED,
   FEATURES2,
   supportsFeature2,
@@ -133,6 +134,9 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
           {s && !s.core1Alive && <div className="dk-notice error">{t("desktop.diag.core1Frozen", "Core1 stopped: the audio path is dead until the dongle restarts.")}</div>}
           {s && ((s.counters.core1Flags ?? 0) & CORE1_SPEAKER_FAILED) !== 0 && (
             <div className="dk-notice error">{t("desktop.diag.speakerEncoderFailed", { kb: Math.round((s.counters.core1FreeHeap ?? 0) / 1024) })}</div>
+          )}
+          {s && ((s.counters.core1Flags ?? 0) & CORE1_MIC_FAILED) !== 0 && (
+            <div className="dk-notice error">{t("desktop.diag.micDecoderFailed", { kb: Math.round((s.counters.core1FreeHeap ?? 0) / 1024) })}</div>
           )}
           <div className="dash-levels">
             <Level label={td("speakerPeak")} value={s?.peaks[0] ?? 0} />

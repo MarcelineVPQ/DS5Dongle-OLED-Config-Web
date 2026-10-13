@@ -197,7 +197,8 @@
         "setFeatureCount": "Écritures feature de l'hôte",
         "setFeatureLast": "Dernière écriture feature de l'hôte"
       },
-      "speakerEncoderFailed": "Haut-parleur coupé : le dongle n’avait pas assez de mémoire pour l’encodeur du haut-parleur au démarrage ({{kb}} Ko libres). Retours haptiques, gâchettes, micro et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
+      "speakerEncoderFailed": "Haut-parleur coupé : le dongle n’avait pas assez de mémoire pour l’encodeur du haut-parleur au démarrage ({{kb}} Ko libres). Retours haptiques, gâchettes, micro et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette.",
+      "micDecoderFailed": "Micro coupé : le dongle n’a pas pu créer le décodeur du micro de la manette au démarrage ({{kb}} Ko libres). Haut-parleur, retours haptiques, gâchettes et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
     },
     "firmware": {
       "installed": "Firmware installé",
@@ -573,6 +574,7 @@
       "hardwareAccelerationSub": "Dessine avec la carte graphique : plus fluide, et nécessaire au flou et aux effets de verre. Se désactive si la carte graphique plante.",
       "restartToApply": "Redémarrez l'app pour appliquer",
       "modelLabel": "Modèle :",
+      "headsetIn": "Casque branché",
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
       "triggersTitle": "Gâchettes adaptatives",

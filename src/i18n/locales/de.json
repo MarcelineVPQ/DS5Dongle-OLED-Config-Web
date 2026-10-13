@@ -197,7 +197,8 @@
         "setFeatureCount": "Feature-Writes vom Host",
         "setFeatureLast": "Letzter Feature-Write vom Host"
       },
-      "speakerEncoderFailed": "Lautsprecher aus: Der Dongle hatte beim Start nicht genug Speicher für den Lautsprecher-Encoder ({{kb}} KB frei). Haptik, Trigger, Mikrofon und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
+      "speakerEncoderFailed": "Lautsprecher aus: Der Dongle hatte beim Start nicht genug Speicher für den Lautsprecher-Encoder ({{kb}} KB frei). Haptik, Trigger, Mikrofon und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller.",
+      "micDecoderFailed": "Mikrofon aus: Der Dongle konnte beim Start den Decoder für das Controller-Mikrofon nicht anlegen ({{kb}} KB frei). Lautsprecher, Haptik, Trigger und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
     },
     "firmware": {
       "installed": "Installierte Firmware",
@@ -573,6 +574,7 @@
       "hardwareAccelerationSub": "Zeichnet mit der Grafikkarte: flüssiger und nötig für Unschärfe- und Glaseffekte. Schaltet sich ab, wenn die Grafikkarte abstürzt.",
       "restartToApply": "Starte die App neu, um es anzuwenden",
       "modelLabel": "Modell:",
+      "headsetIn": "Headset eingesteckt",
       "colorLabel": "Farbe:",
       "statusLabel": "Status:",
       "triggersTitle": "Adaptive Trigger",

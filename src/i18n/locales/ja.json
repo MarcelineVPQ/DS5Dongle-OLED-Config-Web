@@ -197,7 +197,8 @@
         "setFeatureCount": "ホストからの Feature 書き込み",
         "setFeatureLast": "最後のホスト Feature 書き込み"
       },
-      "speakerEncoderFailed": "スピーカーオフ：起動時にドングルのメモリがスピーカー用エンコーダーに足りませんでした（空き {{kb}} KB）。ハプティクス、トリガー、マイク、保存は使えます。ボードとコントローラーを添えて GitHub（issue #15）で報告してください。"
+      "speakerEncoderFailed": "スピーカーオフ：起動時にドングルのメモリがスピーカー用エンコーダーに足りませんでした（空き {{kb}} KB）。ハプティクス、トリガー、マイク、保存は使えます。ボードとコントローラーを添えて GitHub（issue #15）で報告してください。",
+      "micDecoderFailed": "マイクオフ：起動時にドングルがコントローラーのマイク用デコーダーを作成できませんでした（空き {{kb}} KB）。スピーカー、ハプティクス、トリガー、保存は使えます。ボードとコントローラーを添えて GitHub（issue #15）で報告してください。"
     },
     "firmware": {
       "installed": "インストール済みファームウェア",
@@ -570,6 +571,7 @@
       "hardwareAccelerationSub": "グラフィックカードで描画します：より滑らかで、ぼかしやガラス効果に必要です。グラフィックカードがクラッシュすると自動でオフになります。",
       "restartToApply": "アプリを再起動すると反映されます",
       "modelLabel": "モデル：",
+      "headsetIn": "ヘッドセット接続",
       "colorLabel": "カラー：",
       "statusLabel": "状態：",
       "triggersTitle": "アダプティブトリガー",

@@ -299,6 +299,7 @@ export const AUDIO_COUNTER_NAMES = [
 // byte arrived, without bit7: that firmware and older read as no health fields
 // (the dashboard falls back to the loop-count check alone, as before).
 export const CORE1_SPEAKER_FAILED = 0x02;
+export const CORE1_MIC_FAILED = 0x04;
 export const CORE1_HEALTH_LAYOUT = 0x80;
 export const AUDIO_COUNTERS_BYTES = 63;
 export type AudioCounters = Record<(typeof AUDIO_COUNTER_NAMES)[number], number> & { core1Flags?: number; core1FreeHeap?: number };

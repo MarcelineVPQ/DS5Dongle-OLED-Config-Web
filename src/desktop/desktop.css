@@ -3155,6 +3155,30 @@ html[data-glass] .rail-label {
   position: relative;
   z-index: 1;
 }
+/* "Mic muted" / "Headset in" under the mute button, by the headset jack
+   (LiveController places the box): icon + word in the title's label style. */
+.live-ctl-wrap {
+  position: relative;
+}
+.live-marks {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* On a panel-colored pill: on a small window it can overlap the drawing. */
+.live-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 6px;
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
 /* The specs under the drawing, in the title's style: a small label above a
    value in chunky caps. */
 .live-specs {

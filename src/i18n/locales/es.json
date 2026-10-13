@@ -197,7 +197,8 @@
         "setFeatureCount": "Escrituras de feature del host",
         "setFeatureLast": "Última escritura de feature del host"
       },
-      "speakerEncoderFailed": "Altavoz desactivado: el dongle no tuvo memoria suficiente para el codificador del altavoz al arrancar ({{kb}} KB libres). Hápticos, gatillos, micrófono y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
+      "speakerEncoderFailed": "Altavoz desactivado: el dongle no tuvo memoria suficiente para el codificador del altavoz al arrancar ({{kb}} KB libres). Hápticos, gatillos, micrófono y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando.",
+      "micDecoderFailed": "Micrófono desactivado: el dongle no pudo crear el decodificador del micrófono del mando al arrancar ({{kb}} KB libres). Altavoz, hápticos, gatillos y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
     },
     "firmware": {
       "installed": "Firmware instalado",
@@ -573,6 +574,7 @@
       "hardwareAccelerationSub": "Dibuja con la tarjeta gráfica: más fluido y necesario para el desenfoque y los efectos de cristal. Se desactiva sola si la tarjeta gráfica falla.",
       "restartToApply": "Reinicia la app para aplicarlo",
       "modelLabel": "Modelo:",
+      "headsetIn": "Auriculares conectados",
       "colorLabel": "Color:",
       "statusLabel": "Estado:",
       "triggersTitle": "Gatillos adaptativos",
