@@ -6,8 +6,8 @@
 
 const FEED = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest.json";
 const RELEASES = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest";
-// macOS builds exist but haven't been tested on a Mac yet: always labeled so.
-const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS (untested)" };
+// macOS builds are community-tested only (we have no Mac): always labeled so.
+const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS (community-tested)" };
 const KINDS = { linux: "AppImage", windows: "portable .exe", macos: ".zip" };
 
 function detectOs() {
@@ -64,7 +64,7 @@ async function main() {
     el("dl-sub").textContent = `v${version} · ${KINDS[os]} · ${mb(mine.size)}`;
   } else {
     el("dl-title").textContent = `Download v${version}`;
-    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC (Linux, Windows; macOS untested)" : "Linux and Windows (macOS untested)";
+    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC (Linux, Windows; macOS community-tested)" : "Linux and Windows (macOS community-tested)";
     el("dl-main").href = RELEASES;
   }
 
@@ -85,7 +85,8 @@ async function main() {
     note.textContent = "The Windows build hasn't been tested on a Windows PC yet. Windows SmartScreen warns that it's unsigned: choose More info → Run anyway. Reports welcome!";
   } else if (os === "macos") {
     note.hidden = false;
-    note.textContent = "The macOS build hasn't been tested on a Mac yet. Unzip it, move the app to Applications, and right-click → Open the first time (it isn't notarized). Reports welcome!";
+    note.textContent =
+      "We can't test the macOS build ourselves, but it has been reported working on macOS 27.0.1. Unzip it, move the app to Applications, and right-click → Open the first time (it isn't notarized). Reports welcome!";
   }
 }
 
