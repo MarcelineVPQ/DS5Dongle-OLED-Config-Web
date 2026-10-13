@@ -82,22 +82,19 @@
       "about": "About",
       "games": "Games"
     },
-    "hardware": {
-      "generic": "Dongle"
-    },
     "status": {
-      "connected": "{{device}} connected",
-      "waiting": "Waiting for the {{device}}…",
+      "connected": "{{deviceName}} connected",
+      "waiting": "Waiting for {{device}}…",
       "waitingFirst": "Waiting to connect…"
     },
     "empty": {
-      "title": "Plug in the DS5 Dongle"
+      "title": "Plug in {{device}}"
     },
     "bar": {
-      "unsaved": "Applied to the dongle, not saved yet: changes are lost when it powers off.",
-      "saved": "All changes saved on the dongle.",
+      "unsaved": "Applied to {{device}}, not saved yet: changes are lost when it powers off.",
+      "saved": "All changes saved on {{device}}.",
       "revert": "Revert",
-      "save": "Save to dongle",
+      "save": "Save to {{device}}",
       "profileActive": "{{title}} profile is active",
       "profileSaved": "Changes go to the profile; normal settings come back when the game closes.",
       "profileUnsaved": "Changed here, not saved to the profile yet.",
@@ -131,7 +128,7 @@
       "zeroOff": "0 = never",
       "controllerWakes": "Controller input wakes the screen",
       "usb": "USB",
-      "usbHint": "These take effect after Reconnect USB (the PC sees the dongle unplug and replug).",
+      "usbHint": "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).",
       "speakerLevel": "Volume (Speaker for Controller)",
       "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip",
       "triggerIntensity": "Trigger Effect Intensity",
@@ -154,9 +151,9 @@
       "sleepControllerOff": "Turn off the controller when the PC sleeps",
       "sleepControllerOffSub": "Once the PC has slept for 3 seconds",
       "psWakesPc": "Wake the PC with the PS button",
-      "psWakesPcSub": "The PC must keep USB powered while it sleeps and allow the keyboard to wake it. With no controller connected, the dongle appears as \"DS5 Dongle Wake Keyboard\".",
-      "pcSleepHint": "Saved on the dongle right away.",
-      "needsFirmware": "Update the dongle's firmware to use these settings.",
+      "psWakesPcSub": "The PC must keep USB powered while it sleeps and allow the keyboard to wake it. With no controller connected, {{device}} appears as \"DS5 Dongle Wake Keyboard\".",
+      "pcSleepHint": "Saved on {{device}} right away.",
+      "needsFirmware": "Update {{device}}'s firmware to use these settings.",
       "asGame": "As the game",
       "choice": {
         "auto": "Auto",
@@ -179,7 +176,7 @@
         "fav2": "FAV2",
         "fav3": "FAV3"
       },
-      "hint": "While charging, the dongle shows an amber pulse in every mode.",
+      "hint": "While charging, {{device}} shows an amber pulse in every mode.",
       "favorites": "Favorite colors",
       "favN": "FAV{{n}}"
     },
@@ -212,8 +209,8 @@
       }
     },
     "diag": {
-      "core1Frozen": "Core1 stopped: the audio path is dead until the dongle restarts.",
-      "core1StoppedAt": "Core1 stopped {{step}} (start-up step {{stage}}): the audio path is dead until the dongle restarts.",
+      "core1Frozen": "Core1 stopped: the audio path is dead until {{device}} restarts.",
+      "core1StoppedAt": "Core1 stopped {{step}} (start-up step {{stage}}): the audio path is dead until {{device}} restarts.",
       "core1Step": {
         "0": "before it started",
         "1": "while registering for flash lockout",
@@ -244,15 +241,15 @@
         "setFeatureCount": "Host feature writes",
         "setFeatureLast": "Last host feature write"
       },
-      "speakerEncoderFailed": "Speaker off: the dongle didn't have enough memory for the speaker encoder when it started ({{kb}} KB free). Haptics, triggers, the mic and saving still work. Please report this on GitHub (issue #15) with your board and controller.",
-      "micDecoderFailed": "Mic off: the dongle couldn't create the controller mic's decoder when it started ({{kb}} KB free). The speaker, haptics, triggers and saving still work. Please report this on GitHub (issue #15) with your board and controller."
+      "speakerEncoderFailed": "Speaker off: {{device}} didn't have enough memory for the speaker encoder when it started ({{kb}} KB free). Haptics, triggers, the mic and saving still work. Please report this on GitHub (issue #15) with your board and controller.",
+      "micDecoderFailed": "Mic off: {{device}} couldn't create the controller mic's decoder when it started ({{kb}} KB free). The speaker, haptics, triggers and saving still work. Please report this on GitHub (issue #15) with your board and controller."
     },
     "firmware": {
       "installed": "Installed firmware",
       "device": "Device",
       "rebooting": "Restarting… press the PS button on the controller once it's back.",
       "reboot": "Restart {{device}}",
-      "bootsel": "The dongle is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
+      "bootsel": "{{device, capitalize}} is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
       "enterBootsel": "Enter BOOTSEL mode",
       "resetDone": "Settings reset to defaults and saved.",
       "confirmInstall": "Install {{version}} now",
@@ -263,7 +260,7 @@
       "update": "Update to {{version}}",
       "upToDate": "Up to date",
       "check": "Check now",
-      "updateHint": "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.",
+      "updateHint": "{{device, capitalize}} restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.",
       "unpublished": "no release published yet",
       "offline": "can't check (offline)",
       "bundled": "included with the app",
@@ -276,20 +273,20 @@
     "usbAccess": {
       "label": "USB access rule",
       "installed": "Installed",
-      "missing": "Not installed (Steam's rules may already cover the dongle)",
+      "missing": "Not installed (Steam's rules may already cover {{device}})",
       "button": "Set up USB access"
     },
     "windowsUsb": {
       "hint": "Plugged in, the controller is on, and it still never connects? Windows may be holding an old USB setting for it.",
-      "seen": "The dongle is plugged in, but Windows hasn't set up its driver.",
+      "seen": "{{device, capitalize}} is plugged in, but Windows hasn't set up its driver.",
       "button": "Repair USB driver",
-      "done": "Repaired. Now unplug the dongle and plug it back in.",
+      "done": "Repaired. Now unplug {{device}} and plug it back in.",
       "stepsTitle": "What the repair does",
       "step": {
         "admin": "Windows asks for administrator permission (Windows PowerShell, from Microsoft). Choose No and nothing changes.",
-        "forget": "Windows forgets the USB setting it saved for the dongle's two USB IDs (054C:0CE6 and 054C:0DF2). Nothing else in the registry is touched.",
+        "forget": "Windows forgets the USB setting it saved for {{device}}'s two USB IDs (054C:0CE6 and 054C:0DF2). Nothing else in the registry is touched.",
         "entries": "It removes Windows' saved device entries for those two IDs. Windows creates them again by itself.",
-        "replug": "You unplug the dongle and plug it back in. Windows sets up its driver from scratch, and the app connects."
+        "replug": "You unplug {{device}} and plug it back in. Windows sets up its driver from scratch, and the app connects."
       },
       "showScript": "Show the exact script",
       "run": "Run the repair",
@@ -304,18 +301,18 @@
       "restart": "Restart now",
       "manual": "App update {{version}} is available on the release page.",
       "open": "Open release page",
-      "fwAvailable": "Firmware {{version}} is available for your {{device}}.",
+      "fwAvailable": "Firmware {{version}} is available for {{device}}.",
       "details": "Details",
-      "fwDontUnplug": "Updating firmware, don't unplug the dongle.",
+      "fwDontUnplug": "Updating firmware, don't unplug {{device}}.",
       "fwDone": "Firmware updated to {{version}}. Press the PS button to reconnect the controller.",
       "fwStep": {
         "downloading": "Downloading and checking the firmware…",
-        "rebooting": "Restarting the dongle into its bootloader…",
+        "rebooting": "Restarting {{device}} into its bootloader…",
         "waiting-bootloader": "Waiting for the bootloader…",
         "flashing": "Writing firmware directly; ignore the RP2350 drive if it pops up",
-        "restarting": "Restarting the dongle…",
-        "verifying": "Waiting for the dongle: press the PS button on the controller to reconnect it.",
-        "verifyingPress": "Flashed. Press the PS button on the controller: the dongle comes back once a controller connects. If it stays dark, unplug it and plug it back in."
+        "restarting": "Restarting {{device}}…",
+        "verifying": "Waiting for {{device}}: press the PS button on the controller to reconnect it.",
+        "verifyingPress": "Flashed. Press the PS button on the controller: {{device}} comes back once a controller connects. If it stays dark, unplug it and plug it back in."
       },
       "askTitle": "Keep the app up to date?",
       "askBody": "New versions can download and install by themselves, checked like every update, and start the next time you open the app. You can change this in App settings.",
@@ -358,7 +355,7 @@
           "buttons": "Buttons",
           "audio": "Audio & haptic feedback",
           "games": "Games",
-          "dongle": "Dongle & OLED",
+          "dongle": "{{deviceName}} & OLED",
           "app": "App",
           "community": "Community"
         },
@@ -379,7 +376,7 @@
       "scanning": "Checking Steam, Heroic and Lutris…",
       "protonTitle": "DualSense Proton build",
       "protonFound": "is installed.",
-      "protonMissing": "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through the dongle.",
+      "protonMissing": "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through {{device}}.",
       "protonInstall": "Install {{name}}…",
       "protonUpdate": "Install {{name}}…",
       "protonConfirm": "This downloads {{name}} ({{size}}) from the project's GitHub release, checks its SHA-256 checksum, and installs it where your launchers look for Proton builds. Existing Proton versions are not changed or removed. Afterwards you choose which launchers and games use it.",
@@ -437,7 +434,7 @@
           "audioProfile": "Switch the controller's audio to the \"{{profile}}\" profile"
         },
         "why": {
-          "defaultSteam": "Steam currently runs Windows games with {{current}}. Our build is what makes adaptive triggers and haptic feedback work through the dongle. Games you've set to a specific Proton keep their own setting.",
+          "defaultSteam": "Steam currently runs Windows games with {{current}}. Our build is what makes adaptive triggers and haptic feedback work through {{device}}. Games you've set to a specific Proton keep their own setting.",
           "defaultHeroic": "Heroic currently gives new Epic, GOG and Amazon installs {{current}}. This only affects games you install from now on; installed games keep their own setting, and this page checks those one by one.",
           "defaultLutris": "Lutris currently uses {{current}} for Wine games. Games with their own Wine version keep it.",
           "runner": "{{support}} It currently runs with {{current}}, which doesn't pass the controller's native features through.",
@@ -486,7 +483,7 @@
       "installing": "Installing the firmware…",
       "keepPlugged": "Keep the Pico plugged in.",
       "restarting": "Firmware {{version}} installed. Now pair your controller",
-      "restartingHint": "Hold the Create button and the PS button on the controller until the light bar blinks. The dongle shows up here once the controller connects (a previously paired controller just needs the PS button).",
+      "restartingHint": "Hold the Create button and the PS button on the controller until the light bar blinks. {{device, capitalize}} shows up here once the controller connects (a previously paired controller just needs the PS button).",
       "found": "A Pico is ready to set up",
       "offerBundled": "Install firmware {{version}}, included with this app (no download needed).",
       "offerOnline": "Install firmware {{version}}, the newest published version.",
@@ -496,16 +493,16 @@
       "newPico": "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.",
       "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it.",
       "turnOnTitle": "Turn on your controller",
-      "pairHint": "Press the PS button on the controller. A new controller: hold the Create button and the PS button until the light bar blinks (the dongle's screen shows \"Pair your DualSense\").",
-      "whyHidden": "The dongle only shows up on this PC once a controller is connected to it.",
+      "pairHint": "Press the PS button on the controller. A new controller: hold the Create button and the PS button until the light bar blinks ({{device}}'s screen shows \"Pair your DualSense\").",
+      "whyHidden": "{{device, capitalize}} only shows up on this PC once a controller is connected to it.",
       "updatesTitle": "Updates",
       "fwReady": "This app installs firmware {{version}}.",
-      "fwHowTo": "To update or reinstall the firmware without a controller: hold the Pico's BOOTSEL button while you plug the dongle in. This screen then offers to install it.",
+      "fwHowTo": "To update or reinstall the firmware without a controller: hold the Pico's BOOTSEL button while you plug {{device}} in. This screen then offers to install it.",
       "checkUpdates": "Check for updates",
       "checkedCurrent": "The app is up to date ({{version}}).",
       "checkedNewer": "App {{version}} is available: see the banner at the top.",
-      "checkedFwNewer": "Firmware {{version}} is available for the dongle: see the banner at the top.",
-      "checkedFwCurrent": "The dongle's firmware is up to date ({{version}}).",
+      "checkedFwNewer": "Firmware {{version}} is available for {{device}}: see the banner at the top.",
+      "checkedFwCurrent": "{{device, capitalize}}'s firmware is up to date ({{version}}).",
       "checkFailed": "Couldn't check for updates. Are you online?"
     },
     "live": {
@@ -538,7 +535,7 @@
         "body": "Haptic feedback"
       },
       "pickHint": "Click any part of the drawing to set it up.",
-      "needsFirmware": "Update the dongle's firmware to see the controller move live.",
+      "needsFirmware": "Update {{device}}'s firmware to see the controller move live.",
       "overview": "Your controller",
       "app": "App settings",
       "close": "Close",
@@ -548,7 +545,7 @@
       "remap": "Button assignments",
       "remapActs": "Acts as",
       "remapDefault": "default",
-      "remapHint": "Button assignments are written to the dongle when you press Apply and work in every game, with no software on the PC.",
+      "remapHint": "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.",
       "remapApply": "Apply assignments",
       "remapReset": "Reset all buttons",
       "remapResetHint": "Every button back to itself",
@@ -576,7 +573,7 @@
       "edgePart": {
         "fn": "The DualSense Edge's Fn button. Hold it with other buttons to switch the controller's custom profiles. It lights up here when you press it.",
         "paddle": "One of the DualSense Edge's back buttons. The controller's custom profiles can make it act as any button. It lights up here when you press it.",
-        "soon": "Assigning them needs the newest dongle firmware (Pico page → Update)."
+        "soon": "Assigning them needs the newest firmware on {{device}} ({{deviceName}} → Update)."
       },
       "go": {
         "intro": "Click a part of the drawing with your mouse, or pick a setting here:",
@@ -612,7 +609,7 @@
       "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app",
       "hapticSilent": "Silent: nothing is sending haptic feedback right now. It moves while a game plays haptic feedback, or with Audio Auto Haptics on while sound plays.",
       "speakerSilent": "Silent: nothing is playing on the controller's speaker right now.",
-      "levelLive": "Live from the dongle.",
+      "levelLive": "Live from {{device}}.",
       "hardwareAcceleration": "Hardware acceleration",
       "hardwareAccelerationSub": "Draws with the graphics card: smoother, and needed for blur and glass effects. Turns itself off if the graphics card crashes.",
       "restartToApply": "Restart the app to apply",
@@ -657,7 +654,7 @@
       },
       "panel": {
         "title": "Settings open here",
-        "body": "Changes go to the dongle right away, so you see, hear and feel them as you go. ✕ closes the panel."
+        "body": "Changes go to {{device}} right away, so you see, hear and feel them as you go. ✕ closes the panel."
       },
       "list": {
         "title": "Or pick from the list",
@@ -665,11 +662,11 @@
       },
       "save": {
         "title": "Keep what you like",
-        "body": "Changes are live but temporary. Save to dongle keeps them after it powers off; Revert goes back to what's saved."
+        "body": "Changes are live but temporary. Save to {{device}} keeps them after it powers off; Revert goes back to what's saved."
       },
       "top": {
-        "title": "The dongle, your games, and help",
-        "body": "{{device}}: firmware updates, the OLED, power and USB. Games: get Steam and other launchers ready for triggers and haptic feedback (Linux). About: what's new and the guide. ⚙: the app's own settings."
+        "title": "{{deviceName}}, your games, and help",
+        "body": "{{deviceName}}: firmware updates, the OLED, power and USB. Games: get Steam and other launchers ready for triggers and haptic feedback (Linux). About: what's new and the guide. ⚙: the app's own settings."
       },
       "finish": {
         "title": "You're all set",
@@ -773,8 +770,8 @@
       "activeNow": "Active now",
       "profileNone": "This game uses your normal settings. A profile changes any controller setting (haptic feedback, speaker, light bar, microphone, buttons, sticks) for this game only, and switches back when it closes.",
       "profileFromCurrent": "Create from current settings",
-      "profileNeedsDongle": "Connect the dongle to start from your current settings.",
-      "profileHint": "Changes are saved to this game's profile, not to the dongle.",
+      "profileNeedsDongle": "Connect {{device}} to start from your current settings.",
+      "profileHint": "Changes are saved to this game's profile, not to {{device}}.",
       "profileCopyCurrent": "Copy current settings",
       "profileDelete": "Delete profile",
       "haptics": "Vibration intensity",
@@ -828,7 +825,7 @@
         "unknown": "Unknown"
       },
       "tierHint": {
-        "verified": "Tested on the dongle: triggers and haptic feedback work.",
+        "verified": "Tested on {{device}}: triggers and haptic feedback work.",
         "works": "The game supports DualSense features natively.",
         "needs-setup": "Works once this game's setup is done.",
         "partial": "Some DualSense features are missing on PC. Audio Auto Haptics can fill in vibration.",
@@ -934,13 +931,13 @@
       "lockVolume": "Lock volume"
     },
     "dongleConsole": {
-      "title": "{{device}} console",
+      "title": "{{deviceName}} console",
       "pane": {
         "screen": "Screen",
         "log": "Log"
       },
-      "noDongle": "Waiting for the dongle",
-      "needsFirmware": "Update the dongle's firmware to see its screen",
+      "noDongle": "Waiting for {{device}}",
+      "needsFirmware": "Update {{device}}'s firmware to see its screen",
       "unavailable": "Screen not available, retrying",
       "connecting": "Reading the screen…",
       "live": "Live",
@@ -949,18 +946,18 @@
       "screenN": "Screen {{n}}/{{total}}",
       "brightness": "Brightness {{pct}}%",
       "frame": "Frame {{n}}",
-      "hint": "Exactly what the dongle's screen shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1 on the dongle.",
+      "hint": "Exactly what {{device}}'s screen shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1 on {{device}}.",
       "logEmpty": "Nothing yet.",
       "log": {
-        "online": "{{device}} connected (protocol {{version}})",
-        "offline": "{{device}} disconnected",
+        "online": "{{deviceName}} connected (protocol {{version}})",
+        "offline": "{{deviceName}} disconnected",
         "controller": "Controller connected (slot {{slot}})",
         "controllerGone": "Controller disconnected",
         "slot": "Switched to slot {{slot}}",
         "charging": "Controller charging",
         "notCharging": "Controller stopped charging",
         "battery": "Battery {{pct}}%",
-        "saved": "Settings saved on the dongle"
+        "saved": "Settings saved on {{device}}"
       }
     },
     "rail": {
@@ -1051,7 +1048,7 @@
     },
     "dev": {
       "title": "Developer",
-      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to the dongle. Ctrl+Shift+D hides this card. Shown on the Development channel.",
+      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to {{device}}. Ctrl+Shift+D hides this card. Shown on the Development channel.",
       "model": "Model",
       "colorway": "Colorway",
       "real": "The real one",
@@ -1072,11 +1069,11 @@
         "ready": "Ready / waiting"
       },
       "fakeSlots": "Pretend more controllers",
-      "fakeSlotsHint": "Slots 1 and 2 show as paired (a Midnight Black Edge and a Galactic Purple DualSense). Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to the dongle.",
-      "simulated": "Simulated dongle (no hardware)",
-      "simulatedHint": "The app talks to a simulated dongle instead of USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
+      "fakeSlotsHint": "Slots 1 and 2 show as paired (a Midnight Black Edge and a Galactic Purple DualSense). Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
+      "simulated": "Simulate {{device}} (no hardware)",
+      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
       "simCore1": "Simulated core1",
-      "simCore1Hint": "Make the simulated dongle's core1 stop at a start-up step, to see the Pico page's warning. Restarts the page.",
+      "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}. Restarts the page.",
       "simCore1Runs": "Runs normally",
       "simCore1Stage": "Stops at step {{stage}}: {{step}}"
     },
@@ -1095,8 +1092,8 @@
     "calib": {
       "title": "Calibration",
       "shortcut": "Stick drift, deadzones, trigger travel, gyroscope",
-      "intro": "Corrects stick drift, deadzones, trigger travel and the gyroscope's zero inside the dongle, for every game. Nothing is written to the controller; Reset undoes it.",
-      "needsFirmware": "Update the dongle's firmware to calibrate.",
+      "intro": "Corrects stick drift, deadzones, trigger travel and the gyroscope's zero inside {{device}}, for every game. Nothing is written to the controller; Reset undoes it.",
+      "needsFirmware": "Update {{device}}'s firmware to calibrate.",
       "needsController": "Connect a controller to calibrate.",
       "noInput": "No input from the controller during that step. Try again.",
       "start": "Start calibration",
@@ -1121,10 +1118,10 @@
       "now": "now {{raw}} → {{out}}",
       "gyro": "Gyroscope",
       "gyroZero": "Zero offset:",
-      "save": "Save to dongle",
+      "save": "Save to {{device}}",
       "revert": "Revert",
       "reset": "Reset to uncalibrated",
-      "saveHint": "Saved in the dongle's own memory; it applies to every game right away.",
+      "saveHint": "Saved in {{device}}'s own memory; it applies to every game right away.",
       "forSlot": "For the controller in pairing slot {{slot}}; each slot keeps its own.",
       "getReady": "Get ready…",
       "missed": "Not measured, so the old values were kept: {{parts}}. Go all the way on those and measure again.",
@@ -1132,7 +1129,7 @@
     },
     "curves": {
       "title": "Sensitivity curve",
-      "intro": "How each stick responds between center and full tilt. Applied in the dongle after calibration, so it works in every game.",
+      "intro": "How each stick responds between center and full tilt. Applied in {{device}} after calibration, so it works in every game.",
       "curve": "Curve",
       "type": {
         "linear": "Linear",
@@ -1160,10 +1157,10 @@
       "keyLinear": "Linear",
       "keyLive": "Your stick now",
       "gameOn": "A game's profile has its own curves on right now. Saving here ends them until that game starts again.",
-      "needsFirmware": "Update the dongle's firmware for sensitivity curves.",
-      "readFailed": "The dongle didn't answer with its curves.",
+      "needsFirmware": "Update {{device}}'s firmware for sensitivity curves.",
+      "readFailed": "{{device, capitalize}} didn't answer with its curves.",
       "resetLinear": "Back to Linear",
-      "saveHint": "Saved in the dongle for the controller in pairing slot {{slot}}; applies to every game right away.",
+      "saveHint": "Saved in {{device}} for the controller in pairing slot {{slot}}; applies to every game right away.",
       "profileLeft": "Left stick curve",
       "profileRight": "Right stick curve",
       "profileSaved": "My saved curve",
@@ -1171,7 +1168,7 @@
     },
     "ctrlInfo": {
       "title": "Controller info",
-      "needsFirmware": "Update the dongle's firmware to see the controller's firmware, battery voltage and lifetime counters.",
+      "needsFirmware": "Update {{device}}'s firmware to see the controller's firmware, battery voltage and lifetime counters.",
       "noController": "Connect a controller to see its info.",
       "charge": "Charging",
       "chargeState": {
@@ -1217,7 +1214,7 @@
       "howToPc": "Plug the controller into a Windows PC with a USB-C cable and update it with Sony's PlayStation Accessories app (formerly \"Firmware updater for DualSense wireless controller\").",
       "sonyPage": "Sony's page",
       "howToPs5": "Or on a PS5: connect it with a USB cable, then Settings → Accessories → Controller (General) → DualSense Wireless Controller Device Software.",
-      "howToCable": "The update can't go through the dongle. Afterwards, pair the controller with the dongle again if it doesn't reconnect.",
+      "howToCable": "The update can't go through {{device}}. Afterwards, pair the controller with {{device}} again if it doesn't reconnect.",
       "windowsOnly": "Sony's PlayStation Accessories app runs on Windows only: on Linux and macOS, use a Windows PC or a PS5."
     },
     "stickTest": {
@@ -1328,8 +1325,8 @@
       "devHint": "Development builds of the app and the firmware, before they're released: newer, and less tested. You also get every stable release. Back to stable installs the latest stable app and firmware.",
       "backToStable": "Back to stable",
       "joinTitle": "Join the Development channel?",
-      "joinNewer": "You get builds of the app and the dongle firmware before they're released: newer features, sooner.",
-      "joinBoth": "Both are offered: the app updates itself, the firmware update shows on the Pico page as usual.",
+      "joinNewer": "You get builds of the app and of {{device}}'s firmware before they're released: newer features, sooner.",
+      "joinBoth": "Both are offered: the app updates itself, the firmware update shows under {{deviceName}} as usual.",
       "joinBugs": "They're less tested than stable releases and can have bugs. Please report what you find.",
       "joinBack": "Back to stable (App settings → Updates) returns to the latest stable app and firmware at any time.",
       "joinLatest": "Newest development build",
@@ -1343,7 +1340,7 @@
     },
     "layouts": {
       "title": "Button layouts",
-      "hint": "Save the buttons above under a name. A game's profile can use a layout: it's switched in while the game runs (never saved on the dongle), and your normal buttons come back when it ends.",
+      "hint": "Save the buttons above under a name. A game's profile can use a layout: it's switched in while the game runs (never saved on {{device}}), and your normal buttons come back when it ends.",
       "none": "No saved layouts yet.",
       "load": "Load",
       "loadHint": "Put this layout into the editor above (Apply assignments makes it your normal buttons)",
@@ -1355,11 +1352,11 @@
       "namePlaceholder": "Layout name, e.g. Racing",
       "usedBy_one": "used by {{count}} game",
       "usedBy_other": "used by {{count}} games",
-      "activeNotice": "{{game}}'s button layout is on the dongle now. Apply assignments saves your normal buttons and ends it until the game starts again.",
+      "activeNotice": "{{game}}'s button layout is on {{device}} now. Apply assignments saves your normal buttons and ends it until the game starts again.",
       "aGame": "A game",
       "profileLabel": "Button layout",
       "normal": "Normal buttons",
-      "needsFirmware": "Needs the newest dongle firmware (Pico page → Update).",
+      "needsFirmware": "Needs the newest firmware on {{device}} ({{deviceName}} → Update).",
       "noneForGame": "Save layouts on the Buttons page: pick a button on the controller.",
       "allTitle": "Buttons",
       "allHeading": "All buttons",
@@ -1377,9 +1374,9 @@
       "loadedEdited": "edited",
       "loadedChip": "Loaded",
       "loadedState": {
-        "notApplied": "Not applied yet: Apply assignments makes it your normal buttons on the dongle.",
+        "notApplied": "Not applied yet: Apply assignments makes it your normal buttons on {{device}}.",
         "edited": "Changed since you loaded it: Update saves the changes into the layout; Apply assignments makes them your normal buttons.",
-        "applied": "Applied: these are your normal buttons on the dongle now."
+        "applied": "Applied: these are your normal buttons on {{device}} now."
       },
       "extraSelf": "Itself (default)"
     },
@@ -1393,8 +1390,8 @@
       "open": "Edit in controller view",
       "openHint": "Put this profile on the controller and edit it with every panel, feeling each change live",
       "buttonsNote": "{{title}}'s profile is on: buttons go into this game's layout with Save to profile, not into your normal buttons.",
-      "dongleNote": "Not part of {{title}}'s profile: dongle settings stay your normal ones. Changes here are kept after the profile ends; save them to the dongle then.",
-      "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: saving it changes it in the dongle for every game.",
+      "dongleNote": "Not part of {{title}}'s profile: these settings on {{device}} stay your normal ones. Changes here are kept after the profile ends; save them to {{device}} then.",
+      "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: saving it changes it in {{device}} for every game.",
       "curvesNote": "{{title}}'s profile is on: curves go into this game's profile with Save to profile and are felt from then on; your normal curves come back after.",
       "curvesNormal": "This stick uses your normal curve in this game."
     },
@@ -1406,11 +1403,11 @@
       "normalSub": "Your normal setting",
       "on": "On",
       "off": "Off",
-      "copyHint": "This game gets the settings on the dongle now",
-      "applyFailed": "{{title}}'s profile didn't go on the dongle ({{reason}}). Your normal settings are on.",
-      "partlyOn": "{{title}}'s profile may be on without its buttons or stick curves ({{reason}}). It's tried again when the dongle reconnects.",
+      "copyHint": "This game gets the settings on {{device}} now",
+      "applyFailed": "{{title}}'s profile didn't go on {{device}} ({{reason}}). Your normal settings are on.",
+      "partlyOn": "{{title}}'s profile may be on without its buttons or stick curves ({{reason}}). It's tried again when {{device}} reconnects.",
       "saveFailed": "Not saved to {{title}}'s profile: {{reason}}",
-      "notOn": "{{title}}'s profile isn't on the dongle yet, so nothing was saved into it. Try again once it's on."
+      "notOn": "{{title}}'s profile isn't on {{device}} yet, so nothing was saved into it. Try again once it's on."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Change the color",

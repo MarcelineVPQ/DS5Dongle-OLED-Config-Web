@@ -85,5 +85,5 @@ async function waitForBootloader(): Promise<PicoflashHandle> {
     if (device) return device;
     await new Promise((r) => setTimeout(r, 300));
   }
-  throw new Error("The dongle didn't come back in BOOTSEL mode. Unplug it, hold BOOTSEL while plugging it in, and try again.");
+  throw new Error("Your board didn't come back in BOOTSEL mode. Unplug it, hold BOOTSEL while plugging it in, and try again.");
 }

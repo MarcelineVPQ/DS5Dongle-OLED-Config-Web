@@ -2,17 +2,17 @@
 
 Step by step, from the parts on your desk to every setting in the app. Each section has a picture of exactly what it describes.
 
-- [1. Build the dongle](#1-build-the-dongle)
+- [1. Build your board](#1-build-your-board)
 - [2. First start: firmware and pairing](#2-first-start-firmware-and-pairing)
 - [3. The Controller page](#3-the-controller-page)
 - [4. Each part of the controller](#4-each-part-of-the-controller)
 - [5. Calibration](#5-calibration)
-- [6. The Dongle page](#6-the-dongle-page)
+- [6. Your board's page](#6-your-boards-page)
 - [7. Games](#7-games)
 - [8. App settings](#8-app-settings)
 - [9. Troubleshooting](#9-troubleshooting)
 
-## 1. Build the dongle
+## 1. Build your board
 
 ### Parts
 
@@ -28,11 +28,11 @@ Step by step, from the parts on your desk to every setting in the app. Each sect
 2. **The screen:** the OLED board plugs straight onto the Pico's headers, no wiring. Seat it with its **KEY0 / KEY1 buttons at the end away from the Pico's USB port** (in the photo below, the USB cable goes in on the right) and press it down evenly.
 3. **Plug it in** (next section).
 
-![A finished dongle: the Pico-OLED-1.3 seated on the Pico 2 W, KEY0 and KEY1 on the left, the USB cable going in on the right](screenshots/guide-hardware.png)
+![A finished board: the Pico-OLED-1.3 seated on the Pico 2 W, KEY0 and KEY1 on the left, the USB cable going in on the right](screenshots/guide-hardware.png)
 
 ### Which USB port
 
-**Use a USB 2.0 port** (usually the black ones, not blue). USB 3.0 ports and USB 3.0 extension cables give off radio noise right in the 2.4 GHz band Bluetooth uses: the controller then gets stuck on an **amber light bar** and never connects. If you only have USB 3.0 ports nearby, use a short **USB 2.0** extension cable or a powered **USB 2.0** hub to move the dongle a little away from them. The dongle takes its power from the USB port; it needs nothing else.
+**Use a USB 2.0 port** (usually the black ones, not blue). USB 3.0 ports and USB 3.0 extension cables give off radio noise right in the 2.4 GHz band Bluetooth uses: the controller then gets stuck on an **amber light bar** and never connects. If you only have USB 3.0 ports nearby, use a short **USB 2.0** extension cable or a powered **USB 2.0** hub to move your board a little away from them. Your board takes its power from the USB port; it needs nothing else.
 
 ## 2. First start: firmware and pairing
 
@@ -45,11 +45,11 @@ The app includes the matching firmware, so this works offline.
 
 ### Pair your controller
 
-Hold the **Create button** and the **PS button** on the controller until the light bar blinks. The dongle finds it and the app shows it a moment later. A controller that was paired before only needs the **PS button**.
+Hold the **Create button** and the **PS button** on the controller until the light bar blinks. Your board finds it and the app shows it a moment later. A controller that was paired before only needs the **PS button**.
 
 ### USB access (Linux)
 
-On Linux, press **Set up USB access** on the Dongle page once (it asks for your password). It lets the app open the dongle, and on newer Ubuntu it also lets the app run inside its security sandbox.
+On Linux, press **Set up USB access** on your board's page once (it asks for your password). It lets the app open your board, and on newer Ubuntu it also lets the app run inside its security sandbox.
 
 ## 3. The Controller page
 
@@ -61,8 +61,8 @@ Your controller (a DualSense in its colorway, or a DualSense Edge with its Fn bu
 - **The tiles** under the drawing: battery, signal, light bar mode, and the player light and pairing slot.
 - **Under the drawing's Mute button:** **Mic muted** while the controller's mute light is on, and **Headset in** while headphones are plugged into its headset jack.
 - **The cards**: inputs (sticks, triggers, buttons, touch pad), gyroscope, accelerometer, and the connection (update rate, round trip, headset and mic).
-- **Controller info:** the controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch) with **Up to date** or **Newer official firmware available**, its battery (level, charge state, voltage), and the lifetime counters it keeps itself (time played, charging, haptic feedback and trigger time, charges, connections; in a fold-out, every button's presses and each stick's round trips). **How to update** explains Sony's way: a USB-C cable to a Windows PC with Sony's **PlayStation Accessories** app, or a PS5 (not through the dongle; pair the controller with the dongle again afterwards if needed). The app only checks Sony's version list; it never installs Sony firmware. Read only, and the controller's serial number is never read into the app.
-- **Changes apply right away.** **Save to dongle** in the bottom bar keeps them after the dongle is unplugged; **Revert** goes back to what's saved.
+- **Controller info:** the controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch) with **Up to date** or **Newer official firmware available**, its battery (level, charge state, voltage), and the lifetime counters it keeps itself (time played, charging, haptic feedback and trigger time, charges, connections; in a fold-out, every button's presses and each stick's round trips). **How to update** explains Sony's way: a USB-C cable to a Windows PC with Sony's **PlayStation Accessories** app, or a PS5 (not through your board; pair the controller with your board again afterwards if needed). The app only checks Sony's version list; it never installs Sony firmware. Read only, and the controller's serial number is never read into the app.
+- **Changes apply right away.** **Save to the Pico 2 W** (the button names your board) in the bottom bar keeps them after your board is unplugged; **Revert** goes back to what's saved.
 
 ## 4. Each part of the controller
 
@@ -97,15 +97,15 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 
 ![Assigning a button](screenshots/guide-remap.png)
 
-Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in the dongle and work in every game, on any computer.
+Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in your board and work in every game, on any computer.
 
-**Saved button layouts:** save the buttons under a name ("Racing", "Southpaw") and give a layout to any game's profile. It switches in while that game runs (never written to the dongle's memory, so nothing wears out) and your normal buttons come back when it ends. Each layout lists what it changes ("Cross → Circle · L1 → R1"); edit it once and every game using it follows. Needs the newest dongle firmware.
+**Saved button layouts:** save the buttons under a name ("Racing", "Southpaw") and give a layout to any game's profile. It switches in while that game runs (never written to your board's memory, so nothing wears out) and your normal buttons come back when it ends. Each layout lists what it changes ("Cross → Circle · L1 → R1"); edit it once and every game using it follows. Needs the newest firmware on your board.
 
 ### Pairing slots
 
 ![The pairing slots](screenshots/guide-slots.png)
 
-The dongle remembers up to four controllers (slots 0–3). **Switch** to another slot, **Forget** one, or forget all. Each slot keeps its own calibration.
+Your board remembers up to four controllers (slots 0–3). **Switch** to another slot, **Forget** one, or forget all. Each slot keeps its own calibration.
 
 ## 5. Calibration
 
@@ -119,19 +119,21 @@ For stick drift, sticks that don't reach the edge, triggers that don't reach ful
    3. press both triggers all the way, then let go;
    4. put the controller down and don't touch it.
 2. Check the previews: **Raw** (what the stick really does) next to **What games see**. Adjust the **deadzone** and **full tilt** by hand if you like.
-3. **Save to dongle.** It applies to every game right away.
+3. **Save to the Pico 2 W** (your board's name). It applies to every game right away.
 
-A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in the dongle, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
+A step that didn't go all the way (a trigger pressed halfway, the controller moved) keeps the old values and tells you which part to redo. Calibration lives in your board, per pairing slot; nothing is written to the controller, and **Reset to uncalibrated** undoes it.
 
-**Sensitivity curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Quick** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to dongle** keeps it for this pairing slot, after the calibration, in every game. A game's profile can use its own curve per stick (pick it in the controller view while you edit the profile), used only while the game runs.
+**Sensitivity curve** (below the stick cards): how each stick responds between center and full tilt. Pick **Linear** (the stick as it is), **Precise** or **Steady** (a slow start for fine aiming), **Quick** (a quick start) or **Digital** (almost on/off), or **Custom** and drag its four points (or select one with Tab and move it with the arrow keys). The graph shows the curve against a dashed straight line and a dot where your stick is now; **Save to the Pico 2 W** keeps it for this pairing slot, after the calibration, in every game. A game's profile can use its own curve per stick (pick it in the controller view while you edit the profile), used only while the game runs.
 
 **Stick tests** (below the sensitivity curve): the **circularity test** draws the outline each stick reaches when you roll it around its edge against a perfect circle, with the average error (under about 10% is typical for a healthy DualSense), raw or with your calibration applied. The **drift test** watches the sticks for 10 seconds while you leave them alone and graphs any movement, so you can see whether to recenter or raise the deadzone.
 
-## 6. The Dongle page
+## 6. Your board's page
 
-![The Dongle page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)
+The side bar names this page after your board (**Pico 2 W**, for example), and the app's buttons and messages use that name too.
 
-- **Dongle console:** the dongle's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on the dongle.
+![Your board's page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)
+
+- **Console:** your board's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on your board.
 - **The dashboard:** the Pico 2 W's chip temperature, CPU clock and core voltage; graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and the OLED's brightness, state and timeouts.
 - **Timing** (firmware with protocol 1.11): how long each part of the firmware takes, average and worst case since the last **Reset**, for tracking down audio stutters.
 
@@ -139,10 +141,10 @@ A step that didn't go all the way (a trigger pressed halfway, the controller mov
 
 In the panel on the right:
 
-- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (the dongle restarts itself; press the PS button on the controller afterwards).
-- **Device:** restart the dongle, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
+- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards).
+- **Device:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
 - **Power:** disconnect the controller when idle, the timeout, the Pico's status light.
-- **PC sleep:** turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, the dongle appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on the dongle at once.
+- **PC sleep:** turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
 - **OLED display:** brightness, dim and off timeouts, whether controller input wakes the screen.
 - **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
 
@@ -158,7 +160,7 @@ The first time, the app asks before reading anything; it then lists your **Steam
 ![A game page](screenshots/guide-game-page.png)
 
   - **Play**, and links to its Steam properties, Steam Input layout, store page, install folder and Proton prefix.
-  - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in the dongle's memory only, never saved to its flash.
+  - **Controller profile:** only what this game changes from your normal settings (haptic feedback, Audio Auto Haptics, the audio buffer, speaker, light bar mode and favorite colors, mic, a saved **button layout** and each stick's curve), shown as chips; the × on a chip goes back to your normal setting. **Edit in controller view** puts the profile on the controller so you feel it while you edit (every panel then edits the profile; **Done** brings your normal settings back), and **All settings** is for quick edits. It switches in while the game runs and your normal settings come back when it closes (also after a crash). While you edit or the game runs, the profile is in your board's memory only, never saved to its flash.
   - **Setup:** this game's recommended fixes, applied with a backup you can undo.
   - **Compatibility:** which Proton it runs with, and the recommended one (with a one-click switch).
   - **DualSense support:** how well it works (Verified, Works, Needs setup, Partial, Broken) and per feature.
@@ -181,12 +183,12 @@ Open with the ⚙ in the rail.
 
 | Problem | What to do |
 | --- | --- |
-| The light bar stays **amber** and never connects | Move the dongle to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
-| **Windows:** "The dongle is plugged in, but Windows hasn't set up its driver", or it never connects | Press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. It happens on PCs where a real DualSense was plugged in by USB before (it uses the same USB IDs); do it again if that happens again. |
-| Nothing shows up when the dongle is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
+| The light bar stays **amber** and never connects | Move your board to a **USB 2.0** port, or onto a short USB 2.0 extension away from USB 3.0 ports (radio noise; see [Which USB port](#which-usb-port)). Leave it 10–20 s: the firmware retries on its own. |
+| **Windows:** "The Pico 2 W is plugged in, but Windows hasn't set up its driver", or it never connects | Press **Repair USB driver** on that screen, allow the admin prompt, then unplug your board and plug it back in. It happens on PCs where a real DualSense was plugged in by USB before (it uses the same USB IDs); do it again if that happens again. |
+| Nothing shows up when your board is plugged in | Try another cable (charge-only cables don't carry data). On Linux, press **Set up USB access**. |
 | "Not connected" | Press the **PS button** on the controller. After a firmware update or a slot switch it doesn't reconnect by itself. A new controller: hold the **Create button** and the **PS button**. |
-| Settings reset after unplugging | They were applied but not saved: press **Save to dongle**. |
-| The drawing doesn't move, or a page says "update the firmware" | Update the dongle's firmware from the Dongle page. |
+| Settings reset after unplugging | They were applied but not saved: press **Save to the Pico 2 W** (your board's name). |
+| The drawing doesn't move, or a page says "update the firmware" | Update your board's firmware from your board's page. |
 | The narrator is silent | She speaks only through the controller's speaker, and only when the narrator is on (App settings → Accessibility). Check the controller's volume. |
 | The app window doesn't appear | It may be in the tray: click the tray icon. |
 | A soft reboot without unplugging | Hold **PS + Mute** for 2 seconds, or **KEY0 + KEY1** on the OLED for 1 second. |

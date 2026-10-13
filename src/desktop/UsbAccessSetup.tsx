@@ -28,7 +28,7 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
       {!compact && (
         <span className="dk-label">
           {t("desktop.usbAccess.label", "USB access rule")}
-          <span className="dk-sub">{installed ? t("desktop.usbAccess.installed", "Installed") : t("desktop.usbAccess.missing", "Not installed (Steam's rules may already cover the dongle)")}</span>
+          <span className="dk-sub">{installed ? t("desktop.usbAccess.installed", "Installed") : t("desktop.usbAccess.missing", "Not installed (Steam's rules may already cover {{device}})")}</span>
         </span>
       )}
       <div className="dk-ctl" style={compact ? { justifyContent: "center" } : undefined}>

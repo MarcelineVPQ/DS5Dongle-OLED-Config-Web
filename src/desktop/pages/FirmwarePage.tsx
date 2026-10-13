@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { errorText } from "../../errorText";
-import { hardwareName } from "../hardwareName";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
@@ -104,7 +103,10 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           </p>
         )}
         <p className="dk-hint">
-          {t("desktop.firmware.updateHint", "The dongle restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.")}
+          {t(
+            "desktop.firmware.updateHint",
+            "{{device, capitalize}} restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.",
+          )}
         </p>
       </section>
 
@@ -117,12 +119,12 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
             disabled={!client || busy}
             onClick={() => act(() => client!.reboot(), t("desktop.firmware.rebooting", "Restarting… press the PS button on the controller once it's back."))}
           >
-            {t("desktop.firmware.reboot", { device: hardwareName(bridge.identity, t) })}
+            {t("desktop.firmware.reboot")}
           </BusyButton>
           <BusyButton
             className="dk-btn"
             disabled={!client || busy}
-            onClick={() => act(() => client!.enterBootsel(), t("desktop.firmware.bootsel", "The dongle is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel."))}
+            onClick={() => act(() => client!.enterBootsel(), t("desktop.firmware.bootsel", "{{device, capitalize}} is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel."))}
           >
             {t("desktop.firmware.enterBootsel", "Enter BOOTSEL mode")}
           </BusyButton>

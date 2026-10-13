@@ -80,11 +80,11 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
   // neutral line if none has yet.
   const lastBoard = connected ? null : lastBoardName();
   const status = connected
-    ? `${t("desktop.status.connected", { device })}${firmware ? ` · ${firmware}` : ""}`
+    ? `${t("desktop.status.connected")}${firmware ? ` · ${firmware}` : ""}`
     : connecting
       ? t("statusText.connecting")
       : lastBoard
-        ? t("desktop.status.waiting", { device: lastBoard })
+        ? t("desktop.status.waiting")
         : t("desktop.status.waitingFirst");
   const pinLabel = pinned ? t("desktop.rail.collapse") : t("desktop.rail.pin");
 
@@ -110,7 +110,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
               <span className="rail-dot">{connected ? "✓" : "…"}</span>
             </span>
             <span className="rail-label rail-status-text">
-              <span>{connected ? t("desktop.status.connected", { device }) : status}</span>
+              <span>{connected ? t("desktop.status.connected") : status}</span>
               {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
             </span>
           </div>

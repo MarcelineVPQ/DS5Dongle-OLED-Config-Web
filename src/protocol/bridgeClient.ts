@@ -185,7 +185,7 @@ function boardNameFrom(raw: Uint8Array): string | null {
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
   if (bytes.length < 20 || bytes[0] !== 0x44 || bytes[1] !== 0x53 || bytes[2] !== 0x35 || bytes[3] !== 0x4f) {
-    throw new Error("The dongle did not identify itself (expected DS5O). Update the firmware.");
+    throw new Error("Your board did not identify itself (expected DS5O). Update the firmware.");
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   return {
@@ -233,7 +233,7 @@ export class CommandError extends Error {
     public readonly func: number,
     public readonly result: CommandResult,
   ) {
-    super(`Dongle command 0x${func.toString(16).padStart(2, "0")} ${result === "failed" ? "failed" : `was rejected (${result})`}`);
+    super(`Command 0x${func.toString(16).padStart(2, "0")} ${result === "failed" ? "failed" : `was rejected (${result})`}`);
     this.name = "CommandError";
   }
 }
@@ -373,7 +373,7 @@ export class Ds5BridgeClient {
   async checkCompatible(): Promise<BridgeIdentity> {
     const id = await this.identity();
     if (id.protoMajor !== SUPPORTED_PROTO_MAJOR) {
-      throw new Error(`Dongle protocol ${id.protoMajor}.${id.protoMinor} is not supported by this app (needs ${SUPPORTED_PROTO_MAJOR}.x). Update the app or the firmware.`);
+      throw new Error(`Firmware protocol ${id.protoMajor}.${id.protoMinor} is not supported by this app (needs ${SUPPORTED_PROTO_MAJOR}.x). Update the app or the firmware.`);
     }
     return id;
   }
@@ -405,10 +405,10 @@ export class Ds5BridgeClient {
         if (cause instanceof DeviceGoneError) return "gone";
         throw cause;
       }
-      if (id.sequence !== expected) throw new Error("Another program sent a command to the dongle at the same time. Try again.");
+      if (id.sequence !== expected) throw new Error("Another program sent a command to your board at the same time. Try again.");
       if (id.lastResult === "ok") return "ok";
       if (id.lastResult !== "pending") throw new CommandError(func, id.lastResult);
-      if (Date.now() > deadline) throw new Error("The dongle did not finish the command in time.");
+      if (Date.now() > deadline) throw new Error("Your board did not finish the command in time.");
       await sleep(POLL_INTERVAL_MS);
     }
   }
@@ -631,7 +631,7 @@ export class Ds5BridgeClient {
   // Bluetooth from its main loop; this polls until it's done.
   async runControllerTest(dev: number, action: number, pages: number): Promise<Uint8Array | null> {
     const before = await this.readControllerHeader();
-    if (!before) throw new Error("The dongle sent no controller info.");
+    if (!before) throw new Error("Your board sent no controller info.");
     await this.command(FUNC.controllerTest, [dev, action, pages]);
     const expected = (before.request + 1) & 0xff;
     const deadline = Date.now() + CONTROLLER_TEST_TIMEOUT_MS;

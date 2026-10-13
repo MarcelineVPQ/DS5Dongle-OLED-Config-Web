@@ -120,7 +120,7 @@ function simTelemetry(edge: boolean): Uint8Array {
 }
 
 export class SimulatedDongle implements Ds5Transport {
-  readonly label = "Simulated dongle";
+  readonly label = "Simulation";
   private readonly started = Date.now();
   isOpen = false;
   gone = false;

@@ -40,7 +40,7 @@ export default function LightbarPage(props: SectionProps) {
             </button>
           ))}
         </div>
-        <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, the dongle shows an amber pulse in every mode.")}</p>
+        <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")}</p>
       </section>
       <section className="dk-card">
         <h2>

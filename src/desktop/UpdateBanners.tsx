@@ -28,13 +28,11 @@ const Action = ({ primary, onClick, children }: { primary?: boolean; onClick: ()
 export default function UpdateBanners({
   app,
   fw,
-  device,
   onShowFirmware,
   onFirmwareChanges,
 }: {
   app: UpdateState;
   fw: FirmwareUpdate;
-  device: string;
   onShowFirmware: () => void; // the Pico page, where Update installs it
   onFirmwareChanges: () => void; // About → Firmware changes
 }) {
@@ -111,7 +109,7 @@ export default function UpdateBanners({
           </>
         }
       >
-        <span>{t("desktop.update.fwAvailable", { version: fw.latest.version, device })}</span>
+        <span>{t("desktop.update.fwAvailable", { version: fw.latest.version })}</span>
       </Notice>
     );
   else if (s.phase === "running" || s.phase === "verifying") {
@@ -119,7 +117,7 @@ export default function UpdateBanners({
     const pct = s.phase === "running" && s.progress.fraction !== undefined ? ` ${Math.floor(s.progress.fraction * 100)}%` : "";
     fwNotice = (
       <Notice>
-        <strong>{t("desktop.update.fwDontUnplug", "Updating firmware, don't unplug the dongle.")}</strong>
+        <strong>{t("desktop.update.fwDontUnplug", "Updating firmware, don't unplug {{device}}.")}</strong>
         <span>
           {t(`desktop.update.fwStep.${step}`, step)}
           {pct}

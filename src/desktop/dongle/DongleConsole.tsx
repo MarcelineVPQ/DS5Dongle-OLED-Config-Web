@@ -4,7 +4,6 @@
 // every theme, like any console. Works without the OLED add-on too: the
 // firmware draws the same frames whether or not a panel is fitted.
 import { useEffect, useRef, useState } from "react";
-import { hardwareName } from "../hardwareName";
 import { useTranslation } from "react-i18next";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
@@ -58,9 +57,9 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
           : t("desktop.dongleConsole.connecting");
 
   return (
-    <section className="dcon" aria-label={t("desktop.dongleConsole.title", { device: hardwareName(identity, t) })}>
+    <section className="dcon" aria-label={t("desktop.dongleConsole.title")}>
       <header className="dcon-head">
-        <span className="dcon-title">{t("desktop.dongleConsole.title", { device: hardwareName(identity, t) })}</span>
+        <span className="dcon-title">{t("desktop.dongleConsole.title")}</span>
         <div className="dcon-tabs" role="tablist">
           {(["screen", "log"] as const).map((p) => (
             <button
@@ -214,14 +213,13 @@ function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity |
     const p = prev.current;
     prev.current = now;
     if (!p) {
-      if (now.client) add(t("desktop.dongleConsole.log.online", { device: hardwareName(identity, t), version: identity ? `${identity.protoMajor}.${identity.protoMinor}` : "?" }));
+      if (now.client) add(t("desktop.dongleConsole.log.online", { version: identity ? `${identity.protoMajor}.${identity.protoMinor}` : "?" }));
       if (now.on) add(t("desktop.dongleConsole.log.controller", { slot: now.slot ?? 0 }));
       return;
     }
     if (now.client !== p.client)
       add(
         t(now.client ? "desktop.dongleConsole.log.online" : "desktop.dongleConsole.log.offline", {
-          device: hardwareName(identity, t),
           version: identity ? `${identity.protoMajor}.${identity.protoMinor}` : "?",
         }),
       );

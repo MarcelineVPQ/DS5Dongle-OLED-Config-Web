@@ -83,22 +83,19 @@
       "about": "À propos",
       "games": "Jeux"
     },
-    "hardware": {
-      "generic": "Dongle"
-    },
     "status": {
-      "connected": "{{device}} connecté",
-      "waiting": "En attente du {{device}}…",
+      "connected": "Connecté : {{deviceName}}",
+      "waiting": "En attente {{device_de}}…",
       "waitingFirst": "En attente de connexion…"
     },
     "empty": {
-      "title": "Branche le DS5 Dongle"
+      "title": "Branche {{device}}"
     },
     "bar": {
-      "unsaved": "Appliqué au dongle, pas encore enregistré : les changements seront perdus à l'extinction.",
-      "saved": "Tous les changements sont enregistrés sur le dongle.",
+      "unsaved": "Appliqué {{device_a}}, pas encore enregistré : les changements seront perdus à l'extinction.",
+      "saved": "Tous les changements sont enregistrés sur {{device}}.",
       "revert": "Annuler",
-      "save": "Enregistrer sur le dongle",
+      "save": "Enregistrer sur {{device}}",
       "profileActive": "Profil {{title}} actif",
       "profileSaved": "Les modifications vont dans le profil ; vos réglages habituels reviennent à la fermeture du jeu.",
       "profileUnsaved": "Modifié ici, pas encore enregistré dans le profil.",
@@ -132,7 +129,7 @@
       "zeroOff": "0 = jamais",
       "controllerWakes": "La manette réveille l'écran",
       "usb": "USB",
-      "usbHint": "Pris en compte après Reconnecter USB (le PC voit le dongle se débrancher puis se rebrancher).",
+      "usbHint": "Pris en compte après Reconnecter USB (le PC voit {{device}} se débrancher puis se rebrancher).",
       "speakerLevel": "Volume (haut-parleur de la manette)",
       "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer",
       "triggerIntensity": "Intensité de l'effet gâchette",
@@ -155,9 +152,9 @@
       "sleepControllerOff": "Éteindre la manette quand le PC se met en veille",
       "sleepControllerOffSub": "Après 3 secondes de veille du PC",
       "psWakesPc": "Réveiller le PC avec la touche PS",
-      "psWakesPcSub": "Le PC doit garder l'USB alimenté pendant la veille et autoriser le clavier à le réveiller. Sans manette connectée, le dongle apparaît comme « DS5 Dongle Wake Keyboard ».",
-      "pcSleepHint": "Enregistré tout de suite sur le dongle.",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour utiliser ces réglages.",
+      "psWakesPcSub": "Le PC doit garder l'USB alimenté pendant la veille et autoriser le clavier à le réveiller. Sans manette connectée, {{device}} apparaît comme « DS5 Dongle Wake Keyboard ».",
+      "pcSleepHint": "Enregistré tout de suite sur {{device}}.",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour utiliser ces réglages.",
       "asGame": "Selon le jeu",
       "choice": {
         "auto": "Auto",
@@ -180,7 +177,7 @@
         "fav2": "FAV2",
         "fav3": "FAV3"
       },
-      "hint": "Pendant la charge, le dongle affiche une pulsation ambre dans tous les modes.",
+      "hint": "Pendant la charge, {{device}} affiche une pulsation ambre dans tous les modes.",
       "favorites": "Couleurs favorites",
       "favN": "FAV{{n}}"
     },
@@ -213,8 +210,8 @@
       }
     },
     "diag": {
-      "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
-      "core1StoppedAt": "Core1 arrêté {{step}} (étape de démarrage {{stage}}) : l'audio ne fonctionnera plus jusqu'au redémarrage du dongle.",
+      "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage {{device_de}}.",
+      "core1StoppedAt": "Core1 arrêté {{step}} (étape de démarrage {{stage}}) : l'audio ne fonctionnera plus jusqu'au redémarrage {{device_de}}.",
       "core1Step": {
         "0": "avant de démarrer",
         "1": "pendant son inscription au verrouillage flash",
@@ -245,15 +242,15 @@
         "setFeatureCount": "Écritures feature de l'hôte",
         "setFeatureLast": "Dernière écriture feature de l'hôte"
       },
-      "speakerEncoderFailed": "Haut-parleur coupé : le dongle n’avait pas assez de mémoire pour l’encodeur du haut-parleur au démarrage ({{kb}} Ko libres). Retours haptiques, gâchettes, micro et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette.",
-      "micDecoderFailed": "Micro coupé : le dongle n’a pas pu créer le décodeur du micro de la manette au démarrage ({{kb}} Ko libres). Haut-parleur, retours haptiques, gâchettes et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
+      "speakerEncoderFailed": "Haut-parleur coupé : {{device}} n’avait pas assez de mémoire pour l’encodeur du haut-parleur au démarrage ({{kb}} Ko libres). Retours haptiques, gâchettes, micro et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette.",
+      "micDecoderFailed": "Micro coupé : {{device}} n’a pas pu créer le décodeur du micro de la manette au démarrage ({{kb}} Ko libres). Haut-parleur, retours haptiques, gâchettes et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
     },
     "firmware": {
       "installed": "Firmware installé",
       "device": "Appareil",
-      "rebooting": "Redémarrage… appuie sur la touche PS sur la manette une fois le dongle revenu.",
+      "rebooting": "Redémarrage… appuie sur la touche PS sur la manette dès que {{device}} est de retour.",
       "reboot": "Redémarrer {{device}}",
-      "bootsel": "Le dongle est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche-le pour annuler.",
+      "bootsel": "{{device, capitalize}} est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche le câble USB pour annuler.",
       "enterBootsel": "Passer en mode BOOTSEL",
       "resetDone": "Paramètres réinitialisés par défaut et enregistrés.",
       "confirmInstall": "Installer {{version}} maintenant",
@@ -264,7 +261,7 @@
       "update": "Mettre à jour en {{version}}",
       "upToDate": "À jour",
       "check": "Vérifier maintenant",
-      "updateHint": "Le dongle redémarre dans son bootloader, est flashé et redémarre tout seul. Laisse-le branché ; appuie ensuite sur PS sur la manette.",
+      "updateHint": "{{device, capitalize}} redémarre dans son bootloader, reçoit le firmware puis redémarre automatiquement. Ne débranche rien ; appuie ensuite sur PS sur la manette.",
       "unpublished": "aucune version publiée pour l'instant",
       "offline": "vérification impossible (hors ligne)",
       "bundled": "incluse dans l'app",
@@ -277,20 +274,20 @@
     "usbAccess": {
       "label": "Règle d'accès USB",
       "installed": "Installée",
-      "missing": "Non installée (les règles de Steam couvrent peut-être déjà le dongle)",
+      "missing": "Non installée (les règles de Steam couvrent peut-être déjà {{device}})",
       "button": "Configurer l'accès USB"
     },
     "windowsUsb": {
       "hint": "Branché, manette allumée, et toujours aucune connexion ? Windows garde peut-être un ancien réglage USB pour lui.",
-      "seen": "Le dongle est branché, mais Windows n’a pas installé son pilote.",
+      "seen": "Windows voit {{device}}, mais n’a pas installé son pilote.",
       "button": "Réparer le pilote USB",
-      "done": "Réparé. Débranche maintenant le dongle puis rebranche-le.",
+      "done": "Réparé. Débranche maintenant {{device}} puis rebranche le câble USB.",
       "stepsTitle": "Ce que fait la réparation",
       "step": {
         "admin": "Windows demande l’autorisation administrateur (Windows PowerShell, de Microsoft). Choisis Non et rien ne change.",
-        "forget": "Windows oublie le réglage USB qu’il a enregistré pour les deux identifiants USB du dongle (054C:0CE6 et 054C:0DF2). Rien d’autre n’est modifié dans le registre.",
+        "forget": "Windows oublie le réglage USB qu’il a enregistré pour les deux identifiants USB {{device_de}} (054C:0CE6 et 054C:0DF2). Rien d’autre n’est modifié dans le registre.",
         "entries": "Les entrées de périphérique enregistrées pour ces deux identifiants sont supprimées. Windows les recrée tout seul.",
-        "replug": "Tu débranches le dongle et le rebranches. Windows réinstalle son pilote et l’app se connecte."
+        "replug": "Tu débranches {{device}} et rebranches le câble USB. Windows réinstalle le pilote et l’app se connecte."
       },
       "showScript": "Afficher le script exact",
       "run": "Lancer la réparation",
@@ -305,18 +302,18 @@
       "restart": "Redémarrer maintenant",
       "manual": "La mise à jour {{version}} est disponible sur la page des versions.",
       "open": "Ouvrir la page des versions",
-      "fwAvailable": "Le firmware {{version}} est disponible ({{device}}).",
+      "fwAvailable": "Le firmware {{version}} est disponible pour {{device}}.",
       "details": "Détails",
-      "fwDontUnplug": "Mise à jour du firmware, ne débranche pas le dongle.",
+      "fwDontUnplug": "Mise à jour du firmware, ne débranche pas {{device}}.",
       "fwDone": "Firmware mis à jour en {{version}}. Appuie sur la touche PS pour reconnecter la manette.",
       "fwStep": {
         "downloading": "Téléchargement et vérification du firmware…",
-        "rebooting": "Redémarrage du dongle dans son bootloader…",
+        "rebooting": "Redémarrage {{device_de}} dans son bootloader…",
         "waiting-bootloader": "En attente du bootloader…",
         "flashing": "Écriture directe du firmware ; ignore le lecteur RP2350 s'il apparaît",
-        "restarting": "Redémarrage du dongle…",
-        "verifying": "En attente du dongle : appuie sur la touche PS sur la manette pour la reconnecter.",
-        "verifyingPress": "Flashé. Appuie sur la touche PS sur la manette : le dongle revient dès qu'une manette est connectée. S'il reste éteint, débranche-le puis rebranche-le."
+        "restarting": "Redémarrage {{device_de}}…",
+        "verifying": "En attente {{device_de}} : appuie sur la touche PS sur la manette pour la reconnecter.",
+        "verifyingPress": "Flashé. Appuie sur la touche PS sur la manette : {{device}} revient dès qu'une manette est connectée. Si l'écran reste éteint, débranche le câble USB puis rebranche-le."
       },
       "askTitle": "Garder l'app à jour ?",
       "askBody": "Les nouvelles versions peuvent se télécharger et s'installer toutes seules, vérifiées comme chaque mise à jour, et démarrer à la prochaine ouverture de l'app. Tu peux changer ça dans les réglages de l'app.",
@@ -359,7 +356,7 @@
           "buttons": "Boutons",
           "audio": "Audio et retour haptique",
           "games": "Jeux",
-          "dongle": "Dongle et OLED",
+          "dongle": "{{deviceName}} et OLED",
           "app": "App",
           "community": "Communauté"
         },
@@ -380,7 +377,7 @@
       "scanning": "Vérification de Steam, Heroic et Lutris…",
       "protonTitle": "Build Proton DualSense",
       "protonFound": "est installé.",
-      "protonMissing": "Notre build Proton n'est pas encore installé. Les jeux Windows en ont besoin pour les gâchettes adaptatives et le retour haptique via le dongle.",
+      "protonMissing": "Notre build Proton n'est pas encore installé. Les jeux Windows en ont besoin pour les gâchettes adaptatives et le retour haptique via {{device}}.",
       "protonInstall": "Installer {{name}}…",
       "protonUpdate": "Installer {{name}}…",
       "protonConfirm": "Télécharge {{name}} ({{size}}) depuis la release GitHub du projet, vérifie sa somme SHA-256 et l'installe là où tes lanceurs cherchent les builds Proton. Les versions de Proton existantes ne sont ni modifiées ni supprimées. Ensuite, tu choisis quels lanceurs et jeux l'utilisent.",
@@ -438,7 +435,7 @@
           "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »"
         },
         "why": {
-          "defaultSteam": "Steam lance actuellement les jeux Windows avec {{current}}. C'est notre build qui fait marcher les gâchettes adaptatives et le retour haptique via le dongle. Les jeux réglés sur un Proton précis gardent leur réglage.",
+          "defaultSteam": "Steam lance actuellement les jeux Windows avec {{current}}. C'est notre build qui fait marcher les gâchettes adaptatives et le retour haptique via {{device}}. Les jeux réglés sur un Proton précis gardent leur réglage.",
           "defaultHeroic": "Heroic attribue actuellement {{current}} aux nouvelles installations Epic, GOG et Amazon. Cela ne concerne que les jeux installés à partir de maintenant ; les jeux installés gardent leur propre réglage, et cette page les vérifie un par un.",
           "defaultLutris": "Lutris utilise actuellement {{current}} pour les jeux Wine. Les jeux avec leur propre version de Wine la gardent.",
           "runner": "{{support}} Il tourne actuellement avec {{current}}, qui ne transmet pas les fonctions natives de la manette.",
@@ -487,7 +484,7 @@
       "installing": "Installation du firmware…",
       "keepPlugged": "Laisse le Pico branché.",
       "restarting": "Firmware {{version}} installé. Associe maintenant ta manette",
-      "restartingHint": "Maintiens la touche de création et la touche PS de la manette jusqu'à ce que la barre lumineuse clignote. Le dongle apparaît ici dès que la manette est connectée (une manette déjà associée n'a besoin que de la touche PS).",
+      "restartingHint": "Maintiens la touche de création et la touche PS de la manette jusqu'à ce que la barre lumineuse clignote. {{device, capitalize}} apparaît ici dès que la manette est connectée (une manette déjà associée n'a besoin que de la touche PS).",
       "found": "Un Pico est prêt à être configuré",
       "offerBundled": "Installer le firmware {{version}}, inclus avec cette app (aucun téléchargement).",
       "offerOnline": "Installer le firmware {{version}}, la dernière version publiée.",
@@ -497,16 +494,16 @@
       "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
       "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
       "turnOnTitle": "Allume ta manette",
-      "pairHint": "Appuie sur la touche PS de la manette. Une nouvelle manette : maintiens la touche de création et la touche PS jusqu’à ce que la barre lumineuse clignote (l’écran du dongle affiche « Pair your DualSense »).",
-      "whyHidden": "Le dongle n’apparaît sur ce PC qu’une fois une manette connectée.",
+      "pairHint": "Appuie sur la touche PS de la manette. Une nouvelle manette : maintiens la touche de création et la touche PS jusqu’à ce que la barre lumineuse clignote (l’écran {{device_de}} affiche « Pair your DualSense »).",
+      "whyHidden": "{{device, capitalize}} n’apparaît sur ce PC qu’une fois une manette connectée.",
       "updatesTitle": "Mises à jour",
       "fwReady": "Cette app installe le firmware {{version}}.",
-      "fwHowTo": "Pour mettre à jour ou réinstaller le firmware sans manette : maintiens le bouton BOOTSEL de la Pico pendant que tu branches le dongle. Cet écran propose alors de l’installer.",
+      "fwHowTo": "Pour mettre à jour ou réinstaller le firmware sans manette : maintiens le bouton BOOTSEL de la Pico pendant que tu branches {{device}}. Cet écran propose alors de l’installer.",
       "checkUpdates": "Rechercher des mises à jour",
       "checkedCurrent": "L’app est à jour ({{version}}).",
       "checkedNewer": "L’app {{version}} est disponible : voir le bandeau en haut.",
-      "checkedFwNewer": "Le firmware {{version}} est disponible pour le dongle : vois le bandeau en haut.",
-      "checkedFwCurrent": "Le firmware du dongle est à jour ({{version}}).",
+      "checkedFwNewer": "Le firmware {{version}} est disponible pour {{device}} : vois le bandeau en haut.",
+      "checkedFwCurrent": "Le firmware {{device_de}} est à jour ({{version}}).",
       "checkFailed": "Impossible de vérifier les mises à jour. Es-tu en ligne ?"
     },
     "live": {
@@ -539,7 +536,7 @@
         "body": "Retour haptique"
       },
       "pickHint": "Clique sur une partie du dessin pour la configurer.",
-      "needsFirmware": "Mets à jour le firmware du dongle pour voir la manette bouger en direct.",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour voir la manette bouger en direct.",
       "overview": "Ta manette",
       "app": "Réglages de l'app",
       "close": "Fermer",
@@ -549,7 +546,7 @@
       "remap": "Attribution des touches",
       "remapActs": "Agit comme",
       "remapDefault": "par défaut",
-      "remapHint": "L'attribution des touches est écrite sur le dongle quand tu appuies sur Appliquer et marche dans tous les jeux, sans logiciel sur le PC.",
+      "remapHint": "L'attribution des touches est écrite sur {{device}} quand tu appuies sur Appliquer et marche dans tous les jeux, sans logiciel sur le PC.",
       "remapApply": "Appliquer l'attribution",
       "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
@@ -571,7 +568,7 @@
       "edgePart": {
         "fn": "La touche Fn de la DualSense Edge. Maintenue avec d'autres touches, elle change les profils personnalisés de la manette. Elle s'allume ici quand tu appuies dessus.",
         "paddle": "Une des touches arrière de la DualSense Edge. Les profils personnalisés de la manette peuvent lui attribuer n'importe quelle touche. Elle s'allume ici quand tu appuies dessus.",
-        "soon": "Pour leur attribuer une touche, il faut le dernier firmware du dongle (page Pico → Mettre à jour)."
+        "soon": "Pour leur attribuer une touche, il faut le dernier firmware sur {{device}} ({{deviceName}} → Mettre à jour)."
       },
       "effects": {
         "0": "aucun",
@@ -613,7 +610,7 @@
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
       "hapticSilent": "Silence : rien n'envoie de retour haptique en ce moment. Le niveau bouge quand un jeu joue du retour haptique, ou avec Audio Auto Haptics activé pendant que du son joue.",
       "speakerSilent": "Silence : rien ne joue sur le haut-parleur de la manette en ce moment.",
-      "levelLive": "En direct depuis le dongle.",
+      "levelLive": "En direct depuis {{device}}.",
       "hardwareAcceleration": "Accélération matérielle",
       "hardwareAccelerationSub": "Dessine avec la carte graphique : plus fluide, et nécessaire au flou et aux effets de verre. Se désactive si la carte graphique plante.",
       "restartToApply": "Redémarrez l'app pour appliquer",
@@ -658,7 +655,7 @@
       },
       "panel": {
         "title": "Les réglages s'ouvrent ici",
-        "body": "Les changements partent tout de suite vers le dongle : tu les vois, les entends et les sens. ✕ ferme le panneau."
+        "body": "Les changements partent tout de suite vers {{device}} : tu les vois, les entends et les sens. ✕ ferme le panneau."
       },
       "list": {
         "title": "Ou choisis dans la liste",
@@ -666,11 +663,11 @@
       },
       "save": {
         "title": "Garde ce qui te plaît",
-        "body": "Les changements sont actifs mais temporaires. « Enregistrer sur le dongle » les garde après extinction ; « Annuler » revient à ce qui est enregistré."
+        "body": "Les changements sont actifs mais temporaires. « Enregistrer sur {{device}} » les garde après extinction ; « Annuler » revient à ce qui est enregistré."
       },
       "top": {
-        "title": "Le dongle, tes jeux et l'aide",
-        "body": "{{device}} : mises à jour du firmware, OLED, alimentation et USB. Jeux : prépare Steam et les autres lanceurs pour les gâchettes et le retour haptique (Linux). À propos : nouveautés et guide. ⚙ : les réglages de l'app."
+        "title": "{{deviceName}}, tes jeux et l'aide",
+        "body": "{{deviceName}} : mises à jour du firmware, OLED, alimentation et USB. Jeux : prépare Steam et les autres lanceurs pour les gâchettes et le retour haptique (Linux). À propos : nouveautés et guide. ⚙ : les réglages de l'app."
       },
       "finish": {
         "title": "Tout est prêt",
@@ -774,8 +771,8 @@
       "activeNow": "Actif",
       "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (retour haptique, haut-parleur, barre lumineuse, micro, touches, joysticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
       "profileFromCurrent": "Créer depuis les réglages actuels",
-      "profileNeedsDongle": "Connecte le dongle pour partir de tes réglages actuels.",
-      "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur le dongle.",
+      "profileNeedsDongle": "Connecte {{device}} pour partir de tes réglages actuels.",
+      "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur {{device}}.",
       "profileCopyCurrent": "Copier les réglages actuels",
       "profileDelete": "Supprimer le profil",
       "haptics": "Intensité des vibrations",
@@ -829,7 +826,7 @@
         "unknown": "Inconnu"
       },
       "tierHint": {
-        "verified": "Testé sur le dongle : gâchettes et retour haptique fonctionnent.",
+        "verified": "Testé sur {{device}} : gâchettes et retour haptique fonctionnent.",
         "works": "Le jeu prend en charge nativement les fonctions DualSense.",
         "needs-setup": "Fonctionne une fois la configuration de ce jeu faite.",
         "partial": "Certaines fonctions DualSense manquent sur PC. Audio Auto Haptics peut compenser les vibrations.",
@@ -935,13 +932,13 @@
       "lockVolume": "Verrouiller le volume"
     },
     "dongleConsole": {
-      "title": "Console : {{device}}",
+      "title": "Console : {{deviceName}}",
       "pane": {
         "screen": "Écran",
         "log": "Journal"
       },
-      "noDongle": "En attente du dongle",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour voir son écran",
+      "noDongle": "En attente {{device_de}}",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour voir son écran",
       "unavailable": "Écran indisponible, nouvel essai",
       "connecting": "Lecture de l'écran…",
       "live": "En direct",
@@ -950,18 +947,18 @@
       "screenN": "Écran {{n}}/{{total}}",
       "brightness": "Luminosité {{pct}} %",
       "frame": "Image {{n}}",
-      "hint": "Exactement ce qu'affiche l'écran du dongle, pixel par pixel. Fonctionne aussi sans le module OLED. Changez d'écran avec KEY0 / KEY1 sur le dongle.",
+      "hint": "Exactement ce qu'affiche l'écran {{device_de}}, pixel par pixel. Fonctionne aussi sans le module OLED. Change d'écran avec KEY0 / KEY1 sur {{device}}.",
       "logEmpty": "Rien pour l'instant.",
       "log": {
-        "online": "{{device}} connecté (protocole {{version}})",
-        "offline": "{{device}} déconnecté",
+        "online": "Connecté : {{deviceName}} (protocole {{version}})",
+        "offline": "Déconnecté : {{deviceName}}",
         "controller": "Manette connectée (emplacement {{slot}})",
         "controllerGone": "Manette déconnectée",
         "slot": "Passage à l'emplacement {{slot}}",
         "charging": "Manette en charge",
         "notCharging": "Manette plus en charge",
         "battery": "Batterie {{pct}} %",
-        "saved": "Réglages enregistrés sur le dongle"
+        "saved": "Réglages enregistrés sur {{device}}"
       }
     },
     "rail": {
@@ -1052,7 +1049,7 @@
     },
     "dev": {
       "title": "Développeur",
-      "hint": "Prévisualisez un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé au dongle. Ctrl+Maj+D masque cette carte. Affichée sur le canal de développement.",
+      "hint": "Prévisualise un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé {{device_a}}. Ctrl+Maj+D masque cette carte. Affichée sur le canal de développement.",
       "model": "Modèle",
       "colorway": "Coloris",
       "real": "La vraie",
@@ -1073,11 +1070,11 @@
         "ready": "Prête / en attente"
       },
       "fakeSlots": "Simuler d’autres manettes",
-      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent associés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé au dongle.",
-      "simulated": "Dongle simulé (sans matériel)",
-      "simulatedHint": "L’app parle à un dongle simulé au lieu de l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
+      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent associés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé {{device_a}}.",
+      "simulated": "Simuler {{device}} (sans matériel)",
+      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
       "simCore1": "Core1 simulé",
-      "simCore1Hint": "Arrête le Core1 du dongle simulé à une étape de démarrage, pour voir l'avertissement de la page Pico. Recharge la page.",
+      "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}. Recharge la page.",
       "simCore1Runs": "Fonctionne normalement",
       "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}"
     },
@@ -1096,8 +1093,8 @@
     "calib": {
       "title": "Calibrage",
       "shortcut": "Dérive des joysticks, zones inertes, course des gâchettes, gyro",
-      "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans le dongle, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour calibrer.",
+      "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans {{device}}, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour calibrer.",
       "needsController": "Connectez une manette pour calibrer.",
       "noInput": "Aucune entrée de la manette pendant cette étape. Réessayez.",
       "start": "Lancer le calibrage",
@@ -1122,10 +1119,10 @@
       "now": "maintenant {{raw}} → {{out}}",
       "gyro": "Gyroscope",
       "gyroZero": "Décalage du zéro :",
-      "save": "Enregistrer sur le dongle",
+      "save": "Enregistrer sur {{device}}",
       "revert": "Annuler",
       "reset": "Revenir au non calibré",
-      "saveHint": "Enregistré dans la mémoire du dongle ; s'applique tout de suite à tous les jeux.",
+      "saveHint": "Enregistré dans la mémoire {{device_de}} ; s'applique tout de suite à tous les jeux.",
       "forSlot": "Pour la manette de l'emplacement {{slot}} ; chaque emplacement garde le sien.",
       "getReady": "Préparez-vous…",
       "missed": "Non mesuré, les anciennes valeurs sont conservées : {{parts}}. Allez jusqu'au bout et mesurez à nouveau.",
@@ -1133,7 +1130,7 @@
     },
     "curves": {
       "title": "Courbe de sensibilité",
-      "intro": "La façon dont chaque joystick répond entre le centre et l'inclinaison maximale. Appliquée dans le dongle après le calibrage, elle fonctionne donc dans tous les jeux.",
+      "intro": "La façon dont chaque joystick répond entre le centre et l'inclinaison maximale. Appliquée dans {{device}} après le calibrage, elle fonctionne donc dans tous les jeux.",
       "curve": "Courbe",
       "type": {
         "linear": "Linéaire",
@@ -1161,10 +1158,10 @@
       "keyLinear": "Linéaire",
       "keyLive": "Votre joystick maintenant",
       "gameOn": "Le profil d'un jeu applique ses propres courbes en ce moment. Enregistrer ici les arrête jusqu'au prochain lancement de ce jeu.",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour les courbes de sensibilité.",
-      "readFailed": "Le dongle n'a pas renvoyé ses courbes.",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour les courbes de sensibilité.",
+      "readFailed": "{{device, capitalize}} n'a pas renvoyé ses courbes.",
       "resetLinear": "Revenir à Linéaire",
-      "saveHint": "Enregistrée dans le dongle pour la manette de l'emplacement {{slot}} ; s'applique tout de suite à tous les jeux.",
+      "saveHint": "Enregistrée dans {{device}} pour la manette de l'emplacement {{slot}} ; s'applique tout de suite à tous les jeux.",
       "profileLeft": "Courbe du joystick gauche",
       "profileRight": "Courbe du joystick droit",
       "profileSaved": "Ma courbe enregistrée",
@@ -1172,7 +1169,7 @@
     },
     "ctrlInfo": {
       "title": "Infos de la manette",
-      "needsFirmware": "Mettez à jour le firmware du dongle pour voir le firmware, la tension de batterie et les compteurs de la manette.",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour voir le firmware, la tension de batterie et les compteurs de la manette.",
       "noController": "Connectez une manette pour voir ses infos.",
       "charge": "Charge",
       "chargeState": {
@@ -1218,7 +1215,7 @@
       "howToPc": "Branchez la manette à un PC Windows avec un câble USB-C et mettez-la à jour avec l'application PlayStation Accessories de Sony (anciennement « Outil de mise à jour du firmware pour la manette sans fil DualSense »).",
       "sonyPage": "Page de Sony",
       "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manette (général) → Logiciel de la manette sans fil DualSense.",
-      "howToCable": "La mise à jour ne peut pas passer par le dongle. Ensuite, associez de nouveau la manette au dongle si elle ne se reconnecte pas.",
+      "howToCable": "La mise à jour ne peut pas passer par {{device}}. Ensuite, associe de nouveau la manette {{device_a}} si elle ne se reconnecte pas.",
       "windowsOnly": "L'application PlayStation Accessories de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5."
     },
     "stickTest": {
@@ -1329,8 +1326,8 @@
       "devHint": "Des versions de développement de l'app et du firmware, avant leur sortie : plus récentes et moins testées. Vous recevez aussi chaque version stable. « Revenir au stable » installe la dernière app et le dernier firmware stables.",
       "backToStable": "Revenir au stable",
       "joinTitle": "Rejoindre le canal de développement ?",
-      "joinNewer": "Tu reçois des versions de l’app et du firmware du dongle avant leur sortie : les nouveautés plus tôt.",
-      "joinBoth": "Les deux sont proposés : l’app se met à jour seule, la mise à jour du firmware apparaît sur la page du Pico comme d’habitude.",
+      "joinNewer": "Tu reçois des versions de l’app et du firmware {{device_de}} avant leur sortie : les nouveautés plus tôt.",
+      "joinBoth": "Les deux sont proposés : l’app se met à jour seule, la mise à jour du firmware apparaît sous {{deviceName}} comme d’habitude.",
       "joinBugs": "Elles sont moins testées que les versions stables et peuvent avoir des bugs. Signale ce que tu trouves.",
       "joinBack": "Revenir à stable (Réglages de l’app → Mises à jour) remet la dernière app et le dernier firmware stables à tout moment.",
       "joinLatest": "Dernière version de développement",
@@ -1344,7 +1341,7 @@
     },
     "layouts": {
       "title": "Dispositions des boutons",
-      "hint": "Enregistre les boutons ci-dessus sous un nom. Le profil d’un jeu peut utiliser une disposition : elle s’applique pendant que le jeu tourne (jamais enregistrée sur le dongle), et tes boutons habituels reviennent à la fin.",
+      "hint": "Enregistre les boutons ci-dessus sous un nom. Le profil d’un jeu peut utiliser une disposition : elle s’applique pendant que le jeu tourne (jamais enregistrée sur {{device}}), et tes boutons habituels reviennent à la fin.",
       "none": "Aucune disposition enregistrée.",
       "load": "Charger",
       "loadHint": "Mettre cette disposition dans l’éditeur ci-dessus (Appliquer en fait tes boutons habituels)",
@@ -1356,11 +1353,11 @@
       "namePlaceholder": "Nom, p. ex. Course",
       "usedBy_one": "utilisée par {{count}} jeu",
       "usedBy_other": "utilisée par {{count}} jeux",
-      "activeNotice": "La disposition de {{game}} est sur le dongle en ce moment. Appliquer enregistre tes boutons habituels et la termine jusqu’au prochain lancement du jeu.",
+      "activeNotice": "La disposition de {{game}} est sur {{device}} en ce moment. Appliquer enregistre tes boutons habituels et la termine jusqu’au prochain lancement du jeu.",
       "aGame": "Un jeu",
       "profileLabel": "Disposition des boutons",
       "normal": "Boutons habituels",
-      "needsFirmware": "Nécessite le dernier firmware du dongle (page Pico → Mettre à jour).",
+      "needsFirmware": "Nécessite le dernier firmware sur {{device}} ({{deviceName}} → Mettre à jour).",
       "noneForGame": "Enregistre des dispositions sur la page des boutons : choisis un bouton de la manette.",
       "allTitle": "Boutons",
       "allHeading": "Tous les boutons",
@@ -1378,9 +1375,9 @@
       "loadedEdited": "modifiée",
       "loadedChip": "Chargée",
       "loadedState": {
-        "notApplied": "Pas encore appliquée : Appliquer en fait tes boutons habituels sur le dongle.",
+        "notApplied": "Pas encore appliquée : Appliquer en fait tes boutons habituels sur {{device}}.",
         "edited": "Modifiée depuis son chargement : Mettre à jour enregistre les changements dans la disposition ; Appliquer en fait tes boutons habituels.",
-        "applied": "Appliquée : ce sont maintenant tes boutons habituels sur le dongle."
+        "applied": "Appliquée : ce sont maintenant tes boutons habituels sur {{device}}."
       },
       "extraSelf": "Lui-même (par défaut)"
     },
@@ -1394,8 +1391,8 @@
       "open": "Modifier dans la vue manette",
       "openHint": "Mettre ce profil sur la manette et le modifier avec tous les panneaux, en ressentant chaque changement",
       "buttonsNote": "Profil de {{title}} actif : les boutons vont dans la disposition de ce jeu avec Enregistrer dans le profil, pas dans tes boutons habituels.",
-      "dongleNote": "Hors du profil de {{title}} : les réglages du dongle restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur le dongle.",
-      "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans le dongle pour tous les jeux.",
+      "dongleNote": "Hors du profil de {{title}} : ces réglages {{device_de}} restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur {{device}}.",
+      "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans {{device}} pour tous les jeux.",
       "curvesNote": "Profil de {{title}} actif : les courbes vont dans le profil de ce jeu avec Enregistrer dans le profil et se ressentent dès lors ; tes courbes habituelles reviennent ensuite.",
       "curvesNormal": "Ce joystick utilise ta courbe habituelle dans ce jeu."
     },
@@ -1407,11 +1404,11 @@
       "normalSub": "Ton réglage habituel",
       "on": "Activé",
       "off": "Désactivé",
-      "copyHint": "Ce jeu reçoit les réglages actuellement sur le dongle",
-      "applyFailed": "Le profil de {{title}} n'a pas pu être mis sur le dongle ({{reason}}). Tes réglages normaux sont actifs.",
-      "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de joystick ({{reason}}). Nouvel essai quand le dongle se reconnecte.",
+      "copyHint": "Ce jeu reçoit les réglages actuellement sur {{device}}",
+      "applyFailed": "Le profil de {{title}} n'a pas pu être mis sur {{device}} ({{reason}}). Tes réglages normaux sont actifs.",
+      "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de joystick ({{reason}}). Nouvel essai quand {{device}} se reconnecte.",
       "saveFailed": "Non enregistré dans le profil de {{title}} : {{reason}}",
-      "notOn": "Le profil de {{title}} n'est pas encore sur le dongle : rien n'y a été enregistré. Réessaie une fois qu'il est actif."
+      "notOn": "Le profil de {{title}} n'est pas encore sur {{device}} : rien n'y a été enregistré. Réessaie une fois qu'il est actif."
     },
     "colorPicker": {
       "swatch": "{{name}} : {{hex}}. Changer la couleur",

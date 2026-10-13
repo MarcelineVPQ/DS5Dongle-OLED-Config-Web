@@ -83,22 +83,19 @@
       "about": "Acerca de",
       "games": "Juegos"
     },
-    "hardware": {
-      "generic": "Dongle"
-    },
     "status": {
-      "connected": "{{device}} conectado",
-      "waiting": "Esperando el {{device}}…",
+      "connected": "Conectado: {{deviceName}}",
+      "waiting": "Esperando {{device_a}}…",
       "waitingFirst": "Esperando la conexión…"
     },
     "empty": {
-      "title": "Conecta el DS5 Dongle"
+      "title": "Conecta {{device}}"
     },
     "bar": {
-      "unsaved": "Aplicado al dongle, aún sin guardar: los cambios se pierden al apagarlo.",
-      "saved": "Todos los cambios guardados en el dongle.",
+      "unsaved": "Aplicado {{device_a}}, aún sin guardar: los cambios se pierden al apagarse.",
+      "saved": "Todos los cambios guardados en {{device}}.",
       "revert": "Revertir",
-      "save": "Guardar en el dongle",
+      "save": "Guardar en {{device}}",
       "profileActive": "Perfil de {{title}} activo",
       "profileSaved": "Los cambios van al perfil; tus ajustes normales vuelven al cerrar el juego.",
       "profileUnsaved": "Cambiado aquí, aún no guardado en el perfil.",
@@ -132,7 +129,7 @@
       "zeroOff": "0 = nunca",
       "controllerWakes": "Usar el mando activa la pantalla",
       "usb": "USB",
-      "usbHint": "Se aplican tras Reconectar USB (el PC ve el dongle desconectarse y reconectarse).",
+      "usbHint": "Se aplican tras Reconectar USB (el PC ve {{device}} desconectarse y reconectarse).",
       "speakerLevel": "Volumen (altavoz para mando)",
       "speakerLevelSub": "0 = sin cambios; por encima de 0 amplifica y puede saturar",
       "triggerIntensity": "Intensidad del efecto gatillo",
@@ -155,9 +152,9 @@
       "sleepControllerOff": "Apagar el mando cuando el PC entra en suspensión",
       "sleepControllerOffSub": "Tras 3 segundos de suspensión del PC",
       "psWakesPc": "Reactivar el PC con el botón PS",
-      "psWakesPcSub": "El PC debe mantener la alimentación USB durante la suspensión y permitir que el teclado lo reactive. Sin un mando conectado, el dongle aparece como «DS5 Dongle Wake Keyboard».",
-      "pcSleepHint": "Se guarda en el dongle al instante.",
-      "needsFirmware": "Actualiza el firmware del dongle para usar estos ajustes.",
+      "psWakesPcSub": "El PC debe mantener la alimentación USB durante la suspensión y permitir que el teclado lo reactive. Sin un mando conectado, {{device}} aparece como «DS5 Dongle Wake Keyboard».",
+      "pcSleepHint": "Se guarda en {{device}} al instante.",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para usar estos ajustes.",
       "asGame": "Según el juego",
       "choice": {
         "auto": "Auto",
@@ -180,7 +177,7 @@
         "fav2": "FAV2",
         "fav3": "FAV3"
       },
-      "hint": "Durante la carga, el dongle muestra un pulso ámbar en todos los modos.",
+      "hint": "Durante la carga, {{device}} muestra un pulso ámbar en todos los modos.",
       "favorites": "Colores favoritos",
       "favN": "FAV{{n}}"
     },
@@ -213,8 +210,8 @@
       }
     },
     "diag": {
-      "core1Frozen": "Core1 detenido: el audio no funcionará hasta que el dongle se reinicie.",
-      "core1StoppedAt": "Core1 detenido {{step}} (paso de arranque {{stage}}): el audio no funcionará hasta que el dongle se reinicie.",
+      "core1Frozen": "Core1 detenido: el audio no funcionará hasta que {{device}} se reinicie.",
+      "core1StoppedAt": "Core1 detenido {{step}} (paso de arranque {{stage}}): el audio no funcionará hasta que {{device}} se reinicie.",
       "core1Step": {
         "0": "antes de arrancar",
         "1": "al registrarse para el bloqueo de flash",
@@ -245,15 +242,15 @@
         "setFeatureCount": "Escrituras de feature del host",
         "setFeatureLast": "Última escritura de feature del host"
       },
-      "speakerEncoderFailed": "Altavoz desactivado: el dongle no tuvo memoria suficiente para el codificador del altavoz al arrancar ({{kb}} KB libres). Hápticos, gatillos, micrófono y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando.",
-      "micDecoderFailed": "Micrófono desactivado: el dongle no pudo crear el decodificador del micrófono del mando al arrancar ({{kb}} KB libres). Altavoz, hápticos, gatillos y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
+      "speakerEncoderFailed": "Altavoz desactivado: {{device}} no tuvo memoria suficiente para el codificador del altavoz al arrancar ({{kb}} KB libres). Hápticos, gatillos, micrófono y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando.",
+      "micDecoderFailed": "Micrófono desactivado: {{device}} no pudo crear el decodificador del micrófono del mando al arrancar ({{kb}} KB libres). Altavoz, hápticos, gatillos y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
     },
     "firmware": {
       "installed": "Firmware instalado",
       "device": "Dispositivo",
       "rebooting": "Reiniciando… pulsa el botón PS en el mando cuando vuelva.",
       "reboot": "Reiniciar {{device}}",
-      "bootsel": "El dongle es ahora una unidad RP2350. Copia un .uf2 en ella o desconéctalo para cancelar.",
+      "bootsel": "{{device, capitalize}} es ahora una unidad RP2350. Copia un .uf2 en ella o desconecta el cable USB para cancelar.",
       "enterBootsel": "Entrar en modo BOOTSEL",
       "resetDone": "Ajustes restablecidos a los valores predeterminados y guardados.",
       "confirmInstall": "Instalar {{version}} ahora",
@@ -264,7 +261,7 @@
       "update": "Actualizar a {{version}}",
       "upToDate": "Actualizado",
       "check": "Comprobar ahora",
-      "updateHint": "El dongle se reinicia en su bootloader, se graba y vuelve a arrancar solo. Déjalo conectado; después pulsa el botón PS en el mando.",
+      "updateHint": "{{device, capitalize}} se reinicia en su bootloader, recibe el firmware y vuelve a arrancar automáticamente. No desconectes nada; después pulsa el botón PS en el mando.",
       "unpublished": "aún no hay versión publicada",
       "offline": "no se puede comprobar (sin conexión)",
       "bundled": "incluido con la app",
@@ -277,20 +274,20 @@
     "usbAccess": {
       "label": "Regla de acceso USB",
       "installed": "Instalada",
-      "missing": "No instalada (las reglas de Steam quizá ya cubren el dongle)",
+      "missing": "No instalada (las reglas de Steam quizá ya cubren {{device}})",
       "button": "Configurar acceso USB"
     },
     "windowsUsb": {
       "hint": "¿Conectado, con el mando encendido, y aun así nunca conecta? Puede que Windows guarde una configuración USB antigua para él.",
-      "seen": "El dongle está conectado, pero Windows no ha instalado su controlador.",
+      "seen": "Windows ve {{device}}, pero no ha instalado su controlador.",
       "button": "Reparar controlador USB",
-      "done": "Reparado. Ahora desconecta el dongle y vuelve a conectarlo.",
+      "done": "Reparado. Ahora desconecta {{device}} y vuelve a conectar el cable USB.",
       "stepsTitle": "Qué hace la reparación",
       "step": {
         "admin": "Windows pide permiso de administrador (Windows PowerShell, de Microsoft). Si eliges No, no cambia nada.",
-        "forget": "Windows olvida el ajuste USB que guardó para los dos ID USB del dongle (054C:0CE6 y 054C:0DF2). No se toca nada más del registro.",
+        "forget": "Windows olvida el ajuste USB que guardó para los dos ID USB {{device_de}} (054C:0CE6 y 054C:0DF2). No se toca nada más del registro.",
         "entries": "Se eliminan las entradas de dispositivo guardadas para esos dos ID. Windows las vuelve a crear solo.",
-        "replug": "Desconectas el dongle y lo vuelves a conectar. Windows instala su controlador desde cero y la app se conecta."
+        "replug": "Desconectas {{device}} y vuelves a conectar el cable USB. Windows instala el controlador desde cero y la app se conecta."
       },
       "showScript": "Ver el script exacto",
       "run": "Hacer la reparación",
@@ -305,18 +302,18 @@
       "restart": "Reiniciar ahora",
       "manual": "La actualización {{version}} está en la página de versiones.",
       "open": "Abrir página de versiones",
-      "fwAvailable": "Hay firmware {{version}} para tu {{device}}.",
+      "fwAvailable": "Hay firmware {{version}} para {{device}}.",
       "details": "Detalles",
-      "fwDontUnplug": "Actualizando el firmware, no desconectes el dongle.",
+      "fwDontUnplug": "Actualizando el firmware, no desconectes {{device}}.",
       "fwDone": "Firmware actualizado a {{version}}. Pulsa el botón PS para reconectar el mando.",
       "fwStep": {
         "downloading": "Descargando y comprobando el firmware…",
-        "rebooting": "Reiniciando el dongle en su bootloader…",
+        "rebooting": "Reiniciando {{device}} en su bootloader…",
         "waiting-bootloader": "Esperando al bootloader…",
         "flashing": "Escribiendo el firmware directamente; ignora la unidad RP2350 si aparece",
-        "restarting": "Reiniciando el dongle…",
-        "verifying": "Esperando al dongle: pulsa el botón PS en el mando para volver a conectarlo.",
-        "verifyingPress": "Flasheado. Pulsa el botón PS en el mando: el dongle vuelve en cuanto se conecta un mando. Si sigue apagado, desconéctalo y vuelve a conectarlo."
+        "restarting": "Reiniciando {{device}}…",
+        "verifying": "Esperando {{device_a}}: pulsa el botón PS en el mando para volver a conectarlo.",
+        "verifyingPress": "Flasheado. Pulsa el botón PS en el mando: {{device}} vuelve en cuanto se conecta un mando. Si la pantalla sigue apagada, desconecta el cable USB y vuelve a conectarlo."
       },
       "askTitle": "¿Mantener la app al día?",
       "askBody": "Las nuevas versiones pueden descargarse e instalarse solas, verificadas como cada actualización, y se inician la próxima vez que abras la app. Puedes cambiarlo en los ajustes de la app.",
@@ -359,7 +356,7 @@
           "buttons": "Botones",
           "audio": "Audio y retroalimentación háptica",
           "games": "Juegos",
-          "dongle": "Dongle y OLED",
+          "dongle": "{{deviceName}} y OLED",
           "app": "App",
           "community": "Comunidad"
         },
@@ -380,7 +377,7 @@
       "scanning": "Revisando Steam, Heroic y Lutris…",
       "protonTitle": "Build de Proton para DualSense",
       "protonFound": "está instalado.",
-      "protonMissing": "Nuestro build de Proton aún no está instalado. Los juegos de Windows lo necesitan para los gatillos adaptativos y la retroalimentación háptica a través del dongle.",
+      "protonMissing": "Nuestro build de Proton aún no está instalado. Los juegos de Windows lo necesitan para los gatillos adaptativos y la retroalimentación háptica a través {{device_de}}.",
       "protonInstall": "Instalar {{name}}…",
       "protonUpdate": "Instalar {{name}}…",
       "protonConfirm": "Descarga {{name}} ({{size}}) de la release del proyecto en GitHub, comprueba su suma SHA-256 y lo instala donde tus lanzadores buscan builds de Proton. Las versiones de Proton existentes no se cambian ni se eliminan. Después eliges qué lanzadores y juegos lo usan.",
@@ -438,7 +435,7 @@
           "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»"
         },
         "why": {
-          "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la retroalimentación háptica a través del dongle. Los juegos con un Proton concreto mantienen su ajuste.",
+          "defaultSteam": "Steam ejecuta ahora los juegos de Windows con {{current}}. Nuestro build es lo que hace funcionar los gatillos adaptativos y la retroalimentación háptica a través {{device_de}}. Los juegos con un Proton concreto mantienen su ajuste.",
           "defaultHeroic": "Heroic asigna ahora {{current}} a las nuevas instalaciones de Epic, GOG y Amazon. Solo afecta a los juegos que instales a partir de ahora; los instalados mantienen su propio ajuste, y esta página los revisa uno por uno.",
           "defaultLutris": "Lutris usa ahora {{current}} para los juegos de Wine. Los juegos con su propia versión de Wine la mantienen.",
           "runner": "{{support}} Ahora se ejecuta con {{current}}, que no transmite las funciones nativas del mando.",
@@ -487,7 +484,7 @@
       "installing": "Instalando el firmware…",
       "keepPlugged": "Deja el Pico conectado.",
       "restarting": "Firmware {{version}} instalado. Ahora empareja tu mando",
-      "restartingHint": "Mantén el botón de crear y el botón PS del mando hasta que la barra luminosa parpadee. El dongle aparece aquí en cuanto el mando se conecta (un mando ya emparejado solo necesita el botón PS).",
+      "restartingHint": "Mantén el botón de crear y el botón PS del mando hasta que la barra luminosa parpadee. {{device, capitalize}} aparece aquí en cuanto el mando se conecta (un mando ya emparejado solo necesita el botón PS).",
       "found": "Hay un Pico listo para configurar",
       "offerBundled": "Instalar el firmware {{version}}, incluido con esta app (sin descargas).",
       "offerOnline": "Instalar el firmware {{version}}, la versión publicada más reciente.",
@@ -497,16 +494,16 @@
       "newPico": "¿Pico nuevo? Conéctalo manteniendo pulsado su botón BOOTSEL (un Pico nuevo de fábrica no lo necesita). La app lo encuentra e instala el firmware.",
       "driveNote": "Puede que tu equipo también lo muestre como una unidad llamada RP2350. No hace falta abrirla.",
       "turnOnTitle": "Enciende tu mando",
-      "pairHint": "Pulsa el botón PS del mando. Un mando nuevo: mantén el botón de crear y el botón PS hasta que la barra luminosa parpadee (la pantalla del dongle muestra «Pair your DualSense»).",
-      "whyHidden": "El dongle solo aparece en este PC cuando hay un mando conectado a él.",
+      "pairHint": "Pulsa el botón PS del mando. Un mando nuevo: mantén el botón de crear y el botón PS hasta que la barra luminosa parpadee (la pantalla {{device_de}} muestra «Pair your DualSense»).",
+      "whyHidden": "{{device, capitalize}} solo aparece en este PC cuando hay un mando conectado.",
       "updatesTitle": "Actualizaciones",
       "fwReady": "Esta app instala el firmware {{version}}.",
-      "fwHowTo": "Para actualizar o reinstalar el firmware sin mando: mantén pulsado el botón BOOTSEL de la Pico mientras conectas el dongle. Esta pantalla te ofrecerá instalarlo.",
+      "fwHowTo": "Para actualizar o reinstalar el firmware sin mando: mantén pulsado el botón BOOTSEL de la Pico mientras conectas {{device}}. Esta pantalla te ofrecerá instalarlo.",
       "checkUpdates": "Buscar actualizaciones",
       "checkedCurrent": "La app está al día ({{version}}).",
       "checkedNewer": "La app {{version}} está disponible: mira el aviso de arriba.",
-      "checkedFwNewer": "El firmware {{version}} está disponible para el dongle: mira el aviso de arriba.",
-      "checkedFwCurrent": "El firmware del dongle está actualizado ({{version}}).",
+      "checkedFwNewer": "El firmware {{version}} está disponible para {{device}}: mira el aviso de arriba.",
+      "checkedFwCurrent": "El firmware {{device_de}} está actualizado ({{version}}).",
       "checkFailed": "No se pudo buscar actualizaciones. ¿Tienes conexión?"
     },
     "live": {
@@ -539,7 +536,7 @@
         "body": "Retroalimentación háptica"
       },
       "pickHint": "Haz clic en cualquier parte del dibujo para configurarla.",
-      "needsFirmware": "Actualiza el firmware del dongle para ver el mando moverse en directo.",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para ver el mando moverse en directo.",
       "overview": "Tu mando",
       "app": "Ajustes de la app",
       "close": "Cerrar",
@@ -549,7 +546,7 @@
       "remap": "Asignaciones de botones",
       "remapActs": "Actúa como",
       "remapDefault": "predeterminado",
-      "remapHint": "Las asignaciones de botones se guardan en el dongle al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
+      "remapHint": "Las asignaciones de botones se guardan en {{device}} al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
       "remapApply": "Aplicar asignaciones",
       "remapReset": "Restablecer todos los botones",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
@@ -571,7 +568,7 @@
       "edgePart": {
         "fn": "El botón Fn del DualSense Edge. Junto con otros botones cambia los perfiles personalizados del mando. Se ilumina aquí cuando lo pulsas.",
         "paddle": "Uno de los botones posteriores del DualSense Edge. Los perfiles personalizados del mando pueden hacer que actúe como cualquier botón. Se ilumina aquí cuando lo pulsas.",
-        "soon": "Para asignarlos hace falta el firmware más reciente del dongle (página del Pico → Actualizar)."
+        "soon": "Para asignarlos hace falta el firmware más reciente en {{device}} ({{deviceName}} → Actualizar)."
       },
       "effects": {
         "0": "ninguno",
@@ -613,7 +610,7 @@
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
       "hapticSilent": "Silencio: ahora nada envía retroalimentación háptica. Se mueve cuando un juego reproduce retroalimentación háptica, o con Audio Auto Haptics activado mientras suena audio.",
       "speakerSilent": "Silencio: ahora no suena nada en el altavoz del mando.",
-      "levelLive": "En directo desde el dongle.",
+      "levelLive": "En directo desde {{device}}.",
       "hardwareAcceleration": "Aceleración por hardware",
       "hardwareAccelerationSub": "Dibuja con la tarjeta gráfica: más fluido y necesario para el desenfoque y los efectos de cristal. Se desactiva sola si la tarjeta gráfica falla.",
       "restartToApply": "Reinicia la app para aplicarlo",
@@ -658,7 +655,7 @@
       },
       "panel": {
         "title": "Los ajustes se abren aquí",
-        "body": "Los cambios llegan al dongle al instante: los ves, los oyes y los sientes. ✕ cierra el panel."
+        "body": "Los cambios llegan {{device_a}} al instante: los ves, los oyes y los sientes. ✕ cierra el panel."
       },
       "list": {
         "title": "O elige de la lista",
@@ -666,11 +663,11 @@
       },
       "save": {
         "title": "Quédate con lo que te guste",
-        "body": "Los cambios son inmediatos pero temporales. «Guardar en el dongle» los conserva al apagarlo; «Revertir» vuelve a lo guardado."
+        "body": "Los cambios son inmediatos pero temporales. «Guardar en {{device}}» los conserva al apagarse; «Revertir» vuelve a lo guardado."
       },
       "top": {
-        "title": "El dongle, tus juegos y la ayuda",
-        "body": "{{device}}: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
+        "title": "{{deviceName}}, tus juegos y la ayuda",
+        "body": "{{deviceName}}: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
       },
       "finish": {
         "title": "Todo listo",
@@ -774,8 +771,8 @@
       "activeNow": "Activo ahora",
       "profileNone": "Este juego usa tus ajustes normales. Un perfil cambia cualquier ajuste del mando (retroalimentación háptica, altavoz, barra luminosa, micrófono, botones, joysticks) solo para este juego, y los restablece al cerrarlo.",
       "profileFromCurrent": "Crear desde los ajustes actuales",
-      "profileNeedsDongle": "Conecta el dongle para partir de tus ajustes actuales.",
-      "profileHint": "Los cambios se guardan en el perfil de este juego, no en el dongle.",
+      "profileNeedsDongle": "Conecta {{device}} para partir de tus ajustes actuales.",
+      "profileHint": "Los cambios se guardan en el perfil de este juego, no en {{device}}.",
       "profileCopyCurrent": "Copiar ajustes actuales",
       "profileDelete": "Eliminar perfil",
       "haptics": "Intensidad de la vibración",
@@ -829,7 +826,7 @@
         "unknown": "Desconocido"
       },
       "tierHint": {
-        "verified": "Probado con el dongle: gatillos y retroalimentación háptica funcionan.",
+        "verified": "Probado con {{device}}: gatillos y retroalimentación háptica funcionan.",
         "works": "El juego es compatible de forma nativa con las funciones del DualSense.",
         "needs-setup": "Funciona cuando se completa la configuración de este juego.",
         "partial": "Faltan algunas funciones del DualSense en PC. Audio Auto Haptics puede suplir la vibración.",
@@ -935,13 +932,13 @@
       "lockVolume": "Bloquear volumen"
     },
     "dongleConsole": {
-      "title": "Consola: {{device}}",
+      "title": "Consola: {{deviceName}}",
       "pane": {
         "screen": "Pantalla",
         "log": "Registro"
       },
-      "noDongle": "Esperando el dongle",
-      "needsFirmware": "Actualiza el firmware del dongle para ver su pantalla",
+      "noDongle": "Esperando {{device_a}}",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para ver su pantalla",
       "unavailable": "Pantalla no disponible, reintentando",
       "connecting": "Leyendo la pantalla…",
       "live": "En directo",
@@ -950,18 +947,18 @@
       "screenN": "Pantalla {{n}}/{{total}}",
       "brightness": "Brillo {{pct}} %",
       "frame": "Fotograma {{n}}",
-      "hint": "Exactamente lo que muestra la pantalla del dongle, píxel a píxel. También funciona sin el módulo OLED. Cambia de pantalla con KEY0 / KEY1 en el dongle.",
+      "hint": "Exactamente lo que muestra la pantalla {{device_de}}, píxel a píxel. También funciona sin el módulo OLED. Cambia de pantalla con KEY0 / KEY1 en {{device}}.",
       "logEmpty": "Nada todavía.",
       "log": {
-        "online": "{{device}} conectado (protocolo {{version}})",
-        "offline": "{{device}} desconectado",
+        "online": "Conectado: {{deviceName}} (protocolo {{version}})",
+        "offline": "Desconectado: {{deviceName}}",
         "controller": "Mando conectado (ranura {{slot}})",
         "controllerGone": "Mando desconectado",
         "slot": "Cambiado a la ranura {{slot}}",
         "charging": "Mando cargando",
         "notCharging": "El mando dejó de cargar",
         "battery": "Batería {{pct}} %",
-        "saved": "Ajustes guardados en el dongle"
+        "saved": "Ajustes guardados en {{device}}"
       }
     },
     "rail": {
@@ -1052,7 +1049,7 @@
     },
     "dev": {
       "title": "Desarrollador",
-      "hint": "Previsualiza otro modelo y color de mando para comprobar los colores de la app. Solo cambia lo que se muestra; no se envía nada al dongle. Ctrl+Mayús+D oculta esta tarjeta. Se muestra en el canal de desarrollo.",
+      "hint": "Previsualiza otro modelo y color de mando para comprobar los colores de la app. Solo cambia lo que se muestra; no se envía nada {{device_a}}. Ctrl+Mayús+D oculta esta tarjeta. Se muestra en el canal de desarrollo.",
       "model": "Modelo",
       "colorway": "Color",
       "real": "El real",
@@ -1073,11 +1070,11 @@
         "ready": "Lista / esperando"
       },
       "fakeSlots": "Simular más mandos",
-      "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada al dongle.",
-      "simulated": "Dongle simulado (sin hardware)",
-      "simulatedHint": "La app habla con un dongle simulado en vez de por USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página.",
+      "fakeSlotsHint": "Las ranuras 1 y 2 aparecen emparejadas (un Edge Midnight Black y un DualSense Galactic Purple). Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada {{device_a}}.",
+      "simulated": "Simular {{device}} (sin hardware)",
+      "simulatedHint": "La app simula {{device}} en vez de usar USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página.",
       "simCore1": "Core1 simulado",
-      "simCore1Hint": "Hace que el Core1 del dongle simulado se detenga en un paso de arranque, para ver el aviso de la página del Pico. Recarga la página.",
+      "simCore1Hint": "Hace que el Core1 de la simulación se detenga en un paso de arranque, para ver el aviso en {{deviceName}}. Recarga la página.",
       "simCore1Runs": "Funciona con normalidad",
       "simCore1Stage": "Se detiene en el paso {{stage}}: {{step}}"
     },
@@ -1096,8 +1093,8 @@
     "calib": {
       "title": "Calibración",
       "shortcut": "Deriva de joysticks, zonas muertas, recorrido de gatillos, giroscopio",
-      "intro": "Corrige la deriva de los joysticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en el dongle, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
-      "needsFirmware": "Actualiza el firmware del dongle para calibrar.",
+      "intro": "Corrige la deriva de los joysticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en {{device}}, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para calibrar.",
       "needsController": "Conecta un mando para calibrar.",
       "noInput": "No llegó entrada del mando durante ese paso. Inténtalo de nuevo.",
       "start": "Iniciar calibración",
@@ -1122,10 +1119,10 @@
       "now": "ahora {{raw}} → {{out}}",
       "gyro": "Giroscopio",
       "gyroZero": "Desplazamiento del cero:",
-      "save": "Guardar en el dongle",
+      "save": "Guardar en {{device}}",
       "revert": "Deshacer",
       "reset": "Volver a sin calibrar",
-      "saveHint": "Se guarda en la memoria del dongle; se aplica al instante en todos los juegos.",
+      "saveHint": "Se guarda en la memoria {{device_de}}; se aplica al instante en todos los juegos.",
       "forSlot": "Para el mando del espacio de emparejamiento {{slot}}; cada espacio guarda la suya.",
       "getReady": "Prepárate…",
       "missed": "No medido, se mantienen los valores anteriores: {{parts}}. Llega hasta el tope y vuelve a medir.",
@@ -1133,7 +1130,7 @@
     },
     "curves": {
       "title": "Curva de sensibilidad",
-      "intro": "Cómo responde cada joystick entre el centro y la inclinación máxima. Se aplica en el dongle después de la calibración, así que funciona en todos los juegos.",
+      "intro": "Cómo responde cada joystick entre el centro y la inclinación máxima. Se aplica en {{device}} después de la calibración, así que funciona en todos los juegos.",
       "curve": "Curva",
       "type": {
         "linear": "Lineal",
@@ -1161,10 +1158,10 @@
       "keyLinear": "Lineal",
       "keyLive": "Tu joystick ahora",
       "gameOn": "El perfil de un juego tiene sus propias curvas activas ahora. Guardar aquí las desactiva hasta que ese juego vuelva a iniciarse.",
-      "needsFirmware": "Actualiza el firmware del dongle para usar curvas de sensibilidad.",
-      "readFailed": "El dongle no devolvió sus curvas.",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para usar curvas de sensibilidad.",
+      "readFailed": "{{device, capitalize}} no devolvió sus curvas.",
       "resetLinear": "Volver a Lineal",
-      "saveHint": "Guardada en el dongle para el mando de la espacio de emparejamiento {{slot}}; se aplica al instante en todos los juegos.",
+      "saveHint": "Guardada en {{device}} para el mando del espacio de emparejamiento {{slot}}; se aplica al instante en todos los juegos.",
       "profileLeft": "Curva del joystick izquierdo",
       "profileRight": "Curva del joystick derecho",
       "profileSaved": "Mi curva guardada",
@@ -1172,7 +1169,7 @@
     },
     "ctrlInfo": {
       "title": "Info del mando",
-      "needsFirmware": "Actualiza el firmware del dongle para ver el firmware, el voltaje de la batería y los contadores del mando.",
+      "needsFirmware": "Actualiza el firmware {{device_de}} para ver el firmware, el voltaje de la batería y los contadores del mando.",
       "noController": "Conecta un mando para ver su info.",
       "charge": "Carga",
       "chargeState": {
@@ -1218,7 +1215,7 @@
       "howToPc": "Conecta el mando a un PC con Windows con un cable USB-C y actualízalo con la app PlayStation Accessories de Sony (antes «Actualizador de firmware para el mando inalámbrico DualSense»).",
       "sonyPage": "Página de Sony",
       "howToPs5": "O en una PS5: conéctalo con un cable USB y ve a Ajustes → Accesorios → Mando (general) → Software del mando inalámbrico DualSense.",
-      "howToCable": "La actualización no puede hacerse a través del dongle. Después, vuelve a emparejar el mando con el dongle si no se reconecta.",
+      "howToCable": "La actualización no puede hacerse a través {{device_de}}. Después, vuelve a emparejar el mando con {{device}} si no se reconecta.",
       "windowsOnly": "La aplicación PlayStation Accessories de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5."
     },
     "stickTest": {
@@ -1329,8 +1326,8 @@
       "devHint": "Versiones de desarrollo de la app y el firmware, antes de publicarse: más nuevas y menos probadas. También recibes cada versión estable. «Volver a estable» instala la última app y firmware estables.",
       "backToStable": "Volver a estable",
       "joinTitle": "¿Unirte al canal de desarrollo?",
-      "joinNewer": "Recibes versiones de la app y del firmware del dongle antes de publicarse: novedades antes.",
-      "joinBoth": "Se ofrecen ambas: la app se actualiza sola y la actualización del firmware aparece en la página del Pico como siempre.",
+      "joinNewer": "Recibes versiones de la app y del firmware {{device_de}} antes de publicarse: novedades antes.",
+      "joinBoth": "Se ofrecen ambas: la app se actualiza sola y la actualización del firmware aparece en {{deviceName}} como siempre.",
       "joinBugs": "Están menos probadas que las versiones estables y pueden tener errores. Cuéntanos lo que encuentres.",
       "joinBack": "Volver a estable (Ajustes de la app → Actualizaciones) recupera la última app y firmware estables cuando quieras.",
       "joinLatest": "Versión de desarrollo más reciente",
@@ -1344,7 +1341,7 @@
     },
     "layouts": {
       "title": "Distribuciones de botones",
-      "hint": "Guarda los botones de arriba con un nombre. El perfil de un juego puede usar una distribución: se activa mientras el juego está abierto (nunca se guarda en el dongle) y tus botones normales vuelven al cerrarlo.",
+      "hint": "Guarda los botones de arriba con un nombre. El perfil de un juego puede usar una distribución: se activa mientras el juego está abierto (nunca se guarda en {{device}}) y tus botones normales vuelven al cerrarlo.",
       "none": "Aún no hay distribuciones guardadas.",
       "load": "Cargar",
       "loadHint": "Pasar esta distribución al editor de arriba (Aplicar la convierte en tus botones normales)",
@@ -1356,11 +1353,11 @@
       "namePlaceholder": "Nombre, p. ej. Carreras",
       "usedBy_one": "usada por {{count}} juego",
       "usedBy_other": "usada por {{count}} juegos",
-      "activeNotice": "La distribución de {{game}} está ahora en el dongle. Aplicar guarda tus botones normales y la termina hasta que el juego vuelva a iniciarse.",
+      "activeNotice": "La distribución de {{game}} está ahora en {{device}}. Aplicar guarda tus botones normales y la termina hasta que el juego vuelva a iniciarse.",
       "aGame": "Un juego",
       "profileLabel": "Distribución de botones",
       "normal": "Botones normales",
-      "needsFirmware": "Necesita el firmware más reciente del dongle (página del Pico → Actualizar).",
+      "needsFirmware": "Necesita el firmware más reciente en {{device}} ({{deviceName}} → Actualizar).",
       "noneForGame": "Guarda distribuciones en la página de botones: elige un botón del mando.",
       "allTitle": "Botones",
       "allHeading": "Todos los botones",
@@ -1378,9 +1375,9 @@
       "loadedEdited": "editada",
       "loadedChip": "Cargada",
       "loadedState": {
-        "notApplied": "Aún sin aplicar: Aplicar la convierte en tus botones normales en el dongle.",
+        "notApplied": "Aún sin aplicar: Aplicar la convierte en tus botones normales en {{device}}.",
         "edited": "Cambiada desde que la cargaste: Actualizar guarda los cambios en la distribución; Aplicar los convierte en tus botones normales.",
-        "applied": "Aplicada: ahora son tus botones normales en el dongle."
+        "applied": "Aplicada: ahora son tus botones normales en {{device}}."
       },
       "extraSelf": "Él mismo (predeterminado)"
     },
@@ -1394,8 +1391,8 @@
       "open": "Editar en la vista del mando",
       "openHint": "Poner este perfil en el mando y editarlo con todos los paneles, notando cada cambio al momento",
       "buttonsNote": "Perfil de {{title}} activo: los botones van a la distribución de este juego con Guardar en el perfil, no a tus botones normales.",
-      "dongleNote": "No forma parte del perfil de {{title}}: los ajustes del dongle siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en el dongle.",
-      "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en el dongle para todos los juegos.",
+      "dongleNote": "No forma parte del perfil de {{title}}: estos ajustes {{device_de}} siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en {{device}}.",
+      "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en {{device}} para todos los juegos.",
       "curvesNote": "Perfil de {{title}} activo: las curvas van al perfil de este juego con Guardar en el perfil y se notan desde entonces; luego vuelven tus curvas normales.",
       "curvesNormal": "Este joystick usa tu curva normal en este juego."
     },
@@ -1407,11 +1404,11 @@
       "normalSub": "Tu ajuste normal",
       "on": "Activado",
       "off": "Desactivado",
-      "copyHint": "Este juego recibe los ajustes que hay ahora en el dongle",
-      "applyFailed": "El perfil de {{title}} no se pudo poner en el dongle ({{reason}}). Están activos tus ajustes normales.",
-      "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de joystick ({{reason}}). Se volverá a intentar cuando el dongle se reconecte.",
+      "copyHint": "Este juego recibe los ajustes que hay ahora en {{device}}",
+      "applyFailed": "El perfil de {{title}} no se pudo poner en {{device}} ({{reason}}). Están activos tus ajustes normales.",
+      "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de joystick ({{reason}}). Se volverá a intentar cuando {{device}} se reconecte.",
       "saveFailed": "No se guardó en el perfil de {{title}}: {{reason}}",
-      "notOn": "El perfil de {{title}} aún no está en el dongle, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo."
+      "notOn": "El perfil de {{title}} aún no está en {{device}}, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Cambiar el color",

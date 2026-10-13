@@ -39,7 +39,7 @@ export function repairWindowsUsb(): Promise<{ ok: boolean; message: string }> {
   const powershell = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   return new Promise((resolve) => {
     execFile(powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodeCommand(launcherScript(powershell, REPAIR_SCRIPT))], { windowsHide: true }, (error) => {
-      if (!error) resolve({ ok: true, message: "Repaired. Now unplug the dongle and plug it back in." });
+      if (!error) resolve({ ok: true, message: "Repaired. Now unplug your board and plug it back in." });
       else if (error.code === CANCELLED) resolve({ ok: false, message: "Cancelled." });
       else resolve({ ok: false, message: `Repair failed: ${error.message}` });
     });
