@@ -34,5 +34,12 @@ export function applyAutostart(enabled: boolean, startMinimized: boolean): void 
     }
     return;
   }
-  app.setLoginItemSettings({ openAtLogin: enabled, args: startMinimized ? [HIDDEN_FLAG] : [] });
+  // Windows: the real portable exe (launchPath), never process.execPath, which
+  // is the temp unpacked copy that is deleted when the app quits. Applied at
+  // every start, so an entry written by an older build is corrected.
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    args: startMinimized ? [HIDDEN_FLAG] : [],
+    ...(process.platform === "win32" ? { path: launchPath() } : {}),
+  });
 }

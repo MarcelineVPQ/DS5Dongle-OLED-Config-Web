@@ -31,6 +31,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Launch at login on Windows** started nothing: the startup entry pointed at the portable app's temporary unpacked copy, which Windows deletes when the app quits. It now points at the app's own .exe, and the entry is corrected at the next start.
 - **No warning sign for the mic's connect-time concealment:** right after a controller connects, the Audio card showed "Mic frames concealed (lost)" with ⚠ (about 33 frames, a benign one-off before the dongle sees the mic stream stop). The count still shows, but the ⚠ only appears when it keeps climbing while the mic is in use.
 - **Warning text reads with Color vision on in the Light theme:** with Protanopia, Deuteranopia or Tritanopia and no colorway accent, warning-colored text (dashboard counters, the rating stars) used the palette's warning color as is, about 2:1 on a white panel. It is now made legible on every surface the same way the colorway accent layer already did (at least 4.5:1), and follows System when the OS switches between light and dark.
 - **The side bar names your board while it waits:** before the device identifies itself, the status says "Waiting for the Pico 2 W…" (the last board that connected), or "Waiting to connect…" if none has yet, instead of "Waiting for the dongle…". The guide's side-bar step and the hints that point to the board's page ("Pico page → Update", the developer core1 option) now match the side bar too. All 7 languages.
