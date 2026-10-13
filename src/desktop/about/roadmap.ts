@@ -114,6 +114,12 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "planned", title: "Diagnostics in the app", text: "Run the dongle's checks in the app, see pass or fail for each, and copy the results into a GitHub issue.", areas: ["dongle", "app"] },
   { column: "planned", title: "Share button layouts", text: "Share your saved button layouts and use other players' layouts.", areas: ["buttons", "community"] },
+  {
+    column: "next",
+    title: "Trigger strength and more audio settings",
+    text: "Weaker adaptive triggers in 10 steps (per game too), a speaker boost, a volume lock games can't override, which mic and output the controller uses, and a status pin for an LED. The mute button's light follows the mic.",
+    areas: ["controller", "audio", "dongle"],
+  },
   { column: "next", title: "Faster dongle firmware", text: "The dongle's screen and the speaker's audio take less of the dongle's time.", areas: ["dongle"] },
   { column: "next", title: "Better OLED status screen", text: "A symmetric controller on the OLED's Status screen, with Create and Options, and a version line that fits.", areas: ["dongle"] },
   { column: "planned", title: "Clearer message when the dongle is busy", text: "Say that another app is using the dongle, instead of a raw USB error.", areas: ["dongle"], platform: "linux" },

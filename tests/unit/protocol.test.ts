@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
-import { CONFIG_BODY_SIZE, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, validateConfig } from "../../src/protocol/config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V13, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, STATUS_GPIO_OFF, validateConfig } from "../../src/protocol/config";
 import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
 
 describe("config codec (firmware Config_body, 37 bytes)", () => {
@@ -18,6 +18,36 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     expect(bytes.length).toBe(42);
     expect(bytes[37]).toBe(0xff); // the narrator byte, which a settings write never changes
     expect(decodeConfigBody(bytes)).toEqual(cfg);
+  });
+
+  it("carries the protocol 1.13 settings after the right grip (49 bytes)", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGainRight: 3, triggerReduce: 6, speakerGain: 3, lockVolume: true, micSelect: 2, speakerSelect: 3, statusGpioPin: 22, statusGpioMode: 1 });
+    const bytes = encodeConfigBody(cfg, true, true);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE_V13);
+    expect([...bytes.subarray(42)]).toEqual([6, 3, 1, 2, 3, 22, 1]);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+    // Older firmware's body (42 bytes): the 1.13 settings read as their defaults.
+    const old = decodeConfigBody(bytes.subarray(0, 42));
+    expect([old.triggerReduce, old.speakerGain, old.lockVolume, old.micSelect, old.speakerSelect, old.statusGpioPin]).toEqual([0, 0, false, 0, 0, STATUS_GPIO_OFF]);
+  });
+
+  it("never takes a 63-byte read's remap block (at 42 from 1.13) for the 1.13 settings", () => {
+    const report = new Uint8Array(63);
+    report.set(encodeConfigBody({ ...DEFAULT_CONFIG, triggerReduce: 4 }, true, true).subarray(0, 42));
+    report.set([0x52, 0x4d, 1, 0, 0, ...Array.from({ length: 16 }, (_, i) => i)], 42);
+    expect(decodeConfigBody(report).triggerReduce).toBe(0);
+  });
+
+  it("checks the 1.13 settings like the firmware", () => {
+    expect(validateConfig({ ...DEFAULT_CONFIG, triggerReduce: 10, speakerGain: 7, speakerSelect: 3, statusGpioPin: 28 })).toEqual([]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, triggerReduce: 11 })[0]?.field).toBe("triggerReduce");
+    expect(validateConfig({ ...DEFAULT_CONFIG, speakerGain: 8 })[0]?.field).toBe("speakerGain");
+    expect(validateConfig({ ...DEFAULT_CONFIG, statusGpioPin: 9 })[0]?.field).toBe("statusGpioPin"); // the OLED's chip select
+    expect(normalizeConfig({ ...DEFAULT_CONFIG, statusGpioPin: 25 }).statusGpioPin).toBe(STATUS_GPIO_OFF);
+  });
+
+  it("defaults to 500 Hz polling, like a fresh firmware config", () => {
+    expect(DEFAULT_CONFIG.pollingRateMode).toBe(1);
   });
 
   it("puts haptics gain at offset 1 as little-endian float32", () => {

@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V13, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
@@ -91,6 +91,7 @@ export const FEATURES2 = {
 // Identity [46] (protocol 1.12): a third feature byte.
 export const FEATURES3 = {
   controllerInfo: 0x01, // 0xEB get / 0xF6 0x16: controller firmware, lifetime counters, battery voltage
+  configTail: 0x02, // protocol 1.13: trigger reduction, speaker boost, volume lock, mic / speaker choice, status pin (config body 49 bytes)
 } as const;
 export const IDENTITY_BYTES = 47;
 
@@ -337,12 +338,18 @@ export class Ds5BridgeClient {
   }
 
   // The firmware's protocol, as of the last identity read (decides the config layout).
-  private protocol: { major: number; minor: number } | null = null;
+  private protocol: { major: number; minor: number; features3: number } | null = null;
 
   async identity(): Promise<BridgeIdentity> {
     const id = decodeIdentity(await this.transport.getReport(REPORT.identity, IDENTITY_BYTES));
-    this.protocol = { major: id.protoMajor, minor: id.protoMinor };
+    this.protocol = { major: id.protoMajor, minor: id.protoMinor, features3: id.features3 };
     return id;
+  }
+
+  // Protocol 1.13+: the config body's seven 1.13 settings (49 bytes).
+  get configTail(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 13) && (p.features3 & FEATURES3.configTail) !== 0;
   }
 
   // Protocol 1.6+: left and right grip haptics strengths.
@@ -395,12 +402,13 @@ export class Ds5BridgeClient {
   }
 
   async readConfig(): Promise<ConfigBody> {
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_SPLIT));
+    // The whole body: older firmware answers its own (shorter) body to this.
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V13));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config, this.splitHaptics);
+    const body = encodeConfigBody(config, this.splitHaptics, this.configTail);
     await this.command(FUNC.applyConfig, [...body]);
   }
 
