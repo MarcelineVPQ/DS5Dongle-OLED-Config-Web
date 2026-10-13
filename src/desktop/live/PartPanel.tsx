@@ -203,26 +203,35 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
             {t("desktop.layouts.seeAll")}
           </button>
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
-          <div className="dk-row-btns">
-            {game.target ? (
-              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={game.saveToProfile}>
-                {t("desktop.bar.saveProfile")}
-              </BusyButton>
-            ) : (
-              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-                {t("desktop.live.remapApply", "Apply remap")}
-              </BusyButton>
-            )}
-            <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
-              {t("desktop.bar.revert", "Revert")}
-            </button>
-            <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
-              {t("desktop.live.remapReset", "Reset all")}
-            </button>
-          </div>
+          <RemapActions remap={remap} onSave={game.target ? game.saveToProfile : null} />
         </>
       )}
     </section>
+  );
+}
+
+// The remap actions under the button pickers: Save to profile while a
+// game's profile is on (the buttons go into its layout), else Apply remap.
+function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<unknown>) | null }) {
+  const { t } = useTranslation();
+  return (
+    <div className="dk-row-btns">
+      {onSave ? (
+        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={onSave}>
+          {t("desktop.bar.saveProfile")}
+        </BusyButton>
+      ) : (
+        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
+          {t("desktop.live.remapApply", "Apply remap")}
+        </BusyButton>
+      )}
+      <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
+        {t("desktop.bar.revert", "Revert")}
+      </button>
+      <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
+        {t("desktop.live.remapReset", "Reset all")}
+      </button>
+    </div>
   );
 }
 
@@ -329,23 +338,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
           })}
       </div>
       {remap.error && <div className="dk-notice error">{remap.error}</div>}
-      <div className="dk-row-btns">
-        {target ? (
-          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={saveToProfile}>
-            {t("desktop.bar.saveProfile")}
-          </BusyButton>
-        ) : (
-          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-            {t("desktop.live.remapApply", "Apply remap")}
-          </BusyButton>
-        )}
-        <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
-          {t("desktop.bar.revert", "Revert")}
-        </button>
-        <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
-          {t("desktop.live.remapReset", "Reset all")}
-        </button>
-      </div>
+      <RemapActions remap={remap} onSave={target ? saveToProfile : null} />
     </section>
   );
 }
