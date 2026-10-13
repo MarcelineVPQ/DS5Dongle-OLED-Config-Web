@@ -12,6 +12,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
 import { useLibrary } from "../library/libraryContext";
+import { profileCurves, sameGameCurves, type GameCurves } from "../library/profileValues";
 import {
   CURVE_PRESETS,
   CURVE_TYPES,
@@ -48,19 +49,12 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   const [loadTry, setLoadTry] = useState(0);
   // A game's profile on (edited, or its game running): the curves picked here
   // go into that profile (undefined = that stick keeps the normal curve) and
-  // the profile hook puts them on the dongle for now (RAM only).
-  const { editing, active, library, setLibrary } = useLibrary();
+  // the profile hook puts them on the dongle for now (RAM only). The draft is
+  // the profile's (kept when this panel closes), saved with "Save to profile".
+  const { editing, active, library, curvesDraft, setCurvesDraft, saveToProfile } = useLibrary();
   const target = editing ?? active;
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
-  const stored = profile?.settings.stickCurves;
-  const storedKey = JSON.stringify(stored ?? null);
-  const [gameDraft, setGameDraft] = useState<GameCurves>(() => fromProfile(storedKey));
-  // A new version of the profile's curves (saved here or on the game page): start from it.
-  const [draftFor, setDraftFor] = useState(storedKey);
-  if (draftFor !== storedKey) {
-    setDraftFor(storedKey);
-    setGameDraft(fromProfile(storedKey));
-  }
+  const stored = profileCurves(profile?.settings);
 
   const currentSlot = bridge.identity?.currentSlot;
   useEffect(() => {
@@ -97,19 +91,14 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       <GameStickCurves
         title={target.title}
         saved={saved}
-        draft={gameDraft}
-        onDraft={setGameDraft}
+        draft={curvesDraft ?? stored}
+        onDraft={setCurvesDraft}
         side={side}
         onSide={setSide}
         input={input}
         sticks={sticks}
-        stored={fromProfile(storedKey)}
-        onSave={async (pair) => {
-          const desktop = window.desktop;
-          if (!desktop) return;
-          const stickCurves = pair[0] || pair[1] ? { ...(pair[0] ? { left: pair[0] } : {}), ...(pair[1] ? { right: pair[1] } : {}) } : undefined;
-          setLibrary(await desktop.librarySetProfile({ gameKey: target.gameKey, title: target.title, settings: { ...profile.settings, stickCurves } }));
-        }}
+        stored={stored}
+        onSave={saveToProfile}
       />
     );
 
@@ -317,13 +306,6 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
   );
 }
 
-type GameCurves = [StickCurve | undefined, StickCurve | undefined];
-const fromProfile = (key: string): GameCurves => {
-  const c = JSON.parse(key) as { left?: StickCurve; right?: StickCurve } | null;
-  return [c?.left, c?.right];
-};
-const sameGameCurve = (a: StickCurve | undefined, b: StickCurve | undefined) => (a && b ? curvesEqual(a, b) : a === b);
-
 // The curves panel while a game's profile is on: per stick, the normal
 // (saved) curve or a preset for this game, saved into the profile and felt
 // right away. Custom points per game aren't edited here (a later step).
@@ -348,7 +330,7 @@ function GameStickCurves({
   input: InputReport | null;
   sticks: readonly [StickCal, StickCal];
   stored: GameCurves;
-  onSave: (d: GameCurves) => Promise<void>;
+  onSave: () => Promise<void>;
 }) {
   const { t } = useTranslation();
   const own = draft[side];
@@ -359,7 +341,7 @@ function GameStickCurves({
     const next: StickCurve | undefined = choice === "normal" ? undefined : { type: choice, points: (own ?? saved?.[side] ?? LINEAR_CURVE).points };
     onDraft(side === 0 ? [next, draft[1]] : [draft[0], next]);
   };
-  const changed = !draft.every((c, i) => sameGameCurve(c, stored[i]));
+  const changed = !sameGameCurves(draft, stored);
   const raw = input ? (side === 0 ? input.leftStick : input.rightStick) : null;
   const calibrated = raw ? correctStick(raw.x, raw.y, sticks[side]) : null;
   const out = calibrated ? applyCurve(calibrated[0], calibrated[1], curve) : null;
@@ -390,7 +372,7 @@ function GameStickCurves({
       <CurveGraph curve={curve} live={tin !== null && tout !== null ? [tin, tout] : null} />
       <p className="dk-mono curve-now">{tin !== null && tout !== null ? t("desktop.curves.now", { in: Math.round(tin * 100), out: Math.round(tout * 100) }) : t("desktop.calib.needsController")}</p>
       <div className="dk-row-btns">
-        <BusyButton className="dk-btn primary" disabled={!changed} onClick={() => onSave(draft)}>
+        <BusyButton className="dk-btn primary" disabled={!changed} onClick={onSave}>
           {t("desktop.bar.saveProfile")}
         </BusyButton>
         <button type="button" className="dk-btn" disabled={!changed} onClick={() => onDraft(stored)}>

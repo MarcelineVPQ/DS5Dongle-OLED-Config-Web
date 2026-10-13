@@ -216,6 +216,10 @@ export default function DesktopApp() {
         editing: profiles.editing,
         appliedStamp: profiles.appliedStamp,
         switchSlot: profiles.switchSlot,
+        curvesDraft: profiles.curvesDraft,
+        setCurvesDraft: profiles.setCurvesDraft,
+        setButtonsDraft: profiles.setButtonsDraft,
+        saveToProfile: profiles.saveToProfile,
         editProfile: (gameKey, title) => {
           profiles.startEditing(gameKey, title);
           setMain("controller");

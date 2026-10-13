@@ -1339,7 +1339,7 @@
       "allHint_other": "{{count}} buttons changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "changed": "changed",
       "notApplied": "not applied yet",
-      "activeNoticeShort": "A game's button layout is on the dongle now. Apply remap saves your normal buttons and ends it until the game starts again.",
+      "notSaved": "not saved yet",
       "shortcutTitle": "Buttons & layouts",
       "shortcutSub": "Every button in one list, saved layouts for games",
       "seeAll": "See all buttons and saved layouts",
@@ -1357,16 +1357,14 @@
     },
     "editing": {
       "title": "Editing: {{title}} profile",
-      "hint": "every change here goes to this game's profile and you feel it right away; your normal settings come back with Done.",
+      "hint": "settings changed here are felt right away, buttons and curves once saved; Save to profile keeps them all for this game. Your normal settings come back with Done.",
       "done": "Done",
       "open": "Edit in controller view",
       "openHint": "Put this profile on the controller and edit it with every panel, feeling each change live",
-      "saveLayout": "Save to {{name}} layout",
-      "saveNewLayout": "Save as this game's layout",
-      "buttonsNote": "Editing {{title}}: buttons are saved into this game's layout, not your normal buttons.",
+      "buttonsNote": "{{title}}'s profile is on: buttons go into this game's layout with Save to profile, not into your normal buttons.",
       "dongleNote": "Not part of {{title}}'s profile: dongle settings stay your normal ones. Changes here are kept after the profile ends; save them to the dongle then.",
       "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: saving it changes it in the dongle for every game.",
-      "curvesNote": "Editing {{title}}: curves are saved into this game's profile and felt right away; your normal curves come back after.",
+      "curvesNote": "{{title}}'s profile is on: curves go into this game's profile with Save to profile and are felt from then on; your normal curves come back after.",
       "curvesNormal": "This stick uses your normal curve in this game."
     },
     "profile": {

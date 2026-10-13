@@ -6,10 +6,14 @@ import {
   clearGroup,
   gameFields,
   gameGroups,
+  layoutForButtons,
   profileConfig,
+  profileCurves,
   profileDiffers,
+  profileToSave,
   pruneProfile,
   PROFILE_GROUPS,
+  sameGameCurves,
   settingsFrom,
   shownValues,
   upgradeProfile,
@@ -119,5 +123,51 @@ describe("game profile values (format 2: left out = my normal setting)", () => {
     expect(p.autoHapticsGain).toBeUndefined();
     expect(p.hapticsGain).toBe(2);
     expect(shownValues({ format: 2, speakerVolume: 4 }, normal)).toMatchObject({ speakerVolume: 4, hapticsGain: 1.5, audioBufferLength: 64 });
+  });
+});
+
+// "Save to profile" saves the panels' drafts (buttons, curves) with the settings.
+describe("profileToSave", () => {
+  const precise = {
+    type: "precise" as const,
+    points: [
+      [0, 0],
+      [85, 60],
+      [170, 140],
+      [255, 255],
+    ] as [[number, number], [number, number], [number, number], [number, number]],
+  };
+  const captured: ProfileSettings = { format: 2, speakerVolume: 3, buttonLayout: "l-old", stickCurves: { left: precise } };
+
+  it("keeps the layout and curves when neither was edited", () => {
+    expect(profileToSave(captured, { curves: null })).toEqual(captured);
+  });
+
+  it("points the profile at the layout the buttons went into", () => {
+    expect(profileToSave({ format: 2 }, { buttonLayout: "l-new" })).toEqual({ format: 2, buttonLayout: "l-new" });
+  });
+
+  it("stores the curves draft, and drops them when both sticks went back to normal", () => {
+    expect(profileToSave(captured, { curves: [undefined, precise] }).stickCurves).toEqual({ right: precise });
+    expect(profileToSave(captured, { curves: [undefined, undefined] })).not.toHaveProperty("stickCurves");
+  });
+
+  it("compares curves drafts with what the profile holds", () => {
+    expect(sameGameCurves(profileCurves(captured), [precise, undefined])).toBe(true);
+    expect(sameGameCurves(profileCurves(captured), [undefined, undefined])).toBe(false);
+    expect(sameGameCurves(profileCurves(undefined), [undefined, undefined])).toBe(true);
+  });
+});
+
+describe("layoutForButtons", () => {
+  const layouts = { "l-1": { name: "Racing", table: Array.from({ length: 16 }, (_, i) => i), updated: 1 } };
+
+  it("saves into the game's own layout", () => {
+    expect(layoutForButtons({ format: 2, buttonLayout: "l-1" }, layouts, "Some Game", "l-new")).toEqual({ id: "l-1", name: "Racing" });
+  });
+
+  it("makes a new layout named after the game when it has none (or it was deleted)", () => {
+    expect(layoutForButtons({ format: 2 }, layouts, "Some Game", "l-new")).toEqual({ id: "l-new", name: "Some Game" });
+    expect(layoutForButtons({ format: 2, buttonLayout: "l-gone" }, layouts, "x".repeat(50), "l-new")).toEqual({ id: "l-new", name: "x".repeat(40) });
   });
 });

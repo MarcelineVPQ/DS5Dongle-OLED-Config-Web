@@ -175,7 +175,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
 function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: (index?: number) => void }) {
   const { t } = useTranslation();
   const target = remap.draft[index];
-  const game = useGameLayoutSave(remap);
+  const game = useGameLayoutSave();
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.remapButton", { button: buttonLabel(index) })}</h2>
@@ -205,8 +205,8 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
           {remap.error && <div className="dk-notice error">{remap.error}</div>}
           <div className="dk-row-btns">
             {game.target ? (
-              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={game.saveToGameLayout}>
-                {game.gameLayout ? t("desktop.editing.saveLayout", { name: game.gameLayout.name }) : t("desktop.editing.saveNewLayout")}
+              <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={game.saveToProfile}>
+                {t("desktop.bar.saveProfile")}
               </BusyButton>
             ) : (
               <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
@@ -226,28 +226,15 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
   );
 }
 
-// Buttons edited while a game's profile is on are saved into that game's own
-// layout (a new one named after the game if it has none); the profile hook
-// then puts it on the dongle (temporary remap, RAM only), so it's felt at once.
-function useGameLayoutSave(remap: Remap) {
-  const { editing, active, library, setLibrary } = useLibrary();
+// Buttons edited while a game's profile is on go into that game's own layout
+// (a new one named after the game if it has none) with "Save to profile",
+// together with everything else changed for it; the profile hook then puts it
+// on the dongle (temporary remap, RAM only). ControllerView hands the draft over.
+function useGameLayoutSave() {
+  const { editing, active, library, saveToProfile } = useLibrary();
   const target = editing ?? active;
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
-  const layoutId = profile?.settings.buttonLayout;
-  const gameLayout = layoutId ? library.layouts?.[layoutId] : undefined;
-  const saveToGameLayout = async () => {
-    const desktop = window.desktop;
-    if (!desktop || !target || !profile) return;
-    const extra = remap.extraDevice ? { extra: remap.extraDraft } : {};
-    if (layoutId && gameLayout) {
-      setLibrary(await desktop.librarySetLayout({ id: layoutId, name: gameLayout.name, table: remap.draft, ...extra }));
-      return;
-    }
-    const id = `l-${Date.now().toString(36)}`;
-    await desktop.librarySetLayout({ id, name: target.title.slice(0, 40), table: remap.draft, ...extra });
-    setLibrary(await desktop.librarySetProfile({ gameKey: target.gameKey, title: target.title, settings: { ...profile.settings, buttonLayout: id } }));
-  };
-  return { target: profile ? target : null, gameLayout, saveToGameLayout };
+  return { target: profile ? target : null, saveToProfile };
 }
 
 // Every button in one list (the same draft as clicking them on the drawing),
@@ -268,7 +255,10 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   // A game's profile on (edited, or its game running): the buttons go into
   // that game's layout (switched in while it plays), never into the normal
   // buttons on the dongle.
-  const { target, gameLayout, saveToGameLayout } = useGameLayoutSave(remap);
+  const { target, saveToProfile } = useGameLayoutSave();
+  const { active } = useLibrary();
+  // Not saved yet: in a profile, into its layout; else onto the dongle.
+  const pendingLabel = target ? t("desktop.layouts.notSaved") : t("desktop.layouts.notApplied");
   if (remap.supported === false)
     return (
       <section className="dk-card">
@@ -281,7 +271,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
       {target && <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: target.title })}</div>}
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
-      {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNoticeShort")}</div>}
+      {remap.temporary && !target && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
       <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
         {remap.draft.map((target, i) => {
           const isChanged = target !== i;
@@ -291,7 +281,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
               <label role="rowheader" htmlFor={`all-remap-${i}`}>
                 {isChanged && <span aria-hidden="true">● </span>}
                 {buttonLabel(i)}
-                {(pending || isChanged) && <small>{pending ? t("desktop.layouts.notApplied") : t("desktop.layouts.changed")}</small>}
+                {(pending || isChanged) && <small>{pending ? pendingLabel : t("desktop.layouts.changed")}</small>}
               </label>
               <select
                 id={`all-remap-${i}`}
@@ -323,7 +313,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                 <label role="rowheader" htmlFor={`all-remap-${i}`}>
                   {isChanged && <span aria-hidden="true">● </span>}
                   {t(`desktop.live.part.${part}`)}
-                  {(pending || isChanged) && <small>{pending ? t("desktop.layouts.notApplied") : t("desktop.layouts.changed")}</small>}
+                  {(pending || isChanged) && <small>{pending ? pendingLabel : t("desktop.layouts.changed")}</small>}
                 </label>
                 <select id={`all-remap-${i}`} role="cell" className="dk-select" value={value} disabled={remap.busy} onChange={(e) => remap.setExtra(n, Number(e.target.value))}>
                   <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
@@ -341,8 +331,8 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
       {remap.error && <div className="dk-notice error">{remap.error}</div>}
       <div className="dk-row-btns">
         {target ? (
-          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={saveToGameLayout}>
-            {gameLayout ? t("desktop.editing.saveLayout", { name: gameLayout.name }) : t("desktop.editing.saveNewLayout")}
+          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={saveToProfile}>
+            {t("desktop.bar.saveProfile")}
           </BusyButton>
         ) : (
           <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
@@ -385,7 +375,7 @@ function LoadedLayout({ remap }: { remap: Remap }) {
 function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
-  const { library, setLibrary, active } = useLibrary();
+  const { library, setLibrary } = useLibrary();
   const [name, setName] = useState("");
   const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
   const usedBy = (id: string) => Object.values(library.games).filter((g) => g.profile?.settings.buttonLayout === id).length;
@@ -397,7 +387,6 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
     <section className="dk-card">
       <h2>{t("desktop.layouts.title")}</h2>
       <p className="dk-hint">{t("desktop.layouts.hint")}</p>
-      {remap.temporary && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
       {layouts.length === 0 ? (
         <p className="dk-hint">{t("desktop.layouts.none")}</p>
       ) : (

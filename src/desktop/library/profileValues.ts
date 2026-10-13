@@ -4,7 +4,8 @@
 // "Normal" is what the dongle had before a profile went on (the restore
 // point), or the dongle's settings now when no profile is on.
 import type { ConfigBody } from "../../protocol/config";
-import { PROFILE_FIELDS, type ProfileField, type ProfileSettings } from "../games/library";
+import { curvesEqual, type StickCurve } from "../../protocol/stickCurve";
+import { PROFILE_FIELDS, type LibraryFile, type ProfileField, type ProfileSettings } from "../games/library";
 
 // The profile-able values of a dongle config (format 2: every one set).
 export function settingsFrom(c: ConfigBody): ProfileSettings {
@@ -117,4 +118,33 @@ export const shownValues = (profile: ProfileSettings, normal: ProfileSettings): 
 
 function stripUndefined(s: ProfileSettings): ProfileSettings {
   return Object.fromEntries(Object.entries(s).filter(([, v]) => v !== undefined)) as ProfileSettings;
+}
+
+// Edits kept in a panel's own draft while a profile is on (the Buttons list,
+// the stick curves): "Save to profile" saves them with the settings, in one
+// save, so none is left behind.
+export type GameCurves = [StickCurve | undefined, StickCurve | undefined]; // undefined = that stick's normal curve
+// (The library checks a stored curve has its 4 points.)
+export const profileCurves = (s: ProfileSettings | undefined): GameCurves => [s?.stickCurves?.left as StickCurve | undefined, s?.stickCurves?.right as StickCurve | undefined];
+const sameCurve = (a: StickCurve | undefined, b: StickCurve | undefined) => (a && b ? curvesEqual(a, b) : a === b);
+export const sameGameCurves = (a: GameCurves, b: GameCurves) => sameCurve(a[0], b[0]) && sameCurve(a[1], b[1]);
+
+// The layout a game's buttons are saved into: its own, else a new one named after the game.
+export function layoutForButtons(settings: ProfileSettings | undefined, layouts: LibraryFile["layouts"], title: string, newId: string): { id: string; name: string } {
+  const id = settings?.buttonLayout;
+  const own = id ? layouts?.[id] : undefined;
+  return id && own ? { id, name: own.name } : { id: newId, name: title.slice(0, 40) };
+}
+
+// What "Save to profile" stores: the captured settings, the curves draft (when
+// changed) and the layout the buttons went into (when they changed).
+export function profileToSave(captured: ProfileSettings, pending: { curves?: GameCurves | null; buttonLayout?: string }): ProfileSettings {
+  const out = { ...captured };
+  if (pending.buttonLayout) out.buttonLayout = pending.buttonLayout;
+  if (pending.curves) {
+    const [left, right] = pending.curves;
+    if (left || right) out.stickCurves = { ...(left ? { left } : {}), ...(right ? { right } : {}) };
+    else delete out.stickCurves;
+  }
+  return out;
 }

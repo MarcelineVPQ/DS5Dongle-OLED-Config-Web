@@ -1340,7 +1340,7 @@
       "allHint_other": "{{count}} Tasten weichen von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "changed": "geändert",
       "notApplied": "noch nicht angewendet",
-      "activeNoticeShort": "Die Tastenbelegung eines Spiels ist gerade auf dem Dongle. Belegung anwenden speichert deine normale Belegung und beendet sie, bis das Spiel wieder startet.",
+      "notSaved": "noch nicht gespeichert",
       "shortcutTitle": "Tasten & Belegungen",
       "shortcutSub": "Alle Tasten in einer Liste, gespeicherte Belegungen für Spiele",
       "seeAll": "Alle Tasten und gespeicherten Belegungen",
@@ -1358,16 +1358,14 @@
     },
     "editing": {
       "title": "Bearbeitung: Profil {{title}}",
-      "hint": "jede Änderung hier geht ins Profil dieses Spiels und ist sofort spürbar; mit Fertig kommen deine normalen Einstellungen zurück.",
+      "hint": "geänderte Einstellungen sind sofort spürbar, Tasten und Kurven nach dem Speichern; Im Profil speichern behält alles für dieses Spiel. Mit Fertig kommen deine normalen Einstellungen zurück.",
       "done": "Fertig",
       "open": "In der Controller-Ansicht bearbeiten",
       "openHint": "Dieses Profil auf den Controller legen und mit allen Bereichen bearbeiten, jede Änderung sofort spürbar",
-      "saveLayout": "In Belegung {{name}} speichern",
-      "saveNewLayout": "Als Belegung dieses Spiels speichern",
-      "buttonsNote": "Bearbeitung {{title}}: Tasten werden in die Belegung dieses Spiels gespeichert, nicht in deine normale.",
+      "buttonsNote": "Profil von {{title}} ist aktiv: Tasten kommen mit Im Profil speichern in die Belegung dieses Spiels, nicht in deine normale.",
       "dongleNote": "Nicht Teil des Profils von {{title}}: Dongle-Einstellungen bleiben deine normalen. Änderungen hier bleiben nach dem Profil erhalten; speichere sie dann auf dem Dongle.",
       "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Speichern ändert sie im Dongle für jedes Spiel.",
-      "curvesNote": "Bearbeitung {{title}}: Kurven werden im Profil dieses Spiels gespeichert und sofort spürbar; danach kommen deine normalen Kurven zurück.",
+      "curvesNote": "Profil von {{title}} ist aktiv: Kurven kommen mit Im Profil speichern ins Profil dieses Spiels und sind ab dann spürbar; danach kommen deine normalen Kurven zurück.",
       "curvesNormal": "Dieser Stick nutzt in diesem Spiel deine normale Kurve."
     },
     "profile": {

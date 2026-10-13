@@ -77,8 +77,16 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
     wasOn.current = on;
   }, [on, id]);
-  const { appliedStamp } = useLibrary();
+  const { appliedStamp, editing, active, library, setButtonsDraft } = useLibrary();
   const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
+  // A game's profile on: button changes are part of what "Save to profile" saves.
+  const profileKey = (editing ?? active)?.gameKey;
+  const inProfile = !!(profileKey && library.games[profileKey]?.profile);
+  const { dirty: remapDirty, draft: remapDraft, extraDraft, extraDevice, revert: remapRevert } = remap;
+  useEffect(() => {
+    setButtonsDraft(inProfile && remapDirty ? { table: remapDraft, ...(extraDevice ? { extra: extraDraft } : {}), revert: remapRevert } : null);
+  }, [setButtonsDraft, inProfile, remapDirty, remapDraft, extraDraft, extraDevice, remapRevert]);
+  useEffect(() => () => setButtonsDraft(null), [setButtonsDraft]);
 
   const remapped = useMemo(() => {
     const set = new Set<PartId>();

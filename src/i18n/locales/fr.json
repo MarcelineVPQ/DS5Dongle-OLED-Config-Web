@@ -1340,7 +1340,7 @@
       "allHint_other": "{{count}} boutons modifiés par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "changed": "modifié",
       "notApplied": "pas encore appliqué",
-      "activeNoticeShort": "La disposition d’un jeu est sur le dongle en ce moment. Appliquer enregistre tes boutons habituels et la termine jusqu’au prochain lancement du jeu.",
+      "notSaved": "pas encore enregistré",
       "shortcutTitle": "Boutons et dispositions",
       "shortcutSub": "Tous les boutons dans une liste, dispositions enregistrées pour les jeux",
       "seeAll": "Voir tous les boutons et les dispositions",
@@ -1358,16 +1358,14 @@
     },
     "editing": {
       "title": "Modification : profil {{title}}",
-      "hint": "chaque changement va dans le profil de ce jeu et se ressent tout de suite ; tes réglages habituels reviennent avec Terminé.",
+      "hint": "les réglages modifiés ici se ressentent tout de suite, les boutons et les courbes une fois enregistrés ; Enregistrer dans le profil garde tout pour ce jeu. Tes réglages habituels reviennent avec Terminé.",
       "done": "Terminé",
       "open": "Modifier dans la vue manette",
       "openHint": "Mettre ce profil sur la manette et le modifier avec tous les panneaux, en ressentant chaque changement",
-      "saveLayout": "Enregistrer dans la disposition {{name}}",
-      "saveNewLayout": "Enregistrer comme disposition de ce jeu",
-      "buttonsNote": "Modification de {{title}} : les boutons sont enregistrés dans la disposition de ce jeu, pas dans tes boutons habituels.",
+      "buttonsNote": "Profil de {{title}} actif : les boutons vont dans la disposition de ce jeu avec Enregistrer dans le profil, pas dans tes boutons habituels.",
       "dongleNote": "Hors du profil de {{title}} : les réglages du dongle restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur le dongle.",
       "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans le dongle pour tous les jeux.",
-      "curvesNote": "Modification de {{title}} : les courbes sont enregistrées dans le profil de ce jeu et se ressentent tout de suite ; tes courbes habituelles reviennent ensuite.",
+      "curvesNote": "Profil de {{title}} actif : les courbes vont dans le profil de ce jeu avec Enregistrer dans le profil et se ressentent dès lors ; tes courbes habituelles reviennent ensuite.",
       "curvesNormal": "Ce stick utilise ta courbe habituelle dans ce jeu."
     },
     "profile": {

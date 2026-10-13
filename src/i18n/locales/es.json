@@ -1340,7 +1340,7 @@
       "allHint_other": "{{count}} botones cambiados respecto al mando. Elige en esta lista o haz clic en un botón del dibujo; ambos cambian lo mismo.",
       "changed": "cambiado",
       "notApplied": "sin aplicar",
-      "activeNoticeShort": "La distribución de un juego está ahora en el dongle. Aplicar guarda tus botones normales y la termina hasta que el juego vuelva a iniciarse.",
+      "notSaved": "sin guardar",
       "shortcutTitle": "Botones y distribuciones",
       "shortcutSub": "Todos los botones en una lista, distribuciones guardadas para juegos",
       "seeAll": "Ver todos los botones y distribuciones guardadas",
@@ -1358,16 +1358,14 @@
     },
     "editing": {
       "title": "Editando: perfil de {{title}}",
-      "hint": "cada cambio va al perfil de este juego y lo notas al momento; tus ajustes normales vuelven con Listo.",
+      "hint": "los ajustes cambiados aquí se notan al momento; los botones y las curvas, al guardar. Guardar en el perfil los guarda todos para este juego. Tus ajustes normales vuelven con Listo.",
       "done": "Listo",
       "open": "Editar en la vista del mando",
       "openHint": "Poner este perfil en el mando y editarlo con todos los paneles, notando cada cambio al momento",
-      "saveLayout": "Guardar en la distribución {{name}}",
-      "saveNewLayout": "Guardar como distribución de este juego",
-      "buttonsNote": "Editando {{title}}: los botones se guardan en la distribución de este juego, no en tus botones normales.",
+      "buttonsNote": "Perfil de {{title}} activo: los botones van a la distribución de este juego con Guardar en el perfil, no a tus botones normales.",
       "dongleNote": "No forma parte del perfil de {{title}}: los ajustes del dongle siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en el dongle.",
       "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en el dongle para todos los juegos.",
-      "curvesNote": "Editando {{title}}: las curvas se guardan en el perfil de este juego y se notan al instante; luego vuelven tus curvas normales.",
+      "curvesNote": "Perfil de {{title}} activo: las curvas van al perfil de este juego con Guardar en el perfil y se notan desde entonces; luego vuelven tus curvas normales.",
       "curvesNormal": "Este stick usa tu curva normal en este juego."
     },
     "profile": {

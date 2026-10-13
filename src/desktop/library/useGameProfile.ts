@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { EMPTY_LIBRARY, type LibraryFile, type ProfileSettings } from "../games/library";
 import { applyGameProfile, gamePartsOf, profileCaps, putGameParts, restoreNormal } from "./profileDongle";
-import { captureProfile, profileConfig, profileDiffers, settingsFrom, withSettings } from "./profileValues";
+import { captureProfile, layoutForButtons, profileConfig, profileCurves, profileDiffers, profileToSave, sameGameCurves, settingsFrom, withSettings, type GameCurves } from "./profileValues";
 
 export { nonConfigParts, settingsFrom } from "./profileValues";
 
@@ -49,9 +49,15 @@ export interface GameProfileState {
   running: string | null;
   // The game whose profile is on the dongle right now.
   active: { gameKey: string; title: string } | null;
-  // The dongle's profile settings differ from the stored profile (edits made
-  // in the live view while the profile is active).
+  // Something edited in the live view while the profile is active isn't in
+  // the stored profile yet: the dongle's settings, the buttons or the curves.
   profileDirty: boolean;
+  // The stick curves picked for this game, not saved yet (null: the stored ones).
+  curvesDraft: GameCurves | null;
+  setCurvesDraft: (curves: GameCurves | null) => void;
+  // The Buttons list's changes while a profile is on (null: none), so
+  // "Save to profile" saves them into the game's layout too.
+  setButtonsDraft: (draft: ButtonsDraft | null) => void;
   saveToProfile: () => Promise<void>;
   revertToProfile: () => Promise<void>;
   // Editing a game's profile on purpose (game page → "Edit in controller
@@ -66,6 +72,12 @@ export interface GameProfileState {
   switchSlot: (slot: number) => Promise<void>;
   startEditing: (gameKey: string, title: string) => void;
   stopEditing: () => void;
+}
+
+export interface ButtonsDraft {
+  table: number[];
+  extra?: number[]; // the Edge's Fn buttons and paddles (protocol 1.9)
+  revert: () => void;
 }
 
 export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): GameProfileState {
@@ -201,23 +213,51 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   const profile = active ? library.games[active.gameKey]?.profile : undefined;
   // The normal settings under the active profile (its restore point).
   const normal = library.restore?.settings ?? null;
-  const profileDirty = !!(active && profile && config && profileDiffers(config, normal, profile.settings));
+  // Drafts kept for a profile until it's saved (or another profile goes on).
+  const [curvesDraft, setCurvesDraft] = useState<GameCurves | null>(null);
+  const [buttonsDraft, setButtonsDraft] = useState<ButtonsDraft | null>(null);
+  const storedCurves = profileCurves(profile?.settings);
+  // A new version of the profile's curves (saved here or on the game page), or another profile: start from it.
+  const curvesKey = JSON.stringify([active?.gameKey ?? editing?.gameKey ?? null, storedCurves]);
+  const [curvesFor, setCurvesFor] = useState(curvesKey);
+  if (curvesFor !== curvesKey) {
+    setCurvesFor(curvesKey);
+    setCurvesDraft(null);
+  }
+  const curvesDirty = !!curvesDraft && !sameGameCurves(curvesDraft, storedCurves);
+  const profileDirty = !!(active && profile && config && (profileDiffers(config, normal, profile.settings) || curvesDirty || buttonsDraft));
 
   const saveToProfile = useCallback(async () => {
     if (!desktop || !active || !config) return;
-    // What differs from the normal settings becomes this game's; the layout and curves stay.
-    const file = await desktop.librarySetProfile({ gameKey: active.gameKey, title: active.title, settings: captureProfile(config, normal, library.games[active.gameKey]?.profile?.settings) });
-    // Already on the dongle: don't re-apply the version just saved.
-    const updated = file.games[active.gameKey]?.profile?.updated;
-    const layoutId = file.games[active.gameKey]?.profile?.settings.buttonLayout;
-    const layout = layoutId ? file.layouts?.[layoutId] : undefined;
-    appliedFor.current = `${active.gameKey}@${updated}${layout ? `+${layoutId}@${layout.updated}` : ""}`;
+    const stored = library.games[active.gameKey]?.profile?.settings;
+    // The buttons go into this game's layout (a new one named after it if it has none).
+    let buttonLayout: string | undefined;
+    if (buttonsDraft) {
+      const l = layoutForButtons(stored, library.layouts, active.title, `l-${Date.now().toString(36)}`);
+      await desktop.librarySetLayout({ id: l.id, name: l.name, table: buttonsDraft.table, ...(buttonsDraft.extra ? { extra: buttonsDraft.extra } : {}) });
+      buttonLayout = l.id;
+    }
+    // What differs from the normal settings becomes this game's; the layout and curves stay unless edited here.
+    const settings = profileToSave(captureProfile(config, normal, stored), { curves: curvesDirty ? curvesDraft : null, buttonLayout });
+    const file = await desktop.librarySetProfile({ gameKey: active.gameKey, title: active.title, settings });
+    // Settings only: already on the dongle, so don't re-apply the version just
+    // saved. New buttons or curves are put on by re-applying it.
+    if (!buttonLayout && !curvesDirty) {
+      const updated = file.games[active.gameKey]?.profile?.updated;
+      const layoutId = file.games[active.gameKey]?.profile?.settings.buttonLayout;
+      const layout = layoutId ? file.layouts?.[layoutId] : undefined;
+      appliedFor.current = `${active.gameKey}@${updated}${layout ? `+${layoutId}@${layout.updated}` : ""}`;
+    }
+    setCurvesDraft(null);
     setLibrary(file);
-  }, [desktop, active, config, library, normal]);
+  }, [desktop, active, config, library, normal, buttonsDraft, curvesDirty, curvesDraft]);
 
   const revertToProfile = useCallback(async () => {
-    if (active && profile && config) await applyBody(normal ? profileConfig(config, normal, profile.settings) : config);
-  }, [active, profile, config, applyBody, normal]);
+    if (!active || !profile || !config) return;
+    setCurvesDraft(null);
+    buttonsDraft?.revert();
+    await applyBody(normal ? profileConfig(config, normal, profile.settings) : config);
+  }, [active, profile, config, applyBody, normal, buttonsDraft]);
 
   const switchSlot = useCallback(
     async (slot: number) => {
@@ -239,5 +279,21 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   const startEditing = useCallback((gameKey: string, title: string) => setEditing({ gameKey, title }), []);
   const stopEditing = useCallback(() => setEditing(null), []);
 
-  return { library, setLibrary, running, active, profileDirty, saveToProfile, revertToProfile, editing, appliedStamp, switchSlot, startEditing, stopEditing };
+  return {
+    library,
+    setLibrary,
+    running,
+    active,
+    profileDirty,
+    curvesDraft,
+    setCurvesDraft,
+    setButtonsDraft,
+    saveToProfile,
+    revertToProfile,
+    editing,
+    appliedStamp,
+    switchSlot,
+    startEditing,
+    stopEditing,
+  };
 }
