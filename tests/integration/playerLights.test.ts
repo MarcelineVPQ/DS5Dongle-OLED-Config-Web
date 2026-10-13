@@ -1,15 +1,19 @@
 // @vitest-environment jsdom
 // The player indicator lights: the pattern the PC set (identity byte 25,
-// bits 0..4 left to right) lights exactly those lights on the live drawing
-// (both the DualSense and the DualSense Edge art), and the Player tile names
-// the player for the five standard patterns (1 = center light ... 5 = all)
-// and shows no number for anything else. A new pattern repaints the lights
-// (none left on from the last one).
+// bits 0..4) lights what the controller lights, on the live drawing (both the
+// DualSense and the DualSense Edge art) and on the Player tile. Individually
+// wired boards (generation 0x03) light bit n's own light; paired ones (later
+// boards, and the default) light both outer lights for bit 0 or 4 and both
+// inner ones for bit 1 or 3. The tile names the player for the five standard
+// patterns (1 = center light ... 5 = all), the same on both wirings, and
+// shows no number for anything else. A new pattern repaints the lights (none
+// left on from the last one).
 import { act, createElement, Fragment } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "../../src/i18n";
 import { Ds5BridgeClient, type BridgeIdentity } from "../../src/protocol/bridgeClient";
+import type { PlayerLightWiring } from "../../src/protocol/controllerInfo";
 import LiveController from "../../src/desktop/live/LiveController";
 import LiveStrip from "../../src/desktop/live/LiveStrip";
 import type { PartId } from "../../src/desktop/live/parts";
@@ -40,7 +44,7 @@ async function identityWith(playerLeds: number, model: "dualsense" | "edge"): Pr
   return { ...id, controllerConnected: true, model };
 }
 
-function mount() {
+function mount(playerWiring: PlayerLightWiring) {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -56,12 +60,13 @@ function mount() {
             input: null,
             lightbar: null,
             playerLeds: id.playerLeds,
+            playerWiring,
             colors: null,
             selected: null,
             remapped: new Set<PartId>(),
             onSelect: vi.fn(),
           }),
-          createElement(LiveStrip, { id, rssi: null, lightbarMode: null, lightbar: null, onLightbar: vi.fn() }),
+          createElement(LiveStrip, { id, playerWiring, rssi: null, lightbarMode: null, lightbar: null, onLightbar: vi.fn() }),
         ),
       ),
     );
@@ -77,24 +82,31 @@ function mount() {
 }
 
 // pattern -> lights on (by data-led, left to right) and the tile's text.
-const CASES: Array<[number, number[], string]> = [
+type Case = [number, number[], string];
+const STANDARD: Case[] = [
   [0x00, [], "—"],
   [0x04, [2], "Player 1"],
   [0x0a, [1, 3], "Player 2"],
   [0x15, [0, 2, 4], "Player 3"],
   [0x1b, [0, 1, 3, 4], "Player 4"],
   [0x1f, [0, 1, 2, 3, 4], "Player 5"],
-  // not one of the standard patterns: the lights as set, no player number
-  [0x01, [0], "—"],
-  [0x10, [4], "—"],
-  [0x11, [0, 4], "—"],
 ];
+// Not one of the standard patterns: the lights the controller lights, no player number.
+const CASES: Record<PlayerLightWiring, Case[]> = {
+  individual: [...STANDARD, [0x01, [0], "—"], [0x02, [1], "—"], [0x10, [4], "—"], [0x11, [0, 4], "—"]],
+  paired: [...STANDARD, [0x01, [0, 4], "—"], [0x02, [1, 3], "—"], [0x10, [0, 4], "—"], [0x11, [0, 4], "—"]],
+};
 
 const hex = (n: number) => `0x${n.toString(16).padStart(2, "0")}`;
 
-describe.each(["dualsense", "edge"] as const)("player lights on the %s drawing", (model) => {
+describe.each([
+  ["dualsense", "paired"],
+  ["dualsense", "individual"],
+  ["edge", "paired"],
+  ["edge", "individual"],
+] as const)("player lights on the %s drawing, %s wiring", (model, wiring) => {
   it("has five lights, data-led 0..4 left to right", async () => {
-    const view = mount();
+    const view = mount(wiring);
     view.render(await identityWith(0, model));
     const leds = view.leds();
     expect(leds.map((l) => l.getAttribute("data-led"))).toEqual(["0", "1", "2", "3", "4"]);
@@ -102,8 +114,8 @@ describe.each(["dualsense", "edge"] as const)("player lights on the %s drawing",
     expect([...xs].sort((a, b) => a - b)).toEqual(xs);
   });
 
-  it.each(CASES)(`pattern %s lights %j and the tile shows %s`, async (pattern, on, text) => {
-    const view = mount();
+  it.each(CASES[wiring])(`pattern %s lights %j and the tile shows %s`, async (pattern, on, text) => {
+    const view = mount(wiring);
     view.render(await identityWith(pattern, model));
     expect(view.lit(), hex(pattern)).toEqual(on);
     expect(view.tileLit(), hex(pattern)).toEqual(on);
@@ -111,10 +123,10 @@ describe.each(["dualsense", "edge"] as const)("player lights on the %s drawing",
   });
 
   it("repaints on a new pattern, with nothing left from the last one", async () => {
-    const view = mount();
+    const view = mount(wiring);
     // every pattern after every other one, on the same mounted drawing
-    for (const [from] of CASES)
-      for (const [pattern, on, text] of CASES) {
+    for (const [from] of CASES[wiring])
+      for (const [pattern, on, text] of CASES[wiring]) {
         view.render(await identityWith(from, model));
         view.render(await identityWith(pattern, model));
         expect(view.lit(), `${hex(from)} -> ${hex(pattern)}`).toEqual(on);
@@ -125,7 +137,7 @@ describe.each(["dualsense", "edge"] as const)("player lights on the %s drawing",
 });
 
 it("keeps the lights when the model changes (the other drawing mounts lit)", async () => {
-  const view = mount();
+  const view = mount("paired");
   view.render(await identityWith(0x0a, "dualsense"));
   view.render(await identityWith(0x0a, "edge"));
   expect(view.lit()).toEqual([1, 3]);

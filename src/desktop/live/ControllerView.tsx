@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
+import { type ControllerFirmware, playerLightWiring } from "../../protocol/controllerInfo";
 import { signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 import { useWindowShown } from "../useWindowShown";
@@ -58,6 +59,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const look = colorway(id?.colorwayCode ?? null, id?.model ?? null);
   // Its colors, with the player's own on top (App settings).
   const lookColors = useControllerColors(id?.colorwayCode ?? null, id?.model ?? null);
+  // Its player lights' wiring, from the firmware report the Controller info card reads.
+  const [ctrlFirmware, setCtrlFirmware] = useState<ControllerFirmware | null>(null);
+  const playerWiring = playerLightWiring(on ? ctrlFirmware?.hwInfo : null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
   const liveCapable = supportsLiveInput(bridge.identity);
   // The drawing's live input isn't shown on the Dongle page: no polling there.
@@ -195,6 +199,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 input={input}
                 lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
                 playerLeds={on ? (id?.playerLeds ?? 0) : 0}
+                playerWiring={playerWiring}
                 colors={on ? lookColors : null}
                 selected={selected}
                 remapped={remapped}
@@ -223,6 +228,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
               {on && id && liveCapable && (
                 <LiveStrip
                   id={id}
+                  playerWiring={playerWiring}
                   rssi={status?.rssi ?? null}
                   lightbarMode={bridge.config?.lightbarMode ?? null}
                   lightbar={liveLightbar ?? id.lightbar}
@@ -230,7 +236,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 />
               )}
               {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
-              {on && liveCapable && <ControllerInfo bridge={bridge} batteryPct={input ? Math.min(100, input.batteryPct) : null} batteryState={input ? input.batteryState : null} />}
+              {on && liveCapable && (
+                <ControllerInfo bridge={bridge} batteryPct={input ? Math.min(100, input.batteryPct) : null} batteryState={input ? input.batteryState : null} onFirmware={setCtrlFirmware} />
+              )}
             </div>
             {!(on && id && liveCapable) && (
               <div className="live-status">

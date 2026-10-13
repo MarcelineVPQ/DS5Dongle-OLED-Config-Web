@@ -13,6 +13,8 @@ import {
   formatHex32,
   formatThreePart,
   formatUpdateVersion,
+  litPlayerLights,
+  playerLightWiring,
   telemetryPages,
   telemetrySupported,
 } from "../../src/protocol/controllerInfo";
@@ -161,5 +163,57 @@ describe("battery", () => {
 
   it("names the input report's power states", () => {
     expect([0, 1, 2, 10, 11, 15, 7].map(chargeState)).toEqual(["discharging", "charging", "full", "voltageError", "temperatureError", "chargeError", "unknown"]);
+  });
+});
+
+describe("player light wiring", () => {
+  it("reads the generation (hardware info bits 8..15): 0x03 individual, later boards paired", () => {
+    expect(playerLightWiring(0x00000313)).toBe("individual");
+    expect(playerLightWiring(0x00000300)).toBe("individual");
+    expect(playerLightWiring(0x00000100)).toBe("individual");
+    expect(playerLightWiring(0x00000400)).toBe("paired");
+    expect(playerLightWiring(0x00000711)).toBe("paired"); // a real DualSense: 0x01 lights both outer lights
+    expect(playerLightWiring(0x00010711)).toBe("paired"); // the variation byte doesn't matter
+    expect(playerLightWiring(0x00010311)).toBe("individual");
+  });
+
+  it("is paired when unknown", () => {
+    expect(playerLightWiring(null)).toBe("paired");
+    expect(playerLightWiring(undefined)).toBe("paired");
+    expect(playerLightWiring(0)).toBe("paired");
+  });
+
+  it("reads the hardware info from the firmware report", () => {
+    const b = firmware(1200);
+    new DataView(b.buffer).setUint32(24, 0x00000711, true);
+    expect(playerLightWiring(decodeControllerFirmware(b)!.hwInfo)).toBe("paired");
+  });
+
+  it("lights each bit's own light when individual", () => {
+    for (let p = 0; p < 0x20; p++) expect(litPlayerLights(p, "individual")).toBe(p);
+    expect(litPlayerLights(0xff, "individual")).toBe(0x1f);
+  });
+
+  it("lights mirrored pairs when paired", () => {
+    const cases: Array<[number, number]> = [
+      [0x00, 0x00],
+      [0x01, 0x11],
+      [0x02, 0x0a],
+      [0x04, 0x04],
+      [0x08, 0x0a],
+      [0x10, 0x11],
+      [0x11, 0x11],
+      [0x03, 0x1b],
+      [0x0a, 0x0a],
+      [0x15, 0x15],
+      [0x1b, 0x1b],
+      [0x1f, 0x1f],
+      [0x24, 0x04], // the fade bit is not a light
+    ];
+    for (const [pattern, lit] of cases) expect(litPlayerLights(pattern, "paired"), pattern.toString(16)).toBe(lit);
+  });
+
+  it("draws the standard player patterns the same on both wirings", () => {
+    for (const p of [0x04, 0x0a, 0x15, 0x1b, 0x1f]) expect(litPlayerLights(p, "paired")).toBe(litPlayerLights(p, "individual"));
   });
 });

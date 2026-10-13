@@ -17,6 +17,7 @@ import { Headphones, MicOff } from "lucide-react";
 import dualsenseArt from "../../assets/dualsense.svg?raw";
 import edgeArt from "../../assets/dualsense-edge.svg?raw";
 import type { InputReport } from "../../oled/inputReport";
+import { litPlayerLights, type PlayerLightWiring } from "../../protocol/controllerInfo";
 import { lineOnDark, type ColorwayColors } from "./colorways";
 import { hexToRgb, wantsLightInk } from "../theme/desktopPalette";
 import { PART_IDS, type PartId } from "./parts";
@@ -29,7 +30,8 @@ interface Props {
   model: "dualsense" | "edge" | null; // which drawing (null: the standard one)
   input: InputReport | null;
   lightbar: [number, number, number] | null;
-  playerLeds: number; // bits 0..4, left to right (as the PC set them)
+  playerLeds: number; // the pattern the PC set (bits 0..4)
+  playerWiring: PlayerLightWiring; // how the connected controller lights them
   colors: ColorwayColors | null; // the connected controller's colorway, null = theme colors
   selected: PartId | null;
   remapped: ReadonlySet<PartId>;
@@ -83,7 +85,7 @@ export default function LiveController(props: Props) {
   return <LiveArt key={edge ? "edge" : "dualsense"} art={edge ? edgeArt : dualsenseArt} {...props} />;
 }
 
-function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped, onSelect }: Props & { art: string }) {
+function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selected, remapped, onSelect }: Props & { art: string }) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const parts = useRef(new Map<PartId, SVGGraphicsElement>());
@@ -208,11 +210,12 @@ function LiveArt({ art, input, lightbar, playerLeds, colors, selected, remapped,
     }
   }, [colors]);
 
-  // Player indicator: the pattern the PC set (player 1 = center light, ...).
+  // Player indicator: the lights the PC's pattern turns on (player 1 = center light, ...).
   useEffect(() => {
+    const lit = litPlayerLights(playerLeds, playerWiring);
     const leds = host.current?.querySelectorAll("[data-led]");
-    leds?.forEach((led) => led.classList.toggle("on", (playerLeds & (1 << Number(led.getAttribute("data-led")))) !== 0));
-  }, [playerLeds]);
+    leds?.forEach((led) => led.classList.toggle("on", (lit & (1 << Number(led.getAttribute("data-led")))) !== 0));
+  }, [playerLeds, playerWiring]);
 
   // Live state.
   useEffect(() => {

@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
-import { chargeState, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
+import { type ControllerFirmware, chargeState, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
 import { compareOfficial } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
 import { BusyButton } from "../controls";
@@ -68,9 +68,11 @@ interface Props {
   // From the live input (0xF0): level in %, and the power-state nibble.
   batteryPct: number | null;
   batteryState: number | null;
+  // The controller's firmware report once read (null until then), for the drawing's player lights.
+  onFirmware?: (firmware: ControllerFirmware | null) => void;
 }
 
-function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
+function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props) {
   const { t, i18n } = useTranslation();
   const client = bridge.client;
   const supported = supportsControllerInfo(bridge.identity);
@@ -124,6 +126,9 @@ function ControllerInfo({ bridge, batteryPct, batteryState }: Props) {
       done?.();
     };
   }, [client, supported, connected, loadTry]);
+
+  const firmware = info?.firmware ?? null;
+  useEffect(() => onFirmware?.(firmware), [firmware, onFirmware]);
 
   if (!client) return null;
   const num = (n: number) => n.toLocaleString(i18n.resolvedLanguage);

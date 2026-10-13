@@ -16,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **The player lights in the drawing light like the controller's own:** current DualSense and DualSense Edge boards wire the five lights in mirrored pairs, so a pattern with only the leftmost (or rightmost) light set lights both outer lights on the controller, and one with the second (or fourth) lights both inner ones; the drawing and the Player tile showed a single light. They now follow the connected controller's wiring, read from its hardware info in Controller info (older boards, generation 0x03, light each one on its own); until that is read, the drawing assumes the paired wiring. The standard Player 1-5 patterns look the same either way. The HDR glow follows the drawing.
 - **HDR lighting follows the drawing of the controller you have:** on a DualSense Edge the HDR glow was drawn in the DualSense's light strips and player lights instead of the Edge's, and after switching back to a DualSense it stayed where the other drawing had left it. Each model's drawing now gets its own glow, built from that drawing's light bar and player lights and placed over it, every time the model changes; it also moves along when the model title above the drawing changes size. The UI check (`tools/check_ui.sh`) now switches DualSense → Edge → DualSense and checks that the glow lines up with each drawing.
 
 ## [0.9.5-dev.8] - 2026-10-13

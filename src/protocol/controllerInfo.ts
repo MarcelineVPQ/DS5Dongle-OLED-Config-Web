@@ -104,6 +104,38 @@ export const formatUpdateVersion = (v: number) => `${hex((v >> 8) & 0xff, 1)}.${
 export const formatDspVersion = (v: number) => `${hex((v >>> 16) & 0xffff, 4)}_${hex(v & 0xffff, 4)}`;
 export const formatHex32 = (v: number) => `0x${hex(v >>> 0, 8)}`;
 
+// #region Player indicator wiring
+// How the five player lights under the touch pad answer the pattern's bits
+// 0..4. Report 0x20's hardware info (bytes 24..27, the same u32 Linux
+// hid-playstation shows as hw_version) carries the board generation in bits
+// 8..15 (controllers.fandom.com, Sony DualSense / Data Structures, by Nielk1:
+// "0x00FF0000 - Variation, 0x0000FF00 - Generation"). Generation 0x03 drives
+// each light on its own; later boards wire them in mirrored pairs: bit 0 and
+// bit 4 both light the two outer lights, bits 1 and 3 the two inner ones,
+// bit 2 the center. The wiki's suggested test is (hw & 0x00FFFF00) == 0x0400,
+// but a generation 0x07 DualSense (hw 0x00000711) lights both outer lights
+// for 0x01, so everything after 0x03 counts as paired. Unknown (no controller
+// info yet, or firmware before protocol 1.12) is paired too: that is how
+// current DualSense and Edge units are built, and the standard player
+// patterns (0x04, 0x0A, 0x15, 0x1B, 0x1F) are symmetric, so they look the
+// same either way.
+export type PlayerLightWiring = "paired" | "individual";
+
+export function playerLightWiring(hwInfo: number | null | undefined): PlayerLightWiring {
+  const generation = hwInfo == null ? 0 : (hwInfo >>> 8) & 0xff;
+  return generation >= 1 && generation <= 3 ? "individual" : "paired";
+}
+
+// The lights on for a pattern: bit n = drawn light n (0..4, left to right).
+export function litPlayerLights(pattern: number, wiring: PlayerLightWiring): number {
+  const bits = pattern & 0x1f;
+  if (wiring === "individual") return bits;
+  const outer = bits & 0x11 ? 0x11 : 0;
+  const inner = bits & 0x0a ? 0x0a : 0;
+  return outer | inner | (bits & 0x04);
+}
+// #endregion
+
 export const telemetrySupported = (fw: ControllerFirmware, edge: boolean) => fw.updateVersion > (edge ? TELEMETRY_MIN_UPDATE.edge : TELEMETRY_MIN_UPDATE.dualsense);
 
 // #region NVRAM decoding: unwritten flash (0xFF...) and factory offsets read as 0.

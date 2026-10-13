@@ -5,11 +5,13 @@
 import { useTranslation } from "react-i18next";
 import type { BridgeIdentity } from "../../protocol/bridgeClient";
 import { playerNumber } from "../../protocol/bridgeClient";
+import { litPlayerLights, type PlayerLightWiring } from "../../protocol/controllerInfo";
 import { signalQuality } from "../format";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 
 interface Props {
   id: BridgeIdentity;
+  playerWiring: PlayerLightWiring; // how the connected controller lights its player lights
   rssi: number | null;
   // The lightbar's mode (from the dongle's settings) and its live color;
   // clicking the tile opens the lightbar settings.
@@ -20,10 +22,11 @@ interface Props {
 
 const BARS = { excellent: 4, good: 3, fair: 2, weak: 1 } as const;
 
-export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar }: Props) {
+export default function LiveStrip({ id, playerWiring, rssi, lightbarMode, lightbar, onLightbar }: Props) {
   const { t } = useTranslation();
   const quality = rssi === null ? null : signalQuality(rssi);
   const player = playerNumber(id.playerLeds);
+  const lit = litPlayerLights(id.playerLeds, playerWiring);
   const mode = LIGHTBAR_MODES.find((m) => m.value === lightbarMode);
   const swatch = lightbar ? `rgb(${lightbar.join(", ")})` : null; // theme-exempt: the real lightbar color
   return (
@@ -50,7 +53,7 @@ export default function LiveStrip({ id, rssi, lightbarMode, lightbar, onLightbar
       <div className="live-tile">
         <span className="live-pleds" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((n) => (
-            <span key={n} className={id.playerLeds & (1 << n) ? "on" : ""} />
+            <span key={n} className={lit & (1 << n) ? "on" : ""} />
           ))}
         </span>
         <span className="live-tile-value">{player ? `${t("desktop.live.player", "Player")} ${player}` : "—"}</span>
