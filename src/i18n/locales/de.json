@@ -1198,6 +1198,13 @@
       "none": "Keine",
       "connections": "Verbindungen",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · Zeitüberschreitungen {{timeouts}}",
+      "group": {
+        "action": "Aktionstasten",
+        "directional": "Richtungstasten",
+        "shoulder": "L1, R1 und Trigger",
+        "other": "Weitere Tasten",
+        "back": "Rücktasten"
+      },
       "presses": "Tastendrücke und Stick-Nutzung",
       "stickLeft": "Linker Stick, Hin und zurück",
       "stickRight": "Rechter Stick, Hin und zurück",

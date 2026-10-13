@@ -1198,6 +1198,13 @@
       "none": "Ninguno",
       "connections": "Conexiones",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · tiempos agotados {{timeouts}}",
+      "group": {
+        "action": "Botones de acción",
+        "directional": "Botones de dirección",
+        "shoulder": "L1, R1 y gatillos",
+        "other": "Otros botones",
+        "back": "Botones posteriores"
+      },
       "presses": "Pulsaciones y uso de joysticks",
       "stickLeft": "Joystick izquierdo, idas y vueltas",
       "stickRight": "Joystick derecho, idas y vueltas",

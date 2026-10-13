@@ -1192,6 +1192,13 @@
       "none": "无",
       "connections": "连接次数",
       "connectionsValue": "蓝牙 {{bt}} · USB {{usb}} · 超时 {{timeouts}}",
+      "group": {
+        "action": "动作键",
+        "directional": "方向键",
+        "shoulder": "L1、R1 和扳机",
+        "other": "其他按键",
+        "back": "背面键"
+      },
       "presses": "按键次数与操作杆使用",
       "stickLeft": "左操作杆往返次数",
       "stickRight": "右操作杆往返次数",

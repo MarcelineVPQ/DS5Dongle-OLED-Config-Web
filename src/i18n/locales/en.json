@@ -1197,6 +1197,13 @@
       "none": "None",
       "connections": "Connections",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · timeouts {{timeouts}}",
+      "group": {
+        "action": "Action buttons",
+        "directional": "Directional buttons",
+        "shoulder": "L1, R1 and triggers",
+        "other": "Other buttons",
+        "back": "Back buttons"
+      },
       "presses": "Button presses and stick use",
       "stickLeft": "Left stick round trips",
       "stickRight": "Right stick round trips",

@@ -1192,6 +1192,13 @@
       "none": "なし",
       "connections": "接続回数",
       "connectionsValue": "Bluetooth {{bt}} · USB {{usb}} · タイムアウト {{timeouts}}",
+      "group": {
+        "action": "アクションボタン",
+        "directional": "方向キー",
+        "shoulder": "L1・R1とトリガー",
+        "other": "その他のボタン",
+        "back": "背面ボタン"
+      },
       "presses": "ボタン押下回数とスティック使用",
       "stickLeft": "左スティック往復回数",
       "stickRight": "右スティック往復回数",

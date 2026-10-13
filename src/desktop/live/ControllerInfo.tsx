@@ -16,28 +16,16 @@ import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInf
 
 export const supportsControllerInfo = (identity: UseDs5BridgeResult["identity"]) => supportsFeature3(identity, 12, FEATURES3.controllerInfo);
 
-const BUTTON_ORDER = [
-  "cross",
-  "circle",
-  "square",
-  "triangle",
-  "up",
-  "down",
-  "left",
-  "right",
-  "l1",
-  "r1",
-  "l2",
-  "r2",
-  "l3",
-  "r3",
-  "touchpad",
-  "options",
-  "create",
-  "ps",
-  "mute",
-  "paddleLeft",
-  "paddleRight",
+// The counters in groups, named the way Sony names them where Sony has a
+// group name (docs/GLOSSARY.md): action buttons, directional buttons, back
+// buttons. "sticks" also holds the round trips.
+const BUTTON_GROUPS: { title: string; keys: string[] }[] = [
+  { title: "desktop.ctrlInfo.group.action", keys: ["cross", "circle", "square", "triangle"] },
+  { title: "desktop.ctrlInfo.group.directional", keys: ["up", "down", "left", "right"] },
+  { title: "desktop.ctrlInfo.group.shoulder", keys: ["l1", "r1", "l2", "r2"] },
+  { title: "desktop.customColors.part.stick", keys: ["l3", "r3"] },
+  { title: "desktop.ctrlInfo.group.other", keys: ["touchpad", "options", "create", "ps", "mute"] },
+  { title: "desktop.ctrlInfo.group.back", keys: ["paddleLeft", "paddleRight"] },
 ];
 const BUTTON_LABEL: Record<string, string> = {
   up: "desktop.live.part.dpad-up",
@@ -135,6 +123,7 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
   const hours = (s: number) => t("desktop.ctrlInfo.hours", { value: (s / 3600).toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) });
 
   let body;
+  let presses = null;
   if (!supported) body = <p className="dk-hint">{t("desktop.ctrlInfo.needsFirmware")}</p>;
   else if (!connected) body = <p className="dk-hint">{t("desktop.ctrlInfo.noController")}</p>;
   else {
@@ -144,6 +133,38 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
     const edge = info?.edge ?? null;
     const officialStatus = fw && edge !== null && official?.latest ? compareOfficial(fw.updateVersion, edge, official.latest) : null;
     const tm = info?.telemetry;
+    // "Button presses and stick use": its own card below this one, from the
+    // same read (shown only when the controller has the counters), one small
+    // group per column, wrapping on narrow windows.
+    if (tm) {
+      const groups = BUTTON_GROUPS.map(({ title, keys }) => {
+        const pairs = keys.filter((k) => k in tm.buttons).map((k) => <Pair key={k} label={t(BUTTON_LABEL[k])} value={num(tm.buttons[k])} />);
+        if (title === "desktop.customColors.part.stick")
+          tm.sticks.forEach((s, i) =>
+            pairs.push(
+              <Pair
+                key={`stick-${i}`}
+                label={t(i === 0 ? "desktop.ctrlInfo.stickLeft" : "desktop.ctrlInfo.stickRight")}
+                value={t("desktop.ctrlInfo.stickValue", { x: num(s.roundTripsX), y: num(s.roundTripsY) })}
+              />,
+            ),
+          );
+        return { title, pairs };
+      }).filter((g) => g.pairs.length > 0);
+      presses = (
+        <section className="live-data-card ctrl-info">
+          <h3>{t("desktop.ctrlInfo.presses")}</h3>
+          <div className="dk-grid">
+            {groups.map((g) => (
+              <div key={g.title}>
+                <h4 className="dk-subhead">{t(g.title)}</h4>
+                <dl className="dk-kv">{g.pairs}</dl>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
     const errors = tm ? tm.chargeErrors.voltage + tm.chargeErrors.temperature + tm.chargeErrors.pmic : 0;
     body = (
       <>
@@ -219,25 +240,6 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
               </>
             ) : null}
           </div>
-          {tm && (
-            <div>
-              <details className="dk-advanced">
-                <summary>{t("desktop.ctrlInfo.presses")}</summary>
-                <dl className="dk-kv">
-                  {BUTTON_ORDER.filter((k) => k in tm.buttons).map((k) => (
-                    <Pair key={k} label={t(BUTTON_LABEL[k])} value={num(tm.buttons[k])} />
-                  ))}
-                  {tm.sticks.map((s, i) => (
-                    <Pair
-                      key={`stick-${i}`}
-                      label={t(i === 0 ? "desktop.ctrlInfo.stickLeft" : "desktop.ctrlInfo.stickRight")}
-                      value={t("desktop.ctrlInfo.stickValue", { x: num(s.roundTripsX), y: num(s.roundTripsY) })}
-                    />
-                  ))}
-                </dl>
-              </details>
-            </div>
-          )}
         </div>
         {!tm && (
           <p className="dk-hint">
@@ -262,11 +264,14 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
   // A full-width card under the live data (the same card look), not in the
   // settings panel: it's something to read, not a setting.
   return (
-    <section className="live-data-card ctrl-info">
-      <h3>{t("desktop.ctrlInfo.title")}</h3>
-      {body}
-      {error && <div className="dk-notice error">{error}</div>}
-    </section>
+    <>
+      <section className="live-data-card ctrl-info">
+        <h3>{t("desktop.ctrlInfo.title")}</h3>
+        {body}
+        {error && <div className="dk-notice error">{error}</div>}
+      </section>
+      {presses}
+    </>
   );
 }
 
