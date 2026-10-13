@@ -26,6 +26,7 @@ import { say } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
 import { allFixes } from "../games/types";
+import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -58,13 +59,6 @@ export function useMsg(): (m: Msg) => string {
   );
 }
 
-// Running launchers that own these changes: the page says they'll be closed
-// and reopened, and names them in the request (the main process closes only those).
-export function restartFor(report: GamesReport, fixes: Fix[]): RestartList {
-  const owners = new Set<string>(fixes.map((f) => f.launcher));
-  return report.launchers.flatMap((l) => (l.running && owners.has(l.id) && (l.id === "steam" || l.id === "heroic" || l.id === "lutris") ? [l.id] : []));
-}
-
 // Said before applying (or undoing): which launchers will be closed and reopened.
 export function RestartNotice({ launchers, undo }: { launchers: LauncherId[]; undo?: boolean }) {
   const { t } = useTranslation();
@@ -73,6 +67,20 @@ export function RestartNotice({ launchers, undo }: { launchers: LauncherId[]; un
       {launchers.map((l) => (
         <div key={l} className="dk-notice">
           {t(undo ? "desktop.games.willRestartUndo" : "desktop.games.willRestart", { launcher: LAUNCHER_NAME[l] })}
+        </div>
+      ))}
+    </>
+  );
+}
+
+// A change applied this session that a launcher wrote back (launcherCheck.ts).
+export function OverwrittenNotice({ launchers }: { launchers: LauncherId[] }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {launchers.map((l) => (
+        <div key={l} className="dk-notice">
+          {t("desktop.games.launcherOverwrote", { launcher: LAUNCHER_NAME[l] })}
         </div>
       ))}
     </>
@@ -88,6 +96,7 @@ export function useRestartText(): (r: { blockedBy?: LauncherId[]; problem?: Clos
       if (r.problem === "game-running") return t("desktop.games.restartGameRunning", { launcher: name(r.blockedBy) });
       if (r.problem === "timeout") return t("desktop.games.restartTimeout", { launcher: name(r.blockedBy) });
       if (r.problem) return t("desktop.games.restartFailed", { launcher: name(r.blockedBy) });
+      if (startedSinceCheck(r)) return t("desktop.games.launcherStarted", { launcher: name(r.blockedBy) });
       if (r.reopenFailed?.length) return t("desktop.games.reopenFailed", { launcher: name(r.reopenFailed) });
       return null;
     },
@@ -227,7 +236,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
   const selected = fixes.filter((f) => chosen.has(f.id));
-  const restart = report ? restartFor(report, selected) : [];
+  // The review checks the running launchers again when it opens (and after each scan).
+  const [reviews, setReviews] = useState(0);
+  const fresh = useFreshRunning(step === "review" ? `${reviews}|${report?.scannedAt}` : null);
+  const restart = report ? restartFor(report, selected, fresh) : [];
+  const tookBack = overwrittenBy(fixes);
 
   // Side effects (storage, the parent's count) stay out of the state updater,
   // which React may run twice.
@@ -260,6 +273,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         return;
       }
       setCloseNote(restartText(r));
+      rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
       setResult({ ...r, labels });
       setStep("done");
       if (r.applied.length > 0 && r.applied.every((a) => a.ok)) void say("app_games_ready");
@@ -279,13 +293,15 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       const r = await desktop.gamesUndo({ backupId, restart });
       setCloseNote(null);
       if (r.ok) {
+        forgetApplied();
         setCloseNote(restartText(r));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {
         // Running launchers own these files: say they'll be closed and reopened, then ask.
-        if (r.problem) setCloseNote(restartText(r));
-        else setUndoAsk({ backupId, launchers: r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris") });
+        // One that started after the question was asked: said too, and asked again with it.
+        if (r.problem || restart.length) setCloseNote(restartText(r));
+        if (!r.problem) setUndoAsk({ backupId, launchers: [...new Set([...restart, ...r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris")])] });
       } else if ("conflict" in r) {
         setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
       } else {
@@ -419,10 +435,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
             <p className="dk-good">{t("desktop.games.allGood", "Everything is set up. Nothing to change.")}</p>
           ) : (
             <>
+              <OverwrittenNotice launchers={tookBack} />
               <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
               <FixList fixes={fixes} chosen={chosen} onToggle={toggle} />
               <div className="dk-row-btns">
-                <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={() => setStep("review")}>
+                <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={() => (setReviews((n) => n + 1), setStep("review"))}>
                   {t("desktop.games.review", { count: selected.length })}
                 </button>
               </div>
@@ -450,7 +467,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
           </ul>
           <RestartNotice launchers={restart} />
           <div className="dk-row-btns">
-            <BusyButton className="dk-btn primary" disabled={busy !== null || selected.length === 0} onClick={apply}>
+            <BusyButton className="dk-btn primary" disabled={busy !== null || selected.length === 0 || fresh === undefined} onClick={apply}>
               {t("desktop.games.apply", { count: selected.length })}
             </BusyButton>
             <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>

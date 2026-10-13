@@ -134,6 +134,50 @@ describe("the page shows what the files say after a change", () => {
     expect(report.games.find((g) => g.id === "ghost")!.runner).toBe(OURS);
   });
 
+  it("Heroic started after the scan: the review's check names it, Apply refuses until it's named, paths show as ~/", async () => {
+    buildHeroic(OLD);
+    process.env.HOME = home;
+    process.env.USERPROFILE = home;
+    const running = new Set<"heroic">();
+    const closed: string[] = [];
+    const control: LauncherControl = {
+      running: () => new Set(running),
+      gameRunning: () => false,
+      plan: () => ({ cmd: "heroic", args: [] }),
+      close: async (l) => (closed.push(l), running.delete("heroic"), "closed"),
+      reopen: async () => (running.add("heroic"), true),
+    };
+    const service = new GamesService({
+      userData: join(home, "userdata"),
+      allowed: () => true,
+      fetchManifest: () => Promise.reject(new Error("offline")),
+      download: () => Promise.reject(new Error("offline")),
+      onProtonProgress: () => undefined,
+      notDetected: () => new Set(),
+      hdrMarked: () => new Set(),
+      launchers: control,
+      probes: { audioCards: async () => [], hdr: async () => NO_HDR_SYSTEM },
+    });
+    const report = await service.scan(); // Heroic closed
+    const fix = report.games.find((g) => g.id === "ghost")!.fixes.find((f) => f.kind === "standard-gamepad")!;
+    expect(fix.files).toEqual([join("~", ".config/heroic/GamesConfig/ghost.json")]); // not the test HOME's full path
+    expect(report.launchers.find((l) => l.id === "heroic")!.running).toBe(false);
+
+    running.add("heroic"); // the player starts Heroic; Home isn't rescanned
+    expect(await service.runningLaunchers()).toEqual(["heroic"]); // the review's check
+    const before = readFileSync(gameFile(), "utf8");
+    const refused = await service.apply([fix.id], []); // a page that still names nothing
+    expect(refused).toEqual({ applied: [], backupId: null, blockedBy: ["heroic"] });
+    expect(readFileSync(gameFile(), "utf8")).toBe(before);
+    expect(closed).toEqual([]); // nothing closed before the player was told
+
+    const done = await service.apply([fix.id], ["heroic"]); // after the notice
+    expect(done.applied[0].ok).toBe(true);
+    expect(closed).toEqual(["heroic"]);
+    expect(running.has("heroic")).toBe(true); // reopened
+    expect(JSON.parse(readFileSync(gameFile(), "utf8")).ghost.wineVersion.name).toBe(OURS);
+  });
+
   it("only the newest of overlapping scans is shown, and a change always rescans", async () => {
     const latest = latestOnly();
     let finishOld!: (v: string) => void;

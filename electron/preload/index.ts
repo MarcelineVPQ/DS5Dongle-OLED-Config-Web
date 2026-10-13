@@ -59,6 +59,7 @@ const api: DesktopApi = {
   gamesApply: (request) => ipcRenderer.invoke(IPC.gamesApply, request),
   gamesUndo: (request) => ipcRenderer.invoke(IPC.gamesUndo, request),
   gamesBackups: () => ipcRenderer.invoke(IPC.gamesBackups),
+  gamesRunningLaunchers: () => ipcRenderer.invoke(IPC.gamesRunningLaunchers),
   installProton: () => ipcRenderer.invoke(IPC.installProton),
   onProtonProgress: (listener) => {
     const handler = (_event: IpcRendererEvent, progress: ProtonProgress) => listener(progress);

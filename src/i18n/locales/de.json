@@ -518,7 +518,9 @@
       "restartGameRunning": "Ein Spiel läuft, deshalb wurde {{launcher}} nicht geschlossen (das würde das Spiel beenden). Es wurde nichts geändert. Beende das Spiel und versuche es dann erneut.",
       "restartTimeout": "{{launcher}} wurde nicht innerhalb von 30 Sekunden beendet, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
       "restartFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
-      "reopenFailed": "Gespeichert, aber {{launcher}} konnte nicht wieder gestartet werden. Starte ihn selbst."
+      "reopenFailed": "Gespeichert, aber {{launcher}} konnte nicht wieder gestartet werden. Starte ihn selbst.",
+      "launcherStarted": "{{launcher}} läuft gerade, deshalb wurde noch nichts geändert. Er wird für diese Änderung geschlossen und danach wieder geöffnet. Bestätige erneut, um fortzufahren.",
+      "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet."
     },
     "setup": {
       "installing": "Firmware wird installiert…",

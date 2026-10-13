@@ -518,7 +518,9 @@
       "restartGameRunning": "Un jeu est en cours, donc {{launcher}} n'a pas été fermé (cela fermerait le jeu). Rien n'a été modifié. Quitte le jeu, puis réessaie.",
       "restartTimeout": "{{launcher}} ne s'est pas fermé en 30 secondes, donc rien n'a été modifié. Quitte-le toi-même, puis réessaie.",
       "restartFailed": "Impossible de demander à {{launcher}} de se fermer, donc rien n'a été modifié. Quitte-le toi-même, puis réessaie.",
-      "reopenFailed": "Enregistré, mais {{launcher}} n'a pas pu être relancé. Lance-le toi-même."
+      "reopenFailed": "Enregistré, mais {{launcher}} n'a pas pu être relancé. Lance-le toi-même.",
+      "launcherStarted": "{{launcher}} est en cours d'exécution, donc rien n'a encore été modifié. Il sera fermé pour ce changement, puis rouvert. Confirme à nouveau pour continuer.",
+      "launcherOverwrote": "{{launcher}} a annulé un changement appliqué ici (il était ouvert). Applique-le à nouveau : si {{launcher}} est ouvert, il est d'abord fermé, puis rouvert."
     },
     "setup": {
       "installing": "Installation du firmware…",
