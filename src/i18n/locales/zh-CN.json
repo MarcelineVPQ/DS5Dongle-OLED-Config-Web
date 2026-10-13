@@ -245,14 +245,12 @@
       "label": "USB 访问规则",
       "installed": "已安装",
       "missing": "未安装（Steam 的规则可能已覆盖接收器）",
-      "working": "等待输入密码…",
       "button": "设置 USB 访问"
     },
     "windowsUsb": {
       "hint": "已插好、控制器也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
       "seen": "接收器已插入，但 Windows 没有为它安装驱动。",
       "button": "修复 USB 驱动",
-      "working": "正在等待授权…",
       "done": "已修复。请拔下接收器，然后重新插入。",
       "stepsTitle": "修复会做什么",
       "step": {
@@ -379,11 +377,9 @@
       "noFiles": "不会修改任何文件。",
       "mustClose": "{{launcher}} 正在运行。它退出时会重写这些设置并覆盖更改，所以需要先关闭它。",
       "closeLauncher": "关闭 {{launcher}}",
-      "closing": "正在关闭…",
       "closeGameRunning": "仍有游戏在运行。请先退出游戏，然后重试。",
       "closeTimeout": "{{launcher}} 未在 30 秒内退出。请手动退出，然后点击“重新检查”。",
       "apply_other": "应用 {{count}} 项更改",
-      "applying": "正在应用…",
       "back": "返回",
       "doneTitle": "完成",
       "doneHint": "重新打开启动器，它会在启动时读取新设置。",
@@ -860,7 +856,6 @@
       "compatHint": "自适应扳机和 触觉反馈只有通过 DualSense Proton 版本才能传到 Windows 游戏。",
       "action": {
         "play": "开始游戏",
-        "starting": "正在启动…",
         "playHint": "在 {{launcher}} 中启动游戏",
         "properties": "Steam 属性",
         "propertiesHint": "在 Steam 中打开游戏属性（启动选项、兼容性）",
@@ -946,7 +941,6 @@
       "speakerTitle": "扬声器测试",
       "speakerHint": "在控制器扬声器（不是电脑）上播放一段短提示音。",
       "speakerButton": "播放测试音",
-      "playing": "正在播放…",
       "noSpeaker": "在这台电脑上找不到控制器扬声器这个音频输出。",
       "micTitle": "麦克风测试",
       "micHint": "用控制器麦克风录 3 秒，然后在控制器扬声器上回放。不会保存任何内容。",

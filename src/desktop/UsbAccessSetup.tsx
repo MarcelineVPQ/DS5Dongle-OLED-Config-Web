@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BusyButton } from "./controls";
 
 // Linux only: installs the app's udev rule (via the main process and pkexec)
 // so the logged-in user can open the dongle and the RP2350 boot device.
@@ -7,7 +8,6 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
   const { t } = useTranslation();
   const desktop = window.desktop;
   const [installed, setInstalled] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,11 +18,9 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
   if (desktop?.platform !== "linux") return null;
 
   const run = async () => {
-    setBusy(true);
     const result = await desktop.setupUsbAccess();
     setMessage(result.message);
     if (result.ok) setInstalled(true);
-    setBusy(false);
   };
 
   return (
@@ -34,9 +32,9 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
         </span>
       )}
       <div className="dk-ctl" style={compact ? { justifyContent: "center" } : undefined}>
-        <button type="button" className="dk-btn" disabled={busy || installed === true} onClick={() => void run()}>
-          {busy ? t("desktop.usbAccess.working", "Waiting for password…") : t("desktop.usbAccess.button", "Set up USB access")}
-        </button>
+        <BusyButton className="dk-btn" disabled={installed === true} onClick={run}>
+          {t("desktop.usbAccess.button", "Set up USB access")}
+        </BusyButton>
       </div>
       {message && <p className="dk-hint">{message}</p>}
     </div>

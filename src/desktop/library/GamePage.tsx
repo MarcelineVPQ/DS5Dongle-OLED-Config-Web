@@ -17,7 +17,7 @@ import { X } from "lucide-react";
 import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { Row } from "../controls";
+import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection } from "../pages/SettingsPage";
 import { profileFields } from "./profileFields";
@@ -423,9 +423,7 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
   const m = useMsg();
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const apply = async () => {
-    setBusy(true);
     try {
       const r = await window.desktop!.gamesApply(game.fixes.map((f) => f.id));
       setNote(r.applied.length > 0 && r.applied.every((a) => a.ok) && r.blockedBy.length === 0 ? t("desktop.library.setupDone") : t("desktop.library.setupFailed"));
@@ -433,7 +431,6 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
     } catch (cause) {
       setNote(errorText(cause));
     } finally {
-      setBusy(false);
       setConfirm(false);
     }
   };
@@ -464,9 +461,9 @@ function SetupFrame({ game, onRescan }: { game: GameEntry; onRescan: () => void 
                 <button type="button" className="dk-btn" onClick={() => setConfirm(false)}>
                   {t("desktop.library.cancel")}
                 </button>
-                <button type="button" className="dk-btn primary" disabled={busy} onClick={() => void apply()}>
+                <BusyButton className="dk-btn primary" onClick={apply}>
                   {t("desktop.library.setupApply")}
-                </button>
+                </BusyButton>
               </>
             )}
           </div>
@@ -483,7 +480,6 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
   const ours = report.ourProton.name;
   const runnerFix = game.fixes.find((f) => f.kind === "set-runner");
   const native = game.support === "triggers" || game.support === "haptics";
-  const [busy, setBusy] = useState(false);
   return (
     <section className="dk-card" id="gp-compat">
       <h2>{t("desktop.library.section.compat")}</h2>
@@ -507,20 +503,9 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
         <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>
       ) : runnerFix ? (
         <div className="dk-row-btns">
-          <button
-            type="button"
-            className="dk-btn primary"
-            disabled={busy}
-            onClick={() => {
-              setBusy(true);
-              void window
-                .desktop!.gamesApply([runnerFix.id])
-                .then(onRescan)
-                .finally(() => setBusy(false));
-            }}
-          >
+          <BusyButton className="dk-btn primary" onClick={() => window.desktop!.gamesApply([runnerFix.id]).then(onRescan)}>
             {t("desktop.library.switchTo", { name: ours })}
-          </button>
+          </BusyButton>
         </div>
       ) : null}
     </section>
@@ -696,12 +681,10 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
 // the main process from the scan; only the actions this game has).
 function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
   const { t } = useTranslation();
-  const [busy, setBusy] = useState<GameAction | null>(null);
   const [failed, setFailed] = useState<GameAction | null>(null);
   const actions = info?.actions ?? [];
   if (actions.length === 0) return null;
   const run = async (action: GameAction) => {
-    setBusy(action);
     setFailed(null);
     try {
       if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) {
@@ -710,25 +693,24 @@ function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo
       }
     } catch {
       setFailed(action);
-    } finally {
-      // Launching takes the launcher a moment; keep the button busy briefly.
-      setTimeout(() => setBusy(null), action === "play" ? 3000 : 600);
     }
+    // Launching takes the launcher a moment; keep the button busy briefly.
+    await new Promise((resolve) => setTimeout(resolve, action === "play" ? 3000 : 600));
   };
   const launcher = t(`desktop.library.launcherName.${game.launcher}`);
   return (
     <div className="gp-actions">
       {actions.includes("play") && (
-        <button type="button" className="dk-btn primary gp-play" disabled={running || busy === "play"} onClick={() => void run("play")} title={t("desktop.library.action.playHint", { launcher })}>
-          {running ? `● ${t("desktop.library.running")}` : busy === "play" ? t("desktop.library.action.starting") : `▶ ${t("desktop.library.action.play")}`}
-        </button>
+        <BusyButton className="dk-btn primary gp-play" disabled={running} onClick={() => run("play")} title={t("desktop.library.action.playHint", { launcher })}>
+          {running ? `● ${t("desktop.library.running")}` : `▶ ${t("desktop.library.action.play")}`}
+        </BusyButton>
       )}
       {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
         .filter((a) => actions.includes(a))
         .map((a) => (
-          <button key={a} type="button" className="dk-btn" disabled={busy === a} title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => void run(a)}>
+          <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
             {t(`desktop.library.action.${a}`)}
-          </button>
+          </BusyButton>
         ))}
       {failed && <span className="dk-hint gp-action-failed">{t("desktop.library.action.failed")}</span>}
     </div>

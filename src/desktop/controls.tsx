@@ -191,9 +191,10 @@ interface BusyButtonProps {
   title?: string;
   countdown?: number;
   onStop?: () => void;
+  autoFocus?: boolean;
 }
 
-export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop }: BusyButtonProps) {
+export function BusyButton({ onClick, children, className = "dk-btn", disabled, title, countdown, onStop, autoFocus }: BusyButtonProps) {
   const [busy, setBusy] = useState(false);
   const [secs, setSecs] = useState(0);
   const live = useRef(true);
@@ -225,7 +226,15 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
     }
   };
   return (
-    <button type="button" className={`${className}${busy ? " dk-btn-busy" : ""}`} disabled={disabled || (busy && !onStop)} aria-busy={busy || undefined} title={title} onClick={() => void run()}>
+    <button
+      type="button"
+      className={`${className}${busy ? " dk-btn-busy" : ""}`}
+      disabled={disabled || (busy && !onStop)}
+      aria-busy={busy || undefined}
+      title={title}
+      autoFocus={autoFocus}
+      onClick={() => void run()}
+    >
       {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
       {children}
       {busy && countdown !== undefined && countdown - secs > 0 && <span className="dk-btn-elapsed"> · {countdown - secs}s</span>}

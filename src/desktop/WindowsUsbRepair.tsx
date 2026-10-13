@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WebUsbTransport } from "../protocol/webUsbTransport";
 import { usePoll } from "./usePoll";
+import { BusyButton } from "./controls";
 import { REPAIR_SCRIPT } from "./windowsRepairScript";
 
 const POLL_MS = 2000;
@@ -54,9 +55,9 @@ export default function WindowsUsbRepair() {
               {t("desktop.windowsUsb.cancel")}
             </button>
             {/* autoFocus: Enter runs it, the obvious next step after reading */}
-            <button type="button" className="dk-btn primary" disabled={busy} autoFocus onClick={() => void run()}>
-              {busy ? t("desktop.windowsUsb.working") : t("desktop.windowsUsb.run")}
-            </button>
+            <BusyButton className="dk-btn primary" autoFocus onClick={run}>
+              {t("desktop.windowsUsb.run")}
+            </BusyButton>
           </div>
         </div>
       ) : (

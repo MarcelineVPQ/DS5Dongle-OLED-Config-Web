@@ -782,9 +782,9 @@ function NarratorSettings() {
       <Toggle label={t("desktop.narrator.voice")} sub={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
       <Toggle label={t("desktop.narrator.captions")} sub={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
       <div className="dk-row-btns">
-        <button type="button" className="dk-btn" disabled={voice !== "on"} onClick={() => void say("app_controller", { cut: true })}>
+        <BusyButton className="dk-btn" disabled={voice !== "on"} onClick={() => say("app_controller", { cut: true })}>
           {t("desktop.narrator.test", "Test the voice")}
-        </button>
+        </BusyButton>
       </div>
     </>
   );
@@ -794,11 +794,10 @@ function NarratorSettings() {
 // on the spot with Web Audio and routed to the DualSense output.
 function SpeakerTest() {
   const { t } = useTranslation();
-  const [state, setState] = useState<"idle" | "playing" | "none">("idle");
+  const [state, setState] = useState<"idle" | "none">("idle");
   const play = async () => {
     const sink = await controllerSpeaker();
     if (!sink) return setState("none");
-    setState("playing");
     const ctx = new AudioContext();
     try {
       await (ctx as AudioContext & { setSinkId(id: string): Promise<void> }).setSinkId(sink);
@@ -828,9 +827,9 @@ function SpeakerTest() {
       <h2>{t("desktop.audioTest.speakerTitle")}</h2>
       <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
       <div className="dk-row-btns">
-        <button type="button" className="dk-btn" disabled={state === "playing"} onClick={() => void play()}>
-          {state === "playing" ? t("desktop.audioTest.playing") : t("desktop.audioTest.speakerButton")}
-        </button>
+        <BusyButton className="dk-btn" onClick={play}>
+          {t("desktop.audioTest.speakerButton")}
+        </BusyButton>
       </div>
       {state === "none" && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
     </section>
@@ -864,7 +863,6 @@ function MicTest() {
       setPhase("error");
     }
   };
-  const busy = phase === "recording" || phase === "playing";
   return (
     <section className="dk-card">
       <h2>{t("desktop.audioTest.micTitle")}</h2>
@@ -876,9 +874,10 @@ function MicTest() {
         </div>
       )}
       <div className="dk-row-btns">
-        <button type="button" className="dk-btn" disabled={busy} onClick={() => void run()}>
+        {/* The phase stays in the label: it tells the user when to speak. */}
+        <BusyButton className="dk-btn" onClick={run}>
           {phase === "recording" ? t("desktop.audioTest.recording") : phase === "playing" ? t("desktop.audioTest.playingBack") : t("desktop.audioTest.micButton")}
-        </button>
+        </BusyButton>
       </div>
       {phase === "done" && <p className="dk-good">✓ {t("desktop.audioTest.micDone")}</p>}
       {phase === "quiet" && <p className="dk-hint">{t("desktop.audioTest.micQuiet")}</p>}

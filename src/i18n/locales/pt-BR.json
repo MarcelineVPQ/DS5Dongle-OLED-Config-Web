@@ -245,14 +245,12 @@
       "label": "Regra de acesso USB",
       "installed": "Instalada",
       "missing": "Não instalada (as regras do Steam talvez já cubram o dongle)",
-      "working": "Aguardando a senha…",
       "button": "Configurar acesso USB"
     },
     "windowsUsb": {
       "hint": "Conectado, controle ligado, e mesmo assim nunca conecta? O Windows pode estar guardando uma configuração USB antiga para ele.",
       "seen": "O dongle está conectado, mas o Windows não configurou o driver dele.",
       "button": "Reparar driver USB",
-      "working": "Aguardando permissão…",
       "done": "Reparado. Agora desconecte o dongle e conecte de novo.",
       "stepsTitle": "O que o reparo faz",
       "step": {
@@ -380,12 +378,10 @@
       "noFiles": "Nenhum arquivo muda.",
       "mustClose": "{{launcher}} está aberto. Ao fechar, ele regrava essas configurações e desfaria as mudanças, então precisa ser fechado antes.",
       "closeLauncher": "Fechar {{launcher}}",
-      "closing": "Fechando…",
       "closeGameRunning": "Ainda há um jogo aberto. Feche o jogo primeiro e tente de novo.",
       "closeTimeout": "{{launcher}} não fechou em 30 segundos. Feche você mesmo e aperte Verificar de novo.",
       "apply_one": "Aplicar {{count}} mudança",
       "apply_other": "Aplicar {{count}} mudanças",
-      "applying": "Aplicando…",
       "back": "Voltar",
       "doneTitle": "Pronto",
       "doneHint": "Abra o launcher de novo; ele carrega as novas configurações ao iniciar.",
@@ -866,7 +862,6 @@
       "compatHint": "Gatilhos adaptáveis e resposta tátil só chegam aos jogos de Windows pela versão Proton DualSense.",
       "action": {
         "play": "Jogar",
-        "starting": "Iniciando…",
         "playHint": "Iniciar o jogo no {{launcher}}",
         "properties": "Propriedades na Steam",
         "propertiesHint": "Abrir as propriedades do jogo na Steam (opções de inicialização, compatibilidade)",
@@ -952,7 +947,6 @@
       "speakerTitle": "Teste do alto-falante",
       "speakerHint": "Toca um som curto no alto-falante do controle (não no do PC).",
       "speakerButton": "Tocar som de teste",
-      "playing": "Tocando…",
       "noSpeaker": "O alto-falante do controle não está disponível como saída de áudio neste PC.",
       "micTitle": "Teste do microfone",
       "micHint": "Grava 3 segundos do microfone do controle e toca de volta no alto-falante dele. Nada é salvo.",

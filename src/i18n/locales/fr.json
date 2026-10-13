@@ -245,14 +245,12 @@
       "label": "Règle d'accès USB",
       "installed": "Installée",
       "missing": "Non installée (les règles de Steam couvrent peut-être déjà le dongle)",
-      "working": "En attente du mot de passe…",
       "button": "Configurer l'accès USB"
     },
     "windowsUsb": {
       "hint": "Branché, manette allumée, et toujours aucune connexion ? Windows garde peut-être un ancien réglage USB pour lui.",
       "seen": "Le dongle est branché, mais Windows n’a pas installé son pilote.",
       "button": "Réparer le pilote USB",
-      "working": "En attente d’autorisation…",
       "done": "Réparé. Débranche maintenant le dongle puis rebranche-le.",
       "stepsTitle": "Ce que fait la réparation",
       "step": {
@@ -380,12 +378,10 @@
       "noFiles": "Aucun fichier ne change.",
       "mustClose": "{{launcher}} est ouvert. Il réécrit ces réglages en se fermant, ce qui annulerait les changements : il faut donc le fermer d'abord.",
       "closeLauncher": "Fermer {{launcher}}",
-      "closing": "Fermeture…",
       "closeGameRunning": "Un jeu tourne encore. Quitte d'abord le jeu, puis réessaie.",
       "closeTimeout": "{{launcher}} ne s'est pas fermé en 30 secondes. Quitte-le toi-même, puis appuie sur Revérifier.",
       "apply_one": "Appliquer {{count}} changement",
       "apply_other": "Appliquer {{count}} changements",
-      "applying": "Application…",
       "back": "Retour",
       "doneTitle": "Terminé",
       "doneHint": "Relance le lanceur : il prend en compte les nouveaux réglages au démarrage.",
@@ -866,7 +862,6 @@
       "compatHint": "Les gâchettes adaptatives et le retour haptique n'arrivent aux jeux Windows que via la version Proton DualSense.",
       "action": {
         "play": "Jouer",
-        "starting": "Lancement…",
         "playHint": "Lancer le jeu dans {{launcher}}",
         "properties": "Propriétés Steam",
         "propertiesHint": "Ouvrir les propriétés du jeu dans Steam (options de lancement, compatibilité)",
@@ -952,7 +947,6 @@
       "speakerTitle": "Test du haut-parleur",
       "speakerHint": "Joue un court carillon sur le haut-parleur de la manette (pas celui du PC).",
       "speakerButton": "Jouer un son de test",
-      "playing": "Lecture…",
       "noSpeaker": "Le haut-parleur de la manette n'est pas disponible comme sortie audio sur ce PC.",
       "micTitle": "Test du micro",
       "micHint": "Enregistre 3 secondes avec le micro de la manette, puis les rejoue sur son haut-parleur. Rien n'est enregistré sur le disque.",

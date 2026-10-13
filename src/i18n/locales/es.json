@@ -245,14 +245,12 @@
       "label": "Regla de acceso USB",
       "installed": "Instalada",
       "missing": "No instalada (las reglas de Steam quizá ya cubren el dongle)",
-      "working": "Esperando la contraseña…",
       "button": "Configurar acceso USB"
     },
     "windowsUsb": {
       "hint": "¿Conectado, con el mando encendido, y aun así nunca conecta? Puede que Windows guarde una configuración USB antigua para él.",
       "seen": "El dongle está conectado, pero Windows no ha instalado su controlador.",
       "button": "Reparar controlador USB",
-      "working": "Esperando permiso…",
       "done": "Reparado. Ahora desconecta el dongle y vuelve a conectarlo.",
       "stepsTitle": "Qué hace la reparación",
       "step": {
@@ -380,12 +378,10 @@
       "noFiles": "No cambia ningún archivo.",
       "mustClose": "{{launcher}} está abierto. Al cerrarse reescribe estos ajustes y desharía los cambios, así que hay que cerrarlo primero.",
       "closeLauncher": "Cerrar {{launcher}}",
-      "closing": "Cerrando…",
       "closeGameRunning": "Todavía hay un juego en marcha. Ciérralo primero y vuelve a intentarlo.",
       "closeTimeout": "{{launcher}} no se cerró en 30 segundos. Ciérralo tú y pulsa Volver a revisar.",
       "apply_one": "Aplicar {{count}} cambio",
       "apply_other": "Aplicar {{count}} cambios",
-      "applying": "Aplicando…",
       "back": "Atrás",
       "doneTitle": "Listo",
       "doneHint": "Vuelve a abrir el lanzador; toma los nuevos ajustes al iniciarse.",
@@ -866,7 +862,6 @@
       "compatHint": "Los gatillos adaptativos y la retroalimentación háptica solo llegan a los juegos de Windows con la versión Proton DualSense.",
       "action": {
         "play": "Jugar",
-        "starting": "Iniciando…",
         "playHint": "Iniciar el juego en {{launcher}}",
         "properties": "Propiedades de Steam",
         "propertiesHint": "Abrir las propiedades del juego en Steam (opciones de lanzamiento, compatibilidad)",
@@ -952,7 +947,6 @@
       "speakerTitle": "Prueba del altavoz",
       "speakerHint": "Reproduce un breve sonido en el altavoz del mando (no en el del PC).",
       "speakerButton": "Reproducir sonido de prueba",
-      "playing": "Reproduciendo…",
       "noSpeaker": "El altavoz del mando no está disponible como salida de audio en este PC.",
       "micTitle": "Prueba del micrófono",
       "micHint": "Graba 3 segundos con el micrófono del mando y los reproduce en su altavoz. No se guarda nada.",

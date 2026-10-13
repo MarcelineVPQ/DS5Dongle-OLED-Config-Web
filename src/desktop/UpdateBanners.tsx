@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { UpdateState } from "./api";
+import { BusyButton } from "./controls";
 import type { FirmwareUpdate } from "./useUpdates";
 
 function mb(bytes: number): string {
@@ -46,9 +47,9 @@ export default function UpdateBanners({
     appNotice = (
       <Notice
         action={
-          <Action primary onClick={() => void desktop?.installUpdate()}>
+          <BusyButton className="dk-btn primary" onClick={() => desktop?.installUpdate()}>
             {t("desktop.update.download", "Download and install")}
-          </Action>
+          </BusyButton>
         }
       >
         <span>{t("desktop.update.appAvailable", { version: app.version, size: mb(app.size), defaultValue: "App update {{version}} is available ({{size}})." })}</span>

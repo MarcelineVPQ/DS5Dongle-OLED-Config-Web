@@ -88,9 +88,9 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
         <span className="dk-hint">{t("desktop.setup.replaces", "This replaces whatever is on the Pico now.")}</span>
         <span className="dk-hint">{t("desktop.setup.driveNote")}</span>
         {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
-        <button type="button" className="dk-btn primary" disabled={!firmware} onClick={() => void start()}>
+        <BusyButton className="dk-btn primary" disabled={!firmware} onClick={start}>
           {t("desktop.setup.install", "Install the firmware")}
-        </button>
+        </BusyButton>
       </Center>
     );
   }

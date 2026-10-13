@@ -356,13 +356,13 @@ export default function DesktopApp() {
                     <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
                   </span>
                   <span className="dk-spacer" />
-                  <button type="button" className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={() => void profiles.revertToProfile()}>
+                  <BusyButton className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={profiles.revertToProfile}>
                     {t("desktop.bar.revert", "Revert")}
-                  </button>
-                  <button type="button" className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={() => void profiles.saveToProfile()}>
+                  </BusyButton>
+                  <BusyButton className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={profiles.saveToProfile}>
                     {/* Named: it saves into the profile being edited, which needn't be the active one. */}
                     {t("desktop.bar.saveProfileTo", { title: (profileTarget(profiles.editing, profiles.active) ?? profiles.active).title })}
-                  </button>
+                  </BusyButton>
                 </>
               ) : (
                 <>
@@ -374,21 +374,20 @@ export default function DesktopApp() {
                         : t("desktop.bar.saved", "All changes saved on the dongle.")}
                   </span>
                   <span className="dk-spacer" />
-                  <button type="button" className="dk-btn" disabled={busy || !bridge.canRevert} onClick={() => void bridge.revertToSaved()}>
+                  <BusyButton className="dk-btn" disabled={busy || !bridge.canRevert} onClick={bridge.revertToSaved}>
                     {t("desktop.bar.revert", "Revert")}
-                  </button>
-                  <button
-                    type="button"
+                  </BusyButton>
+                  <BusyButton
                     className="dk-btn primary"
                     disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
                     onClick={() =>
-                      void bridge.saveToFlash().then((ok) => {
+                      bridge.saveToFlash().then((ok) => {
                         if (ok) void say("app_saved");
                       })
                     }
                   >
                     {t("desktop.bar.save", "Save to dongle")}
-                  </button>
+                  </BusyButton>
                 </>
               )}
             </footer>

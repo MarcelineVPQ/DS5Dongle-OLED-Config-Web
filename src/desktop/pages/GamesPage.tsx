@@ -402,15 +402,15 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
                 })}
               </span>
               <span className="dk-spacer" />
-              <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => void closeLauncher(l)}>
-                {busy === `close-${l}` ? t("desktop.games.closing", "Closing…") : t("desktop.games.closeLauncher", { launcher: LAUNCHER_NAME[l], defaultValue: "Close {{launcher}}" })}
-              </button>
+              <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => closeLauncher(l)}>
+                {t("desktop.games.closeLauncher", { launcher: LAUNCHER_NAME[l], defaultValue: "Close {{launcher}}" })}
+              </BusyButton>
             </div>
           ))}
           <div className="dk-row-btns">
-            <button type="button" className="dk-btn primary" disabled={blocking.length > 0 || busy !== null || selected.length === 0} onClick={() => void apply()}>
-              {busy === "apply" ? t("desktop.games.applying", "Applying…") : t("desktop.games.apply", { count: selected.length })}
-            </button>
+            <BusyButton className="dk-btn primary" disabled={blocking.length > 0 || busy !== null || selected.length === 0} onClick={apply}>
+              {t("desktop.games.apply", { count: selected.length })}
+            </BusyButton>
             <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>
               {t("desktop.games.back", "Back")}
             </button>
@@ -433,9 +433,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
           <p className="dk-hint">{t("desktop.games.doneHint", "Start the launcher again; it picks up the new settings when it starts.")}</p>
           <div className="dk-row-btns">
             {result.backupId && (
-              <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => void undo(result.backupId!)}>
+              <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => undo(result.backupId!)}>
                 {t("desktop.games.undo", "Undo these changes")}
-              </button>
+              </BusyButton>
             )}
             <button type="button" className="dk-btn" onClick={() => setStep("pick")}>
               {t("desktop.games.ok", "OK")}
@@ -451,9 +451,9 @@ function GamesSetup({ onScanned, onDeclinedChange, onStop, rescanToken }: Omit<G
             {backups.map((b) => (
               <li key={b.id}>
                 <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.changes.map(m).join("; ")}
-                <button type="button" className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => void undo(b.id)}>
+                <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => undo(b.id)}>
                   {t("desktop.games.undoShort", "Undo")}
-                </button>
+                </BusyButton>
               </li>
             ))}
           </ul>

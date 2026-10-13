@@ -245,14 +245,12 @@
       "label": "USB-Zugriffsregel",
       "installed": "Installiert",
       "missing": "Nicht installiert (Steams Regeln decken den Dongle eventuell schon ab)",
-      "working": "Warte auf Passwort…",
       "button": "USB-Zugriff einrichten"
     },
     "windowsUsb": {
       "hint": "Eingesteckt, Controller an, und trotzdem keine Verbindung? Windows hat dafür vielleicht noch eine alte USB-Einstellung gespeichert.",
       "seen": "Der Dongle ist eingesteckt, aber Windows hat seinen Treiber nicht eingerichtet.",
       "button": "USB-Treiber reparieren",
-      "working": "Warte auf Erlaubnis…",
       "done": "Repariert. Zieh den Dongle jetzt ab und steck ihn wieder ein.",
       "stepsTitle": "Was die Reparatur macht",
       "step": {
@@ -380,12 +378,10 @@
       "noFiles": "Keine Dateien ändern sich.",
       "mustClose": "{{launcher}} läuft. Beim Beenden schreibt er diese Einstellungen neu und würde die Änderungen überschreiben, deshalb muss er zuerst geschlossen werden.",
       "closeLauncher": "{{launcher}} schließen",
-      "closing": "Wird geschlossen…",
       "closeGameRunning": "Ein Spiel läuft noch. Beende zuerst das Spiel und versuche es dann erneut.",
       "closeTimeout": "{{launcher}} wurde nicht innerhalb von 30 Sekunden beendet. Beende ihn selbst und drücke dann auf Neu prüfen.",
       "apply_one": "{{count}} Änderung übernehmen",
       "apply_other": "{{count}} Änderungen übernehmen",
-      "applying": "Wird übernommen…",
       "back": "Zurück",
       "doneTitle": "Fertig",
       "doneHint": "Starte den Launcher neu; er übernimmt die neuen Einstellungen beim Start.",
@@ -866,7 +862,6 @@
       "compatHint": "Adaptive Trigger und haptisches Feedback erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
       "action": {
         "play": "Spielen",
-        "starting": "Startet…",
         "playHint": "Spiel in {{launcher}} starten",
         "properties": "Steam-Eigenschaften",
         "propertiesHint": "Die Eigenschaften des Spiels in Steam öffnen (Startoptionen, Kompatibilität)",
@@ -952,7 +947,6 @@
       "speakerTitle": "Lautsprechertest",
       "speakerHint": "Spielt einen kurzen Ton auf dem Lautsprecher des Controllers (nicht des PCs).",
       "speakerButton": "Testton abspielen",
-      "playing": "Spielt…",
       "noSpeaker": "Der Lautsprecher des Controllers ist auf diesem PC nicht als Audioausgabe verfügbar.",
       "micTitle": "Mikrofontest",
       "micHint": "Nimmt 3 Sekunden vom Mikrofon des Controllers auf und spielt sie auf seinem Lautsprecher ab. Nichts wird gespeichert.",

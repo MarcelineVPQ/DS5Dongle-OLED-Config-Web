@@ -245,14 +245,12 @@
       "label": "USB アクセスルール",
       "installed": "インストール済み",
       "missing": "未インストール（Steam のルールで既に対応している場合があります）",
-      "working": "パスワード入力を待っています…",
       "button": "USB アクセスを設定"
     },
     "windowsUsb": {
       "hint": "接続済みでコントローラーも電源オンなのに、つながらない場合は、Windows が古い USB 設定を保持している可能性があります。",
       "seen": "ドングルは接続されていますが、Windows がドライバーを設定していません。",
       "button": "USB ドライバーを修復",
-      "working": "許可を待っています…",
       "done": "修復しました。ドングルを抜いて、もう一度差し込んでください。",
       "stepsTitle": "修復で行うこと",
       "step": {
@@ -379,11 +377,9 @@
       "noFiles": "変更されるファイルはありません。",
       "mustClose": "{{launcher}} が実行中です。終了時にこれらの設定を書き直して変更を上書きしてしまうため、先に終了する必要があります。",
       "closeLauncher": "{{launcher}} を終了",
-      "closing": "終了しています…",
       "closeGameRunning": "ゲームがまだ実行中です。先にゲームを終了してから、もう一度お試しください。",
       "closeTimeout": "{{launcher}} が 30 秒以内に終了しませんでした。手動で終了してから「再確認」を押してください。",
       "apply_other": "{{count}} 件の変更を適用",
-      "applying": "適用しています…",
       "back": "戻る",
       "doneTitle": "完了",
       "doneHint": "ランチャーを起動し直してください。起動時に新しい設定が読み込まれます。",
@@ -860,7 +856,6 @@
       "compatHint": "アダプティブトリガーと ハプティックフィードバックは、DualSense 版 Proton を使ったときだけ Windows ゲームに届きます。",
       "action": {
         "play": "プレイ",
-        "starting": "起動中…",
         "playHint": "{{launcher}} でゲームを起動",
         "properties": "Steam のプロパティ",
         "propertiesHint": "Steam でゲームのプロパティを開く（起動オプション、互換性）",
@@ -946,7 +941,6 @@
       "speakerTitle": "スピーカーテスト",
       "speakerHint": "コントローラーのスピーカー（PC ではなく）で短いチャイムを鳴らします。",
       "speakerButton": "テスト音を再生",
-      "playing": "再生中…",
       "noSpeaker": "この PC ではコントローラーのスピーカーがオーディオ出力として使えません。",
       "micTitle": "マイクテスト",
       "micHint": "コントローラーのマイクで 3 秒録音し、コントローラーのスピーカーで再生します。何も保存されません。",

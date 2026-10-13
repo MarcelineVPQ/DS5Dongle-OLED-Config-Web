@@ -3,6 +3,7 @@ import { errorText } from "../../errorText";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { usePoll } from "../usePoll";
+import { BusyButton } from "../controls";
 import { FAKE_SLOTS, useFakeSlots } from "../devPreview";
 import { COLORWAYS } from "../live/colorways";
 import { readPref, writePref } from "../storage";
@@ -112,21 +113,20 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
                       {active ? (
                         <span className="dk-chip ok">{t("desktop.slots.active", "Active")}</span>
                       ) : (
-                        <button
-                          type="button"
+                        <BusyButton
                           className="dk-btn"
                           disabled={!client || busy}
                           onClick={() =>
                             // A pretend controller, or back from one to the real slot: shown only, nothing sent.
-                            fakeHere ? fake.switchTo(i) : fake.slot !== null && id?.currentSlot === i ? fake.switchTo(null) : void act(() => switchSlot(i))
+                            fakeHere ? fake.switchTo(i) : fake.slot !== null && id?.currentSlot === i ? fake.switchTo(null) : act(() => switchSlot(i))
                           }
                         >
                           {t("desktop.slots.switch", "Switch to")}
-                        </button>
+                        </BusyButton>
                       )}
-                      <button type="button" className="dk-btn danger" disabled={!client || busy || !occupied || !!fakeHere} onClick={() => void act(() => client!.forgetSlot(i))}>
+                      <BusyButton className="dk-btn danger" disabled={!client || busy || !occupied || !!fakeHere} onClick={() => act(() => client!.forgetSlot(i))}>
                         {t("desktop.slots.forget", "Forget")}
-                      </button>
+                      </BusyButton>
                     </div>
                   </td>
                 </tr>
@@ -141,9 +141,9 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
               <button type="button" className="dk-btn" onClick={() => setConfirmWipe(false)}>
                 {t("desktop.common.cancel", "Cancel")}
               </button>
-              <button type="button" className="dk-btn danger" disabled={busy} onClick={() => void act(() => client!.wipeSlots())}>
+              <BusyButton className="dk-btn danger" disabled={busy} onClick={() => act(() => client!.wipeSlots())}>
                 {t("desktop.slots.wipe", "Forget all")}
-              </button>
+              </BusyButton>
             </>
           ) : (
             <button type="button" className="dk-btn danger" disabled={!client || busy} onClick={() => setConfirmWipe(true)}>
