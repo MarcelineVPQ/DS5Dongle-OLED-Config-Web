@@ -442,7 +442,8 @@
           "gamepad": "Pass the controller to {{game}} as a standard gamepad (XInput)",
           "hdr": "Turn on HDR for {{game}}",
           "hdrUpdate": "Move {{game}}'s HDR to gamescope",
-          "hdrRemoveOld": "Remove the old HDR setting from {{game}}"
+          "hdrRemoveOld": "Remove the old HDR setting from {{game}}",
+          "mode": "Start {{game}} in {{api}} so {{feature}} is available"
         },
         "why": {
           "defaultSteam": "Steam currently runs Windows games with {{current}}. Our build is what makes adaptive triggers and haptic feedback work through {{device}}. Games you've set to a specific Proton keep their own setting.",
@@ -465,7 +466,15 @@
           "hdrLutris": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR: Lutris's own Gamescope options for the game are turned on, HDR included. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back.{{runner}}",
           "hdrNoProton": " Install our DualSense Proton on the Proton card to get the controller's adaptive triggers and haptic feedback with HDR too.",
           "hdrOld": "{{game}} still has the old HDR setting (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), which can leave the game on a black screen. It's removed. {{next}}",
-          "hdrOldOnly": "HDR through gamescope is offered once the checklist on the game's page is all ✓."
+          "hdrOldOnly": "HDR through gamescope is offered once the checklist on the game's page is all ✓.",
+          "modeSteam": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. The launch options become: {{args}}{{proton}}",
+          "modeHeroic": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its game arguments in Heroic become: {{args}}{{proton}}",
+          "modeLutris": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its arguments in Lutris become: {{args}}{{proton}}",
+          "modeVkd3d": " Under Proton, DirectX 12 runs through vkd3d-proton, so the first starts can take longer while shaders are built."
+        },
+        "unlock": {
+          "rayTracing": "Ray Tracing",
+          "frameGen": "DLSS Frame Generation"
         },
         "support": {
           "triggers": "This game supports the DualSense's adaptive triggers and haptic feedback.",
@@ -959,6 +968,8 @@
       "gamepadSet": "The controller reaches this game as a standard gamepad (XInput).",
       "gamepadSteamInput": "Steam Input isn't turned off for this game, so Steam already gives it an Xbox controller: the standard gamepad option isn't needed.",
       "gamepadNoBuild": "This game needs the standard gamepad option (PROTON_PREFER_SDL), but {{runner}} ignores it and no Proton that honours it is installed. Install our newer DualSense Proton (GE-Proton11-7.2-DualSense or later) or a stock GE-Proton.",
+      "modeSet": "Starts in {{api}} ({{flag}}), so {{feature}} is available.",
+      "modeOwn": "Your own arguments start {{game}} with {{own}}, so they're left as they are. For {{feature}}, replace {{own}} with {{flag}}.",
       "notDetectedHint": "Tick this if the game doesn't react to the controller: the app then offers to pass it to the game as a standard gamepad (XInput).",
       "supportsHdr": "Supports HDR",
       "supportsHdrHint": "Tick this if the game has an HDR setting on PC: the app then shows what HDR needs and offers Turn on HDR once everything is ready.",

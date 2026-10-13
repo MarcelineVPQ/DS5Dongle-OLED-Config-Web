@@ -17,7 +17,24 @@ export type FixKind =
   | "remove-env" // drop PROTON_PREFER_SDL from the game's env / launch options
   | "audio-hifi" // disable a pro-audio rule for the DualSense
   | "standard-gamepad" // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
-  | "hdr-on"; // HDR game: run it inside gamescope with HDR (and move it to our Proton); also replaces the old PROTON_ENABLE_WAYLAND/HDR variant
+  | "hdr-on" // HDR game: run it inside gamescope with HDR (and move it to our Proton); also replaces the old PROTON_ENABLE_WAYLAND/HDR variant
+  | "graphics-mode"; // start the game in DirectX 12 / Vulkan with its own game argument (knownGames.ts MODES)
+
+// Graphics modes a game argument can start a game in, and what a mode unlocks.
+export type GraphicsApi = "dx12" | "vulkan";
+export type Unlock = "rayTracing" | "frameGen";
+
+// A game that needs another graphics mode for a feature (all platforms):
+//   set      its arguments start it in that mode
+//   needed   a fix adds the flag
+//   own      the player's own arguments pick another mode (e.g. -dx11): left alone
+export interface ModeInfo {
+  state: "set" | "needed" | "own";
+  api: GraphicsApi;
+  flag: string;
+  unlocks: Unlock;
+  own?: string; // the player's own mode flag ("own")
+}
 
 // An XInput-only game (our list, or the player marked "controller not
 // detected"): is the controller passed to it as a standard gamepad?
@@ -99,6 +116,7 @@ export interface GameEntry {
   support: DualSenseSupport;
   gamepad?: GamepadState; // XInput-only games (Linux) only
   hdr?: HdrState; // HDR games (Linux) only
+  mode?: ModeInfo; // games that need another graphics mode for a feature
   fixes: Fix[];
   // What the launcher says it is (Steam's own categories); absent = a game.
   kind?: AppKind;
@@ -176,3 +194,8 @@ export type RestartList = Array<"steam" | "heroic" | "lutris">;
 // A scanned game's artwork, served by the main process (ds5-art://, see
 // electron/main/games/artRequest.ts).
 export const artUrl = (key: string, kind: ArtKind) => `ds5-art://art/${encodeURIComponent(key)}/${kind}`;
+
+// Every fix in a report: what the Games page lists and Home counts as recommended changes.
+export function allFixes(r: GamesReport): Fix[] {
+  return [...r.launchers.flatMap((l) => l.fixes), ...r.system.fixes, ...r.games.flatMap((g) => g.fixes)];
+}

@@ -24,6 +24,7 @@ export interface LutrisGame {
   runner: string | null; // wine.version, null = runner default
   env: Record<string, string>; // system.env (the game's environment variables)
   system: Record<string, unknown>; // the game's system options (gamescope, gamescope_hdr, … since Lutris 0.5.17)
+  args: string; // game.args (the game's arguments)
 }
 
 export function findLutrisInstalls(home: string): LutrisInstall[] {
@@ -65,6 +66,11 @@ function systemEnv(doc: unknown): Record<string, string> {
 function systemOptions(doc: unknown): Record<string, unknown> {
   const system = (doc as { system?: unknown } | null)?.system;
   return system && typeof system === "object" && !Array.isArray(system) ? (system as Record<string, unknown>) : {};
+}
+
+function gameArgs(doc: unknown): string {
+  const args = (doc as { game?: { args?: unknown } } | null)?.game?.args;
+  return typeof args === "string" ? args : "";
 }
 
 function wineVersion(doc: unknown): string | null {
@@ -109,7 +115,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
     .map((r) => {
       const configPath = join(install.configDir, "games", `${r.configpath}.yml`);
       const doc = readYaml(configPath);
-      return { slug: r.slug, configId: r.configpath!, name: r.name, configPath, runner: wineVersion(doc), env: systemEnv(doc), system: systemOptions(doc) };
+      return { slug: r.slug, configId: r.configpath!, name: r.name, configPath, runner: wineVersion(doc), env: systemEnv(doc), system: systemOptions(doc), args: gameArgs(doc) };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 }

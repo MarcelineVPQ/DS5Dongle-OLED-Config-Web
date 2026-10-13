@@ -142,6 +142,12 @@ export const ROADMAP: RoadmapItem[] = [
   },
   {
     column: "next",
+    title: "Ray Tracing in more games",
+    text: "Games that start in DirectX 11 and only offer Ray Tracing in DirectX 12 (Ghostrunner, Ghostrunner 2) get the game's own -dx12 flag: Games adds it to the launcher's arguments, with Undo.",
+    areas: ["games"],
+  },
+  {
+    column: "next",
     title: "HDR for games",
     text: "Games with HDR get it on Linux: Games runs them inside gamescope with HDR, on our DualSense Proton, and shows a checklist of what HDR needs.",
     areas: ["games"],

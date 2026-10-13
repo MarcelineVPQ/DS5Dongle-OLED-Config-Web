@@ -58,6 +58,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Better OLED status screen": "OLED Status screen controller drawing",
   "XInput games find the controller": "XInput-only games: set the Proton option automatically",
   "HDR for games": "Games: Turn on HDR for HDR games",
+  "Ray Tracing in more games": "Games: the right graphics mode",
   "Clearer message when {{device}} is busy": '{{device}} busy: "Unable to claim interface"',
   "Desktop accent color on Windows": 'Windows: Accent color "Desktop"',
   "Guide in every language": "Translate the Guide and changelogs",

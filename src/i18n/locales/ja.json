@@ -440,7 +440,8 @@
           "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す",
           "hdr": "{{game}} の HDR をオンにする",
           "hdrUpdate": "{{game}} の HDR を gamescope 方式に切り替える",
-          "hdrRemoveOld": "{{game}} から古い HDR 設定を削除する"
+          "hdrRemoveOld": "{{game}} から古い HDR 設定を削除する",
+          "mode": "{{game}} を {{api}} で起動して{{feature}}を使えるようにする"
         },
         "why": {
           "defaultSteam": "Steam は現在 {{current}} で Windows ゲームを実行しています。{{device}} 経由でアダプティブトリガーとハプティックフィードバックを動かすには当プロジェクトのビルドが必要です。個別に Proton を指定したゲームはその設定のままです。",
@@ -463,7 +464,15 @@
           "hdrLutris": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Lutris の Gamescope オプションを HDR も含めてオンにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
           "hdrNoProton": " HDR と一緒にアダプティブトリガーとハプティックフィードバックも使うには、Proton カードから当アプリの DualSense Proton をインストールしてください。",
           "hdrOld": "{{game}} には古い HDR 設定（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR）が残っており、画面が真っ暗になることがあります。これを削除します。{{next}}",
-          "hdrOldOnly": "ゲームのページのチェックリストがすべて ✓ になると、gamescope による HDR が提案されます。"
+          "hdrOldOnly": "ゲームのページのチェックリストがすべて ✓ になると、gamescope による HDR が提案されます。",
+          "modeSteam": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。起動オプションは次のようになります: {{args}}{{proton}}",
+          "modeHeroic": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。Heroic でのゲーム引数は次のようになります: {{args}}{{proton}}",
+          "modeLutris": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。Lutris での引数は次のようになります: {{args}}{{proton}}",
+          "modeVkd3d": " Proton では DirectX 12 は vkd3d-proton を通して動くため、最初の数回はシェーダーの作成で起動に時間がかかることがあります。"
+        },
+        "unlock": {
+          "rayTracing": "レイトレーシング",
+          "frameGen": "DLSS フレーム生成"
         },
         "support": {
           "triggers": "このゲームは DualSense のアダプティブトリガーとハプティックフィードバックに対応しています。",
@@ -954,6 +963,8 @@
       "gamepadSet": "コントローラーは標準ゲームパッド（XInput）としてこのゲームに届いています。",
       "gamepadSteamInput": "このゲームでは Steam Input がオフになっていないため、Steam がすでに Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。",
       "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
+      "modeSet": "{{api}}（{{flag}}）で起動するので、{{feature}}が使えます。",
+      "modeOwn": "独自の引数で {{game}} を {{own}} で起動しているため、そのままにしています。{{feature}}を使うには {{own}} を {{flag}} に置き換えてください。",
       "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。",
       "supportsHdr": "HDR 対応",
       "supportsHdrHint": "PC 版に HDR 設定があるゲームならチェックしてください: HDR に必要なものが表示され、準備ができると「HDR をオンにする」が提案されます。",
