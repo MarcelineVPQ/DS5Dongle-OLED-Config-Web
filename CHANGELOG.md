@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.6] - 2026-10-12
+
 ### Added
 
 - **Where core1 stopped:** when the dongle's second core never gets going (issue #15), the Dongle page's "Core1 stopped" warning now names the start-up step it stopped in (for example "while creating the speaker encoder") and the free memory it had, so a bug report says exactly where. Needs dongle firmware from this release; older firmware shows the warning as before. The Developer card's simulated dongle can be set to stop at any step.
