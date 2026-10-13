@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { readPref, writePref } from "../storage";
 import { createPortal } from "react-dom";
+import { lastBoardName } from "../hardwareName";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
@@ -364,7 +365,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
             <p className="tour-voice">{t("desktop.tour.voiceAsk")}</p>
           </>
         ) : (
-          <p>{t(`desktop.tour.${step.key}.body`)}</p>
+          <p>{t(`desktop.tour.${step.key}.body`, { device: lastBoardName() ?? t("desktop.hardware.generic") })}</p>
         )}
         {handsOn && (
           <p className={`tour-task${ticked ? " ok" : ""}`} aria-live="polite">

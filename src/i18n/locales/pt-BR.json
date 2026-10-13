@@ -88,7 +88,8 @@
     },
     "status": {
       "connected": "{{device}} conectado",
-      "waiting": "Aguardando o dongle…"
+      "waiting": "Aguardando o {{device}}…",
+      "waitingFirst": "Aguardando a conexão…"
     },
     "empty": {
       "title": "Conecte o DS5 Dongle"
@@ -669,7 +670,7 @@
       },
       "top": {
         "title": "O dongle, seus jogos e a ajuda",
-        "body": "Dongle: atualizações de firmware, OLED, energia e USB. Jogos: prepare o Steam e outros launchers para gatilhos e resposta tátil (Linux). Sobre: novidades e o guia. ⚙: as configurações do app."
+        "body": "{{device}}: atualizações de firmware, OLED, energia e USB. Jogos: prepare o Steam e outros launchers para gatilhos e resposta tátil (Linux). Sobre: novidades e o guia. ⚙: as configurações do app."
       },
       "finish": {
         "title": "Tudo pronto",
@@ -1076,7 +1077,7 @@
       "simulated": "Dongle simulado (sem hardware)",
       "simulatedHint": "O app conversa com um dongle simulado em vez de USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, emparelhamento e atualizações de firmware não são simulados. Recarrega a página.",
       "simCore1": "Core1 simulado",
-      "simCore1Hint": "Faz o Core1 do dongle simulado parar em uma etapa de inicialização, para ver o aviso da página Dongle. Recarrega a página.",
+      "simCore1Hint": "Faz o Core1 do dongle simulado parar em uma etapa de inicialização, para ver o aviso da página do Pico. Recarrega a página.",
       "simCore1Runs": "Funciona normalmente",
       "simCore1Stage": "Para na etapa {{stage}}: {{step}}"
     },
@@ -1359,7 +1360,7 @@
       "aGame": "Um jogo",
       "profileLabel": "Layout de botões",
       "normal": "Botões normais",
-      "needsFirmware": "Precisa do firmware mais recente do dongle (Dongle → Firmware).",
+      "needsFirmware": "Precisa do firmware mais recente do dongle (página do Pico → Atualizar).",
       "noneForGame": "Salve layouts na página de botões: escolha um botão no controle.",
       "allTitle": "Botões",
       "allHeading": "Todos os botões",

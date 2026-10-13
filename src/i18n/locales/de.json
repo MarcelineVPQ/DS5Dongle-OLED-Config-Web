@@ -88,7 +88,8 @@
     },
     "status": {
       "connected": "{{device}} verbunden",
-      "waiting": "Warte auf den Dongle…"
+      "waiting": "Warte auf {{device}}…",
+      "waitingFirst": "Warte auf Verbindung…"
     },
     "empty": {
       "title": "DS5 Dongle anschließen"
@@ -669,7 +670,7 @@
       },
       "top": {
         "title": "Dongle, Spiele und Hilfe",
-        "body": "Dongle: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
+        "body": "{{device}}: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
       },
       "finish": {
         "title": "Alles bereit",
@@ -1076,7 +1077,7 @@
       "simulated": "Simulierter Dongle (ohne Hardware)",
       "simulatedHint": "Die App spricht mit einem simulierten Dongle statt über USB: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",
-      "simCore1Hint": "Lässt Core1 des simulierten Dongles bei einem Startschritt anhalten, um die Warnung auf der Dongle-Seite zu sehen. Startet die Seite neu.",
+      "simCore1Hint": "Lässt Core1 des simulierten Dongles bei einem Startschritt anhalten, um die Warnung auf der Pico-Seite zu sehen. Startet die Seite neu.",
       "simCore1Runs": "Läuft normal",
       "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}"
     },
@@ -1359,7 +1360,7 @@
       "aGame": "Ein Spiel",
       "profileLabel": "Tastenbelegung",
       "normal": "Normale Belegung",
-      "needsFirmware": "Braucht die neueste Dongle-Firmware (Dongle → Firmware).",
+      "needsFirmware": "Braucht die neueste Dongle-Firmware (Pico-Seite → Aktualisieren).",
       "noneForGame": "Belegungen speicherst du auf der Tastenseite: wähle eine Taste am Controller.",
       "allTitle": "Tasten",
       "allHeading": "Alle Tasten",
