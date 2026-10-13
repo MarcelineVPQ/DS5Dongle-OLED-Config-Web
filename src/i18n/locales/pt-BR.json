@@ -1379,7 +1379,11 @@
       "normalSub": "Sua configuração normal",
       "on": "Ligado",
       "off": "Desligado",
-      "copyHint": "Este jogo recebe as configurações que estão no dongle agora"
+      "copyHint": "Este jogo recebe as configurações que estão no dongle agora",
+      "applyFailed": "O perfil de {{title}} não foi colocado no dongle ({{reason}}). Suas configurações normais estão ativas.",
+      "partlyOn": "O perfil de {{title}} pode estar ativo sem seus botões ou curvas de analógico ({{reason}}). Uma nova tentativa é feita quando o dongle se reconectar.",
+      "saveFailed": "Não salvo no perfil de {{title}}: {{reason}}",
+      "notOn": "O perfil de {{title}} ainda não está no dongle, então nada foi salvo nele. Tente de novo quando ele estiver ativo."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Mudar a cor",

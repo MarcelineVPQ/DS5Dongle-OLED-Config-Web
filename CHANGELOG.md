@@ -17,6 +17,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **HDR lighting lights up:** the experimental HDR glow over the lightbar (App settings → Advanced) read the lightbar color from the wrong element, so it never showed and never followed the light. It now follows the live lightbar color, and switching between the DualSense and DualSense Edge drawings rebuilds its shape.
 - **Match desktop: accent text readable on every surface:** with a KDE color scheme, accent and selection text is now checked against the page, inset and button colors too, not only the panel.
 - **Spark lines follow every theme change:** the Live data graphs now pick up a new accent, the Controller theme and Color vision changes, not only light/dark.
+- **A game profile can no longer end up saved to the dongle as your normal settings:** if a profile's button layout or stick curves failed to go on after its settings had, the bottom bar went back to normal mode with the game's settings still on the dongle, and Save to dongle would have written them to flash. Now your normal settings go back on (or, if even that fails, the bar stays in the game's profile mode), and a notice says what happened.
+- **Switching pairing slots while a game profile goes on or off** waits for it to finish and puts your normal settings back first (the dongle saves its settings on a slot switch), so a game's settings are never saved that way.
+- **Save to profile saves into the profile you're editing:** the buttons in the bottom bar, the Buttons panels, the curves panel and Save and close did nothing while the edited profile wasn't on the dongle yet, or saved into another game's profile while that game was running. They now save into the profile being edited, or say it isn't on the dongle yet.
+- **A failed Save to profile says so** (instead of nothing happening), Save and close stays open when it fails, and a profile that wasn't saved no longer leaves a new button layout behind.
+- **A game's profile goes on after a quick game switch:** a game started while another profile was still switching could be skipped until something else changed; it's now picked up as soon as the first switch is done.
 
 ## [0.9.5-dev.6] - 2026-10-12
 

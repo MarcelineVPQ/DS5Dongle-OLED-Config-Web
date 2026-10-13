@@ -1379,7 +1379,11 @@
       "normalSub": "Tu ajuste normal",
       "on": "Activado",
       "off": "Desactivado",
-      "copyHint": "Este juego recibe los ajustes que hay ahora en el dongle"
+      "copyHint": "Este juego recibe los ajustes que hay ahora en el dongle",
+      "applyFailed": "El perfil de {{title}} no se pudo poner en el dongle ({{reason}}). Están activos tus ajustes normales.",
+      "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de stick ({{reason}}). Se volverá a intentar cuando el dongle se reconecte.",
+      "saveFailed": "No se guardó en el perfil de {{title}}: {{reason}}",
+      "notOn": "El perfil de {{title}} aún no está en el dongle, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Cambiar el color",

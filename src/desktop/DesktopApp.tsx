@@ -284,6 +284,15 @@ export default function DesktopApp() {
                 </button>
               </div>
             )}
+            {profiles.error && (
+              <div className="dk-notice error" role="alert">
+                <span>{profiles.error}</span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn" onClick={profiles.clearError}>
+                  {t("notice.dismiss")}
+                </button>
+              </div>
+            )}
             {main === "games" && (
               <GamesPage bridge={bridge} profiles={profiles} openGame={openGame} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />
             )}
@@ -298,8 +307,7 @@ export default function DesktopApp() {
                       className="dk-btn primary"
                       disabled={busy || bridge.isDirty}
                       onClick={async () => {
-                        await profiles.saveToProfile();
-                        finishEditing();
+                        if (await profiles.saveToProfile()) finishEditing();
                       }}
                     >
                       {t("desktop.editing.saveClose")}

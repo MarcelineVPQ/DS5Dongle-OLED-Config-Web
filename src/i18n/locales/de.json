@@ -1379,7 +1379,11 @@
       "normalSub": "Deine normale Einstellung",
       "on": "An",
       "off": "Aus",
-      "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf dem Dongle sind"
+      "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf dem Dongle sind",
+      "applyFailed": "Das Profil von {{title}} wurde nicht auf den Dongle übertragen ({{reason}}). Deine normalen Einstellungen sind aktiv.",
+      "partlyOn": "Das Profil von {{title}} ist eventuell ohne seine Tasten oder Stick-Kurven aktiv ({{reason}}). Es wird erneut versucht, wenn der Dongle sich wieder verbindet.",
+      "saveFailed": "Nicht im Profil von {{title}} gespeichert: {{reason}}",
+      "notOn": "Das Profil von {{title}} ist noch nicht auf dem Dongle, daher wurde nichts darin gespeichert. Versuche es erneut, sobald es aktiv ist."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Farbe ändern",

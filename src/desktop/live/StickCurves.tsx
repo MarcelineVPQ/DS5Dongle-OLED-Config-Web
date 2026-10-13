@@ -11,7 +11,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
-import { useLibrary } from "../library/libraryContext";
+import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { profileCurves, sameGameCurves, type GameCurves } from "../library/profileValues";
 import {
   CURVE_PRESETS,
@@ -51,8 +51,8 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   // go into that profile (undefined = that stick keeps the normal curve) and
   // the profile hook puts them on the dongle for now (RAM only). The draft is
   // the profile's (kept when this panel closes), saved with "Save to profile".
-  const { editing, active, library, curvesDraft, setCurvesDraft, saveToProfile } = useLibrary();
-  const target = editing ?? active;
+  const { library, curvesDraft, setCurvesDraft, saveToProfile } = useLibrary();
+  const target = useProfileTarget();
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
   const stored = profileCurves(profile?.settings);
 
@@ -330,7 +330,7 @@ function GameStickCurves({
   input: InputReport | null;
   sticks: readonly [StickCal, StickCal];
   stored: GameCurves;
-  onSave: () => Promise<void>;
+  onSave: () => Promise<unknown>;
 }) {
   const { t } = useTranslation();
   const own = draft[side];

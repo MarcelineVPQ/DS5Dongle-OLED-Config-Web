@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { Ds5BridgeClient } from "../../src/protocol/bridgeClient";
 import { DEFAULT_CONFIG, decodeConfigBody, normalizeConfig, type ConfigBody } from "../../src/protocol/config";
 import { DEFAULT_CURVES, encodeCurve, type StickCurve } from "../../src/protocol/stickCurve";
-import { applyGameProfile, profileCaps, restoreNormal, type GameParts } from "../../src/desktop/library/profileDongle";
+import { applyGameProfile, ProfileNotApplied, profileCaps, restoreNormal, type GameParts } from "../../src/desktop/library/profileDongle";
 import { settingsFrom } from "../../src/desktop/library/profileValues";
 import type { ProfileSettings } from "../../src/desktop/games/library";
 import { FakeDongle } from "../support/fakeDongle";
@@ -112,6 +112,19 @@ describe("game profiles on the dongle (RAM only)", () => {
     expect(ram.audioBufferLength).toBe(48);
     expect(s.dongle.remap).toEqual(s.dongle.flashRemap);
     expect(s.dongle.tempCurves).toBeNull();
+    expect(s.dongle.sets.map((p) => p[0]).filter((f) => FLASH_WRITES.has(f))).toEqual([]);
+  });
+
+  it("a layout that fails after the config landed puts the normal values back, never saving", async () => {
+    const s = await setup(10);
+    s.client.applyStickCurves = async () => {
+      throw new Error("curves refused");
+    };
+    const failure = await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config(), normal: s.normal, profile, parts }).catch((e: unknown) => e);
+    expect(failure).toBeInstanceOf(ProfileNotApplied);
+    expect((failure as ProfileNotApplied).left).toBe("normal");
+    expect(s.dongle.config).toEqual(s.dongle.flashConfig);
+    expect(s.dongle.remap).toEqual(s.dongle.flashRemap);
     expect(s.dongle.sets.map((p) => p[0]).filter((f) => FLASH_WRITES.has(f))).toEqual([]);
   });
 

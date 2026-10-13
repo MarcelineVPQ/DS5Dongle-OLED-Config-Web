@@ -1378,7 +1378,11 @@
       "normalSub": "Your normal setting",
       "on": "On",
       "off": "Off",
-      "copyHint": "This game gets the settings on the dongle now"
+      "copyHint": "This game gets the settings on the dongle now",
+      "applyFailed": "{{title}}'s profile didn't go on the dongle ({{reason}}). Your normal settings are on.",
+      "partlyOn": "{{title}}'s profile may be on without its buttons or stick curves ({{reason}}). It's tried again when the dongle reconnects.",
+      "saveFailed": "Not saved to {{title}}'s profile: {{reason}}",
+      "notOn": "{{title}}'s profile isn't on the dongle yet, so nothing was saved into it. Try again once it's on."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Change the color",
