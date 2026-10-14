@@ -12,7 +12,7 @@ import { readPref, useFlagPref, usePref, writePref } from "../storage";
 import { GLASS_KEY } from "../glass/glassPref";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { APP_KINDS, type AppKind, artUrl, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
+import { APP_KINDS, ART_SHOWN, type AppKind, artUrl, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
 import type { LibraryFile } from "../games/library";
 import GamePage from "./GamePage";
 import { GameTile } from "./GameTile";
@@ -141,9 +141,9 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
       <li key={g.key}>
         <button type="button" data-key={g.key} data-store={g.store} className={`lib-row${selected === g.key ? " sel" : ""}`} aria-current={selected === g.key} onClick={() => setSelected(g.key)}>
           {details[g.key]?.art.includes("icon") ? (
-            <img src={artUrl(g.key, "icon")} alt="" />
+            <img src={artUrl(g.key, "icon", ART_SHOWN.rowIcon())} alt="" />
           ) : details[g.key]?.art.includes("cover") ? (
-            <img src={artUrl(g.key, "cover")} alt="" />
+            <img src={artUrl(g.key, "cover", ART_SHOWN.rowIcon())} alt="" />
           ) : (
             <span className="lib-glyph" title={t(`desktop.library.storeName.${g.store}`)}>
               {hasLauncherIcon(g.store) ? <LauncherIcon id={g.store} /> : hasLauncherIcon(g.launcher) ? <LauncherIcon id={g.launcher} /> : STORE_GLYPH[g.store]}

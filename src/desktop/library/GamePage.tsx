@@ -32,7 +32,7 @@ import { OverwrittenNotice, RestartNotice, useMsg, useRestartText } from "../pag
 import { overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import type { GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
 import { API_NAME } from "../games/gameArgs";
-import { artUrl } from "../games/types";
+import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
@@ -104,7 +104,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   return (
     <div className="gp" ref={scroller} style={accent ?? undefined}>
       <header className={`gp-hero ${header.shape}`} style={header.style}>
-        {has("logo") ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <h1 className="gp-title">{game.title}</h1>}
+        {has("logo") ? <img className="gp-logo" src={artUrl(game.key, "logo", ART_SHOWN.logo())} alt={game.title} /> : <h1 className="gp-title">{game.title}</h1>}
       </header>
 
       <div className="gp-bar">

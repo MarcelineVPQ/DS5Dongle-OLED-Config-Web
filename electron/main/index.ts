@@ -14,6 +14,7 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
+import { ArtThumbs } from "./games/artThumbs";
 import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser } from "./games/schemeHandler";
 import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { devChannelPreview } from "./updateFeed";
@@ -236,10 +237,14 @@ function start(): void {
     else watcher.stop();
   };
   syncRunningWatcher();
+  // Art asked for at a width (?w=) is served from scaled-down copies kept in
+  // userData/art-cache (artThumbs.ts); only ever derived from a scanned file.
+  const artThumbs = new ArtThumbs(join(app.getPath("userData"), "art-cache"));
   // lifetime: NOT-WORTH — one scheme handler per app, lives until quit
-  protocol.handle("ds5-art", (request) => {
+  protocol.handle("ds5-art", async (request) => {
     const target = artRequestTarget(request.url);
-    const file = target ? games?.artPath(target.key, target.kind) : undefined;
+    const source = target ? games?.artPath(target.key, target.kind) : undefined;
+    const file = source && target?.width ? await artThumbs.path(source, target.kind, target.width) : source;
     return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
   });
 

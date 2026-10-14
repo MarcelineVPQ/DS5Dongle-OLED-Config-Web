@@ -282,7 +282,7 @@ describe("Games → Home, art and the Glass look", () => {
     await render("healthy", homeReport("healthy"), withArt(["cover", "icon"]));
     const art = leadArt();
     expect(art.classList.contains("tall")).toBe(true);
-    expect(art.style.getPropertyValue("--gp-art")).toBe(`url("ds5-art://art/${encodeURIComponent(LEAD)}/cover")`);
+    expect(art.style.getPropertyValue("--gp-art")).toBe(`url("ds5-art://art/${encodeURIComponent(LEAD)}/cover?w=320")`);
     expect(art.style.getPropertyValue("--art-color")).toBe("#c31646");
     expect(art.textContent).toContain("Cyberpunk 2077"); // no logo without the hero: the title
     // Its page's header falls back the same way.

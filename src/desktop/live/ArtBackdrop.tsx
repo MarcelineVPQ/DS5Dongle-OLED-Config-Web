@@ -28,6 +28,9 @@ export function useBackground(): [Background, (value: Background) => void] {
   return usePref<Background>(BACKGROUND_KEY, readPref(OLD_OFF_KEY) === "1" ? "off" : "default", BACKGROUNDS);
 }
 const CYCLE_MS = 20_000;
+// The canvas is at most this many pixels wide (the sharpest blur setting),
+// whatever the screen's pixel ratio, so the art is asked for at that width.
+const BACKDROP_PX = 320;
 
 // A game page puts its own game behind the window while it's open.
 let pageGame: string | null = null;
@@ -109,8 +112,8 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
       if (!live) return; // a newer image or blur setting took over
       const ctx = c?.getContext("2d");
       if (!c || !ctx) return;
-      // Background blur knob: 0 = sharpest (320 px), 100 = softest (24 px).
-      const w = Math.round(320 - (blurKnob / 100) * (320 - 24));
+      // Background blur knob: 0 = sharpest (BACKDROP_PX), 100 = softest (24 px).
+      const w = Math.round(BACKDROP_PX - (blurKnob / 100) * (BACKDROP_PX - 24));
       c.width = w;
       c.height = Math.max(1, Math.round((w * img.naturalHeight) / img.naturalWidth));
       ctx.imageSmoothingQuality = "high";
@@ -150,7 +153,7 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   return (
     <div className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
       {/* loop: HOT-PATH-OK — N ≤ 8 backdrop images; renders on a 20 s cycle tick */}
-      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} />}
+      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero", BACKDROP_PX, 1)} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} />}
       <div className="art-bd-dim" />
     </div>
   );
