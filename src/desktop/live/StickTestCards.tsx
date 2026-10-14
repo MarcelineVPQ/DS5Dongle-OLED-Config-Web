@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import { correctStick, type StickCal } from "../../protocol/calibration";
 import { Segmented } from "../controls";
+import { useWindowShown } from "../useWindowShown";
 import { DRIFT_MS, type DriftSample, type Outline, addPoint, circularity, driftStats, emptyOutline, normAxis } from "./stickTests";
 
 const SAMPLE_MS = 33; // the live input arrives at ~30 Hz
@@ -34,9 +35,12 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   // Circularity: always tracking while the view is open, until Reset.
   const [outlines, setOutlines] = useState<Outlines>(() => fresh(calKey));
   const [view, setView] = useState<0 | 1>(0);
-  // lifetime: OK — cleanup: clears the circularity sampler (unmount)
+  // Sampling only while the window is on screen: hidden, the input is frozen.
+  const onScreen = useWindowShown();
+  // lifetime: OK — cleanup: clears the circularity sampler (window hidden, unmount)
   useEffect(() => {
-    // lifetime: WASTE — 30 Hz sampler keeps ticking while the window is hidden (input frozen)
+    if (!onScreen) return;
+    // lifetime: OK — cleared in the effect cleanup (window hidden, view closed)
     const id = setInterval(() => {
       const r = latest.current;
       if (!r) return;
@@ -61,7 +65,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
       });
     }, SAMPLE_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [onScreen]);
   const shown = view === 0 ? outlines.raw : outlines.key === calKey ? outlines.cal : [emptyOutline(), emptyOutline()];
 
   // Drift: sample the resting sticks for DRIFT_MS.

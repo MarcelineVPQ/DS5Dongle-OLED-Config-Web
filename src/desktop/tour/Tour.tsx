@@ -239,6 +239,8 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // the ring's progress (0..1) for the card.
   const hold = useRef<{ btn: "cross" | "circle"; since: number } | null>(null);
   const [holdProgress, setHoldProgress] = useState<{ btn: "cross" | "circle"; p: number } | null>(null);
+  // A button is being held: the ring's frame loop runs only then.
+  const [holding, setHolding] = useState(false);
 
   // Follow the target (layouts move: panels open, the window resizes), only
   // while the window is on screen; measured again on show.
@@ -298,7 +300,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
       // Holding, not tapping: the ring effect below acts once it fills.
       if (cross && !was.cross) hold.current = { btn: "cross", since: Date.now() };
       else if (circle && !was.circle && i > 0) hold.current = { btn: "circle", since: Date.now() };
-      if ((hold.current?.btn === "cross" && !cross) || (hold.current?.btn === "circle" && !circle)) hold.current = null;
+      if ((hold.current?.btn === "cross" && !cross) || (hold.current?.btn === "circle" && !circle)) {
+        hold.current = null;
+        setHoldProgress(null);
+      }
+      setHolding(hold.current !== null);
       return;
     }
     if (cross && !was.cross) {
@@ -308,31 +314,31 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [input, go, finish, answer]);
 
   // While ✕ or ○ is held on a play step: fill the ring, then move on / back.
-  // A per-frame loop, so only while the window is on screen.
-  // lifetime: OK — cleanup cancels the hold loop (step change, window hidden, tour closed)
+  // A per-frame loop, so only while a button is held and the window is on screen.
+  // lifetime: OK — cleanup cancels the hold loop (release, step change, window hidden, tour closed)
   useEffect(() => {
-    if (index === null || !STEPS[index].pad || !shown) return;
+    if (index === null || !STEPS[index].pad || !shown || !holding) return;
     let frame = 0;
     const tick = () => {
       const h = hold.current;
-      if (h) {
-        const p = Math.min(1, (Date.now() - h.since) / HOLD_MS);
-        setHoldProgress({ btn: h.btn, p });
-        if (p >= 1) {
-          hold.current = null;
-          setHoldProgress(null);
-          if (h.btn === "cross") go(index + 1);
-          else go(index - 1);
-          return;
-        }
-      } else setHoldProgress((v) => (v ? null : v));
-      // lifetime: WASTE — re-arms every frame for the whole pad step, even with no button held
+      if (!h) return void setHoldProgress(null);
+      const p = Math.min(1, (Date.now() - h.since) / HOLD_MS);
+      setHoldProgress({ btn: h.btn, p });
+      if (p >= 1) {
+        hold.current = null;
+        setHoldProgress(null);
+        setHolding(false);
+        if (h.btn === "cross") go(index + 1);
+        else go(index - 1);
+        return;
+      }
+      // lifetime: OK — re-arms only while the button is held; cancelled in the effect cleanup
       frame = requestAnimationFrame(tick);
     };
     // lifetime: OK — cancelled in the effect cleanup
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [index, go, shown]);
+  }, [index, go, shown, holding]);
 
   // A ticked mouse step moves on by itself after a moment, but never over
   // her: it waits for the current line to finish (the next step's line would
