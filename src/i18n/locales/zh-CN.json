@@ -524,7 +524,9 @@
       "restartFailed": "无法请求 {{launcher}} 退出，因此未做任何更改。请手动退出后重试。",
       "reopenFailed": "已保存，但无法重新启动 {{launcher}}。请手动启动它。",
       "launcherStarted": "{{launcher}} 正在运行，因此尚未做任何更改。将为此更改关闭它，之后重新打开。请再次确认以继续。",
-      "launcherOverwrote": "{{launcher}} 撤回了在此应用的更改（当时它正在运行）。请再次应用：如果 {{launcher}} 正在运行，会先关闭它，之后重新打开。"
+      "launcherOverwrote": "{{launcher}} 撤回了在此应用的更改（当时它正在运行）。请再次应用：如果 {{launcher}} 正在运行，会先关闭它，之后重新打开。",
+      "details": "详细信息",
+      "needsAttention": "待设置"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -924,7 +926,6 @@
         "dualsense": "原生支持自适应扳机或 触觉反馈的游戏",
         "attention": "有待处理设置更改的游戏"
       },
-      "summary": "{{games}} 款游戏 · {{dualsense}} 款支持 DualSense 功能 · {{profiles}} 款有配置文件",
       "recent": "最近游玩",
       "tierLegend": "各等级的含义",
       "compatHint": "自适应扳机和 触觉反馈只有通过 DualSense Proton 版本才能传到 Windows 游戏。",
@@ -943,7 +944,6 @@
         "prefixFolderHint": "打开游戏的 Windows（Proton/Wine）文件夹：设置和存档通常在这里",
         "failed": "无法打开。启动器已安装吗？"
       },
-      "gridFiltered": "与列表相同的筛选",
       "kind": {
         "demo": "试玩版",
         "dlc": "DLC",
@@ -979,7 +979,11 @@
       "supportsHdr": "支持 HDR",
       "supportsHdrHint": "如果该游戏在 PC 上有 HDR 设置，请勾选：应用会显示 HDR 需要的条件，并在一切就绪时提供“开启 HDR”。",
       "marksTitle": "没有按预期工作?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "继续游戏",
+      "libraryTitle": "游戏库",
+      "filteredBy": "筛选：{{filter}}",
+      "showAll": "显示全部"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",

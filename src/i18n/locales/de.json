@@ -527,7 +527,9 @@
       "restartFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
       "reopenFailed": "Gespeichert, aber {{launcher}} konnte nicht wieder gestartet werden. Starte ihn selbst.",
       "launcherStarted": "{{launcher}} läuft gerade, deshalb wurde noch nichts geändert. Er wird für diese Änderung geschlossen und danach wieder geöffnet. Bestätige erneut, um fortzufahren.",
-      "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet."
+      "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet.",
+      "details": "Details",
+      "needsAttention": "Zu erledigen"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -932,7 +934,6 @@
         "dualsense": "Spiele mit nativen adaptiven Triggern oder haptisches Feedback",
         "attention": "Spiele mit einer ausstehenden Einrichtungsänderung"
       },
-      "summary": "{{games}} Spiele · {{dualsense}} mit DualSense-Funktionen · {{profiles}} mit Profil",
       "recent": "Zuletzt gespielt",
       "tierLegend": "Was die Stufen bedeuten",
       "compatHint": "Adaptive Trigger und haptisches Feedback erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
@@ -951,7 +952,6 @@
         "prefixFolderHint": "Den Windows-Ordner (Proton/Wine) des Spiels öffnen: Einstellungen und Spielstände liegen oft hier",
         "failed": "Konnte nicht geöffnet werden. Ist der Launcher installiert?"
       },
-      "gridFiltered": "gefiltert wie die Liste",
       "kind": {
         "demo": "Demo",
         "dlc": "DLC",
@@ -987,7 +987,11 @@
       "supportsHdr": "Unterstützt HDR",
       "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App zeigt dann, was HDR braucht, und bietet „HDR einschalten“ an, sobald alles bereit ist.",
       "marksTitle": "Funktioniert etwas nicht wie erwartet?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Weiterspielen",
+      "libraryTitle": "Bibliothek",
+      "filteredBy": "Filter: {{filter}}",
+      "showAll": "Alle zeigen"
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",

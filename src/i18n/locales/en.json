@@ -526,7 +526,9 @@
       "restartFailed": "{{launcher}} couldn't be asked to quit, so nothing was changed. Quit it yourself, then try again.",
       "reopenFailed": "Saved, but {{launcher}} couldn't be started again. Start it yourself.",
       "launcherStarted": "{{launcher}} is running now, so nothing was changed yet. It will be closed for this change and reopened afterwards. Confirm again to go ahead.",
-      "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards."
+      "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards.",
+      "details": "Details",
+      "needsAttention": "Needs attention"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -931,7 +933,6 @@
         "dualsense": "Games with native adaptive triggers or haptic feedback",
         "attention": "Games with a setup change waiting"
       },
-      "summary": "{{games}} games · {{dualsense}} with DualSense features · {{profiles}} with a profile",
       "recent": "Recently played",
       "tierLegend": "What the tiers mean",
       "compatHint": "Adaptive triggers and haptic feedback reach Windows games only through the DualSense Proton build.",
@@ -950,7 +951,6 @@
         "prefixFolderHint": "Open the game's Windows (Proton/Wine) folder: settings and saves often live here",
         "failed": "Couldn't open that. Is the launcher installed?"
       },
-      "gridFiltered": "filtered like the list",
       "kind": {
         "demo": "Demo",
         "dlc": "DLC",
@@ -986,7 +986,11 @@
       "supportsHdr": "Supports HDR",
       "supportsHdrHint": "Tick this if the game has an HDR setting on PC: the app then shows what HDR needs and offers Turn on HDR once everything is ready.",
       "marksTitle": "Not working as expected?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Continue playing",
+      "libraryTitle": "Library",
+      "filteredBy": "Filter: {{filter}}",
+      "showAll": "Show all"
     },
     "dongleConsole": {
       "title": "{{deviceName}} console",
