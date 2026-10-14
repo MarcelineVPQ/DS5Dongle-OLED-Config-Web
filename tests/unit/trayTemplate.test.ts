@@ -2,6 +2,7 @@
 // menu bar), both the start-up image and the live one the renderer draws.
 // Other systems keep the colored per-state icons.
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const images: { path?: string; template: boolean }[] = [];
@@ -42,7 +43,7 @@ describe("the tray icon", () => {
   it("macOS: starts with the template image and marks the live one as a template", async () => {
     onPlatform("darwin");
     const tray = await makeTray();
-    expect(images[0]).toMatchObject({ path: "/res/trayTemplate.png", template: true });
+    expect(images[0]).toMatchObject({ path: join("/res", "trayTemplate.png"), template: true });
     tray.setCustomIcon("data:image/png;base64,AAAA");
     expect(images.at(-1)).toMatchObject({ path: undefined, template: true });
   });
@@ -50,7 +51,7 @@ describe("the tray icon", () => {
   it("Linux and Windows: the colored per-state icons, never a template", async () => {
     onPlatform("linux");
     const tray = await makeTray();
-    expect(images[0]).toMatchObject({ path: "/res/tray-none-22.png", template: false });
+    expect(images[0]).toMatchObject({ path: join("/res", "tray-none-22.png"), template: false });
     tray.setCustomIcon("data:image/png;base64,AAAA");
     expect(images.at(-1)!.template).toBe(false);
   });
