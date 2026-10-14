@@ -1050,6 +1050,7 @@
         "controller": "seu controle, ao vivo. Clique em qualquer parte para configurá-la",
         "dongle": "firmware, tela OLED, energia e USB",
         "games": "seus jogos, perfis por jogo e configuração do Proton",
+        "gamesWindows": "seus jogos e perfis por jogo",
         "app": "idioma, aparência, atualizações e inicialização",
         "about": "o guia, novidades e créditos"
       },

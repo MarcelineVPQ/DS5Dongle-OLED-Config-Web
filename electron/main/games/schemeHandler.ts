@@ -57,9 +57,9 @@ export function realHome(): string {
 // program gets its own transient user unit, named the way KDE and GNOME
 // name launched apps (app-<launcher>-<app id>@<random>.service), and only
 // without a user systemd falls back to a detached spawn (setsid: its own
-// session and process group). Windows: libuv puts only non-detached children
-// in its kill-on-close job object; a detached one (DETACHED_PROCESS, new
-// process group) is in no job of ours and keeps running when the app exits.
+// session and process group). Windows: PowerShell's Start-Process starts it
+// through the shell (shellStart below): in no job of ours, so it keeps running
+// when the app exits, and holding none of the app's handles.
 // macOS: a detached child is reparented to launchd when the app quits and
 // nothing kills it; links and folders there go through shell.openExternal /
 // openPath (LaunchServices, like `open`), which start apps under launchd.
@@ -133,6 +133,9 @@ export interface StartDeps {
   systemdRun: (argv: string[], env: NodeJS.ProcessEnv) => Promise<RunResult>;
   /** A detached spawn (POSIX: setsid, own process group), no shell. */
   spawnDetached: (cmd: string, args: string[], env: NodeJS.ProcessEnv) => Promise<boolean>;
+  /** Windows: start through the shell (ShellExecuteEx), which hands the
+   * program none of this app's handles. */
+  shellStart: (cmd: string, args: string[], env: NodeJS.ProcessEnv) => Promise<boolean>;
   now: () => number;
   random: () => string;
 }
@@ -148,6 +151,58 @@ function spawnDetached(cmd: string, args: string[], env: NodeJS.ProcessEnv): Pro
       child.unref();
       resolve(true);
     });
+  });
+}
+
+// Windows: a program we spawn gets every inheritable handle of this app.
+// libuv's uv_spawn always calls CreateProcess with bInheritHandles=TRUE (it
+// passes stdio that way) and has no handle list; detached, stdio "ignore"
+// and windowsHide don't change that. Chromium's sockets are inheritable, so a
+// Steam the app reopened kept the app's listening socket after the app
+// closed. So on Windows the program is started by PowerShell's Start-Process
+// (ShellExecuteEx, like a double-click: no handles inherited). PowerShell
+// itself inherits them for the moment it runs and exits right after.
+
+/** One argument quoted the way Windows programs split their command line
+ * (CommandLineToArgvW / the C runtime). */
+export function windowsQuoteArg(arg: string): string {
+  if (arg !== "" && !/[\s"]/.test(arg)) return arg;
+  // Backslashes before a quote (or the closing quote) are doubled; a quote is escaped.
+  return `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, "$1$1")}"`;
+}
+
+/** A single-quoted PowerShell string (a quote inside is doubled). */
+const psQuote = (s: string): string => `'${s.replace(/'/g, "''")}'`;
+
+/** The PowerShell script that starts `cmd args` through the shell; it fails
+ * (exit 1) when the program can't be started. */
+export function shellStartScript(cmd: string, args: string[]): string {
+  const argList = args.length ? ` -ArgumentList ${psQuote(args.map(windowsQuoteArg).join(" "))}` : "";
+  return `$ErrorActionPreference = 'Stop'\nStart-Process -FilePath ${psQuote(cmd)}${argList}`;
+}
+
+const powershellExe = (): string => join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+
+export const shellStartArgs = (cmd: string, args: string[]): string[] => ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(shellStartScript(cmd, args), "utf16le").toString("base64")];
+
+export function shellStart(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Detached too, so PowerShell is in no job of ours (libuv's job lets
+    // children break away silently anyway); no console window, no pipes.
+    // lifetime: OK — PowerShell exits once Start-Process returned; the 15 s timer kills a hung one; the program it started is the user's and outlives the app on purpose
+    // error: SHOWN — desktop.library.action.failed (a start that fails or times out resolves false up to the game action)
+    const child = spawn(powershellExe(), shellStartArgs(cmd, args), { detached: true, stdio: "ignore", windowsHide: true, env });
+    // lifetime: OK — fires once; cleared when PowerShell exits or fails to start
+    const timer = setTimeout(() => {
+      child.kill();
+      resolve(false); // it may still start: never risk a second copy
+    }, 15_000);
+    const done = (ok: boolean) => {
+      clearTimeout(timer);
+      resolve(ok);
+    };
+    child.once("error", () => done(false)); // lifetime: OK — fires once; goes with the child object
+    child.once("exit", (code) => done(code === 0)); // lifetime: OK — fires once; goes with the child object
   });
 }
 
@@ -167,6 +222,7 @@ const realDeps: StartDeps = {
     // error: NOT-WORTH — "failed" / "timeout" make startIndependent fall back to a detached start
     new Promise((resolve) => execFile("systemd-run", argv, { timeout: 10_000, env }, (err) => resolve(!err ? "ok" : (err as { killed?: boolean }).killed ? "timeout" : "failed"))),
   spawnDetached,
+  shellStart,
   now: Date.now,
   random: () => randomBytes(3).toString("hex"),
 };
@@ -185,6 +241,7 @@ export async function startIndependent(cmd: string, args: string[], deps: StartD
       if (result === "timeout") return false;
     }
   }
+  if (deps.platform === "win32") return deps.shellStart(cmd, args, env);
   return deps.spawnDetached(cmd, args, env);
 }
 
