@@ -192,6 +192,12 @@ const scrollPanel = () => evaluate(`(() => { const p = document.querySelector(".
 const openSection = (id) => evaluate(`(() => { const h = document.querySelector('[data-section="${id}"] .dk-sec-toggle'); if (h && h.getAttribute("aria-expanded") !== "true") h.click(); })()`);
 const pinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="false"]').forEach((b) => b.click())`);
 const unpinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="true"]').forEach((b) => b.click())`);
+// A main-view block (MainBlock: readouts) opened and scrolled to; every open one closed (they're remembered).
+const openBlock = (id) =>
+  evaluate(
+    `(() => { const h = document.querySelector('[data-block="${id}"] .dk-block-toggle'); if (h && h.getAttribute("aria-expanded") !== "true") h.click(); h?.closest(".dk-block")?.scrollIntoView({ block: "start" }); })()`,
+  );
+const closeBlocks = () => evaluate(`document.querySelectorAll('.dk-block-toggle[aria-expanded="true"]').forEach((b) => b.click())`);
 
 // Every view worth checking: its page group (the unit the fast plan
 // combines), the update state it's shown in, and a rough cost (ms: its own
@@ -206,7 +212,11 @@ const gamesHome = async () => {
 };
 const view = (group, name, cost, open) => ({ group, name, cost: cost + SETTLE_MS + 150, open });
 const BASE_VIEWS = [
-  view("controller", "controller", 0, () => rail("controller")),
+  view("controller", "controller", 300, async () => {
+    await rail("controller");
+    await sleep(300);
+    await closeBlocks(); // as a player first finds it
+  }),
   ...PARTS.map((part) =>
     view("controller", `part:${part}`, 300, async () => {
       await rail("controller");
@@ -214,7 +224,12 @@ const BASE_VIEWS = [
       await click(`.live-ctl [data-part="${part}"]`);
     }),
   ),
-  ...["sticks", "info"].map((id) =>
+  view("controller", "controller info (main view)", 600, async () => {
+    await rail("controller");
+    await sleep(300);
+    await openBlock("info");
+  }),
+  ...["sticks"].map((id) =>
     view("controller", `section:${id}`, 300, async () => {
       await rail("controller");
       await sleep(300);
@@ -234,13 +249,24 @@ const BASE_VIEWS = [
     await sleep(300);
     await unpinAll();
   }),
-  view("dongle", "dongle (console + dashboard)", 0, () => rail("dongle")),
+  view("dongle", "dongle (console + dashboard)", 300, async () => {
+    await rail("dongle");
+    await sleep(300);
+    await closeBlocks();
+  }),
+  view("dongle", "dongle diagnostics (main view)", 1500, async () => {
+    await rail("dongle");
+    await sleep(300);
+    await openBlock("diagnostics");
+    await sleep(1200); // a poll or two: the graphs and counters filled in
+    await openBlock("diagnostics"); // scrolled to again at its full height
+  }),
   view("dongle", "dongle, scrolled", 800, async () => {
     await rail("dongle");
     await sleep(800);
     await evaluate(`(() => { const s = document.querySelector(".dk-split-main"); if (s) s.scrollTop = s.scrollHeight; })()`);
   }),
-  ...["firmware", "device", "power", "oled", "usb", "diagnostics"].map((id) =>
+  ...["firmware", "device", "power", "oled", "usb"].map((id) =>
     view("dongle", `dongle section:${id}`, 900, async () => {
       await rail("dongle");
       await sleep(300);
@@ -291,6 +317,12 @@ const BASE_VIEWS = [
       await scrollPanel();
     }),
   ),
+  view("games", "game page details (main view)", 2300, async () => {
+    await rail("games");
+    await sleep(2000);
+    await evaluate(`document.querySelectorAll(".lib-row")[1]?.click()`);
+    await openBlock("details");
+  }),
   view("games", "games, Show menu open", 1500, async () => {
     await gamesHome();
     await evaluate(`(() => { const d = document.querySelector(".lib-show"); if (d) d.open = true; })()`);

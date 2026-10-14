@@ -8,15 +8,16 @@ import type { FirmwareUpdateState } from "./useUpdates";
 import { BOARD_PROBLEM_ID, type BoardProblem } from "./dongle/core1Status";
 import { noticeKey, type NoticeTask, type Settled } from "./notices";
 import { formatMb } from "./format";
-import type { SectionId } from "./accordion/sections";
+import type { BlockId, SectionId } from "./accordion/sections";
 
 export const APP_UPDATE_ID = "app-update";
 export const FIRMWARE_UPDATE_ID = "firmware-update";
 export const GAMES_SETUP_ID = "games-setup";
-// The accordion section each task opens (rail dots, Dismissed notices' Go to).
+// The accordion section, or the main-view block for a readout, each task
+// opens (rail dots, Dismissed notices' Go to).
 export const APP_UPDATE_SECTION: SectionId<"app"> = "updates";
 export const FIRMWARE_UPDATE_SECTION: SectionId<"dongle"> = "firmware";
-export const BOARD_PROBLEM_SECTION: SectionId<"dongle"> = "diagnostics";
+export const BOARD_PROBLEM_BLOCK: BlockId<"dongle"> = "diagnostics";
 export const GAMES_SETUP_SECTION: SectionId<"games"> = "recommended";
 
 // The app update notice's key: the offered version, or (once it's installed
@@ -71,7 +72,7 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
     for (const p of input.board) {
       const key = boardProblemKey(p);
       keys.push(key);
-      tasks.push({ id: BOARD_PROBLEM_ID, place: "dongle", section: BOARD_PROBLEM_SECTION, text: p.text, key });
+      tasks.push({ id: BOARD_PROBLEM_ID, place: "dongle", section: BOARD_PROBLEM_BLOCK, text: p.text, key });
     }
     settled.set(BOARD_PROBLEM_ID, keys);
   }

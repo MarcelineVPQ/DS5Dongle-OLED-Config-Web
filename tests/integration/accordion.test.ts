@@ -6,7 +6,9 @@
 // built on it (App settings, About, the Controller and Pico 2 W pages, Games
 // → Home and a game's page): every setting from the plan's table (the
 // accordion sketch's MAPPING.md) renders in exactly one section, nothing
-// lost, no dupes; and every deep link target exists.
+// lost, no dupes; and every deep link target exists. Readouts (Pico
+// diagnostics, Controller info, a game's details) are main-view blocks
+// (MainBlock), never sections: closed by default, reading nothing until opened.
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,6 +34,7 @@ let m: {
   i18n: typeof import("../../src/i18n").default;
   Section: typeof import("../../src/desktop/accordion/Section");
   acc: typeof import("../../src/desktop/accordion/useAccordion");
+  block: typeof import("../../src/desktop/accordion/MainBlock");
   sections: typeof import("../../src/desktop/accordion/sections");
   AppSettingsPage: typeof import("../../src/desktop/pages/AppSettingsPage").default;
   AboutPage: typeof import("../../src/desktop/pages/AboutPage").default;
@@ -53,6 +56,7 @@ beforeAll(async () => {
     i18n: (await import("../../src/i18n")).default,
     Section: await import("../../src/desktop/accordion/Section"),
     acc: await import("../../src/desktop/accordion/useAccordion"),
+    block: await import("../../src/desktop/accordion/MainBlock"),
     sections: await import("../../src/desktop/accordion/sections"),
     AppSettingsPage: (await import("../../src/desktop/pages/AppSettingsPage")).default,
     AboutPage: (await import("../../src/desktop/pages/AboutPage")).default,
@@ -109,6 +113,9 @@ const head = (id: string) => container.querySelector<HTMLButtonElement>(`[data-s
 const pinOf = (id: string) => container.querySelector<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-pin`)!;
 const openIds = () => [...container.querySelectorAll<HTMLElement>(".dk-sec.open")].map((s) => s.dataset.section);
 const click = (b: HTMLElement) => act(() => b.click());
+// A main-view block (MainBlock): its header, and whether its body is there.
+const blockHead = (id: string) => container.querySelector<HTMLButtonElement>(`.dk-split-main [data-block="${id}"] .dk-block-toggle`)!;
+const blockBody = (id: string) => container.querySelector<HTMLElement>(`.dk-split-main [data-block="${id}"] .dk-block-body`);
 
 // A small page on the accordion: the body counts how often it renders.
 let bodyRenders = 0;
@@ -411,7 +418,6 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
   buttons: ["desktop.live.remapApply", "desktop.layouts.title", "desktop.layouts.saveAs"],
   sticks: ["desktop.calib.title", "desktop.calib.leftStick", "desktop.curves.title", "desktop.calib.triggers"],
   slots: ["desktop.slots.wipe"],
-  info: ["desktop.ctrlInfo.refresh"],
 };
 const DONGLE_INVENTORY: Record<string, string[]> = {
   firmware: ["desktop.firmware.check"],
@@ -419,7 +425,6 @@ const DONGLE_INVENTORY: Record<string, string[]> = {
   power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.picoLed", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
   oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
   usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
-  diagnostics: ["desktop.dash.audio", "desktop.dash.specs.title"],
 };
 // Each section opened in turn: everything listed shows in it, and no row or
 // heading shows in two sections (nothing lost, no dupes).
@@ -461,6 +466,24 @@ describe("the Controller page on the accordion", () => {
     for (const id of m.sections.SECTIONS.controller) expect(container.querySelector(`[data-section="${id}"] .dk-sec-status`)?.textContent, id).toBeTruthy();
   });
 
+  it("shows Controller info in the main view under the drawing, closed until opened, with Refresh next to it", async () => {
+    await live("overview");
+    expect(container.querySelector(".dk-split-panel [data-block], .dk-split-panel [data-section='info']")).toBeNull();
+    expect(blockHead("info").textContent).toContain(m.i18n.t("desktop.ctrlInfo.title"));
+    expect(blockHead("info").getAttribute("aria-expanded")).toBe("false");
+    expect(blockBody("info")).toBeNull();
+    // Under the drawing.
+    const ctl = container.querySelector(".dk-split-main .live-ctl")!;
+    expect(ctl.compareDocumentPosition(blockHead("info")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    click(blockHead("info"));
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    expect(blockBody("info")?.textContent).toContain(m.i18n.t("desktop.ctrlInfo.refresh"));
+    // Remembered: open again on the next visit.
+    act(() => root.render(null));
+    await live("overview");
+    expect(blockBody("info")).not.toBeNull();
+  });
+
   it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
     await live("overview");
     const part = (p: string) => container.querySelector(`.live-ctl [data-part="${p}"]`)!;
@@ -477,16 +500,26 @@ describe("the Controller page on the accordion", () => {
 });
 
 describe("the Pico 2 W page on the accordion", () => {
-  it("has every section of the plan, each setting in exactly one; Diagnostics reads its extras only while open", async () => {
+  it("has every section of the plan, each setting in exactly one; Diagnostics is in the main view and reads its extras only while open", async () => {
     const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
     const counters = vi.spyOn(Ds5BridgeClient.prototype, "readAudioCounters");
     await live("dongle");
-    await act(() => new Promise((r) => setTimeout(r, 1200))); // a poll or two with Diagnostics folded
+    expect(container.querySelector(".dk-split-panel [data-block]")).toBeNull();
+    expect(blockHead("diagnostics").getAttribute("aria-expanded")).toBe("false");
+    expect(blockBody("diagnostics")).toBeNull();
+    await act(() => new Promise((r) => setTimeout(r, 1200))); // a poll or two with Diagnostics closed
     expect(counters).not.toHaveBeenCalled();
-    click(head("diagnostics"));
+    click(blockHead("diagnostics"));
     await act(() => new Promise((r) => setTimeout(r, 1200)));
     expect(counters).toHaveBeenCalled();
-    click(head("diagnostics"));
+    // Graphs, audio counters, the OLED, the specs: all in the block.
+    // loop: test
+    for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.specs.title"]) expect(blockBody("diagnostics")?.textContent, key).toContain(m.i18n.t(key));
+    click(blockHead("diagnostics"));
+    expect(blockBody("diagnostics")).toBeNull();
+    const calls = counters.mock.calls.length;
+    await act(() => new Promise((r) => setTimeout(r, 1200)));
+    expect(counters.mock.calls.length, "closed: no more counter reads").toBeLessThanOrEqual(calls + 1); // one read may have been in flight
     counters.mockRestore();
     await inventory("dongle", DONGLE_INVENTORY);
     expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Pico 2 W");
@@ -494,7 +527,19 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(container.querySelectorAll(".dk-split-main .dash-gauge")).toHaveLength(3);
   });
 
-  it("a firmware update and a board problem open their sections from the rail", () => {
+  it("a deep link (the rail's board-problem dot, the tray's Diagnostics) opens the Diagnostics block", async () => {
+    m.block.revealBlock("dongle", "diagnostics"); // before the page mounts: taken when it does
+    await live("dongle");
+    expect(blockHead("diagnostics").getAttribute("aria-expanded")).toBe("true");
+    expect(blockBody("diagnostics")).not.toBeNull();
+    expect(document.activeElement).toBe(blockHead("diagnostics"));
+    // "More in Diagnostics" under the dials does the same.
+    click(blockHead("diagnostics"));
+    click(container.querySelector<HTMLButtonElement>(".dash-more")!);
+    expect(blockBody("diagnostics")).not.toBeNull();
+  });
+
+  it("a firmware update and a board problem open their places from the rail", () => {
     const { tasks } = m.openTasks.openTasks(t, {
       app: { phase: "idle" } as never,
       fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never },
@@ -530,7 +575,6 @@ const GAME_INVENTORY: Record<string, string[]> = {
   compatibility: ["desktop.library.runsWith"],
   support: ["desktop.library.tierLegend", "desktop.library.rateTitle", "desktop.library.feedbackHint"],
   notes: [],
-  details: ["desktop.library.launcher", "desktop.library.id"],
 };
 // Each section opened in turn: everything listed is in it (by text; some
 // carry a count or a name), and no row label or heading shows in two.
@@ -596,6 +640,12 @@ describe("a game's page on the accordion", () => {
     );
     expect(container.querySelector(".dk-split-main .gp-hero")).not.toBeNull();
     expect(container.querySelectorAll(".dk-split-main .gp-tile")).toHaveLength(4);
+    // Details: a block in the main view under the tiles, closed until opened.
+    expect(blockHead("details").getAttribute("aria-expanded")).toBe("false");
+    click(blockHead("details"));
+    // loop: test
+    for (const key of ["desktop.library.launcher", "desktop.library.id"]) expect(blockBody("details")?.textContent, key).toContain(m.i18n.t(key));
+    click(blockHead("details"));
     expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Ghostrunner");
     await textInventory("game", GAME_INVENTORY);
     expect(container.querySelector('[data-section="notes"] .dk-sec-toggle')).not.toBeNull();
@@ -605,7 +655,7 @@ describe("a game's page on the accordion", () => {
 });
 
 describe("deep links", () => {
-  it("every task with a section targets one its page has (the rail's Games count: Recommended changes)", () => {
+  it("every task with a place targets a section or main-view block its page has (the rail's Games count: Recommended changes)", () => {
     const app = { phase: "ready" as const, version: "1.2.3" };
     const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 1 });
     expect(tasks.find((x) => x.place === "games")?.section).toBe("recommended");
@@ -613,8 +663,20 @@ describe("deep links", () => {
     for (const task of tasks.filter((x) => x.section)) {
       const page = task.place as keyof typeof m.sections.SECTIONS;
       expect(Object.keys(m.sections.SECTIONS), task.id).toContain(page);
-      expect(m.sections.SECTIONS[page] as readonly string[], task.id).toContain(task.section);
+      const blocks = (m.sections.MAIN_BLOCKS as Record<string, readonly string[]>)[page] ?? [];
+      expect([...m.sections.SECTIONS[page], ...blocks], task.id).toContain(task.section);
     }
+    // A board problem: the Pico 2 W page's Diagnostics block (a readout, not a section).
+    const board = m.openTasks.openTasks(t, {
+      app: { phase: "idle" } as never,
+      fw: { available: false, latest: null, state: { phase: "idle" } as never },
+      connected: true,
+      board: [{ reason: "mic-decoder", text: "mic" }] as never,
+      gamesCount: 0,
+    });
+    expect(board.tasks[0]?.section).toBe("diagnostics");
+    expect(m.sections.MAIN_BLOCKS.dongle as readonly string[]).toContain("diagnostics");
+    expect(m.sections.SECTIONS.dongle as readonly string[]).not.toContain("diagnostics");
   });
 
   it("every section a link can name renders on its page", async () => {

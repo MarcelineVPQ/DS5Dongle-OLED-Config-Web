@@ -3,7 +3,7 @@
 // Clicking a part of the drawing opens its section (ControllerView); the
 // section bodies are functions, so a folded section renders nothing and its
 // polls (the level meters, the slot list) and tests stop.
-import { Bluetooth, Gamepad2, Info, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick } from "lucide-react";
+import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick } from "lucide-react";
 import Calibration from "./Calibration";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
@@ -15,7 +15,6 @@ import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
-import type { ChargeState } from "../../protocol/controllerInfo";
 import type { SpeakerSelect } from "../../protocol/config";
 import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
@@ -25,7 +24,6 @@ import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
 import { EDGE_REMAP_ROWS } from "./parts";
 import type { Remap } from "./useRemap";
-import ControllerInfo, { controllerInfoStatus, type ControllerInfoState } from "./ControllerInfo";
 import { named, onOff } from "../accordion/status";
 import { Section, SectionGroup } from "../accordion/Section";
 import { logged } from "../../errorText";
@@ -42,16 +40,13 @@ interface Props {
   onButtonHover: (index: number | null) => void;
   edge: boolean; // a DualSense Edge (or its preview): the Buttons list adds its Fn buttons and paddles
   trigger: "l2" | "r2"; // the trigger picked last on the drawing: its pull shows first
-  info: ControllerInfoState;
-  batteryPct: number | null;
-  power: ChargeState | null;
 }
 
 const CHOICES = ["auto", "speaker", "headset", "off"] as const;
 const MICS = ["auto", "builtIn", "headset"] as const;
 const AH_MODES = ["off", "fallback", "mix", "replace"] as const;
 
-export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger, info, batteryPct, power }: Props) {
+export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger }: Props) {
   const { t } = useTranslation();
   const d = bridge.draft;
   // loop: HOT-PATH-OK — N = 9 light bar modes; per render of the panel
@@ -60,7 +55,6 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
   const { library } = useLibrary();
   const loaded = remap.loaded ? (library.layouts?.[remap.loaded.id]?.name ?? remap.loaded.name) : null;
-  const infoStatus = controllerInfoStatus(t, info, batteryPct);
   const slot = bridge.identity?.currentSlot;
   const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
   return (
@@ -155,9 +149,6 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
       </Section>
       <Section id="slots" icon={Bluetooth} title={t("desktop.sections.slots")} status={slot !== undefined ? t("desktop.accordion.slotActive", { slot }) : null}>
         {() => <SlotsPage bridge={bridge} />}
-      </Section>
-      <Section id="info" icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
-        {() => <ControllerInfo data={info} batteryPct={batteryPct} power={power} />}
       </Section>
     </>
   );

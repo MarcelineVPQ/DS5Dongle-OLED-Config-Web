@@ -2,9 +2,12 @@
 export interface SettingsFinding {
   file: string;
   line: number;
-  kind: "card" | "row" | "bare" | "section";
+  kind: "card" | "row" | "bare" | "section" | "readout" | "nav";
   detail: string;
 }
 export const NOT_SETTINGS: Record<string, string>;
-export function settingsFindings(sources: Array<{ file: string; text: string }>): SettingsFinding[];
+export const NAVIGATION_SECTIONS: Record<string, string>;
+export const READOUTS_PENDING: Record<string, string>;
+export const READOUT_RULE: string;
+export function settingsFindings(sources: Array<{ file: string; text: string; lookup?: boolean }>): SettingsFinding[];
 export function gateProblems(rows: SettingsFinding[], files: string[]): { bad: SettingsFinding[]; stale: string[] };

@@ -98,7 +98,7 @@ export interface NoticeTask {
   text: string; // the dot's tooltip and the Dismissed notices row
   key?: string; // set when a notice for it can be dismissed
   count?: number; // a number on the dot (Games: changes waiting); otherwise a plain dot
-  section?: string; // the section on its page that holds it (accordion/sections.ts): rail dots and Go to open it
+  section?: string; // the section or main-view block on its page that holds it (SECTIONS / MAIN_BLOCKS, accordion/sections.ts): rail dots and Go to open it
 }
 
 export interface Reminder {

@@ -29,7 +29,9 @@ import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
 import LiveController from "./LiveController";
 import LiveData from "./LiveData";
-import { useControllerInfo } from "./ControllerInfo";
+import ControllerInfo, { controllerInfoStatus, useControllerInfo } from "./ControllerInfo";
+import { MainBlock, useMainBlock } from "../accordion/MainBlock";
+import { Info } from "lucide-react";
 import LiveStrip from "./LiveStrip";
 import ControllerSections from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
@@ -85,7 +87,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // Its colors, with the player's own on top (App settings).
   const lookColors = useControllerColors(id?.colorwayCode ?? null, id?.model ?? null);
   // Its player lights' wiring, from the firmware report Controller info reads
-  // (once per connection, kept here: the section's status and task need it folded too).
+  // (once per connection, kept here: the block's status and task need it closed too).
   const [ctrlFirmware, setCtrlFirmware] = useState<ControllerFirmware | null>(null);
   const info = useControllerInfo(bridge, setCtrlFirmware);
   const playerWiring = playerLightWiring(on ? ctrlFirmware?.hwInfo : null);
@@ -131,6 +133,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
 
   // The accordion: pins per board and pairing slot.
   const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
+  // Controller info: a readout, so a block in the main view under the drawing (not the accordion).
+  const infoBlock = useMainBlock("controller", "info");
+  const infoStatus = controllerInfoStatus(t, info, batteryPct);
   // The Buttons list's focused button (from the drawing or a row) and the
   // row under the pointer: both light up on the drawing.
   const [buttonFocus, setButtonFocus] = useState<number | null>(null);
@@ -317,6 +322,11 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
       {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
       {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
       {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
+      {view === "overview" && client && (
+        <MainBlock state={infoBlock} icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
+          {() => <ControllerInfo data={info} batteryPct={batteryPct} power={input ? power : null} />}
+        </MainBlock>
+      )}
     </div>
   );
   if (view === "app") return <AppSettingsPage bridge={bridge} fw={fw} main={main} panelRef={panelGlass} />;
@@ -347,9 +357,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           onButtonHover={setButtonHover}
           edge={id?.model === "edge"}
           trigger={picked === "l2" ? "l2" : "r2"}
-          info={info}
-          batteryPct={batteryPct}
-          power={input ? power : null}
         />
       </SplitView>
       <Tour client={client} input={input} view={openSection} onView={tourView} ready={on && liveCapable} />

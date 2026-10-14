@@ -1,9 +1,10 @@
-// The Controller page's "Controller info" section (protocol 1.12): the
+// The Controller page's "Controller info" block (protocol 1.12; in the main
+// view under the drawing, MainBlock.tsx: readouts stay out of the accordion): the
 // connected controller's own firmware, its battery (level and charge state
 // from the live input, the voltage from a test command) and its lifetime
 // counters. Read once when a controller connects and on Refresh
-// (useControllerInfo, kept by the page so the section's status and its
-// "newer firmware" task dot are known while it's folded); nothing here polls.
+// (useControllerInfo, kept by the page so the block's status and its
+// "newer firmware" task dot are known while it's closed); nothing here polls.
 // Serial numbers never reach the app (the dongle blanks them), so nothing
 // identifying is shown.
 import { useEffect, useRef, useState } from "react";
@@ -134,7 +135,7 @@ interface Props {
   power: ChargeState | null;
 }
 
-// The section's body.
+// The block's body.
 export default function ControllerInfo({ data, batteryPct, power }: Props) {
   const { t, i18n } = useTranslation();
   const { client, supported, connected, info, error, setError, loading, official, officialStatus, loadTry, refresh } = data;
@@ -333,7 +334,7 @@ function Pair({ label, value }: { label: string; value: string }) {
   );
 }
 
-// The section's status: the task (a newer official firmware), else the firmware and battery.
+// The block's status: the task (a newer official firmware), else the firmware and battery.
 export function controllerInfoStatus(t: (k: string, o?: Record<string, unknown>) => string, data: ControllerInfoState, batteryPct: number | null): { status: string | null; task: string | null } {
   const s = data.officialStatus;
   const task = s?.status === "newer" ? t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(s.version) }) : null;
