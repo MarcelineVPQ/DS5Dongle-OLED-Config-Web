@@ -35,6 +35,7 @@ export function ContinuePlaying({
         <LeadTile {...tile(lead)} />
         {rest.length > 0 && (
           <ul className={`lib-continue-rest${rest.length > 2 ? " two" : ""}`}>
+            {/* loop: HOT-PATH-OK — N ≤ 8 recent games; Home render on library change */}
             {rest.map((g) => (
               <li key={g.key}>
                 <SmallTile {...tile(g)} />
@@ -47,6 +48,7 @@ export function ContinuePlaying({
   );
 }
 
+// loop: HOT-PATH-OK — N ≤ 3 art kinds per tile
 const first = (info: GameInfo | undefined, kinds: ArtKind[]) => kinds.find((k) => info?.art.includes(k)) ?? null;
 
 function LeadTile({ game, info, running, hasProfile, onOpen }: TileProps) {

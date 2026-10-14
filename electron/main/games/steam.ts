@@ -43,6 +43,7 @@ export function windowsSteamRoots(): string[] {
   } catch {
     // no Steam in the registry
   }
+  // loop: NOT-WORTH — N = 2 Program Files folders, Windows only, once per scan
   for (const pf of [process.env["ProgramFiles(x86)"], process.env.ProgramFiles]) if (pf) roots.push(join(pf, "Steam"));
   return roots;
 }
@@ -50,7 +51,8 @@ export function windowsSteamRoots(): string[] {
 export function findSteamInstalls(home: string, platform: NodeJS.Platform = process.platform, winRoots: () => string[] = windowsSteamRoots): SteamInstall[] {
   const candidates: Array<[string, boolean]> =
     platform === "win32"
-      ? winRoots().map((r) => [r, false])
+      ? // loop: NOT-WORTH — Steam roots on Windows
+        winRoots().map((r) => [r, false])
       : [
           [join(home, ".local/share/Steam"), false],
           [join(home, ".steam/root"), false],
@@ -61,6 +63,7 @@ export function findSteamInstalls(home: string, platform: NodeJS.Platform = proc
         ];
   const seen = new Set<string>();
   const out: SteamInstall[] = [];
+  // loop: NOT-WORTH — six possible Steam folders, a realpath each
   for (const [path, flatpak] of candidates) {
     let root: string;
     try {
@@ -79,6 +82,7 @@ function newestLocalConfig(root: string): string | null {
   const userdata = join(root, "userdata");
   let best: { path: string; mtime: number } | null = null;
   try {
+    // loop: NOT-WORTH — Steam accounts on this PC, a stat each
     for (const id of readdirSync(userdata)) {
       const p = join(userdata, id, "config/localconfig.vdf");
       try {
@@ -102,6 +106,7 @@ export function readVdfFile(path: string): VdfNode | null {
 export function steamLibraries(install: SteamInstall): string[] {
   const lf = readVdfFile(join(install.root, "steamapps/libraryfolders.vdf")) ?? readVdfFile(join(install.root, "config/libraryfolders.vdf"));
   const libraries = new Set<string>([install.root]);
+  // loop: NOT-WORTH — Steam library folders
   for (const [, entry] of getNode(lf ?? [], "libraryfolders") ?? []) {
     const path = typeof entry === "string" ? undefined : getString(entry, "path");
     if (path) libraries.add(path);
@@ -113,14 +118,17 @@ export function steamLibraries(install: SteamInstall): string[] {
 // with the library's steamapps folder. Shared by the game list and details.
 export function steamAppManifests(install: SteamInstall): Array<{ steamapps: string; acf: VdfNode }> {
   const out: Array<{ steamapps: string; acf: VdfNode }> = [];
+  // loop: NOT-WORTH — Steam library folders, a readdir each
   for (const lib of steamLibraries(install)) {
     const steamapps = join(lib, "steamapps");
     let files: string[];
     try {
+      // loop: HOT-PATH-OK — names in one steamapps folder, one regex test each
       files = readdirSync(steamapps).filter((f) => /^appmanifest_\d+\.acf$/.test(f));
     } catch {
       continue;
     }
+    // loop: PARALLELIZE — one sync read + VDF parse per appmanifest blocks the main process
     for (const f of files) {
       const acf = readVdfFile(join(steamapps, f));
       if (acf) out.push({ steamapps, acf });
@@ -131,12 +139,14 @@ export function steamAppManifests(install: SteamInstall): Array<{ steamapps: str
 
 export function listSteamGames(install: SteamInstall): SteamGame[] {
   const games = new Map<string, SteamGame>();
+  // loop: HOT-PATH-OK — parsed manifests, two getString each
   for (const { acf } of steamAppManifests(install)) {
     const appid = getString(acf, "AppState", "appid");
     const name = getString(acf, "AppState", "name");
     if (!appid || !name || TOOL_APPIDS.has(appid) || TOOL_NAME.test(name)) continue;
     games.set(appid, { appid, name });
   }
+  // loop: HOT-PATH-OK — one sort of the Steam games by name
   return [...games.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -162,6 +172,7 @@ export function installedTools(install: SteamInstall): string[] {
 
 // Valve's own Proton builds (steamapps/common/<name>/proton) in every library.
 export function valveProtons(install: SteamInstall): string[] {
+  // loop: NOT-WORTH — library folders, a readdir each
   return steamLibraries(install).flatMap((lib) => protonBuilds(join(lib, "steamapps/common")).filter((n) => /^Proton\b/.test(n)));
 }
 

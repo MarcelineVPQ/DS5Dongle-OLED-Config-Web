@@ -83,6 +83,7 @@ export const contrast = (a: string, b: string) => rgbContrast(hexToRgb(a), hexTo
 
 const LINE_ON_DARK_FALLBACK = "#9aa1a9";
 
+// loop: HOT-PATH-OK — N = 3 channels, only when the colors change (memoized)
 const toHex = (c: readonly number[]) => `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 
 // `color` if it reaches every [ground, ratio] pair, else the smallest step
@@ -90,16 +91,20 @@ const toHex = (c: readonly number[]) => `#${c.map((v) => v.toString(16).padStart
 // (two very different grounds can rule out every color). The one outline rule
 // for the colorways here and the player's own colors (customColors.ts).
 export function legibleOn(color: string, needs: ReadonlyArray<readonly [string, number]>): string {
+  // loop: HOT-PATH-OK — N ≤ 3 grounds, only when the colors change (memoized)
   const reads = (c: string) => needs.every(([ground, ratio]) => contrast(c, ground) >= ratio);
   if (reads(color)) return color;
   const base = hexToRgb(color);
   const ends = ["#ffffff", "#000000"];
+  // loop: HOT-PATH-OK — N ≤ 20 steps, early exit, only when the colors change
   for (let step = 1; step <= 20; step++) {
+    // loop: HOT-PATH-OK — N = 2 ends per step, only when the colors change
     for (const end of ends) {
       const c = toHex(mix(base, hexToRgb(end), step / 20));
       if (reads(c)) return c;
     }
   }
+  // loop: HOT-PATH-OK — N ≤ 3 grounds, fallback only, on color change
   const worst = (c: string) => Math.min(...needs.map(([ground, ratio]) => contrast(c, ground) / ratio));
   return worst(ends[0]) >= worst(ends[1]) ? ends[0] : ends[1];
 }

@@ -106,6 +106,7 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
 
   return plans.map(({ start, end, idxs }) => {
     const data = new Uint8Array(end - start);
+    // loop: NOT-WORTH — UF2 blocks copied once per firmware install, linear overall
     for (const idx of idxs) {
       const block = blocks[idx];
       data.set(block.payload, block.address - start);

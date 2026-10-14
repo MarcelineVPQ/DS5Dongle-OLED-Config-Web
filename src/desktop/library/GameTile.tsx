@@ -26,6 +26,7 @@ export function TileOverlays({ game, running, hasProfile }: Omit<TileProps, "inf
   // No store mark (added to Heroic by hand): the launcher's mark instead.
   const markId = hasLauncherIcon(game.store) ? game.store : game.launcher;
   const store = hasLauncherIcon(game.store) ? t(`desktop.library.storeName.${game.store}`) : `${t(`desktop.library.launcherName.${game.launcher}`)} · ${t(`desktop.library.storeName.${game.store}`)}`;
+  // loop: HOT-PATH-OK — N = 4 badge candidates per tile; tile renders on library change only
   const marks = [
     s.features.triggers === "yes" && { key: "triggers", icon: <Crosshair size={13} />, label: t("desktop.library.featureName.triggers") },
     s.features.haptics === "yes" && { key: "haptics", icon: <AudioWaveform size={13} />, label: t("desktop.library.featureName.haptics") },
@@ -37,6 +38,7 @@ export function TileOverlays({ game, running, hasProfile }: Omit<TileProps, "inf
       {running && <span className="lib-tile-badge">{t("desktop.library.running")}</span>}
       {marks.length > 0 && (
         <span className="lib-tile-marks">
+          {/* loop: HOT-PATH-OK — N ≤ 4 marks per tile; renders on library change only */}
           {marks.map((m) => (
             <span key={m.key} className={`lib-tile-mark${m.key === "attention" ? " warn" : ""}`} title={m.label} aria-label={m.label} role="img">
               {m.icon}

@@ -17,20 +17,25 @@ const SAME_MODE: Record<GraphicsApi, string[]> = { dx12: ["-dx12", "-d3d12"], vu
 
 const argsOf = (line: string) => {
   const at = line.indexOf("%command%");
+  // loop: NOT-WORTH — N ≤ ~20 words in one launch line; per known-mode game per scan
   return (at < 0 ? line : line.slice(at + "%command%".length)).split(/\s+/).filter(Boolean);
 };
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
+// loop: NOT-WORTH — N ≤ ~20 launch arguments; per known-mode game per scan
 export const hasArg = (line: string, flag: string) => argsOf(line).some((a) => same(a, flag));
 
 // The line with `flag` added at the end of the game arguments (unchanged if it's there).
+// loop: NOT-WORTH — N = 2 parts
 export const withArg = (line: string, flag: string) => (hasArg(line, flag) ? line : [line.trim(), flag].filter(Boolean).join(" "));
 
 // Does the line start the game in `mode`, or pick another mode of the player's own?
 export function modeInfo(mode: GraphicsMode, line: string): ModeInfo {
   const base = { api: mode.api, flag: mode.flag, unlocks: mode.unlocks };
   const args = argsOf(line);
+  // loop: NOT-WORTH — N ≤ ~20 launch arguments; per known-mode game per scan
   if (args.some((a) => same(a, mode.flag) || SAME_MODE[mode.api].includes(a.toLowerCase()))) return { ...base, state: "set" };
+  // loop: NOT-WORTH — N ≤ ~20 launch arguments; per known-mode game per scan
   const own = args.find((a) => MODE_FLAGS.includes(a.toLowerCase()));
   return own ? { ...base, state: "own", own } : { ...base, state: "needed" };
 }

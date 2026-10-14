@@ -2,7 +2,7 @@
 // stick reaches against a perfect circle, raw or with the calibration above
 // applied) and a drift test (where the sticks sit and wander while nobody
 // touches them). The math is in stickTests.ts.
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import { correctStick, type StickCal } from "../../protocol/calibration";
@@ -41,15 +41,18 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
       setOutlines((o) => {
         // A changed calibration starts the "what games see" outlines over.
         const base = o.key === key ? o : { ...o, key, cal: [emptyOutline(), emptyOutline()] as [Outline, Outline] };
+        // loop: HOT-PATH-OK — N = 2 sticks per sample while the stick test is open
         const raw = base.raw.map((out, i) => {
           const s = stickOf(r, i);
           return addPoint(out, normAxis(s.x), normAxis(s.y));
         }) as [Outline, Outline];
+        // loop: HOT-PATH-OK — N = 2 sticks per sample while the stick test is open
         const corrected = base.cal.map((out, i) => {
           const s = stickOf(r, i);
           const [x, y] = correctStick(s.x, s.y, cal.current[i]);
           return addPoint(out, normAxis(x), normAxis(y));
         }) as [Outline, Outline];
+        // loop: HOT-PATH-OK — N = 2 outlines, skips the state update when nothing moved
         if (base === o && raw.every((v, i) => v === o.raw[i]) && corrected.every((v, i) => v === o.cal[i])) return o;
         return { key, raw, cal: corrected };
       });
@@ -60,6 +63,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
 
   // Drift: sample the resting sticks for DRIFT_MS.
   const [drift, setDrift] = useState<"idle" | "running" | "short" | [DriftSample[], DriftSample[]]>("idle");
+  // The results of a finished test: its samples don't change, so worked out
+  // once, not on every live input frame (~30 a second).
+  const driftResults = useMemo(() => (typeof drift === "object" ? ([driftStats(drift[0], sticks[0]), driftStats(drift[1], sticks[1])] as const) : null), [drift, sticks]);
   const samples = useRef<[DriftSample[], DriftSample[]]>([[], []]);
   useEffect(() => {
     if (drift !== "running") return;
@@ -69,6 +75,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
       const r = latest.current;
       if (!r) return;
       const at = performance.now() - start;
+      // loop: HOT-PATH-OK — N = 2 sticks per 33 ms sample, only during the 10 s drift test
       samples.current.forEach((list, i) => list.push({ t: at, ...stickOf(r, i) }));
     }, SAMPLE_MS);
     const done = setTimeout(() => {
@@ -97,6 +104,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
           onChange={setView}
         />
         <div className="stest-pair">
+          {/* loop: HOT-PATH-OK — N = 2 sticks per live frame (72-bucket outlines) */}
           {SIDES.map((side, i) => {
             const c = circularity(shown[i]);
             const now = input ? stickOf(input, i) : null;
@@ -156,8 +164,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
         )}
         {drift === "short" && <p className="dk-bad">{t("desktop.calib.noInput")}</p>}
         {typeof drift === "object" &&
+          // loop: HOT-PATH-OK — N = 2 sticks; the stats are memoized on the finished samples
           SIDES.map((side, i) => {
-            const d = driftStats(drift[i], sticks[i]);
+            const d = driftResults?.[i];
             if (!d) return null;
             return (
               <div className="stest-drift" key={side}>
@@ -202,8 +211,10 @@ function CirclePlot({ outline, dot }: { outline: Outline; dot: [number, number] 
   const R = 40; // full tilt, in viewBox units; the outline may go past it
   const step = (2 * Math.PI) / outline.length;
   const at = (r: number, i: number) => `${(50 + r * R * Math.cos((i + 0.5) * step)).toFixed(1)} ${(50 + r * R * Math.sin((i + 0.5) * step)).toFixed(1)}`;
+  // loop: HOT-PATH-OK — N = 72 buckets per live frame
   const full = outline.every((r) => r > 0);
   let d = "";
+  // loop: HOT-PATH-OK — N = 72 buckets, one path string per live frame
   outline.forEach((r, i) => {
     if (r <= 0) return;
     d += `${d && outline[i - 1] > 0 ? "L" : "M"}${at(Math.min(r, 1.2), i)} `;
@@ -221,11 +232,15 @@ function CirclePlot({ outline, dot }: { outline: Outline; dot: [number, number] 
 }
 
 // X (solid) and Y (dashed) offset from the center over the test's time.
-function DriftPlot({ samples }: { samples: DriftSample[] }) {
+// memo(): its samples are fixed once the test ends.
+const DriftPlot = memo(function DriftPlot({ samples }: { samples: DriftSample[] }) {
   const W = 200;
   const H = 50;
+  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
   const pts = samples.map((s) => ({ t: s.t, x: normAxis(s.x), y: normAxis(s.y) }));
+  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
   const scale = Math.max(0.05, ...pts.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
+  // loop: HOT-PATH-OK — two ~300-point paths; memo()ed, once per finished test
   const line = (key: "x" | "y") => pts.map((p, i) => `${i ? "L" : "M"}${((p.t / DRIFT_MS) * W).toFixed(1)} ${(H / 2 - (p[key] / scale) * (H / 2 - 2)).toFixed(1)}`).join(" ");
   return (
     <figure className="stest-driftfig">
@@ -237,4 +252,4 @@ function DriftPlot({ samples }: { samples: DriftSample[] }) {
       <figcaption className="dk-hint">±{(scale * 100).toFixed(1)}%</figcaption>
     </figure>
   );
-}
+});

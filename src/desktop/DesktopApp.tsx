@@ -195,6 +195,7 @@ export default function DesktopApp() {
   const darkTaskbar = useDarkTaskbar();
   useEffect(() => {
     if (!window.desktop) return;
+    // loop: NOT-WORTH — N = 3 numbers; only when the tray icon's inputs change
     const rgb = lightbarKey ? (lightbarKey.split(",").map(Number) as [number, number, number]) : null;
     let cancelled = false;
     void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", darkTaskbar, lightbar: rgb, charging })

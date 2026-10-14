@@ -42,8 +42,25 @@ pre-commit run --all-files
 - **Security baseline** is gated by `.hooks/check_electron_security.sh`, `.hooks/check_dom_sinks.sh` and `tests/security/`. Changing window/session/CSP/allowlists requires updating `docs/SECURITY_AUDIT.md` and those tests.
 - **Protocol changes** land in the firmware first, then the client, the simulated dongle (`src/protocol/simulatedDongle.ts`, also the tests' fake) and the tests in the same change.
 - **Dependencies**: exact versions, chosen ≥ 2 weeks after release. Gated: `tests/unit/dependencies.test.ts` rejects `^`/`~`/ranges, `.npmrc` has `save-exact=true`, Dependabot waits 14 days (`cooldown`).
-- **Gates, not prose** (`npm run gates` + tests, all in CI): the theme gate (`.hooks/check_theme_colors.mjs`) walks `.css`, `.tsx` and `.ts`; only its `TOKEN_SOURCES` files (the palettes) are exempt by path, anything else marks the line `theme-exempt: <reason>`. Every inline `eslint-disable` is listed in `docs/LINT_SUPPRESSIONS.md` (`tests/unit/lintSuppressions.test.ts`; an unused disable is an ESLint error). Every duplicate candidate has a verdict in `docs/DEDUPE_AUDIT.md` (`tools/list_duplicates.mjs --check`). No byte-identical files (`tools/check_identical_files.mjs`; with the firmware repo's path as an argument it checks across both). Every About → Coming soon entry maps to a BACKLOG row with a matching status, and every user-facing row still to do has an entry (rows ending "(internal)" are exempt; `tests/unit/roadmapBacklog.test.ts`). An allowlist entry names the finding/batch that removes it.
+- **Gates, not prose** (`npm run gates` + tests, all in CI): the theme gate (`.hooks/check_theme_colors.mjs`) walks `.css`, `.tsx` and `.ts`; only its `TOKEN_SOURCES` files (the palettes) are exempt by path, anything else marks the line `theme-exempt: <reason>`. Every inline `eslint-disable` is listed in `docs/LINT_SUPPRESSIONS.md` (`tests/unit/lintSuppressions.test.ts`; an unused disable is an ESLint error). Every duplicate candidate has a verdict in `docs/DEDUPE_AUDIT.md` (`tools/list_duplicates.mjs --check`). No byte-identical files (`tools/check_identical_files.mjs`; with the firmware repo's path as an argument it checks across both). Every loop that waits or sits on a hot path has a `// loop: VERDICT — reason` comment (`tools/list_loops.mjs --check`, see "Loop pass"). Every About → Coming soon entry maps to a BACKLOG row with a matching status, and every user-facing row still to do has an entry (rows ending "(internal)" are exempt; `tests/unit/roadmapBacklog.test.ts`). An allowlist entry names the finding/batch that removes it.
 - **Linux dev quirks** (ADR-0004): `--no-sandbox` (AppArmor userns restriction), GPU rendering on by default (App settings → Hardware acceleration; a GPU crash turns it off for the next start), zoom pinned to 100%. When restarting the app from a shell, kill by the anchored full path (`pgrep -f "^$PWD/node_modules/electron/dist/electron"`; unanchored patterns also match your own shell and kill it): it is single-instance, so a stale hidden copy blocks every new launch.
+
+## Loop pass
+
+A standing rule for both repos (the AVIEW "serial-loop pass"). Never sample "hot paths" by eye: list every candidate mechanically and give each one a verdict.
+
+1. **Every loop that waits or sits on a hot path carries a verdict comment**, added in the same commit as the loop. The gate enforces it: `node tools/list_loops.mjs --check` (in `npm run gates`, pre-commit and CI); the firmware's `tools/list_loops.py --check` runs in its CI.
+   - App: `tools/list_loops.mjs` (TypeScript compiler API) lists every `for`/`while`/`do` loop and array iteration callback (`.map`, `.forEach`, `.reduce`, `.filter`, `.some`, `.every`, `.find*`, `.flatMap`, `.sort`) in `src/` and `electron/` that awaits, runs on a hot path (render, useEffect, rAF, setInterval, a poll, a WebUSB handler, the audio worklet, the game library scan, or anything those call), or is nested in another loop.
+   - Firmware: `tools/list_loops.py` lists every loop in `src/` with where it runs (core1, core0's main loop, a callback, an ISR, boot), busy-waits and nesting.
+2. **The comment goes on the loop's line or the line above:** `// loop: VERDICT — reason` (`{/* loop: … */}` inside JSX). If several loops share a line, one comment covers them all.
+   - **PARALLELIZE**: independent async work per step. Run it with a bound.
+   - **BATCH**: one call, report or write instead of N.
+   - **SERIAL-REQUIRED**: give the reason. It is one of: the board's vendor HID interface is one session (requests must not interleave); protocol or transaction order; retry/backoff; a deadline; a data dependency.
+   - **HOT-PATH-OK**: runs per frame or poll, but N is small and bounded. State N.
+   - **FIX-HOT-PATH**: allocation, sort, regex or O(n²) work per frame or poll; work while the window is hidden (breaks the lean rule). In firmware: unbounded or blocking work on core1, flash access on core1, a busy-wait without a timeout.
+   - **NOT-WORTH**: tiny N (state it), or startup-only / rare.
+3. **"Parallel" means as parallel as the target allows, never unbounded.** The board is one HID session, so its requests stay serial.
+4. **Re-run the full pass when a release touches hot paths** (render, polls, input, the library scan, core0's loop, core1). Run both listers, re-check every verdict, and update the tables in `docs/LOOP_PASS_<date>.md` (this repo holds the doc for both repos). Then fix PARALLELIZE, BATCH and FIX-HOT-PATH rows in batches, biggest effect first, with tests. The owner picks the batches.
 
 ## Backlog: one list
 
@@ -57,4 +74,4 @@ pre-commit run --all-files
 
 ## Docs
 
-`docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `CHANGELOG.md`.
+`docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `docs/DEDUPE_AUDIT.md`, `docs/LOOP_PASS_2026-10.md` (loop pass, both repos), `CHANGELOG.md`.

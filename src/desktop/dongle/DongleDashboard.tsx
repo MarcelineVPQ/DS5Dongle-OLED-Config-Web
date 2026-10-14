@@ -112,6 +112,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
   const { sample: s, history } = useDongleTelemetry(bridge, frame, rssi);
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
+  // loop: HOT-PATH-OK — N = 60 samples per trend, a few trends per render
   const series = (pick: (x: Sample) => number) => history.map(pick);
   const config = bridge.config;
   const micLoss = micLossClimbing(history);
@@ -168,6 +169,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
             <Level label={td("hapticPeak")} value={s?.peaks[1] ?? 0} />
           </div>
           <div className="dash-counters">
+            {/* loop: HOT-PATH-OK — N ≈ 15 audio counters */}
             {AUDIO_COUNTER_NAMES.filter((k) => k !== "setFeatureLast" && k !== "core1Loops").map((k) => (
               <Fact key={k} label={t(`desktop.diag.counters.${k}`)} value={s ? s.counters[k].toLocaleString() : "—"} bad={k === "micPlc" ? micLoss : BAD.has(k) && !!s?.counters[k]} />
             ))}
@@ -225,6 +227,7 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
   // The graphs start over at a reset, like the numbers.
   const [resetAt, setResetAt] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // loop: HOT-PATH-OK — N = 60 samples
   const recent = history.filter((x) => x.at >= resetAt && x.timings);
   const reset = async () => {
     try {
@@ -247,9 +250,11 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
           <span>{td("average")}</span>
           <span>{td("worst")}</span>
           <span>{td("trend")}</span>
+          {/* loop: HOT-PATH-OK — N ≤ 8 timing stages */}
           {timings.stages.slice(0, TIMING_STAGES.length).map((st, i) => {
             const saturated = st.maxUs >= TIMING_MAX_SATURATED;
             const bad = TIMING_STAGES[i] === "speaker" && st.maxUs >= SPEAKER_FRAME_US;
+            // loop: HOT-PATH-OK — N = 8 stages x 60 samples = 480 numbers
             const trend = recent.map((x) => (x.timings?.stages[i]?.avgNs ?? 0) / 1000);
             return <TimingRow key={TIMING_STAGES[i]} label={td(`stages.${TIMING_STAGES[i]}`)} avg={formatMicros(st.avgNs / 1000)} worst={formatMicros(st.maxUs, saturated)} bad={bad} trend={trend} />;
           })}
@@ -285,6 +290,7 @@ const BAD = new Set(["dropRaw", "dropEnc", "dropHap", "flashFailures"]);
 // a one-off that is benign. "In use": mic frames decoding at a real rate (a
 // stream is far above this; the connect-time packets far below).
 const MIC_IN_USE_FPS = 20;
+// loop: HOT-PATH-OK — N = 60 samples
 const micLossClimbing = (history: Sample[]): boolean => history.filter((x, i) => i > 0 && x.micFps >= MIC_IN_USE_FPS && x.counters.micPlc > history[i - 1].counters.micPlc).length >= 2;
 
 // A 240° dial; the arc turns warning / bad colors past the thresholds (the
@@ -348,6 +354,7 @@ function Trend({ values }: { values: number[] }) {
   const h = 18;
   const lo = Math.min(...values);
   const hi = Math.max(...values, lo + 0.5);
+  // loop: HOT-PATH-OK — N = 60 points per trend line
   const pts = values.map((v, i) => `${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
   return (
     <svg className="dash-gauge-trend" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
@@ -362,6 +369,7 @@ function Graph({ label, values, now, unit, digits = 0, note }: { label: string; 
   const h = 34;
   const lo = Math.min(...values, 0);
   const hi = Math.max(...values, lo + 1);
+  // loop: HOT-PATH-OK — N = 60 points per graph
   const pts = values.map((v, i) => `${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
   return (
     <div className="dash-card dash-graph">

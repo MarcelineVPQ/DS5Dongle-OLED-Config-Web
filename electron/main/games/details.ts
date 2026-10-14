@@ -101,6 +101,7 @@ function steamArt(cache: string, appid: string): Partial<Record<ArtKind, string>
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
+        // loop: HOT-PATH-OK — one art folder's subfolders, a few files each
         for (const name of readdirSync(full)) note(name, join(full, name));
       } else if (/^[0-9a-f]{40}\.jpg$/.test(entry.name)) icon = full;
       else note(entry.name, full);
@@ -140,6 +141,7 @@ function heroicDetails(install: HeroicInstall, out: Map<string, GameDetails>): v
     ["sideload", arr(obj(readJson(join(install.root, "sideload_apps/library.json"))).games)],
   ];
   for (const [store, games] of libraries) {
+    // loop: HOT-PATH-OK — library entries per store, Map lookups only
     for (const g of games) {
       const e = obj(g);
       const appName = typeof e.app_name === "string" ? e.app_name : undefined;

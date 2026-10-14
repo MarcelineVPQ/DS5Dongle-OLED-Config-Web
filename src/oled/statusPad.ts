@@ -163,9 +163,11 @@ export function packedCanvas(fb: Uint8Array): PadCanvas & { get(x: number, y: nu
       }
     },
     filled(x, y, w, h) {
+      // loop: NOT-WORTH — small rects on the simulated OLED only (dev/test fake)
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, true);
     },
     invert(x, y, w, h) {
+      // loop: NOT-WORTH — small rects on the simulated OLED only (dev/test fake)
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, !get(x + i, y + j));
     },
   };

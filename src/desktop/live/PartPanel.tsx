@@ -20,7 +20,7 @@ import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
-import { useCallback, useEffect, useState, useRef, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -115,8 +115,8 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
         )}
       </header>
       {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
-      {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
-      {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
+      {view === "buttons" && <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
+      {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
       {view === "app" && <AppSettings bridge={bridge} fw={fw} />}
@@ -146,6 +146,7 @@ function Overview({ onOpen, onCalibrate, onButtons }: { onOpen: (part: PartId) =
     <section className="dk-card">
       <p>{t("desktop.live.go.intro")}</p>
       <div className="live-shortcuts">
+        {/* loop: HOT-PATH-OK — N ≈ 6 shortcuts per render */}
         {SHORTCUTS.map(([key, part]) => (
           <button key={key} type="button" className="live-shortcut" onClick={() => onOpen(part)}>
             <strong>{t(`desktop.live.go.${key}.title`)}</strong>
@@ -216,6 +217,7 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
           <div className="dk-row">
             <label htmlFor={`remap-${index}`}>{t("desktop.live.remapActs", "Acts as")}</label>
             <select id={`remap-${index}`} className="dk-select" value={target} disabled={remap.busy || remap.supported !== true} onChange={(e) => remap.setTarget(index, Number(e.target.value))}>
+              {/* loop: HOT-PATH-OK — N ≈ 17 options in one select per render */}
               {REMAP_BUTTON_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.value === index ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
@@ -277,7 +279,11 @@ function useGameLayoutSave() {
 }
 
 // Every button in one list (the same draft as clicking them on the drawing),
-// with what's changed from the controller's own buttons marked.
+// with what's changed from the controller's own buttons marked. memo()ed with
+// the saved layouts below: the controller view re-renders on every live input
+// frame (~30 a second) and neither depends on the input (useRemap's result
+// only changes when the remap does).
+export const AllButtonsList = memo(AllButtonsSection);
 function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Remap; focus: number | null; onFocus: (i: number | null) => void; onHover: (i: number | null) => void; edge: boolean }) {
   const { t } = useTranslation();
   const table = useRef<HTMLDivElement>(null);
@@ -290,6 +296,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
     sel?.focus({ preventScroll: true });
   }, [focus]);
   useEffect(() => () => onHover(null), [onHover]);
+  // loop: HOT-PATH-OK — N = 16 + 4 slots per render
   const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
   // A game's profile on (edited, or its game running): the buttons go into
   // that game's layout (switched in while it plays), never into the normal
@@ -312,6 +319,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && !target && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
       <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
+        {/* loop: HOT-PATH-OK — N = 16 rows; memo()ed, re-renders on a remap or focus change, not per live frame */}
         {remap.draft.map((target, i) => {
           const isChanged = target !== i;
           const pending = target !== remap.device[i];
@@ -330,6 +338,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                 disabled={remap.busy || remap.supported !== true}
                 onChange={(e) => remap.setTarget(i, Number(e.target.value))}
               >
+                {/* loop: HOT-PATH-OK — 16 x ~17 options; memo()ed, only on a remap or focus change */}
                 {REMAP_BUTTON_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
@@ -342,6 +351,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
         })}
         {edge &&
           remap.extraDevice &&
+          // loop: HOT-PATH-OK — N = 4 Edge rows; memo()ed, only on a remap or focus change
           EDGE_REMAP_ROWS.map((part, n) => {
             const i = 16 + n;
             const value = remap.extraDraft[n];
@@ -356,6 +366,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                 </label>
                 <select id={`all-remap-${i}`} role="cell" className="dk-select" value={value} disabled={remap.busy} onChange={(e) => remap.setExtra(n, Number(e.target.value))}>
                   <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
+                  {/* loop: HOT-PATH-OK — 4 x ~17 options; memo()ed, only on a remap or focus change */}
                   {REMAP_BUTTON_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -395,14 +406,27 @@ function LoadedLayout({ remap }: { remap: Remap }) {
 }
 
 // Saved button layouts: the buttons above under a name, for any game's profile.
+export const SavedLayouts = memo(ButtonLayoutsSection);
 function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const { library, setLibrary } = useLibrary();
   const [name, setName] = useState("");
-  const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
-  const usedBy = (id: string) => Object.values(library.games).filter((g) => g.profile?.settings.buttonLayout === id).length;
+  // loop: HOT-PATH-OK — N = saved layouts (a few); once per library change (useMemo + memo)
+  const layouts = useMemo(() => Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name)), [library.layouts]);
+  // How many game profiles use each layout: one pass over the games per library change.
+  const uses = useMemo(() => {
+    const m = new Map<string, number>();
+    // loop: HOT-PATH-OK — N = games with a profile (tens to hundreds); once per library change
+    for (const g of Object.values(library.games)) {
+      const id = g.profile?.settings.buttonLayout;
+      if (id) m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [library.games]);
+  const usedBy = (id: string) => uses.get(id) ?? 0;
   if (!desktop) return null;
+  // loop: HOT-PATH-OK — N = 4 Edge names per render
   const extraNames = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`));
   const save = (id: string, layoutName: string) =>
     void desktop.librarySetLayout({ id, name: layoutName, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) }).then(setLibrary);
@@ -414,6 +438,7 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
         <p className="dk-hint">{t("desktop.layouts.none")}</p>
       ) : (
         <ul className="dk-layouts">
+          {/* loop: HOT-PATH-OK — N = saved layouts (a few); memo()ed, only on a remap or library change */}
           {layouts.map(([id, l]) => (
             <li key={id} className={remap.loaded?.id === id ? "loaded" : undefined}>
               <div className="dk-layout-info">
@@ -494,6 +519,7 @@ function TriggerLive({ input, side }: { input: InputReport | null; side: "l2" | 
   return (
     <section className="dk-card">
       <h2>{t("desktop.live.pull", "Pull")}</h2>
+      {/* loop: HOT-PATH-OK — N = 2 triggers per live frame */}
       {sides.map((sd) => {
         const value = input ? (sd === "l2" ? input.triggerLeft : input.triggerRight) : 0;
         const effect = input ? (sd === "l2" ? input.triggerEffectLeft : input.triggerEffectRight) : 0;
@@ -540,10 +566,12 @@ function EdgePartInfo({ part }: { part: PartId }) {
 
 function TouchLive({ input }: { input: InputReport | null }) {
   const { t } = useTranslation();
+  // loop: HOT-PATH-OK — N ≤ 2 fingers per live frame
   const touching = input?.fingers.filter((f) => f.touching) ?? [];
   return (
     <section className="dk-card">
       <p className="dk-hint">{t("desktop.live.touchHint", "Touch the touch pad to see your fingers here. There's nothing to set up for it.")}</p>
+      {/* loop: HOT-PATH-OK — N ≤ 2 fingers per live frame */}
       {touching.map((f, i) => (
         <p key={i} className="dk-mono">
           {t("desktop.live.finger", { n: i + 1, defaultValue: "Finger {{n}}" })}: {f.x}, {f.y}
@@ -638,6 +666,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
         <GlassSetting />
         <AccentSetting />
         <BackdropSetting />
+        {/* loop: HOT-PATH-OK — N ≈ 10 look knobs per render */}
         {KNOBS.filter((k) => !k.hidden).map((k) => (
           <KnobSlider key={k.key} k={k} />
         ))}
@@ -822,6 +851,7 @@ function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: s
       </BusyButton>
       {result.length > 0 && (
         <span className="dk-hint" role="status">
+          {/* loop: HOT-PATH-OK — N ≤ 3 result lines, after a click */}
           {result.map((line) => (
             <span key={line} className="dk-check-line">
               {line}
@@ -840,6 +870,7 @@ function ColorVisionSetting() {
   return (
     <Row label={t("desktop.colorVision.label")} sub={t("desktop.colorVision.sub")}>
       <select className="dk-select" aria-label={t("desktop.colorVision.label")} value={cv} onChange={(e) => setColorVision(e.target.value as ColorVision)}>
+        {/* loop: HOT-PATH-OK — N ≈ 4 color vision options per render */}
         {COLOR_VISIONS.map((v) => (
           <option key={v} value={v}>
             {t(`desktop.colorVision.${v}`)}
@@ -1099,6 +1130,7 @@ function BackdropSetting() {
   return (
     <Row label={t("desktop.backdrop.label")} sub={t(`desktop.backdrop.sub.${background}`)}>
       <select className="dk-select" aria-label={t("desktop.backdrop.label")} value={background} onChange={(e) => setBackground(e.target.value as Background)}>
+        {/* loop: HOT-PATH-OK — N = 3 backgrounds per render */}
         {BACKGROUNDS.map((b) => (
           <option key={b} value={b}>
             {t(`desktop.backdrop.${b}`)}
@@ -1142,6 +1174,7 @@ function CustomColorsSetting() {
       <Toggle label={t("desktop.customColors.toggle")} sub={t("desktop.customColors.toggleSub")} value={on} onChange={setOn} />
       {on && (
         <>
+          {/* loop: HOT-PATH-OK — N = 6 color parts per render */}
           {COLOR_PARTS.map((part) => (
             <Row key={part} label={t(`desktop.customColors.part.${part}`)} sub={part === "dark" || part === "cap" ? t(`desktop.customColors.partSub.${part}`) : undefined}>
               <ColorPicker label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(hex) => setColors({ ...colors, [part]: hex })} />
@@ -1168,6 +1201,7 @@ function AccentSetting() {
   return (
     <Row label={t("desktop.accent.label")} sub={t("desktop.accent.sub")}>
       <select className="dk-select" aria-label={t("desktop.accent.label")} value={choice} onChange={(e) => setChoice(e.target.value as (typeof ACCENTS)[number])}>
+        {/* loop: HOT-PATH-OK — N = 2 accents per render */}
         {ACCENTS.map((a) => (
           <option key={a} value={a}>
             {t(`desktop.accent.${a}`)}
@@ -1282,6 +1316,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
       <Row label={t("desktop.dev.colorway")}>
         <select className="dk-select" aria-label={t("desktop.dev.colorway")} value={dev.colorway} onChange={(e) => dev.setColorway(e.target.value)}>
           <option value="">{t("desktop.dev.real")}</option>
+          {/* loop: HOT-PATH-OK — N ≈ 40 colorway codes, Developer card only (dev builds) */}
           {codes.map((code) => (
             <option key={code} value={code}>
               {COLORWAYS[code].name}
@@ -1310,6 +1345,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
               location.reload(); // the simulated dongle takes it when it connects
             }}
           >
+            {/* loop: HOT-PATH-OK — N = 10 stages, Developer card only */}
             {SIM_CORE1_STAGES.map((v) => (
               <option key={v} value={v}>
                 {v === "" ? t("desktop.dev.simCore1Runs") : t("desktop.dev.simCore1Stage", { stage: v, step: t(`desktop.diag.core1Step.${v}`) })}
@@ -1321,6 +1357,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
+          {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}
           {UPDATE_PREVIEWS.map((p) => (
             <option key={p} value={p}>
               {t(`desktop.dev.updatesState.${p || "off"}`)}

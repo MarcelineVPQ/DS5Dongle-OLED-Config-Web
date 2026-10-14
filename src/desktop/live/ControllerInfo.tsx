@@ -136,9 +136,12 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
     // same read (shown only when the controller has the counters), one small
     // group per column, wrapping on narrow windows.
     if (tm) {
+      // loop: HOT-PATH-OK — N = 6 groups, memo component, rerenders on prop change only
       const groups = BUTTON_GROUPS.map(({ title, keys }) => {
+        // loop: HOT-PATH-OK — N ≤ 21 counters across groups, memo component
         const pairs = keys.filter((k) => k in tm.buttons).map((k) => <Pair key={k} label={t(BUTTON_LABEL[k])} value={num(tm.buttons[k])} />);
         if (title === "desktop.customColors.part.stick")
+          // loop: HOT-PATH-OK — N = 2 sticks, memo component
           tm.sticks.forEach((s, i) =>
             pairs.push(
               <Pair
@@ -154,6 +157,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
         <section className="live-data-card ctrl-info">
           <h3>{t("desktop.ctrlInfo.presses")}</h3>
           <div className="ctrl-info-groups">
+            {/* loop: HOT-PATH-OK — N ≤ 6 groups, memo component */}
             {groups.map((g) => (
               <div key={g.title}>
                 <h4 className="dk-subhead">{t(g.title)}</h4>
@@ -171,6 +175,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
           <div>
             <dl className="dk-kv">
               <dt>{t("desktop.controller.battery")}</dt>
+              {/* loop: HOT-PATH-OK — N = 2 parts of one label */}
               <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
               <dt>{t("desktop.ctrlInfo.charge")}</dt>
               <dd className={chargeBad ? "dk-bad" : undefined}>{power ? t(`desktop.ctrlInfo.chargeState.${power}`) : "—"}</dd>
@@ -245,7 +250,8 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
             {loading
               ? t("desktop.ctrlInfo.reading")
               : info?.tooOld
-                ? [t("desktop.ctrlInfo.tooOld"), info.activeOnly ? t("desktop.ctrlInfo.playedOnly", { value: hours(info.activeOnly) }) : null].filter(Boolean).join(" ")
+                ? // loop: HOT-PATH-OK — N = 2 parts of one hint
+                  [t("desktop.ctrlInfo.tooOld"), info.activeOnly ? t("desktop.ctrlInfo.playedOnly", { value: hours(info.activeOnly) }) : null].filter(Boolean).join(" ")
                 : info
                   ? t("desktop.ctrlInfo.noCounters")
                   : "—"}

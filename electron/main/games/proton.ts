@@ -59,6 +59,7 @@ export function hasBuild(dir: string, name: string): boolean {
 // Folder names in `dir` that hold a Proton build (a `proton` script).
 export function protonBuilds(dir: string): string[] {
   try {
+    // loop: NOT-WORTH — folders in one tools dir, a stat each
     return readdirSync(dir).filter((d) => hasBuild(dir, d));
   } catch {
     return [];
@@ -77,10 +78,13 @@ export interface BuildName {
 }
 export function dualSenseBuild(name: string, versionText?: string | null): BuildName {
   const texts = [name, versionText ?? ""];
+  // loop: NOT-WORTH — 2 texts (name, version file)
   const first = (re: RegExp) => texts.map((t) => re.exec(t)?.[1]).find((v) => v !== undefined);
   return {
+    // loop: NOT-WORTH — 2 texts (name, version file)
     ours: texts.some((t) => /DualSense/i.test(t)),
     major: Number(first(/GE-Proton(\d+)/) ?? 0),
+    // loop: NOT-WORTH — 2 texts (name, version file)
     revision: Math.max(1, ...texts.map((t) => Number(/GE-Proton\d+-\d+\.(\d+)-DualSense\b/i.exec(t)?.[1] ?? 1))),
   };
 }
@@ -98,6 +102,7 @@ export function honoursPreferSdl(name: string, versionText?: string | null): boo
 // A build's `version` file ("<timestamp> <name>"), from the first of these
 // build folders that has one; null when none does.
 export function buildVersion(folders: string[]): string | null {
+  // loop: BATCH — first folder with a version file; called again per game for the same build
   for (const folder of folders) {
     try {
       return readFileSync(join(folder, "version"), "utf8").slice(0, 200).trim();
@@ -109,19 +114,23 @@ export function buildVersion(folders: string[]): string | null {
 }
 
 // Does the build `name` (found in one of `dirs`) honour PROTON_PREFER_SDL?
+// loop: NOT-WORTH — 1-3 build folders
 export const buildHonoursPreferSdl = (name: string, dirs: string[]) => honoursPreferSdl(name, buildVersion(dirs.map((d) => join(d, name))));
 
 // A build's GE version [major, minor, our .N revision], from its `version`
 // file (GE-Proton-latest says which build it is) or else its folder name;
 // null when neither names a GE-Proton version (Valve's Proton, Wine builds).
 export function buildVersionKey(name: string, dirs: string[]): number[] | null {
+  // loop: NOT-WORTH — 1-3 build folders
   const fromFile = buildVersion(dirs.map((d) => join(d, name)))?.split(/\s+/)[1] ?? "";
+  // loop: NOT-WORTH — 2 texts (version file, name)
   for (const text of [fromFile, name]) {
     const m = /GE-Proton(\d+)-(\d+)(?:\.(\d+))?/.exec(text);
     if (m) return [Number(m[1]), Number(m[2]), Number(m[3] ?? 1)];
   }
   return null;
 }
+// loop: NOT-WORTH — 3-part version keys
 const compareKeys = (a: number[], b: number[]) => a.reduce((d, v, i) => d || v - (b[i] ?? 0), 0);
 
 // The build to move a game to: the newest of our builds that `ok` accepts,
@@ -129,11 +138,14 @@ const compareKeys = (a: number[], b: number[]) => a.reduce((d, v, i) => d || v -
 // folder name), and never one older than the game's `current` build.
 export function pickBuild(names: string[], dirs: string[], ok: (name: string) => boolean, current?: string | null): string | null {
   const floor = current ? buildVersionKey(current, dirs) : null;
+  // loop: NOT-WORTH — installed builds, only for games that need a switch
   const keyed = names.flatMap((n) => {
     const key = buildVersionKey(n, dirs);
     return key && (!floor || compareKeys(key, floor) >= 0) && ok(n) ? [{ n, key }] : [];
   });
+  // loop: NOT-WORTH — installed builds, copied and sorted
   const newest = (list: typeof keyed) => [...list].sort((a, b) => compareKeys(b.key, a.key) || compareProtonNames(b.n, a.n))[0]?.n ?? null;
+  // loop: NOT-WORTH — installed builds
   return newest(keyed.filter((b) => PROTON_NAME.test(b.n))) ?? newest(keyed.filter((b) => /^GE-Proton/.test(b.n) && !/DualSense|DS5/i.test(b.n)));
 }
 
@@ -207,6 +219,7 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
   }
   installed.push(join(primary, build.name));
 
+  // loop: SERIAL-REQUIRED — install order: each copy or link of the one unpacked build, then report
   for (const { dir: target, link } of copies) {
     if (hasBuild(target, build.name)) {
       installed.push(join(target, build.name));

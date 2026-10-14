@@ -148,6 +148,7 @@ export class GamesService {
   // The report as the page shows it: changed files under the home folder as
   // ~/… (a dev copy's test HOME never shows; apply works from the fresh scan).
   private shown(report: GamesReport): GamesReport {
+    // loop: NOT-WORTH — files of one fix
     const fixes = (list: Fix[]) => list.map((f) => ({ ...f, files: f.files.map((file) => this.tilde(file)) }));
     return {
       ...report,
@@ -257,6 +258,7 @@ export class GamesService {
         // anything is marked undone, so Undo can be tried again later.
         const mixer = this.mixerLayer();
         const mixerSets = this.backups.manifest(backupId).mixer ?? [];
+        // loop: NOT-WORTH — mixer changes x cards, a few each; once per Undo
         if (mixerSets.length && (!mixer || mixerSets.some((m) => !mixer.cards().some((c) => c.key === m.key)))) return { ok: false, noController: true };
         const run = await withLaunchersClosed(restart, this.launchers, async () => {
           const late = await startedSince(owners, this.launchers);
@@ -265,6 +267,7 @@ export class GamesService {
         if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };
         if ("late" in run.value) return { ok: false, blockedBy: run.value.late };
         if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
+        // loop: SERIAL-REQUIRED — ALSA order: one card's restore after another, ≤ 2 cards; per Undo
         for (const m of run.value.mixer) await restoreDualSenseMixer(m.key, m.changes, mixer!);
         return { ok: true, restored: run.value.files.map((f) => this.tilde(f)), ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}) };
       } catch (cause) {
@@ -278,6 +281,7 @@ export class GamesService {
   // user has let the app look at launcher settings.
   listBackups(): BackupSummary[] {
     if (!this.deps.allowed()) return [];
+    // loop: NOT-WORTH — files of one backup set
     return this.backups.list().map((b) => ({ ...b, files: b.files.map((f) => this.tilde(f)) }));
   }
 
@@ -305,6 +309,7 @@ export class GamesService {
           ...steam.filter((s) => s.toolsDir !== primary).map((s) => ({ dir: s.toolsDir, link: !s.flatpak })),
           ...heroic.filter((h) => h.toolsDir !== primary).map((h) => ({ dir: h.toolsDir, link: !h.flatpak })),
           // Native Lutris already lists Steam's compatibility tools.
+          // loop: NOT-WORTH — Steam installs
           ...lutris.filter((l) => l.wineDir !== primary && (l.flatpak || steam.every((s) => s.flatpak))).map((l) => ({ dir: l.wineDir, link: !l.flatpak })),
         ];
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);

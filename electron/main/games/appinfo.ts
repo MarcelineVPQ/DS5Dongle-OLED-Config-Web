@@ -48,6 +48,7 @@ export function parseAppTypes(buf: Buffer, wanted: Set<string>): Map<string, App
     const count = buf.readUInt32LE(tableAt);
     let p = tableAt + 4;
     strings = [];
+    // loop: HOT-PATH-OK — one pass over appinfo.vdf's string table, linear, no allocation per step
     for (let i = 0; i < count && p < buf.length; i++) {
       const end = buf.indexOf(0, p);
       if (end < 0) break;
@@ -66,6 +67,7 @@ export function parseAppTypes(buf: Buffer, wanted: Set<string>): Map<string, App
   const findType = (start: number, end: number): string | undefined => {
     const stack: string[] = [];
     let p = start;
+    // loop: HOT-PATH-OK — walks one wanted app's key-values, returns at common/type
     while (p < end) {
       const t = buf[p++];
       if (t === 8 || t === 11) {
@@ -97,6 +99,7 @@ export function parseAppTypes(buf: Buffer, wanted: Set<string>): Map<string, App
           break;
         case 5: {
           // UTF-16 string, two zero bytes at the end
+          // loop: HOT-PATH-OK — skips one UTF-16 value, linear in its length
           while (p + 1 < end && (buf[p] !== 0 || buf[p + 1] !== 0)) p += 2;
           p += 2;
           break;
@@ -109,6 +112,7 @@ export function parseAppTypes(buf: Buffer, wanted: Set<string>): Map<string, App
   };
 
   try {
+    // loop: HOT-PATH-OK — one linear walk of appinfo.vdf, stops when all wanted apps are found
     while (pos + 8 <= buf.length) {
       const appid = buf.readUInt32LE(pos);
       if (appid === 0) break;

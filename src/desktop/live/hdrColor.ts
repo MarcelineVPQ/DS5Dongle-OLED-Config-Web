@@ -27,6 +27,7 @@ const P3_TO_SRGB = [
  *  `rgb` is sRGB-encoded 0..255. */
 export function ledLinear(rgb: readonly number[]): [number, number, number] {
   const lin = rgb.map((c) => toLinear(c / 255));
+  // loop: HOT-PATH-OK — 3 x 3 matrix per HDR glow redraw (on change, not per frame)
   const wide = P3_TO_SRGB.map((row) => row.reduce((sum, k, i) => sum + k * lin[i], 0));
   const top = Math.max(...wide);
   return top > 0 ? (wide.map((c) => c / top) as [number, number, number]) : [0, 0, 0];
