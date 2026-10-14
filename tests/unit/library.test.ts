@@ -1,9 +1,9 @@
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { detectRunning, readProcs, RunningGameWatcher, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
+import { detectRunning, parseProcStat, readProcs, RunningGameWatcher, runningInterval, type ProcView, type RunningCandidate } from "../../electron/main/games/running";
 import { LibraryStore } from "../../electron/main/games/libraryStore";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
 import { ButtonLayoutSchema, LayoutIdSchema, GameKeySchema, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
@@ -73,20 +73,25 @@ describe("running game detection", () => {
 });
 
 // A fake /proc: pid -> name, parent, owner, and what the full read finds.
-function fakeProc(procs: Array<{ pid: number; name: string; ppid: number; uid?: number; env?: string[]; args?: string[]; cwd?: string; exe?: string }>): string {
+// /proc/<pid>/stat: name, parent and start time (clock ticks after boot).
+const statText = (pid: number, name: string, ppid: number, start = 100) => `${pid} (${name}) S ${ppid} ${pid} ${pid} 0 -1 4194560 100 0 0 0 5 2 0 0 20 0 1 0 ${start} 1000 10 18446744073709551615\n`;
+// Long after boot, so processes started at tick 100 are old (their reads are cached).
+const UPTIME = "100000.00 1.00\n";
+function fakeProc(procs: Array<{ pid: number; name: string; ppid: number; uid?: number; env?: string[]; args?: string[]; cwd?: string; exe?: string; start?: number }>): string {
   const root = mkdtempSync(join(tmpdir(), "proc-"));
   const me = process.getuid?.() ?? 1000;
   for (const p of procs) {
     const dir = join(root, String(p.pid));
     mkdirSync(dir);
     writeFileSync(join(dir, "status"), `Name:\t${p.name}\nUmask:\t0022\nPPid:\t${p.ppid}\nUid:\t${p.uid ?? me}\t${p.uid ?? me}\t${p.uid ?? me}\t${p.uid ?? me}\n`);
+    writeFileSync(join(dir, "stat"), statText(p.pid, p.name, p.ppid, p.start));
     writeFileSync(join(dir, "comm"), `${p.name}\n`);
     writeFileSync(join(dir, "cmdline"), (p.args ?? [p.name]).join("\0") + "\0");
     writeFileSync(join(dir, "environ"), (p.env ?? ["HOME=/home/x"]).join("\0") + "\0");
     symlinkSync(p.cwd ?? "/home/x", join(dir, "cwd"));
     symlinkSync(p.exe ?? `/usr/bin/${p.name}`, join(dir, "exe"));
   }
-  writeFileSync(join(root, "uptime"), "1 1\n"); // not a process
+  writeFileSync(join(root, "uptime"), UPTIME); // not a process
   return root;
 }
 
@@ -132,7 +137,7 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), heroic)).toBe("h");
   });
 
-  it("checks a process's owner once, yet still sees it start a launcher (status read every pass)", () => {
+  it("checks a process's owner once, yet still sees it start a launcher (stat read every pass)", () => {
     const tmp = fakeProc([
       { pid: 10, name: "systemd", ppid: 0 },
       { pid: 15, name: "plasmashell", ppid: 10 },
@@ -140,7 +145,7 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     ]);
     expect(readProcs(true, tmp).some((p) => p.pid === 16)).toBe(false);
     // The same process runs Steam (exec: a new name on the same pid).
-    writeFileSync(join(tmp, "16", "status"), `Name:\tsteam\nPPid:\t15\nUid:\t${process.getuid?.() ?? 1000}\n`);
+    writeFileSync(join(tmp, "16", "stat"), statText(16, "steam", 15));
     writeFileSync(join(tmp, "16", "comm"), "steam\n");
     expect(readProcs(true, tmp).some((p) => p.pid === 16)).toBe(true);
     rmSync(tmp, { recursive: true, force: true });
@@ -155,11 +160,117 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(false);
     mkdirSync(join(root, "15")); // ...then a new process on the same pid
     writeFileSync(join(root, "15", "status"), `Name:\tplasmashell\nPPid:\t10\nUid:\t${process.getuid?.() ?? 1000}\n`);
+    writeFileSync(join(root, "15", "stat"), statText(15, "plasmashell", 10, 500));
     writeFileSync(join(root, "15", "comm"), "plasmashell\n");
     writeFileSync(join(root, "15", "cmdline"), "plasmashell\0");
     writeFileSync(env, "HEROIC_APP_NAME=hollow\0");
     expect(readProcs(true, root).some((p) => p.pid === 15)).toBe(true);
     rmSync(root, { recursive: true, force: true });
+  });
+});
+
+describe.skipIf(process.platform === "win32")("the running-game watcher's per-process cache", () => {
+  it("reads /proc/<pid>/stat's name, parent and start time, whatever the name holds", () => {
+    expect(parseProcStat(statText(42, "Wine (x) y.exe", 7, 123456))).toEqual({ name: "Wine (x) y.exe", ppid: 7, start: 123456 });
+    expect(parseProcStat("garbage")).toBeNull();
+  });
+
+  it("reads a game's environment and command line once, while the same process runs the same program", () => {
+    const root = fakeProc([
+      { pid: 10, name: "systemd", ppid: 0 },
+      { pid: 20, name: "steam", ppid: 10 },
+      { pid: 31, name: "hl2_linux", ppid: 20, env: ["SteamAppId=4078430"] },
+    ]);
+    const candidates: RunningCandidate[] = [{ key: "s", launcher: "steam", id: "4078430" }];
+    expect(detectRunning(readProcs(true, root), candidates)).toBe("s");
+    rmSync(join(root, "31", "environ")); // not read again: the cached view stays
+    rmSync(join(root, "31", "cmdline"));
+    expect(detectRunning(readProcs(true, root), candidates)).toBe("s");
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("reads a reused pid again (another start time), and a process that ran another program (another name)", () => {
+    const root = fakeProc([
+      { pid: 10, name: "systemd", ppid: 0 },
+      { pid: 20, name: "steam", ppid: 10 },
+      { pid: 31, name: "hl2_linux", ppid: 20, env: ["SteamAppId=4078430"] },
+    ]);
+    const steam: RunningCandidate[] = [
+      { key: "a", launcher: "steam", id: "4078430" },
+      { key: "b", launcher: "steam", id: "620" },
+    ];
+    expect(detectRunning(readProcs(true, root), steam)).toBe("a");
+    // The game quit and a new one got the same pid between two passes: same name, another start time.
+    writeFileSync(join(root, "31", "environ"), "SteamAppId=620\0");
+    writeFileSync(join(root, "31", "stat"), statText(31, "hl2_linux", 20, 900));
+    expect(detectRunning(readProcs(true, root), steam)).toBe("b");
+    // The same process runs another program (exec): same start time, another name.
+    writeFileSync(join(root, "31", "environ"), "SteamAppId=4078430\0");
+    writeFileSync(join(root, "31", "comm"), "portal2_linux\n");
+    writeFileSync(join(root, "31", "stat"), statText(31, "portal2_linux", 20, 900));
+    expect(detectRunning(readProcs(true, root), steam)).toBe("a");
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("forgets a pid that left, and reads a process again while it is young (Wine renames itself while starting)", () => {
+    const young = 100000 * 100 - 500; // started 5 s ago
+    const root = fakeProc([
+      { pid: 10, name: "systemd", ppid: 0 },
+      { pid: 20, name: "steam", ppid: 10 },
+      { pid: 31, name: "game", ppid: 20, env: ["SteamAppId=4078430"], start: young },
+    ]);
+    const steam: RunningCandidate[] = [
+      { key: "a", launcher: "steam", id: "4078430" },
+      { key: "b", launcher: "steam", id: "620" },
+    ];
+    expect(detectRunning(readProcs(true, root), steam)).toBe("a");
+    writeFileSync(join(root, "31", "environ"), "SteamAppId=620\0"); // young: read again
+    expect(detectRunning(readProcs(true, root), steam)).toBe("b");
+    rmSync(join(root, "31"), { recursive: true });
+    expect(detectRunning(readProcs(true, root), steam)).toBeNull();
+    rmSync(root, { recursive: true, force: true });
+  });
+});
+
+describe("the running-game watcher's pace", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("looks every 2 s while something needs it soon and every 10 s otherwise", () => {
+    expect(runningInterval(true)).toBe(2000);
+    expect(runningInterval(false)).toBe(10000);
+  });
+
+  it("asks for the interval before each pass, and looks at once when it got shorter (retime)", () => {
+    vi.useFakeTimers();
+    let soon = false;
+    let reads = 0;
+    const w = new RunningGameWatcher(
+      () => games,
+      () => undefined,
+      () => {
+        reads++;
+        return [];
+      },
+      4000,
+      () => runningInterval(soon),
+      "linux",
+    );
+    w.start();
+    expect(reads).toBe(1);
+    vi.advanceTimersByTime(9999);
+    expect(reads).toBe(1); // in the tray with no profiles: every 10 s
+    vi.advanceTimersByTime(1);
+    expect(reads).toBe(2);
+    w.retime(); // nothing changed: no extra pass
+    expect(reads).toBe(2);
+    soon = true; // the window is shown
+    w.retime();
+    expect(reads).toBe(3);
+    vi.advanceTimersByTime(2000);
+    expect(reads).toBe(4);
+    w.stop();
+    vi.advanceTimersByTime(20000);
+    expect(reads).toBe(4);
   });
 });
 
@@ -329,7 +440,9 @@ describe("library file (game-library-2.json) and the older apps' file", () => {
     const s = new LibraryStore(dir);
     expect(s.get()).toEqual(EMPTY_LIBRARY);
     expect(files()).toEqual([]);
+    expect(s.hasProfiles()).toBe(false); // the running-game watcher's slow pace
     s.setProfile(key, "Cyberpunk 2077", { format: 2, hapticsGain: 3 });
+    expect(s.hasProfiles()).toBe(true);
     expect(files()).toEqual(["game-library-2.json"]);
     expect(new LibraryStore(dir).get().games[key].profile?.settings).toEqual({ format: 2, hapticsGain: 3 });
   });

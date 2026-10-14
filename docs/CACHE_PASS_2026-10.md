@@ -273,14 +273,15 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
 | 47 | `<module>` | module | `uidRe` | { uid: number; re: RegExp; } \| null; memo by lazy | **OK** | key=the process uid; invalidated=rebuilt when the uid differs; bound=1 entry |
+| 70 | `<module>` | module | `known` | Map<string, {start, name, mine, wine?, view?}>; written by .set .delete (added 2026-10-14, budgets) | **OK** | key=<proc root>/<pid> + starttime + name; invalidated=each pass forgets pids that are gone, a new starttime (reused pid) or name (exec) replaces the entry, processes younger than 30 s are read every pass; bound=the user's live processes |
 | 50 | `<module>` | module | `plainOrphans` | Set<string>; written by .add .delete | **OK** | key=<proc root>/<pid>:<name>; invalidated=each pass forgets orphans that are gone (a reused pid has a new name or is re-read); bound=live orphan processes without a launch variable |
 | 102 | `readProcs` | repeat-io | `readFileSync` | in forof (line 96); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
 | 105 | `readProcs` | repeat-io | `readFull` | in forof (line 96); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
 | 121 | `readProcs` | closure | `memo` | Map<number, boolean>; written by a nested function (.set), looked up with .get | **OK** | key=pid; invalidated=per readProcs call; bound=the user's processes in one pass |
 | 145 | `readProcs` | closure | `seenPlain` | Set<string>; written by a nested function (.add), looked up with .has | **OK** | key=<proc root>/<pid>:<name>; invalidated=per readProcs call (prunes plainOrphans); bound=the user's orphans in one pass |
-| 162 | `readProcs` | repeat-io | `wineExe` | in forof (line 161); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
+| 162 | `readProcs` | repeat-io | `wineExe` | in forof (line 161); reaches fs | **OK** (2026-10-14) | read once per process and program (`known`), was every pass |
 | 162 | `readProcs` | repeat-io | `launched` | in forof (line 161); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
-| 164 | `readProcs` | repeat-io | `readFull` | in forof (line 161); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
+| 164 | `readProcs` | repeat-io | `readFull` | in forof (line 161); reaches fs | **OK** (2026-10-14) | read once per process and program (`known`; every pass while younger than 30 s), was every pass |
 | 259 | `walk` | repeat-io | `walk` | in forof (line 257); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
 | 285 | `RunningGameWatcher` | field | `pending` | { key: string \| null; since: number; } \| null; memo by timestamp | **OK** | key=none (the candidate running game); invalidated=replaced on every change, cleared on stop(); bound=1 entry. debounce state, settleMs |
 | 288 | `RunningGameWatcher` | field | `exeCache` | Map<string, Set<string>>; written by .set | **FIX-STALE** | key=install folder; invalidated=never (lives as long as the watcher); bound=installed games' folders. Windows: a folder indexed while the game was still installing, or before an update renamed its .exe, stays wrong until the app restarts, so Playing is never detected; re-index when the candidate list changes (each scan) or on a miss |

@@ -57,6 +57,44 @@ const plainOrphans = new Set<string>();
 // next pass, so a new process on an old pid is checked again.
 // cache: OK — key=<proc root>/<pid>; invalidated=each pass forgets pids that are gone; bound=live processes
 const ownsDir = new Map<string, boolean>();
+// What the watcher learned about each of the user's processes, by
+// "<root>/<pid>": its start time and name from /proc/<pid>/stat (one short
+// read a pass instead of the status text), and the costly reads (its real
+// owner from the status text, whether its program is Wine, and the full view
+// of a possible game) made once. A pid
+// with the same start time and name is the same process running the same
+// program, so nothing else is read again; another start time (the pid was
+// reused) or name (the process ran another program) starts over. Processes
+// younger than FRESH_S are read in full every pass: Wine renames its process
+// and rewrites its command line while starting, and a game may change folder.
+// cache: OK — key=<proc root>/<pid> + starttime + name; invalidated=each pass forgets pids that are gone, a new starttime or name replaces the entry; bound=the user's live processes
+const known = new Map<string, { start: number; name: string; mine: boolean; wine?: boolean; view?: ProcView }>();
+const FRESH_S = 30;
+
+// /proc/<pid>/stat: the name (field 2, in parentheses, may hold spaces and
+// ")"), the parent (field 4) and the start time in clock ticks after boot
+// (field 22).
+export function parseProcStat(text: string): { name: string; ppid: number; start: number } | null {
+  const open = text.indexOf("(");
+  const close = text.lastIndexOf(")");
+  if (open < 0 || close < open) return null;
+  const f = text.slice(close + 2).split(" ");
+  const ppid = Number(f[1]);
+  const start = Number(f[19]);
+  return Number.isFinite(ppid) && Number.isFinite(start) ? { name: text.slice(open + 1, close), ppid, start } : null;
+}
+
+// Seconds since boot, and the kernel's clock ticks per second (USER_HZ: 100
+// on every Linux Electron runs on), for a process's age.
+const CLK_TCK = 100;
+function uptimeS(root: string): number {
+  try {
+    return Number(readFileSync(`${root}/uptime`, "utf8").split(" ")[0]);
+  } catch {
+    // error: NOT-WORTH — no uptime: every process counts as old (cached reads)
+    return Infinity;
+  }
+}
 
 // Everything detectRunning looks at, for one process.
 function readFull(dir: string, pid: number): ProcView {
@@ -103,6 +141,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   }
   const own: Array<{ pid: number; name: string; ppid: number }> = [];
   const seen = new Set<string>();
+  const freshFrom = gamesOnly ? (uptimeS(root) - FRESH_S) * CLK_TCK : 0;
   // loop: HOT-PATH-OK — all PIDs; cheap first pass (owner checked once per process, status of own only); runs hidden on purpose
   for (const entry of entries) {
     if (!/^\d+$/.test(entry)) continue;
@@ -116,15 +155,24 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
         if (mine === undefined) ownsDir.set(dir, (mine = statSync(dir).uid === uid));
         if (!mine) continue;
       }
-      const status = readFileSync(`${root}/${entry}/status`, "utf8");
-      if (uidRe && !uidRe.re.test(status)) continue;
       if (!gamesOnly) {
+        const status = readFileSync(`${root}/${entry}/status`, "utf8");
+        if (uidRe && !uidRe.re.test(status)) continue;
         out.push(readFull(`${root}/${entry}`, Number(entry)));
         continue;
       }
-      const name = /^Name:\s*(.*)$/m.exec(status)?.[1] ?? "";
-      const ppid = Number(/^PPid:\s*(\d+)/m.exec(status)?.[1] ?? 0);
-      own.push({ pid: Number(entry), name, ppid });
+      const stat = parseProcStat(readFileSync(`${root}/${entry}/stat`, "utf8"));
+      if (!stat) continue;
+      const dir = `${root}/${entry}`;
+      let k = known.get(dir);
+      // A reused pid (another start time), another program (another name) or a young process: read again,
+      // starting with its real owner (the status text, once per process and program).
+      if (!k || k.start !== stat.start || k.name !== stat.name || stat.start > freshFrom) {
+        const mine = !uidRe || uidRe.re.test(readFileSync(`${dir}/status`, "utf8"));
+        known.set(dir, (k = { start: stat.start, name: stat.name, mine }));
+      }
+      if (!k.mine) continue;
+      own.push({ pid: Number(entry), name: stat.name, ppid: stat.ppid });
     } catch {
       // error: NOT-WORTH — process exited while we looked
     }
@@ -133,6 +181,8 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   // Forget the owners of processes that are gone (a later process may get the pid).
   // loop: HOT-PATH-OK — one Map of live processes, a delete only for those that left
   for (const dir of ownsDir.keys()) if (dir.startsWith(`${root}/`) && !seen.has(dir)) ownsDir.delete(dir);
+  // loop: HOT-PATH-OK — one Map of the user's live processes, a delete only for those that left
+  for (const dir of known.keys()) if (dir.startsWith(`${root}/`) && !seen.has(dir)) known.delete(dir);
   // Possible games: a launcher or Wine process, anything started under one,
   // and Wine processes that outlived their launcher.
   // loop: HOT-PATH-OK — one Map over own processes for the ancestry walk
@@ -148,13 +198,18 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     memo.set(pid, yes);
     return yes;
   };
+  // Once per process and program (`known`).
   const wineExe = (pid: number) => {
+    const k = known.get(`${root}/${pid}`);
+    if (k?.wine !== undefined) return k.wine;
+    let wine = false;
     try {
-      return WINE_EXE.test(readlinkSync(`${root}/${pid}/exe`));
+      wine = WINE_EXE.test(readlinkSync(`${root}/${pid}/exe`));
     } catch {
       // error: NOT-WORTH — exe link unreadable: not counted as a Wine process
-      return false;
     }
+    if (k) k.wine = wine;
+    return wine;
   };
   // A native game whose launcher quit (Heroic) is reparented to init or the
   // user's systemd: such an orphan is kept when its environment carries a
@@ -181,8 +236,11 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   // loop: HOT-PATH-OK — own processes, memoized ancestry; full reads only for candidates
   for (const p of own) {
     if (!underLauncher(p.pid) && !wineExe(p.pid) && !(orphan(p) && launched(p))) continue;
+    const k = known.get(`${root}/${p.pid}`);
     try {
-      out.push(readFull(`${root}/${p.pid}`, p.pid));
+      // Read in full once per process and program (`known`).
+      out.push(k?.view ?? readFull(`${root}/${p.pid}`, p.pid));
+      if (k) k.view ??= out[out.length - 1];
     } catch {
       // error: NOT-WORTH — process exited while we looked
     }
@@ -305,10 +363,20 @@ export function detectRunningWindows(procs: ProcView[], games: RunningCandidate[
   return null;
 }
 
+// How often the Linux watcher looks: every 2 s while something needs to know
+// soon (a game with a profile, which switches the board's settings; the
+// window on screen, which shows Playing and the game's art), every 10 s
+// otherwise (in the tray with no profiles, only the tray's own state follows).
+export const RUNNING_FAST_MS = 2000;
+export const RUNNING_SLOW_MS = 10000;
+export const runningInterval = (needsSoon: boolean): number => (needsSoon ? RUNNING_FAST_MS : RUNNING_SLOW_MS);
+
 // Polls and reports changes, debounced so a launcher's short helper
-// processes don't flap it (a change has to hold for `settleMs`).
+// processes don't flap it (a change has to hold for `settleMs`). `everyMs`
+// may be a function: it is asked again before each pass.
 export class RunningGameWatcher {
-  private timer: ReturnType<typeof setInterval> | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private waitMs = 0;
   private current: string | null = null;
   // cache: OK — key=none (the candidate running game); invalidated=replaced on every change, cleared on stop(); bound=1 entry
   private pending: { key: string | null; since: number } | null = null;
@@ -325,7 +393,7 @@ export class RunningGameWatcher {
     private readonly onChange: (key: string | null) => void,
     private readonly read: () => ProcView[] | Promise<ProcView[]> = process.platform === "win32" ? readWindowsProcs : readGameProcs,
     private readonly settleMs = 4000,
-    private readonly everyMs = process.platform === "win32" ? 3000 : 2000,
+    private readonly everyMs: number | (() => number) = process.platform === "win32" ? 3000 : RUNNING_FAST_MS,
     private readonly platform: NodeJS.Platform = process.platform,
   ) {}
 
@@ -339,19 +407,34 @@ export class RunningGameWatcher {
     return this.current;
   }
 
+  private interval = (): number => (typeof this.everyMs === "function" ? this.everyMs() : this.everyMs);
+
+  // One pass now, then the next after the interval. A failed pass changes
+  // nothing; the next one looks again.
+  private pass = (): void => {
+    void Promise.resolve(this.tick()).catch(logged("running-game watcher pass"));
+    this.waitMs = this.interval();
+    // lifetime: OK — re-armed by each pass; cleared in stop() (Games consent off) and retime(); runs while hidden on purpose (game profiles)
+    this.timer = setTimeout(this.pass, this.waitMs);
+  };
+
   start(): void {
     if (this.timer) return;
-    // A failed pass changes nothing; the next one (2-3 s) looks again.
-    const pass = () => void Promise.resolve(this.tick()).catch(logged("running-game watcher pass"));
-    pass();
-    // lifetime: OK — cleared in stop() (Games consent off); runs while hidden on purpose (game profiles)
-    this.timer = setInterval(pass, this.everyMs);
+    this.pass();
+  }
+
+  // Something now needs the answer sooner (the window shown, a profile
+  // made): when the interval got shorter, look now and keep the new pace.
+  retime(): void {
+    if (!this.timer || this.interval() >= this.waitMs) return;
+    clearTimeout(this.timer);
+    this.pass();
   }
 
   // Stopping (Games consent turned off) also ends a running game's state, so
   // the renderer restores the normal settings instead of keeping its profile.
   stop(): void {
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.pending = null;
     this.generation++;

@@ -24,12 +24,12 @@
 //   6. writes summary.md (the job summary), results.json and the screenshots.
 //
 //   node tools/mac_smoke.mjs --app "/Applications/X.app" --port 9334 --inspect 9335 --log stdout.log,stderr.log --out tmp/mac-smoke
-/* global WebSocket -- Node 22's built-in client */
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
+import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -77,31 +77,6 @@ const rendererErrors = [];
 const rendererWarnings = [];
 const crashes = [];
 
-// --- CDP
-async function connect(url) {
-  const ws = new WebSocket(url);
-  await new Promise((r, j) => {
-    ws.addEventListener("open", r);
-    ws.addEventListener("error", j);
-  });
-  let id = 0;
-  const wait = new Map();
-  const handlers = new Set();
-  ws.addEventListener("message", (m) => {
-    const d = JSON.parse(m.data);
-    if (d.id && wait.has(d.id)) {
-      wait.get(d.id)(d);
-      wait.delete(d.id);
-    } else handlers.forEach((h) => h(d));
-  });
-  const send = (method, params = {}) =>
-    new Promise((r) => {
-      const i = ++id;
-      wait.set(i, r);
-      ws.send(JSON.stringify({ id: i, method, params }));
-    });
-  return { send, handlers, close: () => ws.close() };
-}
 async function waitForPort(port, secs) {
   for (let i = 0; i < secs; i++) {
     try {
@@ -116,18 +91,8 @@ const pageList = await waitForPort(Number(opts.port), 90);
 const page = await connect(pageList.find((p) => p.type === "page").webSocketDebuggerUrl);
 const main = await connect((await waitForPort(Number(opts.inspect), 30))[0].webSocketDebuggerUrl);
 
-async function ev(expression) {
-  const r = await page.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
-  if (r.result?.exceptionDetails) throw new Error(`page: ${JSON.stringify(r.result.exceptionDetails).slice(0, 400)}`);
-  return r.result?.result?.value;
-}
-async function mainEv(expression) {
-  const r = await main.send("Runtime.evaluate", { expression, includeCommandLineAPI: true, returnByValue: true, awaitPromise: true });
-  if (r.result?.exceptionDetails) throw new Error(`main: ${JSON.stringify(r.result.exceptionDetails).slice(0, 400)}`);
-  return r.result?.result?.value;
-}
+const { ev, mainEv, win } = evaluators(page, main);
 const E = `require("electron")`;
-const win = (body) => mainEv(`(() => { const w = ${E}.BrowserWindow.getAllWindows()[0]; ${body} })()`);
 
 // Renderer console errors, exceptions and browser log errors, across reloads.
 await page.send("Runtime.enable");
@@ -291,22 +256,6 @@ function memory() {
   }
   writeFileSync(join(OUT, `footprint-${Date.now()}.txt`), raw);
   return { footprintMb, rssMb, processes: procs.length, byType: Object.fromEntries(procs.map((p) => [`${p.type}:${p.pid}`, Math.round(p.rssKb / 102.4) / 10])) };
-}
-async function framesOver(secs) {
-  const counts = {};
-  let done;
-  const finished = new Promise((r) => (done = r));
-  const h = (d) => {
-    if (d.method === "Tracing.dataCollected") for (const e of d.params.value) counts[e.name] = (counts[e.name] ?? 0) + 1;
-    if (d.method === "Tracing.tracingComplete") done();
-  };
-  page.handlers.add(h);
-  await page.send("Tracing.start", { traceConfig: { includedCategories: ["viz", "disabled-by-default-devtools.timeline.frame"], recordMode: "recordContinuously" }, transferMode: "ReportEvents" });
-  await sleep(secs * 1000);
-  await page.send("Tracing.end");
-  await finished;
-  page.handlers.delete(h);
-  return Math.round(((counts["Display::DrawAndSwap"] ?? 0) / secs) * 10) / 10;
 }
 
 const result = { app: opts.app, startedAt: new Date().toISOString() };
@@ -654,7 +603,7 @@ await step("budgets", async () => {
     await tap(`[data-rail="${item}"]`);
     await sleep(8000);
     const cpu = await cpuOver(Number(opts.cpuS));
-    const framesPerS = await framesOver(Number(opts.traceS));
+    const framesPerS = await framesOver(page, Number(opts.traceS));
     const anims = await ev(
       `[...new Set(document.getAnimations().filter((a) => a.playState === "running").map((a) => (a.animationName ?? a.transitionProperty ?? "?") + "@" + String(a.effect?.target?.className?.baseVal ?? a.effect?.target?.className ?? "").split(" ")[0]))]`,
     );

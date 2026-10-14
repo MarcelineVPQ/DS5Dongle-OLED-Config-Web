@@ -15,7 +15,7 @@ import { DEV_TOOLS_BUILT } from "./devTools";
 import { FakeGamesService } from "./games/fake/service";
 import { dominantColor } from "./games/artColor";
 import { LibraryStore } from "./games/libraryStore";
-import { RunningGameWatcher } from "./games/running";
+import { RunningGameWatcher, runningInterval } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
 import { ArtThumbs } from "./games/artThumbs";
@@ -59,6 +59,8 @@ let sessionEnding = false;
 let movedFromPortable = false;
 // Starts/stops the running-game watcher with the Games consent (set in start()).
 let syncRunningWatcher: () => void = () => undefined;
+// Tells the running-game watcher that something may need its answer sooner (set in start()).
+let retimeRunningWatcher: () => void = () => undefined;
 // Linux: keeps the controller's volume at full while the app runs, once the
 // player applied that Games fix (the controllerVolumeFull setting).
 let syncVolumeKeeper: () => void = () => undefined;
@@ -277,12 +279,19 @@ function start(): void {
   const lib = (): LibraryStore => fakeGames()?.library() ?? library;
 
   // The running game (polled only while Games is allowed).
+  // Linux: every 2 s while a game has a profile or the window is on screen,
+  // every 10 s in the tray otherwise (runningInterval); Windows: every 3 s.
+  const windowShown = () => !!mainWindow && mainWindow.isVisible() && !mainWindow.isMinimized();
   const watcher = games
     ? new RunningGameWatcher(
         () => games.runningCandidates(),
         (key) => mainWindow?.webContents.send(IPC.runningGame, key),
+        undefined,
+        undefined,
+        process.platform === "linux" ? () => runningInterval(library.hasProfiles() || windowShown()) : undefined,
       )
     : null;
+  retimeRunningWatcher = () => watcher?.retime();
   syncRunningWatcher = () => {
     if (!games || !watcher) return;
     // Fake games: no real game is looked for (the fake library says which one runs).
@@ -344,7 +353,11 @@ function start(): void {
       return f ? f.running : (watcher?.running ?? null);
     },
     libraryGet: () => lib().get(),
-    librarySetProfile: (u) => lib().setProfile(u.gameKey, u.title, u.settings),
+    librarySetProfile: (u) => {
+      const file = lib().setProfile(u.gameKey, u.title, u.settings);
+      retimeRunningWatcher(); // a first profile: the watcher looks every 2 s again
+      return file;
+    },
     libraryDeleteProfile: (key) => lib().deleteProfile(key),
     librarySetMine: (u) => lib().setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => lib().setRestore(r ?? undefined),
@@ -605,6 +618,9 @@ function createWindow(visible: boolean): void {
   const sendVisible = () => mainWindow?.webContents.send(IPC.windowVisible, !!mainWindow && mainWindow.isVisible() && !mainWindow.isMinimized());
   // lifetime: OK — goes with the window (destroyed on "closed")
   for (const event of ["show", "hide", "minimize", "restore"] as const) mainWindow.on(event as "show", sendVisible);
+  // On screen again: the running-game watcher looks now and every 2 s (Playing, the game's art).
+  // lifetime: OK — goes with the window (destroyed on "closed")
+  for (const event of ["show", "restore"] as const) mainWindow.on(event as "show", () => retimeRunningWatcher());
   mainWindow.webContents.on("did-finish-load", sendVisible); // lifetime: OK — goes with the window (destroyed on "closed")
   // lifetime: OK — goes with the window (destroyed on "closed"); acts once
   mainWindow.webContents.on("did-finish-load", () => {

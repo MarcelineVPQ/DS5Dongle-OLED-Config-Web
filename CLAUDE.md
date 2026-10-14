@@ -18,6 +18,7 @@ tools/dev.sh             # the dev copy: dev tools on, build id from Git ("0.9.3
 DS5_DEV_TOOLS=1 npm run build:desktop   # a dev build by hand: the Developer card (previews, fake controllers, simulated dongle, HDR test) is built in and shown; stable releases leave it out, dev-channel (X.Y.Z-dev.N) builds include it
 tools/check_ui.sh        # UI checker (layout, contrast, names) on its own app copy: simulated dongle, own settings, port 9334, virtual display (xvfb-run; CHECK_UI_SHOW=1 to see it), private D-Bus (no tray icon), no USB/hidraw (bwrap); never run it on the dev copy the user is using
                          # default --plan fast (dev builds, ~7 min): pairwise language x size x theme x page group x model, colorways computed; --plan full (~21 min) renders everything: the release gate
+tools/check_budgets.sh   # resource budgets (frames, CPU shown/hidden, memory) on its own hidden copy, port 9420; --quick (~10 min, every release) or --long (~55 min with a 30-min soak, stable RC); docs/BUDGETS.md
 npm run check            # typecheck + lint + format check + gates (security, theme, duplicates, identical files) + tests (what CI runs)
 npm test                 # vitest: tests/{unit,integration,security}
 node tools/update_version.mjs --verify
@@ -102,6 +103,15 @@ A standing rule (the same pattern as the loop pass). Every piece of kept state t
 2. **Think about invalidation when the board, the controller, the launcher or the update channel changes.** Those are where a cache goes stale here.
 3. **Re-run the full pass when a release adds caches, polls or library-scan reads.** `node tools/list_caches.mjs --firmware ../DS5Dongle` lists every row, including `useMemo` / `useCallback`, localStorage keys, clock checks and repeated reads (`repeat-io`, `dup-read`, `poll-io`, `effect-io`). Re-check every verdict and update the tables in `docs/CACHE_PASS_<date>.md`. The owner picks the batches.
 
+## Resource budgets
+
+A standing rule, the game-development way: the app is a little tool for a controller, so it sips resources, and every change fits its budget first. The limits live in one place, [`tools/budgets.json`](tools/budgets.json), and [`docs/BUDGETS.md`](docs/BUDGETS.md) explains each one and the last measurement.
+
+1. **The budgets are a gate.** Idle frames ≤ 10/s on every page (window shown, nothing changing), CPU shown and idle < 2% of a core (main + renderer + utility), CPU hidden in the tray < 0.5% (every process), memory < 300 MB PSS after 10 minutes, and memory growth < 5 MB over a 30-minute soak. `tools/check_budgets.sh` measures them on its own hidden copy (own HOME and port 9420, Xvfb 1920x1080, private D-Bus, no USB/hidraw, simulated board with the controller put down, Fake games) and prints a PASS/FAIL table.
+2. **When it runs.** `--quick` (~10 min) once per release, in the same step as the UI checker (`docs/TEST_PLAN.md`); `--long` (~55 min, the soak) for a stable release candidate. Not in CI and not in agents' spot checks: it needs a display server and minutes of wall time, and CI runners' timing is too noisy to judge 0.5%.
+3. **New visuals state their idle cost**, in the commit and in a comment where they're drawn: frames per second while shown and idle, what stops it while hidden, and what it costs on the CPU fallback. The default is the cheaper option; anything that draws continuously needs the owner's OK and a row in `docs/BUDGETS.md`.
+4. **A failing budget is fixed, not raised.** A limit changes only with the owner's OK, in the same commit as the reason in `docs/BUDGETS.md`. The GPU process's CPU is reported, not judged (software rendering on the test display inflates it).
+
 ## Backlog: one list
 
 [`docs/BACKLOG.md`](docs/BACKLOG.md) is the single list of open, agreed and blocked work for the app and the firmware (the AVIEW rule). When work starts, ships, or is decided against, update its row in the same commit; anything agreed in conversation gets a row the same day. Session notes and handoffs point to it and never keep a second list.
@@ -114,4 +124,4 @@ A standing rule (the same pattern as the loop pass). Every piece of kept state t
 
 ## Docs
 
-`docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `docs/DEDUPE_AUDIT.md`, `docs/LOOP_PASS_2026-10.md` (loop pass, both repos), `CHANGELOG.md`.
+`docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `docs/DEDUPE_AUDIT.md`, `docs/LOOP_PASS_2026-10.md` (loop pass, both repos), `docs/BUDGETS.md` (resource budgets), `CHANGELOG.md`.
