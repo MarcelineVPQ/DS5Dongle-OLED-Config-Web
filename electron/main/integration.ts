@@ -84,7 +84,8 @@ function integrateAppImage(resourcesDir: string): void {
   if (current !== entry) {
     writeFileSync(desktopPath, entry);
     // Refresh the menu caches (no-ops where the tool doesn't exist).
-    execFile("update-desktop-database", [appsDir], () => undefined);
+    execFile("update-desktop-database", [appsDir], () => undefined); // lifetime: OK — exits on its own; only when the entry changed
+    // lifetime: OK — each exits on its own; only when the desktop entry changed
     execFile("kbuildsycoca6", () => execFile("kbuildsycoca5", () => undefined));
   }
 }

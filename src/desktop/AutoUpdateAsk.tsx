@@ -11,9 +11,11 @@ export default function AutoUpdateAsk() {
   const { t } = useTranslation();
   const [asked, setAsked] = useState(true);
   const [due, setDue] = useState(false);
+  // lifetime: WASTE — cleanup clears the interval only at unmount: it ticks after the answer, and hidden
   useEffect(() => {
     void window.desktop?.getSettings().then((s) => setAsked(s.updatesAsked));
     const started = Date.now();
+    // lifetime: WASTE — 1 Hz DOM query for the app's life, also once answered and while hidden
     const timer = setInterval(() => {
       const tourOpen = Boolean(document.querySelector(".tour-card"));
       setDue(!tourOpen && (tourDone() || Date.now() - started > ASK_AFTER_MS));

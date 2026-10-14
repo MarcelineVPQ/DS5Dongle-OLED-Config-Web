@@ -37,14 +37,17 @@ function wire(): void {
     windowShown = shown;
     notify();
   });
+  // lifetime: NOT-WORTH — one shared store, wired once per page; lives as long as the window
   document.addEventListener("visibilitychange", () => {
     pageVisible = document.visibilityState === "visible";
     notify();
   });
+  // lifetime: NOT-WORTH — one shared store, wired once per page; lives as long as the window
   window.addEventListener("focus", () => {
     focused = true;
     notify();
   });
+  // lifetime: NOT-WORTH — one shared store, wired once per page; lives as long as the window
   window.addEventListener("blur", () => {
     focused = false;
     notify();

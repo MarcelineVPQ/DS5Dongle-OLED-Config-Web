@@ -13,6 +13,7 @@ const api: DesktopApi = {
   setTrayIcon: (pngDataUrl) => ipcRenderer.send(IPC.setTrayIcon, pngDataUrl),
   onTrayCommand: (listener) => {
     const handler = (_event: IpcRendererEvent, command: TrayCommand) => listener(command);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.trayCommand, handler);
     return () => ipcRenderer.removeListener(IPC.trayCommand, handler);
   },
@@ -30,6 +31,7 @@ const api: DesktopApi = {
   restartToUpdate: () => ipcRenderer.send(IPC.restartToUpdate),
   onUpdateState: (listener) => {
     const handler = (_event: IpcRendererEvent, state: UpdateState) => listener(state);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.updateState, handler);
     return () => ipcRenderer.removeListener(IPC.updateState, handler);
   },
@@ -40,6 +42,7 @@ const api: DesktopApi = {
   getFirmwareHold: () => ipcRenderer.invoke(IPC.getFirmwareHold),
   onFirmwareHold: (listener) => {
     const handler = (_event: IpcRendererEvent, state: FirmwareHoldState) => listener(state);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.firmwareHold, handler);
     return () => ipcRenderer.removeListener(IPC.firmwareHold, handler);
   },
@@ -47,11 +50,13 @@ const api: DesktopApi = {
   firmwareChangelog: () => ipcRenderer.invoke(IPC.firmwareChangelog),
   onDesktopPalette: (listener) => {
     const handler = (_event: IpcRendererEvent, palette: DesktopPalette | null) => listener(palette);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.desktopPalette, handler);
     return () => ipcRenderer.removeListener(IPC.desktopPalette, handler);
   },
   onWindowVisible: (listener) => {
     const handler = (_event: IpcRendererEvent, visible: boolean) => listener(visible);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.windowVisible, handler);
     return () => ipcRenderer.removeListener(IPC.windowVisible, handler);
   },
@@ -63,6 +68,7 @@ const api: DesktopApi = {
   installProton: () => ipcRenderer.invoke(IPC.installProton),
   onProtonProgress: (listener) => {
     const handler = (_event: IpcRendererEvent, progress: ProtonProgress) => listener(progress);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.protonProgress, handler);
     return () => ipcRenderer.removeListener(IPC.protonProgress, handler);
   },
@@ -70,6 +76,7 @@ const api: DesktopApi = {
   gamesRunning: () => ipcRenderer.invoke(IPC.gamesRunning),
   onRunningGame: (listener) => {
     const handler = (_event: IpcRendererEvent, key: string | null) => listener(key);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.runningGame, handler);
     return () => ipcRenderer.removeListener(IPC.runningGame, handler);
   },

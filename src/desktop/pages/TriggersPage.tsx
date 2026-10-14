@@ -13,6 +13,7 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
   const [error, setError] = useState<string | null>(null);
 
   // Leaving the page turns the effect off again, like leaving the OLED screen.
+  // lifetime: OK — acquires nothing; the cleanup turns the trigger preview off
   useEffect(
     () => () => {
       void client?.previewTrigger(0).catch(() => undefined);

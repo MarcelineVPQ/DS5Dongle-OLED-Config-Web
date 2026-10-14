@@ -9,6 +9,7 @@ class MicRing extends AudioWorkletProcessor {
     this.ring = new Float32Array(Math.max(1, Math.round(options.processorOptions.seconds * sampleRate)));
     this.pos = 0;
     this.filled = 0;
+    // lifetime: OK — lives with the worklet node; the AudioContext's close() ends both
     this.port.onmessage = () => {
       const n = this.filled;
       const out = new Float32Array(n);

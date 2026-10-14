@@ -87,6 +87,7 @@ export function useApplyTheme(): void {
   const desktop = window.desktop;
   // "Controller": light or dark from the connected controller's colorway.
   const shade = useSyncExternalStore(onControllerShade, controllerShade);
+  // lifetime: OK — cleanup: unsubscribes the desktop palette; the other paths acquire nothing
   useEffect(() => {
     document.documentElement.toggleAttribute("data-controller-theme", theme === "controller");
     if (theme === "controller") {

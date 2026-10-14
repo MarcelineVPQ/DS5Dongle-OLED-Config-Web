@@ -87,6 +87,7 @@ export class GamesService {
   // The published Proton build; a slow or offline network never holds up a scan.
   private async refreshLatest(): Promise<void> {
     try {
+      // lifetime: NOT-WORTH — one-shot 5 s timer, never cleared after a fast answer; one per scan, then gone
       const manifest = await Promise.race([this.deps.fetchManifest(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), MANIFEST_TIMEOUT_MS))]);
       this.latest = manifest.proton ?? null;
     } catch {

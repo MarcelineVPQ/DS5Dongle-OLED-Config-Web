@@ -203,6 +203,7 @@ export function detectRunning(procs: ProcView[], games: RunningCandidate[]): str
 // main process never waits for it.
 export function readWindowsProcs(): Promise<ProcView[]> {
   return new Promise((resolve) => {
+    // lifetime: OK — tasklist exits on its own; the 4 s timeout kills a hung one
     execFile(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tasklist.exe"), ["/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true, timeout: 4000 }, (error, stdout) =>
       resolve(error ? [] : parseTasklist(stdout)),
     );
@@ -288,6 +289,7 @@ export class RunningGameWatcher {
   start(): void {
     if (this.timer) return;
     void this.tick();
+    // lifetime: OK — cleared in stop() (Games consent off); runs while hidden on purpose: game profiles need it
     this.timer = setInterval(() => void this.tick(), this.everyMs);
   }
 

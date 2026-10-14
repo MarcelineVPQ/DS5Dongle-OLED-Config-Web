@@ -78,6 +78,7 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     'command -v udevadm >/dev/null || exit 3; install -m 0644 "$1" "$2" && udevadm control --reload-rules && udevadm trigger --subsystem-match=usb' +
     ' && { [ -z "$3" ] || { install -m 0644 "$3" "$4" && apparmor_parser -r "$4"; }; }';
   return new Promise((resolve) => {
+    // lifetime: OK — exits when the user answers the password prompt; no timeout on purpose (a person types)
     execFile("pkexec", ["/bin/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile ? PROFILE_DEST : ""], (error) => {
       rmSync(dir, { recursive: true, force: true });
       if (!error)

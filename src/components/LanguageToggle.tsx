@@ -15,6 +15,7 @@ export default function LanguageToggle() {
   const current = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
 
   // Click-outside-to-close
+  // lifetime: OK — cleanup: removes the mousedown listener (menu closes / unmount)
   useEffect(() => {
     if (!open) return;
     const onClickOutside = (e: MouseEvent) => {
@@ -22,16 +23,19 @@ export default function LanguageToggle() {
         setOpen(false);
       }
     };
+    // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
   // Close on Escape
+  // lifetime: OK — cleanup: removes the keydown listener (menu closes / unmount)
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+    // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);

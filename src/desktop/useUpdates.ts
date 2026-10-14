@@ -9,6 +9,7 @@ import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
 // App self-update state, mirrored from the main process.
 export function useAppUpdate(): UpdateState {
   const [state, setState] = useState<UpdateState>({ phase: "idle" });
+  // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for the update state
   useEffect(() => {
     const desktop = window.desktop;
     if (!desktop) return;
@@ -21,6 +22,7 @@ export function useAppUpdate(): UpdateState {
 // Firmware being written, and the restart/quit waiting for it (main process).
 export function useFirmwareHold(): FirmwareHoldState {
   const [state, setState] = useState<FirmwareHoldState>({ writing: false, restartQueued: false, quitQueued: false });
+  // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for the firmware hold
   useEffect(() => {
     const desktop = window.desktop;
     if (!desktop) return;
@@ -78,6 +80,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   }, []);
 
   // Look up the published firmware whenever the app checks for updates.
+  // lifetime: OK — cleanup: drops a late lookup answer (holds no resource)
   useEffect(() => {
     let live = true;
     window.desktop?.latestFirmware().then(
@@ -109,6 +112,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       setState({ phase: "verifying", version });
       // The dongle only shows up on USB once a controller connects, so a slow
       // return isn't a failure: keep waiting, and ask for PS.
+      // lifetime: OK — cleared once the update settles, and on unmount (effects below)
       timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
     } catch (cause) {
       setState({ phase: "failed", detail: errorText(cause) });
@@ -124,10 +128,12 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       : { phase: "failed", detail: `${deviceText("{{device, capitalize}}")} came back reporting ${installed}, expected ${state.version}.` };
   }
   const settled = shown !== state;
+  // lifetime: OK — acquires nothing (clears the slow-return timer once settled)
   useEffect(() => {
     if (settled && timer.current) clearTimeout(timer.current);
   }, [settled]);
 
+  // lifetime: OK — cleanup: clears the slow-return timer on unmount
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);

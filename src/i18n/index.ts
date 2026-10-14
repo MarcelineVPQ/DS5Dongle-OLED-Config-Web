@@ -77,6 +77,7 @@ void i18n
   });
 
 fillDevice();
+// lifetime: NOT-WORTH — one i18n instance, subscribed once at load; lives as long as the window
 i18n.on("languageChanged", fillDevice);
 i18n.services.formatter?.add("capitalize", (value: unknown) => capitalize(String(value)));
 

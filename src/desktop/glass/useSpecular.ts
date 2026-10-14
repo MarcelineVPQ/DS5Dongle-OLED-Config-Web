@@ -20,12 +20,15 @@ function update(): void {
 
 function onMove(e: PointerEvent): void {
   pointer = { x: e.clientX, y: e.clientY };
+  // lifetime: OK — one-shot, at most one pending; only pointer moves arm it (none while hidden)
   if (!frame) frame = requestAnimationFrame(update);
 }
 
 export function useSpecular(el: HTMLElement | null, on: boolean): void {
+  // lifetime: OK — cleanup drops the element; the last one removes the shared listener
   useEffect(() => {
     if (!el || !on) return;
+    // lifetime: OK — one shared listener, removed when the last glass element unmounts
     if (elements.size === 0) window.addEventListener("pointermove", onMove, { passive: true });
     elements.add(el);
     update();

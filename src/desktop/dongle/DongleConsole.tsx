@@ -37,6 +37,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
   const [unread, setUnread] = useState(false);
   const seen = useRef(0);
   const newest = log.at(-1)?.id ?? 0;
+  // lifetime: OK — acquires nothing (unread flag for the log pane)
   useEffect(() => {
     if (pane === "log") seen.current = newest;
     else if (newest > seen.current) setUnread(true);
@@ -123,6 +124,7 @@ export interface OledFrameState {
 export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): OledFrameState {
   const [frame, setFrame] = useState<OledFrame | null>(null);
   const [error, setError] = useState(false);
+  // lifetime: OK — cleanup: stops the 100 ms mirror poll (hidden / page left / unmount)
   useEffect(() => {
     if (!client || !enabled) return;
     let live = true;
@@ -144,6 +146,7 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
         setError(true);
         wait = RETRY_MS;
       }
+      // lifetime: OK — self re-arming; cleared in useOledFrame's cleanup, stops once live is false
       timer = setTimeout(() => void tick(), wait);
     };
     void tick();
@@ -157,6 +160,7 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
 
 function OledCanvas({ frame }: { frame: OledFrame | null }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // lifetime: HOT-ALLOC — a new 128x64 ImageData (32 KB) per mirror frame (10 Hz); nothing to release
   useEffect(() => {
     const ctx = ref.current?.getContext("2d");
     if (!ctx) return;
@@ -181,11 +185,13 @@ function OledCanvas({ frame }: { frame: OledFrame | null }) {
   // Whole-number scaling only, so every panel pixel is the same square.
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(4);
+  // lifetime: OK — cleanup: disconnects the ResizeObserver
   useEffect(() => {
     const el = box.current;
     if (!el) return;
     const fit = () => setScale(Math.max(1, Math.min(6, Math.floor(el.clientWidth / FB_W))));
     fit();
+    // lifetime: OK — disconnected in the effect cleanup
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     return () => ro.disconnect();
@@ -209,6 +215,7 @@ function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity |
   };
   const prev = useRef<{ client: boolean; on: boolean; slot: number | null; battery: number | null; unsaved: boolean | null; charging: boolean } | null>(null);
   const status = identity;
+  // lifetime: OK — acquires nothing (appends log lines, capped at 200)
   useEffect(() => {
     const now = {
       client: !!client,

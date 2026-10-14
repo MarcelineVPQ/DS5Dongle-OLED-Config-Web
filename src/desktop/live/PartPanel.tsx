@@ -283,12 +283,14 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   const table = useRef<HTMLDivElement>(null);
   // A button picked on the drawing: its row scrolls into view and its picker
   // gets the focus, ready to change.
+  // lifetime: OK — acquires nothing (scrolls the picked row into view)
   useEffect(() => {
     if (focus === null) return;
     const sel = table.current?.querySelector<HTMLSelectElement>(`#all-remap-${focus}`);
     sel?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     sel?.focus({ preventScroll: true });
   }, [focus]);
+  // lifetime: OK — cleanup: clears the hovered row on unmount
   useEffect(() => () => onHover(null), [onHover]);
   const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
   // A game's profile on (edited, or its game running): the buttons go into
@@ -561,6 +563,7 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   const client = bridge.client;
   // The level, and its peak held for 1.5 s (kept with each reading).
   const hold = useRef({ value: 0, at: 0 });
+  // lifetime: OK — usePoll stops on unmount (panel closed) and while hidden
   const reading = usePoll(
     async () => {
       const diag = await client!.readDiag();
@@ -618,6 +621,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
   const [settings, setSettings] = useState<DesktopSettings | null>(null);
   const [gpuChanged, setGpuChanged] = useState(false);
   const [hdrChanged, setHdrChanged] = useState(false);
+  // lifetime: OK — acquires nothing (one settings read)
   useEffect(() => {
     void window.desktop?.getSettings().then(setSettings);
   }, []);
@@ -753,6 +757,7 @@ export function GameLaunchersSetting() {
   const { t } = useTranslation();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [confirmOff, setConfirmOff] = useState(false);
+  // lifetime: OK — cleanup: drops a late read, unsubscribes the games-allowed event
   useEffect(() => {
     let live = true;
     void window.desktop?.getSettings().then((s) => live && setAllowed(s.gamesScanAllowed));
@@ -878,11 +883,14 @@ export function SpeakerTest() {
   const shown = useWindowShown();
   // The song-length line: one frame loop only while playing and on screen;
   // it catches up from the start time when the window comes back.
+  // lifetime: OK — cleanup: cancels the frame loop; runs only while playing and shown
   useEffect(() => {
     if (!playing || !startedAt || !shown) return;
     const length = duration * 1000;
+    // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
       setProgress(Math.min(1, Math.round(((Date.now() - startedAt) / length) * 1000) / 1000));
+      // lifetime: OK — re-armed per frame; the effect cleanup cancels the latest
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
@@ -952,7 +960,9 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
     if (kept) clip.current = kept;
     setHasClip(clip.current !== null);
   }, []);
+  // lifetime: OK — cleanup: closes the mic session and any playback on unmount
   useEffect(() => () => void stopAll(), [stopAll]);
+  // lifetime: OK — acquires nothing (closes the mic test when the window hides)
   useEffect(() => {
     if (shown) return;
     void stopAll().then(() => setPhase("idle"));
@@ -1012,25 +1022,32 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
   // The live loopback: on only with a headset that Audio output plays to,
   // and follows it being plugged in or out (or the setting changing).
   const loopback = headset && (output === 0 || output === 2);
+  // lifetime: OK — acquires nothing (switches the live session's loopback)
   useEffect(() => {
     if (phase === "testing") session.current?.setLoopback(loopback);
   }, [phase, loopback]);
   // The meter: one frame loop only while testing and on screen; a new React
   // render only when the number of lit segments changes.
+  // lifetime: OK — cleanup: cancels the meter's frame loop (testing and shown only)
   useEffect(() => {
     if (phase !== "testing" || !shown) return;
+    // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
       const level = session.current?.level() ?? 0;
       setLit(Math.min(VU_SEGMENTS, Math.round(Math.sqrt(level) * VU_SEGMENTS)));
+      // lifetime: OK — re-armed per frame; the effect cleanup cancels the latest
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
   }, [phase, shown]);
   // The playback line, the same way.
+  // lifetime: OK — cleanup: cancels the playback line's frame loop (playing and shown only)
   useEffect(() => {
     if (phase !== "playing" || !playing || !shown) return;
+    // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
       setPlayed(Math.min(1, Math.round(((Date.now() - playing.since) / (playing.seconds * 1000)) * 100) / 100));
+      // lifetime: OK — re-armed per frame; the effect cleanup cancels the latest
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
@@ -1191,6 +1208,7 @@ function ReduceMotionSetting() {
 function DevChannelDialog({ onJoin, onCancel }: { onJoin: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<DevChannelPreview | null | "loading">("loading");
+  // lifetime: OK — cleanup: removes the Escape listener, drops a late preview
   useEffect(() => {
     let live = true;
     void window.desktop?.devChannelPreview().then(
@@ -1198,6 +1216,7 @@ function DevChannelDialog({ onJoin, onCancel }: { onJoin: () => void; onCancel: 
       () => live && setPreview(null),
     );
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    // lifetime: OK — removed in the effect cleanup (dialog closed)
     window.addEventListener("keydown", onKey);
     return () => {
       live = false;

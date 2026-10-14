@@ -95,6 +95,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   const marks = useRef<HTMLDivElement>(null);
 
   // Index the parts once and make each one a keyboard-reachable button.
+  // lifetime: OK — acquires nothing (indexes the drawing's parts; they go with its DOM)
   useLayoutEffect(() => {
     const root = host.current?.querySelector("svg");
     if (!root) return;
@@ -134,6 +135,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   // The mic / headset marks sit under the mute button, just below the shell's
   // bottom edge (where the headset jack is); placed again only when the
   // drawing's size changes.
+  // lifetime: OK — cleanup: disconnects the ResizeObserver
   useLayoutEffect(() => {
     const el = host.current;
     const box = marks.current;
@@ -152,18 +154,21 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       box.style.left = `${x - origin.left}px`;
       box.style.top = `${y + 3 - origin.top}px`;
     };
+    // lifetime: OK — disconnected in the effect cleanup
     const ro = new ResizeObserver(place);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
   // Accessible names follow the language.
+  // lifetime: OK — acquires nothing (sets the parts' names)
   useEffect(() => {
     for (const [id, el] of parts.current) el.setAttribute("aria-label", t(`desktop.live.part.${id}`));
     host.current?.querySelector('[data-part="body"]')?.setAttribute("aria-label", t("desktop.live.part.body"));
     host.current?.querySelector("svg")?.setAttribute("aria-label", t("desktop.live.overview", "Your controller"));
   }, [t]);
 
+  // lifetime: OK — acquires nothing (marks the selected part)
   useEffect(() => {
     for (const [id, el] of parts.current) {
       el.classList.toggle("sel", id === selected);
@@ -175,6 +180,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   // The lightbar like the real one: its color at full strength, mixed with
   // the unlit grey plastic by how bright it is (off = plain grey, dim = a
   // tinted grey), and a glow that fades with it.
+  // lifetime: OK — acquires nothing (sets the lightbar color tokens)
   useEffect(() => {
     const root = host.current?.querySelector("svg");
     if (!root) return;
@@ -190,6 +196,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   }, [lightbar]);
 
   // The connected controller's own colors (else the CSS theme defaults).
+  // lifetime: OK — acquires nothing (sets the colorway tokens)
   useEffect(() => {
     const el = host.current;
     if (!el) return;
@@ -211,6 +218,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   }, [colors]);
 
   // Player indicator: the lights the PC's pattern turns on (player 1 = center light, ...).
+  // lifetime: OK — acquires nothing (toggles the player lights)
   useEffect(() => {
     const lit = litPlayerLights(playerLeds, playerWiring);
     const leds = host.current?.querySelectorAll("[data-led]");
@@ -218,6 +226,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   }, [playerLeds, playerWiring]);
 
   // Live state.
+  // lifetime: OK — acquires nothing lasting (touch dots reused, removed when lifted)
   useEffect(() => {
     const root = host.current?.querySelector("svg");
     if (!root) return;

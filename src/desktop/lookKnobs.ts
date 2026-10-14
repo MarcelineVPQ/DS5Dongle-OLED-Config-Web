@@ -46,14 +46,17 @@ export const knob = (key: string) => KNOBS.find((k) => k.key === key)!;
 // for all of them).
 export function useLookKnobs(): void {
   const [vals, setVals] = useState(() => KNOBS.map(readKnob));
+  // lifetime: OK — cleanup: removes the pref listener (app root, mounts once)
   useEffect(() => {
     const on = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
       if (key.startsWith("ds5.knob.")) setVals(KNOBS.map(readKnob));
     };
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener(PREF_EVENT, on);
     return () => window.removeEventListener(PREF_EVENT, on);
   }, []);
+  // lifetime: OK — acquires nothing (writes CSS variables on <html>)
   useEffect(() => {
     const root = document.documentElement;
     KNOBS.forEach((k, i) => root.style.setProperty(k.cssVar, k.css(vals[i])));

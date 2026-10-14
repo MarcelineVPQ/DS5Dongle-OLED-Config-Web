@@ -41,6 +41,7 @@ export async function downloadVerified(download: Download, path: string, progres
   // The first write error, surfaced at the next await instead of as an uncaught event.
   let writeError: Error | null = null;
   const failed = new Promise<never>((_, reject) =>
+    // lifetime: OK — goes with the stream: ended on success, destroyed on any failure
     file.on("error", (err) => {
       writeError = err;
       reject(err);
@@ -52,6 +53,7 @@ export async function downloadVerified(download: Download, path: string, progres
   try {
     for (;;) {
       let timer: ReturnType<typeof setTimeout> | undefined;
+      // lifetime: OK — cleared in .finally() after every read
       const stall = new Promise<never>((_, reject) => (timer = setTimeout(() => reject(stalled()), STALL_TIMEOUT_MS)));
       const { done, value } = await Promise.race([reader.read(), failed, stall]).finally(() => clearTimeout(timer));
       if (done) break;
@@ -59,6 +61,7 @@ export async function downloadVerified(download: Download, path: string, progres
       got += value.byteLength;
       if (got > download.size) throw new Error("The download is larger than the manifest says.");
       hash.update(value);
+      // lifetime: OK — fires once on drain; the stream is destroyed if `failed` wins instead
       if (!file.write(value)) await Promise.race([new Promise<void>((r) => file.once("drain", () => r())), failed]);
       if (Date.now() - lastReport > 150) {
         lastReport = Date.now();

@@ -80,6 +80,7 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
   const [firmware, setFirmware] = useState<string | null>(null);
   const [firmwareError, setFirmwareError] = useState<string | null>(null);
 
+  // lifetime: OK — acquires nothing (one IPC read of the firmware changelog)
   useEffect(() => {
     if (tab !== "firmware" || firmware || !window.desktop) return;
     window.desktop

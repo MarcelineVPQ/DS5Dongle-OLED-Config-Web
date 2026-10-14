@@ -73,7 +73,7 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   // Launching it again just brings the running copy forward.
-  app.on("second-instance", showWindow);
+  app.on("second-instance", showWindow); // lifetime: NOT-WORTH — one per app, lives until quit
   void app.whenReady().then(start);
 }
 
@@ -81,6 +81,7 @@ if (!app.requestSingleInstanceLock()) {
 // Chromium falls back to software for the rest of this run, and the setting
 // goes off so the next start doesn't try again (the user can turn it back on).
 function recordGpuCrash(): void {
+  // lifetime: NOT-WORTH — registered once in start(), lives until quit
   app.on("child-process-gone", (_event, details) => {
     if (details.type !== "GPU" || details.reason === "clean-exit" || details.reason === "killed") return;
     if (!settings?.hardwareAcceleration) return;
@@ -103,7 +104,9 @@ function start(): void {
   );
   updater.pruneStaleFiles();
   hold = new FirmwareHold((state) => mainWindow?.webContents.send(IPC.firmwareHold, state));
+  // lifetime: OK — fires once, the first update check
   setTimeout(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_FIRST_CHECK_MS);
+  // lifetime: NOT-WORTH — one per app, a background update check meant to run in the tray too
   setInterval(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_INTERVAL_MS);
   applyAutostart(settings.launchAtLogin, settings.startMinimized);
   lockDownSession();
@@ -172,6 +175,7 @@ function start(): void {
     else watcher.stop();
   };
   syncRunningWatcher();
+  // lifetime: NOT-WORTH — one scheme handler per app, lives until quit
   protocol.handle("ds5-art", (request) => {
     const target = artRequestTarget(request.url);
     const file = target ? games?.artPath(target.key, target.kind) : undefined;
@@ -282,13 +286,15 @@ function start(): void {
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
   watchDesktopPalette(() => void readDesktopPalette().then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette)));
-  app.on("activate", showWindow);
+  app.on("activate", showWindow); // lifetime: NOT-WORTH — one per app, lives until quit
   // Quitting (tray Quit, Ctrl+Q, logout) mid-write would leave the board
   // half-written: show the window, which says it closes when the write ends.
+  // lifetime: NOT-WORTH — one per app, lives until quit
   app.on("before-quit", (event) => {
     if (hold.allowQuit(event, () => app.quit())) quitting = true;
     else showWindow();
   });
+  // lifetime: NOT-WORTH — one per app, lives until quit
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
   });
@@ -345,6 +351,7 @@ function lockDownSession(): void {
 
   // navigator.usb.requestDevice() has no picker in Electron: answer it with the
   // first allowed device that matches, or none.
+  // lifetime: NOT-WORTH — once per app on the default session, lives until quit
   ses.on("select-usb-device", (event, details, callback) => {
     event.preventDefault();
     const match = details.deviceList.find((d) => isAllowedUsbDevice(d));
@@ -353,6 +360,7 @@ function lockDownSession(): void {
 }
 
 function createWindow(visible: boolean): void {
+  // lifetime: OK — one window; "closed" drops the reference, showWindow() makes a new one only after that
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 760,
@@ -376,11 +384,13 @@ function createWindow(visible: boolean): void {
 
   // The layout is sized for 100%; the desktop's display scale is applied on top.
   // (Chromium persists zoom per origin, so pin it rather than inherit a stale one.)
-  mainWindow.webContents.on("did-finish-load", () => mainWindow?.webContents.setZoomFactor(1));
+  mainWindow.webContents.on("did-finish-load", () => mainWindow?.webContents.setZoomFactor(1)); // lifetime: OK — goes with the window (destroyed on "closed")
+  // lifetime: OK — goes with the window (destroyed on "closed")
   mainWindow.once("ready-to-show", () => {
     if (visible) showWindow();
   });
   // Close-to-tray: hide instead of quitting; tray Quit and logout still quit.
+  // lifetime: OK — goes with the window (destroyed on "closed")
   mainWindow.on("close", (event) => {
     if (settings.closeToTray && !quitting) {
       event.preventDefault();
@@ -390,17 +400,19 @@ function createWindow(visible: boolean): void {
       showWindow();
     }
   });
+  // lifetime: OK — goes with the window (destroyed on "closed")
   mainWindow.on("closed", () => {
     mainWindow = null;
     hold.setWriting(false);
   });
   // A fresh or crashed page isn't writing anything any more.
-  mainWindow.webContents.on("did-finish-load", () => hold.setWriting(false));
-  mainWindow.webContents.on("render-process-gone", () => hold.setWriting(false));
+  mainWindow.webContents.on("did-finish-load", () => hold.setWriting(false)); // lifetime: OK — goes with the window (destroyed on "closed")
+  mainWindow.webContents.on("render-process-gone", () => hold.setWriting(false)); // lifetime: OK — goes with the window (destroyed on "closed")
   // Tell the page when it's actually on screen, so live polling stops in the tray.
   const sendVisible = () => mainWindow?.webContents.send(IPC.windowVisible, !!mainWindow && mainWindow.isVisible() && !mainWindow.isMinimized());
+  // lifetime: OK — goes with the window (destroyed on "closed")
   for (const event of ["show", "hide", "minimize", "restore"] as const) mainWindow.on(event as "show", sendVisible);
-  mainWindow.webContents.on("did-finish-load", sendVisible);
+  mainWindow.webContents.on("did-finish-load", sendVisible); // lifetime: OK — goes with the window (destroyed on "closed")
 
   const contents = mainWindow.webContents;
   // External links open in the system browser, and only to allowlisted hosts.
@@ -408,6 +420,7 @@ function createWindow(visible: boolean): void {
     if (isAllowedExternalUrl(url)) openExternalLink(url);
     return { action: "deny" };
   });
+  // lifetime: OK — goes with the window (destroyed on "closed")
   contents.on("will-navigate", (event, url) => {
     if (!isAppUrl(url)) {
       event.preventDefault();

@@ -41,12 +41,14 @@ export function useGameAction(game: GameEntry): { run: (action: GameAction) => P
     try {
       if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) {
         setFailed(action);
+        // lifetime: NOT-WORTH — one-shot 6 s that only clears the error label; harmless after unmount
         setTimeout(() => setFailed((f) => (f === action ? null : f)), 6000);
       }
     } catch {
       setFailed(action);
     }
     // Launching takes the launcher a moment; keep the button busy briefly.
+    // lifetime: NOT-WORTH — one-shot 0.6-3 s that ends the busy button's wait; fires once
     await new Promise((resolve) => setTimeout(resolve, action === "play" ? 3000 : 600));
   };
   return { run, failed };

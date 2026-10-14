@@ -115,28 +115,33 @@ export interface IpcHandlers {
 export function registerIpc(h: IpcHandlers): void {
   const trusted = (event: IpcMainEvent | IpcMainInvokeEvent) => h.isTrusted(event.sender, event.senderFrame?.url ?? "");
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.on(IPC.reportStatus, (event, raw: unknown) => {
     if (!trusted(event)) return;
     const parsed = DeviceStatusSchema.safeParse(raw);
     if (parsed.success) h.onStatus(parsed.data);
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.on(IPC.setTrayIcon, (event, raw: unknown) => {
     if (!trusted(event)) return;
     const parsed = TrayIconSchema.safeParse(raw);
     if (parsed.success) h.onTrayIcon(parsed.data);
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.getSettings, (event) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.getSettings();
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.on(IPC.appVersion, (event) => {
     event.returnValue = trusted(event) ? h.appVersion() : "";
   });
 
   const invoke = (channel: string, run: () => unknown) =>
+    // lifetime: NOT-WORTH — one handler per channel, registered once by registerIpc(), lives until quit
     ipcMain.handle(channel, (event) => {
       if (!trusted(event)) throw new Error("untrusted sender");
       return run();
@@ -152,26 +157,31 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.firmwareChangelog, h.firmwareChangelog);
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.on(IPC.setFirmwareWriting, (event, raw: unknown) => {
     if (!trusted(event)) return;
     const parsed = z.boolean().safeParse(raw);
     if (parsed.success) h.setFirmwareWriting(parsed.data);
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.on(IPC.restartToUpdate, (event) => {
     if (trusted(event)) h.restartToUpdate();
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.usbAccessInstalled, (event) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.usbAccessInstalled();
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.setupUsbAccess, (event) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.setupUsbAccess();
   });
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.repairWindowsUsb, (event) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     return h.repairWindowsUsb();
@@ -182,6 +192,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.gamesRunningLaunchers, h.gamesRunningLaunchers);
   invoke(IPC.installProton, h.installProton);
   const invokeWith = <T>(channel: string, schema: z.ZodType<T>, run: (value: T) => unknown) =>
+    // lifetime: NOT-WORTH — one handler per channel, registered once by registerIpc(), lives until quit
     ipcMain.handle(channel, (event, raw: unknown) => {
       if (!trusted(event)) throw new Error("untrusted sender");
       return run(schema.parse(raw));
@@ -201,6 +212,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
   invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
 
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");
     const { key, value } = SettingUpdate.parse(raw);

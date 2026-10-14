@@ -24,6 +24,7 @@ export default function WindowsUsbRepair() {
 
   // Plugged in but not connected: the case this repairs (polled only while
   // the window is shown).
+  // lifetime: OK — usePoll: Windows only, stops when hidden or when setup unmounts
   const seen = !!usePoll(() => WebUsbTransport.findPermitted(), POLL_MS, windows).value;
 
   if (!windows || !desktop) return null;

@@ -41,6 +41,7 @@ export class WebUsbTransport implements Ds5Transport {
   // Browser: shows the device chooser (needs a user gesture). Desktop: the main
   // process answers with the dongle automatically.
   static async request(): Promise<USBDevice> {
+    // lifetime: OK — opens nothing (the permission prompt returns a USBDevice)
     return navigator.usb.requestDevice({
       filters: DONGLE_PRODUCT_IDS.map((productId) => ({ vendorId: SONY_VENDOR_ID, productId, classCode: VENDOR_CLASS })),
     });
@@ -59,8 +60,10 @@ export class WebUsbTransport implements Ds5Transport {
     if (this.isOpen) return;
     const itf = configuratorInterface(this.device);
     if (itf < 0) throw new Error("Your board's firmware has no configurator interface. Update the firmware first.");
+    // lifetime: NOT-WORTH — one dongle handle per connection; close() is unused, freed on disconnect
     if (!this.device.opened) await this.device.open();
     if (this.device.configuration === null) await this.device.selectConfiguration(1);
+    // lifetime: NOT-WORTH — claimed for the connection's life, freed on disconnect; re-claim is harmless
     await this.device.claimInterface(itf);
     this.interfaceNumber = itf;
   }

@@ -38,6 +38,7 @@ function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean, t
   const [running, setRunning] = useState<GripSide | null>(null);
   const stop = useRef<(() => void) | null>(null);
   // Unmount, another client or a disconnect ends a running test.
+  // lifetime: OK — cleanup stops a running grip test (unmount, client change, disconnect)
   useEffect(() => () => stop.current?.(), [client, connected]);
   const run = useCallback(
     async (side: GripSide) => {
@@ -52,6 +53,7 @@ function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean, t
       const start = Date.now();
       const until = (ms: number) =>
         new Promise<void>((resolve) => {
+          // lifetime: OK — fires once, or cleared by wake() when the test stops
           const timer = setTimeout(resolve, Math.max(0, start + ms - Date.now()));
           wake = () => {
             clearTimeout(timer);

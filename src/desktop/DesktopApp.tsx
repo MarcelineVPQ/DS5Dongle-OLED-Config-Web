@@ -51,9 +51,11 @@ export default function DesktopApp() {
   const bridge = useDs5Bridge();
   // Remembered so the setup screen can tell "no dongle yet" from "the dongle
   // is waiting for its controller" (it stays off USB until one connects).
+  // lifetime: OK — acquires nothing (remembers that a dongle was seen)
   useEffect(() => {
     if (bridge.client) writePref(HAD_DONGLE_KEY, "1");
   }, [bridge.client]);
+  // lifetime: OK — acquires nothing (trackBoard records the board name, returns nothing)
   useEffect(() => trackBoard(bridge.identity), [bridge.identity]);
   const realAppUpdate = useAppUpdate();
   const realFw = useFirmwareUpdate(bridge, realAppUpdate);
@@ -85,8 +87,10 @@ export default function DesktopApp() {
   // loop with the error showing).
   const { isDirty, issues, operation, applyConfig, draft } = bridge;
   const failedDraft = useRef<typeof draft | null>(null);
+  // lifetime: OK — cleanup: clears the apply debounce timer (draft change / unmount)
   useEffect(() => {
     if (!isDirty || issues.length > 0 || operation || draft === failedDraft.current) return;
+    // lifetime: OK — cleared in the effect cleanup
     const timer = setTimeout(() => {
       void applyConfig().then((ok) => {
         failedDraft.current = ok ? null : draft;
@@ -100,11 +104,13 @@ export default function DesktopApp() {
   // Narrator events (she only speaks if the user said yes, and only through
   // the controller; see narrator.ts).
   const wasConnected = useRef(false);
+  // lifetime: OK — acquires nothing (narrator line on connect)
   useEffect(() => {
     if (connected && !wasConnected.current) void say("app_dongle_online");
     wasConnected.current = connected;
   }, [connected]);
   const offered = useRef<string | null>(null);
+  // lifetime: OK — acquires nothing (narrator line once per offered version)
   useEffect(() => {
     const version = fw.available ? fw.latest?.version : null;
     if (version && offered.current !== version) {
@@ -112,6 +118,7 @@ export default function DesktopApp() {
       void say("app_fw_available");
     }
   }, [fw.available, fw.latest?.version]);
+  // lifetime: OK — acquires nothing (narrator line when an update finishes)
   useEffect(() => {
     if (fw.state.phase === "done") void say("app_fw_updated");
   }, [fw.state.phase]);
@@ -150,6 +157,7 @@ export default function DesktopApp() {
     () => mergeColors(colorway(liveIdentity?.colorwayCode ?? null, liveIdentity?.model ?? null)?.colors ?? null, customColors),
     [liveIdentity?.colorwayCode, liveIdentity?.model, customColors],
   );
+  // lifetime: OK — acquires nothing (toggles data-glass on <html>)
   useEffect(() => {
     document.documentElement.toggleAttribute("data-glass", glass);
   }, [glass]);
@@ -162,6 +170,7 @@ export default function DesktopApp() {
   const battery = controllerOn ? (liveIdentity?.battery ?? null) : null;
   const lightbar = controllerOn ? (liveIdentity?.lightbar ?? null) : null;
   const lightbarKey = lightbar ? lightbar.join(",") : "";
+  // lifetime: OK — acquires nothing (sends the status to the tray over IPC)
   useEffect(() => {
     window.desktop?.reportStatus({
       dongle: connected,
@@ -178,6 +187,7 @@ export default function DesktopApp() {
   // only when it differs, since the dongle saves it to flash.
   const narrator = useNarrator();
   const fwNarrator = Boolean(liveIdentity && liveIdentity.features & IDENTITY_FEATURES.narrator);
+  // lifetime: OK — cleanup: drops a stale narrator read (holds no resource)
   useEffect(() => {
     if (!client || !fwNarrator) return;
     const want = firmwareNarratorValue(narrator);
@@ -193,6 +203,7 @@ export default function DesktopApp() {
 
   // Redraw the tray icon only when something it shows changes.
   const darkTaskbar = useDarkTaskbar();
+  // lifetime: OK — cleanup: drops a stale tray icon render (holds no resource)
   useEffect(() => {
     if (!window.desktop) return;
     const rgb = lightbarKey ? (lightbarKey.split(",").map(Number) as [number, number, number]) : null;
@@ -205,6 +216,7 @@ export default function DesktopApp() {
     };
   }, [connected, controllerOn, charging, lightbarKey, darkTaskbar]);
 
+  // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for tray commands
   useEffect(
     () =>
       window.desktop?.onTrayCommand((command) => {
@@ -403,6 +415,7 @@ export default function DesktopApp() {
             // After the page or panel renders, focus moves into it (the page
             // in the middle; App settings / Pico open in the side panel), so
             // the keyboard and screen readers continue there, not in the rail.
+            // lifetime: OK — fires once (moves focus after the page renders)
             requestAnimationFrame(() => {
               const target = item === "dongle" || item === "app" ? document.querySelector<HTMLElement>(".live-panel-head h2") : document.querySelector<HTMLElement>("main.dk-body");
               target?.focus({ preventScroll: true });
@@ -435,6 +448,7 @@ export default function DesktopApp() {
 function useDarkTaskbar(): boolean {
   const query = () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? true;
   const [dark, setDark] = useState(query);
+  // lifetime: OK — cleanup: palette unsubscribe + media query listener removed (app root)
   useEffect(() => {
     const desktop = window.desktop;
     let live = true;
@@ -443,6 +457,7 @@ function useDarkTaskbar(): boolean {
     const off = desktop?.onDesktopPalette(fromPalette);
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     const onChange = () => void desktop?.getDesktopPalette().then(fromPalette);
+    // lifetime: OK — removed in the effect cleanup
     mq?.addEventListener("change", onChange);
     return () => {
       live = false;
@@ -495,6 +510,7 @@ function useGamesAttention() {
     },
     [recount],
   );
+  // lifetime: OK — cleanup: drops a late settings / scan answer (holds no resource)
   useEffect(() => {
     if (!supported) return;
     let live = true;
@@ -512,6 +528,7 @@ function useGamesAttention() {
     };
   }, [supported, update]);
   // Games' consent card or App settings → Privacy changed it.
+  // lifetime: OK — cleanup: onGamesAllowed's remover (removeEventListener)
   useEffect(
     () =>
       onGamesAllowed((value) => {

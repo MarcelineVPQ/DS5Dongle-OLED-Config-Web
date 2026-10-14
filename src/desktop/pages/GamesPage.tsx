@@ -222,6 +222,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   );
 
   // First scan on open (state is only set once the scan resolves).
+  // lifetime: OK — acquires nothing; the cleanup drops a late scan result (unmount)
   useEffect(() => {
     let live = true;
     latest(desktop.gamesScan()).then(
@@ -232,9 +233,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       live = false;
     };
   }, [desktop, receive, latest]);
+  // lifetime: OK — cleanup is onProtonProgress's unsubscribe (unmount)
   useEffect(() => desktop.onProtonProgress(setProtonProgress), [desktop]);
   // A game page applied a fix: rescan so Home and the library agree.
   const firstToken = useRef(rescanToken);
+  // lifetime: OK — acquires nothing (one rescan per token change)
   useEffect(() => {
     if (rescanToken !== firstToken.current) void rescan(true);
   }, [rescanToken, rescan]);

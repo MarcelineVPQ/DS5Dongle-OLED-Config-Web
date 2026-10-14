@@ -36,6 +36,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
 
   // Only the slots: the current slot comes from the connection hook's
   // identity poll (the app's one identity poll).
+  // lifetime: OK — usePoll stops on unmount, while hidden and while busy
   const live = usePoll(
     async () => {
       if (!client) return null;
@@ -65,6 +66,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const memory = readMemory();
   const id = bridge.identity;
   const here = id && v && v.slots.occupied[id.currentSlot] ? formatMac(v.slots.addrs[id.currentSlot]) : null;
+  // lifetime: OK — acquires nothing (writes the slot memory pref)
   useEffect(() => {
     if (!here || !id?.model || !id.colorwayCode || fake.slot !== null) return;
     const known = memory[here];

@@ -138,8 +138,10 @@ export interface StartDeps {
 
 function spawnDetached(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
   return new Promise((resolve) => {
+    // lifetime: OK — detached and unref'd on spawn: the program is the user's, it outlives the app on purpose
     const child = spawn(cmd, args, { detached: true, stdio: "ignore", env });
-    child.once("error", () => resolve(false));
+    child.once("error", () => resolve(false)); // lifetime: OK — fires once; goes with the child object
+    // lifetime: OK — fires once; goes with the child object
     child.once("spawn", () => {
       child.unref();
       resolve(true);
@@ -151,13 +153,17 @@ const realDeps: StartDeps = {
   platform: process.platform,
   env: () => launcherEnv(process.env, realHome()),
   userSystemd: (env) => {
+    // lifetime: OK — systemctl exits on its own; the 3 s timeout kills a hung one
     const run = (args: string[]) => new Promise<string | null>((resolve) => execFile("systemctl", args, { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve(err ? null : out)));
     return Promise.all([run(["--user", "show-environment"]), run(["--version"])]).then(([vars, version]) =>
       vars === null ? null : { env: parseManagerEnv(vars), version: parseSystemdVersion(version ?? "") },
     );
   },
   systemdRun: (argv, env) =>
-    new Promise((resolve) => execFile("systemd-run", argv, { timeout: 10_000, env }, (err) => resolve(!err ? "ok" : (err as { killed?: boolean }).killed ? "timeout" : "failed"))),
+    new Promise((resolve) =>
+      // lifetime: OK — systemd-run exits once the --collect'ed unit started (10 s timeout); the unit is the user's
+      execFile("systemd-run", argv, { timeout: 10_000, env }, (err) => resolve(!err ? "ok" : (err as { killed?: boolean }).killed ? "timeout" : "failed")),
+    ),
   spawnDetached,
   now: Date.now,
   random: () => randomBytes(3).toString("hex"),
@@ -196,6 +202,7 @@ export function openForUser(target: string): Promise<boolean> {
 function defaultHandler(scheme: string): Promise<{ err: boolean; entry: string | null }> {
   const env = process.platform === "linux" ? launcherEnv(process.env, realHome()) : process.env;
   return new Promise((resolve) =>
+    // lifetime: OK — xdg-mime exits on its own; the 3 s timeout kills a hung one
     execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve({ err: !!err, entry: err ? null : out.trim() || null })),
   );
 }

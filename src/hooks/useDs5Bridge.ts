@@ -73,6 +73,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<Ds5BridgeClient | null>(null);
+  // lifetime: OK — acquires nothing (mirrors the client into a ref)
   useEffect(() => {
     clientRef.current = client;
   }, [client]);
@@ -249,6 +250,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [config]);
 
+  // lifetime: OK — acquires nothing (one auto-connect attempt)
   useEffect(() => {
     void autoConnect();
   }, [autoConnect]);
@@ -260,11 +262,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const isDirtyRef = useRef(isDirty);
   const operationRef = useRef(operation);
   const configRef = useRef(config);
+  // lifetime: OK — acquires nothing (mirrors state into refs)
   useEffect(() => {
     isDirtyRef.current = isDirty;
     operationRef.current = operation;
     configRef.current = config;
   });
+  // lifetime: OK — cleanup: stops the 1 s identity / config poll (client change / unmount)
   useEffect(() => {
     if (!client) return;
     let stopped = false;
@@ -288,8 +292,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       } catch {
         // gone or busy: the USB events handle reconnecting
       }
+      // lifetime: OK — self re-arming 1 s poll, runs hidden on purpose (tray); cleared in the cleanup
       if (!stopped) timer = setTimeout(() => void poll(), 1000);
     };
+    // lifetime: OK — the first tick; cleared in the cleanup
     timer = setTimeout(() => void poll(), 1000);
     return () => {
       stopped = true;
@@ -299,6 +305,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   // Reboot, BOOTSEL + flash, USB reconnect and replugging all re-enumerate the
   // dongle: drop the old handle and pick the new one up automatically.
+  // lifetime: OK — cleanup: removes both USB connect / disconnect listeners
   useEffect(() => {
     if (!supported) return;
     const onDisconnect = (event: USBConnectionEvent) => {
@@ -308,7 +315,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     const onConnect = (event: USBConnectionEvent) => {
       if (isDongle(event.device)) void autoConnect();
     };
+    // lifetime: OK — removed in the effect cleanup
     navigator.usb.addEventListener("disconnect", onDisconnect);
+    // lifetime: OK — removed in the effect cleanup
     navigator.usb.addEventListener("connect", onConnect);
     return () => {
       navigator.usb.removeEventListener("disconnect", onDisconnect);

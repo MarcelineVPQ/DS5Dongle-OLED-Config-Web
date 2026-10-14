@@ -227,10 +227,12 @@ const changed = () => accentListeners.forEach((l) => l());
 // <style> elements in <head>, and System follows the OS's light/dark.
 const THEME_ATTRS = ["style", "class", "data-theme", "data-controller-theme", "data-cv", "data-glass"];
 export function onThemeChange(l: () => void): () => void {
+  // lifetime: OK — disconnected by the unsubscribe onThemeChange returns
   const mo = new MutationObserver(() => l());
   mo.observe(document.documentElement, { attributes: true, attributeFilter: THEME_ATTRS });
   mo.observe(document.head, { childList: true, subtree: true, characterData: true });
   const scheme = matchMedia("(prefers-color-scheme: dark)");
+  // lifetime: OK — removed by the unsubscribe onThemeChange returns
   scheme.addEventListener("change", l);
   const off = onAccentChange(l);
   return () => {
@@ -277,6 +279,7 @@ export const ACCENTS = ["controller", "desktop"] as const;
 
 // App root: the controller layer, and reapplying when the theme changes.
 export function useControllerAccent(code: string | null, choice: (typeof ACCENTS)[number], custom: CustomColors | null = null): void {
+  // lifetime: OK — acquires nothing (sets the accent tokens)
   useEffect(() => {
     customColors = custom;
     setShade(code);
@@ -287,13 +290,16 @@ export function useControllerAccent(code: string | null, choice: (typeof ACCENTS
     controllerColor = choice === "controller" ? colorwayAccent(code) : null;
     applyAccent();
   }, [code, choice, custom]);
+  // lifetime: OK — cleanup: disconnects the observer and removes the scheme listener
   useEffect(() => {
+    // lifetime: OK — disconnected in the effect cleanup (one, at the app root)
     const mo = new MutationObserver(applyAccent);
     // data-cv: Color vision swaps the warning amber the warning text is made from.
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-controller-theme", "data-cv"] });
     mo.observe(document.head, { childList: true, subtree: true, characterData: true });
     // System follows the OS's light/dark: the tokens change with no DOM change.
     const scheme = matchMedia("(prefers-color-scheme: dark)");
+    // lifetime: OK — removed in the effect cleanup
     scheme.addEventListener("change", applyAccent);
     return () => {
       mo.disconnect();

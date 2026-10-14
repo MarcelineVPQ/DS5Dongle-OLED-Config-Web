@@ -17,11 +17,13 @@ export const RECENT_KEY = "ds5.recentColors";
 
 function useRecentColors(): [string[], (hex: string) => void] {
   const [list, setList] = useState(() => parseRecent(readPref(RECENT_KEY)));
+  // lifetime: OK — cleanup removes the PREF_EVENT listener (unmount)
   useEffect(() => {
     const on = (e: Event) => {
       const { key, value } = (e as CustomEvent<{ key: string; value: string }>).detail;
       if (key === RECENT_KEY) setList(parseRecent(value));
     };
+    // lifetime: OK — removed in the effect cleanup (unmount)
     window.addEventListener(PREF_EVENT, on);
     return () => window.removeEventListener(PREF_EVENT, on);
   }, []);
@@ -103,6 +105,7 @@ function ColorPopover({
   // The newest HSV for event handlers (a drag's move can come before React
   // has rendered the previous one).
   const hsvNow = useRef(hsv);
+  // lifetime: OK — acquires nothing (mirrors state into a ref)
   useEffect(() => {
     hsvNow.current = hsv;
   }, [hsv]);
@@ -141,6 +144,7 @@ function ColorPopover({
 
   // A popover in the top layer (over everything, escaping scrolling panels),
   // placed under the swatch, or above it when there's no room.
+  // lifetime: OK — cleanup removes the resize/scroll listeners; the early return acquires nothing
   useLayoutEffect(() => {
     const el = pop.current;
     const a = anchor.current;
@@ -160,7 +164,9 @@ function ColorPopover({
     };
     place();
     square.current?.focus();
+    // lifetime: OK — removed in the layout effect cleanup (popover closes)
     window.addEventListener("resize", place);
+    // lifetime: OK — removed in the layout effect cleanup (popover closes)
     window.addEventListener("scroll", place, true);
     return () => {
       window.removeEventListener("resize", place);
@@ -169,6 +175,7 @@ function ColorPopover({
   }, [anchor]);
 
   // However it closes, a changed color joins the recent ones.
+  // lifetime: OK — acquires nothing; the cleanup adds a changed color to the recent ones
   useEffect(
     () => () => {
       if (last.current !== opened.current) addRecentColor(last.current);
@@ -177,11 +184,13 @@ function ColorPopover({
   );
   const close = onClose;
   // A click outside closes it (the swatch's own click toggles it).
+  // lifetime: OK — cleanup removes the outside-click listener (popover closes)
   useEffect(() => {
     const down = (e: PointerEvent) => {
       const target = e.target as Node;
       if (!pop.current?.contains(target) && !anchor.current?.contains(target)) close(false);
     };
+    // lifetime: OK — removed in the effect cleanup (popover closes)
     document.addEventListener("pointerdown", down, true);
     return () => document.removeEventListener("pointerdown", down, true);
   }, [anchor, close]);
@@ -217,8 +226,11 @@ function ColorPopover({
       el.removeEventListener("pointerup", up);
       el.removeEventListener("pointercancel", up);
     };
+    // lifetime: OK — removed in up() on pointerup/pointercancel; dies with the element
     el.addEventListener("pointermove", move);
+    // lifetime: OK — removed in up() on pointerup/pointercancel; dies with the element
     el.addEventListener("pointerup", up);
+    // lifetime: OK — removed in up() on pointerup/pointercancel; dies with the element
     el.addEventListener("pointercancel", up);
   };
 

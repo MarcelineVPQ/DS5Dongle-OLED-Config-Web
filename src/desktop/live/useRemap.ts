@@ -42,6 +42,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const [extraDevice, setExtraDevice] = useState<number[] | null>(null);
   const [extraDraft, setExtraDraft] = useState<number[]>(defaultExtra);
 
+  // lifetime: OK — cleanup: drops late reads (acquires nothing else)
   useEffect(() => {
     if (!client) return;
     let live = true;

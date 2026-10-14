@@ -143,7 +143,9 @@ export const desktopOf = (env: NodeJS.ProcessEnv): HdrDesktop => {
 
 async function screens(check: HdrDesktop, env: NodeJS.ProcessEnv, exec: Runner): Promise<{ check: HdrDesktop; screens: HdrScreen[] }> {
   try {
+    // lifetime: OK — kscreen-doctor exits on its own; the 5 s timeout kills a hung one
     if (check === "kde") return { check, screens: kscreenScreens((await exec("kscreen-doctor", ["-o"], OPTS(env))).stdout) };
+    // lifetime: OK — gdbus exits on its own; the 5 s timeout kills a hung one
     if (check === "gnome") return { check, screens: gnomeScreens((await exec("gdbus", MUTTER, OPTS(env))).stdout) };
   } catch {
     return { check: "failed", screens: [] };
@@ -153,6 +155,7 @@ async function screens(check: HdrDesktop, env: NodeJS.ProcessEnv, exec: Runner):
 
 async function gamescopeVersion(path: string, env: NodeJS.ProcessEnv, exec: Runner): Promise<string | null> {
   try {
+    // lifetime: OK — gamescope --version exits on its own; the 5 s timeout kills a hung one
     const { stdout, stderr } = await exec(path, ["--version"], OPTS(env));
     return parseGamescopeVersion(`${stdout}\n${stderr ?? ""}`);
   } catch (e) {

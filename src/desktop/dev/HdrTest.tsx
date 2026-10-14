@@ -18,6 +18,7 @@ type GpuContext = { configure(c: Record<string, unknown>): void; getCurrentTextu
 function GpuSwatch() {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ok, setOk] = useState<boolean | null>(null);
+  // lifetime: LEAK — cleanup only sets live = false; the WebGPU device is never destroyed (dev-only)
   useEffect(() => {
     let live = true;
     void (async () => {
@@ -25,6 +26,7 @@ function GpuSwatch() {
         const canvas = ref.current;
         const gpu = (navigator as Navigator & { gpu?: Gpu }).gpu;
         const adapter = await gpu?.requestAdapter();
+        // lifetime: LEAK — GPUDevice never destroy()ed, held until GC, one per mount (dev-only HDR test)
         const device = await adapter?.requestDevice();
         const ctx = canvas?.getContext("webgpu") as unknown as GpuContext | null;
         if (!canvas || !device || !ctx || !live) return setOk(false);

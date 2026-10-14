@@ -82,6 +82,7 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
   const [mic, speaker] = await Promise.all([controllerAudio("audioinput"), controllerAudio("audiooutput")]);
   if (!mic) return { problem: "no-mic" };
   if (!speaker) return { problem: "no-speaker" };
+  // lifetime: OK — closed in stop(), or at once when the start fails
   const ctx = new AudioContext({ latencyHint: "interactive" }) as SinkContext;
   let stream: MediaStream | null = null;
   try {
@@ -91,10 +92,12 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
       void ctx.close();
       return { problem: "no-speaker" };
     }
+    // lifetime: OK — tracks stopped in stop(), or at once when the start fails
     stream = await navigator.mediaDevices.getUserMedia({
       audio: { deviceId: { exact: mic }, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       video: false,
     });
+    // lifetime: OK — goes with the AudioContext (closed in stop())
     await ctx.audioWorklet.addModule(RING_URL);
   } catch {
     stream?.getTracks().forEach((t) => t.stop());
@@ -102,10 +105,12 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
     return { problem: "failed" };
   }
   const input = stream;
+  // lifetime: OK — goes with the AudioContext (closed in stop())
   const source = ctx.createMediaStreamSource(input);
   // Neither the analyser nor the ring has an output: nothing is heard but the loopback.
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 1024;
+  // lifetime: OK — goes with the AudioContext (closed in stop())
   const ring = new AudioWorkletNode(ctx, "mic-ring", { numberOfInputs: 1, numberOfOutputs: 0, processorOptions: { seconds: LISTEN_SECONDS } });
   source.connect(analyser);
   source.connect(ring);
@@ -114,11 +119,14 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
   let looping = false;
   let stopped = false;
   const samples = new Float32Array(analyser.fftSize);
+  // lifetime: OK — goes with the track (stopped in stop())
   input.getTracks().forEach((t) => t.addEventListener("ended", () => !stopped && onLost()));
 
   const dump = () =>
     new Promise<MicClip | null>((resolve) => {
+      // lifetime: OK — cleared when the ring answers, else fires once after DUMP_TIMEOUT_MS
       const timer = setTimeout(() => resolve(null), DUMP_TIMEOUT_MS);
+      // lifetime: OK — goes with the AudioContext, closed right after the dump
       ring.port.onmessage = (e: MessageEvent<MicClip>) => {
         clearTimeout(timer);
         resolve(e.data.samples.length ? e.data : null);
@@ -165,6 +173,7 @@ export async function listenBack(clip: MicClip, signal: AbortSignal, onPlaying: 
   const speaker = await controllerAudio("audiooutput");
   if (!speaker) return result("no-speaker");
   if (signal.aborted) return result("failed");
+  // lifetime: OK — closed in listenBack's finally
   const ctx = new AudioContext() as SinkContext;
   try {
     try {
@@ -211,10 +220,14 @@ function playClip(ctx: AudioContext, buffer: AudioBuffer, speaker: string, signa
       void controllerAudio("audiooutput").then((now) => {
         if (now !== speaker) end(new Error("output gone"));
       });
+    // lifetime: OK — cleared in end()
     const watchdog = setTimeout(() => end(new Error("playback didn't end")), buffer.duration * 1000 + PLAYBACK_GRACE_MS);
     if (signal.aborted) return abort();
+    // lifetime: OK — removed in end()
     signal.addEventListener("abort", abort);
+    // lifetime: OK — removed in end()
     navigator.mediaDevices?.addEventListener?.("devicechange", gone);
+    // lifetime: OK — goes with the AudioContext, closed in listenBack's finally
     src.onended = () => end();
     try {
       src.start();

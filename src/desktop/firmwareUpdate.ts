@@ -97,6 +97,7 @@ async function waitForBootloader(): Promise<PicoflashHandle> {
   while (Date.now() < deadline) {
     const device = await findBootloader();
     if (device) return device;
+    // lifetime: OK — fires once (300 ms between bootloader looks, bounded by the deadline)
     await new Promise((r) => setTimeout(r, 300));
   }
   throw new Error("Your board didn't come back in BOOTSEL mode. Unplug it, hold BOOTSEL while plugging it in, and try again.");

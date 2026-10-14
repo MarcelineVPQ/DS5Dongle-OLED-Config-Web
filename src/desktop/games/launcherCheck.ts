@@ -14,6 +14,7 @@ import type { CloseProblem, Fix, GamesReport, LauncherId, RestartList } from "./
 // main process checks again anyway).
 export function useFreshRunning(key: string | null): LauncherId[] | null | undefined {
   const [running, setRunning] = useState<{ key: string; list: LauncherId[] | null } | null>(null);
+  // lifetime: OK — cleanup: drops a late answer (holds no resource)
   useEffect(() => {
     if (key === null || !window.desktop) return;
     let live = true;

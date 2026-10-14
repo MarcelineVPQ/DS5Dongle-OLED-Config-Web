@@ -38,6 +38,7 @@ export function repairWindowsUsb(): Promise<{ ok: boolean; message: string }> {
   // Full path, never PATH lookup.
   const powershell = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   return new Promise((resolve) => {
+    // lifetime: OK — exits when the UAC prompt is answered and the repair ends; no timeout (a person answers)
     execFile(powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodeCommand(launcherScript(powershell, REPAIR_SCRIPT))], { windowsHide: true }, (error) => {
       if (!error) resolve({ ok: true, message: "Repaired. Now unplug your board and plug it back in." });
       else if (error.code === CANCELLED) resolve({ ok: false, message: "Cancelled." });

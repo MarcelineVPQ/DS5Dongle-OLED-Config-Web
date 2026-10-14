@@ -46,8 +46,8 @@ export class AppTray {
     private readonly handlers: TrayHandlers,
     private settings: DesktopSettings,
   ) {
-    this.tray = new Tray(this.icon("none"));
-    this.tray.on("click", handlers.toggleWindow);
+    this.tray = new Tray(this.icon("none")); // lifetime: NOT-WORTH — one tray per app; Electron removes it at quit
+    this.tray.on("click", handlers.toggleWindow); // lifetime: NOT-WORTH — goes with the one tray, lives until quit
     this.refresh();
   }
 
@@ -91,6 +91,7 @@ export class AppTray {
       if (!this.custom) this.tray.setImage(this.icon(state));
     }
     this.tray.setToolTip(trayTooltip(this.status));
+    // lifetime: OK — replaces the previous menu, which is then collected; rebuilt only when status/settings change
     this.tray.setContextMenu(Menu.buildFromTemplate(this.menu()));
   }
 

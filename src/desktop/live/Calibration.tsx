@@ -43,19 +43,24 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   // Guided run: a pause to get ready, then sample the raw input and fit.
   const samples = useRef<Array<{ at: number; r: InputReport }>>([]);
   const latest = useRef(input);
+  // lifetime: OK — acquires nothing (mirrors the input into a ref)
   useEffect(() => {
     latest.current = input;
   }, [input]);
+  // lifetime: OK — cleanup: clears the step's timers (next step, cancel or unmount)
   useEffect(() => {
     if (step === "idle" || step === "done") return;
     const { measure, ready } = step;
     if (!ready) {
+      // lifetime: OK — cleared in the effect cleanup
       const go = setTimeout(() => setStep({ measure, ready: true }), READY_MS);
       return () => clearTimeout(go);
     }
     samples.current = [];
     const start = performance.now();
+    // lifetime: OK — cleared when the step ends, or in the effect cleanup
     const id = setInterval(() => latest.current && samples.current.push({ at: performance.now() - start, r: latest.current }), 33);
+    // lifetime: OK — cleared in the effect cleanup
     const done = setTimeout(() => {
       clearInterval(id);
       const all = samples.current.map((x) => x.r);

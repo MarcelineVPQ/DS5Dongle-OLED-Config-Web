@@ -105,10 +105,12 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
   const peak = useRef(nits);
   // Asks for one redraw (set once the GPU is ready).
   const redraw = useRef<(() => void) | null>(null);
+  // lifetime: OK — acquires nothing (stores the peak, asks for one redraw)
   useEffect(() => {
     peak.current = nits;
     redraw.current?.();
   }, [nits]);
+  // lifetime: OK — cleanup: stops frames and observers, destroys the GPU device and texture
   useEffect(() => {
     const el = hero.current?.querySelector<HTMLElement>(".live-ctl") ?? null;
     const cv = canvas.current;
@@ -132,6 +134,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
     };
     void (async () => {
       const adapter = await gpu.requestAdapter();
+      // lifetime: OK — destroyed in release() (cleanup, or at once if unmounted while starting)
       device = (await adapter?.requestDevice()) ?? null;
       if (!live) return release();
       ctx = cv.getContext("webgpu");
@@ -150,6 +153,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       let generation = 0;
       let draw: () => void = () => undefined;
       const schedule = () => {
+        // lifetime: OK — cancelled in the effect cleanup; one frame only when something changed
         if (live && !frame) frame = requestAnimationFrame(() => draw());
       };
 
@@ -188,8 +192,10 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       };
       await rebuild();
       if (!live) return release();
+      // lifetime: OK — disconnected in the effect cleanup
       ro = new ResizeObserver(() => {
         cancelAnimationFrame(resizeFrame);
+        // lifetime: OK — cancelled in the effect cleanup
         resizeFrame = requestAnimationFrame(() => void rebuild());
       });
       ro.observe(el);
@@ -226,10 +232,12 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       // The <svg>'s style (the live color), and the player lights the PC set
       // (their "on" class): a new mask for those. The <svg> itself never
       // changes here: another model mounts a new .live-ctl (see `model`).
+      // lifetime: OK — disconnected in the effect cleanup
       styleWatch = new MutationObserver(schedule);
       const svg = el.querySelector("svg");
       if (svg) styleWatch.observe(svg, { attributes: true, attributeFilter: ["style"] });
       // class changes elsewhere (button presses) don't touch the mask
+      // lifetime: OK — disconnected in the effect cleanup
       svgWatch = new MutationObserver((records) => {
         if (records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) void rebuild();
       });

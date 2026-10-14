@@ -39,6 +39,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
   // reopen it until the pointer leaves the rail and comes back. Keyboard focus
   // only opens it when it's visible focus (Tab), not after a click.
   const [picked, setPicked] = useState(false);
+  // lifetime: OK — cleanup: removes the Ctrl+B keydown listener (unmount / pin change)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "b") {
@@ -46,6 +47,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
         pin(!pinned);
       }
     };
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [pinned, pin]);

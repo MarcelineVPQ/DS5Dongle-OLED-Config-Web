@@ -211,6 +211,7 @@ const posixLayer: ProcLayer = {
   list: () => readProcs(),
   env: envOf,
   exists: existsSync,
+  // lifetime: OK — a launcher command that exits on its own; the 15 s timeout kills a hung one
   run: (cmd, args) => execFile(cmd, args, { timeout: 15_000, env: launcherEnv(process.env, realHome()) }, () => undefined),
   start: startForUser,
   signal: (pid) => {
@@ -220,7 +221,7 @@ const posixLayer: ProcLayer = {
       // already gone
     }
   },
-  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+  sleep: (ms) => new Promise((r) => setTimeout(r, ms)), // lifetime: OK — fires once, an awaited pause
 };
 
 const system32 = (exe: string) => join(process.env.SystemRoot ?? "C:\\Windows", "System32", exe);
@@ -237,6 +238,7 @@ export const steamAppRunning = (regOutput: string): boolean => {
 
 function steamReportsGame(): Promise<boolean> {
   return new Promise((resolve) =>
+    // lifetime: OK — reg.exe exits on its own; the 3 s timeout kills a hung one
     execFile(system32("reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "RunningAppID"], { encoding: "utf8", windowsHide: true, timeout: 3000 }, (error, stdout) =>
       resolve(!error && steamAppRunning(stdout)),
     ),
@@ -258,8 +260,10 @@ function windowsLayer(libraryGame: () => boolean): ProcLayer {
     list: readWindowsProcs,
     env: () => undefined,
     exists: existsSync,
+    // lifetime: OK — a launcher command that exits on its own; the 15 s timeout kills a hung one
     run: (cmd, args) => execFile(cmd, args, { timeout: 15_000, windowsHide: true, env: launcherEnv(process.env, realHome()) }, () => undefined),
     start: startForUser,
+    // lifetime: OK — taskkill exits on its own; the 5 s timeout kills a hung one
     signal: (pid) => execFile(system32("taskkill.exe"), taskkillArgs(pid), { timeout: 5000, windowsHide: true }, () => undefined),
     sleep: posixLayer.sleep,
     windows: {

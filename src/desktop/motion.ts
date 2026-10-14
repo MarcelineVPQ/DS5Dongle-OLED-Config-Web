@@ -7,6 +7,7 @@ export const REDUCE_MOTION_KEY = "ds5.reduceMotion";
 
 export function useReduceMotion(): void {
   const [on] = useFlagPref(REDUCE_MOTION_KEY);
+  // lifetime: OK — acquires nothing (toggles data-reduce-motion)
   useEffect(() => {
     document.documentElement.toggleAttribute("data-reduce-motion", on);
   }, [on]);
@@ -19,9 +20,11 @@ const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 export function useReducedMotion(): boolean {
   const [pref] = useFlagPref(REDUCE_MOTION_KEY);
   const [system, setSystem] = useState(() => matchMedia(REDUCED_QUERY).matches);
+  // lifetime: OK — cleanup: removes the media query listener
   useEffect(() => {
     const media = matchMedia(REDUCED_QUERY);
     const update = () => setSystem(media.matches);
+    // lifetime: OK — removed in the effect cleanup
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);

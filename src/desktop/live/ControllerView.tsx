@@ -51,6 +51,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const client = bridge.client;
   // The identity comes from the connection hook's poll (one for the app);
   // the signal strength is read here, only while the window is on screen.
+  // lifetime: OK — usePoll stops on unmount, without a client and while hidden
   const rssi = usePoll(() => client!.readRssi(), 1000, Boolean(client)).value;
   const status = bridge.identity ? { identity: bridge.identity, rssi } : null;
   const id = useShownIdentity(status?.identity);
@@ -80,6 +81,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // "There you are." when a controller connects while the app is open (not
   // for one that was already there at start).
   const wasOn = useRef<boolean | null>(null);
+  // lifetime: OK — acquires nothing (says the connected line once)
   useEffect(() => {
     if (!id) return;
     // The dongle says its own "Connected" when it has the narrator.
@@ -92,9 +94,11 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const profileKey = useProfileTarget()?.gameKey;
   const inProfile = !!(profileKey && library.games[profileKey]?.profile);
   const { dirty: remapDirty, draft: remapDraft, extraDraft, extraDevice, revert: remapRevert } = remap;
+  // lifetime: OK — acquires nothing (hands the button draft to the library)
   useEffect(() => {
     setButtonsDraft(inProfile && remapDirty ? { table: remapDraft, ...(extraDevice ? { extra: extraDraft } : {}), revert: remapRevert } : null);
   }, [setButtonsDraft, inProfile, remapDirty, remapDraft, extraDraft, extraDevice, remapRevert]);
+  // lifetime: OK — cleanup: clears the button draft on unmount
   useEffect(() => () => setButtonsDraft(null), [setButtonsDraft]);
 
   const remapped = useMemo(() => {
@@ -134,6 +138,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // HDR lighting: on in settings (the app started in scRGB), an HDR display,
   // and WebGPU; otherwise the normal glow only.
   const [hdrSetting, setHdrSetting] = useState(false);
+  // lifetime: OK — acquires nothing (one settings read; a late answer only sets state)
   useEffect(() => {
     void window.desktop?.getSettings().then((s) => setHdrSetting(s.hdrLighting && s.hardwareAcceleration));
   }, []);
@@ -142,6 +147,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const shownModel = on ? (id?.model ?? null) : null;
   const hdr = hdrSetting && on && matchMedia("(dynamic-range: high)").matches && "gpu" in navigator;
   const [ctlWidth, setCtlWidth] = useState(800);
+  // lifetime: OK — cleanup: disconnects the ResizeObserver
   useEffect(() => {
     const ctl = heroRef.current?.querySelector(".live-ctl");
     if (!ctl) return;
@@ -149,6 +155,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     // the smaller of the box width and its height times the art's aspect.
     const vb = ctl.querySelector("svg")?.viewBox.baseVal;
     const aspect = vb && vb.height ? vb.width / vb.height : 1.8;
+    // lifetime: OK — disconnected in the effect cleanup (unmount, controller on/off)
     const ro = new ResizeObserver(([e]) => setCtlWidth(Math.min(e.contentRect.width, e.contentRect.height * aspect)));
     ro.observe(ctl);
     return () => ro.disconnect();
@@ -160,11 +167,14 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const panelGlass = useGlass(glass && !collapsed, REGULAR_GLASS);
 
   // The tour points at the settings list, so it brings the panel back.
+  // lifetime: OK — cleanup: removes the tour listener
   useEffect(() => {
     const show = () => hidePanel(false);
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
   }, [hidePanel]);
+  // lifetime: HOT-ALLOC — no deps: re-adds its window listener every render (~30 Hz live input)
   useEffect(() => {
     const toggle = () => {
       if (collapsed) hidePanel(false);
@@ -173,6 +183,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
         onView("overview");
       }
     };
+    // lifetime: OK — removed in the effect cleanup (re-added per render: see the effect above)
     window.addEventListener(PANEL_TOGGLE_EVENT, toggle);
     return () => window.removeEventListener(PANEL_TOGGLE_EVENT, toggle);
   });

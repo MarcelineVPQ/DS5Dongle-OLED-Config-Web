@@ -90,6 +90,7 @@ export function useDevToolsShown(): [boolean, (on: boolean) => void] {
 // Ctrl+Shift+D shows / hides the Developer card.
 export function useDevToolsShortcut(): void {
   const [on, setOn] = useDevToolsShown();
+  // lifetime: OK — cleanup: removes the Ctrl+Shift+D keydown listener
   useEffect(() => {
     if (!DEV_TOOLS_BUILT) return;
     const onKey = (e: KeyboardEvent) => {
@@ -98,6 +99,7 @@ export function useDevToolsShortcut(): void {
         setOn(!on);
       }
     };
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [on, setOn]);

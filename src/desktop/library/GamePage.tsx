@@ -58,6 +58,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   // page's cards are mixed from the panel color those set).
   const [artColor, setArtColor] = useState<string | null>(null);
   const [accent, setAccent] = useState<Record<string, string> | null>(null);
+  // lifetime: OK — acquires nothing; the cleanup drops a late art color (game change, unmount)
   useEffect(() => {
     let live = true;
     void window
@@ -68,12 +69,14 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       live = false;
     };
   }, [game.key]);
+  // lifetime: OK — cleanup unsubscribes the theme listener and cancels the frame
   useEffect(() => {
     if (!artColor) return;
     const el = scroller.current;
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);
+      // lifetime: OK — one-shot, cancelled by the next update() and the effect cleanup
       frame = requestAnimationFrame(() => setAccent(scopedAccent(artColor, el)));
     };
     update();
@@ -84,11 +87,13 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     };
   }, [artColor]);
   // The window's background shows this game's art while its page is open.
+  // lifetime: OK — acquires nothing; the cleanup clears the backdrop game (page closes)
   useEffect(() => {
     setBackdropGame(info?.art.includes("hero") ? game.key : null);
     return () => setBackdropGame(null);
   }, [game.key, info]);
   // Scroll back to the top when another game is opened.
+  // lifetime: OK — acquires nothing (scrolls to the top)
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
   }, [game.key]);
@@ -455,6 +460,7 @@ function SetupFrame({
   // from a few seconds' cache): HDR turned on in the desktop's settings, or
   // gamescope just installed, shows without a manual rescan.
   const rescanned = useRef<string | null>(null);
+  // lifetime: OK — acquires nothing (asks for one rescan per HDR game opened)
   useEffect(() => {
     if (!isHdr || rescanned.current === game.key) return;
     rescanned.current = game.key;

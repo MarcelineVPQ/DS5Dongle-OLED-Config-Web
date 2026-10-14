@@ -293,9 +293,10 @@ export class Updater {
       } catch {
         // systemd-run unavailable
       }
+      // lifetime: OK — detached and unref'd: the relaunch outlives this app on purpose (app.exit next)
       if (!started) spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env }).unref();
     } else {
-      spawn(target, [], { detached: true, stdio: "ignore" }).unref();
+      spawn(target, [], { detached: true, stdio: "ignore" }).unref(); // lifetime: OK — detached relaunch, app.exit next
     }
     app.exit(0);
   }

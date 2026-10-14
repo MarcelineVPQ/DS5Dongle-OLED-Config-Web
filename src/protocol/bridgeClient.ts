@@ -700,5 +700,6 @@ function toView(bytes: Uint8Array, need: number): DataView {
 }
 
 function sleep(ms: number): Promise<void> {
+  // lifetime: OK — fires once (sleep between status polls)
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

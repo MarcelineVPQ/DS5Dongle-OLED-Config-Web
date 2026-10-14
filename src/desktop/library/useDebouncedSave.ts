@@ -13,12 +13,14 @@ export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unkno
   const saveRef = useRef(save);
   const latestStored = useRef(stored);
   // Kept current after each render (before the effects below read them).
+  // lifetime: OK — acquires nothing (keeps refs current)
   useEffect(() => {
     saveRef.current = save;
     latestStored.current = stored;
   });
 
   const storedKey = JSON.stringify(stored ?? null);
+  // lifetime: OK — acquires nothing (follows the stored value)
   useEffect(() => {
     if (!timer.current) setValue(latestStored.current);
   }, [storedKey]);
@@ -30,6 +32,7 @@ export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unkno
   }, []);
 
   // On unmount: send what's still waiting.
+  // lifetime: OK — cleanup clears the timer and sends the waiting save (unmount)
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -43,6 +46,7 @@ export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unkno
       setValue(next);
       waiting.current = { value: next };
       if (timer.current) clearTimeout(timer.current);
+      // lifetime: OK — cleared by the next set(), cancel() or the unmount cleanup
       timer.current = setTimeout(() => {
         timer.current = null;
         waiting.current = null;

@@ -38,6 +38,7 @@ export function useSlotSettings<T>(bridge: UseDs5BridgeResult, supported: boolea
 
   // The slot in use now; reloads when the controller (slot) changes.
   const currentSlot = bridge.identity?.currentSlot;
+  // lifetime: OK — cleanup: drops a late read (acquires nothing else)
   useEffect(() => {
     if (!client || !supported) return settle();
     let live = true;

@@ -159,9 +159,11 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
   const canvas = useRef<HTMLCanvasElement>(null);
   const history = useRef<Array<[number, number, number]>>([]);
   const colors = useRef<SparkColors | null>(null);
+  // lifetime: OK — cleanup: the theme watcher's unsubscribe
   useEffect(() => {
     return onThemeChange(() => (colors.current = null));
   }, []);
+  // lifetime: OK — acquires nothing (draws a frame; the history is capped at HISTORY)
   useEffect(() => {
     const h = history.current;
     h.push(values);

@@ -82,6 +82,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
 
   // Once per controller connection, and again on Refresh. (While none is
   // connected the card shows no numbers; a new one starts from blank.)
+  // lifetime: OK — cleanup: drops a late read and settles the Refresh promise
   useEffect(() => {
     if (!client || !supported || !connected) return;
     let live = true;
@@ -116,6 +117,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
   }, [client, supported, connected, loadTry]);
 
   const firmware = info?.firmware ?? null;
+  // lifetime: OK — acquires nothing (reports the firmware to the parent)
   useEffect(() => onFirmware?.(firmware), [firmware, onFirmware]);
 
   if (!client) return null;

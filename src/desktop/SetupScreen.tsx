@@ -34,8 +34,10 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   // Watch for a Pico in BOOTSEL mode (stops while installing, and while the
   // window is hidden: it's only shown here).
   const installing = install.phase === "running";
+  // lifetime: OK — usePoll: stops while installing, when hidden, or when setup unmounts
   const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
+  // lifetime: OK — acquires nothing (one firmware lookup once a Pico shows up)
   useEffect(() => {
     if (!pico || firmware) return;
     void window.desktop
@@ -121,6 +123,7 @@ function UpdatesWithoutDongle() {
   const desktop = window.desktop;
   const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
   const [checked, setChecked] = useState<string | null>(null);
+  // lifetime: OK — acquires nothing (one firmware lookup on mount)
   useEffect(() => {
     void desktop
       ?.latestFirmware()

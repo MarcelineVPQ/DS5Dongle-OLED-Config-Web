@@ -206,6 +206,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   // GPU with hardware acceleration on; the CPU fallback without it, or once
   // the GPU context failed or was lost (a new canvas: one can't hold both).
   const [mode, setMode] = useState<Mode | null>(() => (window.desktop ? null : "cpu"));
+  // lifetime: OK — acquires nothing (one settings read picks GPU or CPU)
   useEffect(() => {
     void window.desktop?.getSettings().then(
       (s) => setMode((m) => m ?? (s.hardwareAcceleration && gpuWorks() ? "gpu" : "cpu")),
@@ -221,9 +222,11 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   const renderer = useRef<Renderer | null>(null);
   const palette = useRef<Rgb[]>([]);
   const stillRef = useRef(still);
+  // lifetime: OK — acquires nothing (mirrors Reduce motion into a ref)
   useEffect(() => {
     stillRef.current = still;
   }, [still]);
+  // lifetime: OK — cleanup: removes the context-lost listener, disposes the renderer
   useEffect(() => {
     const c = ref.current;
     if (!c || !mode) return;
@@ -241,6 +244,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
       e.preventDefault();
       setMode("cpu");
     };
+    // lifetime: OK — removed in the effect cleanup
     c.addEventListener("webglcontextlost", onLost);
     return () => {
       c.removeEventListener("webglcontextlost", onLost);
@@ -249,6 +253,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     };
   }, [mode]);
   // The palette: read now, and again whenever the theme changes.
+  // lifetime: OK — cleanup: the theme watcher's unsubscribe
   useEffect(() => {
     const c = ref.current;
     if (!c || !mode) return;
@@ -278,6 +283,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   }, [colors, mode]);
   // The clock: a frame now, then ~12 a second (4 behind another window), none
   // while minimized or in the tray, and just the one with Reduce motion.
+  // lifetime: OK — cleanup: clears the frame timer; none while hidden or still
   useEffect(() => {
     const r = renderer.current;
     if (!r) return;
@@ -286,6 +292,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     const now = () => (swirlClock.elapsed = performance.now() - start) / 1000;
     const draw = (t: number) => r.draw(t, palette.current);
     draw(still ? 0 : now());
+    // lifetime: OK — cleared in the effect cleanup; off while hidden (lean rule)
     const timer = still || !shown ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
     return () => clearInterval(timer);
   }, [mode, shown, focused, still]);

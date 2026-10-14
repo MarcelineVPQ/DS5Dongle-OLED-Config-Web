@@ -26,6 +26,7 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
   const [input, setInput] = useState<InputReport | null>(null);
   const active = !!client && enabled && visible;
 
+  // lifetime: OK — cleanup: clears the poll timer and the pending rAF (hidden / view left / unmount)
   useEffect(() => {
     if (!active || !client) return;
     let live = true;
@@ -53,10 +54,12 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
           since = t1;
         }
         fresh = true;
-        if (!frame) frame = requestAnimationFrame(paint);
+        // lifetime: OK — at most one pending; cancelled in the cleanup, never armed after it
+        if (live && !frame) frame = requestAnimationFrame(paint);
       } catch {
         // dongle busy or gone: the connection hook handles reconnecting
       }
+      // lifetime: OK — self re-arming ~30 Hz poll; cleared in the cleanup, stops once live is false
       if (live) timer = setTimeout(() => void poll(), POLL_MS);
     };
     void poll();
@@ -79,6 +82,7 @@ export function useLiveLightbar(client: Ds5BridgeClient | null, enabled: boolean
   const [rgb, setRgb] = useState<[number, number, number] | null>(null);
   const active = !!client && enabled && visible;
 
+  // lifetime: OK — cleanup: clears the 10 Hz lightbar poll (hidden / view left / unmount)
   useEffect(() => {
     if (!active || !client) return;
     let live = true;
@@ -95,6 +99,7 @@ export function useLiveLightbar(client: Ds5BridgeClient | null, enabled: boolean
       } catch {
         // dongle busy or gone: the connection hook handles reconnecting
       }
+      // lifetime: OK — self re-arming; cleared in the cleanup, stops once live is false
       if (live) timer = setTimeout(() => void poll(), LIGHTBAR_MS);
     };
     void poll();

@@ -14,6 +14,7 @@ export function useLiquidGlass(on: boolean, clear: Partial<GlassOptions>, regula
   const ref = useCallback((node: HTMLElement | null) => setEl(node), []);
   const c = JSON.stringify(clear);
   const r = JSON.stringify(regular ?? null);
+  // lifetime: OK — cleanup disconnects the observer, clears the timer, removes the SVG filters
   useEffect(() => {
     if (!el || !on) return;
     const clearOpts = { ...DEFAULT_GLASS, ...(JSON.parse(c) as Partial<GlassOptions>) };
@@ -29,8 +30,10 @@ export function useLiquidGlass(on: boolean, clear: Partial<GlassOptions>, regula
       el.style.setProperty("--glass-regular", regularOpts ? glassFilter(ids[1], w, h, regularOpts) : "var(--glass-clear)");
     };
     build();
+    // lifetime: OK — disconnected in the effect cleanup (unmount, glass off)
     const ro = new ResizeObserver(() => {
       clearTimeout(timer);
+      // lifetime: OK — one-shot debounce, cleared on the next resize and in the cleanup
       timer = setTimeout(build, 120);
     });
     ro.observe(el);

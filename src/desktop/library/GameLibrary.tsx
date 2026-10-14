@@ -80,6 +80,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     setSelected(openGame.key);
   }
 
+  // lifetime: OK — acquires nothing (one IPC read of the game details)
   useEffect(() => {
     if (report) void desktop.gamesDetails().then(setDetails, () => undefined);
   }, [desktop, report]);

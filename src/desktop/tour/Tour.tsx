@@ -127,11 +127,13 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     },
     [onView],
   );
+  // lifetime: OK — cleanup removes the TOUR_EVENT listener (unmount)
   useEffect(() => {
     const start = () => {
       setClosed(false);
       go(0);
     };
+    // lifetime: OK — removed in the effect cleanup (unmount)
     window.addEventListener(TOUR_EVENT, start);
     return () => window.removeEventListener(TOUR_EVENT, start);
   }, [go]);
@@ -145,9 +147,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   const narrator = useNarrator();
   const asking = index === 0 && narrator === "ask";
   const narratorRef = useRef(narrator);
+  // lifetime: OK — acquires nothing (mirrors state into a ref)
   useEffect(() => {
     narratorRef.current = narrator;
   });
+  // lifetime: OK — acquires nothing (says one narrator line; the next step cuts it)
   useEffect(() => {
     if (index === null) return;
     const key = STEPS[index].key;
@@ -164,14 +168,17 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // The click step: the strips pulse so it's clear what to click, and a click
   // on the touchpad (inside the spotlight) opens the lightbar instead.
   const onClickStep = index !== null && STEPS[index].key === "click";
+  // lifetime: OK — cleanup removes the pulse class (step change, unmount)
   useEffect(() => {
     if (!onClickStep) return;
     document.querySelector('.live-ctl [data-part="lightbar"]')?.classList.add("tour-pulse");
     return () => document.querySelector('.live-ctl [data-part="lightbar"]')?.classList.remove("tour-pulse");
   }, [onClickStep]);
+  // lifetime: OK — acquires nothing (opens the lightbar panel)
   useEffect(() => {
     if (onClickStep && typeof view === "object" && view.part === "touchpad") onView({ part: "lightbar" });
   }, [onClickStep, view, onView]);
+  // lifetime: OK — cleanup turns the trigger preview off (step change, unmount)
   useEffect(() => {
     if (!onTriggerStep || !client) return;
     void client.previewTrigger(WEAPON_PRESET).catch(() => undefined);
@@ -188,8 +195,10 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
 
   // Hands-on steps tick off when the controller (or the mouse) does the thing.
   const idle = !anyPress(input);
+  // lifetime: OK — cleanup cancels the frame
   useEffect(() => {
     if (index === null || armedStep === index || !idle) return;
+    // lifetime: OK — one-shot, cancelled in the effect cleanup
     const frame = requestAnimationFrame(() => setArmedStep(index));
     return () => cancelAnimationFrame(frame);
   }, [idle, index, armedStep]);
@@ -197,8 +206,10 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   const [pressed, setPressed] = useState<{ step: number | null; labels: string[] }>({ step: null, labels: [] });
   const heldNow = input ? BUTTONS.filter(([, held]) => held(input)).map(([label]) => label) : [];
   const heldKey = heldNow.join(",");
+  // lifetime: OK — cleanup cancels the frame
   useEffect(() => {
     if (index === null || STEPS[index].key !== "press" || armedStep !== index || !heldKey) return;
+    // lifetime: OK — one-shot, cancelled in the effect cleanup
     const frame = requestAnimationFrame(() =>
       setPressed((p) => {
         const base = p.step === index ? p.labels : [];
@@ -210,8 +221,10 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [heldKey, index, armedStep]);
   const pressedLabels = pressed.step === index ? pressed.labels : [];
   const isDone = step?.key === "press" ? pressedLabels.length >= PRESS_GOAL : !!step?.done && armedStep === index && step.done(input, view);
+  // lifetime: OK — cleanup cancels the frame
   useEffect(() => {
     if (!isDone || ticked || index === null) return;
+    // lifetime: OK — one-shot, cancelled in the effect cleanup
     const frame = requestAnimationFrame(() => {
       setTickedStep(index);
       // Her reaction (if the step has one): after the step's own line.
@@ -228,14 +241,18 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // Follow the target (layouts move: panels open, the window resizes), only
   // while the window is on screen; measured again on show.
   const shown = useWindowShown();
+  // lifetime: OK — cleanup cancels the frame, the interval and the resize listener; off while hidden
   useLayoutEffect(() => {
     if (!step?.target || !shown) return;
     const measure = () => {
       const el = document.querySelector(step.target!);
       setRect(el ? el.getBoundingClientRect() : null);
     };
+    // lifetime: OK — one-shot, cancelled in the layout effect cleanup
     const first = requestAnimationFrame(measure);
+    // lifetime: OK — cleared in the cleanup (step change, window hidden, tour closed)
     const timer = setInterval(measure, 200);
+    // lifetime: OK — removed in the layout effect cleanup
     window.addEventListener("resize", measure);
     return () => {
       cancelAnimationFrame(first);
@@ -256,10 +273,12 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // On a controller step that isn't done yet, ✕ is just a press for the
   // task; on a mouse step it skips it.
   const current = useRef({ index, padTask: false, ticked: false, asking: false });
+  // lifetime: OK — acquires nothing (mirrors state into a ref)
   useEffect(() => {
     current.current = { index, padTask: !!step?.pad, ticked, asking };
   });
   const pad = useRef({ cross: false, circle: false });
+  // lifetime: OK — acquires nothing (edge-detects the pad buttons)
   useEffect(() => {
     const was = pad.current;
     const cross = !!input?.cross;
@@ -288,6 +307,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
 
   // While ✕ or ○ is held on a play step: fill the ring, then move on / back.
   // A per-frame loop, so only while the window is on screen.
+  // lifetime: OK — cleanup cancels the hold loop (step change, window hidden, tour closed)
   useEffect(() => {
     if (index === null || !STEPS[index].pad || !shown) return;
     let frame = 0;
@@ -304,8 +324,10 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
           return;
         }
       } else setHoldProgress((v) => (v ? null : v));
+      // lifetime: WASTE — re-arms every frame for the whole pad step, even with no button held
       frame = requestAnimationFrame(tick);
     };
+    // lifetime: OK — cancelled in the effect cleanup
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [index, go, shown]);
@@ -313,9 +335,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   // A ticked mouse step moves on by itself after a moment, but never over
   // her: it waits for the current line to finish (the next step's line would
   // cut it off). Controller steps wait for ✕ to be held instead.
+  // lifetime: OK — cleanup clears the timer and drops a late narratorIdle()
   useEffect(() => {
     if (!ticked || index === null || index >= STEPS.length - 1 || STEPS[index].pad) return;
     let cancelled = false;
+    // lifetime: OK — cleared in the effect cleanup
     const timer = setTimeout(() => {
       void narratorIdle().then(() => !cancelled && go(index + 1));
     }, 1400);
@@ -325,9 +349,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     };
   }, [ticked, index, go]);
 
+  // lifetime: OK — cleanup removes the keydown listener (tour closed, unmount)
   useEffect(() => {
     if (index === null) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && finish();
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [index, finish]);

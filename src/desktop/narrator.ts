@@ -120,6 +120,7 @@ export function stopNarrator(): void {
   notify();
 }
 
+// lifetime: OK — fires once (caption linger)
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // Long enough to read: about 60 ms a character, at least 2 s.
 const readingTime = (text: string) => Math.max(2000, text.length * 60);
@@ -132,12 +133,14 @@ async function play(key: string, voice: boolean, withCaption: boolean): Promise<
   if (withCaption) showCaption(key);
   let spoke = false;
   if (sink && url) {
+    // lifetime: OK — one element per line, dropped when it ends, errors or stop() pauses it
     const audio = new Audio(url);
     try {
       await audio.setSinkId(sink);
       current = audio;
       spoke = true;
       await new Promise<void>((resolve) => {
+        // lifetime: OK — handlers live on the element and go with it when the line ends
         audio.onended = audio.onerror = audio.onpause = () => resolve();
         audio.play().catch(() => resolve());
       });

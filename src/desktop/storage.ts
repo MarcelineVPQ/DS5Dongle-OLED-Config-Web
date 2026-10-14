@@ -29,11 +29,13 @@ export function usePref<T extends string>(key: string, fallback: T, allowed: rea
     const stored = readPref(key);
     return stored !== null && (allowed as readonly string[]).includes(stored) ? (stored as T) : fallback;
   });
+  // lifetime: OK — cleanup: removes the pref listener (unmount / key change)
   useEffect(() => {
     const on = (e: Event) => {
       const { key: k, value: v } = (e as CustomEvent<{ key: string; value: string }>).detail;
       if (k === key && (allowed as readonly string[]).includes(v)) setValue(v as T);
     };
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener(PREF_EVENT, on);
     return () => window.removeEventListener(PREF_EVENT, on);
   }, [key, allowed]);
@@ -58,11 +60,13 @@ export function useFlagPref(key: string): [boolean, (value: boolean) => void] {
 // A free-form string preference (JSON and the like; null while unset).
 export function useRawPref(key: string): [string | null, (value: string) => void] {
   const [value, setValue] = useState<string | null>(() => readPref(key));
+  // lifetime: OK — cleanup: removes the pref listener (unmount / key change)
   useEffect(() => {
     const on = (e: Event) => {
       const { key: k, value: v } = (e as CustomEvent<{ key: string; value: string }>).detail;
       if (k === key) setValue(v);
     };
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener(PREF_EVENT, on);
     return () => window.removeEventListener(PREF_EVENT, on);
   }, [key]);

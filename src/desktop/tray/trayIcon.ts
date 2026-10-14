@@ -116,7 +116,9 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    // lifetime: OK — on the FileReader, which is dropped after its one read
     reader.onload = () => resolve(reader.result as string);
+    // lifetime: OK — on the FileReader, which is dropped after its one read
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });

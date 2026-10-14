@@ -10,6 +10,7 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
   const [installed, setInstalled] = useState<boolean | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // lifetime: OK — acquires nothing (one IPC check on mount)
   useEffect(() => {
     if (desktop?.platform !== "linux") return;
     void desktop.usbAccessInstalled().then(setInstalled);

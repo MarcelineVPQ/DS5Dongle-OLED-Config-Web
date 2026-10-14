@@ -10,6 +10,7 @@ export function setGamesAllowed(value: boolean): Promise<unknown> {
 
 export function onGamesAllowed(listener: (value: boolean) => void): () => void {
   const handle = (e: Event) => listener((e as CustomEvent<boolean>).detail);
+  // lifetime: OK — the returned remover calls removeEventListener (callers' effect cleanups)
   window.addEventListener(GAMES_ALLOWED_EVENT, handle);
   return () => window.removeEventListener(GAMES_ALLOWED_EVENT, handle);
 }

@@ -62,12 +62,14 @@ async function playTune(): Promise<void> {
     stopNow = null;
     return set({ playing: false, noSpeaker: !sink });
   }
+  // lifetime: OK — closed in playTune's finally (tune ended or stopped)
   const ctx = new AudioContext();
   let noSpeaker = false;
   const gone = () =>
     void controllerSpeaker().then((now) => {
       if (now !== sink) stopNow?.();
     });
+  // lifetime: OK — removed in playTune's finally
   navigator.mediaDevices?.addEventListener?.("devicechange", gone);
   try {
     await (ctx as AudioContext & { setSinkId(id: string): Promise<void> }).setSinkId(sink);
@@ -78,6 +80,7 @@ async function playTune(): Promise<void> {
     src.buffer = buffer;
     src.connect(ctx.destination);
     await new Promise<void>((done) => {
+      // lifetime: OK — goes with the AudioContext, closed in playTune's finally
       src.onended = () => done();
       stopNow = () => {
         // a 20 ms fade so stopping mid-note doesn't click

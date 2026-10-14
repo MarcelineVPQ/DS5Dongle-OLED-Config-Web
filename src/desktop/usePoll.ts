@@ -11,6 +11,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const readRef = useRef(read);
+  // lifetime: OK — acquires nothing (keeps the latest read function in a ref)
   useEffect(() => {
     readRef.current = read;
   }, [read]);
@@ -18,6 +19,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
   const shown = useWindowShown();
   const running = enabled && shown;
 
+  // lifetime: OK — cleanup: stops and clears the poll (disabled / hidden / unmount)
   useEffect(() => {
     if (!running) return;
     let stopped = false;
@@ -32,6 +34,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
       } catch (cause) {
         if (!stopped) setError(errorText(cause));
       }
+      // lifetime: OK — self re-arming; cleared in the cleanup, stops once stopped is set
       if (!stopped) timer = setTimeout(tick, intervalMs);
     };
     void tick();

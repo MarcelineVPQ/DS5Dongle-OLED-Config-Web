@@ -59,9 +59,11 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
   // seq null = no mirror frame in that sample (then no redraw rate).
   const prev = useRef<{ at: number; usb: number; bt: number; mic: number; loops: number; seq: number | null } | null>(null);
   const latest = useRef({ frame: frameNow, rssi: rssiNow });
+  // lifetime: OK — acquires nothing (latest frame / RSSI into a ref)
   useEffect(() => {
     latest.current = { frame: frameNow, rssi: rssiNow };
   }, [frameNow, rssiNow]);
+  // lifetime: OK — usePoll: 1 s, stops when hidden, without a client, or on unmount
   const sample = usePoll(
     async () => {
       if (!client) return null;

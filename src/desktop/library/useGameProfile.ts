@@ -139,6 +139,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   // RAM: the dongle saves its config on a slot switch, so they go back first.
   const profileInRam = useRef<ProfileSettings | null>(null);
 
+  // lifetime: OK — cleanup unsubscribes onRunningGame (unmount)
   useEffect(() => {
     if (!desktop) return;
     void desktop.libraryGet().then((f) => {
@@ -169,11 +170,13 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   // retried on every config change; cleared when the game or connection changes.
   const failed = useRef<string | null>(null);
   // A reconnect (dongle reboot, USB replug) loads its flash settings again.
+  // lifetime: OK — acquires nothing (resets refs)
   useEffect(() => {
     if (!isConnected) appliedFor.current = null;
     failed.current = null;
   }, [isConnected, wanted]);
 
+  // lifetime: OK — acquires nothing (queues one profile switch; switchOnce serializes them)
   useEffect(() => {
     if (!desktop || !loaded || !runningKnown || !isConnected || !config || operation || paused) return;
     const step = decideProfileStep({ running: wanted, library, appliedFor: appliedFor.current, failed: failed.current, active: !!active });

@@ -101,6 +101,7 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
 // doesn't set its state (BusyButton, Toggle).
 function useLive() {
   const live = useRef(true);
+  // lifetime: OK — cleanup: marks the component unmounted (holds no resource)
   useEffect(() => {
     live.current = true; // (again: StrictMode mounts twice in development)
     return () => {
@@ -165,6 +166,7 @@ export function Segmented<T extends number>({ label, sub, value, options, disabl
   const seg = useRef<HTMLDivElement>(null);
   const needed = useRef(0); // the choices' width side by side, measured inline
   const [stack, setStack] = useState(false);
+  // lifetime: OK — cleanup: disconnects the ResizeObserver (unmount / options change)
   useLayoutEffect(() => {
     const el = seg.current;
     const row = el?.closest(".dk-row");
@@ -176,6 +178,7 @@ export function Segmented<T extends number>({ label, sub, value, options, disabl
       setStack(needed.current > room);
     };
     check();
+    // lifetime: OK — disconnected in the layout effect cleanup
     const ro = new ResizeObserver(check);
     ro.observe(row);
     return () => ro.disconnect();
@@ -239,11 +242,13 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
   const busy = ownBusy || since != null;
   const [secs, setSecs] = useState(0);
   const live = useLive();
+  // lifetime: OK — cleanup: clears the 1 s busy counter (done / unmount)
   useEffect(() => {
     if (!busy) return;
     const started = since || Date.now();
     const tick = () => setSecs(Math.floor((Date.now() - started) / 1000));
     tick();
+    // lifetime: OK — cleared in the effect cleanup (busy ends / unmount)
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [busy, since]);

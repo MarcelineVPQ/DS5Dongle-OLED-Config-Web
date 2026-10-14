@@ -24,6 +24,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   const { t } = useTranslation();
   const latest = useRef(input);
   const cal = useRef(sticks);
+  // lifetime: OK — acquires nothing (mirrors input and calibration into refs)
   useEffect(() => {
     latest.current = input;
     cal.current = sticks;
@@ -33,7 +34,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   // Circularity: always tracking while the view is open, until Reset.
   const [outlines, setOutlines] = useState<Outlines>(() => fresh(calKey));
   const [view, setView] = useState<0 | 1>(0);
+  // lifetime: OK — cleanup: clears the circularity sampler (unmount)
   useEffect(() => {
+    // lifetime: WASTE — 30 Hz sampler keeps ticking while the window is hidden (input frozen)
     const id = setInterval(() => {
       const r = latest.current;
       if (!r) return;
@@ -61,16 +64,19 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   // Drift: sample the resting sticks for DRIFT_MS.
   const [drift, setDrift] = useState<"idle" | "running" | "short" | [DriftSample[], DriftSample[]]>("idle");
   const samples = useRef<[DriftSample[], DriftSample[]]>([[], []]);
+  // lifetime: OK — cleanup: clears the drift sampler and its end timer
   useEffect(() => {
     if (drift !== "running") return;
     samples.current = [[], []];
     const start = performance.now();
+    // lifetime: OK — cleared at the end of the 10 s test, or in the effect cleanup
     const id = setInterval(() => {
       const r = latest.current;
       if (!r) return;
       const at = performance.now() - start;
       samples.current.forEach((list, i) => list.push({ t: at, ...stickOf(r, i) }));
     }, SAMPLE_MS);
+    // lifetime: OK — cleared in the effect cleanup
     const done = setTimeout(() => {
       clearInterval(id);
       setDrift(samples.current[0].length < 5 ? "short" : samples.current);

@@ -52,6 +52,7 @@ function useBackdropKeys(): string[] {
   const desktop = window.desktop;
   const [keys, setKeys] = useState<string[]>([]);
   const [running, setRunning] = useState<string | null>(null);
+  // lifetime: OK — cleanup: stops the retry timer, drops late reads, unsubscribes the running game
   useEffect(() => {
     if (!desktop) return;
     let live = true;
@@ -70,6 +71,7 @@ function useBackdropKeys(): string[] {
             .slice(0, 8)
             .map(([key]) => key);
           if (recent.length > 0) setKeys(recent);
+          // lifetime: OK — cleared in the effect cleanup (unmount)
           else if (tries > 0) timer = setTimeout(() => void load(tries - 1), 3000);
         })
         .catch(() => undefined);
@@ -94,9 +96,11 @@ function useBackdropKeys(): string[] {
 function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean; blurKnob: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
+  // lifetime: OK — cleanup: drops the image's onload and src
   useEffect(() => {
     let live = true;
     const img = new Image();
+    // lifetime: OK — set to null in the effect cleanup (new image or unmount)
     img.onload = () => {
       const c = ref.current;
       if (!live) return; // a newer image or blur setting took over
@@ -131,8 +135,10 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   // The art cycles only while the window is on screen (a crossfade nobody sees
   // still costs frames).
   const shown = useWindowShown();
+  // lifetime: OK — cleanup: clears the cycle timer; none while hidden or with one game
   useEffect(() => {
     if (keys.length < 2 || !shown) return;
+    // lifetime: OK — cleared in the effect cleanup; runs only while shown with 2+ games
     const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
   }, [sig, keys.length, shown]);

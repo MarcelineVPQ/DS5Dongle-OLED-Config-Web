@@ -25,6 +25,7 @@ function hexAccent(hex: string): Rgb | null {
 // The XDG desktop portal's accent (GNOME 47+, others). Doubles 0..1.
 function portalAccent(): Promise<Rgb | null> {
   return new Promise((resolve) => {
+    // lifetime: OK — exits on its own; the 2 s timeout kills a hung gdbus
     execFile(
       "gdbus",
       [
@@ -72,12 +73,13 @@ export function watchDesktopPalette(onChange: () => void): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null;
   const fire = () => {
     if (timer) clearTimeout(timer);
-    timer = setTimeout(onChange, 300);
+    timer = setTimeout(onChange, 300); // lifetime: OK — one-shot 300 ms debounce, cleared by the next fire()
   };
   let watcher: FSWatcher | null = null;
   if (isKde()) {
     // KDE rewrites kdeglobals atomically (new file + rename), so watch the folder.
     try {
+      // lifetime: NOT-WORTH — one watcher per app, closed by the returned stop (index.ts keeps it to quit)
       watcher = watch(configDir, (_event, file) => {
         if (file === "kdeglobals") fire();
       });
@@ -85,7 +87,8 @@ export function watchDesktopPalette(onChange: () => void): () => void {
       watcher = null;
     }
   }
-  nativeTheme.on("updated", fire);
+  nativeTheme.on("updated", fire); // lifetime: OK — removed by the returned stop; one per app, lives until quit
+  // lifetime: OK — removed by the returned stop; one per app, lives until quit
   if (process.platform === "win32") systemPreferences.on("accent-color-changed", fire);
   return () => {
     watcher?.close();
