@@ -11,7 +11,7 @@ import guide from "../../../docs/GUIDE.md?raw";
 import protonChangelog from "../../../docs/PROTON_CHANGELOG.md?raw";
 // The firmware repo's CHANGELOG.md, bundled at build time (firmwareChangelog.config.ts).
 import firmwareChangelog from "@firmware-changelog?raw";
-import Markdown, { markdownHeadings, plainHeading, scrollToHeading } from "../Markdown";
+import Markdown, { firstChapters, markdownHeadings, plainHeading, scrollToHeading } from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
 import { ISSUES_URL, ROADMAP_COLUMNS } from "../about/roadmap";
@@ -95,6 +95,16 @@ const TEXTS: Record<AboutTab, { icon: LucideIcon; title: string; text: string | 
   credits: { icon: Heart, title: "desktop.about.credits", text: CREDITS },
 };
 
+// A changelog opens on its newest releases (whole ones, about the first 16k
+// characters); the rest shows on request. Parsing and drawing all of App
+// changes (100 KB, ~900 elements) for the release on top would be drinking.
+const NEWEST_BUDGET = 16_000;
+const NEWEST: Partial<Record<AboutTab, { text: string; chapters: number } | null>> = {
+  changes: firstChapters(changelog, NEWEST_BUDGET),
+  firmware: firstChapters(firmwareChangelog, NEWEST_BUDGET),
+  proton: firstChapters(protonChangelog, NEWEST_BUDGET),
+};
+
 // The newest version a changelog lists ("0.9.5-dev.11" from "[0.9.5-dev.11] - date").
 const newest = (headings: string[]) => headings.find((h) => !/^unreleased$/i.test(h))?.split(" ")[0] ?? null; // loop: NOT-WORTH — stops at the first released heading
 
@@ -117,6 +127,7 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   const openNow = ids.find((id) => acc.isOpen(id) && !acc.isPinned(id)) ?? ids.find((id) => acc.isOpen(id));
   const [doc, setDoc] = useState<AboutTab>(openNow ?? "guide");
   const [at, setAt] = useState<string | null>(null); // the chapter last clicked
+  const [older, setOlder] = useState(false); // a changelog's older releases shown
   // A section opened: its text shows (set while rendering, React's pattern for state that follows other state).
   const [lastOpen, setLastOpen] = useState(openNow);
   if (openNow !== lastOpen) {
@@ -124,6 +135,7 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
     if (openNow) {
       setDoc(openNow);
       setAt(null);
+      setOlder(false);
     }
   }
   // App changes seen: the "Updated to" notice and the dot go.
@@ -145,6 +157,9 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   // loop: NOT-WORTH — N = 4 columns; only while Coming soon is open
   const chapters = (id: AboutTab) => (id === "roadmap" ? ROADMAP_COLUMNS.map((c) => t(`desktop.about.roadmap.column.${c}`)) : headings[id]);
   const go = (id: AboutTab, chapter: string) => {
+    // A chapter among the older releases shows them first.
+    const past = (NEWEST[id]?.chapters ?? Infinity) <= headings[id].indexOf(chapter);
+    setOlder((o) => (id === doc && o) || past);
     setDoc(id);
     setAt(chapter);
     // After the text for that section is shown.
@@ -153,6 +168,7 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   };
 
   const text = TEXTS[doc].text;
+  const cut = older ? null : NEWEST[doc];
   const main = (
     <article className="dk-about-text">
       <span className="dk-subhead">{t(TEXTS[doc].title)}</span>
@@ -163,7 +179,14 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
       ) : (
         text && (
           <div className="dk-card dk-doc">
-            <Markdown text={text} />
+            <Markdown text={cut?.text ?? text} />
+            {cut && (
+              <div className="dk-row-btns">
+                <button type="button" className="dk-btn" onClick={() => setOlder(true)}>
+                  {t("desktop.about.showOlder")}
+                </button>
+              </div>
+            )}
           </div>
         )
       )}

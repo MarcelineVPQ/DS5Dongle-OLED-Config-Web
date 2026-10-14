@@ -360,6 +360,7 @@
       "source": "ソースコード (MIT)",
       "issues": "問題を報告",
       "roadmapTab": "今後の予定",
+      "showOlder": "以前のリリースを表示",
       "roadmap": {
         "intro": "これは計画であり、約束ではありません。変わることがあり、日付もありません。",
         "suggest": "ご提案は GitHub でどうぞ。",

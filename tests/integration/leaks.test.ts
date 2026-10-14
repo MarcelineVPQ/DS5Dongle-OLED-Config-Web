@@ -219,6 +219,8 @@ describe(`leak test: ${N} mounts and unmounts per page`, () => {
     "$name gives back everything it takes",
     async (page) => {
       vi.stubGlobal("desktop", probe.desktop(page.desktop?.()));
+      // React's development warnings ("Warning: …" on console.error) fail the page too.
+      const errors = vi.spyOn(console, "error");
       // One warm-up cycle: module-level stores wire once per app (the
       // window-shown store, i18n, the theme watcher) and stay by design.
       await cycle(page);
@@ -238,7 +240,10 @@ describe(`leak test: ${N} mounts and unmounts per page`, () => {
       const after = probe.snapshot();
       const now = tally(probe.describe());
       const extra = [...now].filter(([d, n]) => n > (held.get(d) ?? 0)).map(([d, n]) => `${d}: ${held.get(d) ?? 0} -> ${n}`);
-      expect({ diff: diff(before, after), extra }).toEqual({ diff: {}, extra: [] });
+      // loop: test
+      const warnings = errors.mock.calls.map((c) => String(c[0])).filter((m) => m.startsWith("Warning:"));
+      errors.mockRestore();
+      expect({ diff: diff(before, after), extra, warnings }).toEqual({ diff: {}, extra: [], warnings: [] });
     },
     120_000,
   );

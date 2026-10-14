@@ -360,6 +360,7 @@
       "source": "Quellcode (MIT)",
       "issues": "Problem melden",
       "roadmapTab": "Demnächst",
+      "showOlder": "Ältere Versionen anzeigen",
       "roadmap": {
         "intro": "Das sind Pläne, keine Versprechen: Sie können sich ändern und haben kein Datum.",
         "suggest": "Vorschläge sind auf GitHub willkommen.",

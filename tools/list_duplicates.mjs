@@ -13,20 +13,24 @@
 // finds (merged: take it out). F48: the lister used to be manual only.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
-const SKIP = /(node_modules|dist|out|release|src\/flash\/picoflash|src\/i18n|\.d\.ts$)/;
+// fileURLToPath, not .pathname: a Windows path (C:\, RUNNER~1) comes back usable.
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+// Matched against the repo-relative path (forward slashes), never the absolute
+// one: a checkout under ".../about-light/" or ".../dist/" must not skip everything.
+const SKIP = /(^|\/)(node_modules|dist|out|release)\/|^src\/flash\/picoflash\/|^src\/i18n\/|\.d\.ts$/;
+const rel = (p) => relative(ROOT, p).replace(/\\/g, "/");
 const files = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (SKIP.test(p)) continue;
+    if (SKIP.test(rel(p))) continue;
     if (statSync(p).isDirectory()) walk(p);
     else if (/\.(ts|tsx|css|mjs)$/.test(p)) files.push(p);
   }
 };
 ["src", "electron", "tools", ".hooks"].forEach((d) => walk(join(ROOT, d)));
-const rel = (p) => relative(ROOT, p);
 const rows = [];
 
 // --- CSS: each selector of each top-level or @media rule ---
