@@ -304,6 +304,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         if (!r.problem) setUndoAsk({ backupId, launchers: [...new Set([...restart, ...r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris")])] });
       } else if ("conflict" in r) {
         setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
+      } else if ("noController" in r) {
+        setCloseNote(t("desktop.games.undoNoController"));
       } else {
         setError(r.error);
       }

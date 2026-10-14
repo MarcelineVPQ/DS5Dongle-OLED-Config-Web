@@ -448,6 +448,7 @@
           "envHeroic": "Quitar {{vars}} de las variables de entorno de {{game}}",
           "audioRule": "Desactivar la regla de audio que fuerza el mando a «pro-audio»",
           "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»",
+          "audioVolume": "Poner al máximo el volumen y el nivel del micrófono del mando en este ordenador",
           "gamepad": "Pasar el mando a {{game}} como mando estándar (XInput)",
           "hdr": "Activar HDR para {{game}}",
           "hdrUpdate": "Pasar el HDR de {{game}} a gamescope",
@@ -466,6 +467,7 @@
           "envHeroic": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos.",
           "audioRule": "{{file}} pone la tarjeta de audio del DualSense en el perfil pro-audio, lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. El archivo se renombra a .disabled (no se borra) y el servicio de audio (WirePlumber) se reinicia, así que el sonido se corta un segundo.",
           "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido.",
+          "audioVolume": "En Linux, la tarjeta de sonido del mando conserva su propio volumen y nivel del micrófono de la última vez que se guardaron, y los controles deslizantes de tu escritorio no los cambian. Aquí están bajos, así que el micrófono puede sonar casi en silencio y los auriculares y el altavoz suenan más bajo. Se ponen al máximo (en el mezclador de la tarjeta de sonido de Linux, ALSA); los controles de volumen de tu escritorio funcionan como antes, y Deshacer vuelve a poner los niveles anteriores. Si Nivel del micrófono está por encima de 0 en {{device}}, ese ajuste decide el nivel del micrófono.",
           "gamepad": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración.{{runner}}",
           "gamepadSteam": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración. Las opciones de lanzamiento quedan así: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignora esta opción, así que el juego también pasa a {{proton}}.",
@@ -498,7 +500,8 @@
         "result": {
           "stale": "Este cambio ya no aplica (la configuración cambió desde la última revisión).",
           "restartFailed": "Guardado, pero no se pudo reiniciar el servicio de audio: {{error}}",
-          "profileFailed": "No se pudo cambiar el perfil: {{error}}"
+          "profileFailed": "No se pudo cambiar el perfil: {{error}}",
+          "volumeFailed": "No se pudo ajustar el volumen del mando: {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -516,6 +519,7 @@
       "readLaunchersOff": "Al desactivarlo se ocultan tu biblioteca de juegos y los perfiles del mando por juego hasta que lo vuelvas a activar. No se borra nada.",
       "readLaunchersTurnOff": "Desactivar",
       "undoConflict": "No se deshizo: {{files}} cambió después de aplicar (el lanzador guardó sus propios ajustes). Deshacer descartaría esos cambios.",
+      "undoNoController": "No se deshizo: el mando no está conectado. Conéctalo y pulsa Deshacer otra vez.",
       "scanningWindows": "Comprobando Steam, GOG Galaxy y Epic…",
       "consentIntroWindows": "La configuración de juegos lista tus juegos de Steam, GOG Galaxy y Epic y busca en Steam ajustes que impiden que los gatillos adaptativos y la retroalimentación háptica lleguen a ellos. Para ello lee, solo en este equipo:",
       "consentLaunchersWindows": "los ajustes y las listas de juegos instalados de Steam, GOG Galaxy y Epic",

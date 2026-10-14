@@ -445,6 +445,7 @@
           "envHeroic": "从 {{game}} 的环境变量中删除 {{vars}}",
           "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
           "audioProfile": "将控制器音频切换到“{{profile}}”配置",
+          "audioVolume": "在这台电脑上把控制器的音量和麦克风音量调到最大",
           "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}",
           "hdr": "为 {{game}} 开启 HDR",
           "hdrUpdate": "将 {{game}} 的 HDR 改用 gamescope",
@@ -463,6 +464,7 @@
           "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
           "audioRule": "{{file}} 会把 DualSense 的声卡切换到 pro-audio 配置，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。该文件会被重命名为 .disabled（不会删除），音频服务 (WirePlumber) 会重启，声音会中断一秒。",
           "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。",
+          "audioVolume": "在 Linux 上，控制器的声卡会保留上次保存的音量和麦克风音量，桌面的音量滑块不会改变它们。这里它们偏低，所以麦克风几乎没有声音，耳机和扬声器的声音也更小。它们会被调到最大（在 Linux 的声卡混音器 ALSA 中）；桌面的音量滑块照常工作，撤销会恢复原来的音量。当 {{device}} 上的麦克风音量大于 0 时，由该设置决定麦克风音量。",
           "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
           "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
@@ -495,7 +497,8 @@
         "result": {
           "stale": "此更改已不再适用（上次检查后设置已改变）。",
           "restartFailed": "已保存，但重启音频服务失败：{{error}}",
-          "profileFailed": "切换配置失败：{{error}}"
+          "profileFailed": "切换配置失败：{{error}}",
+          "volumeFailed": "设置控制器音量失败：{{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -513,6 +516,7 @@
       "readLaunchersOff": "关闭后，你的游戏库和每个游戏的手柄配置文件会被隐藏，直到你重新打开。不会删除任何内容。",
       "readLaunchersTurnOff": "关闭",
       "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。",
+      "undoNoController": "未撤销：控制器未连接。请连接后再次点击撤销。",
       "scanningWindows": "正在检查 Steam、GOG Galaxy 和 Epic…",
       "consentIntroWindows": "游戏设置会列出你在 Steam、GOG Galaxy 和 Epic 的游戏，并检查 Steam 中阻止自适应扳机和触觉反馈生效的设置。为此，它只在这台电脑上读取：",
       "consentLaunchersWindows": "Steam、GOG Galaxy 和 Epic 的设置和已安装游戏列表",

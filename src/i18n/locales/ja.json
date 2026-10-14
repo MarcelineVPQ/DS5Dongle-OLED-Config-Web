@@ -445,6 +445,7 @@
           "envHeroic": "{{game}} の環境変数から {{vars}} を削除する",
           "audioRule": "コントローラーを「pro-audio」に固定する音声ルールを無効にする",
           "audioProfile": "コントローラーの音声を「{{profile}}」プロファイルに切り替える",
+          "audioVolume": "このコンピューターでコントローラーの音量とマイクレベルを最大にする",
           "gamepad": "コントローラーを標準ゲームパッド（XInput）として {{game}} に渡す",
           "hdr": "{{game}} の HDR をオンにする",
           "hdrUpdate": "{{game}} の HDR を gamescope 方式に切り替える",
@@ -463,6 +464,7 @@
           "envHeroic": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。",
           "audioRule": "{{file}} が DualSense のサウンドカードを pro-audio プロファイルに切り替えるため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは .disabled に名前変更され（削除はされません）、音声サービス (WirePlumber) が再起動するので、音が一瞬途切れます。",
           "audioProfile": "DualSense のサウンドカードが「{{profile}}」になっているため、GE-Proton 11 が力のないトリガーを送り、ハプティックフィードバックも出ません。ファイルは変更されません。サウンド設定でプロファイルを選ぶのと同じです。",
+          "audioVolume": "Linux では、コントローラーのサウンドカードが最後に保存された音量とマイクレベルをそのまま使い、デスクトップの音量スライダーでは変わりません。ここではそれが低いため、マイクがほとんど無音に聞こえたり、ヘッドセットやスピーカーの音が小さくなったりします。最大に設定します（Linux のサウンドカードミキサー ALSA）。デスクトップの音量スライダーはこれまでどおり使え、元に戻すと以前のレベルに戻ります。{{device}} のマイクレベルが 0 より大きいときは、その設定がマイクレベルを決めます。",
           "gamepad": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。{{runner}}",
           "gamepadSteam": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。起動オプションは次のようになります: {{options}}{{runner}}",
           "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。",
@@ -495,7 +497,8 @@
         "result": {
           "stale": "この変更はもう当てはまりません（前回の確認後に設定が変わりました）。",
           "restartFailed": "保存しましたが、音声サービスの再起動に失敗しました: {{error}}",
-          "profileFailed": "プロファイルの切り替えに失敗しました: {{error}}"
+          "profileFailed": "プロファイルの切り替えに失敗しました: {{error}}",
+          "volumeFailed": "コントローラーの音量の設定に失敗しました: {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -513,6 +516,7 @@
       "readLaunchersOff": "オフにすると、再びオンにするまでゲームライブラリとゲームごとのコントローラープロファイルが非表示になります。何も削除されません。",
       "readLaunchersTurnOff": "オフにする",
       "undoConflict": "元に戻していません: 適用後に {{files}} が変更されました（ランチャーが独自の設定を保存しました）。元に戻すとその変更が失われます。",
+      "undoNoController": "元に戻していません: コントローラーが接続されていません。接続してから、もう一度「元に戻す」を押してください。",
       "scanningWindows": "Steam、GOG Galaxy、Epic を確認しています…",
       "consentIntroWindows": "ゲーム設定は Steam、GOG Galaxy、Epic のゲームを一覧にし、アダプティブトリガーやハプティックフィードバックを妨げる Steam の設定を確認します。そのため、このコンピューター上でのみ次を読み取ります：",
       "consentLaunchersWindows": "Steam、GOG Galaxy、Epic の設定とインストール済みゲームの一覧",
