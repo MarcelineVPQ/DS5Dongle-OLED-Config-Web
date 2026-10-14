@@ -11,7 +11,8 @@
 // The rail's dots follow the task, not the dismissal: a dot stays until the
 // task is done, whether its notice was dismissed or not.
 import { createContext, useCallback, useContext, useMemo } from "react";
-import { readPref, useRawPref, writePref } from "./storage";
+import { readPref, writePref } from "./storage";
+import { externalStore } from "./externalStore";
 import type { RailItem } from "./AppRail";
 
 export const DISMISSED_KEY = "ds5.dismissedNotices";
@@ -36,7 +37,15 @@ export function parseDismissed(raw: string | null): string[] {
   }
 }
 
-const writeDismissed = (keys: string[]) => writePref(DISMISSED_KEY, JSON.stringify(keys.slice(-MAX_DISMISSED)));
+// The stored list as written (local storage, kept in step on every write):
+// every notice and the App settings list see a dismissal at once.
+// cache: OK — key=DISMISSED_KEY; invalidated=every dismissal, Show again and prune writes it; bound=MAX_DISMISSED keys
+const stored = externalStore<string | null>(readPref(DISMISSED_KEY));
+const writeDismissed = (keys: string[]) => {
+  const raw = JSON.stringify(keys.slice(-MAX_DISMISSED));
+  writePref(DISMISSED_KEY, raw);
+  stored.set(raw);
+};
 
 export function dismissNotice(key: string): void {
   const keys = parseDismissed(readPref(DISMISSED_KEY));
@@ -69,10 +78,9 @@ export function pruneStored(settled: Settled): void {
   if (kept.length !== keys.length) writeDismissed(kept);
 }
 
-// The dismissed keys, live: every notice and the App settings list see a
-// dismissal or a Show again at once.
+// The dismissed keys, live.
 export function useDismissedNotices(): ReadonlySet<string> {
-  const [raw] = useRawPref(DISMISSED_KEY);
+  const raw = stored.use();
   return useMemo(() => new Set(parseDismissed(raw)), [raw]);
 }
 

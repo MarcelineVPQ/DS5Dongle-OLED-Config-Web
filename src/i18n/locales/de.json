@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "App-Update {{version}} ist verfügbar ({{size}}).",
+      "dropsDevTools": "Dies ist ein Entwickler-Build; das Update ersetzt ihn durch einen regulären Build ohne die Entwicklerwerkzeuge.",
       "download": "Herunterladen und installieren",
       "downloading": "Lade {{version}}: {{got}} von {{total}} ({{pct}} %)",
       "installing": "Update wird installiert…",
@@ -835,7 +836,6 @@
         "setup": "Einrichtung",
         "compat": "Kompatibilität",
         "support": "DualSense-Support",
-        "rating": "Deine Wertung",
         "notes": "Notizen",
         "details": "Details"
       },
@@ -920,8 +920,16 @@
         "mic": "Mikrofon",
         "lightbar": "Leuchtleiste"
       },
-      "stars_one": "{{count}} Stern",
-      "stars_other": "{{count}} Sterne",
+      "stars_one": "{{count}} Stern: {{label}}",
+      "stars_other": "{{count}} Sterne: {{label}}",
+      "rateTitle": "Wie gut funktioniert dein DualSense in diesem Spiel?",
+      "rateLabel": {
+        "1": "Funktioniert nicht",
+        "2": "Funktioniert kaum",
+        "3": "Funktioniert mit Problemen",
+        "4": "Funktioniert gut",
+        "5": "Funktioniert perfekt"
+      },
       "feedbackHint": "Was ist dir aufgefallen?",
       "tag": {
         "triggers-work": "Adaptive Trigger gehen",
@@ -1666,6 +1674,12 @@
       "showAgain": "Wieder anzeigen",
       "showAllAgain": "Alle wieder anzeigen",
       "goTo": "Zu {{place}}"
+    },
+    "toast": {
+      "region": "Benachrichtigungen",
+      "controllerConnected": "Controller verbunden",
+      "controllerDisconnected": "Controller getrennt",
+      "profileOff": "Profil „{{title}}“ aus: deine normalen Einstellungen sind zurück"
     }
   },
   "ad": {

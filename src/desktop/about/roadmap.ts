@@ -33,7 +33,19 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = ["next", "progress", "planned", 
 export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
+  {
+    column: "next",
+    title: "Notifications in the app",
+    text: "Short messages for what just happened, at the bottom right: changes saved, copied, a game's profile on or off, a controller connected. They close by themselves, wait while you point at them, and have a × to close.",
+    areas: ["app"],
+  },
   { column: "next", title: "Our own color picker", text: "A color picker in the app's look, with hex and R/G/B fields, recent colors and full keyboard use.", areas: ["app"], high: true },
+  {
+    column: "next",
+    title: "Rate how your DualSense works",
+    text: "A game's page asks how well your DualSense works in that game, inside DualSense support, and each star says what it means.",
+    areas: ["games"],
+  },
   { column: "next", title: "Your controller's colors", text: "Pick colors for the shell, the black parts, buttons, sticks and outlines of the drawing.", areas: ["controller"] },
   {
     column: "next",
@@ -299,7 +311,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "On an HDR display, the app's copy of {{device}}'s OLED screen shows true black and the panel's real brightness.",
     areas: ["dongle"],
   },
-  { column: "planned", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
+  { column: "next", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
     column: "planned",
@@ -310,14 +322,14 @@ export const ROADMAP: RoadmapItem[] = [
     high: true,
   },
   {
-    column: "planned",
+    column: "next",
     title: "Full speaker volume after a headset unplug",
     text: "The controller's speaker keeps its full volume after you plug in and unplug a headset.",
     areas: ["audio", "dongle"],
     high: true,
   },
   {
-    column: "planned",
+    column: "next",
     title: "Headset sound in both ears",
     text: "A headset on the controller plays in both ears even when Linux's default sound profile sends mono.",
     areas: ["audio", "dongle"],
@@ -332,7 +344,7 @@ export const ROADMAP: RoadmapItem[] = [
     platform: "linux",
     high: true,
   },
-  { column: "planned", title: "Headphones up to full volume", text: "Headphones on the controller reach the controller's full headphone volume.", areas: ["audio", "dongle"] },
+  { column: "next", title: "Headphones up to full volume", text: "Headphones on the controller reach the controller's full headphone volume.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Clearer highs on speaker and headset", text: "Cleaner treble on the speaker and headset, from a better sample-rate step in {{device}}.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Steady mic delay", text: "Your voice reaches the PC with the same short delay all session, even after a Bluetooth hiccup.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Less headset delay", text: "Game sound reaches a headset on the controller about 10 ms sooner.", areas: ["audio", "dongle"] },
@@ -388,7 +400,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "A small always-on-top window (or a KDE widget) with your controller moving live: buttons, sticks, triggers and the light bar, plus battery and signal.",
     areas: ["controller", "app"],
   },
-  { column: "planned", title: "Notifications in the app", text: "Short messages for what just happened: a change saved, a game's profile switched on, an error with what to do next.", areas: ["app"] },
+
   {
     column: "planned",
     title: "Desktop notifications",
@@ -401,12 +413,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
   { column: "planned", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"] },
   { column: "planned", title: "Game logs for bug reports", text: "Tick a box on a game's page and the next Play records a log, showing what happened with your controller.", areas: ["games"] },
-  {
-    column: "planned",
-    title: "Rate how your DualSense works",
-    text: "The rating on a game's page moves into DualSense support and says clearly that it rates the controller in that game, not the game.",
-    areas: ["games"],
-  },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },

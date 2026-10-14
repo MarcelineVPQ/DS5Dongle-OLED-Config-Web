@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
+      "dropsDevTools": "这是开发者版本；安装此更新会将其替换为不含开发者工具的普通版本。",
       "download": "下载并安装",
       "downloading": "正在下载 {{version}}：{{got}} / {{total}}（{{pct}}%）",
       "installing": "正在安装更新…",
@@ -830,7 +831,6 @@
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
-        "rating": "你的评分",
         "notes": "笔记",
         "details": "详情"
       },
@@ -913,7 +913,15 @@
         "mic": "麦克风",
         "lightbar": "光条"
       },
-      "stars_other": "{{count}} 星",
+      "stars_other": "{{count}} 星：{{label}}",
+      "rateTitle": "你的 DualSense 控制器在这款游戏中表现如何？",
+      "rateLabel": {
+        "1": "无法使用",
+        "2": "勉强能用",
+        "3": "能用但有问题",
+        "4": "运行良好",
+        "5": "完美运行"
+      },
       "feedbackHint": "你注意到了什么?",
       "tag": {
         "triggers-work": "自适应扳机正常",
@@ -1658,6 +1666,12 @@
       "showAgain": "再次显示",
       "showAllAgain": "全部再次显示",
       "goTo": "前往{{place}}"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "控制器已连接",
+      "controllerDisconnected": "控制器已断开连接",
+      "profileOff": "{{title}} 配置文件已关闭：已恢复常规设置"
     }
   },
   "ad": {

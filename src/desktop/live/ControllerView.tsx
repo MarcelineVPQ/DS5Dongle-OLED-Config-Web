@@ -14,7 +14,7 @@ import { useFlagPref } from "../storage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
+import { playerNumber } from "../../protocol/bridgeClient";
 import { type ControllerFirmware, chargeState, identityChargeState, playerLightWiring } from "../../protocol/controllerInfo";
 import { signalQuality } from "../format";
 import { usePoll } from "../usePoll";
@@ -27,7 +27,6 @@ import LiveController from "./LiveController";
 import LiveData from "./LiveData";
 import ControllerInfo from "./ControllerInfo";
 import LiveStrip from "./LiveStrip";
-import { sayInPassing } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
@@ -79,16 +78,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // Only while the window is on screen.
   const shown = useWindowShown();
   const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
-  // "There you are." when a controller connects while the app is open (not
-  // for one that was already there at start).
-  const wasOn = useRef<boolean | null>(null);
-  // lifetime: OK — acquires nothing (says the connected line once)
-  useEffect(() => {
-    if (!id) return;
-    // The dongle says its own "Connected" when it has the narrator.
-    if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) sayInPassing("app_controller");
-    wasOn.current = on;
-  }, [on, id]);
   const { appliedStamp, library, setButtonsDraft } = useLibrary();
   const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
   // A game's profile on: button changes are part of what "Save to profile" saves.

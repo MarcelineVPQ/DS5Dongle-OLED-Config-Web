@@ -16,15 +16,19 @@ export default function FakeGames() {
   const { t } = useTranslation();
   const [state, setState] = useState<DevFakeGamesState | null>(null);
   const api = DEV_TOOLS_BUILT ? window.desktop?.devFakeGames : undefined;
+  // Read once on mount, not keyed on the method: its identity isn't a
+  // contract (a fake window.desktop hands out a new function each read, and
+  // keying on it re-ran this on every render: answer -> setState -> again).
   // lifetime: OK — acquires nothing; the cleanup drops a late answer (unmount)
   useEffect(() => {
-    if (!api) return;
+    const read = DEV_TOOLS_BUILT ? window.desktop?.devFakeGames : undefined;
+    if (!read) return;
     let live = true;
-    api({}).then((s) => live && setState(s), logged("reading the Fake games state for the Developer card (the switch shows off)"));
+    read({}).then((s) => live && setState(s), logged("reading the Fake games state for the Developer card (the switch shows off)"));
     return () => {
       live = false;
     };
-  }, [api]);
+  }, []);
   if (!api) return null;
   const change = (c: DevFakeGamesChange): void => {
     // error: SHOWN — desktop.errors.actionFailed (the Developer card has no status line)

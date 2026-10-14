@@ -11,7 +11,7 @@ import DismissedNotices from "../../src/desktop/DismissedNotices";
 import UpdateBanners from "../../src/desktop/UpdateBanners";
 import { ActionFailed, useGameAction } from "../../src/desktop/library/playBar";
 import type { GameEntry } from "../../src/desktop/games/types";
-import { NoticeTasksContext, dismissNotice, railReminders, type NoticeTask } from "../../src/desktop/notices";
+import { NoticeTasksContext, dismissNotice, railReminders, restoreNotices, type NoticeTask } from "../../src/desktop/notices";
 import { openTasks, type TaskInput } from "../../src/desktop/openTasks";
 import type { UpdateState } from "../../src/desktop/api";
 import type { FirmwareUpdate } from "../../src/desktop/useUpdates";
@@ -29,6 +29,7 @@ let container: HTMLDivElement;
 let root: Root;
 beforeEach(async () => {
   window.localStorage.clear();
+  restoreNotices("all");
   await i18n.changeLanguage("en");
   container = document.createElement("div");
   document.body.append(container);

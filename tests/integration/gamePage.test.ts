@@ -153,3 +153,100 @@ describe("game page", () => {
     expect($("#gp-details")!.textContent).toContain(i18n.t("desktop.library.launcher"));
   });
 });
+
+// The rating rates the controller in this game, not the game: it sits in
+// DualSense support under the feature list, asks so, and every star names
+// what it means (owner: "five stars under a game banner read as rating the game").
+describe("rating: how well the DualSense works in this game", () => {
+  const stars = () => [...container!.querySelectorAll<HTMLButtonElement>("#gp-rating [role=radio]")];
+  const label = () => $("#gp-rating .gp-rate-label");
+  const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
+
+  it("lives in DualSense support under the per-feature list, with its question, feedback and the saved-on-this-PC line", () => {
+    render(ghostrunner());
+    const rating = $("#gp-support #gp-rating")!;
+    expect(rating).not.toBeNull();
+    expect(cards()).not.toContain("gp-rating");
+    expect($("#gp-support .gp-features")!.compareDocumentPosition(rating) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(rating.querySelector("h3")!.textContent).toBe("How well does your DualSense work in this game?");
+    expect(rating.querySelector("[role=radiogroup]")!.getAttribute("aria-labelledby")).toBe(rating.querySelector("h3")!.id);
+    expect(rating.querySelector("summary")!.textContent).toContain(i18n.t("desktop.library.feedbackHint"));
+    expect(rating.textContent).toContain(i18n.t("desktop.library.shareSoon"));
+  });
+
+  it("each star names how the controller works; the chosen one's words show next to the stars", () => {
+    render(ghostrunner()); // rated 4
+    expect(stars().map((b) => b.title)).toEqual(["Doesn't work", "Barely works", "Works with problems", "Works well", "Works perfectly"]);
+    expect(stars()[0].getAttribute("aria-label")).toBe("1 star: Doesn't work");
+    expect(stars()[4].getAttribute("aria-label")).toBe("5 stars: Works perfectly");
+    expect(stars().map((b) => b.getAttribute("aria-checked"))).toEqual(["false", "false", "false", "true", "false"]);
+    expect(label()!.textContent).toBe("Works well");
+    expect(label()!.classList.contains("preview")).toBe(false);
+  });
+
+  it("hover and focus preview a star's words; leaving shows the chosen one again", () => {
+    render(ghostrunner());
+    act(() => void stars()[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
+    expect(label()!.textContent).toBe("Doesn't work");
+    expect(label()!.classList.contains("preview")).toBe(true);
+    expect(stars().filter((b) => b.classList.contains("on")).length).toBe(1);
+    act(() => void $("#gp-rating .gp-stars")!.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body })));
+    expect(label()!.textContent).toBe("Works well");
+    act(() => stars()[4].focus());
+    expect(label()!.textContent).toBe("Works perfectly");
+  });
+
+  it("no rating yet: no words until a star is pointed at, and the first star is the one tab stop", () => {
+    const record = { ...GHOSTRUNNER_RECORD, mine: { ...GHOSTRUNNER_RECORD.mine, rating: undefined } };
+    vi.stubGlobal("desktop", fakeDesktop("linux"));
+    act(() =>
+      root!.render(
+        createElement(GamePage, {
+          game: ghostrunner(),
+          info: GHOSTRUNNER_INFO,
+          record,
+          running: false,
+          report: gamesReport(ghostrunner()),
+          bridge: fakeBridge(),
+          onLibrary: () => undefined,
+          onRescan: () => undefined,
+        }),
+      ),
+    );
+    expect(label()).toBeNull();
+    expect(stars().map((b) => b.tabIndex)).toEqual([0, -1, -1, -1, -1]);
+  });
+
+  it("keyboard: one tab stop, arrows and Home/End pick a star and move focus; saved in the same rating field", () => {
+    vi.useFakeTimers();
+    try {
+      render(ghostrunner());
+      const calls: string[] = [];
+      vi.stubGlobal("desktop", fakeDesktop("linux", calls));
+      expect(stars().map((b) => b.tabIndex)).toEqual([-1, -1, -1, 0, -1]);
+      act(() => stars()[3].focus());
+      key(stars()[3], "ArrowRight");
+      expect(stars()[4].getAttribute("aria-checked")).toBe("true");
+      expect(document.activeElement).toBe(stars()[4]);
+      expect(label()!.textContent).toBe("Works perfectly");
+      key(stars()[4], "ArrowRight"); // stays at 5
+      expect(stars()[4].getAttribute("aria-checked")).toBe("true");
+      key(stars()[4], "Home");
+      expect(document.activeElement).toBe(stars()[0]);
+      key(stars()[0], "ArrowUp");
+      expect(stars()[1].getAttribute("aria-checked")).toBe("true");
+      expect(stars().map((b) => b.tabIndex)).toEqual([-1, 0, -1, -1, -1]);
+      act(() => void vi.advanceTimersByTime(1000));
+      expect(calls.at(-1)).toContain('"rating":2');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("all 7 languages have the question and the five star words", () => {
+    for (const lng of ["en", "de", "fr", "es", "pt-BR", "zh-CN", "ja"]) {
+      expect(i18n.exists("desktop.library.rateTitle", { lng })).toBe(true);
+      for (const n of [1, 2, 3, 4, 5]) expect(i18n.exists(`desktop.library.rateLabel.${n}`, { lng })).toBe(true);
+    }
+  });
+});

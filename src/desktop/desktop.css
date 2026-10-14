@@ -233,6 +233,67 @@ html[data-theme="dark"] .dk {
   border-color: currentColor;
 }
 
+/* Toasts (Toasts.tsx): short-lived confirmations and events, bottom right of
+   the page, above the save bar. Same grid cell as the page body, so they
+   never cover the rail or the bar. Only opacity and transform change (on the
+   compositor), once on the way in and once on the way out. */
+.dk-main > .dk-body {
+  grid-area: 1 / 1;
+}
+.dk-toasts {
+  grid-area: 1 / 1;
+  align-self: end;
+  justify-self: end;
+  z-index: 20;
+  width: min(360px, calc(100% - 2 * var(--dk-pad)));
+  margin: 0 var(--dk-pad) var(--dk-pad) 0;
+  pointer-events: none;
+}
+.dk-toasts ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dk-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--dk-accent);
+  border-radius: var(--dk-radius);
+  background: var(--bg-elevated);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-card-hover);
+  pointer-events: auto;
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+}
+@starting-style {
+  .dk-toast {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.dk-toast.leaving {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.dk-toast-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-toast {
+    transition: none;
+  }
+}
+
 /* ---- Layout blocks ---- */
 .dk-grid {
   display: grid;
@@ -2438,10 +2499,36 @@ html[data-cards-translucent] .gp-sections .dk-card {
   gap: 6px;
   cursor: pointer;
 }
+/* The rating, inside DualSense support under the feature list. */
+.gp-rating {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.gp-rating h3 {
+  margin: 0 0 4px;
+  font-size: var(--dk-small);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.gp-rate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin-bottom: 6px;
+}
+.gp-rate-label {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.gp-rate-label.preview {
+  color: var(--text-muted);
+  font-weight: 400;
+}
 .gp-stars {
   display: flex;
   gap: 2px;
-  margin-bottom: 6px;
 }
 .gp-stars button {
   padding: 0 2px;

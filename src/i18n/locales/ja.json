@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "アプリのアップデート {{version}} があります（{{size}}）。",
+      "dropsDevTools": "これは開発者ビルドです。アップデートをインストールすると、開発者ツールのない通常のビルドに置き換わります。",
       "download": "ダウンロードしてインストール",
       "downloading": "{{version}} をダウンロード中：{{got}} / {{total}}（{{pct}}%）",
       "installing": "アップデートをインストール中…",
@@ -830,7 +831,6 @@
         "setup": "セットアップ",
         "compat": "互換性",
         "support": "DualSense 対応",
-        "rating": "あなたの評価",
         "notes": "メモ",
         "details": "詳細"
       },
@@ -913,7 +913,15 @@
         "mic": "マイク",
         "lightbar": "ライトバー"
       },
-      "stars_other": "星 {{count}}",
+      "stars_other": "星 {{count}}：{{label}}",
+      "rateTitle": "このゲームでDualSenseはどのくらい快適に使えますか？",
+      "rateLabel": {
+        "1": "動作しない",
+        "2": "ほとんど動作しない",
+        "3": "問題はあるが動作する",
+        "4": "問題なく動作する",
+        "5": "完璧に動作する"
+      },
       "feedbackHint": "気づいたことは?",
       "tag": {
         "triggers-work": "アダプティブトリガー動作",
@@ -1658,6 +1666,12 @@
       "showAgain": "もう一度表示",
       "showAllAgain": "すべてもう一度表示",
       "goTo": "{{place}}へ移動"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "コントローラーが接続されました",
+      "controllerDisconnected": "コントローラーの接続が切れました",
+      "profileOff": "{{title}} のプロファイルをオフにしました。通常の設定に戻りました"
     }
   },
   "ad": {
