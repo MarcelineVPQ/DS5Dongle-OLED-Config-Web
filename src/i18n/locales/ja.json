@@ -274,7 +274,8 @@
       "checkedCurrent": "確認しました：最新の状態です。",
       "checkedNone": "確認しました：まだリリースが公開されていません。",
       "checkedOffline": "確認できません：更新サーバーに接続できません（オフライン？）。",
-      "backToStable": "安定版 {{version}} に戻す"
+      "backToStable": "安定版 {{version}} に戻す",
+      "writeFailed": "ファームウェアの更新が途中で止まったため、{{device}} はファームウェアが動いていない BOOTSEL モードで待機しています。接続したままにしてください。アプリが検出し、ファームウェアの再インストールを案内します。何も表示されない場合は、{{device}} を抜いて差し直してください。"
     },
     "usbAccess": {
       "label": "USB アクセスルール",

@@ -1,6 +1,6 @@
 # Lifetime pass: every acquisition, where it is released
 
-_2026-10-13. Done per CLAUDE.md "Lifetime pass" (the AVIEW pass pattern, applied to resource lifetimes). This is the one doc for both repos: the firmware's CLAUDE.md links here. The code changes are the verdict comments (one per acquisition), the two listers, the leak test and one one-line fix. Everything else is proposed in batches below; the owner picks which to do._
+_2026-10-13. Done per CLAUDE.md "Lifetime pass" (the AVIEW pass pattern, applied to resource lifetimes). This is the one doc for both repos: the firmware's CLAUDE.md links here. The code changes are the verdict comments (one per acquisition), the two listers, the leak test, one one-line fix and batch 1 (approved by the owner). Everything else is proposed in batches below; the owner picks which to do._
 
 ## How the list was made
 
@@ -31,8 +31,8 @@ Each row also says where it runs: `module` (module scope: lives as long as the p
 
 | Verdict | App | Firmware | Meaning |
 |---|---|---|---|
-| OK | 316 | 5 | Released, and the comment names where: an effect cleanup (unmount, deps change), a `stop()` / `close()` / `off()`, the window closing, a device disconnect, "fires once". |
-| LEAK | 3 | 0 | Never released, or released too late. The impact is stated. |
+| OK | 317 | 5 | Released, and the comment names where: an effect cleanup (unmount, deps change), a `stop()` / `close()` / `off()`, the window closing, a device disconnect, "fires once". |
+| LEAK | 2 | 0 | Never released, or released too late. The impact is stated. |
 | WASTE | 4 | 0 | Keeps running while the window is hidden or after it is no longer needed (the lean rule). |
 | HOT-ALLOC | 2 | 3 | Acquired or allocated per frame, per render or per main-loop pass. |
 | NOT-WORTH | 33 | 31 | One per app or per boot and lives until quit / reset by design (Electron's IPC handlers, BTstack registrations, core1's Opus state), or rare and small (a copy per host request). The reason is stated. |
@@ -42,7 +42,7 @@ App rows per kind:
 
 | Kind | OK | LEAK | WASTE | HOT-ALLOC | NOT-WORTH | Total |
 |---|---|---|---|---|---|---|
-| device | 2 | 2 | 0 | 0 | 2 | 6 |
+| device | 3 | 1 | 0 | 0 | 2 | 6 |
 | effect | 140 | 1 | 1 | 2 | 0 | 144 |
 | electron | 2 | 0 | 0 | 0 | 2 | 4 |
 | ipc | 0 | 0 | 0 | 0 | 7 | 7 |
@@ -54,7 +54,7 @@ App rows per kind:
 | subscribe | 14 | 0 | 0 | 0 | 1 | 15 |
 | timer | 49 | 0 | 3 | 0 | 4 | 56 |
 | watcher | 0 | 0 | 0 | 0 | 1 | 1 |
-| **Total** | 316 | 3 | 4 | 2 | 33 | 358 |
+| **Total** | 317 | 2 | 4 | 2 | 33 | 358 |
 
 Where the app rows run: 150 in a render (mostly the effects themselves), 66 inside an effect body, 2 at module scope, 140 in ordinary functions and handlers (the main process, the preload, `micTest.ts`, `speakerPlayer.ts`, the firmware flash). Firmware rows: 14 on core0's main loop (2 of them also from a callback), 11 in TinyUSB / BTstack callbacks, 4 on core1, 9 at boot, 1 at file scope.
 
@@ -62,9 +62,9 @@ Where the app rows run: 150 in a render (mostly the effects themselves), 66 insi
 
 **No resource is lost per mount on any main page or panel.** The leak test below mounts and unmounts each of them 50 times and every count comes back to where it started. The findings are a failure path that keeps a USB session, a dev-only GPU device, UI timers that keep running when nothing needs them, and a few allocations per frame or per main-loop pass.
 
-**Real leaks (LEAK):**
+**Real leaks (LEAK; the first is fixed in batch 1):**
 
-- `src/desktop/firmwareUpdate.ts:79` `flash`: the firmware write opens a PICOBOOT session (`device.connect()`) and only ends it by rebooting the board at the end. If an erase/write throws partway, nothing calls `disconnect()`, so the board's interface stays claimed until it is unplugged; a retry in the same app run may not be able to claim it. Possibly related to the open "{{device}} busy: Unable to claim interface" row. Fix: `try { … } catch (e) { await device.disconnect().catch(() => {}); throw e; }`.
+- **Fixed in batch 1 (2026-10-13):** `src/desktop/firmwareUpdate.ts` `flash`: the firmware write opens a PICOBOOT session (`device.connect()`) and only ended it by rebooting the board at the end. If an erase/write threw partway, nothing called `disconnect()`, so the board's interface stayed claimed until it was unplugged and a retry in the same app run couldn't claim it. Now `disconnect()` runs in a `finally` (success and every failure), the error says in plain words what happened and what to do (7 languages; the USB error is kept as its `cause`), and `tests/unit/firmwareFlash.test.ts` fails a fake board mid-write and checks the release and a working retry. The row is OK now. It doesn't explain the open "{{device}} busy: Unable to claim interface" row: that is the running board held by another app, a different USB device from the bootloader.
 - `src/desktop/dev/HdrTest.tsx:22, 30` `GpuSwatch`: the HDR test swatch requests a WebGPU device per mount and never calls `device.destroy()`; the cleanup only stops the drawing. Dev builds only (the Developer card). Fix: keep the device in the effect and destroy it in the cleanup.
 
 **Waste under the lean rule (WASTE):**
@@ -109,7 +109,7 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Batch | What | Rows | Why first |
 |---|---|---|---|
-| 1. The firmware update's USB session | End the PICOBOOT session when a write fails (`disconnect()` in a catch); check the dongle handle after a failed attach (`WebUsbTransport.close()` unused) and whether either explains "Unable to claim interface" | `firmwareUpdate.ts:79`; `webUsbTransport.ts:65, 68` | A user-visible failure (a retry that can't claim the board) on the update path |
+| 1. The firmware update's USB session (**done**, 2026-10-13) | End the PICOBOOT session when a write fails (`disconnect()` in a `finally`, done); check the dongle handle after a failed attach (`WebUsbTransport.close()` unused) and whether either explains "Unable to claim interface" | `firmwareUpdate.ts:79`; `webUsbTransport.ts:65, 68` | A user-visible failure (a retry that can't claim the board) on the update path |
 | 2. Every frame and every second on screen | The controller view's panel-toggle effect gets stable deps; the OLED mirror reuses one `ImageData`; the stick-test sampler stops while hidden; Auto-update's 1 Hz check stops once answered and while hidden; the tour's hold ring runs only while held | `ControllerView.tsx:179`, `DongleConsole.tsx:167`, `StickTestCards.tsx:40`, `AutoUpdateAsk.tsx:15, 19`, `Tour.tsx:330` | Runs whenever the app is open (two of them while hidden) |
 | 3. Firmware: no heap on core0's loop | A non-allocating feature peek for the 0x81 callers; a `bt_request_feature()` without a copy for the fire-and-forget callers | `cmd.cpp:193`, `ctrl_info.cpp:165, 179`; the `get_feature_data` NOT-WORTH rows | Bounded windows per connection, so smaller; heap use on core0 is worth removing anyway |
 | 4. Tidy | The HDR test's GPU device destroyed (dev only); `refreshLatest`'s timeout cleared; the palette watcher's stop kept | `HdrTest.tsx:22, 30`, `service.ts:90`, `index.ts:288` | Dev-only or once per app |
@@ -466,8 +466,8 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 79 | `flash` | device | PicoflashHandle.connect | - | **LEAK** | no disconnect() when a write throws: the PICOBOOT session stays claimed until replug |
-| 105 | `waitForBootloader > <anonymous>` | timer | setTimeout | - | **OK** | fires once (300 ms between bootloader looks, bounded by the deadline) |
+| 87 | `flash` | device | PicoflashHandle.connect | - | **OK** | released in the finally below (disconnect), on success and on every failure |
+| 120 | `waitForBootloader > <anonymous>` | timer | setTimeout | - | **OK** | fires once (300 ms between bootloader looks, bounded by the deadline) |
 
 #### src/desktop/games/consent.ts
 

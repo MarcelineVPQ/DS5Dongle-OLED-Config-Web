@@ -273,7 +273,8 @@
       "checkedCurrent": "Checked just now: you're up to date.",
       "checkedNone": "Checked just now: no release has been published yet.",
       "checkedOffline": "Couldn't check: the update server can't be reached (offline?).",
-      "backToStable": "Back to stable {{version}}"
+      "backToStable": "Back to stable {{version}}",
+      "writeFailed": "The firmware update stopped before it finished, so {{device}} is waiting in BOOTSEL mode with no firmware running. Keep it plugged in: the app finds it and offers to install the firmware again. If nothing shows up, unplug it and plug it back in."
     },
     "usbAccess": {
       "label": "USB access rule",

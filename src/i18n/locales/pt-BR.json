@@ -274,7 +274,8 @@
       "checkedCurrent": "Verificado agora: você está atualizado.",
       "checkedNone": "Verificado agora: nenhuma versão foi publicada ainda.",
       "checkedOffline": "Não foi possível verificar: o servidor de atualizações não responde (offline?).",
-      "backToStable": "Voltar ao estável {{version}}"
+      "backToStable": "Voltar ao estável {{version}}",
+      "writeFailed": "A atualização do firmware parou antes de terminar: {{device}} está esperando no modo BOOTSEL, sem firmware rodando. Não desconecte nada: o app percebe e oferece instalar o firmware de novo. Se nada aparecer, desconecte e conecte {{device}} de novo."
     },
     "usbAccess": {
       "label": "Regra de acesso USB",

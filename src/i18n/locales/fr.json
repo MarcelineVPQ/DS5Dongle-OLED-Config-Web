@@ -274,7 +274,8 @@
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",
       "checkedNone": "Vérifié à l'instant : aucune version n'a encore été publiée.",
       "checkedOffline": "Vérification impossible : le serveur de mises à jour est injoignable (hors ligne ?).",
-      "backToStable": "Revenir au stable {{version}}"
+      "backToStable": "Revenir au stable {{version}}",
+      "writeFailed": "La mise à jour du firmware s’est arrêtée avant la fin : {{device}} attend en mode BOOTSEL, sans firmware actif. Ne débranche rien : l’app s’en aperçoit et propose de réinstaller le firmware. Si rien n’apparaît, débranche puis rebranche {{device}}."
     },
     "usbAccess": {
       "label": "Règle d'accès USB",

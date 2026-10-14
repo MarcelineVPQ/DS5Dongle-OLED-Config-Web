@@ -8,6 +8,7 @@
 // installFirmware() flashes it directly (first-run setup).
 import type { Ds5BridgeClient } from "../protocol/bridgeClient";
 import { PicoflashAPI, parseUf2Regions, type PicoflashHandle } from "../flash";
+import i18n from "../i18n";
 
 export type FirmwareStep = "downloading" | "rebooting" | "waiting-bootloader" | "flashing" | "restarting";
 
@@ -71,28 +72,42 @@ export async function findBootloader(): Promise<PicoflashHandle | null> {
 
 const FLASH_CHUNK = 0x10000; // 64 KB: 16 flash sectors
 
+// Writes the firmware over one PICOBOOT session and restarts the board. The
+// session (the board's claimed USB interface) is always released, also when a
+// write fails: otherwise the board stays claimed until it is unplugged and a
+// retry can't open it. A failure is reported in plain words (the board is in
+// BOOTSEL with no firmware: Setup offers to install it again), with the USB
+// error kept as the cause for the log.
 export async function flash(device: PicoflashHandle, regions: ReturnType<typeof parseUf2Regions>, onProgress: (p: FirmwareProgress) => void): Promise<void> {
   onProgress({ step: "flashing", fraction: 0 });
   const total = regions.reduce((n, r) => n + r.data.byteLength, 0);
   let done = 0;
-  // lifetime: LEAK — no disconnect() when a write throws: the PICOBOOT session stays claimed until replug
-  await device.connect();
-  // In pieces, so the progress moves (the firmware is usually one region).
-  // Regions are whole flash sectors (alignRegionToSector), and a piece is a
-  // whole number of sectors, so every write stays sector-aligned.
-  // loop: SERIAL-REQUIRED — one PICOBOOT session: regions are erased and written in order
-  for (const region of regions) {
-    // loop: SERIAL-REQUIRED — one PICOBOOT session: 64 KB erase+write pieces in order, for the progress
-    for (let offset = 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
-      const piece = region.data.subarray(offset, offset + FLASH_CHUNK);
-      await device.flashEraseAndWrite(region.address + offset, piece);
-      done += piece.byteLength;
-      onProgress({ step: "flashing", fraction: done / total });
+  try {
+    // lifetime: OK — released in the finally below (disconnect), on success and on every failure
+    await device.connect();
+    // In pieces, so the progress moves (the firmware is usually one region).
+    // Regions are whole flash sectors (alignRegionToSector), and a piece is a
+    // whole number of sectors, so every write stays sector-aligned.
+    // loop: SERIAL-REQUIRED — one PICOBOOT session: regions are erased and written in order
+    for (const region of regions) {
+      // loop: SERIAL-REQUIRED — one PICOBOOT session: 64 KB erase+write pieces in order, for the progress
+      for (let offset = 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
+        const piece = region.data.subarray(offset, offset + FLASH_CHUNK);
+        await device.flashEraseAndWrite(region.address + offset, piece);
+        done += piece.byteLength;
+        onProgress({ step: "flashing", fraction: done / total });
+      }
     }
-  }
 
-  onProgress({ step: "restarting" });
-  await device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS);
+    onProgress({ step: "restarting" });
+    await device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS);
+  } catch (cause) {
+    throw new Error(i18n.t("desktop.firmware.writeFailed"), { cause });
+  } finally {
+    // Never throws (picoflash logs a failed release). After the restart
+    // request it only lets go of the interface before the board resets.
+    await device.disconnect();
+  }
 }
 
 async function waitForBootloader(): Promise<PicoflashHandle> {

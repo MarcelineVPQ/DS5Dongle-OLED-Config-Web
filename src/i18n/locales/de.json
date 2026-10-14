@@ -274,7 +274,8 @@
       "checkedCurrent": "Gerade geprüft: Du bist auf dem neuesten Stand.",
       "checkedNone": "Gerade geprüft: Es wurde noch kein Release veröffentlicht.",
       "checkedOffline": "Prüfung fehlgeschlagen: Der Update-Server ist nicht erreichbar (offline?).",
-      "backToStable": "Zurück zu stabil {{version}}"
+      "backToStable": "Zurück zu stabil {{version}}",
+      "writeFailed": "Das Firmware-Update wurde nicht fertig, darum wartet {{device}} im BOOTSEL-Modus, ohne laufende Firmware. Nicht abziehen: Die App erkennt das und bietet an, die Firmware erneut zu installieren. Erscheint nichts, {{device_akk}} abziehen und wieder einstecken."
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
