@@ -64,21 +64,12 @@ const ALLOW = [
     re: /ERROR:base\/process\/process_mac\.cc:\d+\] task_policy_set TASK_SUPPRESSION_POLICY: \(os\/kern\) invalid argument/,
     why: "Chromium on macOS, at quit: lowering the priority of a helper process that has already exited",
   },
-  // Findings of this test (reported 2026-10-14), allowed until fixed; remove the entry with the fix:
-  {
-    re: /ERROR:electron\/shell\/common\/platform_util_mac\.mm:\d+\] Unable to set login item: .*Operation not permitted/,
-    why: "mac-smoke finding 1: every start re-applies Launch at login off (index.ts applyAutostart), and Electron logs this unregistering a login item that was never registered; harmless",
-  },
-  {
-    re: /^Error occurred in handler for 'desktop:games-details': Error: The Games page isn't available on this system yet\./,
-    why: "mac-smoke finding 2: the controller page's backdrop (live/ArtBackdrop.tsx) asks for game art on macOS, where Games isn't available; harmless (colors-only backdrop)",
-  },
 ];
 const allowed = (line) => ALLOW.find((a) => a.re.test(line.trim()));
 
 // --- results
 const checks = []; // { area, name, ok, detail }
-const check = (area, name, ok, detail = "") => {
+const record = (area, name, ok, detail = "") => {
   checks.push({ area, name, ok: ok === null ? null : !!ok, detail: String(detail) });
   log(`${ok === null ? "INFO" : ok ? "PASS" : "FAIL"} ${area}: ${name}${detail ? ` (${detail})` : ""}`);
 };
@@ -172,7 +163,7 @@ async function shot(name) {
   const r = await page.send("Page.captureScreenshot", { format: "png" });
   const file = `${String(++shotN).padStart(3, "0")}-${name.replace(/[^a-z0-9.-]+/gi, "_")}.png`;
   if (r.result?.data) writeFileSync(join(SHOTS, file), Buffer.from(r.result.data, "base64"));
-  else check("screenshots", name, false, JSON.stringify(r.error ?? r).slice(0, 200));
+  else record("screenshots", name, false, JSON.stringify(r.error ?? r).slice(0, 200));
   return file;
 }
 function screencapture(name) {
@@ -181,11 +172,28 @@ function screencapture(name) {
     execFileSync("screencapture", ["-x", file], { timeout: 20000 });
     return file;
   } catch (e) {
-    check("screenshots", `screencapture ${name}`, false, e.message.split("\n")[0]);
+    record("screenshots", `screencapture ${name}`, false, e.message.split("\n")[0]);
     return null;
   }
 }
-const click = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`);
+// The whole screen, plus a strip of the menu bar around our icon.
+function menuBarShot(name, b) {
+  const full = screencapture(`fullscreen-${name}`);
+  if (!full || !b) return;
+  try {
+    const crop = join(SHOTS, `${String(++shotN).padStart(3, "0")}-${name}-icon.png`);
+    const scale = result.system?.scale ?? 1;
+    // sips crops around the center: a 240 x 40 pt strip centered on the icon.
+    const px = Math.round(scale * (b.x + b.width / 2));
+    const py = Math.round(scale * (b.y + b.height / 2));
+    const w = Math.round(240 * scale);
+    const h = Math.round(40 * scale);
+    execFileSync("sips", ["-c", String(h), String(w), "--cropOffset", String(Math.max(0, py - h / 2)), String(Math.max(0, px - w / 2)), full, "--out", crop], { stdio: "ignore" });
+  } catch (e) {
+    log("menu-bar crop failed:", e.message.split("\n")[0]);
+  }
+}
+const tap = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`);
 const READY = `document.readyState === "complete" && !!document.querySelector("[data-rail]")`;
 async function waitReady(ms = 20000) {
   const t = Date.now();
@@ -206,7 +214,7 @@ async function devSwitch(labelStart, on) {
     return "clicked";
   })()`);
 }
-async function openSection(id) {
+async function expandSection(id) {
   return ev(`(() => {
     const s = document.querySelector('.dk-sec[data-section="${id}"]');
     if (!s) return false;
@@ -307,7 +315,7 @@ const step = async (name, fn) => {
   try {
     return await fn();
   } catch (e) {
-    check(name, "ran to the end", false, e.message.split("\n")[0].slice(0, 300));
+    record(name, "ran to the end", false, e.message.split("\n")[0].slice(0, 300));
     return undefined;
   }
 };
@@ -325,7 +333,7 @@ await step("system", async () => {
       accent: systemPreferences.getAccentColor(), userData: app.getPath("userData") };
   })()`);
   log("system:", JSON.stringify(result.system));
-  check("system", "native arm64, not under Rosetta", result.system.arch === "arm64" && !result.system.isTranslated, `${result.system.arch}, translated=${result.system.isTranslated}`);
+  record("system", "native arm64, not under Rosetta", result.system.arch === "arm64" && !result.system.isTranslated, `${result.system.arch}, translated=${result.system.isTranslated}`);
   // A fixed size that fits the runner's display (1024 x 768 on GitHub's
   // macOS runners): screenshots match between runs.
   log(
@@ -341,32 +349,28 @@ await step("system", async () => {
 // 1. The Developer card's switches, clicked as a developer would
 await step("dev switches", async () => {
   await ev(`localStorage.setItem("ds5.tourDone", "1"); window.desktop.setSetting("updatesAsked", true).then(() => 1)`);
-  await click('[data-rail="app"]');
-  await sleep(800);
-  check("dev switches", "Developer section is there (a dev-tools build)", await openSection("developer"));
-  await sleep(600);
-  const sim = await devSwitch("Simulate", true);
-  check("dev switches", "Simulate board switch", sim === "clicked" || sim === "already", sim);
-  await waitReady();
-  await sleep(4000);
-  await click('[data-rail="app"]');
-  await sleep(800);
-  await openSection("developer");
-  await sleep(600);
-  const fakeGames = await devSwitch("Fake games", true);
-  check("dev switches", "Fake games switch", fakeGames === "clicked" || fakeGames === "already", fakeGames);
-  await waitReady();
-  await sleep(4000);
-  await click('[data-rail="app"]');
-  await sleep(800);
-  await openSection("developer");
-  await sleep(600);
-  const slots = await devSwitch("Pretend more controllers", true);
-  check("dev switches", "Pretend more controllers switch", slots === "clicked" || slots === "already", slots);
+  // Each switch (the first two reload the page), from the Developer section.
+  // loop: SERIAL-REQUIRED — one page: each switch is clicked after the previous reload
+  for (const [label, reloads] of [
+    ["Simulate", true],
+    ["Fake games", true],
+    ["Pretend more controllers", false],
+  ]) {
+    await tap('[data-rail="app"]');
+    await sleep(800);
+    record("dev switches", `Developer section is there for ${label} (a dev-tools build)`, await expandSection("developer"));
+    await sleep(600);
+    const got = await devSwitch(label, true);
+    record("dev switches", `${label} switch`, got === "clicked" || got === "already", got);
+    if (reloads) {
+      await waitReady();
+      await sleep(4000);
+    }
+  }
   await sleep(1000);
   const state = await ev(`({ simulated: localStorage.getItem("ds5.dev.simulated"), fakeSlots: localStorage.getItem("ds5.dev.fakeSlots") })`);
   const fg = await ev(`window.desktop.devFakeGames({}).then((s) => s.on)`);
-  check("dev switches", "all three on", state.simulated === "1" && state.fakeSlots === "1" && fg === true, JSON.stringify({ ...state, fakeGames: fg }));
+  record("dev switches", "all three on", state.simulated === "1" && state.fakeSlots === "1" && fg === true, JSON.stringify({ ...state, fakeGames: fg }));
   await shot("app-developer-on");
 });
 
@@ -381,10 +385,10 @@ result.pages = {};
 await step("pages", async () => {
   const rail = await ev(`[...document.querySelectorAll("[data-rail]")].map((e) => e.dataset.rail)`);
   result.rail = rail;
-  check("mac", "Games page hidden on macOS", !rail.includes("games"), `rail: ${rail.join(", ")}`);
+  record("mac", "Games page hidden on macOS", !rail.includes("games"), `rail: ${rail.join(", ")}`);
   for (const item of rail) {
     currentStep = `page ${item}`;
-    await click(`[data-rail="${item}"]`);
+    await tap(`[data-rail="${item}"]`);
     await sleep(1500);
     await shot(`${item}`);
     const listed = SECTIONS[item] ?? [];
@@ -392,11 +396,11 @@ await step("pages", async () => {
     const ids = [...listed.filter((id) => shown.includes(id)), ...shown.filter((id) => !listed.includes(id))];
     const missing = listed.filter((id) => !shown.includes(id));
     result.pages[item] = { sections: ids, notShown: missing };
-    if (missing.length) check("pages", `${item}: sections in sections.ts not on the page`, null, missing.join(", "));
+    if (missing.length) record("pages", `${item}: sections in sections.ts not on the page`, null, missing.join(", "));
     // loop: SERIAL-REQUIRED — one window: each section is opened, then captured
     for (const id of ids) {
       currentStep = `page ${item} / ${id}`;
-      await openSection(id);
+      await expandSection(id);
       await sleep(900);
       await shot(`${item}-${id}`);
     }
@@ -406,13 +410,13 @@ await step("pages", async () => {
         currentStep = `controller part ${part}`;
         const hit = await ev(`(() => { const el = document.querySelector('.live-ctl [data-part="${part}"]'); el?.dispatchEvent(new MouseEvent("click", { bubbles: true })); return !!el; })()`);
         if (!hit) {
-          check("pages", `controller part ${part} is drawn`, false);
+          record("pages", `controller part ${part} is drawn`, false);
           continue;
         }
         await sleep(700);
         await shot(`controller-part-${part}`);
       }
-      if (await click('[data-view="buttons"]')) {
+      if (await tap('[data-view="buttons"]')) {
         await sleep(900);
         await shot("controller-buttons");
       }
@@ -426,7 +430,7 @@ await step("pages", async () => {
       await shot(`${item}-scrolled`);
     }
   }
-  check("pages", "visited every page on the rail", rail.length >= 4, `${rail.length} pages, ${shotN} screenshots`);
+  record("pages", "visited every page on the rail", rail.length >= 4, `${rail.length} pages, ${shotN} screenshots`);
 });
 
 // 3. Mac-specific checks
@@ -445,7 +449,7 @@ await step("tray", async () => {
     const half = n.length / 2;
     for (let i = 0; i < half / 2; i++) items.push({ x: n[i * 2], y: n[i * 2 + 1], width: n[half + i * 2], height: n[half + i * 2 + 1] });
   } catch (e) {
-    check(
+    record(
       "mac",
       "menu-bar items readable (System Events)",
       false,
@@ -455,33 +459,19 @@ await step("tray", async () => {
     );
   }
   result.tray = items;
-  check("mac", "menu-bar (tray) icon exists", items.length === 1, JSON.stringify(items));
+  record("mac", "menu-bar (tray) icon exists", items.length === 1, JSON.stringify(items));
   const b = items[0];
-  check("mac", "menu-bar icon is on screen in the menu bar", b && b.width > 0 && b.y < 40, JSON.stringify(b));
-  // Template images follow the menu bar's light/dark look; ours are colored
-  // status icons (tray.ts). Reported for the owner to decide.
-  const files = readdirSync(join(opts.app, "Contents/Resources/resources")).filter((f) => f.startsWith("tray-"));
-  check(
+  record("mac", "menu-bar icon is on screen in the menu bar", b && b.width > 0 && b.y < 40, JSON.stringify(b));
+  // A template image (black + alpha) follows the menu bar's light/dark look
+  // (tray.ts, tools/prepare_tray_template.py; the live one from trayIcon.ts).
+  const files = readdirSync(join(opts.app, "Contents/Resources/resources")).filter((f) => f.startsWith("tray"));
+  record(
     "mac",
     "menu-bar icon is a template image (follows menu bar light/dark)",
-    null,
-    files.some((f) => /Template/.test(f)) ? "yes" : `no: colored PNGs (${files.join(", ")}); tray.ts never calls setTemplateImage`,
+    files.includes("trayTemplate.png") && files.includes("trayTemplate@2x.png"),
+    files.filter((f) => /Template/.test(f)).join(", ") || "no template files",
   );
-  const full = screencapture("fullscreen-menubar");
-  if (full && b) {
-    try {
-      const crop = join(SHOTS, `${String(++shotN).padStart(3, "0")}-menubar-icon.png`);
-      const scale = result.system?.scale ?? 1;
-      // sips crops around the center: a 240 x 40 pt strip centered on the icon.
-      const px = Math.round(scale * (b.x + b.width / 2));
-      const py = Math.round(scale * (b.y + b.height / 2));
-      const w = Math.round(240 * scale);
-      const h = Math.round(40 * scale);
-      execFileSync("sips", ["-c", String(h), String(w), "--cropOffset", String(Math.max(0, py - h / 2)), String(Math.max(0, px - w / 2)), full, "--out", crop], { stdio: "ignore" });
-    } catch (e) {
-      log("menu-bar crop failed:", e.message.split("\n")[0]);
-    }
-  }
+  menuBarShot("menubar", b);
 });
 
 await step("app menu", async () => {
@@ -492,10 +482,10 @@ await step("app menu", async () => {
     return walk(m.items);
   })()`);
   result.appMenu = menu;
-  check("mac", "an application menu is set", !!menu, menu ? menu.map((i) => i.label).join(" | ") : "none");
+  record("mac", "an application menu is set", !!menu, menu ? menu.map((i) => i.label).join(" | ") : "none");
   const roles = JSON.stringify(menu ?? []);
   for (const role of ["quit", "copy", "paste", "selectall", "undo", "close", "minimize"])
-    check("mac", `app menu has ${role} (Cmd shortcuts in text fields)`, new RegExp(`"role":"${role}"`, "i").test(roles));
+    record("mac", `app menu has ${role} (Cmd shortcuts in text fields)`, new RegExp(`"role":"${role}"`, "i").test(roles));
 });
 
 await step("launch at login", async () => {
@@ -508,10 +498,10 @@ await step("launch at login", async () => {
   await sleep(1500);
   const off = await read();
   result.loginItem = { before, on, off };
-  check("mac", "Launch at login turns on (app.getLoginItemSettings)", on.openAtLogin === true || on.status === "requires-approval", JSON.stringify(on));
-  check("mac", "Launch at login turns off again", off.openAtLogin === false, JSON.stringify(off));
+  record("mac", "Launch at login turns on (app.getLoginItemSettings)", on.openAtLogin === true || on.status === "requires-approval", JSON.stringify(on));
+  record("mac", "Launch at login turns off again", off.openAtLogin === false, JSON.stringify(off));
   const setting = await ev(`window.desktop.getSettings ? window.desktop.getSettings().then((s) => s.launchAtLogin) : null`).catch(() => null);
-  if (setting !== null) check("mac", "the app's setting matches", setting === false, String(setting));
+  if (setting !== null) record("mac", "the app's setting matches", setting === false, String(setting));
 });
 
 await step("appearance", async () => {
@@ -519,9 +509,9 @@ await step("appearance", async () => {
   await ev(`localStorage.setItem("ds5-bridge-theme", "desktop"); location.reload()`);
   await waitReady();
   await sleep(3000);
-  await click('[data-rail="app"]');
+  await tap('[data-rail="app"]');
   await sleep(800);
-  await openSection("appearance");
+  await expandSection("appearance");
   await sleep(800);
   const look = () =>
     ev(
@@ -530,7 +520,7 @@ await step("appearance", async () => {
   const sys = () => mainEv(`({ dark: ${E}.nativeTheme.shouldUseDarkColors, accent: ${E}.systemPreferences.getAccentColor() })`);
   const first = { system: await sys(), page: await look() };
   await shot(`appearance-desktop-${first.system.dark ? "dark" : "light"}`);
-  check("mac", "system accent color read", /^[0-9a-f]{8}$/i.test(first.system.accent ?? ""), first.system.accent);
+  record("mac", "system accent color read", /^[0-9a-f]{8}$/i.test(first.system.accent ?? ""), first.system.accent);
   // Flip the system appearance the way a user does (System Events), else
   // fall back to the app's own nativeTheme.themeSource (app-only flip).
   const target = !first.system.dark;
@@ -548,9 +538,10 @@ await step("appearance", async () => {
   await sleep(3000);
   const second = { system: await sys(), page: await look() };
   await shot(`appearance-desktop-${second.system.dark ? "dark" : "light"}`);
+  menuBarShot(`menubar-${second.system.dark ? "dark" : "light"}`, result.tray?.[0]);
   result.appearance = { how, first, second };
-  check("mac", `dark/light switch reaches the app (${how.split(" (")[0]})`, second.system.dark === target, `system dark ${first.system.dark} -> ${second.system.dark}`);
-  check("mac", "Match desktop theme follows light/dark", second.page.bg !== first.page.bg, `--bg-panel ${first.page.bg} -> ${second.page.bg}`);
+  record("mac", `dark/light switch reaches the app (${how.split(" (")[0]})`, second.system.dark === target, `system dark ${first.system.dark} -> ${second.system.dark}`);
+  record("mac", "Match desktop theme follows light/dark", second.page.bg !== first.page.bg, `--bg-panel ${first.page.bg} -> ${second.page.bg}`);
   // Back to how it was.
   if (how === "System Events") execFileSync("osascript", ["-e", `tell application "System Events" to tell appearance preferences to set dark mode to ${!target}`], { timeout: 30000, stdio: "pipe" });
   else await mainEv(`${E}.nativeTheme.themeSource = "system"`);
@@ -570,7 +561,7 @@ await step("budgets", async () => {
   const pages = [];
   for (const item of result.rail.filter((r) => r !== "games")) {
     currentStep = `budgets ${item}`;
-    await click(`[data-rail="${item}"]`);
+    await tap(`[data-rail="${item}"]`);
     await sleep(8000);
     const cpu = await cpuOver(Number(opts.cpuS));
     const framesPerS = await framesOver(Number(opts.traceS));
@@ -588,7 +579,7 @@ await step("budgets", async () => {
   const hidden = { secs: Number(opts.hiddenS), cpu: await cpuOver(Number(opts.hiddenS)), pageSawHide };
   const memHidden = memory();
   result.budgets = { limits: budgets, pages, hidden, memory: { shown: memShown, hidden: memHidden } };
-  check("lean", "the page knows it's hidden (data-window-hidden)", pageSawHide);
+  record("lean", "the page knows it's hidden (data-window-hidden)", pageSawHide);
   await win(`w.show(); w.focus(); return true;`);
   await sleep(1500);
 });
@@ -599,7 +590,7 @@ await step("single instance", async () => {
   await sleep(1500);
   execFileSync("open", ["-a", opts.app], { timeout: 30000 });
   await sleep(4000);
-  check("mac", "opening it again (open -a) shows the hidden window", await win(`return w.isVisible();`));
+  record("mac", "opening it again (open -a) shows the hidden window", await win(`return w.isVisible();`));
   // A second process (a shortcut or script that runs the binary): it must
   // quit at once and bring the first window forward.
   await win(`w.hide(); return true;`);
@@ -608,10 +599,10 @@ await step("single instance", async () => {
   const code = await Promise.race([new Promise((r) => second.on("exit", (c) => r(c))), sleep(20000).then(() => "still running")]);
   if (code === "still running") second.kill("SIGKILL");
   await sleep(2500);
-  check("mac", "a second process exits by itself", code === 0, `exit ${code}`);
-  check("mac", "and the first window comes forward", await win(`return w.isVisible();`));
+  record("mac", "a second process exits by itself", code === 0, `exit ${code}`);
+  record("mac", "and the first window comes forward", await win(`return w.isVisible();`));
   const mains = procTable().filter((p) => p.cmd.startsWith(BINARY) && !/--type=/.test(p.cmd));
-  check("mac", "one app process left", mains.length === 1, mains.map((p) => p.pid).join(", "));
+  record("mac", "one app process left", mains.length === 1, mains.map((p) => p.pid).join(", "));
 });
 
 // 4. Errors (before Quit: the inspector goes with the app)
@@ -620,8 +611,8 @@ await step("errors", async () => {
   const gone = await mainEv("globalThis.__smokeGone");
   crashes.push(...gone.filter((g) => !(g.reason === "clean-exit")));
   result.crashes = crashes;
-  check("errors", "no crashed processes", crashes.length === 0, JSON.stringify(crashes));
-  check("errors", "no renderer console errors or exceptions", rendererErrors.length === 0, `${rendererErrors.length} errors`);
+  record("errors", "no crashed processes", crashes.length === 0, JSON.stringify(crashes));
+  record("errors", "no renderer console errors or exceptions", rendererErrors.length === 0, `${rendererErrors.length} errors`);
 });
 
 await step("quit", async () => {
@@ -629,7 +620,7 @@ await step("quit", async () => {
   // Quit (Cmd+Q, the app menu's Quit) must end every process.
   await win(`w.close(); return true;`);
   await sleep(2000);
-  check(
+  record(
     "mac",
     "closing the window keeps it in the menu bar (close to tray)",
     procTable().some((p) => p.pid === MAIN_PID),
@@ -660,11 +651,11 @@ await step("quit", async () => {
   while (Date.now() - t < 20000 && alive()) await sleep(500);
   const left = procTable().filter((p) => p.pid === MAIN_PID || p.cmd.includes(`${opts.app}/`));
   result.quit = { how, secs: Math.round((Date.now() - t) / 100) / 10, left: left.map((p) => p.cmd.slice(0, 120)) };
-  check("mac", `Quit ends every process (${how.split(" (")[0]})`, left.length === 0, left.length ? `${left.length} left after ${result.quit.secs} s` : `${result.quit.secs} s`);
+  record("mac", `Quit ends every process (${how.split(" (")[0]})`, left.length === 0, left.length ? `${left.length} left after ${result.quit.secs} s` : `${result.quit.secs} s`);
 });
 
-if (existsSync(join(OUT, "launch-refused.txt"))) check("mac", "starts from /Applications with open -a (LaunchServices)", false, readFileSync(join(OUT, "launch-refused.txt"), "utf8").trim());
-else check("mac", "starts from /Applications with open -a (LaunchServices)", true);
+if (existsSync(join(OUT, "launch-refused.txt"))) record("mac", "starts from /Applications with open -a (LaunchServices)", false, readFileSync(join(OUT, "launch-refused.txt"), "utf8").trim());
+else record("mac", "starts from /Applications with open -a (LaunchServices)", true);
 
 // Crash reports macOS wrote for the app during the run.
 const reports = (() => {
@@ -676,7 +667,7 @@ const reports = (() => {
     return [];
   }
 })();
-check("errors", "no macOS crash reports", reports.length === 0, reports.join(", "));
+record("errors", "no macOS crash reports", reports.length === 0, reports.join(", "));
 
 // Main-process output (stdout + stderr via open --stdout/--stderr).
 const mainLines = (opts.log ?? "")
@@ -687,7 +678,7 @@ const mainLines = (opts.log ?? "")
 const ERRORISH = /error|fail|crash|exception|uncaught|unhandled|fatal|\[\d+:\d+\/[\d.]+:(ERROR|FATAL)/i;
 const mainErrors = mainLines.filter((l) => ERRORISH.test(l) && !allowed(l));
 const mainAllowed = mainLines.filter((l) => allowed(l));
-check("errors", "no errors from the main process", mainErrors.length === 0, `${mainErrors.length} lines`);
+record("errors", "no errors from the main process", mainErrors.length === 0, `${mainErrors.length} lines`);
 
 // ============================================================================
 // 6. The report
