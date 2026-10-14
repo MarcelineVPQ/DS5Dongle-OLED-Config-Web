@@ -21,7 +21,9 @@ import {
   type DeviceStatus,
   type GameBackup,
   type FirmwareHoldState,
+  type FirmwareDownload,
   type FirmwareLookup,
+  type LatestFirmware,
   type OfficialFirmwareLookup,
   type ProtonInstallResult,
   type UndoResult,
@@ -57,6 +59,17 @@ export const FixIdsSchema = z
       .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+|hdr:[\w.-]+|mode:[\w.-]+)$|^system:audio-(rule|profile|volume):[0-9a-f]{8}$/),
   )
   .max(500);
+// The firmware the user confirmed (latestFirmware's `latest`, sent back).
+export const ShownFirmwareSchema = z.strictObject({
+  version: z.string().max(64),
+  notesUrl: z.string().max(2048).optional(),
+  source: z.enum(["bundled", "online"]),
+  sha256: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .optional(),
+  channel: z.enum(["stable", "dev"]).optional(),
+});
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
 // The running launchers the page said it will close and reopen for the change.
 const RestartSchema = z.array(z.enum(["steam", "heroic", "lutris"])).max(3);
@@ -95,11 +108,11 @@ export interface IpcHandlers {
   getUpdateState: () => UpdateState;
   installUpdate: () => Promise<UpdateState>;
   backToStable: () => Promise<UpdateState>;
-  devChannelPreview: () => Promise<DevChannelPreview | null>;
+  devChannelPreview: (asked: boolean) => Promise<DevChannelPreview | null>;
   restartToUpdate: () => void;
-  latestFirmware: () => Promise<FirmwareLookup>;
+  latestFirmware: (asked: boolean) => Promise<FirmwareLookup>;
   officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;
-  downloadFirmware: () => Promise<{ version: string; bytes: Uint8Array }>;
+  downloadFirmware: (shown: LatestFirmware) => Promise<FirmwareDownload>;
   setFirmwareWriting: (writing: boolean) => void;
   getFirmwareHold: () => FirmwareHoldState;
   getDesktopPalette: () => Promise<unknown>;
@@ -145,9 +158,6 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.getUpdateState, h.getUpdateState);
   invoke(IPC.installUpdate, h.installUpdate);
   invoke(IPC.backToStable, h.backToStable);
-  invoke(IPC.devChannelPreview, h.devChannelPreview);
-  invoke(IPC.latestFirmware, h.latestFirmware);
-  invoke(IPC.downloadFirmware, h.downloadFirmware);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
   invoke(IPC.firmwareChangelog, h.firmwareChangelog);
 
@@ -200,6 +210,9 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
   invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
+  invokeWith(IPC.devChannelPreview, z.boolean(), h.devChannelPreview);
+  invokeWith(IPC.latestFirmware, z.boolean(), h.latestFirmware);
+  invokeWith(IPC.downloadFirmware, ShownFirmwareSchema, h.downloadFirmware);
 
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");

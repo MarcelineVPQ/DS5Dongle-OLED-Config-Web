@@ -28,6 +28,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Your board by its name": '"Waiting for the dongle…" and other leftovers',
   "Your board's specs": "Board page: Waveshare Pico-OLED-1.3",
   "No restart during a firmware update": "No restart or quit while firmware is being written",
+  "Update checks only when you allow them": "Updates: the automatic-checks switch is kept, and firmware installs the version shown",
   "Lighter haptic feedback processing": "Haptics: upstream 16:1",
   "Sony's names for everything": "Sony's official naming",
   "More controller colors": "My controller's colors",

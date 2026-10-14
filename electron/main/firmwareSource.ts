@@ -7,8 +7,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import type { FirmwareLookup } from "../../src/desktop/api";
-import { isNewer, type Manifest } from "../../src/update/manifest";
+import type { FirmwareDownload, FirmwareLookup, LatestFirmware, UpdateChannel } from "../../src/desktop/api";
+import { isNewer, type Download, type Manifest } from "../../src/update/manifest";
+import { CorruptDownloadError } from "./download";
+import { FEED_REUSE_MS, FeedMissingError, type FeedCache } from "./updateFeed";
 
 export const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
 
@@ -53,26 +55,68 @@ export function choose(bundled: Bundled | null, published: Published | null): "b
 
 export interface FirmwareSourceDeps {
   bundled: () => Bundled | null;
-  // The feed, or why there's none: "unpublished" (nothing released yet) or "offline".
-  manifest: () => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"] }>;
-  downloadPublished: () => Promise<{ version: string; bytes: Uint8Array }>;
+  // The feed, or why there's none: "unpublished" (nothing released yet),
+  // "offline", or "disabled" (automatic checks are off and nobody asked).
+  // `asked`: the user pressed a check button. See firmwareFeed().
+  manifest: (asked: boolean) => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"]; channel: UpdateChannel }>;
+  // A fresh look at one channel's feed (the user pressed Install).
+  freshFeed: (channel: UpdateChannel) => Promise<Manifest>;
+  // Downloads one published file, verified against its own size + SHA-256.
+  download: (uf2: Download) => Promise<Uint8Array>;
 }
 
-export async function latestFirmware(deps: FirmwareSourceDeps): Promise<FirmwareLookup> {
+// The feed for the firmware lookups, under the "Check for updates
+// automatically" switch: with it off, nothing goes online until the user asks
+// (a check button); the last feed the user fetched is still shown.
+export function firmwareFeed(feed: Pick<FeedCache, "get" | "last">, automatic: () => boolean, channel: () => UpdateChannel): FirmwareSourceDeps["manifest"] {
+  return async (asked) => {
+    const ch = channel();
+    if (!asked && !automatic()) {
+      const last = feed.last(ch);
+      return { manifest: last, problem: last ? null : "disabled", channel: ch };
+    }
+    try {
+      return { manifest: await feed.get(ch, FEED_REUSE_MS), problem: null, channel: ch };
+    } catch (cause) {
+      if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished", channel: ch };
+      // Offline: the last one fetched for this channel, if any.
+      const last = feed.last(ch);
+      return last ? { manifest: last, problem: null, channel: ch } : { manifest: null, problem: "offline", channel: ch };
+    }
+  };
+}
+
+export async function latestFirmware(deps: FirmwareSourceDeps, asked = false): Promise<FirmwareLookup> {
   const bundled = deps.bundled();
-  const { manifest, problem } = await deps.manifest();
+  const { manifest, problem, channel } = await deps.manifest(asked);
   const published = manifest?.firmware ?? null;
   const source = choose(bundled, published);
-  if (source === "online") return { latest: { version: published!.version, notesUrl: published!.notes_url, source }, problem: null };
+  if (source === "online") return { latest: { version: published!.version, notesUrl: published!.notes_url, source, sha256: published!.uf2.sha256, channel }, problem: null };
   if (source === "bundled") return { latest: { version: bundled!.version, source }, problem };
   return { latest: null, problem: problem ?? "unpublished" };
 }
 
-export async function firmwareBytes(deps: FirmwareSourceDeps): Promise<{ version: string; bytes: Uint8Array }> {
-  const bundled = deps.bundled();
-  const published = (await deps.manifest()).manifest?.firmware ?? null;
-  const source = choose(bundled, published);
-  if (source === "online") return deps.downloadPublished();
-  if (source === "bundled") return { version: bundled!.version, bytes: loadBundled(bundled!) };
-  throw new Error("No firmware is available: this build has none bundled and the update feed can't be reached.");
+// The firmware the user was shown and confirmed, nothing else: the bundled
+// build, or exactly that feed entry (version + SHA-256, from that channel's
+// feed). If the feed has moved on since, nothing is downloaded; the user
+// checks again and sees the new offer first.
+export async function firmwareBytes(deps: FirmwareSourceDeps, shown: LatestFirmware): Promise<FirmwareDownload> {
+  if (shown.source === "bundled") {
+    const bundled = deps.bundled();
+    if (!bundled || bundled.version !== shown.version) return { ok: false, reason: "changed" };
+    return { ok: true, version: bundled.version, bytes: loadBundled(bundled) };
+  }
+  if (!shown.sha256 || !shown.channel) return { ok: false, reason: "changed" };
+  const fw = (await deps.freshFeed(shown.channel)).firmware;
+  if (!fw || fw.version !== shown.version || fw.uf2.sha256 !== shown.sha256) return { ok: false, reason: "changed" };
+  let bytes: Uint8Array;
+  try {
+    bytes = await deps.download(fw.uf2);
+  } catch (cause) {
+    if (cause instanceof CorruptDownloadError) return { ok: false, reason: "mismatch" };
+    throw cause;
+  }
+  // Checked again against the entry shown, whatever the download did.
+  if (createHash("sha256").update(bytes).digest("hex") !== shown.sha256) return { ok: false, reason: "mismatch" };
+  return { ok: true, version: shown.version, bytes };
 }
