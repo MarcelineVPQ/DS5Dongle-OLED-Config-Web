@@ -2,9 +2,16 @@
 // newest is the big one (its wide art and logo, like its own page's header,
 // with when and how long it was played); the next ones are smaller, beside
 // it. Opening a tile opens the game's page; Play starts it in its launcher.
+// In the Glass look the bars are real glass over the tile's own art (at most
+// five tiles, so a live backdrop filter is affordable here, unlike the grid).
+import { useMemo, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameEntry, GameInfo } from "../games/types";
-import { artUrl, type ArtKind } from "../games/types";
+import { artUrl } from "../games/types";
+import { glassCaption } from "../glass/glassCaption";
+import { useGlass } from "../glass/useGlass";
+import { REGULAR_GLASS } from "../glass/variants";
+import { firstArt, headerArt, useArtColor } from "./gameArt";
 import { TileOverlays, type TileProps } from "./GameTile";
 import { PlayButton, PlayStats, useGameAction } from "./playBar";
 
@@ -17,7 +24,9 @@ export function ContinuePlaying({
   running,
   hasProfile,
   onOpen,
+  glass = false,
 }: {
+  glass?: boolean;
   games: GameEntry[];
   details: Record<string, GameInfo>;
   running: string | null;
@@ -27,7 +36,7 @@ export function ContinuePlaying({
   const { t } = useTranslation();
   if (games.length === 0) return null;
   const [lead, ...rest] = games;
-  const tile = (g: GameEntry) => ({ game: g, info: details[g.key], running: g.key === running, hasProfile: hasProfile(g), onOpen: () => onOpen(g.key) });
+  const tile = (g: GameEntry) => ({ game: g, info: details[g.key], running: g.key === running, hasProfile: hasProfile(g), onOpen: () => onOpen(g.key), glass });
   return (
     <section className="lib-section">
       <h2 className="lib-section-title">{t("desktop.library.continue")}</h2>
@@ -48,28 +57,32 @@ export function ContinuePlaying({
   );
 }
 
-// loop: HOT-PATH-OK — N ≤ 3 art kinds per tile
-const first = (info: GameInfo | undefined, kinds: ArtKind[]) => kinds.find((k) => info?.art.includes(k)) ?? null;
+type ContinueProps = TileProps & { glass: boolean };
 
-function LeadTile({ game, info, running, hasProfile, onOpen }: TileProps) {
+// Glass: the caption tokens from the art color, and the bar's glass filter
+// and specular rim (the same as the save bar's, regular variant: it holds text).
+function useGlassBar(glass: boolean, artColor: string | null) {
+  const barRef = useGlass(glass, REGULAR_GLASS);
+  const tokens = useMemo(() => (glass ? glassCaption(artColor) : null), [glass, artColor]);
+  return { barRef, tokens, glassClass: glass ? " lib-glass" : "" };
+}
+
+function LeadTile({ game, info, running, hasProfile, onOpen, glass }: ContinueProps) {
   const { t } = useTranslation();
   const { run, failed } = useGameAction(game);
-  const art = first(info, ["hero", "header", "cover"]);
-  const logo = art === "hero" && info?.art.includes("logo");
+  const art = headerArt(game.key, info);
+  const artColor = useArtColor(game.key, glass || art.shape === "tall");
+  const { barRef, tokens, glassClass } = useGlassBar(glass, artColor);
+  const logo = art.kind === "hero" && info?.art.includes("logo");
+  const style = { ...art.style, ...(artColor && art.shape === "tall" ? { "--art-color": artColor } : null) } as CSSProperties;
   return (
-    <div className="lib-tile lib-continue-tile lead">
+    <div className={`lib-tile lib-continue-tile lead${glassClass}`} style={tokens ?? undefined}>
       {/* The game page's header, as a button that opens the page. */}
-      <button
-        type="button"
-        className={`gp-hero lib-continue-art${art ? "" : " plain"}`}
-        style={art ? { backgroundImage: `url("${artUrl(game.key, art)}")` } : undefined}
-        title={game.title}
-        onClick={onOpen}
-      >
+      <button type="button" className={`gp-hero ${art.shape} lib-continue-art`} style={style} title={game.title} onClick={onOpen}>
         {logo ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <span className="gp-title">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </button>
-      <div className="gp-bar lib-continue-bar">
+      <div className="gp-bar lib-continue-bar" ref={barRef}>
         {info?.actions?.includes("play") && <PlayButton game={game} running={running} run={run} />}
         <PlayStats info={info} running={running} />
       </div>
@@ -78,17 +91,18 @@ function LeadTile({ game, info, running, hasProfile, onOpen }: TileProps) {
   );
 }
 
-function SmallTile({ game, info, running, hasProfile, onOpen }: TileProps) {
+function SmallTile({ game, info, running, hasProfile, onOpen, glass }: ContinueProps) {
   const { t } = useTranslation();
   const { run, failed } = useGameAction(game);
-  const art = first(info, ["header", "hero", "cover"]);
+  const art = firstArt(info, ["header", "hero", "cover"]);
+  const { barRef, tokens, glassClass } = useGlassBar(glass, useArtColor(game.key, glass));
   return (
-    <div className="lib-tile lib-continue-tile">
+    <div className={`lib-tile lib-continue-tile${glassClass}`} style={tokens ?? undefined}>
       <button type="button" className="lib-continue-art" title={game.title} onClick={onOpen}>
         {art ? <img src={artUrl(game.key, art)} alt="" loading="lazy" /> : <span className="lib-tile-noart">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </button>
-      <div className="lib-continue-bar">
+      <div className="lib-continue-bar" ref={barRef}>
         <span className="lib-tile-title" title={game.title}>
           {game.title}
         </span>
