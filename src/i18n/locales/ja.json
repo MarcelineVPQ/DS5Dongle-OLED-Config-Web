@@ -522,7 +522,9 @@
       "restartFailed": "{{launcher}} に終了を依頼できなかったため、何も変更していません。手動で終了してから、もう一度お試しください。",
       "reopenFailed": "保存しましたが、{{launcher}} をもう一度起動できませんでした。手動で起動してください。",
       "launcherStarted": "{{launcher}} が起動中のため、まだ何も変更していません。この変更のために終了し、その後もう一度開きます。続けるにはもう一度確定してください。",
-      "launcherOverwrote": "{{launcher}} がここで適用した変更を元に戻しました (起動中でした)。もう一度適用してください。{{launcher}} が起動中なら、先に終了し、その後もう一度開きます。"
+      "launcherOverwrote": "{{launcher}} がここで適用した変更を元に戻しました (起動中でした)。もう一度適用してください。{{launcher}} が起動中なら、先に終了し、その後もう一度開きます。",
+      "details": "詳細",
+      "needsAttention": "要設定"
     },
     "setup": {
       "installing": "ファームウェアをインストールしています…",
@@ -922,7 +924,6 @@
         "dualsense": "アダプティブトリガーまたは ハプティックフィードバックにネイティブ対応のゲーム",
         "attention": "設定の変更待ちがあるゲーム"
       },
-      "summary": "{{games}} 本のゲーム · DualSense 機能対応 {{dualsense}} 本 · プロファイルあり {{profiles}} 本",
       "recent": "最近プレイ",
       "tierLegend": "ランクの意味",
       "compatHint": "アダプティブトリガーと ハプティックフィードバックは、DualSense 版 Proton を使ったときだけ Windows ゲームに届きます。",
@@ -941,7 +942,6 @@
         "prefixFolderHint": "ゲームの Windows（Proton/Wine）フォルダーを開く：設定やセーブがよくここにあります",
         "failed": "開けませんでした。ランチャーはインストールされていますか？"
       },
-      "gridFiltered": "リストと同じ絞り込み",
       "kind": {
         "demo": "体験版",
         "dlc": "DLC",
@@ -976,7 +976,11 @@
       "supportsHdr": "HDR 対応",
       "supportsHdrHint": "PC 版に HDR 設定があるゲームならチェックしてください: HDR に必要なものが表示され、準備ができると「HDR をオンにする」が提案されます。",
       "marksTitle": "思いどおりに動かない?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "続けてプレイ",
+      "libraryTitle": "ライブラリ",
+      "filteredBy": "フィルター: {{filter}}",
+      "showAll": "すべて表示"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",

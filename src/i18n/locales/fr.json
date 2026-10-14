@@ -525,7 +525,9 @@
       "restartFailed": "Impossible de demander à {{launcher}} de se fermer, donc rien n'a été modifié. Quitte-le toi-même, puis réessaie.",
       "reopenFailed": "Enregistré, mais {{launcher}} n'a pas pu être relancé. Lance-le toi-même.",
       "launcherStarted": "{{launcher}} est en cours d'exécution, donc rien n'a encore été modifié. Il sera fermé pour ce changement, puis rouvert. Confirme à nouveau pour continuer.",
-      "launcherOverwrote": "{{launcher}} a annulé un changement appliqué ici (il était ouvert). Applique-le à nouveau : si {{launcher}} est ouvert, il est d'abord fermé, puis rouvert."
+      "launcherOverwrote": "{{launcher}} a annulé un changement appliqué ici (il était ouvert). Applique-le à nouveau : si {{launcher}} est ouvert, il est d'abord fermé, puis rouvert.",
+      "details": "Détails",
+      "needsAttention": "À régler"
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -930,7 +932,6 @@
         "dualsense": "Jeux avec gâchettes adaptatives ou retour haptique natives",
         "attention": "Jeux avec un réglage en attente"
       },
-      "summary": "{{games}} jeux · {{dualsense}} avec fonctions DualSense · {{profiles}} avec un profil",
       "recent": "Joués récemment",
       "tierLegend": "Signification des niveaux",
       "compatHint": "Les gâchettes adaptatives et le retour haptique n'arrivent aux jeux Windows que via la version Proton DualSense.",
@@ -949,7 +950,6 @@
         "prefixFolderHint": "Ouvrir le dossier Windows (Proton/Wine) du jeu : réglages et sauvegardes s'y trouvent souvent",
         "failed": "Impossible d'ouvrir. Le lanceur est-il installé ?"
       },
-      "gridFiltered": "filtrés comme la liste",
       "kind": {
         "demo": "Démo",
         "dlc": "DLC",
@@ -984,7 +984,11 @@
       "supportsHdr": "Prend en charge le HDR",
       "supportsHdrHint": "Cochez si le jeu a un réglage HDR sur PC : l'app montre alors ce qu'il faut pour le HDR et propose Activer le HDR dès que tout est prêt.",
       "marksTitle": "Ça ne fonctionne pas comme prévu ?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Reprendre",
+      "libraryTitle": "Bibliothèque",
+      "filteredBy": "Filtre : {{filter}}",
+      "showAll": "Tout afficher"
     },
     "dongleConsole": {
       "title": "Console : {{deviceName}}",

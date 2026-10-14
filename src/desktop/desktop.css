@@ -2247,6 +2247,7 @@ html[data-theme="light"] .live-ctl {
   overflow: auto;
 }
 .lib-home-pane {
+  container-type: inline-size; /* Continue playing sizes by the pane, not the window */
   padding: var(--dk-pad);
 }
 
@@ -2739,49 +2740,247 @@ html[data-cards-translucent] .gp-sections .dk-card {
   font-size: 10.5px;
 }
 
-/* Library: sort, Home's summary and recently-played shelf. */
+/* ---- Games → Home: game setup (one line, or open when something needs
+   the player), Continue playing, then the Library (filters with counts,
+   sort, Show) over the cover grid. The art is the color; the page around it
+   stays quiet. ---- */
+.lib-home-pane > .dk-stack {
+  max-width: none;
+  margin-bottom: 18px;
+}
+.lib-section {
+  margin-bottom: 22px;
+}
+/* Home's headings read as headings, not as small grey labels. */
+.lib-section-title {
+  margin: 0 0 8px;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.lib-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.lib-toolbar .lib-section-title {
+  margin: 0 4px 0 0;
+}
+.lib-toolbar .dk-spacer {
+  flex: 1;
+}
+/* Show opens under its button, right-aligned with it (the toolbar's end). */
+.lib-toolbar .lib-show-menu {
+  right: 0;
+  left: auto;
+}
+.lib-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 .lib-sort {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: var(--dk-small);
 }
 .lib-sort .dk-select {
   height: 24px;
   font-size: var(--dk-small);
 }
-.lib-home-pane .dk-stack {
-  max-width: none;
-}
-.lib-shelf-wrap {
-  margin-bottom: var(--dk-gap);
-}
-.lib-summary {
-  margin: 0 0 8px;
-  color: var(--text-muted);
-}
-.lib-shelf-title {
-  margin: 0 0 6px;
-  color: var(--text-muted);
-  font-size: var(--dk-small);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.lib-shelf {
+/* The rail says when the list is filtered (from the Library's chips). */
+.lib-filtered {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0 6px;
+}
+.lib-filtered .dk-inline-btn {
+  margin-left: auto;
+}
+
+/* Game setup, all fine: one line; its summary is the status itself. */
+.lib-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 8px 7px var(--dk-pad);
+}
+.lib-status > .lib-system {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding-top: 3px;
+}
+.lib-facts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin-left: 14px;
+  color: var(--text-secondary);
+  font-size: var(--dk-small);
+  font-weight: 400;
+  vertical-align: middle;
+}
+.lib-facts > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Something needs the player: open, first, with its action. */
+.lib-setup-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lib-setup-head h2 {
+  flex: 1;
+}
+.lib-setup-part {
+  margin-top: 10px;
+}
+.lib-setup-part h3 {
+  margin: 0 0 4px;
+  color: var(--text-strong);
+  font-size: var(--dk-font);
+  font-weight: 600;
+}
+.lib-setup-part p {
+  margin: 2px 0 6px;
+}
+.lib-setup > .lib-system {
+  margin: 10px 0 2px;
+}
+.lib-system[open] > summary {
+  margin-bottom: 6px;
+}
+.lib-history {
+  margin: 10px 0 0;
+}
+
+/* Continue playing: the newest game big (its page's header: wide art and
+   logo, Play and the play stats), the next ones beside it. */
+.lib-continue {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.lib-continue.solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lib-continue:has(.lib-continue-rest.two) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.lib-continue-rest {
+  display: grid;
+  grid-auto-rows: 1fr;
   gap: 10px;
   margin: 0;
-  padding: 0 0 6px;
-  overflow-x: auto;
+  padding: 0;
   list-style: none;
-  scrollbar-width: thin;
 }
-.lib-shelf > li {
-  flex: 0 0 104px;
-  width: 104px;
+.lib-continue-rest.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.lib-tile.lib-continue-tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  cursor: default;
+}
+.lib-continue-art {
+  position: relative;
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg-inset);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+.lib-continue-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 460 / 215;
+  object-fit: cover;
+}
+.lib-continue-art .lib-tile-noart {
+  aspect-ratio: 460 / 215;
+}
+.lib-continue-tile.lead .lib-continue-art {
+  display: flex;
+  flex: 1;
+  height: auto;
+  min-height: 170px;
+  padding: 16px 18px;
+  background-color: var(--bg-inset);
+  box-shadow: none;
+}
+.lib-continue-tile.lead .lib-continue-art img.gp-logo {
+  width: auto;
+  height: auto;
+  max-width: min(55%, 320px);
+  max-height: 46%;
+  aspect-ratio: auto;
+}
+.lib-continue-tile.lead .gp-title {
+  font-size: 22px;
+}
+/* The marks sit above the scrim. */
+.lib-continue-art .lib-tile-marks,
+.lib-continue-art .lib-tile-store,
+.lib-continue-art .lib-tile-kind,
+.lib-continue-art .lib-tile-badge {
+  z-index: 1;
+}
+.lib-continue-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 5px 6px 5px 8px;
+}
+.lib-continue-tile.lead .lib-continue-bar {
+  padding: 8px 12px;
+  border-bottom: 0;
+}
+.lib-continue-bar .lib-tile-title {
+  flex: 1;
   min-width: 0;
+  padding: 0;
+  font-size: var(--dk-font);
+}
+/* A tile holding a button: it lifts on hover but doesn't wiggle. */
+.lib-tile.lib-continue-tile:hover {
+  animation: none;
+}
+.lib-continue-tile:not(.lead) .gp-play {
+  min-width: 0;
+}
+.lib-continue-failed {
+  margin: 0 8px 6px;
+}
+/* Narrow: the big one on its own row, the others under it. */
+@container (max-width: 640px) {
+  .lib-continue,
+  .lib-continue:has(.lib-continue-rest.two) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lib-continue-rest {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .lib-tile {
   position: relative;
@@ -2828,38 +3027,42 @@ html[data-cards-translucent] .gp-sections .dk-card {
   text-align: center;
 }
 /* Marks over the art: dark glass so they read on any cover. */
+/* One strip of marks (top right) rather than a column down the art. */
 .lib-tile-marks {
   position: absolute;
   top: 5px;
   right: 5px;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  padding: 0 2px;
+  border-radius: 5px;
+  background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
+  backdrop-filter: blur(4px);
 }
 .lib-tile-mark,
 .lib-tile-store {
   display: grid;
-  width: 21px;
+  width: 20px;
   height: 21px;
   place-items: center;
-  border-radius: 5px;
-  background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
   color: #fff; /* theme-exempt: overlay on game art */
-  backdrop-filter: blur(4px);
-}
-.lib-tile-mark.warn {
-  color: #ffc24a; /* theme-exempt: overlay on game art (warning glyph also differs) */
 }
 .lib-tile-store {
   position: absolute;
   bottom: 5px;
   left: 5px;
+  width: 21px;
+  border-radius: 5px;
+  background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
+  backdrop-filter: blur(4px);
 }
-/* Home: every game as a cover grid (follows the list's search, filter, sort). */
+.lib-tile-mark.warn {
+  color: #ffc24a; /* theme-exempt: overlay on game art (warning glyph also differs) */
+}
+/* The Library: every game as a cover grid (the same search, filter and sort as the list). */
 .lib-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 14px 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -4321,7 +4524,8 @@ main.dk-body:focus:not(:focus-visible),
 }
 /* A summary that is itself the status ("✓ All set"), not a small aside. */
 .hdr-row summary,
-.gp-checks > summary {
+.gp-checks > summary,
+.lib-status > .lib-system > summary {
   color: inherit;
   font-size: inherit;
 }
