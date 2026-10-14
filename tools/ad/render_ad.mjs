@@ -152,7 +152,7 @@ const send = (method, params) =>
   });
 const evaluate = async (expression) => (await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true })).result?.value;
 
-const saved = await evaluate(`JSON.stringify({ lang: localStorage.getItem("i18nextLng"), panel: localStorage.getItem("ds5.panelHidden") })`);
+const saved = await evaluate(`JSON.stringify({ lang: localStorage.getItem("i18nextLng"), panel: localStorage.getItem("ds5.accordion.hidden.controller") })`);
 await send("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: 1, mobile: false });
 
 const STYLE = `
@@ -176,10 +176,10 @@ let uiLang = null;
 let P = null; // controller center at identity
 let ctlH = 0;
 async function loadUi(lang) {
-  await evaluate(`(() => { localStorage.setItem("i18nextLng", ${JSON.stringify(lang)}); localStorage.setItem("ds5.panelHidden", "0"); location.reload(); })()`);
+  await evaluate(`(() => { localStorage.setItem("i18nextLng", ${JSON.stringify(lang)}); localStorage.setItem("ds5.accordion.hidden.controller", "0"); location.reload(); })()`);
   for (let i = 0; i < 40; i++) {
     await sleep(250);
-    if (await evaluate(`!!document.querySelector(".live-ctl svg") && !!document.querySelector(".live-panel")`)) break;
+    if (await evaluate(`!!document.querySelector(".live-ctl svg") && !!document.querySelector(".dk-split-panel")`)) break;
   }
   await sleep(1200);
   const m = await evaluate(`(() => {
@@ -267,7 +267,7 @@ const was = JSON.parse(saved);
 await send("Emulation.clearDeviceMetricsOverride", {});
 await evaluate(`(() => {
   ${was.lang === null ? `localStorage.removeItem("i18nextLng")` : `localStorage.setItem("i18nextLng", ${JSON.stringify(was.lang)})`};
-  ${was.panel === null ? `localStorage.removeItem("ds5.panelHidden")` : `localStorage.setItem("ds5.panelHidden", ${JSON.stringify(was.panel)})`};
+  ${was.panel === null ? `localStorage.removeItem("ds5.accordion.hidden.controller")` : `localStorage.setItem("ds5.accordion.hidden.controller", ${JSON.stringify(was.panel)})`};
   location.reload();
 })()`);
 ws.close();

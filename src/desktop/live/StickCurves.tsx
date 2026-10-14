@@ -11,6 +11,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
+import { SectionGroup } from "../accordion/Section";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { profileCurves, sameGameCurves, type GameCurves } from "../library/profileValues";
 import {
@@ -69,10 +70,9 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   if (!client) return null;
   if (!supported) {
     return (
-      <section className="dk-card">
-        <h2>{t("desktop.curves.title")}</h2>
+      <SectionGroup title={t("desktop.curves.title")}>
         <p className="dk-hint">{t("desktop.curves.needsFirmware")}</p>
-      </section>
+      </SectionGroup>
     );
   }
 
@@ -111,8 +111,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   const tilt = stickTilt(input, side, sticks[side], curve);
 
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.curves.title")}</h2>
+    <SectionGroup title={t("desktop.curves.title")}>
       <p className="dk-hint">{t("desktop.curves.intro")}</p>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
         {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
@@ -157,7 +156,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       </div>
       <p className="dk-hint">{t("desktop.curves.saveHint", { slot })}</p>
       <SlotReadError error={error} retry={saved === null ? retry : null} />
-    </section>
+    </SectionGroup>
   );
 }
 
@@ -326,8 +325,7 @@ function GameStickCurves({
   const changed = !sameGameCurves(draft, stored);
   const tilt = stickTilt(input, side, sticks[side], curve);
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.curves.title")}</h2>
+    <SectionGroup title={t("desktop.curves.title")}>
       <Notice closable>{t("desktop.editing.curvesNote", { title })}</Notice>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
         {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
@@ -359,6 +357,6 @@ function GameStickCurves({
           {t("desktop.calib.revert")}
         </button>
       </div>
-    </section>
+    </SectionGroup>
   );
 }

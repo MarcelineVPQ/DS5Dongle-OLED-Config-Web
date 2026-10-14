@@ -1,9 +1,11 @@
-// Games: checks Steam, Heroic and Lutris (Linux; Steam, GOG Galaxy and Epic
-// on Windows) for settings that stop the DualSense's native features
+// Games → Home: checks Steam, Heroic and Lutris (Linux; Steam, GOG Galaxy
+// and Epic on Windows) for settings that stop the DualSense's native features
 // (adaptive triggers, haptics) from reaching games, and fixes them with the
-// user's consent. On Home it's calm when healthy (one "Everything is set up"
-// line over the library, the details folded) and loud when not: what needs
-// the player shows open at the top with its action (homeStatus).
+// user's consent. Like every page: the library (Continue playing, the grid)
+// is the main view, and game setup is the accordion at the right: Launchers,
+// DualSense Proton and This computer (Linux), Recommended changes (the rail's
+// count: its task dot) and Change history. Each section says its state in
+// its header; what needs the player carries the yellow dot.
 //
 // Consent flow (load-bearing, see src/desktop/games/types.ts):
 //   allow (first visit: what will be read, nothing until the user agrees)
@@ -12,7 +14,12 @@
 //      named there: it will be closed for the change, then reopened)
 //   -> apply (backed up first) -> Undo (the same close-and-reopen, said first).
 // Downloading Proton is its own confirmation with size and destination.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+//
+// The scan and the steps live here (useGamesSetup), not in the sections: a
+// folded section renders nothing, and opening it again finds the review or
+// an install where it was.
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Cpu, History, Layers, ListChecks, Rocket } from "lucide-react";
 import { LauncherIcon } from "../library/LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { latestOnly } from "../games/scanOrder";
@@ -33,6 +40,9 @@ import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSince
 import { logged } from "../../errorText";
 import { feedProblemKey } from "../useUpdates";
 import Notice from "../Notice";
+import { Section } from "../accordion/Section";
+import { pinScope, useAccordion } from "../accordion/useAccordion";
+import type { SectionId } from "../accordion/sections";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -128,31 +138,9 @@ interface GamesPageProps {
   openGame?: { key: string } | null; // a game page to open (back from editing its profile)
 }
 
-export default function GamesPage({ allowed, onAllowedChange, bridge, profiles, onScanned, openGame, ...rest }: GamesPageProps) {
-  // The library shows the games of the latest scan; Home (setup and fixes)
-  // runs the scans, and rescans when a game page applied something.
-  const [report, setReport] = useState<GamesReport | null>(null);
-  const [rescanToken, setRescanToken] = useState(0);
-  const scanned = useCallback(
-    (r: GamesReport) => {
-      setReport(r);
-      onScanned?.(r);
-    },
-    [onScanned],
-  );
+export default function GamesPage({ allowed, onAllowedChange, ...rest }: GamesPageProps) {
   if (!allowed) return <GamesConsent onAllow={() => onAllowedChange(true)} />;
-  return (
-    <GameLibrary
-      report={report}
-      bridge={bridge}
-      library={profiles.library}
-      onLibrary={profiles.setLibrary}
-      running={profiles.running}
-      openGame={openGame}
-      onRescan={() => setRescanToken((n) => n + 1)}
-      home={<GamesSetup {...rest} rescanToken={rescanToken} onScanned={scanned} />}
-    />
-  );
+  return <GamesHome {...rest} />;
 }
 
 // First visit: say exactly what checking reads, and read nothing until the user agrees.
@@ -160,6 +148,7 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
   const { t } = useTranslation();
   return (
     <div className="dk-stack">
+      {/* settings-gate: not-settings — the first-visit consent (nothing is read before it), not a settings card */}
       <section className="dk-card">
         <h2>{t("desktop.games.title", "Game setup")}</h2>
         <p>{t(protonApplies() ? "desktop.games.consentIntro" : "desktop.games.consentIntroWindows")}</p>
@@ -180,22 +169,30 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
   );
 }
 
-function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPageProps, "allowed" | "onAllowedChange" | "bridge" | "profiles"> & { rescanToken: number }) {
+// Where a message from an action shows: the section the action is in (or, for a scan, above the sections).
+type Place = "top" | Extract<SectionId<"games">, "proton" | "recommended" | "history">;
+interface Placed {
+  text: string;
+  at: Place;
+}
+
+// The scan and every step of game setup (pick → review → done, Undo, the
+// Proton install), kept while sections fold and open.
+function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "onScanned" | "onDeclinedChange">) {
   const { t } = useTranslation();
   const desktop = window.desktop!;
   const [report, setReport] = useState<GamesReport | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Placed | null>(null);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const declined = useRef<Set<string>>(loadDeclined());
   const [declinedAtScan, setDeclinedAtScan] = useState<ReadonlySet<string>>(loadDeclined);
   const [step, setStep] = useState<Step>("pick");
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<(ApplyResult & { labels: Map<string, Msg> }) | null>(null);
-  const m = useMsg();
-  const [closeNote, setCloseNote] = useState<string | null>(null);
+  const [closeNote, setCloseNote] = useState<Placed | null>(null);
   const restartText = useRestartText();
-  // An undo that needs running launchers closed: said first, then confirmed.
-  const [undoAsk, setUndoAsk] = useState<{ backupId: string; launchers: RestartList } | null>(null);
+  // An undo that needs running launchers closed: said first, then confirmed (where it was asked).
+  const [undoAsk, setUndoAsk] = useState<{ backupId: string; launchers: RestartList; at: Place } | null>(null);
   const [backups, setBackups] = useState<GameBackup[]>([]);
   const [protonConfirm, setProtonConfirm] = useState(false);
   const [protonProgress, setProtonProgress] = useState<ProtonProgress | null>(null);
@@ -222,8 +219,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         const r = await latest(desktop.gamesScan());
         if (r.current) await receive(r.value, keepSelection);
       } catch (cause) {
-        // error: SHOWN — english: the scan's error on the Games page (main-process text, batch E3)
-        setError(causeText(cause));
+        // error: SHOWN — english: the scan's error above Home's sections (main-process text, batch E3)
+        setError({ text: causeText(cause), at: "top" });
       }
     },
     [desktop, receive, latest],
@@ -233,11 +230,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   // lifetime: OK — acquires nothing; the cleanup drops a late scan result (unmount)
   useEffect(() => {
     let live = true;
-    // error: SHOWN — english: the scan's error on the Games page (main-process text, batch E3; receive's own failure too)
+    // error: SHOWN — english: the scan's error above Home's sections (main-process text, batch E3; receive's own failure too)
     latest(desktop.gamesScan()).then(
-      // error: SHOWN — english: receive's failure (the backups list) on the Games page (batch E3)
-      (r) => live && r.current && void receive(r.value, false).catch((cause: unknown) => setError(causeText(cause))),
-      (cause: unknown) => live && setError(causeText(cause)),
+      // error: SHOWN — english: receive's failure (the backups list) above Home's sections (batch E3)
+      (r) => live && r.current && void receive(r.value, false).catch((cause: unknown) => setError({ text: causeText(cause), at: "top" })),
+      (cause: unknown) => live && setError({ text: causeText(cause), at: "top" }),
     );
     return () => {
       live = false;
@@ -245,12 +242,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   }, [desktop, receive, latest]);
   // lifetime: OK — cleanup is onProtonProgress's unsubscribe (unmount)
   useEffect(() => desktop.onProtonProgress(setProtonProgress), [desktop]);
-  // A game page applied a fix: rescan so Home and the library agree.
-  const firstToken = useRef(rescanToken);
-  // lifetime: OK — acquires nothing (one rescan per token change)
-  useEffect(() => {
-    if (rescanToken !== firstToken.current) rescan(true).catch(logged("rescan (it shows its own errors)"));
-  }, [rescanToken, rescan]);
+  // A game page applied something: rescan so Home and the library agree (the ticks stay).
+  const rescanAfterChange = useCallback(() => void rescan(true).catch(logged("rescan (it shows its own errors)")), [rescan]);
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
   // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render on interaction
@@ -259,7 +252,6 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   const [reviews, setReviews] = useState(0);
   const fresh = useFreshRunning(step === "review" ? `${reviews}|${report?.scannedAt}` : null);
   const restart = report ? restartFor(report, selected, fresh) : [];
-  const tookBack = overwrittenBy(fixes);
 
   // Side effects (storage, the parent's count) stay out of the state updater,
   // which React may run twice.
@@ -277,6 +269,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
     onDeclinedChange?.();
   };
 
+  const review = () => {
+    setReviews((n) => n + 1);
+    setStep("review");
+  };
+
   const apply = async () => {
     setBusy("apply");
     setCloseNote(null);
@@ -284,31 +281,33 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       // Keep the labels: after the rescan, applied fixes are no longer in the list.
       const labels = new Map(selected.map((f) => [f.id, f.label]));
       const r = await desktop.gamesApply({ fixIds: selected.map((f) => f.id), restart });
+      const note = restartText(r);
       if (r.blockedBy.length) {
         // Not closed (why), or a launcher started since the scan: the rescan
         // names it on the review, and Apply asks again.
-        setCloseNote(restartText(r));
+        setCloseNote(note ? { text: note, at: "recommended" } : null);
         await rescan(true);
         return;
       }
-      setCloseNote(restartText(r));
+      setCloseNote(note ? { text: note, at: "recommended" } : null);
       rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
       setResult({ ...r, labels });
       setStep("done");
       if (r.applied.length > 0 && r.applied.every((a) => a.ok)) sayInPassing("app_games_ready");
       await rescan();
     } catch (cause) {
-      // error: SHOWN — desktop.errors.badRequest (causeText: a refused request in plain words; main-process text English, batch E3). Was SILENT-BUG: the rescan right after cleared the message at once
+      // error: SHOWN — desktop.errors.badRequest (causeText: a refused request in plain words; main-process text English, batch E3), in Recommended changes. Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true); // something may have been written before it failed
-      setError(causeText(cause));
+      setError({ text: causeText(cause), at: "recommended" });
     } finally {
       setBusy(null);
     }
   };
 
-  const undo = async (backupId: string, restart: RestartList = []) => {
+  const undo = async (backupId: string, at: Place, restart: RestartList = []) => {
     setBusy(`undo-${backupId}`);
     setUndoAsk(null);
+    const note = (text: string | null) => setCloseNote(text ? { text, at } : null);
     try {
       const r = await desktop.gamesUndo({ backupId, restart });
       setCloseNote(null);
@@ -319,26 +318,26 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         const volumeNote = r.volumeNotSaved
           ? t("desktop.games.undoVolumeNotSaved", { error: r.volumeNotSaved === "cancelled" ? t("desktop.games.msg.result.passwordCancelled") : r.volumeNotSaved })
           : null;
-        setCloseNote(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : (volumeNote ?? restartText(r)));
+        note(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : (volumeNote ?? restartText(r)));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {
         // Running launchers own these files: say they'll be closed and reopened, then ask.
         // One that started after the question was asked: said too, and asked again with it.
-        if (r.problem || restart.length) setCloseNote(restartText(r));
-        if (!r.problem) setUndoAsk({ backupId, launchers: [...new Set([...restart, ...r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris")])] });
+        if (r.problem || restart.length) note(restartText(r));
+        if (!r.problem) setUndoAsk({ backupId, at, launchers: [...new Set([...restart, ...r.blockedBy.filter((l): l is RestartList[number] => l === "steam" || l === "heroic" || l === "lutris")])] });
       } else if ("conflict" in r) {
-        setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
+        note(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
       } else if ("noController" in r) {
-        setCloseNote(t("desktop.games.undoNoController"));
+        note(t("desktop.games.undoNoController"));
       }
       await rescan();
       // After the rescan, which clears the error line (was SILENT-BUG: Undo's error vanished at once).
-      if (!r.ok && "error" in r) setError(r.error);
+      if (!r.ok && "error" in r) setError({ text: r.error, at });
     } catch (cause) {
-      // error: SHOWN — desktop.errors.badRequest (causeText; main-process text English, batch E3). Was SILENT-BUG: the rescan right after cleared the message at once
+      // error: SHOWN — desktop.errors.badRequest (causeText; main-process text English, batch E3), in the section Undo was pressed in. Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true);
-      setError(causeText(cause));
+      setError({ text: causeText(cause), at });
     } finally {
       setBusy(null);
     }
@@ -355,7 +354,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       );
       await rescan();
     } catch (cause) {
-      // error: SHOWN — english: the Proton card's message (main-process text, batch E3)
+      // error: SHOWN — english: DualSense Proton's message (main-process text, batch E3)
       setProtonMessage(causeText(cause));
     } finally {
       setProtonProgress(null);
@@ -363,275 +362,336 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
     }
   };
 
-  if (!report) {
-    return (
-      <div className="dk-stack">
-        <section className="dk-card lib-status">
-          {error ? <p className="dk-bad">{error}</p> : <p className="dk-hint">{t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")}</p>}
-        </section>
-      </div>
-    );
-  }
+  return {
+    report,
+    error,
+    clearError: () => setError(null),
+    closeNote,
+    clearCloseNote: () => setCloseNote(null),
+    declinedAtScan,
+    fixes,
+    chosen,
+    selected,
+    toggle,
+    step,
+    setStep,
+    review,
+    fresh,
+    restart,
+    busy,
+    result,
+    apply,
+    undo,
+    undoAsk,
+    cancelUndo: () => setUndoAsk(null),
+    backups,
+    rescan,
+    rescanAfterChange,
+    protonConfirm,
+    setProtonConfirm,
+    protonProgress,
+    protonMessage,
+    installProton,
+  };
+}
+type GamesSetup = ReturnType<typeof useGamesSetup>;
 
-  // loop: HOT-PATH-OK — N ≤ 4 launchers; Home render
-  const found = report.launchers.filter((l) => l.found);
-  const ours = report.ourProton.name;
-  const linux = protonApplies();
+function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: Omit<GamesPageProps, "allowed" | "onAllowedChange">) {
+  const { t } = useTranslation();
+  const setup = useGamesSetup({ onScanned, onDeclinedChange });
+  // The rail's Games count opens Recommended changes (a deep link), so no section opens by itself.
+  const acc = useAccordion("games", pinScope("games"));
+  const { report, error } = setup;
   // What needs the player, as of the last scan (unticking a change doesn't
   // move it away while the player is looking at it).
-  const status = homeStatus(report, declinedAtScan);
-  // An install in progress or just finished stays where it was started.
-  const protonTop = linux && (status.proton || protonConfirm || busy === "proton" || protonMessage !== null);
-  const open = status.attention || protonTop;
-  const showFixes = step === "pick" && fixes.length > 0;
-  const fixesTop = showFixes && status.fixes;
-  const systemTop = status.system || status.hdr;
+  const status = report ? homeStatus(report, setup.declinedAtScan) : null;
+  const sub = !status
+    ? t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")
+    : status.attention
+      ? t("desktop.games.needsAttention")
+      : t("desktop.games.allGood", "Everything is set up. Nothing to change.");
+  return (
+    <GameLibrary
+      report={report}
+      bridge={bridge}
+      library={profiles.library}
+      onLibrary={profiles.setLibrary}
+      running={profiles.running}
+      openGame={openGame}
+      onRescan={setup.rescanAfterChange}
+      home={{
+        acc,
+        title: t("desktop.games.title", "Game setup"),
+        sub,
+        top: error?.at === "top" && (
+          <Notice error onDismiss={setup.clearError}>
+            {error.text}
+          </Notice>
+        ),
+        sections: report && status && <HomeSections setup={setup} report={report} status={status} />,
+      }}
+    />
+  );
+}
 
-  const rescanButton = (
-    <BusyButton onClick={() => rescan(step !== "pick")} disabled={busy !== null}>
-      {t("desktop.games.rescan", "Rescan")}
-    </BusyButton>
-  );
-  const launcherChips = (
-    <div className="dk-games-launchers">
-      {found.length === 0 && <span className="dk-hint">{t("desktop.games.noLaunchers", "No Steam, Heroic or Lutris installation found.")}</span>}
-      {/* loop: HOT-PATH-OK — N ≤ 4 launchers; Home render */}
-      {found.map((l) => (
-        <span key={`${l.id}${l.flatpak}`} className={`dk-chip${l.defaultIsOurs ? " ok" : ""}`} title={l.defaultRunner ?? ""}>
-          {linux && <span className="dot" />}
-          <LauncherIcon id={l.id} />
-          {LAUNCHER_NAME[l.id]}
-          {l.flatpak ? " (Flatpak)" : ""}
-          {/* The launchers the app closes and reopens around a change (GOG Galaxy and Epic: never). */}
-          {(l.id === "steam" || l.id === "heroic" || l.id === "lutris") && ` · ${l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}`}
-          {l.defaultIsOurs ? ` · ${t("desktop.games.ourDefault", "our Proton is the default")}` : ""}
-        </span>
-      ))}
-    </div>
-  );
-  const proton = linux && (
-    <div className="lib-setup-part">
-      <h3>{t("desktop.games.protonTitle", "DualSense Proton build")}</h3>
-      {ours ? (
-        <p>
-          <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
-        </p>
-      ) : (
-        <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through {{device}}.")}</p>
-      )}
-      {report.ourProton.updateAvailable && report.ourProton.latest && !protonConfirm && busy !== "proton" && (
-        <button type="button" className="dk-btn primary" onClick={() => setProtonConfirm(true)}>
-          {ours
-            ? t("desktop.games.protonUpdate", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })
-            : t("desktop.games.protonInstall", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })}
-        </button>
-      )}
-      {protonConfirm && (
-        <div className="dk-confirm">
-          <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
-          <div className="dk-row-btns">
-            <button type="button" className="dk-btn primary" onClick={() => void installProton().catch(logged("installProton (it shows its own errors)"))}>
-              {t("desktop.games.protonGo", "Download and install")}
-            </button>
-            <button type="button" className="dk-btn" onClick={() => setProtonConfirm(false)}>
-              {t("desktop.games.cancel", "Cancel")}
-            </button>
-          </div>
-        </div>
-      )}
-      {busy === "proton" && <ProtonProgressView progress={protonProgress} />}
-      {protonMessage && <p className="dk-hint">{protonMessage}</p>}
-    </div>
-  );
-  const system = linux && <SystemPart report={report} hdrOpen={status.hdr} />;
-  const fixList = showFixes && (
-    <div className="lib-setup-part">
-      <h3>{t("desktop.games.changesTitle", "Recommended changes")}</h3>
-      <OverwrittenNotice launchers={tookBack} />
-      <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
-      <FixList fixes={fixes} chosen={chosen} onToggle={toggle} />
-      <div className="dk-row-btns">
-        <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={() => (setReviews((n) => n + 1), setStep("review"))}>
-          {t("desktop.games.review", { count: selected.length })}
-        </button>
-      </div>
-    </div>
-  );
-  // Everything that isn't shown open above: what checking does, the
-  // launchers, Proton, This computer, changes the player declined, and the
-  // change history (quiet, one more fold).
-  const details = (
+// Home's sections. Messages from an action (a launcher that wasn't closed,
+// an error) show in the section the action was started in.
+function HomeSections({ setup, report, status }: { setup: GamesSetup; report: GamesReport; status: ReturnType<typeof homeStatus> }) {
+  const { t } = useTranslation();
+  const m = useMsg();
+  const { busy, step, fixes, selected, result, backups, error, closeNote } = setup;
+  const linux = protonApplies();
+  const ours = report.ourProton.name;
+  // loop: HOT-PATH-OK — N ≤ 4 launchers; Home render
+  const found = report.launchers.filter((l) => l.found);
+  const tookBack = overwrittenBy(fixes);
+  // The rail's count, as of the last scan: recommended changes the player hasn't declined.
+  // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render
+  const waiting = fixes.filter((f) => f.recommended && !setup.declinedAtScan.has(f.id)).length;
+  const s = report.system;
+  // loop: HOT-PATH-OK — N = screens, 1-3; Home render
+  const hdrScreens = linux ? s.hdr.screens.filter((x) => x.hdr).map((x) => x.name) : [];
+  const hdrLine = `${t("desktop.games.hdr")} ${hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}`;
+  // loop: NOT-WORTH — N = backups (tens); Home render
+  const lastChange = backups.reduce((n, b) => Math.max(n, Date.parse(b.created) || 0), 0);
+
+  // A section's messages, at the top of its body.
+  const notices = (at: Place): ReactNode => (
     <>
-      <p className="dk-hint">
-        {t(
-          "desktop.games.intro",
-          "Checks your launchers for settings that stop adaptive triggers and haptics from reaching games. Checking only reads your settings. Nothing changes until you review the changes and press Apply, and every change can be undone.",
-        )}
-      </p>
-      {!fixesTop && launcherChips}
-      {!protonTop && proton}
-      {!systemTop && system}
-      {!fixesTop && fixList}
-      {backups.length > 0 && (
-        <details className="gp-legend lib-history">
-          <summary>{t("desktop.games.history", "Change history")}</summary>
-          <ul className="dk-review">
-            {/* loop: HOT-PATH-OK — change history entries, tens; Home render */}
-            {backups.map((b) => (
-              <li key={b.id}>
-                {/* loop: HOT-PATH-OK — a few changes per backup; Home render */}
-                <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.changes.map(m).join("; ")}
-                <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => undo(b.id)}>
-                  {t("desktop.games.undoShort", "Undo")}
-                </BusyButton>
-              </li>
-            ))}
-          </ul>
-        </details>
+      {closeNote?.at === at && <Notice onDismiss={setup.clearCloseNote}>{closeNote.text}</Notice>}
+      {error?.at === at && (
+        <Notice error onDismiss={setup.clearError}>
+          {error.text}
+        </Notice>
       )}
     </>
   );
-  // loop: HOT-PATH-OK — N = screens, 1-3; Home render
-  const hdrScreens = linux ? report.system.hdr.screens.filter((x) => x.hdr).map((x) => x.name) : [];
-
   return (
-    <div className="dk-stack">
-      {open ? (
-        <section className="dk-card lib-setup" aria-label={t("desktop.games.title", "Game setup")}>
-          <div className="lib-setup-head">
-            <h2>
-              {t("desktop.games.title", "Game setup")}{" "}
-              {status.attention && (
-                <span className="dk-chip warn">
-                  <span className="dot" aria-hidden="true" />
-                  {t("desktop.games.needsAttention")}
+    <>
+      <Section
+        id="launchers"
+        icon={Rocket}
+        title={t("desktop.games.launchersTitle")}
+        // loop: HOT-PATH-OK — N ≤ 4 launchers; Home render
+        status={found.length ? found.map((l) => `${LAUNCHER_NAME[l.id]}${l.flatpak ? " (Flatpak)" : ""}`).join(" · ") : t("desktop.games.noLaunchers")}
+      >
+        {() => (
+          <>
+            <p className="dk-hint">{t("desktop.games.intro")}</p>
+            <div className="dk-games-launchers">
+              {found.length === 0 && <span className="dk-hint">{t("desktop.games.noLaunchers", "No Steam, Heroic or Lutris installation found.")}</span>}
+              {/* loop: HOT-PATH-OK — N ≤ 4 launchers; Home render */}
+              {found.map((l) => (
+                <span key={`${l.id}${l.flatpak}`} className={`dk-chip${l.defaultIsOurs ? " ok" : ""}`} title={l.defaultRunner ?? ""}>
+                  {linux && <span className="dot" />}
+                  <LauncherIcon id={l.id} />
+                  {LAUNCHER_NAME[l.id]}
+                  {l.flatpak ? " (Flatpak)" : ""}
+                  {/* The launchers the app closes and reopens around a change (GOG Galaxy and Epic: never). */}
+                  {(l.id === "steam" || l.id === "heroic" || l.id === "lutris") && ` · ${l.running ? t("desktop.games.running", "running") : t("desktop.games.closed", "closed")}`}
+                  {l.defaultIsOurs ? ` · ${t("desktop.games.ourDefault", "our Proton is the default")}` : ""}
                 </span>
-              )}
-            </h2>
-            {rescanButton}
-          </div>
-          {fixesTop && (
+              ))}
+            </div>
+            <div className="dk-row-btns">
+              <BusyButton onClick={() => setup.rescan(step !== "pick")} disabled={busy !== null}>
+                {t("desktop.games.rescan", "Rescan")}
+              </BusyButton>
+            </div>
+          </>
+        )}
+      </Section>
+      {linux && (
+        <Section
+          id="proton"
+          icon={Layers}
+          title={t("desktop.games.protonTitle", "DualSense Proton build")}
+          status={ours ?? t("desktop.games.protonNotInstalled")}
+          task={status.proton && (ours && report.ourProton.latest ? t("desktop.games.protonNewer", { name: report.ourProton.latest }) : t("desktop.games.protonNotInstalled"))}
+        >
+          {() => (
             <>
-              {launcherChips}
-              {fixList}
+              {ours ? (
+                <p>
+                  <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
+                </p>
+              ) : (
+                <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through {{device}}.")}</p>
+              )}
+              {report.ourProton.updateAvailable && report.ourProton.latest && !setup.protonConfirm && busy !== "proton" && (
+                <div className="dk-row-btns">
+                  <button type="button" className="dk-btn primary" onClick={() => setup.setProtonConfirm(true)}>
+                    {ours
+                      ? t("desktop.games.protonUpdate", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })
+                      : t("desktop.games.protonInstall", { name: report.ourProton.latest, defaultValue: "Install {{name}}…" })}
+                  </button>
+                </div>
+              )}
+              {setup.protonConfirm && (
+                <div className="dk-confirm">
+                  <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
+                  <div className="dk-row-btns">
+                    <button type="button" className="dk-btn primary" onClick={() => void setup.installProton().catch(logged("installProton (it shows its own errors)"))}>
+                      {t("desktop.games.protonGo", "Download and install")}
+                    </button>
+                    <button type="button" className="dk-btn" onClick={() => setup.setProtonConfirm(false)}>
+                      {t("desktop.games.cancel", "Cancel")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {busy === "proton" && <ProtonProgressView progress={setup.protonProgress} />}
+              {setup.protonMessage && <p className="dk-hint">{setup.protonMessage}</p>}
             </>
           )}
-          {protonTop && proton}
-          {systemTop && system}
-          <details className="gp-legend lib-system">
-            <summary>{t("desktop.games.details")}</summary>
-            {details}
-          </details>
-        </section>
-      ) : (
-        // All fine: one line, the details one click away.
-        <section className="dk-card lib-status">
-          <details className="gp-legend lib-system">
-            <summary>
-              {found.length === 0 ? (
-                <span className="dk-hint">{t("desktop.games.noLaunchers")}</span>
-              ) : (
-                <span className="dk-good">✓ {t("desktop.games.allGood", "Everything is set up. Nothing to change.")}</span>
-              )}
-              <span className="lib-facts">
-                {/* loop: HOT-PATH-OK — N ≤ 4 launchers; Home render */}
-                {found.map((l) => (
-                  <span key={`${l.id}${l.flatpak}`}>
-                    <LauncherIcon id={l.id} />
-                    {LAUNCHER_NAME[l.id]}
-                  </span>
-                ))}
-                {linux && ours && <span className="dk-mono">{ours}</span>}
-                {linux && hdrScreens.length > 0 && (
-                  <span>
-                    {t("desktop.games.hdr")} {t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") })}
-                  </span>
-                )}
-              </span>
-            </summary>
-            {details}
-          </details>
-          {rescanButton}
-        </section>
+        </Section>
       )}
-
-      {closeNote && <Notice onDismiss={() => setCloseNote(null)}>{closeNote}</Notice>}
-      {undoAsk && (
-        <div className="dk-confirm">
-          <RestartNotice launchers={undoAsk.launchers} undo />
-          <div className="dk-row-btns">
-            <BusyButton className="dk-btn primary" disabled={busy !== null} onClick={() => undo(undoAsk.backupId, undoAsk.launchers)}>
-              {t("desktop.games.undoShort", "Undo")}
-            </BusyButton>
-            <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setUndoAsk(null)}>
-              {t("desktop.games.cancel", "Cancel")}
-            </button>
-          </div>
-        </div>
+      {linux && (
+        <Section
+          id="computer"
+          icon={Cpu}
+          title={t("desktop.games.systemTitle", "This computer")}
+          // loop: NOT-WORTH — N = 2 parts of one status line
+          status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
+          task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
+        >
+          {() => <SystemPart report={report} hdrOpen={status.hdr} />}
+        </Section>
       )}
-      {error && (
-        <Notice error onDismiss={() => setError(null)}>
-          {error}
-        </Notice>
-      )}
-
-      {step === "review" && (
-        <section className="dk-card">
-          <h2>{t("desktop.games.reviewTitle", "Review before applying")}</h2>
-          <p className="dk-hint">{t("desktop.games.reviewHint", "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.")}</p>
-          <ul className="dk-review">
-            {/* loop: HOT-PATH-OK — chosen fixes, tens at most; review dialog render */}
-            {selected.map((f) => (
-              <li key={f.id}>
-                <strong>{m(f.label)}</strong>
-                {/* loop: HOT-PATH-OK — 1-3 files per chosen fix; review dialog render */}
-                {f.files.map((file) => (
-                  <div key={file} className="dk-mono dk-file">
-                    {file}
+      <Section
+        id="recommended"
+        icon={ListChecks}
+        title={t("desktop.games.changesTitle", "Recommended changes")}
+        status={fixes.length ? t("desktop.games.attention", { count: fixes.length }) : t("desktop.games.nothingToChange")}
+        task={waiting > 0 && t("desktop.games.attention", { count: waiting })}
+        notice={notices("recommended")}
+      >
+        {() => (
+          <>
+            {step === "pick" &&
+              (fixes.length > 0 ? (
+                <>
+                  <OverwrittenNotice launchers={tookBack} />
+                  <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
+                  <FixList fixes={fixes} chosen={setup.chosen} onToggle={setup.toggle} />
+                  <div className="dk-row-btns">
+                    <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={setup.review}>
+                      {t("desktop.games.review", { count: selected.length })}
+                    </button>
                   </div>
-                ))}
-                {f.files.length === 0 && <div className="dk-hint">{t("desktop.games.noFiles", "No files change.")}</div>}
-              </li>
-            ))}
-          </ul>
-          <RestartNotice launchers={restart} />
-          <div className="dk-row-btns">
-            <BusyButton className="dk-btn primary" disabled={busy !== null || selected.length === 0 || fresh === undefined} onClick={apply}>
-              {t("desktop.games.apply", { count: selected.length })}
-            </BusyButton>
-            <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setStep("pick")}>
-              {t("desktop.games.back", "Back")}
-            </button>
-          </div>
-        </section>
-      )}
-
-      {step === "done" && result && (
-        <section className="dk-card">
-          <h2>{t("desktop.games.doneTitle", "Done")}</h2>
-          <ul className="dk-review">
-            {/* loop: HOT-PATH-OK — applied fixes, tens at most; result render after apply */}
-            {result.applied.map((a) => (
-              <li key={a.id} className={a.ok ? "" : "dk-bad"}>
-                {a.ok ? "✓ " : "✗ "}
-                {result.labels.has(a.id) ? m(result.labels.get(a.id)!) : a.id}
-                {a.message && <div className="dk-hint">{m(a.message)}</div>}
-              </li>
-            ))}
-          </ul>
-          <p className="dk-hint">{t("desktop.games.doneHint")}</p>
-          <div className="dk-row-btns">
-            {result.backupId && (
-              <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => undo(result.backupId!)}>
-                {t("desktop.games.undo", "Undo these changes")}
-              </BusyButton>
+                </>
+              ) : (
+                <p className="dk-good">✓ {t("desktop.games.allGood", "Everything is set up. Nothing to change.")}</p>
+              ))}
+            {step === "review" && (
+              <>
+                <h3 className="dk-subhead">{t("desktop.games.reviewTitle", "Review before applying")}</h3>
+                <p className="dk-hint">{t("desktop.games.reviewHint", "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.")}</p>
+                <ul className="dk-review">
+                  {/* loop: HOT-PATH-OK — chosen fixes, tens at most; review render */}
+                  {selected.map((f) => (
+                    <li key={f.id}>
+                      <strong>{m(f.label)}</strong>
+                      {/* loop: HOT-PATH-OK — 1-3 files per chosen fix; review render */}
+                      {f.files.map((file) => (
+                        <div key={file} className="dk-mono dk-file">
+                          {file}
+                        </div>
+                      ))}
+                      {f.files.length === 0 && <div className="dk-hint">{t("desktop.games.noFiles", "No files change.")}</div>}
+                    </li>
+                  ))}
+                </ul>
+                <RestartNotice launchers={setup.restart} />
+                <div className="dk-row-btns">
+                  <BusyButton className="dk-btn primary" disabled={busy !== null || selected.length === 0 || setup.fresh === undefined} onClick={setup.apply}>
+                    {t("desktop.games.apply", { count: selected.length })}
+                  </BusyButton>
+                  <button type="button" className="dk-btn" disabled={busy !== null} onClick={() => setup.setStep("pick")}>
+                    {t("desktop.games.back", "Back")}
+                  </button>
+                </div>
+              </>
             )}
-            <button type="button" className="dk-btn" onClick={() => setStep("pick")}>
-              {t("desktop.games.ok", "OK")}
-            </button>
-          </div>
-        </section>
-      )}
+            {step === "done" && result && (
+              <>
+                <h3 className="dk-subhead">{t("desktop.games.doneTitle", "Done")}</h3>
+                <ul className="dk-review">
+                  {/* loop: HOT-PATH-OK — applied fixes, tens at most; result render after apply */}
+                  {result.applied.map((a) => (
+                    <li key={a.id} className={a.ok ? "" : "dk-bad"}>
+                      {a.ok ? "✓ " : "✗ "}
+                      {result.labels.has(a.id) ? m(result.labels.get(a.id)!) : a.id}
+                      {a.message && <div className="dk-hint">{m(a.message)}</div>}
+                    </li>
+                  ))}
+                </ul>
+                <p className="dk-hint">{t("desktop.games.doneHint")}</p>
+                <div className="dk-row-btns">
+                  {result.backupId && (
+                    <BusyButton className="dk-btn" disabled={busy !== null} onClick={() => setup.undo(result.backupId!, "recommended")}>
+                      {t("desktop.games.undo", "Undo these changes")}
+                    </BusyButton>
+                  )}
+                  <button type="button" className="dk-btn" onClick={() => setup.setStep("pick")}>
+                    {t("desktop.games.ok", "OK")}
+                  </button>
+                </div>
+              </>
+            )}
+            <UndoConfirm setup={setup} at="recommended" />
+          </>
+        )}
+      </Section>
+      <Section
+        id="history"
+        icon={History}
+        title={t("desktop.games.history", "Change history")}
+        status={backups.length ? t("desktop.games.historyStatus", { count: backups.length, date: new Date(lastChange).toLocaleDateString() }) : t("desktop.games.historyNone")}
+        notice={notices("history")}
+      >
+        {() => (
+          <>
+            {backups.length === 0 ? (
+              <p className="dk-hint">{t("desktop.games.historyNone")}</p>
+            ) : (
+              <ul className="dk-review">
+                {/* loop: HOT-PATH-OK — change history entries, tens; Home render */}
+                {backups.map((b) => (
+                  <li key={b.id}>
+                    {/* loop: HOT-PATH-OK — a few changes per backup; Home render */}
+                    <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.changes.map(m).join("; ")}
+                    <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => setup.undo(b.id, "history")}>
+                      {t("desktop.games.undoShort", "Undo")}
+                    </BusyButton>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <UndoConfirm setup={setup} at="history" />
+          </>
+        )}
+      </Section>
+    </>
+  );
+}
+
+// An undo that closes running launchers: said first, then confirmed, in the section it was asked in.
+function UndoConfirm({ setup, at }: { setup: GamesSetup; at: Place }) {
+  const { t } = useTranslation();
+  const { undoAsk, busy } = setup;
+  if (undoAsk?.at !== at) return null;
+  return (
+    <div className="dk-confirm">
+      <RestartNotice launchers={undoAsk.launchers} undo />
+      <div className="dk-row-btns">
+        <BusyButton className="dk-btn primary" disabled={busy !== null} onClick={() => setup.undo(undoAsk.backupId, at, undoAsk.launchers)}>
+          {t("desktop.games.undoShort", "Undo")}
+        </BusyButton>
+        <button type="button" className="dk-btn" disabled={busy !== null} onClick={setup.cancelUndo}>
+          {t("desktop.games.cancel", "Cancel")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -668,9 +728,9 @@ function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string
   );
 }
 
-// This computer (Linux): the controller's audio and access, the environment
-// and HDR (its checklist opens from the row; open already when it has a ✗
-// that matters).
+// This computer's body (Linux): the controller's audio and access, the
+// environment and HDR (its checklist opens from the row; open already when it
+// has a ✗ that matters).
 function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean }) {
   const { t } = useTranslation();
   const s = report.system;
@@ -679,8 +739,7 @@ function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean
   const hdrScreens = s.hdr.screens.filter((x) => x.hdr).map((x) => x.name);
   const reqs = systemHdrReqs(report);
   return (
-    <div className="lib-setup-part">
-      <h3>{t("desktop.games.systemTitle", "This computer")}</h3>
+    <>
       <dl className="dk-kv">
         <dt>{t("desktop.games.audio", "Controller audio")}</dt>
         <dd className={proAudio ? "dk-bad" : ""}>{s.audioProfile ?? t("desktop.games.noController", "controller not connected")}</dd>
@@ -716,7 +775,7 @@ function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean
       {s.proAudioRules.some((r) => r.startsWith("/etc")) && (
         <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>
       )}
-    </div>
+    </>
   );
 }
 

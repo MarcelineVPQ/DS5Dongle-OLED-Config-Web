@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Energia",
       "idleDisconnect": "Desconectar quando inativo",
       "picoLed": "LED de status do Pico",
       "brightness": "Brilho",
       "zeroOff": "0 = nunca",
       "controllerWakes": "Usar o controle reativa a tela",
-      "usb": "USB",
       "usbHint": "Entram em vigor após Reconectar USB (o PC vê {{device}} ser desconectado e reconectado).",
       "speakerLevel": "Volume (alto-falante do controle)",
       "speakerLevelSub": "0 = sem alteração; acima de 0 amplifica e pode distorcer",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Microfone desligado: {{device}} não conseguiu criar o decodificador do microfone do controle ao iniciar ({{kb}} KB livres). Alto-falante, hápticos, gatilhos e salvar continuam funcionando. Relate no GitHub (issue #15) com sua placa e controle."
     },
     "firmware": {
-      "installed": "Firmware instalado",
-      "device": "Dispositivo",
       "rebooting": "Reiniciando… pressione o botão PS no controle quando ele voltar.",
       "reboot": "Reiniciar {{device}}",
       "bootsel": "{{device, capitalize}} agora é uma unidade RP2350. Copie um .uf2 para ela ou desconecte o cabo USB para cancelar.",
@@ -281,7 +277,9 @@
       "writeFailed": "A atualização do firmware parou antes de terminar: {{device}} está esperando no modo BOOTSEL, sem firmware rodando. Não desconecte nada: o app percebe e oferece instalar o firmware de novo. Se nada aparecer, desconecte e conecte {{device}} de novo.",
       "disabled": "não verificado (a busca automática está desligada)",
       "feedChanged": "Apareceu um firmware mais novo. Verifique de novo.",
-      "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo."
+      "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo.",
+      "wrongFile": "Este arquivo não é firmware para {{device}} (é para outro chip, ou está danificado), então nada foi gravado. Procure atualizações de novo; se acontecer outra vez, reinstale o app.",
+      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez."
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -360,6 +358,7 @@
       "source": "Código-fonte (MIT)",
       "issues": "Relatar um problema",
       "roadmapTab": "Em breve",
+      "showOlder": "Mostrar versões anteriores",
       "roadmap": {
         "intro": "São planos, não promessas: podem mudar e nenhum tem data.",
         "suggest": "Sugestões são bem-vindas no GitHub.",
@@ -549,7 +548,14 @@
       "details": "Detalhes",
       "needsAttention": "A revisar",
       "undoAudioRestart": "Desfeito, mas reiniciar o serviço de áudio falhou ({{error}}). Saia e entre de novo na sessão, ou reinicie o PC, para a mudança de áudio valer.",
-      "undoVolumeNotSaved": "Desfeito: os níveis antigos voltaram, mas não foi possível restaurar os níveis salvos do Linux ({{error}}), então o controle volta no máximo depois da próxima reconexão."
+      "undoVolumeNotSaved": "Desfeito: os níveis antigos voltaram, mas não foi possível restaurar os níveis salvos do Linux ({{error}}), então o controle volta no máximo depois da próxima reconexão.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Não instalado",
+      "protonNewer": "{{name}} disponível",
+      "nothingToChange": "Nada a mudar",
+      "historyStatus_one": "{{count}} mudança · última em {{date}}",
+      "historyStatus_other": "{{count}} mudanças · última em {{date}}",
+      "historyNone": "Nenhuma mudança ainda"
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -616,19 +622,13 @@
       "overview": "Seu controle",
       "app": "Configurações do app",
       "close": "Fechar",
-      "haptics": "Resposta tátil",
-      "speaker": "Alto-falante",
-      "mic": "Microfone",
       "remap": "Atribuições de botões",
-      "remapActs": "Age como",
       "remapDefault": "padrão",
-      "remapHint": "As atribuições de botões são gravadas {{device_em}} ao apertar Aplicar e funcionam em todos os jogos, sem software no PC.",
       "remapApply": "Aplicar atribuições",
       "remapReset": "Redefinir todos os botões",
       "remapResetHint": "Cada botão volta a ser ele mesmo",
       "pull": "Pressão",
       "effect": "Efeito",
-      "position": "Posição",
       "touchHint": "Toque no touch pad para ver seus dedos aqui. Não há nada para configurar.",
       "finger": "Dedo {{n}}",
       "speakerLevel": "Nível do alto-falante agora",
@@ -652,36 +652,6 @@
         "2": "arma",
         "3": "vibração"
       },
-      "go": {
-        "intro": "Clique com o mouse numa parte do desenho, ou escolha uma configuração aqui:",
-        "lightbar": {
-          "title": "Barra de luz",
-          "sub": "Modo e cores favoritas"
-        },
-        "triggers": {
-          "title": "Gatilhos adaptáveis",
-          "sub": "Teste os efeitos em L2 / R2"
-        },
-        "haptics": {
-          "title": "Resposta tátil",
-          "sub": "Intensidade da vibração e Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Alto-falante",
-          "sub": "Nível, com medidor ao vivo"
-        },
-        "mic": {
-          "title": "Microfone",
-          "sub": "O microfone embutido do controle"
-        },
-        "slots": {
-          "title": "Slots de emparelhamento",
-          "sub": "Trocar ou esquecer controles"
-        },
-        "buttons": "Para atribuir um botão ou analógico, clique nele no desenho.",
-        "bodyHint": "Resposta tátil: intensidade da vibração e Audio Auto Haptics"
-      },
-      "hidePanel": "Ocultar o painel de configurações (o controle fica maior)",
       "autoInstall": "Instalar atualizações automaticamente",
       "autoInstallSub": "Baixa e verifica em segundo plano; a nova versão abre na próxima vez que você abrir o app",
       "hapticSilent": "Silêncio: nada está enviando resposta tátil agora. Ele se move quando um jogo toca resposta tátil, ou com o Audio Auto Haptics ligado enquanto toca som.",
@@ -694,8 +664,6 @@
       "headsetIn": "Fone conectado",
       "colorLabel": "Cor:",
       "statusLabel": "Status:",
-      "triggersTitle": "Gatilhos adaptáveis",
-      "remapButton": "Atribuir {{button}}",
       "effectOther": "outro efeito ({{n}})",
       "checkForUpdatesSub": "Desligado: o app só fica online para buscar atualizações quando você toca em Procurar atualizações."
     },
@@ -842,7 +810,6 @@
       "profileNone": "Este jogo usa suas configurações normais. Um perfil muda qualquer configuração do controle (resposta tátil, alto-falante, barra de luz, microfone, botões, analógicos) só para este jogo e volta ao normal quando ele fecha.",
       "profileFromCurrent": "Criar a partir das configurações atuais",
       "profileNeedsDongle": "Conecte {{device}} para partir das suas configurações atuais.",
-      "profileHint": "As alterações são salvas no perfil deste jogo, não {{device_em}}.",
       "profileCopyCurrent": "Copiar configurações atuais",
       "profileDelete": "Excluir perfil",
       "haptics": "Intensidade da vibração",
@@ -1023,7 +990,13 @@
       "continue": "Continuar jogando",
       "libraryTitle": "Biblioteca",
       "filteredBy": "Filtro: {{filter}}",
-      "showAll": "Mostrar todos"
+      "showAll": "Mostrar todos",
+      "profileNoneShort": "Sem perfil",
+      "profileChanges_one": "{{count}} mudança",
+      "profileChanges_other": "{{count}} mudanças",
+      "hdrUnknown": "Não se sabe se suporta HDR",
+      "notesEmpty": "Vazio",
+      "glanceOpen": "Abrir {{section}}"
     },
     "dongleConsole": {
       "title": "Console: {{deviceName}}",
@@ -1194,11 +1167,35 @@
         "no-gamescope": "O gamescope não está instalado"
       },
       "simulated": "Simular {{device}} (sem hardware)",
-      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, emparelhamento e atualizações de firmware não são simulados. Recarrega a página.",
+      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo). Recarrega a página.",
       "simCore1": "Core1 simulado",
       "simCore1Hint": "Faz o Core1 da simulação parar em uma etapa de inicialização, para ver o aviso em {{deviceName}}. Recarrega a página.",
       "simCore1Runs": "Funciona normalmente",
-      "simCore1Stage": "Para na etapa {{stage}}: {{step}}"
+      "simCore1Stage": "Para na etapa {{stage}}: {{step}}",
+      "simBoard": "Placa simulada",
+      "simBoardHint": "O que a simulação está fazendo agora. Atualizar no cartão de firmware e Instalar na tela de configuração rodam com ela do começo ao fim.",
+      "simBoardState": {
+        "dongle": "Rodando o firmware {{version}}",
+        "bootsel": "No modo BOOTSEL",
+        "blank": "Uma Pico vazia no BOOTSEL (primeira instalação)",
+        "away": "Fora do USB (esperando um controle)"
+      },
+      "simFault": "Falha na atualização de firmware",
+      "simFaultHint": "Faz a próxima atualização falhar, para ver o que o app diz.",
+      "simFaults": {
+        "none": "Nenhuma",
+        "write10": "Erro de gravação em 10 %",
+        "write50": "Erro de gravação em 50 %",
+        "write90": "Erro de gravação em 90 %",
+        "noBootsel": "Não aparece no BOOTSEL",
+        "noReturn": "Não volta depois da atualização"
+      },
+      "simSpeed": "Velocidade de gravação",
+      "simSpeeds": {
+        "fast": "Instantânea",
+        "normal": "Alguns segundos",
+        "real": "Como uma placa real (cerca de 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",
@@ -1214,7 +1211,6 @@
     },
     "calib": {
       "title": "Calibração",
-      "shortcut": "Drift dos analógicos, zonas inativas, curso dos gatilhos, giroscópio",
       "intro": "Corrige o drift dos analógicos, as zonas inativas, o curso dos gatilhos e o zero do giroscópio {{device_em}}, para todos os jogos. Nada é gravado no controle; Redefinir desfaz.",
       "needsFirmware": "Atualize o firmware {{device_de}} para calibrar.",
       "needsController": "Conecte um controle para calibrar.",
@@ -1403,12 +1399,7 @@
         "dim": "Escurecida (inativa)",
         "off": "Desligada (inativa)"
       },
-      "dimAfter": "Escurece após",
-      "offAfter": "Desliga após",
-      "wakeOnInput": "Acorda com o controle",
       "never": "nunca",
-      "yes": "sim",
-      "no": "não",
       "minutes": "{{n}} min",
       "mic": "Quadros de áudio do microfone",
       "timing": {
@@ -1510,16 +1501,11 @@
       "normal": "Botões normais",
       "needsFirmware": "Precisa do firmware mais recente {{device_em}} ({{deviceName}} → Atualizar).",
       "noneForGame": "Salve layouts na página de botões: escolha um botão no controle.",
-      "allTitle": "Botões",
-      "allHeading": "Todos os botões",
       "allHint_one": "{{count}} botão alterado em relação ao controle. Escolha nesta lista ou clique num botão do desenho; os dois mudam a mesma coisa.",
       "allHint_other": "{{count}} botões alterados em relação ao controle. Escolha nesta lista ou clique num botão do desenho; os dois mudam a mesma coisa.",
       "changed": "alterado",
       "notApplied": "ainda não aplicado",
       "notSaved": "ainda não salvo",
-      "shortcutTitle": "Botões e layouts",
-      "shortcutSub": "Todos os botões numa lista, layouts salvos para jogos",
-      "seeAll": "Ver todos os botões e layouts salvos",
       "off": "Desligado",
       "noChanges": "Sem alterações (os botões do controle)",
       "loaded": "Layout carregado: {{name}}",
@@ -1551,7 +1537,6 @@
       "changes": "O que este jogo muda (todo o resto usa suas configurações normais):",
       "allNormal": "Nada mudou para este jogo ainda: ele usa suas configurações normais. \"Editar na tela do controle\" muda qualquer uma só para este jogo.",
       "useNormal": "{{name}}. Usar minha configuração normal",
-      "allSettings": "Todas as configurações",
       "normalSub": "Sua configuração normal",
       "on": "Ligado",
       "off": "Desligado",
@@ -1702,7 +1687,27 @@
       "hidden_other": "{{count}} ocultos",
       "devOnly": "Só versões de desenvolvimento",
       "chapters_one": "{{count}} capítulo",
-      "chapters_other": "{{count}} capítulos"
+      "chapters_other": "{{count}} capítulos",
+      "buttonsChanged_one": "{{count}} botão alterado",
+      "buttonsChanged_other": "{{count}} botões alterados",
+      "slotActive": "Slot {{slot}} ativo",
+      "moreInDiagnostics": "Mais em Diagnóstico"
+    },
+    "sections": {
+      "lightbar": "Barra de luz",
+      "triggers": "Gatilhos adaptáveis",
+      "haptics": "Resposta tátil",
+      "speaker": "Alto-falante",
+      "mic": "Microfone",
+      "buttons": "Atribuições de botões",
+      "sticks": "Analógicos e calibração",
+      "slots": "Slots de emparelhamento",
+      "firmware": "Firmware",
+      "device": "Reinício e redefinição",
+      "power": "Energia e suspensão",
+      "oled": "Tela OLED",
+      "usb": "USB e pino de status",
+      "diagnostics": "Diagnóstico"
     }
   },
   "ad": {

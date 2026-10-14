@@ -16,14 +16,15 @@ import {
 } from "../../protocol/config";
 import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
-import { OLED_MODULE } from "../dongle/boardSpecs";
 import Notice from "../Notice";
 
-// Settings sections, each a card the live view's side panel shows for the
-// part it belongs to. Changes apply to the dongle's RAM right away
-// (DesktopApp); "Save to dongle" in the bottom bar makes them survive a
-// power cycle. The game page shows the profile-able ones with a game
-// profile's draft instead (`fields`, see sectionFields.tsx).
+// The settings rows of the Controller and Pico 2 W pages' sections (their
+// accordion: live/PartPanel.tsx, dongle/DonglePage.tsx). Each function is a
+// section's body (its rows), the Section around it gives the title. Changes
+// apply to the dongle's RAM right away (DesktopApp); "Save to dongle" in the
+// bottom bar makes them survive a power cycle. The game page shows the
+// profile-able ones with a game profile's draft instead (`fields`, see
+// sectionFields.tsx).
 // The haptic feedback test plays for 3 s. Firmware from protocol 1.15
 // (FEATURES3.timedGripTest) holds the grip test (0xF6 0x0E) steadily for a
 // given time: one command starts it, and pressing the running button again,
@@ -98,24 +99,19 @@ const hasV13 = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity,
 export function TriggerIntensitySection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, issue, sub } = useFields(props);
-  return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings.triggerIntensity")}</h2>
-      {hasV13(props.bridge) ? (
-        <Slider
-          label={t("desktop.settings.triggerReduce")}
-          sub={sub("triggerReduce", t("desktop.settings.triggerReduceSub"))}
-          value={d.triggerReduce}
-          min={0}
-          max={10}
-          step={1}
-          invalid={issue("triggerReduce")}
-          onChange={(v) => set("triggerReduce", v)}
-        />
-      ) : (
-        <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
-      )}
-    </section>
+  return hasV13(props.bridge) ? (
+    <Slider
+      label={t("desktop.settings.triggerReduce")}
+      sub={sub("triggerReduce", t("desktop.settings.triggerReduceSub"))}
+      value={d.triggerReduce}
+      min={0}
+      max={10}
+      step={1}
+      invalid={issue("triggerReduce")}
+      onChange={(v) => set("triggerReduce", v)}
+    />
+  ) : (
+    <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
   );
 }
 
@@ -127,8 +123,7 @@ export function HapticsSection(props: SectionProps) {
   const connected = !!bridge.identity?.controllerConnected;
   const test = useGripTest(bridge.client, connected, supportsFeature3(bridge.identity, 15, FEATURES3.timedGripTest));
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.haptics", "Haptic feedback")}</h2>
+    <>
       <GripHaptics
         left={d.hapticsGain}
         right={d.hapticsGainRight}
@@ -165,7 +160,7 @@ export function HapticsSection(props: SectionProps) {
         invalid={issue("audioBufferLength")}
         onChange={(v) => set("audioBufferLength", v)}
       />
-    </section>
+    </>
   );
 }
 
@@ -179,8 +174,7 @@ export function AutoHapticsSection(props: SectionProps) {
     title: t(`autoHaptics.modes.${k}.hint`),
   }));
   return (
-    <section className="dk-card">
-      <h2>{t("autoHaptics.sectionTitle")}</h2>
+    <>
       <Segmented label={t("autoHaptics.modeLabel")} sub={sub("autoHapticsEnable")} value={d.autoHapticsEnable} options={ahModes} onChange={(v) => set("autoHapticsEnable", v)} />
       <Slider label={t("autoHaptics.gainLabel")} value={d.autoHapticsGain} min={0} max={200} step={10} unit="%" disabled={d.autoHapticsEnable === 0} onChange={(v) => set("autoHapticsGain", v)} />
       <Segmented
@@ -192,7 +186,7 @@ export function AutoHapticsSection(props: SectionProps) {
         onChange={(v) => set("autoHapticsLowpass", v)}
       />
       <p className="dk-hint">{t(`autoHaptics.modes.${["off", "fallback", "mix", "replace"][d.autoHapticsEnable & 3]}.hint`)}</p>
-    </section>
+    </>
   );
 }
 
@@ -206,8 +200,7 @@ export function SpeakerSection(props: SectionProps) {
     label: t(`desktop.settings.choice.${k}`),
   }));
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.speaker", "Speaker")}</h2>
+    <>
       <Slider
         label={t("desktop.settings.speakerLevel", "Volume (Speaker for Controller)")}
         sub={sub("speakerVolume", t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip"))}
@@ -240,7 +233,7 @@ export function SpeakerSection(props: SectionProps) {
         </>
       )}
       {!v13 && <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>}
-    </section>
+    </>
   );
 }
 
@@ -313,15 +306,14 @@ export function MicSection(props: SectionProps) {
     label: t(`desktop.settings.choice.${k}`),
   }));
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.mic", "Microphone")}</h2>
+    <>
       <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
       {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
       {/* Live, the level and the echo cancellation are under the Mic Test (PartPanel). */}
       {!live && <MicLevelSlider {...props} />}
       {!live && <EchoCancelToggle {...props} />}
-    </section>
+    </>
   );
 }
 
@@ -331,8 +323,7 @@ export function StatusPinSection(props: SectionProps) {
   const { d, set } = useFields(props);
   const off = d.statusGpioPin === STATUS_GPIO_OFF;
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings.statusPin")}</h2>
+    <>
       {hasV13(props.bridge) ? (
         <>
           <Row label={t("desktop.settings.statusPinGpio")}>
@@ -361,7 +352,7 @@ export function StatusPinSection(props: SectionProps) {
       ) : (
         <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
       )}
-    </section>
+    </>
   );
 }
 
@@ -369,12 +360,11 @@ export function PowerSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set } = useFields(props);
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings.power", "Power")}</h2>
+    <>
       <Toggle label={t("desktop.settings.idleDisconnect", "Disconnect when idle")} value={!d.disableInactiveDisconnect} onChange={(v) => set("disableInactiveDisconnect", !v)} />
       <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
       <Toggle label={t("desktop.settings.picoLed", "Pico status LED")} value={!d.disablePicoLed} onChange={(v) => set("disablePicoLed", !v)} />
-    </section>
+    </>
   );
 }
 
@@ -389,8 +379,7 @@ export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
   // One write at a time: the next one is worked out from the bits this one leaves.
   const off = bits === null || !bridge.client || bridge.operation !== null;
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings.pcSleep")}</h2>
+    <>
       {bits !== null ? (
         <>
           <Toggle
@@ -412,7 +401,7 @@ export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
       ) : (
         <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
       )}
-    </section>
+    </>
   );
 }
 
@@ -420,8 +409,7 @@ export function DisplaySection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set } = useFields(props);
   return (
-    <section className="dk-card">
-      <h2>{OLED_MODULE.name}</h2>
+    <>
       <Segmented
         label={t("desktop.settings.brightness", "Brightness")}
         value={d.screenBrightness}
@@ -450,7 +438,7 @@ export function DisplaySection(props: SectionProps) {
         onChange={(v) => set("screenOffTimeout", v)}
       />
       <Toggle label={t("desktop.settings.controllerWakes", "Controller input wakes the screen")} value={d.controllerWakesDisplay} onChange={(v) => set("controllerWakesDisplay", v)} />
-    </section>
+    </>
   );
 }
 
@@ -459,8 +447,7 @@ export function UsbSection(props: SectionProps) {
   const { bridge } = props;
   const { d, set } = useFields(props);
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings.usb", "USB")}</h2>
+    <>
       <Segmented
         label={t("behavior.pollingRateLabel")}
         value={d.pollingRateMode}
@@ -482,11 +469,11 @@ export function UsbSection(props: SectionProps) {
         onChange={(v) => set("controllerMode", v)}
       />
       <p className="dk-hint">{t("desktop.settings.usbHint", "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).")}</p>
-      <div className="dk-ctl" style={{ justifyContent: "flex-start", paddingBottom: 4 }}>
+      <div className="dk-row-btns">
         <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
           {t("actions.reconnect")}
         </BusyButton>
       </div>
-    </section>
+    </>
   );
 }

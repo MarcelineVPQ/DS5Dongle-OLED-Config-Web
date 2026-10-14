@@ -1,8 +1,10 @@
 // App settings: the app's own settings (stored by the main process, or this
-// PC's preferences), one full-width accordion. Nothing here talks to the
-// board, so the page has no controller drawing and polls nothing: each
-// section's status comes from state the app already holds.
-import { useEffect, useState } from "react";
+// PC's preferences), in the accordion at the right like every page. The main
+// view is the live controller drawing (ControllerView hands it in as `main`),
+// so a theme, accent, glass or color vision change shows on it right away.
+// Nothing in the sections talks to the board: each section's status comes
+// from state the app already holds.
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Accessibility, AppWindow, BellOff, Code, Globe, Palette, RefreshCw, Shield, Zap } from "lucide-react";
 import Markdown from "../Markdown";
@@ -10,6 +12,7 @@ import type { DesktopSettings, DevChannelAnswer, FirmwareLookup } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import FakeGames from "../dev/FakeGames";
+import SimulatedBoard from "../dev/SimulatedBoard";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "../live/colorways";
 import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "../live/customColors";
@@ -35,13 +38,11 @@ import { shown } from "../shownError";
 import Notice from "../Notice";
 import DismissedNotices, { useDismissedTasks } from "../DismissedNotices";
 import { useNoticeTasks } from "../notices";
-import { Accordion, Section, SectionSub } from "../accordion/Section";
+import { named, onOff } from "../accordion/status";
+import { Section, SectionSub, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
 
-// "Name on" / "Name off", for the sections' status lines.
-const onOff = (t: (k: string, o?: Record<string, unknown>) => string, name: string, on: boolean) => t(on ? "desktop.accordion.on" : "desktop.accordion.off", { name });
-
-export default function AppSettingsPage({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
+export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate; main?: ReactNode; panelRef?: (el: HTMLElement | null) => void }) {
   const { t, i18n } = useTranslation();
   // Joining the Development channel asks first (what it means, what's in it).
   const [joiningDev, setJoiningDev] = useState(false);
@@ -81,171 +82,165 @@ export default function AppSettingsPage({ bridge, fw }: { bridge: UseDs5BridgeRe
     : null;
 
   return (
-    <div className="dk-app-settings">
-      <header className="dk-page-head">
-        <h1 tabIndex={-1}>{t("desktop.live.app")}</h1>
-        <span className="dk-page-sub">{t("desktop.settings2.sub")}</span>
-      </header>
-      <Accordion state={acc}>
-        <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
-          {() => (
-            <Row label={t("desktop.settings2.language")} wide>
-              <LanguageToggle />
-            </Row>
-          )}
-        </Section>
-        <Section
-          id="appearance"
-          icon={Palette}
-          title={t("desktop.settings2.appearance")}
-          status={[t(`themeToggle.${theme}`), t(glass ? "desktop.glass.glass" : "desktop.glass.standard"), t(`desktop.backdrop.${background}`)].join(" · ")}
-        >
-          {() => (
-            <>
-              <div className="dk-sec-cols">
-                <Row label={t("desktop.settings2.theme")}>
-                  <ThemeToggle />
-                </Row>
-                <GlassSetting />
-                <AccentSetting />
-                <BackdropSetting />
-                {/* loop: HOT-PATH-OK — N ≈ 10 look knobs; only while Appearance is open */}
-                {KNOBS.filter((k) => !k.hidden).map((k) => (
-                  <KnobSlider key={k.key} k={k} />
-                ))}
-              </div>
-              <CustomColorsSetting />
-            </>
-          )}
-        </Section>
-        <Section
-          id="accessibility"
-          icon={Accessibility}
-          title={t("desktop.settings2.accessibility")}
-          status={[
-            t("desktop.accordion.value", { name: t("desktop.colorVision.label"), value: t(`desktop.colorVision.${cv}`) }),
-            onOff(t, t("desktop.narrator.voice"), narrator === "on"),
-            onOff(t, t("desktop.narrator.captions"), captions),
-          ].join(" · ")}
-        >
-          {() => (
-            <>
-              <ColorVisionSetting />
-              <ReduceMotionSetting />
-              <NarratorSettings />
-            </>
-          )}
-        </Section>
-        {settings && (
+    <SplitView page="app" main={main} title={t("desktop.live.app")} sub={t("desktop.settings2.sub")} state={acc} panelRef={panelRef}>
+      <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
+        {() => (
+          <Row label={t("desktop.settings2.language")} wide>
+            <LanguageToggle />
+          </Row>
+        )}
+      </Section>
+      <Section
+        id="appearance"
+        icon={Palette}
+        title={t("desktop.settings2.appearance")}
+        status={[t(`themeToggle.${theme}`), t(glass ? "desktop.glass.glass" : "desktop.glass.standard"), t(`desktop.backdrop.${background}`)].join(" · ")}
+      >
+        {() => (
           <>
-            <Section id="startup" icon={AppWindow} title={t("desktop.settings2.startup")} status={startup}>
-              {() => (
-                <>
-                  <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
-                  <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
-                  <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
-                </>
-              )}
-            </Section>
-            <Section
-              id="graphics"
-              icon={Zap}
-              title={t("desktop.settings2.graphics")}
-              status={[onOff(t, t("desktop.live.hardwareAcceleration"), settings.hardwareAcceleration), onOff(t, t("desktop.hdr.short"), settings.hdrLighting)].join(" · ")}
-            >
-              {() => (
-                <>
-                  <Toggle
-                    label={t("desktop.live.hardwareAcceleration")}
-                    sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
-                    value={settings.hardwareAcceleration}
-                    onChange={(v) => {
-                      setGpuChanged(true);
-                      set("hardwareAcceleration", v);
-                    }}
-                  />
-                  <Toggle
-                    label={t("desktop.hdr.label")}
-                    sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
-                    value={settings.hdrLighting}
-                    disabled={!settings.hardwareAcceleration}
-                    onChange={(v) => {
-                      setHdrChanged(true);
-                      set("hdrLighting", v);
-                    }}
-                  />
-                  {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
-                </>
-              )}
-            </Section>
-            <Section id="updates" icon={RefreshCw} title={t("desktop.settings2.updates")} status={updates} task={updateTask}>
-              {() => (
-                <>
-                  <Toggle label={t("desktop.live.checkForUpdates")} sub={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
-                  <Toggle
-                    label={t("desktop.live.autoInstall")}
-                    sub={t("desktop.live.autoInstallSub")}
-                    value={settings.checkForUpdates && settings.autoInstallUpdates}
-                    disabled={!settings.checkForUpdates}
-                    onChange={(v) => {
-                      set("autoInstallUpdates", v);
-                      set("updatesAsked", true);
-                    }}
-                  />
-                  <Segmented
-                    label={t("desktop.channel.label")}
-                    sub={settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}
-                    value={settings.updateChannel === "dev" ? 1 : 0}
-                    options={[
-                      { value: 0, label: t("desktop.channel.stable") },
-                      { value: 1, label: t("desktop.channel.dev") },
-                    ]}
-                    onChange={(v) => (v === 1 ? setJoiningDev(true) : set("updateChannel", "stable"))}
-                  />
-                  {joiningDev && (
-                    <DevChannelDialog
-                      automatic={settings.checkForUpdates}
-                      onJoin={() => {
-                        setJoiningDev(false);
-                        set("updateChannel", "dev");
-                      }}
-                      onCancel={() => setJoiningDev(false)}
-                    />
-                  )}
-                  <CheckNow firmwareInstalled={bridge.firmwareVersion} refreshFirmware={fw.refreshLatest} />
-                  {settings.updateChannel === "dev" && (
-                    <div className="dk-row-btns">
-                      <BusyButton
-                        className="dk-btn"
-                        onClick={async () => {
-                          await window.desktop?.backToStable();
-                          setSettings((await window.desktop?.getSettings()) ?? settings);
-                        }}
-                      >
-                        {t("desktop.channel.backToStable")}
-                      </BusyButton>
-                    </div>
-                  )}
-                </>
-              )}
-            </Section>
+            <div className="dk-sec-cols">
+              <Row label={t("desktop.settings2.theme")}>
+                <ThemeToggle />
+              </Row>
+              <GlassSetting />
+              <AccentSetting />
+              <BackdropSetting />
+              {/* loop: HOT-PATH-OK — N ≈ 10 look knobs; only while Appearance is open */}
+              {KNOBS.filter((k) => !k.hidden).map((k) => (
+                <KnobSlider key={k.key} k={k} />
+              ))}
+            </div>
+            <CustomColorsSetting />
           </>
         )}
-        {gamesSupported() && launchers !== null && (
-          <Section id="privacy" icon={Shield} title={t("desktop.settings2.privacy")} status={t(launchers ? "desktop.accordion.launchersRead" : "desktop.accordion.launchersNotRead")}>
-            {() => <GameLaunchersSetting allowed={launchers} />}
-          </Section>
+      </Section>
+      <Section
+        id="accessibility"
+        icon={Accessibility}
+        title={t("desktop.settings2.accessibility")}
+        status={[
+          named(t, t("desktop.colorVision.label"), t(`desktop.colorVision.${cv}`)),
+          onOff(t, t("desktop.narrator.voice"), narrator === "on"),
+          onOff(t, t("desktop.narrator.captions"), captions),
+        ].join(" · ")}
+      >
+        {() => (
+          <>
+            <ColorVisionSetting />
+            <ReduceMotionSetting />
+            <NarratorSettings />
+          </>
         )}
-        <Section id="dismissed" icon={BellOff} title={t("desktop.notices.dismissedTitle")} status={dismissed ? t("desktop.accordion.hidden", { count: dismissed }) : t("desktop.notices.none")}>
-          {() => <DismissedNotices device={hardwareName(bridge.identity)} />}
+      </Section>
+      {settings && (
+        <>
+          <Section id="startup" icon={AppWindow} title={t("desktop.settings2.startup")} status={startup}>
+            {() => (
+              <>
+                <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
+                <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
+                <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
+              </>
+            )}
+          </Section>
+          <Section
+            id="graphics"
+            icon={Zap}
+            title={t("desktop.settings2.graphics")}
+            status={[onOff(t, t("desktop.live.hardwareAcceleration"), settings.hardwareAcceleration), onOff(t, t("desktop.hdr.short"), settings.hdrLighting)].join(" · ")}
+          >
+            {() => (
+              <>
+                <Toggle
+                  label={t("desktop.live.hardwareAcceleration")}
+                  sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+                  value={settings.hardwareAcceleration}
+                  onChange={(v) => {
+                    setGpuChanged(true);
+                    set("hardwareAcceleration", v);
+                  }}
+                />
+                <Toggle
+                  label={t("desktop.hdr.label")}
+                  sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
+                  value={settings.hdrLighting}
+                  disabled={!settings.hardwareAcceleration}
+                  onChange={(v) => {
+                    setHdrChanged(true);
+                    set("hdrLighting", v);
+                  }}
+                />
+                {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
+              </>
+            )}
+          </Section>
+          <Section id="updates" icon={RefreshCw} title={t("desktop.settings2.updates")} status={updates} task={updateTask}>
+            {() => (
+              <>
+                <Toggle label={t("desktop.live.checkForUpdates")} sub={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
+                <Toggle
+                  label={t("desktop.live.autoInstall")}
+                  sub={t("desktop.live.autoInstallSub")}
+                  value={settings.checkForUpdates && settings.autoInstallUpdates}
+                  disabled={!settings.checkForUpdates}
+                  onChange={(v) => {
+                    set("autoInstallUpdates", v);
+                    set("updatesAsked", true);
+                  }}
+                />
+                <Segmented
+                  label={t("desktop.channel.label")}
+                  sub={settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}
+                  value={settings.updateChannel === "dev" ? 1 : 0}
+                  options={[
+                    { value: 0, label: t("desktop.channel.stable") },
+                    { value: 1, label: t("desktop.channel.dev") },
+                  ]}
+                  onChange={(v) => (v === 1 ? setJoiningDev(true) : set("updateChannel", "stable"))}
+                />
+                {joiningDev && (
+                  <DevChannelDialog
+                    automatic={settings.checkForUpdates}
+                    onJoin={() => {
+                      setJoiningDev(false);
+                      set("updateChannel", "dev");
+                    }}
+                    onCancel={() => setJoiningDev(false)}
+                  />
+                )}
+                <CheckNow firmwareInstalled={bridge.firmwareVersion} refreshFirmware={fw.refreshLatest} />
+                {settings.updateChannel === "dev" && (
+                  <div className="dk-row-btns">
+                    <BusyButton
+                      className="dk-btn"
+                      onClick={async () => {
+                        await window.desktop?.backToStable();
+                        setSettings((await window.desktop?.getSettings()) ?? settings);
+                      }}
+                    >
+                      {t("desktop.channel.backToStable")}
+                    </BusyButton>
+                  </div>
+                )}
+              </>
+            )}
+          </Section>
+        </>
+      )}
+      {gamesSupported() && launchers !== null && (
+        <Section id="privacy" icon={Shield} title={t("desktop.settings2.privacy")} status={t(launchers ? "desktop.accordion.launchersRead" : "desktop.accordion.launchersNotRead")}>
+          {() => <GameLaunchersSetting allowed={launchers} />}
         </Section>
-        {devTools && (
-          <Section id="developer" icon={Code} title={t("desktop.dev.title")} status={t("desktop.accordion.devOnly")}>
-            {() => <DeveloperSettings />}
-          </Section>
-        )}
-      </Accordion>
-    </div>
+      )}
+      <Section id="dismissed" icon={BellOff} title={t("desktop.notices.dismissedTitle")} status={dismissed ? t("desktop.accordion.hidden", { count: dismissed }) : t("desktop.notices.none")}>
+        {() => <DismissedNotices device={hardwareName(bridge.identity)} />}
+      </Section>
+      {devTools && (
+        <Section id="developer" icon={Code} title={t("desktop.dev.title")} status={t("desktop.accordion.devOnly")}>
+          {() => <DeveloperSettings />}
+        </Section>
+      )}
+    </SplitView>
   );
 }
 
@@ -648,6 +643,7 @@ export function DeveloperSettings() {
           </select>
         </Row>
       )}
+      {simulated && <SimulatedBoard />}
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <FakeGames />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>

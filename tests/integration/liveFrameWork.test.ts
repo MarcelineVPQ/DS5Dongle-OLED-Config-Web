@@ -186,7 +186,7 @@ describe("a finished drift test", () => {
     vi.useFakeTimers();
     const sticks = DEFAULT_CALIBRATION.sticks;
     const el = mount(createElement(StickTests, { input: frame(0), sticks }));
-    const start = [...el.querySelectorAll<HTMLButtonElement>("button.primary")].find((b) => b.closest("section")?.querySelector("h2")?.textContent?.match(/drift/i));
+    const start = [...el.querySelectorAll<HTMLButtonElement>("button.primary")].find((b) => b.closest(".dk-sec-group")?.querySelector(".dk-subhead")?.textContent?.match(/drift/i));
     expect(start).toBeTruthy();
     act(() => start!.click());
     // The test samples for 10 s while the input keeps coming.

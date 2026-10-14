@@ -1,9 +1,9 @@
-// The side panel of the one-screen view: the settings for whatever is
-// selected (a part of the controller, or the dongle). The sections are the
-// same components the old pages used. (App settings is its own page:
-// pages/AppSettingsPage.tsx.)
-import { PanelRightClose, X } from "lucide-react";
-import { hardwareName } from "../hardwareName";
+// The Controller page's accordion (its panel at the right of the drawing):
+// one Section per thing to set up, each with a live status in its header.
+// Clicking a part of the drawing opens its section (ControllerView); the
+// section bodies are functions, so a folded section renders nothing and its
+// polls (the level meters, the slot list) and tests stop.
+import { Bluetooth, Gamepad2, Info, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick } from "lucide-react";
 import Calibration from "./Calibration";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
@@ -15,207 +15,151 @@ import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
+import type { ChargeState } from "../../protocol/controllerInfo";
 import type { SpeakerSelect } from "../../protocol/config";
-import { BusyButton } from "../controls";
-import FirmwarePage from "../pages/FirmwarePage";
-import LightbarPage from "../pages/LightbarPage";
-import {
-  AutoHapticsSection,
-  DisplaySection,
-  EchoCancelToggle,
-  HapticsSection,
-  MicLevelSlider,
-  MicSection,
-  PcSleepSection,
-  PowerSection,
-  SpeakerSection,
-  StatusPinSection,
-  TriggerIntensitySection,
-  UsbSection,
-} from "../pages/SettingsPage";
+import { BusyButton, Row } from "../controls";
+import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
+import { AutoHapticsSection, EchoCancelToggle, HapticsSection, MicLevelSlider, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
-import type { FirmwareUpdate } from "../useUpdates";
-import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
+import { EDGE_REMAP_ROWS } from "./parts";
 import type { Remap } from "./useRemap";
+import ControllerInfo, { controllerInfoStatus, type ControllerInfoState } from "./ControllerInfo";
+import { named, onOff } from "../accordion/status";
+import { Section, SectionGroup } from "../accordion/Section";
 import { logged } from "../../errorText";
 import { shown } from "../shownError";
 import Notice from "../Notice";
 
-export type PanelView = "overview" | "dongle" | "calibration" | "buttons" | { part: PartId };
-
 interface Props {
-  view: PanelView;
   bridge: UseDs5BridgeResult;
-  fw: FirmwareUpdate;
   input: InputReport | null;
   remap: Remap;
-  onClose: () => void;
-  onOpen: (part: PartId) => void;
-  onCalibrate: () => void;
-  onButtons: (index?: number) => void;
   // The Buttons list: the focused row (also lit on the drawing) and hovers.
   buttonFocus: number | null;
   onButtonFocus: (index: number | null) => void;
   onButtonHover: (index: number | null) => void;
   edge: boolean; // a DualSense Edge (or its preview): the Buttons list adds its Fn buttons and paddles
-  onHide: () => void;
+  trigger: "l2" | "r2"; // the trigger picked last on the drawing: its pull shows first
+  info: ControllerInfoState;
+  batteryPct: number | null;
+  power: ChargeState | null;
 }
 
-export default function PartPanel({ view, bridge, fw, input, remap, onClose, onOpen, onCalibrate, onButtons, buttonFocus, onButtonFocus, onButtonHover, edge, onHide }: Props) {
+const CHOICES = ["auto", "speaker", "headset", "off"] as const;
+const MICS = ["auto", "builtIn", "headset"] as const;
+const AH_MODES = ["off", "fallback", "mix", "replace"] as const;
+
+export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger, info, batteryPct, power }: Props) {
   const { t } = useTranslation();
-  const title =
-    view === "overview"
-      ? t("desktop.live.overview", "Your controller")
-      : view === "dongle"
-        ? hardwareName(bridge.identity)
-        : view === "calibration"
-          ? t("desktop.calib.title")
-          : view === "buttons"
-            ? t("desktop.layouts.allTitle")
-            : view.part === "l2" || view.part === "r2"
-              ? t("desktop.live.triggersTitle")
-              : partName(t, view.part);
-
-  return (
-    <div className="dk-stack">
-      <header className="live-panel-head">
-        <h2 tabIndex={-1}>{title}</h2>
-        {view === "overview" && (
-          <button type="button" className="dk-btn dk-icon-btn" onClick={onHide} title={t("desktop.live.hidePanel")} aria-label={t("desktop.live.hidePanel")}>
-            <PanelRightClose size={14} />
-          </button>
-        )}
-        {view !== "overview" && (
-          <button type="button" className="dk-btn dk-icon-btn" onClick={onClose} title={t("desktop.live.close", "Close")} aria-label={t("desktop.live.close", "Close")}>
-            <X size={14} />
-          </button>
-        )}
-      </header>
-      {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
-      {view === "buttons" && <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
-      {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
-      {view === "calibration" && <Calibration bridge={bridge} input={input} />}
-      {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
-      {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
-    </div>
-  );
-}
-
-function partName(t: (k: string) => string, part: PartId): string {
-  return part === "body" ? t("desktop.live.part.body") : t(`desktop.live.part.${part}`);
-}
-
-// Shortcuts to every panel, so nobody has to guess where on the drawing a
-// setting lives (the grips for haptics weren't obvious).
-const SHORTCUTS: Array<[key: string, part: PartId]> = [
-  ["lightbar", "lightbar"],
-  ["triggers", "r2"],
-  ["haptics", "body"],
-  ["speaker", "speaker"],
-  ["mic", "mute"],
-  ["slots", "ps"],
-];
-
-function Overview({ onOpen, onCalibrate, onButtons }: { onOpen: (part: PartId) => void; onCalibrate: () => void; onButtons: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <section className="dk-card">
-      <p>{t("desktop.live.go.intro")}</p>
-      <div className="live-shortcuts">
-        {/* loop: HOT-PATH-OK — N ≈ 6 shortcuts per render */}
-        {SHORTCUTS.map(([key, part]) => (
-          <button key={key} type="button" className="live-shortcut" onClick={() => onOpen(part)}>
-            <strong>{t(`desktop.live.go.${key}.title`)}</strong>
-            <span>{t(`desktop.live.go.${key}.sub`)}</span>
-          </button>
-        ))}
-        <button type="button" className="live-shortcut" data-view="buttons" onClick={onButtons}>
-          <strong>{t("desktop.layouts.shortcutTitle")}</strong>
-          <span>{t("desktop.layouts.shortcutSub")}</span>
-        </button>
-        <button type="button" className="live-shortcut" onClick={onCalibrate}>
-          <strong>{t("desktop.calib.title")}</strong>
-          <span>{t("desktop.calib.shortcut")}</span>
-        </button>
-      </div>
-      <p className="dk-hint">{t("desktop.live.go.buttons")}</p>
-    </section>
-  );
-}
-
-function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId; bridge: UseDs5BridgeResult; input: InputReport | null; remap: Remap; onButtons: (index?: number) => void }) {
-  const index = REMAP_INDEX[part];
+  const d = bridge.draft;
+  // loop: HOT-PATH-OK — N = 9 light bar modes; per render of the panel
+  const mode = LIGHTBAR_MODES.find((m) => m.value === d.lightbarMode);
+  // loop: HOT-PATH-OK — N = 16 + 4 remap slots; per render of the panel
+  const changed = remap.draft.filter((v, i) => v !== i).length + (edge && remap.extraDevice ? remap.extraDraft.filter((v) => v !== REMAP_EXTRA_SELF).length : 0);
+  const { library } = useLibrary();
+  const loaded = remap.loaded ? (library.layouts?.[remap.loaded.id]?.name ?? remap.loaded.name) : null;
+  const infoStatus = controllerInfoStatus(t, info, batteryPct);
+  const slot = bridge.identity?.currentSlot;
+  const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
   return (
     <>
-      {part === "lightbar" && <LightbarPage bridge={bridge} />}
-      {(part === "l2" || part === "r2") && <TriggerLive input={input} side={part} />}
-      {(part === "l2" || part === "r2") && <TriggerIntensitySection bridge={bridge} />}
-      {(part === "l2" || part === "r2") && <TriggersPage bridge={bridge} />}
-      {(part === "stick-l" || part === "stick-r") && <StickLive input={input} side={part} />}
-      {part === "touchpad" && <TouchLive input={input} />}
-      {part === "speaker" && <SpeakerSection bridge={bridge} />}
-      {part === "speaker" && <LevelMeter bridge={bridge} which="speaker" />}
-      {part === "speaker" && <SpeakerTest />}
-      {part === "body" && <HapticsSection bridge={bridge} />}
-      {part === "body" && <LevelMeter bridge={bridge} which="haptic" />}
-      {part === "body" && <AutoHapticsSection bridge={bridge} />}
-      {part === "mute" && <MicSection bridge={bridge} />}
-      {part === "mute" && (
-        <MicTest
-          headset={input?.headphones ?? false}
-          output={bridge.draft.speakerSelect}
-          level={
-            <>
-              <MicLevelSlider bridge={bridge} />
-              <EchoCancelToggle bridge={bridge} />
-            </>
-          }
-        />
-      )}
-      {part === "ps" && <SlotsPage bridge={bridge} />}
-      {EDGE_PARTS.has(part) && <EdgePartInfo part={part} />}
-      {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}
+      <Section id="lightbar" icon={Lightbulb} title={t("desktop.sections.lightbar")} status={mode ? t(`desktop.lightbar.modes.${mode.key}`) : null}>
+        {() => <LightbarPage bridge={bridge} />}
+      </Section>
+      <Section id="triggers" icon={MoveDown} title={t("desktop.sections.triggers")} status={named(t, t("desktop.settings.triggerReduce"), d.triggerReduce)}>
+        {() => (
+          <>
+            <TriggerLive input={input} side={trigger} />
+            <TriggerIntensitySection bridge={bridge} />
+            <TriggersPage bridge={bridge} />
+          </>
+        )}
+      </Section>
+      <Section
+        id="haptics"
+        icon={AudioWaveform}
+        title={t("desktop.sections.haptics")}
+        status={[gains, named(t, t("autoHaptics.sectionTitle"), t(`autoHaptics.modes.${AH_MODES[d.autoHapticsEnable & 3]}.label`))].join(" · ")}
+      >
+        {() => (
+          <>
+            <HapticsSection bridge={bridge} />
+            <LevelMeter bridge={bridge} which="haptic" />
+            <SectionGroup title={t("autoHaptics.sectionTitle")}>
+              <AutoHapticsSection bridge={bridge} />
+            </SectionGroup>
+          </>
+        )}
+      </Section>
+      <Section
+        id="speaker"
+        icon={Volume2}
+        title={t("desktop.sections.speaker")}
+        status={[`${d.speakerVolume > 0 ? "+" : ""}${d.speakerVolume} dB`, named(t, t("desktop.settings.audioOutput"), t(`desktop.settings.choice.${CHOICES[d.speakerSelect & 3]}`))].join(" · ")}
+      >
+        {() => (
+          <>
+            <SpeakerSection bridge={bridge} />
+            <LevelMeter bridge={bridge} which="speaker" />
+            <SpeakerTest />
+          </>
+        )}
+      </Section>
+      <Section
+        id="mic"
+        icon={Mic}
+        title={t("desktop.sections.mic")}
+        status={
+          d.btMicEnable
+            ? [t(`desktop.settings.choice.${MICS[Math.min(2, d.micSelect)]}`), named(t, t("desktop.settings.micLevel"), d.micLevel), onOff(t, t("desktop.settings.echoCancel"), d.micEchoCancel)].join(
+                " · ",
+              )
+            : onOff(t, t("haptics.btMicLabel"), false)
+        }
+      >
+        {() => (
+          <>
+            <MicSection bridge={bridge} />
+            <MicTest
+              headset={input?.headphones ?? false}
+              output={d.speakerSelect}
+              level={
+                <>
+                  <MicLevelSlider bridge={bridge} />
+                  <EchoCancelToggle bridge={bridge} />
+                </>
+              }
+            />
+          </>
+        )}
+      </Section>
+      <Section
+        id="buttons"
+        icon={Gamepad2}
+        title={t("desktop.sections.buttons")}
+        status={loaded ?? (changed ? t("desktop.accordion.buttonsChanged", { count: changed }) : t("desktop.layouts.normal"))}
+      >
+        {() => (
+          <>
+            <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
+            {edge && !remap.extraDevice && <EdgePartInfo />}
+            <TouchLive input={input} />
+            {remap.supported && <SavedLayouts remap={remap} />}
+          </>
+        )}
+      </Section>
+      <Section id="sticks" icon={Joystick} title={t("desktop.sections.sticks")} status={slot !== undefined ? named(t, t("desktop.overview.slot"), slot) : null}>
+        {() => <Calibration bridge={bridge} input={input} />}
+      </Section>
+      <Section id="slots" icon={Bluetooth} title={t("desktop.sections.slots")} status={slot !== undefined ? t("desktop.accordion.slotActive", { slot }) : null}>
+        {() => <SlotsPage bridge={bridge} />}
+      </Section>
+      <Section id="info" icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
+        {() => <ControllerInfo data={info} batteryPct={batteryPct} power={power} />}
+      </Section>
     </>
-  );
-}
-
-function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap; onButtons: (index?: number) => void }) {
-  const { t } = useTranslation();
-  const target = remap.draft[index];
-  const game = useGameLayoutSave();
-  return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.remapButton", { button: buttonLabel(index) })}</h2>
-      {remap.supported === false ? (
-        <p className="dk-hint">{t("remap.unsupported")}</p>
-      ) : (
-        <>
-          <div className="dk-row">
-            <label htmlFor={`remap-${index}`}>{t("desktop.live.remapActs", "Acts as")}</label>
-            <select id={`remap-${index}`} className="dk-select" value={target} disabled={remap.busy || remap.supported !== true} onChange={(e) => remap.setTarget(index, Number(e.target.value))}>
-              {/* loop: HOT-PATH-OK — N ≈ 17 options in one select per render */}
-              {REMAP_BUTTON_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.value === index ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
-                </option>
-              ))}
-              <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
-            </select>
-          </div>
-          {game.target ? (
-            <Notice closable>{t("desktop.editing.buttonsNote", { title: game.target.title })}</Notice>
-          ) : (
-            <p className="dk-hint">{t("desktop.live.remapHint", "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.")}</p>
-          )}
-          <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
-            {t("desktop.layouts.seeAll")}
-          </button>
-          <RemapActions remap={remap} onSave={game.target ? game.saveToProfile : null} />
-        </>
-      )}
-    </section>
   );
 }
 
@@ -292,47 +236,39 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   const { active } = useLibrary();
   // Not saved yet: in a profile, into its layout; else onto the dongle.
   const pendingLabel = target ? t("desktop.layouts.notSaved") : t("desktop.layouts.notApplied");
-  if (remap.supported === false)
-    return (
-      <section className="dk-card">
-        <p className="dk-hint">{t("remap.unsupported")}</p>
-      </section>
-    );
+  if (remap.supported === false) return <p className="dk-hint">{t("remap.unsupported")}</p>;
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.layouts.allHeading")}</h2>
+    <>
       {target && <Notice closable>{t("desktop.editing.buttonsNote", { title: target.title })}</Notice>}
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && !target && <Notice closable>{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</Notice>}
-      <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
+      <div className="dk-buttons-table" ref={table} onMouseLeave={() => onHover(null)}>
         {/* loop: HOT-PATH-OK — N = 16 rows; memo()ed, re-renders on a remap or focus change, not per live frame */}
         {remap.draft.map((target, i) => {
           const isChanged = target !== i;
           const pending = target !== remap.device[i];
+          const name = buttonLabel(i);
           return (
-            <div key={i} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
-              <label role="rowheader" htmlFor={`all-remap-${i}`}>
-                {isChanged && <span aria-hidden="true">● </span>}
-                {buttonLabel(i)}
-                {(pending || isChanged) && <small>{pending ? pendingLabel : t("desktop.layouts.changed")}</small>}
-              </label>
-              <select
-                id={`all-remap-${i}`}
-                role="cell"
-                className="dk-select"
-                value={target}
-                disabled={remap.busy || remap.supported !== true}
-                onChange={(e) => remap.setTarget(i, Number(e.target.value))}
-              >
-                {/* loop: HOT-PATH-OK — 16 x ~17 options; memo()ed, only on a remap or focus change */}
-                {REMAP_BUTTON_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
-                  </option>
-                ))}
-                <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
-              </select>
+            <div key={i} className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
+              <Row id={`btn-${i}`} label={`${isChanged ? "● " : ""}${name}`} sub={pending || isChanged ? (pending ? pendingLabel : t("desktop.layouts.changed")) : undefined}>
+                <select
+                  id={`all-remap-${i}`}
+                  aria-label={name}
+                  className="dk-select"
+                  value={target}
+                  disabled={remap.busy || remap.supported !== true}
+                  onChange={(e) => remap.setTarget(i, Number(e.target.value))}
+                >
+                  {/* loop: HOT-PATH-OK — 16 x ~17 options; memo()ed, only on a remap or focus change */}
+                  {REMAP_BUTTON_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
+                    </option>
+                  ))}
+                  <option value={REMAP_DISABLED}>{t("remap.disabled")}</option>
+                </select>
+              </Row>
             </div>
           );
         })}
@@ -345,28 +281,36 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
             const isChanged = value !== REMAP_EXTRA_SELF;
             const pending = value !== remap.extraDevice?.[n];
             return (
-              <div key={part} role="row" className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
-                <label role="rowheader" htmlFor={`all-remap-${i}`}>
-                  {isChanged && <span aria-hidden="true">● </span>}
-                  {t(`desktop.live.part.${part}`)}
-                  {(pending || isChanged) && <small>{pending ? pendingLabel : t("desktop.layouts.changed")}</small>}
-                </label>
-                <select id={`all-remap-${i}`} role="cell" className="dk-select" value={value} disabled={remap.busy} onChange={(e) => remap.setExtra(n, Number(e.target.value))}>
-                  <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
-                  {/* loop: HOT-PATH-OK — 4 x ~17 options; memo()ed, only on a remap or focus change */}
-                  {REMAP_BUTTON_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                  <option value={REMAP_EXTRA_OFF}>{t("remap.disabled")}</option>
-                </select>
+              <div key={part} className={`dk-buttons-row${isChanged ? " changed" : ""}${focus === i ? " focused" : ""}`} onMouseEnter={() => onHover(i)} onFocus={() => onFocus(i)}>
+                <Row
+                  id={`btn-${i}`}
+                  label={`${isChanged ? "● " : ""}${t(`desktop.live.part.${part}`)}`}
+                  sub={pending || isChanged ? (pending ? pendingLabel : t("desktop.layouts.changed")) : undefined}
+                >
+                  <select
+                    id={`all-remap-${i}`}
+                    aria-label={t(`desktop.live.part.${part}`)}
+                    className="dk-select"
+                    value={value}
+                    disabled={remap.busy}
+                    onChange={(e) => remap.setExtra(n, Number(e.target.value))}
+                  >
+                    <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
+                    {/* loop: HOT-PATH-OK — 4 x ~17 options; memo()ed, only on a remap or focus change */}
+                    {REMAP_BUTTON_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                    <option value={REMAP_EXTRA_OFF}>{t("remap.disabled")}</option>
+                  </select>
+                </Row>
               </div>
             );
           })}
       </div>
       <RemapActions remap={remap} onSave={target ? saveToProfile : null} />
-    </section>
+    </>
   );
 }
 
@@ -420,8 +364,7 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
       .then(setLibrary)
       .catch(shown("desktop.errors.layoutSave"));
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.layouts.title")}</h2>
+    <SectionGroup title={t("desktop.layouts.title")}>
       <p className="dk-hint">{t("desktop.layouts.hint")}</p>
       {layouts.length === 0 ? (
         <p className="dk-hint">{t("desktop.layouts.none")}</p>
@@ -491,7 +434,7 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
           {t("desktop.layouts.saveAs")}
         </button>
       </form>
-    </section>
+    </SectionGroup>
   );
 }
 
@@ -511,8 +454,7 @@ function TriggerLive({ input, side }: { input: InputReport | null; side: "l2" | 
   const { t } = useTranslation();
   const sides: Array<"l2" | "r2"> = side === "l2" ? ["l2", "r2"] : ["r2", "l2"];
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.pull", "Pull")}</h2>
+    <SectionGroup title={t("desktop.live.pull", "Pull")}>
       {/* loop: HOT-PATH-OK — N = 2 triggers per live frame */}
       {sides.map((sd) => {
         const value = input ? (sd === "l2" ? input.triggerLeft : input.triggerRight) : 0;
@@ -527,34 +469,22 @@ function TriggerLive({ input, side }: { input: InputReport | null; side: "l2" | 
           </div>
         );
       })}
-    </section>
+    </SectionGroup>
   );
 }
 
-function StickLive({ input, side }: { input: InputReport | null; side: "stick-l" | "stick-r" }) {
+// The DualSense Edge's Fn buttons and back paddles without firmware that
+// remaps them (protocol 1.9): what they are; they light up on the drawing when pressed.
+function EdgePartInfo() {
   const { t } = useTranslation();
-  const s = input ? (side === "stick-l" ? input.leftStick : input.rightStick) : { x: 128, y: 128 };
-  const pct = (v: number) => Math.round(((v - 128) / 127) * 100);
+  // loop: NOT-WORTH — N = 4 part names; only while Button assignments is open
+  const title = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`)).join(" · ");
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.live.position", "Position")}</h2>
-      <p className="dk-mono">
-        X {pct(s.x)}% · Y {pct(s.y)}%
-      </p>
-    </section>
-  );
-}
-
-// The DualSense Edge's Fn buttons and back paddles: what they are; they light
-// up on the drawing when pressed, remapping them comes later.
-function EdgePartInfo({ part }: { part: PartId }) {
-  const { t } = useTranslation();
-  const kind = part === "fn-l" || part === "fn-r" ? "fn" : "paddle";
-  return (
-    <section className="dk-card">
-      <p>{t(`desktop.live.edgePart.${kind}`)}</p>
+    <SectionGroup title={title}>
+      <p className="dk-hint">{t("desktop.live.edgePart.fn")}</p>
+      <p className="dk-hint">{t("desktop.live.edgePart.paddle")}</p>
       <p className="dk-hint">{t("desktop.live.edgePart.soon")}</p>
-    </section>
+    </SectionGroup>
   );
 }
 
@@ -563,7 +493,7 @@ function TouchLive({ input }: { input: InputReport | null }) {
   // loop: HOT-PATH-OK — N ≤ 2 fingers per live frame
   const touching = input?.fingers.filter((f) => f.touching) ?? [];
   return (
-    <section className="dk-card">
+    <SectionGroup title={t("desktop.live.part.touchpad")}>
       <p className="dk-hint">{t("desktop.live.touchHint", "Touch the touch pad to see your fingers here. There's nothing to set up for it.")}</p>
       {/* loop: HOT-PATH-OK — N ≤ 2 fingers per live frame */}
       {touching.map((f, i) => (
@@ -571,7 +501,7 @@ function TouchLive({ input }: { input: InputReport | null }) {
           {t("desktop.live.finger", { n: i + 1, defaultValue: "Finger {{n}}" })}: {f.x}, {f.y}
         </p>
       ))}
-    </section>
+    </SectionGroup>
   );
 }
 
@@ -583,7 +513,7 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   const client = bridge.client;
   // The level, and its peak held for 1.5 s (kept with each reading).
   const hold = useRef({ value: 0, at: 0 });
-  // lifetime: OK — usePoll stops on unmount (panel closed) and while hidden
+  // lifetime: OK — usePoll stops on unmount (section folded) and while hidden
   const reading = usePoll(
     async () => {
       const diag = await client!.readDiag();
@@ -599,37 +529,13 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
   const held = reading?.hold ?? 0;
   const silent = held < 0.01;
   return (
-    <section className="dk-card">
-      <h2>{which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptic feedback now")}</h2>
+    <SectionGroup title={which === "speaker" ? t("desktop.live.speakerLevel", "Speaker level now") : t("desktop.live.hapticLevel", "Haptic feedback now")}>
       <div className="live-level">
         <Meter value={level} hold={held} />
         <span className="live-level-pct">{Math.round(level * 100)}%</span>
       </div>
       <p className="dk-hint">{silent ? t(which === "speaker" ? "desktop.live.speakerSilent" : "desktop.live.hapticSilent") : t("desktop.live.levelLive")}</p>
-    </section>
-  );
-}
-
-// The dongle-wide settings aren't part of a game's profile: say so while one is
-// on, since the save bar then saves to the profile (these stay normal settings,
-// kept after the profile ends, to save to the dongle then).
-function ProfileDongleNote() {
-  const { t } = useTranslation();
-  const target = useProfileTarget();
-  return target ? <Notice closable>{t("desktop.editing.dongleNote", { title: target.title })}</Notice> : null;
-}
-
-function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
-  return (
-    <>
-      <FirmwarePage bridge={bridge} fw={fw} />
-      <ProfileDongleNote />
-      <PowerSection bridge={bridge} />
-      <PcSleepSection bridge={bridge} />
-      <DisplaySection bridge={bridge} />
-      <UsbSection bridge={bridge} />
-      <StatusPinSection bridge={bridge} />
-    </>
+    </SectionGroup>
   );
 }
 
@@ -657,8 +563,7 @@ export function SpeakerTest() {
   }, [playing, startedAt, duration, onScreen]);
   const played = playing && startedAt ? progress : 0;
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.audioTest.speakerTitle")}</h2>
+    <SectionGroup title={t("desktop.audioTest.speakerTitle")}>
       <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
       <div className="dk-stack">
         <div className="dk-row-btns">
@@ -676,7 +581,7 @@ export function SpeakerTest() {
         </div>
       </div>
       {noSpeaker && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
-    </section>
+    </SectionGroup>
   );
 }
 
@@ -687,7 +592,7 @@ export function SpeakerTest() {
 // live sound (it would feed back on the speaker), nor with Audio output set to
 // Speaker: Listen back plays the last 3 seconds, after the mic is closed. A status line always says what is
 // happening, so silence with text is a visible error, never silence alone.
-// Closing the panel or hiding the window stops everything. `level` (the Mic
+// Folding the section or hiding the window stops everything. `level` (the Mic
 // level slider) sits right under the meter, so a change shows on it live.
 const VU_SEGMENTS = 20;
 type MicPhase = "idle" | "starting" | "testing" | "stopping" | "playing";
@@ -845,8 +750,7 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
                     ? t("desktop.audioTest.micQuiet")
                     : "";
   return (
-    <section className="dk-card">
-      <h2>{t("desktop.audioTest.micTitle")}</h2>
+    <SectionGroup title={t("desktop.audioTest.micTitle")}>
       <p className="dk-hint">{t("desktop.audioTest.micHint", { seconds: LISTEN_SECONDS })}</p>
       <div className="mic-test-row">
         {/* error: SHOWN — desktop.audioTest.problem.failed (failed() ends on the status line) */}
@@ -880,6 +784,6 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       >
         {status}
       </p>
-    </section>
+    </SectionGroup>
   );
 }

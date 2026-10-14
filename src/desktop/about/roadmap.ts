@@ -414,6 +414,12 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
   { column: "planned", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"] },
   { column: "planned", title: "Game logs for bug reports", text: "Tick a box on a game's page and the next Play records a log, showing what happened with your controller.", areas: ["games"] },
+  {
+    column: "planned",
+    title: "Clear message when new firmware won't start",
+    text: "If the board comes back still waiting for firmware after an update, the app says so and offers to install again.",
+    areas: ["dongle"],
+  },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },

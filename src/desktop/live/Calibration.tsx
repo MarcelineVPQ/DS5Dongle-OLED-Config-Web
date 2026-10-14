@@ -19,6 +19,7 @@ import { useProfileTarget } from "../library/libraryContext";
 import StickTests from "./StickTestCards";
 import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
 import Notice from "../Notice";
+import { SectionGroup, SectionSub } from "../accordion/Section";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
 type Step = "idle" | "done" | { measure: Measure; ready: boolean };
@@ -114,10 +115,9 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   if (!client) return null;
   if (!supported) {
     return (
-      <section className="dk-card">
-        <h2>{t("desktop.calib.title")}</h2>
+      <SectionGroup title={t("desktop.calib.title")}>
         <p className="dk-hint">{t("desktop.calib.needsFirmware")}</p>
-      </section>
+      </SectionGroup>
     );
   }
 
@@ -147,8 +147,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   const running = step !== "idle" && step !== "done";
   return (
     <>
-      <section className="dk-card">
-        <h2>{t("desktop.calib.title")}</h2>
+      <SectionGroup title={t("desktop.calib.title")}>
         <p className="dk-hint">{t("desktop.calib.intro")}</p>
         <p className="dk-hint">{t("desktop.calib.forSlot", { slot })}</p>
         {target && <Notice closable>{t("desktop.editing.calibrationNote", { title: target.title })}</Notice>}
@@ -173,7 +172,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         {step === "done" && !missed.length && <p className="dk-good">✓ {t("desktop.calib.measured")}</p>}
         {step === "done" && missed.length > 0 && <p className="dk-bad">{t("desktop.calib.missed", { parts: missed.join(", ") })}</p>}
         {!input && <p className="dk-hint">{t("desktop.calib.needsController")}</p>}
-      </section>
+      </SectionGroup>
 
       {/* loop: HOT-PATH-OK — N = 2 sticks, per live frame while calibrating */}
       {(["left", "right"] as const).map((side, i) => {
@@ -181,8 +180,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         const raw = input ? (i === 0 ? input.leftStick : input.rightStick) : { x: 128, y: 128 };
         const [cxOut, cyOut] = correctStick(raw.x, raw.y, s);
         return (
-          <section className="dk-card" key={side}>
-            <h2>{t(`desktop.calib.${side}Stick`)}</h2>
+          <SectionGroup key={side} title={t(`desktop.calib.${side}Stick`)}>
             <div className="calib-preview">
               <StickDot label={t("desktop.calib.raw")} x={raw.x} y={raw.y} deadzone={s.deadzone} cx={s.cx} cy={s.cy} />
               <StickDot label={t("desktop.calib.corrected")} x={cxOut} y={cyOut} />
@@ -190,7 +188,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
             <Slider label={t("desktop.calib.deadzone")} sub={t("desktop.calib.deadzoneSub")} value={s.deadzone} min={0} max={64} step={1} onChange={(v) => editStick(i as 0 | 1, { deadzone: v })} />
             <Slider label={t("desktop.calib.outer")} sub={t("desktop.calib.outerSub")} value={s.outer} min={64} max={128} step={1} onChange={(v) => editStick(i as 0 | 1, { outer: v })} />
             <p className="dk-hint dk-mono">{t("desktop.calib.center", { x: s.cx, y: s.cy })}</p>
-          </section>
+          </SectionGroup>
         );
       })}
 
@@ -198,8 +196,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
 
       <StickTests input={input} sticks={draft.sticks} />
 
-      <section className="dk-card">
-        <h2>{t("desktop.calib.triggers")}</h2>
+      <SectionGroup title={t("desktop.calib.triggers")}>
         {/* loop: HOT-PATH-OK — N = 2 triggers, per live frame while calibrating */}
         {(["L2", "R2"] as const).map((name, i) => {
           const tr = draft.triggers[i];
@@ -210,14 +207,14 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
             </p>
           );
         })}
-        <h2>{t("desktop.calib.gyro")}</h2>
+        <SectionSub>{t("desktop.calib.gyro")}</SectionSub>
         <p className="dk-mono">
           {/* loop: HOT-PATH-OK — N = 3 gyro axes */}
           {t("desktop.calib.gyroZero")} {draft.gyro.every((g) => g === 0) ? "—" : draft.gyro.join(" · ")}
         </p>
-      </section>
+      </SectionGroup>
 
-      <section className="dk-card">
+      <SectionGroup>
         <div className="dk-row-btns">
           <BusyButton className="dk-btn primary" disabled={!changed || running} onClick={() => save(draft)}>
             {t("desktop.calib.save")}
@@ -231,7 +228,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         </div>
         <p className="dk-hint">{t("desktop.calib.saveHint")}</p>
         <SlotReadError error={error} retry={saved === null ? retry : null} />
-      </section>
+      </SectionGroup>
     </>
   );
 }

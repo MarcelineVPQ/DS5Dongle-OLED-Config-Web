@@ -86,7 +86,7 @@ const NO_TRANSITIONS = `(() => { if (document.getElementById("check-no-transitio
 
 // In the page: clipped or spilling text in what's visible now.
 const LAYOUT_PROBE = `(() => {
-  const BOXES = ".dk-card, .live-tile, .live-data-card, .dash-card, .dk-notice, .dk-btn, .dk-seg button, .dk-row, .live-panel, .narrator-caption, .lib-row, .gp-stat";
+  const BOXES = ".dk-card, .live-tile, .live-data-card, .dash-card, .dk-notice, .dk-btn, .dk-seg button, .dk-row, .dk-sec, .dk-split-panel, .narrator-caption, .lib-row, .gp-stat";
   const out = [];
   const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden"; };
   const label = (el) => (el.innerText || el.getAttribute("aria-label") || "").trim().replace(/\\s+/g, " ").slice(0, 60);
@@ -187,7 +187,11 @@ const NAMES_PROBE = `(() => {
 
 const click = (selector) => evaluate(`(() => { const el = document.querySelector(${JSON.stringify(selector)}); el?.dispatchEvent(new MouseEvent("click", { bubbles: true })); return !!el; })()`);
 const rail = (item) => click(`[data-rail="${item}"]`);
-const scrollPanel = () => evaluate(`(() => { const p = document.querySelector(".live-panel .dk-panel-body, .live-panel"); if (p) p.scrollTop = p.scrollHeight; })()`);
+const scrollPanel = () => evaluate(`(() => { const p = document.querySelector(".dk-split-panel"); if (p) p.scrollTop = p.scrollHeight; })()`);
+// An accordion section opened (left open if it is), and every section pinned open.
+const openSection = (id) => evaluate(`(() => { const h = document.querySelector('[data-section="${id}"] .dk-sec-toggle'); if (h && h.getAttribute("aria-expanded") !== "true") h.click(); })()`);
+const pinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="false"]').forEach((b) => b.click())`);
+const unpinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="true"]').forEach((b) => b.click())`);
 
 // Every view worth checking: its page group (the unit the fast plan
 // combines), the update state it's shown in, and a rough cost (ms: its own
@@ -198,6 +202,7 @@ const gamesHome = async () => {
   await rail("games");
   await sleep(1500);
   await click(".lib-home"); // home, not the game page the last view left open
+  await unpinAll(); // Home's sections as a player finds them (a view before pinned them all)
 };
 const view = (group, name, cost, open) => ({ group, name, cost: cost + SETTLE_MS + 150, open });
 const BASE_VIEWS = [
@@ -209,30 +214,54 @@ const BASE_VIEWS = [
       await click(`.live-ctl [data-part="${part}"]`);
     }),
   ),
-  view("controller", "calibration", 300, async () => {
+  ...["sticks", "info"].map((id) =>
+    view("controller", `section:${id}`, 300, async () => {
+      await rail("controller");
+      await sleep(300);
+      await openSection(id);
+    }),
+  ),
+  // Every section pinned open (pins are kept per board and slot: taken off again after), scrolled down.
+  view("controller", "controller, every section open, scrolled", 1200, async () => {
+    await rail("controller");
+    await sleep(400);
+    await pinAll();
+    await sleep(700);
+    await scrollPanel();
+  }),
+  view("controller", "controller, pins taken off", 300, async () => {
     await rail("controller");
     await sleep(300);
-    await evaluate(`[...document.querySelectorAll(".live-shortcut")].at(-1)?.click()`);
+    await unpinAll();
   }),
   view("dongle", "dongle (console + dashboard)", 0, () => rail("dongle")),
   view("dongle", "dongle, scrolled", 800, async () => {
     await rail("dongle");
     await sleep(800);
-    await evaluate(`(() => { const s = document.querySelector(".live-stage"); if (s) s.scrollTop = s.scrollHeight; })()`);
+    await evaluate(`(() => { const s = document.querySelector(".dk-split-main"); if (s) s.scrollTop = s.scrollHeight; })()`);
   }),
+  ...["firmware", "device", "power", "oled", "usb", "diagnostics"].map((id) =>
+    view("dongle", `dongle section:${id}`, 900, async () => {
+      await rail("dongle");
+      await sleep(300);
+      await openSection(id);
+      await sleep(500);
+      await scrollPanel();
+    }),
+  ),
   view("app", "app settings", 0, () => rail("app")),
   // Every section pinned open (the accordion: one open otherwise), scrolled down.
   view("app", "app settings, every section open, scrolled", 700, async () => {
     await rail("app");
     await sleep(400);
-    await evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="false"]').forEach((b) => b.click())`);
+    await pinAll();
     await sleep(300);
-    await evaluate(`(() => { const b = document.querySelector("main.dk-body"); if (b) b.scrollTop = b.scrollHeight; })()`);
+    await scrollPanel();
   }),
   view("controller", "buttons & layouts", 900, async () => {
     await rail("controller");
     await sleep(400);
-    await click('[data-view="buttons"]');
+    await openSection("buttons");
     await sleep(500);
     await scrollPanel();
   }),
@@ -249,6 +278,19 @@ const BASE_VIEWS = [
     await sleep(800);
     await evaluate(`document.querySelector(".lib-grid")?.scrollIntoView({ block: "start" })`);
   }),
+  // Every section pinned open, scrolled down: Home, then a game page (the pins are every game page's). The next view on each takes the pins off.
+  ...[
+    ["games home, every section open, scrolled", gamesHome],
+    ["game page, every section open, scrolled", () => gamesHome().then(() => evaluate(`document.querySelectorAll(".lib-row")[1]?.click()`))],
+  ].map(([name, go]) =>
+    view("games", name, 2600, async () => {
+      await go();
+      await sleep(500);
+      await pinAll();
+      await sleep(500);
+      await scrollPanel();
+    }),
+  ),
   view("games", "games, Show menu open", 1500, async () => {
     await gamesHome();
     await evaluate(`(() => { const d = document.querySelector(".lib-show"); if (d) d.open = true; })()`);
@@ -263,6 +305,7 @@ const BASE_VIEWS = [
       await rail("games");
       await sleep(2000);
       await evaluate(`(${pick} ?? document.querySelectorAll(".lib-row")[1])?.click()`);
+      await unpinAll(); // the sections as a player finds them (a view before pinned them all)
     }),
   ),
 ];

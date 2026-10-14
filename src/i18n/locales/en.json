@@ -120,13 +120,11 @@
       }
     },
     "settings": {
-      "power": "Power",
       "idleDisconnect": "Disconnect when idle",
       "picoLed": "Pico status LED",
       "brightness": "Brightness",
       "zeroOff": "0 = never",
       "controllerWakes": "Controller input wakes the screen",
-      "usb": "USB",
       "usbHint": "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).",
       "speakerLevel": "Volume (Speaker for Controller)",
       "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip",
@@ -251,8 +249,6 @@
       "micDecoderFailed": "Mic off: {{device}} couldn't create the controller mic's decoder when it started ({{kb}} KB free). The speaker, haptics, triggers and saving still work. Please report this on GitHub (issue #15) with your board and controller."
     },
     "firmware": {
-      "installed": "Installed firmware",
-      "device": "Device",
       "rebooting": "Restarting… press the PS button on the controller once it's back.",
       "reboot": "Restart {{device}}",
       "bootsel": "{{device, capitalize}} is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
@@ -280,7 +276,9 @@
       "writeFailed": "The firmware update stopped before it finished, so {{device}} is waiting in BOOTSEL mode with no firmware running. Keep it plugged in: the app finds it and offers to install the firmware again. If nothing shows up, unplug it and plug it back in.",
       "disabled": "not checked (automatic checks are off)",
       "feedChanged": "A newer firmware appeared. Check again.",
-      "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again."
+      "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again.",
+      "wrongFile": "This file isn't firmware for {{device}} (it's for another chip, or damaged), so nothing was written. Check for updates again; if it happens again, reinstall the app.",
+      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again."
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -359,6 +357,7 @@
       "source": "Source code (MIT)",
       "issues": "Report an issue",
       "roadmapTab": "Coming soon",
+      "showOlder": "Show older releases",
       "roadmap": {
         "intro": "These are plans, not promises: they can change, and none has a date.",
         "suggest": "Suggestions are welcome on GitHub.",
@@ -548,7 +547,14 @@
       "details": "Details",
       "needsAttention": "Needs attention",
       "undoAudioRestart": "Undone, but restarting the audio service failed ({{error}}). Log out and back in, or restart the PC, for the audio change to take effect.",
-      "undoVolumeNotSaved": "Undone: the old levels are back, but the levels Linux saved couldn't be put back ({{error}}), so the controller comes back at full after its next reconnect."
+      "undoVolumeNotSaved": "Undone: the old levels are back, but the levels Linux saved couldn't be put back ({{error}}), so the controller comes back at full after its next reconnect.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Not installed",
+      "protonNewer": "{{name}} available",
+      "nothingToChange": "Nothing to change",
+      "historyStatus_one": "{{count}} change · last {{date}}",
+      "historyStatus_other": "{{count}} changes · last {{date}}",
+      "historyNone": "No changes yet"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -615,13 +621,8 @@
       "overview": "Your controller",
       "app": "App settings",
       "close": "Close",
-      "haptics": "Haptic feedback",
-      "speaker": "Speaker",
-      "mic": "Microphone",
       "remap": "Button assignments",
-      "remapActs": "Acts as",
       "remapDefault": "default",
-      "remapHint": "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.",
       "remapApply": "Apply assignments",
       "remapReset": "Reset all buttons",
       "remapResetHint": "Every button back to itself",
@@ -633,7 +634,6 @@
         "2": "weapon",
         "3": "vibration"
       },
-      "position": "Position",
       "touchHint": "Touch the touch pad to see your fingers here. There's nothing to set up for it.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Speaker level now",
@@ -651,36 +651,6 @@
         "paddle": "One of the DualSense Edge's back buttons. The controller's custom profiles can make it act as any button. It lights up here when you press it.",
         "soon": "Assigning them needs the newest firmware on {{device}} ({{deviceName}} → Update)."
       },
-      "go": {
-        "intro": "Click a part of the drawing with your mouse, or pick a setting here:",
-        "lightbar": {
-          "title": "Light bar",
-          "sub": "Mode and favorite colors"
-        },
-        "triggers": {
-          "title": "Adaptive triggers",
-          "sub": "Try the effects on L2 / R2"
-        },
-        "haptics": {
-          "title": "Haptic feedback",
-          "sub": "Vibration intensity and Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Speaker",
-          "sub": "Level, with a live meter"
-        },
-        "mic": {
-          "title": "Microphone",
-          "sub": "The controller's built-in microphone"
-        },
-        "slots": {
-          "title": "Pairing slots",
-          "sub": "Switch or forget controllers"
-        },
-        "buttons": "To assign a button or stick, click it on the drawing.",
-        "bodyHint": "Haptic feedback: vibration intensity and Audio Auto Haptics"
-      },
-      "hidePanel": "Hide the settings panel (the controller gets bigger)",
       "autoInstall": "Install updates automatically",
       "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app",
       "hapticSilent": "Silent: nothing is sending haptic feedback right now. It moves while a game plays haptic feedback, or with Audio Auto Haptics on while sound plays.",
@@ -693,8 +663,6 @@
       "headsetIn": "Headset in",
       "colorLabel": "Color:",
       "statusLabel": "Status:",
-      "triggersTitle": "Adaptive triggers",
-      "remapButton": "Assign {{button}}",
       "effectOther": "other effect ({{n}})",
       "checkForUpdatesSub": "Off: the app goes online for updates only when you press Check for updates."
     },
@@ -841,7 +809,6 @@
       "profileNone": "This game uses your normal settings. A profile changes any controller setting (haptic feedback, speaker, light bar, microphone, buttons, sticks) for this game only, and switches back when it closes.",
       "profileFromCurrent": "Create from current settings",
       "profileNeedsDongle": "Connect {{device}} to start from your current settings.",
-      "profileHint": "Changes are saved to this game's profile, not to {{device}}.",
       "profileCopyCurrent": "Copy current settings",
       "profileDelete": "Delete profile",
       "haptics": "Vibration intensity",
@@ -1022,7 +989,13 @@
       "continue": "Continue playing",
       "libraryTitle": "Library",
       "filteredBy": "Filter: {{filter}}",
-      "showAll": "Show all"
+      "showAll": "Show all",
+      "profileNoneShort": "No profile",
+      "profileChanges_one": "{{count}} change",
+      "profileChanges_other": "{{count}} changes",
+      "hdrUnknown": "Not known to support HDR",
+      "notesEmpty": "Empty",
+      "glanceOpen": "Open {{section}}"
     },
     "dongleConsole": {
       "title": "{{deviceName}} console",
@@ -1193,11 +1166,35 @@
         "no-gamescope": "gamescope isn't installed"
       },
       "simulated": "Simulate {{device}} (no hardware)",
-      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
+      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below). Restarts the page.",
       "simCore1": "Simulated core1",
       "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}. Restarts the page.",
       "simCore1Runs": "Runs normally",
-      "simCore1Stage": "Stops at step {{stage}}: {{step}}"
+      "simCore1Stage": "Stops at step {{stage}}: {{step}}",
+      "simBoard": "Simulated board",
+      "simBoardHint": "What the simulation is doing now. Update on the firmware card and Install on the setup screen run against it, start to finish.",
+      "simBoardState": {
+        "dongle": "Running firmware {{version}}",
+        "bootsel": "In BOOTSEL mode",
+        "blank": "A blank Pico in BOOTSEL (first-time setup)",
+        "away": "Off USB (waiting for a controller)"
+      },
+      "simFault": "Firmware update failure",
+      "simFaultHint": "Make the next update fail, to see what the app says.",
+      "simFaults": {
+        "none": "None",
+        "write10": "Write error at 10 %",
+        "write50": "Write error at 50 %",
+        "write90": "Write error at 90 %",
+        "noBootsel": "Doesn't show up in BOOTSEL",
+        "noReturn": "Doesn't come back after the update"
+      },
+      "simSpeed": "Writing speed",
+      "simSpeeds": {
+        "fast": "Instant",
+        "normal": "A few seconds",
+        "real": "Like a real board (about 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Card opacity",
@@ -1213,7 +1210,6 @@
     },
     "calib": {
       "title": "Calibration",
-      "shortcut": "Stick drift, deadzones, trigger travel, gyroscope",
       "intro": "Corrects stick drift, deadzones, trigger travel and the gyroscope's zero inside {{device}}, for every game. Nothing is written to the controller; Reset undoes it.",
       "needsFirmware": "Update {{device}}'s firmware to calibrate.",
       "needsController": "Connect a controller to calibrate.",
@@ -1402,12 +1398,7 @@
         "dim": "Dimmed (idle)",
         "off": "Off (idle)"
       },
-      "dimAfter": "Dims after",
-      "offAfter": "Turns off after",
-      "wakeOnInput": "Wakes on controller input",
       "never": "never",
-      "yes": "yes",
-      "no": "no",
       "minutes": "{{n}} min",
       "mic": "Mic audio frames",
       "timing": {
@@ -1509,16 +1500,11 @@
       "normal": "Normal buttons",
       "needsFirmware": "Needs the newest firmware on {{device}} ({{deviceName}} → Update).",
       "noneForGame": "Save layouts on the Buttons page: pick a button on the controller.",
-      "allTitle": "Buttons",
-      "allHeading": "All buttons",
       "allHint_one": "{{count}} button changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "allHint_other": "{{count}} buttons changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "changed": "changed",
       "notApplied": "not applied yet",
       "notSaved": "not saved yet",
-      "shortcutTitle": "Buttons & layouts",
-      "shortcutSub": "Every button in one list, saved layouts for games",
-      "seeAll": "See all buttons and saved layouts",
       "off": "Off",
       "noChanges": "No changes (the controller's own buttons)",
       "loaded": "Loaded layout: {{name}}",
@@ -1550,7 +1536,6 @@
       "changes": "What this game changes (everything else uses your normal settings):",
       "allNormal": "Nothing changed for this game yet: it uses your normal settings. Edit in controller view to change any of them for this game.",
       "useNormal": "{{name}}. Use my normal setting",
-      "allSettings": "All settings",
       "normalSub": "Your normal setting",
       "on": "On",
       "off": "Off",
@@ -1701,7 +1686,27 @@
       "hidden_other": "{{count}} hidden",
       "devOnly": "Development builds only",
       "chapters_one": "{{count}} chapter",
-      "chapters_other": "{{count}} chapters"
+      "chapters_other": "{{count}} chapters",
+      "buttonsChanged_one": "{{count}} button changed",
+      "buttonsChanged_other": "{{count}} buttons changed",
+      "slotActive": "Slot {{slot}} active",
+      "moreInDiagnostics": "More in Diagnostics"
+    },
+    "sections": {
+      "lightbar": "Light bar",
+      "triggers": "Adaptive triggers",
+      "haptics": "Haptic feedback",
+      "speaker": "Speaker",
+      "mic": "Microphone",
+      "buttons": "Button assignments",
+      "sticks": "Sticks & calibration",
+      "slots": "Pairing slots",
+      "firmware": "Firmware",
+      "device": "Restart & reset",
+      "power": "Power & sleep",
+      "oled": "OLED screen",
+      "usb": "USB & status pin",
+      "diagnostics": "Diagnostics"
     }
   },
   "ad": {

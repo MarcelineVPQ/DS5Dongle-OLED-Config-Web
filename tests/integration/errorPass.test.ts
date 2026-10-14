@@ -21,6 +21,12 @@ import { homeDesktop, homeLibrary, homeReport } from "../support/gamesHome";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollTo ??= () => undefined;
+Element.prototype.scrollIntoView ??= () => undefined;
+// Opens an accordion section (left open if it is).
+const openSection = (id: string) => {
+  const head = document.querySelector<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-toggle`)!;
+  if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
+};
 
 let container: HTMLDivElement;
 let root: Root;
@@ -182,6 +188,7 @@ describe("Games → Home", () => {
 
   it("Apply refused by the main process's request check says so in plain words (it showed nothing)", async () => {
     await renderHome({ gamesApply: () => Promise.reject(new Error(`Error invoking remote method 'desktop:games-apply': Error: ${BAD_REQUEST}`)) });
+    openSection("recommended");
     act(() => button(i18n.t("desktop.games.review", { count: 1 }))!.click());
     await settle();
     act(() => button(i18n.t("desktop.games.apply", { count: 1 }))!.click());
@@ -192,7 +199,8 @@ describe("Games → Home", () => {
 
   it("Undo: a failed audio service restart is said (it was dropped)", async () => {
     await renderHome({ gamesUndo: () => Promise.resolve({ ok: true, restored: [], audioRestartFailed: "wpctl: not found" }) });
-    const history = container.querySelector(".lib-history")!;
+    openSection("history");
+    const history = container.querySelector('[data-section="history"] .dk-sec-body')!;
     act(() => [...history.querySelectorAll("button")].find((b) => b.textContent === i18n.t("desktop.games.undoShort"))!.click());
     await settle();
     await settle();
@@ -218,7 +226,8 @@ describe("Games → Home, Undo that fails", () => {
     );
     await settle();
     await settle();
-    const history = container.querySelector(".lib-history")!;
+    openSection("history");
+    const history = container.querySelector('[data-section="history"] .dk-sec-body')!;
     act(() => [...history.querySelectorAll("button")].find((b) => b.textContent === i18n.t("desktop.games.undoShort"))!.click());
     await settle();
     await settle();
@@ -230,13 +239,15 @@ describe("Controller info", () => {
   it("Refresh with Sony unreachable says so (the line was left blank)", async () => {
     const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
     const { FakeDongle } = await import("../support/fakeDongle");
-    const { default: ControllerInfo } = await import("../../src/desktop/live/ControllerInfo");
+    const { default: ControllerInfo, useControllerInfo } = await import("../../src/desktop/live/ControllerInfo");
     const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 17 }));
     await client.checkCompatible();
     const identity = await client.identity();
     vi.stubGlobal("desktop", { platform: "linux", officialControllerFirmware: () => Promise.reject(new Error("offline")) });
     const bridge = { client, identity } as never;
-    act(() => root.render(createElement(ControllerInfo, { bridge, batteryPct: 80, power: null })));
+    // The Controller page keeps the read (useControllerInfo); the section shows it.
+    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: 80, power: null });
+    act(() => root.render(createElement(Info)));
     for (let i = 0; i < 100 && !container.textContent?.includes(i18n.t("desktop.ctrlInfo.built")); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
     expect(container.textContent).not.toContain(i18n.t("desktop.ctrlInfo.officialUnavailable")); // an automatic check stays quiet
     act(() => button(i18n.t("desktop.ctrlInfo.refresh"))!.click());
@@ -271,6 +282,7 @@ describe("a game's page", () => {
       ),
     );
     await settle();
+    openSection("profile");
     act(() => button(i18n.t("desktop.library.profileDelete"))!.click());
     await settle();
     expect(notice).toBe(i18n.t("desktop.errors.profileDelete"));

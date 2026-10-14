@@ -6,7 +6,7 @@ import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normal
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
-import { simulatedCore1Stage, simulatedDongleOn, simulatedRest } from "../desktop/devPreview";
+import { simulatedBoard } from "../desktop/devPreview";
 import { logged } from "../errorText";
 import { isWindowShown } from "../desktop/useWindowShown";
 
@@ -159,10 +159,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   // Dev builds can use the simulated dongle instead (Developer card).
   const autoConnect = useCallback(async () => {
     if (clientRef.current) return;
-    if (simulatedDongleOn()) {
-      await attachTransport(
-        new SimulatedDongle({ live: true, protoMinor: 17, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() }),
-      );
+    const sim = simulatedBoard();
+    if (sim) {
+      // Only while it runs the firmware (in BOOTSEL it's a bootloader, not a board to configure).
+      const dongle = sim.dongle();
+      if (dongle) await attachTransport(dongle);
       return;
     }
     if (!supported) return;
@@ -364,6 +365,23 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       navigator.usb.removeEventListener("connect", onConnect);
     };
   }, [autoConnect, detach, supported]);
+
+  // The simulated board (dev builds) re-enumerates the same way: BOOTSEL and
+  // a firmware update take it off "USB" and bring it back running the new version.
+  // lifetime: OK — cleanup: the simulated board's unsubscribe (unmount)
+  useEffect(() => {
+    const sim = simulatedBoard();
+    if (!sim) return;
+    // lifetime: OK — the effect returns its unsubscribe
+    return sim.onChange(() => {
+      const current = clientRef.current?.transport;
+      if (current instanceof SimulatedDongle && current !== sim.dongle()) {
+        clientRef.current = null; // gone now: the reconnect below must not wait for the next render
+        detach();
+      }
+      if (sim.state === "dongle") autoConnect().catch(logged("connecting to the simulated board after it restarted (it stays on the setup screen)"));
+    });
+  }, [autoConnect, detach]);
 
   return {
     supported,

@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Alimentation",
       "idleDisconnect": "Déconnecter si inactif",
       "picoLed": "LED d'état du Pico",
       "brightness": "Luminosité",
       "zeroOff": "0 = jamais",
       "controllerWakes": "La manette réveille l'écran",
-      "usb": "USB",
       "usbHint": "Pris en compte après Reconnecter USB (le PC voit {{device}} se débrancher puis se rebrancher).",
       "speakerLevel": "Volume (haut-parleur de la manette)",
       "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Micro coupé : {{device}} n’a pas pu créer le décodeur du micro de la manette au démarrage ({{kb}} Ko libres). Haut-parleur, retours haptiques, gâchettes et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
     },
     "firmware": {
-      "installed": "Firmware installé",
-      "device": "Appareil",
       "rebooting": "Redémarrage… appuie sur la touche PS sur la manette dès que {{device}} est de retour.",
       "reboot": "Redémarrer {{device}}",
       "bootsel": "{{device, capitalize}} est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche le câble USB pour annuler.",
@@ -281,7 +277,9 @@
       "writeFailed": "La mise à jour du firmware s’est arrêtée avant la fin : {{device}} attend en mode BOOTSEL, sans firmware actif. Ne débranche rien : l’app s’en aperçoit et propose de réinstaller le firmware. Si rien n’apparaît, débranche puis rebranche {{device}}.",
       "disabled": "non vérifié (recherche automatique désactivée)",
       "feedChanged": "Un firmware plus récent est apparu. Vérifie à nouveau.",
-      "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau."
+      "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau.",
+      "wrongFile": "Ce fichier n’est pas un firmware pour {{device}} (il est pour une autre puce, ou abîmé) : rien n’a été écrit. Recherche à nouveau les mises à jour ; si ça se reproduit, réinstalle l’app.",
+      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie."
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -360,6 +358,7 @@
       "source": "Code source (MIT)",
       "issues": "Signaler un problème",
       "roadmapTab": "Bientôt",
+      "showOlder": "Afficher les versions précédentes",
       "roadmap": {
         "intro": "Ce sont des projets, pas des promesses : ils peuvent changer et aucun n'a de date.",
         "suggest": "Les suggestions sont bienvenues sur GitHub.",
@@ -549,7 +548,14 @@
       "details": "Détails",
       "needsAttention": "À régler",
       "undoAudioRestart": "Annulé, mais le redémarrage du service audio a échoué ({{error}}). Déconnecte-toi puis reconnecte-toi, ou redémarre le PC, pour que le changement audio prenne effet.",
-      "undoVolumeNotSaved": "Annulé : les anciens niveaux sont revenus, mais les niveaux enregistrés de Linux n'ont pas pu être remis ({{error}}), donc la manette revient au maximum à sa prochaine reconnexion."
+      "undoVolumeNotSaved": "Annulé : les anciens niveaux sont revenus, mais les niveaux enregistrés de Linux n'ont pas pu être remis ({{error}}), donc la manette revient au maximum à sa prochaine reconnexion.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Non installé",
+      "protonNewer": "{{name}} disponible",
+      "nothingToChange": "Rien à changer",
+      "historyStatus_one": "{{count}} changement · dernier le {{date}}",
+      "historyStatus_other": "{{count}} changements · dernier le {{date}}",
+      "historyNone": "Aucun changement pour l'instant"
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -616,19 +622,13 @@
       "overview": "Ta manette",
       "app": "Réglages de l'app",
       "close": "Fermer",
-      "haptics": "Retour haptique",
-      "speaker": "Haut-parleur",
-      "mic": "Micro",
       "remap": "Attribution des touches",
-      "remapActs": "Agit comme",
       "remapDefault": "par défaut",
-      "remapHint": "L'attribution des touches est écrite sur {{device}} quand tu appuies sur Appliquer et marche dans tous les jeux, sans logiciel sur le PC.",
       "remapApply": "Appliquer l'attribution",
       "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
       "effect": "Effet",
-      "position": "Position",
       "touchHint": "Touche le pavé tactile pour voir tes doigts ici. Il n'y a rien à régler.",
       "finger": "Doigt {{n}}",
       "speakerLevel": "Niveau du haut-parleur",
@@ -652,36 +652,6 @@
         "2": "arme",
         "3": "vibration"
       },
-      "go": {
-        "intro": "Clique sur une partie du dessin avec la souris, ou choisis un réglage ici :",
-        "lightbar": {
-          "title": "Barre lumineuse",
-          "sub": "Mode et couleurs favorites"
-        },
-        "triggers": {
-          "title": "Gâchettes adaptatives",
-          "sub": "Essaie les effets sur L2 / R2"
-        },
-        "haptics": {
-          "title": "Retour haptique",
-          "sub": "Intensité des vibrations et Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Haut-parleur",
-          "sub": "Niveau, avec un indicateur en direct"
-        },
-        "mic": {
-          "title": "Micro",
-          "sub": "Le microphone intégré de la manette"
-        },
-        "slots": {
-          "title": "Emplacements d'association",
-          "sub": "Changer ou oublier des manettes"
-        },
-        "buttons": "Pour attribuer une touche ou un joystick, clique dessus sur le dessin.",
-        "bodyHint": "Retour haptique : intensité des vibrations et Audio Auto Haptics"
-      },
-      "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
       "autoInstall": "Installer les mises à jour automatiquement",
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
       "hapticSilent": "Silence : rien n'envoie de retour haptique en ce moment. Le niveau bouge quand un jeu joue du retour haptique, ou avec Audio Auto Haptics activé pendant que du son joue.",
@@ -694,8 +664,6 @@
       "headsetIn": "Casque branché",
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
-      "triggersTitle": "Gâchettes adaptatives",
-      "remapButton": "Attribuer {{button}}",
       "effectOther": "autre effet ({{n}})",
       "checkForUpdatesSub": "Désactivé : l’app ne va en ligne pour les mises à jour que quand tu appuies sur Rechercher des mises à jour."
     },
@@ -842,7 +810,6 @@
       "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (retour haptique, haut-parleur, barre lumineuse, micro, touches, joysticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
       "profileFromCurrent": "Créer depuis les réglages actuels",
       "profileNeedsDongle": "Connecte {{device}} pour partir de tes réglages actuels.",
-      "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur {{device}}.",
       "profileCopyCurrent": "Copier les réglages actuels",
       "profileDelete": "Supprimer le profil",
       "haptics": "Intensité des vibrations",
@@ -1023,7 +990,13 @@
       "continue": "Reprendre",
       "libraryTitle": "Bibliothèque",
       "filteredBy": "Filtre : {{filter}}",
-      "showAll": "Tout afficher"
+      "showAll": "Tout afficher",
+      "profileNoneShort": "Aucun profil",
+      "profileChanges_one": "{{count}} changement",
+      "profileChanges_other": "{{count}} changements",
+      "hdrUnknown": "Prise en charge du HDR inconnue",
+      "notesEmpty": "Vide",
+      "glanceOpen": "Ouvrir {{section}}"
     },
     "dongleConsole": {
       "title": "Console : {{deviceName}}",
@@ -1194,11 +1167,35 @@
         "no-gamescope": "gamescope n'est pas installé"
       },
       "simulated": "Simuler {{device}} (sans matériel)",
-      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
+      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous). Recharge la page.",
       "simCore1": "Core1 simulé",
       "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}. Recharge la page.",
       "simCore1Runs": "Fonctionne normalement",
-      "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}"
+      "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}",
+      "simBoard": "Carte simulée",
+      "simBoardHint": "Ce que fait la simulation en ce moment. Mettre à jour sur la carte Firmware et Installer sur l’écran de configuration s’y déroulent du début à la fin.",
+      "simBoardState": {
+        "dongle": "Firmware {{version}} en marche",
+        "bootsel": "En mode BOOTSEL",
+        "blank": "Un Pico vierge en BOOTSEL (première installation)",
+        "away": "Hors USB (attend une manette)"
+      },
+      "simFault": "Échec de mise à jour du firmware",
+      "simFaultHint": "Fait échouer la prochaine mise à jour, pour voir ce que dit l’app.",
+      "simFaults": {
+        "none": "Aucun",
+        "write10": "Erreur d’écriture à 10 %",
+        "write50": "Erreur d’écriture à 50 %",
+        "write90": "Erreur d’écriture à 90 %",
+        "noBootsel": "N’apparaît pas en BOOTSEL",
+        "noReturn": "Ne revient pas après la mise à jour"
+      },
+      "simSpeed": "Vitesse d’écriture",
+      "simSpeeds": {
+        "fast": "Instantanée",
+        "normal": "Quelques secondes",
+        "real": "Comme une vraie carte (environ 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",
@@ -1214,7 +1211,6 @@
     },
     "calib": {
       "title": "Calibrage",
-      "shortcut": "Dérive des joysticks, zones inertes, course des gâchettes, gyro",
       "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans {{device}}, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
       "needsFirmware": "Mets à jour le firmware {{device_de}} pour calibrer.",
       "needsController": "Connectez une manette pour calibrer.",
@@ -1403,12 +1399,7 @@
         "dim": "Atténué (inactif)",
         "off": "Éteint (inactif)"
       },
-      "dimAfter": "S'atténue après",
-      "offAfter": "S'éteint après",
-      "wakeOnInput": "Se réveille avec la manette",
       "never": "jamais",
-      "yes": "oui",
-      "no": "non",
       "minutes": "{{n}} min",
       "mic": "Trames audio du micro",
       "timing": {
@@ -1510,16 +1501,11 @@
       "normal": "Boutons habituels",
       "needsFirmware": "Nécessite le dernier firmware sur {{device}} ({{deviceName}} → Mettre à jour).",
       "noneForGame": "Enregistre des dispositions sur la page des boutons : choisis un bouton de la manette.",
-      "allTitle": "Boutons",
-      "allHeading": "Tous les boutons",
       "allHint_one": "{{count}} bouton modifié par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "allHint_other": "{{count}} boutons modifiés par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "changed": "modifié",
       "notApplied": "pas encore appliqué",
       "notSaved": "pas encore enregistré",
-      "shortcutTitle": "Boutons et dispositions",
-      "shortcutSub": "Tous les boutons dans une liste, dispositions enregistrées pour les jeux",
-      "seeAll": "Voir tous les boutons et les dispositions",
       "off": "Désactivé",
       "noChanges": "Aucune modification (les boutons de la manette)",
       "loaded": "Disposition chargée : {{name}}",
@@ -1551,7 +1537,6 @@
       "changes": "Ce que ce jeu change (tout le reste utilise tes réglages habituels) :",
       "allNormal": "Rien n'est encore changé pour ce jeu : il utilise tes réglages habituels. « Modifier dans la vue manette » les change pour ce jeu seulement.",
       "useNormal": "{{name}}. Utiliser mon réglage habituel",
-      "allSettings": "Tous les réglages",
       "normalSub": "Ton réglage habituel",
       "on": "Activé",
       "off": "Désactivé",
@@ -1702,7 +1687,27 @@
       "hidden_other": "{{count}} masquées",
       "devOnly": "Versions de développement uniquement",
       "chapters_one": "{{count}} chapitre",
-      "chapters_other": "{{count}} chapitres"
+      "chapters_other": "{{count}} chapitres",
+      "buttonsChanged_one": "{{count}} touche modifiée",
+      "buttonsChanged_other": "{{count}} touches modifiées",
+      "slotActive": "Slot {{slot}} actif",
+      "moreInDiagnostics": "Plus dans Diagnostic"
+    },
+    "sections": {
+      "lightbar": "Barre lumineuse",
+      "triggers": "Gâchettes adaptatives",
+      "haptics": "Retour haptique",
+      "speaker": "Haut-parleur",
+      "mic": "Micro",
+      "buttons": "Attribution des touches",
+      "sticks": "Joysticks et calibrage",
+      "slots": "Emplacements d'association",
+      "firmware": "Firmware",
+      "device": "Redémarrage et réinitialisation",
+      "power": "Alimentation et veille",
+      "oled": "Écran OLED",
+      "usb": "USB et broche d'état",
+      "diagnostics": "Diagnostic"
     }
   },
   "ad": {

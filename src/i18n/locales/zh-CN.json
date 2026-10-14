@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "电源",
       "idleDisconnect": "空闲时断开",
       "picoLed": "Pico 状态 LED",
       "brightness": "亮度",
       "zeroOff": "0 = 从不",
       "controllerWakes": "控制器输入时唤醒屏幕",
-      "usb": "USB",
       "usbHint": "需在重新连接 USB 后生效(电脑会看到 {{device}} 拔出并重新插入)。",
       "speakerLevel": "音量（控制器的扬声器）",
       "speakerLevelSub": "0 = 不变；高于 0 会增益并可能削波",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "麦克风已关闭：{{device}} 启动时无法创建控制器麦克风的解码器（剩余 {{kb}} KB）。扬声器、触觉、扳机和保存仍可使用。请在 GitHub（issue #15）报告，并注明开发板和控制器。"
     },
     "firmware": {
-      "installed": "已安装固件",
-      "device": "设备",
       "rebooting": "正在重启… 恢复后请按控制器上的 PS 键。",
       "reboot": "重启 {{device}}",
       "bootsel": "{{device}} 现在是 RP2350 驱动器。将 .uf2 复制到其中，或拔下以取消。",
@@ -281,7 +277,9 @@
       "writeFailed": "固件更新未完成就中断了，{{device}} 正在 BOOTSEL 模式下等待，没有运行固件。请保持连接：应用会发现它并提示重新安装固件。如果没有出现提示，请拔下 {{device}} 再重新插上。",
       "disabled": "未检查（自动检查已关闭）",
       "feedChanged": "出现了更新的固件。请重新检查。",
-      "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。"
+      "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。",
+      "wrongFile": "此文件不是{{device}}的固件（用于其他芯片，或已损坏），因此没有写入任何内容。请再次检查更新；如果再次发生，请重新安装应用。",
+      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。"
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -360,6 +358,7 @@
       "source": "源代码 (MIT)",
       "issues": "报告问题",
       "roadmapTab": "即将推出",
+      "showOlder": "显示更早的版本",
       "roadmap": {
         "intro": "这些是计划，不是承诺：可能会变，也都没有日期。",
         "suggest": "欢迎在 GitHub 上提出建议。",
@@ -546,7 +545,13 @@
       "details": "详细信息",
       "needsAttention": "待设置",
       "undoAudioRestart": "已撤销，但重启音频服务失败（{{error}}）。请注销并重新登录，或重启电脑，使音频更改生效。",
-      "undoVolumeNotSaved": "已撤销：原来的音量已恢复，但无法恢复 Linux 的已保存音量（{{error}}），所以控制器下次重新连接后会回到最大。"
+      "undoVolumeNotSaved": "已撤销：原来的音量已恢复，但无法恢复 Linux 的已保存音量（{{error}}），所以控制器下次重新连接后会回到最大。",
+      "launchersTitle": "启动器",
+      "protonNotInstalled": "未安装",
+      "protonNewer": "{{name}} 可用",
+      "nothingToChange": "无需更改",
+      "historyStatus_other": "{{count}} 项更改 · 最近 {{date}}",
+      "historyNone": "暂无更改"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -613,19 +618,13 @@
       "overview": "你的控制器",
       "app": "应用设置",
       "close": "关闭",
-      "haptics": "触觉反馈",
-      "speaker": "扬声器",
-      "mic": "麦克风",
       "remap": "按键配置",
-      "remapActs": "作为",
       "remapDefault": "默认",
-      "remapHint": "点击“应用”后按键配置会写入 {{device}}，在任何游戏中都有效，电脑无需安装软件。",
       "remapApply": "应用按键配置",
       "remapReset": "重置所有按键",
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
       "effect": "效果",
-      "position": "位置",
       "touchHint": "触摸触摸板即可在这里看到手指位置。触摸板没有可设置的项目。",
       "finger": "手指 {{n}}",
       "speakerLevel": "当前扬声器电平",
@@ -649,36 +648,6 @@
         "2": "武器",
         "3": "振动"
       },
-      "go": {
-        "intro": "用鼠标点击图中的部位，或在这里选择设置：",
-        "lightbar": {
-          "title": "光条",
-          "sub": "模式和收藏颜色"
-        },
-        "triggers": {
-          "title": "自适应扳机",
-          "sub": "在 L2 / R2 上试用效果"
-        },
-        "haptics": {
-          "title": "触觉反馈",
-          "sub": "振动强度和音频自动触觉"
-        },
-        "speaker": {
-          "title": "扬声器",
-          "sub": "音量，带实时电平表"
-        },
-        "mic": {
-          "title": "麦克风",
-          "sub": "控制器的内置麦克风"
-        },
-        "slots": {
-          "title": "配对槽位",
-          "sub": "切换或移除控制器"
-        },
-        "buttons": "要配置按键或操作杆，请在图中点击它。",
-        "bodyHint": "触觉反馈：振动强度和音频自动触觉"
-      },
-      "hidePanel": "隐藏设置面板（控制器会变大）",
       "autoInstall": "自动安装更新",
       "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本",
       "hapticSilent": "静默：目前没有任何触觉反馈输入。游戏播放触觉反馈时，或开启 Audio Auto Haptics 且有声音播放时，电平才会变化。",
@@ -691,8 +660,6 @@
       "headsetIn": "已插耳机",
       "colorLabel": "配色：",
       "statusLabel": "状态：",
-      "triggersTitle": "自适应扳机",
-      "remapButton": "配置 {{button}}",
       "effectOther": "其他效果（{{n}}）",
       "checkForUpdatesSub": "关闭时：只有你按“检查更新”时，应用才会联网检查更新。"
     },
@@ -837,7 +804,6 @@
       "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何控制器设置（触觉反馈、扬声器、光条、麦克风、按键、操作杆），游戏关闭后自动切回。",
       "profileFromCurrent": "基于当前设置创建",
       "profileNeedsDongle": "连接 {{device}} 后才能基于当前设置开始。",
-      "profileHint": "更改保存到此游戏的配置中,而不是 {{device}}。",
       "profileCopyCurrent": "复制当前设置",
       "profileDelete": "删除配置",
       "haptics": "振动强度",
@@ -1015,7 +981,12 @@
       "continue": "继续游戏",
       "libraryTitle": "游戏库",
       "filteredBy": "筛选：{{filter}}",
-      "showAll": "显示全部"
+      "showAll": "显示全部",
+      "profileNoneShort": "无配置",
+      "profileChanges_other": "{{count}} 项更改",
+      "hdrUnknown": "未知是否支持 HDR",
+      "notesEmpty": "空",
+      "glanceOpen": "打开{{section}}"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",
@@ -1186,11 +1157,35 @@
         "no-gamescope": "未安装 gamescope"
       },
       "simulated": "模拟{{device}}（无需硬件）",
-      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
+      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。会重新加载页面。",
       "simCore1": "模拟 Core1",
       "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。会重新加载页面。",
       "simCore1Runs": "正常运行",
-      "simCore1Stage": "停在步骤 {{stage}}：{{step}}"
+      "simCore1Stage": "停在步骤 {{stage}}：{{step}}",
+      "simBoard": "模拟的开发板",
+      "simBoardHint": "模拟当前的状态。固件卡片上的“更新”和设置界面上的“安装”会从头到尾针对它运行。",
+      "simBoardState": {
+        "dongle": "正在运行固件 {{version}}",
+        "bootsel": "BOOTSEL 模式",
+        "blank": "空白的 Pico，处于 BOOTSEL（首次设置）",
+        "away": "不在 USB 上（等待手柄）"
+      },
+      "simFault": "固件更新失败",
+      "simFaultHint": "让下一次更新失败，查看应用的提示。",
+      "simFaults": {
+        "none": "无",
+        "write10": "10 % 时写入出错",
+        "write50": "50 % 时写入出错",
+        "write90": "90 % 时写入出错",
+        "noBootsel": "不以 BOOTSEL 出现",
+        "noReturn": "更新后不再出现"
+      },
+      "simSpeed": "写入速度",
+      "simSpeeds": {
+        "fast": "立即",
+        "normal": "几秒",
+        "real": "与真实开发板相同（约 12 秒）"
+      }
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",
@@ -1206,7 +1201,6 @@
     },
     "calib": {
       "title": "校准",
-      "shortcut": "操作杆漂移、盲区、扳机行程、陀螺仪",
       "intro": "在 {{device}} 内校正操作杆漂移、盲区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入控制器；重置即可撤销。",
       "needsFirmware": "更新 {{device}} 的固件后才能校准。",
       "needsController": "连接控制器后才能校准。",
@@ -1395,12 +1389,7 @@
         "dim": "已调暗（空闲）",
         "off": "已关闭（空闲）"
       },
-      "dimAfter": "调暗时间",
-      "offAfter": "关闭时间",
-      "wakeOnInput": "控制器输入时唤醒",
       "never": "从不",
-      "yes": "是",
-      "no": "否",
       "minutes": "{{n}} 分钟",
       "mic": "麦克风音频帧",
       "timing": {
@@ -1502,16 +1491,11 @@
       "normal": "常用按键",
       "needsFirmware": "需要 {{device}} 的最新固件（{{deviceName}} 页面 → 更新）。",
       "noneForGame": "在按键页面保存布局：在控制器上选择一个按键。",
-      "allTitle": "按键",
-      "allHeading": "全部按键",
       "allHint_one": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
       "allHint_other": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
       "changed": "已更改",
       "notApplied": "尚未应用",
       "notSaved": "尚未保存",
-      "shortcutTitle": "按键与布局",
-      "shortcutSub": "全部按键一览，为游戏保存的布局",
-      "seeAll": "查看全部按键和已保存的布局",
       "off": "关闭",
       "noChanges": "无更改（控制器原始按键）",
       "loaded": "已载入布局：{{name}}",
@@ -1543,7 +1527,6 @@
       "changes": "此游戏更改的设置（其他都使用你的常规设置）：",
       "allNormal": "此游戏还没有更改：它使用你的常规设置。用“在控制器视图中编辑”可只为此游戏更改任何设置。",
       "useNormal": "{{name}}。使用我的常规设置",
-      "allSettings": "所有设置",
       "normalSub": "你的常规设置",
       "on": "开",
       "off": "关",
@@ -1692,7 +1675,27 @@
       "launchersNotRead": "游戏不读取你的启动器",
       "hidden_other": "{{count}} 项已隐藏",
       "devOnly": "仅开发版本",
-      "chapters_other": "{{count}} 章"
+      "chapters_other": "{{count}} 章",
+      "buttonsChanged_one": "已更改 {{count}} 个按键",
+      "buttonsChanged_other": "已更改 {{count}} 个按键",
+      "slotActive": "槽位 {{slot}} 使用中",
+      "moreInDiagnostics": "诊断中查看更多"
+    },
+    "sections": {
+      "lightbar": "光条",
+      "triggers": "自适应扳机",
+      "haptics": "触觉反馈",
+      "speaker": "扬声器",
+      "mic": "麦克风",
+      "buttons": "按键配置",
+      "sticks": "操作杆与校准",
+      "slots": "配对槽位",
+      "firmware": "固件",
+      "device": "重启与重置",
+      "power": "电源与睡眠",
+      "oled": "OLED 屏幕",
+      "usb": "USB 与状态引脚",
+      "diagnostics": "诊断"
     }
   },
   "ad": {

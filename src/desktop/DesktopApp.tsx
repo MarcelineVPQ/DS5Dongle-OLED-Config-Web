@@ -28,7 +28,6 @@ import { useApplyTheme } from "../components/ThemeToggle";
 import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage from "./pages/AboutPage";
-import AppSettingsPage from "./pages/AppSettingsPage";
 import { revealSection } from "./accordion/useAccordion";
 import { SECTIONS } from "./accordion/sections";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
@@ -37,7 +36,7 @@ import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
-import type { PanelView } from "./live/PartPanel";
+import type { PanelView } from "./live/ControllerView";
 import UpdateBanners from "./UpdateBanners";
 import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
@@ -101,7 +100,7 @@ export default function DesktopApp() {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
-    if ((item === "app" || item === "about") && section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
+    if (section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
   };
 
   // Open tasks: the rail's dots, and which dismissed notices still apply.
@@ -302,10 +301,11 @@ export default function DesktopApp() {
       // lifetime: OK — the effect returns its unsubscribe (unmount)
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
-          // The tray's "Diagnostics" opens the Dongle page (its live diagnostics).
+          // The tray's "Diagnostics" opens the Pico 2 W page's Diagnostics section.
           if (command.page === "diagnostics") {
             setMain("controller");
             setPanel("dongle");
+            revealSection("dongle", "diagnostics");
           } else if (command.page === "games" || command.page === "about") setMain(command.page);
           else {
             setMain("controller");
@@ -347,12 +347,12 @@ export default function DesktopApp() {
           <div className="dk-main">
             <main
               tabIndex={-1}
-              className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}${main === "about" ? " dk-body-split" : ""}`}
+              className={`dk-body${main === "games" && games.allowed ? " dk-body-lib" : ""}${(main === "controller" && connected) || main === "app" || main === "about" ? " dk-body-split" : ""}`}
             >
               <UpdateBanners
                 app={appUpdate}
                 fw={fw}
-                onShowFirmware={() => openPanel("dongle")}
+                onShowFirmware={() => goTo("dongle", "firmware")}
                 onFirmwareChanges={() => {
                   setMain("about");
                   revealSection("about", "firmware");
@@ -397,7 +397,6 @@ export default function DesktopApp() {
                   onDeclinedChange={games.recount}
                 />
               )}
-              {main === "app" && <AppSettingsPage bridge={bridge} fw={fw} />}
               {main === "about" && <AboutPage whatsNew={whatsNew.version} onSeen={whatsNew.dismiss} />}
               {main === "controller" && profiles.editing && (
                 <div className="dk-editing" role="status">
@@ -434,9 +433,10 @@ export default function DesktopApp() {
                   )}
                 </div>
               )}
-              {main === "controller" &&
-                (connected ? (
-                  <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
+              {/* App settings shows the same live view (kept mounted when switching, so nothing is read twice). */}
+              {(main === "controller" || main === "app") &&
+                (connected || main === "app" ? (
+                  <ControllerView bridge={bridge} fw={fw} view={main === "app" ? "app" : panel} onView={openPanel} />
                 ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
                   // Mid-update the dongle is a bootloader drive: the update banner
                   // shows the progress; Setup must not offer to flash it again.
@@ -500,14 +500,7 @@ export default function DesktopApp() {
               // the keyboard and screen readers continue there, not in the rail.
               // lifetime: OK — fires once (moves focus after the page renders)
               requestAnimationFrame(() => {
-                const target =
-                  item === "dongle"
-                    ? document.querySelector<HTMLElement>(".live-panel-head h2")
-                    : item === "app"
-                      ? document.querySelector<HTMLElement>(".dk-page-head h1")
-                      : item === "about"
-                        ? document.querySelector<HTMLElement>(".dk-split-head h2")
-                        : document.querySelector<HTMLElement>("main.dk-body");
+                const target = item === "dongle" || item === "app" || item === "about" ? document.querySelector<HTMLElement>(".dk-split-head h2") : document.querySelector<HTMLElement>("main.dk-body");
                 // A deep link already moved the focus to its section.
                 if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
               });
@@ -522,7 +515,7 @@ export default function DesktopApp() {
                   setMain("controller");
                   setPanel("overview");
                 }
-              } else openPanel(item);
+              } else goTo(item, section);
             }}
             gamesSupported={games.supported}
             reminders={reminders}

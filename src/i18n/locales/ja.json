@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "電源",
       "idleDisconnect": "アイドル時に切断",
       "picoLed": "Pico ステータス LED",
       "brightness": "明るさ",
       "zeroOff": "0 = なし",
       "controllerWakes": "コントローラー入力で画面を復帰",
-      "usb": "USB",
       "usbHint": "USB 再接続後に反映されます (PC からは {{device}} が抜き差しされたように見えます)。",
       "speakerLevel": "音量（コントローラーのスピーカー）",
       "speakerLevelSub": "0 = 変更なし。0 より上は増幅され、音割れすることがあります",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "マイクオフ：起動時に {{device}} がコントローラーのマイク用デコーダーを作成できませんでした（空き {{kb}} KB）。スピーカー、ハプティックフィードバック、トリガー、保存は使えます。ボードとコントローラーを添えて GitHub（issue #15）で報告してください。"
     },
     "firmware": {
-      "installed": "インストール済みファームウェア",
-      "device": "デバイス",
       "rebooting": "再起動中… 復帰したらコントローラーの PSボタンを押してください。",
       "reboot": "{{device}} を再起動",
       "bootsel": "{{device}} は RP2350 ドライブになりました。.uf2 をコピーするか、取り外してキャンセルしてください。",
@@ -281,7 +277,9 @@
       "writeFailed": "ファームウェアの更新が途中で止まったため、{{device}} はファームウェアが動いていない BOOTSEL モードで待機しています。接続したままにしてください。アプリが検出し、ファームウェアの再インストールを案内します。何も表示されない場合は、{{device}} を抜いて差し直してください。",
       "disabled": "未確認（自動確認はオフ）",
       "feedChanged": "新しいファームウェアが公開されました。もう一度確認してください。",
-      "hashMismatch": "ダウンロードしたファームウェアが表示されたものと一致しないため、何もインストールしていません。もう一度確認してください。"
+      "hashMismatch": "ダウンロードしたファームウェアが表示されたものと一致しないため、何もインストールしていません。もう一度確認してください。",
+      "wrongFile": "このファイルは {{device}} 用のファームウェアではありません（別のチップ用か、破損しています）。何も書き込んでいません。もう一度アップデートを確認してください。再発する場合はアプリを再インストールしてください。",
+      "noBootsel": "{{device}} が BOOTSEL モードで認識されませんでした。いったん抜き、BOOTSEL ボタンを押したまま差し直してから、もう一度お試しください。"
     },
     "usbAccess": {
       "label": "USB アクセスルール",
@@ -360,6 +358,7 @@
       "source": "ソースコード (MIT)",
       "issues": "問題を報告",
       "roadmapTab": "今後の予定",
+      "showOlder": "以前のリリースを表示",
       "roadmap": {
         "intro": "これは計画であり、約束ではありません。変わることがあり、日付もありません。",
         "suggest": "ご提案は GitHub でどうぞ。",
@@ -546,7 +545,13 @@
       "details": "詳細",
       "needsAttention": "要設定",
       "undoAudioRestart": "元に戻しましたが、オーディオサービスの再起動に失敗しました（{{error}}）。オーディオの変更を反映するには、ログアウトして再ログインするか、PC を再起動してください。",
-      "undoVolumeNotSaved": "元に戻しました。以前のレベルに戻りましたが、Linux の保存レベルは戻せませんでした（{{error}}）。そのため、次の再接続後はコントローラーが最大に戻ります。"
+      "undoVolumeNotSaved": "元に戻しました。以前のレベルに戻りましたが、Linux の保存レベルは戻せませんでした（{{error}}）。そのため、次の再接続後はコントローラーが最大に戻ります。",
+      "launchersTitle": "ランチャー",
+      "protonNotInstalled": "未インストール",
+      "protonNewer": "{{name}} を入手できます",
+      "nothingToChange": "変更はありません",
+      "historyStatus_other": "{{count}} 件の変更 · 最終 {{date}}",
+      "historyNone": "まだ変更はありません"
     },
     "setup": {
       "installing": "ファームウェアをインストールしています…",
@@ -613,19 +618,13 @@
       "overview": "あなたのコントローラー",
       "app": "アプリ設定",
       "close": "閉じる",
-      "haptics": "ハプティックフィードバック",
-      "speaker": "スピーカー",
-      "mic": "マイク",
       "remap": "ボタンの割り当て",
-      "remapActs": "割り当て先",
       "remapDefault": "標準",
-      "remapHint": "割り当ては「適用」を押すと {{device}} に保存され、PC にソフトなしでどのゲームでも有効です。",
       "remapApply": "割り当てを適用",
       "remapReset": "すべてのボタンをリセット",
       "remapResetHint": "すべてのボタンを元に戻す",
       "pull": "押し込み",
       "effect": "効果",
-      "position": "位置",
       "touchHint": "タッチパッドに触れると、ここに指の位置が表示されます。設定項目はありません。",
       "finger": "指 {{n}}",
       "speakerLevel": "現在のスピーカーレベル",
@@ -649,36 +648,6 @@
         "2": "ウェポン",
         "3": "振動"
       },
-      "go": {
-        "intro": "マウスで図の部位をクリックするか、ここで設定を選んでください：",
-        "lightbar": {
-          "title": "ライトバー",
-          "sub": "モードとお気に入りの色"
-        },
-        "triggers": {
-          "title": "アダプティブトリガー",
-          "sub": "L2 / R2 で効果を試す"
-        },
-        "haptics": {
-          "title": "ハプティックフィードバック",
-          "sub": "振動の強さとオーディオ自動ハプティクス"
-        },
-        "speaker": {
-          "title": "スピーカー",
-          "sub": "音量とライブメーター"
-        },
-        "mic": {
-          "title": "マイク",
-          "sub": "コントローラーの内蔵マイク"
-        },
-        "slots": {
-          "title": "ペアリングスロット",
-          "sub": "コントローラーの切り替えと削除"
-        },
-        "buttons": "ボタンやスティックを割り当て直すには、図でそれをクリックします。",
-        "bodyHint": "ハプティックフィードバック：振動の強さとオーディオ自動ハプティクス"
-      },
-      "hidePanel": "設定パネルを隠す（コントローラーが大きくなります）",
       "autoInstall": "アップデートを自動でインストール",
       "autoInstallSub": "バックグラウンドでダウンロードして検証し、次にアプリを開いたときに新しいバージョンで起動します",
       "hapticSilent": "無音：いまはハプティックフィードバックが送られていません。ゲームが ハプティックフィードバックを再生しているとき、または Audio Auto Haptics がオンで音が鳴っているときに動きます。",
@@ -691,8 +660,6 @@
       "headsetIn": "ヘッドセット接続",
       "colorLabel": "カラー：",
       "statusLabel": "状態：",
-      "triggersTitle": "アダプティブトリガー",
-      "remapButton": "{{button}} の割り当て",
       "effectOther": "その他の効果（{{n}}）",
       "checkForUpdatesSub": "オフ：「アップデートを確認」を押したときだけ、アプリはアップデートのためにオンラインになります。"
     },
@@ -837,7 +804,6 @@
       "profileNone": "このゲームは通常の設定を使います。プロファイルを使うと、このゲームの間だけコントローラーの設定（ハプティックフィードバック、スピーカー、ライトバー、マイク、ボタン、スティック）を変えられ、終了すると元に戻ります。",
       "profileFromCurrent": "現在の設定から作成",
       "profileNeedsDongle": "現在の設定から始めるには、{{device}} を接続してください。",
-      "profileHint": "変更は {{device}} ではなく、このゲームのプロファイルに保存されます。",
       "profileCopyCurrent": "現在の設定をコピー",
       "profileDelete": "プロファイルを削除",
       "haptics": "振動の強さ",
@@ -1015,7 +981,12 @@
       "continue": "続けてプレイ",
       "libraryTitle": "ライブラリ",
       "filteredBy": "フィルター: {{filter}}",
-      "showAll": "すべて表示"
+      "showAll": "すべて表示",
+      "profileNoneShort": "プロファイルなし",
+      "profileChanges_other": "{{count}} 件の変更",
+      "hdrUnknown": "HDR 対応は不明",
+      "notesEmpty": "なし",
+      "glanceOpen": "{{section}} を開く"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",
@@ -1186,11 +1157,35 @@
         "no-gamescope": "gamescopeが未インストール"
       },
       "simulated": "{{device}} をシミュレート（ハードウェアなし）",
-      "simulatedHint": "アプリは USB を使わずに {{device}} をシミュレートします。すべてのページが動作し、入力は自動で動きます。ハードウェアなしでのテスト用（Windows VM など）。ハプティックフィードバック、音声、ペアリング、ファームウェア更新はシミュレートされません。ページを再読み込みします。",
+      "simulatedHint": "アプリは USB を使わずに {{device}} をシミュレートします。すべてのページが動作し、入力は自動で動きます。ハードウェアなしでのテスト用（Windows VM など）。ハプティックフィードバック、音声、ペアリングはシミュレートされません。ファームウェア更新と初回セットアップはシミュレートされます（下記）。ページを再読み込みします。",
       "simCore1": "シミュレートした Core1",
       "simCore1Hint": "シミュレーションの Core1 を起動ステップで止めて、{{deviceName}} のページの警告を確認します。ページを再読み込みします。",
       "simCore1Runs": "通常どおり動作",
-      "simCore1Stage": "ステップ {{stage}} で停止: {{step}}"
+      "simCore1Stage": "ステップ {{stage}} で停止: {{step}}",
+      "simBoard": "シミュレートしたボード",
+      "simBoardHint": "シミュレーションの現在の状態です。ファームウェアカードの「更新」とセットアップ画面の「インストール」は、最初から最後までこれを相手に動作します。",
+      "simBoardState": {
+        "dongle": "ファームウェア {{version}} を実行中",
+        "bootsel": "BOOTSEL モード",
+        "blank": "空の Pico（BOOTSEL、初回セットアップ）",
+        "away": "USB から外れている（コントローラー待ち）"
+      },
+      "simFault": "ファームウェア更新の失敗",
+      "simFaultHint": "次の更新を失敗させて、アプリの表示を確認します。",
+      "simFaults": {
+        "none": "なし",
+        "write10": "10 % で書き込みエラー",
+        "write50": "50 % で書き込みエラー",
+        "write90": "90 % で書き込みエラー",
+        "noBootsel": "BOOTSEL で現れない",
+        "noReturn": "更新後に戻ってこない"
+      },
+      "simSpeed": "書き込み速度",
+      "simSpeeds": {
+        "fast": "即時",
+        "normal": "数秒",
+        "real": "実機並み（約 12 秒）"
+      }
     },
     "knobs": {
       "cardOpacity": "カードの不透明度",
@@ -1206,7 +1201,6 @@
     },
     "calib": {
       "title": "キャリブレーション",
-      "shortcut": "スティックのドリフト、デッドゾーン、トリガーの深さ、ジャイロスコープ",
       "intro": "スティックのドリフト、デッドゾーン、トリガーの深さ、ジャイロスコープのゼロ点を {{device}} 内で補正し、すべてのゲームに適用します。コントローラーには何も書き込みません。リセットで元に戻せます。",
       "needsFirmware": "キャリブレーションするには {{device}} のファームウェアを更新してください。",
       "needsController": "キャリブレーションするにはコントローラーを接続してください。",
@@ -1395,12 +1389,7 @@
         "dim": "減光中（アイドル）",
         "off": "オフ（アイドル）"
       },
-      "dimAfter": "減光まで",
-      "offAfter": "消灯まで",
-      "wakeOnInput": "コントローラー入力で復帰",
       "never": "しない",
-      "yes": "はい",
-      "no": "いいえ",
       "minutes": "{{n}} 分",
       "mic": "マイク音声フレーム",
       "timing": {
@@ -1502,16 +1491,11 @@
       "normal": "通常のボタン",
       "needsFirmware": "{{device}} の最新ファームウェアが必要です（{{deviceName}} のページ → アップデート）。",
       "noneForGame": "配置はボタンページで保存します：コントローラーのボタンを選んでください。",
-      "allTitle": "ボタン",
-      "allHeading": "すべてのボタン",
       "allHint_one": "コントローラー本来の設定から {{count}} 個のボタンが変更されています。このリストか、図のボタンをクリックして選びます。どちらも同じ設定を変更します。",
       "allHint_other": "コントローラー本来の設定から {{count}} 個のボタンが変更されています。このリストか、図のボタンをクリックして選びます。どちらも同じ設定を変更します。",
       "changed": "変更済み",
       "notApplied": "未適用",
       "notSaved": "未保存",
-      "shortcutTitle": "ボタンと配置",
-      "shortcutSub": "すべてのボタンを一覧に、ゲーム用に保存した配置",
-      "seeAll": "すべてのボタンと保存した配置を見る",
       "off": "オフ",
       "noChanges": "変更なし（コントローラー本来のボタン）",
       "loaded": "読み込んだ配置：{{name}}",
@@ -1543,7 +1527,6 @@
       "changes": "このゲームで変わる設定（それ以外は通常の設定）：",
       "allNormal": "このゲームではまだ何も変わっていません：通常の設定を使います。「コントローラー画面で編集」で、このゲームだけの設定に変えられます。",
       "useNormal": "{{name}}。通常の設定を使う",
-      "allSettings": "すべての設定",
       "normalSub": "通常の設定",
       "on": "オン",
       "off": "オフ",
@@ -1692,7 +1675,27 @@
       "launchersNotRead": "ゲームはランチャーを読み取りません",
       "hidden_other": "{{count}} 件非表示",
       "devOnly": "開発版のみ",
-      "chapters_other": "{{count}} 章"
+      "chapters_other": "{{count}} 章",
+      "buttonsChanged_one": "{{count}} 個のボタンを変更",
+      "buttonsChanged_other": "{{count}} 個のボタンを変更",
+      "slotActive": "スロット {{slot}} 使用中",
+      "moreInDiagnostics": "診断で詳しく見る"
+    },
+    "sections": {
+      "lightbar": "ライトバー",
+      "triggers": "アダプティブトリガー",
+      "haptics": "ハプティックフィードバック",
+      "speaker": "スピーカー",
+      "mic": "マイク",
+      "buttons": "ボタンの割り当て",
+      "sticks": "スティックとキャリブレーション",
+      "slots": "ペアリングスロット",
+      "firmware": "ファームウェア",
+      "device": "再起動とリセット",
+      "power": "電源とスリープ",
+      "oled": "OLED画面",
+      "usb": "USBとステータスピン",
+      "diagnostics": "診断"
     }
   },
   "ad": {

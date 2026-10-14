@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-// Games → Home is calm when healthy and loud when not: with nothing to do,
-// game setup is one "Everything is set up" line over the library (launchers,
-// Proton, This computer and the change history folded under it); anything
-// that needs the player (a recommended change, a missing Proton, a system ✗,
-// an HDR ✗ that matters) shows open at the top with its action and a Needs
-// attention chip. Every function stays reachable either way. Then Continue
-// playing (Play on the tiles) and the Library (filters with their counts,
-// sort, the grid); the rail is the index and says when it's filtered.
+// Games → Home, like every page: the library (Continue playing, the Library
+// with its filters, sort and grid) is the main view, and game setup is the
+// accordion at the right: Launchers, DualSense Proton, This computer,
+// Recommended changes (the rail's count: its yellow dot) and Change history.
+// Each section says its state in its header; what needs the player carries a
+// yellow dot; a folded section renders nothing. Every function stays one
+// click away. The rail's Games count opens Recommended changes, from a game
+// page too.
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,9 +18,11 @@ import type { GameInfo, GamesReport } from "../../src/desktop/games/types";
 import { fakeBridge, HDR_NO_LAYER, OUR_PROTON } from "../support/gamePage";
 import { homeDesktop, homeDetails, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
 import { GLASS_KEY } from "../../src/desktop/glass/glassPref";
+import { revealSection } from "../../src/desktop/accordion/useAccordion";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollTo ??= () => undefined;
+Element.prototype.scrollIntoView ??= () => undefined;
 // The Glass look's bars rebuild their filter on resize (useLiquidGlass).
 globalThis.ResizeObserver ??= class {
   observe() {}
@@ -71,8 +73,16 @@ const click = async (el: HTMLElement | undefined) => {
   act(() => el!.click());
   await settle();
 };
-const setup = () => $(".lib-home-pane > .dk-stack")!;
-const details = () => $<HTMLDetailsElement>(".lib-system")!;
+const sectionIds = () => $$(".dk-sec").map((x) => x.dataset.section);
+const openIds = () => $$(".dk-sec.open").map((x) => x.dataset.section);
+const status = (id: string) => $(`[data-section="${id}"] .dk-sec-status`)?.textContent;
+const hasDot = (id: string) => !!$(`[data-section="${id}"] .dk-sec-task`);
+// Opens a section (left open if it is) and gives its body.
+const open = async (id: string) => {
+  const head = $<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-toggle`)!;
+  if (head.getAttribute("aria-expanded") !== "true") await click(head);
+  return $(`[data-section="${id}"] .dk-sec-body`)!;
+};
 const linux = () => vi.stubGlobal("desktop", { platform: "linux" });
 
 describe("homeStatus", () => {
@@ -119,36 +129,49 @@ describe("homeStatus", () => {
 });
 
 describe("Games → Home, healthy", () => {
-  it("is one status line with the facts; the details are folded and keep every function", async () => {
+  it("the library is the main view; game setup is the accordion at the right, each section saying its state", async () => {
     await render("healthy");
-    expect($(".lib-setup")).toBeNull();
-    const line = $(".lib-status")!;
-    const summary = line.querySelector(".lib-system > summary")!.textContent!;
-    expect(summary).toContain(i18n.t("desktop.games.allGood"));
-    for (const fact of ["Steam", "Heroic", "Lutris", OUR_PROTON, "DP-5"]) expect(summary).toContain(fact);
-    expect(details().open).toBe(false);
-    expect(button(i18n.t("desktop.games.rescan"), line)).toBeTruthy();
-    // Inside the fold: what checking does, the launchers' chips, Proton, This computer (HDR checklist), history with Undo.
-    const fold = details();
-    expect(fold.textContent).toContain(i18n.t("desktop.games.intro"));
-    expect(fold.textContent).toContain("Steam · closed · our Proton is the default");
-    expect(fold.textContent).toContain(`${OUR_PROTON} ${i18n.t("desktop.games.protonFound")}`);
-    expect(fold.textContent).toContain(i18n.t("desktop.games.systemTitle"));
-    expect(fold.querySelector(".hdr-row .hdr-check")).toBeTruthy();
-    expect(fold.querySelector<HTMLDetailsElement>(".hdr-row")!.open).toBe(false);
-    const history = fold.querySelector<HTMLDetailsElement>(".lib-history")!;
-    expect(history.querySelector("summary")!.textContent).toBe(i18n.t("desktop.games.history"));
+    expect($(".dk-split-main .lib-grid")).not.toBeNull();
+    expect($(".dk-split-main .lib-continue")).not.toBeNull();
+    expect($(".dk-split-head h2")!.textContent).toBe(i18n.t("desktop.games.title"));
+    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.allGood"));
+    expect(sectionIds()).toEqual(["launchers", "proton", "computer", "recommended", "history"]);
+    expect($$(".dk-card")).toHaveLength(0);
+    // Nothing needs the player: no dots, nothing open, nothing rendered in the sections.
+    expect($$(".dk-sec-task")).toHaveLength(0);
+    expect(openIds()).toEqual([]);
+    expect($$(".dk-sec-body")).toHaveLength(0);
+    expect(status("launchers")).toBe("Steam · Heroic · Lutris");
+    expect(status("proton")).toBe(OUR_PROTON);
+    expect(status("computer")).toContain("on for DP-5");
+    expect(status("recommended")).toBe(i18n.t("desktop.games.nothingToChange"));
+    expect(status("history")).toBe(i18n.t("desktop.games.historyStatus", { count: 1, date: new Date("2026-10-12T19:30:00Z").toLocaleDateString() }));
+  });
+
+  it("every function is in its section: launchers with Rescan, Proton, This computer with HDR, history with Undo", async () => {
+    await render("healthy");
+    const launchers = await open("launchers");
+    expect(launchers.textContent).toContain(i18n.t("desktop.games.intro"));
+    expect(launchers.textContent).toContain("Steam · closed · our Proton is the default");
+    expect(button(i18n.t("desktop.games.rescan"), launchers)).toBeTruthy();
+    expect((await open("proton")).textContent).toContain(`${OUR_PROTON} ${i18n.t("desktop.games.protonFound")}`);
+    const computer = await open("computer");
+    expect(computer.querySelector(".hdr-row .hdr-check")).toBeTruthy();
+    expect(computer.querySelector<HTMLDetailsElement>(".hdr-row")!.open).toBe(false);
+    expect((await open("recommended")).textContent).toContain(i18n.t("desktop.games.allGood"));
+    const history = await open("history");
     await click(button(i18n.t("desktop.games.undoShort"), history));
     expect(calls).toContain("gamesUndo b1");
-    // Each fact once: no separate cards, no "Recommended changes" heading.
-    expect(container!.textContent).not.toContain(i18n.t("desktop.games.changesTitle"));
-    expect(container!.textContent!.split(i18n.t("desktop.games.protonFound")).length - 1).toBe(1);
+    // One section open at a time; each fact once.
+    expect(openIds()).toEqual(["history"]);
+    await click($<HTMLButtonElement>('[data-section="history"] .dk-sec-toggle')!);
+    expect($$(".dk-sec-body")).toHaveLength(0);
   });
 
   it("Rescan scans again", async () => {
     await render("healthy");
     const before = calls.filter((c) => c === "gamesScan").length;
-    await click(button(i18n.t("desktop.games.rescan")));
+    await click(button(i18n.t("desktop.games.rescan"), await open("launchers")));
     expect(calls.filter((c) => c === "gamesScan").length).toBe(before + 1);
   });
 
@@ -163,10 +186,10 @@ describe("Games → Home, healthy", () => {
     await click(button(`▶ ${i18n.t("desktop.library.action.play")}`, tiles[1]));
     expect(calls.some((c) => c.startsWith("gameAction play ") && c.includes(":1000"))).toBe(true); // Astro Bot
     await click(tiles[0].querySelector<HTMLButtonElement>(".lib-continue-art")!);
-    expect($<HTMLElement>(".lib-home-pane")!.hidden).toBe(true);
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(true);
     expect($(".gp")).toBeTruthy();
     await click(button(`⌂ ${i18n.t("desktop.library.home")}`));
-    expect($<HTMLElement>(".lib-home-pane")!.hidden).toBe(false);
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(false);
   });
 
   it("Library: the filters carry the counts; filtering shows in the grid and the rail, Show all clears it", async () => {
@@ -200,52 +223,66 @@ describe("Games → Home, healthy", () => {
 });
 
 describe("Games → Home, needs attention", () => {
-  it("shows what needs the player open at the top, with its action and the chip", async () => {
+  it("Recommended changes carries the rail's count as its dot, This computer its HDR ✗", async () => {
     await render("attention");
-    expect($(".lib-status")).toBeNull();
-    const card = $(".lib-setup")!;
-    expect(setup().firstElementChild).toBe(card);
-    expect(card.querySelector(".dk-chip.warn")!.textContent).toBe(i18n.t("desktop.games.needsAttention"));
-    // The change, ticked, with the launchers (Steam is running) and Review.
-    expect(card.textContent).toContain(i18n.t("desktop.games.msg.label.defaultSteam", { proton: OUR_PROTON, interpolation: { escapeValue: false } }));
-    expect(card.querySelector<HTMLInputElement>(".dk-fix input")!.checked).toBe(true);
-    expect(card.textContent).toContain("Steam · running");
-    // HDR ✗: This computer open at the top, its checklist open with the ✗.
-    const hdr = card.querySelector<HTMLDetailsElement>(".hdr-row")!;
-    expect(hdr.closest(".lib-system")).toBeNull();
+    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.needsAttention"));
+    expect(hasDot("recommended")).toBe(true);
+    expect(status("recommended")).toBe(i18n.t("desktop.games.attention", { count: 1 }));
+    expect(hasDot("computer")).toBe(true);
+    expect(hasDot("launchers")).toBe(false);
+    expect(hasDot("proton")).toBe(false);
+    // The change, ticked, with Review; the launchers say Steam is running.
+    const changes = await open("recommended");
+    expect(changes.textContent).toContain(i18n.t("desktop.games.msg.label.defaultSteam", { proton: OUR_PROTON, interpolation: { escapeValue: false } }));
+    expect(changes.querySelector<HTMLInputElement>(".dk-fix input")!.checked).toBe(true);
+    expect((await open("launchers")).textContent).toContain("Steam · running");
+    // HDR ✗: its checklist open with the ✗.
+    const hdr = (await open("computer")).querySelector<HTMLDetailsElement>(".hdr-row")!;
     expect(hdr.open).toBe(true);
     expect(hdr.textContent).toContain("✗");
-    // The rest folded: what checking does, Proton, history.
-    expect(details().open).toBe(false);
-    expect(details().textContent).toContain(`${OUR_PROTON} ${i18n.t("desktop.games.protonFound")}`);
-    expect(details().querySelector(".lib-history")).toBeTruthy();
-    expect(details().textContent).not.toContain(i18n.t("desktop.games.systemTitle")); // shown once, above
+  });
+
+  it("the rail's count opens Recommended changes, from a game page too", async () => {
+    await render("attention");
+    await click($$<HTMLButtonElement>(".lib-row")[0]);
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(true);
+    act(() => revealSection("games", "recommended"));
+    await settle();
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(false);
+    expect(openIds()).toEqual(["recommended"]);
+    expect($(".gp")).toBeNull();
   });
 
   it("Review → Apply says Steam will be closed and reopened", async () => {
     await render("attention");
-    await click(button(i18n.t("desktop.games.review", { count: 1 })));
+    await click(button(i18n.t("desktop.games.review", { count: 1 }), await open("recommended")));
     await settle();
-    expect(container!.textContent).toContain(i18n.t("desktop.games.reviewTitle"));
-    expect(container!.textContent).toContain(i18n.t("desktop.games.willRestart", { launcher: "Steam" }));
-    expect(button(i18n.t("desktop.games.apply", { count: 1 }))).toBeTruthy();
+    const body = await open("recommended");
+    expect(body.textContent).toContain(i18n.t("desktop.games.reviewTitle"));
+    expect(body.textContent).toContain(i18n.t("desktop.games.willRestart", { launcher: "Steam" }));
+    expect(button(i18n.t("desktop.games.apply", { count: 1 }), body)).toBeTruthy();
+    // Folded and opened again, the review is where it was.
+    await click($<HTMLButtonElement>('[data-section="recommended"] .dk-sec-toggle')!);
+    expect((await open("recommended")).textContent).toContain(i18n.t("desktop.games.reviewTitle"));
   });
 
-  it("unticking the change keeps it where it is until the next scan", async () => {
+  it("unticking the change keeps it (and the dot) until the next scan", async () => {
     await render("attention");
-    const box = $<HTMLInputElement>(".lib-setup .dk-fix input")!;
+    const box = (await open("recommended")).querySelector<HTMLInputElement>(".dk-fix input")!;
     act(() => box.click());
     await settle();
-    expect($(".lib-setup .dk-fix input")).toBe(box);
+    expect($('[data-section="recommended"] .dk-fix input')).toBe(box);
     expect(box.checked).toBe(false);
+    expect(hasDot("recommended")).toBe(true);
   });
 
-  it("a missing Proton shows open with Install, and the install path still confirms first", async () => {
+  it("a missing Proton carries a dot and offers Install; the install still confirms first", async () => {
     const r = homeReport("healthy");
     await render("healthy", { ...r, ourProton: { name: null, latest: OUR_PROTON, latestSize: 400e6, updateAvailable: true } });
-    const card = $(".lib-setup")!;
-    expect(card.textContent).toContain(i18n.t("desktop.games.protonTitle"));
-    await click(button(i18n.t("desktop.games.protonInstall", { name: OUR_PROTON })));
+    expect(hasDot("proton")).toBe(true);
+    expect(status("proton")).toBe(i18n.t("desktop.games.protonNotInstalled"));
+    const proton = await open("proton");
+    await click(button(i18n.t("desktop.games.protonInstall", { name: OUR_PROTON }), proton));
     expect(calls).not.toContain("installProton");
     await click(button(i18n.t("desktop.games.protonGo")));
     expect(calls).toContain("installProton");
@@ -253,10 +290,10 @@ describe("Games → Home, needs attention", () => {
 });
 
 describe("Games → Home, Windows", () => {
-  it("one line with the launchers; no Proton, This computer or HDR anywhere", async () => {
+  it("launchers, changes and history; no Proton, This computer or HDR anywhere", async () => {
     await render("windows");
-    const summary = $(".lib-status .lib-system > summary")!.textContent!;
-    for (const name of ["Steam", "GOG Galaxy", "Epic Games"]) expect(summary).toContain(name);
+    expect(sectionIds()).toEqual(["launchers", "recommended", "history"]);
+    for (const name of ["Steam", "GOG Galaxy", "Epic Games"]) expect(status("launchers")).toContain(name);
     const text = container!.textContent!;
     expect(text).not.toContain(i18n.t("desktop.games.protonTitle"));
     expect(text).not.toContain(i18n.t("desktop.games.systemTitle"));

@@ -134,3 +134,44 @@ describe("the Developer card", () => {
     expect(container.childElementCount).toBe(0);
   });
 });
+
+// The simulated board's bootloader (firmware updates without hardware) is a
+// dev-tools feature: a release build with the setting left over from a dev
+// build never simulates a board or offers its controls.
+describe("the simulated board", () => {
+  afterEach(() => localStorage.clear());
+  const withSimulation = async (devTools: boolean) => {
+    localStorage.setItem("ds5.dev.simulated", "1");
+    localStorage.setItem("ds5.dev.simBoard", "bootsel");
+    vi.unstubAllGlobals();
+    await build(devTools);
+    const flash = await import("../../src/flash");
+    const getDevices = vi.spyOn(flash.PicoflashAPI, "getDevices").mockResolvedValue([]);
+    return { devPreview: await import("../../src/desktop/devPreview"), firmwareUpdate: await import("../../src/desktop/firmwareUpdate"), getDevices };
+  };
+
+  it("in a dev-tools build: in BOOTSEL its bootloader is what the app finds", async () => {
+    const { devPreview, firmwareUpdate, getDevices } = await withSimulation(true);
+    expect(devPreview.simulatedBoard()).not.toBeNull();
+    expect((await firmwareUpdate.findBootloader())?.getTarget().toString()).toBe("RP2350");
+    expect(getDevices).not.toHaveBeenCalled();
+  });
+  it("never in a release build: no simulated board, only real USB", async () => {
+    const { devPreview, firmwareUpdate, getDevices } = await withSimulation(false);
+    expect(devPreview.simulatedBoard()).toBeNull();
+    expect(await firmwareUpdate.findBootloader()).toBeNull();
+    expect(getDevices).toHaveBeenCalledOnce();
+  });
+  it("its Developer card controls show only in a dev-tools build", async () => {
+    for (const devTools of [true, false]) {
+      localStorage.setItem("ds5.dev.simulated", "1");
+      vi.unstubAllGlobals();
+      const { panel, i18n: t } = await build(devTools);
+      const container = document.createElement("div");
+      const root = createRoot(container);
+      act(() => root.render(createElement(panel.DeveloperSettings)));
+      expect(container.textContent?.includes(t.t("desktop.dev.simBoard")), String(devTools)).toBe(devTools);
+      act(() => root.unmount());
+    }
+  });
+});

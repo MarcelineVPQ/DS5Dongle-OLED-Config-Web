@@ -1,6 +1,7 @@
-// Play and the play stats, shared by a game's page (its bar under the art)
-// and Games → Home (the Continue playing tiles): one Play button, one way to
-// run a launcher action, one way to say when and how long a game was played.
+// Play and the play stats, shared by a game's page (its bar under the art,
+// with the launcher's links: GameActions) and Games → Home (the Continue
+// playing tiles): one Play button, one way to run a launcher action, one way
+// to say when and how long a game was played.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
@@ -73,5 +74,31 @@ export function PlayButton({ game, running, run }: { game: GameEntry; running: b
     <BusyButton className="dk-btn primary gp-play" disabled={running} onClick={() => run("play")} title={t("desktop.library.action.playHint", { launcher })}>
       {running ? `● ${t("desktop.library.running")}` : `▶ ${t("desktop.library.action.play")}`}
     </BusyButton>
+  );
+}
+
+// Launch and open: the launcher's own links and the game's folders (built in
+// the main process from the scan; only the actions this game has).
+export function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
+  const { t } = useTranslation();
+  const { run, failed, clearFailed } = useGameAction(game);
+  const actions = info?.actions ?? [];
+  if (actions.length === 0) return null;
+  const launcher = t(`desktop.library.launcherName.${game.launcher}`);
+  return (
+    <>
+      <div className="gp-actions">
+        {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
+        {/* loop: HOT-PATH-OK — N = 5 game actions */}
+        {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
+          .filter((a) => actions.includes(a))
+          .map((a) => (
+            <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
+              {t(`desktop.library.action.${a}`)}
+            </BusyButton>
+          ))}
+      </div>
+      <ActionFailed action={failed} onDismiss={clearFailed} />
+    </>
   );
 }

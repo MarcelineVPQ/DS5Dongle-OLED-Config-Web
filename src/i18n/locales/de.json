@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Energie",
       "idleDisconnect": "Bei Inaktivität trennen",
       "picoLed": "Pico-Status-LED",
       "brightness": "Helligkeit",
       "zeroOff": "0 = nie",
       "controllerWakes": "Controller-Eingabe weckt das Display",
-      "usb": "USB",
       "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht {{device_akk}} kurz ab- und wieder angesteckt).",
       "speakerLevel": "Lautstärke (Lautsprecher für Controller)",
       "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Mikrofon aus: {{device, capitalize}} konnte beim Start den Decoder für das Controller-Mikrofon nicht anlegen ({{kb}} KB frei). Lautsprecher, Haptik, Trigger und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
     },
     "firmware": {
-      "installed": "Installierte Firmware",
-      "device": "Gerät",
       "rebooting": "Startet neu… drück die PS-Taste am Controller, sobald er wieder da ist.",
       "reboot": "{{device_akk, capitalize}} neu starten",
       "bootsel": "{{device, capitalize}} ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder zieh das USB-Kabel ab, um abzubrechen.",
@@ -281,7 +277,9 @@
       "writeFailed": "Das Firmware-Update wurde nicht fertig, darum wartet {{device}} im BOOTSEL-Modus, ohne laufende Firmware. Nicht abziehen: Die App erkennt das und bietet an, die Firmware erneut zu installieren. Erscheint nichts, {{device_akk}} abziehen und wieder einstecken.",
       "disabled": "nicht geprüft (automatische Suche ist aus)",
       "feedChanged": "Eine neuere Firmware ist erschienen. Prüfe erneut.",
-      "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut."
+      "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut.",
+      "wrongFile": "Diese Datei ist keine Firmware für {{device_akk}} (sie ist für einen anderen Chip oder beschädigt), darum wurde nichts geschrieben. Such noch einmal nach Updates; passiert es wieder, installiere die App neu.",
+      "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal."
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
@@ -360,6 +358,7 @@
       "source": "Quellcode (MIT)",
       "issues": "Problem melden",
       "roadmapTab": "Demnächst",
+      "showOlder": "Ältere Versionen anzeigen",
       "roadmap": {
         "intro": "Das sind Pläne, keine Versprechen: Sie können sich ändern und haben kein Datum.",
         "suggest": "Vorschläge sind auf GitHub willkommen.",
@@ -549,7 +548,14 @@
       "details": "Details",
       "needsAttention": "Zu erledigen",
       "undoAudioRestart": "Rückgängig gemacht, aber der Neustart des Audiodienstes ist fehlgeschlagen ({{error}}). Melde dich ab und wieder an oder starte den PC neu, damit die Audioänderung wirkt.",
-      "undoVolumeNotSaved": "Rückgängig gemacht: Die alten Pegel sind zurück, aber die von Linux gespeicherten Pegel konnten nicht wiederhergestellt werden ({{error}}). Nach dem nächsten erneuten Verbinden steht der Controller daher wieder auf voll."
+      "undoVolumeNotSaved": "Rückgängig gemacht: Die alten Pegel sind zurück, aber die von Linux gespeicherten Pegel konnten nicht wiederhergestellt werden ({{error}}). Nach dem nächsten erneuten Verbinden steht der Controller daher wieder auf voll.",
+      "launchersTitle": "Launcher",
+      "protonNotInstalled": "Nicht installiert",
+      "protonNewer": "{{name}} verfügbar",
+      "nothingToChange": "Nichts zu ändern",
+      "historyStatus_one": "{{count}} Änderung · zuletzt {{date}}",
+      "historyStatus_other": "{{count}} Änderungen · zuletzt {{date}}",
+      "historyNone": "Noch keine Änderungen"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -616,19 +622,13 @@
       "overview": "Dein Controller",
       "app": "App-Einstellungen",
       "close": "Schließen",
-      "haptics": "Haptisches Feedback",
-      "speaker": "Lautsprecher",
-      "mic": "Mikrofon",
       "remap": "Tastenzuweisung",
-      "remapActs": "Wirkt als",
       "remapDefault": "Standard",
-      "remapHint": "Tastenzuweisungen werden beim Übernehmen auf {{device_akk}} geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
       "remapApply": "Zuweisung übernehmen",
       "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
       "effect": "Effekt",
-      "position": "Position",
       "touchHint": "Berühre das Touchpad, um deine Finger hier zu sehen. Dafür gibt es nichts einzustellen.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Lautsprecherpegel jetzt",
@@ -652,36 +652,6 @@
         "2": "Waffe",
         "3": "Vibration"
       },
-      "go": {
-        "intro": "Klicke mit der Maus auf einen Teil der Abbildung oder wähle hier eine Einstellung:",
-        "lightbar": {
-          "title": "Leuchtleiste",
-          "sub": "Modus und Lieblingsfarben"
-        },
-        "triggers": {
-          "title": "Adaptive Trigger",
-          "sub": "Effekte an L2 / R2 ausprobieren"
-        },
-        "haptics": {
-          "title": "Haptisches Feedback",
-          "sub": "Vibrationsintensität und Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Lautsprecher",
-          "sub": "Pegel mit Live-Anzeige"
-        },
-        "mic": {
-          "title": "Mikrofon",
-          "sub": "Das integrierte Mikrofon des Controllers"
-        },
-        "slots": {
-          "title": "Kopplungsplätze",
-          "sub": "Controller wechseln oder entfernen"
-        },
-        "buttons": "Um einer Taste oder einem Stick etwas zuzuweisen, klicke in der Abbildung darauf.",
-        "bodyHint": "Haptisches Feedback: Vibrationsintensität und Audio Auto Haptics"
-      },
-      "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
       "autoInstall": "Updates automatisch installieren",
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
       "hapticSilent": "Still: gerade sendet nichts haptisches Feedback. Der Pegel bewegt sich, wenn ein Spiel haptisches Feedback abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
@@ -694,8 +664,6 @@
       "headsetIn": "Headset eingesteckt",
       "colorLabel": "Farbe:",
       "statusLabel": "Status:",
-      "triggersTitle": "Adaptive Trigger",
-      "remapButton": "{{button}} zuweisen",
       "effectOther": "anderer Effekt ({{n}})",
       "checkForUpdatesSub": "Aus: Die App geht nur dann für Updates online, wenn du auf „Nach Updates suchen“ drückst."
     },
@@ -842,7 +810,6 @@
       "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (haptisches Feedback, Lautsprecher, Leuchtleiste, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
       "profileFromCurrent": "Aus aktuellen Einstellungen erstellen",
       "profileNeedsDongle": "Verbinde {{device_akk}}, um mit deinen aktuellen Einstellungen zu starten.",
-      "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf {{device_dat}}.",
       "profileCopyCurrent": "Aktuelle Einstellungen kopieren",
       "profileDelete": "Profil löschen",
       "haptics": "Vibrationsintensität",
@@ -1023,7 +990,13 @@
       "continue": "Weiterspielen",
       "libraryTitle": "Bibliothek",
       "filteredBy": "Filter: {{filter}}",
-      "showAll": "Alle zeigen"
+      "showAll": "Alle zeigen",
+      "profileNoneShort": "Kein Profil",
+      "profileChanges_one": "{{count}} Änderung",
+      "profileChanges_other": "{{count}} Änderungen",
+      "hdrUnknown": "HDR-Unterstützung nicht bekannt",
+      "notesEmpty": "Leer",
+      "glanceOpen": "{{section}} öffnen"
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",
@@ -1194,11 +1167,35 @@
         "no-gamescope": "gamescope ist nicht installiert"
       },
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
-      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
+      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten). Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",
       "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen. Startet die Seite neu.",
       "simCore1Runs": "Läuft normal",
-      "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}"
+      "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}",
+      "simBoard": "Simuliertes Board",
+      "simBoardHint": "Was die Simulation gerade tut. Aktualisieren auf der Firmware-Karte und Installieren auf dem Einrichtungsbildschirm laufen damit von Anfang bis Ende.",
+      "simBoardState": {
+        "dongle": "Firmware {{version}} läuft",
+        "bootsel": "Im BOOTSEL-Modus",
+        "blank": "Ein leerer Pico im BOOTSEL-Modus (Ersteinrichtung)",
+        "away": "Nicht an USB (wartet auf einen Controller)"
+      },
+      "simFault": "Fehler beim Firmware-Update",
+      "simFaultHint": "Lässt das nächste Update scheitern, um zu sehen, was die App sagt.",
+      "simFaults": {
+        "none": "Keiner",
+        "write10": "Schreibfehler bei 10 %",
+        "write50": "Schreibfehler bei 50 %",
+        "write90": "Schreibfehler bei 90 %",
+        "noBootsel": "Erscheint nicht im BOOTSEL-Modus",
+        "noReturn": "Kommt nach dem Update nicht zurück"
+      },
+      "simSpeed": "Schreibgeschwindigkeit",
+      "simSpeeds": {
+        "fast": "Sofort",
+        "normal": "Ein paar Sekunden",
+        "real": "Wie ein echtes Board (etwa 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",
@@ -1214,7 +1211,6 @@
     },
     "calib": {
       "title": "Kalibrierung",
-      "shortcut": "Stick-Drift, Deadzones, Triggerweg, Gyroskop",
       "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops {{device_im}}, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
       "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um zu kalibrieren.",
       "needsController": "Verbinde einen Controller, um zu kalibrieren.",
@@ -1403,12 +1399,7 @@
         "dim": "Gedimmt (inaktiv)",
         "off": "Aus (inaktiv)"
       },
-      "dimAfter": "Dimmt nach",
-      "offAfter": "Schaltet ab nach",
-      "wakeOnInput": "Wacht bei Controller-Eingabe auf",
       "never": "nie",
-      "yes": "ja",
-      "no": "nein",
       "minutes": "{{n}} Min.",
       "mic": "Mikrofon-Audioframes",
       "timing": {
@@ -1510,16 +1501,11 @@
       "normal": "Normale Belegung",
       "needsFirmware": "Braucht die neueste Firmware auf {{device_dat}} ({{deviceName}} → Aktualisieren).",
       "noneForGame": "Belegungen speicherst du auf der Tastenseite: wähle eine Taste am Controller.",
-      "allTitle": "Tasten",
-      "allHeading": "Alle Tasten",
       "allHint_one": "{{count}} Taste weicht von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "allHint_other": "{{count}} Tasten weichen von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "changed": "geändert",
       "notApplied": "noch nicht angewendet",
       "notSaved": "noch nicht gespeichert",
-      "shortcutTitle": "Tasten & Belegungen",
-      "shortcutSub": "Alle Tasten in einer Liste, gespeicherte Belegungen für Spiele",
-      "seeAll": "Alle Tasten und gespeicherten Belegungen",
       "off": "Aus",
       "noChanges": "Keine Änderungen (die Controller-Belegung)",
       "loaded": "Geladene Belegung: {{name}}",
@@ -1551,7 +1537,6 @@
       "changes": "Was dieses Spiel ändert (alles andere nutzt deine normalen Einstellungen):",
       "allNormal": "Für dieses Spiel ist noch nichts geändert: Es nutzt deine normalen Einstellungen. Mit „In der Controller-Ansicht bearbeiten“ änderst du sie nur für dieses Spiel.",
       "useNormal": "{{name}}. Meine normale Einstellung verwenden",
-      "allSettings": "Alle Einstellungen",
       "normalSub": "Deine normale Einstellung",
       "on": "An",
       "off": "Aus",
@@ -1702,7 +1687,27 @@
       "hidden_other": "{{count}} ausgeblendet",
       "devOnly": "Nur Entwicklungsversionen",
       "chapters_one": "{{count}} Kapitel",
-      "chapters_other": "{{count}} Kapitel"
+      "chapters_other": "{{count}} Kapitel",
+      "buttonsChanged_one": "{{count}} Taste geändert",
+      "buttonsChanged_other": "{{count}} Tasten geändert",
+      "slotActive": "Slot {{slot}} aktiv",
+      "moreInDiagnostics": "Mehr in Diagnose"
+    },
+    "sections": {
+      "lightbar": "Leuchtleiste",
+      "triggers": "Adaptive Trigger",
+      "haptics": "Haptisches Feedback",
+      "speaker": "Lautsprecher",
+      "mic": "Mikrofon",
+      "buttons": "Tastenzuweisung",
+      "sticks": "Sticks & Kalibrierung",
+      "slots": "Kopplungsplätze",
+      "firmware": "Firmware",
+      "device": "Neustart & Zurücksetzen",
+      "power": "Energie & Ruhezustand",
+      "oled": "OLED-Bildschirm",
+      "usb": "USB & Status-Pin",
+      "diagnostics": "Diagnose"
     }
   },
   "ad": {

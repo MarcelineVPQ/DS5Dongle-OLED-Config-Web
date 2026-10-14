@@ -25,7 +25,10 @@ const POLL_MS = 1000;
 // Set once a dongle has connected on this PC (DesktopApp).
 export const HAD_DONGLE_KEY = "ds5.hadDongle";
 
-type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "restarting"; version: string } | { phase: "failed"; detail: string };
+// `left`: the flashed Pico has left BOOTSEL. Until then the poll can still
+// see it (it restarts half a second after the write), and that must not read
+// as "a Pico is ready to set up" again.
+type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "restarting"; version: string; left: boolean } | { phase: "failed"; detail: string };
 
 export default function SetupScreen({ supported }: { supported: boolean }) {
   const { t } = useTranslation();
@@ -53,7 +56,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     if (!pico || !firmware) return;
     try {
       const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
-      setInstall({ phase: "restarting", version });
+      setInstall({ phase: "restarting", version, left: false });
     } catch (cause) {
       // error: SHOWN — english: the install's failure text next to Install (flash errors are English, batch E3)
       setInstall({ phase: "failed", detail: causeText(cause) });
@@ -62,6 +65,11 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       setFirmware(null);
     }
   };
+
+  const restarting = install.phase === "restarting" ? install : null;
+  // The flashed Pico has left BOOTSEL (noted while rendering, React's pattern
+  // for state that follows a value from the last render).
+  if (restarting && !restarting.left && !pico) setInstall({ ...restarting, left: true });
 
   if (install.phase === "running") {
     const p = install.progress;
@@ -74,12 +82,12 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     );
   }
 
-  // A Pico back in BOOTSEL (the user retried, or a different one) ends the
-  // wait: offer to set it up again.
-  if (install.phase === "restarting" && !pico) {
+  // A Pico back in BOOTSEL after the flashed one left (the user retried, or
+  // a different one) ends the wait: offer to set it up again.
+  if (restarting && (!pico || !restarting.left)) {
     return (
       <Center>
-        <strong>{t("desktop.setup.restarting", { version: install.version })}</strong>
+        <strong>{t("desktop.setup.restarting", { version: restarting.version })}</strong>
         <span>{t("desktop.setup.restartingHint")}</span>
       </Center>
     );

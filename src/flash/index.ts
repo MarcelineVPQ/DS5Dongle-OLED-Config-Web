@@ -54,6 +54,16 @@ const UF2_FLAG_FAMILY_ID = 0x2000;
 // the bootloader and picotool skip it. Written over PICOBOOT it erased the
 // sector at 0x10fff000, past a 4 MB chip's end (wrapping onto its last sector).
 export const UF2_FAMILY_ABSOLUTE = 0xe48bff57;
+// The RP2350's firmware families (Arm Secure, RISC-V, Arm Non-secure). Any
+// other family is firmware for a different chip (an RP2040 UF2 for a Pico 1,
+// say): the boot ROM would not start it, so it's refused before anything is
+// written.
+export const UF2_FAMILY_RP2350_ARM_S = 0xe48bff59;
+const RP2350_FAMILIES = new Set([UF2_FAMILY_RP2350_ARM_S, 0xe48bff5a, 0xe48bff5b]);
+
+// A file that isn't RP2350 firmware (bad magic, another chip's family, blocks
+// missing): refused before the board is touched.
+export class Uf2FileError extends Error {}
 
 /**
  * Parse a UF2 file into the set of contiguous flash regions it specifies.
@@ -63,7 +73,7 @@ export const UF2_FAMILY_ABSOLUTE = 0xe48bff57;
 export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
   const u8 = new Uint8Array(buffer);
   if (u8.length === 0 || u8.length % 512 !== 0) {
-    throw new Error(`UF2 size ${u8.length} is not a multiple of 512 bytes`);
+    throw new Uf2FileError(`UF2 size ${u8.length} is not a multiple of 512 bytes`);
   }
 
   interface Block {
@@ -71,21 +81,35 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
     payload: Uint8Array;
   }
   const blocks: Block[] = [];
+  // Per family: the block numbers seen and the count the blocks claim (each
+  // block says how many the file has; a cut-off download has fewer).
+  const counts = new Map<number, { seen: Set<number>; total: number }>();
+  // loop: NOT-WORTH — once per firmware install: one pass over the file's 512-byte blocks
   for (let offset = 0; offset < u8.length; offset += 512) {
     const view = new DataView(u8.buffer, u8.byteOffset + offset, 512);
     if (view.getUint32(0, true) !== UF2_MAGIC_START || view.getUint32(4, true) !== UF2_MAGIC_START2 || view.getUint32(508, true) !== UF2_MAGIC_END) {
-      throw new Error(`Invalid UF2 magic at offset ${offset}`);
+      throw new Uf2FileError(`Invalid UF2 magic at offset ${offset}`);
     }
     const flags = view.getUint32(8, true);
+    const family = flags & UF2_FLAG_FAMILY_ID ? view.getUint32(28, true) : null;
+    if (family === UF2_FAMILY_ABSOLUTE) continue;
+    if (family !== null && !RP2350_FAMILIES.has(family)) throw new Uf2FileError(`UF2 family 0x${family.toString(16)} is not an RP2350 one`);
+    const blockNo = view.getUint32(20, true);
+    const total = view.getUint32(24, true);
+    const count = counts.get(family ?? 0) ?? { seen: new Set<number>(), total };
+    counts.set(family ?? 0, count);
+    if (total !== count.total || blockNo >= total || count.seen.has(blockNo)) throw new Uf2FileError(`UF2 block ${blockNo} of ${total} doesn't fit the file`);
+    count.seen.add(blockNo);
     if (flags & UF2_FLAG_NOT_MAIN_FLASH) continue;
-    if (flags & UF2_FLAG_FAMILY_ID && view.getUint32(28, true) === UF2_FAMILY_ABSOLUTE) continue;
     const address = view.getUint32(12, true);
     const payloadSize = view.getUint32(16, true);
     const payload = new Uint8Array(u8.buffer, u8.byteOffset + offset + 32, payloadSize);
     blocks.push({ address, payload });
   }
 
-  if (blocks.length === 0) throw new Error("The UF2 has no blocks to write to flash");
+  // loop: NOT-WORTH — once per firmware install; N = the file's families (one or two)
+  for (const { seen, total } of counts.values()) if (seen.size !== total) throw new Uf2FileError(`The UF2 has ${seen.size} of its ${total} blocks`);
+  if (blocks.length === 0) throw new Uf2FileError("The UF2 has no blocks to write to flash");
   blocks.sort((a, b) => a.address - b.address);
 
   // Walk sorted blocks, grouping contiguous runs.
