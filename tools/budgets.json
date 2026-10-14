@@ -1,0 +1,19 @@
+{
+  "$comment": "The app's resource budgets: the single source of truth (docs/BUDGETS.md explains each one; tools/check_budgets.sh measures them). Raise a limit only with the owner's OK, in the same commit as the reason in docs/BUDGETS.md.",
+  "pages": ["controller", "dongle", "gameshome", "gamepage", "app", "about"],
+  "budgets": {
+    "idleFrames": { "max": 10, "unit": "frames/s", "what": "frames drawn per second, window shown and focused, nothing changing, per page" },
+    "shownCpu": {
+      "max": 2,
+      "unit": "% of a core",
+      "what": "CPU of the main, renderer and utility processes, window shown and idle, per page (the GPU process is reported, not judged: software rendering on the test display inflates it)"
+    },
+    "hiddenCpu": { "max": 0.5, "unit": "% of a core", "what": "CPU of every app process together, window hidden in the tray" },
+    "memory": { "max": 300, "unit": "MB PSS", "what": "proportional set size of every app process together, 10 minutes after start (--quick: at the end of its run)" },
+    "growth": { "max": 5, "unit": "MB / 30 min", "what": "memory trend over the soak after warm-up (least-squares slope), --long only" }
+  },
+  "modes": {
+    "quick": { "settleS": 8, "cpuS": 20, "traceS": 5, "hiddenSettleS": 45, "hiddenS": 300, "memoryAtS": 0, "soakWarmupS": 0, "soakS": 0, "sampleS": 60 },
+    "long": { "settleS": 8, "cpuS": 60, "traceS": 10, "hiddenSettleS": 45, "hiddenS": 300, "memoryAtS": 600, "soakWarmupS": 300, "soakS": 1800, "sampleS": 60 }
+  }
+}

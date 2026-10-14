@@ -9,7 +9,7 @@
 // shader (the same math as swirlPixel below), drawn at a third of the
 // window's size and stretched up smoothly. Without it, or when the GPU
 // context fails or is lost, the CPU fallback draws the field tiny (128 x 72)
-// and CSS stretches it, which blurs it for free. Redrawn ~12 times a second
+// and CSS stretches it, which blurs it for free. Redrawn 10 times a second
 // while the window is focused, not at all while it's behind another window
 // or a game (`hold`: the last frame stays), minimized or in the tray, and
 // once (still) with Reduce motion. The
@@ -30,7 +30,9 @@ export const CPU_H = 72;
 // The GPU field: this fraction of the canvas's size on screen, capped.
 const GPU_SCALE = 1 / 3;
 const GPU_MAX_W = 960;
-const FRAME_MS = 80;
+// 10 frames a second, the art pan's rate (backdropPan.ts PAN_MS) and the idle
+// frame budget (docs/BUDGETS.md); 12.5 cost ~20% more GPU time for no visible gain.
+const FRAME_MS = 100;
 
 // Any CSS color the browser understands -> RGB (the canvas normalizes it).
 function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
@@ -175,7 +177,7 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
   return {
     draw(t, palette) {
       const px = image.data;
-      // loop: FIX-HOT-PATH — CPU fallback: 128 x 72 px in JS every 80 ms (no GPU / GPU lost)
+      // loop: FIX-HOT-PATH — CPU fallback: 128 x 72 px in JS every 100 ms (no GPU / GPU lost)
       for (let y = 0; y < CPU_H; y++)
         // loop: FIX-HOT-PATH — CPU fallback pixel loop, inner row
         for (let x = 0; x < CPU_W; x++) {
@@ -292,7 +294,7 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
     // lifetime: OK — the effect returns its unsubscribe
     return onThemeChange(update);
   }, [colors, mode]);
-  // The clock: a frame now, then ~12 a second, none while minimized, in the
+  // The clock: a frame now, then 10 a second, none while minimized, in the
   // tray or holding (not focused), and just the one with Reduce
   // motion. Each frame also takes the pan's next step (none when still).
   // lifetime: OK — cleanup: clears the frame timer; none while hidden, holding or still

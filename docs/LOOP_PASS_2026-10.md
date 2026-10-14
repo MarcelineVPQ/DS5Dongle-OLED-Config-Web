@@ -122,7 +122,7 @@ The scan runs at startup when Games is on, on a rescan, and after each apply. It
 
 ## Found along the way
 
-- **Polls that run while hidden, on purpose.** `useDs5Bridge`'s 1 s identity poll and 2 s config poll, and the running-game watcher's 2 s `/proc` scan (`running.ts`), keep running while the window is hidden, because the tray and game profiles need them. Their loops are HOT-PATH-OK with N stated. The watcher's first pass is already cheap (stat, then the status file of the user's own processes only).
+- **Polls that run while hidden, on purpose.** `useDs5Bridge`'s 1 s identity poll and 2 s config poll, and the running-game watcher's 2 s `/proc` scan (`running.ts`), keep running while the window is hidden, because the tray and game profiles need them. Their loops are HOT-PATH-OK with N stated. The watcher's first pass is already cheap (stat, then the status file of the user's own processes only). Since 2026-10-14 (budgets) it reads each own process's short `stat` file instead of `status`, does the costly reads (owner, Wine, environment, command line) once per process and program (`known`, keyed by pid + start time + name), and looks every 10 s instead of 2 s while the window is in the tray and no game has a profile.
 - **One-shot rAFs are tagged `raf` too.** `desktopPalette.ts`, `narrator.ts` and `controllerAudio.ts` are reached from one-shot `requestAnimationFrame` calls (a game page opening, a theme change), not frame loops. Their verdicts say so.
 - **Lister gaps found by the verdict pass, now fixed in the lister.**
   - A function passed as a default parameter (`read = isWin ? readWindowsProcs : readGameProcs`) wasn't resolved, which hid the watcher's `/proc` reader.
@@ -856,7 +856,7 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 |---|---|---|---|---|---|---|---|
 | 63 | `swirlPixel` | for | hot:interval | **HOT-PATH-OK** | 4 / per pixel | N = 4 colors per pixel; the cost is the pixel loop at 173 | - |
 | 70 | `swirlPixel` | for | hot:interval | **HOT-PATH-OK** | 4 / per pixel | N = 4 colors per pixel; the cost is the pixel loop at 173 | - |
-| 176 | `draw` | for | hot:interval | **FIX-HOT-PATH** | - | CPU fallback: 128 x 72 px in JS every 80 ms (no GPU / GPU lost) | - |
+| 176 | `draw` | for | hot:interval | **FIX-HOT-PATH** | - | CPU fallback: 128 x 72 px in JS every 100 ms (no GPU / GPU lost) | - |
 | 178 | `draw` | for | hot:interval nested | **FIX-HOT-PATH** | 128 / per row | CPU fallback pixel loop, inner row | Same fix as the outer pixel loop |
 | 182 | `draw` | for | hot:interval nested | **FIX-HOT-PATH** | 3 / per pixel | CPU fallback, 3 channels per pixel | Same fix as the outer pixel loop |
 
