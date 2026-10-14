@@ -835,7 +835,6 @@
         "setup": "Réglages",
         "compat": "Compatibilité",
         "support": "Support DualSense",
-        "rating": "Ta note",
         "notes": "Notes",
         "details": "Détails"
       },
@@ -920,8 +919,16 @@
         "mic": "Microphone",
         "lightbar": "Barre lumineuse"
       },
-      "stars_one": "{{count}} étoile",
-      "stars_other": "{{count}} étoiles",
+      "stars_one": "{{count}} étoile : {{label}}",
+      "stars_other": "{{count}} étoiles : {{label}}",
+      "rateTitle": "Ta manette DualSense fonctionne-t-elle bien dans ce jeu ?",
+      "rateLabel": {
+        "1": "Ne fonctionne pas",
+        "2": "Fonctionne à peine",
+        "3": "Fonctionne avec des problèmes",
+        "4": "Fonctionne bien",
+        "5": "Fonctionne parfaitement"
+      },
       "feedbackHint": "Qu'as-tu remarqué ?",
       "tag": {
         "triggers-work": "Gâchettes adaptatives OK",

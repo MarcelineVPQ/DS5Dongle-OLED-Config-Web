@@ -2404,10 +2404,36 @@ html[data-cards-translucent] .gp-sections .dk-card {
   gap: 6px;
   cursor: pointer;
 }
+/* The rating, inside DualSense support under the feature list. */
+.gp-rating {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.gp-rating h3 {
+  margin: 0 0 4px;
+  font-size: var(--dk-small);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.gp-rate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin-bottom: 6px;
+}
+.gp-rate-label {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.gp-rate-label.preview {
+  color: var(--text-muted);
+  font-weight: 400;
+}
 .gp-stars {
   display: flex;
   gap: 2px;
-  margin-bottom: 6px;
 }
 .gp-stars button {
   padding: 0 2px;

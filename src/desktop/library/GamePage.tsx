@@ -4,7 +4,7 @@
 // something is waiting), then the game's controller profile; a healthy Setup
 // is one "All set" line. Each fact has one place: the tier in DualSense
 // support, the Proton in Compatibility, store and launcher in Details.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
@@ -115,11 +115,10 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       <div className="gp-cols">
         <div className="gp-col">
           {status.attention ? [setup, profile] : [profile, setup]}
-          <RatingFrame game={game} info={info} mineState={mineState} />
           <NotesFrame mineState={mineState} />
         </div>
         <div className="gp-col">
-          <SupportFrame game={game} />
+          <SupportFrame game={game} info={info} mineState={mineState} />
           {protonApplies() && <CompatFrame game={game} report={report} onRescan={onRescan} />}
           <DetailsFrame game={game} info={info} />
         </div>
@@ -646,7 +645,7 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
 }
 
 // ---- DualSense support ----
-function SupportFrame({ game }: { game: GameEntry }) {
+function SupportFrame({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
   const { t } = useTranslation();
   const s = supportOf(game);
   return (
@@ -691,12 +690,13 @@ function SupportFrame({ game }: { game: GameEntry }) {
           </li>
         ))}
       </ul>
+      <RatingPart game={game} info={info} mineState={mineState} />
     </section>
   );
 }
 
 // ---- The player's own rating and notes (local; sharing comes later) ----
-// One copy per page, shared by the Rating and Notes frames: the library
+// One copy per page, shared by the rating (in DualSense support) and Notes: the library
 // stores the whole record, so two copies would overwrite each other's fields.
 type MineState = readonly [Mine, (patch: Partial<Mine>) => void];
 function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void, onRescan: () => void): MineState {
@@ -721,33 +721,73 @@ function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord
   return [mine, update] as const;
 }
 
-function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
+// The player's rating of how the controller works in this game (not of the
+// game), under the per-feature list it sums up. Each star names what it means.
+const STARS = [1, 2, 3, 4, 5] as const;
+function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
   const { t } = useTranslation();
   const [mine, update] = mineState;
+  // The star under the pointer or keyboard focus; its words show until it leaves.
+  const [preview, setPreview] = useState<number | null>(null);
+  // cache: NOT-WORTH — key=star 1-5; invalidated=React's ref callbacks on mount/unmount; bound=5 elements
+  const stars = useRef<(HTMLButtonElement | null)[]>([]);
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
   // "Controller not detected" lives in Setup where it's a mark that acts.
   // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const tags = FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
   // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const picked = tags.filter((tag) => mine.tags?.includes(tag)).length;
+  const rating = mine.rating;
+  const lit = preview ?? rating;
+  // One tab stop for the group (the chosen star, else the first); arrows pick.
+  const tabStop = rating ?? 1;
+  const pick = (n: number) => {
+    update({ rating: n });
+    stars.current[n - 1]?.focus();
+  };
+  const onKey = (e: KeyboardEvent, n: number) => {
+    const next = { ArrowRight: n + 1, ArrowUp: n + 1, ArrowLeft: n - 1, ArrowDown: n - 1, Home: 1, End: 5 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    pick(Math.min(5, Math.max(1, next)));
+  };
   return (
-    <section className="dk-card" id="gp-rating">
-      <h2>{t("desktop.library.section.rating")}</h2>
-      <div className="gp-stars" role="radiogroup" aria-label={t("desktop.library.section.rating")}>
-        {/* loop: HOT-PATH-OK — N = 5 stars */}
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            role="radio"
-            aria-checked={mine.rating === n}
-            aria-label={t("desktop.library.stars", { count: n })}
-            className={(mine.rating ?? 0) >= n ? "on" : ""}
-            onClick={() => update({ rating: mine.rating === n ? undefined : n })}
-          >
-            {(mine.rating ?? 0) >= n ? "★" : "☆"}
-          </button>
-        ))}
+    <div className="gp-rating" id="gp-rating">
+      <h3 id="gp-rating-title">{t("desktop.library.rateTitle")}</h3>
+      <div className="gp-rate-row">
+        <div className="gp-stars" role="radiogroup" aria-labelledby="gp-rating-title" onMouseLeave={() => setPreview(null)}>
+          {/* loop: HOT-PATH-OK — N = 5 stars */}
+          {STARS.map((n) => {
+            const label = t(`desktop.library.rateLabel.${n}`);
+            return (
+              <button
+                key={n}
+                ref={(el) => {
+                  stars.current[n - 1] = el;
+                }}
+                type="button"
+                role="radio"
+                aria-checked={rating === n}
+                aria-label={t("desktop.library.stars", { count: n, label })}
+                title={label}
+                tabIndex={n === tabStop ? 0 : -1}
+                className={(lit ?? 0) >= n ? "on" : ""}
+                onClick={() => update({ rating: rating === n ? undefined : n })}
+                onKeyDown={(e) => onKey(e, n)}
+                onMouseEnter={() => setPreview(n)}
+                onFocus={() => setPreview(n)}
+                onBlur={() => setPreview(null)}
+              >
+                {(lit ?? 0) >= n ? "★" : "☆"}
+              </button>
+            );
+          })}
+        </div>
+        {lit !== undefined && (
+          <span className={`gp-rate-label${preview !== null && preview !== rating ? " preview" : ""}`} aria-hidden="true">
+            {t(`desktop.library.rateLabel.${lit}`)}
+          </span>
+        )}
       </div>
       {stale && (
         <p className="dk-notice">
@@ -782,7 +822,7 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
         </ul>
       </details>
       <p className="dk-hint">{t("desktop.library.shareSoon")}</p>
-    </section>
+    </div>
   );
 }
 

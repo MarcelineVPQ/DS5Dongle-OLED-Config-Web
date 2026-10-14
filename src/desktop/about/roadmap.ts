@@ -34,6 +34,12 @@ export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   { column: "next", title: "Our own color picker", text: "A color picker in the app's look, with hex and R/G/B fields, recent colors and full keyboard use.", areas: ["app"], high: true },
+  {
+    column: "next",
+    title: "Rate how your DualSense works",
+    text: "A game's page asks how well your DualSense works in that game, inside DualSense support, and each star says what it means.",
+    areas: ["games"],
+  },
   { column: "next", title: "Your controller's colors", text: "Pick colors for the shell, the black parts, buttons, sticks and outlines of the drawing.", areas: ["controller"] },
   {
     column: "next",
@@ -401,12 +407,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
   { column: "planned", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"] },
   { column: "planned", title: "Game logs for bug reports", text: "Tick a box on a game's page and the next Play records a log, showing what happened with your controller.", areas: ["games"] },
-  {
-    column: "planned",
-    title: "Rate how your DualSense works",
-    text: "The rating on a game's page moves into DualSense support and says clearly that it rates the controller in that game, not the game.",
-    areas: ["games"],
-  },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
