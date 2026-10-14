@@ -421,6 +421,12 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
   },
   { column: "planned", title: "Collapse all and clear pins", text: "A small menu at the top of every settings panel: fold every section at once, or clear your pinned sections.", areas: ["app"] },
+  {
+    column: "ideas",
+    title: "Back up and restore your settings",
+    text: "Save everything the app keeps (settings, game profiles, ratings, notes, layouts) to one file and bring it back on another PC.",
+    areas: ["app"],
+  },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
