@@ -54,6 +54,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Controller plugins": "Controller plugins: an API",
   "More games in the background": "Game-art background: more games",
   "Pick any Proton version": "Game page: Proton version picker",
+  "Game logs for bug reports": "Game page: \"Record a log when I press Play\"",
   "One Update button": "One Update flow",
   "The board's OLED settings in the app": "Board's OLED settings in the app",
   "OLED screens in Sony's words": "OLED screens use Sony's names",
