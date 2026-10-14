@@ -427,6 +427,12 @@ export const ROADMAP: RoadmapItem[] = [
     text: "Save everything the app keeps (settings, game profiles, ratings, notes, layouts) to one file and bring it back on another PC.",
     areas: ["app"],
   },
+  {
+    column: "ideas",
+    title: "Quick controls",
+    text: "The everyday levels (haptic feedback, speaker, microphone, light bar) as sliders together in one place on the Controller page.",
+    areas: ["controller"],
+  },
   { column: "ideas", title: "Lock the rail collapsed", text: "A small lock in the rail's corner keeps the rail small, icons only, so it no longer opens when you point at it.", areas: ["app"] },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
