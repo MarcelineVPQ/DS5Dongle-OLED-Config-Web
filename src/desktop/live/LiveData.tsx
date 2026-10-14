@@ -3,12 +3,13 @@
 // touchpad), the two motion sensors, and the connection (link and what's
 // plugged in). Settings live in the panel, not here, and nothing repeats
 // what the drawing or the status strip shows.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AXIS_DASH, PALETTES } from "../colorVision";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import { liveStats } from "../useLiveInput";
 import { onThemeChange } from "./controllerAccent";
+import { useWindowShown } from "../useWindowShown";
 
 interface Props {
   input: InputReport;
@@ -25,8 +26,29 @@ const dot = (down: boolean) => (down ? "●" : "○");
 // The D-pad's direction (0 = up, clockwise; 8 = released, shown as —).
 const DPAD_ARROWS = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
 
+// The link's reads a second and round trip, as text, read from liveStats
+// once a second (they'd change with every input frame otherwise, ~30 a
+// second); a render only when the text changes, none while hidden.
+function useLinkRates(): [string, string] {
+  const shown = useWindowShown();
+  const read = (): [string, string] => [`${liveStats.hz.toFixed(1)} /s`, `${liveStats.ms.toFixed(1)} ms`];
+  const [rates, setRates] = useState(read);
+  // lifetime: OK — cleanup: clears the 1 s timer (hidden / unmount)
+  useEffect(() => {
+    if (!shown) return;
+    // lifetime: OK — cleared in the effect cleanup; runs only while shown
+    const id = setInterval(() => {
+      const next = read();
+      setRates((prev) => (prev[0] === next[0] && prev[1] === next[1] ? prev : next));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [shown]);
+  return rates;
+}
+
 export default function LiveData({ input, rssi, edge = false }: Props) {
   const { t } = useTranslation();
+  const [rate, roundTrip] = useLinkRates();
   const tl = (key: string) => t(`desktop.liveData.${key}`);
   const yn = (v: boolean) => (v ? tl("yes") : tl("no"));
   const centered = (v: number) => v - 128;
@@ -83,8 +105,8 @@ export default function LiveData({ input, rssi, edge = false }: Props) {
       <Card title={tl("connection")}>
         <Rows
           rows={[
-            [tl("rate"), `${liveStats.hz.toFixed(1)} /s`],
-            [tl("roundTrip"), `${liveStats.ms.toFixed(1)} ms`],
+            [tl("rate"), rate],
+            [tl("roundTrip"), roundTrip],
             // Bluetooth reports RSSI relative to the ideal ("golden") range: 0 = in it.
             [tl("signal"), rssi === null ? "—" : rssi === 0 ? tl("inRange") : `${rssi} dB`],
             [tl("usb"), yn(input.usbPower)],
