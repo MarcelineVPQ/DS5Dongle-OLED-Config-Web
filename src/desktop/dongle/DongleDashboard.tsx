@@ -55,8 +55,10 @@ const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : nu
 function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null) {
   const client = bridge.client;
   const withTimings = supportsFeature2(bridge.identity, 11, FEATURES2.timings);
+  // cache: OK — key=sample time; invalidated=sliding window; bound=HISTORY = 60 samples
   const history = useRef<Sample[]>([]);
   // seq null = no mirror frame in that sample (then no redraw rate).
+  // cache: OK — key=none (previous counters); invalidated=each 1 s sample; bound=1 entry
   const prev = useRef<{ at: number; usb: number; bt: number; mic: number; loops: number; seq: number | null } | null>(null);
   const latest = useRef({ frame: frameNow, rssi: rssiNow });
   // lifetime: OK — acquires nothing (latest frame / RSSI into a ref)

@@ -41,6 +41,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   const [missed, setMissed] = useState<string[]>([]);
 
   // Guided run: a pause to get ready, then sample the raw input and fit.
+  // cache: OK — key=sample time; invalidated=reset at each step; bound=one step (≤ 5 s at ~30 Hz)
   const samples = useRef<Array<{ at: number; r: InputReport }>>([]);
   const latest = useRef(input);
   // lifetime: OK — acquires nothing (mirrors the input into a ref)

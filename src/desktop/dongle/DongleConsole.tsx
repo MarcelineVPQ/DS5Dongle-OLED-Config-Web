@@ -35,6 +35,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
   const capable = supportsOledMirror(identity);
   const log = useDongleLog(client, identity, controllerOn);
   const [unread, setUnread] = useState(false);
+  // cache: OK — key=none (newest log line seen); invalidated=while the log tab is open; bound=1 number
   const seen = useRef(0);
   const newest = log.at(-1)?.id ?? 0;
   // lifetime: OK — acquires nothing (unread flag for the log pane)
@@ -218,6 +219,7 @@ function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity |
     const id = nextId.current++;
     setLines((l) => [...l.slice(-199), { id, at: Date.now(), text }]);
   };
+  // cache: OK — key=none (the previous status); invalidated=each status change; bound=1 entry
   const prev = useRef<{ client: boolean; on: boolean; slot: number | null; battery: number | null; unsaved: boolean | null; charging: boolean } | null>(null);
   const status = identity;
   // lifetime: OK — acquires nothing (appends log lines, capped at 200)

@@ -46,7 +46,7 @@
 // Verdicts: OK (the release point named), LEAK, WASTE, HOT-ALLOC, NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Lifetime pass".
 import ts from "typescript";
-import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, relOf, report, sources, verdictSyntax } from "./ts_source.mjs";
+import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, relOf, report, sources, verdictSyntax } from "./ts_program.mjs";
 
 export const VERDICTS = ["OK", "LEAK", "WASTE", "HOT-ALLOC", "NOT-WORTH"];
 
@@ -248,7 +248,7 @@ for (const sf of sources) {
     rows.push({
       file: relOf.get(sf.fileName),
       line,
-      fn: displayFn(n),
+      fn: displayFn(n, () => false),
       kind: c[0],
       detail: c[1],
       ctx: runsIn(n),

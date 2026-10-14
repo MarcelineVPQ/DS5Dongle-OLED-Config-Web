@@ -125,6 +125,7 @@ const byteQ = (b: number) => Math.floor((b * Q + 127) / 255);
 
 // The nodes, built once per curve: curves are immutable values (an edit makes
 // a new object), and the curve graph calls curveAt 65 times per drawing.
+// cache: OK — key=curve object (curves are immutable); invalidated=garbage-collected with the curve (WeakMap); bound=live curve objects
 const nodeCache = new WeakMap<StickCurve, Nodes | null>();
 let nodeBuilds = 0;
 // How many times nodes were built (tests: not once per drawn frame).

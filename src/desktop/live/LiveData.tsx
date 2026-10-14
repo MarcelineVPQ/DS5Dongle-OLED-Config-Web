@@ -160,7 +160,9 @@ function readSparkColors(c: HTMLCanvasElement): SparkColors {
 // which Chromium rasterizes on the GPU with hardware acceleration.
 function Spark({ values, range }: { values: [number, number, number]; range: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  // cache: OK — key=sample order; invalidated=sliding window; bound=HISTORY = 150 points
   const history = useRef<Array<[number, number, number]>>([]);
+  // cache: OK — key=none (the spark colors); invalidated=cleared on theme change; bound=1 entry
   const colors = useRef<SparkColors | null>(null);
   // lifetime: OK — cleanup: the theme watcher's unsubscribe
   useEffect(() => {

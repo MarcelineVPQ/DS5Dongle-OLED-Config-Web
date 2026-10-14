@@ -110,6 +110,7 @@ function ColorPopover({
     hsvNow.current = hsv;
   }, [hsv]);
   const opened = useRef(value);
+  // cache: OK — key=none (last applied hex); invalidated=each pick; bound=1 entry
   const last = useRef(value);
   // Changes coming back in (the parent's value) without losing the hue of a grey.
   const [seen, setSeen] = useState(value);

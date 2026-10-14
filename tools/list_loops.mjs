@@ -28,140 +28,30 @@
 // Verdicts: PARALLELIZE BATCH SERIAL-REQUIRED HOT-PATH-OK FIX-HOT-PATH NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Loop pass".
 import ts from "typescript";
-import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, isOurs, relOf, report, sources, verdictSyntax } from "./ts_source.mjs";
+import {
+  calleeName,
+  checker,
+  displayFn,
+  fnName,
+  isCallbackOf,
+  isComponentOrHook,
+  isFn,
+  isLoop,
+  isStmtLoop,
+  iterCallOf,
+  loopBody,
+  loopKind,
+  relOf,
+  report,
+  resolveFns,
+  sources,
+  verdictSyntax,
+} from "./ts_program.mjs";
 
 export const VERDICTS = ["PARALLELIZE", "BATCH", "SERIAL-REQUIRED", "HOT-PATH-OK", "FIX-HOT-PATH", "NOT-WORTH"];
 const VERDICT = verdictSyntax("loop", VERDICTS);
-const ITER_METHODS = new Set(["map", "forEach", "reduce", "reduceRight", "filter", "some", "every", "find", "findIndex", "findLast", "findLastIndex", "flatMap", "sort", "toSorted"]);
-const ITER_OWNERS = /^(Array|ReadonlyArray|Set|ReadonlySet|Map|ReadonlyMap|\w+Array)$/;
 // Library scan roots: the game library scan (electron/main/games/games.ts).
 const SCAN_ROOTS = new Set(["electron/main/games/games.ts:scan"]);
-
-// ---------- helpers ----------
-const isStmtLoop = (n) => ts.isForStatement(n) || ts.isForOfStatement(n) || ts.isForInStatement(n) || ts.isWhileStatement(n) || ts.isDoStatement(n);
-// An array iteration call: x.map(cb) where map is the lib's Array/Set/Map method.
-const iterCache = new Map();
-function isIterCall(n) {
-  if (!ts.isCallExpression(n) || !ts.isPropertyAccessExpression(n.expression)) return false;
-  if (!ITER_METHODS.has(n.expression.name.text) || n.arguments.length === 0) return false;
-  if (iterCache.has(n)) return iterCache.get(n);
-  const sym = checker.getSymbolAtLocation(n.expression.name);
-  const ok = !!sym?.declarations?.some((d) => {
-    const owner = d.parent;
-    const name = owner && (ts.isInterfaceDeclaration(owner) || ts.isClassDeclaration(owner)) ? owner.name?.text : "";
-    return /typescript\/lib\/lib\./.test(d.getSourceFile().fileName) && ITER_OWNERS.test(name ?? "");
-  });
-  iterCache.set(n, ok);
-  return ok;
-}
-const isLoop = (n) => isStmtLoop(n) || isIterCall(n);
-const loopBody = (n) => (isStmtLoop(n) ? n.statement : n.arguments[0]);
-const loopKind = (n) => {
-  if (ts.isForOfStatement(n)) return n.awaitModifier ? "for-await" : "for-of";
-  if (ts.isForInStatement(n)) return "for-in";
-  if (ts.isForStatement(n)) return "for";
-  if (ts.isWhileStatement(n)) return "while";
-  if (ts.isDoStatement(n)) return "do";
-  return `.${n.expression.name.text}`;
-};
-// Is fn the callback of an array iteration call?
-const iterCallOf = (fn) => (fn.parent && ts.isCallExpression(fn.parent) && fn.parent.arguments[0] === fn && isIterCall(fn.parent) ? fn.parent : null);
-const isCallbackOf = (fn, names) => {
-  const p = fn.parent;
-  return p && ts.isCallExpression(p) && p.arguments.includes(fn) && names.includes(calleeName(p));
-};
-// Enclosing named function (skipping array iteration callbacks) for the row's "function" column.
-const loopFn = (node) => displayFn(node, (fn) => !!iterCallOf(fn));
-// Resolve an identifier / property access to our own function-like declarations.
-// The functions a value can be: f, a ? f : g, a ?? f (a default parameter
-// "read = isWin ? readWindowsProcs : readGameProcs").
-function fnsOfValue(e, depth) {
-  if (isFn(e)) return [e];
-  if (ts.isParenthesizedExpression(e)) return fnsOfValue(e.expression, depth);
-  if (ts.isConditionalExpression(e)) return [...fnsOfValue(e.whenTrue, depth), ...fnsOfValue(e.whenFalse, depth)];
-  if (ts.isBinaryExpression(e) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(e.operatorToken.kind)) return [...fnsOfValue(e.left, depth), ...fnsOfValue(e.right, depth)];
-  if ((ts.isIdentifier(e) || ts.isPropertyAccessExpression(e)) && depth < 4) return resolveFns(e, depth + 1);
-  return [];
-}
-function resolveFns(expr, depth = 0) {
-  let sym = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(expr) ? expr.name : expr);
-  if (!sym) return [];
-  if (sym.flags & ts.SymbolFlags.Alias) sym = checker.getAliasedSymbol(sym);
-  const out = [];
-  for (const d of sym.declarations ?? []) {
-    if (!isOurs(d.getSourceFile())) continue;
-    if (isFn(d)) out.push(d);
-    else if ((ts.isVariableDeclaration(d) || ts.isPropertyDeclaration(d) || ts.isPropertyAssignment(d) || ts.isParameter(d)) && d.initializer) out.push(...fnsOfValue(d.initializer, depth));
-    else if (ts.isMethodSignature(d) || ts.isPropertySignature(d)) out.push(...implementationsOf(d));
-  }
-  if (!out.length) {
-    // A function value from a factory (const draw = makeRenderer().draw): the
-    // declaration its type was inferred from.
-    for (const sig of checker.getTypeAtLocation(expr).getCallSignatures()) {
-      const d = sig.getDeclaration?.();
-      if (d && isFn(d) && isOurs(d.getSourceFile())) out.push(d);
-    }
-  }
-  return out;
-}
-// An interface member: every class method / object member of that name in a
-// class that implements the interface (Ds5BridgeClient -> the real and the
-// simulated dongle).
-const classesByIface = new Map();
-for (const sf of sources) {
-  const visit = (n) => {
-    if (ts.isClassDeclaration(n)) {
-      for (const h of n.heritageClauses ?? [])
-        for (const t of h.types) {
-          const name = t.expression.getText(sf);
-          if (!classesByIface.has(name)) classesByIface.set(name, []);
-          classesByIface.get(name).push(n);
-        }
-    }
-    ts.forEachChild(n, visit);
-  };
-  visit(sf);
-}
-// Object literal members, by name, for interfaces/types implemented by a
-// plain object ({ draw() {...} } returned as a Renderer).
-const literalMembers = new Map();
-for (const sf of sources) {
-  const visit = (n) => {
-    if (ts.isObjectLiteralExpression(n)) {
-      for (const m of n.properties) {
-        const fn = ts.isMethodDeclaration(m) ? m : ts.isPropertyAssignment(m) && isFn(m.initializer) ? m.initializer : null;
-        if (!fn || !m.name) continue;
-        const key = m.name.getText(sf);
-        if (!literalMembers.has(key)) literalMembers.set(key, []);
-        literalMembers.get(key).push({ lit: n, fn });
-      }
-    }
-    ts.forEachChild(n, visit);
-  };
-  visit(sf);
-}
-function implementationsOf(sig) {
-  const iface = sig.parent;
-  if (!iface) return [];
-  const name = sig.name.getText();
-  const out = [];
-  const owner = ts.isTypeLiteralNode(iface) && ts.isTypeAliasDeclaration(iface.parent) ? iface.parent : iface;
-  for (const { lit, fn } of literalMembers.get(name) ?? []) {
-    const t = checker.getContextualType(lit);
-    const parts = t?.isUnion() ? t.types : t ? [t] : [];
-    const decls = parts.flatMap((x) => [...(x.symbol?.declarations ?? []), ...(x.aliasSymbol?.declarations ?? [])]);
-    if (decls.includes(iface) || decls.includes(owner)) out.push(fn);
-  }
-  if (!ts.isInterfaceDeclaration(iface)) return out;
-  for (const cls of classesByIface.get(iface.name.text) ?? []) {
-    for (const m of cls.members) {
-      if (m.name?.getText() !== name) continue;
-      if (isFn(m)) out.push(m);
-      else if (ts.isPropertyDeclaration(m) && m.initializer && isFn(m.initializer)) out.push(m.initializer);
-    }
-  }
-  return out;
-}
 
 // ---------- hot roots + call graph ----------
 const tags = new Map(); // fn node -> Set of tags
@@ -335,7 +225,7 @@ for (const sf of sources) {
       if (trig.length) {
         const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
         const head = (isStmtLoop(n) ? sf.text.slice(n.getStart(sf), n.statement.getStart(sf)) : n.getText(sf).split("\n")[0]).replace(/\s+/g, " ").trim().slice(0, 100);
-        rows.push({ file: relOf.get(sf.fileName), line, fn: loopFn(n), kind: loopKind(n), trigger: trig.join(" "), verdict: loopVerdict(sf, n), head });
+        rows.push({ file: relOf.get(sf.fileName), line, fn: displayFn(n), kind: loopKind(n), trigger: trig.join(" "), verdict: loopVerdict(sf, n), head });
       }
     }
     ts.forEachChild(n, visit);

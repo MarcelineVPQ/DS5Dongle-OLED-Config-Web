@@ -52,6 +52,7 @@ export function scopedAccent(color: string | null, el: Element | null): Record<s
 
 // The app-wide accent source: the controller's colorway (null = the theme's).
 let controllerColor: string | null = null;
+// cache: OK — key=none (the shown controller's colorway); invalidated=set on every controller change; bound=1 entry
 let controllerCode: string | null = null;
 // The player's own colors while on (else null).
 let customColors: CustomColors | null = null;

@@ -88,14 +88,18 @@ export default function LiveController(props: Props) {
 function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selected, remapped, onSelect }: Props & { art: string }) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
+  // cache: OK — key=part id; invalidated=per mount, the art is keyed by model, so another model remounts; bound=≈ 30 parts
   const parts = useRef(new Map<PartId, SVGGraphicsElement>());
   // The art's own transform per stick group; live movement is applied on top of it.
+  // cache: OK — key=part id; invalidated=per mount (keyed by model); bound=≈ 30 parts
   const baseTransform = useRef(new Map<PartId, string>());
   const touchLayer = useRef<SVGGElement | null>(null);
   // Looked up once at mount, not on every live frame: the triggers' fill
   // gradient stops (and the value they show now), and the touchpad's box.
+  // cache: OK — key=trigger (l2/r2); invalidated=per mount (keyed by model); bound=2 lists of gradient stops
   const triggerStops = useRef<Record<"l2" | "r2", Element[]>>({ l2: [], r2: [] });
   const triggerShown = useRef<Record<"l2" | "r2", number>>({ l2: -1, r2: -1 });
+  // cache: OK — key=none (the touchpad's box); invalidated=per mount (keyed by model); bound=1 entry
   const padBox = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const marks = useRef<HTMLDivElement>(null);
 

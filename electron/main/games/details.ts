@@ -85,6 +85,7 @@ const STEAM_NAMES: Record<ArtKind, string[]> = {
 };
 function steamArt(cache: string, appid: string): Partial<Record<ArtKind, string>> {
   const dir = join(cache, appid);
+  // cache: OK — key=art file name; invalidated=per call (one game's art folder); bound=files in one game's librarycache folder
   const found = new Map<string, { path: string; mtime: number }>();
   const note = (name: string, path: string) => {
     let mtime: number;

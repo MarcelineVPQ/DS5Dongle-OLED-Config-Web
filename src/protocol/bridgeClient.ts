@@ -359,6 +359,7 @@ export class Ds5BridgeClient {
   }
 
   // The firmware's protocol, as of the last identity read (decides the config layout).
+  // cache: OK — key=the client (one per connected board); invalidated=every identity read (the 1 s poll), a new board makes a new client; bound=1 entry
   private protocol: { major: number; minor: number; features3: number } | null = null;
 
   async identity(): Promise<BridgeIdentity> {

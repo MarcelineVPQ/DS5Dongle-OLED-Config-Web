@@ -43,8 +43,10 @@ const LAUNCHER_COMMS = /^(steam|reaper|heroic|legendary|gogdl|nile|lutris|umu-ru
 // program is Wine's loader whatever its name shows.
 const WINE_EXE = /\/(wine|wine64|wine-preloader|wine64-preloader|wineserver)$/;
 const UID_RE = (uid: number) => new RegExp(`^Uid:\\s+${uid}\\b`, "m");
+// cache: OK — key=the process uid; invalidated=rebuilt when the uid differs; bound=1 entry
 let uidRe: { uid: number; re: RegExp } | null = null;
 // Orphans whose environment has no launch variable, by "<root>/<pid>:<name>".
+// cache: OK — key=<proc root>/<pid>:<name>; invalidated=each pass forgets orphans that are gone (a reused pid has a new name or is re-read); bound=live orphan processes without a launch variable
 const plainOrphans = new Set<string>();
 
 // Everything detectRunning looks at, for one process.
@@ -115,6 +117,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   // and Wine processes that outlived their launcher.
   // loop: HOT-PATH-OK — one Map over own processes for the ancestry walk
   const byPid = new Map(own.map((p) => [p.pid, p]));
+  // cache: OK — key=pid; invalidated=per readProcs call; bound=the user's processes in one pass
   const memo = new Map<number, boolean>();
   const isRoot = (name: string) => LAUNCHER_COMMS.test(name) || WINE_COMMS.test(name);
   const underLauncher = (pid: number, depth = 0): boolean => {
@@ -138,6 +141,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   // the variables isn't read again (its environment is fixed until it runs
   // another program, which changes its name).
   const orphan = (p: { ppid: number }) => p.ppid <= 1 || !byPid.has(p.ppid) || byPid.get(p.ppid)!.name === "systemd";
+  // cache: OK — key=<proc root>/<pid>:<name>; invalidated=per readProcs call (prunes plainOrphans); bound=the user's orphans in one pass
   const seenPlain = new Set<string>();
   const launched = (p: { pid: number; name: string }) => {
     const id = `${root}/${p.pid}:${p.name}`;
@@ -278,8 +282,10 @@ export function detectRunningWindows(procs: ProcView[], games: RunningCandidate[
 export class RunningGameWatcher {
   private timer: ReturnType<typeof setInterval> | null = null;
   private current: string | null = null;
+  // cache: OK — key=none (the candidate running game); invalidated=replaced on every change, cleared on stop(); bound=1 entry
   private pending: { key: string | null; since: number } | null = null;
 
+  // cache: FIX-STALE — key=install folder; invalidated=never (lives as long as the watcher); bound=installed games' folders (docs/CACHE_PASS_2026-10.md)
   private readonly exeCache = new Map<string, Set<string>>();
   // An asynchronous read (Windows) in flight: the next tick waits for it.
   private reading = false;
