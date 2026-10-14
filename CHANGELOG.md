@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.11] - 2026-10-13
+
 ### Fixed
 
 - Linux: after an update from inside the app, the restarted app couldn't find programs on the PC (the old version's AppImage folder stayed first in its search path and is gone once that version closes), so Games showed "controller not connected" and "couldn't read the screen settings" (no Turn on HDR). The app now drops other AppImage folders from its search path at start, and launchers it starts (Steam, Heroic, Lutris) no longer get the app's own folder either.
