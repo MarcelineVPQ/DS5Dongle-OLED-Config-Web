@@ -19,7 +19,7 @@ import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
-import { FeedCache, FeedMissingError } from "./updateFeed";
+import { FeedCache, FeedError, FeedMissingError, feedProblem } from "./updateFeed";
 
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
@@ -154,8 +154,8 @@ export class Updater {
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url });
     } catch (cause) {
-      // error: SHOWN — desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
-      return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}` });
+      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
+      return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}`, problem: feedProblem(cause) });
     }
   }
 
@@ -168,22 +168,33 @@ export class Updater {
 
   async fetchManifest(channel: UpdateChannel = this.channel()): Promise<Manifest> {
     const url = manifestUrl(channel);
-    const response = await net.fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    // The server answering at all: a failure here is a network one (offline, unreachable, a timeout).
+    // error: PASSES-ON — status/ok are read right below (404 = FeedMissingError, else FeedError "offline"; a bad .sig = "unsigned")
+    const reach = async (u: string): Promise<{ status: number; ok: boolean; text: string }> => {
+      try {
+        const r = await net.fetch(u, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+        return { status: r.status, ok: r.ok, text: r.ok ? await r.text() : "" };
+      } catch (cause) {
+        // error: PASSES-ON — thrown as FeedError "offline" to check()'s / the lookups' catch
+        throw new FeedError("offline", `the update server can't be reached (${errorText(cause)})`);
+      }
+    };
+    const response = await reach(url);
     if (response.status === 404) throw new FeedMissingError();
-    if (!response.ok) throw new Error(`update server returned HTTP ${response.status}`);
-    const text = await response.text();
+    if (!response.ok) throw new FeedError("offline", `update server returned HTTP ${response.status}`);
+    const text = response.text;
     // Nothing in the feed is used before its signature checks out.
-    const sig = await net.fetch(`${url}.sig`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
-    if (!sig.ok || !feedSignedBy(text, await sig.text(), trustedKeys())) throw new Error("the update feed isn't signed by the developer; ignoring it");
+    const sig = await reach(`${url}.sig`);
+    if (!sig.ok || !feedSignedBy(text, sig.text, trustedKeys())) throw new FeedError("unsigned", "the update feed isn't signed by the developer; ignoring it");
     let json: unknown;
     try {
       json = JSON.parse(text);
     } catch {
-      throw new Error("the update manifest is malformed");
+      throw new FeedError("malformed", "the update manifest is malformed");
     }
-    // error: PASSES-ON — a malformed manifest throws "the update manifest is malformed" to check()'s catch
+    // error: PASSES-ON — a malformed manifest throws FeedError "malformed" to check()'s catch
     const parsed = Manifest.safeParse(json);
-    if (!parsed.success) throw new Error("the update manifest is malformed");
+    if (!parsed.success) throw new FeedError("malformed", "the update manifest is malformed");
     return parsed.data;
   }
 

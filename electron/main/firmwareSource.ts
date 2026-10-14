@@ -10,7 +10,7 @@ import { z } from "zod";
 import type { FirmwareDownload, FirmwareLookup, LatestFirmware, UpdateChannel } from "../../src/desktop/api";
 import { isNewer, type Download, type Manifest } from "../../src/update/manifest";
 import { CorruptDownloadError } from "./download";
-import { FEED_REUSE_MS, FeedMissingError, type FeedCache } from "./updateFeed";
+import { FEED_REUSE_MS, FeedMissingError, feedProblem, type FeedCache } from "./updateFeed";
 
 export const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
 
@@ -57,7 +57,8 @@ export function choose(bundled: Bundled | null, published: Published | null): "b
 export interface FirmwareSourceDeps {
   bundled: () => Bundled | null;
   // The feed, or why there's none: "unpublished" (nothing released yet),
-  // "offline", or "disabled" (automatic checks are off and nobody asked).
+  // "offline", "unsigned" / "malformed" (the feed was refused), or "disabled"
+  // (automatic checks are off and nobody asked).
   // `asked`: the user pressed a check button. See firmwareFeed().
   // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest, checkedNone / checkedOffline after Check now)
   manifest: (asked: boolean) => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"]; channel: UpdateChannel }>;
@@ -80,11 +81,11 @@ export function firmwareFeed(feed: Pick<FeedCache, "get" | "last">, automatic: (
     try {
       return { manifest: await feed.get(ch, FEED_REUSE_MS), problem: null, channel: ch };
     } catch (cause) {
-      // error: SHOWN — desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; the last feed fetched answers when offline)
+      // error: SHOWN — desktop.firmware.offline / .unsigned / .malformed (problem on the Firmware card; the last feed verified answers when there's one)
       if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished", channel: ch };
-      // Offline: the last one fetched for this channel, if any.
+      // The last one verified for this channel, if any.
       const last = feed.last(ch);
-      return last ? { manifest: last, problem: null, channel: ch } : { manifest: null, problem: "offline", channel: ch };
+      return last ? { manifest: last, problem: null, channel: ch } : { manifest: null, problem: feedProblem(cause), channel: ch };
     }
   };
 }

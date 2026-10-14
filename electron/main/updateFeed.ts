@@ -3,7 +3,7 @@
 // here, so one check is one fetch of the feed and its .sig. No electron
 // import, so the rules are tested (tests/unit/firmwareSource.test.ts,
 // tests/integration/updateConsent.test.ts).
-import type { DevChannelPreview, UpdateChannel } from "../../src/desktop/api";
+import type { DevChannelAnswer, FeedProblem, UpdateChannel } from "../../src/desktop/api";
 import type { Manifest } from "../../src/update/manifest";
 
 // A feed fetched this recently is reused by the firmware lookups (the update
@@ -15,6 +15,23 @@ export class FeedMissingError extends Error {
   constructor() {
     super("No release has been published yet.");
   }
+}
+
+// Why a fetched feed was refused, so the page can say what really happened
+// (a stale signature is not "offline"). See FeedProblem.
+export class FeedError extends Error {
+  constructor(
+    readonly problem: FeedProblem,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+// The kind of a feed failure: a refused feed says so; anything else (a
+// network error, a timeout) means the server couldn't be reached.
+export function feedProblem(cause: unknown): FeedProblem {
+  return cause instanceof FeedError ? cause.problem : "offline";
 }
 
 export class FeedCache {
@@ -55,13 +72,13 @@ export class FeedCache {
 
 // What's in the newest development build, for the join dialog. With
 // automatic checks off, only once the user presses the dialog's check button.
-export async function devChannelPreview(feed: Pick<FeedCache, "get">, automatic: boolean, asked: boolean): Promise<DevChannelPreview | null> {
+export async function devChannelPreview(feed: Pick<FeedCache, "get">, automatic: boolean, asked: boolean): Promise<DevChannelAnswer> {
   if (!asked && !automatic) return null;
   try {
     const m = await feed.get("dev", FEED_REUSE_MS);
     return { app: m.app.version, firmware: m.firmware?.version ?? null, notes: m.app.notes ?? null, notesUrl: m.app.notes_url ?? null };
-  } catch {
-    // error: SHOWN — desktop.channel.joinOffline (offline or no dev build yet)
-    return null;
+  } catch (cause) {
+    // error: SHOWN — desktop.channel.joinOffline (offline), desktop.channel.joinUnpublished, desktop.updateFeed.unsigned / .malformed (the problem says which)
+    return { problem: cause instanceof FeedMissingError ? "unpublished" : feedProblem(cause) };
   }
 }

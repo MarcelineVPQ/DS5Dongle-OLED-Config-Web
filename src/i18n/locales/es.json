@@ -270,6 +270,8 @@
       "updateHint": "{{device, capitalize}} se reinicia en su bootloader, recibe el firmware y vuelve a arrancar automáticamente. No desconectes nada; después pulsa el botón PS en el mando.",
       "unpublished": "aún no hay versión publicada",
       "offline": "no se puede comprobar (sin conexión)",
+      "unsigned": "no se puede comprobar (el canal de actualizaciones no superó su comprobación de seguridad)",
+      "malformed": "no se puede comprobar (no se pudo leer el canal de actualizaciones)",
       "bundled": "incluido con la app",
       "checkedNewer": "Comprobado ahora: {{version}} está disponible.",
       "checkedCurrent": "Comprobado ahora: estás al día.",
@@ -573,6 +575,10 @@
       "checkedFwNewer": "El firmware {{version}} está disponible para {{device}}: mira el aviso de arriba.",
       "checkedFwCurrent": "El firmware {{device_de}} está actualizado ({{version}}).",
       "checkFailed": "No se pudo buscar actualizaciones. ¿Tienes conexión?"
+    },
+    "updateFeed": {
+      "unsigned": "El canal de actualizaciones no superó su comprobación de seguridad, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
+      "malformed": "No se pudo leer el canal de actualizaciones, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde."
     },
     "live": {
       "part": {
@@ -1455,6 +1461,7 @@
       "joinNoNotes": "Aún no hay notas de esta versión en el canal.",
       "joinNotesLink": "Leer las notas de la versión en GitHub",
       "joinOffline": "No se puede acceder al canal de desarrollo ahora (¿sin conexión?). Puedes unirte igualmente; la actualización aparecerá cuando sea accesible.",
+      "joinUnpublished": "Todavía no se ha publicado ninguna versión de desarrollo. Puedes unirte igualmente; la actualización aparecerá cuando haya una.",
       "joinButton": "Unirme al canal de desarrollo",
       "stayButton": "Seguir en estable",
       "joinCheckOff": "La búsqueda automática de actualizaciones está desactivada, así que no se ha consultado nada.",

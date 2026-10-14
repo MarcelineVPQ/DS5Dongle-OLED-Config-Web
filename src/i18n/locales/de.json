@@ -270,6 +270,8 @@
       "updateHint": "{{device, capitalize}} startet in den Bootloader, wird geflasht und startet von selbst neu. Nicht abziehen; drücke danach die PS-Taste am Controller.",
       "unpublished": "noch kein Release veröffentlicht",
       "offline": "Prüfung nicht möglich (offline)",
+      "unsigned": "Prüfung nicht möglich (Update-Feed hat die Sicherheitsprüfung nicht bestanden)",
+      "malformed": "Prüfung nicht möglich (Update-Feed nicht lesbar)",
       "bundled": "in der App enthalten",
       "checkedNewer": "Gerade geprüft: {{version}} ist verfügbar.",
       "checkedCurrent": "Gerade geprüft: Du bist auf dem neuesten Stand.",
@@ -573,6 +575,10 @@
       "checkedFwNewer": "Firmware {{version}} ist für {{device_akk}} verfügbar: siehe Hinweis oben.",
       "checkedFwCurrent": "Die Firmware {{device_gen}} ist aktuell ({{version}}).",
       "checkFailed": "Suche nach Updates fehlgeschlagen. Bist du online?"
+    },
+    "updateFeed": {
+      "unsigned": "Der Update-Feed hat die Sicherheitsprüfung nicht bestanden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal.",
+      "malformed": "Der Update-Feed konnte nicht gelesen werden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal."
     },
     "live": {
       "part": {
@@ -1455,6 +1461,7 @@
       "joinNoNotes": "Für diesen Build gibt es im Feed noch keine Notizen.",
       "joinNotesLink": "Versionshinweise auf GitHub lesen",
       "joinOffline": "Der Entwicklungs-Feed ist gerade nicht erreichbar (offline?). Du kannst trotzdem beitreten; das Update erscheint, sobald er erreichbar ist.",
+      "joinUnpublished": "Es wurde noch kein Entwicklungs-Build veröffentlicht. Du kannst trotzdem beitreten; das Update erscheint, sobald es eines gibt.",
       "joinButton": "Dem Entwicklungskanal beitreten",
       "stayButton": "Bei Stabil bleiben",
       "joinCheckOff": "Die automatische Update-Suche ist aus, daher wurde nichts abgerufen.",

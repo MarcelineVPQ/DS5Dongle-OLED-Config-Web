@@ -12,7 +12,7 @@ import {
   type Mine,
   type ProfileSettings,
 } from "../../src/desktop/games/library";
-import type { DevChannelPreview } from "../../src/desktop/api";
+import type { DevChannelAnswer } from "../../src/desktop/api";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
@@ -126,7 +126,7 @@ export interface IpcHandlers {
   getUpdateState: () => UpdateState;
   installUpdate: () => Promise<UpdateState>;
   backToStable: () => Promise<UpdateState>;
-  devChannelPreview: (asked: boolean) => Promise<DevChannelPreview | null>;
+  devChannelPreview: (asked: boolean) => Promise<DevChannelAnswer>;
   restartToUpdate: () => void;
   latestFirmware: (asked: boolean) => Promise<FirmwareLookup>;
   officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;

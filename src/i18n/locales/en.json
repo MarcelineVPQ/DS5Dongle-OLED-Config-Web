@@ -269,6 +269,8 @@
       "updateHint": "{{device, capitalize}} restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.",
       "unpublished": "no release published yet",
       "offline": "can't check (offline)",
+      "unsigned": "can't check (the update feed failed its security check)",
+      "malformed": "can't check (the update feed couldn't be read)",
       "bundled": "included with the app",
       "checkedNewer": "Checked just now: {{version}} is available.",
       "checkedCurrent": "Checked just now: you're up to date.",
@@ -572,6 +574,10 @@
       "checkedFwNewer": "Firmware {{version}} is available for {{device}}: see the banner at the top.",
       "checkedFwCurrent": "{{device, capitalize}}'s firmware is up to date ({{version}}).",
       "checkFailed": "Couldn't check for updates. Are you online?"
+    },
+    "updateFeed": {
+      "unsigned": "The update feed didn't pass its security check, so nothing was installed. This is on our side, not your connection: try again later.",
+      "malformed": "The update feed couldn't be read, so nothing was installed. This is on our side, not your connection: try again later."
     },
     "live": {
       "part": {
@@ -1454,6 +1460,7 @@
       "joinNoNotes": "No notes for this build in the feed yet.",
       "joinNotesLink": "Read the release notes on GitHub",
       "joinOffline": "Can't reach the development feed right now (offline?). You can still join; the update shows when it's reachable.",
+      "joinUnpublished": "No development build has been published yet. You can still join; the update shows when there is one.",
       "joinButton": "Join the Development channel",
       "stayButton": "Stay on Stable",
       "joinCheckOff": "Automatic update checks are off, so nothing has been fetched.",

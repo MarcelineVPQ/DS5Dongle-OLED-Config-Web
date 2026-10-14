@@ -49,6 +49,16 @@ export interface DevChannelPreview {
   notesUrl: string | null;
 }
 
+// Why the update feed gave no answer: "offline" (the server couldn't be
+// reached: no network, a timeout, an HTTP error), "unsigned" (it answered, but
+// the feed failed its signature check) or "malformed" (signed, but not a feed
+// this app can read). Only "offline" is the user's connection.
+export type FeedProblem = "offline" | "unsigned" | "malformed";
+
+// The join dialog's answer: the preview, why there's none, or null (not checked).
+// error: SHOWN — desktop.channel.joinOffline / .joinUnpublished, desktop.updateFeed.unsigned / .malformed (DevChannelDialog)
+export type DevChannelAnswer = DevChannelPreview | { problem: FeedProblem | "unpublished" } | null;
+
 export interface DesktopSettings {
   closeToTray: boolean;
   startMinimized: boolean;
@@ -92,7 +102,9 @@ export type UpdateState =
   | { phase: "installing"; version: string }
   | { phase: "ready"; version: string }
   // during "install": the user's Download and install (or an automatic one) failed, which the banner shows.
-  | { phase: "failed"; detail: string; during?: "install" };
+  // problem: why a check failed (the feed's own problem, see FeedProblem).
+  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed by problem (CheckNow, SetupScreen)
+  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem };
 
 export interface LatestFirmware {
   version: string;
@@ -110,12 +122,12 @@ export interface LatestFirmware {
 export type FirmwareDownload = { ok: true; version: string; bytes: Uint8Array } | { ok: false; reason: "changed" | "mismatch" };
 
 // Result of looking for firmware to offer. problem says why the feed gave no
-// answer: "unpublished" (no release in the feed yet) or "offline".
+// answer: "unpublished" (no release in the feed yet) or a FeedProblem.
 export interface FirmwareLookup {
   latest: LatestFirmware | null;
   // "disabled": automatic checks are off and the user hasn't asked.
-  // error: SHOWN — desktop.firmware.offline (or desktop.firmware.unpublished; "disabled" is a choice, not an error)
-  problem: "unpublished" | "offline" | "disabled" | null;
+  // error: SHOWN — desktop.firmware.offline / .unsigned / .malformed (or desktop.firmware.unpublished; "disabled" is a choice, not an error)
+  problem: "unpublished" | FeedProblem | "disabled" | null;
 }
 
 // Sony's official controller firmware (check only): the latest version per
@@ -189,7 +201,7 @@ export interface DesktopApi {
   // The newest development build (app and firmware versions, the app's notes)
   // from the signed dev feed, shown before joining the Development channel.
   // `asked`: the user pressed the dialog's check button (allowed with automatic checks off).
-  devChannelPreview(asked: boolean): Promise<DevChannelPreview | null>;
+  devChannelPreview(asked: boolean): Promise<DevChannelAnswer>;
   restartToUpdate(): void;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.

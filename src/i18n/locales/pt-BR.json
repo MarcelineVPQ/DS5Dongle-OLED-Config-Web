@@ -270,6 +270,8 @@
       "updateHint": "{{device, capitalize}} reinicia no bootloader, recebe o firmware e reinicia automaticamente. Não desconecte nada; depois pressione o botão PS no controle.",
       "unpublished": "nenhuma versão publicada ainda",
       "offline": "não dá para verificar (offline)",
+      "unsigned": "não foi possível verificar (o feed de atualizações não passou na verificação de segurança)",
+      "malformed": "não foi possível verificar (feed de atualizações ilegível)",
       "bundled": "incluído no app",
       "checkedNewer": "Verificado agora: {{version}} está disponível.",
       "checkedCurrent": "Verificado agora: você está atualizado.",
@@ -573,6 +575,10 @@
       "checkedFwNewer": "O firmware {{version}} está disponível para {{device}}: veja o aviso no topo.",
       "checkedFwCurrent": "O firmware {{device_de}} está atualizado ({{version}}).",
       "checkFailed": "Não foi possível procurar atualizações. Você está online?"
+    },
+    "updateFeed": {
+      "unsigned": "O feed de atualizações não passou na verificação de segurança, então nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde.",
+      "malformed": "Não foi possível ler o feed de atualizações, então nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde."
     },
     "live": {
       "part": {
@@ -1455,6 +1461,7 @@
       "joinNoNotes": "Ainda não há notas desta versão no canal.",
       "joinNotesLink": "Ler as notas da versão no GitHub",
       "joinOffline": "Não dá para acessar o canal de desenvolvimento agora (sem conexão?). Você pode entrar mesmo assim; a atualização aparece quando ele estiver acessível.",
+      "joinUnpublished": "Nenhuma versão de desenvolvimento foi publicada ainda. Você pode entrar mesmo assim; a atualização aparece quando houver uma.",
       "joinButton": "Entrar no canal de desenvolvimento",
       "stayButton": "Continuar no estável",
       "joinCheckOff": "A busca automática de atualizações está desligada, então nada foi consultado.",

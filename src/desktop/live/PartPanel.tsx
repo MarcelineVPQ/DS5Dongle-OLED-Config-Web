@@ -3,7 +3,7 @@
 // sections are the same components the old pages used.
 import { PanelRightClose, X } from "lucide-react";
 import Markdown from "../Markdown";
-import type { DevChannelPreview } from "../api";
+import type { DevChannelAnswer } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import Calibration from "./Calibration";
@@ -32,7 +32,7 @@ import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings, FirmwareLookup } from "../api";
 import type { SpeakerSelect } from "../../protocol/config";
 import ColorPicker from "../colorPicker/ColorPicker";
-import { firmwareOffer } from "../useUpdates";
+import { feedProblemKey, firmwareOffer } from "../useUpdates";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
@@ -852,17 +852,17 @@ export function GameLaunchersSetting() {
 // Checks the chosen channel now, the app and the dongle's firmware, instead
 // of waiting for the next automatic check (every 6 hours). Anything new shows
 // up in the banners at the top; this says what was found for both.
-function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: string | null | undefined; refreshFirmware: () => Promise<FirmwareLookup> }) {
+export function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: string | null | undefined; refreshFirmware: () => Promise<FirmwareLookup> }) {
   const { t } = useTranslation();
   const [result, setResult] = useState<string[]>([]);
   const desktop = window.desktop;
   if (!desktop) return null;
   const check = async () => {
     setResult([]);
-    // error: SHOWN — desktop.setup.checkFailed (null: the line below says the check failed)
+    // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed when the feed was refused (null: the line below says the check failed)
     const app = await desktop.checkForUpdates().catch(() => null);
     const lines: string[] = [];
-    if (!app || app.phase === "failed") lines.push(t("desktop.setup.checkFailed"));
+    if (!app || app.phase === "failed") lines.push(t(feedProblemKey(app?.problem, "desktop.setup.checkFailed")));
     else if (app.phase === "up-to-date") lines.push(t("desktop.setup.checkedCurrent", { version: app.version }));
     else if (app.phase !== "idle" && app.phase !== "checking") lines.push(t("desktop.setup.checkedNewer", { version: app.version }));
     // The firmware: only with a dongle connected (its version is what's compared).
@@ -1283,7 +1283,7 @@ function ReduceMotionSetting() {
 // With automatic checks off it goes online only when its check button is pressed.
 export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: boolean; onJoin: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
-  const [preview, setPreview] = useState<DevChannelPreview | null | "loading" | "ask">(automatic ? "loading" : "ask");
+  const [preview, setPreview] = useState<DevChannelAnswer | "loading" | "ask">(automatic ? "loading" : "ask");
   const [asked, setAsked] = useState(false);
   const check = () => {
     setPreview("loading");
@@ -1293,10 +1293,10 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
   useEffect(() => {
     if (!automatic && !asked) return;
     let live = true;
-    // error: SHOWN — desktop.channel.joinOffline
+    // error: SHOWN — desktop.channel.joinOffline (or the answer's problem: joinUnpublished, desktop.updateFeed.unsigned / .malformed)
     window.desktop?.devChannelPreview(asked).then(
       (p) => live && setPreview(p),
-      () => live && setPreview(null),
+      () => live && setPreview({ problem: "offline" }),
     );
     return () => {
       live = false;
@@ -1329,6 +1329,8 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
           </div>
         ) : preview === "loading" ? (
           <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
+        ) : preview && "problem" in preview ? (
+          <p className="dk-hint">{t(preview.problem === "unpublished" ? "desktop.channel.joinUnpublished" : feedProblemKey(preview.problem, "desktop.channel.joinOffline"))}</p>
         ) : preview ? (
           <>
             <p>{t("desktop.channel.joinVersions", { app: preview.app, firmware: preview.firmware ?? "—" })}</p>
