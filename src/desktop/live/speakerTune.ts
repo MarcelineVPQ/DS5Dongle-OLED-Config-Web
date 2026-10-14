@@ -105,6 +105,7 @@ export function renderTune(sampleRate: number, tune: readonly Step[] = TUNE): Fl
       const on = len * (1 - GAP);
       const start = Math.round(t0 * sampleRate);
       const n = Math.round(on * sampleRate);
+      // loop: NOT-WORTH — renders the test tune once per speaker test, N = samples
       for (let i = 0; i < n && start + i < total; i++) {
         const t = i / sampleRate;
         const env = Math.min(1, t / ATTACK_S, (on - t) / RELEASE_S) * (0.7 + 0.3 * Math.exp(-t / 0.15));

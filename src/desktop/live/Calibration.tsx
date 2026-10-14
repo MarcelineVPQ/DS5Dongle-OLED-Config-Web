@@ -72,6 +72,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           next.sticks[1] = { ...next.sticks[1], ...fitCenter(all.map((r) => [r.rightStick.x, r.rightStick.y])) };
         } else if (measure === "edges") {
           ([0, 1] as const).forEach((i) => {
+            // loop: NOT-WORTH — once per finished measurement, N ≤ ~150 samples (5 s at 30 Hz)
             const pts = all.map((r): [number, number] => (i === 0 ? [r.leftStick.x, r.leftStick.y] : [r.rightStick.x, r.rightStick.y]));
             const outer = fitOuter(pts, next.sticks[i].cx, next.sticks[i].cy);
             if (outer === null) miss.push(t(i === 0 ? "desktop.calib.leftStick" : "desktop.calib.rightStick"));
@@ -79,6 +80,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           });
         } else if (measure === "triggers") {
           ([0, 1] as const).forEach((i) => {
+            // loop: NOT-WORTH — once per finished measurement, N ≤ ~150 samples
             const fit = fitTrigger(all.map((r) => (i === 0 ? r.triggerLeft : r.triggerRight)));
             if (fit === null) miss.push(i === 0 ? "L2" : "R2");
             else next.triggers[i] = fit;
@@ -165,6 +167,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         {!input && <p className="dk-hint">{t("desktop.calib.needsController")}</p>}
       </section>
 
+      {/* loop: HOT-PATH-OK — N = 2 sticks, per live frame while calibrating */}
       {(["left", "right"] as const).map((side, i) => {
         const s = draft.sticks[i];
         const raw = input ? (i === 0 ? input.leftStick : input.rightStick) : { x: 128, y: 128 };
@@ -189,6 +192,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
 
       <section className="dk-card">
         <h2>{t("desktop.calib.triggers")}</h2>
+        {/* loop: HOT-PATH-OK — N = 2 triggers, per live frame while calibrating */}
         {(["L2", "R2"] as const).map((name, i) => {
           const tr = draft.triggers[i];
           const raw = input ? (i === 0 ? input.triggerLeft : input.triggerRight) : 0;
@@ -200,6 +204,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         })}
         <h2>{t("desktop.calib.gyro")}</h2>
         <p className="dk-mono">
+          {/* loop: HOT-PATH-OK — N = 3 gyro axes */}
           {t("desktop.calib.gyroZero")} {draft.gyro.every((g) => g === 0) ? "—" : draft.gyro.join(" · ")}
         </p>
       </section>

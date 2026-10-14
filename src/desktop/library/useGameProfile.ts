@@ -116,6 +116,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
   const missed = useRef(false);
   const [retry, setRetry] = useState(0);
   const switchOnce = useCallback(async (task: () => Promise<void>, wait = false) => {
+    // loop: SERIAL-REQUIRED — one profile switch at a time: one HID session, protocol order
     while (switching.current) {
       if (!wait) {
         missed.current = true;

@@ -14,7 +14,9 @@ export default function ComingSoon() {
         </a>
       </p>
       <div className="dk-roadmap-board">
+        {/* loop: HOT-PATH-OK — N = 4 roadmap columns; About page render only */}
         {ROADMAP_COLUMNS.map((column) => {
+          // loop: HOT-PATH-OK — N ≈ 100 roadmap rows x 4 columns; About page render only
           const items = ROADMAP.filter((x) => x.column === column);
           const heading = t(`desktop.about.roadmap.column.${column}`);
           return (
@@ -22,6 +24,7 @@ export default function ComingSoon() {
               <h2>
                 {heading} <span className="dk-roadmap-count">{items.length}</span>
               </h2>
+              {/* loop: HOT-PATH-OK — N = one column's roadmap items (tens); About page render only */}
               {items.map((x) => (
                 <article key={x.title} className="dk-card">
                   <h3>{deviceText(x.title)}</h3>
@@ -33,6 +36,7 @@ export default function ComingSoon() {
                         {t("desktop.about.roadmap.high", "High priority")}
                       </span>
                     )}
+                    {/* loop: HOT-PATH-OK — N ≤ 3 areas per roadmap item */}
                     {x.areas.map((a) => (
                       <span key={a} className="dk-chip">
                         {t(`desktop.about.roadmap.area.${a}`)}

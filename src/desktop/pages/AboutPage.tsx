@@ -61,6 +61,7 @@ function StudioCard() {
           {window.desktop && <span className="dk-studio-version"> · v{appVersionLabel()}</span>}
         </p>
         <div className="dk-studio-links">
+          {/* loop: HOT-PATH-OK — N ≈ 4 studio links; About page render */}
           {STUDIO_LINKS.map((l) => (
             <a key={l.href} className="dk-btn" href={l.href} target="_blank" rel="noreferrer noopener">
               <l.icon size={14} aria-hidden="true" />
@@ -102,6 +103,7 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
   return (
     <div className="dk-stack">
       <div className="dk-seg" role="tablist" aria-label={t("desktop.nav.about", "About")} style={{ alignSelf: "flex-start" }}>
+        {/* loop: HOT-PATH-OK — N ≈ 4 tabs; About page render */}
         {tabs.map((x) => (
           <button type="button" role="tab" key={x.id} className={tab === x.id ? "on" : ""} aria-selected={tab === x.id} onClick={() => setTab(x.id)}>
             {x.label}

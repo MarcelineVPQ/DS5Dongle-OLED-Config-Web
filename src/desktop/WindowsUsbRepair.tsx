@@ -42,6 +42,7 @@ export default function WindowsUsbRepair() {
         <div className="dk-setup-steps">
           <strong>{t("desktop.windowsUsb.stepsTitle")}</strong>
           <ol>
+            {/* loop: HOT-PATH-OK — N = 4 steps; re-render per USB poll on Windows only */}
             {STEPS.map((step) => (
               <li key={step}>{t(`desktop.windowsUsb.step.${step}`)}</li>
             ))}

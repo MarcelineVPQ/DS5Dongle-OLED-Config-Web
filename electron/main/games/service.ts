@@ -145,6 +145,7 @@ export class GamesService {
   // The report as the page shows it: changed files under the home folder as
   // ~/… (a dev copy's test HOME never shows; apply works from the fresh scan).
   private shown(report: GamesReport): GamesReport {
+    // loop: NOT-WORTH — files of one fix
     const fixes = (list: Fix[]) => list.map((f) => ({ ...f, files: f.files.map((file) => this.tilde(file)) }));
     return {
       ...report,
@@ -261,6 +262,7 @@ export class GamesService {
   // user has let the app look at launcher settings.
   listBackups(): BackupSummary[] {
     if (!this.deps.allowed()) return [];
+    // loop: NOT-WORTH — files of one backup set
     return this.backups.list().map((b) => ({ ...b, files: b.files.map((f) => this.tilde(f)) }));
   }
 
@@ -288,6 +290,7 @@ export class GamesService {
           ...steam.filter((s) => s.toolsDir !== primary).map((s) => ({ dir: s.toolsDir, link: !s.flatpak })),
           ...heroic.filter((h) => h.toolsDir !== primary).map((h) => ({ dir: h.toolsDir, link: !h.flatpak })),
           // Native Lutris already lists Steam's compatibility tools.
+          // loop: NOT-WORTH — Steam installs
           ...lutris.filter((l) => l.wineDir !== primary && (l.flatpak || steam.every((s) => s.flatpak))).map((l) => ({ dir: l.wineDir, link: !l.flatpak })),
         ];
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);

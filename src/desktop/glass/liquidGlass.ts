@@ -41,6 +41,7 @@ export function displacementMap(w: number, h: number, o: GlassOptions, scale = 0
   const hy = h / 2;
   const e = 0.5; // finite-difference step for the edge normal
   for (let j = 0; j < ch; j++) {
+    // loop: NOT-WORTH — half-size pixels of a glass element; on mount and debounced resize only
     for (let i = 0; i < cw; i++) {
       const x = (i + 0.5) / scale - hx;
       const y = (j + 0.5) / scale - hy;
@@ -110,6 +111,7 @@ export function glassFilter(id: string, w: number, h: number, o: GlassOptions): 
     for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
     f.appendChild(el);
   };
+  // loop: NOT-WORTH — N = 3 x 4 matrix cells; per glass filter build
   const only = (c: number) => [0, 1, 2].map((r) => [0, 1, 2, 3].map((k) => (r === c && k === c ? 1 : 0)).join(" ") + " 0").join("  ") + "  0 0 0 1 0";
   step("feImage", { href: map, x: 0, y: 0, width: w, height: h, preserveAspectRatio: "none", result: "map" });
   step("feGaussianBlur", { in: "SourceGraphic", stdDeviation: o.frost, result: "frost" });

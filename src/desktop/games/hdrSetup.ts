@@ -32,8 +32,11 @@ export const NO_HDR_SYSTEM: HdrSystem = { check: "unchecked", screens: [], games
 
 // a >= b for dotted versions (3.16.14.5 >= 3.16.5).
 export function versionAtLeast(a: string, b: string): boolean {
+  // loop: NOT-WORTH — N ≤ 4 version parts
   const pa = a.split(".").map(Number);
+  // loop: NOT-WORTH — N ≤ 4 version parts
   const pb = b.split(".").map(Number);
+  // loop: NOT-WORTH — N ≤ 4 version parts
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const d = (pa[i] ?? 0) - (pb[i] ?? 0);
     if (d) return d > 0;
@@ -43,6 +46,7 @@ export function versionAtLeast(a: string, b: string): boolean {
 
 // The screen with HDR on (the first, if several), and the screen a line is
 // made for: that one, else the first screen (the manual line before HDR is on).
+// loop: NOT-WORTH — N ≤ 3 screens
 export const hdrScreen = (sys: HdrSystem) => sys.screens.find((s) => s.hdr) ?? null;
 export const lineScreen = (sys: HdrSystem) => hdrScreen(sys) ?? sys.screens[0] ?? null;
 
@@ -86,6 +90,7 @@ export function withGamescopeHdr(opts: string, screen: Size): string {
   const post = (at < 0 ? rest : rest.slice(at + "%command%".length)).trim();
   const env = ENV_PREFIX.exec(pre)![1].trim();
   let wrappers = pre.slice(ENV_PREFIX.exec(pre)![1].length).trim();
+  // loop: NOT-WORTH — N = 2 parts; per HDR game per scan
   const envOut = [env, /(^|\s)ENABLE_GAMESCOPE_WSI=/.test(env) ? "" : WSI_ENV].filter(Boolean).join(" ");
   const own = GAMESCOPE.exec(wrappers);
   if (own) {
@@ -93,8 +98,10 @@ export function withGamescopeHdr(opts: string, screen: Size): string {
     const end = GAMESCOPE.exec(wrappers)!;
     const cut = end.index + end[0].length;
     wrappers = `${wrappers.slice(0, cut)} --backend wayland --hdr-enabled${wrappers.slice(cut)}`;
+    // loop: NOT-WORTH — N = 4 parts; per HDR game per scan
     return [envOut, wrappers, "%command%", post].filter(Boolean).join(" ");
   }
+  // loop: NOT-WORTH — N ≤ 10 parts; per HDR game per scan
   return [envOut, "gamescope", ...gamescopeFlags(screen), "--", wrappers, "%command%", post].filter(Boolean).join(" ");
 }
 
@@ -138,6 +145,7 @@ export function hdrSystemReqs(sys: HdrSystem, o: { ourProton: string | null; fla
 // Everything the fix itself needs (our Proton is recommended, not required:
 // gamescope gives any Proton HDR; ours adds the DualSense's triggers and haptics).
 export const hdrReady = (sys: HdrSystem, flatpak = false) =>
+  // loop: NOT-WORTH — N ≤ 6 requirements; per HDR game per scan
   hdrSystemReqs(sys, { ourProton: "-", flatpak })
     .filter((r) => r.id !== "proton")
     .every((r) => r.ok);

@@ -52,6 +52,7 @@ export const isProAudio = (profile: string) => /pro-audio/i.test(profile);
 
 // A rule file that forces pro-audio onto the DualSense card.
 export function forcesProAudio(text: string): boolean {
+  // loop: NOT-WORTH — lines of one small PipeWire rule file
   const live = text
     .split("\n")
     .filter((l) => !/^\s*(#|--)/.test(l))
@@ -74,13 +75,16 @@ export function findProAudioRules(home: string): ProAudioRule[] {
     ["/etc/wireplumber/main.lua.d", false],
   ];
   const out: ProAudioRule[] = [];
+  // loop: NOT-WORTH — six fixed rule folders
   for (const [dir, editable] of dirs) {
     let files: string[];
     try {
+      // loop: NOT-WORTH — files in one rule folder
       files = readdirSync(dir).filter((f) => f.endsWith(".conf") || f.endsWith(".lua"));
     } catch {
       continue;
     }
+    // loop: NOT-WORTH — rule files, a small read each
     for (const f of files) {
       try {
         if (forcesProAudio(readFileSync(join(dir, f), "utf8"))) out.push({ path: join(dir, f), editable });
@@ -102,8 +106,10 @@ export interface SdlVarSource {
 
 export function findGlobalSdlVars(home: string): SdlVarSource[] {
   const files = [join(home, ".profile"), join(home, ".bash_profile"), join(home, ".bashrc"), join(home, ".zshenv"), join(home, ".pam_environment"), "/etc/environment"];
+  // loop: NOT-WORTH — three environment folders
   for (const dir of [join(home, ".config/environment.d"), join(home, ".config/plasma-workspace/env"), "/etc/environment.d"]) {
     try {
+      // loop: NOT-WORTH — files in one environment folder
       for (const f of readdirSync(dir)) files.push(join(dir, f));
     } catch {
       // missing dir
@@ -111,8 +117,10 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
   }
   const out: SdlVarSource[] = [];
   const pattern = new RegExp(`^\\s*(?:export\\s+)?(${SDL_FORCING_VARS.join("|")})\\s*=\\s*["']?([^"'\\s#]*)`, "gm");
+  // loop: NOT-WORTH — shell profile and environment files, a small read each
   for (const f of files) {
     try {
+      // loop: NOT-WORTH — matches in one profile file
       for (const m of readFileSync(f, "utf8").matchAll(pattern)) {
         if (sdlVarForcing(m[1], m[2])) out.push({ variable: m[1], file: f.startsWith(home) ? f.replace(home, "~") : f });
       }
@@ -120,6 +128,7 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
       // missing file
     }
   }
+  // loop: NOT-WORTH — SDL-forcing variable names
   for (const v of SDL_FORCING_VARS) if (sdlVarForcing(v, process.env[v] ?? "")) out.push({ variable: v, file: null });
   return out;
 }
@@ -133,6 +142,7 @@ export function hidrawAccess(): boolean | null {
     return null;
   }
   let found = false;
+  // loop: NOT-WORTH — hidraw nodes, a small sysfs read each
   for (const n of nodes) {
     try {
       const uevent = readFileSync(`/sys/class/hidraw/${n}/device/uevent`, "utf8");

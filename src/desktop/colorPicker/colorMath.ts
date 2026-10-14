@@ -10,6 +10,7 @@ export const clamp = (x: number, lo: number, hi: number): number => (Number.isFi
 const byte = (x: number) => Math.round(clamp(x, 0, 255));
 
 export function rgbToHex(rgb: readonly number[]): string {
+  // loop: HOT-PATH-OK — N = 3 channels
   return `#${rgb
     .slice(0, 3)
     .map((c) => byte(c).toString(16).padStart(2, "0"))
@@ -21,7 +22,9 @@ export function rgbToHex(rgb: readonly number[]): string {
 export function parseHex(text: string): Rgb | null {
   const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(text.trim());
   if (!m) return null;
+  // loop: HOT-PATH-OK — N = 3 characters of a short hex
   const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
+  // loop: HOT-PATH-OK — N = 3 channels
   return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as Rgb;
 }
 

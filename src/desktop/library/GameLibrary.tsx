@@ -63,7 +63,9 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   // The categories this library has, with counts (the Show menu lists only these).
   const kindCounts = useMemo(() => {
     const m = new Map<AppKind, number>();
+    // loop: HOT-PATH-OK — N = games (hundreds); memoized on the scan report
     for (const g of report?.games ?? []) m.set(kindOfGame(g), (m.get(kindOfGame(g)) ?? 0) + 1);
+    // loop: HOT-PATH-OK — N = 7 app kinds; memoized on the scan report
     return APP_KINDS.filter((k) => m.has(k)).map((k) => [k, m.get(k)!] as const);
   }, [report]);
   const listRef = useRef<HTMLUListElement>(null);
@@ -80,11 +82,13 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
 
   const games = useMemo(() => {
     const by = (g: GameEntry) => (sort === "recent" ? (details[g.key]?.lastPlayed ?? 0) : sort === "played" ? (details[g.key]?.playtimeMin ?? 0) : 0);
+    // loop: HOT-PATH-OK — sort of the games (hundreds); memoized on report, sort and details
     return [...(report?.games ?? [])].sort((a, b) => by(b) - by(a) || a.title.localeCompare(b.title));
   }, [report, sort, details]);
   // Home's shelf: the most recently played games with artwork.
   const recent = useMemo(
     () =>
+      // loop: HOT-PATH-OK — games (hundreds) filtered+sorted to 8; memoized on report and details
       (report?.games ?? [])
         .filter((g) => !hiddenKinds.has(kindOfGame(g)) && details[g.key]?.lastPlayed && (details[g.key].art.includes("cover") || details[g.key].art.includes("header")))
         .sort((a, b) => (details[b.key].lastPlayed ?? 0) - (details[a.key].lastPlayed ?? 0))
@@ -93,6 +97,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   );
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
+    // loop: HOT-PATH-OK — N = games (hundreds); memoized, reruns per search keystroke or filter
     return games.filter((g) => {
       if (q && !g.title.toLowerCase().includes(q)) return false;
       if (hiddenKinds.has(kindOfGame(g))) return false;
@@ -102,12 +107,17 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
       return true;
     });
   }, [games, query, filter, library, hiddenKinds]);
+  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const playing = visible.filter((g) => g.key === running);
+  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const withProfile = visible.filter((g) => g.key !== running && library.games[g.key]?.profile);
+  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const rest = visible.filter((g) => g.key !== running && !library.games[g.key]?.profile);
+  // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
   const game = games.find((g) => g.key === selected) ?? null;
 
   // ↑/↓ through the list (in the order shown), Home/End to the ends.
+  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const order = [...playing, ...withProfile, ...rest].map((g) => g.key);
   const onListKey = (e: KeyboardEvent<HTMLUListElement>) => {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) || order.length === 0) return;
@@ -158,6 +168,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
         <li className="lib-group">
           {label} ({list.length})
         </li>
+        {/* loop: HOT-PATH-OK — one sidebar row per visible game (hundreds); per library render */}
         {list.map(row)}
       </>
     );
@@ -177,6 +188,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           onChange={(e) => setQuery(e.target.value)}
         />
         <div className="lib-filters" role="group" aria-label={t("desktop.library.filter")}>
+          {/* loop: HOT-PATH-OK — N = 4 filters */}
           {(["all", "profile", "dualsense", "attention"] as const).map((f) => (
             <button key={f} type="button" className={`dk-chip${filter === f ? " ok" : ""}`} aria-pressed={filter === f} title={t(`desktop.library.filterHint.${f}`)} onClick={() => setFilter(f)}>
               {t(`desktop.library.filters.${f}`)}
@@ -186,6 +198,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
         <label className="lib-sort">
           <span>{t("desktop.library.sort")}</span>
           <select className="dk-select" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+            {/* loop: HOT-PATH-OK — N = 3 sorts */}
             {SORTS.map((s) => (
               <option key={s} value={s}>
                 {t(`desktop.library.sorts.${s}`)}
@@ -197,9 +210,11 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           <details className="lib-show">
             <summary className="dk-btn" title={t("desktop.library.showHint")}>
               {t("desktop.library.show")}
+              {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
               {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
             </summary>
             <div className="lib-show-menu">
+              {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
               {kindCounts.map(([k, n]) => (
                 <label key={k} className="lib-show-item">
                   <input type="checkbox" checked={!hiddenKinds.has(k)} onChange={(e) => setKindShown(k, e.target.checked)} />
@@ -223,7 +238,9 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
               <p className="lib-summary">
                 {t("desktop.library.summary", {
                   games: report.games.length,
+                  // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
                   dualsense: report.games.filter((g) => g.support === "triggers" || g.support === "haptics").length,
+                  // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
                   profiles: report.games.filter((g) => library.games[g.key]?.profile).length,
                 })}
               </p>
@@ -231,6 +248,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                 <>
                   <h2 className="lib-shelf-title">{t("desktop.library.recent")}</h2>
                   <ul className="lib-shelf">
+                    {/* loop: HOT-PATH-OK — N ≤ 8 recent games */}
                     {recent.map((g) => (
                       <li key={g.key}>
                         <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
@@ -248,6 +266,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                 {t("desktop.library.groupAll")} ({visible.length}){visible.length < games.length && <span className="dk-hint"> · {t("desktop.library.gridFiltered")}</span>}
               </h2>
               <ul className="lib-grid">
+                {/* loop: FIX-HOT-PATH — a tile per game (hundreds) re-rendered per library render, even hidden */}
                 {visible.map((g) => (
                   <li key={g.key}>
                     <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />

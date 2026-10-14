@@ -42,6 +42,8 @@ jobs:
         run: node tools/list_duplicates.mjs --check
       - name: No byte-identical files
         run: node tools/check_identical_files.mjs
+      - name: Loops that wait or sit on a hot path have a verdict (docs/LOOP_PASS_2026-10.md)
+        run: node tools/list_loops.mjs --check
 
   typecheck:
     name: Typecheck

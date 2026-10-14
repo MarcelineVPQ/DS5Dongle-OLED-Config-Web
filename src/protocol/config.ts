@@ -226,10 +226,13 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   // byte depending on browser/driver. Try both offsets and pick whichever
   // passes validation.
   const candidates = bytes.byteLength >= CONFIG_BODY_MIN_SIZE + 1 ? [0, 1] : [0];
+  // loop: HOT-PATH-OK — N ≤ 2 offsets (with or without report id)
   const parsed = candidates.map((offset) => decodeAt(bytes, offset)).filter(Boolean) as ConfigBody[];
+  // loop: HOT-PATH-OK — N ≤ 2 candidates, early exit
   const valid = parsed.find((config) => validateConfig(config).length === 0);
   if (valid) return valid;
   if (parsed[0]) {
+    // loop: NOT-WORTH — error path only (the board sent an invalid config)
     const issues = validateConfig(parsed[0])
       .map((i) => i.message)
       .join("; ");
@@ -243,6 +246,7 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
 export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
+    // loop: NOT-WORTH — error path only (invalid draft)
     throw new Error(issues.map((i) => i.message).join("; "));
   }
   micLevel ||= echoCancel;
@@ -264,8 +268,11 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
   view.setUint8(17, config.autoHapticsGain & 0xff);
   view.setUint8(18, config.autoHapticsLowpass);
   view.setUint8(19, config.lightbarMode & 0xff);
+  // loop: HOT-PATH-OK — N = 4 favourite colors
   for (let i = 0; i < 4; i++) view.setUint8(20 + i, config.lbFavR[i] & 0xff);
+  // loop: HOT-PATH-OK — N = 4 favourite colors
   for (let i = 0; i < 4; i++) view.setUint8(24 + i, config.lbFavG[i] & 0xff);
+  // loop: HOT-PATH-OK — N = 4 favourite colors
   for (let i = 0; i < 4; i++) view.setUint8(28 + i, config.lbFavB[i] & 0xff);
   view.setUint8(32, config.screenDimTimeout & 0xff);
   view.setUint8(33, config.screenOffTimeout & 0xff);
@@ -374,8 +381,11 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     autoHapticsGain: clampInteger(config.autoHapticsGain, 0, 200),
     autoHapticsLowpass: clampInteger(config.autoHapticsLowpass, 0, 3) as AutoHapticsLowpass,
     lightbarMode: clampInteger(config.lightbarMode, 0, 8),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavR: config.lbFavR.map((v) => clampInteger(v, 0, 255)),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavG: config.lbFavG.map((v) => clampInteger(v, 0, 255)),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavB: config.lbFavB.map((v) => clampInteger(v, 0, 255)),
     screenDimTimeout: clampInteger(config.screenDimTimeout, 0, 250),
     screenOffTimeout: clampInteger(config.screenOffTimeout, 0, 250),
@@ -433,6 +443,7 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
 }
 
 function arraysEqual(a: number[], b: number[]): boolean {
+  // loop: HOT-PATH-OK — N = 4 favourite colors per field
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
@@ -468,8 +479,11 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     autoHapticsGain: view.getUint8(17),
     autoHapticsLowpass: view.getUint8(18) as AutoHapticsLowpass,
     lightbarMode: u8(19, DEFAULT_CONFIG.lightbarMode),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavR: [0, 1, 2, 3].map((i) => u8(20 + i, DEFAULT_CONFIG.lbFavR[i])),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavG: [0, 1, 2, 3].map((i) => u8(24 + i, DEFAULT_CONFIG.lbFavG[i])),
+    // loop: HOT-PATH-OK — N = 4 favourite colors
     lbFavB: [0, 1, 2, 3].map((i) => u8(28 + i, DEFAULT_CONFIG.lbFavB[i])),
     screenDimTimeout: u8(32, DEFAULT_CONFIG.screenDimTimeout),
     screenOffTimeout: u8(33, DEFAULT_CONFIG.screenOffTimeout),

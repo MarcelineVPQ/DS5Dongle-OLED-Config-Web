@@ -12,6 +12,7 @@ export interface SetupStatus {
 }
 
 export function setupStatus(game: Pick<GameEntry, "fixes" | "gamepad" | "mode">, hdrReqs: HdrReq[]): SetupStatus {
+  // loop: HOT-PATH-OK — N ≈ 6 HDR requirements; per game page render
   const hdrOk = hdrReqs.every((r) => r.ok);
   const attention = game.fixes.length > 0 || game.gamepad === "no-build" || game.mode?.state === "own" || !hdrOk;
   const passed = (game.gamepad === "set" ? 1 : 0) + (game.mode?.state === "set" ? 1 : 0) + (hdrOk ? hdrReqs.length : 0);

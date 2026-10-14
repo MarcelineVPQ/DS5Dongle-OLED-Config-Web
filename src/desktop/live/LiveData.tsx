@@ -66,6 +66,7 @@ export default function LiveData({ input, rssi, edge = false }: Props) {
               : []),
             ["L2 / R2", `${fmt(input.triggerLeft, 3)} ${fmt(input.triggerRight, 3)}`],
             [tl("effect"), `${effect(input.triggerEffectLeft)} · ${effect(input.triggerEffectRight)}`],
+            // loop: HOT-PATH-OK — N = 2 fingers per live frame
             ...input.fingers.map((f, i): [string, string] => [t("desktop.liveData.finger", { n: i + 1 }), f.touching ? `${fmt(f.x, 4)} ${fmt(f.y, 4)}` : "—"]),
           ]}
         />
@@ -114,6 +115,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function Rows({ rows }: { rows: Array<[string, string]> }) {
   return (
     <dl className="live-data-rows">
+      {/* loop: HOT-PATH-OK — N ≈ 20 rows per live frame (the panel shows live values) */}
       {rows.map(([k, v]) => (
         <div key={k}>
           <dt title={k}>{k}</dt>
@@ -127,6 +129,7 @@ function Rows({ rows }: { rows: Array<[string, string]> }) {
 function Xyz({ values }: { values: [number, number, number] }) {
   return (
     <div className="live-data-xyz">
+      {/* loop: HOT-PATH-OK — N = 3 axes per live frame */}
       {(["X", "Y", "Z"] as const).map((axis, i) => (
         <span key={axis}>
           <b>
@@ -178,11 +181,13 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
     g.moveTo(0, ht / 2);
     g.lineTo(w, ht / 2);
     g.stroke();
+    // loop: HOT-PATH-OK — N = 3 axes per spark redraw; 2D canvas, GPU-composited
     for (let axis = 0; axis < 3; axis++) {
       g.strokeStyle = col.axis[axis];
       g.setLineDash(AXIS_DASH[axis]);
       g.lineWidth = 1.5;
       g.beginPath();
+      // loop: HOT-PATH-OK — N = 150 history points per axis per redraw
       h.forEach((sample, i) => {
         const x = (i / (HISTORY - 1)) * w;
         const y = ht / 2 - (Math.max(-range, Math.min(range, sample[axis])) / range) * (ht / 2 - 2);

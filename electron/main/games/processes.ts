@@ -75,11 +75,13 @@ function matches(launcher: LauncherId, p: ProcView): boolean {
 const LAUNCHERS = ["steam", "heroic", "lutris"] as const;
 
 export function launchersIn(procs: ProcView[]): Set<LauncherId> {
+  // loop: HOT-PATH-OK — 3 launchers x game-candidate processes
   return new Set(LAUNCHERS.filter((id) => procs.some((p) => matches(id, p))));
 }
 
 // A Proton/Wine game is running (Proton's script or a wineserver).
 export function gameIn(procs: ProcView[]): boolean {
+  // loop: HOT-PATH-OK — args of one process, short
   return procs.some((p) => p.comm === "wineserver" || (/python/.test(p.comm) && p.args.some((a) => a.endsWith("/proton")) && p.args.includes("waitforexitandrun")));
 }
 
@@ -147,6 +149,7 @@ export function launcherControl(layer: ProcLayer = realLayer(), timeoutMs = 30_0
       } else {
         for (const p of procs) if (matches(launcher, p) && isMain(p)) layer.signal(p.pid);
       }
+      // loop: SERIAL-REQUIRED — deadline: polls every 500 ms until the launcher has quit or timeoutMs
       for (let waited = 0; waited < timeoutMs; waited += 500) {
         await layer.sleep(500);
         if (!(await running()).has(launcher)) {
@@ -172,9 +175,11 @@ export async function withLaunchersClosed<T>(launchers: LauncherId[], control: L
   const closed: Array<{ launcher: LauncherId; plan: ReopenPlan | null }> = [];
   const reopenAll = async () => {
     const failed: LauncherId[] = [];
+    // loop: SERIAL-REQUIRED — launcher order: reopen one at a time, as they were closed
     for (const { launcher, plan } of closed) if (!plan || !(await control.reopen(plan).catch(() => false))) failed.push(launcher);
     return failed;
   };
+  // loop: SERIAL-REQUIRED — launcher order: stop at the first that won't close and reopen the rest
   for (const launcher of toClose) {
     const plan = await control.plan(launcher);
     const result = await control.close(launcher).catch(() => "failed" as const);

@@ -12,6 +12,7 @@ export type ControllerAudioKind = "audioinput" | "audiooutput";
 
 export function findControllerAudio(devices: readonly Pick<MediaDeviceInfo, "kind" | "label" | "deviceId">[], kind: ControllerAudioKind): string | null {
   return (
+    // loop: NOT-WORTH — N ≈ 10 audio devices; once per narration or test start, not per frame
     devices.find(
       (d) =>
         d.kind === kind &&

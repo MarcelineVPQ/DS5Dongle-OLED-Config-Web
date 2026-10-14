@@ -15,6 +15,7 @@ export const TRUSTED_KEYS = [
 export function feedSignedBy(text: string, signatureB64: string, keys: readonly string[]): boolean {
   const signature = Buffer.from(signatureB64.trim(), "base64");
   if (signature.length !== 64) return false;
+  // loop: NOT-WORTH — N = 1 trusted key (2 during a rotation)
   return keys.some((k) => {
     try {
       const key = createPublicKey({ key: Buffer.from(k, "base64"), format: "der", type: "spki" });

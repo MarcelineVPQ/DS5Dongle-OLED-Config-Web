@@ -61,8 +61,10 @@ const isByte = (v: number) => Number.isInteger(v) && v >= 0 && v <= 255;
 // Custom points must be bytes, non-decreasing in x and y (what the firmware accepts).
 export function isValidCurve(c: StickCurve): boolean {
   if (!CURVE_TYPES.includes(c.type)) return false;
+  // loop: HOT-PATH-OK — N = 4 points; cost is in the callers (see nodesOf row)
   if (c.points.length !== 4 || c.points.some(([x, y]) => !isByte(x) || !isByte(y))) return false;
   if (c.type !== "custom") return true;
+  // loop: HOT-PATH-OK — N = 3 point pairs
   for (let i = 1; i < 4; i++) if (c.points[i][0] < c.points[i - 1][0] || c.points[i][1] < c.points[i - 1][1]) return false;
   return true;
 }
@@ -110,6 +112,7 @@ export function decodeCurvesReport(b: Uint8Array): CurvesReport | null {
   return { slot: b[3], temporary: (b[4] & 0x01) !== 0, saved: [at(0), at(1)], active: [at(2), at(3)] };
 }
 
+// loop: HOT-PATH-OK — N = 4 points
 export const curvesEqual = (a: StickCurve, b: StickCurve) => a.type === b.type && (a.type !== "custom" || a.points.every((p, i) => p[0] === b.points[i][0] && p[1] === b.points[i][1]));
 
 // --- The firmware's math (src/stick_curve.h) ---
@@ -123,12 +126,14 @@ const byteQ = (b: number) => Math.floor((b * Q + 127) / 255);
 function nodesOf(c: StickCurve): Nodes | null {
   if (c.type === "linear" || !isValidCurve(c)) return null;
   if (c.type === "custom") {
+    // loop: FIX-HOT-PATH — nodes rebuilt per call: 65 curveAt calls per graph per live frame
     return { x: [0, ...c.points.map(([x]) => byteQ(x)), Q], y: [0, ...c.points.map(([, y]) => byteQ(y)), Q] };
   }
   return { x: Array.from({ length: LUT }, (_, i) => i * (Q / (LUT - 1))), y: [...PRESET_LUT[c.type]] };
 }
 
 function evalNodes(n: Nodes, m: number): number {
+  // loop: HOT-PATH-OK — N ≤ 34 nodes, the firmware math itself
   for (let k = 0; k + 1 < n.x.length; k++) {
     const xa = n.x[k];
     const xb = n.x[k + 1];

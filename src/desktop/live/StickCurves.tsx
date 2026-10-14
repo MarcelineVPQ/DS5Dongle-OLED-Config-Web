@@ -93,6 +93,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
 
   const curve = draft[side];
   const setCurve = (c: StickCurve) => setDraft((d) => (side === 0 ? [c, d[1]] : [d[0], c]));
+  // loop: HOT-PATH-OK — N = 2 sticks per render
   const changed = saved !== null && !draft.every((c, i) => curvesEqual(c, saved[i]));
   const save = async (pair: StickCurvePair) => {
     setError(null);
@@ -112,6 +113,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       <h2>{t("desktop.curves.title")}</h2>
       <p className="dk-hint">{t("desktop.curves.intro")}</p>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
+        {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
         {SIDES.map((s, i) => (
           <button type="button" role="tab" key={s} className={side === i ? "on" : ""} aria-selected={side === i} onClick={() => setSide(i as 0 | 1)}>
             {t(`desktop.calib.${s}Stick`)}
@@ -121,6 +123,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       <Segmented
         label={t("desktop.curves.curve")}
         value={CURVE_TYPES.indexOf(curve.type)}
+        /* loop: HOT-PATH-OK — N = 6 curve types per render */
         options={CURVE_TYPES.map((type, i) => ({ value: i, label: t(`desktop.curves.type.${type}`), title: t(`desktop.curves.typeHint.${type}`) }))}
         onChange={(i) => setCurve({ ...curve, type: CURVE_TYPES[i] as CurveType })}
       />
@@ -138,6 +141,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
         </button>
         <BusyButton
           className="dk-btn"
+          /* loop: HOT-PATH-OK — N = 2 sticks per render */
           disabled={saved === null || saved.every((c) => c.type === "linear")}
           onClick={() =>
             save([
@@ -207,6 +211,7 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
         onPointerCancel={() => setDragging(null)}
       >
         <rect x={PAD} y={PAD} width={SIZE} height={SIZE} className="curve-frame" />
+        {/* loop: HOT-PATH-OK — N = 3 grid lines per render */}
         {[0.25, 0.5, 0.75].map((g) => (
           <g key={g}>
             <line x1={px(g)} y1={py(0)} x2={px(g)} y2={py(1)} className="curve-grid" />
@@ -223,6 +228,7 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
           </g>
         )}
         {custom &&
+          // loop: HOT-PATH-OK — N ≤ 4 curve points per render
           curve.points.map(([x, y], i) => {
             const on = selected === i;
             const r = on ? 6 : 4.5;
@@ -319,6 +325,7 @@ function GameStickCurves({
       <h2>{t("desktop.curves.title")}</h2>
       <div className="dk-notice">{t("desktop.editing.curvesNote", { title })}</div>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
+        {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
         {SIDES.map((s, i) => (
           <button type="button" role="tab" key={s} className={side === i ? "on" : ""} aria-selected={side === i} onClick={() => onSide(i as 0 | 1)}>
             {t(`desktop.calib.${s}Stick`)}
@@ -328,6 +335,7 @@ function GameStickCurves({
       <Segmented
         label={t("desktop.curves.curve")}
         value={choices.indexOf(own ? own.type : "normal")}
+        /* loop: HOT-PATH-OK — N ≤ 7 curve choices per render */
         options={choices.map((c, i) => ({
           value: i,
           label: c === "normal" ? t("desktop.curves.profileSaved") : t(`desktop.curves.type.${c}`),

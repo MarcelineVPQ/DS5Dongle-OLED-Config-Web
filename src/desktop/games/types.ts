@@ -197,5 +197,6 @@ export const artUrl = (key: string, kind: ArtKind) => `ds5-art://art/${encodeURI
 
 // Every fix in a report: what the Games page lists and Home counts as recommended changes.
 export function allFixes(r: GamesReport): Fix[] {
+  // loop: HOT-PATH-OK — N = games (hundreds) + 3 launchers; memoized per scan report
   return [...r.launchers.flatMap((l) => l.fixes), ...r.system.fixes, ...r.games.flatMap((g) => g.fixes)];
 }

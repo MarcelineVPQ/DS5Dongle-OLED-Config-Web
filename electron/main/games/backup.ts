@@ -234,6 +234,7 @@ export class Backups {
       .flatMap((id) => {
         try {
           const m = this.manifest(id);
+          // loop: NOT-WORTH — files per backup set, a handful
           return [{ id, created: m.created, changes: m.changes ?? [{ key: "legacy", params: { text: m.description ?? "" } }], files: m.files.map((f) => f.path), restored: !!m.restored }];
         } catch {
           return [];
@@ -269,6 +270,7 @@ export class Backups {
         continue; // unreadable: leave it for the user to inspect
       }
       if (m.restored) continue;
+      // loop: NOT-WORTH — files per backup set, pruning after a write
       for (const f of m.files) {
         if (originals.has(f.path)) continue;
         originals.add(f.path);

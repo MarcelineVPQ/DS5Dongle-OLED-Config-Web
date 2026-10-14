@@ -12,6 +12,7 @@ export default function LanguageToggle() {
   const ref = useRef<HTMLDivElement | null>(null);
 
   // Resolve the current language to one of our supported codes (or fallback to en).
+  // loop: HOT-PATH-OK — N = 7 languages, early exit; per LanguageToggle render
   const current = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
 
   // Click-outside-to-close
@@ -47,6 +48,7 @@ export default function LanguageToggle() {
         // A disclosure: a plain list of buttons (a listbox role would promise
         // arrow-key handling this menu doesn't have).
         <ul className="language-toggle-menu" aria-label={t("languageToggle.groupLabel")}>
+          {/* loop: HOT-PATH-OK — N = 7 languages in the menu */}
           {SUPPORTED_LANGUAGES.map((lang) => {
             const active = lang.code === current.code;
             return (
