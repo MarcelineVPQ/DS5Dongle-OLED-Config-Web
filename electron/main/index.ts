@@ -224,7 +224,7 @@ function start(): void {
         // Launchers often exit non-zero after handing the link to their
         // running instance (Steam does), so the open result means nothing:
         // success = a handler is registered for the scheme.
-        if (!(await hasSchemeHandler(target.url))) return false;
+        if (!(await hasSchemeHandler(target.url, (u) => app.getApplicationNameForProtocol(u)))) return false;
         // ▶ Play with the launcher closed: it starts in the background with
         // the game (Steam -silent, Heroic --no-gui; actions.ts), in its own
         // unit like everything we start; if that can't start, the link.

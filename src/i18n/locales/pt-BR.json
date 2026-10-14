@@ -448,6 +448,7 @@
           "envHeroic": "Remover {{vars}} das variáveis de ambiente de {{game}}",
           "audioRule": "Desativar a regra de áudio que força o controle para \"pro-audio\"",
           "audioProfile": "Mudar o áudio do controle para o perfil \"{{profile}}\"",
+          "audioVolume": "Colocar o volume e o nível do microfone do controle no máximo neste computador",
           "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)",
           "hdr": "Ativar HDR para {{game}}",
           "hdrUpdate": "Passar o HDR de {{game}} para o gamescope",
@@ -466,6 +467,7 @@
           "envHeroic": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis.",
           "audioRule": "{{file}} coloca a placa de áudio do DualSense no perfil pro-audio, o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. O arquivo é renomeado para .disabled (não é apagado) e o serviço de áudio (WirePlumber) reinicia, então o som cai por um segundo.",
           "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som.",
+          "audioVolume": "No Linux, a placa de som do controle mantém o próprio volume e nível do microfone da última vez que foram salvos, e os controles deslizantes da sua área de trabalho não os mudam. Aqui eles estão baixos, então o microfone pode soar quase mudo e o headset e o alto-falante tocam mais baixo. Eles vão para o máximo (no mixer da placa de som do Linux, ALSA); os controles de volume da sua área de trabalho funcionam como antes, e Desfazer devolve os níveis antigos. Quando Nível do microfone está acima de 0 {{device_em}}, é essa configuração que decide o nível do microfone.",
           "gamepad": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração.{{runner}}",
           "gamepadSteam": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração. As opções de inicialização ficam: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}.",
@@ -498,7 +500,8 @@
         "result": {
           "stale": "Esta mudança não se aplica mais (a configuração mudou desde a última verificação).",
           "restartFailed": "Salvo, mas a reinicialização do serviço de áudio falhou: {{error}}",
-          "profileFailed": "A troca de perfil falhou: {{error}}"
+          "profileFailed": "A troca de perfil falhou: {{error}}",
+          "volumeFailed": "Não foi possível ajustar o volume do controle: {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -516,6 +519,7 @@
       "readLaunchersOff": "Desligar isso oculta sua biblioteca de jogos e os perfis de controle por jogo até você ligar de novo. Nada é apagado.",
       "readLaunchersTurnOff": "Desligar",
       "undoConflict": "Não foi desfeito: {{files}} mudou depois de aplicar (o launcher salvou as próprias configurações). Desfazer descartaria essas mudanças.",
+      "undoNoController": "Não foi desfeito: o controle não está conectado. Conecte-o e pressione Desfazer de novo.",
       "scanningWindows": "Verificando Steam, GOG Galaxy e Epic…",
       "consentIntroWindows": "A configuração de jogos lista seus jogos da Steam, GOG Galaxy e Epic e procura na Steam ajustes que impedem os gatilhos adaptáveis e a resposta tátil de chegarem a eles. Para isso, lê, só neste computador:",
       "consentLaunchersWindows": "os ajustes e as listas de jogos instalados da Steam, GOG Galaxy e Epic",
@@ -527,7 +531,9 @@
       "restartFailed": "Não foi possível pedir para o {{launcher}} fechar, então nada foi alterado. Feche você mesmo e tente de novo.",
       "reopenFailed": "Salvo, mas o {{launcher}} não pôde ser aberto de novo. Abra você mesmo.",
       "launcherStarted": "O {{launcher}} está aberto agora, então nada foi alterado ainda. Ele será fechado para esta mudança e depois aberto de novo. Confirme de novo para continuar.",
-      "launcherOverwrote": "O {{launcher}} desfez uma mudança aplicada aqui (ele estava aberto). Aplique de novo: se o {{launcher}} estiver aberto, ele é fechado antes e aberto de novo depois."
+      "launcherOverwrote": "O {{launcher}} desfez uma mudança aplicada aqui (ele estava aberto). Aplique de novo: se o {{launcher}} estiver aberto, ele é fechado antes e aberto de novo depois.",
+      "details": "Detalhes",
+      "needsAttention": "A revisar"
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -932,7 +938,6 @@
         "dualsense": "Jogos com gatilhos adaptáveis ou resposta tátil nativa",
         "attention": "Jogos com um ajuste pendente"
       },
-      "summary": "{{games}} jogos · {{dualsense}} com recursos DualSense · {{profiles}} com perfil",
       "recent": "Jogados recentemente",
       "tierLegend": "O que os níveis significam",
       "compatHint": "Gatilhos adaptáveis e resposta tátil só chegam aos jogos de Windows pela versão Proton DualSense.",
@@ -951,7 +956,6 @@
         "prefixFolderHint": "Abrir a pasta do Windows (Proton/Wine) do jogo: configurações e saves costumam ficar aqui",
         "failed": "Não deu para abrir. O launcher está instalado?"
       },
-      "gridFiltered": "filtrados como a lista",
       "kind": {
         "demo": "Demo",
         "dlc": "DLC",
@@ -987,7 +991,11 @@
       "supportsHdr": "Compatível com HDR",
       "supportsHdrHint": "Marque se o jogo tem uma configuração de HDR no PC: o app mostra o que o HDR precisa e oferece Ativar HDR quando tudo estiver pronto.",
       "marksTitle": "Não está funcionando como esperado?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Continuar jogando",
+      "libraryTitle": "Biblioteca",
+      "filteredBy": "Filtro: {{filter}}",
+      "showAll": "Mostrar todos"
     },
     "dongleConsole": {
       "title": "Console: {{deviceName}}",

@@ -192,6 +192,20 @@ export const ROADMAP: RoadmapItem[] = [
     text: "Steam and Heroic reopened by the app after a Games change, and games you start with Play, keep running when the app restarts, updates or quits.",
     areas: ["games", "app"],
   },
+  {
+    column: "next",
+    title: "Launcher check on every OS",
+    text: "Games knows whether a launcher is installed on Windows and macOS too, so a game page says when a launcher link can't open instead of assuming it can.",
+    areas: ["games"],
+  },
+  {
+    column: "next",
+    title: "Full headset mic and volume",
+    text: "Games → This computer finds the controller's mic level and volume left low by the system and sets them to full, with Undo.",
+    areas: ["audio", "app"],
+    platform: "linux",
+    high: true,
+  },
 
   // In progress
   {
@@ -260,7 +274,6 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "planned", title: "Games on macOS", text: "The Games area on macOS too: your Steam, Heroic, Epic and GOG Galaxy games and the game that's running.", areas: ["games"] },
   { column: "planned", title: "Heroic games on Windows and macOS", text: "Games finds your Heroic games on Windows and macOS too.", areas: ["games"] },
-  { column: "planned", title: "Launcher check on every OS", text: "Games knows whether a launcher is installed on Windows and macOS too, instead of assuming it is.", areas: ["games"] },
   {
     column: "planned",
     title: "Controller buttons as keyboard keys",
@@ -277,6 +290,21 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
     column: "planned",
+    title: "Launchers close cleanly",
+    text: "When the app closes Heroic or Steam to save a Games change, they close without crashing.",
+    areas: ["games"],
+    platform: "linux",
+    high: true,
+  },
+  {
+    column: "planned",
+    title: "Full speaker volume after a headset unplug",
+    text: "The controller's speaker keeps its full volume after you plug in and unplug a headset.",
+    areas: ["audio", "dongle"],
+    high: true,
+  },
+  {
+    column: "planned",
     title: "Headset sound in both ears",
     text: "A headset on the controller plays in both ears even when Linux's default sound profile sends mono.",
     areas: ["audio", "dongle"],
@@ -287,14 +315,6 @@ export const ROADMAP: RoadmapItem[] = [
     column: "planned",
     title: "Stereo when headphones go in",
     text: "Plug headphones into the controller and its sound switches to stereo; unplug them and the speaker comes back. Undo and your own choice always win.",
-    areas: ["audio", "app"],
-    platform: "linux",
-    high: true,
-  },
-  {
-    column: "planned",
-    title: "Full headset mic and volume",
-    text: "The app finds the controller's mic gain and volume left low by the system and sets them right, with Undo.",
     areas: ["audio", "app"],
     platform: "linux",
     high: true,
@@ -348,6 +368,12 @@ export const ROADMAP: RoadmapItem[] = [
     title: "3D audio for the headset",
     text: "Surround games heard in 3D on a headset plugged into the controller: Windows Sonic on Windows, a virtual surround output on Linux.",
     areas: ["audio"],
+  },
+  {
+    column: "planned",
+    title: "Live controller widget",
+    text: "A small always-on-top window (or a KDE widget) with your controller moving live: buttons, sticks, triggers and the light bar, plus battery and signal.",
+    areas: ["controller", "app"],
   },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },

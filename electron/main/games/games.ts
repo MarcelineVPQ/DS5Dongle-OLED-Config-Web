@@ -49,7 +49,7 @@ import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
 import { compatMapping, findSteamInstalls, installedTools, launchOptions, listSteamGames, readVdfFile, setCompatTool, steamInputState, valveProtons, type SteamInstall } from "./steam";
-import { findGlobalSdlVars, findProAudioRules, hidrawAccess, isProAudio, sdlVarForcing, SDL_FORCING_VARS, type AudioCard } from "./system";
+import { findGlobalSdlVars, findProAudioRules, hidrawAccess, isProAudio, lowMixerControls, sdlVarForcing, SDL_FORCING_VARS, type AudioCard, type DualSenseMixer, type MixerChange } from "./system";
 
 export { sdlVarForcing };
 import { ensureNode, getString, parseVdf, serializeVdf, setKey, type VdfNode } from "./vdf";
@@ -62,7 +62,7 @@ type Edit =
   | { file: string; format: "yaml"; mutate: (doc: ReturnType<typeof parseDocument>) => void }
   | { file: string; format: "disable"; mutate?: undefined }; // rename to <file>.disabled
 
-type PostAction = { kind: "restart-wireplumber" } | { kind: "set-profile"; card: string; profile: string };
+type PostAction = { kind: "restart-wireplumber" } | { kind: "set-profile"; card: string; profile: string } | { kind: "set-mixer"; key: string; changes: MixerChange[] };
 
 interface Planned {
   fix: Fix;
@@ -77,6 +77,7 @@ export interface ScanDeps {
   latestSize: number | null; // its download size in bytes
   running: Set<LauncherId>;
   audioCards: AudioCard[];
+  mixers?: DualSenseMixer[]; // Linux: the controller's ALSA volume controls (system.ts)
   windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
   notDetected?: Set<string>; // game keys the player marked "controller not detected"
   hdrMarked?: Set<string>; // game keys the player marked "Supports HDR"
@@ -842,6 +843,14 @@ export function scan(deps: ScanDeps): Scan {
       );
     }
   }
+  // The controller's hardware volume and mic gain, left low by the boot ALSA
+  // restore (PipeWire never sets them for the DualSense).
+  // loop: NOT-WORTH — connected DualSense sound cards, 0-2; once per scan
+  for (const m of deps.mixers ?? []) {
+    const changes = lowMixerControls(m.controls);
+    if (!changes.length) continue;
+    sfixes.push(fix(`system:audio-volume:${idHash(m.key)}`, "audio-volume", "system", msg("label.audioVolume"), msg("why.audioVolume"), true, [], { kind: "set-mixer", key: m.key, changes }));
+  }
   const system: SystemInfo = {
     audioProfile: deps.audioCards[0]?.activeProfile ?? null,
     // loop: NOT-WORTH — DualSense audio cards
@@ -880,6 +889,7 @@ export interface ApplyDeps {
   launchers: LauncherControl;
   restartWirePlumber: () => Promise<void>;
   setCardProfile: (card: string, profile: string) => Promise<void>;
+  setMixer?: (key: string, changes: MixerChange[]) => Promise<void>; // Linux: the controller's ALSA controls (system.ts setDualSenseMixer)
 }
 
 // Running launchers that own one of these changes: `allowed` (the ones the
@@ -937,10 +947,12 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
   const posts = new Map<string, PostAction>();
   for (const p of chosen) if (p.post) posts.set(JSON.stringify(p.post), p.post);
   const restartsAudio = [...posts.values()].some((p) => p.kind === "restart-wireplumber");
+  // The old mixer values go into the change set, so Undo can put them back.
+  const mixer = [...posts.values()].flatMap((p) => (p.kind === "set-mixer" ? [{ key: p.key, changes: p.changes }] : []));
 
   const applied: ApplyResult["applied"] = unknown.map((id) => ({ id, ok: false, message: msg("result.stale") }));
   let backupId: string | null = null;
-  if (byFile.size) {
+  if (byFile.size || mixer.length) {
     backupId = deps.backups.run(
       chosen.map((p) => p.fix.label),
       files,
@@ -948,6 +960,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
         for (const [file, { edits }] of byFile) writeEdits(file, edits);
       },
       restartsAudio ? ["restart-wireplumber"] : [],
+      mixer,
     );
   }
   const postErrors = new Map<string, Msg>();
@@ -955,9 +968,13 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
   for (const [key, post] of posts) {
     try {
       if (post.kind === "restart-wireplumber") await deps.restartWirePlumber();
-      else await deps.setCardProfile(post.card, post.profile);
+      else if (post.kind === "set-mixer") {
+        if (!deps.setMixer) throw new Error("No mixer access.");
+        await deps.setMixer(post.key, post.changes);
+      } else await deps.setCardProfile(post.card, post.profile);
     } catch (cause) {
-      postErrors.set(key, msg(post.kind === "restart-wireplumber" ? "result.restartFailed" : "result.profileFailed", { error: errorText(cause) }));
+      const failed = post.kind === "restart-wireplumber" ? "result.restartFailed" : post.kind === "set-mixer" ? "result.volumeFailed" : "result.profileFailed";
+      postErrors.set(key, msg(failed, { error: errorText(cause) }));
     }
   }
   for (const p of chosen) {

@@ -105,8 +105,13 @@ export type ProtonProgress = { phase: "downloading"; got: number; total: number 
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 // blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
+// noController: the change set the controller's volume, and it isn't connected (nothing undone).
 export type UndoResult =
-  { ok: true; restored: string[]; reopenFailed?: LauncherId[] } | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem } | { ok: false; conflict: string[] } | { ok: false; error: string };
+  | { ok: true; restored: string[]; reopenFailed?: LauncherId[] }
+  | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem }
+  | { ok: false; conflict: string[] }
+  | { ok: false; noController: true }
+  | { ok: false; error: string };
 
 // Firmware being written to the board, and what waits for it to finish
 // (electron/main/firmwareHold.ts).

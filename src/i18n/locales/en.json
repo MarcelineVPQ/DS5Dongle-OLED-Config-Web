@@ -447,6 +447,7 @@
           "envHeroic": "Remove {{vars}} from {{game}}'s environment variables",
           "audioRule": "Turn off the audio rule that forces the controller onto \"pro-audio\"",
           "audioProfile": "Switch the controller's audio to the \"{{profile}}\" profile",
+          "audioVolume": "Turn the controller's volume and microphone level up to full on this computer",
           "gamepad": "Pass the controller to {{game}} as a standard gamepad (XInput)",
           "hdr": "Turn on HDR for {{game}}",
           "hdrUpdate": "Move {{game}}'s HDR to gamescope",
@@ -465,6 +466,7 @@
           "envHeroic": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers.",
           "audioRule": "{{file}} switches the DualSense's audio card to the pro-audio profile, which makes GE-Proton 11 send zero-force triggers and no haptic feedback. The file is renamed to .disabled (not deleted) and the audio service (WirePlumber) restarts, so sound drops for a second.",
           "audioProfile": "The DualSense's audio card is on \"{{profile}}\", which makes GE-Proton 11 send zero-force triggers and no haptic feedback. No files change; it's the same as picking the profile in your sound settings.",
+          "audioVolume": "On Linux, the controller's sound card keeps its own volume and microphone level from the last time they were saved, and your desktop's sliders don't change them. Here they're low, so the microphone can sound almost silent and the headset and speaker play quieter. They're set to full (in Linux's sound card mixer, ALSA); your desktop's volume sliders work as before, and Undo puts the old levels back. When Microphone level is above 0 on {{device}}, that setting decides the microphone level instead.",
           "gamepad": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble.{{runner}}",
           "gamepadSteam": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble. The launch options become: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignores this option, so the game also switches to {{proton}}.",
@@ -497,7 +499,8 @@
         "result": {
           "stale": "This change no longer applies (the setup changed since the last scan).",
           "restartFailed": "Saved, but restarting the audio service failed: {{error}}",
-          "profileFailed": "Switching the profile failed: {{error}}"
+          "profileFailed": "Switching the profile failed: {{error}}",
+          "volumeFailed": "Setting the controller's volume failed: {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -515,6 +518,7 @@
       "readLaunchersOff": "Turning this off hides your game library and per-game controller profiles until you turn it back on. Nothing is deleted.",
       "readLaunchersTurnOff": "Turn off",
       "undoConflict": "Not undone: {{files}} changed after this was applied (the launcher saved its own settings). Undoing would throw those changes away.",
+      "undoNoController": "Not undone: the controller isn't connected. Connect it and press Undo again.",
       "scanningWindows": "Checking Steam, GOG Galaxy and Epic…",
       "consentIntroWindows": "Game setup lists your Steam, GOG Galaxy and Epic games and checks Steam for settings that stop adaptive triggers and haptic feedback from reaching them. To do that it reads, on this computer only:",
       "consentLaunchersWindows": "the settings and installed-game lists of Steam, GOG Galaxy and Epic",
@@ -526,7 +530,9 @@
       "restartFailed": "{{launcher}} couldn't be asked to quit, so nothing was changed. Quit it yourself, then try again.",
       "reopenFailed": "Saved, but {{launcher}} couldn't be started again. Start it yourself.",
       "launcherStarted": "{{launcher}} is running now, so nothing was changed yet. It will be closed for this change and reopened afterwards. Confirm again to go ahead.",
-      "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards."
+      "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards.",
+      "details": "Details",
+      "needsAttention": "Needs attention"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -931,7 +937,6 @@
         "dualsense": "Games with native adaptive triggers or haptic feedback",
         "attention": "Games with a setup change waiting"
       },
-      "summary": "{{games}} games · {{dualsense}} with DualSense features · {{profiles}} with a profile",
       "recent": "Recently played",
       "tierLegend": "What the tiers mean",
       "compatHint": "Adaptive triggers and haptic feedback reach Windows games only through the DualSense Proton build.",
@@ -950,7 +955,6 @@
         "prefixFolderHint": "Open the game's Windows (Proton/Wine) folder: settings and saves often live here",
         "failed": "Couldn't open that. Is the launcher installed?"
       },
-      "gridFiltered": "filtered like the list",
       "kind": {
         "demo": "Demo",
         "dlc": "DLC",
@@ -986,7 +990,11 @@
       "supportsHdr": "Supports HDR",
       "supportsHdrHint": "Tick this if the game has an HDR setting on PC: the app then shows what HDR needs and offers Turn on HDR once everything is ready.",
       "marksTitle": "Not working as expected?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Continue playing",
+      "libraryTitle": "Library",
+      "filteredBy": "Filter: {{filter}}",
+      "showAll": "Show all"
     },
     "dongleConsole": {
       "title": "{{deviceName}} console",

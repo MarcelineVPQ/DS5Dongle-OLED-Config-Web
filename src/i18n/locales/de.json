@@ -448,6 +448,7 @@
           "envHeroic": "{{vars}} aus den Umgebungsvariablen von {{game}} entfernen",
           "audioRule": "Die Audio-Regel abschalten, die den Controller auf „pro-audio“ zwingt",
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen",
+          "audioVolume": "Lautstärke und Mikrofonpegel des Controllers auf diesem Computer auf voll stellen",
           "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben",
           "hdr": "HDR für {{game}} einschalten",
           "hdrUpdate": "HDR von {{game}} auf gamescope umstellen",
@@ -466,6 +467,7 @@
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
           "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
           "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen.",
+          "audioVolume": "Unter Linux behält die Soundkarte des Controllers ihre eigene Lautstärke und ihren eigenen Mikrofonpegel vom letzten Speichern, und die Regler deines Desktops ändern sie nicht. Hier sind sie niedrig, daher kann das Mikrofon fast stumm klingen und Headset und Lautsprecher spielen leiser. Sie werden auf voll gestellt (im Soundkarten-Mixer von Linux, ALSA); die Lautstärkeregler deines Desktops funktionieren wie bisher, und Rückgängig stellt die alten Pegel wieder her. Steht der Mikrofonpegel auf {{device_dat}} über 0, bestimmt stattdessen diese Einstellung den Mikrofonpegel.",
           "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
           "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}.",
@@ -498,7 +500,8 @@
         "result": {
           "stale": "Diese Änderung gilt nicht mehr (die Einrichtung hat sich seit der letzten Prüfung geändert).",
           "restartFailed": "Gespeichert, aber der Neustart des Audiodienstes ist fehlgeschlagen: {{error}}",
-          "profileFailed": "Das Umschalten des Profils ist fehlgeschlagen: {{error}}"
+          "profileFailed": "Das Umschalten des Profils ist fehlgeschlagen: {{error}}",
+          "volumeFailed": "Das Einstellen der Controller-Lautstärke ist fehlgeschlagen: {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -516,6 +519,7 @@
       "readLaunchersOff": "Wenn du das ausschaltest, werden deine Spielebibliothek und die Controller-Profile pro Spiel ausgeblendet, bis du es wieder einschaltest. Es wird nichts gelöscht.",
       "readLaunchersTurnOff": "Ausschalten",
       "undoConflict": "Nicht rückgängig gemacht: {{files}} wurde nach dem Übernehmen geändert (der Launcher hat eigene Einstellungen gespeichert). Rückgängig würde diese Änderungen verwerfen.",
+      "undoNoController": "Nicht rückgängig gemacht: Der Controller ist nicht verbunden. Verbinde ihn und drücke erneut auf Rückgängig.",
       "scanningWindows": "Steam, GOG Galaxy und Epic werden geprüft…",
       "consentIntroWindows": "Die Spieleeinrichtung listet deine Spiele aus Steam, GOG Galaxy und Epic auf und prüft Steam auf Einstellungen, die adaptive Trigger und haptisches Feedback blockieren. Dafür liest sie, nur auf diesem Computer:",
       "consentLaunchersWindows": "die Einstellungen und die Listen installierter Spiele von Steam, GOG Galaxy und Epic",
@@ -527,7 +531,9 @@
       "restartFailed": "{{launcher}} konnte nicht zum Beenden aufgefordert werden, deshalb wurde nichts geändert. Beende ihn selbst und versuche es dann erneut.",
       "reopenFailed": "Gespeichert, aber {{launcher}} konnte nicht wieder gestartet werden. Starte ihn selbst.",
       "launcherStarted": "{{launcher}} läuft gerade, deshalb wurde noch nichts geändert. Er wird für diese Änderung geschlossen und danach wieder geöffnet. Bestätige erneut, um fortzufahren.",
-      "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet."
+      "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet.",
+      "details": "Details",
+      "needsAttention": "Zu erledigen"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -932,7 +938,6 @@
         "dualsense": "Spiele mit nativen adaptiven Triggern oder haptisches Feedback",
         "attention": "Spiele mit einer ausstehenden Einrichtungsänderung"
       },
-      "summary": "{{games}} Spiele · {{dualsense}} mit DualSense-Funktionen · {{profiles}} mit Profil",
       "recent": "Zuletzt gespielt",
       "tierLegend": "Was die Stufen bedeuten",
       "compatHint": "Adaptive Trigger und haptisches Feedback erreichen Windows-Spiele nur über den DualSense-Proton-Build.",
@@ -951,7 +956,6 @@
         "prefixFolderHint": "Den Windows-Ordner (Proton/Wine) des Spiels öffnen: Einstellungen und Spielstände liegen oft hier",
         "failed": "Konnte nicht geöffnet werden. Ist der Launcher installiert?"
       },
-      "gridFiltered": "gefiltert wie die Liste",
       "kind": {
         "demo": "Demo",
         "dlc": "DLC",
@@ -987,7 +991,11 @@
       "supportsHdr": "Unterstützt HDR",
       "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App zeigt dann, was HDR braucht, und bietet „HDR einschalten“ an, sobald alles bereit ist.",
       "marksTitle": "Funktioniert etwas nicht wie erwartet?",
-      "hdrTitle": "HDR"
+      "hdrTitle": "HDR",
+      "continue": "Weiterspielen",
+      "libraryTitle": "Bibliothek",
+      "filteredBy": "Filter: {{filter}}",
+      "showAll": "Alle zeigen"
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",

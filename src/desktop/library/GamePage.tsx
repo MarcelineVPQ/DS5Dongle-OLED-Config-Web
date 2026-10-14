@@ -30,11 +30,12 @@ import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, Trigger
 import { profileFields } from "./profileFields";
 import { OverwrittenNotice, RestartNotice, useMsg, useRestartText } from "../pages/GamesPage";
 import { overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
-import type { GameAction, GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
+import type { GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
 import { API_NAME } from "../games/gameArgs";
 import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
+import { PlayButton, PlayStats, useGameAction } from "./playBar";
 
 interface Props {
   game: GameEntry;
@@ -48,7 +49,6 @@ interface Props {
 }
 
 export default function GamePage({ game, info, record, running, report, bridge, onLibrary, onRescan }: Props) {
-  const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement>(null);
   const mineState = useMine(game, info, record, onLibrary, onRescan);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
@@ -112,11 +112,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
 
       <div className="gp-bar">
         <GameActions game={game} info={info} running={running} />
-        <div className="gp-stats">
-          {/* While it runs, the Play button says so. */}
-          {!running && <Stat label={t("desktop.library.lastPlayed")} value={info?.lastPlayed ? new Date(info.lastPlayed * 1000).toLocaleDateString() : t("desktop.library.never")} />}
-          <Stat label={t("desktop.library.playTime")} value={info?.playtimeMin ? hours(info.playtimeMin, t) : "—"} />
-        </div>
+        <PlayStats info={info} running={running} />
       </div>
 
       <div className="gp-cols">
@@ -140,21 +136,6 @@ const isProtonGame = (game: GameEntry) => protonApplies() && (game.launcher === 
 
 const TIER_ICON: Record<string, string> = { verified: "✓✓", works: "✓", "needs-setup": "⚙", partial: "◐", broken: "✗", unknown: "?" };
 const FEATURE_ICON: Record<FeatureState, string> = { yes: "✓", no: "✗", unknown: "?" };
-
-function hours(min: number, t: (k: string, o?: Record<string, unknown>) => string): string {
-  return min < 60 ? t("desktop.library.minutes", { count: min }) : t("desktop.library.hours", { count: Math.round(min / 6) / 10 });
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="gp-stat">
-      <span className="gp-stat-label">{label}</span>
-      <span className="gp-stat-value" title={value}>
-        {value}
-      </span>
-    </div>
-  );
-}
 
 // ---- Controller profile ----
 
@@ -868,30 +849,13 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
 // the main process from the scan; only the actions this game has).
 function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
   const { t } = useTranslation();
-  const [failed, setFailed] = useState<GameAction | null>(null);
+  const { run, failed } = useGameAction(game);
   const actions = info?.actions ?? [];
   if (actions.length === 0) return null;
-  const run = async (action: GameAction) => {
-    setFailed(null);
-    try {
-      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) {
-        setFailed(action);
-        setTimeout(() => setFailed((f) => (f === action ? null : f)), 6000);
-      }
-    } catch {
-      setFailed(action);
-    }
-    // Launching takes the launcher a moment; keep the button busy briefly.
-    await new Promise((resolve) => setTimeout(resolve, action === "play" ? 3000 : 600));
-  };
   const launcher = t(`desktop.library.launcherName.${game.launcher}`);
   return (
     <div className="gp-actions">
-      {actions.includes("play") && (
-        <BusyButton className="dk-btn primary gp-play" disabled={running} onClick={() => run("play")} title={t("desktop.library.action.playHint", { launcher })}>
-          {running ? `● ${t("desktop.library.running")}` : `▶ ${t("desktop.library.action.play")}`}
-        </BusyButton>
-      )}
+      {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
       {/* loop: HOT-PATH-OK — N = 5 game actions */}
       {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
         .filter((a) => actions.includes(a))

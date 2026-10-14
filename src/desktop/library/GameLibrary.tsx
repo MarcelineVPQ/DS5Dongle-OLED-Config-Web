@@ -1,6 +1,10 @@
-// The Games tab as a library (like Steam's): games on the left, grouped
-// (Playing, With profile, All games) with search and filters; Home (launcher
-// setup and fixes, the old Games page) or one game's page on the right.
+// The Games tab as a library (like Steam's): on the left an index of the
+// games by title (grouped Playing, With profile, All games) with search; on
+// the right Home or one game's page. Home, top to bottom: game setup (one
+// line when everything is set up, open at the top when something needs the
+// player), Continue playing (the games played last, with Play), and the
+// Library: the filters with their counts, sort and Show, over the cover grid.
+// The list and the grid follow the same search, filter and sort.
 // Home stays mounted while a game is open, so switching back doesn't rescan.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
@@ -12,9 +16,11 @@ import { artUrl } from "../games/types";
 import type { LibraryFile } from "../games/library";
 import GamePage from "./GamePage";
 import { GameTile } from "./GameTile";
+import { ContinuePlaying, continueCount } from "./ContinuePlaying";
 import { supportOf } from "./support";
 
-type Filter = "all" | "profile" | "dualsense" | "attention";
+const FILTERS = ["all", "profile", "dualsense", "attention"] as const;
+type Filter = (typeof FILTERS)[number];
 const SORTS = ["name", "recent", "played"] as const;
 type Sort = (typeof SORTS)[number];
 const SORT_KEY = "ds5.librarySort";
@@ -85,28 +91,24 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     // loop: HOT-PATH-OK — sort of the games (hundreds); memoized on report, sort and details
     return [...(report?.games ?? [])].sort((a, b) => by(b) - by(a) || a.title.localeCompare(b.title));
   }, [report, sort, details]);
-  // Home's shelf: the most recently played games with artwork.
-  const recent = useMemo(
-    () =>
-      // loop: HOT-PATH-OK — games (hundreds) filtered+sorted to 8; memoized on report and details
-      (report?.games ?? [])
-        .filter((g) => !hiddenKinds.has(kindOfGame(g)) && details[g.key]?.lastPlayed && (details[g.key].art.includes("cover") || details[g.key].art.includes("header")))
-        .sort((a, b) => (details[b.key].lastPlayed ?? 0) - (details[a.key].lastPlayed ?? 0))
-        .slice(0, 8),
-    [report, details, hiddenKinds],
-  );
-  const visible = useMemo(() => {
+  // Continue playing: the games played last (with artwork).
+  const recent = useMemo(() => {
+    // loop: HOT-PATH-OK — games (hundreds) filtered+sorted to 8; memoized on report and details
+    const played = (report?.games ?? [])
+      .filter((g) => !hiddenKinds.has(kindOfGame(g)) && details[g.key]?.lastPlayed && details[g.key].art.length > 0)
+      .sort((a, b) => (details[b.key].lastPlayed ?? 0) - (details[a.key].lastPlayed ?? 0));
+    return played.slice(0, continueCount(played.length));
+  }, [report, details, hiddenKinds]);
+  // Search and Show first; each filter's count is how many it would show.
+  const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
     // loop: HOT-PATH-OK — N = games (hundreds); memoized, reruns per search keystroke or filter
-    return games.filter((g) => {
-      if (q && !g.title.toLowerCase().includes(q)) return false;
-      if (hiddenKinds.has(kindOfGame(g))) return false;
-      if (filter === "profile") return !!library.games[g.key]?.profile;
-      if (filter === "dualsense") return g.support === "triggers" || g.support === "haptics";
-      if (filter === "attention") return g.fixes.length > 0 || g.runnerMissing;
-      return true;
-    });
-  }, [games, query, filter, library, hiddenKinds]);
+    return games.filter((g) => (!q || g.title.toLowerCase().includes(q)) && !hiddenKinds.has(kindOfGame(g)));
+  }, [games, query, hiddenKinds]);
+  const matches = (f: Filter, g: GameEntry) =>
+    f === "profile" ? !!library.games[g.key]?.profile : f === "dualsense" ? g.support === "triggers" || g.support === "haptics" : f === "attention" ? g.fixes.length > 0 || g.runnerMissing : true;
+  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
+  const visible = searched.filter((g) => matches(filter, g));
   // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const playing = visible.filter((g) => g.key === running);
   // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
@@ -187,42 +189,13 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <div className="lib-filters" role="group" aria-label={t("desktop.library.filter")}>
-          {/* loop: HOT-PATH-OK — N = 4 filters */}
-          {(["all", "profile", "dualsense", "attention"] as const).map((f) => (
-            <button key={f} type="button" className={`dk-chip${filter === f ? " ok" : ""}`} aria-pressed={filter === f} title={t(`desktop.library.filterHint.${f}`)} onClick={() => setFilter(f)}>
-              {t(`desktop.library.filters.${f}`)}
+        {filter !== "all" && (
+          <p className="dk-hint lib-filtered">
+            {t("desktop.library.filteredBy", { filter: t(`desktop.library.filters.${filter}`) })}
+            <button type="button" className="dk-btn dk-inline-btn" onClick={() => setFilter("all")}>
+              {t("desktop.library.showAll")}
             </button>
-          ))}
-        </div>
-        <label className="lib-sort">
-          <span>{t("desktop.library.sort")}</span>
-          <select className="dk-select" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-            {/* loop: HOT-PATH-OK — N = 3 sorts */}
-            {SORTS.map((s) => (
-              <option key={s} value={s}>
-                {t(`desktop.library.sorts.${s}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {kindCounts.length > 1 && (
-          <details className="lib-show">
-            <summary className="dk-btn" title={t("desktop.library.showHint")}>
-              {t("desktop.library.show")}
-              {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
-              {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
-            </summary>
-            <div className="lib-show-menu">
-              {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
-              {kindCounts.map(([k, n]) => (
-                <label key={k} className="lib-show-item">
-                  <input type="checkbox" checked={!hiddenKinds.has(k)} onChange={(e) => setKindShown(k, e.target.checked)} />
-                  {t(`desktop.library.kinds.${k}`)} ({n})
-                </label>
-              ))}
-            </div>
-          </details>
+          </p>
         )}
         <ul className="lib-list" ref={listRef} onKeyDown={onListKey}>
           {group(t("desktop.library.groupPlaying"), playing)}
@@ -233,46 +206,72 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
       </aside>
       <div className="lib-main">
         <div hidden={game !== null} className="lib-home-pane">
-          {report && (
-            <section className="lib-shelf-wrap">
-              <p className="lib-summary">
-                {t("desktop.library.summary", {
-                  games: report.games.length,
-                  // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
-                  dualsense: report.games.filter((g) => g.support === "triggers" || g.support === "haptics").length,
-                  // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
-                  profiles: report.games.filter((g) => library.games[g.key]?.profile).length,
-                })}
-              </p>
-              {recent.length > 0 && (
-                <>
-                  <h2 className="lib-shelf-title">{t("desktop.library.recent")}</h2>
-                  <ul className="lib-shelf">
-                    {/* loop: HOT-PATH-OK — N ≤ 8 recent games */}
-                    {recent.map((g) => (
-                      <li key={g.key}>
-                        <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </section>
-          )}
           {home}
-          {report && visible.length > 0 && (
-            <section className="lib-shelf-wrap">
-              <h2 className="lib-shelf-title">
-                {t("desktop.library.groupAll")} ({visible.length}){visible.length < games.length && <span className="dk-hint"> · {t("desktop.library.gridFiltered")}</span>}
-              </h2>
-              <ul className="lib-grid">
-                {/* loop: FIX-HOT-PATH — a tile per game (hundreds) re-rendered per library render, even hidden */}
-                {visible.map((g) => (
-                  <li key={g.key}>
-                    <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
-                  </li>
-                ))}
-              </ul>
+          {report && <ContinuePlaying games={recent} details={details} running={running} hasProfile={(g) => !!library.games[g.key]?.profile} onOpen={setSelected} />}
+          {report && (
+            <section className="lib-section">
+              <div className="lib-toolbar">
+                <h2 className="lib-section-title">{t("desktop.library.libraryTitle")}</h2>
+                <div className="lib-filters" role="group" aria-label={t("desktop.library.filter")}>
+                  {/* loop: HOT-PATH-OK — N = 4 filters */}
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      className={`dk-chip${filter === f ? " ok" : ""}`}
+                      aria-pressed={filter === f}
+                      title={t(`desktop.library.filterHint.${f}`)}
+                      onClick={() => setFilter(f)}
+                    >
+                      {t(`desktop.library.filters.${f}`)}
+                      {/* loop: HOT-PATH-OK — 4 filters x searched games (hundreds); per library render */}
+                      <span className="lib-count">{searched.filter((g) => matches(f, g)).length}</span>
+                    </button>
+                  ))}
+                </div>
+                <span className="dk-spacer" />
+                <label className="lib-sort">
+                  <span>{t("desktop.library.sort")}</span>
+                  <select className="dk-select" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+                    {/* loop: HOT-PATH-OK — N = 3 sorts */}
+                    {SORTS.map((s) => (
+                      <option key={s} value={s}>
+                        {t(`desktop.library.sorts.${s}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {kindCounts.length > 1 && (
+                  <details className="lib-show">
+                    <summary className="dk-btn" title={t("desktop.library.showHint")}>
+                      {t("desktop.library.show")}
+                      {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
+                      {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
+                    </summary>
+                    <div className="lib-show-menu">
+                      {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
+                      {kindCounts.map(([k, n]) => (
+                        <label key={k} className="lib-show-item">
+                          <input type="checkbox" checked={!hiddenKinds.has(k)} onChange={(e) => setKindShown(k, e.target.checked)} />
+                          {t(`desktop.library.kinds.${k}`)} ({n})
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+              {visible.length > 0 ? (
+                <ul className="lib-grid">
+                  {/* loop: FIX-HOT-PATH — a tile per game (hundreds) re-rendered per library render, even hidden */}
+                  {visible.map((g) => (
+                    <li key={g.key}>
+                      <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="dk-hint">{t("desktop.library.noMatch")}</p>
+              )}
             </section>
           )}
         </div>

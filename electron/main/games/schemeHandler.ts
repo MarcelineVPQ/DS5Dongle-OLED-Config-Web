@@ -200,11 +200,26 @@ function defaultHandler(scheme: string): Promise<{ err: boolean; entry: string |
   );
 }
 
-export function hasSchemeHandler(url: string): Promise<boolean> {
+/** Whether an app is registered for a link's scheme. Windows and macOS ask
+ * the system through Electron (`nameForProtocol` is
+ * app.getApplicationNameForProtocol: "" when nothing is). Linux asks
+ * xdg-mime with the launcher environment instead: Electron's lookup reads
+ * the app's own HOME, which in the dev copy is a test folder, so a handler
+ * installed in the user's ~/.local/share/applications (Steam's own entry)
+ * would look missing. Without xdg-mime, Linux falls back to Electron's. */
+export async function hasSchemeHandler(url: string, nameForProtocol: (url: string) => string, platform: NodeJS.Platform = process.platform, handler = defaultHandler): Promise<boolean> {
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url)?.[1]?.toLowerCase();
-  if (!scheme) return Promise.resolve(false);
-  // can't tell (no xdg-mime): let the open attempt decide
-  return defaultHandler(scheme).then(({ err, entry }) => err || entry !== null);
+  if (!scheme) return false;
+  const electronSays = () => {
+    try {
+      return nameForProtocol(`${scheme}://`) !== "";
+    } catch {
+      return true; // can't tell: let the open attempt decide
+    }
+  };
+  if (platform !== "linux") return electronSays();
+  const { err, entry } = await handler(scheme);
+  return err ? electronSays() : entry !== null;
 }
 
 /** The applications folders desktop entries are looked up in (XDG base

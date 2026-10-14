@@ -25,7 +25,7 @@ import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClose
 import { schemeHandlerExec } from "./schemeHandler";
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools, windowsSteamRoots } from "./steam";
-import { dualSenseCards, restartWirePlumber, setCardProfile, type AudioCard } from "./system";
+import { amixerLayer, dualSenseCards, dualSenseMixers, restartWirePlumber, restoreDualSenseMixer, setCardProfile, setDualSenseMixer, type AudioCard, type MixerLayer } from "./system";
 import { hdrSystem } from "./hdr";
 
 const MANIFEST_TIMEOUT_MS = 5000;
@@ -42,7 +42,7 @@ export interface GamesServiceDeps {
   launchers?: LauncherControl; // tests: a fake process layer
   gameRunning?: () => boolean; // the library sees a game running (Windows: launchers aren't closed then)
   quietPlaySystem?: Omit<QuietPlaySystem, "running" | "flatpak">; // tests: no xdg-mime, registry or file checks
-  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem> }; // tests: no pactl / kscreen-doctor / gdbus / gamescope
+  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem>; mixer?: MixerLayer }; // tests: no pactl / kscreen-doctor / gdbus / gamescope / amixer (no mixer: no controls)
 }
 
 // Where ▶ Play finds the launchers' programs on this system.
@@ -109,9 +109,11 @@ export class GamesService {
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
     const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrSystem() };
-    const [audioCards, hdr] = await Promise.all([
+    const mixer = this.mixerLayer();
+    const [audioCards, hdr, mixers] = await Promise.all([
       linux ? probes.audioCards() : Promise.resolve([]),
       linux ? this.hdrCheck(probes.hdr) : Promise.resolve(undefined),
+      linux && mixer ? dualSenseMixers(mixer) : Promise.resolve([]),
       linux ? this.refreshLatest() : Promise.resolve(),
     ]);
     return scan({
@@ -122,6 +124,7 @@ export class GamesService {
       latestSize: this.latest?.tarball.size ?? null,
       running: await this.launchers.running(),
       audioCards,
+      mixers,
       windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
       notDetected: this.deps.notDetected(),
       hdrMarked: this.deps.hdrMarked(),
@@ -230,8 +233,16 @@ export class GamesService {
     return this.lastGames.map((g) => ({ key: g.key, launcher: g.launcher, id: g.id, installDir: this.lastDetails.get(g.key)?.installDir }));
   }
 
+  // The controller's ALSA controls (Linux): amixer, a test's fake, or none
+  // when a test gave probes without one.
+  private mixerLayer(): MixerLayer | undefined {
+    return this.deps.probes ? this.deps.probes.mixer : amixerLayer;
+  }
+
   apply(fixIds: string[], restart: RestartList): Promise<ApplyResult> {
-    return this.exclusive(async () => applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile }));
+    const mixer = this.mixerLayer();
+    const setMixer = mixer ? (key: string, changes: Parameters<typeof setDualSenseMixer>[1]) => setDualSenseMixer(key, changes, mixer) : undefined;
+    return this.exclusive(async () => applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile, setMixer }));
   }
 
   undo(backupId: string, allowed: RestartList): Promise<UndoResult> {
@@ -243,6 +254,12 @@ export class GamesService {
         const { restart, blockedBy } = launchersToRestart(this.backups.owners(backupId), await this.launchers.running(), allowed);
         if (blockedBy.length) return { ok: false, blockedBy };
         const owners = this.backups.owners(backupId);
+        // Volume changes need the controller connected: checked before
+        // anything is marked undone, so Undo can be tried again later.
+        const mixer = this.mixerLayer();
+        const mixerSets = this.backups.manifest(backupId).mixer ?? [];
+        // loop: NOT-WORTH — mixer changes x cards, a few each; once per Undo
+        if (mixerSets.length && (!mixer || mixerSets.some((m) => !mixer.cards().some((c) => c.key === m.key)))) return { ok: false, noController: true };
         const run = await withLaunchersClosed(restart, this.launchers, async () => {
           const late = await startedSince(owners, this.launchers);
           return late.length ? { late } : this.backups.restore(backupId);
@@ -250,6 +267,8 @@ export class GamesService {
         if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };
         if ("late" in run.value) return { ok: false, blockedBy: run.value.late };
         if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
+        // loop: SERIAL-REQUIRED — ALSA order: one card's restore after another, ≤ 2 cards; per Undo
+        for (const m of run.value.mixer) await restoreDualSenseMixer(m.key, m.changes, mixer!);
         return { ok: true, restored: run.value.files.map((f) => this.tilde(f)), ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}) };
       } catch (cause) {
         if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };

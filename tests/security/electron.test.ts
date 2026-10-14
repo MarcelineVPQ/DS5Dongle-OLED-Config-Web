@@ -266,6 +266,11 @@ describe("▶ Play starting a launcher in the background", () => {
     expect(handlerSource).toContain("if (!entry || !/^[\\w.-]+\\.desktop$/.test(entry)) return null;");
     expect(handlerSource).toContain('execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }');
   });
+
+  it("asks whether a launcher is installed: xdg-mime on Linux, Electron's lookup elsewhere (no process)", () => {
+    expect(mainSource).toContain("if (!(await hasSchemeHandler(target.url, (u) => app.getApplicationNameForProtocol(u)))) return false;");
+    expect(handlerSource).toContain('return nameForProtocol(`${scheme}://`) !== "";');
+  });
 });
 
 describe("closing and reopening game launchers (Linux)", () => {
@@ -352,7 +357,7 @@ describe("privileged Linux setup", () => {
 });
 
 // Helper programs the main process runs (SECURITY_AUDIT.md rows "Proton
-// install", "Audio fix follow-ups", "Updater relaunch", "Menu entry refresh",
+// install", "Audio fix follow-ups" (with the controller volume), "Updater relaunch", "Menu entry refresh",
 // "Desktop accent read"): fixed argv through execFile/spawn, never a shell.
 describe("helper programs", () => {
   const read = (path: string) => readFileSync(new URL(`../../electron/main/${path}`, import.meta.url), "utf8");
@@ -376,6 +381,20 @@ describe("helper programs", () => {
     expect(source).toContain('run("systemctl", ["--user", "restart", "wireplumber"], { timeout: 15_000 })');
     expect(source).toMatch(/if \(!DS5_CARD\.test\(card\)\) throw new Error\("Not a DualSense audio card\."\);\n\s+await run\("pactl", \["set-card-profile", card, profile\]/);
     expect(source).not.toMatch(noShell);
+  });
+
+  it("controller volume: amixer on Sony's DualSense cards only, fixed controls, integer values", () => {
+    const source = read("games/system.ts");
+    expect(source).toContain('const DS5_USB_IDS = new Set(["054c:0ce6", "054c:0df2"]);');
+    expect(source).toContain('export const MIXER_TARGETS = ["PCM Playback Volume", "Headset Capture Volume", "PCM Playback Switch", "Headset Capture Switch"] as const;');
+    expect(source).toContain('run("amixer", ["-c", String(card), "contents"], { env: { ...process.env, LC_ALL: "C" }, maxBuffer: 1024 * 1024, timeout: 5000 })');
+    expect(source).toMatch(
+      /if \(!\(MIXER_TARGETS as readonly string\[\]\)\.includes\(name\) \|\| !Number\.isInteger\(value\) \|\| value < 0\) throw new Error\("Not a controller volume control\."\);\n\s+await run\("amixer", \["-c", String\(card\), "-q", "cset", `name=\$\{name\}`, String\(value\)\], \{ env: \{ \.\.\.process\.env, LC_ALL: "C" \}, timeout: 5000 \}\);/,
+    );
+    expect(source.match(/run\("amixer"/g)).toHaveLength(2);
+    // The page names only a fix id; the backup manifest's values are schema-checked.
+    expect(read("ipc.ts")).toContain("|^system:audio-(rule|profile|volume):[0-9a-f]{8}$/");
+    expect(read("games/backup.ts")).toContain("changes: z.array(z.object({ name: z.enum(MIXER_TARGETS), from: z.number().int().min(0), to: z.number().int().min(0) }))");
   });
 
   it("updater relaunch: the installed file, an environment allowlist, the path never in a shell string", () => {
