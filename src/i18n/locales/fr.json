@@ -1156,7 +1156,7 @@
         "ready": "Prête / en attente"
       },
       "fakeSlots": "Simuler d’autres manettes",
-      "fakeSlotsHint": "Les emplacements 1 et 2 apparaissent associés (une Edge Midnight Black et une DualSense Galactic Purple). Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé {{device_a}}.",
+      "fakeSlotsHint": "Une Edge Midnight Black et une DualSense Galactic Purple apparaissent associées dans les premiers emplacements libres. Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé {{device_a}}.",
       "simulated": "Simuler {{device}} (sans matériel)",
       "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
       "simCore1": "Core1 simulé",

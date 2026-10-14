@@ -1148,7 +1148,7 @@
         "ready": "準備完了／待機中"
       },
       "fakeSlots": "ほかのコントローラーを仮表示",
-      "fakeSlotsHint": "スロット 1 と 2 をペアリング済みとして表示します（Midnight Black の Edge と Galactic Purple の DualSense）。ペアリングスロットで切り替えると、そのコントローラーが接続されたように動作します。{{device}} には何も送信しません。",
+      "fakeSlotsHint": "Midnight Black の Edge と Galactic Purple の DualSense を、先頭の空きスロットにペアリング済みとして表示します。ペアリングスロットで切り替えると、そのコントローラーが接続されたように動作します。{{device}} には何も送信しません。",
       "simulated": "{{device}} をシミュレート（ハードウェアなし）",
       "simulatedHint": "アプリは USB を使わずに {{device}} をシミュレートします。すべてのページが動作し、入力は自動で動きます。ハードウェアなしでのテスト用（Windows VM など）。ハプティックフィードバック、音声、ペアリング、ファームウェア更新はシミュレートされません。ページを再読み込みします。",
       "simCore1": "シミュレートした Core1",

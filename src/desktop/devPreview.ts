@@ -2,7 +2,7 @@
 // pretend another controller model / colorway is connected, to check the
 // UI's colors (drawing, title, accent, tint) for every controller without
 // owning them. Only changes what the app shows; nothing is sent to the dongle.
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { BridgeIdentity } from "../protocol/bridgeClient";
 import { COLORWAYS } from "./live/colorways";
 import { readPref, useFlagPref, usePref } from "./storage";
@@ -21,29 +21,71 @@ export const MODEL_COLORWAYS: Record<"dualsense" | "edge", string[]> = {
 };
 const COLORWAY_CODES = ["", ...Object.keys(COLORWAYS)];
 
-// Pretend more controllers are paired (Developer card): slots 1 and 2 hold
-// these, slot 3 stays empty. Switching to one makes the app act as if that
-// controller connected (drawing, colors, slot); nothing is sent to the dongle.
-export const FAKE_SLOTS: Record<number, { model: "dualsense" | "edge"; colorway: string }> = {
-  1: { model: "edge", colorway: "01" },
-  2: { model: "dualsense", colorway: "04" },
+// Pretend more controllers are paired (Developer card): these, in this order,
+// fill the board's first empty slots (by slot number); with fewer empty slots
+// only as many show as fit, and they move when the real slots change.
+// Switching to one makes the app act as if that controller connected
+// (drawing, colors, slot); nothing is sent to the dongle.
+export const FAKE_CONTROLLERS = [
+  { id: "edge-01", model: "edge", colorway: "01" },
+  { id: "dualsense-04", model: "dualsense", colorway: "04" },
+] as const;
+export type FakeController = (typeof FAKE_CONTROLLERS)[number];
+// The selected fake by its id ("" = the real controller). Older builds stored
+// a slot number ("1"/"2"): not in this list, so it reads as "" (the real one).
+const FAKE_PICK_VALUES = ["", ...FAKE_CONTROLLERS.map((f) => f.id)] as readonly ("" | FakeController["id"])[];
+
+// Which fake each slot shows (undefined = none): the fakes in order into the
+// empty slots in slot order. The one placement rule: the Pairing slots
+// table, the shown identity's slot and switching all read it.
+export function placeFakes(occupied: readonly boolean[] | null): (FakeController | undefined)[] {
+  // loop: HOT-PATH-OK — N = 4 slots; once per slot-occupancy change (memoized by useFakeSlots)
+  const placed: (FakeController | undefined)[] = (occupied ?? []).map(() => undefined);
+  let next = 0;
+  // loop: HOT-PATH-OK — N = 4 slots; once per slot-occupancy change (memoized by useFakeSlots)
+  occupied?.forEach((taken, slot) => {
+    if (!taken && next < FAKE_CONTROLLERS.length) placed[slot] = FAKE_CONTROLLERS[next++];
+  });
+  return placed;
+}
+
+// The board's real slot occupancy, as Pairing slots last read it (null until
+// read): where the fakes go. Only kept in dev builds.
+// cache: OK — key=none (the board's slot occupancy); invalidated=replaced on every Pairing slots poll that differs; bound=1 entry (4 flags)
+let slotOccupancy: readonly boolean[] | null = null;
+const occupancyListeners = new Set<() => void>();
+export function noteSlotOccupancy(occupied: readonly boolean[]): void {
+  if (!DEV_TOOLS_BUILT) return;
+  // loop: HOT-PATH-OK — N = 4 slots; per 1.5 s slot poll
+  if (slotOccupancy && slotOccupancy.length === occupied.length && slotOccupancy.every((v, i) => v === occupied[i])) return;
+  slotOccupancy = [...occupied];
+  occupancyListeners.forEach((l) => l());
+}
+const onOccupancy = (l: () => void) => {
+  occupancyListeners.add(l);
+  return () => occupancyListeners.delete(l);
 };
-const FAKE_SLOT_VALUES = ["", "1", "2"] as const;
 
 export function useFakeSlots() {
   const [onPref, setOn] = useFlagPref("ds5.dev.fakeSlots");
   const on = DEV_TOOLS_BUILT && onPref;
-  const [slot, setSlot] = usePref<(typeof FAKE_SLOT_VALUES)[number]>("ds5.dev.fakeSlot", "", FAKE_SLOT_VALUES);
-  const active = on && slot !== "" ? Number(slot) : null;
+  const [pick, setPick] = usePref("ds5.dev.fakeSlot", "", FAKE_PICK_VALUES);
+  const occupied = useSyncExternalStore(onOccupancy, () => slotOccupancy);
+  const placed = useMemo(() => (on ? placeFakes(occupied) : []), [on, occupied]);
+  // The selected fake's slot (null = not selected, or no empty slot for it).
+  // loop: HOT-PATH-OK — N = 4 slots; per render of the few views that read the fakes
+  const at = pick === "" ? -1 : placed.findIndex((f) => f?.id === pick);
   return {
     on,
     setOn: (next: boolean) => {
       setOn(next);
-      if (!next) setSlot("");
+      if (!next) setPick("");
     },
-    // The fake slot shown as connected, or null (the real controller).
-    slot: active,
-    switchTo: (s: number | null) => setSlot(s === null ? "" : (String(s) as "1" | "2")),
+    // Which fake each slot shows (indexed by slot; undefined = none).
+    placed,
+    // The fake shown as connected and its slot, or null (the real controller).
+    shown: at >= 0 ? { fake: placed[at]!, slot: at } : null,
+    switchTo: (fake: FakeController | null) => setPick(fake ? fake.id : ""),
   };
 }
 
@@ -70,14 +112,15 @@ export function useDevPreview() {
 // model / colorway in place while the developer preview is set.
 export function useShownIdentity<T extends BridgeIdentity | null | undefined>(id: T): T {
   const { model, colorway, active } = useDevPreview();
-  const fake = useFakeSlots().slot;
+  const fake = useFakeSlots().shown;
+  const fakeSlot = fake?.slot ?? null;
+  const fakeCtl = fake?.fake ?? null;
   // The same object until something changes (effects key on it).
   return useMemo(() => {
     if (!id) return id;
-    const slot = fake !== null ? FAKE_SLOTS[fake] : null;
-    const base = slot ? { ...id, model: slot.model, colorwayCode: slot.colorway, currentSlot: fake! } : id;
+    const base = fakeCtl ? { ...id, model: fakeCtl.model, colorwayCode: fakeCtl.colorway, currentSlot: fakeSlot! } : id;
     return !active ? base : { ...base, model: model || base.model, colorwayCode: colorway || base.colorwayCode };
-  }, [id, model, colorway, active, fake]);
+  }, [id, model, colorway, active, fakeCtl, fakeSlot]);
 }
 
 // Whether the Developer card shows: on by default in dev builds (Ctrl+Shift+D

@@ -1156,7 +1156,7 @@
         "ready": "Pronta / aguardando"
       },
       "fakeSlots": "Simular mais controles",
-      "fakeSlotsHint": "Os slots 1 e 2 aparecem emparelhados (um Edge Midnight Black e um DualSense Galactic Purple). Troque para eles em Slots de emparelhamento: o app age como se esse controle tivesse conectado. Nada é enviado {{device_a}}.",
+      "fakeSlotsHint": "Um Edge Midnight Black e um DualSense Galactic Purple aparecem emparelhados nos primeiros slots livres. Troque para eles em Slots de emparelhamento: o app age como se esse controle tivesse conectado. Nada é enviado {{device_a}}.",
       "simulated": "Simular {{device}} (sem hardware)",
       "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, emparelhamento e atualizações de firmware não são simulados. Recarrega a página.",
       "simCore1": "Core1 simulado",

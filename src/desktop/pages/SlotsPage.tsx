@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { usePoll } from "../usePoll";
 import { BusyButton } from "../controls";
-import { FAKE_SLOTS, useFakeSlots } from "../devPreview";
+import { noteSlotOccupancy, useFakeSlots } from "../devPreview";
 import { COLORWAYS } from "../live/colorways";
 import { readPref, writePref } from "../storage";
 import { useLibrary } from "../library/libraryContext";
@@ -64,6 +64,12 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
 
   const v = live.value;
   const fake = useFakeSlots();
+  const fakeSlot = fake.shown?.slot ?? null;
+  // The pretend controllers fill the empty slots this poll reads.
+  // lifetime: OK — acquires nothing (hands the slot occupancy to the developer preview)
+  useEffect(() => {
+    if (v) noteSlotOccupancy(v.slots.occupied);
+  }, [v]);
   // Remember the connected controller against its slot's address.
   // Read fresh each render (the panel re-renders with every poll).
   const memory = readMemory();
@@ -71,11 +77,11 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const here = id && v && v.slots.occupied[id.currentSlot] ? formatMac(v.slots.addrs[id.currentSlot]) : null;
   // lifetime: OK — acquires nothing (writes the slot memory pref)
   useEffect(() => {
-    if (!here || !id?.model || !id.colorwayCode || fake.slot !== null) return;
+    if (!here || !id?.model || !id.colorwayCode || fakeSlot !== null) return;
     const known = memory[here];
     if (known && known.model === id.model && known.colorway === id.colorwayCode) return;
     writePref(SLOT_MEMORY_KEY, JSON.stringify({ ...memory, [here]: { model: id.model, colorway: id.colorwayCode } }));
-  }, [here, id?.model, id?.colorwayCode, fake.slot, memory]);
+  }, [here, id?.model, id?.colorwayCode, fakeSlot, memory]);
   const describe = (c: { model: "dualsense" | "edge"; colorway: string } | undefined) =>
     c ? `${t(c.model === "edge" ? "desktop.slots.edge" : "desktop.slots.dualsense")} · ${COLORWAYS[c.colorway]?.name ?? c.colorway}` : null;
   return (
@@ -105,8 +111,8 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
           <tbody>
             {/* loop: HOT-PATH-OK — N = 4 slots; re-render per 1.5 s slot poll */}
             {[0, 1, 2, 3].map((i) => {
-              const fakeHere = fake.on && !(v?.slots.occupied[i] ?? false) ? FAKE_SLOTS[i] : undefined;
-              const active = fake.slot !== null ? fake.slot === i : id?.currentSlot === i;
+              const fakeHere = fake.placed[i];
+              const active = fakeSlot !== null ? fakeSlot === i : id?.currentSlot === i;
               const occupied = (v?.slots.occupied[i] ?? false) || !!fakeHere;
               const mac = v && v.slots.occupied[i] ? formatMac(v.slots.addrs[i]) : null;
               const name = fakeHere ? `${describe(fakeHere)} (${t("desktop.slots.pretend")})` : mac ? describe(memory[mac]) : null;
@@ -124,7 +130,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
                           disabled={!client || busy}
                           onClick={() =>
                             // A pretend controller, or back from one to the real slot: shown only, nothing sent.
-                            fakeHere ? fake.switchTo(i) : fake.slot !== null && id?.currentSlot === i ? fake.switchTo(null) : act(() => switchSlot(i))
+                            fakeHere ? fake.switchTo(fakeHere) : fakeSlot !== null && id?.currentSlot === i ? fake.switchTo(null) : act(() => switchSlot(i))
                           }
                         >
                           {t("desktop.slots.switch", "Switch to")}

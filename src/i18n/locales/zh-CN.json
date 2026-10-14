@@ -1148,7 +1148,7 @@
         "ready": "就绪 / 等待"
       },
       "fakeSlots": "模拟更多控制器",
-      "fakeSlotsHint": "槽位 1 和 2 显示为已配对（一只午夜黑 Edge 和一只银河紫 DualSense）。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
+      "fakeSlotsHint": "一只午夜黑 Edge 和一只银河紫 DualSense 显示为已配对，占用最前面的空槽位。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
       "simulated": "模拟{{device}}（无需硬件）",
       "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",

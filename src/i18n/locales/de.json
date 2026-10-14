@@ -1156,7 +1156,7 @@
         "ready": "Bereit / wartet"
       },
       "fakeSlots": "Weitere Controller vortäuschen",
-      "fakeSlotsHint": "Slots 1 und 2 erscheinen gekoppelt (ein Midnight Black Edge und ein Galactic Purple DualSense). Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An {{device_akk}} wird nichts gesendet.",
+      "fakeSlotsHint": "Ein Midnight Black Edge und ein Galactic Purple DualSense erscheinen in den ersten freien Slots gekoppelt. Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An {{device_akk}} wird nichts gesendet.",
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
       "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",

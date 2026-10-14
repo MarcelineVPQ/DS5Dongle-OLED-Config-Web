@@ -1155,7 +1155,7 @@
         "ready": "Ready / waiting"
       },
       "fakeSlots": "Pretend more controllers",
-      "fakeSlotsHint": "Slots 1 and 2 show as paired (a Midnight Black Edge and a Galactic Purple DualSense). Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
+      "fakeSlotsHint": "A Midnight Black Edge and a Galactic Purple DualSense show as paired in the first empty slots. Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
       "simulated": "Simulate {{device}} (no hardware)",
       "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
       "simCore1": "Simulated core1",
