@@ -103,7 +103,8 @@
     },
     "common": {
       "cancel": "Cancel",
-      "stop": "Stop"
+      "stop": "Stop",
+      "moreInfo": "More information"
     },
     "overview": {
       "firmware": "Firmware",
@@ -1031,7 +1032,6 @@
       "label": "Navigation",
       "pin": "Keep open",
       "collapse": "Collapse",
-      "controllerAgain": "Controller · click again to show or hide its settings",
       "tip": {
         "controller": "your controller, live. Click any part of it to set it up",
         "dongle": "firmware, the OLED screen, power and USB",
@@ -1041,7 +1041,8 @@
         "about": "the guide, what's new and credits"
       },
       "development": "Development",
-      "devHint": "A development build: newer than the stable release and less tested"
+      "devHint": "A development build: newer than the stable release and less tested",
+      "again": "click again to show or hide its settings"
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
@@ -1154,7 +1155,7 @@
       "fakeSlots": "Pretend more controllers",
       "fakeSlotsHint": "A Midnight Black Edge and a Galactic Purple DualSense show as paired in the first empty slots. Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
       "fakeGames": "Fake games",
-      "fakeGamesHint": "Games shows a made-up library of 20 games (Steam, Heroic, Lutris) with generated art instead of reading your launchers. Play, Apply, Undo and Install only change the made-up library: no launcher file is read or written and nothing is started. Restarts the page.",
+      "fakeGamesHint": "Games shows a made-up library of 20 games (Steam, Heroic, Lutris) with generated art instead of reading your launchers. Play, Apply, Undo and Install only change the made-up library: no launcher file is read or written and nothing is started.",
       "fakeRunning": "Running game",
       "fakeRunningHint": "The fake game shown as running. ▶ Play on a game page runs one for a minute.",
       "fakeRunningNone": "None",
@@ -1166,9 +1167,9 @@
         "no-gamescope": "gamescope isn't installed"
       },
       "simulated": "Simulate {{device}} (no hardware)",
-      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below). Restarts the page.",
+      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below).",
       "simCore1": "Simulated core1",
-      "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}. Restarts the page.",
+      "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}.",
       "simCore1Runs": "Runs normally",
       "simCore1Stage": "Stops at step {{stage}}: {{step}}",
       "simBoard": "Simulated board",
@@ -1194,7 +1195,8 @@
         "fast": "Instant",
         "normal": "A few seconds",
         "real": "Like a real board (about 12 s)"
-      }
+      },
+      "restartsPage": "Restarts the page."
     },
     "knobs": {
       "cardOpacity": "Card opacity",
@@ -1437,7 +1439,10 @@
         "interface": "Interface",
         "keys": "Keys",
         "notDetected": "Not detected: {{device}} drives it whenever it's attached."
-      }
+      },
+      "asOf": "As of {{time}}",
+      "watchLive": "Watch live ({{seconds}} s)",
+      "liveLeft": "Live · {{seconds}} s left"
     },
     "hdr": {
       "label": "HDR lighting (experimental)",

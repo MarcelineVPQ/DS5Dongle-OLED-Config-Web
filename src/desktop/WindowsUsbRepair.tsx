@@ -44,6 +44,7 @@ export default function WindowsUsbRepair() {
 
   return (
     <div className="dk-setup-repair" data-testid="windows-usb-repair">
+      {/* hint: MUST-SHOW — the repair notice's own question: whether this repair is for you */}
       <span className={seen ? "dk-bad" : "dk-hint"}>{seen ? t("desktop.windowsUsb.seen") : t("desktop.windowsUsb.hint")}</span>
       {confirming ? (
         <div className="dk-setup-steps">

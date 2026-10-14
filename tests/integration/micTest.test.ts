@@ -209,7 +209,7 @@ afterEach(() => {
 
 const wait = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 const mount = (headset = false, output: SpeakerSelect = 0) => act(() => root!.render(createElement(MicTest, { headset, output })));
-const buttons = () => [...container!.querySelectorAll<HTMLButtonElement>("button")];
+const buttons = () => [...container!.querySelectorAll<HTMLButtonElement>("button:not(.dk-info)")];
 const press = (label: string) =>
   act(() =>
     buttons()

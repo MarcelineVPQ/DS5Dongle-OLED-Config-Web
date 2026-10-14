@@ -104,7 +104,8 @@
     },
     "common": {
       "cancel": "Abbrechen",
-      "stop": "Stoppen"
+      "stop": "Stoppen",
+      "moreInfo": "Weitere Informationen"
     },
     "overview": {
       "firmware": "Firmware",
@@ -1032,7 +1033,6 @@
       "label": "Navigation",
       "pin": "Offen halten",
       "collapse": "Einklappen",
-      "controllerAgain": "Controller · erneut klicken, um die Einstellungen ein- oder auszublenden",
       "tip": {
         "controller": "dein Controller, live. Klick auf ein Teil, um es einzustellen",
         "dongle": "Firmware, OLED-Display, Energie und USB",
@@ -1042,7 +1042,8 @@
         "about": "Anleitung, Neuigkeiten und Credits"
       },
       "development": "Entwicklung",
-      "devHint": "Ein Entwicklungs-Build: neuer als die stabile Version und weniger getestet"
+      "devHint": "Ein Entwicklungs-Build: neuer als die stabile Version und weniger getestet",
+      "again": "erneut klicken, um die Einstellungen ein- oder auszublenden"
     },
     "audioTest": {
       "speakerTitle": "Lautsprechertest",
@@ -1155,7 +1156,7 @@
       "fakeSlots": "Weitere Controller vortäuschen",
       "fakeSlotsHint": "Ein Midnight Black Edge und ein Galactic Purple DualSense erscheinen in den ersten freien Slots gekoppelt. Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An {{device_akk}} wird nichts gesendet.",
       "fakeGames": "Testspiele",
-      "fakeGamesHint": "Spiele zeigt eine erfundene Bibliothek mit 20 Spielen (Steam, Heroic, Lutris) und generierten Bildern, statt deine Launcher zu lesen. Spielen, Übernehmen, Rückgängig und Installieren ändern nur die erfundene Bibliothek: Keine Launcher-Datei wird gelesen oder geschrieben und nichts wird gestartet. Lädt die Seite neu.",
+      "fakeGamesHint": "Spiele zeigt eine erfundene Bibliothek mit 20 Spielen (Steam, Heroic, Lutris) und generierten Bildern, statt deine Launcher zu lesen. Spielen, Übernehmen, Rückgängig und Installieren ändern nur die erfundene Bibliothek: Keine Launcher-Datei wird gelesen oder geschrieben und nichts wird gestartet.",
       "fakeRunning": "Laufendes Spiel",
       "fakeRunningHint": "Das Testspiel, das als laufend angezeigt wird. ▶ Spielen auf einer Spielseite lässt eins eine Minute lang laufen.",
       "fakeRunningNone": "Keins",
@@ -1167,9 +1168,9 @@
         "no-gamescope": "gamescope ist nicht installiert"
       },
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
-      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten). Lädt die Seite neu.",
+      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten).",
       "simCore1": "Simulierter Core1",
-      "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen. Startet die Seite neu.",
+      "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen.",
       "simCore1Runs": "Läuft normal",
       "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}",
       "simBoard": "Simuliertes Board",
@@ -1195,7 +1196,8 @@
         "fast": "Sofort",
         "normal": "Ein paar Sekunden",
         "real": "Wie ein echtes Board (etwa 12 s)"
-      }
+      },
+      "restartsPage": "Lädt die Seite neu."
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",
@@ -1438,7 +1440,10 @@
         "interface": "Schnittstelle",
         "keys": "Tasten",
         "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist."
-      }
+      },
+      "asOf": "Stand {{time}}",
+      "watchLive": "Live ansehen ({{seconds}} s)",
+      "liveLeft": "Live · noch {{seconds}} s"
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",

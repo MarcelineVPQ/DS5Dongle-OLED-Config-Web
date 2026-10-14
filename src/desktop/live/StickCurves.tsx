@@ -28,7 +28,7 @@ import {
   type StickCurve,
   type StickCurvePair,
 } from "../../protocol/stickCurve";
-import { BusyButton, Segmented } from "../controls";
+import { BusyButton, InfoTip, Segmented } from "../controls";
 import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
 import Notice from "../Notice";
 
@@ -111,8 +111,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   const tilt = stickTilt(input, side, sticks[side], curve);
 
   return (
-    <SectionGroup title={t("desktop.curves.title")}>
-      <p className="dk-hint">{t("desktop.curves.intro")}</p>
+    <SectionGroup title={t("desktop.curves.title")} info={t("desktop.curves.intro")}>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
         {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
         {SIDES.map((s, i) => (
@@ -130,8 +129,10 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       />
       <p className="dk-hint">{t(`desktop.curves.typeHint.${curve.type}`)}</p>
       <CurveGraph curve={curve} live={tilt} onPoints={(points) => setCurve({ ...curve, points })} />
+      {/* hint: MUST-SHOW — how to move the points, keyboard included: needed before you can edit */}
       {curve.type === "custom" && <p className="dk-hint">{t("desktop.curves.customHint")}</p>}
       <p className="dk-mono curve-now">{tilt ? t("desktop.curves.now", { in: Math.round(tilt[0] * 100), out: Math.round(tilt[1] * 100) }) : t("desktop.calib.needsController")}</p>
+      {/* hint: MUST-SHOW — a warning: saving ends a game's curves */}
       {bridge.identity?.curvesTemporary && <p className="dk-hint">{t("desktop.curves.gameOn")}</p>}
       <div className="dk-row-btns">
         <BusyButton className="dk-btn primary" disabled={!changed} onClick={() => save(draft)}>
@@ -153,8 +154,8 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
         >
           {t("desktop.curves.resetLinear")}
         </BusyButton>
+        <InfoTip text={t("desktop.curves.saveHint", { slot })} />
       </div>
-      <p className="dk-hint">{t("desktop.curves.saveHint", { slot })}</p>
       <SlotReadError error={error} retry={saved === null ? retry : null} />
     </SectionGroup>
   );

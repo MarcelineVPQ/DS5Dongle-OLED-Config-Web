@@ -165,7 +165,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       <div className="gp-blocks">
         {/* loop: NOT-WORTH — N = 2 parts of one status line */}
         <MainBlock state={details} icon={Info} title={t("desktop.library.section.details")} status={[store, info?.sizeBytes && `${(info.sizeBytes / 1e9).toFixed(1)} GB`].filter(Boolean).join(" · ")}>
-          {() => <DetailsBody game={game} info={info} />}
+          <DetailsBody game={game} info={info} />
         </MainBlock>
       </div>
     </>
@@ -265,6 +265,7 @@ function ProfileBody({
   if (!draft)
     return (
       <>
+        {/* hint: MUST-SHOW — the empty state: what a profile is, next to the button that makes one */}
         <p className="dk-hint">{t("desktop.library.profileNone")}</p>
         <div className="dk-row-btns">
           <button type="button" className="dk-btn primary" disabled={!config} onClick={() => config && create(captureProfile(config, normal, undefined))}>
@@ -373,6 +374,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
   const chips = useProfileChips(draft, normal, split);
   return (
     <>
+      {/* hint: MUST-SHOW — a status: nothing changed for this game yet */}
       <p className="dk-hint">{chips.length ? t("desktop.profile.changes") : t("desktop.profile.allNormal")}</p>
       {chips.length > 0 && (
         <div className="lib-filters" role="group" aria-label={t("desktop.library.section.profile")}>
@@ -417,8 +419,10 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
         </select>
       </Row>
       {oldFirmware ? (
+        // hint: MUST-SHOW — why the layouts are off: what to update
         <p className="dk-hint">{t("desktop.layouts.needsFirmware")}</p>
       ) : layouts.length === 0 ? (
+        // hint: MUST-SHOW — the empty state: where layouts are made
         <p className="dk-hint">{t("desktop.layouts.noneForGame")}</p>
       ) : (
         value &&
@@ -456,7 +460,7 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
     <>
       {/* loop: HOT-PATH-OK — N = 2 sticks */}
       {(["left", "right"] as const).map((side) => (
-        <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")}>
+        <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")} info={t("desktop.curves.profileHint")}>
           <select className="dk-select" value={value?.[side]?.type ?? ""} disabled={oldFirmware} onChange={(e) => pick(side, e.target.value)}>
             <option value="">{t("desktop.curves.profileSaved")}</option>
             {/* loop: HOT-PATH-OK — N = 2 sticks x ≤ 5 curve presets */}
@@ -469,7 +473,7 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
           </select>
         </Row>
       ))}
-      <p className="dk-hint">{oldFirmware ? t("desktop.curves.needsFirmware") : t("desktop.curves.profileHint")}</p>
+      {oldFirmware && <p className="dk-hint">{t("desktop.curves.needsFirmware")}</p>}
     </>
   );
 }
@@ -547,6 +551,7 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
           </div>
         </>
       )}
+      {/* hint: MUST-SHOW — a warning: this game's setup can't work yet, and what to install */}
       {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
       {game.mode?.state === "own" && <ModeNote game={game} mode={game.mode} />}
       {status.passed > 0 ? (
@@ -555,12 +560,14 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
             {status.attention ? t("desktop.library.setupPassed", { count: status.passed }) : <span className="dk-good">✓ {t("desktop.library.setupAllSet", { count: status.passed })}</span>}
           </summary>
           {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
+          {/* hint: MUST-SHOW — a status: why the standard gamepad option isn't needed */}
           {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
           {game.mode?.state === "set" && <ModeNote game={game} mode={game.mode} />}
         </details>
       ) : (
         <>
           {!status.attention && <p className="dk-good">✓ {t("desktop.library.setupNone")}</p>}
+          {/* hint: MUST-SHOW — a status: why the standard gamepad option isn't needed */}
           {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
         </>
       )}
@@ -616,6 +623,7 @@ function HdrBody({ game, report, mineState, hdrReqs, isHdr }: { game: GameEntry;
 function ModeNote({ game, mode }: { game: GameEntry; mode: ModeInfo }) {
   const { t } = useTranslation();
   const params = { game: game.title, api: API_NAME[mode.api], flag: mode.flag, own: mode.own ?? "", feature: t(`desktop.games.msg.unlock.${mode.unlocks}`) };
+  // hint: MUST-SHOW — a status: the player's own launch arguments were left as they are, and what to change
   return mode.state === "set" ? <p className="dk-good">✓ {t("desktop.library.modeSet", params)}</p> : <p className="dk-hint">{t("desktop.library.modeOwn", params)}</p>;
 }
 
@@ -658,10 +666,9 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
       </Row>
       {!game.usesOurProton && (
         <>
-          <Row label={t("desktop.library.recommended")} stack>
+          <Row label={t("desktop.library.recommended")} info={native ? t("desktop.library.compatHint") : undefined} stack>
             <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
           </Row>
-          {native && <p className="dk-hint">{t("desktop.library.compatHint")}</p>}
         </>
       )}
       {game.usesOurProton ? (
@@ -697,6 +704,7 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
           {TIER_ICON[s.tier]} {t(`desktop.library.tier.${s.tier}`)}
         </b>
         <br />
+        {/* hint: MUST-SHOW — what this game's rating means, beside the rating */}
         <span className="dk-hint">{t(`desktop.library.tierHint.${s.tier}`)}</span>
       </p>
       {fixesFor(game.title).length > 0 && (
@@ -718,6 +726,7 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
               <b>
                 {TIER_ICON[tier]} {t(`desktop.library.tier.${tier}`)}
               </b>{" "}
+              {/* hint: MUST-SHOW — the legend: what each rating means */}
               <span className="dk-hint">{t(`desktop.library.tierHint.${tier}`)}</span>
             </li>
           ))}

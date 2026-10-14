@@ -14,7 +14,7 @@ import {
   type SpeakerSelect,
   type StatusGpioMode,
 } from "../../protocol/config";
-import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
+import { BusyButton, GripHaptics, InfoTip, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
 import Notice from "../Notice";
 
@@ -147,9 +147,10 @@ export function HapticsSection(props: SectionProps) {
               {t(`desktop.grips.test.${side}`)}
             </BusyButton>
           ))}
+          <InfoTip text={t("desktop.grips.testHint")} />
         </div>
       )}
-      {gripTest && <p className="dk-hint">{t("desktop.grips.testHint")}</p>}
+      {/* hint: MUST-SHOW — the range's meaning (lower: less delay; higher: steadier) */}
       <Slider
         label={t("haptics.audioBufferLabel")}
         sub={sub("audioBufferLength", t("haptics.audioBufferSub"))}
@@ -175,7 +176,14 @@ export function AutoHapticsSection(props: SectionProps) {
   }));
   return (
     <>
-      <Segmented label={t("autoHaptics.modeLabel")} sub={sub("autoHapticsEnable")} value={d.autoHapticsEnable} options={ahModes} onChange={(v) => set("autoHapticsEnable", v)} />
+      <Segmented
+        label={t("autoHaptics.modeLabel")}
+        sub={sub("autoHapticsEnable")}
+        info={t(`autoHaptics.modes.${["off", "fallback", "mix", "replace"][d.autoHapticsEnable & 3]}.hint`)}
+        value={d.autoHapticsEnable}
+        options={ahModes}
+        onChange={(v) => set("autoHapticsEnable", v)}
+      />
       <Slider label={t("autoHaptics.gainLabel")} value={d.autoHapticsGain} min={0} max={200} step={10} unit="%" disabled={d.autoHapticsEnable === 0} onChange={(v) => set("autoHapticsGain", v)} />
       <Segmented
         label={t("autoHaptics.lpLabel")}
@@ -185,7 +193,6 @@ export function AutoHapticsSection(props: SectionProps) {
         options={[80, 160, 250, 400].map((hz, i) => ({ value: i as AutoHapticsLowpass, label: `${hz} Hz` }))}
         onChange={(v) => set("autoHapticsLowpass", v)}
       />
-      <p className="dk-hint">{t(`autoHaptics.modes.${["off", "fallback", "mix", "replace"][d.autoHapticsEnable & 3]}.hint`)}</p>
     </>
   );
 }
@@ -227,7 +234,7 @@ export function SpeakerSection(props: SectionProps) {
             invalid={issue("speakerGain")}
             onChange={(v) => set("speakerGain", v)}
           />
-          <Toggle label={t("desktop.settings.lockVolume")} sub={sub("lockVolume", t("desktop.settings.lockVolumeSub"))} value={d.lockVolume} onChange={(v) => set("lockVolume", v)} />
+          <Toggle label={t("desktop.settings.lockVolume")} sub={sub("lockVolume")} info={t("desktop.settings.lockVolumeSub")} value={d.lockVolume} onChange={(v) => set("lockVolume", v)} />
           {/* Where the PC's audio plays is the dongle's, not a game's (not in profiles). */}
           {live && <Segmented label={t("desktop.settings.audioOutput")} value={d.speakerSelect} options={outputs} onChange={(v) => set("speakerSelect", v)} />}
         </>
@@ -253,6 +260,7 @@ export function MicLevelSlider(props: SectionProps) {
   const silent = live && d.btMicEnable && d.micLevel === 0 && props.bridge.identity?.pcMicLevel === 0;
   return (
     <>
+      {/* hint: MUST-SHOW — the range: 0 = as set on the PC, 1–64 the controller's own level */}
       <Slider
         label={t("desktop.settings.micLevel")}
         sub={sub("micLevel", t("desktop.settings.micLevelSub"))}
@@ -289,7 +297,8 @@ export function EchoCancelToggle(props: SectionProps) {
   return (
     <Toggle
       label={t("desktop.settings.echoCancel")}
-      sub={sub("micEchoCancel", t("desktop.settings.echoCancelSub"))}
+      sub={sub("micEchoCancel")}
+      info={t("desktop.settings.echoCancelSub")}
       value={d.micEchoCancel}
       disabled={!d.btMicEnable}
       onChange={(v) => set("micEchoCancel", v)}
@@ -345,9 +354,9 @@ export function StatusPinSection(props: SectionProps) {
               { value: 0 as StatusGpioMode, label: t("desktop.settings.statusPinHigh") },
               { value: 1 as StatusGpioMode, label: t("desktop.settings.statusPinPulse") },
             ]}
+            info={t("desktop.settings.statusPinHint")}
             onChange={(v) => set("statusGpioMode", v)}
           />
-          <p className="dk-hint">{t("desktop.settings.statusPinHint")}</p>
         </>
       ) : (
         <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>
@@ -391,7 +400,7 @@ export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
           />
           <Toggle
             label={t("desktop.settings.psWakesPc")}
-            sub={t("desktop.settings.psWakesPcSub")}
+            info={t("desktop.settings.psWakesPcSub")}
             value={(bits & POWER_FLAGS.psWakesPc) !== 0}
             disabled={off}
             onChange={(v) => flip(POWER_FLAGS.psWakesPc, v)}
@@ -468,6 +477,7 @@ export function UsbSection(props: SectionProps) {
         ]}
         onChange={(v) => set("controllerMode", v)}
       />
+      {/* hint: MUST-SHOW — a warning: these settings wait for Reconnect USB */}
       <p className="dk-hint">{t("desktop.settings.usbHint", "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).")}</p>
       <div className="dk-row-btns">
         <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>

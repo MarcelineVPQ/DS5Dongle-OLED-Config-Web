@@ -45,10 +45,6 @@ import { useRemap } from "./useRemap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { logged } from "../../errorText";
 
-// The rail's Controller item, clicked while already on the controller: show or
-// hide the settings panel (the panel's own hide button does the same).
-export const PANEL_TOGGLE_EVENT = "ds5:toggle-panel";
-
 // Which page: the Controller page, the Pico 2 W page or App settings.
 export type PanelView = "overview" | "dongle" | "app";
 
@@ -214,13 +210,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
   }, [hidePanel]);
-  // lifetime: OK — cleanup: removes the rail's toggle listener (unmount / the hidden state changes)
-  useEffect(() => {
-    const toggle = () => hidePanel(!panelHidden);
-    // lifetime: OK — removed in the effect cleanup
-    window.addEventListener(PANEL_TOGGLE_EVENT, toggle);
-    return () => window.removeEventListener(PANEL_TOGGLE_EVENT, toggle);
-  }, [panelHidden, hidePanel]);
   // The Tour's view: the open section.
   // loop: NOT-WORTH — N = 9 sections; per render (a Set lookup each)
   const openSection = SECTIONS.controller.find((x) => acc.isOpen(x)) ?? null;
@@ -319,12 +308,14 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           </span>
         </div>
       )}
+      {/* hint: MUST-SHOW — the empty state: how to connect the controller now */}
       {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
+      {/* hint: MUST-SHOW — why the drawing doesn't move: what to update */}
       {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
       {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
       {view === "overview" && client && (
         <MainBlock state={infoBlock} icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
-          {() => <ControllerInfo data={info} batteryPct={batteryPct} power={input ? power : null} />}
+          <ControllerInfo data={info} batteryPct={batteryPct} power={input ? power : null} />
         </MainBlock>
       )}
     </div>

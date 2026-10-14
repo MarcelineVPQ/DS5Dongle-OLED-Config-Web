@@ -1,29 +1,76 @@
 // Compact controls for the desktop layout. Each renders one .dk-row: Row is
 // the settings framework's row (one label, an optional hint, one control),
 // and every setting sits in one inside a Section (accordion/Section.tsx).
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { Info } from "lucide-react";
 import { causeText, shown } from "./shownError";
 import { logged } from "../errorText";
 
 interface RowProps {
   label: string;
+  // What you must know before acting, on screen under the label (a unit or
+  // range, a warning, ≤ ~60 characters: the hint gate, tools/list_hints.mjs).
   sub?: string;
+  // The longer explanation, behind the ⓘ beside the label (InfoTip).
+  info?: string;
   invalid?: boolean;
   // A small control (a switch): the label and its description get the width.
   wide?: boolean;
-  // A wide control (long segmented choices): it goes under the label.
+  // A wide control (long segmented choices): always under the label.
   stack?: boolean;
   // A deep link to this row (revealSection's row): scrolled to and flashed.
   id?: string;
   children: ReactNode;
 }
 
-export function Row({ label, sub, invalid, wide, stack, id, children }: RowProps) {
+// What the label column keeps beside an inline control, at least.
+const LABEL_MIN_PX = 130;
+// Every inline <select> is this wide, so the rows' choices line up; one that
+// needs more (a long option) puts its row in the stacked layout.
+export const SELECT_PX = 180;
+
+// Whether a row's control fits beside its label in the row's width, measured
+// (it depends on the label, the language and the panel's width): if not, the
+// row stacks (label and hint on top, the control under them at full width).
+// Measured once and again only when the row's width changes (a
+// ResizeObserver; nothing runs while idle).
+function useStacked(fixed: boolean) {
+  const row = useRef<HTMLDivElement>(null);
+  const [stacked, setStacked] = useState(false);
+  // lifetime: OK — cleanup: disconnects the ResizeObserver (unmount)
+  useLayoutEffect(() => {
+    const el = row.current;
+    const ctl = el?.querySelector<HTMLElement>(":scope > .dk-ctl");
+    if (fixed || !el || !ctl) return;
+    const check = () => {
+      if (!el.clientWidth) return; // not laid out (a hidden page): measured when it is
+      // The control's natural width, as if inline (the measuring class lifts the stacked layout's widths).
+      el.classList.add("dk-measure");
+      const need = ctl.getBoundingClientRect().width;
+      const select = ctl.querySelector<HTMLElement>(":scope > select");
+      const tooWideSelect = !!select && select.getBoundingClientRect().width > SELECT_PX;
+      el.classList.remove("dk-measure");
+      setStacked(tooWideSelect || need > el.clientWidth - LABEL_MIN_PX - 12);
+    };
+    check();
+    if (typeof ResizeObserver === "undefined") return; // a test DOM without it: measured once
+    // lifetime: OK — disconnected in the layout effect cleanup
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fixed]);
+  return { row, stacked };
+}
+
+export function Row({ label, sub, info, invalid, wide, stack, id, children }: RowProps) {
+  const { row, stacked } = useStacked(!!wide || !!stack);
   return (
-    <div className={`dk-row${invalid ? " invalid" : ""}${wide ? " wide" : ""}${stack ? " stack" : ""}${sub ? " has-sub" : ""}`} data-row={id}>
+    <div ref={row} className={`dk-row${invalid ? " invalid" : ""}${wide ? " wide" : ""}${stack || stacked ? " stack" : ""}${sub ? " has-sub" : ""}`} data-row={id}>
       <span className="dk-label">
         {label}
+        {info && <InfoTip text={info} />}
         {sub && <span className="dk-sub">{sub}</span>}
       </span>
       <div className="dk-ctl">{children}</div>
@@ -31,9 +78,90 @@ export function Row({ label, sub, invalid, wide, stack, id, children }: RowProps
   );
 }
 
+// The ⓘ: a small info icon beside a label, with the longer explanation as a
+// tooltip. Shown on hover, and on keyboard focus (Tab); Esc or leaving closes
+// it; a click toggles it (touch). Screen readers get the text as the icon's
+// description (aria-describedby: the text is always in the page, hidden).
+// The bubble is drawn in the app's root (fixed, near the icon, kept on
+// screen), so a section's clipping never cuts it. Idle cost: none; it closes
+// on scroll (the window's scroll listener lives only while it's open).
+const TIP_MAX_PX = 320;
+export function InfoTip({ text }: { text: string }) {
+  const { t } = useTranslation();
+  const id = useId();
+  const btn = useRef<HTMLButtonElement>(null);
+  // Open: where the bubble goes (the app's root, and a place near the icon,
+  // inside the window: under it, or above it in the window's lower part).
+  const [at, setAt] = useState<{ root: Element; style: CSSProperties } | null>(null);
+  const open = at !== null;
+  const show = () => {
+    const el = btn.current;
+    if (!el) return;
+    const b = el.getBoundingClientRect();
+    const m = 8;
+    const width = Math.min(TIP_MAX_PX, window.innerWidth - 2 * m);
+    const left = Math.max(m, Math.min(b.left - 10, window.innerWidth - width - m));
+    const style = b.bottom > window.innerHeight * 0.6 ? { left, bottom: window.innerHeight - b.top + 6, maxWidth: width } : { left, top: b.bottom + 6, maxWidth: width };
+    setAt({ root: el.closest(".dk") ?? document.body, style });
+  };
+  const hide = () => setAt(null);
+  // lifetime: OK — the effect returns the scroll/resize listeners' removal (closed / unmount)
+  useEffect(() => {
+    if (!open) return;
+    // lifetime: OK — removed in the cleanup (closed / unmount)
+    window.addEventListener("scroll", hide, true);
+    // lifetime: OK — removed in the cleanup (closed / unmount)
+    window.addEventListener("resize", hide);
+    return () => {
+      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("resize", hide);
+    };
+  }, [open]);
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        className={`dk-info${open ? " open" : ""}`}
+        aria-label={t("desktop.common.moreInfo")}
+        aria-describedby={id}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        onClick={(e) => {
+          e.preventDefault(); // inside a <label> or <summary>: not its own click
+          e.stopPropagation();
+          if (open) hide();
+          else show();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && open) {
+            e.stopPropagation(); // closes the tooltip, not the drawer or dialog around it
+            hide();
+          }
+        }}
+      >
+        <Info size={13} aria-hidden="true" />
+      </button>
+      <span id={id} role="tooltip" hidden>
+        {text}
+      </span>
+      {at &&
+        createPortal(
+          <span className="dk-info-tip" aria-hidden="true" style={at.style}>
+            {text}
+          </span>,
+          at.root,
+        )}
+    </>
+  );
+}
+
 interface SliderProps {
   label: string;
   sub?: string;
+  info?: string;
   value: number;
   min: number;
   max: number;
@@ -49,7 +177,7 @@ interface SliderProps {
 
 // The range thumb updates a local value while dragging and only reports on
 // release, so a drag sends one write to the dongle, not dozens.
-export function Slider({ label, sub, value, min, max, step, unit, digits = 0, invalid, disabled, signed, onChange }: SliderProps) {
+export function Slider({ label, sub, info, value, min, max, step, unit, digits = 0, invalid, disabled, signed, onChange }: SliderProps) {
   // While the user is dragging or typing, show their value; otherwise show the
   // dongle's. null = not editing.
   const [editing, setEditing] = useState<number | null>(null);
@@ -65,7 +193,7 @@ export function Slider({ label, sub, value, min, max, step, unit, digits = 0, in
     if (clamped !== value) onChange(clamped);
   };
   return (
-    <Row label={label} sub={sub} invalid={invalid}>
+    <Row label={label} sub={sub} info={info} invalid={invalid}>
       <input
         type="range"
         min={min}
@@ -120,6 +248,7 @@ function useLive() {
 interface ToggleProps {
   label: string;
   sub?: string;
+  info?: string;
   value: boolean;
   disabled?: boolean;
   // A promise (a write that waits on the dongle) makes the switch busy like a
@@ -127,7 +256,7 @@ interface ToggleProps {
   onChange: (value: boolean) => Promise<unknown> | void;
 }
 
-export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
+export function Toggle({ label, sub, info, value, disabled, onChange }: ToggleProps) {
   const [busy, setBusy] = useState(false);
   const live = useLive();
   const flip = () => {
@@ -142,7 +271,7 @@ export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
       });
   };
   return (
-    <Row label={label} sub={sub} wide>
+    <Row label={label} sub={sub} info={info} wide>
       {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
       <button
         type="button"
@@ -161,38 +290,18 @@ export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
 interface SegmentedProps<T extends number> {
   label: string;
   sub?: string;
+  info?: string;
   value: T;
   options: ReadonlyArray<{ value: T; label: string; title?: string }>;
   disabled?: boolean;
   onChange: (value: T) => void;
 }
 
-// The choices go under the label when they don't fit beside it (measured:
-// it depends on the label, the language and the panel's width).
-export function Segmented<T extends number>({ label, sub, value, options, disabled, onChange }: SegmentedProps<T>) {
-  const seg = useRef<HTMLDivElement>(null);
-  const needed = useRef(0); // the choices' width side by side, measured inline
-  const [stack, setStack] = useState(false);
-  // lifetime: OK — cleanup: disconnects the ResizeObserver (unmount / options change)
-  useLayoutEffect(() => {
-    const el = seg.current;
-    const row = el?.closest(".dk-row");
-    if (!el || !row) return;
-    const check = () => {
-      if (!el.closest(".dk-row.stack")) needed.current = el.scrollWidth;
-      // Inline, the control gets what the label column (.dk-row) leaves.
-      const room = row.clientWidth - Math.max(110, row.clientWidth * 0.4) - 10;
-      setStack(needed.current > room);
-    };
-    check();
-    // lifetime: OK — disconnected in the layout effect cleanup
-    const ro = new ResizeObserver(check);
-    ro.observe(row);
-    return () => ro.disconnect();
-  }, [options]);
+// The choices go under the label when they don't fit beside it (Row measures).
+export function Segmented<T extends number>({ label, sub, info, value, options, disabled, onChange }: SegmentedProps<T>) {
   return (
-    <Row label={label} sub={sub} stack={stack}>
-      <div className="dk-seg" role="group" aria-label={label} ref={seg}>
+    <Row label={label} sub={sub} info={info}>
+      <div className="dk-seg" role="group" aria-label={label}>
         {/* loop: HOT-PATH-OK — N ≤ 6 segment options */}
         {options.map((o) => (
           <button type="button" key={o.value} title={o.title} className={o.value === value ? "on" : ""} aria-pressed={o.value === value} disabled={disabled} onClick={() => onChange(o.value)}>

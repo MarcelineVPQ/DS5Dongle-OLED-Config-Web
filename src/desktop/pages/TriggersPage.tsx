@@ -38,8 +38,10 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
   };
 
   return (
-    <SectionGroup title={t("desktop.triggers.title", "Adaptive trigger test")}>
-      <p className="dk-hint">{t("desktop.triggers.hint", "Pick an effect, then pull L2 and R2. Games override this as soon as they send their own trigger effects.")}</p>
+    <SectionGroup
+      title={t("desktop.triggers.title", "Adaptive trigger test")}
+      info={t("desktop.triggers.hint", "Pick an effect, then pull L2 and R2. Games override this as soon as they send their own trigger effects.")}
+    >
       {error && (
         <Notice error onDismiss={() => setError(null)}>
           {error}

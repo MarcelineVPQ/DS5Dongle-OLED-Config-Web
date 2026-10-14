@@ -13,7 +13,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { DEFAULT_CALIBRATION, correctStick, correctTrigger, fitCenter, fitGyro, fitOuter, fitTrigger, normalizeCalibration, type Calibration as Cal } from "../../protocol/calibration";
-import { BusyButton, Slider } from "../controls";
+import { BusyButton, InfoTip, Slider } from "../controls";
 import StickCurves from "./StickCurves";
 import { useProfileTarget } from "../library/libraryContext";
 import StickTests from "./StickTestCards";
@@ -147,8 +147,8 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
   const running = step !== "idle" && step !== "done";
   return (
     <>
-      <SectionGroup title={t("desktop.calib.title")}>
-        <p className="dk-hint">{t("desktop.calib.intro")}</p>
+      <SectionGroup title={t("desktop.calib.title")} info={t("desktop.calib.intro")}>
+        {/* hint: MUST-SHOW — a status: which controller (pairing slot) this calibrates */}
         <p className="dk-hint">{t("desktop.calib.forSlot", { slot })}</p>
         {target && <Notice closable>{t("desktop.editing.calibrationNote", { title: target.title })}</Notice>}
         {running ? (
@@ -225,8 +225,8 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
           <BusyButton className="dk-btn danger" disabled={running || saved === null} onClick={() => save(DEFAULT_CALIBRATION)}>
             {t("desktop.calib.reset")}
           </BusyButton>
+          <InfoTip text={t("desktop.calib.saveHint")} />
         </div>
-        <p className="dk-hint">{t("desktop.calib.saveHint")}</p>
         <SlotReadError error={error} retry={saved === null ? retry : null} />
       </SectionGroup>
     </>

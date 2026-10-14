@@ -4,7 +4,7 @@
 // user's consent. Like every page: the library (Continue playing, the grid)
 // is the main view, with This computer (Linux: controller audio and access,
 // the environment, the HDR checklist; a readout, so a main-view MainBlock at
-// its top, closed until opened), and game setup is the accordion at the
+// its top, always shown), and game setup is the accordion at the
 // right: Launchers, DualSense Proton (Linux), Recommended changes (the rail's
 // count: its task dot) and Change history. Each section and block says its
 // state in its header; what needs the player carries the yellow dot.
@@ -160,7 +160,9 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
           <li>{t(protonApplies() ? "desktop.games.consentAudio" : "desktop.games.consentRunningWindows")}</li>
           {protonApplies() && <li>{t("desktop.games.consentProton")}</li>}
         </ul>
+        {/* hint: MUST-SHOW — what you agree to, before you allow it */}
         <p className="dk-hint">{t("desktop.games.consentPromise")}</p>
+        {/* hint: MUST-SHOW — what you agree to, before you allow it */}
         <p className="dk-hint">{t("desktop.games.consentLibrary")}</p>
         <div className="dk-row-btns">
           <button type="button" className="dk-btn primary" onClick={onAllow}>
@@ -458,7 +460,7 @@ function ComputerBlock({ state, report, status }: { state: MainBlockState; repor
       status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
       task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
     >
-      {() => <SystemPart report={report} hdrOpen={status.hdr} />}
+      <SystemPart report={report} hdrOpen={status.hdr} />
     </MainBlock>
   );
 }
@@ -502,6 +504,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
       >
         {() => (
           <>
+            {/* hint: MUST-SHOW — what Check does and promises (nothing changes until Apply), before you press it */}
             <p className="dk-hint">{t("desktop.games.intro")}</p>
             <div className="dk-games-launchers">
               {found.length === 0 && <span className="dk-hint">{t("desktop.games.noLaunchers", "No Steam, Heroic or Lutris installation found.")}</span>}
@@ -585,6 +588,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
               (fixes.length > 0 ? (
                 <>
                   <OverwrittenNotice launchers={tookBack} />
+                  {/* hint: MUST-SHOW — the instruction for the list below it, before Apply */}
                   <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
                   <FixList fixes={fixes} chosen={setup.chosen} onToggle={setup.toggle} />
                   <div className="dk-row-btns">
@@ -599,6 +603,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
             {step === "review" && (
               <>
                 <h3 className="dk-subhead">{t("desktop.games.reviewTitle", "Review before applying")}</h3>
+                {/* hint: MUST-SHOW — a warning: these files change (backed up first), before Apply */}
                 <p className="dk-hint">{t("desktop.games.reviewHint", "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.")}</p>
                 <ul className="dk-review">
                   {/* loop: HOT-PATH-OK — chosen fixes, tens at most; review render */}
@@ -780,12 +785,14 @@ function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean
         </dd>
       </dl>
       {s.envWarnings.length > 0 && (
+        // hint: MUST-SHOW — what to do about variables this app can't change
         <p className="dk-hint">
           {t("desktop.games.envHint", "These variables are set outside any launcher, so this app doesn't change them. Remove them from the file named above, then log out and back in.")}
         </p>
       )}
       {/* loop: HOT-PATH-OK — PipeWire pro-audio rule files, 0-3 */}
       {s.proAudioRules.some((r) => r.startsWith("/etc")) && (
+        // hint: MUST-SHOW — a status: a rule this app can't change, and why
         <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>
       )}
     </>

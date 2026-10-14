@@ -94,6 +94,7 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
           {checked}
         </p>
       )}
+      {/* hint: MUST-SHOW — a warning before Update: keep the board plugged in, press PS afterwards */}
       <p className="dk-hint">
         {t(
           "desktop.firmware.updateHint",
@@ -170,6 +171,7 @@ export function DeviceSection({ bridge }: { bridge: UseDs5BridgeResult }) {
           </button>
         )}
       </div>
+      {/* hint: MUST-SHOW — what Factory reset keeps and loses, before you press it */}
       <p className="dk-hint">{t("desktop.firmware.resetHint", "Factory reset restores default settings. Pairings and button assignments are kept.")}</p>
       <UsbAccessSetup />
     </>

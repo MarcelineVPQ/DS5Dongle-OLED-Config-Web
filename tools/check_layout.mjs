@@ -192,12 +192,9 @@ const scrollPanel = () => evaluate(`(() => { const p = document.querySelector(".
 const openSection = (id) => evaluate(`(() => { const h = document.querySelector('[data-section="${id}"] .dk-sec-toggle'); if (h && h.getAttribute("aria-expanded") !== "true") h.click(); })()`);
 const pinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="false"]').forEach((b) => b.click())`);
 const unpinAll = () => evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="true"]').forEach((b) => b.click())`);
-// A main-view block (MainBlock: readouts) opened and scrolled to; every open one closed (they're remembered).
-const openBlock = (id) =>
-  evaluate(
-    `(() => { const h = document.querySelector('[data-block="${id}"] .dk-block-toggle'); if (h && h.getAttribute("aria-expanded") !== "true") h.click(); h?.closest(".dk-block")?.scrollIntoView({ block: "start" }); })()`,
-  );
-const closeBlocks = () => evaluate(`document.querySelectorAll('.dk-block-toggle[aria-expanded="true"]').forEach((b) => b.click())`);
+// A main-view block (MainBlock: readouts, always shown) scrolled to; the main view back at its top.
+const openBlock = (id) => evaluate(`document.querySelector('[data-block="${id}"]')?.scrollIntoView({ block: "start" })`);
+const closeBlocks = () => evaluate(`(() => { const s = document.querySelector(".dk-split-main"); if (s) s.scrollTop = 0; })()`);
 
 // Every view worth checking: its page group (the unit the fast plan
 // combines), the update state it's shown in, and a rough cost (ms: its own
@@ -258,7 +255,8 @@ const BASE_VIEWS = [
     await rail("dongle");
     await sleep(300);
     await openBlock("diagnostics");
-    await sleep(1200); // a poll or two: the graphs and counters filled in
+    await click(".dash-watch"); // Watch live: the graphs fill
+    await sleep(1200);
     await openBlock("diagnostics"); // scrolled to again at its full height
   }),
   view("dongle", "dongle, scrolled", 800, async () => {

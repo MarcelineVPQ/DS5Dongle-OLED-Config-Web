@@ -50,6 +50,8 @@ jobs:
         run: node tools/list_errors.mjs --check
       - name: Every setting is a Row inside a Section (src/desktop/accordion/Section.tsx)
         run: node tools/list_settings.mjs --check
+      - name: Long hints sit behind the ⓘ unless they must stay visible (tools/list_hints.mjs)
+        run: node tools/list_hints.mjs --check
 
   typecheck:
     name: Typecheck

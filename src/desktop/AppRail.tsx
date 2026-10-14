@@ -16,6 +16,7 @@ import { protonApplies } from "./games/platform";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Reminder } from "./notices";
+import { togglePanel } from "./accordion/Section";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
 const PIN_KEY = "ds5.railPinned";
@@ -33,6 +34,14 @@ export const railLabel = (t: TFunction, item: RailItem, device: string): string 
           : t("desktop.nav.about", "About");
 
 // The tooltip's key: Games mentions Proton only where Proton applies (Linux).
+// A rail item pressed (click, Enter or Space): the page you're on toggles
+// its settings panel (every page alike, SplitView's togglePanel: shown or
+// hidden, remembered per page); another page is navigated to (`go`).
+export function railPress(item: RailItem, active: RailItem, go: (item: RailItem) => void): void {
+  if (item === active) togglePanel();
+  else go(item);
+}
+
 export const railTip = (item: RailItem): string => (item === "games" && !protonApplies() ? "desktop.rail.tip.gamesWindows" : `desktop.rail.tip.${item}`);
 
 interface Props {
@@ -74,15 +83,15 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
   const link = (item: RailItem, icon: ReactNode) => {
     const label = railLabel(t, item, device);
     const reminder = reminders[item];
-    const tip = item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(railTip(item))}`;
+    const tip = `${label} · ${t(active === item ? "desktop.rail.again" : railTip(item))}`;
     return (
       <button
         type="button"
         className={`rail-link${active === item ? " active" : ""}`}
         data-rail={item}
         aria-current={active === item ? "page" : undefined}
-        // What's there, in one line; on Controller again, what a second click
-        // does; then what's waiting there.
+        // What's there, in one line; on the page you're on, what a second
+        // click does (show / hide its settings panel); then what's waiting there.
         title={reminder ? `${tip}\n${reminder.tip}` : tip}
         aria-description={reminder?.tip}
         onClick={(e) => {

@@ -7,6 +7,7 @@ export default function ComingSoon() {
   const { t } = useTranslation();
   return (
     <div className="dk-roadmap">
+      {/* hint: MUST-SHOW — the roadmap's own text (plans, not promises), not a hint to a control */}
       <p className="dk-hint">
         {t("desktop.about.roadmap.intro", "These are plans, not promises: they can change, and none has a date.")}{" "}
         <a href={ISSUES_URL} target="_blank" rel="noreferrer noopener">

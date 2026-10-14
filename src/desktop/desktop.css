@@ -359,6 +359,73 @@ html[data-theme="dark"] .dk {
   min-width: 0;
   padding: 0 4px;
 }
+/* A select beside its label: one width for every row, so the choices line
+   up (controls.tsx SELECT_PX); stacked, the row's full width. */
+.dk-row:not(.stack) > .dk-ctl > select {
+  flex: none;
+  width: 180px;
+}
+.dk-row.stack > .dk-ctl > select {
+  flex: 1;
+  width: 100%;
+}
+/* Row's measurement (controls.tsx useStacked): the control at its natural
+   width, out of the grid, for one synchronous read (never painted). */
+.dk-row.dk-measure > .dk-ctl {
+  position: absolute;
+  width: max-content;
+  visibility: hidden;
+}
+.dk-row.dk-measure > .dk-ctl > select {
+  flex: none;
+  width: auto;
+}
+.dk-row.dk-measure .dk-seg {
+  display: flex;
+  width: max-content;
+}
+/* The ⓘ beside a label (InfoTip, controls.tsx) and its tooltip. */
+.dk-info {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  vertical-align: -3px;
+  cursor: help;
+}
+.dk-info:hover,
+.dk-info.open {
+  color: var(--dk-accent-text);
+}
+.dk-info:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 1px;
+}
+.dk-info-tip {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  padding: 6px 9px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  color: var(--text-body);
+  font-size: var(--dk-small);
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.4;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text-strong) 20%, transparent);
+  pointer-events: none;
+}
 
 /* Pairing slots: fixed columns so the buttons never spill out of the card. */
 .dk-table.slots {
@@ -4623,16 +4690,14 @@ main.dk-body:focus:not(:focus-visible),
   flex-direction: column;
   gap: 6px;
 }
-.dk-sec,
-.dk-block {
+.dk-sec {
   position: relative;
   flex: none;
   border: 1px solid var(--border-default);
   border-radius: var(--dk-radius);
   background: var(--bg-panel);
 }
-.dk-sec.open,
-.dk-block.open {
+.dk-sec.open {
   border-color: var(--border-soft);
 }
 .dk-sec-head {
@@ -4640,8 +4705,7 @@ main.dk-body:focus:not(:focus-visible),
   display: flex;
   align-items: center;
 }
-.dk-sec-toggle,
-.dk-block-toggle {
+.dk-sec-toggle {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -4665,7 +4729,7 @@ main.dk-body:focus:not(:focus-visible),
   color: var(--text-soft);
 }
 .dk-sec.open .dk-sec-ic,
-.dk-block.open .dk-sec-ic {
+.dk-block .dk-sec-ic {
   color: var(--dk-accent-text);
 }
 /* An open task: a yellow dot on the icon (the status says what it is). */
@@ -4705,8 +4769,7 @@ main.dk-body:focus:not(:focus-visible),
   color: var(--text-muted);
   transition: transform 150ms;
 }
-.dk-sec.open .dk-sec-chev,
-.dk-block.open .dk-sec-chev {
+.dk-sec.open .dk-sec-chev {
   transform: rotate(180deg);
 }
 /* The pin: a ring folds with the others; filled, the section stays open. */
@@ -4742,8 +4805,7 @@ main.dk-body:focus:not(:focus-visible),
   box-shadow: 0 0 0 2px var(--dk-sel-bg);
   opacity: 1;
 }
-.dk-sec-body,
-.dk-block-body {
+.dk-sec-body {
   display: flex;
   flex-direction: column;
   padding: 2px 10px 10px;
@@ -4754,8 +4816,7 @@ main.dk-body:focus:not(:focus-visible),
   transition: height 150ms ease-out;
 }
 @starting-style {
-  .dk-sec-body,
-  .dk-block-body {
+  .dk-sec-body {
     height: 0;
   }
 }
@@ -4782,8 +4843,7 @@ main.dk-body:focus:not(:focus-visible),
   padding-top: 4px;
   border-top: 1px solid var(--border-subtle);
 }
-.dk-sec-body > .dk-sec-group:first-child,
-.dk-block-body > .dk-sec-group:first-child {
+.dk-sec-body > .dk-sec-group:first-child {
   margin-top: 0;
   border-top: 0;
 }
@@ -4793,22 +4853,89 @@ main.dk-body:focus:not(:focus-visible),
 .dk-sec-body p {
   margin: 4px 0;
 }
-/* A readout in a page's main view (MainBlock.tsx): a section's look, as wide
-   as the cards above it (on the Pico 2 W page, its dials: .dongle-main); no
-   pin, so the header runs to the edge. */
+/* A readout in a page's main view (MainBlock.tsx): always shown, a card
+   like the page's other main-view cards (.dash-card, .live-data-card, a
+   game's stat cards), with their small uppercase heading; no fold. */
 .dk-block {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: none;
   width: 100%;
   margin-inline: auto;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-1);
   scroll-margin-top: 8px; /* a deep link's scroll leaves its border in view */
 }
-.dk-block-toggle {
-  padding-right: 10px;
+.dk-block-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+.dk-block-head {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dk-block-head:focus {
+  outline: none;
+}
+.dk-block-head:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 2px;
+}
+.dk-block-head .dk-sec-title {
+  color: inherit;
+  font-weight: inherit;
+}
+.dk-block-head .dk-sec-status {
+  letter-spacing: normal;
+  text-transform: none;
+}
+.dk-block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: var(--dk-small);
 }
 .dk-block-body {
-  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+}
+.dk-block-body > .dk-sec-group:first-child {
+  margin-top: 0;
+  border-top: 0;
+}
+/* A block's label-value list (a game's Details): one compact block, each
+   value right beside its label (as Diagnostics' tables), not at the far edge. */
+.dk-block-body > .live-data-rows {
+  grid-template-columns: max-content minmax(0, max-content);
+  justify-content: start;
+  column-gap: 14px;
+}
+.dk-block-body > .live-data-rows > div {
+  display: contents;
+}
+.dk-block-body > .live-data-rows dd {
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .dk-row-btns-end {
   justify-content: flex-end;
@@ -4850,21 +4977,68 @@ main.dk-body:focus:not(:focus-visible),
   justify-self: start;
   margin-top: 4px;
 }
-/* The Diagnostics block's readouts (under the dials, MainBlock.tsx): the dashboard's pieces at the block's width. */
+/* The Diagnostics block's readouts (under the dials, MainBlock.tsx): the
+   dashboard's pieces at the block's width. Its tables (the audio counters,
+   the timings, the OLED's facts) are compact blocks read left to right: the
+   label column as wide as its longest label, each value right beside it,
+   the graphs after; never a label at one edge and its value at the other. */
 .dash.dash-block {
   margin: 0;
   width: 100%;
 }
-.dash-block .dash-facts {
+.dash-block .dash-facts,
+.dash-block .dash-counters {
+  grid-template-columns: max-content max-content;
+  justify-content: start;
   align-content: start;
+  gap: 3px 14px;
+}
+.dash-block .dash-fact {
+  display: contents;
+}
+/* The counters: one, two or three label-value pairs side by side, by the block's width. */
+@container (min-width: 520px) {
+  .dash-block .dash-counters {
+    grid-template-columns: repeat(2, max-content max-content);
+  }
+  .dash-block .dash-counters > .dash-fact:nth-child(2n) > span {
+    padding-left: 22px;
+  }
+}
+@container (min-width: 820px) {
+  .dash-block .dash-counters {
+    grid-template-columns: repeat(3, max-content max-content);
+  }
+  .dash-block .dash-counters > .dash-fact:nth-child(2n) > span {
+    padding-left: 0;
+  }
+  .dash-block .dash-counters > .dash-fact:not(:nth-child(3n + 1)) > span {
+    padding-left: 22px;
+  }
 }
 .dash-block .dash-timings {
-  grid-template-columns: minmax(0, 1fr) auto auto minmax(28px, 120px);
-  gap: 3px 10px;
+  grid-template-columns: max-content max-content max-content minmax(60px, 160px);
+  justify-content: start;
+  gap: 3px 14px;
 }
-.dash-block .dash-timings > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.dash-block .dash-timing-foot {
+  justify-content: flex-start;
+}
+.dash-block .dash-timing-foot .dash-fact {
+  display: flex;
+  flex: none;
+  gap: 14px;
+}
+/* Diagnostics' heading: "As of …" or the Watch live countdown, and the button. */
+.dash-asof {
+  font-variant-numeric: tabular-nums;
+}
+.dash-watch {
+  gap: 5px;
+}
+.dash-watch.on {
+  border-color: var(--dk-accent);
+  color: var(--dk-accent-text);
 }
 /* Rows side by side where the body is wide (App settings → Appearance). */
 .dk-sec-cols {
@@ -4897,7 +5071,6 @@ main.dk-body:focus:not(:focus-visible),
 }
 @media (prefers-reduced-motion: reduce) {
   .dk-sec-body,
-  .dk-block-body,
   .dk-sec-chev {
     transition: none;
   }

@@ -82,8 +82,8 @@ const status = (id: string) => $(`${place(id)} .dk-sec-status`)?.textContent;
 const hasDot = (id: string) => !!$(`${place(id)} .dk-sec-task`);
 // Opens a section or block (left open if it is) and gives its body.
 const open = async (id: string) => {
-  const head = $<HTMLButtonElement>(`${place(id)} :is(.dk-sec-toggle, .dk-block-toggle)`)!;
-  if (head.getAttribute("aria-expanded") !== "true") await click(head);
+  const head = $<HTMLButtonElement>(`${place(id)} .dk-sec-toggle`);
+  if (head && head.getAttribute("aria-expanded") !== "true") await click(head); // a block is always open
   return $(`${place(id)} :is(.dk-sec-body, .dk-block-body)`)!;
 };
 const linux = () => vi.stubGlobal("desktop", { platform: "linux" });
@@ -139,11 +139,11 @@ describe("Games → Home, healthy", () => {
     expect($(".dk-split-head h2")!.textContent).toBe(i18n.t("desktop.games.title"));
     expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.allGood"));
     expect(sectionIds()).toEqual(["launchers", "proton", "recommended", "history"]);
-    // This computer is a readout: a block at the top of the main view, closed until opened.
+    // This computer is a readout: a block at the top of the main view, always shown (no fold).
     expect($(".dk-split-main .lib-home-pane > [data-block='computer']")).not.toBeNull();
     expect($(".dk-split-panel [data-block]")).toBeNull();
-    expect($(`${place("computer")} .dk-block-toggle`)!.getAttribute("aria-expanded")).toBe("false");
-    expect($$(".dk-block-body")).toHaveLength(0);
+    expect($(`${place("computer")} .dk-block-toggle`)).toBeNull();
+    expect($$(".dk-block-body")).toHaveLength(1);
     expect($$(".dk-card")).toHaveLength(0);
     // Nothing needs the player: no dots, nothing open, nothing rendered in the sections.
     expect($$(".dk-sec-task")).toHaveLength(0);

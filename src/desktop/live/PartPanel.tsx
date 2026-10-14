@@ -227,6 +227,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   const { active } = useLibrary();
   // Not saved yet: in a profile, into its layout; else onto the dongle.
   const pendingLabel = target ? t("desktop.layouts.notSaved") : t("desktop.layouts.notApplied");
+  // hint: MUST-SHOW — why there's nothing to assign: what to update
   if (remap.supported === false) return <p className="dk-hint">{t("remap.unsupported")}</p>;
   return (
     <>
@@ -355,8 +356,7 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
       .then(setLibrary)
       .catch(shown("desktop.errors.layoutSave"));
   return (
-    <SectionGroup title={t("desktop.layouts.title")}>
-      <p className="dk-hint">{t("desktop.layouts.hint")}</p>
+    <SectionGroup title={t("desktop.layouts.title")} info={t("desktop.layouts.hint")}>
       {layouts.length === 0 ? (
         <p className="dk-hint">{t("desktop.layouts.none")}</p>
       ) : (
@@ -472,8 +472,11 @@ function EdgePartInfo() {
   const title = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`)).join(" · ");
   return (
     <SectionGroup title={title}>
+      {/* hint: MUST-SHOW — the part's own panel: what this button is (there's nothing else in it) */}
       <p className="dk-hint">{t("desktop.live.edgePart.fn")}</p>
+      {/* hint: MUST-SHOW — the part's own panel: what this button is (there's nothing else in it) */}
       <p className="dk-hint">{t("desktop.live.edgePart.paddle")}</p>
+      {/* hint: MUST-SHOW — the part's own panel: what this button is (there's nothing else in it) */}
       <p className="dk-hint">{t("desktop.live.edgePart.soon")}</p>
     </SectionGroup>
   );
@@ -485,6 +488,7 @@ function TouchLive({ input }: { input: InputReport | null }) {
   const touching = input?.fingers.filter((f) => f.touching) ?? [];
   return (
     <SectionGroup title={t("desktop.live.part.touchpad")}>
+      {/* hint: MUST-SHOW — the part's own panel: what this button is (there's nothing else in it) */}
       <p className="dk-hint">{t("desktop.live.touchHint", "Touch the touch pad to see your fingers here. There's nothing to set up for it.")}</p>
       {/* loop: HOT-PATH-OK — N ≤ 2 fingers per live frame */}
       {touching.map((f, i) => (
@@ -554,8 +558,7 @@ export function SpeakerTest() {
   }, [playing, startedAt, duration, onScreen]);
   const played = playing && startedAt ? progress : 0;
   return (
-    <SectionGroup title={t("desktop.audioTest.speakerTitle")}>
-      <p className="dk-hint">{t("desktop.audioTest.speakerHint")}</p>
+    <SectionGroup title={t("desktop.audioTest.speakerTitle")} info={t("desktop.audioTest.speakerHint")}>
       <div className="dk-stack">
         <div className="dk-row-btns">
           <BusyButton className="dk-btn" onClick={startSpeakerTest} countdown={Math.ceil(duration)} onStop={stopSpeakerTest} since={playing ? startedAt || null : null}>
@@ -571,6 +574,7 @@ export function SpeakerTest() {
           <Meter value={played} />
         </div>
       </div>
+      {/* hint: MUST-SHOW — a status: why the test can't play here */}
       {noSpeaker && <p className="dk-hint">{t("desktop.audioTest.noSpeaker")}</p>}
     </SectionGroup>
   );
@@ -741,8 +745,7 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
                     ? t("desktop.audioTest.micQuiet")
                     : "";
   return (
-    <SectionGroup title={t("desktop.audioTest.micTitle")}>
-      <p className="dk-hint">{t("desktop.audioTest.micHint", { seconds: LISTEN_SECONDS })}</p>
+    <SectionGroup title={t("desktop.audioTest.micTitle")} info={t("desktop.audioTest.micHint", { seconds: LISTEN_SECONDS })}>
       <div className="mic-test-row">
         {/* error: SHOWN — desktop.audioTest.problem.failed (failed() ends on the status line) */}
         <button type="button" className="dk-btn" aria-pressed={running} onClick={() => void (running ? stopTest() : start()).catch(failed)}>

@@ -104,7 +104,8 @@
     },
     "common": {
       "cancel": "Annuler",
-      "stop": "Arrêter"
+      "stop": "Arrêter",
+      "moreInfo": "Plus d'informations"
     },
     "overview": {
       "firmware": "Firmware",
@@ -1032,7 +1033,6 @@
       "label": "Navigation",
       "pin": "Garder ouvert",
       "collapse": "Replier",
-      "controllerAgain": "Manette · cliquez à nouveau pour afficher ou masquer ses réglages",
       "tip": {
         "controller": "ta manette, en direct. Clique sur une partie pour la régler",
         "dongle": "firmware, écran OLED, alimentation et USB",
@@ -1042,7 +1042,8 @@
         "about": "le guide, les nouveautés et les crédits"
       },
       "development": "Développement",
-      "devHint": "Une version de développement : plus récente que la version stable et moins testée"
+      "devHint": "Une version de développement : plus récente que la version stable et moins testée",
+      "again": "cliquez à nouveau pour afficher ou masquer ses réglages"
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
@@ -1155,7 +1156,7 @@
       "fakeSlots": "Simuler d’autres manettes",
       "fakeSlotsHint": "Une Edge Midnight Black et une DualSense Galactic Purple apparaissent associées dans les premiers emplacements libres. Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé {{device_a}}.",
       "fakeGames": "Jeux fictifs",
-      "fakeGamesHint": "Jeux affiche une bibliothèque inventée de 20 jeux (Steam, Heroic, Lutris) avec des images générées, au lieu de lire tes lanceurs. Jouer, Appliquer, Annuler et Installer ne modifient que la bibliothèque inventée : aucun fichier de lanceur n'est lu ni écrit et rien n'est lancé. Recharge la page.",
+      "fakeGamesHint": "Jeux affiche une bibliothèque inventée de 20 jeux (Steam, Heroic, Lutris) avec des images générées, au lieu de lire tes lanceurs. Jouer, Appliquer, Annuler et Installer ne modifient que la bibliothèque inventée : aucun fichier de lanceur n'est lu ni écrit et rien n'est lancé.",
       "fakeRunning": "Jeu en cours",
       "fakeRunningHint": "Le jeu fictif affiché comme en cours. ▶ Jouer sur la page d'un jeu le lance pendant une minute.",
       "fakeRunningNone": "Aucun",
@@ -1167,9 +1168,9 @@
         "no-gamescope": "gamescope n'est pas installé"
       },
       "simulated": "Simuler {{device}} (sans matériel)",
-      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous). Recharge la page.",
+      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous).",
       "simCore1": "Core1 simulé",
-      "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}. Recharge la page.",
+      "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}.",
       "simCore1Runs": "Fonctionne normalement",
       "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}",
       "simBoard": "Carte simulée",
@@ -1195,7 +1196,8 @@
         "fast": "Instantanée",
         "normal": "Quelques secondes",
         "real": "Comme une vraie carte (environ 12 s)"
-      }
+      },
+      "restartsPage": "Recharge la page."
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",
@@ -1438,7 +1440,10 @@
         "interface": "Interface",
         "keys": "Touches",
         "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché."
-      }
+      },
+      "asOf": "Relevé à {{time}}",
+      "watchLive": "Suivre en direct ({{seconds}} s)",
+      "liveLeft": "En direct · encore {{seconds}} s"
     },
     "hdr": {
       "label": "Éclairage HDR (expérimental)",
