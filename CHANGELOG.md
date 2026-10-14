@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Performance
+
+The app is meant to sip resources, not drink them. Measured before and after this release's changes, in a test copy of the app:
+
+| | Before | After |
+| --- | --- | --- |
+| Linux, hidden in the tray (animated light bar) | 4.9 % CPU | 0.4 % |
+| Idle window, game page | 60 frames/s | 9 |
+| Idle window, About / Games Home | 60 frames/s | 10 / 22 |
+| Game art memory (Controller page with the art background) | 50 MB | 11 MB |
+
 ### Added
 
 - **Every notice can be dismissed with a small × in its corner.** An update or a problem with your board stays hidden after you dismiss it, also after a restart, until something changes (a newer version, a different problem); an error comes back if the same thing fails again. The rail keeps a yellow dot on the page where something is still waiting (an app update on App settings, a firmware update or a board problem on the board's page (Pico 2 W)) until it's done, with what's waiting in its tooltip. App settings → Dismissed notices lists what you dismissed that still applies, with a way to it and Show again. All 7 languages.
