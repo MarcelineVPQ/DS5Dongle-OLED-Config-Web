@@ -77,6 +77,11 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // The OLED mirror, shared by the console and the dashboard (one poll).
   // Only while the window is on screen.
   const shown = useWindowShown();
+  // A controller gone: the next connection pulses the status dot again.
+  // lifetime: OK — acquires nothing (resets the dot's pulse on disconnect)
+  useEffect(() => {
+    if (!on) resetConnectedDot();
+  }, [on]);
   const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
   const { appliedStamp, library, setButtonsDraft } = useLibrary();
   const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
@@ -228,7 +233,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 <span className="live-spec">
                   <span className="live-title-label">{t("desktop.live.statusLabel")}</span>
                   <span className="live-spec-value">
-                    <span className="live-spec-dot" aria-hidden="true" />
+                    <ConnectedDot />
                     {t("desktop.overview.connected", "Connected")}
                   </span>
                 </span>
@@ -304,4 +309,21 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
       )}
     </div>
   );
+}
+
+// The status dot pulses three times when the controller connects (the app
+// starting with one connected, or a reconnect), then stays steady; coming
+// back to the page doesn't pulse it again (desktop.css .live-spec-dot.pulse).
+// cache: OK — key=none (the current connection's pulse played); invalidated=reset when the controller disconnects (ControllerView); bound=1 flag
+let dotPulsed = false;
+export const resetConnectedDot = (): void => {
+  dotPulsed = false;
+};
+export function ConnectedDot() {
+  const [pulse] = useState(() => !dotPulsed);
+  // lifetime: OK — acquires nothing (marks this connection's pulse as played)
+  useEffect(() => {
+    dotPulsed = true;
+  }, []);
+  return <span className={`live-spec-dot${pulse ? " pulse" : ""}`} aria-hidden="true" />;
 }

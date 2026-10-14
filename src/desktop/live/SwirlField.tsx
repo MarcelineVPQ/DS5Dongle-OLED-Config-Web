@@ -10,14 +10,14 @@
 // window's size and stretched up smoothly. Without it, or when the GPU
 // context fails or is lost, the CPU fallback draws the field tiny (128 x 72)
 // and CSS stretches it, which blurs it for free. Redrawn ~12 times a second
-// (4 while the window is behind another one), not at all while the window is
-// minimized or in the tray or while a game runs with the window behind it
-// (`hold`: the last frame stays), and once (still) with Reduce motion. The
+// while the window is focused, not at all while it's behind another window
+// or a game (`hold`: the last frame stays), minimized or in the tray, and
+// once (still) with Reduce motion. The
 // slow pan and zoom (backdropPan.ts) steps with those same frames, so it
 // adds none of its own.
 // The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
-import { useWindowFocused, useWindowShown } from "../useWindowShown";
+import { useWindowShown } from "../useWindowShown";
 import { useReducedMotion } from "../motion";
 import { hsvToRgb, rgbToHsv, type Rgb } from "../theme/desktopPalette";
 import { onThemeChange } from "./controllerAccent";
@@ -31,8 +31,6 @@ export const CPU_H = 72;
 const GPU_SCALE = 1 / 3;
 const GPU_MAX_W = 960;
 const FRAME_MS = 80;
-// Behind another window: about 4 frames a second.
-const UNFOCUSED_MS = 250;
 
 // Any CSS color the browser understands -> RGB (the canvas normalizes it).
 function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
@@ -226,7 +224,6 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
       .finally(() => setMode((m) => m ?? "cpu"));
   }, []);
   const shown = useWindowShown();
-  const focused = useWindowFocused();
   const still = useReducedMotion();
   // The renderer lives as long as the canvas (one per mode); colors, the
   // theme, focus and Reduce motion only change what it's handed or how often
@@ -295,8 +292,8 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
     // lifetime: OK — the effect returns its unsubscribe
     return onThemeChange(update);
   }, [colors, mode]);
-  // The clock: a frame now, then ~12 a second (4 behind another window), none
-  // while minimized, in the tray or holding, and just the one with Reduce
+  // The clock: a frame now, then ~12 a second, none while minimized, in the
+  // tray or holding (not focused), and just the one with Reduce
   // motion. Each frame also takes the pan's next step (none when still).
   // lifetime: OK — cleanup: clears the frame timer; none while hidden, holding or still
   useEffect(() => {
@@ -314,9 +311,9 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
     };
     draw(still ? 0 : now());
     // lifetime: OK — cleared in the effect cleanup; off while hidden (lean rule) or holding
-    const timer = still || !shown || hold ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
+    const timer = still || !shown || hold ? undefined : setInterval(() => draw(now()), FRAME_MS);
     return () => clearInterval(timer);
-  }, [mode, shown, focused, still, hold]);
+  }, [mode, shown, still, hold]);
   if (!mode) return null;
   return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
 }
