@@ -20,6 +20,7 @@ import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
 import { FeedCache, FeedError, FeedMissingError, feedProblem } from "./updateFeed";
+import { pathWithoutAppImageMounts } from "./games/schemeHandler";
 
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
@@ -280,6 +281,8 @@ export class Updater {
       const vars = ["DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS", "XDG_CURRENT_DESKTOP", "XDG_SESSION_TYPE", "XAUTHORITY", "HOME", "LANG", "PATH"];
       const env: Record<string, string> = {};
       for (const v of vars) if (process.env[v]) env[v] = process.env[v]!;
+      // This copy's AppImage mount dies when it exits: the new copy adds its own.
+      if (env.PATH) env.PATH = pathWithoutAppImageMounts(env.PATH)!;
       let started = false;
       try {
         const setenv = Object.entries(env).map(([k, v]) => `--setenv=${k}=${v}`);

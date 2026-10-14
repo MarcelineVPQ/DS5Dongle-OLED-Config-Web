@@ -14,7 +14,7 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
-import { hasSchemeHandler, openForUser, startForUser } from "./games/schemeHandler";
+import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser } from "./games/schemeHandler";
 import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { devChannelPreview } from "./updateFeed";
 import { OfficialFirmwareSource } from "./officialFirmware";
@@ -75,6 +75,11 @@ const isDirectory = (path: string) => {
     return false;
   }
 };
+
+// A copy started by an older version's in-app update inherited that copy's
+// AppImage mount in PATH, dead now: drop every mount but our own, or programs
+// run by name (kscreen-doctor, pactl) aren't found.
+if (process.env.PATH) process.env.PATH = pathWithoutAppImageMounts(process.env.PATH, process.env.APPDIR);
 
 // One instance: two copies would fight over the USB interface claim.
 if (!app.requestSingleInstanceLock()) {

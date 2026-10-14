@@ -21,6 +21,24 @@ const APP_ONLY = /^(ELECTRON_|CHROME_|DS5_)|^(APPIMAGE|APPDIR|ARGV0|OWD)$/;
 // Per-user base folders that may point inside an overridden HOME.
 const XDG_HOME_DIRS = new Set(["XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME"]);
 
+// An AppImage's own mount (`/tmp/.mount_XXXX`), which its runtime puts at the
+// front of PATH. Once that copy of the app exits, the mount is dead and every
+// program lookup through it fails with ENOTCONN, which stops the PATH search
+// (kscreen-doctor, pactl and everything a launcher runs by name).
+const APPIMAGE_MOUNT = /(^|\/)\.mount_[^/]+(\/|$)/;
+
+/** PATH without AppImage mounts other than `keep` (this copy's own APPDIR, or
+ * none: a launcher or a relaunched app must not depend on this copy's mount). */
+export function pathWithoutAppImageMounts(path: string | undefined, keep?: string): string | undefined {
+  if (path === undefined) return undefined;
+  const own = keep ? keep.replace(/\/+$/, "") : null;
+  // loop: NOT-WORTH — a PATH's few entries, at start-up and per launcher start
+  return path
+    .split(":")
+    .filter((dir) => !APPIMAGE_MOUNT.test(dir) || (own !== null && (dir === own || dir.startsWith(own + "/"))))
+    .join(":");
+}
+
 /** The environment a launcher gets: the app's, with HOME = the real (passwd)
  * home, XDG base folders inside an overridden HOME removed (so they default
  * under the real one), and app-only variables dropped. */
@@ -33,6 +51,7 @@ export function launcherEnv(env: NodeJS.ProcessEnv, realHome: string): NodeJS.Pr
     out[key] = value;
   }
   out.HOME = realHome;
+  if (out.PATH !== undefined) out.PATH = pathWithoutAppImageMounts(out.PATH);
   return out;
 }
 
