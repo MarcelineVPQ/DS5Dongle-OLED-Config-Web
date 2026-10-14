@@ -545,7 +545,13 @@
       "details": "詳細",
       "needsAttention": "要設定",
       "undoAudioRestart": "元に戻しましたが、オーディオサービスの再起動に失敗しました（{{error}}）。オーディオの変更を反映するには、ログアウトして再ログインするか、PC を再起動してください。",
-      "undoVolumeNotSaved": "元に戻しました。以前のレベルに戻りましたが、Linux の保存レベルは戻せませんでした（{{error}}）。そのため、次の再接続後はコントローラーが最大に戻ります。"
+      "undoVolumeNotSaved": "元に戻しました。以前のレベルに戻りましたが、Linux の保存レベルは戻せませんでした（{{error}}）。そのため、次の再接続後はコントローラーが最大に戻ります。",
+      "launchersTitle": "ランチャー",
+      "protonNotInstalled": "未インストール",
+      "protonNewer": "{{name}} を入手できます",
+      "nothingToChange": "変更はありません",
+      "historyStatus_other": "{{count}} 件の変更 · 最終 {{date}}",
+      "historyNone": "まだ変更はありません"
     },
     "setup": {
       "installing": "ファームウェアをインストールしています…",
@@ -798,7 +804,6 @@
       "profileNone": "このゲームは通常の設定を使います。プロファイルを使うと、このゲームの間だけコントローラーの設定（ハプティックフィードバック、スピーカー、ライトバー、マイク、ボタン、スティック）を変えられ、終了すると元に戻ります。",
       "profileFromCurrent": "現在の設定から作成",
       "profileNeedsDongle": "現在の設定から始めるには、{{device}} を接続してください。",
-      "profileHint": "変更は {{device}} ではなく、このゲームのプロファイルに保存されます。",
       "profileCopyCurrent": "現在の設定をコピー",
       "profileDelete": "プロファイルを削除",
       "haptics": "振動の強さ",
@@ -976,7 +981,12 @@
       "continue": "続けてプレイ",
       "libraryTitle": "ライブラリ",
       "filteredBy": "フィルター: {{filter}}",
-      "showAll": "すべて表示"
+      "showAll": "すべて表示",
+      "profileNoneShort": "プロファイルなし",
+      "profileChanges_other": "{{count}} 件の変更",
+      "hdrUnknown": "HDR 対応は不明",
+      "notesEmpty": "なし",
+      "glanceOpen": "{{section}} を開く"
     },
     "dongleConsole": {
       "title": "{{deviceName}} コンソール",
@@ -1517,7 +1527,6 @@
       "changes": "このゲームで変わる設定（それ以外は通常の設定）：",
       "allNormal": "このゲームではまだ何も変わっていません：通常の設定を使います。「コントローラー画面で編集」で、このゲームだけの設定に変えられます。",
       "useNormal": "{{name}}。通常の設定を使う",
-      "allSettings": "すべての設定",
       "normalSub": "通常の設定",
       "on": "オン",
       "off": "オフ",

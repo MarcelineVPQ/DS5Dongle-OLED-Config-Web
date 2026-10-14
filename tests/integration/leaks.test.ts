@@ -154,8 +154,9 @@ const PAGES: Page[] = [
     },
   },
   {
-    name: "Games Home",
+    name: "Games Home, every section opened",
     desktop: () => homeDesktop("healthy"),
+    use: everySection,
     element: () =>
       createElement(mods.GamesPage, {
         allowed: true,
@@ -165,7 +166,10 @@ const PAGES: Page[] = [
       }),
   },
   {
-    name: "game page",
+    name: "a game page, every section opened",
+    // A real art color: the page's own accent (a frame and the theme listener) runs too.
+    desktop: () => ({ gameArtColor: () => Promise.resolve("#c31646") }),
+    use: everySection,
     element: () =>
       createElement(mods.GamePage, {
         game: ghostrunner(),

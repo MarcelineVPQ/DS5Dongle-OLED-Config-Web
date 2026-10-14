@@ -3,13 +3,16 @@
 // dot keeps one open, what's open and pinned is remembered (pins per board and
 // slot on the controller page), closed sections render nothing, the keyboard
 // moves between headers, and deep links open their section. Then the pages
-// built on it (App settings, About, the Controller and Pico 2 W pages): every setting from the plan's
-// table (the accordion sketch's MAPPING.md) renders in exactly one section,
-// nothing lost, no dupes; and every deep link target exists.
+// built on it (App settings, About, the Controller and Pico 2 W pages, Games
+// → Home and a game's page): every setting from the plan's table (the
+// accordion sketch's MAPPING.md) renders in exactly one section, nothing
+// lost, no dupes; and every deep link target exists.
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TFunction } from "i18next";
+import { fakeBridge, fakeDesktop, gamesReport, ghostrunnerNeedsSetup, GHOSTRUNNER_INFO, GHOSTRUNNER_RECORD, HDR_NO_LAYER } from "../support/gamePage";
+import { homeDesktop, homeLibrary, homeReport } from "../support/gamesHome";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollIntoView ??= () => undefined;
@@ -38,6 +41,8 @@ let m: {
   useDs5Bridge: typeof import("../../src/hooks/useDs5Bridge").useDs5Bridge;
   storage: typeof import("../../src/desktop/storage");
   devPreview: typeof import("../../src/desktop/devPreview");
+  GamesPage: typeof import("../../src/desktop/pages/GamesPage").default;
+  GamePage: typeof import("../../src/desktop/library/GamePage").default;
 };
 const t = ((key: string, o?: Record<string, unknown>) => m.i18n.t(key, o)) as TFunction;
 
@@ -57,6 +62,8 @@ beforeAll(async () => {
     useDs5Bridge: (await import("../../src/hooks/useDs5Bridge")).useDs5Bridge,
     storage: await import("../../src/desktop/storage"),
     devPreview: await import("../../src/desktop/devPreview"),
+    GamesPage: (await import("../../src/desktop/pages/GamesPage")).default,
+    GamePage: (await import("../../src/desktop/library/GamePage")).default,
   };
   await m.i18n.changeLanguage("en");
 });
@@ -507,14 +514,105 @@ describe("App settings beside the live controller", () => {
   });
 });
 
+// The plan's table (MAPPING.md, "Games Home" and "Game page"), by what each
+// section's body says (its texts, buttons and row labels).
+const GAMES_INVENTORY: Record<string, string[]> = {
+  launchers: ["desktop.games.intro", "desktop.games.rescan"],
+  proton: ["desktop.games.protonFound"],
+  computer: ["desktop.games.audio", "desktop.games.hidraw", "desktop.games.env", "desktop.games.hdr"],
+  recommended: ["desktop.games.changesHint", "desktop.games.review"],
+  history: ["desktop.games.undoShort"],
+};
+const GAME_INVENTORY: Record<string, string[]> = {
+  profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.profileLabel", "desktop.curves.profileLeft"],
+  setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
+  hdr: ["desktop.hdrManual.title"],
+  compatibility: ["desktop.library.runsWith"],
+  support: ["desktop.library.tierLegend", "desktop.library.rateTitle", "desktop.library.feedbackHint"],
+  notes: [],
+  details: ["desktop.library.launcher", "desktop.library.id"],
+};
+// Each section opened in turn: everything listed is in it (by text; some
+// carry a count or a name), and no row label or heading shows in two.
+async function textInventory(page: "games" | "game", table: Record<string, string[]>) {
+  expect([...container.querySelectorAll<HTMLElement>(".dk-split-panel .dk-sec")].map((x) => x.dataset.section)).toEqual([...m.sections.SECTIONS[page]]);
+  expect(Object.keys(table)).toEqual([...m.sections.SECTIONS[page]]);
+  expect(container.querySelectorAll(".dk-card")).toHaveLength(0); // no settings cards left
+  const rows = new Map<string, Set<string>>();
+  for (const id of m.sections.SECTIONS[page]) {
+    const toggle = head(id);
+    if (toggle.getAttribute("aria-expanded") !== "true") click(toggle);
+    await act(async () => undefined);
+    expect(openIds(), id).toEqual([id]);
+    const body = container.querySelector(`[data-section="${id}"] .dk-sec-body`)!;
+    // loop: test
+    for (const key of table[id]) expect(body.textContent, `${key} in ${id}`).toContain(m.i18n.t(key, { count: 1, name: "", launcher: "" }).replace(/ +$/, ""));
+    // loop: test
+    for (const x of body.querySelectorAll(".dk-row > .dk-label, .dk-subhead, dt")) {
+      const l = (x.firstChild?.textContent ?? "").trim();
+      rows.set(l, new Set([...(rows.get(l) ?? []), id]));
+    }
+  }
+  click(head(m.sections.SECTIONS[page].at(-1)!));
+  expect(openIds()).toEqual([]);
+  expect(container.querySelectorAll(".dk-sec-body")).toHaveLength(0); // folded: nothing rendered
+  expect([...rows].filter(([, ids]) => ids.size > 1)).toEqual([]);
+}
+
+describe("Games → Home on the accordion", () => {
+  it("has every section of the plan, each thing in exactly one; the library is the main view", async () => {
+    const report = homeReport("attention");
+    vi.stubGlobal("desktop", homeDesktop("attention", [], report));
+    await render(
+      createElement(m.GamesPage, {
+        allowed: true,
+        onAllowedChange: () => undefined,
+        bridge: fakeBridge(),
+        profiles: { library: homeLibrary(report.games), setLibrary: () => undefined, running: null } as never,
+      }),
+    );
+    await act(() => new Promise((r) => setTimeout(r, 0)));
+    expect(container.querySelector(".dk-split-main .lib-grid")).not.toBeNull();
+    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe(m.i18n.t("desktop.games.title"));
+    await textInventory("games", GAMES_INVENTORY);
+  });
+});
+
+describe("a game's page on the accordion", () => {
+  it("has every section of the plan, each thing in exactly one; art, Play and the tiles are the main view", async () => {
+    const game = ghostrunnerNeedsSetup();
+    vi.stubGlobal("desktop", fakeDesktop("linux"));
+    await render(
+      createElement(m.GamePage, {
+        game: { ...game, support: "unknown", gamepad: undefined },
+        info: GHOSTRUNNER_INFO,
+        record: GHOSTRUNNER_RECORD,
+        running: false,
+        report: gamesReport(game, HDR_NO_LAYER),
+        bridge: fakeBridge(),
+        onLibrary: () => undefined,
+        onRescan: () => undefined,
+      }),
+    );
+    expect(container.querySelector(".dk-split-main .gp-hero")).not.toBeNull();
+    expect(container.querySelectorAll(".dk-split-main .gp-tile")).toHaveLength(4);
+    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Ghostrunner");
+    await textInventory("game", GAME_INVENTORY);
+    expect(container.querySelector('[data-section="notes"] .dk-sec-toggle')).not.toBeNull();
+    click(head("notes"));
+    expect(container.querySelector('[data-section="notes"] textarea')).not.toBeNull();
+  });
+});
+
 describe("deep links", () => {
-  it("every task with a section targets one its page has", () => {
+  it("every task with a section targets one its page has (the rail's Games count: Recommended changes)", () => {
     const app = { phase: "ready" as const, version: "1.2.3" };
     const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 1 });
+    expect(tasks.find((x) => x.place === "games")?.section).toBe("recommended");
     // loop: test
     for (const task of tasks.filter((x) => x.section)) {
       const page = task.place as keyof typeof m.sections.SECTIONS;
-      expect(m.sections.MIGRATED, task.id).toContain(page);
+      expect(Object.keys(m.sections.SECTIONS), task.id).toContain(page);
       expect(m.sections.SECTIONS[page] as readonly string[], task.id).toContain(task.section);
     }
   });

@@ -202,6 +202,7 @@ const gamesHome = async () => {
   await rail("games");
   await sleep(1500);
   await click(".lib-home"); // home, not the game page the last view left open
+  await unpinAll(); // Home's sections as a player finds them (a view before pinned them all)
 };
 const view = (group, name, cost, open) => ({ group, name, cost: cost + SETTLE_MS + 150, open });
 const BASE_VIEWS = [
@@ -277,6 +278,19 @@ const BASE_VIEWS = [
     await sleep(800);
     await evaluate(`document.querySelector(".lib-grid")?.scrollIntoView({ block: "start" })`);
   }),
+  // Every section pinned open, scrolled down: Home, then a game page (the pins are every game page's). The next view on each takes the pins off.
+  ...[
+    ["games home, every section open, scrolled", gamesHome],
+    ["game page, every section open, scrolled", () => gamesHome().then(() => evaluate(`document.querySelectorAll(".lib-row")[1]?.click()`))],
+  ].map(([name, go]) =>
+    view("games", name, 2600, async () => {
+      await go();
+      await sleep(500);
+      await pinAll();
+      await sleep(500);
+      await scrollPanel();
+    }),
+  ),
   view("games", "games, Show menu open", 1500, async () => {
     await gamesHome();
     await evaluate(`(() => { const d = document.querySelector(".lib-show"); if (d) d.open = true; })()`);
@@ -291,6 +305,7 @@ const BASE_VIEWS = [
       await rail("games");
       await sleep(2000);
       await evaluate(`(${pick} ?? document.querySelectorAll(".lib-row")[1])?.click()`);
+      await unpinAll(); // the sections as a player finds them (a view before pinned them all)
     }),
   ),
 ];

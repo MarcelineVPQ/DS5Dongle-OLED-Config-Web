@@ -2134,8 +2134,9 @@ html[data-theme="light"] .live-ctl {
   margin-top: 0;
 }
 
-/* ---- Games library: list on the left, Home or a game page on the right;
-   each side scrolls on its own (like Steam's library). ---- */
+/* ---- Games library: list on the left, then Home or a game page, each a
+   split (main view, its accordion at the right); every part scrolls on its
+   own (like Steam's library). ---- */
 .dk-body.dk-body-lib {
   overflow: hidden;
   padding: 0;
@@ -2262,24 +2263,42 @@ html[data-theme="light"] .live-ctl {
 .lib-empty {
   padding: 8px 6px;
 }
+/* The container the split asks (below ~760 px its panel is a drawer):
+   the width beside the list, not the window's. */
 .lib-main {
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  container-type: inline-size;
+}
+.lib-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lib-pane[hidden] {
+  display: none;
 }
 .lib-home-pane {
   container-type: inline-size; /* Continue playing sizes by the pane, not the window */
-  padding: var(--dk-pad);
 }
 
 /* ---- Game page ---- */
 .gp {
-  min-height: 100%;
-  overflow: auto;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   /* The page sets its own text tokens (scopedAccent); inherited text must
      resolve them here, not keep the color computed outside the page. */
   color: var(--text-body);
+}
+/* The art runs to the main view's edges. */
+.gp > .dk-split > .dk-split-main {
+  padding: 0;
 }
 /* The header art (gameArt.ts headerArt, --gp-art): the hero or the wide
    capsule over the art-color gradient (the game page's accent, or the art
@@ -2366,38 +2385,50 @@ html[data-theme="light"] .live-ctl {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.gp-cols {
+/* The game at a glance: a tile per section, each opening it. */
+.gp-glance {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--dk-gap);
-  align-items: start;
   padding: var(--dk-pad);
 }
-.gp-col {
+.gp-tile {
   display: flex;
   flex-direction: column;
-  gap: var(--dk-gap);
+  gap: 2px;
   min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.gp-col .dk-card {
-  scroll-margin-top: 8px;
+.gp-tile:hover {
+  border-color: var(--dk-sel-border);
+  background: var(--bg-elevated);
 }
-/* "All settings": the controller view's own sections, flat inside the
-   profile card, one column. */
-.gp-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.gp-tile-label {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.gp-sections .dk-card {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
+.gp-tile-value {
+  overflow: hidden;
+  color: var(--text-strong);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-html[data-cards-translucent] .gp-sections .dk-card {
-  background: transparent !important; /* the card it sits in is already see-through */
+.gp-tile-hint {
+  color: var(--text-secondary);
+  font-size: var(--dk-small);
+}
+.gp-notes {
+  margin: 8px 0 2px;
 }
 .gp-tier {
   margin: 0 0 8px;
@@ -2478,11 +2509,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-@media (max-width: 900px) {
-  .gp-cols {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 @media (max-width: 700px) {
   .lib {
@@ -2805,14 +2831,9 @@ html[data-cards-translucent] .gp-sections .dk-card {
   font-size: 10.5px;
 }
 
-/* ---- Games → Home: game setup (one line, or open when something needs
-   the player), Continue playing, then the Library (filters with counts,
-   sort, Show) over the cover grid. The art is the color; the page around it
-   stays quiet. ---- */
-.lib-home-pane > .dk-stack {
-  max-width: none;
-  margin-bottom: 18px;
-}
+/* ---- Games → Home's main view: Continue playing, then the Library
+   (filters with counts, sort, Show) over the cover grid. The art is the
+   color; the page around it stays quiet. ---- */
 .lib-section {
   margin-bottom: 22px;
 }
@@ -2868,65 +2889,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
 }
 .lib-filtered .dk-inline-btn {
   margin-left: auto;
-}
-
-/* Game setup, all fine: one line; its summary is the status itself. */
-.lib-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 7px 8px 7px var(--dk-pad);
-}
-.lib-status > .lib-system {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  padding-top: 3px;
-}
-.lib-facts {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-  margin-left: 14px;
-  color: var(--text-secondary);
-  font-size: var(--dk-small);
-  font-weight: 400;
-  vertical-align: middle;
-}
-.lib-facts > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-/* Something needs the player: open, first, with its action. */
-.lib-setup-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.lib-setup-head h2 {
-  flex: 1;
-}
-.lib-setup-part {
-  margin-top: 10px;
-}
-.lib-setup-part h3 {
-  margin: 0 0 4px;
-  color: var(--text-strong);
-  font-size: var(--dk-font);
-  font-weight: 600;
-}
-.lib-setup-part p {
-  margin: 2px 0 6px;
-}
-.lib-setup > .lib-system {
-  margin: 10px 0 2px;
-}
-.lib-system[open] > summary {
-  margin-bottom: 6px;
-}
-.lib-history {
-  margin: 10px 0 0;
 }
 
 /* Continue playing: the newest game big (its page's header: wide art and
@@ -4622,10 +4584,6 @@ main.dk-body:focus:not(:focus-visible),
 .hdr-no {
   color: var(--cv-bad, var(--text-error));
 }
-.hdr-game h3 {
-  margin: 8px 0 2px;
-  font-size: var(--dk-small);
-}
 .hdr-line {
   display: flex;
   gap: 6px;
@@ -4639,8 +4597,7 @@ main.dk-body:focus:not(:focus-visible),
 }
 /* A summary that is itself the status ("✓ All set"), not a small aside. */
 .hdr-row summary,
-.gp-checks > summary,
-.lib-status > .lib-system > summary {
+.gp-checks > summary {
   color: inherit;
   font-size: inherit;
 }

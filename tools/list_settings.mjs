@@ -17,11 +17,10 @@
 //            typed list), a lucide icon, a translated title (t(...)), a
 //            unique id in its file, or a body that is a function (so a
 //            closed section renders nothing).
-// The pages not on the accordion yet are allowed their findings (PENDING,
-// each naming the step that removes it); a PENDING file with no findings
-// left fails too, so the list only shrinks. Files that aren't settings pages
-// at all (the setup flow, the tour, dialogs, the game library's views) are
-// NOT_SETTINGS, each with its reason.
+// Every page is on the accordion: no page is allowed findings. Files that
+// aren't settings pages at all (the setup flow, the shell's bars, the game
+// library's views) are NOT_SETTINGS, each with its reason; an entry with no
+// findings left fails too, so the list only shrinks.
 //
 // Usage: node tools/list_settings.mjs           TSV: file line kind detail
 //        node tools/list_settings.mjs --check   the gate (npm run gates)
@@ -35,20 +34,13 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\\/g, "/");
 // The framework itself (Row and the controls are defined here) is not checked.
 const FRAMEWORK = new Set(["src/desktop/controls.tsx", "src/desktop/accordion/Section.tsx"]);
 
-// Pages and panels not on the accordion yet: their cards and rows are allowed
-// until their step moves them (the accordion plan, step 4).
-export const PENDING = {
-  "src/desktop/pages/GamesPage.tsx": "step 4: Games Home",
-  "src/desktop/library/GamePage.tsx": "step 4: game page",
-};
-
 // Not settings pages: their buttons and choices aren't settings rows.
 export const NOT_SETTINGS = {
   "src/desktop/DesktopApp.tsx": "the app shell: the save bar and the profile-editing bar (they stay as they are)",
   "src/desktop/UpdateBanners.tsx": "the update notices' actions (Download and install)",
   "src/desktop/SetupScreen.tsx": "the first-run setup flow (flash the board), not a settings page",
   "src/desktop/WindowsUsbRepair.tsx": "a one-time repair flow (the Windows driver), shown in a notice",
-  "src/desktop/library/playBar.tsx": "the game page's Play bar (its main view)",
+  "src/desktop/library/playBar.tsx": "the game page's Play bar and its launcher links (its main view)",
   "src/desktop/library/GameLibrary.tsx": "the game library's toolbar (sort and filter), not settings",
 };
 
@@ -176,10 +168,10 @@ export function settingsFindings(sources) {
 
 // The gate's verdict: findings outside the lists, and list entries with none left.
 export function gateProblems(rows, files) {
-  const allowed = (r) => r.kind !== "section" && (r.file in PENDING || r.file in NOT_SETTINGS);
+  const allowed = (r) => r.kind !== "section" && r.file in NOT_SETTINGS;
   const known = new Set(files);
-  // loop: NOT-WORTH — N = the lists' entries (≈ 20); once per gate run
-  const stale = [...Object.keys(PENDING), ...Object.keys(NOT_SETTINGS)].filter((f) => !known.has(f) || !rows.some((r) => r.file === f));
+  // loop: NOT-WORTH — N = the list's entries (≈ 10); once per gate run
+  const stale = Object.keys(NOT_SETTINGS).filter((f) => !known.has(f) || !rows.some((r) => r.file === f));
   return { bad: rows.filter((r) => !allowed(r)), stale };
 }
 
@@ -197,12 +189,12 @@ function main() {
   // loop: NOT-WORTH — N = the problems; once per gate run
   for (const r of bad) console.error(`${r.file}:${r.line}: ${r.kind}: ${r.detail}`);
   // loop: NOT-WORTH — N = the stale entries; once per gate run
-  for (const f of stale) console.error(`${f}: listed in tools/list_settings.mjs but has no findings (moved onto Section/Row, or gone): take it off the list`);
+  for (const f of stale) console.error(`${f}: listed in tools/list_settings.mjs but has no findings (no buttons or rows left, or gone): take it off the list`);
   if (bad.length || stale.length) {
     console.error(`\n${bad.length + stale.length} settings-gate problem(s). Every setting goes in a Row inside a Section (src/desktop/accordion/Section.tsx).`);
     process.exit(1);
   }
-  console.log(`settings gate: ${rows.length} findings, all in pages still to move (${Object.keys(PENDING).length} files) or not settings pages (${Object.keys(NOT_SETTINGS).length}).`);
+  console.log(`settings gate: ${rows.length} findings, all in files that aren't settings pages (${Object.keys(NOT_SETTINGS).length}).`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

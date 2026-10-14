@@ -545,7 +545,13 @@
       "details": "详细信息",
       "needsAttention": "待设置",
       "undoAudioRestart": "已撤销，但重启音频服务失败（{{error}}）。请注销并重新登录，或重启电脑，使音频更改生效。",
-      "undoVolumeNotSaved": "已撤销：原来的音量已恢复，但无法恢复 Linux 的已保存音量（{{error}}），所以控制器下次重新连接后会回到最大。"
+      "undoVolumeNotSaved": "已撤销：原来的音量已恢复，但无法恢复 Linux 的已保存音量（{{error}}），所以控制器下次重新连接后会回到最大。",
+      "launchersTitle": "启动器",
+      "protonNotInstalled": "未安装",
+      "protonNewer": "{{name}} 可用",
+      "nothingToChange": "无需更改",
+      "historyStatus_other": "{{count}} 项更改 · 最近 {{date}}",
+      "historyNone": "暂无更改"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -798,7 +804,6 @@
       "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何控制器设置（触觉反馈、扬声器、光条、麦克风、按键、操作杆），游戏关闭后自动切回。",
       "profileFromCurrent": "基于当前设置创建",
       "profileNeedsDongle": "连接 {{device}} 后才能基于当前设置开始。",
-      "profileHint": "更改保存到此游戏的配置中,而不是 {{device}}。",
       "profileCopyCurrent": "复制当前设置",
       "profileDelete": "删除配置",
       "haptics": "振动强度",
@@ -976,7 +981,12 @@
       "continue": "继续游戏",
       "libraryTitle": "游戏库",
       "filteredBy": "筛选：{{filter}}",
-      "showAll": "显示全部"
+      "showAll": "显示全部",
+      "profileNoneShort": "无配置",
+      "profileChanges_other": "{{count}} 项更改",
+      "hdrUnknown": "未知是否支持 HDR",
+      "notesEmpty": "空",
+      "glanceOpen": "打开{{section}}"
     },
     "dongleConsole": {
       "title": "{{deviceName}} 控制台",
@@ -1517,7 +1527,6 @@
       "changes": "此游戏更改的设置（其他都使用你的常规设置）：",
       "allNormal": "此游戏还没有更改：它使用你的常规设置。用“在控制器视图中编辑”可只为此游戏更改任何设置。",
       "useNormal": "{{name}}。使用我的常规设置",
-      "allSettings": "所有设置",
       "normalSub": "你的常规设置",
       "on": "开",
       "off": "关",

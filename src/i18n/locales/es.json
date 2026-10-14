@@ -548,7 +548,14 @@
       "details": "Detalles",
       "needsAttention": "Por revisar",
       "undoAudioRestart": "Deshecho, pero no se pudo reiniciar el servicio de audio ({{error}}). Cierra sesión y vuelve a entrar, o reinicia el PC, para que el cambio de audio surta efecto.",
-      "undoVolumeNotSaved": "Deshecho: los niveles anteriores han vuelto, pero no se pudieron restaurar los niveles guardados de Linux ({{error}}), así que el mando vuelve al máximo tras su próxima reconexión."
+      "undoVolumeNotSaved": "Deshecho: los niveles anteriores han vuelto, pero no se pudieron restaurar los niveles guardados de Linux ({{error}}), así que el mando vuelve al máximo tras su próxima reconexión.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "No instalado",
+      "protonNewer": "{{name}} disponible",
+      "nothingToChange": "Nada que cambiar",
+      "historyStatus_one": "{{count}} cambio · último el {{date}}",
+      "historyStatus_other": "{{count}} cambios · último el {{date}}",
+      "historyNone": "Aún no hay cambios"
     },
     "setup": {
       "installing": "Instalando el firmware…",
@@ -803,7 +810,6 @@
       "profileNone": "Este juego usa tus ajustes normales. Un perfil cambia cualquier ajuste del mando (retroalimentación háptica, altavoz, barra luminosa, micrófono, botones, joysticks) solo para este juego, y los restablece al cerrarlo.",
       "profileFromCurrent": "Crear desde los ajustes actuales",
       "profileNeedsDongle": "Conecta {{device}} para partir de tus ajustes actuales.",
-      "profileHint": "Los cambios se guardan en el perfil de este juego, no en {{device}}.",
       "profileCopyCurrent": "Copiar ajustes actuales",
       "profileDelete": "Eliminar perfil",
       "haptics": "Intensidad de la vibración",
@@ -984,7 +990,13 @@
       "continue": "Seguir jugando",
       "libraryTitle": "Biblioteca",
       "filteredBy": "Filtro: {{filter}}",
-      "showAll": "Mostrar todos"
+      "showAll": "Mostrar todos",
+      "profileNoneShort": "Sin perfil",
+      "profileChanges_one": "{{count}} cambio",
+      "profileChanges_other": "{{count}} cambios",
+      "hdrUnknown": "No se sabe si admite HDR",
+      "notesEmpty": "Vacío",
+      "glanceOpen": "Abrir {{section}}"
     },
     "dongleConsole": {
       "title": "Consola: {{deviceName}}",
@@ -1525,7 +1537,6 @@
       "changes": "Lo que cambia este juego (todo lo demás usa tus ajustes normales):",
       "allNormal": "Aún no hay cambios para este juego: usa tus ajustes normales. «Editar en la vista del mando» los cambia solo para este juego.",
       "useNormal": "{{name}}. Usar mi ajuste normal",
-      "allSettings": "Todos los ajustes",
       "normalSub": "Tu ajuste normal",
       "on": "Activado",
       "off": "Desactivado",

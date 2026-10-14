@@ -100,7 +100,7 @@ export default function DesktopApp() {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
-    if ((item === "app" || item === "about" || item === "dongle" || item === "controller") && section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
+    if (section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
   };
 
   // Open tasks: the rail's dots, and which dismissed notices still apply.

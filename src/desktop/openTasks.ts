@@ -17,6 +17,7 @@ export const GAMES_SETUP_ID = "games-setup";
 export const APP_UPDATE_SECTION: SectionId<"app"> = "updates";
 export const FIRMWARE_UPDATE_SECTION: SectionId<"dongle"> = "firmware";
 export const BOARD_PROBLEM_SECTION: SectionId<"dongle"> = "diagnostics";
+export const GAMES_SETUP_SECTION: SectionId<"games"> = "recommended";
 
 // The app update notice's key: the offered version, or (once it's installed
 // and waits for a restart) "ready:" plus it, a new step that shows again.
@@ -75,8 +76,8 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
     settled.set(BOARD_PROBLEM_ID, keys);
   }
 
-  // No notice of its own: the Games page's setup is the place (the count it always had).
-  if (input.gamesCount > 0) tasks.push({ id: GAMES_SETUP_ID, place: "games", text: t("desktop.games.attention", { count: input.gamesCount }), count: input.gamesCount });
+  // No notice of its own: Games → Home's Recommended changes is the place (the count it always had).
+  if (input.gamesCount > 0) tasks.push({ id: GAMES_SETUP_ID, place: "games", section: GAMES_SETUP_SECTION, text: t("desktop.games.attention", { count: input.gamesCount }), count: input.gamesCount });
 
   return { tasks, settled };
 }

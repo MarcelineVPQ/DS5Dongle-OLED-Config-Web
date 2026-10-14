@@ -548,7 +548,14 @@
       "details": "Détails",
       "needsAttention": "À régler",
       "undoAudioRestart": "Annulé, mais le redémarrage du service audio a échoué ({{error}}). Déconnecte-toi puis reconnecte-toi, ou redémarre le PC, pour que le changement audio prenne effet.",
-      "undoVolumeNotSaved": "Annulé : les anciens niveaux sont revenus, mais les niveaux enregistrés de Linux n'ont pas pu être remis ({{error}}), donc la manette revient au maximum à sa prochaine reconnexion."
+      "undoVolumeNotSaved": "Annulé : les anciens niveaux sont revenus, mais les niveaux enregistrés de Linux n'ont pas pu être remis ({{error}}), donc la manette revient au maximum à sa prochaine reconnexion.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Non installé",
+      "protonNewer": "{{name}} disponible",
+      "nothingToChange": "Rien à changer",
+      "historyStatus_one": "{{count}} changement · dernier le {{date}}",
+      "historyStatus_other": "{{count}} changements · dernier le {{date}}",
+      "historyNone": "Aucun changement pour l'instant"
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -803,7 +810,6 @@
       "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (retour haptique, haut-parleur, barre lumineuse, micro, touches, joysticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
       "profileFromCurrent": "Créer depuis les réglages actuels",
       "profileNeedsDongle": "Connecte {{device}} pour partir de tes réglages actuels.",
-      "profileHint": "Les changements sont enregistrés dans le profil de ce jeu, pas sur {{device}}.",
       "profileCopyCurrent": "Copier les réglages actuels",
       "profileDelete": "Supprimer le profil",
       "haptics": "Intensité des vibrations",
@@ -984,7 +990,13 @@
       "continue": "Reprendre",
       "libraryTitle": "Bibliothèque",
       "filteredBy": "Filtre : {{filter}}",
-      "showAll": "Tout afficher"
+      "showAll": "Tout afficher",
+      "profileNoneShort": "Aucun profil",
+      "profileChanges_one": "{{count}} changement",
+      "profileChanges_other": "{{count}} changements",
+      "hdrUnknown": "Prise en charge du HDR inconnue",
+      "notesEmpty": "Vide",
+      "glanceOpen": "Ouvrir {{section}}"
     },
     "dongleConsole": {
       "title": "Console : {{deviceName}}",
@@ -1525,7 +1537,6 @@
       "changes": "Ce que ce jeu change (tout le reste utilise tes réglages habituels) :",
       "allNormal": "Rien n'est encore changé pour ce jeu : il utilise tes réglages habituels. « Modifier dans la vue manette » les change pour ce jeu seulement.",
       "useNormal": "{{name}}. Utiliser mon réglage habituel",
-      "allSettings": "Tous les réglages",
       "normalSub": "Ton réglage habituel",
       "on": "Activé",
       "off": "Désactivé",
