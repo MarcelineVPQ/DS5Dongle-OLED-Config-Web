@@ -54,6 +54,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Controller plugins": "Controller plugins: an API",
   "More games in the background": "Game-art background: more games",
   "Pick any Proton version": "Game page: Proton version picker",
+  "Lock the rail collapsed": "Rail lock: hold the rail's collapse button 3 s",
   "Back up and restore your settings": "Back up and restore all settings (JSON export/import)",
   "Collapse all and clear pins": "Accordion panel menu: Collapse all, Clear pins",
   "Clear message when new firmware won't start": "Firmware update: say when the board came back still in BOOTSEL",

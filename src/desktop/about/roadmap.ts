@@ -427,6 +427,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "Save everything the app keeps (settings, game profiles, ratings, notes, layouts) to one file and bring it back on another PC.",
     areas: ["app"],
   },
+  { column: "ideas", title: "Lock the rail collapsed", text: "Hold the rail's collapse button for 3 seconds to keep the rail small, icons only.", areas: ["app"] },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
