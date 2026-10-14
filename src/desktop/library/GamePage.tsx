@@ -33,6 +33,7 @@ import { overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFresh
 import type { GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
 import { API_NAME } from "../games/gameArgs";
 import { artUrl } from "../games/types";
+import { headerArt, useArtColor } from "./gameArt";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { PlayButton, PlayStats, useGameAction } from "./playBar";
@@ -52,23 +53,13 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const scroller = useRef<HTMLDivElement>(null);
   const mineState = useMine(game, info, record, onLibrary, onRescan);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
+  const header = headerArt(game.key, info);
   // The page takes the game's artwork color as its accent (the rest of the
   // app keeps the controller's); same legibility rules, scoped to the page.
   // Recomputed when the theme, the controller tint or the look changes (the
   // page's cards are mixed from the panel color those set).
-  const [artColor, setArtColor] = useState<string | null>(null);
+  const artColor = useArtColor(game.key);
   const [accent, setAccent] = useState<Record<string, string> | null>(null);
-  // lifetime: OK — acquires nothing; the cleanup drops a late art color (game change, unmount)
-  useEffect(() => {
-    let live = true;
-    void window
-      .desktop!.gameArtColor(game.key)
-      .then((c) => live && setArtColor(c))
-      .catch(() => undefined);
-    return () => {
-      live = false;
-    };
-  }, [game.key]);
   // lifetime: OK — cleanup unsubscribes the theme listener and cancels the frame
   useEffect(() => {
     if (!artColor) return;
@@ -112,7 +103,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
 
   return (
     <div className="gp" ref={scroller} style={accent ?? undefined}>
-      <header className={`gp-hero${has("hero") ? "" : " plain"}`} style={has("hero") ? { backgroundImage: `url("${artUrl(game.key, "hero")}")` } : undefined}>
+      <header className={`gp-hero ${header.shape}`} style={header.style}>
         {has("logo") ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <h1 className="gp-title">{game.title}</h1>}
       </header>
 

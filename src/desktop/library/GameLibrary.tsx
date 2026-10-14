@@ -8,7 +8,8 @@
 // Home stays mounted while a game is open, so switching back doesn't rescan.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
-import { readPref, usePref, writePref } from "../storage";
+import { readPref, useFlagPref, usePref, writePref } from "../storage";
+import { GLASS_KEY } from "../glass/glassPref";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { APP_KINDS, type AppKind, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
@@ -66,6 +67,8 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = usePref<Sort>(SORT_KEY, "name", SORTS);
   const [hiddenKinds, setKindShown] = useHiddenKinds();
+  // The Glass look: the tiles' captions and Play bars as glass over their art.
+  const [glass] = useFlagPref(GLASS_KEY);
   // The categories this library has, with counts (the Show menu lists only these).
   const kindCounts = useMemo(() => {
     const m = new Map<AppKind, number>();
@@ -208,7 +211,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
       <div className="lib-main">
         <div hidden={game !== null} className="lib-home-pane">
           {home}
-          {report && <ContinuePlaying games={recent} details={details} running={running} hasProfile={(g) => !!library.games[g.key]?.profile} onOpen={setSelected} />}
+          {report && <ContinuePlaying games={recent} details={details} running={running} hasProfile={(g) => !!library.games[g.key]?.profile} onOpen={setSelected} glass={glass} />}
           {report && (
             <section className="lib-section">
               <div className="lib-toolbar">
@@ -266,7 +269,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                   {/* loop: FIX-HOT-PATH — a tile per game (hundreds) re-rendered per library render, even hidden */}
                   {visible.map((g) => (
                     <li key={g.key}>
-                      <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} />
+                      <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} glass={glass} />
                     </li>
                   ))}
                 </ul>

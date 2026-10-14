@@ -14,12 +14,19 @@ import i18n from "../../src/i18n";
 import GamesPage from "../../src/desktop/pages/GamesPage";
 import { homeStatus } from "../../src/desktop/library/setupStatus";
 import { continueCount } from "../../src/desktop/library/ContinuePlaying";
-import type { GamesReport } from "../../src/desktop/games/types";
+import type { GameInfo, GamesReport } from "../../src/desktop/games/types";
 import { fakeBridge, HDR_NO_LAYER, OUR_PROTON } from "../support/gamePage";
-import { homeDesktop, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
+import { homeDesktop, homeDetails, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
+import { GLASS_KEY } from "../../src/desktop/glass/glassPref";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollTo ??= () => undefined;
+// The Glass look's bars rebuild their filter on resize (useLiquidGlass).
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
 
 let container: HTMLDivElement | null = null;
 let root: Root | null = null;
@@ -41,8 +48,9 @@ afterEach(() => {
 });
 
 const settle = () => act(() => new Promise((r) => setTimeout(r, 0)));
-async function render(kase: HomeCase, report: GamesReport = homeReport(kase)) {
-  vi.stubGlobal("desktop", homeDesktop(kase, calls, report));
+async function render(kase: HomeCase, report: GamesReport = homeReport(kase), over: Record<string, unknown> = {}) {
+  const desktop = homeDesktop(kase, calls, report);
+  vi.stubGlobal("desktop", new Proxy(over, { get: (t, p: string) => (p in t ? t[p] : desktop[p]) }));
   act(() =>
     root!.render(
       createElement(GamesPage, {
@@ -254,5 +262,58 @@ describe("Games → Home, Windows", () => {
     expect(text).not.toContain(i18n.t("desktop.games.systemTitle"));
     expect($(".hdr-check")).toBeNull();
     expect($$(".lib-continue-tile").length).toBe(5);
+  });
+});
+
+describe("Games → Home, art and the Glass look", () => {
+  // Cyberpunk 2077 (Heroic, GOG) was played last: the big tile.
+  const LEAD = "heroic-0000abcd:gog:1001";
+  const withArt = (art: GameInfo["art"]) => {
+    const r = homeReport("healthy");
+    const details = homeDetails(r.games);
+    details[LEAD] = { ...details[LEAD], art };
+    return { gamesDetails: () => Promise.resolve(details), gameArtColor: () => Promise.resolve("#c31646") };
+  };
+  const leadArt = () => $(".lib-continue-tile.lead .lib-continue-art")!;
+  // The game page follows the theme for its art-color accent.
+  beforeEach(() => vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined })));
+
+  it("a Heroic GOG game without hero art: the big tile shows its cover, whole on the art-color gradient (the game page's lookup)", async () => {
+    await render("healthy", homeReport("healthy"), withArt(["cover", "icon"]));
+    const art = leadArt();
+    expect(art.classList.contains("tall")).toBe(true);
+    expect(art.style.getPropertyValue("--gp-art")).toBe(`url("ds5-art://art/${encodeURIComponent(LEAD)}/cover")`);
+    expect(art.style.getPropertyValue("--art-color")).toBe("#c31646");
+    expect(art.textContent).toContain("Cyberpunk 2077"); // no logo without the hero: the title
+    // Its page's header falls back the same way.
+    await click(art);
+    const header = $(".gp-hero")!;
+    expect(header.classList.contains("tall")).toBe(true);
+    expect(header.style.getPropertyValue("--gp-art")).toContain("/cover");
+  });
+
+  it("with hero art the big tile shows it wide; with none, the gradient alone", async () => {
+    await render("healthy", homeReport("healthy"), withArt(["hero", "cover"]));
+    expect(leadArt().classList.contains("wide")).toBe(true);
+    expect(leadArt().style.getPropertyValue("--gp-art")).toContain("/hero");
+    act(() => root!.unmount());
+    root = createRoot(container!);
+    await render("healthy", homeReport("healthy"), withArt(["header"]));
+    expect(leadArt().style.getPropertyValue("--gp-art")).toContain("/header");
+  });
+
+  it("the glass captions only in the Glass look", async () => {
+    await render("healthy");
+    expect($$(".lib-glass").length).toBe(0);
+    expect($(".lib-continue-tile")!.getAttribute("style")).toBeNull();
+    act(() => root!.unmount());
+    root = createRoot(container!);
+    window.localStorage.setItem(GLASS_KEY, "1");
+    await render("healthy");
+    expect($$(".lib-continue-tile.lib-glass").length).toBe(5);
+    expect($$(".lib-grid .lib-tile.lib-glass").length).toBe(30);
+    // The caption tokens: tint, its opacity and the ink.
+    expect($(".lib-continue-tile")!.style.getPropertyValue("--cap-ink")).toMatch(/^rgb\(/);
+    expect($(".lib-grid .lib-tile")!.style.getPropertyValue("--cap-alpha")).toMatch(/^\d+%$/);
   });
 });
