@@ -546,7 +546,14 @@
       "details": "Detalhes",
       "needsAttention": "A revisar",
       "undoAudioRestart": "Desfeito, mas reiniciar o serviço de áudio falhou ({{error}}). Saia e entre de novo na sessão, ou reinicie o PC, para a mudança de áudio valer.",
-      "undoVolumeNotSaved": "Desfeito: os níveis antigos voltaram, mas não foi possível restaurar os níveis salvos do Linux ({{error}}), então o controle volta no máximo depois da próxima reconexão."
+      "undoVolumeNotSaved": "Desfeito: os níveis antigos voltaram, mas não foi possível restaurar os níveis salvos do Linux ({{error}}), então o controle volta no máximo depois da próxima reconexão.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Não instalado",
+      "protonNewer": "{{name}} disponível",
+      "nothingToChange": "Nada a mudar",
+      "historyStatus_one": "{{count}} mudança · última em {{date}}",
+      "historyStatus_other": "{{count}} mudanças · última em {{date}}",
+      "historyNone": "Nenhuma mudança ainda"
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -801,7 +808,6 @@
       "profileNone": "Este jogo usa suas configurações normais. Um perfil muda qualquer configuração do controle (resposta tátil, alto-falante, barra de luz, microfone, botões, analógicos) só para este jogo e volta ao normal quando ele fecha.",
       "profileFromCurrent": "Criar a partir das configurações atuais",
       "profileNeedsDongle": "Conecte {{device}} para partir das suas configurações atuais.",
-      "profileHint": "As alterações são salvas no perfil deste jogo, não {{device_em}}.",
       "profileCopyCurrent": "Copiar configurações atuais",
       "profileDelete": "Excluir perfil",
       "haptics": "Intensidade da vibração",
@@ -982,7 +988,13 @@
       "continue": "Continuar jogando",
       "libraryTitle": "Biblioteca",
       "filteredBy": "Filtro: {{filter}}",
-      "showAll": "Mostrar todos"
+      "showAll": "Mostrar todos",
+      "profileNoneShort": "Sem perfil",
+      "profileChanges_one": "{{count}} mudança",
+      "profileChanges_other": "{{count}} mudanças",
+      "hdrUnknown": "Não se sabe se suporta HDR",
+      "notesEmpty": "Vazio",
+      "glanceOpen": "Abrir {{section}}"
     },
     "dongleConsole": {
       "title": "Console: {{deviceName}}",
@@ -1499,7 +1511,6 @@
       "changes": "O que este jogo muda (todo o resto usa suas configurações normais):",
       "allNormal": "Nada mudou para este jogo ainda: ele usa suas configurações normais. \"Editar na tela do controle\" muda qualquer uma só para este jogo.",
       "useNormal": "{{name}}. Usar minha configuração normal",
-      "allSettings": "Todas as configurações",
       "normalSub": "Sua configuração normal",
       "on": "Ligado",
       "off": "Desligado",

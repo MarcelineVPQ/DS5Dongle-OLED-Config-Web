@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-// A game's page puts what needs the player first and folds what's fine:
-// Setup with everything ✓ is one "All set" line (the ✓ list, HDR checklist
-// included, opens from it); anything ✗ or a fix waiting shows open, above the
-// controller profile. Each fact has one place, and no placeholder cards.
+// A game's page, like every page: the main view is the art, the Play bar and
+// the game at a glance (tiles that open their section); the accordion at the
+// right holds Controller profile, Setup, HDR, Compatibility, DualSense
+// support, Notes and Details. What needs the player carries a yellow dot (and
+// opens on a first visit); what's fine is one line. Each fact has one place.
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,12 +17,14 @@ import { fakeBridge, fakeDesktop, gamesReport, ghostrunner, ghostrunnerNeedsSetu
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 // jsdom has no layout: the page scrolls to the top when a game opens.
 Element.prototype.scrollTo ??= () => undefined;
+Element.prototype.scrollIntoView ??= () => undefined;
 
 let container: HTMLDivElement | null = null;
 let root: Root | null = null;
 
 beforeEach(async () => {
   await i18n.changeLanguage("en");
+  window.localStorage.clear();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -51,25 +54,32 @@ function render(game: GameEntry, hdr: HdrSystem = HDR_READY, platform: "linux" |
   );
 }
 const $ = <T extends Element = HTMLElement>(sel: string) => container!.querySelector<T>(sel);
-const cards = () => [...container!.querySelectorAll<HTMLElement>(".gp-col section.dk-card")].map((s) => s.id);
-const hdrChecklist = () => $("#gp-setup .hdr-check");
-const checks = () => $<HTMLDetailsElement>("#gp-setup details.gp-checks");
+const sec = (id: string) => $(`[data-section="${id}"]`);
+const body = (id: string) => $(`[data-section="${id}"] .dk-sec-body`);
+const status = (id: string) => $(`[data-section="${id}"] .dk-sec-status`)?.textContent;
+const hasDot = (id: string) => !!$(`[data-section="${id}"] .dk-sec-task`);
+const sectionIds = () => [...container!.querySelectorAll<HTMLElement>(".dk-sec")].map((x) => x.dataset.section);
+const openIds = () => [...container!.querySelectorAll<HTMLElement>(".dk-sec.open")].map((x) => x.dataset.section);
+// Opens a section (left open if it is).
+const open = (id: string) => {
+  const head = $<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-toggle`)!;
+  if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
+  return body(id)!;
+};
+const checks = () => $<HTMLDetailsElement>('[data-section="setup"] details.gp-checks');
 
 describe("setupStatus", () => {
   const reqs = (game: GameEntry, hdr: HdrSystem) => hdrGameReqs(hdr, game, { ourProton: OUR_PROTON });
 
-  it("all ✓: nothing needs the player; every ✓ line is counted", () => {
+  it("all ✓: nothing needs the player; Setup's ✓ lines are counted (HDR is its own section)", () => {
     const game = ghostrunner();
-    const s = setupStatus(game, reqs(game, HDR_READY));
-    expect(s).toEqual({ attention: false, hdrOk: true, passed: 2 + reqs(game, HDR_READY).length });
+    expect(setupStatus(game, reqs(game, HDR_READY))).toEqual({ attention: false, hdrOk: true, passed: 2 });
   });
 
-  it("any HDR ✗ needs the player, and the HDR list isn't counted as passed", () => {
+  it("an HDR ✗ is HDR's, not Setup's", () => {
     const game = ghostrunner({ hdr: "missing" });
     const s = setupStatus(game, reqs(game, HDR_NO_LAYER));
-    expect(s.attention).toBe(true);
-    expect(s.hdrOk).toBe(false);
-    expect(s.passed).toBe(2);
+    expect(s).toEqual({ attention: false, hdrOk: false, passed: 2 });
   });
 
   it("a fix waiting, an unbuildable standard gamepad or the player's own mode need the player", () => {
@@ -81,34 +91,63 @@ describe("setupStatus", () => {
 });
 
 describe("game page", () => {
-  it("all set: Setup is one folded line after the profile, the HDR checklist inside it", () => {
+  it("main view: the art, the Play bar and the game at a glance; every section at the right", () => {
     render(ghostrunner());
-    const fold = checks()!;
-    expect(fold.open).toBe(false);
-    expect(fold.querySelector("summary")!.textContent).toBe("✓ All set (10 checks)");
-    expect(hdrChecklist()!.closest("details")).toBe(fold);
-    expect($("#gp-setup .dk-chip.warn")).toBeNull();
-    expect(cards().indexOf("gp-profile")).toBeLessThan(cards().indexOf("gp-setup"));
+    expect($(".dk-split-main .gp-hero")).not.toBeNull();
+    expect($(".dk-split-main .gp-bar .gp-play")).not.toBeNull();
+    expect($(".dk-split-head h2")!.textContent).toBe("Ghostrunner");
+    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "notes", "details"]);
+    expect(container!.querySelectorAll(".dk-card")).toHaveLength(0); // no cards left
+    // Nothing needs the player: nothing opens by itself, and a folded section renders nothing.
+    expect(openIds()).toEqual([]);
+    expect(container!.querySelectorAll(".dk-sec-body")).toHaveLength(0);
+    // Every section says its state.
+    for (const id of sectionIds()) expect(status(id!), id).toBeTruthy();
+    expect(status("support")).toMatch(/ · ★★★★☆$/); // the tier and the player's rating
   });
 
-  it("needs attention: Setup comes first and open, the ✗ checklist outside the fold", () => {
+  it("each tile opens its section (and flashes it)", () => {
+    render(ghostrunner());
+    const tiles = [...container!.querySelectorAll<HTMLButtonElement>(".gp-glance .gp-tile")];
+    expect(tiles.map((t) => t.querySelector(".gp-tile-label")!.textContent)).toEqual([
+      i18n.t("desktop.library.section.support"),
+      i18n.t("desktop.library.runsWith"),
+      i18n.t("desktop.library.section.profile"),
+      i18n.t("desktop.library.section.setup"),
+    ]);
+    const targets = ["support", "compatibility", "profile", "setup"];
+    tiles.forEach((tile, i) => {
+      act(() => tile.click());
+      expect(openIds()).toEqual([targets[i]]);
+      expect(sec(targets[i])!.classList.contains("dk-flash")).toBe(true);
+    });
+  });
+
+  it("all set: Setup is one ✓ line (its list folded), HDR its own section with the checklist", () => {
+    render(ghostrunner());
+    expect(status("setup")).toBe("✓ All set (2 checks)");
+    expect(hasDot("setup")).toBe(false);
+    open("setup");
+    expect(checks()!.open).toBe(false);
+    expect(checks()!.querySelector("summary")!.textContent).toBe("✓ All set (2 checks)");
+    expect(status("hdr")).toBe(`${i18n.t("desktop.library.supportsHdr")} · on for DP-1`);
+    expect(hasDot("hdr")).toBe(false);
+    expect(open("hdr").querySelector(".hdr-check")!.textContent).not.toContain("✗");
+  });
+
+  it("needs attention: Setup and HDR carry their dots; a first visit opens Setup with Review", () => {
     render(ghostrunnerNeedsSetup(), HDR_NO_LAYER);
-    expect(cards()[0]).toBe("gp-setup");
-    expect($("#gp-setup .dk-chip.warn")!.textContent).toBe(i18n.t("desktop.library.needsAttention"));
-    expect(hdrChecklist()!.closest("details")).toBeNull();
-    expect(hdrChecklist()!.textContent).toContain("✗");
+    expect(openIds()).toEqual(["setup"]);
+    expect(hasDot("setup")).toBe(true);
+    expect(status("setup")).toBe(i18n.t("desktop.library.needsAttention"));
+    expect([...body("setup")!.querySelectorAll("button")].some((b) => b.textContent === i18n.t("desktop.library.setupReview"))).toBe(true);
     expect(checks()!.querySelector("summary")!.textContent).toBe("1 check passed");
-    expect([...container!.querySelectorAll("#gp-setup button")].some((b) => b.textContent === i18n.t("desktop.library.setupReview"))).toBe(true);
+    expect(body("setup")!.querySelector(".hdr-check")).toBeNull(); // HDR has its own section
+    expect(hasDot("hdr")).toBe(true);
+    const hdr = open("hdr");
+    expect(hdr.querySelector(".hdr-check")!.textContent).toContain("✗");
     // Set it up yourself stays one click away.
-    expect($("#gp-setup .hdr-manual summary")!.textContent).toBe(i18n.t("desktop.hdrManual.title"));
-  });
-
-  it("moving Setup between the two places keeps it (its Apply note survives the rescan)", () => {
-    render(ghostrunnerNeedsSetup(), HDR_NO_LAYER);
-    const before = $("#gp-setup");
-    render(ghostrunner());
-    expect(cards()[0]).toBe("gp-profile");
-    expect($("#gp-setup")).toBe(before);
+    expect(hdr.querySelector(".hdr-manual summary")!.textContent).toBe(i18n.t("desktop.hdrManual.title"));
   });
 
   it("each fact once: no placeholders, no tier or Proton in the stats, the store in Details", () => {
@@ -117,40 +156,78 @@ describe("game page", () => {
     expect(text).not.toContain("Player ratings");
     expect(text).not.toContain("Shared configs");
     expect([...container!.querySelectorAll(".gp-stat-label")].map((l) => l.textContent)).toEqual([i18n.t("desktop.library.lastPlayed"), i18n.t("desktop.library.playTime")]);
-    expect(text.split(i18n.t("desktop.library.runsWith")).length - 1).toBe(1);
-    expect(text.split(i18n.t("desktop.library.recommended")).length - 1).toBe(0); // already on ours
-    expect($("#gp-compat")!.textContent).not.toContain(i18n.t("desktop.library.store"));
-    expect($("#gp-details")!.textContent).toContain(i18n.t("desktop.library.storeName.gog"));
+    const compat = open("compatibility");
+    expect(compat.textContent!.split(i18n.t("desktop.library.runsWith")).length - 1).toBe(1);
+    expect(compat.textContent).not.toContain(i18n.t("desktop.library.recommended")); // already on ours
+    expect(compat.textContent).not.toContain(i18n.t("desktop.library.store"));
+    expect(open("details").textContent).toContain(i18n.t("desktop.library.storeName.gog"));
   });
 
-  it("the player's marks fold under one line; Controller not detected is in Setup or in the feedback, not both", () => {
+  it("Controller profile: what it changes, Edit in controller view, the layout and curves; no copy of the controller view's settings", () => {
+    render(ghostrunner());
+    expect(status("profile")).toBe("2 changes");
+    const profile = open("profile");
+    expect([...profile.querySelectorAll(".dk-chip")].map((c) => c.textContent)).toHaveLength(2);
+    const buttons = [...profile.querySelectorAll("button")].map((b) => b.textContent);
+    expect(buttons).toContain(i18n.t("desktop.editing.open"));
+    expect(buttons).toContain(i18n.t("desktop.library.profileCopyCurrent"));
+    expect(buttons).toContain(i18n.t("desktop.library.profileDelete"));
+    expect([...profile.querySelectorAll(".dk-row > .dk-label")].map((l) => l.textContent)).toEqual([
+      i18n.t("desktop.layouts.profileLabel"),
+      i18n.t("desktop.curves.profileLeft"),
+      i18n.t("desktop.curves.profileRight"),
+    ]);
+    expect(profile.querySelectorAll('input[type="range"]')).toHaveLength(0);
+  });
+
+  it("the player's marks: Controller not detected in Setup (or in the feedback, not both), Supports HDR in HDR", () => {
     render(ghostrunner({ support: "unknown", gamepad: undefined }));
-    const marks = [...container!.querySelectorAll<HTMLDetailsElement>("#gp-setup details")].find((d) => d.querySelector("summary")!.textContent!.startsWith(i18n.t("desktop.library.marksTitle")))!;
+    const marks = open("setup").querySelector<HTMLDetailsElement>("details.gp-marks")!;
     expect(marks.open).toBe(false);
+    expect(marks.querySelector("summary")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
     expect(marks.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
-    expect(marks.textContent).toContain(i18n.t("desktop.library.supportsHdr"));
-    expect(marks.querySelector("summary")!.textContent).toBe(`${i18n.t("desktop.library.marksTitle")} (1)`); // Supports HDR is ticked
-    expect($("#gp-rating")!.textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(marks.textContent).not.toContain(i18n.t("desktop.library.supportsHdr"));
+    const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
+    expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
+    expect(open("support").querySelector("#gp-rating")!.textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
     // A game on our XInput list: no mark, so the feedback keeps it.
     render(ghostrunner());
-    expect($("#gp-rating")!.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(open("support").querySelector("#gp-rating")!.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
   });
 
   it("feedback folds under its question with the number ticked", () => {
     render(ghostrunner());
-    const fold = $<HTMLDetailsElement>("#gp-rating details")!;
+    const fold = open("support").querySelector<HTMLDetailsElement>("#gp-rating details")!;
     expect(fold.open).toBe(false);
     expect(fold.querySelector("summary")!.textContent).toBe(`${i18n.t("desktop.library.feedbackHint")} (2)`);
     expect(fold.querySelectorAll("input[type=checkbox]").length).toBeGreaterThan(0);
   });
 
-  it("Windows: no Proton or HDR parts, the store and launcher in Details", () => {
+  it("Notes: the first line is the status; a folded section keeps what was typed", () => {
+    vi.useFakeTimers();
+    try {
+      render(ghostrunner());
+      expect(status("notes")).toBe("Ray Tracing needs -dx12.");
+      const box = open("notes").querySelector("textarea")!;
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(box, "Use DX12\nand HDR");
+        box.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      expect(status("notes")).toBe("Use DX12");
+      act(() => $<HTMLButtonElement>('[data-section="notes"] .dk-sec-toggle')!.click());
+      expect(open("notes").querySelector("textarea")!.value).toBe("Use DX12\nand HDR");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("Windows: no Proton or HDR sections, the store and launcher in Details", () => {
     render(ghostrunner({ hdr: undefined, gamepad: undefined, runner: null, usesOurProton: false, envFlags: [] }), HDR_READY, "win32");
-    expect($("#gp-compat")).toBeNull();
-    expect(hdrChecklist()).toBeNull();
-    expect(container!.textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
+    expect(sectionIds()).toEqual(["profile", "setup", "support", "notes", "details"]);
+    expect([...container!.querySelectorAll(".gp-tile")]).toHaveLength(3);
+    expect(open("setup").textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
     expect(checks()!.querySelector("summary")!.textContent).toBe("✓ All set (1 check)");
-    expect($("#gp-details")!.textContent).toContain(i18n.t("desktop.library.launcher"));
+    expect(open("details").textContent).toContain(i18n.t("desktop.library.launcher"));
   });
 });
 
@@ -159,15 +236,19 @@ describe("game page", () => {
 // what it means (owner: "five stars under a game banner read as rating the game").
 describe("rating: how well the DualSense works in this game", () => {
   const stars = () => [...container!.querySelectorAll<HTMLButtonElement>("#gp-rating [role=radio]")];
+  // The rating is in DualSense support: rendered while it's open.
+  const show = (game: GameEntry = ghostrunner()) => {
+    render(game);
+    open("support");
+  };
   const label = () => $("#gp-rating .gp-rate-label");
   const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
 
   it("lives in DualSense support under the per-feature list, with its question, feedback and the saved-on-this-PC line", () => {
-    render(ghostrunner());
-    const rating = $("#gp-support #gp-rating")!;
+    show();
+    const rating = $('[data-section="support"] #gp-rating')!;
     expect(rating).not.toBeNull();
-    expect(cards()).not.toContain("gp-rating");
-    expect($("#gp-support .gp-features")!.compareDocumentPosition(rating) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect($('[data-section="support"] .gp-features')!.compareDocumentPosition(rating) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(rating.querySelector("h3")!.textContent).toBe("How well does your DualSense work in this game?");
     expect(rating.querySelector("[role=radiogroup]")!.getAttribute("aria-labelledby")).toBe(rating.querySelector("h3")!.id);
     expect(rating.querySelector("summary")!.textContent).toContain(i18n.t("desktop.library.feedbackHint"));
@@ -175,7 +256,7 @@ describe("rating: how well the DualSense works in this game", () => {
   });
 
   it("each star names how the controller works; the chosen one's words show next to the stars", () => {
-    render(ghostrunner()); // rated 4
+    show(); // rated 4
     expect(stars().map((b) => b.title)).toEqual(["Doesn't work", "Barely works", "Works with problems", "Works well", "Works perfectly"]);
     expect(stars()[0].getAttribute("aria-label")).toBe("1 star: Doesn't work");
     expect(stars()[4].getAttribute("aria-label")).toBe("5 stars: Works perfectly");
@@ -185,7 +266,7 @@ describe("rating: how well the DualSense works in this game", () => {
   });
 
   it("hover and focus preview a star's words; leaving shows the chosen one again", () => {
-    render(ghostrunner());
+    show();
     act(() => void stars()[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
     expect(label()!.textContent).toBe("Doesn't work");
     expect(label()!.classList.contains("preview")).toBe(true);
@@ -213,6 +294,7 @@ describe("rating: how well the DualSense works in this game", () => {
         }),
       ),
     );
+    open("support");
     expect(label()).toBeNull();
     expect(stars().map((b) => b.tabIndex)).toEqual([0, -1, -1, -1, -1]);
   });
@@ -220,7 +302,7 @@ describe("rating: how well the DualSense works in this game", () => {
   it("keyboard: one tab stop, arrows and Home/End pick a star and move focus; saved in the same rating field", () => {
     vi.useFakeTimers();
     try {
-      render(ghostrunner());
+      show();
       const calls: string[] = [];
       vi.stubGlobal("desktop", fakeDesktop("linux", calls));
       expect(stars().map((b) => b.tabIndex)).toEqual([-1, -1, -1, 0, -1]);

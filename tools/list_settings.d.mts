@@ -5,7 +5,6 @@ export interface SettingsFinding {
   kind: "card" | "row" | "bare" | "section";
   detail: string;
 }
-export const PENDING: Record<string, string>;
 export const NOT_SETTINGS: Record<string, string>;
 export function settingsFindings(sources: Array<{ file: string; text: string }>): SettingsFinding[];
 export function gateProblems(rows: SettingsFinding[], files: string[]): { bad: SettingsFinding[]; stale: string[] };

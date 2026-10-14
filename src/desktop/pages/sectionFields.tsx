@@ -1,8 +1,8 @@
-// Where a settings section's values come from and where its edits go. The
-// live panels use the dongle draft (DesktopApp applies it to the dongle's
-// RAM); the game page passes a game profile's draft (library/profileFields.ts).
-// One set of sections, so the ranges, steps, hints and validation are the
-// same in both places.
+// Where a settings section's values come from and where its edits go: the
+// dongle draft (DesktopApp applies it to the dongle's RAM). `fields` (a game
+// profile's draft) has no caller since the game page's "All settings" list
+// went (a game's profile is edited in the controller view); its removal is a
+// BACKLOG row.
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { fieldIssue, type ConfigBody } from "../../protocol/config";

@@ -219,6 +219,9 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
         }),
       ),
     );
+    // DualSense Proton's section (it carries the update's dot), opened unless it's open already.
+    const head = container.querySelector<HTMLButtonElement>('[data-section="proton"] .dk-sec-toggle')!;
+    if (head.getAttribute("aria-expanded") !== "true") await act(async () => head.click());
     await act(async () => [...container.querySelectorAll("button")].find((b) => b.textContent?.startsWith("Install "))!.click());
     await act(async () => button("Download and install").click());
     expect(text()).toContain(words.proton);

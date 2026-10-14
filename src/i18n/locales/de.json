@@ -546,7 +546,14 @@
       "details": "Details",
       "needsAttention": "Zu erledigen",
       "undoAudioRestart": "Rückgängig gemacht, aber der Neustart des Audiodienstes ist fehlgeschlagen ({{error}}). Melde dich ab und wieder an oder starte den PC neu, damit die Audioänderung wirkt.",
-      "undoVolumeNotSaved": "Rückgängig gemacht: Die alten Pegel sind zurück, aber die von Linux gespeicherten Pegel konnten nicht wiederhergestellt werden ({{error}}). Nach dem nächsten erneuten Verbinden steht der Controller daher wieder auf voll."
+      "undoVolumeNotSaved": "Rückgängig gemacht: Die alten Pegel sind zurück, aber die von Linux gespeicherten Pegel konnten nicht wiederhergestellt werden ({{error}}). Nach dem nächsten erneuten Verbinden steht der Controller daher wieder auf voll.",
+      "launchersTitle": "Launcher",
+      "protonNotInstalled": "Nicht installiert",
+      "protonNewer": "{{name}} verfügbar",
+      "nothingToChange": "Nichts zu ändern",
+      "historyStatus_one": "{{count}} Änderung · zuletzt {{date}}",
+      "historyStatus_other": "{{count}} Änderungen · zuletzt {{date}}",
+      "historyNone": "Noch keine Änderungen"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -801,7 +808,6 @@
       "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (haptisches Feedback, Lautsprecher, Leuchtleiste, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
       "profileFromCurrent": "Aus aktuellen Einstellungen erstellen",
       "profileNeedsDongle": "Verbinde {{device_akk}}, um mit deinen aktuellen Einstellungen zu starten.",
-      "profileHint": "Änderungen werden im Profil dieses Spiels gespeichert, nicht auf {{device_dat}}.",
       "profileCopyCurrent": "Aktuelle Einstellungen kopieren",
       "profileDelete": "Profil löschen",
       "haptics": "Vibrationsintensität",
@@ -982,7 +988,13 @@
       "continue": "Weiterspielen",
       "libraryTitle": "Bibliothek",
       "filteredBy": "Filter: {{filter}}",
-      "showAll": "Alle zeigen"
+      "showAll": "Alle zeigen",
+      "profileNoneShort": "Kein Profil",
+      "profileChanges_one": "{{count}} Änderung",
+      "profileChanges_other": "{{count}} Änderungen",
+      "hdrUnknown": "HDR-Unterstützung nicht bekannt",
+      "notesEmpty": "Leer",
+      "glanceOpen": "{{section}} öffnen"
     },
     "dongleConsole": {
       "title": "Konsole: {{deviceName}}",
@@ -1499,7 +1511,6 @@
       "changes": "Was dieses Spiel ändert (alles andere nutzt deine normalen Einstellungen):",
       "allNormal": "Für dieses Spiel ist noch nichts geändert: Es nutzt deine normalen Einstellungen. Mit „In der Controller-Ansicht bearbeiten“ änderst du sie nur für dieses Spiel.",
       "useNormal": "{{name}}. Meine normale Einstellung verwenden",
-      "allSettings": "Alle Einstellungen",
       "normalSub": "Deine normale Einstellung",
       "on": "An",
       "off": "Aus",

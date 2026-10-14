@@ -1,22 +1,23 @@
 // Setup at a glance, on a game's page and on Games → Home: what needs the
-// player (shown open, first on the page) and what already passed (one "All
-// set" line that opens to the details). A fully set-up game, or computer,
-// shows one line, not a wall of checkmarks.
+// player (the section's yellow dot, open on a first visit) and what already
+// passed (one "All set" line that opens to the details). A fully set-up game,
+// or computer, shows one line, not a wall of checkmarks. A game's HDR
+// checklist is its own section (hdrOk), not part of Setup.
 import { protonApplies } from "../games/platform";
 import { hdrSystemReqs, type HdrReq } from "../games/hdrSetup";
 import { allFixes, type GameEntry, type GamesReport } from "../games/types";
 
 export interface SetupStatus {
-  attention: boolean; // anything for the player to do: shown open
-  hdrOk: boolean; // every HDR requirement ✓ (or not an HDR game): its checklist folds into the passed list
-  passed: number; // ✓ lines in the folded list
+  attention: boolean; // anything in Setup for the player to do: its yellow dot
+  hdrOk: boolean; // every HDR requirement ✓ (or not an HDR game); else HDR's yellow dot
+  passed: number; // ✓ lines in Setup's folded list
 }
 
 export function setupStatus(game: Pick<GameEntry, "fixes" | "gamepad" | "mode">, hdrReqs: HdrReq[]): SetupStatus {
   // loop: HOT-PATH-OK — N ≈ 6 HDR requirements; per game page render
   const hdrOk = hdrReqs.every((r) => r.ok);
-  const attention = game.fixes.length > 0 || game.gamepad === "no-build" || game.mode?.state === "own" || !hdrOk;
-  const passed = (game.gamepad === "set" ? 1 : 0) + (game.mode?.state === "set" ? 1 : 0) + (hdrOk ? hdrReqs.length : 0);
+  const attention = game.fixes.length > 0 || game.gamepad === "no-build" || game.mode?.state === "own";
+  const passed = (game.gamepad === "set" ? 1 : 0) + (game.mode?.state === "set" ? 1 : 0);
   return { attention, hdrOk, passed };
 }
 
@@ -38,9 +39,8 @@ export function systemHdrReqs(report: GamesReport): HdrReq[] {
   return hdrSystemReqs(report.system.hdr, { ourProton: report.ourProton.name, flatpak });
 }
 
-// Games → Home: each part that needs the player shows open at the top (with
-// its action); with none, Home is one "Everything is set up" line and the
-// library gets the room.
+// Games → Home: which sections need the player (their yellow dots; the
+// panel's line says "Needs attention" while any does).
 export interface HomeStatus {
   attention: boolean; // any of the below
   fixes: boolean; // a recommended change the player hasn't declined

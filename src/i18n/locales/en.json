@@ -545,7 +545,14 @@
       "details": "Details",
       "needsAttention": "Needs attention",
       "undoAudioRestart": "Undone, but restarting the audio service failed ({{error}}). Log out and back in, or restart the PC, for the audio change to take effect.",
-      "undoVolumeNotSaved": "Undone: the old levels are back, but the levels Linux saved couldn't be put back ({{error}}), so the controller comes back at full after its next reconnect."
+      "undoVolumeNotSaved": "Undone: the old levels are back, but the levels Linux saved couldn't be put back ({{error}}), so the controller comes back at full after its next reconnect.",
+      "launchersTitle": "Launchers",
+      "protonNotInstalled": "Not installed",
+      "protonNewer": "{{name}} available",
+      "nothingToChange": "Nothing to change",
+      "historyStatus_one": "{{count}} change · last {{date}}",
+      "historyStatus_other": "{{count}} changes · last {{date}}",
+      "historyNone": "No changes yet"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -800,7 +807,6 @@
       "profileNone": "This game uses your normal settings. A profile changes any controller setting (haptic feedback, speaker, light bar, microphone, buttons, sticks) for this game only, and switches back when it closes.",
       "profileFromCurrent": "Create from current settings",
       "profileNeedsDongle": "Connect {{device}} to start from your current settings.",
-      "profileHint": "Changes are saved to this game's profile, not to {{device}}.",
       "profileCopyCurrent": "Copy current settings",
       "profileDelete": "Delete profile",
       "haptics": "Vibration intensity",
@@ -981,7 +987,13 @@
       "continue": "Continue playing",
       "libraryTitle": "Library",
       "filteredBy": "Filter: {{filter}}",
-      "showAll": "Show all"
+      "showAll": "Show all",
+      "profileNoneShort": "No profile",
+      "profileChanges_one": "{{count}} change",
+      "profileChanges_other": "{{count}} changes",
+      "hdrUnknown": "Not known to support HDR",
+      "notesEmpty": "Empty",
+      "glanceOpen": "Open {{section}}"
     },
     "dongleConsole": {
       "title": "{{deviceName}} console",
@@ -1498,7 +1510,6 @@
       "changes": "What this game changes (everything else uses your normal settings):",
       "allNormal": "Nothing changed for this game yet: it uses your normal settings. Edit in controller view to change any of them for this game.",
       "useNormal": "{{name}}. Use my normal setting",
-      "allSettings": "All settings",
       "normalSub": "Your normal setting",
       "on": "On",
       "off": "Off",

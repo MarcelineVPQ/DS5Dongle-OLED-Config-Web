@@ -81,6 +81,8 @@ describe("game launchers opt-out", () => {
       });
     act(() => root!.render(page(true)));
     await settle();
+    // Rescan is in Launchers.
+    click(container!.querySelector<HTMLButtonElement>('[data-section="launchers"] .dk-sec-toggle')!);
     expect(button(i18n.t("desktop.games.rescan"))).toBeTruthy();
     expect(buttons().some((b) => /stop/i.test(b.textContent ?? ""))).toBe(false);
     // Off: the consent card, saying the library comes back once allowed.

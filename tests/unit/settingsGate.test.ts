@@ -1,10 +1,10 @@
 // The settings gate (tools/list_settings.mjs): one framework for every
 // setting. A settings card, a row or a bare control outside a Section, or a
-// Section that isn't lazy or named properly, is a finding; the pages not on
-// the accordion yet are allowed theirs, and the list of them only shrinks.
+// Section that isn't lazy or named properly, is a finding; only the files
+// that aren't settings pages are allowed theirs, and that list only shrinks.
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { gateProblems, PENDING, settingsFindings } from "../../tools/list_settings.mjs";
+import { gateProblems, NOT_SETTINGS, settingsFindings } from "../../tools/list_settings.mjs";
 
 const page = (body: string) => [{ file: "src/desktop/pages/NewPage.tsx", text: `import { Globe } from "lucide-react";\n${body}` }];
 const kinds = (body: string) => settingsFindings(page(body)).map((f) => `${f.kind}: ${f.detail}`);
@@ -66,13 +66,15 @@ describe("the settings gate", () => {
     ]);
   });
 
-  it("allows the pages still to move only while they have findings (the list shrinks)", () => {
-    const pending = Object.keys(PENDING)[0];
-    const finding = { file: pending, line: 1, kind: "card" as const, detail: "x" };
-    expect(gateProblems([finding], [pending]).bad).toEqual([]);
-    expect(gateProblems([finding], [pending]).stale).not.toContain(pending);
-    expect(gateProblems([], [pending]).stale).toContain(pending);
-    // A Section problem is never allowed, not even in a page still to move.
-    expect(gateProblems([{ ...finding, kind: "section" }], [pending]).bad).toHaveLength(1);
+  it("allows findings only in the files that aren't settings pages, while they have some (the list shrinks)", () => {
+    const other = Object.keys(NOT_SETTINGS)[0];
+    const finding = { file: other, line: 1, kind: "row" as const, detail: "x" };
+    expect(gateProblems([finding], [other]).bad).toEqual([]);
+    expect(gateProblems([finding], [other]).stale).not.toContain(other);
+    expect(gateProblems([], [other]).stale).toContain(other);
+    // Every page is on the accordion: a page's finding is never allowed.
+    expect(gateProblems([{ ...finding, file: "src/desktop/pages/GamesPage.tsx" }], [other, "src/desktop/pages/GamesPage.tsx"]).bad).toHaveLength(1);
+    // A Section problem is never allowed anywhere.
+    expect(gateProblems([{ ...finding, kind: "section" }], [other]).bad).toHaveLength(1);
   });
 });
