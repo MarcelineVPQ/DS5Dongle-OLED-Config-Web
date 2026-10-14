@@ -1669,6 +1669,7 @@
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",
+      "nowInstalled": "L'application est maintenant installée sur ce PC : ouvrez-la depuis le menu Démarrer. Le fichier .exe portable utilisé jusqu'ici n'est plus nécessaire, vous pouvez le supprimer.",
       "dismissedTitle": "Notifications fermées",
       "none": "Aucune notification fermée.",
       "showAgain": "Afficher à nouveau",

@@ -57,7 +57,7 @@ describe("portable leftovers in Temp", () => {
     nsis("nsa4FED.tmp");
     file("nsb1234.tmp", "app-64.7z");
     for (const dir of [OWN, "3KfewjYWfn6W58O8fai27u0RDUN", "nsa4FED.tmp", "nsa4FED.tmp/7z-out", "nsb1234.tmp"]) age(dir);
-    const removed = await pruneUnpackLeftovers(join(temp, OWN, EXE), NOW);
+    const removed = await pruneUnpackLeftovers(temp, join(temp, OWN, EXE), NOW);
     expect(removed.length).toBe(2);
     expect(existsSync(join(temp, "3KfewjYWfn6W58O8fai27u0RDUN"))).toBe(false);
     expect(existsSync(join(temp, "nsa4FED.tmp"))).toBe(false);

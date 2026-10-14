@@ -5,8 +5,9 @@
 // and the app itself to a build-named folder (~420 MB), and deletes both when
 // the app quits. A launcher that is stopped before that (killed, or ended at
 // sign-out/shutdown while the app sits in the tray) leaves ~1 GB behind every
-// time; the Win11 test VM had 46 such folders, 24.6 GB (2026-10-14). On start,
-// the app removes the ones that are clearly its own and not in use.
+// time; the Win11 test VM had 46 such folders, 24.6 GB (2026-10-14). The app
+// is now installed instead (electron-builder.yml); on start it still removes
+// the ones the portable exe left, those that are clearly its own and not in use.
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
@@ -60,11 +61,13 @@ const removeDir = (dir: string) => rm(dir, { recursive: true, force: true });
 // use stay (that folder is tried again at the next start). In the app, `remove`
 // must not see .asar files as folders (Electron's fs does; index.ts passes
 // original-fs), or every app.asar stays behind.
-export async function pruneUnpackLeftovers(execPath = process.execPath, now = Date.now(), remove: (dir: string) => Promise<void> = removeDir): Promise<string[]> {
+// `temp` is %TEMP% (the installed app cleans up after the portable exe it
+// replaced); `execPath` the running program (its folder is never touched).
+export async function pruneUnpackLeftovers(temp: string, execPath = process.execPath, now = Date.now(), remove: (dir: string) => Promise<void> = removeDir): Promise<string[]> {
   const ownDir = dirname(execPath);
   const removed: string[] = [];
   // loop: SERIAL-REQUIRED — one folder at a time keeps the disk work at start-up small (a few folders at most once tidy)
-  for (const dir of findLeftovers(dirname(ownDir), ownDir, basename(execPath), now)) {
+  for (const dir of findLeftovers(temp, ownDir, basename(execPath), now)) {
     try {
       await remove(dir);
       removed.push(dir);

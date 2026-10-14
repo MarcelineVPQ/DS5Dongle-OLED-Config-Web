@@ -36,15 +36,29 @@ linux:
     - "!node_modules/koffi{,/**/*}"
     - "!node_modules/@koromix{,/**/*}"
 
-# Portable single exe (user decision): no installer, self-updates in place,
-# offers Start Menu / desktop shortcuts on first run.
+# Per-user installer (owner's choice, 2026-10-14): no admin, installs to
+# %LOCALAPPDATA%\Programs, adds a Start menu entry and an uninstaller, starts
+# in about a second. Replaces the portable exe, which unpacked ~1 GB to Temp on
+# every start (docs/BACKLOG.md). Updates run the new installer silently
+# (electron/main/updater.ts). The tray menu still offers a desktop shortcut.
 win:
   target:
-    - target: portable
+    - target: nsis
       arch: [x64]
   icon: build/icon.ico
-portable:
-  artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-win-x64.exe
+nsis:
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: DS5 Dongle OLED Edition Configurator
+  runAfterFinish: true
+  # Settings, game profiles and the library stay (a reinstall keeps them).
+  deleteAppDataOnUninstall: false
+  # Removes the launch-at-login entry the app writes (build/installer.nsh).
+  include: build/installer.nsh
+  artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-win-x64-setup.exe
 
 mac:
   target:

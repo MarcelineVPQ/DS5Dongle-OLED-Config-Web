@@ -9,7 +9,7 @@
 // user verbatim.
 import { TRUSTED_KEYS, feedSignedBy } from "./feedSignature";
 import { errorText } from "../../src/errorText";
-import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
@@ -22,6 +22,7 @@ import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
 import { FeedCache, FeedError, FeedMissingError, feedProblem } from "./updateFeed";
 import { pathWithoutAppImageMounts } from "./games/schemeHandler";
+import { WINDOWS_SETUP_NAME, installerArgs, isInstalledApp } from "./windowsInstall";
 
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
@@ -73,6 +74,17 @@ export function updateDropsDevTools(devToolsBuilt: boolean, remote: string): boo
   return devToolsBuilt && devNumber(remote) === null;
 }
 
+// Windows: where the downloaded installer waits (removed at the next start).
+const windowsUpdateDir = (): string => join(app.getPath("temp"), "ds5-configurator-update");
+
+// Runs the verified installer silently and independent of this app (it
+// outlives the exit that follows).
+function runInstaller(installer: string, relaunch: boolean): void {
+  // lifetime: OK — detached and unref'd: the installer outlives this app on purpose (app.exit follows)
+  // error: NOT-WORTH — the verified installer of the update the user chose; if it can't start, the current version stays and the next check offers the update again
+  spawn(installer, installerArgs(relaunch), { detached: true, stdio: "ignore", windowsHide: true }).unref();
+}
+
 export class Updater {
   private state: UpdateState = { phase: "idle" };
   // cache: OK — key=none (the feed the app offer on screen came from); invalidated=each update check; bound=1 entry. Only the app update installs from it; firmware downloads use the entry the user was shown (firmwareSource.ts)
@@ -86,6 +98,8 @@ export class Updater {
   // though it's older) until it's installed or the Development channel is
   // picked again, so a routine check can't take the offer back.
   private returningToStable = false;
+  // Restart now started the installer (Windows): quitting doesn't run it again.
+  private restarting = false;
 
   constructor(
     private readonly emit: (state: UpdateState) => void,
@@ -106,7 +120,7 @@ export class Updater {
   private selfInstallBlocker(): string | null {
     if (!app.isPackaged) return "running from source";
     if (process.platform === "linux" && !process.env.APPIMAGE) return "not running as an AppImage";
-    if (process.platform === "win32" && !process.env.PORTABLE_EXECUTABLE_FILE) return "not the portable build";
+    if (process.platform === "win32" && !isInstalledApp(process.execPath, app.getName(), existsSync)) return "not the installed app";
     if (process.platform === "darwin") return "macOS builds update from the release page";
     return null;
   }
@@ -118,9 +132,9 @@ export class Updater {
     return null;
   }
 
-  // Leftovers from a previous session's update: partial downloads, the old
-  // Windows exe (it was the running process, so it couldn't be deleted then),
-  // and older versioned AppImages beside the current one.
+  // Leftovers from a previous session's update: partial downloads, the
+  // Windows installer that already ran, and older versioned AppImages beside
+  // the current one.
   pruneStaleFiles(): void {
     try {
       if (process.platform === "linux" && process.env.APPIMAGE) {
@@ -132,10 +146,8 @@ export class Updater {
           const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
-      } else if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) {
-        const exe = process.env.PORTABLE_EXECUTABLE_FILE;
-        rmSync(`${exe}.old`, { force: true });
-        rmSync(`${exe}.part`, { force: true });
+      } else if (process.platform === "win32") {
+        rmSync(windowsUpdateDir(), { recursive: true, force: true });
       }
     } catch {
       // error: NOT-WORTH — Best effort; nothing depends on it.
@@ -248,7 +260,7 @@ export class Updater {
 
   // Where the new build goes. Linux: a versioned file beside the running
   // AppImage (never overwrite it: it's FUSE-mounted and would SIGBUS). Windows:
-  // the portable exe's own path (swapped by rename in install()).
+  // the installer, in a folder of its own under Temp (run on restart or quit).
   private installTarget(download: Download): string {
     if (process.platform === "linux") {
       const dir = dirname(realpathSync(process.env.APPIMAGE!));
@@ -256,7 +268,12 @@ export class Updater {
       if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+(?:-dev\.\d+)?-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
       return join(dir, name);
     }
-    return process.env.PORTABLE_EXECUTABLE_FILE!;
+    const name = basename(new URL(download.url).pathname);
+    if (!WINDOWS_SETUP_NAME.test(name)) throw new Error("Unexpected Windows installer file name in the manifest.");
+    const dir = windowsUpdateDir();
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    return join(dir, name);
   }
 
   private install(part: string, target: string): string {
@@ -269,17 +286,17 @@ export class Updater {
       symlinkSync(target, stable);
       return stable;
     }
-    // Windows: a running exe can be renamed but not overwritten.
-    const old = `${target}.old`;
-    rmSync(old, { force: true });
-    renameSync(target, old);
-    try {
-      renameSync(part, target);
-    } catch (cause) {
-      renameSync(old, target); // roll back
-      throw cause;
-    }
+    // Windows: the verified installer waits; restart() or quitting runs it.
+    renameSync(part, target);
     return target;
+  }
+
+  // Windows, quitting with an update downloaded and verified ("Restart now"
+  // not pressed): the installer runs silently as the app exits, so the next
+  // start is the new version (as on Linux). Called once, from will-quit.
+  installOnQuit(): void {
+    if (process.platform !== "win32" || this.state.phase !== "ready" || !this.installedPath || this.restarting) return;
+    runInstaller(this.installedPath, false);
   }
 
   // Start the installed version and quit this one.
@@ -309,6 +326,11 @@ export class Updater {
       // lifetime: OK — detached and unref'd: the relaunch outlives this app on purpose (app.exit next)
       // error: NOT-WORTH — relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again)
       if (!started) spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env }).unref();
+    } else if (process.platform === "win32") {
+      // The installer closes this copy if it is still running, installs over
+      // it and starts the new version (--force-run).
+      this.restarting = true;
+      runInstaller(target, true);
     } else {
       // lifetime: OK — detached relaunch, app.exit next
       // error: NOT-WORTH — relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again)

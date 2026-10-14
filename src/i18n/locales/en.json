@@ -1668,6 +1668,7 @@
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
+      "nowInstalled": "The app is now installed on this PC: open it from the Start menu. The portable .exe file you used before isn't needed any more, and you can delete it.",
       "dismissedTitle": "Dismissed notices",
       "none": "No dismissed notices.",
       "showAgain": "Show again",
