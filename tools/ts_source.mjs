@@ -82,3 +82,71 @@ export const isComponentOrHook = (fn) => {
   if (/\(cb\)$/.test(n)) return false; // useEffect(cb), useCallback(cb): not the render itself
   return /^use[A-Z]/.test(n) || (/\.tsx$/.test(file) && /^[A-Z]/.test(n) && !ts.isMethodDeclaration(fn));
 };
+
+// ---------- verdict comments and the report (both passes) ----------
+// A pass's verdict comment: "// <prefix>: VERDICT — reason" ({/* … */} in JSX).
+export function verdictSyntax(prefix, verdicts) {
+  const re = new RegExp(`${prefix}:\\s*(${verdicts.join("|")})\\s+—\\s+\\S`);
+  const text = (line) => line.slice(line.indexOf(`${prefix}:`)).replace(/\s*\*\/\}?\s*$/, "");
+  const COMMENT_LINE = /^\s*(\/\/|\{?\/\*|\*)/;
+  // The verdict for a row whose code starts on one of `starts` (0-based
+  // lines, in order of preference): on that line; a trailing comment on the
+  // line above (Prettier puts it after "? " in a ternary) when that line has
+  // no row of its own (`ownRow(line)`); or the comment block right above.
+  // "INVALID …" for a comment with the prefix but no valid verdict.
+  const find = (lines, starts, ownRow) => {
+    for (const l of starts) {
+      if (re.test(lines[l])) return text(lines[l]);
+      const above = lines[l - 1] ?? "";
+      if (above.includes(`${prefix}:`) && !COMMENT_LINE.test(above) && !ownRow(l - 1)) return re.test(above) ? text(above) : `INVALID ${above.trim()}`;
+      for (let i = l - 1; i >= 0 && COMMENT_LINE.test(lines[i]); i--) {
+        if (re.test(lines[i])) return text(lines[i]);
+        if (lines[i].includes(`${prefix}:`)) return `INVALID ${lines[i].trim()}`;
+      }
+    }
+    return lines[starts[0]].includes(`${prefix}:`) ? `INVALID ${lines[starts[0]].trim()}` : "";
+  };
+  // [verdict, reason] of a row's verdict text.
+  const parts = (verdict) => {
+    const m = new RegExp(`^${prefix}:\\s*(\\S+)\\s+—\\s+(.*?)\\s*(\\*\\/\\})?$`).exec(verdict) ?? [];
+    return [m[1] ?? "?", m[2] ?? verdict];
+  };
+  return { re, find, parts };
+}
+
+// The CLI every pass shares: TSV by default, --check (the gate), --md (the
+// per-file tables for the doc). `columns` are the TSV columns: a row key, or
+// [key, heading],
+// `md` = { header: [...], row: (r, esc) => [...] } after the file heading.
+export function report({ tool, rule, prefix, verdicts, rows, noun, what, failLine, hint, columns, md, extra = {} }) {
+  const { parts } = verdictSyntax(prefix, verdicts);
+  const mode = process.argv[2];
+  if (mode === "--check") {
+    const bad = rows.filter((r) => !r.verdict || r.verdict.startsWith("INVALID"));
+    if (bad.length) {
+      console.error(`${tool}: ${bad.length} ${what} without a valid verdict comment (CLAUDE.md "${rule}"):`);
+      for (const r of bad) console.error(`  ${failLine(r)}  ${r.verdict || `no // ${prefix}: VERDICT — reason`}`);
+      console.error(hint);
+      process.exit(1);
+    }
+    const counts = verdicts.map((v) => `${v} ${rows.filter((r) => parts(r.verdict)[0] === v).length}`);
+    console.log(`${tool}: ${rows.length} ${noun}, all with a verdict (${counts.join(", ")})`);
+  } else if (mode === "--md") {
+    const esc = (s) => String(s).replace(/\|/g, "\\|");
+    let file = "";
+    for (const r of rows) {
+      if (r.file !== file) {
+        file = r.file;
+        console.log(`\n### ${file}\n\n| ${md.header.join(" | ")} |\n|${md.header.map(() => "---").join("|")}|`);
+      }
+      const [v, why] = parts(r.verdict);
+      console.log(`| ${md.row(r, esc).join(" | ")} | **${v}** | ${esc(why)} |`);
+    }
+  } else if (extra[mode]) {
+    extra[mode](parts);
+  } else {
+    const cols = columns.map((c) => (Array.isArray(c) ? c : [c, c]));
+    console.log(cols.map(([, h]) => h).join("\t"));
+    for (const r of rows) console.log(cols.map(([k]) => r[k]).join("\t"));
+  }
+}

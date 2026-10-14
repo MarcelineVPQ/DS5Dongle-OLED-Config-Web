@@ -28,10 +28,10 @@
 // Verdicts: PARALLELIZE BATCH SERIAL-REQUIRED HOT-PATH-OK FIX-HOT-PATH NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Loop pass".
 import ts from "typescript";
-import { calleeName, checker, displayFn as displayFnSkipping, fnName, isComponentOrHook, isFn, isOurs, relOf, sources } from "./ts_source.mjs";
+import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, isOurs, relOf, report, sources, verdictSyntax } from "./ts_source.mjs";
 
 export const VERDICTS = ["PARALLELIZE", "BATCH", "SERIAL-REQUIRED", "HOT-PATH-OK", "FIX-HOT-PATH", "NOT-WORTH"];
-const VERDICT_RE = new RegExp(`loop:\\s*(${VERDICTS.join("|")})\\s+—\\s+\\S`);
+const VERDICT = verdictSyntax("loop", VERDICTS);
 const ITER_METHODS = new Set(["map", "forEach", "reduce", "reduceRight", "filter", "some", "every", "find", "findIndex", "findLast", "findLastIndex", "flatMap", "sort", "toSorted"]);
 const ITER_OWNERS = /^(Array|ReadonlyArray|Set|ReadonlySet|Map|ReadonlyMap|\w+Array)$/;
 // Library scan roots: the game library scan (electron/main/games/games.ts).
@@ -71,7 +71,7 @@ const isCallbackOf = (fn, names) => {
   return p && ts.isCallExpression(p) && p.arguments.includes(fn) && names.includes(calleeName(p));
 };
 // Enclosing named function (skipping array iteration callbacks) for the row's "function" column.
-const displayFn = (node) => displayFnSkipping(node, (fn) => !!iterCallOf(fn));
+const loopFn = (node) => displayFn(node, (fn) => !!iterCallOf(fn));
 // Resolve an identifier / property access to our own function-like declarations.
 // The functions a value can be: f, a ? f : g, a ?? f (a default parameter
 // "read = isWin ? readWindowsProcs : readGameProcs").
@@ -319,25 +319,9 @@ for (const sf of sources) {
   visit(sf);
   loopLines.set(sf, set);
 }
-const verdictText = (text) => text.slice(text.indexOf("loop:")).replace(/\s*\*\/\}?\s*$/, "");
-function verdictOf(sf, loop) {
-  const lines = sf.text.split("\n");
-  const line = sf.getLineAndCharacterOfPosition(loop.getStart(sf)).line;
-  // The loop's own line; the line above when it ends in the comment (Prettier
-  // puts it after "? " in a ternary) and starts no loop itself; or the
-  // comment block right above.
-  if (VERDICT_RE.test(lines[line])) return verdictText(lines[line]);
-  const above = lines[line - 1] ?? "";
-  if (/(\/\/|\/\*)\s*loop:/.test(above) && !/^\s*(\/\/|\{?\/\*|\*)/.test(above) && !loopLines.get(sf).has(line - 1)) {
-    return VERDICT_RE.test(above) ? verdictText(above) : `INVALID ${above.trim()}`;
-  }
-  for (let i = line - 1; i >= 0 && /^\s*(\/\/|\{?\/\*|\*)/.test(lines[i]); i--) {
-    if (VERDICT_RE.test(lines[i])) return verdictText(lines[i]);
-    if (/loop:/.test(lines[i])) return `INVALID ${lines[i].trim()}`;
-  }
-  if (/loop:/.test(lines[line])) return `INVALID ${lines[line].trim()}`;
-  return "";
-}
+// The loop's own line, a trailing comment on the line above that starts no
+// loop itself, or the comment block right above.
+const loopVerdict = (sf, loop) => VERDICT.find(sf.text.split("\n"), [sf.getLineAndCharacterOfPosition(loop.getStart(sf)).line], (l) => loopLines.get(sf).has(l));
 const rows = [];
 for (const sf of sources) {
   const visit = (n) => {
@@ -351,7 +335,7 @@ for (const sf of sources) {
       if (trig.length) {
         const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
         const head = (isStmtLoop(n) ? sf.text.slice(n.getStart(sf), n.statement.getStart(sf)) : n.getText(sf).split("\n")[0]).replace(/\s+/g, " ").trim().slice(0, 100);
-        rows.push({ file: relOf.get(sf.fileName), line, fn: displayFn(n), kind: loopKind(n), trigger: trig.join(" "), verdict: verdictOf(sf, n), head });
+        rows.push({ file: relOf.get(sf.fileName), line, fn: loopFn(n), kind: loopKind(n), trigger: trig.join(" "), verdict: loopVerdict(sf, n), head });
       }
     }
     ts.forEachChild(n, visit);
@@ -360,29 +344,16 @@ for (const sf of sources) {
 }
 rows.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 
-const mode = process.argv[2];
-if (mode === "--check") {
-  const bad = rows.filter((r) => !r.verdict || r.verdict.startsWith("INVALID"));
-  if (bad.length) {
-    console.error(`list_loops: ${bad.length} loop(s) on a hot path or awaiting without a valid verdict comment (CLAUDE.md "Loop pass"):`);
-    for (const r of bad) console.error(`  ${r.file}:${r.line}  ${r.fn}  ${r.kind}  [${r.trigger}]  ${r.verdict || "no // loop: VERDICT — reason"}`);
-    console.error(`Add "// loop: <${VERDICTS.join("|")}> — <reason>" on the loop's line or the line above.`);
-    process.exit(1);
-  }
-  const counts = Object.fromEntries(VERDICTS.map((v) => [v, rows.filter((r) => r.verdict.startsWith(`loop: ${v} `)).length]));
-  console.log(`list_loops: ${rows.length} loops, all with a verdict (${VERDICTS.map((v) => `${v} ${counts[v]}`).join(", ")})`);
-} else if (mode === "--md") {
-  const esc = (s) => s.replace(/\|/g, "\\|");
-  let file = "";
-  for (const r of rows) {
-    if (r.file !== file) {
-      file = r.file;
-      console.log(`\n### ${file}\n\n| Line | Function | Kind | Trigger | Verdict | Reason |\n|---|---|---|---|---|---|`);
-    }
-    const m = /^loop:\s*(\S+)\s+—\s+(.*?)\s*(\*\/\})?$/.exec(r.verdict) ?? [];
-    console.log(`| ${r.line} | \`${esc(r.fn)}\` | ${esc(r.kind)} | ${r.trigger} | **${m[1] ?? "?"}** | ${esc(m[2] ?? r.verdict)} |`);
-  }
-} else {
-  console.log(["file", "line", "function", "kind", "trigger", "verdict", "head"].join("\t"));
-  for (const r of rows) console.log([r.file, r.line, r.fn, r.kind, r.trigger, r.verdict, r.head].join("\t"));
-}
+report({
+  tool: "list_loops",
+  rule: "Loop pass",
+  prefix: "loop",
+  verdicts: VERDICTS,
+  rows,
+  noun: "loops",
+  what: "loop(s) on a hot path or awaiting",
+  failLine: (r) => `${r.file}:${r.line}  ${r.fn}  ${r.kind}  [${r.trigger}]`,
+  hint: `Add "// loop: <${VERDICTS.join("|")}> — <reason>" on the loop's line or the line above.`,
+  columns: ["file", "line", ["fn", "function"], "kind", "trigger", "verdict", "head"],
+  md: { header: ["Line", "Function", "Kind", "Trigger", "Verdict", "Reason"], row: (r, esc) => [r.line, `\`${esc(r.fn)}\``, esc(r.kind), r.trigger] },
+});

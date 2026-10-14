@@ -60,7 +60,7 @@ export function useFlagPref(key: string): [boolean, (value: boolean) => void] {
 // A free-form string preference (JSON and the like; null while unset).
 export function useRawPref(key: string): [string | null, (value: string) => void] {
   const [value, setValue] = useState<string | null>(() => readPref(key));
-  // lifetime: OK — cleanup: removes the pref listener (unmount / key change)
+  // lifetime: OK — cleanup: removes this raw pref's listener (unmount / key change)
   useEffect(() => {
     const on = (e: Event) => {
       const { key: k, value: v } = (e as CustomEvent<{ key: string; value: string }>).detail;

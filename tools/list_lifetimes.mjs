@@ -46,17 +46,16 @@
 // Verdicts: OK (the release point named), LEAK, WASTE, HOT-ALLOC, NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Lifetime pass".
 import ts from "typescript";
-import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, relOf, sources } from "./ts_source.mjs";
+import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, relOf, report, sources, verdictSyntax } from "./ts_source.mjs";
 
 export const VERDICTS = ["OK", "LEAK", "WASTE", "HOT-ALLOC", "NOT-WORTH"];
-const VERDICT_RE = new RegExp(`lifetime:\\s*(${VERDICTS.join("|")})\\s+—\\s+\\S`);
 
 // ---------- helpers ----------
 const receiverText = (call, sf) => (ts.isPropertyAccessExpression(call.expression) ? call.expression.expression.getText(sf) : "");
 const short = (s, n = 40) => s.replace(/\s+/g, " ").trim().slice(0, n);
 const EFFECTS = new Set(["useEffect", "useLayoutEffect"]);
 // Where the acquisition runs: the nearest function decides.
-function context(node) {
+function runsIn(node) {
   for (let p = node.parent; p; p = p.parent) {
     if (!isFn(p)) continue;
     const call = p.parent;
@@ -223,75 +222,64 @@ function classify(n, sf) {
 }
 
 // ---------- verdict comments ----------
-const verdictText = (text) => text.slice(text.indexOf("lifetime:")).replace(/\s*\*\/\}?\s*$/, "");
-const COMMENT_LINE = /^\s*(\/\/|\{?\/\*|\*)/;
-function verdictOf(sf, node) {
-  const lines = sf.text.split("\n");
-  const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line;
-  // The node's own line, then the statement's first line (a call deep in an
-  // expression), each with the comment block right above.
+const VERDICT = verdictSyntax("lifetime", VERDICTS);
+// The acquisition's own line, then its statement's first line (a call deep in
+// an expression), each with a trailing comment on the line above (when that
+// line has no row of its own) or the comment block right above.
+function lifetimeVerdict(sf, node, rowLines) {
   let stmt = node;
   while (stmt.parent && !ts.isBlock(stmt.parent) && !ts.isSourceFile(stmt.parent) && !ts.isCaseClause(stmt.parent) && !ts.isJsxElement(stmt.parent) && !isFn(stmt.parent)) stmt = stmt.parent;
-  const starts = [...new Set([line, sf.getLineAndCharacterOfPosition(stmt.getStart(sf)).line])];
-  for (const l of starts) {
-    if (VERDICT_RE.test(lines[l])) return verdictText(lines[l]);
-    for (let i = l - 1; i >= 0 && COMMENT_LINE.test(lines[i]); i--) {
-      if (VERDICT_RE.test(lines[i])) return verdictText(lines[i]);
-      if (/lifetime:/.test(lines[i])) return `INVALID ${lines[i].trim()}`;
-    }
-    // A trailing comment on the line above (Prettier moves it after "? ").
-    const above = lines[l - 1] ?? "";
-    if (!COMMENT_LINE.test(above) && VERDICT_RE.test(above)) return verdictText(above);
-  }
-  if (/lifetime:/.test(lines[line])) return `INVALID ${lines[line].trim()}`;
-  return "";
+  const at = (n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line;
+  return VERDICT.find(sf.text.split("\n"), [...new Set([at(node), at(stmt)])], (l) => rowLines.has(l));
 }
 
 const rows = [];
 for (const sf of sources) {
+  const found = [];
   const visit = (n) => {
     const c = classify(n, sf);
-    if (c) {
-      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
-      rows.push({ file: relOf.get(sf.fileName), line, fn: displayFn(n), kind: c[0], detail: c[1], ctx: context(n), verdict: verdictOf(sf, n), head: short(n.getText(sf).split("\n")[0], 90) });
-    }
+    if (c) found.push([n, c]);
     ts.forEachChild(n, visit);
   };
   visit(sf);
+  const rowLines = new Set(found.map(([n]) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line));
+  for (const [n, c] of found) {
+    const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+    rows.push({
+      file: relOf.get(sf.fileName),
+      line,
+      fn: displayFn(n),
+      kind: c[0],
+      detail: c[1],
+      ctx: runsIn(n),
+      verdict: lifetimeVerdict(sf, n, rowLines),
+      head: short(n.getText(sf).split("\n")[0], 90),
+    });
+  }
 }
 rows.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 
-const verdictWord = (r) => /^lifetime:\s*(\S+)/.exec(r.verdict)?.[1] ?? "?";
-const mode = process.argv[2];
-if (mode === "--check") {
-  const bad = rows.filter((r) => !r.verdict || r.verdict.startsWith("INVALID"));
-  if (bad.length) {
-    console.error(`list_lifetimes: ${bad.length} acquisition(s) without a valid verdict comment (CLAUDE.md "Lifetime pass"):`);
-    for (const r of bad) console.error(`  ${r.file}:${r.line}  ${r.fn}  ${r.kind} ${r.detail}  [${r.ctx}]  ${r.verdict || "no // lifetime: VERDICT — release point"}`);
-    console.error(`Add "// lifetime: <${VERDICTS.join("|")}> — <where it is released, or why not>" on its line or the comment block above.`);
-    process.exit(1);
-  }
-  const counts = Object.fromEntries(VERDICTS.map((v) => [v, rows.filter((r) => verdictWord(r) === v).length]));
-  console.log(`list_lifetimes: ${rows.length} acquisitions, all with a verdict (${VERDICTS.map((v) => `${v} ${counts[v]}`).join(", ")})`);
-} else if (mode === "--counts") {
-  const kinds = [...new Set(rows.map((r) => r.kind))].sort();
-  console.log(`| Kind | ${VERDICTS.join(" | ")} | Total |\n|---|${VERDICTS.map(() => "---").join("|")}|---|`);
-  for (const k of [...kinds, "**Total**"]) {
-    const rs = k === "**Total**" ? rows : rows.filter((r) => r.kind === k);
-    console.log(`| ${k} | ${VERDICTS.map((v) => rs.filter((r) => verdictWord(r) === v).length).join(" | ")} | ${rs.length} |`);
-  }
-} else if (mode === "--md") {
-  const esc = (s) => s.replace(/\|/g, "\\|");
-  let file = "";
-  for (const r of rows) {
-    if (r.file !== file) {
-      file = r.file;
-      console.log(`\n### ${file}\n\n| Line | Function | Kind | What | Runs in | Verdict | Release point / reason |\n|---|---|---|---|---|---|---|`);
-    }
-    const m = /^lifetime:\s*(\S+)\s+—\s+(.*?)\s*(\*\/\})?$/.exec(r.verdict) ?? [];
-    console.log(`| ${r.line} | \`${esc(r.fn)}\` | ${r.kind} | ${esc(r.detail)} | ${r.ctx} | **${m[1] ?? "?"}** | ${esc(m[2] ?? r.verdict)} |`);
-  }
-} else {
-  console.log(["file", "line", "function", "kind", "detail", "context", "verdict", "head"].join("\t"));
-  for (const r of rows) console.log([r.file, r.line, r.fn, r.kind, r.detail, r.ctx, r.verdict, r.head].join("\t"));
-}
+report({
+  tool: "list_lifetimes",
+  rule: "Lifetime pass",
+  prefix: "lifetime",
+  verdicts: VERDICTS,
+  rows,
+  noun: "acquisitions",
+  what: "acquisition(s)",
+  failLine: (r) => `${r.file}:${r.line}  ${r.fn}  ${r.kind} ${r.detail}  [${r.ctx}]`,
+  hint: `Add "// lifetime: <${VERDICTS.join("|")}> — <where it is released, or why not>" on its line or the comment block above.`,
+  columns: ["file", "line", ["fn", "function"], "kind", "detail", ["ctx", "context"], "verdict", "head"],
+  md: { header: ["Line", "Function", "Kind", "What", "Runs in", "Verdict", "Release point / reason"], row: (r, esc) => [r.line, `\`${esc(r.fn)}\``, r.kind, esc(r.detail), r.ctx] },
+  extra: {
+    // Verdict counts per kind, for the doc.
+    "--counts": (parts) => {
+      const kinds = [...new Set(rows.map((r) => r.kind))].sort();
+      console.log(`| Kind | ${VERDICTS.join(" | ")} | Total |\n|---|${VERDICTS.map(() => "---").join("|")}|---|`);
+      for (const k of [...kinds, "**Total**"]) {
+        const rs = k === "**Total**" ? rows : rows.filter((r) => r.kind === k);
+        console.log(`| ${k} | ${VERDICTS.map((v) => rs.filter((r) => parts(r.verdict)[0] === v).length).join(" | ")} | ${rs.length} |`);
+      }
+    },
+  },
+});
