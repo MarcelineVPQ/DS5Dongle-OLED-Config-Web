@@ -338,6 +338,12 @@ export const ROADMAP: RoadmapItem[] = [
     high: true,
   },
   { column: "planned", title: "Printed colorways", text: "Controllers with a print, like Grey Camouflage, drawn with their real pattern instead of a flat color.", areas: ["controller"] },
+  {
+    column: "planned",
+    title: "3D audio for the headset",
+    text: "Surround games heard in 3D on a headset plugged into the controller: Windows Sonic on Windows, a virtual surround output on Linux.",
+    areas: ["audio"],
+  },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
   { column: "ideas", title: "Simpler layout and wording", text: "Shorter labels, fewer clicks to common things, and pairing slots that are easy to find.", areas: ["app"] },
