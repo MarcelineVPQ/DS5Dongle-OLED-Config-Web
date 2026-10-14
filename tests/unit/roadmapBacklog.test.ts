@@ -106,6 +106,8 @@ const BACKLOG_ROW: Record<string, string> = {
   "OLED mirror in HDR": "OLED mirror in HDR",
   "Whole narrator lines": "Narrator line drops pieces",
   "Speaker buffer that can't break up": "Firmware: speaker buffer minimum",
+  "Launchers close cleanly": "Launchers: Heroic crashes when the app closes it",
+  "Full speaker volume after a headset unplug": "Firmware: noise cancellation stays on after a headset plug or unplug",
   "Headset sound in both ears": "Headset: both ears on Linux's default sound profile",
   "Stereo when headphones go in": "Linux: stereo headset profile follows the jack",
   "Full headset mic and volume": "Linux: controller volume and mic gain restored low",

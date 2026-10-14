@@ -277,6 +277,21 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
     column: "planned",
+    title: "Launchers close cleanly",
+    text: "When the app closes Heroic or Steam to save a Games change, they close without crashing.",
+    areas: ["games"],
+    platform: "linux",
+    high: true,
+  },
+  {
+    column: "planned",
+    title: "Full speaker volume after a headset unplug",
+    text: "The controller's speaker keeps its full volume after you plug in and unplug a headset.",
+    areas: ["audio", "dongle"],
+    high: true,
+  },
+  {
+    column: "planned",
     title: "Headset sound in both ears",
     text: "A headset on the controller plays in both ears even when Linux's default sound profile sends mono.",
     areas: ["audio", "dongle"],
