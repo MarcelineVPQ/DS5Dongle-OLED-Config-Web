@@ -4,7 +4,8 @@
 // so a theme, accent, glass or color vision change shows on it right away.
 // Nothing in the sections talks to the board: each section's status comes
 // from state the app already holds.
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useTopLayer } from "../topLayer";
 import { useTranslation } from "react-i18next";
 import { Accessibility, AppWindow, BellOff, Code, Globe, Palette, RefreshCw, Shield, Zap } from "lucide-react";
 import Markdown from "../Markdown";
@@ -515,6 +516,9 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
       live = false;
     };
   }, [automatic, asked]);
+  // Over everything (the top layer), wherever the page puts it (inside a section).
+  const backdrop = useRef<HTMLDivElement>(null);
+  useTopLayer(backdrop, true);
   // lifetime: OK — cleanup: removes the Escape listener (dialog closed / onCancel change)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
@@ -523,7 +527,7 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
   return (
-    <div className="dk-dialog-backdrop" onClick={onCancel}>
+    <div ref={backdrop} className="dk-dialog-backdrop top-layer" onClick={onCancel}>
       <section className="dk-card dk-dialog" role="dialog" aria-modal="true" aria-labelledby="dev-join-title" onClick={(e) => e.stopPropagation()}>
         <h2 id="dev-join-title">{t("desktop.channel.joinTitle")}</h2>
         <ul className="dk-review">

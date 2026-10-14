@@ -372,3 +372,23 @@ describe("Games → Home, art and the Glass look", () => {
     expect($(".lib-grid .lib-tile")!.style.getPropertyValue("--cap-alpha")).toMatch(/^\d+%$/);
   });
 });
+
+describe("Games' Show menu (the app kinds) is a popup on top", () => {
+  it("opens in the top layer, placed under its button", async () => {
+    const shown = vi.fn();
+    // jsdom has no Popover API: record the request for the top layer.
+    HTMLElement.prototype.showPopover = shown;
+    const report = homeReport("healthy");
+    await render("healthy", { ...report, games: report.games.map((g, i) => (i === 0 ? { ...g, kind: "tool" as const } : g)) });
+    const details = $<HTMLDetailsElement>(".lib-show")!;
+    expect(details).not.toBeNull();
+    details.open = true;
+    act(() => void details.dispatchEvent(new Event("toggle")));
+    await settle();
+    const menu = $(".lib-show-menu")!;
+    expect(menu.classList.contains("top-layer")).toBe(true);
+    expect(menu.getAttribute("popover")).toBe("manual");
+    expect(shown).toHaveBeenCalled();
+    expect(menu.style.top).not.toBe("");
+  });
+});

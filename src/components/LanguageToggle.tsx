@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
 import { logged } from "../errorText";
+import { useTopLayer } from "../desktop/topLayer";
 
 // The current language as one of ours (or English): also App settings →
 // Language's status.
@@ -18,6 +19,10 @@ export default function LanguageToggle() {
   const { i18n, t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const button = useRef<HTMLButtonElement | null>(null);
+  const menu = useRef<HTMLUListElement | null>(null);
+  // The menu in the top layer (over every card, section and panel), under the button, right edges lined up.
+  useTopLayer(menu, open, { anchor: button, align: "end" });
 
   const current = currentLanguage(i18n.language);
 
@@ -49,7 +54,7 @@ export default function LanguageToggle() {
 
   return (
     <div className="language-toggle" ref={ref}>
-      <button type="button" className="language-toggle-button" onClick={() => setOpen((v) => !v)} aria-expanded={open} title={t("languageToggle.currentTitle", { name: current.label })}>
+      <button ref={button} type="button" className="language-toggle-button" onClick={() => setOpen((v) => !v)} aria-expanded={open} title={t("languageToggle.currentTitle", { name: current.label })}>
         <Globe size={15} />
         {/* The language's own name ("Español"), never a flag: languages aren't countries. */}
         <span className="language-toggle-current">{current.label}</span>
@@ -57,7 +62,7 @@ export default function LanguageToggle() {
       {open && (
         // A disclosure: a plain list of buttons (a listbox role would promise
         // arrow-key handling this menu doesn't have).
-        <ul className="language-toggle-menu" aria-label={t("languageToggle.groupLabel")}>
+        <ul ref={menu} className="language-toggle-menu top-layer" aria-label={t("languageToggle.groupLabel")}>
           {/* loop: HOT-PATH-OK — N = 7 languages in the menu */}
           {SUPPORTED_LANGUAGES.map((lang) => {
             const active = lang.code === current.code;

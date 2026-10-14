@@ -7,9 +7,10 @@
 // Same contract as the native input: `value` "#rrggbb" in, onChange("#rrggbb")
 // out while the color changes. Everything is drawn from the theme tokens,
 // except the color space itself (desktop.css, .cp-*).
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { readPref, writePref, PREF_EVENT } from "../storage";
+import { useTopLayer } from "../topLayer";
 import { addRecent, clamp, hsvFromHex, hsvToHex, normalizeHex, parseChannel, parseHex, parseRecent, rgbToHex, type Hsv } from "./colorMath";
 
 // The recent colors, shared by every picker (newest first).
@@ -144,37 +145,13 @@ function ColorPopover({
     emit(hex);
   };
 
-  // A popover in the top layer (over everything, escaping scrolling panels),
-  // placed under the swatch, or above it when there's no room.
-  // lifetime: OK — cleanup removes the resize/scroll listeners; the early return acquires nothing
-  useLayoutEffect(() => {
-    const el = pop.current;
-    const a = anchor.current;
-    if (!el || !a) return;
-    // (React 18 doesn't know the popover attribute yet.)
-    el.setAttribute("popover", "manual");
-    el.showPopover?.();
-    const place = () => {
-      const r = a.getBoundingClientRect();
-      const w = el.offsetWidth;
-      const h = el.offsetHeight;
-      const below = r.bottom + 6 + h <= window.innerHeight - 8;
-      const top = below ? r.bottom + 6 : Math.max(8, r.top - 6 - h);
-      const left = clamp(r.left, 8, Math.max(8, window.innerWidth - w - 8));
-      el.style.top = `${Math.round(top)}px`;
-      el.style.left = `${Math.round(left)}px`;
-    };
-    place();
+  // In the top layer (useTopLayer: over everything, escaping scrolling
+  // panels), placed under the swatch, or above it when there's no room.
+  useTopLayer(pop, true, { anchor });
+  // lifetime: OK — acquires nothing (focus on open)
+  useEffect(() => {
     square.current?.focus();
-    // lifetime: OK — removed in the layout effect cleanup (popover closes)
-    window.addEventListener("resize", place);
-    // lifetime: OK — removed in the layout effect cleanup (popover closes)
-    window.addEventListener("scroll", place, true);
-    return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-    };
-  }, [anchor]);
+  }, []);
 
   // However it closes, a changed color joins the recent ones.
   // lifetime: OK — acquires nothing; the cleanup adds a changed color to the recent ones
@@ -281,7 +258,7 @@ function ColorPopover({
   const channelNames = (["R", "G", "B"] as const).map((c) => t(`desktop.colorPicker.channel${c}`));
 
   return (
-    <div ref={pop} className="cp-pop" role="dialog" aria-label={t("desktop.colorPicker.dialog", { name: label })} onKeyDown={onKeyDown} onBlur={onBlur}>
+    <div ref={pop} className="cp-pop top-layer" role="dialog" aria-label={t("desktop.colorPicker.dialog", { name: label })} onKeyDown={onKeyDown} onBlur={onBlur}>
       <div
         ref={square}
         className="cp-square"

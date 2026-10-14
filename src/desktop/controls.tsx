@@ -1,12 +1,12 @@
 // Compact controls for the desktop layout. Each renders one .dk-row: Row is
 // the settings framework's row (one label, an optional hint, one control),
 // and every setting sits in one inside a Section (accordion/Section.tsx).
-import { type CSSProperties, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { causeText, shown } from "./shownError";
 import { logged } from "../errorText";
+import { useTopLayer } from "./topLayer";
 
 interface RowProps {
   label: string;
@@ -82,29 +82,19 @@ export function Row({ label, sub, info, invalid, wide, stack, id, children }: Ro
 // tooltip. Shown on hover, and on keyboard focus (Tab); Esc or leaving closes
 // it; a click toggles it (touch). Screen readers get the text as the icon's
 // description (aria-describedby: the text is always in the page, hidden).
-// The bubble is drawn in the app's root (fixed, near the icon, kept on
-// screen), so a section's clipping never cuts it. Idle cost: none; it closes
-// on scroll (the window's scroll listener lives only while it's open).
-const TIP_MAX_PX = 320;
+// The bubble is in the top layer (useTopLayer: over everything, never cut by
+// a section, the drawer or a card), near the icon and kept on screen. Idle
+// cost: none; it closes on scroll (the window's scroll listener lives only
+// while it's open).
 export function InfoTip({ text }: { text: string }) {
   const { t } = useTranslation();
   const id = useId();
   const btn = useRef<HTMLButtonElement>(null);
-  // Open: where the bubble goes (the app's root, and a place near the icon,
-  // inside the window: under it, or above it in the window's lower part).
-  const [at, setAt] = useState<{ root: Element; style: CSSProperties } | null>(null);
-  const open = at !== null;
-  const show = () => {
-    const el = btn.current;
-    if (!el) return;
-    const b = el.getBoundingClientRect();
-    const m = 8;
-    const width = Math.min(TIP_MAX_PX, window.innerWidth - 2 * m);
-    const left = Math.max(m, Math.min(b.left - 10, window.innerWidth - width - m));
-    const style = b.bottom > window.innerHeight * 0.6 ? { left, bottom: window.innerHeight - b.top + 6, maxWidth: width } : { left, top: b.bottom + 6, maxWidth: width };
-    setAt({ root: el.closest(".dk") ?? document.body, style });
-  };
-  const hide = () => setAt(null);
+  const tip = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const show = () => setOpen(true);
+  const hide = () => setOpen(false);
+  useTopLayer(tip, open, { anchor: btn, dx: -10 });
   // lifetime: OK — the effect returns the scroll/resize listeners' removal (closed / unmount)
   useEffect(() => {
     if (!open) return;
@@ -132,8 +122,7 @@ export function InfoTip({ text }: { text: string }) {
         onClick={(e) => {
           e.preventDefault(); // inside a <label> or <summary>: not its own click
           e.stopPropagation();
-          if (open) hide();
-          else show();
+          setOpen((o) => !o);
         }}
         onKeyDown={(e) => {
           if (e.key === "Escape" && open) {
@@ -147,13 +136,11 @@ export function InfoTip({ text }: { text: string }) {
       <span id={id} role="tooltip" hidden>
         {text}
       </span>
-      {at &&
-        createPortal(
-          <span className="dk-info-tip" aria-hidden="true" style={at.style}>
-            {text}
-          </span>,
-          at.root,
-        )}
+      {open && (
+        <span ref={tip} className="dk-info-tip top-layer" aria-hidden="true">
+          {text}
+        </span>
+      )}
     </>
   );
 }

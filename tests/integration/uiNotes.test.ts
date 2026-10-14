@@ -170,7 +170,7 @@ describe("InfoTip: the ⓘ", () => {
     act(() => btn().focus());
     const b = bubble()!;
     expect(b.textContent).toBe("Draws with the graphics card.");
-    expect(b.parentElement).toBe(container); // drawn in the app's root, never clipped by a section
+    expect(b.getAttribute("popover"), "in the top layer, never clipped by a section").toBe("manual");
     expect(parseFloat(b.style.left)).toBeGreaterThanOrEqual(8);
     act(() => void btn().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(bubble()).toBeNull();
