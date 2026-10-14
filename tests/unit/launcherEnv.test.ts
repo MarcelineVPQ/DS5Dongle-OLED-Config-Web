@@ -70,19 +70,24 @@ describe("launcherEnv", () => {
 });
 
 describe("openForUser", () => {
-  // Windows never calls it (links go through shell.openExternal) and starts through PowerShell: tested below.
-  it.skipIf(process.platform === "win32")("without a user systemd, spawns xdg-open with a fixed argv, no shell, detached, with the launcher env", async () => {
-    const child = { once: vi.fn((ev: string, cb: () => void) => (ev === "spawn" ? cb() : undefined)), unref: vi.fn() };
+  it("without a user systemd, starts xdg-open with a fixed argv, no shell, with the launcher env (POSIX: detached; Windows: through PowerShell)", async () => {
+    spawnMock.mockClear();
+    const child = { once: vi.fn((ev: string, cb: (code?: number) => void) => (ev === "spawn" ? cb() : ev === "exit" ? cb(0) : undefined)), unref: vi.fn(), kill: vi.fn() };
     spawnMock.mockReturnValue(child);
     await expect(openForUser("heroic://launch?appName=1234&runner=gog")).resolves.toBe(true);
     const [cmd, argv, opts] = spawnMock.mock.calls[0];
-    expect(cmd).toBe("xdg-open");
-    expect(argv).toEqual(["heroic://launch?appName=1234&runner=gog"]);
+    if (process.platform === "win32") {
+      expect(cmd).toMatch(/powershell\.exe$/);
+      expect(argv).toEqual(shellStartArgs("xdg-open", ["heroic://launch?appName=1234&runner=gog"]));
+    } else {
+      expect(cmd).toBe("xdg-open");
+      expect(argv).toEqual(["heroic://launch?appName=1234&runner=gog"]);
+      expect(opts.detached).toBe(true);
+      expect(child.unref).toHaveBeenCalled();
+    }
     expect(opts.shell).toBeUndefined();
-    expect(opts.detached).toBe(true);
     expect(opts.env.HOME).toBeTruthy();
     expect(Object.keys(opts.env).some((k) => /^(ELECTRON_|DS5_|CHROME_)/.test(k))).toBe(false);
-    expect(child.unref).toHaveBeenCalled();
   });
 
   it("refuses anything that would read as an option", async () => {
@@ -234,7 +239,7 @@ describe("starting programs independent of the app", () => {
     expect(Buffer.from(args[3], "base64").toString("utf16le")).toBe(shellStartScript("steam.exe", ["-silent"]));
   });
 
-  it("starts PowerShell detached, hidden, with no stdio and the launcher env; its exit code is the answer", async () => {
+  it("starts PowerShell hidden (not detached), with no stdio and the launcher env; its exit code is the answer", async () => {
     for (const [code, ok] of [
       [0, true],
       [1, false],
@@ -246,7 +251,7 @@ describe("starting programs independent of the app", () => {
       const [cmd, argv, opts] = spawnMock.mock.calls[0];
       expect(cmd).toMatch(/WindowsPowerShell[\\/]v1\.0[\\/]powershell\.exe$/);
       expect(argv).toEqual(shellStartArgs("C:\\Steam\\steam.exe", ["-silent"]));
-      expect(opts).toEqual({ detached: true, stdio: "ignore", windowsHide: true, env: ENV });
+      expect(opts).toEqual({ stdio: "ignore", windowsHide: true, env: ENV }); // not detached: see shellStart
       expect(opts.shell).toBeUndefined();
     }
   });

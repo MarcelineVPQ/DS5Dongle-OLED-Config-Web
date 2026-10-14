@@ -187,11 +187,13 @@ export const shellStartArgs = (cmd: string, args: string[]): string[] => ["-NoPr
 
 export function shellStart(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
   return new Promise((resolve) => {
-    // Detached too, so PowerShell is in no job of ours (libuv's job lets
-    // children break away silently anyway); no console window, no pipes.
+    // Not detached: a PowerShell without a console (DETACHED_PROCESS) exits
+    // 0 from Start-Process but starts nothing (seen on Windows CI). libuv's
+    // kill-on-close job allows silent breakaway, so the program PowerShell
+    // starts is in no job of ours either way. Hidden window, no pipes.
     // lifetime: OK — PowerShell exits once Start-Process returned; the 15 s timer kills a hung one; the program it started is the user's and outlives the app on purpose
     // error: SHOWN — desktop.library.action.failed (a start that fails or times out resolves false up to the game action)
-    const child = spawn(powershellExe(), shellStartArgs(cmd, args), { detached: true, stdio: "ignore", windowsHide: true, env });
+    const child = spawn(powershellExe(), shellStartArgs(cmd, args), { stdio: "ignore", windowsHide: true, env });
     // lifetime: OK — fires once; cleared when PowerShell exits or fails to start
     const timer = setTimeout(() => {
       child.kill();

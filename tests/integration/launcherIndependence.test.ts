@@ -148,8 +148,7 @@ describe.skipIf(process.platform !== "win32")("Windows: a started program surviv
     let out = "";
     child.stdout.on("data", (d) => (out += String(d)));
     child.stderr.on("data", (d) => (out += String(d)));
-    // PowerShell's first start on a fresh runner can take seconds.
-    const pid = await waitFor(() => readPid(pidFile), 25_000).catch((e: unknown) => {
+    const pid = await waitFor(() => readPid(pidFile)).catch((e: unknown) => {
       throw new Error(`no program started; the app said: ${out || "(nothing)"}`, { cause: e });
     });
     survivors.push(pid);
