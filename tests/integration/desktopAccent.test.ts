@@ -59,6 +59,18 @@ describe("Accent color -> Desktop", () => {
     expect(container!.textContent).not.toMatch(/Couldn't read/);
   });
 
+  // The owner's machine: KDE read fine (a full "kde" palette over IPC), yet
+  // with Light / Dark / System only the warning-text layer was set.
+  it.each(["light", "dark", "system"])("%s theme with KDE's full palette: the accent is KDE's", async (theme) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    palette = { source: "kde", isDark: true, accent: [233, 58, 154], window: [32, 35, 38], windowText: [252, 252, 252] };
+    act(() => root!.render(createElement(App)));
+    await settle();
+    const [r, g, b] = token("--accent")!;
+    expect(r).toBeGreaterThan(g);
+    expect(b).toBeGreaterThan(g);
+  });
+
   it("no desktop accent: the row says so", async () => {
     palette = null;
     act(() => root!.render(createElement(App)));
