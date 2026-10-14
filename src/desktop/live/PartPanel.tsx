@@ -6,6 +6,7 @@ import Markdown from "../Markdown";
 import type { DevChannelAnswer } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
+import FakeGames from "../dev/FakeGames";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "./colorways";
@@ -63,6 +64,8 @@ import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 import { logged } from "../../errorText";
 import { shown } from "../shownError";
+import Notice from "../Notice";
+import DismissedNotices from "../DismissedNotices";
 
 export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
 
@@ -121,7 +124,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
       {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
-      {view === "app" && <AppSettings bridge={bridge} fw={fw} />}
+      {view === "app" && <AppSettingsPanel bridge={bridge} fw={fw} />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
     </div>
   );
@@ -229,14 +232,13 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
             </select>
           </div>
           {game.target ? (
-            <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: game.target.title })}</div>
+            <Notice closable>{t("desktop.editing.buttonsNote", { title: game.target.title })}</Notice>
           ) : (
             <p className="dk-hint">{t("desktop.live.remapHint", "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.")}</p>
           )}
           <button type="button" className="dk-btn dk-btn-wrap" onClick={() => onButtons(index)}>
             {t("desktop.layouts.seeAll")}
           </button>
-          {remap.error && <div className="dk-notice error">{remap.error}</div>}
           <RemapActions remap={remap} onSave={game.target ? game.saveToProfile : null} />
         </>
       )}
@@ -245,27 +247,35 @@ function RemapSection({ index, remap, onButtons }: { index: number; remap: Remap
 }
 
 // The remap actions under the button pickers: Save to profile while a
-// game's profile is on (the buttons go into its layout), else Apply remap.
+// game's profile is on (the buttons go into its layout), else Apply remap;
+// a failed apply's error above them.
 function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<unknown>) | null }) {
   const { t } = useTranslation();
   return (
-    <div className="dk-row-btns">
-      {onSave ? (
-        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={onSave}>
-          {t("desktop.bar.saveProfile")}
-        </BusyButton>
-      ) : (
-        <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-          {t("desktop.live.remapApply", "Apply assignments")}
-        </BusyButton>
+    <>
+      {remap.error && (
+        <Notice error onDismiss={remap.clearError}>
+          {remap.error}
+        </Notice>
       )}
-      <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
-        {t("desktop.bar.revert", "Revert")}
-      </button>
-      <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
-        {t("desktop.live.remapReset", "Reset all")}
-      </button>
-    </div>
+      <div className="dk-row-btns">
+        {onSave ? (
+          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={onSave}>
+            {t("desktop.bar.saveProfile")}
+          </BusyButton>
+        ) : (
+          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
+            {t("desktop.live.remapApply", "Apply assignments")}
+          </BusyButton>
+        )}
+        <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
+          {t("desktop.bar.revert", "Revert")}
+        </button>
+        <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
+          {t("desktop.live.remapReset", "Reset all")}
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -318,10 +328,10 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.allHeading")}</h2>
-      {target && <div className="dk-notice">{t("desktop.editing.buttonsNote", { title: target.title })}</div>}
+      {target && <Notice closable>{t("desktop.editing.buttonsNote", { title: target.title })}</Notice>}
       <LoadedLayout remap={remap} />
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
-      {remap.temporary && !target && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
+      {remap.temporary && !target && <Notice closable>{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</Notice>}
       <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
         {/* loop: HOT-PATH-OK — N = 16 rows; memo()ed, re-renders on a remap or focus change, not per live frame */}
         {remap.draft.map((target, i) => {
@@ -382,7 +392,6 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
             );
           })}
       </div>
-      {remap.error && <div className="dk-notice error">{remap.error}</div>}
       <RemapActions remap={remap} onSave={target ? saveToProfile : null} />
     </section>
   );
@@ -634,7 +643,7 @@ function LevelMeter({ bridge, which }: { bridge: UseDs5BridgeResult; which: "spe
 function ProfileDongleNote() {
   const { t } = useTranslation();
   const target = useProfileTarget();
-  return target ? <div className="dk-notice">{t("desktop.editing.dongleNote", { title: target.title })}</div> : null;
+  return target ? <Notice closable>{t("desktop.editing.dongleNote", { title: target.title })}</Notice> : null;
 }
 
 function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
@@ -652,6 +661,10 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
 }
 
 // The app's own settings (stored by the main process), plus theme and language.
+// memo()ed: the controller view re-renders on every live input frame (~30 a
+// second) and App settings uses none of it (bridge and fw only change with
+// the app's state), so the long settings page isn't rebuilt each frame.
+const AppSettingsPanel = memo(AppSettings);
 function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   // Joining the Development channel asks first (what it means, what's in it).
   const [joiningDev, setJoiningDev] = useState(false);
@@ -777,7 +790,8 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
           </section>
         </>
       )}
-      <DeveloperSettings devChannel={settings?.updateChannel === "dev"} />
+      <DismissedNotices device={hardwareName(bridge.identity)} />
+      <DeveloperSettings />
       {TOUR_ENABLED && (
         <section className="dk-card">
           <h2>{t("desktop.tour.helpTitle")}</h2>
@@ -1360,9 +1374,9 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
 }
 
 // Developer (Ctrl+Shift+D): preview any controller model and colorway. Only
-// on the Development channel (and only in builds that include it), right
-// under the channel switch, so switching shows it appear.
-function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
+// in builds that include it (DS5_DEV_TOOLS=1 or X.Y.Z-dev.N), on any update
+// channel, right under the channel switch. A release never shows it.
+export function DeveloperSettings() {
   const { t } = useTranslation();
   const [onScreen] = useDevToolsShown();
   const dev = useDevPreview();
@@ -1370,7 +1384,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
   const fakeSlots = useFakeSlots();
   const [simulated] = useFlagPref(SIMULATED_KEY);
   const [simCore1] = usePref<(typeof SIM_CORE1_STAGES)[number]>(SIM_CORE1_KEY, "", SIM_CORE1_STAGES);
-  if (!onScreen || !devChannel) return null;
+  if (!onScreen) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
   return (
@@ -1435,6 +1449,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
         </Row>
       )}
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
+      <FakeGames />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
           {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}

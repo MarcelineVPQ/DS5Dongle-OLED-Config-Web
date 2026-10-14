@@ -97,6 +97,14 @@ export const simulatedDongleOn = (): boolean => DEV_TOOLS_BUILT && readPref(SIMU
 // "0".."8", firmware audio.cpp), to see the dashboard's "Core1 stopped" notice.
 export const SIM_CORE1_KEY = "ds5.dev.simCore1Stage";
 export const SIM_CORE1_STAGES = ["", "0", "1", "2", "3", "4", "5", "6", "7", "8"] as const;
+// The simulated controller put down (see SimulatedDongleOptions.rest):
+// "still" or "noise"; anything else moves on its own. Set by hand or by a
+// measuring script (no Developer card control).
+export const SIM_REST_KEY = "ds5.dev.simRest";
+export function simulatedRest(): "still" | "noise" | undefined {
+  const v = readPref(SIM_REST_KEY);
+  return v === "still" || v === "noise" ? v : undefined;
+}
 export function simulatedCore1Stage(): number | undefined {
   const v = readPref(SIM_CORE1_KEY);
   return v && (SIM_CORE1_STAGES as readonly string[]).includes(v) ? Number(v) : undefined;

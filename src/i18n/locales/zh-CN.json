@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
+      "dropsDevTools": "这是开发者版本；安装此更新会将其替换为不含开发者工具的普通版本。",
       "download": "下载并安装",
       "downloading": "正在下载 {{version}}：{{got}} / {{total}}（{{pct}}%）",
       "installing": "正在安装更新…",
@@ -830,7 +831,6 @@
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
-        "rating": "你的评分",
         "notes": "笔记",
         "details": "详情"
       },
@@ -913,7 +913,15 @@
         "mic": "麦克风",
         "lightbar": "光条"
       },
-      "stars_other": "{{count}} 星",
+      "stars_other": "{{count}} 星：{{label}}",
+      "rateTitle": "你的 DualSense 控制器在这款游戏中表现如何？",
+      "rateLabel": {
+        "1": "无法使用",
+        "2": "勉强能用",
+        "3": "能用但有问题",
+        "4": "运行良好",
+        "5": "完美运行"
+      },
       "feedbackHint": "你注意到了什么?",
       "tag": {
         "triggers-work": "自适应扳机正常",
@@ -1165,6 +1173,18 @@
       },
       "fakeSlots": "模拟更多控制器",
       "fakeSlotsHint": "一只午夜黑 Edge 和一只银河紫 DualSense 显示为已配对，占用最前面的空槽位。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
+      "fakeGames": "测试游戏",
+      "fakeGamesHint": "“游戏”页面显示一个虚构的游戏库（Steam、Heroic、Lutris 共 20 款，配生成的图片），而不读取你的启动器。开始游戏、应用、撤销和安装只会更改虚构的游戏库：不读写任何启动器文件，也不启动任何程序。会重新加载页面。",
+      "fakeRunning": "运行中的游戏",
+      "fakeRunningHint": "显示为运行中的测试游戏。在游戏页面点 ▶ 开始游戏会让它运行一分钟。",
+      "fakeRunningNone": "无",
+      "fakeHdr": "这台电脑的 HDR",
+      "fakeHdrHint": "测试电脑的 HDR 条件，用于 HDR 检查清单。",
+      "fakeHdrState": {
+        "ready": "就绪",
+        "hdr-off": "显示器的 HDR 已关闭",
+        "no-gamescope": "未安装 gamescope"
+      },
       "simulated": "模拟{{device}}（无需硬件）",
       "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",
@@ -1640,7 +1660,18 @@
       "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。"
     },
     "notices": {
-      "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。"
+      "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。",
+      "dismissedTitle": "已关闭的通知",
+      "none": "没有已关闭的通知。",
+      "showAgain": "再次显示",
+      "showAllAgain": "全部再次显示",
+      "goTo": "前往{{place}}"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "控制器已连接",
+      "controllerDisconnected": "控制器已断开连接",
+      "profileOff": "{{title}} 配置文件已关闭：已恢复常规设置"
     }
   },
   "ad": {

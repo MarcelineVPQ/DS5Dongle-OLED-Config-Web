@@ -57,8 +57,12 @@ function desktopCsp(): Plugin {
   };
 }
 
+// The main process's half of the dev tools (Fake games, electron/main/devTools.ts).
+const DEV_TOOLS_DEFINE = { "import.meta.env.VITE_DEV_TOOLS": JSON.stringify(DEV_TOOLS ? "1" : "0") };
+
 export default defineConfig({
   main: {
+    define: DEV_TOOLS_DEFINE,
     build: {
       outDir: "out/main",
       rollupOptions: { input: resolve("electron/main/index.ts") },
@@ -81,7 +85,7 @@ export default defineConfig({
     resolve: { alias: [{ find: FIRMWARE_CHANGELOG_ALIAS, replacement: FIRMWARE_CHANGELOG }] },
     // The dev server may read it from the firmware checkout next to this repo.
     server: { fs: { allow: [resolve("."), dirname(FIRMWARE_CHANGELOG)] } },
-    define: { "import.meta.env.VITE_DESKTOP": JSON.stringify("1"), "import.meta.env.VITE_DEV_TOOLS": JSON.stringify(DEV_TOOLS ? "1" : "0"), "import.meta.env.VITE_BUILD_ID": JSON.stringify(BUILD_ID) },
+    define: { "import.meta.env.VITE_DESKTOP": JSON.stringify("1"), ...DEV_TOOLS_DEFINE, "import.meta.env.VITE_BUILD_ID": JSON.stringify(BUILD_ID) },
     build: {
       outDir: "out/renderer",
       // Never inline assets as data: URLs; the CSP only allows 'self'.

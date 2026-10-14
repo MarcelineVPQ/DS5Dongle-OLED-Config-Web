@@ -9,6 +9,7 @@ import { noteSlotOccupancy, useFakeSlots } from "../devPreview";
 import { COLORWAYS } from "../live/colorways";
 import { readPref, writePref } from "../storage";
 import { useLibrary } from "../library/libraryContext";
+import Notice from "../Notice";
 
 // Which controller each pairing slot holds, remembered by its Bluetooth
 // address whenever it connects (the dongle only stores the address).
@@ -95,12 +96,16 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
             "Each slot remembers one controller. Switching disconnects the current controller; press PS on the one in the new slot. To pair a new controller into an empty slot, switch to it and hold Create + PS.",
           )}
         </p>
-        {error && <div className="dk-notice error">{error}</div>}
+        {error && (
+          <Notice error onDismiss={() => setError(null)}>
+            {error}
+          </Notice>
+        )}
         {/* Real occupancy only: the pretend controllers fill free slots in the table, not on the board. */}
         {v && allSlotsTaken(v.slots) && (
-          <div className="dk-notice" role="status">
+          <Notice role="status" closable>
             {t("desktop.slots.allTaken", { total: v.slots.occupied.length })}
-          </div>
+          </Notice>
         )}
         <table className="dk-table slots">
           <colgroup>

@@ -29,6 +29,7 @@ import {
 } from "../../protocol/stickCurve";
 import { BusyButton, Segmented } from "../controls";
 import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
+import Notice from "../Notice";
 
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
 
@@ -327,7 +328,7 @@ function GameStickCurves({
   return (
     <section className="dk-card">
       <h2>{t("desktop.curves.title")}</h2>
-      <div className="dk-notice">{t("desktop.editing.curvesNote", { title })}</div>
+      <Notice closable>{t("desktop.editing.curvesNote", { title })}</Notice>
       <div className="dk-seg curve-tabs" role="tablist" aria-label={t("desktop.curves.title")}>
         {/* loop: HOT-PATH-OK — N = 2 tabs per render */}
         {SIDES.map((s, i) => (

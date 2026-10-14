@@ -11,7 +11,10 @@
 // context fails or is lost, the CPU fallback draws the field tiny (128 x 72)
 // and CSS stretches it, which blurs it for free. Redrawn ~12 times a second
 // (4 while the window is behind another one), not at all while the window is
-// minimized or in the tray, and once (still) with Reduce motion.
+// minimized or in the tray or while a game runs with the window behind it
+// (`hold`: the last frame stays), and once (still) with Reduce motion. The
+// slow pan and zoom (backdropPan.ts) steps with those same frames, so it
+// adds none of its own.
 // The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
 import { useWindowFocused, useWindowShown } from "../useWindowShown";
@@ -19,6 +22,7 @@ import { useReducedMotion } from "../motion";
 import { hsvToRgb, rgbToHsv, type Rgb } from "../theme/desktopPalette";
 import { onThemeChange } from "./controllerAccent";
 import { logged } from "../../errorText";
+import { panClock, panTransform } from "./backdropPan";
 
 // The CPU fallback's size (stretched and blurred by CSS).
 export const CPU_W = 128;
@@ -208,7 +212,7 @@ function gpuWorks(): boolean {
 // Shared across remounts and pauses, so the swirl doesn't jump back to its start.
 const swirlClock = { elapsed: 0 };
 
-export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
+export default function SwirlField({ colors, hold = false }: { colors: SwirlColors | null; hold?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // GPU with hardware acceleration on; the CPU fallback without it, or once
   // the GPU context failed or was lost (a new canvas: one can't hold both).
@@ -292,20 +296,27 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
     return onThemeChange(update);
   }, [colors, mode]);
   // The clock: a frame now, then ~12 a second (4 behind another window), none
-  // while minimized or in the tray, and just the one with Reduce motion.
-  // lifetime: OK — cleanup: clears the frame timer; none while hidden or still
+  // while minimized, in the tray or holding, and just the one with Reduce
+  // motion. Each frame also takes the pan's next step (none when still).
+  // lifetime: OK — cleanup: clears the frame timer; none while hidden, holding or still
   useEffect(() => {
     const r = renderer.current;
-    if (!r) return;
+    const c = ref.current;
+    if (!r || !c) return;
     // The field's clock carries on where it was across pauses.
     const start = performance.now() - swirlClock.elapsed;
     const now = () => (swirlClock.elapsed = performance.now() - start) / 1000;
-    const draw = (t: number) => r.draw(t, palette.current);
+    const pan = panClock();
+    const draw = (t: number) => {
+      r.draw(t, palette.current);
+      if (still) c.style.removeProperty("--bd-pan");
+      else c.style.setProperty("--bd-pan", panTransform(pan()));
+    };
     draw(still ? 0 : now());
-    // lifetime: OK — cleared in the effect cleanup; off while hidden (lean rule)
-    const timer = still || !shown ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
+    // lifetime: OK — cleared in the effect cleanup; off while hidden (lean rule) or holding
+    const timer = still || !shown || hold ? undefined : setInterval(() => draw(now()), focused ? FRAME_MS : UNFOCUSED_MS);
     return () => clearInterval(timer);
-  }, [mode, shown, focused, still]);
+  }, [mode, shown, focused, still, hold]);
   if (!mode) return null;
   return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
 }

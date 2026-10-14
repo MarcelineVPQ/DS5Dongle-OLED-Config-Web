@@ -1,24 +1,12 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UpdateState } from "./api";
 import { BusyButton } from "./controls";
+import Notice from "./Notice";
+import { appUpdateKey, firmwareUpdateKey } from "./openTasks";
 import { type FirmwareUpdate, useFirmwareHold } from "./useUpdates";
+import { formatMb } from "./format";
 
-function mb(bytes: number): string {
-  return `${(bytes / 1048576).toFixed(1)} MB`;
-}
-
-// One notice: its text, then (pushed right) an optional action.
-// error: NOT-WORTH — \`error\` is the notice's style, not a failure result
-function Notice({ error, children, action }: { error?: boolean; children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <div className={`dk-notice${error ? " error" : ""}`}>
-      {children}
-      {action && <span className="dk-spacer" />}
-      {action}
-    </div>
-  );
-}
 const Action = ({ primary, onClick, disabled, title, children }: { primary?: boolean; onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode }) => (
   <button type="button" className={`dk-btn${primary ? " primary" : ""}`} onClick={onClick} disabled={disabled} title={title}>
     {children}
@@ -39,10 +27,19 @@ export default function UpdateBanners({
   onFirmwareChanges: () => void; // About → Firmware changes
 }) {
   const { t } = useTranslation();
-  // A failed install stays said until dismissed (a failed scheduled check stays quiet).
+  // A failed install stays said until dismissed (a failed scheduled check
+  // stays quiet); failing again after another try shows it again.
   const [dismissedFailure, setDismissedFailure] = useState<string | null>(null);
+  const failed = app.phase === "failed";
+  // Forgotten once the update moves on (set while rendering, React's pattern
+  // for state that follows a prop).
+  const [wasFailed, setWasFailed] = useState(failed);
+  if (wasFailed !== failed) {
+    setWasFailed(failed);
+    if (!failed) setDismissedFailure(null);
+  }
   const desktop = window.desktop;
-  const dismiss = <Action onClick={fw.dismiss}>{t("notice.dismiss")}</Action>;
+  const appKey = appUpdateKey(app) ?? undefined;
   // While firmware is written, restarting or installing the app waits (the
   // main process holds them too); the notice says why.
   const hold = useFirmwareHold();
@@ -52,24 +49,26 @@ export default function UpdateBanners({
   if (app.phase === "available")
     appNotice = (
       <Notice
+        dismissKey={appKey}
         action={
           <BusyButton className="dk-btn primary" onClick={() => desktop?.installUpdate()} disabled={hold.writing} title={waitHint}>
             {t("desktop.update.download", "Download and install")}
           </BusyButton>
         }
       >
-        <span>{t("desktop.update.appAvailable", { version: app.version, size: mb(app.size), defaultValue: "App update {{version}} is available ({{size}})." })}</span>
+        <span>{t("desktop.update.appAvailable", { version: app.version, size: formatMb(app.size), defaultValue: "App update {{version}} is available ({{size}})." })}</span>
+        {app.dropsDevTools && <span>{t("desktop.update.dropsDevTools")}</span>}
         {waitHint && <span>{waitHint}</span>}
       </Notice>
     );
   else if (app.phase === "downloading")
     appNotice = (
-      <Notice>
+      <Notice closable>
         <span>
           {t("desktop.update.downloading", {
             version: app.version,
-            got: mb(app.got),
-            total: mb(app.total),
+            got: formatMb(app.got),
+            total: formatMb(app.total),
             pct: Math.floor((app.got * 100) / Math.max(1, app.total)),
             defaultValue: "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
           })}
@@ -79,14 +78,15 @@ export default function UpdateBanners({
   else if (app.phase === "failed" && app.during === "install" && dismissedFailure !== app.detail)
     // was SILENT-BUG: when Download and install failed, the banner just went away
     appNotice = (
-      <Notice error action={<Action onClick={() => setDismissedFailure(app.detail)}>{t("notice.dismiss")}</Action>}>
+      <Notice error onDismiss={() => setDismissedFailure(app.detail)}>
         <span>{t("desktop.update.appFailed", { detail: app.detail })}</span>
       </Notice>
     );
-  else if (app.phase === "installing") appNotice = <Notice>{t("desktop.update.installing", "Installing the update…")}</Notice>;
+  else if (app.phase === "installing") appNotice = <Notice closable>{t("desktop.update.installing", "Installing the update…")}</Notice>;
   else if (app.phase === "ready")
     appNotice = (
       <Notice
+        dismissKey={appKey}
         action={
           <Action primary onClick={() => desktop?.restartToUpdate()} disabled={hold.writing} title={waitHint}>
             {t("desktop.update.restart", "Restart now")}
@@ -100,6 +100,7 @@ export default function UpdateBanners({
   else if (app.phase === "manual")
     appNotice = (
       <Notice
+        dismissKey={appKey}
         action={
           app.notesUrl && (
             <a className="dk-btn" href={app.notesUrl} target="_blank" rel="noreferrer">
@@ -117,6 +118,7 @@ export default function UpdateBanners({
   if (s.phase === "idle" && fw.available && fw.latest)
     fwNotice = (
       <Notice
+        dismissKey={firmwareUpdateKey(fw.latest.version)}
         action={
           <>
             <Action onClick={onFirmwareChanges}>{t("desktop.update.details", "Details")}</Action>
@@ -143,13 +145,13 @@ export default function UpdateBanners({
     );
   } else if (s.phase === "done")
     fwNotice = (
-      <Notice action={dismiss}>
+      <Notice onDismiss={fw.dismiss}>
         <span>{t("desktop.update.fwDone", { version: s.version, defaultValue: "Firmware updated to {{version}}. Press PS to reconnect the controller." })}</span>
       </Notice>
     );
   else if (s.phase === "failed")
     fwNotice = (
-      <Notice error action={dismiss}>
+      <Notice error onDismiss={fw.dismiss}>
         <span>{s.detail}</span>
       </Notice>
     );
@@ -166,8 +168,9 @@ export default function UpdateBanners({
   return (
     <>
       {quitNotice}
-      {appNotice}
-      {fwNotice}
+      {/* Keyed by phase: a notice closed in one step doesn't hide the next. */}
+      <Fragment key={`app-${app.phase}`}>{appNotice}</Fragment>
+      <Fragment key={`fw-${s.phase}`}>{fwNotice}</Fragment>
     </>
   );
 }

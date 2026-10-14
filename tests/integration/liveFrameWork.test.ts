@@ -92,6 +92,7 @@ describe("the Buttons list and saved layouts", () => {
     dirty: false,
     busy: false,
     error: null,
+    clearError: () => undefined,
     setTarget: () => undefined,
     apply: async () => undefined,
     revert: () => undefined,

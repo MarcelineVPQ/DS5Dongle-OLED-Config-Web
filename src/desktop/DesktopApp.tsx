@@ -1,4 +1,8 @@
-import AppRail from "./AppRail";
+import AppRail, { type RailItem } from "./AppRail";
+import Notice from "./Notice";
+import { NoticeTasksContext, pruneStored, railReminders } from "./notices";
+import { openTasks } from "./openTasks";
+import { useBoardProblems } from "./dongle/useBoardProblems";
 import { useLookKnobs } from "./lookKnobs";
 import { gamesSupported } from "./games/platform";
 import { onGamesAllowed, setGamesAllowed } from "./games/consent";
@@ -36,6 +40,8 @@ import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
+import Toasts from "./Toasts";
+import { announce, showToast } from "./toast";
 import { firmwareNarratorValue, sayInPassing, useNarrator } from "./narrator";
 import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 import { identityChargeState } from "../protocol/controllerInfo";
@@ -87,6 +93,26 @@ export default function DesktopApp() {
     setMain("controller");
     setPanel(view);
   };
+  // A rail item's page (App settings → Dismissed notices: the place to act).
+  const goTo = (item: RailItem) => {
+    if (item === "games" || item === "about") setMain(item);
+    else if (item === "controller") openPanel("overview");
+    else openPanel(item);
+  };
+
+  // Open tasks: the rail's dots, and which dismissed notices still apply.
+  const boardProblems = useBoardProblems(bridge);
+  const { tasks, settled } = useMemo(
+    () => openTasks(t, { app: appUpdate, fw, connected: bridge.isConnected, board: boardProblems, gamesCount: games.count }),
+    [t, appUpdate, fw, bridge.isConnected, boardProblems, games.count],
+  );
+  const reminders = useMemo(() => railReminders(tasks), [tasks]);
+  // loop: NOT-WORTH — N ≤ 3 notice ids; when what applies changes
+  const settledSig = JSON.stringify([...settled].sort(([a], [b]) => a.localeCompare(b)));
+  // lifetime: OK — acquires nothing (drops dismissals whose reason no longer applies)
+  useEffect(() => {
+    pruneStored(new Map(JSON.parse(settledSig) as Array<[string, string[]]>));
+  }, [settledSig]);
 
   // Edits apply to the dongle's RAM as you make them (debounced), so every
   // change is heard and felt immediately. Saving to flash is a separate step.
@@ -173,6 +199,37 @@ export default function DesktopApp() {
   const barRef = useGlass(glass, CLEAR_GLASS_BAR);
   const firmware = bridge.firmwareVersion;
   const controllerOn = Boolean(connected && liveIdentity?.controllerConnected);
+  // Events (toasts): a controller connecting or going away while the board
+  // stays connected (not the one already there at start), and a game's
+  // profile going on or off by itself (not while one is being edited).
+  const wasControllerOn = useRef<boolean | null>(null);
+  const hasIdentity = connected && !!liveIdentity;
+  const firmwareNarrates = !!((liveIdentity?.features ?? 0) & IDENTITY_FEATURES.narrator);
+  // lifetime: OK — acquires nothing (a toast when the controller comes or goes)
+  useEffect(() => {
+    if (!hasIdentity) {
+      wasControllerOn.current = null;
+      return;
+    }
+    const was = wasControllerOn.current;
+    wasControllerOn.current = controllerOn;
+    if (was === null || was === controllerOn) return;
+    // The board says its own "Connected" when it has the narrator.
+    if (controllerOn) announce("desktop.toast.controllerConnected", firmwareNarrates ? null : "app_controller");
+    else showToast("desktop.toast.controllerDisconnected");
+  }, [hasIdentity, controllerOn, firmwareNarrates]);
+  const activeProfile = profiles.active?.title ?? null;
+  const wasProfile = useRef<string | null>(null);
+  const editingProfile = !!profiles.editing;
+  // lifetime: OK — acquires nothing (a toast when a game profile goes on or off)
+  useEffect(() => {
+    const was = wasProfile.current;
+    // A profile being edited is on because of that: not an event.
+    wasProfile.current = editingProfile ? null : activeProfile;
+    if (editingProfile || was === activeProfile) return;
+    if (activeProfile) showToast("desktop.bar.profileActive", { vars: { title: activeProfile } });
+    else if (was) showToast("desktop.toast.profileOff", { vars: { title: was } });
+  }, [activeProfile, editingProfile]);
   const charge = controllerOn && liveIdentity ? identityChargeState(liveIdentity) : null;
   const power = charge === "charging" || charge === "pluggedIn" || charge === "full" ? charge : null;
   const charging = power === "charging";
@@ -258,202 +315,209 @@ export default function DesktopApp() {
   );
 
   return (
-    <LibraryContext.Provider
-      value={{
-        library: profiles.library,
-        setLibrary: profiles.setLibrary,
-        active: profiles.active,
-        editing: profiles.editing,
-        appliedStamp: profiles.appliedStamp,
-        switchSlot: profiles.switchSlot,
-        curvesDraft: profiles.curvesDraft,
-        setCurvesDraft: profiles.setCurvesDraft,
-        setButtonsDraft: profiles.setButtonsDraft,
-        saveToProfile: profiles.saveToProfile,
-        editProfile: (gameKey, title) => {
-          setConfirmDone(false);
-          profiles.startEditing(gameKey, title);
-          setMain("controller");
-          setPanel("overview");
-        },
-      }}
-    >
-      <div className="dk dk-one">
-        <ArtBackdrop colors={controllerColors} />
-        <NarratorCaption />
-        <div className="dk-main">
-          <main tabIndex={-1} className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
-            <UpdateBanners
-              app={appUpdate}
-              fw={fw}
-              onShowFirmware={() => openPanel("dongle")}
-              onFirmwareChanges={() => {
-                setAboutTab("firmware");
-                setMain("about");
-              }}
-            />
-            <AutoUpdateAsk />
-            {whatsNew.version && (
-              <div className="dk-notice">
-                <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
-                <span className="dk-spacer" />
-                <button
-                  type="button"
-                  className="dk-btn"
-                  onClick={() => {
-                    setAboutTab("changes");
-                    setMain("about");
-                    whatsNew.dismiss();
-                  }}
-                >
-                  {t("desktop.about.seeWhatsNew", "See what's new")}
-                </button>
-                <button type="button" className="dk-btn" onClick={whatsNew.dismiss}>
-                  {t("notice.dismiss")}
-                </button>
-              </div>
-            )}
-            <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
-            {mainNotice && (
-              <div className="dk-notice pinned" role="status">
-                <span>{mainNotice}</span>
-                <span className="dk-spacer" />
-                <button type="button" className="dk-btn" onClick={() => setMainNotice(null)}>
-                  {t("notice.dismiss")}
-                </button>
-              </div>
-            )}
-            <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
-            <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
-            {main === "games" && (
-              <GamesPage bridge={bridge} profiles={profiles} openGame={openGame} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />
-            )}
-            {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
-            {main === "controller" && profiles.editing && (
-              <div className="dk-editing" role="status">
-                {confirmDone ? (
-                  <>
-                    <span>{t("desktop.editing.unsaved", { title: profiles.editing.title })}</span>
-                    <span className="dk-spacer" />
-                    <button type="button" className="dk-btn" onClick={() => setConfirmDone(false)}>
-                      {t("desktop.common.cancel")}
-                    </button>
-                    <button type="button" className="dk-btn" onClick={finishEditing}>
-                      {t("desktop.editing.discard")}
-                    </button>
-                    <BusyButton
-                      className="dk-btn primary"
-                      disabled={busy || bridge.isDirty}
-                      onClick={async () => {
-                        if (await profiles.saveToProfile()) finishEditing();
+    <NoticeTasksContext.Provider value={{ tasks, goTo }}>
+      <LibraryContext.Provider
+        value={{
+          library: profiles.library,
+          setLibrary: profiles.setLibrary,
+          active: profiles.active,
+          editing: profiles.editing,
+          appliedStamp: profiles.appliedStamp,
+          switchSlot: profiles.switchSlot,
+          curvesDraft: profiles.curvesDraft,
+          setCurvesDraft: profiles.setCurvesDraft,
+          setButtonsDraft: profiles.setButtonsDraft,
+          saveToProfile: profiles.saveToProfile,
+          editProfile: (gameKey, title) => {
+            setConfirmDone(false);
+            profiles.startEditing(gameKey, title);
+            setMain("controller");
+            setPanel("overview");
+          },
+        }}
+      >
+        <div className="dk dk-one">
+          <ArtBackdrop colors={controllerColors} />
+          <NarratorCaption />
+          <div className="dk-main">
+            <main tabIndex={-1} className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
+              <UpdateBanners
+                app={appUpdate}
+                fw={fw}
+                onShowFirmware={() => openPanel("dongle")}
+                onFirmwareChanges={() => {
+                  setAboutTab("firmware");
+                  setMain("about");
+                }}
+              />
+              <AutoUpdateAsk />
+              {whatsNew.version && (
+                <Notice
+                  onDismiss={whatsNew.dismiss}
+                  action={
+                    <button
+                      type="button"
+                      className="dk-btn"
+                      onClick={() => {
+                        setAboutTab("changes");
+                        setMain("about");
+                        whatsNew.dismiss();
                       }}
                     >
-                      {t("desktop.editing.saveClose")}
+                      {t("desktop.about.seeWhatsNew", "See what's new")}
+                    </button>
+                  }
+                >
+                  <span>{t("desktop.about.updated", { version: whatsNew.version, defaultValue: "Updated to {{version}}." })}</span>
+                </Notice>
+              )}
+              <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
+              {mainNotice && (
+                <Notice pinned role="status" onDismiss={() => setMainNotice(null)}>
+                  <span>{mainNotice}</span>
+                </Notice>
+              )}
+              <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
+              <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
+              {main === "games" && (
+                <GamesPage
+                  bridge={bridge}
+                  profiles={profiles}
+                  openGame={openGame}
+                  allowed={games.allowed}
+                  onAllowedChange={games.setAllowed}
+                  onScanned={games.update}
+                  onDeclinedChange={games.recount}
+                />
+              )}
+              {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
+              {main === "controller" && profiles.editing && (
+                <div className="dk-editing" role="status">
+                  {confirmDone ? (
+                    <>
+                      <span>{t("desktop.editing.unsaved", { title: profiles.editing.title })}</span>
+                      <span className="dk-spacer" />
+                      <button type="button" className="dk-btn" onClick={() => setConfirmDone(false)}>
+                        {t("desktop.common.cancel")}
+                      </button>
+                      <button type="button" className="dk-btn" onClick={finishEditing}>
+                        {t("desktop.editing.discard")}
+                      </button>
+                      <BusyButton
+                        className="dk-btn primary"
+                        disabled={busy || bridge.isDirty}
+                        onClick={async () => {
+                          if (await profiles.saveToProfile()) finishEditing();
+                        }}
+                      >
+                        {t("desktop.editing.saveClose")}
+                      </BusyButton>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
+                      </span>
+                      <span className="dk-spacer" />
+                      <button type="button" className="dk-btn primary" onClick={() => (profiles.profileDirty || bridge.isDirty ? setConfirmDone(true) : finishEditing())}>
+                        {t("desktop.editing.done")}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              {main === "controller" &&
+                (connected ? (
+                  <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
+                ) : panel === "app" ? (
+                  <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
+                ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
+                  // Mid-update the dongle is a bootloader drive: the update banner
+                  // shows the progress; Setup must not offer to flash it again.
+                  <div className="dk-page" />
+                ) : (
+                  <SetupScreen supported={bridge.supported} />
+                ))}
+            </main>
+            <Toasts />
+
+            {connected && !standalone && (
+              <footer className="dk-bar" ref={barRef}>
+                {profiles.active ? (
+                  <>
+                    <span className="dk-bar-note">
+                      <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
+                    </span>
+                    <span className="dk-spacer" />
+                    <BusyButton className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={profiles.revertToProfile}>
+                      {t("desktop.bar.revert", "Revert")}
+                    </BusyButton>
+                    <BusyButton className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={profiles.saveToProfile}>
+                      {/* Named: it saves into the profile being edited, which needn't be the active one. */}
+                      {t("desktop.bar.saveProfileTo", { title: (profileTarget(profiles.editing, profiles.active) ?? profiles.active).title })}
                     </BusyButton>
                   </>
                 ) : (
                   <>
-                    <span>
-                      <b>{t("desktop.editing.title", { title: profiles.editing.title })}</b> · {t("desktop.editing.hint")}
+                    <span className="dk-bar-note">
+                      {busy
+                        ? t(`statusText.${bridge.operation}`)
+                        : bridge.hasUnsavedChanges
+                          ? t("desktop.bar.unsaved", "Applied to {{device}}, not saved yet: changes are lost when it powers off.")
+                          : t("desktop.bar.saved", "All changes saved on {{device}}.")}
                     </span>
                     <span className="dk-spacer" />
-                    <button type="button" className="dk-btn primary" onClick={() => (profiles.profileDirty || bridge.isDirty ? setConfirmDone(true) : finishEditing())}>
-                      {t("desktop.editing.done")}
-                    </button>
+                    <BusyButton className="dk-btn" disabled={busy || !bridge.canRevert} onClick={bridge.revertToSaved}>
+                      {t("desktop.bar.revert", "Revert")}
+                    </BusyButton>
+                    <BusyButton
+                      className="dk-btn primary"
+                      disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
+                      onClick={() =>
+                        bridge.saveToFlash().then((ok) => {
+                          if (ok) announce("desktop.bar.saved", "app_saved");
+                        })
+                      }
+                    >
+                      {t("desktop.bar.save", "Save to {{device}}")}
+                    </BusyButton>
                   </>
                 )}
-              </div>
+              </footer>
             )}
-            {main === "controller" &&
-              (connected ? (
-                <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
-              ) : panel === "app" ? (
-                <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
-              ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
-                // Mid-update the dongle is a bootloader drive: the update banner
-                // shows the progress; Setup must not offer to flash it again.
-                <div className="dk-page" />
-              ) : (
-                <SetupScreen supported={bridge.supported} />
-              ))}
-          </main>
-
-          {connected && !standalone && (
-            <footer className="dk-bar" ref={barRef}>
-              {profiles.active ? (
-                <>
-                  <span className="dk-bar-note">
-                    <b>{t("desktop.bar.profileActive", { title: profiles.active.title })}</b> · {profiles.profileDirty ? t("desktop.bar.profileUnsaved") : t("desktop.bar.profileSaved")}
-                  </span>
-                  <span className="dk-spacer" />
-                  <BusyButton className="dk-btn" disabled={busy || !profiles.profileDirty} onClick={profiles.revertToProfile}>
-                    {t("desktop.bar.revert", "Revert")}
-                  </BusyButton>
-                  <BusyButton className="dk-btn primary" disabled={busy || !profiles.profileDirty || bridge.isDirty} onClick={profiles.saveToProfile}>
-                    {/* Named: it saves into the profile being edited, which needn't be the active one. */}
-                    {t("desktop.bar.saveProfileTo", { title: (profileTarget(profiles.editing, profiles.active) ?? profiles.active).title })}
-                  </BusyButton>
-                </>
-              ) : (
-                <>
-                  <span className="dk-bar-note">
-                    {busy
-                      ? t(`statusText.${bridge.operation}`)
-                      : bridge.hasUnsavedChanges
-                        ? t("desktop.bar.unsaved", "Applied to {{device}}, not saved yet: changes are lost when it powers off.")
-                        : t("desktop.bar.saved", "All changes saved on {{device}}.")}
-                  </span>
-                  <span className="dk-spacer" />
-                  <BusyButton className="dk-btn" disabled={busy || !bridge.canRevert} onClick={bridge.revertToSaved}>
-                    {t("desktop.bar.revert", "Revert")}
-                  </BusyButton>
-                  <BusyButton
-                    className="dk-btn primary"
-                    disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
-                    onClick={() =>
-                      bridge.saveToFlash().then((ok) => {
-                        if (ok) sayInPassing("app_saved");
-                      })
-                    }
-                  >
-                    {t("desktop.bar.save", "Save to {{device}}")}
-                  </BusyButton>
-                </>
-              )}
-            </footer>
-          )}
+          </div>
+          <AppRail
+            active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
+            onSelect={(item) => {
+              // After the page or panel renders, focus moves into it (the page
+              // in the middle; App settings / Pico open in the side panel), so
+              // the keyboard and screen readers continue there, not in the rail.
+              // lifetime: OK — fires once (moves focus after the page renders)
+              requestAnimationFrame(() => {
+                const target = item === "dongle" || item === "app" ? document.querySelector<HTMLElement>(".live-panel-head h2") : document.querySelector<HTMLElement>("main.dk-body");
+                target?.focus({ preventScroll: true });
+              });
+              if (item === "games" || item === "about") setMain(item);
+              else if (item === "controller") {
+                // Already there: show / hide its settings panel.
+                if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
+                else {
+                  setMain("controller");
+                  setPanel("overview");
+                }
+              } else openPanel(item);
+            }}
+            gamesSupported={games.supported}
+            reminders={reminders}
+            connected={connected}
+            connecting={bridge.operation === "connecting"}
+            firmware={bridge.firmwareVersion}
+            deviceLabel={bridge.deviceLabel}
+            device={hardwareName(bridge.identity)}
+          />
         </div>
-        <AppRail
-          active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
-          onSelect={(item) => {
-            // After the page or panel renders, focus moves into it (the page
-            // in the middle; App settings / Pico open in the side panel), so
-            // the keyboard and screen readers continue there, not in the rail.
-            // lifetime: OK — fires once (moves focus after the page renders)
-            requestAnimationFrame(() => {
-              const target = item === "dongle" || item === "app" ? document.querySelector<HTMLElement>(".live-panel-head h2") : document.querySelector<HTMLElement>("main.dk-body");
-              target?.focus({ preventScroll: true });
-            });
-            if (item === "games" || item === "about") setMain(item);
-            else if (item === "controller") {
-              // Already there: show / hide its settings panel.
-              if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
-              else {
-                setMain("controller");
-                setPanel("overview");
-              }
-            } else openPanel(item);
-          }}
-          gamesSupported={games.supported}
-          gamesBadge={games.count}
-          connected={connected}
-          connecting={bridge.operation === "connecting"}
-          firmware={bridge.firmwareVersion}
-          deviceLabel={bridge.deviceLabel}
-          device={hardwareName(bridge.identity)}
-        />
-      </div>
-    </LibraryContext.Provider>
+      </LibraryContext.Provider>
+    </NoticeTasksContext.Provider>
   );
 }
 
@@ -462,16 +526,11 @@ export default function DesktopApp() {
 // An error notice with Dismiss; `pinned` stays at the top of a scrolled page
 // (the one for shown() errors, which can come from anywhere on the page).
 function ErrorNotice({ message, onDismiss, pinned }: { message: string | null; onDismiss: () => void; pinned?: boolean }) {
-  const { t } = useTranslation();
   if (!message) return null;
   return (
-    <div className={`dk-notice error${pinned ? " pinned" : ""}`} role="alert">
+    <Notice error pinned={pinned} role="alert" onDismiss={onDismiss}>
       <span>{message}</span>
-      <span className="dk-spacer" />
-      <button type="button" className="dk-btn" onClick={onDismiss}>
-        {t("notice.dismiss")}
-      </button>
-    </div>
+    </Notice>
   );
 }
 

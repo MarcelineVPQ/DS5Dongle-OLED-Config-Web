@@ -2,8 +2,9 @@
 // install or turn on, and "Set it up yourself" (what Turn on HDR does, by
 // hand, with this computer's real screen mode and a line to copy). Shown on
 // Home -> This computer (the system part) and on each HDR game's page.
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { showToast } from "../toast";
 import { HEROIC_GAMESCOPE_OPTIONS, LUTRIS_GAMESCOPE_FLAGS, lineScreen, WSI_ENV, manualSteamLine, type HdrReq } from "../games/hdrSetup";
 import type { GameEntry, HdrSystem } from "../games/types";
 
@@ -29,16 +30,15 @@ export function HdrChecklist({ reqs }: { reqs: HdrReq[] }) {
 function CopyLine({ text }: { text: string }) {
   const { t } = useTranslation();
   const box = useRef<HTMLTextAreaElement>(null);
-  const [copied, setCopied] = useState(false);
   const copy = () => {
     box.current?.select();
-    setCopied(document.execCommand("copy"));
+    if (document.execCommand("copy")) showToast("desktop.hdrManual.copied");
   };
   return (
     <div className="hdr-line">
       <textarea ref={box} className="dk-textarea dk-mono" readOnly rows={2} value={text} onFocus={(e) => e.currentTarget.select()} aria-label={t("desktop.hdrManual.lineLabel")} />
       <button type="button" className="dk-btn" onClick={copy}>
-        {copied ? t("desktop.hdrManual.copied") : t("desktop.hdrManual.copy")}
+        {t("desktop.hdrManual.copy")}
       </button>
     </div>
   );

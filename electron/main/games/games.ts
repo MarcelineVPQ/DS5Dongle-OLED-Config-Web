@@ -244,8 +244,8 @@ const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined
 export const idHash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 8);
 
 // Message helpers (texts live in the locale files under desktop.games.msg).
-const msg = (key: string, params?: Msg["params"]): Msg => (params ? { key, params } : { key });
-const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers" ? "support.triggers" : "support.haptics");
+export const msg = (key: string, params?: Msg["params"]): Msg => (params ? { key, params } : { key });
+export const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers" ? "support.triggers" : "support.haptics");
 const orMsg = (value: string | null | undefined, fallbackKey: string): string | Msg => value ?? msg(fallbackKey);
 // The standard-gamepad fix's sentence about moving the game to another Proton ("" when it doesn't).
 const runnerSwitch = (current: string, to: string | null): string | Msg => (to ? msg("why.gamepadRunner", { current, proton: to }) : "");

@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "Hay una actualización de la app {{version}} ({{size}}).",
+      "dropsDevTools": "Esta es una versión para desarrolladores; instalar la actualización la reemplaza por una versión normal sin las herramientas de desarrollo.",
       "download": "Descargar e instalar",
       "downloading": "Descargando {{version}}: {{got}} de {{total}} ({{pct}} %)",
       "installing": "Instalando la actualización…",
@@ -835,7 +836,6 @@
         "setup": "Configuración",
         "compat": "Compatibilidad",
         "support": "Soporte DualSense",
-        "rating": "Tu valoración",
         "notes": "Notas",
         "details": "Detalles"
       },
@@ -920,8 +920,16 @@
         "mic": "Micrófono",
         "lightbar": "Barra luminosa"
       },
-      "stars_one": "{{count}} estrella",
-      "stars_other": "{{count}} estrellas",
+      "stars_one": "{{count}} estrella: {{label}}",
+      "stars_other": "{{count}} estrellas: {{label}}",
+      "rateTitle": "¿Qué tal funciona tu mando DualSense en este juego?",
+      "rateLabel": {
+        "1": "No funciona",
+        "2": "Apenas funciona",
+        "3": "Funciona con problemas",
+        "4": "Funciona bien",
+        "5": "Funciona perfectamente"
+      },
       "feedbackHint": "¿Qué has notado?",
       "tag": {
         "triggers-work": "Gatillos adaptativos OK",
@@ -1173,6 +1181,18 @@
       },
       "fakeSlots": "Simular más mandos",
       "fakeSlotsHint": "Un Edge Midnight Black y un DualSense Galactic Purple aparecen emparejados en las primeras ranuras libres. Cambia a ellas en Ranuras de emparejamiento: la app actúa como si ese mando se hubiera conectado. No se envía nada {{device_a}}.",
+      "fakeGames": "Juegos de prueba",
+      "fakeGamesHint": "Juegos muestra una biblioteca inventada de 20 juegos (Steam, Heroic, Lutris) con imágenes generadas en lugar de leer tus lanzadores. Jugar, Aplicar, Deshacer e Instalar solo cambian la biblioteca inventada: no se lee ni se escribe ningún archivo de los lanzadores y no se inicia nada. Recarga la página.",
+      "fakeRunning": "Juego en marcha",
+      "fakeRunningHint": "El juego de prueba que se muestra en marcha. ▶ Jugar en la página de un juego lo pone en marcha durante un minuto.",
+      "fakeRunningNone": "Ninguno",
+      "fakeHdr": "HDR en este equipo",
+      "fakeHdrHint": "Lo que tiene el equipo de prueba para HDR, para las listas de HDR.",
+      "fakeHdrState": {
+        "ready": "Listo",
+        "hdr-off": "El HDR está desactivado en la pantalla",
+        "no-gamescope": "gamescope no está instalado"
+      },
       "simulated": "Simular {{device}} (sin hardware)",
       "simulatedHint": "La app simula {{device}} en vez de usar USB: todas las páginas funcionan y la entrada se mueve sola. Para probar sin hardware (p. ej. la VM de Windows). No se simulan hápticos, audio, emparejamiento ni actualizaciones de firmware. Recarga la página.",
       "simCore1": "Core1 simulado",
@@ -1648,7 +1668,18 @@
       "boardRejected": "{{device, capitalize}} no aceptó eso. Puede que su firmware sea más antiguo que esta app: actualiza el firmware e inténtalo otra vez."
     },
     "notices": {
-      "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando."
+      "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",
+      "dismissedTitle": "Avisos cerrados",
+      "none": "No hay avisos cerrados.",
+      "showAgain": "Volver a mostrar",
+      "showAllAgain": "Volver a mostrar todos",
+      "goTo": "Ir a {{place}}"
+    },
+    "toast": {
+      "region": "Notificaciones",
+      "controllerConnected": "Mando conectado",
+      "controllerDisconnected": "Mando desconectado",
+      "profileOff": "Perfil de {{title}} desactivado: vuelven tus ajustes normales"
     }
   },
   "ad": {

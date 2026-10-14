@@ -14,9 +14,23 @@ import { lastBoardName } from "./hardwareName";
 import { useTranslation } from "react-i18next";
 import { protonApplies } from "./games/platform";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
+import type { TFunction } from "i18next";
+import type { Reminder } from "./notices";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
 const PIN_KEY = "ds5.railPinned";
+
+// Each rail item's name (the board's page is named after the board).
+export const railLabel = (t: TFunction, item: RailItem, device: string): string =>
+  item === "controller"
+    ? t("desktop.nav.controller")
+    : item === "dongle"
+      ? device
+      : item === "games"
+        ? t("desktop.nav.games", "Games")
+        : item === "app"
+          ? t("desktop.live.app", "App settings")
+          : t("desktop.nav.about", "About");
 
 // The tooltip's key: Games mentions Proton only where Proton applies (Linux).
 export const railTip = (item: RailItem): string => (item === "games" && !protonApplies() ? "desktop.rail.tip.gamesWindows" : `desktop.rail.tip.${item}`);
@@ -25,7 +39,8 @@ interface Props {
   active: RailItem;
   onSelect: (item: RailItem) => void;
   gamesSupported: boolean;
-  gamesBadge: number;
+  // Open tasks per rail item (notices.ts): a dot, or Games' count, with what's waiting as its tooltip.
+  reminders: Partial<Record<RailItem, Reminder>>;
   connected: boolean;
   connecting: boolean;
   firmware: string | null;
@@ -33,7 +48,7 @@ interface Props {
   device: string; // hardwareName()
 }
 
-export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, connected, connecting, firmware, deviceLabel, device }: Props) {
+export default function AppRail({ active, onSelect, gamesSupported, reminders, connected, connecting, firmware, deviceLabel, device }: Props) {
   const { t } = useTranslation();
   const [pinned, pin] = useFlagPref(PIN_KEY);
   const [glass] = useFlagPref(GLASS_KEY);
@@ -56,31 +71,38 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
     return () => window.removeEventListener("keydown", onKey);
   }, [pinned, pin]);
 
-  const link = (item: RailItem, label: string, icon: ReactNode, badge?: number) => (
-    <button
-      type="button"
-      className={`rail-link${active === item ? " active" : ""}`}
-      data-rail={item}
-      aria-current={active === item ? "page" : undefined}
-      // What's there, in one line; on Controller again, what a second click does.
-      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(railTip(item))}`}
-      onClick={(e) => {
-        onSelect(item);
-        // A pointer click (detail > 0), not Enter/Space: close the rail now.
-        if (e.detail > 0) setPicked(true);
-      }}
-    >
-      <span className="rail-ic" aria-hidden="true">
-        {icon}
-        {badge ? (
-          <span className="rail-badge" title={t("desktop.games.attention", { count: badge })}>
-            {badge}
-          </span>
-        ) : null}
-      </span>
-      <span className="rail-label">{label}</span>
-    </button>
-  );
+  const link = (item: RailItem, icon: ReactNode) => {
+    const label = railLabel(t, item, device);
+    const reminder = reminders[item];
+    const tip = item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(railTip(item))}`;
+    return (
+      <button
+        type="button"
+        className={`rail-link${active === item ? " active" : ""}`}
+        data-rail={item}
+        aria-current={active === item ? "page" : undefined}
+        // What's there, in one line; on Controller again, what a second click
+        // does; then what's waiting there.
+        title={reminder ? `${tip}\n${reminder.tip}` : tip}
+        aria-description={reminder?.tip}
+        onClick={(e) => {
+          onSelect(item);
+          // A pointer click (detail > 0), not Enter/Space: close the rail now.
+          if (e.detail > 0) setPicked(true);
+        }}
+      >
+        <span className="rail-ic" aria-hidden="true">
+          {icon}
+          {reminder && (
+            <span className={`rail-badge${reminder.count === null ? " dot" : ""}`} title={reminder.tip}>
+              {reminder.count}
+            </span>
+          )}
+        </span>
+        <span className="rail-label">{label}</span>
+      </button>
+    );
+  };
 
   // Before the device identifies itself: the last board that connected, or a
   // neutral line if none has yet.
@@ -98,12 +120,12 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
     <div className={`rail-slot${pinned ? " pinned" : ""}`}>
       <nav className={`app-rail${picked ? " picked" : ""}`} ref={railRef} aria-label={t("desktop.rail.label")} onPointerLeave={() => setPicked(false)}>
         <div className="rail-nav">
-          {link("controller", t("desktop.nav.controller"), <Gamepad2 size={20} />)}
-          {link("dongle", device, <Usb size={20} />)}
-          {gamesSupported && link("games", t("desktop.nav.games", "Games"), <Joystick size={20} />, gamesBadge)}
+          {link("controller", <Gamepad2 size={20} />)}
+          {link("dongle", <Usb size={20} />)}
+          {gamesSupported && link("games", <Joystick size={20} />)}
           <div className="rail-divider" />
-          {link("app", t("desktop.live.app", "App settings"), <Settings size={20} />)}
-          {link("about", t("desktop.nav.about", "About"), <Info size={20} />)}
+          {link("app", <Settings size={20} />)}
+          {link("about", <Info size={20} />)}
           {isDevelopmentBuild() && (
             <div className="rail-dev" title={t("desktop.rail.devHint")}>
               <b>{t("desktop.rail.development")}</b> · {appVersionLabel()}

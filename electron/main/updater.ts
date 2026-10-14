@@ -13,7 +13,8 @@ import { readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, rea
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
-import { Manifest, isNewer, sameVersion, type Download } from "../../src/update/manifest";
+import { Manifest, devNumber, isNewer, sameVersion, type Download } from "../../src/update/manifest";
+import { DEV_TOOLS_BUILT } from "./devTools";
 import { isAllowedDownloadUrl } from "./urls";
 import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
@@ -65,6 +66,13 @@ function downloadAllowed(url: string): boolean {
 
 type Platform = "linux" | "windows" | "macos";
 
+// A build with the developer tools (DS5_DEV_TOOLS=1 or X.Y.Z-dev.N) offered a
+// release (X.Y.Z): installing it drops the tools. The offer says so and is
+// never installed automatically; the user chooses.
+export function updateDropsDevTools(devToolsBuilt: boolean, remote: string): boolean {
+  return devToolsBuilt && devNumber(remote) === null;
+}
+
 export class Updater {
   private state: UpdateState = { phase: "idle" };
   // cache: OK — key=none (the feed the app offer on screen came from); invalidated=each update check; bound=1 entry. Only the app update installs from it; firmware downloads use the entry the user was shown (firmwareSource.ts)
@@ -86,6 +94,12 @@ export class Updater {
 
   getState(): UpdateState {
     return this.state;
+  }
+
+  // An update waits that automatic updates may install: never one that would
+  // replace this developer build with a regular one (updateDropsDevTools).
+  autoInstallable(): boolean {
+    return this.state.phase === "available" && !this.state.dropsDevTools;
   }
 
   // Why this copy can't replace itself, or null if it can.
@@ -153,7 +167,8 @@ export class Updater {
       if (!download) return this.set({ phase: "failed", detail: `No ${process.platform} build is published for ${remote}.` });
       const blocker = this.selfInstallBlocker();
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
-      return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url });
+      const dropsDevTools = updateDropsDevTools(DEV_TOOLS_BUILT, remote) || undefined;
+      return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url, dropsDevTools });
     } catch (cause) {
       // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
       return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}`, problem: feedProblem(cause) });

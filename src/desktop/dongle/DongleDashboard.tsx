@@ -8,23 +8,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import {
-  AUDIO_COUNTER_NAMES,
-  CORE1_MIC_FAILED,
-  CORE1_SPEAKER_FAILED,
-  FEATURES2,
-  supportsFeature2,
-  TIMING_MAX_SATURATED,
-  TIMING_STAGES,
-  type AudioCounters,
-  type CpuTimings,
-  type OledFrame,
-} from "../../protocol/bridgeClient";
+import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { boardSpecs, OLED_MODULE } from "./boardSpecs";
 import { causeText } from "../shownError";
 import { BusyButton } from "../controls";
-import { core1StoppedText } from "./core1Status";
+import { boardProblems } from "./core1Status";
+import Notice from "../Notice";
+import { boardProblemKey } from "../openTasks";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 
@@ -121,6 +112,7 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
   const config = bridge.config;
   const micLoss = micLossClimbing(history);
   const specs = boardSpecs(bridge.identity?.boardName);
+  const problems = s ? boardProblems(t, s.counters, s.core1Alive) : [];
 
   return (
     <div className="dash">
@@ -161,13 +153,12 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
       <div className="dash-row">
         <div className="dash-card dash-wide">
           <h4>{td("audio")}</h4>
-          {s && !s.core1Alive && <div className="dk-notice error">{core1StoppedText(t, s.counters)}</div>}
-          {s && ((s.counters.core1Flags ?? 0) & CORE1_SPEAKER_FAILED) !== 0 && (
-            <div className="dk-notice error">{t("desktop.diag.speakerEncoderFailed", { kb: Math.round((s.counters.core1FreeHeap ?? 0) / 1024) })}</div>
-          )}
-          {s && ((s.counters.core1Flags ?? 0) & CORE1_MIC_FAILED) !== 0 && (
-            <div className="dk-notice error">{t("desktop.diag.micDecoderFailed", { kb: Math.round((s.counters.core1FreeHeap ?? 0) / 1024) })}</div>
-          )}
+          {/* loop: HOT-PATH-OK — N ≤ 3 problems; the 1 s sample's render */}
+          {problems.map((p) => (
+            <Notice key={p.reason} error dismissKey={boardProblemKey(p)}>
+              {p.text}
+            </Notice>
+          ))}
           <div className="dash-levels">
             <Level label={td("speakerPeak")} value={s?.peaks[0] ?? 0} />
             <Level label={td("hapticPeak")} value={s?.peaks[1] ?? 0} />
@@ -249,7 +240,11 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
         <h4>{td("title")}</h4>
         <p className="dk-hint">{td("hint")}</p>
         {timings.timerFallback && <p className="dk-hint">{td("usTimer")}</p>}
-        {error && <div className="dk-notice error">{error}</div>}
+        {error && (
+          <Notice error onDismiss={() => setError(null)}>
+            {error}
+          </Notice>
+        )}
         <div className="dash-timings">
           <span />
           <span>{td("average")}</span>

@@ -17,6 +17,12 @@ export function useReduceMotion(): void {
 // followed live: for animations drawn in script, which the stylesheet can't
 // stop (the swirl background).
 const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
+
+// The same, right now, outside a component (the toast queue: skip the fade).
+export function reducedMotionNow(): boolean {
+  if (typeof document !== "undefined" && document.documentElement.hasAttribute("data-reduce-motion")) return true;
+  return typeof matchMedia === "function" && matchMedia(REDUCED_QUERY).matches;
+}
 export function useReducedMotion(): boolean {
   const [pref] = useFlagPref(REDUCE_MOTION_KEY);
   const [system, setSystem] = useState(() => matchMedia(REDUCED_QUERY).matches);

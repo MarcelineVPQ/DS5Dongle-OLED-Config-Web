@@ -12,7 +12,7 @@ import {
   type Mine,
   type ProfileSettings,
 } from "../../src/desktop/games/library";
-import type { DevChannelAnswer } from "../../src/desktop/api";
+import { FAKE_GAMES_HDR, type DevChannelAnswer, type DevFakeGamesChange, type DevFakeGamesState } from "../../src/desktop/api";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import {
@@ -97,6 +97,9 @@ export const SetProfileSchema = z.strictObject({ gameKey: GameKeySchema, title: 
 export const SetMineSchema = z.strictObject({ gameKey: GameKeySchema, title: TitleSchema, mine: MineSchema });
 export const GameActionSchema = z.strictObject({ gameKey: GameKeySchema, action: z.enum(GAME_ACTIONS) });
 export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable();
+// Developer card → Fake games (dev builds only): the switch, the game shown
+// as running (a fake game's key, or null), the fake computer's HDR setup.
+export const DevFakeGamesSchema = z.strictObject({ on: z.boolean().optional(), running: GameKeySchema.nullable().optional(), hdr: z.enum(FAKE_GAMES_HDR).optional() });
 export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table, extra: ButtonLayoutSchema.shape.extra });
 
 export interface IpcHandlers {
@@ -110,7 +113,9 @@ export interface IpcHandlers {
   librarySetLayout: (u: { id: string; name: string; table: number[]; extra?: number[] }) => LibraryFile;
   libraryDeleteLayout: (id: string) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
-  gameArtColor: (gameKey: string) => string | null;
+  gameArtColor: (gameKey: string) => string | null | Promise<string | null>;
+  // Dev builds only (index.ts passes it when DEV_TOOLS_BUILT): without it the channel isn't registered.
+  devFakeGames?: (change: DevFakeGamesChange) => Promise<DevFakeGamesState>;
   isTrusted: (sender: WebContents, frameUrl: string) => boolean;
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
@@ -138,7 +143,7 @@ export interface IpcHandlers {
   gamesApply: (request: { fixIds: string[]; restart: RestartList }) => Promise<ApplyResult>;
   gamesUndo: (request: { backupId: string; restart: RestartList }) => Promise<UndoResult>;
   gamesBackups: () => GameBackup[];
-  gamesRunningLaunchers: () => Promise<LauncherId[]>;
+  gamesRunningLaunchers: () => LauncherId[] | Promise<LauncherId[]>;
   installProton: () => Promise<ProtonInstallResult>;
 }
 
@@ -247,6 +252,7 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.libraryDeleteLayout, LayoutIdSchema, h.libraryDeleteLayout);
   invokeWith(IPC.gameAction, GameActionSchema, h.gameAction);
   invokeWith(IPC.gameArtColor, GameKeySchema, h.gameArtColor);
+  if (h.devFakeGames) invokeWith(IPC.devFakeGames, DevFakeGamesSchema, h.devFakeGames);
   invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
   invokeWith(IPC.devChannelPreview, z.boolean(), h.devChannelPreview);
   invokeWith(IPC.latestFirmware, z.boolean(), h.latestFirmware);

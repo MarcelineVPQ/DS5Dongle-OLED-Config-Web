@@ -306,6 +306,7 @@
     },
     "update": {
       "appAvailable": "App update {{version}} is available ({{size}}).",
+      "dropsDevTools": "This is a developer build; installing the update replaces it with a regular build without the developer tools.",
       "download": "Download and install",
       "downloading": "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
       "installing": "Installing the update…",
@@ -834,7 +835,6 @@
         "setup": "Setup",
         "compat": "Compatibility",
         "support": "DualSense support",
-        "rating": "Your rating",
         "notes": "Notes",
         "details": "Details"
       },
@@ -919,8 +919,16 @@
         "mic": "Microphone",
         "lightbar": "Light bar"
       },
-      "stars_one": "{{count}} star",
-      "stars_other": "{{count}} stars",
+      "stars_one": "{{count}} star: {{label}}",
+      "stars_other": "{{count}} stars: {{label}}",
+      "rateTitle": "How well does your DualSense work in this game?",
+      "rateLabel": {
+        "1": "Doesn't work",
+        "2": "Barely works",
+        "3": "Works with problems",
+        "4": "Works well",
+        "5": "Works perfectly"
+      },
       "feedbackHint": "What did you notice?",
       "tag": {
         "triggers-work": "Adaptive triggers work",
@@ -1172,6 +1180,18 @@
       },
       "fakeSlots": "Pretend more controllers",
       "fakeSlotsHint": "A Midnight Black Edge and a Galactic Purple DualSense show as paired in the first empty slots. Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
+      "fakeGames": "Fake games",
+      "fakeGamesHint": "Games shows a made-up library of 20 games (Steam, Heroic, Lutris) with generated art instead of reading your launchers. Play, Apply, Undo and Install only change the made-up library: no launcher file is read or written and nothing is started. Restarts the page.",
+      "fakeRunning": "Running game",
+      "fakeRunningHint": "The fake game shown as running. ▶ Play on a game page runs one for a minute.",
+      "fakeRunningNone": "None",
+      "fakeHdr": "HDR on this computer",
+      "fakeHdrHint": "What the fake computer has for HDR, for the HDR checklists.",
+      "fakeHdrState": {
+        "ready": "Ready",
+        "hdr-off": "HDR is off on the screen",
+        "no-gamescope": "gamescope isn't installed"
+      },
       "simulated": "Simulate {{device}} (no hardware)",
       "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
       "simCore1": "Simulated core1",
@@ -1647,7 +1667,18 @@
       "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again."
     },
     "notices": {
-      "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected."
+      "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
+      "dismissedTitle": "Dismissed notices",
+      "none": "No dismissed notices.",
+      "showAgain": "Show again",
+      "showAllAgain": "Show all again",
+      "goTo": "Go to {{place}}"
+    },
+    "toast": {
+      "region": "Notifications",
+      "controllerConnected": "Controller connected",
+      "controllerDisconnected": "Controller disconnected",
+      "profileOff": "{{title}} profile is off: your normal settings are back"
     }
   },
   "ad": {

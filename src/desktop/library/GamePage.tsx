@@ -4,7 +4,7 @@
 // something is waiting), then the game's controller profile; a healthy Setup
 // is one "All set" line. Each fact has one place: the tier in DualSense
 // support, the Proton in Compatibility, store and launcher in Details.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
@@ -36,7 +36,8 @@ import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
-import { PlayButton, PlayStats, useGameAction } from "./playBar";
+import { ActionFailed, PlayButton, PlayStats, useGameAction } from "./playBar";
+import Notice from "../Notice";
 
 interface Props {
   game: GameEntry;
@@ -115,11 +116,10 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       <div className="gp-cols">
         <div className="gp-col">
           {status.attention ? [setup, profile] : [profile, setup]}
-          <RatingFrame game={game} info={info} mineState={mineState} />
           <NotesFrame mineState={mineState} />
         </div>
         <div className="gp-col">
-          <SupportFrame game={game} />
+          <SupportFrame game={game} info={info} mineState={mineState} />
           {protonApplies() && <CompatFrame game={game} report={report} onRescan={onRescan} />}
           <DetailsFrame game={game} info={info} />
         </div>
@@ -646,7 +646,7 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
 }
 
 // ---- DualSense support ----
-function SupportFrame({ game }: { game: GameEntry }) {
+function SupportFrame({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
   const { t } = useTranslation();
   const s = supportOf(game);
   return (
@@ -691,12 +691,13 @@ function SupportFrame({ game }: { game: GameEntry }) {
           </li>
         ))}
       </ul>
+      <RatingPart game={game} info={info} mineState={mineState} />
     </section>
   );
 }
 
 // ---- The player's own rating and notes (local; sharing comes later) ----
-// One copy per page, shared by the Rating and Notes frames: the library
+// One copy per page, shared by the rating (in DualSense support) and Notes: the library
 // stores the whole record, so two copies would overwrite each other's fields.
 type MineState = readonly [Mine, (patch: Partial<Mine>) => void];
 function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void, onRescan: () => void): MineState {
@@ -721,45 +722,87 @@ function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord
   return [mine, update] as const;
 }
 
-function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
+// The player's rating of how the controller works in this game (not of the
+// game), under the per-feature list it sums up. Each star names what it means.
+const STARS = [1, 2, 3, 4, 5] as const;
+function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
   const { t } = useTranslation();
   const [mine, update] = mineState;
+  // The star under the pointer or keyboard focus; its words show until it leaves.
+  const [preview, setPreview] = useState<number | null>(null);
+  // cache: NOT-WORTH — key=star 1-5; invalidated=React's ref callbacks on mount/unmount; bound=5 elements
+  const stars = useRef<(HTMLButtonElement | null)[]>([]);
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
   // "Controller not detected" lives in Setup where it's a mark that acts.
   // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const tags = FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
   // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const picked = tags.filter((tag) => mine.tags?.includes(tag)).length;
+  const rating = mine.rating;
+  const lit = preview ?? rating;
+  // One tab stop for the group (the chosen star, else the first); arrows pick.
+  const tabStop = rating ?? 1;
+  const pick = (n: number) => {
+    update({ rating: n });
+    stars.current[n - 1]?.focus();
+  };
+  const onKey = (e: KeyboardEvent, n: number) => {
+    const next = { ArrowRight: n + 1, ArrowUp: n + 1, ArrowLeft: n - 1, ArrowDown: n - 1, Home: 1, End: 5 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    pick(Math.min(5, Math.max(1, next)));
+  };
   return (
-    <section className="dk-card" id="gp-rating">
-      <h2>{t("desktop.library.section.rating")}</h2>
-      <div className="gp-stars" role="radiogroup" aria-label={t("desktop.library.section.rating")}>
-        {/* loop: HOT-PATH-OK — N = 5 stars */}
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            role="radio"
-            aria-checked={mine.rating === n}
-            aria-label={t("desktop.library.stars", { count: n })}
-            className={(mine.rating ?? 0) >= n ? "on" : ""}
-            onClick={() => update({ rating: mine.rating === n ? undefined : n })}
-          >
-            {(mine.rating ?? 0) >= n ? "★" : "☆"}
-          </button>
-        ))}
+    <div className="gp-rating" id="gp-rating">
+      <h3 id="gp-rating-title">{t("desktop.library.rateTitle")}</h3>
+      <div className="gp-rate-row">
+        <div className="gp-stars" role="radiogroup" aria-labelledby="gp-rating-title" onMouseLeave={() => setPreview(null)}>
+          {/* loop: HOT-PATH-OK — N = 5 stars */}
+          {STARS.map((n) => {
+            const label = t(`desktop.library.rateLabel.${n}`);
+            return (
+              <button
+                key={n}
+                ref={(el) => {
+                  stars.current[n - 1] = el;
+                }}
+                type="button"
+                role="radio"
+                aria-checked={rating === n}
+                aria-label={t("desktop.library.stars", { count: n, label })}
+                title={label}
+                tabIndex={n === tabStop ? 0 : -1}
+                className={(lit ?? 0) >= n ? "on" : ""}
+                onClick={() => update({ rating: rating === n ? undefined : n })}
+                onKeyDown={(e) => onKey(e, n)}
+                onMouseEnter={() => setPreview(n)}
+                onFocus={() => setPreview(n)}
+                onBlur={() => setPreview(null)}
+              >
+                {(lit ?? 0) >= n ? "★" : "☆"}
+              </button>
+            );
+          })}
+        </div>
+        {lit !== undefined && (
+          <span className={`gp-rate-label${preview !== null && preview !== rating ? " preview" : ""}`} aria-hidden="true">
+            {t(`desktop.library.rateLabel.${lit}`)}
+          </span>
+        )}
       </div>
       {stale && (
-        <p className="dk-notice">
-          {stale.kind === "our-fix"
-            ? t("desktop.library.staleFix", { version: stale.app })
-            : stale.at
-              ? t("desktop.library.staleUpdateOn", { date: new Date(stale.at * 1000).toLocaleDateString() })
-              : t("desktop.library.staleUpdate")}{" "}
-          <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ tags: mine.tags ?? [] })}>
-            {t("desktop.library.stillAccurate")}
-          </button>
-        </p>
+        <Notice closable>
+          <span>
+            {stale.kind === "our-fix"
+              ? t("desktop.library.staleFix", { version: stale.app })
+              : stale.at
+                ? t("desktop.library.staleUpdateOn", { date: new Date(stale.at * 1000).toLocaleDateString() })
+                : t("desktop.library.staleUpdate")}{" "}
+            <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ tags: mine.tags ?? [] })}>
+              {t("desktop.library.stillAccurate")}
+            </button>
+          </span>
+        </Notice>
       )}
       <details className="gp-legend">
         <summary>
@@ -782,7 +825,7 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
         </ul>
       </details>
       <p className="dk-hint">{t("desktop.library.shareSoon")}</p>
-    </section>
+    </div>
   );
 }
 
@@ -850,22 +893,24 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
 // the main process from the scan; only the actions this game has).
 function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
   const { t } = useTranslation();
-  const { run, failed } = useGameAction(game);
+  const { run, failed, clearFailed } = useGameAction(game);
   const actions = info?.actions ?? [];
   if (actions.length === 0) return null;
   const launcher = t(`desktop.library.launcherName.${game.launcher}`);
   return (
-    <div className="gp-actions">
-      {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
-      {/* loop: HOT-PATH-OK — N = 5 game actions */}
-      {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
-        .filter((a) => actions.includes(a))
-        .map((a) => (
-          <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
-            {t(`desktop.library.action.${a}`)}
-          </BusyButton>
-        ))}
-      {failed && <span className="dk-hint gp-action-failed">{t("desktop.library.action.failed")}</span>}
-    </div>
+    <>
+      <div className="gp-actions">
+        {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
+        {/* loop: HOT-PATH-OK — N = 5 game actions */}
+        {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
+          .filter((a) => actions.includes(a))
+          .map((a) => (
+            <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
+              {t(`desktop.library.action.${a}`)}
+            </BusyButton>
+          ))}
+      </div>
+      <ActionFailed action={failed} onDismiss={clearFailed} />
+    </>
   );
 }

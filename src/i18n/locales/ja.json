@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "アプリのアップデート {{version}} があります（{{size}}）。",
+      "dropsDevTools": "これは開発者ビルドです。アップデートをインストールすると、開発者ツールのない通常のビルドに置き換わります。",
       "download": "ダウンロードしてインストール",
       "downloading": "{{version}} をダウンロード中：{{got}} / {{total}}（{{pct}}%）",
       "installing": "アップデートをインストール中…",
@@ -830,7 +831,6 @@
         "setup": "セットアップ",
         "compat": "互換性",
         "support": "DualSense 対応",
-        "rating": "あなたの評価",
         "notes": "メモ",
         "details": "詳細"
       },
@@ -913,7 +913,15 @@
         "mic": "マイク",
         "lightbar": "ライトバー"
       },
-      "stars_other": "星 {{count}}",
+      "stars_other": "星 {{count}}：{{label}}",
+      "rateTitle": "このゲームでDualSenseはどのくらい快適に使えますか？",
+      "rateLabel": {
+        "1": "動作しない",
+        "2": "ほとんど動作しない",
+        "3": "問題はあるが動作する",
+        "4": "問題なく動作する",
+        "5": "完璧に動作する"
+      },
       "feedbackHint": "気づいたことは?",
       "tag": {
         "triggers-work": "アダプティブトリガー動作",
@@ -1165,6 +1173,18 @@
       },
       "fakeSlots": "ほかのコントローラーを仮表示",
       "fakeSlotsHint": "Midnight Black の Edge と Galactic Purple の DualSense を、先頭の空きスロットにペアリング済みとして表示します。ペアリングスロットで切り替えると、そのコントローラーが接続されたように動作します。{{device}} には何も送信しません。",
+      "fakeGames": "テスト用ゲーム",
+      "fakeGamesHint": "ゲームページで、ランチャーを読み込む代わりに、生成した画像付きの架空のライブラリ（Steam、Heroic、Lutrisの20本）を表示します。プレイ、適用、元に戻す、インストールは架空のライブラリだけを変更します。ランチャーのファイルは読み書きせず、何も起動しません。ページを再読み込みします。",
+      "fakeRunning": "実行中のゲーム",
+      "fakeRunningHint": "実行中として表示するテスト用ゲーム。ゲームページの ▶ プレイで1分間実行中になります。",
+      "fakeRunningNone": "なし",
+      "fakeHdr": "このコンピューターのHDR",
+      "fakeHdrHint": "HDRチェックリスト用に、テスト用コンピューターのHDR環境を選びます。",
+      "fakeHdrState": {
+        "ready": "準備完了",
+        "hdr-off": "ディスプレイのHDRがオフ",
+        "no-gamescope": "gamescopeが未インストール"
+      },
       "simulated": "{{device}} をシミュレート（ハードウェアなし）",
       "simulatedHint": "アプリは USB を使わずに {{device}} をシミュレートします。すべてのページが動作し、入力は自動で動きます。ハードウェアなしでのテスト用（Windows VM など）。ハプティックフィードバック、音声、ペアリング、ファームウェア更新はシミュレートされません。ページを再読み込みします。",
       "simCore1": "シミュレートした Core1",
@@ -1640,7 +1660,18 @@
       "boardRejected": "{{device}} がこの操作を受け付けませんでした。ファームウェアがこのアプリより古い可能性があります。ファームウェアを更新してから、もう一度お試しください。"
     },
     "notices": {
-      "volumeRestored": "コントローラーの音量を最大に戻しました: コントローラーの再接続後にまた低くなっていました。"
+      "volumeRestored": "コントローラーの音量を最大に戻しました: コントローラーの再接続後にまた低くなっていました。",
+      "dismissedTitle": "閉じたお知らせ",
+      "none": "閉じたお知らせはありません。",
+      "showAgain": "もう一度表示",
+      "showAllAgain": "すべてもう一度表示",
+      "goTo": "{{place}}へ移動"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "コントローラーが接続されました",
+      "controllerDisconnected": "コントローラーの接続が切れました",
+      "profileOff": "{{title}} のプロファイルをオフにしました。通常の設定に戻りました"
     }
   },
   "ad": {

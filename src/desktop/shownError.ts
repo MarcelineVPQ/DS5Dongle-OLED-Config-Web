@@ -3,27 +3,20 @@
 // puts the plain message, in the user's language, pinned at the top of the
 // page (DesktopApp's ErrorNotice) until dismissed or the next one replaces it.
 // tools/list_errors.mjs reads the key as the row's SHOWN verdict.
-import { useSyncExternalStore } from "react";
 import i18n from "../i18n";
 import { errorText } from "../errorText";
 import { BAD_REQUEST } from "./api";
 import { CommandError } from "../protocol/bridgeClient";
+import { externalStore } from "./externalStore";
 
-let message: string | null = null;
-const listeners = new Set<() => void>();
-const emit = () => {
-  // loop: NOT-WORTH — one listener (DesktopApp), per error
-  for (const l of listeners) l();
-};
+const message = externalStore<string | null>(null);
 
 export function showError(key: string, vars?: Record<string, string>): void {
-  message = i18n.t(key, vars);
-  emit();
+  message.set(i18n.t(key, vars));
 }
 
 export function clearShownError(): void {
-  message = null;
-  emit();
+  message.set(null);
 }
 
 // An error's text for the page, in plain words: Electron's IPC wrapper
@@ -45,8 +38,4 @@ export function shown(key: string, vars?: Record<string, string>): (cause: unkno
   };
 }
 
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => void listeners.delete(listener);
-};
-export const useShownError = (): string | null => useSyncExternalStore(subscribe, () => message);
+export const useShownError = (): string | null => message.use();

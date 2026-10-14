@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   hdrLighting: false,
   updateChannel: "stable",
   controllerVolumeFull: false,
+  devFakeGames: false,
 };
 
 const SettingsFile = z.object({
@@ -40,6 +41,7 @@ const SettingsFile = z.object({
   hdrLighting: z.boolean().optional(),
   updateChannel: z.enum(["stable", "dev"]).optional(),
   controllerVolumeFull: z.boolean().optional(),
+  devFakeGames: z.boolean().optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [

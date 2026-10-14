@@ -7,6 +7,7 @@ import { tourDone } from "./tour/Tour";
 import { logged } from "../errorText";
 import { shown } from "./shownError";
 import { useWindowShown } from "./useWindowShown";
+import Notice from "./Notice";
 
 const ASK_AFTER_MS = 60_000;
 
@@ -48,18 +49,26 @@ export default function AutoUpdateAsk() {
       .then(() => window.desktop?.setSetting("updatesAsked", true))
       .catch(shown("desktop.errors.settingNotSaved"));
   };
+  // × closes it for now: it asks again the next time the app starts.
   return (
-    <div className="dk-notice" role="dialog" aria-label={t("desktop.update.askTitle")}>
+    <Notice
+      role="dialog"
+      label={t("desktop.update.askTitle")}
+      closable
+      action={
+        <>
+          <button type="button" className="dk-btn" onClick={() => answer(false)}>
+            {t("desktop.update.askNo")}
+          </button>
+          <button type="button" className="dk-btn primary" onClick={() => answer(true)}>
+            {t("desktop.update.askYes")}
+          </button>
+        </>
+      }
+    >
       <span>
         <b>{t("desktop.update.askTitle")}</b> {t("desktop.update.askBody")}
       </span>
-      <span className="dk-spacer" />
-      <button type="button" className="dk-btn" onClick={() => answer(false)}>
-        {t("desktop.update.askNo")}
-      </button>
-      <button type="button" className="dk-btn primary" onClick={() => answer(true)}>
-        {t("desktop.update.askYes")}
-      </button>
-    </div>
+    </Notice>
   );
 }

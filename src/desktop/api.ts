@@ -89,6 +89,24 @@ export interface DesktopSettings {
   // again whenever the controller's sound card reappears. Set by Apply, cleared
   // by Undo (main process only, not a page setting).
   controllerVolumeFull: boolean;
+  // Dev builds only (Developer card → Fake games): Games shows a made-up
+  // library instead of scanning. A stable release ignores it (electron/main/devTools.ts).
+  devFakeGames: boolean;
+}
+
+// Developer card → Fake games (dev builds only; electron/main/games/fake/).
+// hdr: what the fake computer has for HDR (ready, the screen's HDR off, no gamescope).
+export const FAKE_GAMES_HDR = ["ready", "hdr-off", "no-gamescope"] as const;
+export type FakeGamesHdr = (typeof FAKE_GAMES_HDR)[number];
+// A change from the card: the switch, the game shown as running (null = none), the HDR setup.
+export interface DevFakeGamesChange {
+  on?: boolean;
+  running?: string | null;
+  hdr?: FakeGamesHdr;
+}
+export interface DevFakeGamesState {
+  on: boolean;
+  status: { running: string | null; hdr: FakeGamesHdr; games: Array<{ key: string; title: string }> } | null;
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).
@@ -96,7 +114,8 @@ export type UpdateState =
   | { phase: "idle" }
   | { phase: "checking" }
   | { phase: "up-to-date"; version: string }
-  | { phase: "available"; version: string; size: number; notesUrl?: string }
+  // dropsDevTools: this is a developer build and the update is a regular one (the banner says so; never installed automatically).
+  | { phase: "available"; version: string; size: number; notesUrl?: string; dropsDevTools?: true }
   | { phase: "manual"; version: string; notesUrl?: string; detail: string }
   | { phase: "downloading"; version: string; got: number; total: number }
   | { phase: "installing"; version: string }
@@ -250,6 +269,8 @@ export interface DesktopApi {
   gameAction(update: { gameKey: string; action: GameAction }): Promise<boolean>;
   // A game's signature color from its artwork (#rrggbb), or null.
   gameArtColor(gameKey: string): Promise<string | null>;
+  // Dev builds only: Developer card → Fake games (a release has no handler, so it rejects).
+  devFakeGames?(change: DevFakeGamesChange): Promise<DevFakeGamesState>;
 }
 
 export const IPC = {
@@ -299,6 +320,7 @@ export const IPC = {
   libraryDeleteLayout: "desktop:library-delete-layout",
   gameAction: "desktop:game-action",
   gameArtColor: "desktop:game-art-color",
+  devFakeGames: "desktop:dev-fake-games",
 } as const;
 
 declare global {

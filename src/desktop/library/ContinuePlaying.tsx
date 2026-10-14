@@ -13,7 +13,7 @@ import { useGlass } from "../glass/useGlass";
 import { REGULAR_GLASS } from "../glass/variants";
 import { firstArt, headerArt, useArtColor } from "./gameArt";
 import { TileOverlays, type TileProps } from "./GameTile";
-import { PlayButton, PlayStats, useGameAction } from "./playBar";
+import { ActionFailed, PlayButton, PlayStats, useGameAction } from "./playBar";
 
 // 1 to 3 games: the big one and up to two stacked; 5: the big one and a 2 × 2 block.
 export const continueCount = (played: number) => (played >= 5 ? 5 : Math.min(played, 3));
@@ -68,8 +68,7 @@ function useGlassBar(glass: boolean, artColor: string | null) {
 }
 
 function LeadTile({ game, info, running, hasProfile, onOpen, glass }: ContinueProps) {
-  const { t } = useTranslation();
-  const { run, failed } = useGameAction(game);
+  const { run, failed, clearFailed } = useGameAction(game);
   const art = headerArt(game.key, info);
   const artColor = useArtColor(game.key, glass || art.shape === "tall");
   const { barRef, tokens, glassClass } = useGlassBar(glass, artColor);
@@ -86,14 +85,13 @@ function LeadTile({ game, info, running, hasProfile, onOpen, glass }: ContinuePr
         {info?.actions?.includes("play") && <PlayButton game={game} running={running} run={run} />}
         <PlayStats info={info} running={running} />
       </div>
-      {failed && <p className="dk-hint gp-action-failed lib-continue-failed">{t("desktop.library.action.failed")}</p>}
+      <ActionFailed action={failed} onDismiss={clearFailed} className="lib-continue-failed" />
     </div>
   );
 }
 
 function SmallTile({ game, info, running, hasProfile, onOpen, glass }: ContinueProps) {
-  const { t } = useTranslation();
-  const { run, failed } = useGameAction(game);
+  const { run, failed, clearFailed } = useGameAction(game);
   const art = firstArt(info, ["header", "hero", "cover"]);
   const { barRef, tokens, glassClass } = useGlassBar(glass, useArtColor(game.key, glass));
   return (
@@ -108,7 +106,7 @@ function SmallTile({ game, info, running, hasProfile, onOpen, glass }: ContinueP
         </span>
         {info?.actions?.includes("play") && <PlayButton game={game} running={running} run={run} />}
       </div>
-      {failed && <p className="dk-hint gp-action-failed lib-continue-failed">{t("desktop.library.action.failed")}</p>}
+      <ActionFailed action={failed} onDismiss={clearFailed} className="lib-continue-failed" />
     </div>
   );
 }
