@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Short notifications at the bottom right.** One kind of message for the whole app, for what just happened: "All changes saved" after Save, "Copied" for the HDR lines, the factory reset done, a game's profile going on or off by itself, and a controller connecting or disconnecting. Each closes by itself after a few seconds (longer for longer text), waits while you point at it or tab to it, and has a × to close; screen readers read it out without interrupting. At most three show at once, the same message never twice, and nothing piles up while the app is in the tray. When the narrator's caption already says it, the notification stays away. Errors and things you need to act on still stay at the top of the page until you close them.
+
 ### Changed
 
 - **Games uses less memory for game art.** The app loaded every picture at its full size (Steam heroes are 1920 px wide, Heroic and Lutris art often larger) even where it is shown small: the library's 20 px icons, the cover grid, the logos and the Controller page's blurred background. Each place now gets a copy scaled to the size it shows, sharp on 1x to 2x screens, made once and kept in the app's settings folder (at most 128 MB, oldest removed first; deleted when you turn off Games' access to your launchers). In a test library of 40 games the decoded image memory dropped by about half on Games and by about 75% for the Controller page's art background.

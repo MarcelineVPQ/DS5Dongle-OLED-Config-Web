@@ -1649,6 +1649,12 @@
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando."
+    },
+    "toast": {
+      "region": "Notificaciones",
+      "controllerConnected": "Mando conectado",
+      "controllerDisconnected": "Mando desconectado",
+      "profileOff": "Perfil de {{title}} desactivado: vuelven tus ajustes normales"
     }
   },
   "ad": {

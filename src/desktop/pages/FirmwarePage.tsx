@@ -5,7 +5,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
-import { sayInPassing } from "../narrator";
+import { announce } from "../toast";
 import { feedProblemKey, type FirmwareUpdate } from "../useUpdates";
 import { logged } from "../../errorText";
 
@@ -21,7 +21,8 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
   const [checked, setChecked] = useState<string | null>(null);
   const installed = bridge.firmwareVersion;
 
-  const act = async (task: () => Promise<void>, done: string) => {
+  // `done` stays on the card: it says what to do next (a plain confirmation is a toast from the task instead).
+  const act = async (task: () => Promise<void>, done: string | null) => {
     setBusy(true);
     setMessage(null);
     try {
@@ -146,14 +147,11 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                 className="dk-btn danger"
                 disabled={busy}
                 onClick={() =>
-                  act(
-                    async () => {
-                      await client!.factoryReset();
-                      await bridge.readConfig();
-                      sayInPassing("app_reset");
-                    },
-                    t("desktop.firmware.resetDone", "Settings reset to defaults and saved."),
-                  )
+                  act(async () => {
+                    await client!.factoryReset();
+                    await bridge.readConfig();
+                    announce("desktop.firmware.resetDone", "app_reset");
+                  }, null)
                 }
               >
                 {t("desktop.firmware.confirmReset", "Reset all settings")}

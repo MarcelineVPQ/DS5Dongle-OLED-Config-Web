@@ -1649,6 +1649,12 @@
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig."
+    },
+    "toast": {
+      "region": "Benachrichtigungen",
+      "controllerConnected": "Controller verbunden",
+      "controllerDisconnected": "Controller getrennt",
+      "profileOff": "Profil „{{title}}“ aus: deine normalen Einstellungen sind zurück"
     }
   },
   "ad": {
