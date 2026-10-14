@@ -306,6 +306,7 @@
     },
     "update": {
       "appAvailable": "App update {{version}} is available ({{size}}).",
+      "dropsDevTools": "This is a developer build; installing the update replaces it with a regular build without the developer tools.",
       "download": "Download and install",
       "downloading": "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
       "installing": "Installing the update…",

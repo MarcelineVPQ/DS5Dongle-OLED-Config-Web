@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "アプリのアップデート {{version}} があります（{{size}}）。",
+      "dropsDevTools": "これは開発者ビルドです。アップデートをインストールすると、開発者ツールのない通常のビルドに置き換わります。",
       "download": "ダウンロードしてインストール",
       "downloading": "{{version}} をダウンロード中：{{got}} / {{total}}（{{pct}}%）",
       "installing": "アップデートをインストール中…",

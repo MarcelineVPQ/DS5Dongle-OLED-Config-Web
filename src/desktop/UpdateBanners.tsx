@@ -59,6 +59,7 @@ export default function UpdateBanners({
         }
       >
         <span>{t("desktop.update.appAvailable", { version: app.version, size: mb(app.size), defaultValue: "App update {{version}} is available ({{size}})." })}</span>
+        {app.dropsDevTools && <span>{t("desktop.update.dropsDevTools")}</span>}
         {waitHint && <span>{waitHint}</span>}
       </Notice>
     );

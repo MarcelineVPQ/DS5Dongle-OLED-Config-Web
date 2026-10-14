@@ -778,7 +778,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
           </section>
         </>
       )}
-      <DeveloperSettings devChannel={settings?.updateChannel === "dev"} />
+      <DeveloperSettings />
       {TOUR_ENABLED && (
         <section className="dk-card">
           <h2>{t("desktop.tour.helpTitle")}</h2>
@@ -1361,9 +1361,9 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
 }
 
 // Developer (Ctrl+Shift+D): preview any controller model and colorway. Only
-// on the Development channel (and only in builds that include it), right
-// under the channel switch, so switching shows it appear.
-function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
+// in builds that include it (DS5_DEV_TOOLS=1 or X.Y.Z-dev.N), on any update
+// channel, right under the channel switch. A release never shows it.
+export function DeveloperSettings() {
   const { t } = useTranslation();
   const [onScreen] = useDevToolsShown();
   const dev = useDevPreview();
@@ -1371,7 +1371,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
   const fakeSlots = useFakeSlots();
   const [simulated] = useFlagPref(SIMULATED_KEY);
   const [simCore1] = usePref<(typeof SIM_CORE1_STAGES)[number]>(SIM_CORE1_KEY, "", SIM_CORE1_STAGES);
-  if (!onScreen || !devChannel) return null;
+  if (!onScreen) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
   return (

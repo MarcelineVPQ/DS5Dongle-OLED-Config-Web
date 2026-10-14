@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "Hay una actualización de la app {{version}} ({{size}}).",
+      "dropsDevTools": "Esta es una versión para desarrolladores; instalar la actualización la reemplaza por una versión normal sin las herramientas de desarrollo.",
       "download": "Descargar e instalar",
       "downloading": "Descargando {{version}}: {{got}} de {{total}} ({{pct}} %)",
       "installing": "Instalando la actualización…",
