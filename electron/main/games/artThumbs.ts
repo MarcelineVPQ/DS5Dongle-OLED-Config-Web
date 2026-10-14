@@ -33,6 +33,7 @@ export interface ArtThumbsOptions {
   maxBytes?: number; // the cache folder's size cap
   maxEntries?: number; // and its file count cap (markers are empty files)
   scale?: Scale;
+  remove?: (dir: string) => Promise<void>; // forget(): deletes the cache folder
 }
 
 interface Entry {
@@ -58,6 +59,10 @@ export class ArtThumbs {
   private readonly maxBytes: number;
   private readonly maxEntries: number;
   private readonly scale: Scale;
+  private readonly remove: (dir: string) => Promise<void>;
+  // Bumped by forget(): a copy being made when consent goes is not saved.
+  private generation = 0;
+  private removing: Promise<void> = Promise.resolve();
   // cache: OK — key=thumbKey(source path, mtime, size, width); invalidated=a changed source file gets a new key (the old copy ages out); bound=maxBytes and maxEntries, oldest-used evicted on every write
   private index: Map<string, Entry> | null = null;
   // cache: OK — key=the index load; invalidated=never (loaded once per app run); bound=one promise
@@ -74,6 +79,25 @@ export class ArtThumbs {
     this.maxBytes = opts.maxBytes ?? 128 * 1024 * 1024;
     this.maxEntries = opts.maxEntries ?? 5000;
     this.scale = opts.scale ?? nativeScale;
+    this.remove = opts.remove ?? ((dir) => rm(dir, { recursive: true, force: true }));
+  }
+
+  // Games consent turned off (or off at start): the copies are made from
+  // the player's library, so they go with it. Never rejects: a failure is
+  // logged, and the folder is deleted again at the next start without consent.
+  forget(): void {
+    this.generation++;
+    this.index = null;
+    this.loading = null;
+    this.inflight.clear();
+    this.removing = this.removing
+      .then(() => this.remove(this.dir))
+      .catch(logged("deleting the scaled game art copies after Games consent was turned off (deleted again at the next start without consent)"));
+  }
+
+  // Settles when the last forget() has run (new copies wait for it).
+  forgotten(): Promise<void> {
+    return this.removing;
   }
 
   // The file to serve for `source` shown `width` wide: the cached copy,
@@ -88,6 +112,7 @@ export class ArtThumbs {
       return source;
     }
     const key = thumbKey(source, s.mtimeMs, s.size, width);
+    await this.removing;
     const index = await this.load();
     const hit = index.get(key);
     if (hit) {
@@ -104,6 +129,7 @@ export class ArtThumbs {
   }
 
   private make(source: string, kind: ArtKind, width: number, key: string): Promise<string> {
+    const generation = this.generation;
     const job = this.queue.then(async () => {
       // A turn of the event loop between pictures: IPC and input go first.
       await new Promise<void>((r) => setImmediate(r));
@@ -115,6 +141,7 @@ export class ArtThumbs {
         logged("scaling game art down (the full-size file is served)")(cause);
         return source;
       }
+      if (generation !== this.generation) return source; // consent went meanwhile: nothing is kept
       const name = out === "original" ? key + MARKER : `${key}${thumbIsPng(source, kind) ? ".png" : ".jpg"}`;
       const target = join(this.dir, name);
       try {

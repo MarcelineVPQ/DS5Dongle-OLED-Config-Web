@@ -149,3 +149,55 @@ describe("scaled art copies (artThumbs)", () => {
     expect(files).not.toContain(`${"b".repeat(32)}.jpg`);
   });
 });
+
+describe("scaled art copies go with Games consent", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "art-forget-"));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("deletes the cache folder, and makes copies again only when asked", async () => {
+    const cache = join(dir, "art-cache");
+    const src = join(dir, "hero.jpg");
+    writeFileSync(src, "jpeg");
+    const thumbs = new ArtThumbs(cache, { scale: (_f, w) => Buffer.alloc(w, 1) });
+    await thumbs.path(src, "hero", 320);
+    expect(readdirSync(cache)).toHaveLength(1);
+    thumbs.forget();
+    await thumbs.forgotten();
+    expect(existsSync(cache)).toBe(false);
+    const none = new ArtThumbs(cache);
+    none.forget(); // no folder: nothing to do
+    await none.forgotten();
+    await thumbs.path(src, "hero", 320); // consent back on: a fresh copy
+    expect(readdirSync(cache)).toHaveLength(1);
+  });
+
+  it("keeps nothing that was being made when consent went", async () => {
+    const cache = join(dir, "art-cache");
+    const src = join(dir, "hero.jpg");
+    writeFileSync(src, "jpeg");
+    // Consent goes while the picture is being scaled.
+    const thumbs: InstanceType<typeof ArtThumbs> = new ArtThumbs(cache, {
+      scale: (_f, w) => {
+        thumbs.forget();
+        return Buffer.alloc(w, 1);
+      },
+    });
+    expect(await thumbs.path(src, "hero", 320)).toBe(src);
+    await thumbs.forgotten();
+    expect(existsSync(cache)).toBe(false);
+  });
+
+  it("logs a failed delete instead of throwing", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const thumbs = new ArtThumbs(join(dir, "art-cache"), {
+      remove: () => Promise.reject(new Error("EBUSY")),
+    });
+    expect(() => thumbs.forget()).not.toThrow();
+    await expect(thumbs.forgotten()).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("deleting the scaled game art copies"), expect.stringContaining("EBUSY"));
+    warn.mockRestore();
+  });
+});
