@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 37 bytes (42 from protocol 1.6, 49 from 1.13), little-endian, packed
+// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16), little-endian, packed
 // (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
@@ -34,10 +34,13 @@
 //   offset 46  uint8   speaker_select              0 auto, 1 speaker, 2 headset, 3 off
 //   offset 47  uint8   status_gpio_pin             0xFF off, else one of STATUS_GPIO_PINS
 //   offset 48  uint8   status_gpio_mode            0 high while connected, 1 200 ms pulse on connect
+//   protocol 1.16 (identity [46] bit 4):
+//   offset 49  uint8   mic_level                   0 = follow the PC's mic level, 1..64 the controller's VolumeMic
 //
 // The config GET (0xF7) is capped at 63 bytes: from 1.13 a 63-byte GET still
 // answers the 42-byte body with the remap block at 42 (remap.ts), and a
-// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V13.
+// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V16
+// (older firmware answers its own, shorter body).
 //
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
 // lightbar panel (the web tool doesn't show them), and MUST always be encoded:
@@ -54,6 +57,13 @@ const RIGHT_GAIN_AT = 38;
 // (older firmware would ignore them anyway: it copies at most its own size).
 export const CONFIG_BODY_SIZE_V13 = 49;
 const TAIL_AT = CONFIG_BODY_SIZE_SPLIT;
+// Protocol 1.16 appends the mic level (50 in all). Only sent to 1.16+
+// firmware: a 49-byte write leaves it as it is on the board.
+export const CONFIG_BODY_SIZE_V16 = 50;
+const MIC_LEVEL_AT = CONFIG_BODY_SIZE_V13;
+// The controller's mic level (SetStateData VolumeMic) tops out at 64; 0 =
+// follow the PC's mic level (the firmware's default).
+export const MIC_LEVEL_MAX = 64;
 // The status pin: the GPIOs the firmware accepts (status_gpio.h), the ones
 // nothing else on the dongle uses (not the UART, the OLED add-on or the radio).
 export const STATUS_GPIO_OFF = 0xff;
@@ -110,6 +120,8 @@ export interface ConfigBody {
   speakerSelect: SpeakerSelect;
   statusGpioPin: number; // STATUS_GPIO_OFF or one of STATUS_GPIO_PINS
   statusGpioMode: StatusGpioMode;
+  // Protocol 1.16 (0 on older firmware, and not sent to it).
+  micLevel: number; // 0 = the PC's level, 1..MIC_LEVEL_MAX the controller's own
 }
 
 export interface ConfigValidationIssue {
@@ -148,6 +160,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   speakerSelect: 0,
   statusGpioPin: STATUS_GPIO_OFF,
   statusGpioMode: 0,
+  micLevel: 0,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -216,14 +229,16 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_MIN_SIZE}`);
 }
 
-// split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split).
-export function encodeConfigBody(config: ConfigBody, split = false, tail = false): Uint8Array<ArrayBuffer> {
+// split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split);
+// micLevel: protocol 1.16+ (implies tail).
+export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     throw new Error(issues.map((i) => i.message).join("; "));
   }
+  tail ||= micLevel;
   split ||= tail;
-  const bytes = new Uint8Array(new ArrayBuffer(tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
+  const bytes = new Uint8Array(new ArrayBuffer(micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
   view.setFloat32(1, config.hapticsGain, true);
@@ -260,6 +275,7 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
     view.setUint8(TAIL_AT + 5, config.statusGpioPin);
     view.setUint8(TAIL_AT + 6, config.statusGpioMode);
   }
+  if (micLevel) view.setUint8(MIC_LEVEL_AT, config.micLevel);
   return bytes;
 }
 
@@ -319,6 +335,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (config.statusGpioPin !== STATUS_GPIO_OFF && !(STATUS_GPIO_PINS as readonly number[]).includes(config.statusGpioPin)) {
     issues.push({ field: "statusGpioPin", message: "Status pin must be off or a free GPIO" });
   }
+  if (!Number.isInteger(config.micLevel) || config.micLevel < 0 || config.micLevel > MIC_LEVEL_MAX) {
+    issues.push({ field: "micLevel", message: `Mic level must be 0 (follow the PC) to ${MIC_LEVEL_MAX}` });
+  }
   if (config.statusGpioMode !== 0 && config.statusGpioMode !== 1) {
     issues.push({ field: "statusGpioMode", message: "Status pin mode must be 0 or 1" });
   }
@@ -359,6 +378,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     speakerSelect: clampInteger(config.speakerSelect, 0, 3) as SpeakerSelect,
     statusGpioPin: (STATUS_GPIO_PINS as readonly number[]).includes(config.statusGpioPin) ? config.statusGpioPin : STATUS_GPIO_OFF,
     statusGpioMode: config.statusGpioMode === 1 ? 1 : 0,
+    micLevel: clampInteger(config.micLevel, 0, MIC_LEVEL_MAX),
   };
 }
 
@@ -394,7 +414,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.micSelect === right.micSelect &&
     left.speakerSelect === right.speakerSelect &&
     left.statusGpioPin === right.statusGpioPin &&
-    left.statusGpioMode === right.statusGpioMode
+    left.statusGpioMode === right.statusGpioMode &&
+    left.micLevel === right.micLevel
   );
 }
 
@@ -412,7 +433,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   // A 63-byte read of 1.13+ firmware has the remap block ('RM') at 42, not
   // the 1.13 fields.
   const remapAt42 = avail > TAIL_AT + 1 && bytes[offset + TAIL_AT] === 0x52 && bytes[offset + TAIL_AT + 1] === 0x4d;
-  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V13);
+  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V16);
   const tail = len >= CONFIG_BODY_SIZE_V13;
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
@@ -449,6 +470,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     speakerSelect: (tail ? view.getUint8(TAIL_AT + 4) : DEFAULT_CONFIG.speakerSelect) as SpeakerSelect,
     statusGpioPin: tail ? view.getUint8(TAIL_AT + 5) : DEFAULT_CONFIG.statusGpioPin,
     statusGpioMode: (tail ? view.getUint8(TAIL_AT + 6) : DEFAULT_CONFIG.statusGpioMode) as StatusGpioMode,
+    micLevel: len >= CONFIG_BODY_SIZE_V16 ? view.getUint8(MIC_LEVEL_AT) : DEFAULT_CONFIG.micLevel,
   };
 }
 

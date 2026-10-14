@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V13, DEFAULT_CONFIG, decodeConfigBody, encodeConfigBody, normalizeConfig, STATUS_GPIO_OFF, validateConfig } from "../../src/protocol/config";
+import {
+  CONFIG_BODY_SIZE,
+  CONFIG_BODY_SIZE_V13,
+  CONFIG_BODY_SIZE_V16,
+  DEFAULT_CONFIG,
+  MIC_LEVEL_MAX,
+  decodeConfigBody,
+  encodeConfigBody,
+  normalizeConfig,
+  STATUS_GPIO_OFF,
+  validateConfig,
+} from "../../src/protocol/config";
 import { decodeRemapFromConfigReport, encodeRemapSet, identityTable } from "../../src/protocol/remap";
 
 describe("config codec (firmware Config_body, 37 bytes)", () => {
@@ -29,6 +40,25 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     // Older firmware's body (42 bytes): the 1.13 settings read as their defaults.
     const old = decodeConfigBody(bytes.subarray(0, 42));
     expect([old.triggerReduce, old.speakerGain, old.lockVolume, old.micSelect, old.speakerSelect, old.statusGpioPin]).toEqual([0, 0, false, 0, 0, STATUS_GPIO_OFF]);
+  });
+
+  it("carries the protocol 1.16 mic level after the 1.13 settings (50 bytes)", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, triggerReduce: 2, micLevel: 40 });
+    const bytes = encodeConfigBody(cfg, true, true, true);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE_V16);
+    expect(bytes[49]).toBe(40);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+    // 1.13..1.15 firmware's body (49 bytes): the mic level reads as 0 (follow the PC).
+    expect(decodeConfigBody(bytes.subarray(0, 49)).micLevel).toBe(0);
+    // ...and isn't sent to it.
+    expect(encodeConfigBody(cfg, true, true).length).toBe(CONFIG_BODY_SIZE_V13);
+  });
+
+  it("checks the mic level's range", () => {
+    expect(validateConfig({ ...DEFAULT_CONFIG, micLevel: MIC_LEVEL_MAX })).toEqual([]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, micLevel: MIC_LEVEL_MAX + 1 }).map((i) => i.field)).toEqual(["micLevel"]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, micLevel: 1.5 }).map((i) => i.field)).toEqual(["micLevel"]);
+    expect(normalizeConfig({ ...DEFAULT_CONFIG, micLevel: 99 }).micLevel).toBe(MIC_LEVEL_MAX);
   });
 
   it("never takes a 63-byte read's remap block (at 42 from 1.13) for the 1.13 settings", () => {
@@ -135,6 +165,7 @@ describe("identity report (0xF1)", () => {
       curvesTemporary: null,
       features3: 0,
       powerFlags: null,
+      pcMicLevel: null,
     });
   });
 
@@ -179,6 +210,24 @@ describe("identity report (0xF1)", () => {
     const older = b.slice();
     older[5] = 13;
     expect(decodeIdentity(older).powerFlags).toBeNull();
+  });
+
+  it("reads the PC's mic level (protocol 1.16) only from a 49-byte identity with bit 4", () => {
+    const b = new Uint8Array(49);
+    b.set(sample());
+    b[5] = 16;
+    b[46] = 0x1f;
+    b[48] = 0;
+    expect(decodeIdentity(b).pcMicLevel).toBe(0);
+    b[48] = 0x40;
+    expect(decodeIdentity(b).pcMicLevel).toBe(0x40);
+    expect(decodeIdentity(b.subarray(0, 48)).pcMicLevel).toBeNull(); // 1.14 / 1.15 answer 48 bytes
+    const noBit = b.slice();
+    noBit[46] = 0x0f;
+    expect(decodeIdentity(noBit).pcMicLevel).toBeNull();
+    const older = b.slice();
+    older[5] = 15;
+    expect(decodeIdentity(older).pcMicLevel).toBeNull();
   });
 
   it("reads the board name (protocol 1.7) only when the firmware announces it", () => {

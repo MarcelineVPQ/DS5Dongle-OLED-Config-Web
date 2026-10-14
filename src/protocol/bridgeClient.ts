@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V13, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V16, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
@@ -95,6 +95,7 @@ export const FEATURES3 = {
   configTail: 0x02, // protocol 1.13: trigger reduction, speaker boost, volume lock, mic / speaker choice, status pin (config body 49 bytes)
   pcSleep: 0x04, // protocol 1.14: what the dongle does when the PC sleeps (identity [47], 0xF6 0x17)
   timedGripTest: 0x08, // protocol 1.15: 0xF6 0x0E [side, tenths] holds the grip test steadily (0 stops)
+  micLevel: 0x10, // protocol 1.16: the controller's mic level (config body 50 bytes)
 } as const;
 // Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
 export const POWER_FLAGS = {
@@ -102,7 +103,7 @@ export const POWER_FLAGS = {
   psWakesPc: 0x02, // the PS button wakes the PC (default off)
 } as const;
 // The longest identity this app reads; older firmware answers its own length.
-export const IDENTITY_BYTES = 48;
+export const IDENTITY_BYTES = 49;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
 export interface OledFrame {
@@ -167,6 +168,9 @@ export interface BridgeIdentity {
   features3: number;
   // Protocol 1.14+ (FEATURES3.pcSleep): identity [47], the POWER_FLAGS bits; null on older firmware.
   powerFlags: number | null;
+  // Protocol 1.16+ (FEATURES3.micLevel): identity [48], the PC's mic level as
+  // the controller's 0..64 (what micLevel 0 follows); null on older firmware.
+  pcMicLevel: number | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -214,6 +218,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     curvesTemporary: bytes.length >= 30 && (bytes[29] & FEATURES2.stickCurves) !== 0 ? (bytes[19] & 0x04) !== 0 : null,
     features3: bytes.length >= 47 ? bytes[46] : 0,
     powerFlags: bytes.length >= 48 && (bytes[4] > 1 || bytes[5] >= 14) && (bytes[46] & FEATURES3.pcSleep) !== 0 ? bytes[47] : null,
+    pcMicLevel: bytes.length >= 49 && (bytes[4] > 1 || bytes[5] >= 16) && (bytes[46] & FEATURES3.micLevel) !== 0 ? bytes[48] : null,
   };
 }
 
@@ -364,6 +369,12 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= 13) && (p.features3 & FEATURES3.configTail) !== 0;
   }
 
+  // Protocol 1.16+: the mic level (50 bytes).
+  get micLevel(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 16) && (p.features3 & FEATURES3.micLevel) !== 0;
+  }
+
   // Protocol 1.6+: left and right grip haptics strengths.
   get splitHaptics(): boolean {
     return !!this.protocol && (this.protocol.major > 1 || this.protocol.minor >= 6);
@@ -415,12 +426,12 @@ export class Ds5BridgeClient {
 
   async readConfig(): Promise<ConfigBody> {
     // The whole body: older firmware answers its own (shorter) body to this.
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V13));
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V16));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config, this.splitHaptics, this.configTail);
+    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel);
     await this.command(FUNC.applyConfig, [...body]);
   }
 

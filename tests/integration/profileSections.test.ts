@@ -14,7 +14,7 @@ import type { ProfileSettings } from "../../src/desktop/games/library";
 import { settingsFrom } from "../../src/desktop/library/profileValues";
 import { profileFields } from "../../src/desktop/library/profileFields";
 import type { SectionFields } from "../../src/desktop/pages/sectionFields";
-import { AutoHapticsSection, HapticsSection, MicSection, SpeakerSection, TriggerIntensitySection } from "../../src/desktop/pages/SettingsPage";
+import { AutoHapticsSection, HapticsSection, MicLevelSlider, MicSection, SpeakerSection, TriggerIntensitySection } from "../../src/desktop/pages/SettingsPage";
 import LightbarPage from "../../src/desktop/pages/LightbarPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -28,10 +28,17 @@ globalThis.ResizeObserver ??= class {
 const CONFIG: ConfigBody = { ...DEFAULT_CONFIG, hapticsGain: 2, hapticsGainRight: 3, autoHapticsEnable: 2, autoHapticsGain: 120, speakerVolume: -6 };
 const NORMAL = settingsFrom(CONFIG);
 
-function fakeBridge(draft: ConfigBody, minor = 10) {
+function fakeBridge(draft: ConfigBody, minor = 10, pcMicLevel: number | null = null) {
   const setDraftField = vi.fn();
   const gripTest = vi.fn(async () => undefined);
-  const identity = { protoMajor: 1, protoMinor: minor, features2: FEATURES2.gripTest, features3: minor >= 13 ? FEATURES3.configTail : 0, controllerConnected: true } as unknown as BridgeIdentity;
+  const identity = {
+    protoMajor: 1,
+    protoMinor: minor,
+    features2: FEATURES2.gripTest,
+    features3: (minor >= 13 ? FEATURES3.configTail : 0) | (minor >= 16 ? FEATURES3.micLevel : 0),
+    pcMicLevel,
+    controllerConnected: true,
+  } as unknown as BridgeIdentity;
   const bridge = { draft, config: draft, issues: validateConfig(draft), setDraftField, client: { splitHaptics: true, gripTest }, identity } as unknown as UseDs5BridgeResult;
   return { bridge, setDraftField, gripTest };
 }
@@ -60,6 +67,8 @@ function renderSections(bridge: UseDs5BridgeResult, fields?: SectionFields): HTM
         createElement(SpeakerSection, props),
         createElement(LightbarPage, props),
         createElement(MicSection, props),
+        // Live, the mic level sits under the Mic Test (PartPanel); a profile has it in MicSection.
+        fields ? null : createElement(MicLevelSlider, props),
       ),
     ),
   );
@@ -152,6 +161,36 @@ describe("game page sections (profile draft)", () => {
     keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Weaker by"]')!, 4);
     expect(onChange).toHaveBeenLastCalledWith({ format: 2, triggerReduce: 4 });
     expect(setDraftField).not.toHaveBeenCalled();
+  });
+
+  it("protocol 1.16: the mic level is live and per game, and says when following the PC means silence", () => {
+    const live = renderSections(fakeBridge(CONFIG, 16, 0).bridge);
+    const slider = live.querySelector<HTMLInputElement>('input[type=range][aria-label="Microphone level"]')!;
+    expect([slider.min, slider.max, slider.step, slider.value]).toEqual(["0", "64", "1", "0"]);
+    expect(live.textContent).toContain(i18n.t("desktop.settings.micLevelPcZero"));
+    act(() => root!.unmount());
+    // A level of its own (or a PC level above 0): no note.
+    expect(renderSections(fakeBridge({ ...CONFIG, micLevel: 40 }, 16, 0).bridge).textContent).not.toContain(i18n.t("desktop.settings.micLevelPcZero"));
+    act(() => root!.unmount());
+    expect(renderSections(fakeBridge(CONFIG, 16, 0x40).bridge).textContent).not.toContain(i18n.t("desktop.settings.micLevelPcZero"));
+    act(() => root!.unmount());
+    const { bridge: b2, setDraftField: live2 } = fakeBridge(CONFIG, 16, 0x40);
+    keyUp(renderSections(b2).querySelector<HTMLInputElement>('input[type=range][aria-label="Microphone level"]')!, 48);
+    expect(live2).toHaveBeenLastCalledWith("micLevel", 48);
+    act(() => root!.unmount());
+    const onChange = vi.fn();
+    const { bridge, setDraftField } = fakeBridge(CONFIG, 16, 0);
+    const el = renderSections(bridge, profileFields(CONFIG, NORMAL, { format: 2 }, onChange));
+    expect(el.textContent).not.toContain(i18n.t("desktop.settings.micLevelPcZero"));
+    keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Microphone level"]')!, 20);
+    expect(onChange).toHaveBeenLastCalledWith({ format: 2, micLevel: 20 });
+    expect(setDraftField).not.toHaveBeenCalled();
+  });
+
+  it("before protocol 1.16 the mic level says to update the firmware", () => {
+    const el = renderSections(fakeBridge(CONFIG, 15).bridge);
+    expect(el.querySelector('[aria-label="Microphone level"]')).toBeNull();
+    expect(hints(el).filter((h) => /firmware/i.test(h ?? "")).length).toBeGreaterThan(0);
   });
 
   it("flags an out-of-range value like the live sections", () => {

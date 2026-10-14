@@ -114,6 +114,12 @@ export const ROADMAP: RoadmapItem[] = [
   },
   {
     column: "next",
+    title: "Microphone level",
+    text: "Set the controller's own mic level next to the Mic Test and watch its meter follow, the same on every system, per game too; at 0 it follows the PC's level as before.",
+    areas: ["audio", "controller"],
+  },
+  {
+    column: "next",
     title: "Controller off when the PC sleeps",
     text: "The controller turns off once the PC sleeps, and the PS button can wake the PC (both under {{deviceName}} in the app and on {{device}}'s own Settings screen).",
     areas: ["dongle", "controller"],

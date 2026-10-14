@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FEATURES2, FEATURES3, POWER_FLAGS, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
+  MIC_LEVEL_MAX,
   STATUS_GPIO_OFF,
   STATUS_GPIO_PINS,
   type AutoHapticsLowpass,
@@ -234,6 +235,42 @@ export function SpeakerSection(props: SectionProps) {
   );
 }
 
+// Protocol 1.16: the controller's own mic level (0 = follow the PC's).
+const hasMicLevel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity, 16, FEATURES3.micLevel);
+
+// The controller's mic level, 1..64 (its VolumeMic), or 0 = whatever the PC's
+// mic level is. Live it sits under the Mic Test, so its meter shows the
+// change; in a game's profile it is in the Microphone card. Following a PC
+// level of 0 (identity [48]) means a silent mic, which is common on Linux:
+// the boot-time ALSA restore sets the controller's hardware capture volume and
+// PipeWire never changes it (it uses software volume), so live it says so.
+export function MicLevelSlider(props: SectionProps) {
+  const { t } = useTranslation();
+  const { d, set, issue, sub, live } = useFields(props);
+  if (!hasMicLevel(props.bridge)) return <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>;
+  const silent = live && d.btMicEnable && d.micLevel === 0 && props.bridge.identity?.pcMicLevel === 0;
+  return (
+    <>
+      <Slider
+        label={t("desktop.settings.micLevel")}
+        sub={sub("micLevel", t("desktop.settings.micLevelSub"))}
+        value={d.micLevel}
+        min={0}
+        max={MIC_LEVEL_MAX}
+        step={1}
+        invalid={issue("micLevel")}
+        disabled={!d.btMicEnable}
+        onChange={(v) => set("micLevel", v)}
+      />
+      {silent && (
+        <p className="dk-notice" role="status">
+          {t("desktop.settings.micLevelPcZero")}
+        </p>
+      )}
+    </>
+  );
+}
+
 export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, sub, live } = useFields(props);
@@ -247,6 +284,8 @@ export function MicSection(props: SectionProps) {
       <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
       {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
+      {/* Live, the level is under the Mic Test (PartPanel). */}
+      {!live && <MicLevelSlider {...props} />}
     </section>
   );
 }

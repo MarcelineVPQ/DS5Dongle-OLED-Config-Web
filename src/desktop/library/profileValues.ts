@@ -26,6 +26,7 @@ export function settingsFrom(c: ConfigBody): ProfileSettings {
     triggerReduce: c.triggerReduce,
     speakerGain: c.speakerGain,
     lockVolume: c.lockVolume,
+    micLevel: c.micLevel,
   };
 }
 
@@ -104,6 +105,7 @@ export const PROFILE_GROUPS = [
   { id: "triggers", fields: ["triggerReduce"] },
   { id: "speakerBoost", fields: ["speakerGain"] },
   { id: "volumeLock", fields: ["lockVolume"] },
+  { id: "micLevel", fields: ["micLevel"] },
 ] as const satisfies ReadonlyArray<{ id: string; fields: readonly ProfileField[] }>;
 export type ProfileGroup = (typeof PROFILE_GROUPS)[number]["id"];
 

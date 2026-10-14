@@ -53,6 +53,11 @@ describe("game profile values (format 2: left out = my normal setting)", () => {
     for (const k of ["triggerReduce", "speakerGain", "lockVolume"]) expect(PROFILE_FIELDS as readonly string[]).toContain(k);
     expect(gameGroups({ format: 2, triggerReduce: 3 }, normal)).toEqual(["triggers"]);
     expect(ProfileSettingsSchema.safeParse({ format: 2, triggerReduce: 11 }).success).toBe(false);
+    // Protocol 1.16: a game's own mic level (0 = the PC's).
+    expect(PROFILE_FIELDS as readonly string[]).toContain("micLevel");
+    expect(gameGroups({ format: 2, micLevel: 40 }, normal)).toEqual(["micLevel"]);
+    expect(ProfileSettingsSchema.safeParse({ format: 2, micLevel: 64 }).success).toBe(true);
+    expect(ProfileSettingsSchema.safeParse({ format: 2, micLevel: 65 }).success).toBe(false);
     // Every field is in exactly one game-page group.
     expect(PROFILE_GROUPS.flatMap((g) => g.fields).sort()).toEqual([...PROFILE_FIELDS].sort());
   });

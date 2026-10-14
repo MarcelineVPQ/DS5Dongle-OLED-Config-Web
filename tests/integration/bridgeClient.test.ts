@@ -277,6 +277,51 @@ describe("left / right grip haptics (protocol 1.6)", () => {
   });
 });
 
+describe("the mic level (protocol 1.16)", () => {
+  it("writes and reads it with the 50-byte body", async () => {
+    const dongle = new FakeDongle({ protoMinor: 16 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(50);
+    expect(id.features3 & FEATURES3.micLevel).toBe(FEATURES3.micLevel);
+    expect(client.micLevel).toBe(true);
+    expect((await client.readConfig()).micLevel).toBe(0); // follow the PC
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), micLevel: 40, triggerReduce: 2 });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 50);
+    const back = await client.readConfig();
+    expect([back.micLevel, back.triggerReduce]).toEqual([40, 2]);
+    expect((await client.identity()).unsaved).toBe(true);
+    await client.saveToFlash();
+    expect((await client.identity()).unsaved).toBe(false);
+  });
+
+  it("a 1.13..1.15 app's 49-byte write leaves the mic level alone", async () => {
+    const dongle = new FakeDongle({ protoMinor: 16 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    await client.applyConfig({ ...(await client.readConfig()), micLevel: 24 });
+    const before = await client.readConfig();
+    await client.command(0x01, [...encodeConfigBody({ ...before, micLevel: 0, lockVolume: true }, true, true)]);
+    const after = await client.readConfig();
+    expect([after.lockVolume, after.micLevel]).toEqual([true, 24]);
+  });
+
+  it("sends 1.15 firmware the 49-byte body and reads the mic level as 0", async () => {
+    const dongle = new FakeDongle({ protoMinor: 15 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(49);
+    expect(id.features3 & FEATURES3.micLevel).toBe(0);
+    expect(client.micLevel).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), micLevel: 30, lockVolume: true });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 49);
+    const back = await client.readConfig();
+    expect([back.micLevel, back.lockVolume]).toEqual([0, true]);
+  });
+});
+
 describe("upstream's settings batch (protocol 1.13)", () => {
   it("writes and reads the 1.13 settings, keeps the narrator and the remap block", async () => {
     const dongle = new FakeDongle({ protoMinor: 13 });
