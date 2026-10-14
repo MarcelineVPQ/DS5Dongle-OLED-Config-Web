@@ -1,41 +1,44 @@
 // Measures the resource budgets (tools/budgets.json) on a running test copy
-// of the app started by tools/check_budgets.sh (never the copy you use):
-// DevTools on --port, the main process's inspector on port + 1, its
-// settings in <state>/userdata.
+// of the app (never the copy you use), started by tools/check_budgets.sh on
+// Linux or, inside the Windows VM, by tools/check_budgets_vm.sh: DevTools on
+// --port, the main process's inspector on port + 1.
 //
-//   node tools/measure_budgets.mjs --port 9420 --state tmp/budgets --mode quick|long --out results.json
+//   node tools/measure_budgets.mjs --port 9420 --mode quick|long --out results.json
+//
+// The app's processes are the main process it is attached to (its
+// process.pid) and that process's tree, read by this OS's reader: /proc on
+// Linux (tools/procs_linux.mjs), a CIM query on Windows
+// (tools/procs_windows.mjs). Everything else is the same on both.
 //
 // 1. Setup: simulated board with the controller put down (ds5.dev.simRest
 //    "still"), Developer card → Fake games on (a full library with art),
-//    first-run notices off, then a reload. The window fills the virtual
-//    1920 x 1080 display, shown and focused.
+//    first-run notices off, then a reload. The window is set to 1920 x 1080
+//    (the virtual display on Linux; the VM's screen on Windows), shown and
+//    focused.
 // 2. Per page (Controller, Pico 2 W, Games Home, a game page, App settings,
-//    About): settle, CPU per process over cpuS (/proc ticks of the app's
+//    About): settle, CPU per process over cpuS (CPU time of the app's
 //    process tree), then a traceS trace counting the frames drawn
 //    (Display::DrawAndSwap), plus requestAnimationFrame callbacks and the
 //    running animations as clues.
 // 3. Hidden: Fake games off (so the real running-game check runs, over the
-//    test home's library and this PC's /proc), the window goes to the tray
+//    test library and this PC's processes), the window goes to the tray
 //    (BrowserWindow.hide()), and every app process's CPU is measured over
 //    hiddenS.
-// 4. Memory: the PSS sum of the process tree (/proc/<pid>/smaps_rollup) at
-//    memoryAtS after the start (0: now).
+// 4. Memory: the sum over the process tree (PSS on Linux, the private
+//    working set on Windows) at memoryAtS after the start (0: now).
 // 5. Soak (--long): the window shown again, every sampleS it visits every
-//    page and comes back to Controller, then PSS is sampled; samples from
+//    page and comes back to Controller, then memory is sampled; samples from
 //    the warm-up are dropped.
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { performance } from "node:perf_hooks";
 import { setTimeout as sleepFor } from "node:timers/promises";
-import { execFileSync } from "node:child_process";
-import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
-import { MEASUREMENT_TYPES, cpuByType, descendants, parsePssKb, parseStat, perSecond, procType } from "./budgets_lib.mjs";
+import { cpuByType, memorySummary, perSecond } from "./budgets_lib.mjs";
 
-const ROOT = new URL("..", import.meta.url).pathname;
 const { values: opts } = parseArgs({
   options: {
     port: { type: "string", default: "9420" },
-    state: { type: "string", default: "tmp/budgets" },
     mode: { type: "string", default: "quick" },
     out: { type: "string" },
   },
@@ -45,86 +48,32 @@ if (!config.modes[opts.mode]) throw new Error(`--mode must be one of ${Object.ke
 // DS5_BUDGET_MODE='{"cpuS":60}' changes a mode's timings for an experiment.
 const mode = { ...config.modes[opts.mode], ...JSON.parse(process.env.DS5_BUDGET_MODE || "{}") };
 const PORT = Number(opts.port);
-const STATE = resolve(opts.state);
 const PAGES = process.env.DS5_BUDGET_PAGES ? process.env.DS5_BUDGET_PAGES.split(",") : config.pages;
-const HZ = Number(execFileSync("getconf", ["CLK_TCK"], { encoding: "utf8" }).trim());
 const pause = (ms) => sleepFor(ms);
 const note = (...a) => console.error("[budgets]", ...a);
 
 // --- CDP
 const page = await connect((await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((p) => p.type === "page").webSocketDebuggerUrl);
 const main = await connect((await (await fetch(`http://127.0.0.1:${PORT + 1}/json`)).json())[0].webSocketDebuggerUrl);
-const { ev, win } = evaluators(page, main);
+const { ev, mainEv, win } = evaluators(page, main);
 
-// --- the app's processes: the main process with our --user-data-dir and its tree
-const ELECTRON = `${ROOT}node_modules/electron/dist/electron`;
-function procStats() {
-  const out = [];
-  for (const pid of readdirSync("/proc")) {
-    if (!/^\d+$/.test(pid)) continue;
-    try {
-      const stat = parseStat(readFileSync(`/proc/${pid}/stat`, "utf8"));
-      out.push({ pid: Number(pid), ppid: stat.ppid, ticks: stat.ticks });
-    } catch {
-      // gone between readdir and read
-    }
-  }
-  return out;
-}
-function mainPid() {
-  for (const p of procStats()) {
-    try {
-      const cmd = readFileSync(`/proc/${p.pid}/cmdline`, "utf8");
-      if (cmd.startsWith(ELECTRON) && procType(cmd) === "main" && cmd.includes(`--user-data-dir=${STATE}/userdata`)) return p.pid;
-    } catch {
-      // gone
-    }
-  }
-  throw new Error(`no test copy running with --user-data-dir=${STATE}/userdata`);
-}
-const MAIN = mainPid();
-function sample() {
-  const all = procStats();
-  const tree = new Set(descendants(MAIN, all));
-  const out = [];
-  for (const p of all) {
-    if (!tree.has(p.pid)) continue;
-    try {
-      const cmd = readFileSync(`/proc/${p.pid}/cmdline`, "utf8");
-      out.push({ pid: p.pid, type: p.pid === MAIN ? "main" : procType(cmd), ticks: p.ticks });
-    } catch {
-      // gone
-    }
-  }
-  return out;
-}
-// The PSS sum of the app's processes in MB (without DevTools' tracing
-// service, which only runs because we measure), and per process type.
-function pss() {
-  const byType = {};
-  for (const pid of descendants(MAIN, procStats())) {
-    try {
-      const kb = parsePssKb(readFileSync(`/proc/${pid}/smaps_rollup`, "utf8")) ?? 0;
-      const type = pid === MAIN ? "main" : procType(readFileSync(`/proc/${pid}/cmdline`, "utf8"));
-      byType[type] = (byType[type] ?? 0) + kb / 1024;
-    } catch {
-      // gone
-    }
-  }
-  const mb = (v) => Math.round(v * 10) / 10;
-  const total = Object.entries(byType).reduce((sum, [type, v]) => (MEASUREMENT_TYPES.includes(type) ? sum : sum + v), 0);
-  return { mb: mb(total), byType: Object.fromEntries(Object.entries(byType).map(([k, v]) => [k, mb(v)])) };
-}
-// Seconds since the test copy's main process started.
-function uptimeOfMain() {
-  const f = readFileSync(`/proc/${MAIN}/stat`, "utf8");
-  const start = Number(f.slice(f.lastIndexOf(")") + 2).split(" ")[19]) / HZ;
-  return Number(readFileSync("/proc/uptime", "utf8").split(" ")[0]) - start;
-}
+// --- the app's processes: the main process we're attached to and its tree,
+// read by this OS's reader (tools/procs_linux.mjs, tools/procs_windows.mjs)
+const MAIN = await mainEv("process.pid");
+const reader = process.platform === "win32" ? (await import("./procs_windows.mjs")).windowsReader(await mainEv("process.execPath")) : (await import("./procs_linux.mjs")).linuxReader();
+const sample = () => reader.appProcs(MAIN);
+// Memory per process type in MB (PSS on Linux, the private working set on
+// Windows) and the total without DevTools' tracing service, which only runs
+// because we measure.
+const memoryNow = () => memorySummary(reader.appProcs(MAIN, { memory: true }), reader.memoryMetric);
+// CPU per process type over `secs`, timed by the clock (a Windows sample
+// takes a second or two, so the real stretch between them is used).
 async function cpuDuring(secs) {
   const a = sample();
+  const t0 = performance.now();
   await pause(secs * 1000);
-  return cpuByType(a, sample(), secs, HZ);
+  const b = sample();
+  return cpuByType(a, b, (performance.now() - t0) / 1000, reader.hz);
 }
 
 // --- pages
@@ -148,6 +97,7 @@ await ev(`(async () => {
   set("ds5.dev.simulated", "1"); set("ds5.dev.tools", "1"); set("ds5.dev.simRest", "still");
   set("ds5.tour.done", "1"); set("ds5.tourDone", "1");
   ${process.env.DS5_BUDGET_BACKGROUND ? `set("ds5.background", ${JSON.stringify(process.env.DS5_BUDGET_BACKGROUND)});` : ""}
+  if (typeof window.desktop.devFakeGames !== "function") throw new Error("this build has no Developer card: measure a dev build (X.Y.Z-dev.N, or DS5_DEV_TOOLS=1)");
   await window.desktop.setSetting("gamesScanAllowed", true);
   await window.desktop.setSetting("updatesAsked", true);
   await window.desktop.setSetting("updateChannel", "dev");
@@ -157,6 +107,10 @@ await ev(`(async () => {
 await page.send("Page.reload");
 await pause(10000);
 note("window:", await win(`w.setBounds({ x: 0, y: 0, width: 1920, height: 1080 }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`));
+// The screen it ran on (the Windows VM's may be smaller than 1920 x 1080: the window is then as large as Windows lets it be).
+const display = await mainEv(
+  `(() => { const e = require("electron"); const d = e.screen.getPrimaryDisplay(); return { size: d.size, scaleFactor: d.scaleFactor, window: e.BrowserWindow.getAllWindows()[0].getBounds() }; })()`,
+);
 await pause(3000);
 
 // 2. Pages
@@ -191,10 +145,11 @@ const hidden = { secs: mode.hiddenS, cpu: await cpuDuring(mode.hiddenS), pageSaw
 note("hidden:", JSON.stringify(hidden));
 
 // 4. Memory (still hidden)
-const waitS = mode.memoryAtS - uptimeOfMain();
+const uptimeOfMain = () => mainEv("process.uptime()");
+const waitS = mode.memoryAtS - (await uptimeOfMain());
 if (waitS > 0) await pause(waitS * 1000);
-const memory = { atS: Math.round(uptimeOfMain()), ...pss() };
-note("memory:", JSON.stringify(memory));
+const mem = { atS: Math.round(await uptimeOfMain()), ...memoryNow() };
+note("memory:", JSON.stringify(mem));
 
 // 5. Soak
 let soak = null;
@@ -211,15 +166,15 @@ if (mode.soakS > 0) {
     await NAV.controller();
     await pause(Math.max(1000, mode.sampleS * 1000 - (Date.now() - lap)));
     const t = (Date.now() - t0) / 1000;
-    const { mb } = pss();
+    const { mb } = memoryNow();
     if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb });
     note(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
   }
   soak = { windowS: mode.soakS, samples };
 }
 
-const results = { mode: opts.mode, pages, hidden, memory, soak };
+const results = { mode: opts.mode, platform: process.platform, display, pages, hidden, memory: mem, soak };
 if (opts.out) writeFileSync(opts.out, JSON.stringify(results, null, 2));
-else console.note(JSON.stringify(results, null, 2));
+else console.log(JSON.stringify(results, null, 2));
 page.close();
 main.close();

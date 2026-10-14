@@ -1,16 +1,23 @@
 // The resource budget gate's arithmetic (tools/budgets_lib.mjs): /proc
-// parsing, CPU and frame rates, the memory trend, and PASS/FAIL against
-// tools/budgets.json.
+// parsing, the Windows and macOS readers' parsing (tools/procs_windows.mjs,
+// tools/procs_mac.mjs, with a sample recorded in the Windows VM), CPU and
+// frame rates, the memory trend, PASS/FAIL against tools/budgets.json and
+// the three-OS table.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  appTree,
+  combineResults,
   cpuByType,
   cpuTotal,
   descendants,
   judgeBudgets,
+  formatCombined,
   formatTable,
+  fromMacSmoke,
   growthPerWindow,
   memoryJudged,
+  memorySummary,
   parsePssKb,
   parseStat,
   passed,
@@ -18,6 +25,8 @@ import {
   procType,
   type Results,
 } from "../../tools/budgets_lib.mjs";
+import { parseWinProcs, winQueryScript } from "../../tools/procs_windows.mjs";
+import { parsePsTable } from "../../tools/procs_mac.mjs";
 
 const config = JSON.parse(readFileSync(new URL("../../tools/budgets.json", import.meta.url), "utf8"));
 
@@ -51,6 +60,71 @@ describe("/proc parsing", () => {
       { pid: 99, ppid: 1 },
     ];
     expect(descendants(10, procs).sort()).toEqual([10, 11, 12, 13]);
+  });
+});
+
+describe("Windows reader (a CIM sample recorded in the win11-test VM, 2026-10-14)", () => {
+  // The query's output for a dev.10 copy hidden in the tray: main, GPU,
+  // network service, renderer; perf rows for those and two system processes.
+  const raw = readFileSync(new URL("../fixtures/budgets/win-procs.json", import.meta.url), "utf8");
+  const rows = parseWinProcs(raw);
+
+  it("reads CPU time (user + kernel, 100 ns), private working set and commit in kB", () => {
+    expect(rows.map((r) => r.pid)).toEqual([9344, 8352, 8376, 2556]);
+    expect(rows[0]).toMatchObject({ ppid: 6536, ticks: 2563593750 + 6676718750, memKb: 18964480 / 1024, commitKb: 105668608 / 1024 });
+  });
+
+  it("names each process by its --type from a quoted Windows command line", () => {
+    const procs = appTree(9344, rows, (r) => r.cmd);
+    expect(procs.map((p) => p.type)).toEqual(["main", "gpu-process", "utility:NetworkService", "renderer"]);
+    // the launcher (the portable exe's parent) and anything else is not in the tree
+    expect(appTree(8352, rows, (r) => r.cmd).map((p) => p.pid)).toEqual([8352]);
+  });
+
+  it("sums memory per type as the private working set, commit beside it", () => {
+    const m = memorySummary(
+      appTree(9344, rows, (r) => r.cmd),
+      "private working set",
+    );
+    expect(m.metric).toBe("private working set");
+    expect(m.byType).toEqual({ main: 18.1, "gpu-process": 1, "utility:NetworkService": 1.2, renderer: 3.2 });
+    expect(m.mb).toBe(23.5); // summed before rounding
+    expect(m.commitByType).toEqual({ main: 100.8, "gpu-process": 18.2, "utility:NetworkService": 11.9, renderer: 67.6 });
+    // a CPU-only sample (no perf rows): no memory, not zero
+    const cpuOnly = parseWinProcs(JSON.stringify({ ...JSON.parse(raw), perf: [] }));
+    expect(cpuOnly.every((r) => r.memKb === null)).toBe(true);
+  });
+
+  it("turns 100 ns CPU time into % of a core", () => {
+    const before = appTree(9344, rows, (r) => r.cmd);
+    // 20 s later: main +1.3 s of CPU (the old tasklist-based check), renderer +10 ms
+    const after = before.map((p) => ({ ...p, ticks: p.ticks + (p.type === "main" ? 13_000_000 : p.type === "renderer" ? 100_000 : 0) }));
+    expect(cpuByType(before, after, 20, 1e7)).toEqual({ main: 6.5, "gpu-process": 0, "utility:NetworkService": 0, renderer: 0.05 });
+  });
+
+  it("takes PowerShell 5.1's bare object for a one-item list", () => {
+    const one = JSON.stringify({ procs: { pid: 5, ppid: 1, user: 10, kernel: 5, commit: 2048, cmd: "x.exe" }, perf: { pid: 5, ws: 4096 } });
+    expect(parseWinProcs(one)).toEqual([{ pid: 5, ppid: 1, ticks: 15, cmd: "x.exe", memKb: 4, commitKb: 2 }]);
+    expect(parseWinProcs(JSON.stringify({ procs: null, perf: null }))).toEqual([]);
+  });
+
+  it("queries the app's exe by name, and the counters only when memory is asked for", () => {
+    expect(winQueryScript("DS5 Dongle OLED Edition Configurator.exe")).toContain(`Name='DS5 Dongle OLED Edition Configurator.exe'`);
+    expect(winQueryScript("it's.exe")).toContain(`Name='it''s.exe'`);
+    expect(winQueryScript("a.exe", true)).toContain("WorkingSetPrivate");
+    expect(winQueryScript("a.exe", false)).not.toContain("WorkingSetPrivate");
+  });
+});
+
+describe("macOS reader", () => {
+  it("parses ps's table: CPU time in seconds, RSS, the command with spaces", () => {
+    const text =
+      "  501   1   1:02.50 204800 /Applications/DS5 Dongle.app/Contents/MacOS/DS5 Dongle\n  510 501   0:00.25  10240 /Applications/DS5 Dongle.app/Contents/Frameworks/DS5 Dongle Helper (GPU).app/x --type=gpu-process\n";
+    expect(parsePsTable(text)).toEqual([
+      { pid: 501, ppid: 1, cpuS: 62.5, rssKb: 204800, cmd: "/Applications/DS5 Dongle.app/Contents/MacOS/DS5 Dongle" },
+      { pid: 510, ppid: 501, cpuS: 0.25, rssKb: 10240, cmd: "/Applications/DS5 Dongle.app/Contents/Frameworks/DS5 Dongle Helper (GPU).app/x --type=gpu-process" },
+    ]);
+    expect(appTree(501, parsePsTable(text), (r) => r.cmd).map((p) => p.type)).toEqual(["main", "gpu-process"]);
   });
 });
 
@@ -173,11 +247,70 @@ describe("judgeBudgets", () => {
     expect(rows.find((r) => r.budget === "memory growth")?.verdict).toBe("PASS");
   });
 
+  it("names the memory measure the OS used", () => {
+    const rows = judgeBudgets(config, results({ memory: { atS: 600, mb: 200, byType: { main: 200 }, metric: "private working set" } }));
+    expect(rows.find((r) => r.id === "memory")).toMatchObject({ budget: "memory (private working set) without GPU", measured: 200, verdict: "PASS" });
+  });
+
   it("prints an aligned table with every row", () => {
     const rows = judgeBudgets(config, results());
     const lines = formatTable(rows).split("\n");
     expect(lines[0]).toMatch(/^Budget\s+Scope\s+Measured\s+Limit\s+Unit\s+Verdict$/);
     expect(lines).toHaveLength(rows.length + 2);
     expect(lines.some((l) => /idle frames\s+controller\s+3\s+≤ 10\s+frames\/s\s+PASS/.test(l))).toBe(true);
+  });
+});
+
+describe("three-OS table", () => {
+  const linux: Results = {
+    mode: "quick",
+    pages: [
+      { page: "controller", framesPerS: 10.6, cpu: { main: 0.5, renderer: 1.6, "gpu-process": 60 } },
+      { page: "about", framesPerS: 10, cpu: { main: 0.4, renderer: 1 } },
+    ],
+    hidden: { secs: 300, cpu: { main: 0.3 } },
+    memory: { atS: 600, mb: 246, byType: { main: 246 } },
+    soak: null,
+  };
+  const windows: Results = {
+    ...linux,
+    pages: [{ page: "controller", framesPerS: 4, cpu: { main: 0.2, renderer: 0.5 } }],
+    memory: { atS: 600, mb: 180, byType: { main: 180, "gpu-process": 90 }, metric: "private working set" },
+  };
+  const macSmoke = {
+    budgets: {
+      pages: [{ page: "about", framesPerS: 0, cpu: { main: 0.2, renderer: 0.3, total: 0.5 }, anims: [] }],
+      hidden: { secs: 60, cpu: { main: 0.9, total: 0.9 }, pageSawHide: true },
+      memory: { shown: { footprintMb: 300, gpuFootprintMb: 50, rssMb: 500 }, hidden: { footprintMb: 260, gpuFootprintMb: 40, rssMb: 450 } },
+    },
+  };
+
+  it("reads the macOS smoke test's budgets: no total, footprint taken hidden", () => {
+    const mac = fromMacSmoke(macSmoke);
+    expect(mac?.pages[0].cpu).toEqual({ main: 0.2, renderer: 0.3 });
+    expect(mac?.hidden?.cpu).toEqual({ main: 0.9 });
+    expect(mac?.memory).toMatchObject({ mb: 260, metric: "footprint", byType: { app: 260, "gpu-process": 40 } });
+    expect(memoryJudged(mac!.memory!)).toBe(260);
+    expect(fromMacSmoke({})).toBeNull();
+  });
+
+  it("lines the OSes up by budget and page, n/a where an OS didn't measure it", () => {
+    const rows = combineResults(config, { Linux: linux, Windows: windows, macOS: fromMacSmoke(macSmoke) });
+    const frames = rows.find((r) => r.id === "frames:controller")!;
+    expect(frames.cells.Linux).toMatchObject({ measured: 10.6, verdict: "FAIL" });
+    expect(frames.cells.Windows).toMatchObject({ measured: 4, verdict: "PASS" });
+    expect(frames.cells.macOS).toBeUndefined();
+    const mem = rows.find((r) => r.id === "memory")!;
+    expect(mem.budget).toBe("memory without GPU");
+    expect(mem.cells.Windows).toMatchObject({ measured: 180, verdict: "PASS" });
+    expect(rows.find((r) => r.id === "hidden")!.cells.macOS).toMatchObject({ measured: 0.9, verdict: "FAIL" });
+    const text = formatCombined(rows, ["Linux", "Windows", "macOS"]).split("\n");
+    expect(text[0]).toMatch(/^Budget\s+Page\s+Linux\s+Windows\s+macOS\s+Limit\s+Unit$/);
+    expect(text.some((l) => /^idle frames\s+controller\s+10\.6 FAIL\s+4 PASS\s+n\/a\s+≤ 10/.test(l))).toBe(true);
+  });
+
+  it("leaves out an OS with no results", () => {
+    const rows = combineResults(config, { Linux: linux, Windows: undefined });
+    expect(Object.keys(rows[0].cells)).toEqual(["Linux"]);
   });
 });
