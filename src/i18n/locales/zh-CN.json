@@ -281,7 +281,9 @@
       "writeFailed": "固件更新未完成就中断了，{{device}} 正在 BOOTSEL 模式下等待，没有运行固件。请保持连接：应用会发现它并提示重新安装固件。如果没有出现提示，请拔下 {{device}} 再重新插上。",
       "disabled": "未检查（自动检查已关闭）",
       "feedChanged": "出现了更新的固件。请重新检查。",
-      "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。"
+      "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。",
+      "wrongFile": "此文件不是{{device}}的固件（用于其他芯片，或已损坏），因此没有写入任何内容。请再次检查更新；如果再次发生，请重新安装应用。",
+      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。"
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -1186,11 +1188,35 @@
         "no-gamescope": "未安装 gamescope"
       },
       "simulated": "模拟{{device}}（无需硬件）",
-      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
+      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。会重新加载页面。",
       "simCore1": "模拟 Core1",
       "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。会重新加载页面。",
       "simCore1Runs": "正常运行",
-      "simCore1Stage": "停在步骤 {{stage}}：{{step}}"
+      "simCore1Stage": "停在步骤 {{stage}}：{{step}}",
+      "simBoard": "模拟的开发板",
+      "simBoardHint": "模拟当前的状态。固件卡片上的“更新”和设置界面上的“安装”会从头到尾针对它运行。",
+      "simBoardState": {
+        "dongle": "正在运行固件 {{version}}",
+        "bootsel": "BOOTSEL 模式",
+        "blank": "空白的 Pico，处于 BOOTSEL（首次设置）",
+        "away": "不在 USB 上（等待手柄）"
+      },
+      "simFault": "固件更新失败",
+      "simFaultHint": "让下一次更新失败，查看应用的提示。",
+      "simFaults": {
+        "none": "无",
+        "write10": "10 % 时写入出错",
+        "write50": "50 % 时写入出错",
+        "write90": "90 % 时写入出错",
+        "noBootsel": "不以 BOOTSEL 出现",
+        "noReturn": "更新后不再出现"
+      },
+      "simSpeed": "写入速度",
+      "simSpeeds": {
+        "fast": "立即",
+        "normal": "几秒",
+        "real": "与真实开发板相同（约 12 秒）"
+      }
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",

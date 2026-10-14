@@ -148,19 +148,22 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     }
   }, [appUpdate.phase, bridge.client, latest, state.phase]);
 
-  // The hook reconnects to the rebooted dongle by itself; the outcome is
-  // derived from the version it reports, not stored separately.
+  // The hook reconnects to the rebooted dongle by itself; the outcome is the
+  // version it reports. Kept once known (set while rendering, React's pattern
+  // for state that follows a value): the board leaving USB again later (its
+  // controller turned off, unplugged) is not a new wait for the update.
   let shown: FirmwareUpdateState = state;
   if (state.phase === "verifying" && installed) {
     shown = sameVersion(state.version, installed)
       ? { phase: "done", version: installed }
       : { phase: "failed", detail: `${deviceText("{{device, capitalize}}")} came back reporting ${installed}, expected ${state.version}.` };
+    setState(shown);
   }
-  const settled = shown !== state;
+  const verifying = state.phase === "verifying";
   // lifetime: OK — acquires nothing (clears the slow-return timer once settled)
   useEffect(() => {
-    if (settled && timer.current) clearTimeout(timer.current);
-  }, [settled]);
+    if (!verifying && timer.current) clearTimeout(timer.current);
+  }, [verifying]);
 
   // lifetime: OK — cleanup: clears the slow-return timer on unmount
   useEffect(

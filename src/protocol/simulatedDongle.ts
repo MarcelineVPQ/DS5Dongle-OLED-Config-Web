@@ -54,6 +54,10 @@ export interface SimulatedDongleOptions {
   // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
   audioCountersLegacy?: "none" | "cut";
   version?: string;
+  // BOOTSEL (0xF6 0x08) hands the board to its bootloader: the simulated
+  // board (simulatedBoard.ts) then shows up as an RP2350 in BOOTSEL. Without
+  // it the device just vanishes (the tests' fake).
+  onBootsel?: () => void;
   // Protocol 1.12 controller info: the controller firmware's update version
   // (the counters need > 1106, Edge > 374; by default a little older than
   // Sony's latest, 6.20 / 2.15, so the card shows "newer available" in dev),
@@ -597,8 +601,11 @@ export class SimulatedDongle implements Ds5Transport {
     else if (func === 0x06) this.slots = [false, false, false, false];
     // Reboot / BOOTSEL leave the bus; the app's simulation just restarts on reboot.
     else if (func === 0x07 && this.opts.live) this.hostGen++;
-    else if (func === 0x07 || func === 0x08) this.gone = true;
-    else if (func === 0x09) {
+    else if (func === 0x07) this.gone = true;
+    else if (func === 0x08) {
+      this.gone = true;
+      this.opts.onBootsel?.();
+    } else if (func === 0x09) {
       this.config = encodeConfigBody(DEFAULT_CONFIG);
       this.flashConfig = this.config.slice();
       this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);

@@ -280,7 +280,9 @@
       "writeFailed": "The firmware update stopped before it finished, so {{device}} is waiting in BOOTSEL mode with no firmware running. Keep it plugged in: the app finds it and offers to install the firmware again. If nothing shows up, unplug it and plug it back in.",
       "disabled": "not checked (automatic checks are off)",
       "feedChanged": "A newer firmware appeared. Check again.",
-      "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again."
+      "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again.",
+      "wrongFile": "This file isn't firmware for {{device}} (it's for another chip, or damaged), so nothing was written. Check for updates again; if it happens again, reinstall the app.",
+      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again."
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -1193,11 +1195,35 @@
         "no-gamescope": "gamescope isn't installed"
       },
       "simulated": "Simulate {{device}} (no hardware)",
-      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
+      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below). Restarts the page.",
       "simCore1": "Simulated core1",
       "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}. Restarts the page.",
       "simCore1Runs": "Runs normally",
-      "simCore1Stage": "Stops at step {{stage}}: {{step}}"
+      "simCore1Stage": "Stops at step {{stage}}: {{step}}",
+      "simBoard": "Simulated board",
+      "simBoardHint": "What the simulation is doing now. Update on the firmware card and Install on the setup screen run against it, start to finish.",
+      "simBoardState": {
+        "dongle": "Running firmware {{version}}",
+        "bootsel": "In BOOTSEL mode",
+        "blank": "A blank Pico in BOOTSEL (first-time setup)",
+        "away": "Off USB (waiting for a controller)"
+      },
+      "simFault": "Firmware update failure",
+      "simFaultHint": "Make the next update fail, to see what the app says.",
+      "simFaults": {
+        "none": "None",
+        "write10": "Write error at 10 %",
+        "write50": "Write error at 50 %",
+        "write90": "Write error at 90 %",
+        "noBootsel": "Doesn't show up in BOOTSEL",
+        "noReturn": "Doesn't come back after the update"
+      },
+      "simSpeed": "Writing speed",
+      "simSpeeds": {
+        "fast": "Instant",
+        "normal": "A few seconds",
+        "real": "Like a real board (about 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Card opacity",
