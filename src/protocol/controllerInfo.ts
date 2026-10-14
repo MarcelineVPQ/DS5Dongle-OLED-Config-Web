@@ -300,16 +300,24 @@ export function decodeBatteryMillivolts(page: Uint8Array): number | null {
   return mv >= 2500 && mv <= 5000 ? mv : null;
 }
 
-// The input report's power state (byte 52's high nibble, 0xF0 live input).
-export type ChargeState = "discharging" | "charging" | "full" | "voltageError" | "temperatureError" | "chargeError" | "unknown";
-export function chargeState(batteryState: number): ChargeState {
+// What the app shows for the controller's power, everywhere (battery tile,
+// Controller info, the status line, the tray): one decision from the power
+// state (input report byte 52's high nibble, 0xF0 live input), the level (%)
+// and the controller's own USB power (byte 53 bit 4: a cable in the
+// controller, not the board's USB). The controller says "full" (2) whenever
+// it stops charging on a cable, also below 100% (it pauses when warm), so
+// only 100% is "full"; below that, and on a powered cable that isn't
+// charging (0), it is "pluggedIn". usbPower is null when unknown (the
+// identity's charge flags carry no cable bit).
+export type ChargeState = "discharging" | "charging" | "full" | "pluggedIn" | "voltageError" | "temperatureError" | "chargeError" | "unknown";
+export function chargeState(batteryState: number, level: number | null, usbPower: boolean | null): ChargeState {
   switch (batteryState) {
     case 0:
-      return "discharging";
+      return usbPower ? "pluggedIn" : "discharging";
     case 1:
       return "charging";
     case 2:
-      return "full";
+      return level !== null && level >= 100 ? "full" : "pluggedIn";
     case 10:
       return "voltageError";
     case 11:
@@ -319,4 +327,10 @@ export function chargeState(batteryState: number): ChargeState {
     default:
       return "unknown";
   }
+}
+
+// The same from the identity (status poll, no live input): its flags are the
+// power state's "charging" (1) and "full" (2) bits; no cable bit.
+export function identityChargeState(id: { charging: boolean; batteryFull: boolean; battery: number | null }): ChargeState {
+  return chargeState(id.charging ? 1 : id.batteryFull ? 2 : 0, id.battery, null);
 }

@@ -325,7 +325,8 @@
     },
     "controller": {
       "battery": "Batterie",
-      "charging": "en charge",
+      "charging": "En charge",
+      "pluggedIn": "Branchée",
       "pairHint": "Déjà associée ? Appuie sur la touche PS. Nouvelle manette ? Maintiens la touche de création et la touche PS jusqu'à ce que la barre lumineuse clignote ; elle s'associe dans le slot actuel."
     },
     "dongle": {},
@@ -1228,6 +1229,7 @@
         "discharging": "Pas en charge",
         "charging": "En charge",
         "full": "Chargée",
+        "pluggedIn": "Branchée, pas en charge",
         "voltageError": "Charge arrêtée : problème de tension",
         "temperatureError": "Charge arrêtée : trop chaud ou trop froid",
         "chargeError": "Erreur de charge",

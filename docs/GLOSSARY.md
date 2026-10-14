@@ -95,6 +95,7 @@ zh-CN is Sony's mainland China site (`zh-hans-cn`; playstation.com.cn redirects 
 - **Grips:** Sony has no name for the grips as a setting. The haptics panel is called **Haptic feedback**, and its sliders **Vibration intensity (left / right)**.
 - **Curve presets:** our Precise, Steady and Digital match Sony's. Our **Aggressive** became Sony's **Quick** (it is the same quick start). Our **Linear** and **Custom** have no Sony equivalent and keep their names; Sony's **Dynamic** has no counterpart in the app.
 - **Battery level:** no Sony string in any language; we keep our own ("Battery").
+- **Charge states (Charging, Fully charged, Plugged in, not charging):** Sony's pages describe charging only in running text (the light bar pulses orange), with no status labels; the wording is our own.
 - **Inconsistent at Sony:** zh-CN uses 振动 (console) and 震动 (Edge); we use 振动. ja uses プレーヤーランプ and プレイヤーランプ; we use プレーヤーランプ. pt-BR uses "Manípulo" in the part list and "analógico" everywhere else; we use "analógico". de uses "Deadzone" in menus and "Totzone" in marketing; we use "Deadzone".
 
 ## Our settings with no Sony name

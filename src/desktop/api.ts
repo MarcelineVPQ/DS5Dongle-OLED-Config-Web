@@ -16,7 +16,9 @@ export interface DeviceStatus {
   controller: boolean;
   slot: number; // 0-3, -1 when unknown
   firmware: string | null;
-  charging: boolean;
+  // The controller on a cable (chargeState() in src/protocol/controllerInfo.ts):
+  // charging, plugged in but not charging, or fully charged; null on battery.
+  power: "charging" | "pluggedIn" | "full" | null;
   battery: number | null; // 0-100 in 10% steps, null when unknown
 }
 

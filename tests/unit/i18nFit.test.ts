@@ -33,6 +33,7 @@ const BUDGETS: Array<[string, number]> = [
   ["desktop.live.player", 12],
   ["desktop.controller.battery", 16],
   ["desktop.controller.charging", 16],
+  ["desktop.controller.pluggedIn", 16],
   ["desktop.overview.signal", 16],
   ["desktop.overview.slot", 16],
   ["desktop.live.part.lightbar", 16],

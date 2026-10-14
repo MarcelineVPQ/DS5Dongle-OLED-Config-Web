@@ -12,9 +12,11 @@ export function trayState(status: DeviceStatus): TrayState {
   return status.controller ? "ok" : "away";
 }
 
+const POWER_TEXT: Record<NonNullable<DeviceStatus["power"]>, string> = { charging: "charging", pluggedIn: "plugged in, not charging", full: "fully charged" };
+
 export function trayTooltip(status: DeviceStatus): string {
   if (!status.dongle) return "DS5 Dongle OLED Edition: not connected";
-  const battery = status.battery === null ? "" : `, battery ${status.battery}%${status.charging ? " charging" : ""}`;
+  const battery = status.battery === null ? "" : `, battery ${status.battery}%${status.power ? ` ${POWER_TEXT[status.power]}` : ""}`;
   const controller = status.controller ? `controller connected (slot ${status.slot}${battery})` : "no controller (press PS)";
   return `DS5 Dongle OLED Edition${status.firmware ? ` ${status.firmware}` : ""}: ${controller}`;
 }
@@ -32,7 +34,7 @@ export interface TrayHandlers {
 
 export class AppTray {
   private readonly tray: Tray;
-  private status: DeviceStatus = { dongle: false, controller: false, slot: -1, firmware: null, charging: false, battery: null };
+  private status: DeviceStatus = { dongle: false, controller: false, slot: -1, firmware: null, power: null, battery: null };
   private state: TrayState | null = null;
   // Set once the renderer starts drawing the live icon; until then (and if a
   // drawn image fails to decode) the static per-state icons are used.

@@ -326,6 +326,7 @@
     "controller": {
       "battery": "バッテリー",
       "charging": "充電中",
+      "pluggedIn": "給電中",
       "pairHint": "ペアリング済みですか？PSボタンを押してください。新しいコントローラーは、ライトバーが点滅するまでクリエイトボタンと PSボタンを同時に長押しすると、現在のスロットにペアリングされます。"
     },
     "dongle": {},
@@ -1222,6 +1223,7 @@
         "discharging": "充電していません",
         "charging": "充電中",
         "full": "充電完了",
+        "pluggedIn": "給電中（充電していません）",
         "voltageError": "充電停止：電圧の問題",
         "temperatureError": "充電停止：高温または低温",
         "chargeError": "充電エラー",

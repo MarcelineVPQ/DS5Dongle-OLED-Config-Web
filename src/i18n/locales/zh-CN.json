@@ -326,6 +326,7 @@
     "controller": {
       "battery": "电量",
       "charging": "充电中",
+      "pluggedIn": "已插电",
       "pairHint": "已经配对过？按 PS 键。新控制器？同时按住创建键和 PS 键直到光条闪烁；它会配对到当前槽位。"
     },
     "dongle": {},
@@ -1222,6 +1223,7 @@
         "discharging": "未充电",
         "charging": "充电中",
         "full": "已充满",
+        "pluggedIn": "已插电，未充电",
         "voltageError": "充电停止：电压异常",
         "temperatureError": "充电停止：过热或过冷",
         "chargeError": "充电错误",

@@ -325,7 +325,8 @@
     },
     "controller": {
       "battery": "Batería",
-      "charging": "cargando",
+      "charging": "Cargando",
+      "pluggedIn": "Enchufado",
       "pairHint": "¿Ya está emparejado? Pulsa el botón PS. ¿Mando nuevo? Mantén el botón de crear y el botón PS hasta que la barra luminosa parpadee; se empareja en el slot actual."
     },
     "dongle": {},
@@ -1228,6 +1229,7 @@
         "discharging": "Sin cargar",
         "charging": "Cargando",
         "full": "Carga completa",
+        "pluggedIn": "Enchufado, sin cargar",
         "voltageError": "Carga detenida: problema de voltaje",
         "temperatureError": "Carga detenida: demasiado calor o frío",
         "chargeError": "Error de carga",

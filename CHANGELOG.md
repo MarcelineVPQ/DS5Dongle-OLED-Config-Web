@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **A plugged-in controller that wasn't charging showed "Fully charged".** The DualSense says "full" whenever it stops charging on a cable, also below 100% (it pauses charging when warm), so at 80% the battery tile showed no mark and Controller info said **Fully charged**. One check now decides what every place shows (battery tile, Controller info, the status line, the tray tooltip): **Charging** with the bolt, **Fully charged** only at 100%, and **Plugged in, not charging** with a plug mark on the tile below 100% or when the controller's own USB cable gives power without charging. All 7 languages.
 - **Applying the graphics-mode change did nothing.** The app's check for actions didn't accept the new fix yet, so Apply silently stopped; it does now, with a test.
 
 ### Added

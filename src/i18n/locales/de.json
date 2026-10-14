@@ -325,7 +325,8 @@
     },
     "controller": {
       "battery": "Akku",
-      "charging": "lädt",
+      "charging": "Lädt",
+      "pluggedIn": "Eingesteckt",
       "pairHint": "Schon gekoppelt? Drück die PS-Taste. Neuer Controller? Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt; er wird im aktuellen Slot gekoppelt."
     },
     "dongle": {},
@@ -1228,6 +1229,7 @@
         "discharging": "Lädt nicht",
         "charging": "Lädt",
         "full": "Voll geladen",
+        "pluggedIn": "Eingesteckt, lädt nicht",
         "voltageError": "Laden gestoppt: Spannungsproblem",
         "temperatureError": "Laden gestoppt: zu heiß oder zu kalt",
         "chargeError": "Ladefehler",

@@ -36,7 +36,7 @@ export const DeviceStatusSchema = z.strictObject({
   controller: z.boolean(),
   slot: z.number().int().min(-1).max(3),
   firmware: z.string().max(64).nullable(),
-  charging: z.boolean(),
+  power: z.enum(["charging", "pluggedIn", "full"]).nullable(),
   battery: z.number().int().min(0).max(100).nullable(),
 });
 

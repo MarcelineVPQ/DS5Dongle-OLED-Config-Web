@@ -36,6 +36,7 @@ import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
 import { firmwareNarratorValue, say, useNarrator } from "./narrator";
 import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
+import { identityChargeState } from "../protocol/controllerInfo";
 
 // One screen: the live controller with its settings panel. Games and About
 // replace it while open (with a way back); the dongle and the app's own
@@ -155,7 +156,9 @@ export default function DesktopApp() {
   const barRef = useGlass(glass, CLEAR_GLASS_BAR);
   const firmware = bridge.firmwareVersion;
   const controllerOn = Boolean(connected && liveIdentity?.controllerConnected);
-  const charging = controllerOn && Boolean(liveIdentity?.charging);
+  const charge = controllerOn && liveIdentity ? identityChargeState(liveIdentity) : null;
+  const power = charge === "charging" || charge === "pluggedIn" || charge === "full" ? charge : null;
+  const charging = power === "charging";
   const battery = controllerOn ? (liveIdentity?.battery ?? null) : null;
   const lightbar = controllerOn ? (liveIdentity?.lightbar ?? null) : null;
   const lightbarKey = lightbar ? lightbar.join(",") : "";
@@ -165,10 +168,10 @@ export default function DesktopApp() {
       controller: controllerOn,
       slot: connected && liveIdentity ? liveIdentity.currentSlot : -1,
       firmware: connected ? firmware : null,
-      charging,
+      power,
       battery,
     });
-  }, [connected, controllerOn, liveIdentity, firmware, charging, battery]);
+  }, [connected, controllerOn, liveIdentity, firmware, power, battery]);
 
   // The dongle has her too (connected, slot, battery low; firmware 1.3):
   // keep it in step with the app's narrator setting and language. Written

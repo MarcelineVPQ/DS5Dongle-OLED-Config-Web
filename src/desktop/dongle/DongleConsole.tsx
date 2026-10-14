@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
+import { identityChargeState } from "../../protocol/controllerInfo";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 
 const FB_W = 128;
@@ -209,7 +210,14 @@ function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity |
   const prev = useRef<{ client: boolean; on: boolean; slot: number | null; battery: number | null; unsaved: boolean | null; charging: boolean } | null>(null);
   const status = identity;
   useEffect(() => {
-    const now = { client: !!client, on: controllerOn, slot: status?.currentSlot ?? null, battery: status?.battery ?? null, unsaved: status?.unsaved ?? null, charging: status?.charging ?? false };
+    const now = {
+      client: !!client,
+      on: controllerOn,
+      slot: status?.currentSlot ?? null,
+      battery: status?.battery ?? null,
+      unsaved: status?.unsaved ?? null,
+      charging: status ? identityChargeState(status) === "charging" : false,
+    };
     const p = prev.current;
     prev.current = now;
     if (!p) {

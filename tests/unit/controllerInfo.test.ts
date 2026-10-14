@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   chargeState,
   ctrlInfoReport,
+  identityChargeState,
   decodeActiveTimeOnly,
   decodeBatteryMillivolts,
   decodeControllerFirmware,
@@ -161,8 +162,35 @@ describe("battery", () => {
     expect(decodeBatteryMillivolts(new Uint8Array([1]))).toBeNull();
   });
 
-  it("names the input report's power states", () => {
-    expect([0, 1, 2, 10, 11, 15, 7].map(chargeState)).toEqual(["discharging", "charging", "full", "voltageError", "temperatureError", "chargeError", "unknown"]);
+  // What the app shows: every power state x level x the controller's cable.
+  // State 2 ("full") below 100% is a paused charge on a cable (the owner's
+  // controller: state 2 at 80% while plugged in).
+  it("decides the shown power from state, level and USB power", () => {
+    const LEVELS = [0, 80, 90, 100, null] as const;
+    const table: Array<[number, (typeof LEVELS)[number], boolean | null, string]> = [];
+    for (const state of [0, 1, 2, 10, 11, 15, 7]) for (const level of LEVELS) for (const usb of [false, true, null]) table.push([state, level, usb, chargeState(state, level, usb)]);
+    const expected = (state: number, level: number | null, usb: boolean | null): string => {
+      if (state === 0) return usb ? "pluggedIn" : "discharging";
+      if (state === 1) return "charging";
+      if (state === 2) return level === 100 ? "full" : "pluggedIn";
+      return { 10: "voltageError", 11: "temperatureError", 15: "chargeError" }[state] ?? "unknown";
+    };
+    for (const [state, level, usb, shown] of table) expect(shown, `state ${state}, ${level}%, usb ${usb}`).toBe(expected(state, level, usb));
+    // The spot checks, spelled out.
+    expect(chargeState(2, 80, true)).toBe("pluggedIn");
+    expect(chargeState(2, 100, true)).toBe("full");
+    expect(chargeState(1, 80, true)).toBe("charging");
+    expect(chargeState(0, 80, true)).toBe("pluggedIn");
+    expect(chargeState(0, 80, false)).toBe("discharging");
+    expect(chargeState(11, 80, true)).toBe("temperatureError");
+  });
+
+  it("decides the same from the identity's charge flags (no cable bit)", () => {
+    expect(identityChargeState({ charging: true, batteryFull: false, battery: 80 })).toBe("charging");
+    expect(identityChargeState({ charging: false, batteryFull: true, battery: 80 })).toBe("pluggedIn");
+    expect(identityChargeState({ charging: false, batteryFull: true, battery: 100 })).toBe("full");
+    expect(identityChargeState({ charging: false, batteryFull: false, battery: 80 })).toBe("discharging");
+    expect(identityChargeState({ charging: false, batteryFull: true, battery: null })).toBe("pluggedIn");
   });
 });
 

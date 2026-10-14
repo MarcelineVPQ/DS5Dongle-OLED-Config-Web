@@ -325,7 +325,8 @@
     },
     "controller": {
       "battery": "Bateria",
-      "charging": "carregando",
+      "charging": "Carregando",
+      "pluggedIn": "Ligado ao cabo",
       "pairHint": "Já emparelhado? Aperte o botão PS. Controle novo? Segure o botão Criar e o botão PS até a barra de luz piscar; ele emparelha no slot atual."
     },
     "dongle": {},
@@ -1228,6 +1229,7 @@
         "discharging": "Não carregando",
         "charging": "Carregando",
         "full": "Carga completa",
+        "pluggedIn": "Ligado ao cabo, sem carregar",
         "voltageError": "Carga parada: problema de tensão",
         "temperatureError": "Carga parada: quente ou frio demais",
         "chargeError": "Erro de carga",

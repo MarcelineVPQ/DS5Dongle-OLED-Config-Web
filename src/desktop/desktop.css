@@ -1772,7 +1772,8 @@ html[data-theme="light"] .live-ctl {
 .live-battery.low .level {
   fill: var(--status-bad);
 }
-.live-battery .bolt {
+.live-battery .bolt,
+.live-battery .plug {
   fill: #fde047; /* theme-exempt: charging bolt glyph */
   stroke: rgba(0, 0, 0, 0.5); /* theme-exempt: charging bolt outline */
   stroke-width: 0.8;

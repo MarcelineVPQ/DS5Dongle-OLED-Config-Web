@@ -66,7 +66,7 @@ function mount(playerWiring: PlayerLightWiring) {
             remapped: new Set<PartId>(),
             onSelect: vi.fn(),
           }),
-          createElement(LiveStrip, { id, playerWiring, rssi: null, lightbarMode: null, lightbar: null, onLightbar: vi.fn() }),
+          createElement(LiveStrip, { id, playerWiring, power: null, rssi: null, lightbarMode: null, lightbar: null, onLightbar: vi.fn() }),
         ),
       ),
     );

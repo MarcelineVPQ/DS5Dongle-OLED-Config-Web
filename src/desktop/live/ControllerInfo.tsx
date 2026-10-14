@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
-import { type ControllerFirmware, chargeState, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
+import { type ChargeState, type ControllerFirmware, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
 import { compareOfficial } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
 import { BusyButton } from "../controls";
@@ -53,14 +53,14 @@ const BUTTON_LABEL: Record<string, string> = {
 
 interface Props {
   bridge: UseDs5BridgeResult;
-  // From the live input (0xF0): level in %, and the power-state nibble.
+  // From the live input (0xF0): level in %, and the shown power (chargeState()).
   batteryPct: number | null;
-  batteryState: number | null;
+  power: ChargeState | null;
   // The controller's firmware report once read (null until then), for the drawing's player lights.
   onFirmware?: (firmware: ControllerFirmware | null) => void;
 }
 
-function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props) {
+function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
   const { t, i18n } = useTranslation();
   const client = bridge.client;
   const supported = supportsControllerInfo(bridge.identity);
@@ -127,8 +127,7 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
   if (!supported) body = <p className="dk-hint">{t("desktop.ctrlInfo.needsFirmware")}</p>;
   else if (!connected) body = <p className="dk-hint">{t("desktop.ctrlInfo.noController")}</p>;
   else {
-    const charge = batteryState === null ? null : chargeState(batteryState);
-    const chargeBad = charge === "voltageError" || charge === "temperatureError" || charge === "chargeError";
+    const chargeBad = power === "voltageError" || power === "temperatureError" || power === "chargeError";
     const fw = info?.firmware;
     const edge = info?.edge ?? null;
     const officialStatus = fw && edge !== null && official?.latest ? compareOfficial(fw.updateVersion, edge, official.latest) : null;
@@ -174,7 +173,7 @@ function ControllerInfo({ bridge, batteryPct, batteryState, onFirmware }: Props)
               <dt>{t("desktop.controller.battery")}</dt>
               <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
               <dt>{t("desktop.ctrlInfo.charge")}</dt>
-              <dd className={chargeBad ? "dk-bad" : undefined}>{charge ? t(`desktop.ctrlInfo.chargeState.${charge}`) : "—"}</dd>
+              <dd className={chargeBad ? "dk-bad" : undefined}>{power ? t(`desktop.ctrlInfo.chargeState.${power}`) : "—"}</dd>
               <dt>{t("desktop.overview.firmware")}</dt>
               <dd>
                 <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>

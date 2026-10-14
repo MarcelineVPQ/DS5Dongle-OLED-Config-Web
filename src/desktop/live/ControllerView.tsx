@@ -15,7 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { IDENTITY_FEATURES, playerNumber } from "../../protocol/bridgeClient";
-import { type ControllerFirmware, playerLightWiring } from "../../protocol/controllerInfo";
+import { type ControllerFirmware, chargeState, identityChargeState, playerLightWiring } from "../../protocol/controllerInfo";
 import { signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 import { useWindowShown } from "../useWindowShown";
@@ -68,6 +68,11 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const dongleView = view === "dongle";
   const input = useLiveInput(client, on && liveCapable && !dongleView);
   const liveLightbar = useLiveLightbar(client, on && liveCapable && !dongleView);
+  // The controller's power, decided once for the tile, Controller info and the
+  // status line: from the live input (with its cable bit) when polled, else
+  // from the identity's charge flags.
+  const batteryPct = input ? Math.min(100, input.batteryPct) : null;
+  const power = !on ? null : input ? chargeState(input.batteryState, batteryPct, input.usbPower) : id ? identityChargeState(id) : null;
   // The OLED mirror, shared by the console and the dashboard (one poll).
   // Only while the window is on screen.
   const shown = useWindowShown();
@@ -228,6 +233,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
               {on && id && liveCapable && (
                 <LiveStrip
                   id={id}
+                  power={power}
                   playerWiring={playerWiring}
                   rssi={status?.rssi ?? null}
                   lightbarMode={bridge.config?.lightbarMode ?? null}
@@ -236,9 +242,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                 />
               )}
               {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
-              {on && liveCapable && (
-                <ControllerInfo bridge={bridge} batteryPct={input ? Math.min(100, input.batteryPct) : null} batteryState={input ? input.batteryState : null} onFirmware={setCtrlFirmware} />
-              )}
+              {on && liveCapable && <ControllerInfo bridge={bridge} batteryPct={batteryPct} power={input ? power : null} onFirmware={setCtrlFirmware} />}
             </div>
             {!(on && id && liveCapable) && (
               <div className="live-status">
@@ -249,7 +253,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
                   {t("desktop.controller.battery", "Battery")}{" "}
                   <strong>
                     {on && id?.battery !== null && id?.battery !== undefined ? `${id.battery}%` : "—"}
-                    {on && id?.charging ? ` · ${t("desktop.controller.charging", "charging")}` : ""}
+                    {power === "charging" || power === "pluggedIn" || power === "full" ? ` · ${t(`desktop.ctrlInfo.chargeState.${power}`)}` : ""}
                   </strong>
                 </span>
                 <span>
