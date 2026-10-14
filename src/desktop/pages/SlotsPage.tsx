@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import { allSlotsTaken } from "../../protocol/bridgeClient";
 import { usePoll } from "../usePoll";
 import { BusyButton } from "../controls";
 import { noteSlotOccupancy, useFakeSlots } from "../devPreview";
@@ -95,6 +96,12 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
           )}
         </p>
         {error && <div className="dk-notice error">{error}</div>}
+        {/* Real occupancy only: the pretend controllers fill free slots in the table, not on the board. */}
+        {v && allSlotsTaken(v.slots) && (
+          <div className="dk-notice" role="status">
+            {t("desktop.slots.allTaken", { total: v.slots.occupied.length })}
+          </div>
+        )}
         <table className="dk-table slots">
           <colgroup>
             <col className="slot" />

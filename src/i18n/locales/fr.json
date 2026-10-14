@@ -197,6 +197,7 @@
       "forget": "Oublier",
       "wipeConfirm": "Oublier les quatre manettes ?",
       "wipe": "Tout oublier",
+      "allTaken": "Les {{total}} slots sont occupés. Pour associer une nouvelle manette, oublie d'abord une manette.",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "simulée"

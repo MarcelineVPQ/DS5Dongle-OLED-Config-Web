@@ -197,6 +197,7 @@
       "forget": "忘记",
       "wipeConfirm": "忘记全部四个控制器？",
       "wipe": "全部忘记",
+      "allTaken": "全部 {{total}} 个槽位都已占用。要配对新控制器，请先忘记一个。",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "模拟"

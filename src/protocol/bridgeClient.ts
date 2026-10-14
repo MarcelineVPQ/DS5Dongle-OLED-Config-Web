@@ -252,6 +252,14 @@ export interface SlotsInfo {
   occupied: boolean[];
 }
 
+// Every pairing slot holds a controller (the board's real slots, never the
+// Developer card's pretend controllers): the board is then not discoverable
+// and won't pair a new controller until one is forgotten.
+export function allSlotsTaken(slots: SlotsInfo): boolean {
+  // loop: HOT-PATH-OK — N = 4 slots; per 1.5 s slot poll
+  return slots.occupied.length > 0 && slots.occupied.every(Boolean);
+}
+
 export interface DiagInfo {
   uptimeSeconds: number;
   usbFrames: number;

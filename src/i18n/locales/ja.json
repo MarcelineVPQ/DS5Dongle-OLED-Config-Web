@@ -197,6 +197,7 @@
       "forget": "削除",
       "wipeConfirm": "4 台すべてのコントローラーを削除しますか?",
       "wipe": "すべて削除",
+      "allTaken": "{{total}} つのスロットがすべて使用中です。新しいコントローラーをペアリングするには、先に 1 台を削除してください。",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "仮"

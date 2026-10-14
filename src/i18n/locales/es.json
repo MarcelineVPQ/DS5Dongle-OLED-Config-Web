@@ -197,6 +197,7 @@
       "forget": "Olvidar",
       "wipeConfirm": "¿Olvidar los cuatro mandos?",
       "wipe": "Olvidar todos",
+      "allTaken": "Los {{total}} slots están ocupados. Para emparejar un mando nuevo, olvida uno primero.",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "simulado"

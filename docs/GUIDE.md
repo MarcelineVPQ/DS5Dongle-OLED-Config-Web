@@ -118,6 +118,8 @@ Click a button or stick on the drawing and choose what it **acts as**, or open *
 
 Your board remembers up to four controllers (slots 0–3). **Switch** to another slot, **Forget** one, or forget all. Each slot keeps its own calibration.
 
+When all four slots are taken, your board won't pair a new controller (it just blinks): **Forget** one first, and the page and the OLED say so.
+
 ## 5. Calibration
 
 ![Calibration: the guided run and the raw vs corrected previews](screenshots/guide-calibration.png)

@@ -213,6 +213,12 @@ export const ROADMAP: RoadmapItem[] = [
     platform: "linux",
     high: true,
   },
+  {
+    column: "next",
+    title: "Full pairing slots say so",
+    text: "With all four slots taken, Pairing slots and the board's OLED say to forget one before a new controller can pair, instead of the controller just blinking.",
+    areas: ["dongle"],
+  },
 
   // In progress
   {

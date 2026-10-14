@@ -197,6 +197,7 @@
       "forget": "Vergessen",
       "wipeConfirm": "Alle vier Controller vergessen?",
       "wipe": "Alle vergessen",
+      "allTaken": "Alle {{total}} Slots sind belegt. Um einen neuen Controller zu koppeln, vergiss zuerst einen.",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "vorgetäuscht"
