@@ -430,7 +430,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 184 | `registerIpc` | ipc-handler | `handle IPC.installUpdate` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
 | 185 | `registerIpc` | ipc-handler | `handle IPC.backToStable` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
 | 186 | `registerIpc` | ipc-handler | `handle IPC.getDesktopPalette` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 187 | `registerIpc` | ipc-handler | `handle IPC.firmwareChangelog` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 187 | `registerIpc` | ipc-handler | `handle IPC.firmwareChangelog` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ — _gone 2026-10-13: the firmware changelog is bundled (no fetch, no IPC), branch `pass-lifetimes`_ |
 | 189 | `registerIpc` | ipc-handler | `handle IPC.getFirmwareHold` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
 | 191 | `registerIpc` | ipc-handler | `on IPC.setFirmwareWriting` | **LOGGED-OK** | a value that doesn't fit is logged (an app bug) |
 | 194 | `registerIpc > on(cb)` | schema | `z.boolean().safeParse` | **LOGGED-OK** | only our own page sends it, always a boolean; a misfit is an app bug, logged |
@@ -509,7 +509,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 183 | `fetchManifest` | catch | `rethrow: JSON.parse` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
 | 187 | `fetchManifest` | schema | `Manifest.safeParse` | **PASSES-ON** | a malformed manifest throws "the update manifest is malformed" to check()'s catch |
 | 207 | `downloadAndInstall` | catch | `fallback` | **SHOWN** | desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed) |
-| 217 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ |
+| 217 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ — _gone 2026-10-13: the firmware changelog is bundled (no fetch, no IPC), branch `pass-lifetimes`_ |
 | 261 | `install` | catch | `rethrow: renameSync` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
 | 285 | `restart` | spawn | `execFileSync("systemd-run")` | **NOT-WORTH** | systemd-run unavailable _(via catch L287)_ |
 | 287 | `restart` | catch | `empty: child_process` | **NOT-WORTH** | systemd-run unavailable |
@@ -912,8 +912,8 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 87 | `AboutPage > useEffect(cb)` | ipc-call | `firmwareChangelog` | **SHOWN** | english: the firmware changes tab's error (main-process text, batch E3) _(via .catch L90)_ |
-| 90 | `AboutPage > useEffect(cb)` | .catch | `(cause) => setFirmwareError(causeText(cause))` | **SHOWN** | english: the firmware changes tab's error (main-process text, batch E3) |
+| 87 | `AboutPage > useEffect(cb)` | ipc-call | `firmwareChangelog` | **SHOWN** | english: the firmware changes tab's error (main-process text, batch E3) _(via .catch L90)_ — _gone 2026-10-13: the firmware changelog is bundled (no fetch, no IPC), branch `pass-lifetimes`_ |
+| 90 | `AboutPage > useEffect(cb)` | .catch | `(cause) => setFirmwareError(causeText(cause))` | **SHOWN** | english: the firmware changes tab's error (main-process text, batch E3) — _gone 2026-10-13: the firmware changelog is bundled (no fetch, no IPC), branch `pass-lifetimes`_ |
 
 #### src/desktop/pages/FirmwarePage.tsx
 

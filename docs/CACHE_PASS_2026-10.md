@@ -685,7 +685,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 84 | `AboutPage` | effect-io | `firmwareChangelog` | deps [tab, firmware]; reaches ipc | **NOT-WORTH** | fetched when the About changelog tab opens; rare |
+| 84 | `AboutPage` | effect-io | `firmwareChangelog` | deps [tab, firmware]; reaches ipc | **NOT-WORTH** | fetched when the About changelog tab opens; rare — _gone 2026-10-13: the firmware changelog is bundled (no fetch, no IPC), branch `pass-lifetimes`_ |
 
 #### src/desktop/pages/GamesPage.tsx
 
