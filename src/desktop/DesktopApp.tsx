@@ -27,7 +27,10 @@ import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
 import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
-import AboutPage, { type AboutTab } from "./pages/AboutPage";
+import AboutPage from "./pages/AboutPage";
+import AppSettingsPage from "./pages/AppSettingsPage";
+import { revealSection } from "./accordion/useAccordion";
+import { SECTIONS } from "./accordion/sections";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
@@ -47,10 +50,10 @@ import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 import { identityChargeState } from "../protocol/controllerInfo";
 import { logged } from "../errorText";
 
-// One screen: the live controller with its settings panel. Games and About
-// replace it while open (with a way back); the dongle and the app's own
+// One screen: the live controller with its settings panel. Games, App
+// settings and About replace it while open (with a way back); the dongle's
 // settings open in the panel.
-type MainView = "controller" | "games" | "about";
+type MainView = "controller" | "games" | "app" | "about";
 
 const APPLY_DEBOUNCE_MS = 150;
 
@@ -79,7 +82,6 @@ export default function DesktopApp() {
   const [panel, setPanel] = useState<PanelView>("overview");
   // A game page to open when the Games page shows next (after editing its profile).
   const [openGame, setOpenGame] = useState<{ key: string } | null>(null);
-  const [aboutTab, setAboutTab] = useState<AboutTab>("guide");
   // Done pressed with changes not saved into the profile: ask first.
   const [confirmDone, setConfirmDone] = useState(false);
   const whatsNew = useWhatsNew();
@@ -93,11 +95,13 @@ export default function DesktopApp() {
     setMain("controller");
     setPanel(view);
   };
-  // A rail item's page (App settings → Dismissed notices: the place to act).
-  const goTo = (item: RailItem) => {
-    if (item === "games" || item === "about") setMain(item);
+  // A rail item's page, and the section there that holds a task (rail dots,
+  // App settings → Dismissed notices' Go to): the accordion opens it.
+  const goTo = (item: RailItem, section?: string) => {
+    if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
+    if ((item === "app" || item === "about") && section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
   };
 
   // Open tasks: the rail's dots, and which dismissed notices still apply.
@@ -166,7 +170,8 @@ export default function DesktopApp() {
     profiles.stopEditing();
     setMain("games");
   };
-  const standalone = main !== "controller";
+  // Games and About have no board settings: no save bar there.
+  const standalone = main === "games" || main === "about";
 
   // Keep the tray icon/menu in step with the device, even while the window is
   // hidden (the window keeps running in the background for exactly this):
@@ -340,14 +345,17 @@ export default function DesktopApp() {
           <ArtBackdrop colors={controllerColors} />
           <NarratorCaption />
           <div className="dk-main">
-            <main tabIndex={-1} className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}`}>
+            <main
+              tabIndex={-1}
+              className={`dk-body${main === "controller" && connected ? " dk-body-live" : ""}${main === "games" && games.allowed ? " dk-body-lib" : ""}${main === "about" ? " dk-body-split" : ""}`}
+            >
               <UpdateBanners
                 app={appUpdate}
                 fw={fw}
                 onShowFirmware={() => openPanel("dongle")}
                 onFirmwareChanges={() => {
-                  setAboutTab("firmware");
                   setMain("about");
+                  revealSection("about", "firmware");
                 }}
               />
               <AutoUpdateAsk />
@@ -359,9 +367,8 @@ export default function DesktopApp() {
                       type="button"
                       className="dk-btn"
                       onClick={() => {
-                        setAboutTab("changes");
                         setMain("about");
-                        whatsNew.dismiss();
+                        revealSection("about", "changes");
                       }}
                     >
                       {t("desktop.about.seeWhatsNew", "See what's new")}
@@ -390,7 +397,8 @@ export default function DesktopApp() {
                   onDeclinedChange={games.recount}
                 />
               )}
-              {main === "about" && <AboutPage key={aboutTab} initialTab={aboutTab} />}
+              {main === "app" && <AppSettingsPage bridge={bridge} fw={fw} />}
+              {main === "about" && <AboutPage whatsNew={whatsNew.version} onSeen={whatsNew.dismiss} />}
               {main === "controller" && profiles.editing && (
                 <div className="dk-editing" role="status">
                   {confirmDone ? (
@@ -429,8 +437,6 @@ export default function DesktopApp() {
               {main === "controller" &&
                 (connected ? (
                   <ControllerView bridge={bridge} fw={fw} view={panel} onView={setPanel} />
-                ) : panel === "app" ? (
-                  <ControllerView bridge={bridge} fw={fw} view="app" onView={setPanel} />
                 ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
                   // Mid-update the dongle is a bootloader drive: the update banner
                   // shows the progress; Setup must not offer to flash it again.
@@ -487,20 +493,31 @@ export default function DesktopApp() {
             )}
           </div>
           <AppRail
-            active={main === "games" ? "games" : main === "about" ? "about" : panel === "dongle" ? "dongle" : panel === "app" ? "app" : "controller"}
+            active={main === "controller" ? (panel === "dongle" ? "dongle" : "controller") : main}
             onSelect={(item) => {
               // After the page or panel renders, focus moves into it (the page
               // in the middle; App settings / Pico open in the side panel), so
               // the keyboard and screen readers continue there, not in the rail.
               // lifetime: OK — fires once (moves focus after the page renders)
               requestAnimationFrame(() => {
-                const target = item === "dongle" || item === "app" ? document.querySelector<HTMLElement>(".live-panel-head h2") : document.querySelector<HTMLElement>("main.dk-body");
-                target?.focus({ preventScroll: true });
+                const target =
+                  item === "dongle"
+                    ? document.querySelector<HTMLElement>(".live-panel-head h2")
+                    : item === "app"
+                      ? document.querySelector<HTMLElement>(".dk-page-head h1")
+                      : item === "about"
+                        ? document.querySelector<HTMLElement>(".dk-split-head h2")
+                        : document.querySelector<HTMLElement>("main.dk-body");
+                // A deep link already moved the focus to its section.
+                if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
               });
-              if (item === "games" || item === "about") setMain(item);
+              // A dot on the item: its first task with a section there opens.
+              // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
+              const section = tasks.find((task) => task.place === item && task.section)?.section;
+              if (item === "games" || item === "about" || item === "app") goTo(item, section);
               else if (item === "controller") {
                 // Already there: show / hide its settings panel.
-                if (main === "controller" && panel !== "dongle" && panel !== "app") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
+                if (main === "controller" && panel !== "dongle") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
                 else {
                   setMain("controller");
                   setPanel("overview");

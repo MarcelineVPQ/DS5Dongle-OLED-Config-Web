@@ -1,19 +1,27 @@
-import { useState } from "react";
+// About: the open text in the main view (the guide, a changelog, the
+// roadmap or the credits) and its sections in the panel. The open section
+// lists its text's chapters; a click scrolls the main view there. Nothing
+// here polls: the texts are bundled.
+import { useEffect, useMemo, useState } from "react";
 import { appVersionLabel } from "../appVersion";
-import { Bug, Code, Github, Globe } from "lucide-react";
+import { BookOpen, Bug, Code, Cpu, Flag, Github, Globe, Heart, Layers, ScrollText, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
 import guide from "../../../docs/GUIDE.md?raw";
 import protonChangelog from "../../../docs/PROTON_CHANGELOG.md?raw";
 // The firmware repo's CHANGELOG.md, bundled at build time (firmwareChangelog.config.ts).
 import firmwareChangelog from "@firmware-changelog?raw";
-import Markdown from "../Markdown";
+import Markdown, { markdownHeadings, plainHeading, scrollToHeading } from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
-import { ISSUES_URL } from "../about/roadmap";
+import { ISSUES_URL, ROADMAP_COLUMNS } from "../about/roadmap";
+import { Section, SplitView } from "../accordion/Section";
+import { pinScope, useAccordion } from "../accordion/useAccordion";
+import type { SectionId } from "../accordion/sections";
+import { TOUR_ENABLED, startTour } from "../tour/Tour";
 import { protonApplies } from "../games/platform";
 
-export type AboutTab = "changes" | "firmware" | "proton" | "guide" | "roadmap" | "credits";
+export type AboutTab = SectionId<"about">;
 
 const CREDITS = `
 ### Built on
@@ -52,6 +60,7 @@ const STUDIO_LINKS = [
 function StudioCard() {
   const { t } = useTranslation();
   return (
+    // settings-gate: not-settings — the studio's credit card in About's text, not a settings card
     <section className="dk-card dk-studio">
       <img className="dk-studio-logo" src={diceIcon} alt="" width={112} height={82} />
       <div className="dk-studio-text">
@@ -76,44 +85,120 @@ function StudioCard() {
   );
 }
 
-export default function AboutPage({ initialTab = "guide" }: { initialTab?: AboutTab }) {
+// Each section: its icon, title key and text (Coming soon is the roadmap board).
+const TEXTS: Record<AboutTab, { icon: LucideIcon; title: string; text: string | null }> = {
+  guide: { icon: BookOpen, title: "desktop.about.guide", text: guide },
+  changes: { icon: ScrollText, title: "desktop.about.changes", text: changelog },
+  firmware: { icon: Cpu, title: "desktop.about.firmware", text: firmwareChangelog },
+  proton: { icon: Layers, title: "desktop.about.proton", text: protonChangelog },
+  roadmap: { icon: Flag, title: "desktop.about.roadmapTab", text: null },
+  credits: { icon: Heart, title: "desktop.about.credits", text: CREDITS },
+};
+
+// The newest version a changelog lists ("0.9.5-dev.11" from "[0.9.5-dev.11] - date").
+const newest = (headings: string[]) => headings.find((h) => !/^unreleased$/i.test(h))?.split(" ")[0] ?? null; // loop: NOT-WORTH — stops at the first released heading
+
+export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: string | null; onSeen?: () => void }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<AboutTab>(initialTab);
+  // Our DualSense Proton runs Windows games on Linux: its section shows where
+  // the Games page's Proton section does (Linux only).
+  // loop: NOT-WORTH — N = 6 sections; About's render
+  const ids = (Object.keys(TEXTS) as AboutTab[]).filter((id) => id !== "proton" || protonApplies());
+  const acc = useAccordion("about", pinScope("about"), whatsNew ? "changes" : null);
+  // cache: OK — key=the bundled texts (fixed per build); invalidated=never (bundled); bound=6 lists
+  const headings = useMemo(
+    // loop: NOT-WORTH — N = 6 texts, once per mount
+    () => Object.fromEntries(Object.entries(TEXTS).map(([id, x]) => [id, x.text ? markdownHeadings(x.text) : []])) as Record<AboutTab, string[]>,
+    [],
+  );
+  // The main view shows the open section's text (an unpinned one first), and
+  // keeps the last one shown while all are folded.
+  // loop: NOT-WORTH — N = 6 sections; About's render
+  const openNow = ids.find((id) => acc.isOpen(id) && !acc.isPinned(id)) ?? ids.find((id) => acc.isOpen(id));
+  const [doc, setDoc] = useState<AboutTab>(openNow ?? "guide");
+  const [at, setAt] = useState<string | null>(null); // the chapter last clicked
+  // A section opened: its text shows (set while rendering, React's pattern for state that follows other state).
+  const [lastOpen, setLastOpen] = useState(openNow);
+  if (openNow !== lastOpen) {
+    setLastOpen(openNow);
+    if (openNow) {
+      setDoc(openNow);
+      setAt(null);
+    }
+  }
+  // App changes seen: the "Updated to" notice and the dot go.
+  // lifetime: OK — acquires nothing (marks the new version seen)
+  useEffect(() => {
+    if (doc === "changes" && whatsNew) onSeen?.();
+  }, [doc, whatsNew, onSeen]);
 
-  // Our DualSense Proton runs Windows games on Linux: its tab shows where the
-  // Games page's Proton card does (Linux only).
-  const tabs: Array<{ id: AboutTab; label: string }> = [
-    { id: "guide", label: t("desktop.about.guide", "Guide") },
-    { id: "changes", label: t("desktop.about.changes", "App changes") },
-    { id: "firmware", label: t("desktop.about.firmware", "Firmware changes") },
-    ...(protonApplies() ? [{ id: "proton" as const, label: t("desktop.about.proton", "Proton changes") }] : []),
-    { id: "roadmap", label: t("desktop.about.roadmapTab", "Coming soon") },
-    { id: "credits", label: t("desktop.about.credits", "Credits") },
-  ];
+  const statuses: Record<AboutTab, string | null> = {
+    guide: t("desktop.accordion.chapters", { count: headings.guide.length }),
+    changes: newest(headings.changes),
+    firmware: newest(headings.firmware),
+    proton: newest(headings.proton),
+    // loop: NOT-WORTH — N = 4 columns; About's render
+    roadmap: ROADMAP_COLUMNS.map((c) => t(`desktop.about.roadmap.column.${c}`)).join(" · "),
+    credits: t("desktop.about.production"),
+  };
+  // Chapters: the text's headings, or Coming soon's columns.
+  // loop: NOT-WORTH — N = 4 columns; only while Coming soon is open
+  const chapters = (id: AboutTab) => (id === "roadmap" ? ROADMAP_COLUMNS.map((c) => t(`desktop.about.roadmap.column.${c}`)) : headings[id]);
+  const go = (id: AboutTab, chapter: string) => {
+    setDoc(id);
+    setAt(chapter);
+    // After the text for that section is shown.
+    // lifetime: OK — fires once (scrolls after the next paint)
+    requestAnimationFrame(() => scrollToHeading(document.querySelector(".dk-about-text"), (h) => plainHeading(h).startsWith(chapter)));
+  };
 
-  return (
-    <div className="dk-stack">
-      <div className="dk-seg" role="tablist" aria-label={t("desktop.nav.about", "About")} style={{ alignSelf: "flex-start" }}>
-        {/* loop: HOT-PATH-OK — N ≈ 4 tabs; About page render */}
-        {tabs.map((x) => (
-          <button type="button" role="tab" key={x.id} className={tab === x.id ? "on" : ""} aria-selected={tab === x.id} onClick={() => setTab(x.id)}>
-            {x.label}
-          </button>
-        ))}
-      </div>
-      {tab === "credits" && <StudioCard />}
-      {tab === "roadmap" ? (
+  const text = TEXTS[doc].text;
+  const main = (
+    <article className="dk-about-text">
+      <span className="dk-subhead">{t(TEXTS[doc].title)}</span>
+      {window.desktop && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
+      {doc === "credits" && <StudioCard />}
+      {doc === "roadmap" ? (
         <ComingSoon />
       ) : (
-        <section className="dk-card">
-          {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
-          {tab === "changes" && <Markdown text={changelog} />}
-          {tab === "firmware" && <Markdown text={firmwareChangelog} />}
-          {tab === "proton" && <Markdown text={protonChangelog} />}
-          {tab === "guide" && <Markdown text={guide} />}
-          {tab === "credits" && <Markdown text={CREDITS} />}
-        </section>
+        text && (
+          <div className="dk-card dk-doc">
+            <Markdown text={text} />
+          </div>
+        )
       )}
-    </div>
+    </article>
+  );
+
+  return (
+    <SplitView page="about" main={main} mainKey={doc} title={t("desktop.nav.about", "About")} sub={`DS5 Dongle OLED Edition${window.desktop ? ` · ${appVersionLabel()}` : ""}`} state={acc}>
+      {/* loop: NOT-WORTH — N = 6 sections; About's render */}
+      {ids.map((id) => (
+        <Section key={id} id={id} icon={TEXTS[id].icon} title={t(TEXTS[id].title)} status={statuses[id]} task={id === "changes" && whatsNew ? t("desktop.about.updated", { version: whatsNew }) : null}>
+          {() => (
+            <>
+              <nav className="dk-chapters" aria-label={t(TEXTS[id].title)}>
+                {/* loop: NOT-WORTH — N = one text's chapters (≤ ~100); only while its section is open */}
+                {chapters(id).map((c) => (
+                  <button type="button" key={c} className={`dk-chapter${doc === id && at === c ? " on" : ""}`} aria-current={doc === id && at === c ? "location" : undefined} onClick={() => go(id, c)}>
+                    {c}
+                  </button>
+                ))}
+              </nav>
+              {id === "guide" && TOUR_ENABLED && (
+                <>
+                  <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
+                  <div className="dk-row-btns">
+                    <button type="button" className="dk-btn" onClick={startTour}>
+                      {t("desktop.tour.replay")}
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </Section>
+      ))}
+    </SplitView>
   );
 }

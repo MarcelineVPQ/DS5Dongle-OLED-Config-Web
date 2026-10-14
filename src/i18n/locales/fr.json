@@ -707,7 +707,6 @@
       "next": "Suivant",
       "finishButton": "C'est parti",
       "waiting": "On t'attend…",
-      "helpTitle": "Aide",
       "helpHint": "La courte visite guidée du premier lancement.",
       "replay": "Revoir la visite",
       "welcome": {
@@ -1153,9 +1152,10 @@
       "startup": "Démarrage et fenêtre",
       "privacy": "Confidentialité",
       "updates": "Mises à jour",
-      "advanced": "Avancé",
+      "graphics": "Graphismes",
       "reduceMotion": "Réduire les animations",
-      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)"
+      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)",
+      "sub": "Ce PC uniquement · enregistré à chaque changement"
     },
     "dev": {
       "title": "Développeur",
@@ -1451,7 +1451,8 @@
     },
     "hdr": {
       "label": "Éclairage HDR (expérimental)",
-      "sub": "La barre lumineuse brille plus que le blanc sur un écran HDR, comme les vraies LED. Nécessite l'accélération matérielle ; s'applique au redémarrage."
+      "sub": "La barre lumineuse brille plus que le blanc sur un écran HDR, comme les vraies LED. Nécessite l'accélération matérielle ; s'applique au redémarrage.",
+      "short": "Éclairage HDR"
     },
     "grips": {
       "link": "Lier gauche et droite",
@@ -1680,6 +1681,27 @@
       "controllerConnected": "Manette connectée",
       "controllerDisconnected": "Manette déconnectée",
       "profileOff": "Profil {{title}} désactivé : tes paramètres habituels sont rétablis"
+    },
+    "accordion": {
+      "keepOpen": "Garder {{section}} ouvert",
+      "pin": "Épingler : reste ouvert",
+      "pinned": "Épinglé : reste ouvert",
+      "showPanel": "Afficher le panneau",
+      "hidePanel": "Masquer le panneau",
+      "on": "{{name}} activé",
+      "off": "{{name}} désactivé",
+      "value": "{{name}} : {{value}}",
+      "allOff": "Tout désactivé",
+      "updatesAuto": "installation automatique",
+      "updatesAsk": "demande avant d'installer",
+      "updatesOff": "pas de vérification automatique",
+      "launchersRead": "Jeux peut lire vos lanceurs",
+      "launchersNotRead": "Jeux ne lit pas vos lanceurs",
+      "hidden_one": "{{count}} masquée",
+      "hidden_other": "{{count}} masquées",
+      "devOnly": "Versions de développement uniquement",
+      "chapters_one": "{{count}} chapitre",
+      "chapters_other": "{{count}} chapitres"
     }
   },
   "ad": {

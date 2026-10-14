@@ -26,6 +26,7 @@
 //   (a dev build: the update-state and colorway passes use its Developer previews)
 //   node tools/check_layout.mjs [--host 127.0.0.1] [--port 9334] [--plan fast|full] [--mode layout|contrast|names|all]
 //     [--langs en,de] [--sizes 1100x900,900x650] [--themes light,dark] [--colorways off] [--seed 1] [--dry-run]
+//     [--groups app,about]   only these page groups (a spot check of the pages a change touched)
 //   --dry-run prints the plan (size, estimated time) and stops.
 //
 // Every layout and contrast pass also runs the controller and Dongle views in
@@ -57,6 +58,7 @@ const MODELS = ["dualsense", "edge"];
 // Fast plan: the languages checked on every view at the smallest size.
 const RISKY = opt("risky-langs", RISKY_LANGS.join(",")) === "all" ? LANGS : opt("risky-langs", RISKY_LANGS.join(",")).split(",");
 const COLORWAY_PASS = opt("colorways", "on") !== "off";
+const ONLY_GROUPS = opt("groups", null)?.split(",") ?? null;
 const STYLES = { standard: null, glass: "1" };
 const STARTED = Date.now();
 const doing = (what) => MODE === what || MODE === "all";
@@ -219,10 +221,13 @@ const BASE_VIEWS = [
     await evaluate(`(() => { const s = document.querySelector(".live-stage"); if (s) s.scrollTop = s.scrollHeight; })()`);
   }),
   view("app", "app settings", 0, () => rail("app")),
-  view("app", "app settings, scrolled", 500, async () => {
+  // Every section pinned open (the accordion: one open otherwise), scrolled down.
+  view("app", "app settings, every section open, scrolled", 700, async () => {
     await rail("app");
-    await sleep(500);
-    await scrollPanel();
+    await sleep(400);
+    await evaluate(`document.querySelectorAll('.dk-sec-pin[aria-pressed="false"]').forEach((b) => b.click())`);
+    await sleep(300);
+    await evaluate(`(() => { const b = document.querySelector("main.dk-body"); if (b) b.scrollTop = b.scrollHeight; })()`);
   }),
   view("controller", "buttons & layouts", 900, async () => {
     await rail("controller");
@@ -231,11 +236,11 @@ const BASE_VIEWS = [
     await sleep(500);
     await scrollPanel();
   }),
-  ...[0, 1, 2, 3, 4].map((tab) =>
-    view("about", `about tab ${tab}`, 400, async () => {
+  ...[0, 1, 2, 3, 4, 5].map((i) =>
+    view("about", `about section ${i}`, 400, async () => {
       await rail("about");
       await sleep(400);
-      await evaluate(`document.querySelectorAll('[role="tab"]')[${tab}]?.click()`);
+      await evaluate(`(() => { const h = document.querySelectorAll(".dk-sec-toggle")[${i}]; if (h && h.getAttribute("aria-expanded") !== "true") h.click(); })()`);
     }),
   ),
   view("games", "games home", 1500, gamesHome),
@@ -270,7 +275,7 @@ const VIEWS = [
     BASE_VIEWS.filter((v) => v.name === "controller" || v.name === "dongle (console + dashboard)").map((v) => ({ ...v, group: "updates", name: `${v.name}, update ${state}`, update: state })),
   ),
 ];
-const GROUPS = [...new Set(VIEWS.map((v) => v.group))];
+const GROUPS = [...new Set(VIEWS.map((v) => v.group))].filter((g) => !ONLY_GROUPS || ONLY_GROUPS.includes(g));
 const groupViews = (group) => VIEWS.filter((v) => v.group === group);
 const GROUP_SIZES = Object.fromEntries(GROUPS.map((g) => [g, groupViews(g).length]));
 // The views a combination renders: its slice of the group (fast plan), or all.

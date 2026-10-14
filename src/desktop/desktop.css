@@ -4668,7 +4668,9 @@ html[data-cards-translucent] .dash-card {
 /* Focus moved here after picking a page in the rail (DesktopApp): no ring for
    a pointer pick; keyboard users still see :focus-visible. */
 main.dk-body:focus:not(:focus-visible),
-.live-panel-head h2:focus:not(:focus-visible) {
+.live-panel-head h2:focus:not(:focus-visible),
+.dk-page-head h1:focus:not(:focus-visible),
+.dk-split-head h2:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -4736,4 +4738,370 @@ main.dk-body:focus:not(:focus-visible),
 .lib-status > .lib-system > summary {
   color: inherit;
   font-size: inherit;
+}
+
+/* ---- Accordion (src/desktop/accordion/Section.tsx): the one settings
+   framework. A section is a header (icon, title, live status, chevron, the
+   pin dot in its top-right corner) and, only while open, its body of rows.
+   Idle cost: nothing moves. Opening plays one height transition and a deep
+   link one flash; reduce motion turns both off. ---- */
+.dk-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dk-sec {
+  position: relative;
+  flex: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+}
+.dk-sec.open {
+  border-color: var(--border-soft);
+}
+.dk-sec-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.dk-sec-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 28px 0 10px;
+  border: 0;
+  border-radius: var(--dk-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dk-sec-ic {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-soft);
+}
+.dk-sec.open .dk-sec-ic {
+  color: var(--dk-accent-text);
+}
+/* An open task: a yellow dot on the icon (the status says what it is). */
+.dk-sec-task {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-warn);
+  box-shadow: 0 0 0 2px var(--bg-panel);
+}
+.dk-sec-title {
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.dk-sec-status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.dk-sec-status::before {
+  content: "·";
+  margin-right: 6px;
+}
+.dk-sec-status.warn {
+  color: var(--text-warning);
+}
+.dk-sec-chev {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: transform 150ms;
+}
+.dk-sec.open .dk-sec-chev {
+  transform: rotate(180deg);
+}
+/* The pin: a ring folds with the others; filled, the section stays open. */
+.dk-sec-pin {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.dk-sec-pin i {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 50%;
+  opacity: 0.55;
+}
+.dk-sec-pin:hover i,
+.dk-sec-pin:focus-visible i {
+  border-color: var(--dk-accent-text);
+  opacity: 1;
+}
+.dk-sec.pinned .dk-sec-pin i {
+  border-color: var(--dk-accent);
+  background: var(--dk-accent);
+  box-shadow: 0 0 0 2px var(--dk-sel-bg);
+  opacity: 1;
+}
+.dk-sec-body {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 10px 10px;
+  border-top: 1px solid var(--border-subtle);
+  overflow: hidden;
+  container-type: inline-size;
+  interpolate-size: allow-keywords;
+  transition: height 150ms ease-out;
+}
+@starting-style {
+  .dk-sec-body {
+    height: 0;
+  }
+}
+.dk-sec-body > .dk-notice {
+  margin: 8px 0 2px;
+}
+.dk-sec-body .dk-row:not(.stack) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 5px 0;
+}
+.dk-sec-body .dk-row input[type="range"] {
+  flex: none;
+  width: 120px;
+}
+.dk-sec-body .dk-row-btns {
+  padding: 6px 0 2px;
+}
+/* Rows side by side where the body is wide (App settings → Appearance). */
+.dk-sec-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 28px;
+}
+@container (min-width: 640px) {
+  .dk-sec-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .dk-sec-cols > .dk-row:nth-child(2) {
+    border-top: 0;
+  }
+}
+/* A deep link's one flash (useAccordion's revealSection). */
+.dk-flash {
+  animation: dk-flash 900ms ease-out 1;
+}
+@keyframes dk-flash {
+  0%,
+  40% {
+    box-shadow:
+      0 0 0 2px var(--dk-accent),
+      0 0 18px color-mix(in srgb, var(--dk-accent) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-sec-body,
+  .dk-sec-chev {
+    transition: none;
+  }
+  .dk-flash {
+    animation: none;
+  }
+}
+
+/* App settings: one centered, full-width accordion. */
+.dk-app-settings {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.dk-page-head {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 2px 8px;
+}
+.dk-page-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.dk-page-sub,
+.dk-split-sub {
+  color: var(--text-muted);
+  font-size: var(--dk-small);
+}
+
+/* A page with the accordion panel at the right (About; the others follow).
+   The body is the container: below ~760 px the panel is a drawer. */
+.dk-body.dk-body-split {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  container-type: inline-size;
+}
+.dk-body-split > .dk-notice {
+  margin: var(--dk-pad) var(--dk-pad) 0;
+}
+.dk-split {
+  --dk-acc-w: 372px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--dk-acc-w);
+}
+.dk-split.panel-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dk-split.panel-hidden .dk-split-panel {
+  display: none;
+}
+.dk-split-main {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--dk-pad);
+}
+.dk-split-show {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 3;
+  display: none;
+}
+.dk-split.panel-hidden .dk-split-show {
+  display: inline-flex;
+}
+.dk-split-panel {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-left: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-page) 70%, transparent);
+}
+.dk-split-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 6px;
+}
+.dk-split-titles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dk-split-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+@container (max-width: 760px) {
+  .dk-split,
+  .dk-split.panel-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dk-split .dk-split-panel,
+  .dk-split.panel-hidden .dk-split-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    width: min(var(--dk-acc-w), 100%);
+    background: var(--bg-page);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateX(calc(100% + 12px));
+    visibility: hidden;
+    transition:
+      transform 180ms ease-out,
+      visibility 180ms;
+  }
+  .dk-split.drawer-open .dk-split-panel {
+    transform: none;
+    visibility: visible;
+  }
+  .dk-split .dk-split-show {
+    display: inline-flex;
+  }
+  .dk-split.drawer-open .dk-split-show {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-split .dk-split-panel {
+    transition: none;
+  }
+}
+
+/* About: the open text, and its chapters in the open section. */
+.dk-about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+.dk-about-text > .dk-subhead {
+  margin: 4px 0 0;
+}
+.dk-about-text > .dk-hint {
+  margin: 0;
+}
+.dk-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 6px;
+}
+.dk-chapter {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.dk-chapter:hover {
+  background: var(--bg-elevated);
+}
+.dk-chapter.on {
+  background: var(--dk-sel-bg);
+  color: var(--dk-sel-text);
+  box-shadow: inset 2px 0 0 var(--dk-accent);
 }

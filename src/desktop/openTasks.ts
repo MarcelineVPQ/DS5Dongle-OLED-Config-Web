@@ -8,10 +8,14 @@ import type { FirmwareUpdateState } from "./useUpdates";
 import { BOARD_PROBLEM_ID, type BoardProblem } from "./dongle/core1Status";
 import { noticeKey, type NoticeTask, type Settled } from "./notices";
 import { formatMb } from "./format";
+import type { SectionId } from "./accordion/sections";
 
 export const APP_UPDATE_ID = "app-update";
 export const FIRMWARE_UPDATE_ID = "firmware-update";
 export const GAMES_SETUP_ID = "games-setup";
+// The accordion section each task opens (rail dots, Dismissed notices' Go to).
+// Firmware and board tasks get theirs when the Pico 2 W page moves onto the accordion.
+export const APP_UPDATE_SECTION: SectionId<"app"> = "updates";
 
 // The app update notice's key: the offered version, or (once it's installed
 // and waits for a restart) "ready:" plus it, a new step that shows again.
@@ -47,7 +51,7 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
           : app.phase === "ready"
             ? t("desktop.update.ready", { version: app.version })
             : "";
-    tasks.push({ id: APP_UPDATE_ID, place: "app", text, key: appKey });
+    tasks.push({ id: APP_UPDATE_ID, place: "app", section: APP_UPDATE_SECTION, text, key: appKey });
     settled.set(APP_UPDATE_ID, [appKey]);
   } else if (app.phase === "up-to-date") settled.set(APP_UPDATE_ID, []);
   // Checking, downloading, installing or failed: not known yet, keep the key.

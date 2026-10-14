@@ -48,6 +48,8 @@ jobs:
         run: node tools/list_caches.mjs --check
       - name: Every error path has a verdict, no silent failure (docs/ERROR_PASS_2026-10.md)
         run: node tools/list_errors.mjs --check
+      - name: Every setting is a Row inside a Section (src/desktop/accordion/Section.tsx)
+        run: node tools/list_settings.mjs --check
 
   typecheck:
     name: Typecheck

@@ -707,7 +707,6 @@
       "next": "Siguiente",
       "finishButton": "¡Vamos!",
       "waiting": "Esperándote…",
-      "helpTitle": "Ayuda",
       "helpHint": "El recorrido guiado del primer inicio.",
       "replay": "Ver el recorrido otra vez",
       "welcome": {
@@ -1153,9 +1152,10 @@
       "startup": "Inicio y ventana",
       "privacy": "Privacidad",
       "updates": "Actualizaciones",
-      "advanced": "Avanzado",
+      "graphics": "Gráficos",
       "reduceMotion": "Reducir movimiento",
-      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)"
+      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)",
+      "sub": "Solo este PC · se guarda al cambiarlo"
     },
     "dev": {
       "title": "Desarrollador",
@@ -1451,7 +1451,8 @@
     },
     "hdr": {
       "label": "Iluminación HDR (experimental)",
-      "sub": "La barra luminosa brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar."
+      "sub": "La barra luminosa brilla más que el blanco en una pantalla HDR, como los LED reales. Requiere aceleración por hardware; se aplica al reiniciar.",
+      "short": "Iluminación HDR"
     },
     "grips": {
       "link": "Vincular izquierda y derecha",
@@ -1680,6 +1681,27 @@
       "controllerConnected": "Mando conectado",
       "controllerDisconnected": "Mando desconectado",
       "profileOff": "Perfil de {{title}} desactivado: vuelven tus ajustes normales"
+    },
+    "accordion": {
+      "keepOpen": "Mantener {{section}} abierto",
+      "pin": "Fijar: queda abierto",
+      "pinned": "Fijado: queda abierto",
+      "showPanel": "Mostrar el panel",
+      "hidePanel": "Ocultar el panel",
+      "on": "{{name}} activado",
+      "off": "{{name}} desactivado",
+      "value": "{{name}}: {{value}}",
+      "allOff": "Todo desactivado",
+      "updatesAuto": "se instala automáticamente",
+      "updatesAsk": "pregunta antes de instalar",
+      "updatesOff": "sin comprobación automática",
+      "launchersRead": "Juegos puede leer tus lanzadores",
+      "launchersNotRead": "Juegos no lee tus lanzadores",
+      "hidden_one": "{{count}} oculto",
+      "hidden_other": "{{count}} ocultos",
+      "devOnly": "Solo versiones de desarrollo",
+      "chapters_one": "{{count}} capítulo",
+      "chapters_other": "{{count}} capítulos"
     }
   },
   "ad": {

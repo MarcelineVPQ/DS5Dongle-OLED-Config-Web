@@ -7,14 +7,19 @@ import { useTranslation } from "react-i18next";
 import { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
 import { logged } from "../errorText";
 
+// The current language as one of ours (or English): also App settings →
+// Language's status.
+export function currentLanguage(language: string | undefined): (typeof SUPPORTED_LANGUAGES)[number] {
+  // loop: HOT-PATH-OK — N = 7 languages, early exit; per render
+  return SUPPORTED_LANGUAGES.find((l) => l.code === language) ?? SUPPORTED_LANGUAGES.find((l) => language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
+}
+
 export default function LanguageToggle() {
   const { i18n, t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
-  // Resolve the current language to one of our supported codes (or fallback to en).
-  // loop: HOT-PATH-OK — N = 7 languages, early exit; per LanguageToggle render
-  const current = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
+  const current = currentLanguage(i18n.language);
 
   // Click-outside-to-close
   // lifetime: OK — cleanup: removes the mousedown listener (menu closes / unmount)

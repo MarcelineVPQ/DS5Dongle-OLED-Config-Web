@@ -36,7 +36,7 @@ async function build(devTools: boolean) {
   vi.resetModules();
   return {
     updater: await import("../../electron/main/updater"),
-    panel: await import("../../src/desktop/live/PartPanel"),
+    panel: await import("../../src/desktop/pages/AppSettingsPage"),
     i18n: (await import("../../src/i18n")).default,
   };
 }
@@ -122,12 +122,12 @@ describe("the Developer card", () => {
     container = document.createElement("div");
     root = createRoot(container);
     act(() => root.render(createElement(panel.DeveloperSettings)));
-    return t.t("desktop.dev.title");
+    return t.t("desktop.dev.model");
   };
 
   it("shows in a dev-tools build, whatever the update channel", async () => {
-    const title = await show(true);
-    expect(container.querySelector("h2")?.textContent).toBe(title);
+    const model = await show(true);
+    expect(container.textContent).toContain(model);
   });
   it("never shows in a release build", async () => {
     await show(false);

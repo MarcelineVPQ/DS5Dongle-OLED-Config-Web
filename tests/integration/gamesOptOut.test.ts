@@ -8,7 +8,13 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import GamesPage from "../../src/desktop/pages/GamesPage";
-import { GameLaunchersSetting } from "../../src/desktop/live/PartPanel";
+import { GameLaunchersSetting, useGamesAllowed } from "../../src/desktop/pages/AppSettingsPage";
+
+// App settings → Privacy's body, as the page shows it (with the consent read).
+function Privacy() {
+  const allowed = useGamesAllowed();
+  return allowed === null ? null : createElement(GameLaunchersSetting, { allowed });
+}
 import { EMPTY_LIBRARY } from "../../src/desktop/games/library";
 import type { GamesReport } from "../../src/desktop/games/types";
 
@@ -84,7 +90,7 @@ describe("game launchers opt-out", () => {
   });
 
   it("asks before turning it off, and Cancel keeps it on", async () => {
-    act(() => root!.render(createElement(GameLaunchersSetting)));
+    act(() => root!.render(createElement(Privacy)));
     await settle();
     expect(toggle().getAttribute("aria-checked")).toBe("true");
     expect(text()).toContain("Steam, GOG Galaxy and Epic");
@@ -101,7 +107,7 @@ describe("game launchers opt-out", () => {
     const heard: boolean[] = [];
     const listen = (e: Event) => heard.push((e as CustomEvent<boolean>).detail);
     window.addEventListener("ds5:games-allowed", listen);
-    act(() => root!.render(createElement(GameLaunchersSetting)));
+    act(() => root!.render(createElement(Privacy)));
     await settle();
     click(toggle());
     click(button(i18n.t("desktop.games.readLaunchersTurnOff")));

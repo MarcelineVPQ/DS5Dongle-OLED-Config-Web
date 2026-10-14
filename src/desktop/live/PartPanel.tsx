@@ -1,43 +1,22 @@
 // The side panel of the one-screen view: the settings for whatever is
-// selected (a part of the controller, the dongle, or the app itself). The
-// sections are the same components the old pages used.
+// selected (a part of the controller, or the dongle). The sections are the
+// same components the old pages used. (App settings is its own page:
+// pages/AppSettingsPage.tsx.)
 import { PanelRightClose, X } from "lucide-react";
-import Markdown from "../Markdown";
-import type { DevChannelAnswer } from "../api";
 import { hardwareName } from "../hardwareName";
-import HdrTest from "../dev/HdrTest";
-import FakeGames from "../dev/FakeGames";
 import Calibration from "./Calibration";
-import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
-import { COLORWAYS, colorway } from "./colorways";
-import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "./customColors";
-import { MODEL_COLORWAYS, SIM_CORE1_KEY, SIM_CORE1_STAGES, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
-import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
-import { REDUCE_MOTION_KEY } from "../motion";
-import { ACCENT_KEY, ACCENTS, useControllerCode, useDesktopAccentUnreadable } from "./controllerAccent";
-import { GLASS_KEY } from "../glass/glassPref";
-import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
-import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
 import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import LanguageToggle from "../../components/LanguageToggle";
-import ThemeToggle from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF, tablesEqual } from "../../protocol/remap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
-import type { DesktopSettings, FirmwareLookup } from "../api";
 import type { SpeakerSelect } from "../../protocol/config";
-import ColorPicker from "../colorPicker/ColorPicker";
-import { feedProblemKey, firmwareOffer } from "../useUpdates";
-import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
-import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
-import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
-import { TOUR_ENABLED, startTour } from "../tour/Tour";
+import { BusyButton } from "../controls";
 import FirmwarePage from "../pages/FirmwarePage";
 import LightbarPage from "../pages/LightbarPage";
 import {
@@ -57,17 +36,14 @@ import {
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
-import { gamesSupported, protonApplies } from "../games/platform";
-import { onGamesAllowed, setGamesAllowed } from "../games/consent";
 import type { FirmwareUpdate } from "../useUpdates";
 import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
 import { logged } from "../../errorText";
 import { shown } from "../shownError";
 import Notice from "../Notice";
-import DismissedNotices from "../DismissedNotices";
 
-export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
+export type PanelView = "overview" | "dongle" | "calibration" | "buttons" | { part: PartId };
 
 interface Props {
   view: PanelView;
@@ -94,15 +70,13 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
       ? t("desktop.live.overview", "Your controller")
       : view === "dongle"
         ? hardwareName(bridge.identity)
-        : view === "app"
-          ? t("desktop.live.app", "App settings")
-          : view === "calibration"
-            ? t("desktop.calib.title")
-            : view === "buttons"
-              ? t("desktop.layouts.allTitle")
-              : view.part === "l2" || view.part === "r2"
-                ? t("desktop.live.triggersTitle")
-                : partName(t, view.part);
+        : view === "calibration"
+          ? t("desktop.calib.title")
+          : view === "buttons"
+            ? t("desktop.layouts.allTitle")
+            : view.part === "l2" || view.part === "r2"
+              ? t("desktop.live.triggersTitle")
+              : partName(t, view.part);
 
   return (
     <div className="dk-stack">
@@ -124,7 +98,6 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
       {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
-      {view === "app" && <AppSettingsPanel bridge={bridge} fw={fw} />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
     </div>
   );
@@ -660,289 +633,6 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
   );
 }
 
-// The app's own settings (stored by the main process), plus theme and language.
-// memo()ed: the controller view re-renders on every live input frame (~30 a
-// second) and App settings uses none of it (bridge and fw only change with
-// the app's state), so the long settings page isn't rebuilt each frame.
-const AppSettingsPanel = memo(AppSettings);
-function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
-  // Joining the Development channel asks first (what it means, what's in it).
-  const [joiningDev, setJoiningDev] = useState(false);
-  const { t } = useTranslation();
-  const [settings, setSettings] = useState<DesktopSettings | null>(null);
-  const [gpuChanged, setGpuChanged] = useState(false);
-  const [hdrChanged, setHdrChanged] = useState(false);
-  // lifetime: OK — acquires nothing (one settings read)
-  useEffect(() => {
-    window.desktop?.getSettings().then(setSettings).catch(shown("desktop.errors.settingsRead"));
-  }, []);
-  // error: SHOWN — desktop.errors.settingNotSaved (was SILENT-BUG: a toggle that didn't save showed nothing)
-  const set = <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => {
-    window.desktop?.setSetting(key, value).then(setSettings).catch(shown("desktop.errors.settingNotSaved"));
-  };
-  return (
-    <>
-      <section className="dk-card">
-        <h2>{t("desktop.settings2.language")}</h2>
-        <div className="dk-row-btns">
-          <LanguageToggle />
-        </div>
-      </section>
-      <section className="dk-card">
-        <h2>{t("desktop.settings2.appearance")}</h2>
-        <Row label={t("desktop.settings2.theme")}>
-          <ThemeToggle />
-        </Row>
-        <GlassSetting />
-        <AccentSetting />
-        <BackdropSetting />
-        {/* loop: HOT-PATH-OK — N ≈ 10 look knobs per render */}
-        {KNOBS.filter((k) => !k.hidden).map((k) => (
-          <KnobSlider key={k.key} k={k} />
-        ))}
-        <CustomColorsSetting />
-      </section>
-      <section className="dk-card">
-        <h2>{t("desktop.settings2.accessibility")}</h2>
-        <ColorVisionSetting />
-        <ReduceMotionSetting />
-        <NarratorSettings />
-      </section>
-      {settings && (
-        <>
-          <section className="dk-card">
-            <h2>{t("desktop.settings2.startup")}</h2>
-            <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
-            <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
-            <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
-          </section>
-          {gamesSupported() && <GameLaunchersSetting />}
-          <section className="dk-card">
-            <h2>{t("desktop.settings2.advanced")}</h2>
-            <Toggle
-              label={t("desktop.live.hardwareAcceleration")}
-              sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
-              value={settings.hardwareAcceleration}
-              onChange={(v) => {
-                setGpuChanged(true);
-                set("hardwareAcceleration", v);
-              }}
-            />
-            <Toggle
-              label={t("desktop.hdr.label")}
-              sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
-              value={settings.hdrLighting}
-              disabled={!settings.hardwareAcceleration}
-              onChange={(v) => {
-                setHdrChanged(true);
-                set("hdrLighting", v);
-              }}
-            />
-            {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
-          </section>
-          <section className="dk-card">
-            <h2>{t("desktop.settings2.updates")}</h2>
-            <Toggle label={t("desktop.live.checkForUpdates")} sub={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
-            <Toggle
-              label={t("desktop.live.autoInstall")}
-              sub={t("desktop.live.autoInstallSub")}
-              value={settings.checkForUpdates && settings.autoInstallUpdates}
-              disabled={!settings.checkForUpdates}
-              onChange={(v) => {
-                set("autoInstallUpdates", v);
-                set("updatesAsked", true);
-              }}
-            />
-            <Segmented
-              label={t("desktop.channel.label")}
-              value={settings.updateChannel === "dev" ? 1 : 0}
-              options={[
-                { value: 0, label: t("desktop.channel.stable") },
-                { value: 1, label: t("desktop.channel.dev") },
-              ]}
-              onChange={(v) => (v === 1 ? setJoiningDev(true) : set("updateChannel", "stable"))}
-            />
-            {joiningDev && (
-              <DevChannelDialog
-                automatic={settings.checkForUpdates}
-                onJoin={() => {
-                  setJoiningDev(false);
-                  set("updateChannel", "dev");
-                }}
-                onCancel={() => setJoiningDev(false)}
-              />
-            )}
-            <p className="dk-hint">{settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}</p>
-            <CheckNow firmwareInstalled={bridge.firmwareVersion} refreshFirmware={fw.refreshLatest} />
-            {settings.updateChannel === "dev" && (
-              <div className="dk-row-btns">
-                <BusyButton
-                  className="dk-btn"
-                  onClick={async () => {
-                    await window.desktop?.backToStable();
-                    setSettings((await window.desktop?.getSettings()) ?? settings);
-                  }}
-                >
-                  {t("desktop.channel.backToStable")}
-                </BusyButton>
-              </div>
-            )}
-          </section>
-        </>
-      )}
-      <DismissedNotices device={hardwareName(bridge.identity)} />
-      <DeveloperSettings />
-      {TOUR_ENABLED && (
-        <section className="dk-card">
-          <h2>{t("desktop.tour.helpTitle")}</h2>
-          <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
-          <div className="dk-row-btns">
-            <button type="button" className="dk-btn" onClick={startTour}>
-              {t("desktop.tour.replay")}
-            </button>
-          </div>
-        </section>
-      )}
-    </>
-  );
-}
-
-// Privacy: whether Games may read the game launchers (its first-visit consent).
-// Turning it off asks first, since the library and per-game controller profiles
-// hide until it's back on; turning it on is the same as "Check my launchers".
-export function GameLaunchersSetting() {
-  const { t } = useTranslation();
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [confirmOff, setConfirmOff] = useState(false);
-  // lifetime: OK — cleanup: drops a late read, unsubscribes the games-allowed event
-  useEffect(() => {
-    let live = true;
-    window.desktop
-      ?.getSettings()
-      .then((s) => live && setAllowed(s.gamesScanAllowed))
-      .catch(logged("reading the Games consent for App settings (the card stays hidden)"));
-    // lifetime: OK — off() in the effect cleanup
-    const off = onGamesAllowed(setAllowed);
-    return () => {
-      live = false;
-      off();
-    };
-  }, []);
-  if (allowed === null) return null;
-  const reads = t("desktop.games.readLaunchersSub", { what: t(protonApplies() ? "desktop.games.consentLaunchers" : "desktop.games.consentLaunchersWindows") });
-  const offText = t("desktop.games.readLaunchersOff");
-  return (
-    <section className="dk-card">
-      <h2>{t("desktop.settings2.privacy")}</h2>
-      <Toggle
-        label={t("desktop.games.readLaunchers")}
-        sub={`${reads} ${offText}`}
-        value={allowed}
-        disabled={confirmOff}
-        onChange={(v) => (v ? setGamesAllowed(true).catch(shown("desktop.errors.settingNotSaved")) : setConfirmOff(true))}
-      />
-      {confirmOff && (
-        <div className="dk-row-btns" role="alert">
-          <span className="dk-bad">{offText}</span>
-          <span className="dk-spacer" />
-          <button type="button" className="dk-btn" onClick={() => setConfirmOff(false)}>
-            {t("desktop.common.cancel")}
-          </button>
-          <BusyButton
-            className="dk-btn danger"
-            onClick={async () => {
-              await setGamesAllowed(false).catch(shown("desktop.errors.settingNotSaved"));
-              setConfirmOff(false);
-            }}
-          >
-            {t("desktop.games.readLaunchersTurnOff")}
-          </BusyButton>
-        </div>
-      )}
-    </section>
-  );
-}
-
-// Checks the chosen channel now, the app and the dongle's firmware, instead
-// of waiting for the next automatic check (every 6 hours). Anything new shows
-// up in the banners at the top; this says what was found for both.
-export function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: string | null | undefined; refreshFirmware: () => Promise<FirmwareLookup> }) {
-  const { t } = useTranslation();
-  const [result, setResult] = useState<string[]>([]);
-  const desktop = window.desktop;
-  if (!desktop) return null;
-  const check = async () => {
-    setResult([]);
-    // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed when the feed was refused (null: the line below says the check failed)
-    const app = await desktop.checkForUpdates().catch(() => null);
-    const lines: string[] = [];
-    if (!app || app.phase === "failed") lines.push(t(feedProblemKey(app?.problem, "desktop.setup.checkFailed")));
-    else if (app.phase === "up-to-date") lines.push(t("desktop.setup.checkedCurrent", { version: app.version }));
-    else if (app.phase !== "idle" && app.phase !== "checking") lines.push(t("desktop.setup.checkedNewer", { version: app.version }));
-    // The firmware: only with a dongle connected (its version is what's compared).
-    if (firmwareInstalled && app && app.phase !== "failed") {
-      const lookup = await refreshFirmware();
-      const latest = lookup.latest?.version;
-      if (latest && firmwareOffer(latest, firmwareInstalled).available) lines.push(t("desktop.setup.checkedFwNewer", { version: latest }));
-      else if (lookup.latest || lookup.problem === "unpublished") lines.push(t("desktop.setup.checkedFwCurrent", { version: firmwareInstalled }));
-    }
-    setResult(lines);
-  };
-  return (
-    <div className="dk-row-btns">
-      <BusyButton className="dk-btn" onClick={check}>
-        {t("desktop.setup.checkUpdates")}
-      </BusyButton>
-      {result.length > 0 && (
-        <span className="dk-hint" role="status">
-          {/* loop: HOT-PATH-OK — N ≤ 3 result lines, after a click */}
-          {result.map((line) => (
-            <span key={line} className="dk-check-line">
-              {line}
-            </span>
-          ))}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// Colour-blind-safe palettes for the app's status colours and graphs.
-function ColorVisionSetting() {
-  const { t } = useTranslation();
-  const cv = useColorVision();
-  return (
-    <Row label={t("desktop.colorVision.label")} sub={t("desktop.colorVision.sub")}>
-      <select className="dk-select" aria-label={t("desktop.colorVision.label")} value={cv} onChange={(e) => setColorVision(e.target.value as ColorVision)}>
-        {/* loop: HOT-PATH-OK — N ≈ 4 color vision options per render */}
-        {COLOR_VISIONS.map((v) => (
-          <option key={v} value={v}>
-            {t(`desktop.colorVision.${v}`)}
-          </option>
-        ))}
-      </select>
-    </Row>
-  );
-}
-
-// The narrator's voice (controller speaker only) and her captions.
-function NarratorSettings() {
-  const { t } = useTranslation();
-  const voice = useNarrator();
-  const captions = useCaptionsOn();
-  return (
-    <>
-      <Toggle label={t("desktop.narrator.voice")} sub={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
-      <Toggle label={t("desktop.narrator.captions")} sub={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
-      <div className="dk-row-btns">
-        <BusyButton className="dk-btn" disabled={voice !== "on"} onClick={() => say("app_controller", { cut: true })}>
-          {t("desktop.narrator.test", "Test the voice")}
-        </BusyButton>
-      </div>
-    </>
-  );
-}
-
 // Korobeiniki on the controller's speaker. The app-wide player
 // (speakerPlayer.ts) owns the sound, so leaving the panel doesn't stop it;
 // back here, the countdown and the line pick up where it is.
@@ -1192,295 +882,4 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       </p>
     </section>
   );
-}
-
-function BackdropSetting() {
-  const { t } = useTranslation();
-  const [background, setBackground] = useBackground();
-  return (
-    <Row label={t("desktop.backdrop.label")} sub={t(`desktop.backdrop.sub.${background}`)}>
-      <select className="dk-select" aria-label={t("desktop.backdrop.label")} value={background} onChange={(e) => setBackground(e.target.value as Background)}>
-        {/* loop: HOT-PATH-OK — N = 3 backgrounds per render */}
-        {BACKGROUNDS.map((b) => (
-          <option key={b} value={b}>
-            {t(`desktop.backdrop.${b}`)}
-          </option>
-        ))}
-      </select>
-    </Row>
-  );
-}
-
-// The app's style: Standard (solid surfaces) or Glass (Liquid Glass on the
-// rail, save bar and settings panel).
-function GlassSetting() {
-  const { t } = useTranslation();
-  const [on, setOn] = useFlagPref(GLASS_KEY);
-  return (
-    <Row label={t("desktop.glass.label")} sub={t("desktop.glass.sub")}>
-      <select className="dk-select" aria-label={t("desktop.glass.label")} value={on ? "glass" : "standard"} onChange={(e) => setOn(e.target.value === "glass")}>
-        <option value="standard">{t("desktop.glass.standard")}</option>
-        <option value="glass">{t("desktop.glass.glass")}</option>
-      </select>
-    </Row>
-  );
-}
-
-// My controller's colors: the player's own colors for the drawing's part
-// groups (custom and modded shells), on top of the detected colorway. Only the
-// parts they change are replaced; outlines are kept readable (customColors.ts).
-function CustomColorsSetting() {
-  const { t } = useTranslation();
-  const { on, setOn, colors, setColors } = useCustomColors();
-  const detected = colorway(useControllerCode())?.colors ?? null;
-  const base = detected ?? FALLBACK_BASE;
-  const merged = mergeColors(base, colors) ?? base;
-  // The outline the player sees isn't the one they picked (or the colorway's):
-  // it was pushed lighter or darker to stay visible.
-  const lineAdjusted = merged.line !== (colors.line ?? base.line);
-  return (
-    <>
-      <h3 className="dk-subhead">{t("desktop.customColors.title")}</h3>
-      <Toggle label={t("desktop.customColors.toggle")} sub={t("desktop.customColors.toggleSub")} value={on} onChange={setOn} />
-      {on && (
-        <>
-          {/* loop: HOT-PATH-OK — N = 6 color parts per render */}
-          {COLOR_PARTS.map((part) => (
-            <Row key={part} label={t(`desktop.customColors.part.${part}`)} sub={part === "dark" || part === "cap" ? t(`desktop.customColors.partSub.${part}`) : undefined}>
-              <ColorPicker label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(hex) => setColors({ ...colors, [part]: hex })} />
-            </Row>
-          ))}
-          {lineAdjusted && <p className="dk-hint">{t("desktop.customColors.lineAdjusted")}</p>}
-          <div className="dk-row-btns">
-            <button type="button" className="dk-btn" disabled={!detected} onClick={() => detected && setColors({ ...detected })}>
-              {t("desktop.customColors.fromColorway")}
-            </button>
-            <button type="button" className="dk-btn" disabled={!hasCustomColors(colors)} onClick={() => setColors({})}>
-              {t("desktop.customColors.reset")}
-            </button>
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-
-export function AccentSetting() {
-  const { t } = useTranslation();
-  const [choice, setChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
-  // Desktop, but no accent could be read: say so instead of a silent theme accent.
-  const unreadable = useDesktopAccentUnreadable() && choice === "desktop";
-  return (
-    <Row label={t("desktop.accent.label")} sub={t(unreadable ? "desktop.accent.unreadable" : "desktop.accent.sub")} invalid={unreadable}>
-      <select className="dk-select" aria-label={t("desktop.accent.label")} value={choice} onChange={(e) => setChoice(e.target.value as (typeof ACCENTS)[number])}>
-        {/* loop: HOT-PATH-OK — N = 2 accents per render */}
-        {ACCENTS.map((a) => (
-          <option key={a} value={a}>
-            {t(`desktop.accent.${a}`)}
-          </option>
-        ))}
-      </select>
-    </Row>
-  );
-}
-
-// The app's own "reduce motion" (also on when the system asks): no moving
-// background, pulsing, wobble or animated transitions.
-function ReduceMotionSetting() {
-  const { t } = useTranslation();
-  const [on, setOn] = useFlagPref(REDUCE_MOTION_KEY);
-  return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
-}
-
-// Joining the Development channel: before any dev update is offered (app or
-// dongle firmware), say what it means and what's in the newest dev build.
-// With automatic checks off it goes online only when its check button is pressed.
-export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: boolean; onJoin: () => void; onCancel: () => void }) {
-  const { t } = useTranslation();
-  const [preview, setPreview] = useState<DevChannelAnswer | "loading" | "ask">(automatic ? "loading" : "ask");
-  const [asked, setAsked] = useState(false);
-  const check = () => {
-    setPreview("loading");
-    setAsked(true);
-  };
-  // lifetime: OK — cleanup: drops a late preview (holds no resource)
-  useEffect(() => {
-    if (!automatic && !asked) return;
-    let live = true;
-    // error: SHOWN — desktop.channel.joinOffline (or the answer's problem: joinUnpublished, desktop.updateFeed.unsigned / .malformed)
-    window.desktop?.devChannelPreview(asked).then(
-      (p) => live && setPreview(p),
-      () => live && setPreview({ problem: "offline" }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [automatic, asked]);
-  // lifetime: OK — cleanup: removes the Escape listener (dialog closed / onCancel change)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
-    // lifetime: OK — removed in the effect cleanup
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
-  return (
-    <div className="dk-dialog-backdrop" onClick={onCancel}>
-      <section className="dk-card dk-dialog" role="dialog" aria-modal="true" aria-labelledby="dev-join-title" onClick={(e) => e.stopPropagation()}>
-        <h2 id="dev-join-title">{t("desktop.channel.joinTitle")}</h2>
-        <ul className="dk-review">
-          <li>{t("desktop.channel.joinNewer")}</li>
-          <li>{t("desktop.channel.joinBoth")}</li>
-          <li>{t("desktop.channel.joinBugs")}</li>
-          <li>{t("desktop.channel.joinBack")}</li>
-        </ul>
-        <h3>{t("desktop.channel.joinLatest")}</h3>
-        {preview === "ask" ? (
-          <div className="dk-row-btns">
-            <span className="dk-hint">{t("desktop.channel.joinCheckOff")}</span>
-            <button type="button" className="dk-btn" onClick={check}>
-              {t("desktop.channel.joinCheck")}
-            </button>
-          </div>
-        ) : preview === "loading" ? (
-          <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
-        ) : preview && "problem" in preview ? (
-          <p className="dk-hint">{t(preview.problem === "unpublished" ? "desktop.channel.joinUnpublished" : feedProblemKey(preview.problem, "desktop.channel.joinOffline"))}</p>
-        ) : preview ? (
-          <>
-            <p>{t("desktop.channel.joinVersions", { app: preview.app, firmware: preview.firmware ?? "—" })}</p>
-            <div className="dk-dialog-notes">{preview.notes ? <Markdown text={preview.notes} /> : <p className="dk-hint">{t("desktop.channel.joinNoNotes")}</p>}</div>
-            {preview.notesUrl && (
-              <p>
-                <a href={preview.notesUrl} target="_blank" rel="noreferrer">
-                  {t("desktop.channel.joinNotesLink")}
-                </a>
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="dk-hint">{t("desktop.channel.joinOffline")}</p>
-        )}
-        <div className="dk-row-btns">
-          <button type="button" className="dk-btn primary" onClick={onJoin}>
-            {t("desktop.channel.joinButton")}
-          </button>
-          <button type="button" className="dk-btn" onClick={onCancel} autoFocus>
-            {t("desktop.channel.stayButton")}
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-// Developer (Ctrl+Shift+D): preview any controller model and colorway. Only
-// in builds that include it (DS5_DEV_TOOLS=1 or X.Y.Z-dev.N), on any update
-// channel, right under the channel switch. A release never shows it.
-export function DeveloperSettings() {
-  const { t } = useTranslation();
-  const [onScreen] = useDevToolsShown();
-  const dev = useDevPreview();
-  const [updatePreview, setUpdatePreview] = useUpdatePreview();
-  const fakeSlots = useFakeSlots();
-  const [simulated] = useFlagPref(SIMULATED_KEY);
-  const [simCore1] = usePref<(typeof SIM_CORE1_STAGES)[number]>(SIM_CORE1_KEY, "", SIM_CORE1_STAGES);
-  if (!onScreen) return null;
-  const model = dev.model || "dualsense";
-  const codes = MODEL_COLORWAYS[model];
-  return (
-    <section className="dk-card">
-      <h2>{t("desktop.dev.title")}</h2>
-      <p className="dk-hint">{t("desktop.dev.hint")}</p>
-      <Row label={t("desktop.dev.model")}>
-        <select
-          className="dk-select"
-          aria-label={t("desktop.dev.model")}
-          value={dev.model}
-          onChange={(e) => {
-            const next = e.target.value as DevModel;
-            dev.setModel(next);
-            if (next && dev.colorway && !MODEL_COLORWAYS[next].includes(dev.colorway)) dev.setColorway("");
-          }}
-        >
-          <option value="">{t("desktop.dev.real")}</option>
-          <option value="dualsense">DualSense</option>
-          <option value="edge">DualSense Edge</option>
-        </select>
-      </Row>
-      <Row label={t("desktop.dev.colorway")}>
-        <select className="dk-select" aria-label={t("desktop.dev.colorway")} value={dev.colorway} onChange={(e) => dev.setColorway(e.target.value)}>
-          <option value="">{t("desktop.dev.real")}</option>
-          {/* loop: HOT-PATH-OK — N ≈ 40 colorway codes, Developer card only (dev builds) */}
-          {codes.map((code) => (
-            <option key={code} value={code}>
-              {COLORWAYS[code].name}
-              {COLORWAYS[code].colors ? "" : ` (${t("desktop.dev.noArt")})`}
-            </option>
-          ))}
-        </select>
-      </Row>
-      <Toggle
-        label={t("desktop.dev.simulated")}
-        sub={t("desktop.dev.simulatedHint")}
-        value={simulated}
-        onChange={(on) => {
-          writePref(SIMULATED_KEY, on ? "1" : "0");
-          location.reload(); // reconnect to the simulation or the real dongle
-        }}
-      />
-      {simulated && (
-        <Row label={t("desktop.dev.simCore1")} sub={t("desktop.dev.simCore1Hint")}>
-          <select
-            className="dk-select"
-            aria-label={t("desktop.dev.simCore1")}
-            value={simCore1}
-            onChange={(e) => {
-              writePref(SIM_CORE1_KEY, e.target.value);
-              location.reload(); // the simulated dongle takes it when it connects
-            }}
-          >
-            {/* loop: HOT-PATH-OK — N = 10 stages, Developer card only */}
-            {SIM_CORE1_STAGES.map((v) => (
-              <option key={v} value={v}>
-                {v === "" ? t("desktop.dev.simCore1Runs") : t("desktop.dev.simCore1Stage", { stage: v, step: t(`desktop.diag.core1Step.${v}`) })}
-              </option>
-            ))}
-          </select>
-        </Row>
-      )}
-      <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
-      <FakeGames />
-      <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
-        <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
-          {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}
-          {UPDATE_PREVIEWS.map((p) => (
-            <option key={p} value={p}>
-              {t(`desktop.dev.updatesState.${p || "off"}`)}
-            </option>
-          ))}
-        </select>
-      </Row>
-      <div className="dk-row-btns">
-        <button
-          type="button"
-          className="dk-btn"
-          disabled={!dev.active}
-          onClick={() => {
-            dev.setModel("");
-            dev.setColorway("");
-          }}
-        >
-          {t("desktop.dev.reset")}
-        </button>
-      </div>
-      <h3 className="dk-subhead">{t("desktop.dev.hdrTitle")}</h3>
-      <HdrTest />
-    </section>
-  );
-}
-
-function KnobSlider({ k }: { k: Knob }) {
-  const { t } = useTranslation();
-  const [value, setValue] = useKnob(k);
-  return <Slider label={t(`desktop.knobs.${k.key}`)} sub={t(`desktop.knobs.${k.key}Sub`)} value={value} min={k.min} max={k.max} step={k.step} unit={k.unit} onChange={setValue} />;
 }

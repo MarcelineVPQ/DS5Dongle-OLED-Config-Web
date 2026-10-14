@@ -18,7 +18,7 @@ import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { Manifest } from "../../src/update/manifest";
 import { useFirmwareUpdate, type FirmwareUpdate } from "../../src/desktop/useUpdates";
 import SetupScreen from "../../src/desktop/SetupScreen";
-import { DevChannelDialog } from "../../src/desktop/live/PartPanel";
+import { DevChannelDialog } from "../../src/desktop/pages/AppSettingsPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

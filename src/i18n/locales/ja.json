@@ -704,7 +704,6 @@
       "next": "次へ",
       "finishButton": "はじめよう",
       "waiting": "操作を待っています…",
-      "helpTitle": "ヘルプ",
       "helpHint": "初回起動時のかんたんツアー。",
       "replay": "ツアーをもう一度見る",
       "welcome": {
@@ -1145,9 +1144,10 @@
       "startup": "起動とウィンドウ",
       "privacy": "プライバシー",
       "updates": "アップデート",
-      "advanced": "詳細",
+      "graphics": "グラフィックス",
       "reduceMotion": "視差効果を減らす",
-      "reduceMotionSub": "動く背景、点滅、アニメーションをなくします（システムで設定している場合もオン）"
+      "reduceMotionSub": "動く背景、点滅、アニメーションをなくします（システムで設定している場合もオン）",
+      "sub": "この PC のみ · 変更するとすぐ保存"
     },
     "dev": {
       "title": "開発者",
@@ -1443,7 +1443,8 @@
     },
     "hdr": {
       "label": "HDR ライティング（実験的）",
-      "sub": "HDR ディスプレイでライトバーが白より明るく光り、実物の LED のようになります。ハードウェアアクセラレーションが必要です。再起動後に反映されます。"
+      "sub": "HDR ディスプレイでライトバーが白より明るく光り、実物の LED のようになります。ハードウェアアクセラレーションが必要です。再起動後に反映されます。",
+      "short": "HDR ライティング"
     },
     "grips": {
       "link": "左右を連動",
@@ -1672,6 +1673,25 @@
       "controllerConnected": "コントローラーが接続されました",
       "controllerDisconnected": "コントローラーの接続が切れました",
       "profileOff": "{{title}} のプロファイルをオフにしました。通常の設定に戻りました"
+    },
+    "accordion": {
+      "keepOpen": "{{section}}を開いたままにする",
+      "pin": "固定：開いたまま",
+      "pinned": "固定中：開いたまま",
+      "showPanel": "パネルを表示",
+      "hidePanel": "パネルを隠す",
+      "on": "{{name}} オン",
+      "off": "{{name}} オフ",
+      "value": "{{name}}：{{value}}",
+      "allOff": "すべてオフ",
+      "updatesAuto": "自動でインストール",
+      "updatesAsk": "インストール前に確認",
+      "updatesOff": "自動確認なし",
+      "launchersRead": "ゲームがランチャーを読み取れます",
+      "launchersNotRead": "ゲームはランチャーを読み取りません",
+      "hidden_other": "{{count}} 件非表示",
+      "devOnly": "開発版のみ",
+      "chapters_other": "{{count}} 章"
     }
   },
   "ad": {

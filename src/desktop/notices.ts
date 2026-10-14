@@ -98,6 +98,7 @@ export interface NoticeTask {
   text: string; // the dot's tooltip and the Dismissed notices row
   key?: string; // set when a notice for it can be dismissed
   count?: number; // a number on the dot (Games: changes waiting); otherwise a plain dot
+  section?: string; // the section on its page that holds it (accordion/sections.ts): rail dots and Go to open it
 }
 
 export interface Reminder {
@@ -119,5 +120,5 @@ export function railReminders(tasks: readonly NoticeTask[]): Partial<Record<Rail
 
 // The app's open tasks and how to get to each one's place (DesktopApp
 // provides it; App settings → Dismissed notices reads it).
-export const NoticeTasksContext = createContext<{ tasks: readonly NoticeTask[]; goTo: (place: RailItem) => void }>({ tasks: [], goTo: () => undefined });
+export const NoticeTasksContext = createContext<{ tasks: readonly NoticeTask[]; goTo: (place: RailItem, section?: string) => void }>({ tasks: [], goTo: () => undefined });
 export const useNoticeTasks = () => useContext(NoticeTasksContext);

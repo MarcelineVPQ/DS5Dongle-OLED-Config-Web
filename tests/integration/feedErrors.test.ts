@@ -17,7 +17,7 @@ import { FeedCache, FeedError, devChannelPreview } from "../../electron/main/upd
 import { firmwareFeed, latestFirmware } from "../../electron/main/firmwareSource";
 import SetupScreen from "../../src/desktop/SetupScreen";
 import FirmwarePage from "../../src/desktop/pages/FirmwarePage";
-import { CheckNow, DevChannelDialog } from "../../src/desktop/live/PartPanel";
+import { CheckNow, DevChannelDialog } from "../../src/desktop/pages/AppSettingsPage";
 import GamesPage from "../../src/desktop/pages/GamesPage";
 import { GamesService } from "../../electron/main/games/service";
 import { fakeBridge } from "../support/gamePage";
