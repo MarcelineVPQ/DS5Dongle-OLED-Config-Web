@@ -2,7 +2,7 @@
 // stick reaches against a perfect circle, raw or with the calibration above
 // applied) and a drift test (where the sticks sit and wander while nobody
 // touches them). The math is in stickTests.ts.
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import { correctStick, type StickCal } from "../../protocol/calibration";
@@ -63,6 +63,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
 
   // Drift: sample the resting sticks for DRIFT_MS.
   const [drift, setDrift] = useState<"idle" | "running" | "short" | [DriftSample[], DriftSample[]]>("idle");
+  // The results of a finished test: its samples don't change, so worked out
+  // once, not on every live input frame (~30 a second).
+  const driftResults = useMemo(() => (typeof drift === "object" ? ([driftStats(drift[0], sticks[0]), driftStats(drift[1], sticks[1])] as const) : null), [drift, sticks]);
   const samples = useRef<[DriftSample[], DriftSample[]]>([[], []]);
   useEffect(() => {
     if (drift !== "running") return;
@@ -161,9 +164,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
         )}
         {drift === "short" && <p className="dk-bad">{t("desktop.calib.noInput")}</p>}
         {typeof drift === "object" &&
-          // loop: FIX-HOT-PATH — drift results recomputed every live frame though the samples are frozen
+          // loop: HOT-PATH-OK — N = 2 sticks; the stats are memoized on the finished samples
           SIDES.map((side, i) => {
-            const d = driftStats(drift[i], sticks[i]);
+            const d = driftResults?.[i];
             if (!d) return null;
             return (
               <div className="stest-drift" key={side}>
@@ -229,14 +232,15 @@ function CirclePlot({ outline, dot }: { outline: Outline; dot: [number, number] 
 }
 
 // X (solid) and Y (dashed) offset from the center over the test's time.
-function DriftPlot({ samples }: { samples: DriftSample[] }) {
+// memo(): its samples are fixed once the test ends.
+const DriftPlot = memo(function DriftPlot({ samples }: { samples: DriftSample[] }) {
   const W = 200;
   const H = 50;
-  // loop: FIX-HOT-PATH — ~300 frozen samples remapped every live frame
+  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
   const pts = samples.map((s) => ({ t: s.t, x: normAxis(s.x), y: normAxis(s.y) }));
-  // loop: FIX-HOT-PATH — ~300 frozen samples scanned every live frame
+  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
   const scale = Math.max(0.05, ...pts.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
-  // loop: FIX-HOT-PATH — two ~300-point path strings rebuilt every live frame
+  // loop: HOT-PATH-OK — two ~300-point paths; memo()ed, once per finished test
   const line = (key: "x" | "y") => pts.map((p, i) => `${i ? "L" : "M"}${((p.t / DRIFT_MS) * W).toFixed(1)} ${(H / 2 - (p[key] / scale) * (H / 2 - 2)).toFixed(1)}`).join(" ");
   return (
     <figure className="stest-driftfig">
@@ -248,4 +252,4 @@ function DriftPlot({ samples }: { samples: DriftSample[] }) {
       <figcaption className="dk-hint">±{(scale * 100).toFixed(1)}%</figcaption>
     </figure>
   );
-}
+});

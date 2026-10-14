@@ -92,6 +92,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   // The art's own transform per stick group; live movement is applied on top of it.
   const baseTransform = useRef(new Map<PartId, string>());
   const touchLayer = useRef<SVGGElement | null>(null);
+  // Looked up once at mount, not on every live frame: the triggers' fill
+  // gradient stops (and the value they show now), and the touchpad's box.
+  const triggerStops = useRef<Record<"l2" | "r2", Element[]>>({ l2: [], r2: [] });
+  const triggerShown = useRef<Record<"l2" | "r2", number>>({ l2: -1, r2: -1 });
+  const padBox = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const marks = useRef<HTMLDivElement>(null);
 
   // Index the parts once and make each one a keyboard-reachable button.
@@ -131,6 +136,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     layer.setAttribute("class", "touches");
     root.appendChild(layer);
     touchLayer.current = layer;
+    // loop: NOT-WORTH — N = 2 triggers, once per mount
+    for (const side of ["l2", "r2"] as const) triggerStops.current[side] = [...root.querySelectorAll(`#ctl-${side}-fill [data-edge]`)];
+    // loop: NOT-WORTH — N = 4 numbers, once per mount
+    const [bx, by, bw, bh] = (parts.current.get("touchpad")?.getAttribute("data-box") ?? "0 0 0 0").split(" ").map(Number);
+    padBox.current = { x: bx, y: by, w: bw, h: bh };
   }, []);
 
   // The mic / headset marks sit under the mute button, just below the shell's
@@ -240,9 +250,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       ["l2", input?.triggerLeft ?? 0],
       ["r2", input?.triggerRight ?? 0],
     ] as const) {
+      if (triggerShown.current[side] === value) continue;
+      triggerShown.current[side] = value;
       const offset = String(value / 255);
-      // loop: FIX-HOT-PATH — querySelectorAll for the trigger stops on every live frame
-      for (const stop of root.querySelectorAll(`#ctl-${side}-fill [data-edge]`)) stop.setAttribute("offset", offset);
+      // loop: HOT-PATH-OK — N = 2 stops per trigger, looked up at mount; only when the value changed
+      for (const stop of triggerStops.current[side]) stop.setAttribute("offset", offset);
     }
 
     // loop: HOT-PATH-OK — N = 2 sticks per live frame
@@ -259,11 +271,8 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     }
 
     const layer = touchLayer.current;
-    const pad = parts.current.get("touchpad");
-    if (layer && pad) {
-      // loop: FIX-HOT-PATH — parses the touchpad data-box string (split+map) every live frame
-      const [bx, by, bw, bh] = (pad.getAttribute("data-box") ?? "0 0 0 0").split(" ").map(Number);
-      const box = { x: bx, y: by, w: bw, h: bh };
+    const box = padBox.current;
+    if (layer && box) {
       // loop: HOT-PATH-OK — N ≤ 2 fingers per live frame
       const dots = (input?.fingers ?? []).filter((f) => f.touching);
       // loop: HOT-PATH-OK — N ≤ 2 touch dots removed

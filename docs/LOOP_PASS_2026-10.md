@@ -1,6 +1,6 @@
 # Loop pass: every loop that waits or sits on a hot path, with a verdict
 
-_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. No behaviour has changed yet. The only code changes are the verdict comments, one per loop line. The owner picks which batches to do._
+_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. The owner picks which batches to do. **Batch 1 is done** (dev.10, see below). Batches 2-4 are still proposals. The app tables were re-run after master's Games redesign was merged in (507 loops) and again after batch 1 (508)._
 
 ## How the list was made
 
@@ -35,25 +35,48 @@ The trigger column shows which hot root reached the loop: `render`, `effect`, `r
 - **Nesting**.
 - Whether the body touches flash.
 
-**Every row has exactly one verdict**, written as a comment on the loop (`// loop: VERDICT — reason`). The gates fail on a listed loop without one: `npm run gates` and CI here, and `build.yml` / `release.yml` in the firmware. Line numbers are as of this commit; if code moves, the function name finds the loop.
+**Every row has exactly one verdict**, written as a comment on the loop (`// loop: VERDICT — reason`). The gates fail on a listed loop without one: `npm run gates` and CI here, and `build.yml` / `release.yml` in the firmware. Line numbers are as of the batch 1 commit; if code moves, the function name finds the loop.
 
 | Verdict | App | Firmware | Meaning |
 |---|---|---|---|
 | PARALLELIZE | 7 | 0 | Independent async work per step. Run it with a bound. |
 | BATCH | 5 | 0 | One call, read or index instead of N. |
-| SERIAL-REQUIRED | 16 | 3 | Must stay in order, for the reason given: one HID session, PICOBOOT session order, a deadline, launcher order, stream order, or a data dependency. |
-| HOT-PATH-OK | 312 | 55 | Runs per frame, poll or pass, but N is small and bounded (N is stated). |
-| FIX-HOT-PATH | 28 | 1 | Per-frame or per-poll work that shouldn't be there (allocation, sort, O(n²), DOM queries, CPU pixel work, a blocking read on core0's loop). |
-| NOT-WORTH | 123 | 69 | Tiny N, or startup-only / rare. |
-| **Total** | **491** | **128** | |
+| SERIAL-REQUIRED | 20 | 3 | Must stay in order, for the reason given: one HID session, PICOBOOT session order, a deadline, launcher order, stream order, or a data dependency. |
+| HOT-PATH-OK | 340 | 55 | Runs per frame, poll or pass, but N is small and bounded (N is stated). |
+| FIX-HOT-PATH | 6 | 1 | Per-frame or per-poll work that shouldn't be there (allocation, sort, O(n²), DOM queries, CPU pixel work, a blocking read on core0's loop). |
+| NOT-WORTH | 130 | 69 | Tiny N, or startup-only / rare. |
+| **Total** | **508** | **128** | |
 
-Where the app rows come from (a row can have more than one hot root): render 242, effect 24, library scan 105, poll 39, WebUSB connect/disconnect handlers 32 (they reach the same client code as the polls), interval 32, rAF 16, audio worklet 1. Another 45 rows are only nested or only await.
+When first listed (491 app rows: PARALLELIZE 7, BATCH 5, SERIAL-REQUIRED 16, HOT-PATH-OK 312, FIX-HOT-PATH 28, NOT-WORTH 123), the app rows came from these hot roots (a row can have more than one): render 242, effect 24, library scan 105, poll 39, WebUSB connect/disconnect handlers 32 (they reach the same client code as the polls), interval 32, rAF 16, audio worklet 1. Another 45 rows are only nested or only await.
 
 ## The work: proposed changes in 4 batches (biggest effect first)
 
-Nothing below is done yet. Every change keeps the current behaviour and needs a test that pins it.
+Every change keeps the current behaviour and needs a test that pins it.
 
 ### Batch 1: every live frame on the controller view (~30 Hz)
+
+**DONE for dev.10** (branch `loop-pass`). What changed:
+
+- `useRemap` returns one object per change (`useMemo`), so `AllButtonsList` and `SavedLayouts` (`memo`) skip live frames.
+- Each layout's game count is worked out once per library change, and the layouts are sorted once per library change.
+- Stick-curve nodes are built once per curve object (a `WeakMap`), and the curve graph's 65-point path is memoized on the curve.
+- A finished drift test's stats are worked out once (`useMemo`), and `DriftPlot` is `memo`.
+- The drawing looks up the trigger gradient stops and the touchpad box once at mount, and writes a trigger's stops only when its value changed.
+
+`tests/integration/liveFrameWork.test.ts` counts the work across 30 live frames for each of these, and it fails on the old code. The rows' verdicts are now HOT-PATH-OK (Change: "Done in batch 1").
+
+**Measured** on an isolated copy: a dev build, the simulated board, Xvfb with software rendering, no USB, its own home folder. Each scenario ran for 20 s, two runs per build, averaged.
+
+| View | Renderer script time before → after (ms per s) | Whole-app CPU before → after (% of one core) |
+|---|---|---|
+| Controller, overview | 52.3 → 51.3 | 56.2 → 55.9 |
+| Controller, Buttons list | 64.8 → 53.2 (−18%) | 61.6 → 60.5 |
+| Controller, calibration (curve graphs) | 53.0 → 54.3 | 57.4 → 61.1 |
+| Calibration, after a drift test | 84.4 → 74.3 (−12%) | 72.2 → 71.1 |
+
+The script time drops where the removed work lived: the Buttons list and the drift results. Whole-app CPU on software rendering is dominated by painting and compositing; the difference there is within run-to-run noise (±3 points), and the calibration row's rise is noise too. On a real GPU the painting share is smaller.
+
+The original batch:
 
 `ControllerView` re-renders on each live input frame (~30 Hz) whenever the window is visible and a controller is connected. `PartPanel` and its sections aren't memoized, so whatever panel is open re-renders with it. These run all the time someone looks at the app.
 
@@ -82,17 +105,17 @@ The scan runs at startup when Games is on, on a rescan, and after each apply. It
 
 | Location | Function | Runs | Why | Change |
 |---|---|---|---|---|
-| `electron/main/games/vdf.ts:111`, `games.ts:340` | `getKey` from `scanSteam` | 3 lookups × Steam games × thousands of `localconfig` keys / per scan | Each lookup is a linear `.find` over localconfig's `apps` node. Probably the scan's largest CPU cost. | Index `apps` and `CompatToolMapping` into a lowercase `Map` once per scan. |
+| `electron/main/games/vdf.ts:111`, `games.ts:341` | `getKey` from `scanSteam` | 3 lookups × Steam games × thousands of `localconfig` keys / per scan | Each lookup is a linear `.find` over localconfig's `apps` node. Probably the scan's largest CPU cost. | Index `apps` and `CompatToolMapping` into a lowercase `Map` once per scan. |
 | `electron/main/games/steam.ts:132` | `steamAppManifests` | Steam games, twice / per scan | One synchronous read and VDF parse per manifest, done again by `gameDetails`. | Read with `fs.promises` under a bound (~8), and share one read between the list and the details. |
 | `electron/main/games/heroic.ts:118` | `listHeroicGames` | Heroic games / per scan | One synchronous `GamesConfig` JSON read per game. | Bounded (~8) async reads before building the list. |
 | `electron/main/games/lutris.ts:117` | `listLutrisGames` | Lutris games / per scan | One synchronous YAML read and parse per game. | Bounded (~8) async reads, then parse. |
-| `electron/main/games/games.ts:511, 680`; `proton.ts:106` | `scanHeroic`, `scanLutris`, `buildVersion` | Heroic + Lutris games / per scan | The same Proton build's `version` file is re-read for every game that uses it. | Memoize `buildVersion` per scan: one read per build. |
+| `electron/main/games/games.ts:512, 681`; `proton.ts:106` | `scanHeroic`, `scanLutris`, `buildVersion` | Heroic + Lutris games / per scan | The same Proton build's `version` file is re-read for every game that uses it. | Memoize `buildVersion` per scan: one read per build. |
 
 ### Batch 4: lists and effects off the frame path
 
 | Location | Function | Runs | Why | Change |
 |---|---|---|---|---|
-| `src/desktop/library/GameLibrary.tsx:270` | `GameLibrary` | hundreds of tiles / per library render, even when a game page hides the grid | Every tile re-renders on every library render. | `React.memo` `GameTile` with a stable `onOpen`, or don't render the grid while a game page covers it. |
+| `src/desktop/library/GameLibrary.tsx:266` | `GameLibrary` | hundreds of tiles / per library render, even when a game page hides the grid | Every tile re-renders on every library render. | `React.memo` `GameTile` with a stable `onOpen`, or don't render the grid while a game page covers it. |
 | `src/desktop/dongle/DongleConsole.tsx:107` | `DongleConsole` | ≤ 200 rows / 10 per s while the log tab is shown | Re-rendered on each OLED mirror frame, with a `toLocaleTimeString` per row. | Format the time when the line is added; memo the list. |
 | `src/desktop/live/HdrGlow.tsx:91` | `buildMask` | ~1M pixels / every rAF during a window drag (HDR only) | The full-size mask is rebuilt on every resize frame. | Rebuild once the resize settles (~150 ms). |
 | `src/desktop/live/SwirlField.tsx:176, 178, 182` | CPU renderer `draw` | 128 × 72 px in JS / 12.5 Hz when there's no GPU (already paused while hidden) | Pixel work on the CPU, against the lean rule. **Owner decision.** | Without a GPU: one still frame (or ≤ 2 fps); animate only on the GPU path. |
@@ -112,7 +135,7 @@ The scan runs at startup when Games is on, on a rescan, and after each apply. It
 
 ### App (`MarcelineVPQ/DS5Dongle-OLED-Config-Web`)
 
-Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
+Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the Why column states it; rows added by the merge or batch 1).
 
 #### electron/main/download.ts
 
@@ -139,8 +162,8 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 238 | `list` | .map | nested | **NOT-WORTH** | ≤ 10 files x ≤ KEEP sets / History open | files per backup set, a handful | - |
-| 274 | `prune` | for-of | nested | **NOT-WORTH** | ≤ 10 files x ≤ KEEP sets / per apply | files per backup set, pruning after a write | - |
+| 253 | `list` | .map | nested | **NOT-WORTH** | ≤ 10 files x ≤ KEEP sets / History open | files per backup set, a handful | - |
+| 289 | `prune` | for-of | nested | **NOT-WORTH** | ≤ 10 files x ≤ KEEP sets / per apply | files per backup set, pruning after a write | - |
 
 #### electron/main/games/details.ts
 
@@ -153,37 +176,38 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 93 | `sdlVarsIn` | .map | hot:scan | **HOT-PATH-OK** | ≤ 5 / per game per scan | env assignments in one launch-options line | - |
-| 93 | `sdlVarsIn` | .filter | hot:scan | **HOT-PATH-OK** | ≤ 5 / per game per scan | env assignments in one launch-options line | - |
-| 113 | `withEnvVars` | .reduce | hot:scan | **NOT-WORTH** | ≤ 2 / per fix | 1-2 variables, only when a fix is built | - |
-| 115 | `withEnvVars` | .map | hot:scan | **NOT-WORTH** | ≤ 2 / per fix | 1-2 variables, only when a fix is built | - |
-| 172 | `hasOldEnv` | .some | hot:scan | **NOT-WORTH** | ≤ 4 / per HDR game per scan | fixed list of old HDR variables | - |
-| 278 | `fix` | .flatMap | hot:scan | **NOT-WORTH** | 1-3 / per fix | edits of one fix | - |
-| 306 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs found | - |
-| 337 | `scanSteam` | .map | hot:scan | **HOT-PATH-OK** | Steam games (≤ hundreds) / per scan | app ids for the appinfo lookup, one array | - |
-| 340 | `scanSteam` | for-of | hot:scan | **BATCH** | Steam games x 1000s of keys / per scan | per game 3 linear getString lookups in localconfig apps (1000s of keys) | index localconfig apps and CompatToolMapping into a lowercase Map once per scan instead of getKey's linear find per game |
-| 493 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Heroic installs found | - |
-| 511 | `scanHeroic` | for-of | hot:scan | **BATCH** | Heroic games / per scan | per game reads the runner's version file again (buildHonoursPreferSdl) | memoize buildVersion per (dir, build) for the scan: one read per build instead of one per game |
-| 516 | `scanHeroic` | .map | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
-| 516 | `scanHeroic` | .filter | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
-| 533 | `scanHeroic` | .some | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
-| 582 | `scanHeroic` | .map | hot:scan nested | **NOT-WORTH** | ≤ 10 / per HDR game per scan | env entries, HDR games only | - |
-| 648 | `scan` | .flatMap | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs, a readdir each | - |
-| 650 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Lutris installs found | - |
-| 660 | `scanLutris` | .map | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs | - |
-| 680 | `scanLutris` | for-of | hot:scan | **BATCH** | Lutris games / per scan | per game reads the runner's version file again (buildHonoursPreferSdl) | share the per-scan buildVersion memo with the Heroic loop |
-| 695 | `scanLutris` | .some | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Lutris game per scan | env entries of one game | - |
-| 779 | `scan` | for-of | hot:scan | **NOT-WORTH** | 2 / per scan | two stores, Windows only | - |
-| 784 | `scan` | for-of | hot:scan nested | **HOT-PATH-OK** | ≤ hundreds / per scan on Windows | plain object per store game, no I/O | - |
-| 806 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
-| 806 | `scan` | .filter | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
-| 825 | `scan` | for-of | hot:scan | **NOT-WORTH** | 0-2 / per scan | DualSense audio cards | - |
-| 848 | `scan` | .some | hot:scan | **NOT-WORTH** | 0-2 / per scan | DualSense audio cards | - |
-| 850 | `scan` | .map | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
-| 927 | `writeChosen` | for-of | nested | **NOT-WORTH** | ≤ tens / per apply | edits of the chosen fixes, in memory | - |
-| 934 | `writeChosen` | .map | nested | **NOT-WORTH** | ≤ tens / per apply | edited files, in memory | - |
-| 934 | `writeChosen` | .some | nested | **NOT-WORTH** | ≤ tens / per apply | edited files, in memory | - |
-| 955 | `writeChosen` | for-of | await | **SERIAL-REQUIRED** | ≤ 2 / per apply | process order: WirePlumber restart and profile switch must not overlap | - |
+| 94 | `sdlVarsIn` | .map | hot:scan | **HOT-PATH-OK** | ≤ 5 / per game per scan | env assignments in one launch-options line | - |
+| 94 | `sdlVarsIn` | .filter | hot:scan | **HOT-PATH-OK** | ≤ 5 / per game per scan | env assignments in one launch-options line | - |
+| 114 | `withEnvVars` | .reduce | hot:scan | **NOT-WORTH** | ≤ 2 / per fix | 1-2 variables, only when a fix is built | - |
+| 116 | `withEnvVars` | .map | hot:scan | **NOT-WORTH** | ≤ 2 / per fix | 1-2 variables, only when a fix is built | - |
+| 173 | `hasOldEnv` | .some | hot:scan | **NOT-WORTH** | ≤ 4 / per HDR game per scan | fixed list of old HDR variables | - |
+| 279 | `fix` | .flatMap | hot:scan | **NOT-WORTH** | 1-3 / per fix | edits of one fix | - |
+| 307 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs found | - |
+| 338 | `scanSteam` | .map | hot:scan | **HOT-PATH-OK** | Steam games (≤ hundreds) / per scan | app ids for the appinfo lookup, one array | - |
+| 341 | `scanSteam` | for-of | hot:scan | **BATCH** | Steam games x 1000s of keys / per scan | per game 3 linear getString lookups in localconfig apps (1000s of keys) | index localconfig apps and CompatToolMapping into a lowercase Map once per scan instead of getKey's linear find per game |
+| 494 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Heroic installs found | - |
+| 512 | `scanHeroic` | for-of | hot:scan | **BATCH** | Heroic games / per scan | per game reads the runner's version file again (buildHonoursPreferSdl) | memoize buildVersion per (dir, build) for the scan: one read per build instead of one per game |
+| 517 | `scanHeroic` | .map | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
+| 517 | `scanHeroic` | .filter | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
+| 534 | `scanHeroic` | .some | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
+| 583 | `scanHeroic` | .map | hot:scan nested | **NOT-WORTH** | ≤ 10 / per HDR game per scan | env entries, HDR games only | - |
+| 649 | `scan` | .flatMap | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs, a readdir each | - |
+| 651 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 1-2 / per scan | Lutris installs found | - |
+| 661 | `scanLutris` | .map | hot:scan | **NOT-WORTH** | 1-2 / per scan | Steam installs | - |
+| 681 | `scanLutris` | for-of | hot:scan | **BATCH** | Lutris games / per scan | per game reads the runner's version file again (buildHonoursPreferSdl) | share the per-scan buildVersion memo with the Heroic loop |
+| 696 | `scanLutris` | .some | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Lutris game per scan | env entries of one game | - |
+| 780 | `scan` | for-of | hot:scan | **NOT-WORTH** | 2 / per scan | two stores, Windows only | - |
+| 785 | `scan` | for-of | hot:scan nested | **HOT-PATH-OK** | ≤ hundreds / per scan on Windows | plain object per store game, no I/O | - |
+| 807 | `scan` | .forEach | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
+| 807 | `scan` | .filter | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
+| 826 | `scan` | for-of | hot:scan | **NOT-WORTH** | 0-2 / per scan | DualSense audio cards | - |
+| 849 | `scan` | for-of | hot:scan | **NOT-WORTH** | - | connected DualSense sound cards, 0-2; once per scan | - |
+| 857 | `scan` | .some | hot:scan | **NOT-WORTH** | 0-2 / per scan | DualSense audio cards | - |
+| 859 | `scan` | .map | hot:scan | **NOT-WORTH** | 0-2 / per scan | PipeWire rule files found | - |
+| 937 | `writeChosen` | for-of | nested | **NOT-WORTH** | ≤ tens / per apply | edits of the chosen fixes, in memory | - |
+| 944 | `writeChosen` | .map | nested | **NOT-WORTH** | ≤ 5 / per apply | edited files, in memory | - |
+| 944 | `writeChosen` | .some | nested | **NOT-WORTH** | ≤ 5 / per apply | edited files, in memory | - |
+| 968 | `writeChosen` | for-of | await | **SERIAL-REQUIRED** | ≤ 2 / per apply | process order: WirePlumber restart and profile switch must not overlap | - |
 
 #### electron/main/games/hdr.ts
 
@@ -206,9 +230,9 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 100 | `listHeroicGames` | for-of | hot:scan | **HOT-PATH-OK** | ≤ thousands / per scan | Amazon library entries, in memory | - |
 | 106 | `listHeroicGames` | for-of | hot:scan | **HOT-PATH-OK** | ≤ hundreds / per scan | installed Amazon ids, Map lookups | - |
 | 110 | `listHeroicGames` | for-of | hot:scan | **HOT-PATH-OK** | ≤ tens / per scan | sideloaded apps, in memory | - |
-| 118 | `listHeroicGames` | .sort | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | read the GamesConfig files with fs.promises under a bound (~8) before building the list |
-| 118 | `listHeroicGames` | .map | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | read the GamesConfig files with fs.promises under a bound (~8) before building the list |
-| 118 | `listHeroicGames` | .filter | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | read the GamesConfig files with fs.promises under a bound (~8) before building the list |
+| 118 | `listHeroicGames` | .sort | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | same change as the .map on this line |
+| 118 | `listHeroicGames` | .map | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | same change as the .map on this line |
+| 118 | `listHeroicGames` | .filter | hot:scan | **PARALLELIZE** | Heroic games / per scan | one sync GamesConfig JSON read per game blocks the main process | same change as the .map on this line |
 | 125 | `listHeroicGames` | .filter | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
 | 125 | `listHeroicGames` | .map | hot:scan nested | **HOT-PATH-OK** | ≤ 10 / per Heroic game per scan | env entries of one game | - |
 
@@ -220,9 +244,9 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 65 | `systemEnv` | .map | hot:scan | **HOT-PATH-OK** | ≤ 10 / per Lutris game per scan | env entries of one game | - |
 | 109 | `listLutrisGames` | .map | hot:scan | **NOT-WORTH** | rare | yml fallback only when pga.db can't be read | - |
 | 109 | `listLutrisGames` | .filter | hot:scan | **NOT-WORTH** | rare | yml fallback only when pga.db can't be read | - |
-| 117 | `listLutrisGames` | .sort | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | read the game yml files with fs.promises under a bound (~8), then parse |
-| 117 | `listLutrisGames` | .map | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | read the game yml files with fs.promises under a bound (~8), then parse |
-| 117 | `listLutrisGames` | .filter | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | read the game yml files with fs.promises under a bound (~8), then parse |
+| 117 | `listLutrisGames` | .sort | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | same change as the .map on this line |
+| 117 | `listLutrisGames` | .map | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | same change as the .map on this line |
+| 117 | `listLutrisGames` | .filter | hot:scan | **PARALLELIZE** | Lutris games / per scan | one sync YAML read and parse per game blocks the main process | same change as the .map on this line |
 | 130 | `lutrisWineBuilds` | .filter | hot:scan | **NOT-WORTH** | ≤ 20 / per scan | Wine/Proton builds in Lutris' runner folder, 2 stats each | - |
 
 #### electron/main/games/processes.ts
@@ -271,7 +295,7 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 191 | `detectRunning` | .find | hot:interval nested | **HOT-PATH-OK** | ≤ hundreds / per tick while a game runs | library games, only for a process with a Steam id | - |
 | 196 | `detectRunning` | .find | hot:interval nested | **HOT-PATH-OK** | ≤ hundreds / per tick while a game runs | library games, only for a process with HEROIC_APP_NAME | - |
 | 201 | `detectRunning` | .filter | hot:interval | **HOT-PATH-OK** | ≤ hundreds / every 2 s with Games on | one filtered copy of the library per tick, no I/O | - |
-| 203 | `detectRunning` | for-of | hot:interval | **HOT-PATH-OK** | ≤ tens / every 2 s with Games on | candidate processes, skips non-Wine ones first | - |
+| 203 | `detectRunning` | for-of | hot:interval | **HOT-PATH-OK** | ≤ tens / every 2 s (3 s Windows), Games on | candidate processes, skips non-Wine ones first | - |
 | 205 | `detectRunning` | .some | hot:interval nested | **HOT-PATH-OK** | ≤ 10 / per process per tick | args of one process | - |
 | 207 | `detectRunning` | for-of | hot:interval nested | **HOT-PATH-OK** | ≤ hundreds x Wine procs / per tick | games with a folder, only for Wine/exe processes | - |
 | 209 | `detectRunning` | .some | hot:interval nested | **HOT-PATH-OK** | ≤ 10 / per game per Wine proc | args of one Wine process, string prefix checks | - |
@@ -283,15 +307,17 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 235 | `schemeHandlerExec` | for-of | await | **SERIAL-REQUIRED** | ≤ 5 folders / per Play click | data dependency: the first XDG folder with the entry wins | - |
+| 250 | `schemeHandlerExec` | for-of | await | **SERIAL-REQUIRED** | ≤ 5 folders / per Play click | data dependency: the first XDG folder with the entry wins | - |
 
 #### electron/main/games/service.ts
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 149 | `fixes` | .map | nested | **NOT-WORTH** | 1-3 / per fix per scan | files of one fix | - |
-| 266 | `listBackups` | .map | nested | **NOT-WORTH** | ≤ 10 / History open | files of one backup set | - |
-| 294 | `installLatestProton > exclusive(cb)` | .every | nested | **NOT-WORTH** | 1-2 / per Proton install | Steam installs | - |
+| 152 | `fixes` | .map | nested | **NOT-WORTH** | 1-3 / per fix per scan | files of one fix | - |
+| 262 | `undo > exclusive(cb)` | .some | nested | **NOT-WORTH** | - | mixer changes x cards, a few each; once per Undo | - |
+| 271 | `undo > exclusive(cb)` | for-of | await | **SERIAL-REQUIRED** | - | ALSA order: one card's restore after another, ≤ 2 cards; per Undo | - |
+| 285 | `listBackups` | .map | nested | **NOT-WORTH** | ≤ 10 / History open | files of one backup set | - |
+| 313 | `installLatestProton > exclusive(cb)` | .every | nested | **NOT-WORTH** | 1-2 / per Proton install | Steam installs | - |
 
 #### electron/main/games/steam.ts
 
@@ -307,23 +333,29 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 132 | `steamAppManifests` | for-of | hot:scan nested | **PARALLELIZE** | Steam games / per scan, twice (list + details) | one sync read + VDF parse per appmanifest blocks the main process | read manifests with fs.promises under a bound (~8) and share one read between listSteamGames and gameDetails |
 | 143 | `listSteamGames` | for-of | hot:scan | **HOT-PATH-OK** | Steam games / per scan | parsed manifests, two getString each | - |
 | 150 | `listSteamGames` | .sort | hot:scan | **HOT-PATH-OK** | ≤ hundreds / per scan | one sort of the Steam games by name | - |
-| 176 | `valveProtons` | .flatMap | hot:scan | **NOT-WORTH** | 1-5 / per scan | library folders, a readdir each | - |
-| 176 | `valveProtons` | .filter | hot:scan nested | **NOT-WORTH** | 1-5 / per scan | library folders, a readdir each | - |
+| 176 | `valveProtons` | .flatMap | hot:scan | **NOT-WORTH** | ≤ 10 / per library per scan | library folders, a readdir each | - |
+| 176 | `valveProtons` | .filter | hot:scan nested | **NOT-WORTH** | ≤ 10 / per library per scan | library folders, a readdir each | - |
 
 #### electron/main/games/system.ts
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 56 | `forcesProAudio` | .filter | hot:scan | **NOT-WORTH** | ≤ 100 / per rule file per scan | lines of one small PipeWire rule file | - |
-| 79 | `findProAudioRules` | for-of | hot:scan | **NOT-WORTH** | 6 / per scan | six fixed rule folders | - |
-| 83 | `findProAudioRules` | .filter | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | files in one rule folder | - |
-| 88 | `findProAudioRules` | for-of | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | rule files, a small read each | - |
-| 110 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | 3 / per scan | three environment folders | - |
-| 113 | `findGlobalSdlVars` | for-of | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | files in one environment folder | - |
-| 121 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | ≤ 15 / per scan | shell profile and environment files, a small read each | - |
-| 124 | `findGlobalSdlVars` | for-of | hot:scan nested | **NOT-WORTH** | 0-3 / per file per scan | matches in one profile file | - |
-| 132 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | ≤ 5 / per scan | SDL-forcing variable names | - |
-| 146 | `hidrawAccess` | for-of | hot:scan | **NOT-WORTH** | ≤ 10 / per scan | hidraw nodes, a small sysfs read each | - |
+| 57 | `forcesProAudio` | .filter | hot:scan | **NOT-WORTH** | ≤ 100 / per rule file per scan | lines of one small PipeWire rule file | - |
+| 80 | `findProAudioRules` | for-of | hot:scan | **NOT-WORTH** | 6 / per scan | six fixed rule folders | - |
+| 84 | `findProAudioRules` | .filter | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | files in one rule folder | - |
+| 89 | `findProAudioRules` | for-of | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | rule files, a small read each | - |
+| 111 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | 3 / per scan | three environment folders | - |
+| 114 | `findGlobalSdlVars` | for-of | hot:scan nested | **NOT-WORTH** | 0-10 / per scan | files in one environment folder | - |
+| 122 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | ≤ 15 / per scan | shell profile and environment files, a small read each | - |
+| 125 | `findGlobalSdlVars` | for-of | hot:scan nested | **NOT-WORTH** | 0-3 / per file per scan | matches in one profile file | - |
+| 133 | `findGlobalSdlVars` | for-of | hot:scan | **NOT-WORTH** | ≤ 5 / per scan | SDL-forcing variable names | - |
+| 147 | `hidrawAccess` | for-of | hot:scan | **NOT-WORTH** | ≤ 10 / per scan | hidraw nodes, a small sysfs read each | - |
+| 225 | `lowMixerControls` | for-of | hot:scan | **NOT-WORTH** | - | N = 4 mixer targets per card; once per scan | - |
+| 227 | `lowMixerControls` | .find | hot:scan nested | **NOT-WORTH** | - | ~20 controls per card; once per scan | - |
+| 283 | `dualSenseMixers` | for-of | await | **NOT-WORTH** | - | DualSense cards, 0-2, one amixer read each; once per scan | - |
+| 298 | `setDualSenseMixer` | for-of | await | **SERIAL-REQUIRED** | - | one ALSA card: amixer writes in order, N ≤ 4 controls; per apply | - |
+| 308 | `restoreDualSenseMixer` | for-of | await | **SERIAL-REQUIRED** | - | one ALSA card: amixer writes in order, N ≤ 4 controls; per Undo | - |
+| 308 | `restoreDualSenseMixer` | .find | nested | **SERIAL-REQUIRED** | - | one ALSA card: amixer writes in order, N ≤ 4 controls; per Undo | - |
 
 #### electron/main/games/vdf.ts
 
@@ -463,8 +495,8 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 201 | `allFixes` | .flatMap | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds) + 3 launchers; memoized per scan report | - |
-| 201 | `allFixes` | .flatMap | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds) + 3 launchers; memoized per scan report | - |
+| 202 | `allFixes` | .flatMap | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds) + 3 launchers; memoized per scan report | - |
+| 202 | `allFixes` | .flatMap | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds) + 3 launchers; memoized per scan report | - |
 
 #### src/desktop/glass/liquidGlass.ts
 
@@ -479,64 +511,70 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 |---|---|---|---|---|---|---|---|
 | 14 | `update` | for-of | hot:raf | **HOT-PATH-OK** | ≤ 3 / per pointer-move frame | N ≤ 3 glass elements; at most once a frame while the pointer moves | - |
 
+#### src/desktop/library/ContinuePlaying.tsx
+
+| Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
+|---|---|---|---|---|---|---|---|
+| 39 | `ContinuePlaying` | .map | hot:render | **HOT-PATH-OK** | - | N ≤ 8 recent games; Home render on library change | - |
+| 52 | `first` | .find | hot:render | **HOT-PATH-OK** | - | N ≤ 3 art kinds per tile | - |
+
 #### src/desktop/library/GameLibrary.tsx
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 67 | `GameLibrary > useMemo(cb)` | for-of | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds); memoized on the scan report | - |
-| 69 | `GameLibrary > useMemo(cb)` | .map | hot:render | **HOT-PATH-OK** | 7 / per scan report | N = 7 app kinds; memoized on the scan report | - |
-| 69 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | 7 / per scan report | N = 7 app kinds; memoized on the scan report | - |
-| 86 | `GameLibrary > useMemo(cb)` | .sort | hot:render | **HOT-PATH-OK** | n log n, hundreds / per sort or report change | sort of the games (hundreds); memoized on report, sort and details | - |
-| 92 | `GameLibrary > useMemo(cb)` | .sort | hot:render | **HOT-PATH-OK** | hundreds / per report or details change | games (hundreds) filtered+sorted to 8; memoized on report and details | - |
-| 92 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per report or details change | games (hundreds) filtered+sorted to 8; memoized on report and details | - |
-| 101 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per keystroke or filter | N = games (hundreds); memoized, reruns per search keystroke or filter | - |
-| 111 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
+| 73 | `GameLibrary > useMemo(cb)` | for-of | hot:render | **HOT-PATH-OK** | hundreds / per scan report | N = games (hundreds); memoized on the scan report | - |
+| 75 | `GameLibrary > useMemo(cb)` | .map | hot:render | **HOT-PATH-OK** | 7 / per scan report | N = 7 app kinds; memoized on the scan report | - |
+| 75 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | 7 / per scan report | N = 7 app kinds; memoized on the scan report | - |
+| 92 | `GameLibrary > useMemo(cb)` | .sort | hot:render | **HOT-PATH-OK** | n log n, hundreds / per sort or report change | sort of the games (hundreds); memoized on report, sort and details | - |
+| 97 | `GameLibrary > useMemo(cb)` | .sort | hot:render | **HOT-PATH-OK** | hundreds / per report or details change | games (hundreds) filtered+sorted to 8; memoized on report and details | - |
+| 97 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per report or details change | games (hundreds) filtered+sorted to 8; memoized on report and details | - |
+| 106 | `GameLibrary > useMemo(cb)` | .filter | hot:render | **HOT-PATH-OK** | - | N = games (hundreds); memoized, reruns per search keystroke or filter | - |
+| 111 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | - | N = visible games (hundreds); per library render (interaction) | - |
 | 113 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
 | 115 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
-| 117 | `GameLibrary` | .find | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = games (hundreds); per library render (interaction) | - |
-| 121 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
-| 172 | `group` | .map | hot:render | **HOT-PATH-OK** | hundreds / per library render | one sidebar row per visible game (hundreds); per library render | - |
-| 192 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | 4 / per library render | N = 4 filters | - |
-| 202 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | 3 / per library render | N = 3 sorts | - |
-| 214 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | ≤ 7 / per library render | N ≤ 7 app kinds | - |
-| 218 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | ≤ 7 / per library render | N ≤ 7 app kinds | - |
-| 242 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = games (hundreds); per library render (interaction) | - |
-| 244 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = games (hundreds); per library render (interaction) | - |
-| 252 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | ≤ 8 / per library render | N ≤ 8 recent games | - |
-| 270 | `GameLibrary` | .map | hot:render | **FIX-HOT-PATH** | hundreds / per library render, even when hidden | a tile per game (hundreds) re-rendered per library render, even hidden | React.memo GameTile with a stable onOpen (by key), or skip the grid while a game page hides it |
+| 117 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
+| 119 | `GameLibrary` | .find | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = games (hundreds); per library render (interaction) | - |
+| 123 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | hundreds / per library render | N = visible games (hundreds); per library render (interaction) | - |
+| 174 | `group` | .map | hot:render | **HOT-PATH-OK** | hundreds / per library render | one sidebar row per visible game (hundreds); per library render | - |
+| 217 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | - | N = 4 filters | - |
+| 228 | `GameLibrary` | .filter | hot:render nested | **HOT-PATH-OK** | - | 4 filters x searched games (hundreds); per library render | - |
+| 237 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | 3 / per library render | N = 3 sorts | - |
+| 249 | `GameLibrary` | .filter | hot:render | **HOT-PATH-OK** | ≤ 7 / per library render | N ≤ 7 app kinds | - |
+| 253 | `GameLibrary` | .map | hot:render | **HOT-PATH-OK** | ≤ 7 / per library render | N ≤ 7 app kinds | - |
+| 266 | `GameLibrary` | .map | hot:render | **FIX-HOT-PATH** | hundreds / per library render, even when hidden | a tile per game (hundreds) re-rendered per library render, even hidden | React.memo GameTile with a stable onOpen (by key), or skip the grid while a game page hides it |
 
 #### src/desktop/library/GamePage.tsx
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
 | 99 | `GamePage` | .find | hot:render | **HOT-PATH-OK** | 3 / per game page render | N = 3 launchers | - |
-| 252 | `favorites` | .some | nested | **NOT-WORTH** | 12 / per profile summary render | N = 4 slots x 3 channels; per profile summary | - |
-| 277 | `ProfileSummary` | .map | hot:render | **HOT-PATH-OK** | ≤ 12 / per game page render | N ≤ 12 profile groups | - |
-| 286 | `ProfileSummary` | for-of | hot:render | **HOT-PATH-OK** | 2 / per game page render | N = 2 sticks | - |
-| 305 | `ProfileSummary` | .map | hot:render | **HOT-PATH-OK** | ≤ 15 / per game page render | N ≤ 15 chips | - |
-| 352 | `LayoutPicker` | .sort | hot:render | **HOT-PATH-OK** | a few / per game page render | N = saved button layouts (a few) | - |
-| 360 | `LayoutPicker` | .map | hot:render | **HOT-PATH-OK** | a few / per game page render | N = saved button layouts (a few) | - |
-| 380 | `LayoutPicker` | .map | hot:render | **HOT-PATH-OK** | 4 / per game page render | N = 4 extra buttons | - |
-| 406 | `CurvePicker` | .map | hot:render | **HOT-PATH-OK** | 2 / per game page render | N = 2 sticks | - |
-| 411 | `CurvePicker` | .map | hot:render nested | **HOT-PATH-OK** | ≤ 10 / per game page render | N = 2 sticks x ≤ 5 curve presets | - |
-| 514 | `SetupFrame` | .map | hot:render | **HOT-PATH-OK** | ≤ 5 / per game page render | N = one game's fixes (≤ ~5) | - |
-| 607 | `CompatFrame` | .find | hot:render | **HOT-PATH-OK** | ≤ 5 / per game page render | N = one game's fixes (≤ ~5) | - |
-| 683 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 0 / per game page render | N = known game fixes (GAME_FIXES, empty now) | - |
-| 694 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 6 / per game page render | N = 6 support tiers | - |
-| 706 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 features | - |
-| 748 | `RatingFrame` | .filter | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
-| 750 | `RatingFrame` | .filter | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
-| 756 | `RatingFrame` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 stars | - |
-| 789 | `RatingFrame` | .map | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
-| 896 | `GameActions` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 game actions | - |
-| 896 | `GameActions` | .filter | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 game actions | - |
+| 233 | `favorites` | .some | nested | **NOT-WORTH** | 12 / per profile summary render | N = 4 slots x 3 channels; per profile summary | - |
+| 258 | `ProfileSummary` | .map | hot:render | **HOT-PATH-OK** | ≤ 12 / per game page render | N ≤ 12 profile groups | - |
+| 267 | `ProfileSummary` | for-of | hot:render | **HOT-PATH-OK** | 2 / per game page render | N = 2 sticks | - |
+| 286 | `ProfileSummary` | .map | hot:render | **HOT-PATH-OK** | ≤ 15 / per game page render | N ≤ 15 chips | - |
+| 333 | `LayoutPicker` | .sort | hot:render | **HOT-PATH-OK** | a few / per game page render | N = saved button layouts (a few) | - |
+| 341 | `LayoutPicker` | .map | hot:render | **HOT-PATH-OK** | a few / per game page render | N = saved button layouts (a few) | - |
+| 361 | `LayoutPicker` | .map | hot:render | **HOT-PATH-OK** | 4 / per game page render | N = 4 extra buttons | - |
+| 387 | `CurvePicker` | .map | hot:render | **HOT-PATH-OK** | 2 / per game page render | N = 2 sticks | - |
+| 392 | `CurvePicker` | .map | hot:render nested | **HOT-PATH-OK** | ≤ 10 / per game page render | N = 2 sticks x ≤ 5 curve presets | - |
+| 495 | `SetupFrame` | .map | hot:render | **HOT-PATH-OK** | ≤ 5 / per game page render | N = one game's fixes (≤ ~5) | - |
+| 588 | `CompatFrame` | .find | hot:render | **HOT-PATH-OK** | ≤ 5 / per game page render | N = one game's fixes (≤ ~5) | - |
+| 664 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 0 / per game page render | N = known game fixes (GAME_FIXES, empty now) | - |
+| 675 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 6 / per game page render | N = 6 support tiers | - |
+| 687 | `SupportFrame` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 features | - |
+| 729 | `RatingFrame` | .filter | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
+| 731 | `RatingFrame` | .filter | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
+| 737 | `RatingFrame` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 stars | - |
+| 770 | `RatingFrame` | .map | hot:render | **HOT-PATH-OK** | < 10 / per game page render | N = feedback tags (under 10) | - |
+| 860 | `GameActions` | .map | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 game actions | - |
+| 860 | `GameActions` | .filter | hot:render | **HOT-PATH-OK** | 5 / per game page render | N = 5 game actions | - |
 
 #### src/desktop/library/GameTile.tsx
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 29 | `GameTile` | .filter | hot:render | **HOT-PATH-OK** | 4 per tile, per library render | N = 4 badge candidates per tile; tile renders on library change only | - |
-| 43 | `GameTile` | .map | hot:render | **HOT-PATH-OK** | ≤ 4 per tile, per library render | N ≤ 4 marks per tile; renders on library change only | - |
+| 30 | `TileOverlays` | .filter | hot:render | **HOT-PATH-OK** | - | N = 4 badge candidates per tile; tile renders on library change only | - |
+| 42 | `TileOverlays` | .map | hot:render | **HOT-PATH-OK** | - | N ≤ 4 marks per tile; renders on library change only | - |
 
 #### src/desktop/library/HdrChecklist.tsx
 
@@ -566,7 +604,12 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 16 | `setupStatus` | .every | hot:render | **HOT-PATH-OK** | ~6, per render | N ≈ 6 HDR requirements; per game page render | - |
+| 17 | `setupStatus` | .every | hot:render | **HOT-PATH-OK** | ~6, per render | N ≈ 6 HDR requirements; per game page render | - |
+| 35 | `systemHdrReqs` | .filter | hot:render | **HOT-PATH-OK** | - | N ≤ 4 launchers; Home and game page render | - |
+| 37 | `systemHdrReqs` | .every | hot:render | **HOT-PATH-OK** | - | N ≤ 3 Proton launchers | - |
+| 56 | `homeStatus` | .some | hot:render | **HOT-PATH-OK** | - | fixes found by the scan, tens at most; Home render | - |
+| 60 | `homeStatus` | .some | hot:render | **HOT-PATH-OK** | - | games (hundreds) until one has HDR, then ≤ 4 HDR checks; Home render | - |
+| 60 | `homeStatus` | .every | hot:render | **HOT-PATH-OK** | - | games (hundreds) until one has HDR, then ≤ 4 HDR checks; Home render | - |
 
 #### src/desktop/library/support.ts
 
@@ -669,22 +712,23 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 111 | `LiveArt > useLayoutEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / per mount | once per mount, N ≈ 30 parts | - |
-| 126 | `LiveArt > useLayoutEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | dozens / per mount | once per mount, a few dozen outlines | - |
-| 145 | `LiveArt > useLayoutEffect(cb)` | .filter | hot:effect | **NOT-WORTH** | few / per mount | once per mount, a few shell shapes | - |
-| 166 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / on language change | N ≈ 30 parts, only when the language changes | - |
-| 173 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / on click | N ≈ 30 parts, only on selection/remap change | - |
-| 193 | `LiveArt > useEffect(cb)` | .map | hot:effect | **HOT-PATH-OK** | 3 / ≤ 10 Hz | N = 3 channels, on lightbar change (≤ 10 Hz) | - |
-| 214 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | 7 / on color change | N = 7 CSS vars, only when the colorway changes | - |
-| 234 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | ~30 / ~30 Hz | N ≈ 30 parts, classList.toggle per live frame | - |
-| 239 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 triggers per live frame | - |
-| 245 | `LiveArt > useEffect(cb)` | for-of | hot:effect nested | **FIX-HOT-PATH** | 2 queries / ~30 Hz | querySelectorAll for the trigger stops on every live frame | Look the trigger fill stops up once at mount (with parts) and set offset only when the value changed |
-| 249 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks per live frame | - |
-| 265 | `LiveArt > useEffect(cb)` | .map | hot:effect | **FIX-HOT-PATH** | 4 / ~30 Hz | parses the touchpad data-box string (split+map) every live frame | Parse data-box once at mount next to the parts index |
-| 268 | `LiveArt > useEffect(cb)` | .filter | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
-| 270 | `LiveArt > useEffect(cb)` | while | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots removed | - |
-| 272 | `LiveArt > useEffect(cb)` | while | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots added | - |
-| 274 | `LiveArt > useEffect(cb)` | .forEach | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots placed | - |
+| 116 | `LiveArt > useLayoutEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / per mount | once per mount, N ≈ 30 parts | - |
+| 131 | `LiveArt > useLayoutEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | dozens / per mount | once per mount, a few dozen outlines | - |
+| 140 | `LiveArt > useLayoutEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | - | N = 2 triggers, once per mount | - |
+| 142 | `LiveArt > useLayoutEffect(cb)` | .map | hot:effect | **NOT-WORTH** | - | N = 4 numbers, once per mount | - |
+| 155 | `LiveArt > useLayoutEffect(cb)` | .filter | hot:effect | **NOT-WORTH** | few / per mount | once per mount, a few shell shapes | - |
+| 176 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / on language change | N ≈ 30 parts, only when the language changes | - |
+| 183 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | ~30 / on language change | N ≈ 30 parts, only on selection/remap change | - |
+| 203 | `LiveArt > useEffect(cb)` | .map | hot:effect | **HOT-PATH-OK** | 3 / ≤ 10 Hz | N = 3 channels, on lightbar change (≤ 10 Hz) | - |
+| 224 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **NOT-WORTH** | 7 / on color change | N = 7 CSS vars, only when the colorway changes | - |
+| 244 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | ~30 / on language change | N ≈ 30 parts, classList.toggle per live frame | - |
+| 249 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 triggers per live frame | - |
+| 257 | `LiveArt > useEffect(cb)` | for-of | hot:effect nested | **HOT-PATH-OK** | - | N = 2 stops per trigger, looked up at mount; only when the value changed | Done in batch 1 (dev.10) |
+| 261 | `LiveArt > useEffect(cb)` | for-of | hot:effect | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks per live frame | - |
+| 277 | `LiveArt > useEffect(cb)` | .filter | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
+| 279 | `LiveArt > useEffect(cb)` | while | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots removed | - |
+| 281 | `LiveArt > useEffect(cb)` | while | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots added | - |
+| 283 | `LiveArt > useEffect(cb)` | .forEach | hot:effect | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 touch dots placed | - |
 
 #### src/desktop/live/LiveData.tsx
 
@@ -723,29 +767,29 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 |---|---|---|---|---|---|---|---|
 | 150 | `Overview` | .map | hot:render | **HOT-PATH-OK** | ~6 / ~30 Hz | N ≈ 6 shortcuts per render | - |
 | 221 | `RemapSection` | .map | hot:render | **HOT-PATH-OK** | ~17 / ~30 Hz | N ≈ 17 options in one select per render | - |
-| 296 | `AllButtonsSection` | .filter | hot:render | **HOT-PATH-OK** | 20 / ~30 Hz | N = 16 + 4 slots per render | - |
-| 296 | `AllButtonsSection` | .filter | hot:render | **HOT-PATH-OK** | 20 / ~30 Hz | N = 16 + 4 slots per render | - |
-| 319 | `AllButtonsSection` | .map | hot:render | **FIX-HOT-PATH** | 16 / ~30 Hz | 16 rows rebuilt every live frame while the Buttons list is open | Memo the Buttons-list sections (AllButtonsSection, ButtonLayoutsSection) so live input frames skip them |
-| 338 | `AllButtonsSection` | .map | hot:render nested | **FIX-HOT-PATH** | ~270 / ~30 Hz | 16 x ~17 options (~270 elements) rebuilt every live frame | Memo the Buttons-list sections (AllButtonsSection, ButtonLayoutsSection) so live input frames skip them |
-| 351 | `AllButtonsSection` | .map | hot:render | **FIX-HOT-PATH** | 4 / ~30 Hz | 4 Edge rows rebuilt every live frame | Memo the Buttons-list sections (AllButtonsSection, ButtonLayoutsSection) so live input frames skip them |
-| 366 | `AllButtonsSection` | .map | hot:render nested | **FIX-HOT-PATH** | ~70 / ~30 Hz | 4 x ~17 options rebuilt every live frame | Memo the Buttons-list sections (AllButtonsSection, ButtonLayoutsSection) so live input frames skip them |
-| 411 | `ButtonLayoutsSection` | .sort | hot:render | **FIX-HOT-PATH** | layouts / ~30 Hz | sorts the saved layouts on every live frame | useMemo the sorted layouts on library.layouts (plus the section memo) |
-| 413 | `usedBy` | .filter | hot:render | **FIX-HOT-PATH** | 2 x layouts x games / ~30 Hz | filters all games twice per layout every live frame (layouts x games) | Count uses once per library change into a Map (useMemo), look up per layout |
-| 416 | `ButtonLayoutsSection` | .map | hot:render | **HOT-PATH-OK** | 4 / ~30 Hz | N = 4 Edge names per render | - |
-| 428 | `ButtonLayoutsSection` | .map | hot:render | **FIX-HOT-PATH** | layouts x 20 / ~30 Hz | every saved layout with its summary rebuilt every live frame | Memo the Buttons-list sections (AllButtonsSection, ButtonLayoutsSection) so live input frames skip them |
-| 509 | `TriggerLive` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 triggers per live frame | - |
-| 556 | `TouchLive` | .filter | hot:render | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
-| 561 | `TouchLive` | .map | hot:render | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
-| 656 | `AppSettings` | .map | hot:render | **HOT-PATH-OK** | ~10 / ~30 Hz | N ≈ 10 look knobs per render | - |
-| 656 | `AppSettings` | .filter | hot:render | **HOT-PATH-OK** | ~10 / ~30 Hz | N ≈ 10 look knobs per render | - |
-| 841 | `CheckNow` | .map | hot:render | **HOT-PATH-OK** | ≤ 3 / per render | N ≤ 3 result lines, after a click | - |
-| 860 | `ColorVisionSetting` | .map | hot:render | **HOT-PATH-OK** | ~4 / ~30 Hz | N ≈ 4 color vision options per render | - |
-| 1120 | `BackdropSetting` | .map | hot:render | **HOT-PATH-OK** | 3 / ~30 Hz | N = 3 backgrounds per render | - |
-| 1164 | `CustomColorsSetting` | .map | hot:render | **HOT-PATH-OK** | 6 / ~30 Hz | N = 6 color parts per render | - |
-| 1191 | `AccentSetting` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 accents per render | - |
-| 1306 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | ~40 / ~30 Hz dev only | N ≈ 40 colorway codes, Developer card only (dev builds) | - |
-| 1335 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | 10 / ~30 Hz dev only | N = 10 stages, Developer card only | - |
-| 1347 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | 4 / ~30 Hz dev only | N = 4 previews, Developer card only | - |
+| 300 | `AllButtonsSection` | .filter | hot:render | **HOT-PATH-OK** | 20 / ~30 Hz | N = 16 + 4 slots per render | - |
+| 300 | `AllButtonsSection` | .filter | hot:render | **HOT-PATH-OK** | 20 / ~30 Hz | N = 16 + 4 slots per render | - |
+| 323 | `AllButtonsSection` | .map | hot:render | **HOT-PATH-OK** | 16 / ~30 Hz | N = 16 rows; memo()ed, re-renders on a remap or focus change, not per live frame | Done in batch 1 (dev.10) |
+| 342 | `AllButtonsSection` | .map | hot:render nested | **HOT-PATH-OK** | ~270 / ~30 Hz | 16 x ~17 options; memo()ed, only on a remap or focus change | Done in batch 1 (dev.10) |
+| 355 | `AllButtonsSection` | .map | hot:render | **HOT-PATH-OK** | 4 / ~30 Hz | N = 4 Edge rows; memo()ed, only on a remap or focus change | Done in batch 1 (dev.10) |
+| 370 | `AllButtonsSection` | .map | hot:render nested | **HOT-PATH-OK** | ~270 / ~30 Hz | 4 x ~17 options; memo()ed, only on a remap or focus change | Done in batch 1 (dev.10) |
+| 416 | `ButtonLayoutsSection > useMemo(cb)` | .sort | hot:render | **HOT-PATH-OK** | - | N = saved layouts (a few); once per library change (useMemo + memo) | Done in batch 1 (dev.10) |
+| 421 | `ButtonLayoutsSection > useMemo(cb)` | for-of | hot:render | **HOT-PATH-OK** | - | N = games with a profile (tens to hundreds); once per library change | Done in batch 1 (dev.10) |
+| 430 | `ButtonLayoutsSection` | .map | hot:render | **HOT-PATH-OK** | 4 / ~30 Hz | N = 4 Edge names per render | - |
+| 442 | `ButtonLayoutsSection` | .map | hot:render | **HOT-PATH-OK** | layouts x 20 / ~30 Hz | N = saved layouts (a few); memo()ed, only on a remap or library change | Done in batch 1 (dev.10) |
+| 523 | `TriggerLive` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 triggers per live frame | - |
+| 570 | `TouchLive` | .filter | hot:render | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
+| 575 | `TouchLive` | .map | hot:render | **HOT-PATH-OK** | ≤ 2 / ~30 Hz | N ≤ 2 fingers per live frame | - |
+| 670 | `AppSettings` | .map | hot:render | **HOT-PATH-OK** | ~10 / ~30 Hz | N ≈ 10 look knobs per render | - |
+| 670 | `AppSettings` | .filter | hot:render | **HOT-PATH-OK** | ~10 / ~30 Hz | N ≈ 10 look knobs per render | - |
+| 855 | `CheckNow` | .map | hot:render | **HOT-PATH-OK** | ≤ 3 / per render | N ≤ 3 result lines, after a click | - |
+| 874 | `ColorVisionSetting` | .map | hot:render | **HOT-PATH-OK** | ~4 / ~30 Hz | N ≈ 4 color vision options per render | - |
+| 1134 | `BackdropSetting` | .map | hot:render | **HOT-PATH-OK** | 3 / ~30 Hz | N = 3 backgrounds per render | - |
+| 1178 | `CustomColorsSetting` | .map | hot:render | **HOT-PATH-OK** | 6 / ~30 Hz | N = 6 color parts per render | - |
+| 1205 | `AccentSetting` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 accents per render | - |
+| 1320 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | ~40 / ~30 Hz dev only | N ≈ 40 colorway codes, Developer card only (dev builds) | - |
+| 1349 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | 10 / ~30 Hz dev only | N = 10 stages, Developer card only | - |
+| 1361 | `DeveloperSettings` | .map | hot:render | **HOT-PATH-OK** | 4 / ~30 Hz dev only | N = 4 previews, Developer card only | - |
 
 #### src/desktop/live/parts.ts
 
@@ -767,10 +811,10 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 117 | `StickCurves` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 tabs per render | - |
 | 127 | `StickCurves` | .map | hot:render | **HOT-PATH-OK** | 6 / ~30 Hz | N = 6 curve types per render | - |
 | 145 | `StickCurves` | .every | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks per render | - |
-| 215 | `CurveGraph` | .map | hot:render | **HOT-PATH-OK** | 3 / ~30 Hz | N = 3 grid lines per render | - |
-| 232 | `CurveGraph` | .map | hot:render | **HOT-PATH-OK** | ≤ 4 / ~30 Hz | N ≤ 4 curve points per render | - |
-| 329 | `GameStickCurves` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 tabs per render | - |
-| 339 | `GameStickCurves` | .map | hot:render | **HOT-PATH-OK** | ≤ 7 / ~30 Hz | N ≤ 7 curve choices per render | - |
+| 218 | `CurveGraph` | .map | hot:render | **HOT-PATH-OK** | 3 / ~30 Hz | N = 3 grid lines per render | - |
+| 235 | `CurveGraph` | .map | hot:render | **HOT-PATH-OK** | ≤ 4 / ~30 Hz | N ≤ 4 curve points per render | - |
+| 332 | `GameStickCurves` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 tabs per render | - |
+| 342 | `GameStickCurves` | .map | hot:render | **HOT-PATH-OK** | ≤ 7 / ~30 Hz | N ≤ 7 curve choices per render | - |
 
 #### src/desktop/live/StickTestCards.tsx
 
@@ -780,14 +824,14 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 50 | `StickTests > useEffect(cb) > setInterval(cb) > setOutlines(cb)` | .map | hot:interval | **HOT-PATH-OK** | 2 / 33 ms, test open only | N = 2 sticks per sample while the stick test is open | - |
 | 56 | `StickTests > useEffect(cb) > setInterval(cb) > setOutlines(cb)` | .every | hot:interval | **HOT-PATH-OK** | 2 / 33 ms, test open only | N = 2 outlines, skips the state update when nothing moved | - |
 | 56 | `StickTests > useEffect(cb) > setInterval(cb) > setOutlines(cb)` | .every | hot:interval | **HOT-PATH-OK** | 2 / 33 ms, test open only | N = 2 outlines, skips the state update when nothing moved | - |
-| 76 | `StickTests > useEffect(cb) > setInterval(cb)` | .forEach | hot:interval | **HOT-PATH-OK** | 2 / 30 Hz for 10 s | N = 2 sticks per 33 ms sample, only during the 10 s drift test | - |
-| 105 | `StickTests` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks per live frame (72-bucket outlines) | - |
-| 165 | `StickTests` | .map | hot:render | **FIX-HOT-PATH** | 2 x ~300 samples / ~30 Hz | drift results recomputed every live frame though the samples are frozen | useMemo driftStats and the DriftPlot paths on the finished drift samples |
-| 212 | `CirclePlot` | .every | hot:render | **HOT-PATH-OK** | 72 / ~30 Hz | N = 72 buckets per live frame | - |
-| 215 | `CirclePlot` | .forEach | hot:render | **HOT-PATH-OK** | 72 / ~30 Hz | N = 72 buckets, one path string per live frame | - |
-| 236 | `DriftPlot` | .map | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz x 2 | ~300 frozen samples remapped every live frame | useMemo the points on samples (or memo DriftPlot) |
-| 238 | `DriftPlot` | .map | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz x 2 | ~300 frozen samples scanned every live frame | Part of the DriftPlot useMemo |
-| 240 | `line` | .map | hot:render | **FIX-HOT-PATH** | ~600 / ~30 Hz x 2 | two ~300-point path strings rebuilt every live frame | Part of the DriftPlot useMemo |
+| 79 | `StickTests > useEffect(cb) > setInterval(cb)` | .forEach | hot:interval | **HOT-PATH-OK** | 2 / 30 Hz for 10 s | N = 2 sticks per 33 ms sample, only during the 10 s drift test | - |
+| 108 | `StickTests` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks per live frame (72-bucket outlines) | - |
+| 168 | `StickTests` | .map | hot:render | **HOT-PATH-OK** | 2 / ~30 Hz | N = 2 sticks; the stats are memoized on the finished samples | Done in batch 1 (dev.10) |
+| 215 | `CirclePlot` | .every | hot:render | **HOT-PATH-OK** | 72 / ~30 Hz | N = 72 buckets per live frame | - |
+| 218 | `CirclePlot` | .forEach | hot:render | **HOT-PATH-OK** | 72 / ~30 Hz | N = 72 buckets, one path string per live frame | - |
+| 240 | `DriftPlot` | .map | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz x 2 | ~300 samples; memo()ed, once per finished test | Done in batch 1 (dev.10) |
+| 242 | `DriftPlot` | .map | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz x 2 | ~300 samples; memo()ed, once per finished test | Done in batch 1 (dev.10) |
+| 244 | `line` | .map | hot:render | **HOT-PATH-OK** | ~600 / ~30 Hz x 2 | two ~300-point paths; memo()ed, once per finished test | Done in batch 1 (dev.10) |
 
 #### src/desktop/live/stickTests.ts
 
@@ -798,13 +842,13 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 59 | `circularity` | .reduce | hot:render | **HOT-PATH-OK** | ≤ 72 / ~30 Hz | N ≤ 72 reached buckets | - |
 | 61 | `circularity` | .filter | hot:render | **HOT-PATH-OK** | ≤ 72 / ~30 Hz | N ≤ 72 reached buckets | - |
 | 63 | `circularity` | .filter | hot:render | **HOT-PATH-OK** | ≤ 72 / ~30 Hz | N ≤ 72 reached buckets | - |
-| 108 | `driftStats` | .map | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300 frozen drift samples, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 110 | `driftStats` | .map | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 112 | `driftStats` | .reduce | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 114 | `driftStats` | .reduce | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 116 | `driftStats` | .map | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 119 | `driftStats` | .some | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
-| 124 | `driftStats` | .reduce | hot:render | **FIX-HOT-PATH** | ~300 / ~30 Hz | N ≈ 300, recomputed per live frame by the caller | Fixed by a driftStats useMemo in StickTests |
+| 108 | `driftStats` | .map | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300 samples; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 110 | `driftStats` | .map | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 112 | `driftStats` | .reduce | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 114 | `driftStats` | .reduce | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 116 | `driftStats` | .map | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 119 | `driftStats` | .some | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
+| 124 | `driftStats` | .reduce | hot:render | **HOT-PATH-OK** | ~300 / ~30 Hz | N ≈ 300; once per finished drift test (StickTests useMemo) | Done in batch 1 (dev.10) |
 
 #### src/desktop/live/SwirlField.tsx
 
@@ -812,7 +856,7 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 |---|---|---|---|---|---|---|---|
 | 63 | `swirlPixel` | for | hot:interval | **HOT-PATH-OK** | 4 / per pixel | N = 4 colors per pixel; the cost is the pixel loop at 173 | - |
 | 70 | `swirlPixel` | for | hot:interval | **HOT-PATH-OK** | 4 / per pixel | N = 4 colors per pixel; the cost is the pixel loop at 173 | - |
-| 176 | `draw` | for | hot:interval | **FIX-HOT-PATH** | 9216 px / 12.5 Hz, paused hidden | CPU fallback: 128 x 72 px in JS every 80 ms (no GPU / GPU lost) | CPU fallback: draw one still frame (or ≤ 2 fps); animate only on the GPU path |
+| 176 | `draw` | for | hot:interval | **FIX-HOT-PATH** | - | CPU fallback: 128 x 72 px in JS every 80 ms (no GPU / GPU lost) | - |
 | 178 | `draw` | for | hot:interval nested | **FIX-HOT-PATH** | 128 / per row | CPU fallback pixel loop, inner row | Same fix as the outer pixel loop |
 | 182 | `draw` | for | hot:interval nested | **FIX-HOT-PATH** | 3 / per pixel | CPU fallback, 3 channels per pixel | Same fix as the outer pixel loop |
 
@@ -842,27 +886,28 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 68 | `RestartNotice` | .map | hot:render | **HOT-PATH-OK** | ≤ 3, per render | N ≤ 3 launchers; shown only after applying fixes | - |
-| 83 | `OverwrittenNotice` | .map | hot:render | **HOT-PATH-OK** | ≤ 3, per render | N ≤ 3 launchers; shown only after a launcher overwrote a fix | - |
-| 241 | `GamesSetup` | .filter | hot:render | **HOT-PATH-OK** | ≤ ~50, per Home render | fixes found by the scan, tens at most; Home render on interaction | - |
-| 349 | `GamesSetup` | .filter | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
-| 365 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
-| 462 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ ~50, per review render | chosen fixes, tens at most; review dialog render | - |
-| 466 | `GamesSetup` | .map | hot:render nested | **HOT-PATH-OK** | ≤ ~3 per fix, per render | 1-3 files per chosen fix; review dialog render | - |
-| 492 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ ~50, per render | applied fixes, tens at most; result render after apply | - |
-| 519 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | tens, per Home render | change history entries, tens; Home render | - |
-| 522 | `GamesSetup` | .map | hot:render nested | **HOT-PATH-OK** | few per entry, per render | a few changes per backup; Home render | - |
-| 541 | `FixList` | .filter | hot:render | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
-| 541 | `FixList` | .map | hot:render | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
-| 541 | `FixList` | .filter | hot:render nested | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
-| 545 | `FixList` | .map | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launcher groups | - |
-| 552 | `FixList` | .map | hot:render nested | **HOT-PATH-OK** | ≤ ~50, per render | fixes in one group, tens at most | - |
-| 572 | `SystemCard` | .map | hot:render | **HOT-PATH-OK** | 1-3, per render | N = screens, 1-3; Home render | - |
-| 572 | `SystemCard` | .filter | hot:render | **HOT-PATH-OK** | 1-3, per render | N = screens, 1-3; Home render | - |
-| 575 | `SystemCard` | .filter | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
-| 577 | `SystemCard` | .every | hot:render | **HOT-PATH-OK** | ≤ 3, per render | N ≤ 3 Proton launchers | - |
-| 596 | `SystemCard` | .map | hot:render | **HOT-PATH-OK** | 0-3, per render | env warnings, 0-3; Home render | - |
-| 613 | `SystemCard` | .some | hot:render | **HOT-PATH-OK** | 0-3, per render | PipeWire pro-audio rule files, 0-3 | - |
+| 71 | `RestartNotice` | .map | hot:render | **HOT-PATH-OK** | ≤ 3, per render | N ≤ 3 launchers; shown only after applying fixes | - |
+| 86 | `OverwrittenNotice` | .map | hot:render | **HOT-PATH-OK** | ≤ 3, per render | N ≤ 3 launchers; shown only after a launcher overwrote a fix | - |
+| 246 | `GamesSetup` | .filter | hot:render | **HOT-PATH-OK** | ≤ ~50, per Home render | fixes found by the scan, tens at most; Home render on interaction | - |
+| 356 | `GamesSetup` | .filter | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
+| 378 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
+| 459 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | tens, per Home render | change history entries, tens; Home render | - |
+| 462 | `GamesSetup` | .map | hot:render nested | **HOT-PATH-OK** | few per entry, per render | a few changes per backup; Home render | - |
+| 474 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | - | N = screens, 1-3; Home render | - |
+| 474 | `GamesSetup` | .filter | hot:render | **HOT-PATH-OK** | - | N = screens, 1-3; Home render | - |
+| 517 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launchers; Home render | - |
+| 559 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ ~50, per review render | chosen fixes, tens at most; review dialog render | - |
+| 563 | `GamesSetup` | .map | hot:render nested | **HOT-PATH-OK** | ≤ ~3 per fix, per render | 1-3 files per chosen fix; review dialog render | - |
+| 589 | `GamesSetup` | .map | hot:render | **HOT-PATH-OK** | ≤ ~50, per render | applied fixes, tens at most; result render after apply | - |
+| 620 | `FixList` | .filter | hot:render | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
+| 620 | `FixList` | .map | hot:render | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
+| 620 | `FixList` | .filter | hot:render nested | **HOT-PATH-OK** | 4 x ≤ ~50, per render | 4 launcher groups x tens of fixes; Home render on interaction | - |
+| 624 | `FixList` | .map | hot:render | **HOT-PATH-OK** | ≤ 4, per render | N ≤ 4 launcher groups | - |
+| 631 | `FixList` | .map | hot:render nested | **HOT-PATH-OK** | ≤ ~50, per render | fixes in one group, tens at most | - |
+| 654 | `SystemPart` | .map | hot:render | **HOT-PATH-OK** | - | N = screens, 1-3; Home render | - |
+| 654 | `SystemPart` | .filter | hot:render | **HOT-PATH-OK** | - | N = screens, 1-3; Home render | - |
+| 674 | `SystemPart` | .map | hot:render | **HOT-PATH-OK** | - | env warnings, 0-3; Home render | - |
+| 691 | `SystemPart` | .some | hot:render | **HOT-PATH-OK** | - | PipeWire pro-audio rule files, 0-3 | - |
 
 #### src/desktop/pages/LightbarPage.tsx
 
@@ -911,9 +956,9 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 95 | `mix` | .map | hot:raf+render | **HOT-PATH-OK** | 3, per mix call | N = 3 channels | - |
 | 106 | `hexToRgb` | .map | hot:raf+render | **HOT-PATH-OK** | 3, per call | N = 3 channels; also in LiveController render | - |
 | 151 | `ensureContrast` | for | hot:raf | **NOT-WORTH** | ≤ 20, per theme change | ≤ 20 steps; one-shot rAF on game page open or theme change | - |
-| 208 | `legibleOnAll` | for | hot:raf | **NOT-WORTH** | ≤ 20, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
-| 208 | `legibleOnAll` | .some | hot:raf | **NOT-WORTH** | ≤ 20, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
-| 208 | `legibleOnAll` | .reduce | hot:raf nested | **NOT-WORTH** | ≤ 20, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
+| 208 | `legibleOnAll` | for | hot:raf | **NOT-WORTH** | ≤ 80, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
+| 208 | `legibleOnAll` | .some | hot:raf | **NOT-WORTH** | ≤ 80, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
+| 208 | `legibleOnAll` | .reduce | hot:raf nested | **NOT-WORTH** | ≤ 80, per theme change | ≤ 5 passes x ≤ 4 grounds; theme change or game page open only | - |
 
 #### src/desktop/tour/Tour.tsx
 
@@ -1026,9 +1071,9 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often.
 | 65 | `isValidCurve` | .some | hot:render | **HOT-PATH-OK** | 4 / per curveAt call (65 per graph) | N = 4 points; cost is in the callers (see nodesOf row) | - |
 | 68 | `isValidCurve` | for | hot:render | **HOT-PATH-OK** | 3 / per curveAt call (65 per graph) | N = 3 point pairs | - |
 | 116 | `curvesEqual` | .every | hot:render | **HOT-PATH-OK** | 4 / per StickCurves render | N = 4 points | - |
-| 130 | `nodesOf` | .map | hot:render | **FIX-HOT-PATH** | 4 / 65 x 2 graphs per frame | nodes rebuilt per call: 65 curveAt calls per graph per live frame | Build the nodes once per curve: curveAt/applyCurve take precomputed nodes, or CurveGraph useMemo()s the path on curve |
-| 130 | `nodesOf` | .map | hot:render | **FIX-HOT-PATH** | 4 / 65 x 2 graphs per frame | nodes rebuilt per call: 65 curveAt calls per graph per live frame | Build the nodes once per curve: curveAt/applyCurve take precomputed nodes, or CurveGraph useMemo()s the path on curve |
-| 137 | `evalNodes` | for | hot:render | **HOT-PATH-OK** | ≤ 34 / 65 x 2 graphs per frame | N ≤ 34 nodes, the firmware math itself | - |
+| 145 | `buildNodes` | .map | hot:render | **HOT-PATH-OK** | - | N = 4 points; once per curve (WeakMap cache), not per call | Done in batch 1 (dev.10) |
+| 145 | `buildNodes` | .map | hot:render | **HOT-PATH-OK** | - | N = 4 points; once per curve (WeakMap cache), not per call | Done in batch 1 (dev.10) |
+| 152 | `evalNodes` | for | hot:render | **HOT-PATH-OK** | ≤ 34 / 65 x 2 graphs per frame | N ≤ 34 nodes, the firmware math itself | - |
 
 #### src/protocol/webUsbTransport.ts
 

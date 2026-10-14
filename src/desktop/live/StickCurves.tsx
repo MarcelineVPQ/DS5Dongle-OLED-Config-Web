@@ -4,7 +4,7 @@
 // against a dashed straight line, the custom points (drag them, or select one
 // and use the arrow keys) and a live dot where the stick is now: its tilt in
 // (after the calibration above) and what the dongle sends out.
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { errorText } from "../../errorText";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -170,11 +170,14 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
   // Custom points are dragged only where they can be saved (not into a game's profile yet).
   const custom = curve.type === "custom" && !!onPoints;
 
-  const steps = 64;
-  const path = Array.from({ length: steps + 1 }, (_, i) => {
-    const x = i / steps;
-    return `${i ? "L" : "M"}${px(x).toFixed(1)},${py(curveAt(curve, x)).toFixed(1)}`;
-  }).join("");
+  // 65 points: drawn once per curve, not on every live input frame.
+  const path = useMemo(() => {
+    const steps = 64;
+    return Array.from({ length: steps + 1 }, (_, i) => {
+      const x = i / steps;
+      return `${i ? "L" : "M"}${px(x).toFixed(1)},${py(curveAt(curve, x)).toFixed(1)}`;
+    }).join("");
+  }, [curve]);
 
   const toPoint = (e: PointerEvent): [number, number] | null => {
     const box = svg.current?.getBoundingClientRect();

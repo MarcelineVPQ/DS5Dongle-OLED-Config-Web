@@ -123,10 +123,25 @@ interface Nodes {
 }
 const byteQ = (b: number) => Math.floor((b * Q + 127) / 255);
 
+// The nodes, built once per curve: curves are immutable values (an edit makes
+// a new object), and the curve graph calls curveAt 65 times per drawing.
+const nodeCache = new WeakMap<StickCurve, Nodes | null>();
+let nodeBuilds = 0;
+// How many times nodes were built (tests: not once per drawn frame).
+export const curveNodeBuilds = () => nodeBuilds;
+
 function nodesOf(c: StickCurve): Nodes | null {
+  if (nodeCache.has(c)) return nodeCache.get(c)!;
+  const n = buildNodes(c);
+  nodeCache.set(c, n);
+  return n;
+}
+
+function buildNodes(c: StickCurve): Nodes | null {
+  nodeBuilds++;
   if (c.type === "linear" || !isValidCurve(c)) return null;
   if (c.type === "custom") {
-    // loop: FIX-HOT-PATH — nodes rebuilt per call: 65 curveAt calls per graph per live frame
+    // loop: HOT-PATH-OK — N = 4 points; once per curve (WeakMap cache), not per call
     return { x: [0, ...c.points.map(([x]) => byteQ(x)), Q], y: [0, ...c.points.map(([, y]) => byteQ(y)), Q] };
   }
   return { x: Array.from({ length: LUT }, (_, i) => i * (Q / (LUT - 1))), y: [...PRESET_LUT[c.type]] };

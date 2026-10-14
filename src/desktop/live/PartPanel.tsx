@@ -20,7 +20,7 @@ import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
-import { useCallback, useEffect, useState, useRef, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -115,8 +115,8 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
         )}
       </header>
       {view === "overview" && <Overview onOpen={onOpen} onCalibrate={onCalibrate} onButtons={() => onButtons()} />}
-      {view === "buttons" && <AllButtonsSection remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
-      {view === "buttons" && remap.supported && <ButtonLayoutsSection remap={remap} />}
+      {view === "buttons" && <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />}
+      {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
       {view === "app" && <AppSettings bridge={bridge} fw={fw} />}
@@ -279,7 +279,11 @@ function useGameLayoutSave() {
 }
 
 // Every button in one list (the same draft as clicking them on the drawing),
-// with what's changed from the controller's own buttons marked.
+// with what's changed from the controller's own buttons marked. memo()ed with
+// the saved layouts below: the controller view re-renders on every live input
+// frame (~30 a second) and neither depends on the input (useRemap's result
+// only changes when the remap does).
+export const AllButtonsList = memo(AllButtonsSection);
 function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Remap; focus: number | null; onFocus: (i: number | null) => void; onHover: (i: number | null) => void; edge: boolean }) {
   const { t } = useTranslation();
   const table = useRef<HTMLDivElement>(null);
@@ -315,7 +319,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
       <p className="dk-hint">{t("desktop.layouts.allHint", { count: changed })}</p>
       {remap.temporary && !target && <div className="dk-notice">{t("desktop.layouts.activeNotice", { game: active?.title ?? t("desktop.layouts.aGame") })}</div>}
       <div className="dk-buttons-table" role="table" ref={table} onMouseLeave={() => onHover(null)}>
-        {/* loop: FIX-HOT-PATH — 16 rows rebuilt every live frame while the Buttons list is open */}
+        {/* loop: HOT-PATH-OK — N = 16 rows; memo()ed, re-renders on a remap or focus change, not per live frame */}
         {remap.draft.map((target, i) => {
           const isChanged = target !== i;
           const pending = target !== remap.device[i];
@@ -334,7 +338,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                 disabled={remap.busy || remap.supported !== true}
                 onChange={(e) => remap.setTarget(i, Number(e.target.value))}
               >
-                {/* loop: FIX-HOT-PATH — 16 x ~17 options (~270 elements) rebuilt every live frame */}
+                {/* loop: HOT-PATH-OK — 16 x ~17 options; memo()ed, only on a remap or focus change */}
                 {REMAP_BUTTON_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
@@ -347,7 +351,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
         })}
         {edge &&
           remap.extraDevice &&
-          // loop: FIX-HOT-PATH — 4 Edge rows rebuilt every live frame
+          // loop: HOT-PATH-OK — N = 4 Edge rows; memo()ed, only on a remap or focus change
           EDGE_REMAP_ROWS.map((part, n) => {
             const i = 16 + n;
             const value = remap.extraDraft[n];
@@ -362,7 +366,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                 </label>
                 <select id={`all-remap-${i}`} role="cell" className="dk-select" value={value} disabled={remap.busy} onChange={(e) => remap.setExtra(n, Number(e.target.value))}>
                   <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
-                  {/* loop: FIX-HOT-PATH — 4 x ~17 options rebuilt every live frame */}
+                  {/* loop: HOT-PATH-OK — 4 x ~17 options; memo()ed, only on a remap or focus change */}
                   {REMAP_BUTTON_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -402,15 +406,25 @@ function LoadedLayout({ remap }: { remap: Remap }) {
 }
 
 // Saved button layouts: the buttons above under a name, for any game's profile.
+export const SavedLayouts = memo(ButtonLayoutsSection);
 function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const { library, setLibrary } = useLibrary();
   const [name, setName] = useState("");
-  // loop: FIX-HOT-PATH — sorts the saved layouts on every live frame
-  const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
-  // loop: FIX-HOT-PATH — filters all games twice per layout every live frame (layouts x games)
-  const usedBy = (id: string) => Object.values(library.games).filter((g) => g.profile?.settings.buttonLayout === id).length;
+  // loop: HOT-PATH-OK — N = saved layouts (a few); once per library change (useMemo + memo)
+  const layouts = useMemo(() => Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name)), [library.layouts]);
+  // How many game profiles use each layout: one pass over the games per library change.
+  const uses = useMemo(() => {
+    const m = new Map<string, number>();
+    // loop: HOT-PATH-OK — N = games with a profile (tens to hundreds); once per library change
+    for (const g of Object.values(library.games)) {
+      const id = g.profile?.settings.buttonLayout;
+      if (id) m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [library.games]);
+  const usedBy = (id: string) => uses.get(id) ?? 0;
   if (!desktop) return null;
   // loop: HOT-PATH-OK — N = 4 Edge names per render
   const extraNames = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`));
@@ -424,7 +438,7 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
         <p className="dk-hint">{t("desktop.layouts.none")}</p>
       ) : (
         <ul className="dk-layouts">
-          {/* loop: FIX-HOT-PATH — every saved layout with its summary rebuilt every live frame */}
+          {/* loop: HOT-PATH-OK — N = saved layouts (a few); memo()ed, only on a remap or library change */}
           {layouts.map(([id, l]) => (
             <li key={id} className={remap.loaded?.id === id ? "loaded" : undefined}>
               <div className="dk-layout-info">
