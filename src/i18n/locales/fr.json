@@ -275,7 +275,10 @@
       "checkedNone": "Vérifié à l'instant : aucune version n'a encore été publiée.",
       "checkedOffline": "Vérification impossible : le serveur de mises à jour est injoignable (hors ligne ?).",
       "backToStable": "Revenir au stable {{version}}",
-      "writeFailed": "La mise à jour du firmware s’est arrêtée avant la fin : {{device}} attend en mode BOOTSEL, sans firmware actif. Ne débranche rien : l’app s’en aperçoit et propose de réinstaller le firmware. Si rien n’apparaît, débranche puis rebranche {{device}}."
+      "writeFailed": "La mise à jour du firmware s’est arrêtée avant la fin : {{device}} attend en mode BOOTSEL, sans firmware actif. Ne débranche rien : l’app s’en aperçoit et propose de réinstaller le firmware. Si rien n’apparaît, débranche puis rebranche {{device}}.",
+      "disabled": "non vérifié (recherche automatique désactivée)",
+      "feedChanged": "Un firmware plus récent est apparu. Vérifie à nouveau.",
+      "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau."
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -676,7 +679,8 @@
       "statusLabel": "État :",
       "triggersTitle": "Gâchettes adaptatives",
       "remapButton": "Attribuer {{button}}",
-      "effectOther": "autre effet ({{n}})"
+      "effectOther": "autre effet ({{n}})",
+      "checkForUpdatesSub": "Désactivé : l’app ne va en ligne pour les mises à jour que quand tu appuies sur Rechercher des mises à jour."
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",
@@ -1441,7 +1445,9 @@
       "joinNotesLink": "Lire les notes de version sur GitHub",
       "joinOffline": "Le canal de développement est injoignable pour l’instant (hors ligne ?). Tu peux quand même rejoindre ; la mise à jour apparaîtra dès qu’il sera joignable.",
       "joinButton": "Rejoindre le canal de développement",
-      "stayButton": "Rester sur stable"
+      "stayButton": "Rester sur stable",
+      "joinCheckOff": "La recherche automatique de mises à jour est désactivée, rien n’a donc été récupéré.",
+      "joinCheck": "Vérifier le canal de développement"
     },
     "layouts": {
       "title": "Dispositions des boutons",

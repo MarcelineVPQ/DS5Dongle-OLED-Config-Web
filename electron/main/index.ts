@@ -13,14 +13,15 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { artRequestTarget } from "./games/artRequest";
 import { hasSchemeHandler, openForUser, startForUser } from "./games/schemeHandler";
-import { firmwareBytes, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
+import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
+import { devChannelPreview } from "./updateFeed";
 import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
 import { loadSettings, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
-import { Updater, FeedMissingError } from "./updater";
+import { Updater } from "./updater";
 import { FirmwareHold } from "./firmwareHold";
 import { isAllowedExternalUrl } from "./urls";
 
@@ -188,21 +189,18 @@ function start(): void {
     (url, init) => net.fetch(url, init),
     () => settings.checkForUpdates,
   );
-  // Firmware the app offers: bundled with this release, or a newer published one.
+  // Firmware the app offers: bundled with this release, or a newer published
+  // one. The feed is looked up only with automatic checks on or when the user
+  // asks; Install downloads exactly the entry shown.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
-    // Fresh every time (a cached feed would go stale with automatic checks
-    // off); the last one fetched is the fallback when offline.
-    manifest: async () => {
-      try {
-        return { manifest: await updater.fetchManifest(), problem: null };
-      } catch (cause) {
-        if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished" };
-        const cached = updater.getManifest();
-        return cached ? { manifest: cached, problem: null } : { manifest: null, problem: "offline" };
-      }
-    },
-    downloadPublished: () => updater.downloadFirmware(),
+    manifest: firmwareFeed(
+      updater.feed,
+      () => settings.checkForUpdates,
+      () => settings.updateChannel,
+    ),
+    freshFeed: (channel) => updater.feed.get(channel, 0),
+    download: (uf2) => updater.downloadFirmwareFile(uf2),
   };
 
   registerIpc({
@@ -263,22 +261,15 @@ function start(): void {
     installUpdate: () => (hold.active ? Promise.resolve(updater.getState()) : updater.downloadAndInstall()),
     // The channel first (without the routine re-check, which would race this
     // one), then the stable version on offer even though it's older.
-    devChannelPreview: async () => {
-      try {
-        const m = await updater.fetchManifest("dev");
-        return { app: m.app.version, firmware: m.firmware?.version ?? null, notes: m.app.notes ?? null, notesUrl: m.app.notes_url ?? null };
-      } catch {
-        return null; // offline or no dev build yet: the dialog says so
-      }
-    },
+    devChannelPreview: (asked) => devChannelPreview(updater.feed, settings.checkForUpdates, asked),
     backToStable: () => {
       updateSetting("updateChannel", "stable", false);
       return updater.backToStable();
     },
     restartToUpdate,
-    latestFirmware: () => latestFirmware(firmwareSource),
+    latestFirmware: (asked) => latestFirmware(firmwareSource, asked),
     officialControllerFirmware: (asked) => officialFirmware.lookup(asked),
-    downloadFirmware: () => firmwareBytes(firmwareSource),
+    downloadFirmware: (shown) => firmwareBytes(firmwareSource, shown),
     setFirmwareWriting: (writing) => hold.setWriting(writing),
     getFirmwareHold: () => hold.state(),
     getDesktopPalette: () => readDesktopPalette(),
@@ -320,8 +311,9 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   // Turned on with an update already waiting: install it now.
   if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", () => void updater.downloadAndInstall());
   if (key === "gamesScanAllowed") syncRunningWatcher();
-  // A different feed: look again (a development build may now be offered).
-  if (key === "updateChannel" && recheck && updater.getState().phase !== "ready") void updater.check();
+  // A different feed: look again (a development build may now be offered),
+  // only with automatic checks on (off: the next "Check for updates" does).
+  if (key === "updateChannel" && recheck && settings.checkForUpdates && updater.getState().phase !== "ready") void updater.check();
   tray?.updateSettings(settings);
   return settings;
 }

@@ -275,7 +275,10 @@
       "checkedNone": "Gerade geprüft: Es wurde noch kein Release veröffentlicht.",
       "checkedOffline": "Prüfung fehlgeschlagen: Der Update-Server ist nicht erreichbar (offline?).",
       "backToStable": "Zurück zu stabil {{version}}",
-      "writeFailed": "Das Firmware-Update wurde nicht fertig, darum wartet {{device}} im BOOTSEL-Modus, ohne laufende Firmware. Nicht abziehen: Die App erkennt das und bietet an, die Firmware erneut zu installieren. Erscheint nichts, {{device_akk}} abziehen und wieder einstecken."
+      "writeFailed": "Das Firmware-Update wurde nicht fertig, darum wartet {{device}} im BOOTSEL-Modus, ohne laufende Firmware. Nicht abziehen: Die App erkennt das und bietet an, die Firmware erneut zu installieren. Erscheint nichts, {{device_akk}} abziehen und wieder einstecken.",
+      "disabled": "nicht geprüft (automatische Suche ist aus)",
+      "feedChanged": "Eine neuere Firmware ist erschienen. Prüfe erneut.",
+      "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut."
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
@@ -676,7 +679,8 @@
       "statusLabel": "Status:",
       "triggersTitle": "Adaptive Trigger",
       "remapButton": "{{button}} zuweisen",
-      "effectOther": "anderer Effekt ({{n}})"
+      "effectOther": "anderer Effekt ({{n}})",
+      "checkForUpdatesSub": "Aus: Die App geht nur dann für Updates online, wenn du auf „Nach Updates suchen“ drückst."
     },
     "tour": {
       "stepOf": "Schritt {{n}} von {{total}}",
@@ -1441,7 +1445,9 @@
       "joinNotesLink": "Versionshinweise auf GitHub lesen",
       "joinOffline": "Der Entwicklungs-Feed ist gerade nicht erreichbar (offline?). Du kannst trotzdem beitreten; das Update erscheint, sobald er erreichbar ist.",
       "joinButton": "Dem Entwicklungskanal beitreten",
-      "stayButton": "Bei Stabil bleiben"
+      "stayButton": "Bei Stabil bleiben",
+      "joinCheckOff": "Die automatische Update-Suche ist aus, daher wurde nichts abgerufen.",
+      "joinCheck": "Entwicklungs-Feed prüfen"
     },
     "layouts": {
       "title": "Tastenbelegungen",

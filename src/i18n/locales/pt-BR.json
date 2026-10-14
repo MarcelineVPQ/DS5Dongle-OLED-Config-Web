@@ -275,7 +275,10 @@
       "checkedNone": "Verificado agora: nenhuma versão foi publicada ainda.",
       "checkedOffline": "Não foi possível verificar: o servidor de atualizações não responde (offline?).",
       "backToStable": "Voltar ao estável {{version}}",
-      "writeFailed": "A atualização do firmware parou antes de terminar: {{device}} está esperando no modo BOOTSEL, sem firmware rodando. Não desconecte nada: o app percebe e oferece instalar o firmware de novo. Se nada aparecer, desconecte e conecte {{device}} de novo."
+      "writeFailed": "A atualização do firmware parou antes de terminar: {{device}} está esperando no modo BOOTSEL, sem firmware rodando. Não desconecte nada: o app percebe e oferece instalar o firmware de novo. Se nada aparecer, desconecte e conecte {{device}} de novo.",
+      "disabled": "não verificado (a busca automática está desligada)",
+      "feedChanged": "Apareceu um firmware mais novo. Verifique de novo.",
+      "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo."
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -676,7 +679,8 @@
       "statusLabel": "Status:",
       "triggersTitle": "Gatilhos adaptáveis",
       "remapButton": "Atribuir {{button}}",
-      "effectOther": "outro efeito ({{n}})"
+      "effectOther": "outro efeito ({{n}})",
+      "checkForUpdatesSub": "Desligado: o app só fica online para buscar atualizações quando você toca em Procurar atualizações."
     },
     "tour": {
       "stepOf": "Passo {{n}} de {{total}}",
@@ -1441,7 +1445,9 @@
       "joinNotesLink": "Ler as notas da versão no GitHub",
       "joinOffline": "Não dá para acessar o canal de desenvolvimento agora (sem conexão?). Você pode entrar mesmo assim; a atualização aparece quando ele estiver acessível.",
       "joinButton": "Entrar no canal de desenvolvimento",
-      "stayButton": "Continuar no estável"
+      "stayButton": "Continuar no estável",
+      "joinCheckOff": "A busca automática de atualizações está desligada, então nada foi consultado.",
+      "joinCheck": "Verificar o canal de desenvolvimento"
     },
     "layouts": {
       "title": "Layouts de botões",

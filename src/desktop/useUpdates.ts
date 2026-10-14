@@ -72,7 +72,8 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   const refreshLatest = useCallback(async (): Promise<FirmwareLookup> => {
     let r: FirmwareLookup;
     try {
-      r = (await window.desktop?.latestFirmware()) ?? { latest: null, problem: "offline" };
+      // A check button: allowed to go online even with automatic checks off.
+      r = (await window.desktop?.latestFirmware(true)) ?? { latest: null, problem: "offline" };
     } catch {
       r = { latest: null, problem: "offline" };
     }
@@ -81,11 +82,16 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     return r;
   }, []);
 
-  // Look up the published firmware whenever the app checks for updates.
+  // Look up the published firmware at start and whenever an app update check
+  // ends. Main goes online for it only with automatic checks on, and reuses
+  // the check's own feed (one fetch per check).
+  const phase = appUpdate.phase;
+  const midCheck = phase === "checking" || phase === "downloading" || phase === "installing";
   // lifetime: OK — cleanup: drops a late lookup answer (holds no resource)
   useEffect(() => {
+    if (midCheck) return;
     let live = true;
-    window.desktop?.latestFirmware().then(
+    window.desktop?.latestFirmware(false).then(
       (r) => {
         if (!live) return;
         setLatest(r.latest);
@@ -96,21 +102,22 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     return () => {
       live = false;
     };
-  }, [appUpdate.phase]);
+  }, [phase, midCheck]);
 
   const installed = bridge.firmwareVersion;
   const { available, backToStable } = firmwareOffer(latest?.version, installed);
 
   const start = useCallback(async () => {
     const client = bridge.client;
-    if (!client || state.phase === "running" || state.phase === "verifying") return;
+    if (!client || !latest || state.phase === "running" || state.phase === "verifying") return;
     // Never flash while the app is replacing itself.
     if (appUpdate.phase === "downloading" || appUpdate.phase === "installing") {
       setState({ phase: "failed", detail: "Wait for the app update to finish first." });
       return;
     }
     try {
-      const version = await updateFirmware(client, (progress) => setState({ phase: "running", progress }));
+      // The entry shown on the card, exactly (never a newer feed's).
+      const version = await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress }));
       setState({ phase: "verifying", version });
       // The dongle only shows up on USB once a controller connects, so a slow
       // return isn't a failure: keep waiting, and ask for PS.
@@ -118,8 +125,17 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
     } catch (cause) {
       setState({ phase: "failed", detail: errorText(cause) });
+      // Show what the feed offers now (the failed install already fetched it,
+      // so this doesn't go online again).
+      window.desktop?.latestFirmware(false).then(
+        (r) => {
+          setLatest(r.latest);
+          setProblem(r.problem);
+        },
+        () => undefined,
+      );
     }
-  }, [appUpdate.phase, bridge.client, state.phase]);
+  }, [appUpdate.phase, bridge.client, latest, state.phase]);
 
   // The hook reconnects to the rebooted dongle by itself; the outcome is
   // derived from the version it reports, not stored separately.
