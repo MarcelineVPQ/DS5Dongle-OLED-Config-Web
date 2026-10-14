@@ -63,6 +63,8 @@ export const ProfileSettingsSchema = z.strictObject({
   lockVolume: z.boolean().optional(),
   // Protocol 1.16: the controller's mic level (0 = the PC's, 1..64).
   micLevel: z.number().int().min(0).max(64).optional(), // MIC_LEVEL_MAX (protocol/config.ts; not in the main process build)
+  // Protocol 1.17: the controller's mic echo cancellation.
+  micEchoCancel: z.boolean().optional(),
   // A saved button layout (protocol 1.8: applied for the game only, never
   // to flash); absent = the player's normal buttons.
   buttonLayout: LayoutIdSchema.optional(),
@@ -92,6 +94,7 @@ export const PROFILE_FIELDS = [
   "speakerGain",
   "lockVolume",
   "micLevel",
+  "micEchoCancel",
 ] as const satisfies ReadonlyArray<keyof ProfileSettings>;
 export type ProfileField = (typeof PROFILE_FIELDS)[number];
 

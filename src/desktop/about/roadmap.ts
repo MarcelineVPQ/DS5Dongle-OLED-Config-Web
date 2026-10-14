@@ -120,6 +120,12 @@ export const ROADMAP: RoadmapItem[] = [
   },
   {
     column: "next",
+    title: "Mic echo cancellation",
+    text: "The controller's own echo cancellation is on, so voice chat and the Mic Test no longer hear the PC's sound come back; a switch next to Microphone level turns it off, per game too.",
+    areas: ["audio", "controller"],
+  },
+  {
+    column: "next",
     title: "Controller off when the PC sleeps",
     text: "The controller turns off once the PC sleeps, and the PS button can wake the PC (both under {{deviceName}} in the app and on {{device}}'s own Settings screen).",
     areas: ["dongle", "controller"],
@@ -298,7 +304,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Steady mic delay", text: "Your voice reaches the PC with the same short delay all session, even after a Bluetooth hiccup.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Less headset delay", text: "Game sound reaches a headset on the controller about 10 ms sooner.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Speaker plays both channels", text: "The controller's speaker plays the left and right channels, not only the right.", areas: ["audio", "dongle"] },
-  { column: "planned", title: "No echo in speaker chat", text: "Chatting through the controller's speaker and built-in microphone doesn't echo for the other side.", areas: ["audio", "dongle"] },
   {
     column: "planned",
     title: "Stereo setup on Windows",

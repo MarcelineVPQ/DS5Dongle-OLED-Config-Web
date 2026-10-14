@@ -271,6 +271,30 @@ export function MicLevelSlider(props: SectionProps) {
   );
 }
 
+// Protocol 1.17: the controller's own echo cancellation for its microphone.
+const hasEchoCancel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity, 17, FEATURES3.echoCancel);
+
+// The controller's echo cancellation (on by default): it takes the PC's own
+// sound, played on the controller's headset or speaker, back out of what its
+// mic hears, so a voice chat or the Mic Test doesn't repeat itself. Off, the
+// board leaves it to the game. Live it sits next to Microphone level under the
+// Mic Test; in a game's profile, in the Microphone card. Older firmware has no
+// switch (MicLevelSlider already says to update).
+export function EchoCancelToggle(props: SectionProps) {
+  const { t } = useTranslation();
+  const { d, set, sub } = useFields(props);
+  if (!hasEchoCancel(props.bridge)) return null;
+  return (
+    <Toggle
+      label={t("desktop.settings.echoCancel")}
+      sub={sub("micEchoCancel", t("desktop.settings.echoCancelSub"))}
+      value={d.micEchoCancel}
+      disabled={!d.btMicEnable}
+      onChange={(v) => set("micEchoCancel", v)}
+    />
+  );
+}
+
 export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, sub, live } = useFields(props);
@@ -284,8 +308,9 @@ export function MicSection(props: SectionProps) {
       <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
       {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
-      {/* Live, the level is under the Mic Test (PartPanel). */}
+      {/* Live, the level and the echo cancellation are under the Mic Test (PartPanel). */}
       {!live && <MicLevelSlider {...props} />}
+      {!live && <EchoCancelToggle {...props} />}
     </section>
   );
 }

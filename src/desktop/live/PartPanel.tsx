@@ -42,6 +42,7 @@ import LightbarPage from "../pages/LightbarPage";
 import {
   AutoHapticsSection,
   DisplaySection,
+  EchoCancelToggle,
   HapticsSection,
   MicLevelSlider,
   MicSection,
@@ -182,7 +183,18 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
       {part === "body" && <LevelMeter bridge={bridge} which="haptic" />}
       {part === "body" && <AutoHapticsSection bridge={bridge} />}
       {part === "mute" && <MicSection bridge={bridge} />}
-      {part === "mute" && <MicTest headset={input?.headphones ?? false} output={bridge.draft.speakerSelect} level={<MicLevelSlider bridge={bridge} />} />}
+      {part === "mute" && (
+        <MicTest
+          headset={input?.headphones ?? false}
+          output={bridge.draft.speakerSelect}
+          level={
+            <>
+              <MicLevelSlider bridge={bridge} />
+              <EchoCancelToggle bridge={bridge} />
+            </>
+          }
+        />
+      )}
       {part === "ps" && <SlotsPage bridge={bridge} />}
       {EDGE_PARTS.has(part) && <EdgePartInfo part={part} />}
       {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}

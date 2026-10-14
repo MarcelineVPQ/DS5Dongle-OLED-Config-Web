@@ -58,6 +58,10 @@ describe("game profile values (format 2: left out = my normal setting)", () => {
     expect(gameGroups({ format: 2, micLevel: 40 }, normal)).toEqual(["micLevel"]);
     expect(ProfileSettingsSchema.safeParse({ format: 2, micLevel: 64 }).success).toBe(true);
     expect(ProfileSettingsSchema.safeParse({ format: 2, micLevel: 65 }).success).toBe(false);
+    // Protocol 1.17: a game's own echo cancellation.
+    expect(PROFILE_FIELDS as readonly string[]).toContain("micEchoCancel");
+    expect(gameGroups({ format: 2, micEchoCancel: false }, normal)).toEqual(["echoCancel"]);
+    expect(ProfileSettingsSchema.safeParse({ format: 2, micEchoCancel: 1 }).success).toBe(false);
     // Every field is in exactly one game-page group.
     expect(PROFILE_GROUPS.flatMap((g) => g.fields).sort()).toEqual([...PROFILE_FIELDS].sort());
   });

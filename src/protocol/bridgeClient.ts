@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V16, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V17, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
@@ -96,6 +96,7 @@ export const FEATURES3 = {
   pcSleep: 0x04, // protocol 1.14: what the dongle does when the PC sleeps (identity [47], 0xF6 0x17)
   timedGripTest: 0x08, // protocol 1.15: 0xF6 0x0E [side, tenths] holds the grip test steadily (0 stops)
   micLevel: 0x10, // protocol 1.16: the controller's mic level (config body 50 bytes)
+  echoCancel: 0x20, // protocol 1.17: the controller's mic echo cancellation (config body 51 bytes)
 } as const;
 // Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
 export const POWER_FLAGS = {
@@ -375,6 +376,12 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= 16) && (p.features3 & FEATURES3.micLevel) !== 0;
   }
 
+  // Protocol 1.17+: the mic echo cancellation (51 bytes).
+  get echoCancel(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 17) && (p.features3 & FEATURES3.echoCancel) !== 0;
+  }
+
   // Protocol 1.6+: left and right grip haptics strengths.
   get splitHaptics(): boolean {
     return !!this.protocol && (this.protocol.major > 1 || this.protocol.minor >= 6);
@@ -426,12 +433,12 @@ export class Ds5BridgeClient {
 
   async readConfig(): Promise<ConfigBody> {
     // The whole body: older firmware answers its own (shorter) body to this.
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V16));
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V17));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel);
+    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel, this.echoCancel);
     await this.command(FUNC.applyConfig, [...body]);
   }
 
