@@ -3,9 +3,11 @@
 //     sends zero-force triggers and no HD haptics; it must stay on HiFi)
 //   - a global PROTON_PREFER_SDL / PROTON_USE_SDL (forces the Xbox path)
 //   - no read/write access to the controller's hidraw node
-//   - the controller's hardware volume and mic gain left low by the boot ALSA restore
+//   - the controller's hardware volume and mic gain left low by the ALSA restore
+//     that runs whenever its sound card appears (boot, replug, firmware update)
 import { execFile } from "node:child_process";
-import { accessSync, constants, readFileSync, readdirSync, realpathSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
+import { runPkexec, type PkexecResult, type PkexecRunner } from "../linuxSetup";
 import { basename, join } from "node:path";
 import { promisify } from "node:util";
 
@@ -201,6 +203,7 @@ export interface DualSenseMixer {
   card: number; // ALSA card number (changes with plug order)
   key: string; // where it's plugged in (the card's USB path), stable across boots
   controls: MixerControl[];
+  saved?: Record<string, number> | null; // its levels in ALSA's saved state (null: no entry)
 }
 
 /** `amixer -c N contents` (C locale): every control's name, first value and maximum. */
@@ -221,14 +224,19 @@ export function parseAmixerContents(text: string): MixerControl[] {
   return out;
 }
 
-/** What to change on one card: the target controls below full. */
-export function lowMixerControls(controls: MixerControl[]): MixerChange[] {
+/** What to change on one card: the target controls below full, live or in
+ * ALSA's saved state (`saved`, by control name). `from` is the live value when
+ * that is low, else the saved one (what the next reconnect would bring back). */
+export function lowMixerControls(controls: MixerControl[], saved?: Record<string, number> | null): MixerChange[] {
   const out: MixerChange[] = [];
   // loop: NOT-WORTH — N = 4 mixer targets per card; once per scan
   for (const name of MIXER_TARGETS) {
     // loop: NOT-WORTH — ~20 controls per card; once per scan
     const c = controls.find((x) => x.name === name);
-    if (c && c.value < c.max) out.push({ name, from: c.value, to: c.max });
+    if (!c) continue;
+    const kept = saved?.[name];
+    if (c.value < c.max) out.push({ name, from: c.value, to: c.max });
+    else if (kept !== undefined && kept < c.max) out.push({ name, from: kept, to: c.max });
   }
   return out;
 }
@@ -264,11 +272,67 @@ export function findDualSenseAlsaCards(sysSound = "/sys/class/sound", procAsound
   return out.sort((a, b) => a.card - b.card);
 }
 
-/** What talks to ALSA: tests swap in a fake, the app runs amixer. */
+// ---- Keeping them: ALSA's saved state ----
+// Every time a sound card appears (boot, replug, and each time the board
+// restarts: a firmware update, a reconnect), udev's 90-alsa-restore.rules runs
+// `alsactl restore <N>`, which sets the card's controls from
+// /var/lib/alsa/asound.state (its entry `state.<card id>`, "Controller" for a
+// DualSense; without one, alsactl's init defaults). A level set only on the
+// live card is undone at the next reconnect. `alsactl store <N>` saves this
+// one card's current levels into that file (alsactl keeps the other cards'
+// entries), so the restore brings them back full. The file belongs to root:
+// the store runs through pkexec (runPkexec, linuxSetup.ts), fixed argv.
+// A per-user copy (`alsactl -f <own file> store`, then `restore`) needs no
+// password but can't help: udev restores from the system file as root, so the
+// copy would only be put back while the app runs, which the card watcher
+// (volumeKeeper.ts) already does with amixer.
+export const ALSA_STATE_FILE = "/var/lib/alsa/asound.state";
+const ALSACTL_PATHS = ["/usr/sbin/alsactl", "/sbin/alsactl", "/usr/bin/alsactl"];
+
+/** alsactl's absolute path (pkexec runs it as root by path), null without alsa-utils. */
+export function alsactlPath(exists: (path: string) => boolean = existsSync): string | null {
+  // loop: NOT-WORTH — three fixed paths; once per save
+  return ALSACTL_PATHS.find((p) => exists(p)) ?? null;
+}
+
+/** One card's saved levels in asound.state (`state.<id> { control.N { name '…' value … } }`),
+ * by control name (switches 1/0), or null when the card has no entry. */
+export function parseSavedLevels(text: string, id: string): Record<string, number> | null {
+  const head = new RegExp(`^state\\.${id.replace(/[^\w]/g, "\\$&")} \\{$`, "m").exec(text);
+  if (!head) return null;
+  const end = text.indexOf("\n}", head.index);
+  const block = text.slice(head.index, end < 0 ? undefined : end);
+  const out: Record<string, number> = {};
+  // loop: NOT-WORTH — ~10 controls in one card's entry; once per scan
+  for (const control of block.split(/^\tcontrol\.\d+ \{$/m).slice(1)) {
+    const m = /^\t\tname (?:'([^']*)'|(\S+))$/m.exec(control);
+    const raw = /^\t\tvalue (\S+)$/m.exec(control)?.[1];
+    if (!m || raw === undefined) continue;
+    const value = raw === "true" ? 1 : raw === "false" ? 0 : Number(raw);
+    if (Number.isFinite(value)) out[m[1] ?? m[2]] = value;
+  }
+  return out;
+}
+
+export type SaveResult = PkexecResult | { ok: true; skipped: true };
+
+/** `pkexec alsactl store <N>`: saves this card's levels as ALSA's saved state.
+ * Skipped (nothing to keep them against) without alsactl or a saved-state file:
+ * then no udev restore lowers them either. */
+export async function saveCardState(card: number, pkexec: PkexecRunner = runPkexec, exists: (path: string) => boolean = existsSync): Promise<SaveResult> {
+  if (!Number.isInteger(card) || card < 0) throw new Error("Not a sound card number.");
+  const alsactl = alsactlPath(exists);
+  if (!alsactl || !exists(ALSA_STATE_FILE)) return { ok: true, skipped: true };
+  return pkexec([alsactl, "store", String(card)]);
+}
+
+/** What talks to ALSA: tests swap in a fake, the app runs amixer and alsactl. */
 export interface MixerLayer {
   cards: () => Array<{ card: number; key: string }>;
   contents: (card: number) => Promise<string>;
   set: (card: number, name: MixerName, value: number) => Promise<void>;
+  saved: (card: number) => Record<string, number> | null; // the card's levels in ALSA's saved state, null: none
+  save: (card: number) => Promise<SaveResult>; // pkexec alsactl store <card>
 }
 
 export const amixerLayer: MixerLayer = {
@@ -278,6 +342,16 @@ export const amixerLayer: MixerLayer = {
     if (!(MIXER_TARGETS as readonly string[]).includes(name) || !Number.isInteger(value) || value < 0) throw new Error("Not a controller volume control.");
     await run("amixer", ["-c", String(card), "-q", "cset", `name=${name}`, String(value)], { env: { ...process.env, LC_ALL: "C" }, timeout: 5000 });
   },
+  saved: (card) => {
+    try {
+      // The file is world-readable (0644); the card's entry is keyed by its id.
+      return parseSavedLevels(readFileSync(ALSA_STATE_FILE, "utf8"), readFileSync(`/proc/asound/card${card}/id`, "utf8").trim());
+    } catch {
+      // error: NOT-WORTH — no saved-state file (no alsa-utils) or the card went away: nothing saved, so only the live levels count
+      return null;
+    }
+  },
+  save: (card) => saveCardState(card),
 };
 
 /** Every connected DualSense card with its controls (none without ALSA or amixer). */
@@ -286,7 +360,7 @@ export async function dualSenseMixers(layer: MixerLayer = amixerLayer): Promise<
   // loop: NOT-WORTH — DualSense cards, 0-2, one amixer read each; once per scan
   for (const { card, key } of layer.cards()) {
     try {
-      out.push({ card, key, controls: parseAmixerContents(await layer.contents(card)) });
+      out.push({ card, key, controls: parseAmixerContents(await layer.contents(card)), saved: layer.saved(card) });
     } catch {
       // error: NOT-WORTH — amixer missing or the card went away
     }
@@ -310,4 +384,29 @@ export async function restoreDualSenseMixer(key: string, changes: MixerChange[],
   const now = parseAmixerContents(await layer.contents(card));
   // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per Undo
   for (const c of changes) if (now.find((x) => x.name === c.name)?.value === c.to) await layer.set(card, c.name, c.from);
+}
+
+/** Keep the levels: save the card at `key` as ALSA's saved state (pkexec). */
+export async function saveDualSenseMixer(key: string, layer: MixerLayer = amixerLayer): Promise<SaveResult> {
+  const card = layer.cards().find((c) => c.key === key)?.card;
+  if (card === undefined) throw new Error("The controller isn't connected.");
+  return layer.save(card);
+}
+
+/** The card watcher's step (volumeKeeper.ts): every DualSense card with a target
+ * control below full is set to full again, live only (no password while the
+ * app runs in the background). Returns how many cards it changed. */
+export async function raiseLowDualSenseMixers(layer: MixerLayer = amixerLayer): Promise<number> {
+  let raised = 0;
+  // loop: SERIAL-REQUIRED — one ALSA card's read and writes after another, ≤ 2 cards; per card appearing
+  for (const { card } of layer.cards()) {
+    // A card not open to this user yet throws: the watcher tries again.
+    // Live levels only: what the saved state says is for the next reconnect.
+    const low = lowMixerControls(parseAmixerContents(await layer.contents(card)));
+    if (!low.length) continue;
+    // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per card appearing
+    for (const c of low) await layer.set(card, c.name, c.to);
+    raised++;
+  }
+  return raised;
 }

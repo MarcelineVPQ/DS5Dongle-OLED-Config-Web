@@ -454,6 +454,7 @@
           "audioRule": "Desativar a regra de áudio que força o controle para \"pro-audio\"",
           "audioProfile": "Mudar o áudio do controle para o perfil \"{{profile}}\"",
           "audioVolume": "Colocar o volume e o nível do microfone do controle no máximo neste computador",
+          "audioVolumeSaved": "Manter o volume e o nível do microfone do controle no máximo quando ele reconectar",
           "gamepad": "Passar o controle para {{game}} como controle padrão (XInput)",
           "hdr": "Ativar HDR para {{game}}",
           "hdrUpdate": "Passar o HDR de {{game}} para o gamescope",
@@ -472,7 +473,9 @@
           "envHeroic": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis.",
           "audioRule": "{{file}} coloca a placa de áudio do DualSense no perfil pro-audio, o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. O arquivo é renomeado para .disabled (não é apagado) e o serviço de áudio (WirePlumber) reinicia, então o som cai por um segundo.",
           "audioProfile": "A placa de áudio do DualSense está em \"{{profile}}\", o que faz o GE-Proton 11 enviar gatilhos sem força e nenhuma resposta tátil. Nenhum arquivo muda; é o mesmo que escolher o perfil nas suas configurações de som.",
-          "audioVolume": "No Linux, a placa de som do controle mantém o próprio volume e nível do microfone da última vez que foram salvos, e os controles deslizantes da sua área de trabalho não os mudam. Aqui eles estão baixos, então o microfone pode soar quase mudo e o headset e o alto-falante tocam mais baixo. Eles vão para o máximo (no mixer da placa de som do Linux, ALSA); os controles de volume da sua área de trabalho funcionam como antes, e Desfazer devolve os níveis antigos. Quando Nível do microfone está acima de 0 {{device_em}}, é essa configuração que decide o nível do microfone.",
+          "audioVolume": "No Linux, a placa de som do controle mantém o próprio volume e nível do microfone, e os controles deslizantes da sua área de trabalho não os mudam. Cada vez que a placa aparece (quando o computador liga, quando você conecta o controle e cada vez que {{device}} reinicia, por exemplo depois de uma atualização de firmware), o Linux volta aos níveis que salvou por último. Aqui eles estão baixos, então o microfone pode soar quase mudo e o headset e o alto-falante tocam mais baixo. Eles vão para o máximo (no mixer da placa de som do Linux, ALSA) e são salvos como os níveis salvos do Linux, para continuarem no máximo depois de reconectar: salvar pede sua senha uma vez, na janela do próprio sistema. Enquanto este app está aberto, ele também os coloca no máximo de novo sempre que o controle reconecta. Os controles de volume da sua área de trabalho funcionam como antes, e Desfazer devolve os níveis antigos (com a senha de novo). Quando Nível do microfone está acima de 0 {{device_em}}, é essa configuração que decide o nível do microfone.",
+          "audioVolumeSaved": "O volume e o nível do microfone do controle estão no máximo agora, mas os níveis que o Linux salvou para ele estão baixos, então eles caem de novo na próxima vez que o controle reconectar (quando o computador liga, quando você o conecta ou quando {{device}} reinicia, por exemplo depois de uma atualização de firmware). Os níveis no máximo são salvos como os níveis salvos do Linux (ALSA), o que pede sua senha uma vez, na janela do próprio sistema. Desfazer devolve os níveis antigos.",
+          "audioVolumeAgain": "Eles já foram colocados no máximo, e este app os coloca no máximo de novo sempre que o controle reconecta, mas estão baixos outra vez. Algo além deste app os abaixou: um mixer de som (como o alsamixer) ou outro app depois que o controle conectou, ou uma reconexão enquanto este app não estava aberto, com níveis baixos ainda salvos. Aplicar os coloca no máximo e os salva de novo (sua senha uma vez).",
           "gamepad": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração.{{runner}}",
           "gamepadSteam": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração. As opções de inicialização ficam: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}.",
@@ -506,7 +509,9 @@
           "stale": "Esta mudança não se aplica mais (a configuração mudou desde a última verificação).",
           "restartFailed": "Salvo, mas a reinicialização do serviço de áudio falhou: {{error}}",
           "profileFailed": "A troca de perfil falhou: {{error}}",
-          "volumeFailed": "Não foi possível ajustar o volume do controle: {{error}}"
+          "volumeFailed": "Não foi possível ajustar o volume do controle: {{error}}",
+          "volumeNotSaved": "Colocado no máximo, mas não salvo para a próxima reconexão ({{error}}). Enquanto este app está aberto, ele coloca no máximo de novo sempre que o controle reconecta, e esta página oferece salvar outra vez.",
+          "passwordCancelled": "a janela da senha foi cancelada"
         },
         "legacy": "{{text}}"
       },
@@ -539,7 +544,8 @@
       "launcherOverwrote": "O {{launcher}} desfez uma mudança aplicada aqui (ele estava aberto). Aplique de novo: se o {{launcher}} estiver aberto, ele é fechado antes e aberto de novo depois.",
       "details": "Detalhes",
       "needsAttention": "A revisar",
-      "undoAudioRestart": "Desfeito, mas reiniciar o serviço de áudio falhou ({{error}}). Saia e entre de novo na sessão, ou reinicie o PC, para a mudança de áudio valer."
+      "undoAudioRestart": "Desfeito, mas reiniciar o serviço de áudio falhou ({{error}}). Saia e entre de novo na sessão, ou reinicie o PC, para a mudança de áudio valer.",
+      "undoVolumeNotSaved": "Desfeito: os níveis antigos voltaram, mas não foi possível restaurar os níveis salvos do Linux ({{error}}), então o controle volta no máximo depois da próxima reconexão."
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -1629,6 +1635,9 @@
       "boardFailed": "{{device, capitalize}} não conseguiu concluir isso (por exemplo, salvar na memória). O que você mudou pode se perder ao desligar. Tente de novo; se continuar falhando, desconecte {{device}} e conecte de novo.",
       "boardBusy": "{{device, capitalize}} está ocupado com outra coisa. Tente de novo daqui a pouco.",
       "boardRejected": "{{device, capitalize}} não aceitou isso. O firmware pode ser mais antigo que este app: atualize o firmware e tente de novo."
+    },
+    "notices": {
+      "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou."
     }
   },
   "ad": {

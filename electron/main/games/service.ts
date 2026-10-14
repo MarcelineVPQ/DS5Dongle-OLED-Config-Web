@@ -25,7 +25,18 @@ import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClose
 import { schemeHandlerExec } from "./schemeHandler";
 import { installProton, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools, windowsSteamRoots } from "./steam";
-import { amixerLayer, dualSenseCards, dualSenseMixers, restartWirePlumber, restoreDualSenseMixer, setCardProfile, setDualSenseMixer, type AudioCard, type MixerLayer } from "./system";
+import {
+  amixerLayer,
+  dualSenseCards,
+  dualSenseMixers,
+  restartWirePlumber,
+  restoreDualSenseMixer,
+  saveDualSenseMixer,
+  setCardProfile,
+  setDualSenseMixer,
+  type AudioCard,
+  type MixerLayer,
+} from "./system";
 import { hdrSystem } from "./hdr";
 
 const MANIFEST_TIMEOUT_MS = 5000;
@@ -42,6 +53,10 @@ export interface GamesServiceDeps {
   launchers?: LauncherControl; // tests: a fake process layer
   gameRunning?: () => boolean; // the library sees a game running (Windows: launchers aren't closed then)
   quietPlaySystem?: Omit<QuietPlaySystem, "running" | "flatpak">; // tests: no xdg-mime, registry or file checks
+  // Linux: the volume fix is remembered (the controllerVolumeFull setting): the
+  // app sets the levels to full again whenever the controller's card reappears.
+  volumeKept?: () => boolean;
+  keepVolume?: (on: boolean) => void;
   probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem>; mixer?: MixerLayer }; // tests: no pactl / kscreen-doctor / gdbus / gamescope / amixer (no mixer: no controls)
 }
 
@@ -131,6 +146,7 @@ export class GamesService {
       running: await this.launchers.running(),
       audioCards,
       mixers,
+      volumeKept: this.deps.volumeKept?.() ?? false,
       windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
       notDetected: this.deps.notDetected(),
       hdrMarked: this.deps.hdrMarked(),
@@ -252,7 +268,10 @@ export class GamesService {
   apply(fixIds: string[], restart: RestartList): Promise<ApplyResult> {
     const mixer = this.mixerLayer();
     const setMixer = mixer ? (key: string, changes: Parameters<typeof setDualSenseMixer>[1]) => setDualSenseMixer(key, changes, mixer) : undefined;
-    return this.exclusive(async () => applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile, setMixer }));
+    const saveMixer = mixer ? (key: string) => saveDualSenseMixer(key, mixer) : undefined;
+    return this.exclusive(async () =>
+      applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile, setMixer, saveMixer, keepVolume: this.deps.keepVolume }),
+    );
   }
 
   undo(backupId: string, allowed: RestartList): Promise<UndoResult> {
@@ -279,13 +298,25 @@ export class GamesService {
         let audioRestartFailed: string | undefined;
         // error: SHOWN — desktop.games.undoAudioRestart (was SILENT-BUG: the failed restart was dropped)
         if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch((cause: unknown) => (audioRestartFailed = errorText(cause)));
-        // loop: SERIAL-REQUIRED — ALSA order: one card's restore after another, ≤ 2 cards; per Undo
-        for (const m of run.value.mixer) await restoreDualSenseMixer(m.key, m.changes, mixer!);
+        let volumeNotSaved: string | undefined;
+        // loop: SERIAL-REQUIRED — ALSA order: one card's restore (and its save, a password prompt) after another, ≤ 2 cards; per Undo
+        for (const m of run.value.mixer) {
+          await restoreDualSenseMixer(m.key, m.changes, mixer!);
+          // The old levels go back into ALSA's saved state too (pkexec, explained on the page).
+          if (run.value.mixerSaved) {
+            const saved = await saveDualSenseMixer(m.key, mixer!);
+            // error: SHOWN — desktop.games.undoVolumeNotSaved (the Undo note)
+            if (!saved.ok) volumeNotSaved = saved.reason === "cancelled" ? "cancelled" : saved.message;
+          }
+        }
+        // Undone: the app stops setting them to full when the card reappears.
+        if (run.value.mixer.length) this.deps.keepVolume?.(false);
         return {
           ok: true,
           restored: run.value.files.map((f) => this.tilde(f)),
           ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}),
           ...(audioRestartFailed ? { audioRestartFailed } : {}),
+          ...(volumeNotSaved ? { volumeNotSaved } : {}),
         };
       } catch (cause) {
         // error: SHOWN — main-english: the error text in GamesPage's error notice after Undo (batch E3)

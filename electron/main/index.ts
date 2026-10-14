@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { statSync } from "node:fs";
 import { app, BrowserWindow, dialog, net, protocol, shell, session, type WebContents } from "electron";
-import { IPC, type DesktopSettings, type MainErrorKey } from "../../src/desktop/api";
+import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, logged } from "../../src/errorText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
@@ -12,6 +12,7 @@ import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
+import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
 import { hasSchemeHandler, openForUser, startForUser } from "./games/schemeHandler";
 import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
@@ -45,6 +46,9 @@ let settings: DesktopSettings;
 let quitting = false;
 // Starts/stops the running-game watcher with the Games consent (set in start()).
 let syncRunningWatcher: () => void = () => undefined;
+// Linux: keeps the controller's volume at full while the app runs, once the
+// player applied that Games fix (the controllerVolumeFull setting).
+let syncVolumeKeeper: () => void = () => undefined;
 
 applyLinuxWorkarounds();
 
@@ -165,6 +169,14 @@ function start(): void {
     settings,
   );
 
+  // lifetime: NOT-WORTH — one per app; its card watcher runs only while the setting is on (stop() when it's turned off)
+  const volumeKeeper = process.platform === "linux" ? new VolumeKeeper(() => showMainNotice("desktop.notices.volumeRestored")) : null;
+  syncVolumeKeeper = () => {
+    if (settings.controllerVolumeFull) volumeKeeper?.start();
+    else volumeKeeper?.stop();
+  };
+  syncVolumeKeeper();
+
   // Games library: the player's per-game data (works on every OS).
   const library = new LibraryStore(app.getPath("userData"));
   // Games page (Linux and Windows): the library, per-game profiles and, on
@@ -183,6 +195,17 @@ function start(): void {
           notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.tags?.includes("not-detected") ? [key] : []))),
           // Games the player marked "Supports HDR" get the Turn on HDR fix (with an HDR screen).
           hdrMarked: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.hdr ? [key] : []))),
+          // The volume fix applied (on) or undone (off): remembered, and the card watcher follows.
+          volumeKept: () => settings.controllerVolumeFull,
+          keepVolume: (on) => {
+            if (settings.controllerVolumeFull === on) return;
+            try {
+              updateSetting("controllerVolumeFull", on);
+            } catch {
+              // error: SHOWN — desktop.errors.settingNotSaved (the levels are set; only keeping them after a reconnect isn't remembered; updateSetting logged the cause)
+              showMainError("desktop.errors.settingNotSaved");
+            }
+          },
         })
       : null;
   const withGames = <T>(run: (g: GamesService) => T): T => {
@@ -351,6 +374,11 @@ function showMainError(key: MainErrorKey): void {
   mainWindow?.webContents.send(IPC.showError, key);
 }
 
+// Something the app did on its own (in the background): the page's notice says so.
+function showMainNotice(key: MainNoticeKey): void {
+  mainWindow?.webContents.send(IPC.showNotice, key);
+}
+
 // Throws when the setting can't be saved (or launch at login can't be
 // changed): it is put back first, and the caller shows
 // desktop.errors.settingNotSaved (the page through setSetting's rejection,
@@ -375,6 +403,7 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   // Turned on with an update already waiting: install it now.
   if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", installInBackground);
   if (key === "gamesScanAllowed") syncRunningWatcher();
+  if (key === "controllerVolumeFull") syncVolumeKeeper();
   // A different feed: look again (a development build may now be offered),
   // only with automatic checks on (off: the next "Check for updates" does).
   if (key === "updateChannel" && recheck && settings.checkForUpdates && updater.getState().phase !== "ready")

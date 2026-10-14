@@ -454,6 +454,7 @@
           "audioRule": "Desactivar la regla de audio que fuerza el mando a «pro-audio»",
           "audioProfile": "Cambiar el audio del mando al perfil «{{profile}}»",
           "audioVolume": "Poner al máximo el volumen y el nivel del micrófono del mando en este ordenador",
+          "audioVolumeSaved": "Mantener al máximo el volumen y el nivel del micrófono del mando al volver a conectarlo",
           "gamepad": "Pasar el mando a {{game}} como mando estándar (XInput)",
           "hdr": "Activar HDR para {{game}}",
           "hdrUpdate": "Pasar el HDR de {{game}} a gamescope",
@@ -472,7 +473,9 @@
           "envHeroic": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos.",
           "audioRule": "{{file}} pone la tarjeta de audio del DualSense en el perfil pro-audio, lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. El archivo se renombra a .disabled (no se borra) y el servicio de audio (WirePlumber) se reinicia, así que el sonido se corta un segundo.",
           "audioProfile": "La tarjeta de audio del DualSense está en «{{profile}}», lo que hace que GE-Proton 11 envíe gatillos sin fuerza y nada de retroalimentación háptica. No cambia ningún archivo; es lo mismo que elegir el perfil en tus ajustes de sonido.",
-          "audioVolume": "En Linux, la tarjeta de sonido del mando conserva su propio volumen y nivel del micrófono de la última vez que se guardaron, y los controles deslizantes de tu escritorio no los cambian. Aquí están bajos, así que el micrófono puede sonar casi en silencio y los auriculares y el altavoz suenan más bajo. Se ponen al máximo (en el mezclador de la tarjeta de sonido de Linux, ALSA); los controles de volumen de tu escritorio funcionan como antes, y Deshacer vuelve a poner los niveles anteriores. Si Nivel del micrófono está por encima de 0 en {{device}}, ese ajuste decide el nivel del micrófono.",
+          "audioVolume": "En Linux, la tarjeta de sonido del mando conserva su propio volumen y nivel del micrófono, y los controles deslizantes de tu escritorio no los cambian. Cada vez que aparece la tarjeta (al arrancar el ordenador, al conectar el mando y cada vez que {{device}} se reinicia, por ejemplo tras una actualización de firmware), Linux vuelve a poner los niveles que guardó la última vez. Aquí están bajos, así que el micrófono puede sonar casi en silencio y los auriculares y el altavoz suenan más bajo. Se ponen al máximo (en el mezclador de la tarjeta de sonido de Linux, ALSA) y se guardan como los niveles guardados de Linux, para que sigan al máximo tras volver a conectar: guardarlos pide tu contraseña una vez, en la ventana del propio sistema. Mientras esta app está abierta, también los vuelve a poner al máximo cada vez que el mando se vuelve a conectar. Los controles de volumen de tu escritorio funcionan como antes, y Deshacer vuelve a poner los niveles anteriores (de nuevo con la contraseña). Si Nivel del micrófono está por encima de 0 en {{device}}, ese ajuste decide el nivel del micrófono.",
+          "audioVolumeSaved": "El volumen y el nivel del micrófono del mando están ahora al máximo, pero los niveles que Linux tiene guardados para él son bajos, así que vuelven a bajar la próxima vez que el mando se conecte (al arrancar el ordenador, al conectarlo o cuando {{device}} se reinicia, por ejemplo tras una actualización de firmware). Los niveles al máximo se guardan como los niveles guardados de Linux (ALSA), lo que pide tu contraseña una vez, en la ventana del propio sistema. Deshacer vuelve a poner los niveles anteriores.",
+          "audioVolumeAgain": "Ya se pusieron al máximo, y esta app los vuelve a poner al máximo cada vez que el mando se conecta, pero están bajos otra vez. Algo distinto de esta app los bajó: un mezclador de sonido (como alsamixer) u otra app después de conectar el mando, o una reconexión mientras esta app no estaba abierta y aún había niveles bajos guardados. Aplicar los pone al máximo y los vuelve a guardar (tu contraseña una vez).",
           "gamepad": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración.{{runner}}",
           "gamepadSteam": "{{game}} solo funciona con mandos de tipo Xbox (XInput), y nuestro Proton pasa el DualSense tal cual, así que el juego no ve ningún mando. PROTON_PREFER_SDL=1 hace que Proton se lo entregue a este juego como mando estándar, con vibración. Las opciones de lanzamiento quedan así: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignora esta opción, así que el juego también pasa a {{proton}}.",
@@ -506,7 +509,9 @@
           "stale": "Este cambio ya no aplica (la configuración cambió desde la última revisión).",
           "restartFailed": "Guardado, pero no se pudo reiniciar el servicio de audio: {{error}}",
           "profileFailed": "No se pudo cambiar el perfil: {{error}}",
-          "volumeFailed": "No se pudo ajustar el volumen del mando: {{error}}"
+          "volumeFailed": "No se pudo ajustar el volumen del mando: {{error}}",
+          "volumeNotSaved": "Puesto al máximo, pero no guardado para la próxima reconexión ({{error}}). Mientras esta app está abierta, lo vuelve a poner al máximo cada vez que el mando se conecta, y esta página ofrece guardarlo otra vez.",
+          "passwordCancelled": "se canceló la ventana de la contraseña"
         },
         "legacy": "{{text}}"
       },
@@ -539,7 +544,8 @@
       "launcherOverwrote": "{{launcher}} revirtió un cambio aplicado aquí (estaba en ejecución). Vuelve a aplicarlo: si {{launcher}} está abierto, se cierra primero y luego se vuelve a abrir.",
       "details": "Detalles",
       "needsAttention": "Por revisar",
-      "undoAudioRestart": "Deshecho, pero no se pudo reiniciar el servicio de audio ({{error}}). Cierra sesión y vuelve a entrar, o reinicia el PC, para que el cambio de audio surta efecto."
+      "undoAudioRestart": "Deshecho, pero no se pudo reiniciar el servicio de audio ({{error}}). Cierra sesión y vuelve a entrar, o reinicia el PC, para que el cambio de audio surta efecto.",
+      "undoVolumeNotSaved": "Deshecho: los niveles anteriores han vuelto, pero no se pudieron restaurar los niveles guardados de Linux ({{error}}), así que el mando vuelve al máximo tras su próxima reconexión."
     },
     "setup": {
       "installing": "Instalando el firmware…",
@@ -1629,6 +1635,9 @@
       "boardFailed": "{{device, capitalize}} no pudo terminar eso (por ejemplo, guardarlo en su memoria). Lo que cambiaste puede perderse al apagarse. Inténtalo otra vez; si sigue fallando, desconecta {{device}} y vuelve a conectarlo.",
       "boardBusy": "{{device, capitalize}} está ocupado con otra cosa. Inténtalo de nuevo en un momento.",
       "boardRejected": "{{device, capitalize}} no aceptó eso. Puede que su firmware sea más antiguo que esta app: actualiza el firmware e inténtalo otra vez."
+    },
+    "notices": {
+      "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando."
     }
   },
   "ad": {

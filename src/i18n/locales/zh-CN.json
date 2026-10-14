@@ -451,6 +451,7 @@
           "audioRule": "关闭强制控制器使用“pro-audio”的音频规则",
           "audioProfile": "将控制器音频切换到“{{profile}}”配置",
           "audioVolume": "在这台电脑上把控制器的音量和麦克风音量调到最大",
+          "audioVolumeSaved": "控制器重新连接时保持音量和麦克风音量为最大",
           "gamepad": "将控制器以标准手柄（XInput）形式提供给 {{game}}",
           "hdr": "为 {{game}} 开启 HDR",
           "hdrUpdate": "将 {{game}} 的 HDR 改用 gamescope",
@@ -469,7 +470,9 @@
           "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
           "audioRule": "{{file}} 会把 DualSense 的声卡切换到 pro-audio 配置，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。该文件会被重命名为 .disabled（不会删除），音频服务 (WirePlumber) 会重启，声音会中断一秒。",
           "audioProfile": "DualSense 的声卡当前为“{{profile}}”，导致 GE-Proton 11 发送零力度扳机且没有触觉反馈。不会修改任何文件；等同于在声音设置中选择配置。",
-          "audioVolume": "在 Linux 上，控制器的声卡会保留上次保存的音量和麦克风音量，桌面的音量滑块不会改变它们。这里它们偏低，所以麦克风几乎没有声音，耳机和扬声器的声音也更小。它们会被调到最大（在 Linux 的声卡混音器 ALSA 中）；桌面的音量滑块照常工作，撤销会恢复原来的音量。当 {{device}} 上的麦克风音量大于 0 时，由该设置决定麦克风音量。",
+          "audioVolume": "在 Linux 上，控制器的声卡有自己的音量和麦克风音量，桌面的音量滑块不会改变它们。每次声卡出现时（电脑启动、插入控制器，以及每次 {{device}} 重启，例如固件更新之后），Linux 都会把它们恢复为上次保存的音量。这里它们偏低，所以麦克风几乎没有声音，耳机和扬声器的声音也更小。它们会被调到最大（在 Linux 的声卡混音器 ALSA 中），并保存为 Linux 的已保存音量，这样重新连接后仍是最大：保存时会在系统自己的窗口中要求输入一次密码。本应用运行期间，每当控制器重新连接，也会把它们调回最大。桌面的音量滑块照常工作，撤销会恢复原来的音量（会再次要求输入密码）。当 {{device}} 上的麦克风音量大于 0 时，由该设置决定麦克风音量。",
+          "audioVolumeSaved": "控制器的音量和麦克风音量现在是最大，但 Linux 为它保存的音量偏低，所以下次控制器重新连接时（电脑启动、插入控制器，或 {{device}} 重启，例如固件更新之后）又会降低。最大音量会保存为 Linux 的已保存音量（ALSA），这需要在系统自己的窗口中输入一次密码。撤销会恢复原来的音量。",
+          "audioVolumeAgain": "它们之前已调到最大，并且本应用会在控制器每次重新连接时把它们调回最大，但现在又变低了。是本应用以外的东西降低了它们：控制器连接后有声音混音器（例如 alsamixer）或其他应用改动了它们，或者在本应用未运行时控制器重新连接，而保存的仍是较低的音量。应用会把它们调到最大并再次保存（输入一次密码）。",
           "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
           "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
@@ -503,7 +506,9 @@
           "stale": "此更改已不再适用（上次检查后设置已改变）。",
           "restartFailed": "已保存，但重启音频服务失败：{{error}}",
           "profileFailed": "切换配置失败：{{error}}",
-          "volumeFailed": "设置控制器音量失败：{{error}}"
+          "volumeFailed": "设置控制器音量失败：{{error}}",
+          "volumeNotSaved": "已调到最大，但没有为下次重新连接保存（{{error}}）。本应用运行期间，每当控制器重新连接都会调回最大，此页面也会再次提供保存。",
+          "passwordCancelled": "密码窗口已取消"
         },
         "legacy": "{{text}}"
       },
@@ -536,7 +541,8 @@
       "launcherOverwrote": "{{launcher}} 撤回了在此应用的更改（当时它正在运行）。请再次应用：如果 {{launcher}} 正在运行，会先关闭它，之后重新打开。",
       "details": "详细信息",
       "needsAttention": "待设置",
-      "undoAudioRestart": "已撤销，但重启音频服务失败（{{error}}）。请注销并重新登录，或重启电脑，使音频更改生效。"
+      "undoAudioRestart": "已撤销，但重启音频服务失败（{{error}}）。请注销并重新登录，或重启电脑，使音频更改生效。",
+      "undoVolumeNotSaved": "已撤销：原来的音量已恢复，但无法恢复 Linux 的已保存音量（{{error}}），所以控制器下次重新连接后会回到最大。"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -1621,6 +1627,9 @@
       "boardFailed": "{{device}} 未能完成该操作（例如保存到其存储器）。你的更改可能会在断电后丢失。请重试；如果仍然失败，请拔下 {{device}} 再插上。",
       "boardBusy": "{{device}} 正在忙于其他操作。请稍后重试。",
       "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。"
+    },
+    "notices": {
+      "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。"
     }
   },
   "ad": {

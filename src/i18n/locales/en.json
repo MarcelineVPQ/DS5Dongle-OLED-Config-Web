@@ -453,6 +453,7 @@
           "audioRule": "Turn off the audio rule that forces the controller onto \"pro-audio\"",
           "audioProfile": "Switch the controller's audio to the \"{{profile}}\" profile",
           "audioVolume": "Turn the controller's volume and microphone level up to full on this computer",
+          "audioVolumeSaved": "Keep the controller's volume and microphone level at full when it reconnects",
           "gamepad": "Pass the controller to {{game}} as a standard gamepad (XInput)",
           "hdr": "Turn on HDR for {{game}}",
           "hdrUpdate": "Move {{game}}'s HDR to gamescope",
@@ -471,7 +472,9 @@
           "envHeroic": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers.",
           "audioRule": "{{file}} switches the DualSense's audio card to the pro-audio profile, which makes GE-Proton 11 send zero-force triggers and no haptic feedback. The file is renamed to .disabled (not deleted) and the audio service (WirePlumber) restarts, so sound drops for a second.",
           "audioProfile": "The DualSense's audio card is on \"{{profile}}\", which makes GE-Proton 11 send zero-force triggers and no haptic feedback. No files change; it's the same as picking the profile in your sound settings.",
-          "audioVolume": "On Linux, the controller's sound card keeps its own volume and microphone level from the last time they were saved, and your desktop's sliders don't change them. Here they're low, so the microphone can sound almost silent and the headset and speaker play quieter. They're set to full (in Linux's sound card mixer, ALSA); your desktop's volume sliders work as before, and Undo puts the old levels back. When Microphone level is above 0 on {{device}}, that setting decides the microphone level instead.",
+          "audioVolume": "On Linux, the controller's sound card keeps its own volume and microphone level, and your desktop's sliders don't change them. Each time the card appears (when the computer starts, when you plug the controller in, and each time {{device}} restarts, for example after a firmware update), Linux sets them back to the levels it last saved. Here they're low, so the microphone can sound almost silent and the headset and speaker play quieter. They're set to full (in Linux's sound card mixer, ALSA) and saved as Linux's saved levels, so they stay full after a reconnect: saving asks for your password once, in the system's own prompt. While this app runs, it also sets them back to full whenever the controller reconnects. Your desktop's volume sliders work as before, and Undo puts the old levels back (with the password prompt again). When Microphone level is above 0 on {{device}}, that setting decides the microphone level instead.",
+          "audioVolumeSaved": "The controller's volume and microphone level are full right now, but the levels Linux saved for it are low, so they drop again the next time the controller reconnects (when the computer starts, when you plug it in, or when {{device}} restarts, for example after a firmware update). The full levels are saved as Linux's saved levels (ALSA), which asks for your password once, in the system's own prompt. Undo puts the old levels back.",
+          "audioVolumeAgain": "These were set to full before, and this app sets them back to full whenever the controller reconnects, but they're low again. Something other than this app lowered them: a sound mixer (such as alsamixer) or another app after the controller connected, or a reconnect while this app wasn't running with low levels still saved. Apply sets them to full and saves them again (your password once).",
           "gamepad": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble.{{runner}}",
           "gamepadSteam": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble. The launch options become: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignores this option, so the game also switches to {{proton}}.",
@@ -505,7 +508,9 @@
           "stale": "This change no longer applies (the setup changed since the last scan).",
           "restartFailed": "Saved, but restarting the audio service failed: {{error}}",
           "profileFailed": "Switching the profile failed: {{error}}",
-          "volumeFailed": "Setting the controller's volume failed: {{error}}"
+          "volumeFailed": "Setting the controller's volume failed: {{error}}",
+          "volumeNotSaved": "Set to full, but not saved for the next reconnect ({{error}}). While this app runs, it sets them back to full whenever the controller reconnects, and this page offers to save them again.",
+          "passwordCancelled": "the password prompt was cancelled"
         },
         "legacy": "{{text}}"
       },
@@ -538,7 +543,8 @@
       "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards.",
       "details": "Details",
       "needsAttention": "Needs attention",
-      "undoAudioRestart": "Undone, but restarting the audio service failed ({{error}}). Log out and back in, or restart the PC, for the audio change to take effect."
+      "undoAudioRestart": "Undone, but restarting the audio service failed ({{error}}). Log out and back in, or restart the PC, for the audio change to take effect.",
+      "undoVolumeNotSaved": "Undone: the old levels are back, but the levels Linux saved couldn't be put back ({{error}}), so the controller comes back at full after its next reconnect."
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -1628,6 +1634,9 @@
       "boardFailed": "{{device, capitalize}} couldn't finish that (for example, saving to its memory). What you changed may be lost when it powers off. Try again; if it keeps failing, unplug {{device}} and plug it back in.",
       "boardBusy": "{{device, capitalize}} is busy with something else. Try again in a moment.",
       "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again."
+    },
+    "notices": {
+      "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected."
     }
   },
   "ad": {
