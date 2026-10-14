@@ -2260,16 +2260,25 @@ html[data-theme="light"] .live-ctl {
      resolve them here, not keep the color computed outside the page. */
   color: var(--text-body);
 }
+/* The header art (gameArt.ts headerArt, --gp-art): the hero or the wide
+   capsule over the art-color gradient (the game page's accent, or the art
+   color a Home tile passes); the gradient alone without art, and under any
+   art that won't load. */
 .gp-hero {
   position: relative;
   display: flex;
   align-items: flex-end;
   height: clamp(160px, 30vh, 300px);
   padding: 18px 22px;
-  background: center / cover no-repeat;
+  background:
+    var(--gp-art, none) center / cover no-repeat,
+    linear-gradient(135deg, var(--art-color, var(--dk-sel-bg)), var(--bg-panel));
 }
-.gp-hero.plain {
-  background: linear-gradient(135deg, var(--dk-sel-bg), var(--bg-panel));
+/* Only a cover (portrait): whole, at the right, on the gradient. */
+.gp-hero.tall {
+  background:
+    var(--gp-art) right 6% center / auto 100% no-repeat,
+    linear-gradient(135deg, var(--art-color, var(--dk-sel-bg)), var(--bg-panel));
 }
 .gp-hero::after {
   content: "";
@@ -2902,7 +2911,10 @@ html[data-cards-translucent] .gp-sections .dk-card {
   min-height: 0;
   padding: 0;
   border: 0;
-  background: var(--bg-inset);
+  /* Color only: the big tile's art is .gp-hero's background (a shorthand
+     here reset its size and position: the art showed at full size from its
+     top-left corner, e.g. a flat red slice of Ghostrunner's). */
+  background-color: var(--bg-inset);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -2938,12 +2950,18 @@ html[data-cards-translucent] .gp-sections .dk-card {
 .lib-continue-tile.lead .gp-title {
   font-size: 22px;
 }
-/* The marks sit above the scrim. */
+/* The marks sit above the scrim. Only these few tiles blur behind their
+   marks: in the grid (every game) a backdrop filter per tile would cost the
+   GPU on every scrolled frame. */
 .lib-continue-art .lib-tile-marks,
 .lib-continue-art .lib-tile-store,
 .lib-continue-art .lib-tile-kind,
 .lib-continue-art .lib-tile-badge {
   z-index: 1;
+}
+.lib-continue-art .lib-tile-marks,
+.lib-continue-art .lib-tile-store {
+  backdrop-filter: blur(4px);
 }
 .lib-continue-bar {
   display: flex;
@@ -3036,7 +3054,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
   padding: 0 2px;
   border-radius: 5px;
   background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
-  backdrop-filter: blur(4px);
 }
 .lib-tile-mark,
 .lib-tile-store {
@@ -3053,7 +3070,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
   width: 21px;
   border-radius: 5px;
   background: rgba(10, 10, 14, 0.66); /* theme-exempt: overlay on game art */
-  backdrop-filter: blur(4px);
 }
 .lib-tile-mark.warn {
   color: #ffc24a; /* theme-exempt: overlay on game art (warning glyph also differs) */
@@ -3260,11 +3276,17 @@ html[data-cards-translucent] .gp-sections .dk-card {
    rim; the refraction itself is the backdrop filter from useLiquidGlass),
    a specular rim lit from where the pointer is, a liquid press. Content keeps
    its plain surfaces. ---- */
+/* The glass tokens: the light layer (a faint white fill) and the edge (a
+   brighter line where glass meets glass or art). */
+html[data-glass] {
+  --glass-light: rgb(255 255 255 / 5%);
+  --glass-edge: rgb(255 255 255 / 14%);
+}
 /* Docked: flush with the window edges, square corners (the user preferred
    that to Apple's floating rounded shapes). */
 html[data-glass] .app-rail {
   border-left: 0;
-  background: rgb(255 255 255 / 5%); /* theme-exempt: Liquid Glass light/shade layer */
+  background: var(--glass-light);
   box-shadow: -8px 0 24px rgb(0 0 0 / 25%);
 }
 html[data-glass] .rail-footer {
@@ -3276,13 +3298,14 @@ html[data-glass] .rail-divider {
 html[data-glass] .dk-bar {
   position: relative;
   border-top: 0;
-  background: rgb(255 255 255 / 5%); /* theme-exempt: Liquid Glass light/shade layer */
+  background: var(--glass-light);
   box-shadow: 0 -8px 24px rgb(0 0 0 / 22%);
 }
 /* The specular rim: a thin bright edge, brightest where the light (the
    pointer) is, fading around the shape. Drawn on the border ring only. */
 html[data-glass] .app-rail::before,
-html[data-glass] .dk-bar::before {
+html[data-glass] .dk-bar::before,
+.lib-glass .lib-continue-bar::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -3302,7 +3325,8 @@ html[data-glass] .dk-bar::before {
 html[data-glass] .app-rail::before {
   padding: 0 0 0 1.2px;
 }
-html[data-glass] .dk-bar::before {
+html[data-glass] .dk-bar::before,
+.lib-glass .lib-continue-bar::before {
   padding: 1.2px 0 0;
 }
 /* Liquid press: glass controls give a little and spring back. */
@@ -3318,7 +3342,7 @@ html[data-glass] .dk-bar .dk-btn:active {
   transition-duration: 90ms;
 }
 html[data-glass] .dk-bar .dk-btn:not(.primary) {
-  border-color: rgb(255 255 255 / 14%); /* theme-exempt: Liquid Glass light/shade layer */
+  border-color: var(--glass-edge);
   background: rgb(255 255 255 / 6%); /* theme-exempt: Liquid Glass light/shade layer */
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3356,6 +3380,72 @@ html[data-glass] .app-rail:has(:focus-visible) {
 }
 html[data-glass] .rail-label {
   text-shadow: 0 1px 2px rgb(0 0 0 / 55%);
+}
+
+/* ---- Glass captions on game art (Games -> Home), like a console's home
+   screen: the art runs under the caption and Play bars, which are glass
+   tinted with the art's own color (--cap-* from glassCaption.ts: the tint as
+   clear as its text allows at 4.5:1, the ink legible on it). The tiles carry
+   .lib-glass only in the Glass look. Continue playing (at most five tiles):
+   real glass, the backdrop filter over the tile's art and the specular rim.
+   The Library grid (every game): the same tint as a static gradient with the
+   glass edge and highlight, no backdrop filter (a live blur per tile would
+   cost the GPU on every scrolled frame). ---- */
+.lib-glass .lib-continue-bar,
+.lib-glass > .lib-tile-title {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  border-top: 1px solid var(--glass-edge);
+  /* The text tokens inside, from the caption's ink. */
+  --text-strong: var(--cap-ink);
+  --text-body: var(--cap-ink);
+  --text-soft: var(--cap-ink-soft);
+  --text-muted: var(--cap-ink-soft);
+  color: var(--cap-ink);
+}
+.lib-glass .lib-continue-bar {
+  border-bottom: 0;
+  background: color-mix(in srgb, var(--cap-tint) var(--cap-alpha), transparent);
+  backdrop-filter: var(--glass-regular, blur(18px));
+}
+.lib-glass > .lib-tile-title {
+  padding: 5px 7px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--cap-tint) var(--cap-alpha), transparent), var(--cap-tint));
+  box-shadow: inset 0 1px 0 var(--glass-light);
+}
+/* The art fills the whole tile; the big tile's title and the marks at the
+   bottom of the art move up, clear of the bar. */
+.lib-glass .lib-tile-art {
+  border-radius: inherit;
+}
+.lib-glass.lead .lib-continue-art {
+  padding-bottom: 67px;
+}
+.lib-glass .lib-tile-store,
+.lib-glass .lib-tile-kind {
+  bottom: 31px;
+}
+.lib-glass.lib-continue-tile .lib-tile-store,
+.lib-glass.lib-continue-tile .lib-tile-kind {
+  bottom: 43px;
+}
+.lib-glass.lead .lib-tile-store,
+.lib-glass.lead .lib-tile-kind {
+  bottom: 56px;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lib-glass .lib-continue-bar,
+  .lib-glass > .lib-tile-title {
+    backdrop-filter: none !important;
+    background: var(--cap-tint);
+  }
+}
+@media (prefers-contrast: more) {
+  .lib-glass .lib-continue-bar,
+  .lib-glass > .lib-tile-title {
+    border-top-color: var(--cap-ink);
+  }
 }
 
 /* ---- The model as a magazine-cover title behind the controller ---- */
