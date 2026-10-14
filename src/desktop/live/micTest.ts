@@ -66,12 +66,14 @@ export function playbackGain(peak: number): number {
 export function normalizeClip(channels: Float32Array[]): { peak: number; gain: number } {
   const peak = Math.min(1, Math.max(0, ...channels.map(peakOf)));
   const gain = playbackGain(peak);
+  // loop: NOT-WORTH — once per recorded clip, N = clip samples (a few seconds)
   for (const ch of channels) for (let i = 0; i < ch.length; i++) ch[i] = Math.max(-1, Math.min(1, ch[i] * gain));
   return { peak, gain };
 }
 
 function peakOf(samples: Float32Array): number {
   let max = 0;
+  // loop: HOT-PATH-OK — N = 1024 samples (fftSize) per meter frame while testing
   for (const v of samples) max = Math.max(max, Math.abs(v));
   return max;
 }

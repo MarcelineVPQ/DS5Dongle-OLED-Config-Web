@@ -22,6 +22,7 @@ function readMemory(): Remembered {
 }
 
 function formatMac(addr: Uint8Array): string {
+  // loop: HOT-PATH-OK — N = 6 address bytes x ≤ 4 slots; re-render per 1.5 s slot poll
   return [...addr].map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(":");
 }
 
@@ -98,6 +99,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
             </tr>
           </thead>
           <tbody>
+            {/* loop: HOT-PATH-OK — N = 4 slots; re-render per 1.5 s slot poll */}
             {[0, 1, 2, 3].map((i) => {
               const fakeHere = fake.on && !(v?.slots.occupied[i] ?? false) ? FAKE_SLOTS[i] : undefined;
               const active = fake.slot !== null ? fake.slot === i : id?.currentSlot === i;

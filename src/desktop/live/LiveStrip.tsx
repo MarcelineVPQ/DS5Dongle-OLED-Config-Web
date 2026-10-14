@@ -28,6 +28,7 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
   const quality = rssi === null ? null : signalQuality(rssi);
   const player = playerNumber(id.playerLeds);
   const lit = litPlayerLights(id.playerLeds, playerWiring);
+  // loop: HOT-PATH-OK — N ≈ 8 lightbar modes per render
   const mode = LIGHTBAR_MODES.find((m) => m.value === lightbarMode);
   const swatch = lightbar ? `rgb(${lightbar.join(", ")})` : null; // theme-exempt: the real lightbar color
   return (
@@ -39,6 +40,7 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
       </div>
       <div className="live-tile">
         <span className="live-bars" aria-hidden="true">
+          {/* loop: HOT-PATH-OK — N = 4 player lights per render */}
           {[1, 2, 3, 4].map((n) => (
             <span key={n} className={quality && n <= BARS[quality] ? "on" : ""} style={{ height: `${n * 25}%` }} />
           ))}
@@ -53,6 +55,7 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
       </button>
       <div className="live-tile">
         <span className="live-pleds" aria-hidden="true">
+          {/* loop: HOT-PATH-OK — N = 5 signal bars per render */}
           {[0, 1, 2, 3, 4].map((n) => (
             <span key={n} className={lit & (1 << n) ? "on" : ""} />
           ))}

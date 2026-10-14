@@ -38,6 +38,7 @@ let setting: NarratorSetting = "ask";
 let captionsOn = true;
 let caption: { key: string; text: string } | null = null;
 const listeners = new Set<() => void>();
+// loop: NOT-WORTH — N ≤ 3 listeners; on narrator state change, not per frame
 const notify = () => listeners.forEach((l) => l());
 void window.desktop?.getSettings().then((s) => {
   setting = s.narratorVoice ?? "ask";
@@ -87,6 +88,7 @@ const onScreen = isWindowShown;
 
 function voiceLang(): string {
   const want = i18n.resolvedLanguage ?? i18n.language ?? "en";
+  // loop: NOT-WORTH — N ≤ 12 voice languages; once per line spoken
   return LANGS.find((l) => l === want) ?? LANGS.find((l) => l.split("-")[0] === want.split("-")[0]) ?? "en";
 }
 

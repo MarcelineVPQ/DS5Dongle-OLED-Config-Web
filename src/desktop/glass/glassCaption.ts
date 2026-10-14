@@ -4,17 +4,17 @@
 // 4.5:1 even over pure white art; the ink is then made legible on the tint
 // over white art, over black art and on the solid tint (Reduce
 // transparency). Set as tokens on the tile; desktop.css draws with them.
-import { contrast, hexToRgb, legibleOnAll, mix, type Rgb } from "../theme/desktopPalette";
+import { contrast, css, hexToRgb, legibleOnAll, mix, type Rgb } from "../theme/desktopPalette";
 
 const LIGHT: Rgb = [255, 255, 255];
 const DARK: Rgb = [0, 0, 0];
 // The glass dim (Apple's ~35% dark layer under labels), the tint's base.
 const DIM: Rgb = [8, 10, 16];
-const css = (c: Rgb) => `rgb(${c.join(", ")})`;
 
 export function glassCaption(artColor: string | null): Record<string, string> {
   const tint = mix(artColor ? hexToRgb(artColor) : DIM, DIM, 0.68);
   let alpha = 0.5;
+  // loop: HOT-PATH-OK — at most 25 steps of arithmetic, memoized per tile and art color
   while (alpha < 1 && contrast(LIGHT, mix(LIGHT, tint, alpha)) < 4.6) alpha = Math.min(1, alpha + 0.02);
   const pct = Math.ceil(alpha * 100);
   const grounds = [mix(LIGHT, tint, pct / 100), mix(DARK, tint, pct / 100), tint];

@@ -60,17 +60,21 @@ export const GAME_FIXES: GameFix[] = [];
 
 export function fixesFor(title: string): GameFix[] {
   const n = normalizeTitle(title);
+  // loop: NOT-WORTH — GAME_FIXES is empty today (N = 0); per game page render
   return GAME_FIXES.filter((f) => normalizeTitle(f.title) === n);
 }
 
 // "0.9.0-beta.2" -> numbers [0, 9, 0] (missing or non-numeric parts are 0) and a prerelease flag.
 const parts = (v: string) => {
   const [core, ...pre] = v.replace(/^v/, "").split("-");
+  // loop: NOT-WORTH — N = 3 version parts; only when feedback has a rating
   const nums = core.split(".").map((p) => Number.parseInt(p, 10));
+  // loop: NOT-WORTH — N = 3 version parts; only when feedback has a rating
   return { nums: [0, 1, 2].map((i) => (Number.isFinite(nums[i]) ? nums[i] : 0)), pre: pre.length > 0 };
 };
 export function versionLess(a: string, b: string): boolean {
   const [x, y] = [parts(a), parts(b)];
+  // loop: NOT-WORTH — N = 3 version parts
   for (let i = 0; i < 3; i++) if (x.nums[i] !== y.nums[i]) return x.nums[i] < y.nums[i];
   // Same numbers: a prerelease (0.9.0-beta) comes before the release (0.9.0).
   return x.pre && !y.pre;
@@ -81,6 +85,7 @@ export function versionLess(a: string, b: string): boolean {
 export type Stale = { kind: "game-update"; at?: number } | { kind: "our-fix"; app: string } | null;
 export function staleness(ratedOn: { app: string; build?: string; gameUpdated?: number } | undefined, now: { buildId?: string; lastUpdated?: number }, fixes: GameFix[]): Stale {
   if (!ratedOn) return null;
+  // loop: NOT-WORTH — fixes for one game, N = 0 today
   const fix = fixes.find((f) => versionLess(ratedOn.app, f.app));
   if (fix) return { kind: "our-fix", app: fix.app };
   if (ratedOn.build && now.buildId && ratedOn.build !== now.buildId) return { kind: "game-update", at: now.lastUpdated };

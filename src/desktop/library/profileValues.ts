@@ -49,6 +49,7 @@ export function sameValue(a: unknown, b: unknown): boolean {
 export function withSettings(c: ConfigBody, s: ProfileSettings): ConfigBody {
   const out: Record<string, unknown> = { ...c };
   const u = upgradeProfile(s);
+  // loop: HOT-PATH-OK — N ≈ 16 profile fields; on profile apply or render of dirty check
   for (const k of PROFILE_FIELDS) {
     const v = u[k];
     if (v !== undefined) out[k] = Array.isArray(v) ? [...v] : v;
@@ -64,6 +65,7 @@ export const profileConfig = (c: ConfigBody, normal: ProfileSettings, profile: P
 export function gameFields(profile: ProfileSettings, normal: ProfileSettings | null): ProfileField[] {
   const p = upgradeProfile(profile);
   const n = normal ? upgradeProfile(normal) : null;
+  // loop: HOT-PATH-OK — N ≈ 16 profile fields; per game page / DesktopApp render
   return PROFILE_FIELDS.filter((k) => p[k] !== undefined && (!n || n[k] === undefined || !sameValue(p[k], n[k])));
 }
 
@@ -90,6 +92,7 @@ export const captureProfile = (config: ConfigBody, normal: ProfileSettings | nul
 export function profileDiffers(config: ConfigBody, normal: ProfileSettings | null, profile: ProfileSettings): boolean {
   const want = settingsFrom(normal ? profileConfig(config, normal, profile) : withSettings(config, profile));
   const now = settingsFrom(config);
+  // loop: HOT-PATH-OK — N ≈ 16 profile fields; dirty check per DesktopApp render
   return PROFILE_FIELDS.some((k) => !sameValue(now[k], want[k]));
 }
 
@@ -113,6 +116,7 @@ export type ProfileGroup = (typeof PROFILE_GROUPS)[number]["id"];
 
 export function gameGroups(profile: ProfileSettings, normal: ProfileSettings | null): ProfileGroup[] {
   const own = new Set<ProfileField>(gameFields(profile, normal));
+  // loop: HOT-PATH-OK — N = 12 groups x ≤ 3 fields; per game page render
   return PROFILE_GROUPS.filter((g) => g.fields.some((f) => own.has(f))).map((g) => g.id);
 }
 
@@ -127,6 +131,7 @@ export function clearGroup(profile: ProfileSettings, group: ProfileGroup): Profi
 export const shownValues = (profile: ProfileSettings, normal: ProfileSettings): ProfileSettings => ({ ...upgradeProfile(normal), ...stripUndefined(upgradeProfile(profile)) });
 
 function stripUndefined(s: ProfileSettings): ProfileSettings {
+  // loop: HOT-PATH-OK — N ≈ 18 profile keys; per game page render
   return Object.fromEntries(Object.entries(s).filter(([, v]) => v !== undefined)) as ProfileSettings;
 }
 

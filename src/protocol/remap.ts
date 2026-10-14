@@ -68,6 +68,7 @@ export function isIdentity(table: number[]): boolean {
 }
 
 export function tablesEqual(a: number[], b: number[]): boolean {
+  // loop: HOT-PATH-OK — N = 16 remap entries
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 

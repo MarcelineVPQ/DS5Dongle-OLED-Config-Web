@@ -41,6 +41,7 @@ export function useFields({ bridge, fields }: SectionProps) {
     // like the grip test, belong only there.
     live: !fields,
     // A control's sub line, marked when it shows the normal setting.
+    // loop: NOT-WORTH — N = 2 strings
     sub: (field: keyof ConfigBody, base?: string) => (normal(field) ? [t("desktop.profile.normalSub"), base].filter(Boolean).join(" · ") : base),
     // The same mark for a section whose controls have no sub line.
     mark: (field: keyof ConfigBody) => (normal(field) ? <span className="dk-chip">{t("desktop.profile.normalSub")}</span> : null),

@@ -29,6 +29,7 @@ export interface LutrisGame {
 
 export function findLutrisInstalls(home: string): LutrisInstall[] {
   const out: LutrisInstall[] = [];
+  // loop: NOT-WORTH — two possible Lutris folders
   for (const [dataDir, configHome, flatpak] of [
     [join(home, ".local/share/lutris"), join(home, ".config/lutris"), false],
     [join(home, ".var/app/net.lutris.Lutris/data/lutris"), join(home, ".var/app/net.lutris.Lutris/config/lutris"), true],
@@ -60,6 +61,7 @@ function readYaml(path: string): unknown {
 function systemEnv(doc: unknown): Record<string, string> {
   const env = (doc as { system?: { env?: unknown } } | null)?.system?.env;
   if (!env || typeof env !== "object" || Array.isArray(env)) return {};
+  // loop: HOT-PATH-OK — env entries of one game
   return Object.fromEntries(Object.entries(env).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)]));
 }
 
@@ -103,6 +105,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
     }
   } catch {
     try {
+      // loop: NOT-WORTH — yml fallback only when pga.db can't be read
       rows = readdirSync(join(install.configDir, "games"))
         .filter((f) => f.endsWith(".yml"))
         .map((f) => ({ slug: f.replace(/-\d+\.yml$/, ""), name: f.replace(/-\d+\.yml$/, ""), configpath: f.slice(0, -4) }));
@@ -110,6 +113,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
       rows = [];
     }
   }
+  // loop: PARALLELIZE — one sync YAML read and parse per game blocks the main process
   return rows
     .filter((r) => r.configpath && /^[\w.-]+$/.test(r.configpath))
     .map((r) => {
@@ -122,6 +126,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
 
 export function lutrisWineBuilds(install: LutrisInstall): string[] {
   try {
+    // loop: NOT-WORTH — Wine/Proton builds in Lutris' runner folder, 2 stats each
     return readdirSync(install.wineDir).filter((d) => existsSync(join(install.wineDir, d, "proton")) || existsSync(join(install.wineDir, d, "bin/wine")));
   } catch {
     return [];

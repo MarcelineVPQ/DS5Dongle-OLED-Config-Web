@@ -45,6 +45,7 @@ export const REMAP_ONLY: ReadonlySet<PartId> = new Set<PartId>(["l1", "r1", "cre
 // Rows 16..19 of the Buttons list are the Edge's Fn buttons and paddles (protocol 1.9).
 export const EDGE_REMAP_ROWS: readonly PartId[] = ["fn-l", "fn-r", "paddle-l", "paddle-r"];
 export const partForRemapIndex = (i: number): PartId | null =>
+  // loop: HOT-PATH-OK — N = 16 entries, on Buttons-list hover/focus render
   i >= 16 ? (EDGE_REMAP_ROWS[i - 16] ?? null) : ((Object.entries(REMAP_INDEX).find(([, v]) => v === i)?.[0] as PartId | undefined) ?? null);
 
 export const REMAP_INDEX: Partial<Record<PartId, number>> = {

@@ -79,7 +79,9 @@ export async function flash(device: PicoflashHandle, regions: ReturnType<typeof 
   // In pieces, so the progress moves (the firmware is usually one region).
   // Regions are whole flash sectors (alignRegionToSector), and a piece is a
   // whole number of sectors, so every write stays sector-aligned.
+  // loop: SERIAL-REQUIRED — one PICOBOOT session: regions are erased and written in order
   for (const region of regions) {
+    // loop: SERIAL-REQUIRED — one PICOBOOT session: 64 KB erase+write pieces in order, for the progress
     for (let offset = 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
       const piece = region.data.subarray(offset, offset + FLASH_CHUNK);
       await device.flashEraseAndWrite(region.address + offset, piece);
@@ -94,6 +96,7 @@ export async function flash(device: PicoflashHandle, regions: ReturnType<typeof 
 
 async function waitForBootloader(): Promise<PicoflashHandle> {
   const deadline = Date.now() + BOOTLOADER_TIMEOUT_MS;
+  // loop: SERIAL-REQUIRED — polls until a deadline (300 ms apart) for the board in BOOTSEL
   while (Date.now() < deadline) {
     const device = await findBootloader();
     if (device) return device;

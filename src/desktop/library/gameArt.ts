@@ -7,6 +7,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { artUrl, type ArtKind, type GameInfo } from "../games/types";
 
+// loop: HOT-PATH-OK — N ≤ 3 art kinds per tile, each a lookup in ≤ 5
 export const firstArt = (info: GameInfo | undefined, kinds: ArtKind[]): ArtKind | null => kinds.find((k) => info?.art.includes(k)) ?? null;
 
 const HEADER_ART: ArtKind[] = ["hero", "header", "cover"];

@@ -54,6 +54,7 @@ export function normalizeCalibration(c: Calibration): Calibration {
   return {
     sticks: [stick(c.sticks[0]), stick(c.sticks[1])],
     triggers: [trigger(c.triggers[0]), trigger(c.triggers[1])],
+    // loop: HOT-PATH-OK — N = 3 gyro axes
     gyro: c.gyro.map((g) => clamp(g, -32768, 32767)) as [number, number, number],
   };
 }
@@ -139,6 +140,7 @@ export const GYRO_STILL = 40;
 export function fitGyro(samples: Array<[number, number, number]>): [number, number, number] | null {
   const axis = (i: number) => samples.map((s) => s[i]);
   for (let i = 0; i < 3; i++) if (Math.max(...axis(i)) - Math.min(...axis(i)) > GYRO_STILL) return null;
+  // loop: NOT-WORTH — once when a gyro calibration step ends
   const avg = [0, 1, 2].map((i) => Math.round(axis(i).reduce((a, v) => a + v, 0) / samples.length)) as [number, number, number];
   // 0, 0, 0 means "not calibrated" to the firmware.
   if (avg[0] === 0 && avg[1] === 0 && avg[2] === 0) avg[2] = 1;

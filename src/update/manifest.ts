@@ -64,6 +64,7 @@ export function parseVersion(raw: string | null | undefined): [number, number, n
   const dash = s.indexOf("-");
   if (dash !== -1) s = s.slice(0, dash);
   const parts = s.split(".");
+  // loop: HOT-PATH-OK — N = 3 version parts
   if (parts.length !== 3 || parts.some((p) => !/^\d+$/.test(p))) return null;
   return [Number(parts[0]), Number(parts[1]), Number(parts[2])];
 }
@@ -83,6 +84,7 @@ export function isNewer(remote: string | null | undefined, local: string | null 
   const r = parseVersion(remote);
   const l = parseVersion(local);
   if (!r || !l) return false;
+  // loop: HOT-PATH-OK — N = 3 version parts
   for (let i = 0; i < 3; i++) if (r[i] !== l[i]) return r[i] > l[i];
   const rd = devNumber(remote);
   const ld = devNumber(local);

@@ -67,6 +67,7 @@ function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean, t
           if (stopped) await client.gripTest(side, 0).catch(() => undefined);
         } else {
           // The last pulse ends by the 3 s mark.
+          // loop: SERIAL-REQUIRED — timed pulses: each waits its slot on a deadline, one HID session
           for (let at = 0; at <= GRIP_TEST_S * 1000 - GRIP_PULSE_MS; at += GRIP_REPEAT_MS) {
             await until(at);
             if (stopped) break;
@@ -134,6 +135,7 @@ export function HapticsSection(props: SectionProps) {
       />
       {gripTest && (
         <div className="dk-row-btns">
+          {/* loop: HOT-PATH-OK — N = 3 sides; page render */}
           {(["left", "right", "both"] as const).map((side) => (
             <BusyButton
               key={side}
@@ -166,6 +168,7 @@ export function HapticsSection(props: SectionProps) {
 export function AutoHapticsSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, sub } = useFields(props);
+  // loop: HOT-PATH-OK — N = 4 options; page render
   const ahModes: ReadonlyArray<{ value: AutoHapticsMode; label: string; title: string }> = (["off", "fallback", "mix", "replace"] as const).map((k, i) => ({
     value: i as AutoHapticsMode,
     label: t(`autoHaptics.modes.${k}.label`),
@@ -180,6 +183,7 @@ export function AutoHapticsSection(props: SectionProps) {
         label={t("autoHaptics.lpLabel")}
         value={d.autoHapticsLowpass}
         disabled={d.autoHapticsEnable === 0}
+        /* loop: HOT-PATH-OK — N = 4 options; page render */
         options={[80, 160, 250, 400].map((hz, i) => ({ value: i as AutoHapticsLowpass, label: `${hz} Hz` }))}
         onChange={(v) => set("autoHapticsLowpass", v)}
       />
@@ -192,6 +196,7 @@ export function SpeakerSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, issue, sub, live } = useFields(props);
   const v13 = hasV13(props.bridge);
+  // loop: HOT-PATH-OK — N = 4 options; page render
   const outputs: ReadonlyArray<{ value: SpeakerSelect; label: string }> = (["auto", "speaker", "headset", "off"] as const).map((k, i) => ({
     value: i as SpeakerSelect,
     label: t(`desktop.settings.choice.${k}`),
@@ -298,6 +303,7 @@ export function EchoCancelToggle(props: SectionProps) {
 export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set, sub, live } = useFields(props);
+  // loop: HOT-PATH-OK — N = 3 options; page render
   const mics: ReadonlyArray<{ value: MicSelect; label: string }> = (["auto", "builtIn", "headset"] as const).map((k, i) => ({
     value: i as MicSelect,
     label: t(`desktop.settings.choice.${k}`),
@@ -328,6 +334,7 @@ export function StatusPinSection(props: SectionProps) {
           <Row label={t("desktop.settings.statusPinGpio")}>
             <select className="dk-select" aria-label={t("desktop.settings.statusPinGpio")} value={d.statusGpioPin} onChange={(e) => set("statusGpioPin", Number(e.currentTarget.value))}>
               <option value={STATUS_GPIO_OFF}>{t("desktop.settings.statusPinOff")}</option>
+              {/* loop: HOT-PATH-OK — N = 17 GPIO pins; page render */}
               {STATUS_GPIO_PINS.map((pin) => (
                 <option key={pin} value={pin}>
                   GP{pin}
@@ -414,6 +421,7 @@ export function DisplaySection(props: SectionProps) {
       <Segmented
         label={t("desktop.settings.brightness", "Brightness")}
         value={d.screenBrightness}
+        /* loop: HOT-PATH-OK — N = 4 options; page render */
         options={["100%", "50%", "25%", "6%"].map((label, i) => ({ value: i, label }))}
         onChange={(v) => set("screenBrightness", v)}
       />

@@ -33,8 +33,11 @@ export function useFreshRunning(key: string | null): LauncherId[] | null | undef
 // and reopened, and names them in the request (the main process closes only
 // those). `running`: a fresh check (useFreshRunning), else the scan's answer.
 export function restartFor(report: GamesReport, fixes: Fix[], running?: LauncherId[] | null): RestartList {
+  // loop: HOT-PATH-OK — N = one game's fixes (≤ ~5)
   const owners = new Set<string>(fixes.map((f) => f.launcher));
+  // loop: HOT-PATH-OK — N = 3 launchers
   const now = running ? new Set(running) : new Set(report.launchers.filter((l) => l.running).map((l) => l.id));
+  // loop: HOT-PATH-OK — N = 3 launchers
   return (["steam", "heroic", "lutris"] as const).filter((id) => now.has(id) && owners.has(id));
 }
 
@@ -61,6 +64,7 @@ export function forgetApplied(): void {
 // Launchers (Steam, Heroic, Lutris) whose files lost a change applied in the last minutes.
 export function overwrittenBy(fixes: Fix[], now = Date.now()): LauncherId[] {
   const out = new Set<LauncherId>();
+  // loop: HOT-PATH-OK — N = one game's fixes (≤ ~5)
   for (const f of fixes) {
     const at = applied.get(f.id);
     if (at !== undefined && now - at < RECENT_MS && (f.launcher === "steam" || f.launcher === "heroic" || f.launcher === "lutris")) out.add(f.launcher);

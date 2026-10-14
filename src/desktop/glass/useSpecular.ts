@@ -10,6 +10,7 @@ let pointer = { x: window.innerWidth * 0.3, y: 0 };
 
 function update(): void {
   frame = 0;
+  // loop: HOT-PATH-OK — N ≤ 3 glass elements; at most once a frame while the pointer moves
   for (const el of elements) {
     const r = el.getBoundingClientRect();
     if (r.width === 0) continue;

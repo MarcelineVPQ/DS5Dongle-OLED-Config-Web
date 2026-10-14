@@ -44,6 +44,7 @@ export function ContinuePlaying({
         <LeadTile {...tile(lead)} />
         {rest.length > 0 && (
           <ul className={`lib-continue-rest${rest.length > 2 ? " two" : ""}`}>
+            {/* loop: HOT-PATH-OK — N ≤ 8 recent games; Home render on library change */}
             {rest.map((g) => (
               <li key={g.key}>
                 <SmallTile {...tile(g)} />

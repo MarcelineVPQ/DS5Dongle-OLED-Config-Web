@@ -92,6 +92,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
   // The art's own transform per stick group; live movement is applied on top of it.
   const baseTransform = useRef(new Map<PartId, string>());
   const touchLayer = useRef<SVGGElement | null>(null);
+  // Looked up once at mount, not on every live frame: the triggers' fill
+  // gradient stops (and the value they show now), and the touchpad's box.
+  const triggerStops = useRef<Record<"l2" | "r2", Element[]>>({ l2: [], r2: [] });
+  const triggerShown = useRef<Record<"l2" | "r2", number>>({ l2: -1, r2: -1 });
+  const padBox = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const marks = useRef<HTMLDivElement>(null);
 
   // Index the parts once and make each one a keyboard-reachable button.
@@ -107,6 +112,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       body.setAttribute("tabindex", "0");
       body.setAttribute("role", "button");
     }
+    // loop: NOT-WORTH — once per mount, N ≈ 30 parts
     for (const id of PART_IDS) {
       const el = root.querySelector<SVGGraphicsElement>(`[data-part="${id}"]`);
       if (!el) continue;
@@ -121,6 +127,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     if (strips) root.appendChild(strips);
     // Decorative outlines that belong to no part (the touchpad's edge, the
     // shell seams) let clicks through to whatever is under them.
+    // loop: NOT-WORTH — once per mount, a few dozen outlines
     for (const line of root.querySelectorAll<SVGElement>(".ln")) if (!line.closest("[data-part]")) line.style.pointerEvents = "none";
     // (the player lights sit on the bottom strip, so they stay above it)
     const pled = root.querySelector(".pled");
@@ -129,6 +136,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     layer.setAttribute("class", "touches");
     root.appendChild(layer);
     touchLayer.current = layer;
+    // loop: NOT-WORTH — N = 2 triggers, once per mount
+    for (const side of ["l2", "r2"] as const) triggerStops.current[side] = [...root.querySelectorAll(`#ctl-${side}-fill [data-edge]`)];
+    // loop: NOT-WORTH — N = 4 numbers, once per mount
+    const [bx, by, bw, bh] = (parts.current.get("touchpad")?.getAttribute("data-box") ?? "0 0 0 0").split(" ").map(Number);
+    padBox.current = { x: bx, y: by, w: bw, h: bh };
   }, []);
 
   // The mic / headset marks sit under the mute button, just below the shell's
@@ -139,6 +151,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     const box = marks.current;
     const mute = parts.current.get("mute");
     if (!el || !box || !mute) return;
+    // loop: NOT-WORTH — once per mount, a few shell shapes
     const shell = [...el.querySelectorAll(".bd, .dk")].filter((s): s is SVGGeometryElement => s instanceof SVGGeometryElement);
     const place = () => {
       const origin = el.getBoundingClientRect();
@@ -159,12 +172,14 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
 
   // Accessible names follow the language.
   useEffect(() => {
+    // loop: NOT-WORTH — N ≈ 30 parts, only when the language changes
     for (const [id, el] of parts.current) el.setAttribute("aria-label", t(`desktop.live.part.${id}`));
     host.current?.querySelector('[data-part="body"]')?.setAttribute("aria-label", t("desktop.live.part.body"));
     host.current?.querySelector("svg")?.setAttribute("aria-label", t("desktop.live.overview", "Your controller"));
   }, [t]);
 
   useEffect(() => {
+    // loop: NOT-WORTH — N ≈ 30 parts, only on selection/remap change
     for (const [id, el] of parts.current) {
       el.classList.toggle("sel", id === selected);
       el.setAttribute("aria-pressed", String(id === selected));
@@ -184,6 +199,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       root.style.setProperty("--ctl-led-pct", "0%");
       return;
     }
+    // loop: HOT-PATH-OK — N = 3 channels, on lightbar change (≤ 10 Hz)
     const full = lightbar.map((c) => Math.round((c * 255) / peak)).join(", ");
     root.style.setProperty("--ctl-led", `rgb(${full})`);
     root.style.setProperty("--ctl-led-pct", `${Math.round((peak / 255) * 100)}%`);
@@ -204,6 +220,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       // it shows on every colorway, unlike an accent color).
       ["--ctl-press-ink", colors ? (wantsLightInk(hexToRgb(colors.cap)) ? "#ffffff" : "#000000") : undefined], // theme-exempt: the drawing's press tint
     ];
+    // loop: NOT-WORTH — N = 7 CSS vars, only when the colorway changes
     for (const [name, value] of vars) {
       if (value) el.style.setProperty(name, value);
       else el.style.removeProperty(name);
@@ -223,18 +240,24 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     if (!root) return;
     root.classList.toggle("live", !!input);
     const on = input ? pressed(input) : new Set<PartId>();
+    // loop: HOT-PATH-OK — N ≈ 30 parts, classList.toggle per live frame
     for (const [id, el] of parts.current) el.classList.toggle("on", on.has(id));
     // The mute button's light: amber while the mic is muted, like the real one.
     parts.current.get("mute")?.classList.toggle("muted", !!input?.micMuted);
 
+    // loop: HOT-PATH-OK — N = 2 triggers per live frame
     for (const [side, value] of [
       ["l2", input?.triggerLeft ?? 0],
       ["r2", input?.triggerRight ?? 0],
     ] as const) {
+      if (triggerShown.current[side] === value) continue;
+      triggerShown.current[side] = value;
       const offset = String(value / 255);
-      for (const stop of root.querySelectorAll(`#ctl-${side}-fill [data-edge]`)) stop.setAttribute("offset", offset);
+      // loop: HOT-PATH-OK — N = 2 stops per trigger, looked up at mount; only when the value changed
+      for (const stop of triggerStops.current[side]) stop.setAttribute("offset", offset);
     }
 
+    // loop: HOT-PATH-OK — N = 2 sticks per live frame
     for (const [id, stick] of [
       ["stick-l", input?.leftStick],
       ["stick-r", input?.rightStick],
@@ -248,13 +271,15 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     }
 
     const layer = touchLayer.current;
-    const pad = parts.current.get("touchpad");
-    if (layer && pad) {
-      const [bx, by, bw, bh] = (pad.getAttribute("data-box") ?? "0 0 0 0").split(" ").map(Number);
-      const box = { x: bx, y: by, w: bw, h: bh };
+    const box = padBox.current;
+    if (layer && box) {
+      // loop: HOT-PATH-OK — N ≤ 2 fingers per live frame
       const dots = (input?.fingers ?? []).filter((f) => f.touching);
+      // loop: HOT-PATH-OK — N ≤ 2 touch dots removed
       while (layer.childNodes.length > dots.length) layer.lastChild?.remove();
+      // loop: HOT-PATH-OK — N ≤ 2 touch dots added
       while (layer.childNodes.length < dots.length) layer.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "circle"));
+      // loop: HOT-PATH-OK — N ≤ 2 touch dots placed
       dots.forEach((f, i) => {
         const c = layer.childNodes[i] as SVGCircleElement;
         c.setAttribute("cx", (box.x + (f.x / TOUCH_W) * box.w).toFixed(1));

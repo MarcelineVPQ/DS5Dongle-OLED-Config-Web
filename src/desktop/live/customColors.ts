@@ -41,6 +41,7 @@ export function parseCustomColors(raw: string | null): CustomColors {
   }
   if (!data || typeof data !== "object") return {};
   const out: CustomColors = {};
+  // loop: NOT-WORTH — N = 6 parts, useMemo on the stored string
   for (const part of COLOR_PARTS) {
     const v = (data as Record<string, unknown>)[part];
     if (typeof v === "string" && HEX.test(v.toLowerCase())) out[part] = v.toLowerCase();
@@ -48,6 +49,7 @@ export function parseCustomColors(raw: string | null): CustomColors {
   return out;
 }
 
+// loop: HOT-PATH-OK — N = 6 parts, per render
 export const hasCustomColors = (custom: CustomColors | null): boolean => !!custom && COLOR_PARTS.some((p) => custom[p]);
 
 // The outline on the body and the button caps, made readable (2:1 on both).
@@ -62,6 +64,7 @@ export const legibleLine = (c: ColorwayColors): string =>
 export function mergeColors(base: ColorwayColors | null, custom: CustomColors | null): ColorwayColors | null {
   if (!custom || !hasCustomColors(custom)) return base;
   const merged: ColorwayColors = { ...(base ?? FALLBACK_BASE) };
+  // loop: HOT-PATH-OK — N = 6 parts, inside useMemo on code/model/colors
   for (const part of COLOR_PARTS) if (custom[part]) merged[part] = custom[part];
   return { ...merged, line: legibleLine(merged) };
 }

@@ -184,6 +184,7 @@ export function playerNumber(leds: number): number | null {
 function boardNameFrom(raw: Uint8Array): string | null {
   const end = raw.indexOf(0);
   const chars = [...raw.subarray(0, end < 0 ? raw.length : end)];
+  // loop: HOT-PATH-OK — N ≤ 16 name bytes per identity decode
   if (!chars.length || chars.some((c) => c < 0x20 || c > 0x7e)) return null;
   return String.fromCharCode(...chars).trim() || null;
 }
@@ -227,9 +228,11 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
 // that brings nothing new doesn't re-render the app.
 export function sameIdentity(a: BridgeIdentity | null, b: BridgeIdentity | null): boolean {
   if (!a || !b) return a === b;
+  // loop: HOT-PATH-OK — ~30 identity fields compared so a same poll skips the re-render
   return (Object.keys(a) as Array<keyof BridgeIdentity>).every((k) => {
     const x = a[k];
     const y = b[k];
+    // loop: HOT-PATH-OK — N ≤ 3 per array field (lightbar RGB), skips re-render
     return Array.isArray(x) && Array.isArray(y) ? x.length === y.length && x.every((v, i) => v === y[i]) : x === y;
   });
 }
@@ -415,6 +418,7 @@ export class Ds5BridgeClient {
     const expected = (before.sequence + 1) & 0xffff;
     const deadline = Date.now() + COMMAND_TIMEOUT_MS;
 
+    // loop: SERIAL-REQUIRED — one HID session: polls 0xF1 until the sequence settles, to a deadline
     for (;;) {
       let id: BridgeIdentity;
       try {
@@ -575,6 +579,7 @@ export class Ds5BridgeClient {
   // decode as D-pad up, both sticks in a corner and two fingers touching.
   async readInput(): Promise<InputReport | null> {
     const bytes = await this.transport.getReport(REPORT.liveInput, 63);
+    // loop: HOT-PATH-OK — N = 63 bytes, exits at the first non-zero byte
     return bytes.some((b) => b !== 0) ? decodeInputReport(bytes) : null;
   }
 
@@ -587,7 +592,9 @@ export class Ds5BridgeClient {
   async readSlots(): Promise<SlotsInfo> {
     const data = await this.transport.getReport(REPORT.slots, 28);
     if (data.length < 28) throw new Error("Short slots report");
+    // loop: HOT-PATH-OK — N = 4 slots
     const addrs = [0, 1, 2, 3].map((i) => data.slice(i * 6, i * 6 + 6));
+    // loop: HOT-PATH-OK — N = 4 slots
     const occupied = [0, 1, 2, 3].map((i) => data[24 + i] === 1);
     return { addrs, occupied };
   }
@@ -653,11 +660,13 @@ export class Ds5BridgeClient {
     await this.command(FUNC.controllerTest, [dev, action, pages]);
     const expected = (before.request + 1) & 0xff;
     const deadline = Date.now() + CONTROLLER_TEST_TIMEOUT_MS;
+    // loop: SERIAL-REQUIRED — one HID session: polls the controller header until done or deadline
     for (;;) {
       const h = await this.readControllerHeader();
       if (!h || h.request !== expected) throw new Error("Another program asked the controller at the same time. Try again.");
       if (h.state === "done") {
         const out = new Uint8Array(pages * CTRL_PAGE_BYTES);
+        // loop: SERIAL-REQUIRED — one HID session: page reads must not interleave; 63-byte report cap
         for (let p = 0; p < Math.min(h.pages, pages, CTRL_MAX_PAGES); p++) {
           const r = await this.transport.getReport(ctrlInfoReport(CTRL_SEL.page0 + p), CTRL_PAGE_REPLY_BYTES);
           if (r.length < CTRL_PAGE_REPLY_BYTES || r[0] !== p || r[2] !== expected) throw new Error("Short controller answer");
@@ -684,6 +693,7 @@ export function decodeAudioCounters(bytes: Uint8Array): AudioCounters {
   const base = AUDIO_COUNTER_NAMES.length * 4;
   const view = toView(bytes, base);
   const out = {} as AudioCounters;
+  // loop: HOT-PATH-OK — N = 15 counters
   AUDIO_COUNTER_NAMES.forEach((name, i) => (out[name] = view.getUint32(i * 4, true)));
   if (view.byteLength >= AUDIO_COUNTERS_BYTES && (bytes[base] & CORE1_HEALTH_LAYOUT) !== 0) {
     out.core1Flags = bytes[base] & ~(CORE1_HEALTH_LAYOUT | CORE1_STAGE_MASK);

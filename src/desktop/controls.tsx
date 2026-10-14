@@ -183,6 +183,7 @@ export function Segmented<T extends number>({ label, sub, value, options, disabl
   return (
     <Row label={label} sub={sub} stack={stack}>
       <div className="dk-seg" role="group" aria-label={label} ref={seg}>
+        {/* loop: HOT-PATH-OK — N ≤ 6 segment options */}
         {options.map((o) => (
           <button type="button" key={o.value} title={o.title} className={o.value === value ? "on" : ""} aria-pressed={o.value === value} disabled={disabled} onClick={() => onChange(o.value)}>
             {o.label}
@@ -196,6 +197,7 @@ export function Segmented<T extends number>({ label, sub, value, options, disabl
 export function rgbToHex([r, g, b]: number[]): string {
   return (
     "#" +
+    // loop: HOT-PATH-OK — N = 3 channels
     [r, g, b]
       .map((c) =>
         Math.max(0, Math.min(255, c | 0))

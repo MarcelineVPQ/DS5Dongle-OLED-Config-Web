@@ -2958,9 +2958,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
 .lib-continue-art .lib-tile-kind,
 .lib-continue-art .lib-tile-badge {
   z-index: 1;
-}
-.lib-continue-art .lib-tile-marks,
-.lib-continue-art .lib-tile-store {
   backdrop-filter: blur(4px);
 }
 .lib-continue-bar {

@@ -22,8 +22,10 @@ export function parseVdf(text: string): VdfNode {
 
   const skip = () => {
     for (;;) {
+      // loop: HOT-PATH-OK — skips whitespace, linear in the file
       while (i < n && /\s/.test(text[i])) i++;
       if (text.startsWith("//", i)) {
+        // loop: HOT-PATH-OK — skips one comment line, linear
         while (i < n && text[i] !== "\n") i++;
         continue;
       }
@@ -105,11 +107,13 @@ export function serializeVdf(node: VdfNode, depth = 0): string {
 
 export function getKey(node: VdfNode, key: string): VdfValue | undefined {
   const k = key.toLowerCase();
+  // loop: BATCH — linear key search; scanSteam calls it per game on localconfig's apps
   return node.find(([name]) => name.toLowerCase() === k)?.[1];
 }
 
 export function getNode(node: VdfNode | undefined, ...path: string[]): VdfNode | undefined {
   let cur: VdfValue | undefined = node;
+  // loop: NOT-WORTH — path segments of one lookup
   for (const key of path) {
     if (!cur || typeof cur === "string") return undefined;
     cur = getKey(cur, key);
