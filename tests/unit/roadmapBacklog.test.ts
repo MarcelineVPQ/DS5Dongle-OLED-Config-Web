@@ -43,6 +43,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "A whole tune for the speaker test": "Speaker test: a whole tune",
   "Printed colorways": "Colorways with a print",
   "3D audio for the headset": "3D audio for the headset",
+  "Live controller widget": "DS5 widget: a live controller view",
   "One Update button": "One Update flow",
   "The board's OLED settings in the app": "Board's OLED settings in the app",
   "OLED screens in Sony's words": "OLED screens use Sony's names",

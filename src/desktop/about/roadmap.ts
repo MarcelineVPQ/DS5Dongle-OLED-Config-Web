@@ -364,6 +364,12 @@ export const ROADMAP: RoadmapItem[] = [
     text: "Surround games heard in 3D on a headset plugged into the controller: Windows Sonic on Windows, a virtual surround output on Linux.",
     areas: ["audio"],
   },
+  {
+    column: "planned",
+    title: "Live controller widget",
+    text: "A small always-on-top window (or a KDE widget) with your controller moving live: buttons, sticks, triggers and the light bar, plus battery and signal.",
+    areas: ["controller", "app"],
+  },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
   { column: "ideas", title: "Simpler layout and wording", text: "Shorter labels, fewer clicks to common things, and pairing slots that are easy to find.", areas: ["app"] },
