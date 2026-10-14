@@ -1670,6 +1670,7 @@
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",
+      "nowInstalled": "La aplicación ya está instalada en este PC: ábrela desde el menú Inicio. El archivo .exe portátil que usabas antes ya no hace falta y puedes borrarlo.",
       "dismissedTitle": "Avisos cerrados",
       "none": "No hay avisos cerrados.",
       "showAgain": "Volver a mostrar",

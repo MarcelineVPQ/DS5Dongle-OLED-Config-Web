@@ -1670,6 +1670,7 @@
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",
+      "nowInstalled": "O app agora está instalado neste PC: abra-o pelo menu Iniciar. O arquivo .exe portátil que você usava antes não é mais necessário e pode ser apagado.",
       "dismissedTitle": "Avisos fechados",
       "none": "Nenhum aviso fechado.",
       "showAgain": "Mostrar de novo",

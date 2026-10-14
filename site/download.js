@@ -8,7 +8,7 @@ const FEED = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edit
 const RELEASES = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest";
 // macOS builds are community-tested only (we have no Mac): always labeled so.
 const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS (community-tested)" };
-const KINDS = { linux: "AppImage", windows: "portable .exe", macos: ".zip" };
+const KINDS = { linux: "AppImage", windows: "installer, no admin rights", macos: ".zip" };
 
 function detectOs() {
   const ua = navigator.userAgent || "";

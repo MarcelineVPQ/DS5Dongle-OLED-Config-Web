@@ -25,7 +25,7 @@ export interface TrayHandlers {
   toggleWindow: () => void;
   command: (command: TrayCommand) => void;
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => void;
-  // Windows portable build only.
+  // Windows only.
   createDesktopShortcut?: () => void;
   checkForUpdates: () => void;
   restartToUpdate: () => void;

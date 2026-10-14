@@ -33,9 +33,9 @@ export function applyAutostart(enabled: boolean, startMinimized: boolean): void 
     }
     return;
   }
-  // Windows: the real portable exe (launchPath), never process.execPath, which
-  // is the temp unpacked copy that is deleted when the app quits. Applied at
-  // every start, so an entry written by an older build is corrected.
+  // Windows: the installed exe (launchPath). Applied at every start, so an
+  // entry written by an older build (the portable exe's path) is corrected.
+  // The uninstaller removes it (build/installer.nsh).
   app.setLoginItemSettings({
     openAtLogin: enabled,
     args: startMinimized ? [HIDDEN_FLAG] : [],
