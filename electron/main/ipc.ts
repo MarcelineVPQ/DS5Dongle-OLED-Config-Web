@@ -116,7 +116,6 @@ export interface IpcHandlers {
   setFirmwareWriting: (writing: boolean) => void;
   getFirmwareHold: () => FirmwareHoldState;
   getDesktopPalette: () => Promise<unknown>;
-  firmwareChangelog: () => Promise<string>;
   gamesScan: () => Promise<GamesReport>;
   gamesApply: (request: { fixIds: string[]; restart: RestartList }) => Promise<ApplyResult>;
   gamesUndo: (request: { backupId: string; restart: RestartList }) => Promise<UndoResult>;
@@ -164,7 +163,6 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.installUpdate, h.installUpdate);
   invoke(IPC.backToStable, h.backToStable);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
-  invoke(IPC.firmwareChangelog, h.firmwareChangelog);
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit

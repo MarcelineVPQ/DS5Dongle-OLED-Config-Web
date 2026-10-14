@@ -47,7 +47,6 @@ const api: DesktopApi = {
     return () => ipcRenderer.removeListener(IPC.firmwareHold, handler);
   },
   getDesktopPalette: () => ipcRenderer.invoke(IPC.getDesktopPalette),
-  firmwareChangelog: () => ipcRenderer.invoke(IPC.firmwareChangelog),
   onDesktopPalette: (listener) => {
     const handler = (_event: IpcRendererEvent, palette: DesktopPalette | null) => listener(palette);
     // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)

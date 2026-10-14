@@ -273,7 +273,6 @@ function start(): void {
     setFirmwareWriting: (writing) => hold.setWriting(writing),
     getFirmwareHold: () => hold.state(),
     getDesktopPalette: () => readDesktopPalette(),
-    firmwareChangelog: () => updater.firmwareChangelog(),
   });
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));

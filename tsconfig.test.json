@@ -14,5 +14,5 @@
     "strict": true,
     "jsx": "react-jsx"
   },
-  "include": ["tests", "src", "electron"]
+  "include": ["tests", "src", "electron", "firmwareChangelog.config.ts"]
 }

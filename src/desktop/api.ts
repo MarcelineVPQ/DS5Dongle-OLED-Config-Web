@@ -165,8 +165,6 @@ export interface DesktopApi {
   officialControllerFirmware(asked: boolean): Promise<OfficialFirmwareLookup>;
   // "Match desktop" theme: the desktop's colors, and changes to them.
   getDesktopPalette(): Promise<DesktopPalette | null>;
-  // The firmware repo's CHANGELOG.md (fetched by the main process).
-  firmwareChangelog(): Promise<string>;
   onDesktopPalette(listener: (palette: DesktopPalette | null) => void): () => void;
   // The window was shown or hidden (tray, minimize). Chromium's own visibility
   // stays "visible" while hidden here (background throttling is off).
@@ -228,7 +226,6 @@ export const IPC = {
   getFirmwareHold: "desktop:get-firmware-hold",
   firmwareHold: "desktop:firmware-hold",
   getDesktopPalette: "desktop:get-desktop-palette",
-  firmwareChangelog: "desktop:firmware-changelog",
   desktopPalette: "desktop:desktop-palette",
   windowVisible: "desktop:window-visible",
   setupUsbAccess: "desktop:setup-usb-access",

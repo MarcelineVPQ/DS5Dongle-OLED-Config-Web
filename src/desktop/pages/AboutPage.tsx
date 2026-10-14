@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { errorText } from "../../errorText";
+import { useState } from "react";
 import { appVersionLabel } from "../appVersion";
 import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import changelog from "../../../CHANGELOG.md?raw";
 import guide from "../../../docs/GUIDE.md?raw";
 import protonChangelog from "../../../docs/PROTON_CHANGELOG.md?raw";
+// The firmware repo's CHANGELOG.md, bundled at build time (firmwareChangelog.config.ts).
+import firmwareChangelog from "@firmware-changelog?raw";
 import Markdown from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
@@ -78,17 +79,6 @@ function StudioCard() {
 export default function AboutPage({ initialTab = "guide" }: { initialTab?: AboutTab }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<AboutTab>(initialTab);
-  const [firmware, setFirmware] = useState<string | null>(null);
-  const [firmwareError, setFirmwareError] = useState<string | null>(null);
-
-  // lifetime: OK — acquires nothing (one IPC read of the firmware changelog)
-  useEffect(() => {
-    if (tab !== "firmware" || firmware || !window.desktop) return;
-    window.desktop
-      .firmwareChangelog()
-      .then(setFirmware)
-      .catch((cause) => setFirmwareError(errorText(cause)));
-  }, [tab, firmware]);
 
   // Our DualSense Proton runs Windows games on Linux: its tab shows where the
   // Games page's Proton card does (Linux only).
@@ -118,8 +108,7 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
         <section className="dk-card">
           {window.desktop && tab === "changes" && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
           {tab === "changes" && <Markdown text={changelog} />}
-          {tab === "firmware" &&
-            (firmwareError ? <p className="dk-bad">{firmwareError}</p> : firmware ? <Markdown text={firmware} /> : <p className="dk-hint">{t("desktop.about.loading", "Loading…")}</p>)}
+          {tab === "firmware" && <Markdown text={firmwareChangelog} />}
           {tab === "proton" && <Markdown text={protonChangelog} />}
           {tab === "guide" && <Markdown text={guide} />}
           {tab === "credits" && <Markdown text={CREDITS} />}

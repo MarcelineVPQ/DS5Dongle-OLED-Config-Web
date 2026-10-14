@@ -11,5 +11,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["vite.config.ts", "electron.vite.config.ts", "vitest.config.ts", "eslint.config.js"]
+  "include": ["vite.config.ts", "electron.vite.config.ts", "vitest.config.ts", "firmwareChangelog.config.ts", "eslint.config.js"]
 }

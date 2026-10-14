@@ -27,8 +27,6 @@ const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-O
 // The development channel's feed (opt-in): the newest development build or
 // stable release, whichever is newer. Same signing key, same checks.
 const DEV_MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest-dev.json";
-const FIRMWARE_CHANGELOG_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/CHANGELOG.md";
-const CHANGELOG_MAX_CHARS = 512 * 1024;
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
 
 // Test feed: DS5_UPDATE_MANIFEST=http://127.0.0.1:8765/latest.json points the
@@ -206,14 +204,6 @@ export class Updater {
     } finally {
       this.busy = false;
     }
-  }
-
-  // The firmware repo's CHANGELOG, for the About page. Text only, size-capped.
-  async firmwareChangelog(): Promise<string> {
-    const response = await net.fetch(FIRMWARE_CHANGELOG_URL, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
-    if (!response.ok) throw new Error(`Couldn't load the firmware changelog (HTTP ${response.status}).`);
-    const text = await response.text();
-    return text.length > CHANGELOG_MAX_CHARS ? text.slice(0, CHANGELOG_MAX_CHARS) : text;
   }
 
   // A published firmware file for the renderer's flasher: downloaded and

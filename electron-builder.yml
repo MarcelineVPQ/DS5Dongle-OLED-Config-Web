@@ -17,6 +17,8 @@ files:
 extraResources:
   - from: resources
     to: resources
+    # The release bundle's CHANGELOG.md is built into the renderer (firmwareChangelog.config.ts), not read at runtime.
+    filter: ["**/*", "!firmware/CHANGELOG.md"]
 asar: true
 artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-${os}-${arch}.${ext}
 

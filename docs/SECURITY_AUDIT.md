@@ -1,12 +1,12 @@
 # Security Audit
 
-**Audit date:** 2026-10-13 (helper programs, the XInput fix's files and the firmware-write hold added; first audit 2026-10-10, desktop app introduction)
+**Audit date:** 2026-10-13 (helper programs, the XInput fix's files and the firmware-write hold added; the firmware changelog bundled instead of fetched; first audit 2026-10-10, desktop app introduction)
 **Scope:** the Electron main process, preload, renderer, device access, external links, build and dependency supply chain
 **Overall posture:** **GOOD** for the threat model below; one platform gap is recorded and tracked (Linux OS sandbox).
 
 ## Threat model
 
-The app runs locally and talks to one USB device. It loads no remote content and has no accounts or secrets. Outbound requests come only from the main process (the renderer has no network access): the signed update feed and its downloads on GitHub, and Sony's controller firmware version list (below). What matters:
+The app runs locally and talks to one USB device. It loads no remote content and has no accounts or secrets. Outbound requests come only from the main process (the renderer has no network access): the signed update feed and its downloads on GitHub, and Sony's controller firmware version list (below). The changelogs in About (app, firmware, Proton) are bundled into the app at build time and need no request: the firmware's CHANGELOG.md was fetched from GitHub (raw.githubusercontent.com, unsigned) whenever About → Firmware changes opened, until 2026-10-13; it is now bundled like the others (`firmwareChangelog.config.ts`) and the `desktop:firmware-changelog` IPC channel is gone. What matters:
 
 1. **Renderer compromise** (e.g. a malicious dependency in the UI bundle) must not reach the OS or other USB devices.
 2. **Navigation / window.open** must not load remote content into a privileged window.

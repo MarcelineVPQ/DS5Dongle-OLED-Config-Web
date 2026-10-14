@@ -1,10 +1,11 @@
 // Desktop (Electron) build. The browser build still uses vite.config.ts.
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { defineConfig } from "electron-vite";
 import type { Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { FIRMWARE_CHANGELOG_ALIAS, firmwareChangelogPath } from "./firmwareChangelog.config";
 
 // The Developer card (previews, fake controllers, HDR test) is built into dev
 // builds only: DS5_DEV_TOOLS=1 (devrun / test builds) or a development
@@ -26,6 +27,7 @@ function buildId(): string {
   }
 }
 const BUILD_ID = buildId();
+const FIRMWARE_CHANGELOG = firmwareChangelogPath(resolve("."));
 
 // Strict CSP for the desktop renderer: no remote scripts, no eval, and the page
 // can only talk to its own origin. Device access is WebUSB, gated in the main
@@ -75,6 +77,10 @@ export default defineConfig({
   renderer: {
     root: ".",
     plugins: [react(), desktopCsp()],
+    // About → Firmware changes: the firmware's CHANGELOG.md, bundled (firmwareChangelog.config.ts).
+    resolve: { alias: [{ find: FIRMWARE_CHANGELOG_ALIAS, replacement: FIRMWARE_CHANGELOG }] },
+    // The dev server may read it from the firmware checkout next to this repo.
+    server: { fs: { allow: [resolve("."), dirname(FIRMWARE_CHANGELOG)] } },
     define: { "import.meta.env.VITE_DESKTOP": JSON.stringify("1"), "import.meta.env.VITE_DEV_TOOLS": JSON.stringify(DEV_TOOLS ? "1" : "0"), "import.meta.env.VITE_BUILD_ID": JSON.stringify(BUILD_ID) },
     build: {
       outDir: "out/renderer",

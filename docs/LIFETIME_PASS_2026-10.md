@@ -31,19 +31,19 @@ Each row also says where it runs: `module` (module scope: lives as long as the p
 
 | Verdict | App | Firmware | Meaning |
 |---|---|---|---|
-| OK | 317 | 5 | Released, and the comment names where: an effect cleanup (unmount, deps change), a `stop()` / `close()` / `off()`, the window closing, a device disconnect, "fires once". |
+| OK | 322 | 5 | Released, and the comment names where: an effect cleanup (unmount, deps change), a `stop()` / `close()` / `off()`, the window closing, a device disconnect, "fires once". |
 | LEAK | 2 | 0 | Never released, or released too late. The impact is stated. |
-| WASTE | 4 | 0 | Keeps running while the window is hidden or after it is no longer needed (the lean rule). |
+| WASTE | 0 (4 fixed) | 0 | Keeps running while the window is hidden or after it is no longer needed (the lean rule). |
 | HOT-ALLOC | 2 | 3 | Acquired or allocated per frame, per render or per main-loop pass. |
 | NOT-WORTH | 33 | 31 | One per app or per boot and lives until quit / reset by design (Electron's IPC handlers, BTstack registrations, core1's Opus state), or rare and small (a copy per host request). The reason is stated. |
-| **Total** | **358** | **39** | |
+| **Total** | **359** | **39** | |
 
 App rows per kind:
 
 | Kind | OK | LEAK | WASTE | HOT-ALLOC | NOT-WORTH | Total |
 |---|---|---|---|---|---|---|
 | device | 3 | 1 | 0 | 0 | 2 | 6 |
-| effect | 140 | 1 | 1 | 2 | 0 | 144 |
+| effect | 142 | 1 | 0 | 2 | 0 | 145 |
 | electron | 2 | 0 | 0 | 0 | 2 | 4 |
 | ipc | 0 | 0 | 0 | 0 | 7 | 7 |
 | listener | 65 | 0 | 0 | 0 | 16 | 81 |
@@ -52,11 +52,11 @@ App rows per kind:
 | poll | 6 | 0 | 0 | 0 | 0 | 6 |
 | process | 20 | 0 | 0 | 0 | 0 | 20 |
 | subscribe | 14 | 0 | 0 | 0 | 1 | 15 |
-| timer | 49 | 0 | 3 | 0 | 4 | 56 |
+| timer | 52 | 0 | 0 | 0 | 4 | 56 |
 | watcher | 0 | 0 | 0 | 0 | 1 | 1 |
-| **Total** | 317 | 2 | 4 | 2 | 33 | 358 |
+| **Total** | 322 | 2 | 0 | 2 | 33 | 359 |
 
-Where the app rows run: 150 in a render (mostly the effects themselves), 66 inside an effect body, 2 at module scope, 140 in ordinary functions and handlers (the main process, the preload, `micTest.ts`, `speakerPlayer.ts`, the firmware flash). Firmware rows: 14 on core0's main loop (2 of them also from a callback), 11 in TinyUSB / BTstack callbacks, 4 on core1, 9 at boot, 1 at file scope.
+Where the app rows run: 151 in a render (mostly the effects themselves), 66 inside an effect body, 2 at module scope, 140 in ordinary functions and handlers (the main process, the preload, `micTest.ts`, `speakerPlayer.ts`, the firmware flash). Firmware rows: 14 on core0's main loop (2 of them also from a callback), 11 in TinyUSB / BTstack callbacks, 4 on core1, 9 at boot, 1 at file scope.
 
 ## What the pass found
 
@@ -67,7 +67,7 @@ Where the app rows run: 150 in a render (mostly the effects themselves), 66 insi
 - **Fixed in batch 1 (2026-10-13):** `src/desktop/firmwareUpdate.ts` `flash`: the firmware write opens a PICOBOOT session (`device.connect()`) and only ended it by rebooting the board at the end. If an erase/write threw partway, nothing called `disconnect()`, so the board's interface stayed claimed until it was unplugged and a retry in the same app run couldn't claim it. Now `disconnect()` runs in a `finally` (success and every failure), the error says in plain words what happened and what to do (7 languages; the USB error is kept as its `cause`), and `tests/unit/firmwareFlash.test.ts` fails a fake board mid-write and checks the release and a working retry. The row is OK now. It doesn't explain the open "{{device}} busy: Unable to claim interface" row: that is the running board held by another app, a different USB device from the bootloader.
 - `src/desktop/dev/HdrTest.tsx:22, 30` `GpuSwatch`: the HDR test swatch requests a WebGPU device per mount and never calls `device.destroy()`; the cleanup only stops the drawing. Dev builds only (the Developer card). Fix: keep the device in the effect and destroy it in the cleanup.
 
-**Waste under the lean rule (WASTE):**
+**Waste under the lean rule (WASTE; all three fixed 2026-10-13, owner-approved for dev.10, rows now OK; `tests/integration/hiddenWork.test.ts` proves each stops and fails on the old code):**
 
 - `src/desktop/AutoUpdateAsk.tsx:15, 19` `AutoUpdateAsk`: a 1 Hz interval runs a `document.querySelector(".tour-card")` and a state update for the app's whole life: after the question is answered (the component renders nothing then) and while the window is hidden or in the tray. Fix: run it only while unanswered, not yet due and shown (`useWindowShown`), and stop once due.
 - `src/desktop/live/StickTestCards.tsx:40` `StickTests`: the circularity sampler (`setInterval`, 33 ms) keeps ticking while the window is hidden, as long as the Calibration view is mounted; the input is frozen then, so each tick only re-serializes the calibration (`JSON.stringify`). Fix: gate it on `useWindowShown()`.
@@ -101,16 +101,16 @@ Where the app rows run: 150 in a render (mostly the effects themselves), 66 insi
 
 The pages, with the simulated dongle (`SimulatedDongle`, the dev-build board) behind the app's real connection hook (`useDs5Bridge`, plus the update hooks): the controller view, the Pico page, App settings, Calibration, the Speaker panel, the Mic panel with the Mic Test running when it unmounts (the test checks the mic and its AudioContext are open first), Games Home (30 games) and a game page. Each test also checks that the page holds something the probe sees while it is open, and a self-test mounts a component that forgets six cleanups and checks the probe reports each one. Breaking one cleanup on purpose (the controller view's tour listener) fails six of the page tests with `listener window "ds5:start-tour": 1 -> 51`. It takes ~15 s.
 
-What it doesn't cover: the WASTE rows (things that keep running while the page is still mounted but hidden), the Electron main process (no DOM, lives until quit) and GPU objects (jsdom has no canvas/WebGL/WebGPU; the GPU code's own disposal is in the tables: `SwirlField`'s `dispose()`, `HdrGlow`'s textures).
+What it doesn't cover: work that keeps running while a page is still mounted but hidden (the three WASTE fixes have their own test, `tests/integration/hiddenWork.test.ts`), the Electron main process (no DOM, lives until quit) and GPU objects (jsdom has no canvas/WebGL/WebGPU; the GPU code's own disposal is in the tables: `SwirlField`'s `dispose()`, `HdrGlow`'s textures).
 
 ## The work: proposed changes in 4 batches (biggest effect first)
 
-Nothing below is done yet. Each change keeps the current behaviour and needs a test that pins it; the leak test must keep passing.
+Batch 1 and batch 2's three WASTE items are done (2026-10-13); the rest is still to do. Each change keeps the current behaviour and needs a test that pins it; the leak test must keep passing.
 
 | Batch | What | Rows | Why first |
 |---|---|---|---|
 | 1. The firmware update's USB session (**done**, 2026-10-13) | End the PICOBOOT session when a write fails (`disconnect()` in a `finally`, done); check the dongle handle after a failed attach (`WebUsbTransport.close()` unused) and whether either explains "Unable to claim interface" | `firmwareUpdate.ts:79`; `webUsbTransport.ts:65, 68` | A user-visible failure (a retry that can't claim the board) on the update path |
-| 2. Every frame and every second on screen | The controller view's panel-toggle effect gets stable deps; the OLED mirror reuses one `ImageData`; the stick-test sampler stops while hidden; Auto-update's 1 Hz check stops once answered and while hidden; the tour's hold ring runs only while held | `ControllerView.tsx:179`, `DongleConsole.tsx:167`, `StickTestCards.tsx:40`, `AutoUpdateAsk.tsx:15, 19`, `Tour.tsx:330` | Runs whenever the app is open (two of them while hidden) |
+| 2. Every frame and every second on screen (WASTE items **done**, 2026-10-13) | The controller view's panel-toggle effect gets stable deps; the OLED mirror reuses one `ImageData`; the stick-test sampler stops while hidden (done); Auto-update's 1 Hz check stops once answered and while hidden (done); the tour's hold ring runs only while held (done) | `ControllerView.tsx:179`, `DongleConsole.tsx:167`, `StickTestCards.tsx:40`, `AutoUpdateAsk.tsx:15, 19`, `Tour.tsx:330` | Runs whenever the app is open (two of them while hidden) |
 | 3. Firmware: no heap on core0's loop | A non-allocating feature peek for the 0x81 callers; a `bt_request_feature()` without a copy for the fire-and-forget callers | `cmd.cpp:193`, `ctrl_info.cpp:165, 179`; the `get_feature_data` NOT-WORTH rows | Bounded windows per connection, so smaller; heap use on core0 is worth removing anyway |
 | 4. Tidy | The HDR test's GPU device destroyed (dev only); `refreshLatest`'s timeout cleared; the palette watcher's stop kept | `HdrTest.tsx:22, 30`, `service.ts:90`, `index.ts:288` | Dev-only or once per app |
 
@@ -213,9 +213,9 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 45 | `downloadVerified > <anonymous>` | listener | file.on "error" | - | **OK** | goes with the stream: ended on success, destroyed on any failure |
-| 58 | `downloadVerified > <anonymous>` | timer | setTimeout | - | **OK** | cleared in .finally() after every read |
-| 66 | `downloadVerified > <anonymous>` | listener | file.once "drain" | - | **OK** | fires once on drain; the stream is destroyed if `failed` wins instead |
+| 51 | `downloadVerified > <anonymous>` | listener | file.on "error" | - | **OK** | goes with the stream: ended on success, destroyed on any failure |
+| 64 | `downloadVerified > <anonymous>` | timer | setTimeout | - | **OK** | cleared in .finally() after every read |
+| 72 | `downloadVerified > <anonymous>` | listener | file.once "drain" | - | **OK** | fires once on drain; the stream is destroyed if `failed` wins instead |
 
 #### electron/main/games/hdr.ts
 
@@ -263,25 +263,25 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 77 | `<module>` | listener | app.on "second-instance" | module | **NOT-WORTH** | one per app, lives until quit |
-| 86 | `recordGpuCrash` | listener | app.on "child-process-gone" | - | **NOT-WORTH** | registered once in start(), lives until quit |
-| 109 | `start` | timer | setTimeout | - | **OK** | fires once, the first update check |
-| 111 | `start` | timer | setInterval | - | **NOT-WORTH** | one per app, a background update check meant to run in the tray too |
-| 180 | `start` | electron | protocol.handle "ds5-art" | - | **NOT-WORTH** | one scheme handler per app, lives until quit |
-| 290 | `start` | listener | app.on "activate" | - | **NOT-WORTH** | one per app, lives until quit |
-| 294 | `start` | listener | app.on "before-quit" | - | **NOT-WORTH** | one per app, lives until quit |
-| 299 | `start` | listener | app.on "window-all-closed" | - | **NOT-WORTH** | one per app, lives until quit |
-| 356 | `lockDownSession` | listener | ses.on "select-usb-device" | - | **NOT-WORTH** | once per app on the default session, lives until quit |
-| 365 | `createWindow` | electron | BrowserWindow | - | **OK** | one window; "closed" drops the reference, showWindow() makes a new one only after that |
-| 388 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
-| 390 | `createWindow` | listener | mainWindow.once "ready-to-show" | - | **OK** | goes with the window (destroyed on "closed") |
-| 395 | `createWindow` | listener | mainWindow.on "close" | - | **OK** | goes with the window (destroyed on "closed") |
-| 405 | `createWindow` | listener | mainWindow.on "closed" | - | **OK** | goes with the window (destroyed on "closed") |
-| 410 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
-| 411 | `createWindow` | listener | mainWindow.webContents.on "render-process-gone" | - | **OK** | goes with the window (destroyed on "closed") |
-| 415 | `createWindow` | listener | mainWindow.on "event as "show"" | - | **OK** | goes with the window (destroyed on "closed") |
-| 416 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
-| 425 | `createWindow` | listener | contents.on "will-navigate" | - | **OK** | goes with the window (destroyed on "closed") |
+| 78 | `<module>` | listener | app.on "second-instance" | module | **NOT-WORTH** | one per app, lives until quit |
+| 87 | `recordGpuCrash` | listener | app.on "child-process-gone" | - | **NOT-WORTH** | registered once in start(), lives until quit |
+| 110 | `start` | timer | setTimeout | - | **OK** | fires once, the first update check |
+| 112 | `start` | timer | setInterval | - | **NOT-WORTH** | one per app, a background update check meant to run in the tray too |
+| 181 | `start` | electron | protocol.handle "ds5-art" | - | **NOT-WORTH** | one scheme handler per app, lives until quit |
+| 280 | `start` | listener | app.on "activate" | - | **NOT-WORTH** | one per app, lives until quit |
+| 284 | `start` | listener | app.on "before-quit" | - | **NOT-WORTH** | one per app, lives until quit |
+| 289 | `start` | listener | app.on "window-all-closed" | - | **NOT-WORTH** | one per app, lives until quit |
+| 347 | `lockDownSession` | listener | ses.on "select-usb-device" | - | **NOT-WORTH** | once per app on the default session, lives until quit |
+| 356 | `createWindow` | electron | BrowserWindow | - | **OK** | one window; "closed" drops the reference, showWindow() makes a new one only after that |
+| 379 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
+| 381 | `createWindow` | listener | mainWindow.once "ready-to-show" | - | **OK** | goes with the window (destroyed on "closed") |
+| 386 | `createWindow` | listener | mainWindow.on "close" | - | **OK** | goes with the window (destroyed on "closed") |
+| 396 | `createWindow` | listener | mainWindow.on "closed" | - | **OK** | goes with the window (destroyed on "closed") |
+| 401 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
+| 402 | `createWindow` | listener | mainWindow.webContents.on "render-process-gone" | - | **OK** | goes with the window (destroyed on "closed") |
+| 406 | `createWindow` | listener | mainWindow.on "event as "show"" | - | **OK** | goes with the window (destroyed on "closed") |
+| 407 | `createWindow` | listener | mainWindow.webContents.on "did-finish-load" | - | **OK** | goes with the window (destroyed on "closed") |
+| 416 | `createWindow` | listener | contents.on "will-navigate" | - | **OK** | goes with the window (destroyed on "closed") |
 
 #### electron/main/integration.ts
 
@@ -295,18 +295,18 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 119 | `registerIpc` | listener | ipcMain.on "IPC.reportStatus" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 126 | `registerIpc` | listener | ipcMain.on "IPC.setTrayIcon" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 133 | `registerIpc` | ipc | ipcMain.handle "IPC.getSettings" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 139 | `registerIpc` | listener | ipcMain.on "IPC.appVersion" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 145 | `invoke` | ipc | ipcMain.handle "channel" | - | **NOT-WORTH** | one handler per channel, registered once by registerIpc(), lives until quit |
-| 161 | `registerIpc` | listener | ipcMain.on "IPC.setFirmwareWriting" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 168 | `registerIpc` | listener | ipcMain.on "IPC.restartToUpdate" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 173 | `registerIpc` | ipc | ipcMain.handle "IPC.usbAccessInstalled" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 179 | `registerIpc` | ipc | ipcMain.handle "IPC.setupUsbAccess" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 185 | `registerIpc` | ipc | ipcMain.handle "IPC.repairWindowsUsb" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
-| 196 | `invokeWith` | ipc | ipcMain.handle "channel" | - | **NOT-WORTH** | one handler per channel, registered once by registerIpc(), lives until quit |
-| 216 | `registerIpc` | ipc | ipcMain.handle "IPC.setSetting" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 131 | `registerIpc` | listener | ipcMain.on "IPC.reportStatus" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 138 | `registerIpc` | listener | ipcMain.on "IPC.setTrayIcon" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 145 | `registerIpc` | ipc | ipcMain.handle "IPC.getSettings" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 151 | `registerIpc` | listener | ipcMain.on "IPC.appVersion" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 157 | `invoke` | ipc | ipcMain.handle "channel" | - | **NOT-WORTH** | one handler per channel, registered once by registerIpc(), lives until quit |
+| 169 | `registerIpc` | listener | ipcMain.on "IPC.setFirmwareWriting" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 176 | `registerIpc` | listener | ipcMain.on "IPC.restartToUpdate" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 181 | `registerIpc` | ipc | ipcMain.handle "IPC.usbAccessInstalled" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 187 | `registerIpc` | ipc | ipcMain.handle "IPC.setupUsbAccess" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 193 | `registerIpc` | ipc | ipcMain.handle "IPC.repairWindowsUsb" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
+| 204 | `invokeWith` | ipc | ipcMain.handle "channel" | - | **NOT-WORTH** | one handler per channel, registered once by registerIpc(), lives until quit |
+| 227 | `registerIpc` | ipc | ipcMain.handle "IPC.setSetting" | - | **NOT-WORTH** | registered once by registerIpc(), lives until quit |
 
 #### electron/main/linuxSetup.ts
 
@@ -326,8 +326,8 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 299 | `restart` | process | spawn /bin/sh | - | **OK** | detached and unref'd: the relaunch outlives this app on purpose (app.exit next) |
-| 301 | `restart` | process | spawn target | - | **OK** | detached relaunch, app.exit next |
+| 277 | `restart` | process | spawn /bin/sh | - | **OK** | detached and unref'd: the relaunch outlives this app on purpose (app.exit next) |
+| 279 | `restart` | process | spawn target | - | **OK** | detached relaunch, app.exit next |
 
 #### electron/main/windowsSetup.ts
 
@@ -342,10 +342,10 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | 17 | `onTrayCommand` | listener | ipcRenderer.on "IPC.trayCommand" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
 | 35 | `onUpdateState` | listener | ipcRenderer.on "IPC.updateState" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
 | 46 | `onFirmwareHold` | listener | ipcRenderer.on "IPC.firmwareHold" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
-| 54 | `onDesktopPalette` | listener | ipcRenderer.on "IPC.desktopPalette" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
-| 60 | `onWindowVisible` | listener | ipcRenderer.on "IPC.windowVisible" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
-| 72 | `onProtonProgress` | listener | ipcRenderer.on "IPC.protonProgress" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
-| 80 | `onRunningGame` | listener | ipcRenderer.on "IPC.runningGame" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
+| 53 | `onDesktopPalette` | listener | ipcRenderer.on "IPC.desktopPalette" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
+| 59 | `onWindowVisible` | listener | ipcRenderer.on "IPC.windowVisible" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
+| 71 | `onProtonProgress` | listener | ipcRenderer.on "IPC.protonProgress" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
+| 79 | `onRunningGame` | listener | ipcRenderer.on "IPC.runningGame" | - | **OK** | removed by the unsubscribe it returns (the caller cleans up on unmount) |
 
 #### src/components/LanguageToggle.tsx
 
@@ -374,8 +374,9 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 15 | `AutoUpdateAsk` | effect | useEffect cleanup:all | render | **WASTE** | cleanup clears the interval only at unmount: it ticks after the answer, and hidden |
-| 19 | `AutoUpdateAsk > useEffect(cb)` | timer | setInterval | effect | **WASTE** | 1 Hz DOM query for the app's life, also once answered and while hidden |
+| 19 | `AutoUpdateAsk` | effect | useEffect cleanup:all | render | **OK** | acquires nothing (reads whether the question was answered) |
+| 29 | `AutoUpdateAsk` | effect | useEffect cleanup:some | render | **OK** | cleanup clears the interval (answered, due, window hidden, unmount) |
+| 32 | `AutoUpdateAsk > useEffect(cb)` | timer | setInterval | effect | **OK** | cleared in the effect cleanup once answered, due or hidden |
 
 #### src/desktop/colorPicker/ColorPicker.tsx
 
@@ -466,8 +467,8 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 87 | `flash` | device | PicoflashHandle.connect | - | **OK** | released in the finally below (disconnect), on success and on every failure |
-| 120 | `waitForBootloader > <anonymous>` | timer | setTimeout | - | **OK** | fires once (300 ms between bootloader looks, bounded by the deadline) |
+| 97 | `flash` | device | PicoflashHandle.connect | - | **OK** | released in the finally below (disconnect), on success and on every failure |
+| 130 | `waitForBootloader > <anonymous>` | timer | setTimeout | - | **OK** | fires once (300 ms between bootloader looks, bounded by the deadline) |
 
 #### src/desktop/games/consent.ts
 
@@ -669,22 +670,23 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | 300 | `AllButtonsSection` | effect | useEffect cleanup:all? | render | **OK** | cleanup: clears the hovered row on unmount |
 | 595 | `LevelMeter` | poll | usePoll | render | **OK** | usePoll stops on unmount (panel closed) and while hidden |
 | 653 | `AppSettings` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one settings read) |
-| 790 | `GameLaunchersSetting` | effect | useEffect cleanup:all | render | **OK** | cleanup: drops a late read, unsubscribes the games-allowed event |
-| 794 | `GameLaunchersSetting > useEffect(cb)` | subscribe | onGamesAllowed | effect | **OK** | off() in the effect cleanup |
-| 919 | `SpeakerTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the frame loop; runs only while playing and shown |
-| 923 | `SpeakerTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
-| 926 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
-| 996 | `MicTest` | effect | useEffect cleanup:all? | render | **OK** | cleanup: closes the mic session and any playback on unmount |
-| 998 | `MicTest` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (closes the mic test when the window hides) |
-| 1058 | `MicTest` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (switches the live session's loopback) |
-| 1064 | `MicTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the meter's frame loop (testing and shown only) |
-| 1067 | `MicTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
-| 1071 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
-| 1077 | `MicTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the playback line's frame loop (playing and shown only) |
-| 1080 | `MicTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
-| 1083 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
-| 1247 | `DevChannelDialog` | effect | useEffect cleanup:all | render | **OK** | cleanup: removes the Escape listener, drops a late preview |
-| 1255 | `DevChannelDialog > useEffect(cb)` | listener | window "keydown" | effect | **OK** | removed in the effect cleanup (dialog closed) |
+| 791 | `GameLaunchersSetting` | effect | useEffect cleanup:all | render | **OK** | cleanup: drops a late read, unsubscribes the games-allowed event |
+| 795 | `GameLaunchersSetting > useEffect(cb)` | subscribe | onGamesAllowed | effect | **OK** | off() in the effect cleanup |
+| 920 | `SpeakerTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the frame loop; runs only while playing and shown |
+| 924 | `SpeakerTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
+| 927 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
+| 997 | `MicTest` | effect | useEffect cleanup:all? | render | **OK** | cleanup: closes the mic session and any playback on unmount |
+| 999 | `MicTest` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (closes the mic test when the window hides) |
+| 1059 | `MicTest` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (switches the live session's loopback) |
+| 1065 | `MicTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the meter's frame loop (testing and shown only) |
+| 1068 | `MicTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
+| 1072 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
+| 1078 | `MicTest` | effect | useEffect cleanup:some | render | **OK** | cleanup: cancels the playback line's frame loop (playing and shown only) |
+| 1081 | `MicTest > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup (stop, hidden, unmount) |
+| 1084 | `tick` | timer | raf | - | **OK** | re-armed per frame; the effect cleanup cancels the latest |
+| 1254 | `DevChannelDialog` | effect | useEffect cleanup:some | render | **OK** | cleanup: drops a late preview (holds no resource) |
+| 1266 | `DevChannelDialog` | effect | useEffect cleanup:all | render | **OK** | cleanup: removes the Escape listener (dialog closed / onCancel change) |
+| 1269 | `DevChannelDialog > useEffect(cb)` | listener | window "keydown" | effect | **OK** | removed in the effect cleanup |
 
 #### src/desktop/live/slotSettings.tsx
 
@@ -704,12 +706,12 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 28 | `StickTests` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (mirrors input and calibration into refs) |
-| 38 | `StickTests` | effect | useEffect cleanup:all | render | **OK** | cleanup: clears the circularity sampler (unmount) |
-| 40 | `StickTests > useEffect(cb)` | timer | setInterval | effect | **WASTE** | 30 Hz sampler keeps ticking while the window is hidden (input frozen) |
-| 75 | `StickTests` | effect | useEffect cleanup:some | render | **OK** | cleanup: clears the drift sampler and its end timer |
-| 80 | `StickTests > useEffect(cb)` | timer | setInterval | effect | **OK** | cleared at the end of the 10 s test, or in the effect cleanup |
-| 88 | `StickTests > useEffect(cb)` | timer | setTimeout | effect | **OK** | cleared in the effect cleanup |
+| 29 | `StickTests` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (mirrors input and calibration into refs) |
+| 41 | `StickTests` | effect | useEffect cleanup:some | render | **OK** | cleanup: clears the circularity sampler (window hidden, unmount) |
+| 44 | `StickTests > useEffect(cb)` | timer | setInterval | effect | **OK** | cleared in the effect cleanup (window hidden, view closed) |
+| 79 | `StickTests` | effect | useEffect cleanup:some | render | **OK** | cleanup: clears the drift sampler and its end timer |
+| 84 | `StickTests > useEffect(cb)` | timer | setInterval | effect | **OK** | cleared at the end of the 10 s test, or in the effect cleanup |
+| 92 | `StickTests > useEffect(cb)` | timer | setTimeout | effect | **OK** | cleared in the effect cleanup |
 
 #### src/desktop/live/SwirlField.tsx
 
@@ -756,12 +758,6 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | 147 | `play > <anonymous>` | listener | audio.onerror = | - | **OK** | handlers live on the element and go with it when the line ends |
 | 147 | `play > <anonymous>` | listener | audio.onpause = | - | **OK** | handlers live on the element and go with it when the line ends |
 
-#### src/desktop/pages/AboutPage.tsx
-
-| Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
-|---|---|---|---|---|---|---|
-| 85 | `AboutPage` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one IPC read of the firmware changelog) |
-
 #### src/desktop/pages/GamesPage.tsx
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
@@ -796,8 +792,8 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
 | 38 | `SetupScreen` | poll | usePoll | render | **OK** | usePoll: stops while installing, when hidden, or when setup unmounts |
-| 41 | `SetupScreen` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one firmware lookup once a Pico shows up) |
-| 127 | `UpdatesWithoutDongle` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one firmware lookup on mount) |
+| 42 | `SetupScreen` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one firmware lookup once a Pico shows up) |
+| 131 | `UpdatesWithoutDongle` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (one firmware lookup on mount) |
 
 #### src/desktop/storage.ts
 
@@ -825,19 +821,19 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | 214 | `Tour > useEffect(cb)` | timer | raf | effect | **OK** | one-shot, cancelled in the effect cleanup |
 | 227 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup cancels the frame |
 | 230 | `Tour > useEffect(cb)` | timer | raf | effect | **OK** | one-shot, cancelled in the effect cleanup |
-| 247 | `Tour` | effect | useLayoutEffect cleanup:some | render | **OK** | cleanup cancels the frame, the interval and the resize listener; off while hidden |
-| 254 | `Tour > useLayoutEffect(cb)` | timer | raf | effect | **OK** | one-shot, cancelled in the layout effect cleanup |
-| 256 | `Tour > useLayoutEffect(cb)` | timer | setInterval | effect | **OK** | cleared in the cleanup (step change, window hidden, tour closed) |
-| 258 | `Tour > useLayoutEffect(cb)` | listener | window "resize" | effect | **OK** | removed in the layout effect cleanup |
-| 279 | `Tour` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (mirrors state into a ref) |
-| 284 | `Tour` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (edge-detects the pad buttons) |
-| 313 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup cancels the hold loop (step change, window hidden, tour closed) |
-| 330 | `tick` | timer | raf | - | **WASTE** | re-arms every frame for the whole pad step, even with no button held |
-| 333 | `Tour > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup |
-| 341 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup clears the timer and drops a late narratorIdle() |
-| 345 | `Tour > useEffect(cb)` | timer | setTimeout | effect | **OK** | cleared in the effect cleanup |
-| 355 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup removes the keydown listener (tour closed, unmount) |
-| 359 | `Tour > useEffect(cb)` | listener | window "keydown" | effect | **OK** | removed in the effect cleanup |
+| 249 | `Tour` | effect | useLayoutEffect cleanup:some | render | **OK** | cleanup cancels the frame, the interval and the resize listener; off while hidden |
+| 256 | `Tour > useLayoutEffect(cb)` | timer | raf | effect | **OK** | one-shot, cancelled in the layout effect cleanup |
+| 258 | `Tour > useLayoutEffect(cb)` | timer | setInterval | effect | **OK** | cleared in the cleanup (step change, window hidden, tour closed) |
+| 260 | `Tour > useLayoutEffect(cb)` | listener | window "resize" | effect | **OK** | removed in the layout effect cleanup |
+| 281 | `Tour` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (mirrors state into a ref) |
+| 286 | `Tour` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (edge-detects the pad buttons) |
+| 319 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup cancels the hold loop (release, step change, window hidden, tour closed) |
+| 336 | `tick` | timer | raf | - | **OK** | re-arms only while the button is held; cancelled in the effect cleanup |
+| 339 | `Tour > useEffect(cb)` | timer | raf | effect | **OK** | cancelled in the effect cleanup |
+| 347 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup clears the timer and drops a late narratorIdle() |
+| 351 | `Tour > useEffect(cb)` | timer | setTimeout | effect | **OK** | cleared in the effect cleanup |
+| 361 | `Tour` | effect | useEffect cleanup:some | render | **OK** | cleanup removes the keydown listener (tour closed, unmount) |
+| 365 | `Tour > useEffect(cb)` | listener | window "keydown" | effect | **OK** | removed in the effect cleanup |
 
 #### src/desktop/tray/trayIcon.ts
 
@@ -878,10 +874,10 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 | 18 | `useAppUpdate > useEffect(cb)` | subscribe | desktop.onUpdateState | effect | **OK** | the effect returns its unsubscribe |
 | 27 | `useFirmwareHold` | effect | useEffect cleanup:some | render | **OK** | cleanup: the preload's unsubscribe (removeListener) for the firmware hold |
 | 32 | `useFirmwareHold > useEffect(cb)` | subscribe | desktop.onFirmwareHold | effect | **OK** | the effect returns its unsubscribe |
-| 86 | `useFirmwareUpdate` | effect | useEffect cleanup:all | render | **OK** | cleanup: drops a late lookup answer (holds no resource) |
-| 118 | `useFirmwareUpdate > useCallback(cb)` | timer | setTimeout | - | **OK** | cleared once the update settles, and on unmount (effects below) |
-| 134 | `useFirmwareUpdate` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (clears the slow-return timer once settled) |
-| 139 | `useFirmwareUpdate` | effect | useEffect cleanup:all? | render | **OK** | cleanup: clears the slow-return timer on unmount |
+| 91 | `useFirmwareUpdate` | effect | useEffect cleanup:some | render | **OK** | cleanup: drops a late lookup answer (holds no resource) |
+| 125 | `useFirmwareUpdate > useCallback(cb)` | timer | setTimeout | - | **OK** | cleared once the update settles, and on unmount (effects below) |
+| 150 | `useFirmwareUpdate` | effect | useEffect cleanup:none | render | **OK** | acquires nothing (clears the slow-return timer once settled) |
+| 155 | `useFirmwareUpdate` | effect | useEffect cleanup:all? | render | **OK** | cleanup: clears the slow-return timer on unmount |
 
 #### src/desktop/useWindowShown.ts
 
