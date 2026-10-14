@@ -277,6 +277,46 @@ describe("left / right grip haptics (protocol 1.6)", () => {
   });
 });
 
+describe("the mic echo cancellation (protocol 1.17)", () => {
+  it("writes and reads it with the 51-byte body", async () => {
+    const dongle = new FakeDongle({ protoMinor: 17 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(51);
+    expect(id.features3 & FEATURES3.echoCancel).toBe(FEATURES3.echoCancel);
+    expect(client.echoCancel).toBe(true);
+    expect((await client.readConfig()).micEchoCancel).toBe(true); // on by default
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), micEchoCancel: false, micLevel: 30 });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 51);
+    const back = await client.readConfig();
+    expect([back.micEchoCancel, back.micLevel]).toEqual([false, 30]);
+  });
+
+  it("a 1.16 app's 50-byte write leaves it alone", async () => {
+    const dongle = new FakeDongle({ protoMinor: 17 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.identity();
+    await client.applyConfig({ ...(await client.readConfig()), micEchoCancel: false });
+    const before = await client.readConfig();
+    await client.command(0x01, [...encodeConfigBody({ ...before, micEchoCancel: true, micLevel: 9 }, true, true, true)]);
+    const after = await client.readConfig();
+    expect([after.micLevel, after.micEchoCancel]).toEqual([9, false]);
+  });
+
+  it("sends 1.16 firmware the 50-byte body", async () => {
+    const dongle = new FakeDongle({ protoMinor: 16 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(50);
+    expect(client.echoCancel).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), micEchoCancel: false });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 50);
+    expect((await client.readConfig()).micEchoCancel).toBe(true);
+  });
+});
+
 describe("the mic level (protocol 1.16)", () => {
   it("writes and reads it with the 50-byte body", async () => {
     const dongle = new FakeDongle({ protoMinor: 16 });

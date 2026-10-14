@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16), little-endian, packed
+// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16, 51 from 1.17), little-endian, packed
 // (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
@@ -36,10 +36,12 @@
 //   offset 48  uint8   status_gpio_mode            0 high while connected, 1 200 ms pulse on connect
 //   protocol 1.16 (identity [46] bit 4):
 //   offset 49  uint8   mic_level                   0 = follow the PC's mic level, 1..64 the controller's VolumeMic
+//   protocol 1.17 (identity [46] bit 5):
+//   offset 50  uint8   mic_echo_cancel             1 = the controller's echo cancellation on (default), 0 = the game's own
 //
 // The config GET (0xF7) is capped at 63 bytes: from 1.13 a 63-byte GET still
 // answers the 42-byte body with the remap block at 42 (remap.ts), and a
-// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V16
+// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V17
 // (older firmware answers its own, shorter body).
 //
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
@@ -64,6 +66,10 @@ const MIC_LEVEL_AT = CONFIG_BODY_SIZE_V13;
 // The controller's mic level (SetStateData VolumeMic) tops out at 64; 0 =
 // follow the PC's mic level (the firmware's default).
 export const MIC_LEVEL_MAX = 64;
+// Protocol 1.17 appends the controller's echo cancellation (51 in all). Only
+// sent to 1.17+ firmware: a 50-byte write leaves it as it is on the board.
+export const CONFIG_BODY_SIZE_V17 = 51;
+const ECHO_CANCEL_AT = CONFIG_BODY_SIZE_V16;
 // The status pin: the GPIOs the firmware accepts (status_gpio.h), the ones
 // nothing else on the dongle uses (not the UART, the OLED add-on or the radio).
 export const STATUS_GPIO_OFF = 0xff;
@@ -122,6 +128,8 @@ export interface ConfigBody {
   statusGpioMode: StatusGpioMode;
   // Protocol 1.16 (0 on older firmware, and not sent to it).
   micLevel: number; // 0 = the PC's level, 1..MIC_LEVEL_MAX the controller's own
+  // Protocol 1.17 (on with older firmware, which has no switch, and not sent to it).
+  micEchoCancel: boolean; // the controller's own echo cancellation for its mic
 }
 
 export interface ConfigValidationIssue {
@@ -161,6 +169,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   statusGpioPin: STATUS_GPIO_OFF,
   statusGpioMode: 0,
   micLevel: 0,
+  micEchoCancel: true,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -230,15 +239,16 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
 }
 
 // split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split);
-// micLevel: protocol 1.16+ (implies tail).
-export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false): Uint8Array<ArrayBuffer> {
+// micLevel: protocol 1.16+ (implies tail); echoCancel: protocol 1.17+ (implies micLevel).
+export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     throw new Error(issues.map((i) => i.message).join("; "));
   }
+  micLevel ||= echoCancel;
   tail ||= micLevel;
   split ||= tail;
-  const bytes = new Uint8Array(new ArrayBuffer(micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
+  const bytes = new Uint8Array(new ArrayBuffer(echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
   view.setFloat32(1, config.hapticsGain, true);
@@ -276,6 +286,7 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
     view.setUint8(TAIL_AT + 6, config.statusGpioMode);
   }
   if (micLevel) view.setUint8(MIC_LEVEL_AT, config.micLevel);
+  if (echoCancel) view.setUint8(ECHO_CANCEL_AT, config.micEchoCancel ? 1 : 0);
   return bytes;
 }
 
@@ -379,6 +390,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     statusGpioPin: (STATUS_GPIO_PINS as readonly number[]).includes(config.statusGpioPin) ? config.statusGpioPin : STATUS_GPIO_OFF,
     statusGpioMode: config.statusGpioMode === 1 ? 1 : 0,
     micLevel: clampInteger(config.micLevel, 0, MIC_LEVEL_MAX),
+    micEchoCancel: Boolean(config.micEchoCancel),
   };
 }
 
@@ -415,7 +427,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.speakerSelect === right.speakerSelect &&
     left.statusGpioPin === right.statusGpioPin &&
     left.statusGpioMode === right.statusGpioMode &&
-    left.micLevel === right.micLevel
+    left.micLevel === right.micLevel &&
+    left.micEchoCancel === right.micEchoCancel
   );
 }
 
@@ -433,7 +446,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   // A 63-byte read of 1.13+ firmware has the remap block ('RM') at 42, not
   // the 1.13 fields.
   const remapAt42 = avail > TAIL_AT + 1 && bytes[offset + TAIL_AT] === 0x52 && bytes[offset + TAIL_AT + 1] === 0x4d;
-  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V16);
+  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V17);
   const tail = len >= CONFIG_BODY_SIZE_V13;
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
@@ -471,6 +484,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     statusGpioPin: tail ? view.getUint8(TAIL_AT + 5) : DEFAULT_CONFIG.statusGpioPin,
     statusGpioMode: (tail ? view.getUint8(TAIL_AT + 6) : DEFAULT_CONFIG.statusGpioMode) as StatusGpioMode,
     micLevel: len >= CONFIG_BODY_SIZE_V16 ? view.getUint8(MIC_LEVEL_AT) : DEFAULT_CONFIG.micLevel,
+    micEchoCancel: len >= CONFIG_BODY_SIZE_V17 ? view.getUint8(ECHO_CANCEL_AT) !== 0 : DEFAULT_CONFIG.micEchoCancel,
   };
 }
 

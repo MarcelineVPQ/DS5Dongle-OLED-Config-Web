@@ -7,7 +7,7 @@
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
 import { IDENTITY_BYTES } from "./bridgeClient";
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, CONFIG_BODY_SIZE_V13, CONFIG_BODY_SIZE_V16, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, CONFIG_BODY_SIZE_V13, CONFIG_BODY_SIZE_V16, CONFIG_BODY_SIZE_V17, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
@@ -163,9 +163,10 @@ export class SimulatedDongle implements Ds5Transport {
   // Right grip haptics strength after the narrator (protocol 1.6), float LE.
   rightGain = new Uint8Array(new Float32Array([1]).buffer);
   // The bytes after the right grip, as the firmware's defaults: the seven of
-  // protocol 1.13 (trigger reduction ... status pin mode) and 1.16's mic level
-  // (a body only as long as the simulated protocol's is read or written).
-  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+  // protocol 1.13 (trigger reduction ... status pin mode), 1.16's mic level
+  // and 1.17's echo cancellation (a body only as long as the simulated
+  // protocol's is read or written).
+  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
   flashTail = this.tail.slice();
   private get v13() {
     return this.minor >= 13;
@@ -173,9 +174,12 @@ export class SimulatedDongle implements Ds5Transport {
   private get v16() {
     return this.minor >= 16;
   }
+  private get v17() {
+    return this.minor >= 17;
+  }
   // Config_body's size at this protocol (identity [6]).
   private get bodySize() {
-    return this.v16 ? CONFIG_BODY_SIZE_V16 : this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
+    return this.v17 ? CONFIG_BODY_SIZE_V17 : this.v16 ? CONFIG_BODY_SIZE_V16 : this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
   }
   said: [number, number][] = [];
   playerLeds = 0x04; // player 1
@@ -304,7 +308,7 @@ export class SimulatedDongle implements Ds5Transport {
         // Like the firmware: the whole Config_body (38 bytes before 1.6, 42
         // from 1.6), then the remap block only when the request has room for
         // it. From 1.13 (49 bytes) a 63-byte GET keeps the 42-byte body + the
-        // block at 42, and a shorter one gets the whole body (50 bytes from 1.16).
+        // block at 42, and a shorter one gets the whole body (50 bytes from 1.16, 51 from 1.17).
         const body = this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
         const out = new Uint8Array(body + 21);
         out.set(this.config, 0);
@@ -414,7 +418,8 @@ export class SimulatedDongle implements Ds5Transport {
       if (this.split && payload.length >= 1 + CONFIG_BODY_SIZE_SPLIT) this.rightGain = payload.slice(1 + CONFIG_BODY_SIZE + 1, 1 + CONFIG_BODY_SIZE_SPLIT);
       // Older firmware copies whatever reaches byte 37 into the narrator.
       if (!this.split && payload.length > 1 + CONFIG_BODY_SIZE) this.narrator = payload[1 + CONFIG_BODY_SIZE];
-      // 1.13: the seven bytes after the right grip, 1.16: and the mic level; a
+      // 1.13: the seven bytes after the right grip, 1.16: and the mic level,
+      // 1.17: and the echo cancellation; a
       // shorter body leaves the rest (the firmware copies what it was sent).
       if (this.v13 && payload.length >= 1 + CONFIG_BODY_SIZE_V13) {
         const end = Math.min(payload.length, 1 + this.bodySize);
@@ -572,7 +577,7 @@ export class SimulatedDongle implements Ds5Transport {
     else if (func === 0x09) {
       this.config = encodeConfigBody(DEFAULT_CONFIG);
       this.flashConfig = this.config.slice();
-      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
       this.flashTail = this.tail.slice();
       this.powerFlags = 0x01;
       this.hostGen++;
@@ -636,6 +641,7 @@ export class SimulatedDongle implements Ds5Transport {
       out[46] |= 0x10; // FEATURES3: the mic level (1.16)
       out[48] = this.pcMicLevel;
     }
+    if (minor >= 17) out[46] |= 0x20; // FEATURES3: the mic echo cancellation (1.17)
     return out;
   }
 

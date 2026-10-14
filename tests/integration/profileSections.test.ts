@@ -14,7 +14,7 @@ import type { ProfileSettings } from "../../src/desktop/games/library";
 import { settingsFrom } from "../../src/desktop/library/profileValues";
 import { profileFields } from "../../src/desktop/library/profileFields";
 import type { SectionFields } from "../../src/desktop/pages/sectionFields";
-import { AutoHapticsSection, HapticsSection, MicLevelSlider, MicSection, SpeakerSection, TriggerIntensitySection } from "../../src/desktop/pages/SettingsPage";
+import { AutoHapticsSection, EchoCancelToggle, HapticsSection, MicLevelSlider, MicSection, SpeakerSection, TriggerIntensitySection } from "../../src/desktop/pages/SettingsPage";
 import LightbarPage from "../../src/desktop/pages/LightbarPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -35,7 +35,7 @@ function fakeBridge(draft: ConfigBody, minor = 10, pcMicLevel: number | null = n
     protoMajor: 1,
     protoMinor: minor,
     features2: FEATURES2.gripTest,
-    features3: (minor >= 13 ? FEATURES3.configTail : 0) | (minor >= 16 ? FEATURES3.micLevel : 0),
+    features3: (minor >= 13 ? FEATURES3.configTail : 0) | (minor >= 16 ? FEATURES3.micLevel : 0) | (minor >= 17 ? FEATURES3.echoCancel : 0),
     pcMicLevel,
     controllerConnected: true,
   } as unknown as BridgeIdentity;
@@ -69,6 +69,7 @@ function renderSections(bridge: UseDs5BridgeResult, fields?: SectionFields): HTM
         createElement(MicSection, props),
         // Live, the mic level sits under the Mic Test (PartPanel); a profile has it in MicSection.
         fields ? null : createElement(MicLevelSlider, props),
+        fields ? null : createElement(EchoCancelToggle, props),
       ),
     ),
   );
@@ -185,6 +186,29 @@ describe("game page sections (profile draft)", () => {
     keyUp(el.querySelector<HTMLInputElement>('input[type=range][aria-label="Microphone level"]')!, 20);
     expect(onChange).toHaveBeenLastCalledWith({ format: 2, micLevel: 20 });
     expect(setDraftField).not.toHaveBeenCalled();
+  });
+
+  it("protocol 1.17: echo cancellation is a switch, live and per game", () => {
+    const sel = 'button[role=switch][aria-label="Echo cancellation"]';
+    const { bridge, setDraftField } = fakeBridge(CONFIG, 17);
+    const sw = renderSections(bridge).querySelector<HTMLButtonElement>(sel)!;
+    expect(sw.getAttribute("aria-checked")).toBe("true"); // on by default
+    act(() => sw.click());
+    expect(setDraftField).toHaveBeenLastCalledWith("micEchoCancel", false);
+    act(() => root!.unmount());
+    // Greyed with the mic off, like Microphone level.
+    expect(renderSections(fakeBridge({ ...CONFIG, btMicEnable: false }, 17).bridge).querySelector<HTMLButtonElement>(sel)!.disabled).toBe(true);
+    act(() => root!.unmount());
+    const onChange = vi.fn();
+    const { bridge: b2, setDraftField: live2 } = fakeBridge(CONFIG, 17);
+    const el = renderSections(b2, profileFields(CONFIG, NORMAL, { format: 2 }, onChange));
+    expect(el.querySelectorAll(sel).length).toBe(1);
+    act(() => el.querySelector<HTMLButtonElement>(sel)!.click());
+    expect(onChange).toHaveBeenLastCalledWith({ format: 2, micEchoCancel: false });
+    expect(live2).not.toHaveBeenCalled();
+    act(() => root!.unmount());
+    // 1.16 firmware: no switch.
+    expect(renderSections(fakeBridge(CONFIG, 16).bridge).querySelector(sel)).toBeNull();
   });
 
   it("before protocol 1.16 the mic level says to update the firmware", () => {

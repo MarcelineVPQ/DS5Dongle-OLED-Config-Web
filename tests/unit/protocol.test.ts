@@ -4,6 +4,7 @@ import {
   CONFIG_BODY_SIZE,
   CONFIG_BODY_SIZE_V13,
   CONFIG_BODY_SIZE_V16,
+  CONFIG_BODY_SIZE_V17,
   DEFAULT_CONFIG,
   MIC_LEVEL_MAX,
   decodeConfigBody,
@@ -52,6 +53,18 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     expect(decodeConfigBody(bytes.subarray(0, 49)).micLevel).toBe(0);
     // ...and isn't sent to it.
     expect(encodeConfigBody(cfg, true, true).length).toBe(CONFIG_BODY_SIZE_V13);
+  });
+
+  it("carries the protocol 1.17 echo cancellation after the mic level (51 bytes)", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, micLevel: 12, micEchoCancel: false });
+    const bytes = encodeConfigBody(cfg, true, true, true, true);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE_V17);
+    expect([bytes[49], bytes[50]]).toEqual([12, 0]);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+    expect(encodeConfigBody(DEFAULT_CONFIG, false, false, false, true)[50]).toBe(1); // on by default
+    // 1.16 firmware's body (50 bytes): echo cancellation reads as on, and isn't sent to it.
+    expect(decodeConfigBody(bytes.subarray(0, 50)).micEchoCancel).toBe(true);
+    expect(encodeConfigBody(cfg, true, true, true).length).toBe(CONFIG_BODY_SIZE_V16);
   });
 
   it("checks the mic level's range", () => {
