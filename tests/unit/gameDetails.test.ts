@@ -1,5 +1,6 @@
 // The Games library's per-game details, read from launcher caches on disk
 // (electron/main/games/details.ts), and the art color vote (artColor.ts).
+import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -62,6 +63,32 @@ describe("game details from Steam's local files", () => {
 
   it("finds nothing (and doesn't throw) without launchers", () => {
     expect(gameDetails(home).size).toBe(0);
+  });
+});
+
+describe("game details from Heroic's local files", () => {
+  // Heroic caches each picture under the SHA-256 of its URL.
+  const cacheArt = (root: string, url: string) => write(join(root, "images-cache", createHash("sha256").update(url).digest("hex")));
+
+  it("a GOG game: the background is the hero, the wide cover the header, the square the cover", () => {
+    const root = join(home, ".config/heroic");
+    write(join(root, "config.json"), "{}");
+    const url = (n: string) => `https://images.gog.com/${n}.jpg?namespace=gamesdb`;
+    for (const n of ["bg", "wide", "square"]) cacheArt(root, url(n));
+    write(join(root, "store_cache/gog_library.json"), JSON.stringify({ games: [{ app_name: "1957528513", art_background: url("bg"), art_cover: url("wide"), art_square: url("square") }] }));
+    const d = [...gameDetails(home)].find(([k]) => k.endsWith(":gog:1957528513"))?.[1];
+    expect(d!.artPaths.hero).toContain(createHash("sha256").update(url("bg")).digest("hex"));
+    expect(d!.art.sort()).toEqual(["cover", "header", "hero"]);
+  });
+
+  it("a GOG game without hero art (no background, no wide cover): only its cover", () => {
+    const root = join(home, ".config/heroic");
+    write(join(root, "config.json"), "{}");
+    const square = "https://images.gog.com/square.jpg?namespace=gamesdb";
+    cacheArt(root, square);
+    write(join(root, "store_cache/gog_library.json"), JSON.stringify({ games: [{ app_name: "1207660000", art_square: square, art_background: "" }] }));
+    const d = [...gameDetails(home)].find(([k]) => k.endsWith(":gog:1207660000"))?.[1];
+    expect(d!.art).toEqual(["cover"]);
   });
 });
 

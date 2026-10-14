@@ -155,7 +155,8 @@ export function ensureContrast(fg: Rgb, bg: Rgb, target: number, toward: Rgb = w
   return toward;
 }
 
-const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+// An Rgb as a CSS color value.
+export const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
 
 // CSS custom properties for documentElement. Status colors (connected green,
 // warning amber, error red) are deliberately not touched: they carry meaning.
