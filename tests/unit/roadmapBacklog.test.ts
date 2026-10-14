@@ -59,6 +59,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Share button layouts": "Public button layouts",
   "Trigger strength and more audio settings": "Upstream settings batch",
   "Controller off when the PC sleeps": "PC sleep: controller off",
+  "Microphone level": "Mic level: the controller's own microphone level",
   "Faster firmware for {{device}}": "Firmware: OLED flush and Opus encoder speedups",
   "Better OLED status screen": "OLED Status screen controller drawing",
   "XInput games find the controller": "XInput-only games: set the Proton option automatically",

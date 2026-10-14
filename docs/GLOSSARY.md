@@ -22,6 +22,7 @@ Every page exists per locale: replace `<loc>` with `en-us`, `de-de`, `fr-fr`, `e
 | DS | `https://www.playstation.com/<loc>/accessories/dualsense-wireless-controller/` |
 | DSE | `https://www.playstation.com/<loc>/accessories/dualsense-edge-wireless-controller/` |
 | DS4 | `https://www.playstation.com/<loc>/accessories/dualshock-4-wireless-controller/` |
+| AUDIO | `https://www.playstation.com/<loc>/support/hardware/ps5-change-audio-output/` (PS5 control center → Mic) |
 | BLOG-DE | `https://blog.de.playstation.com/2023/01/26/der-dualsense-edge-wireless-controller-wird-heute-weltweit-eingefuehrt/` |
 | BLOG-FR | `https://blog.fr.playstation.com/2023/01/26/la-manette-sans-fil-dualsense-edge-sort-aujourdhui-dans-le-monde-entier/` |
 
@@ -36,6 +37,8 @@ zh-CN is Sony's mainland China site (`zh-hans-cn`; playstation.com.cn redirects 
 | Adaptive triggers | Adaptive triggers | Adaptive Trigger | Gâchettes adaptatives | Gatillos adaptativos | Gatilhos adaptáveis | 自适应扳机 | アダプティブトリガー | DS |
 | Trigger Effect Intensity (setting) | Trigger Effect Intensity | Intensität des Trigger-Effekts | Intensité de l'effet gâchette | Intensidad del efecto gatillo | Intensidade do efeito gatilho | 扳机效果强度 | トリガーエフェクトの強さ | GEN |
 | Speaker volume (setting) | Volume (Speaker for Controller) | Lautstärke (Lautsprecher für Controller) | Volume (haut-parleur de la manette) | Volumen (altavoz para mando) | Volume (alto-falante do controle) | 音量（控制器的扬声器） | 音量（コントローラーのスピーカー） | GEN |
+| Microphone level (setting) | Microphone level | Mikrofonpegel | Niveau du microphone | Nivel del micrófono | Nível do microfone | 麦克风音量 | マイクレベル | AUDIO ("Adjust Microphone Level", "Mikrofonpegel anpassen", "Régler le niveau du microphone"…) |
+| Input volume (the mic's level meter) | Input volume | Eingangslautstärke | Volume d'entrée | Volumen de entrada | Volume de entrada | 输入音量 | 入力音量 | AUDIO |
 | Brightness of Controller Indicators | Brightness of Controller Indicators | Helligkeit der Controller-Leuchten | Luminosité des indicateurs de la manette | Nivel de luminosidad de los indicadores del mando | Brilho dos indicadores do controle | 控制器指示灯亮度 | コントローラーのランプの明るさ | GEN |
 | Motion sensor | Motion sensor | Bewegungssensoren ⚠ | Capteurs de mouvement ⚠ | Sensor de movimiento | Sensor de movimento | 动态传感器 | モーションセンサー | DS (de/fr: DS4) |
 | Gyroscope / accelerometer | Gyroscope / Accelerometer | Gyroskop / Beschleunigungsmesser | Gyroscope / Accéléromètre | Giroscopio / Acelerómetro | Giroscópio / Acelerômetro | 陀螺仪 / 加速度计 | ジャイロスコープ / 加速度センサー | DS (de/fr: DS4) |
@@ -120,4 +123,4 @@ The app never says "dongle" (that is the owner's slang) in any language. Every s
 
 The firmware's OLED screens use short words that differ from Sony's, because the screen is 128 pixels wide. They're not changed here (firmware strings are out of scope): "Lightbar" (Sony: light bar), "Touchpad" (touch pad), "Gyro Tilt" (gyroscope), "HAP" (haptic feedback), "SPK" (speaker), "BT Mic" (built-in microphone), "DP nav" (directional buttons), "Tri=" (triangle button), "Hold Create + PS" (the Create button and the PS button).
 
-The Settings screen's entries since firmware dev.9 (`src/oled.cpp`, `format_settings_item`) are short forms too: "TrigEff" (Trigger Effect Intensity; "game" at 0, else "-1".."-10"), "SpkBoost" (Speaker boost; "game" or 1..7), "VolLock" (Lock volume), "SPK Out" (Audio output: Auto, SPK, Hset, off), "Mic In" (Microphone used: Auto, Int, Hset), "Sleep CtrlOff" (Turn off the controller when the PC sleeps) and "PS Wakes PC" (Wake the PC with the PS button). The Status pin is set from the app only. Aligning the OLED with Sony's words is a backlog row ("OLED screens use Sony's names").
+The Settings screen's entries since firmware dev.9 (`src/oled.cpp`, `format_settings_item`) are short forms too: "TrigEff" (Trigger Effect Intensity; "game" at 0, else "-1".."-10"), "SpkBoost" (Speaker boost; "game" or 1..7), "VolLock" (Lock volume), "SPK Out" (Audio output: Auto, SPK, Hset, off), "Mic In" (Microphone used: Auto, Int, Hset), "Sleep CtrlOff" (Turn off the controller when the PC sleeps) and "PS Wakes PC" (Wake the PC with the PS button); firmware 1.16 adds "Mic Lvl" (Microphone level; "PC" at 0, else 4..64). The Status pin is set from the app only. Aligning the OLED with Sony's words is a backlog row ("OLED screens use Sony's names").

@@ -20,7 +20,7 @@ import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -43,6 +43,7 @@ import {
   AutoHapticsSection,
   DisplaySection,
   HapticsSection,
+  MicLevelSlider,
   MicSection,
   PcSleepSection,
   PowerSection,
@@ -181,7 +182,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
       {part === "body" && <LevelMeter bridge={bridge} which="haptic" />}
       {part === "body" && <AutoHapticsSection bridge={bridge} />}
       {part === "mute" && <MicSection bridge={bridge} />}
-      {part === "mute" && <MicTest headset={input?.headphones ?? false} output={bridge.draft.speakerSelect} />}
+      {part === "mute" && <MicTest headset={input?.headphones ?? false} output={bridge.draft.speakerSelect} level={<MicLevelSlider bridge={bridge} />} />}
       {part === "ps" && <SlotsPage bridge={bridge} />}
       {EDGE_PARTS.has(part) && <EdgePartInfo part={part} />}
       {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}
@@ -906,12 +907,13 @@ export function SpeakerTest() {
 // live sound (it would feed back on the speaker), nor with Audio output set to
 // Speaker: Listen back plays the last 3 seconds, after the mic is closed. A status line always says what is
 // happening, so silence with text is a visible error, never silence alone.
-// Closing the panel or hiding the window stops everything.
+// Closing the panel or hiding the window stops everything. `level` (the Mic
+// level slider) sits right under the meter, so a change shows on it live.
 const VU_SEGMENTS = 20;
 type MicPhase = "idle" | "starting" | "testing" | "stopping" | "playing";
 type MicNote = { kind: "stopped" | "done" | "quiet" } | { kind: "problem"; problem: MicProblem } | null;
 
-export function MicTest({ headset, output }: { headset: boolean; output: SpeakerSelect }) {
+export function MicTest({ headset, output, level }: { headset: boolean; output: SpeakerSelect; level?: ReactNode }) {
   const { t } = useTranslation();
   const shown = useWindowShown();
   const [phase, setPhase] = useState<MicPhase>("idle");
@@ -1055,6 +1057,7 @@ export function MicTest({ headset, output }: { headset: boolean; output: Speaker
           ))}
         </div>
       </div>
+      {level}
       {(phase === "testing" || (phase === "idle" && hasClip)) && (
         <div className="dk-row-btns">
           <button type="button" className="dk-btn" onClick={() => void listen()}>

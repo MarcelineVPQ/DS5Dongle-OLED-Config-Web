@@ -254,6 +254,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
     triggers: () => (v.triggerReduce ? `−${v.triggerReduce}` : t("desktop.settings.asGame")),
     speakerBoost: () => (v.speakerGain ? `${v.speakerGain}` : t("desktop.settings.asGame")),
     volumeLock: () => onOff(v.lockVolume),
+    micLevel: () => (v.micLevel ? `${v.micLevel}` : t("desktop.settings.asPc")),
   };
   const label: Record<ProfileGroup, string> = {
     grips: t("desktop.library.haptics"),
@@ -266,6 +267,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
     triggers: t("desktop.library.triggerReduce"),
     speakerBoost: t("desktop.library.speakerBoost"),
     volumeLock: t("desktop.library.lockVolume"),
+    micLevel: t("desktop.library.micLevel"),
   };
   const chips: Array<{ key: string; text: string; clear: () => ProfileSettings }> = gameGroups(draft, normal).map((g) => ({
     key: g,
