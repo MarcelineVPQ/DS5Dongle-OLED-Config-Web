@@ -37,6 +37,11 @@ export const BAD_REQUEST = "DS5_BAD_REQUEST";
 export const MAIN_ERROR_KEYS = ["desktop.errors.settingNotSaved", "desktop.errors.linkNotOpened"] as const;
 export type MainErrorKey = (typeof MAIN_ERROR_KEYS)[number];
 
+// News from the main process the page shows as a notice (not an error):
+// something the app did on its own in the background. Fixed keys only.
+export const MAIN_NOTICE_KEYS = ["desktop.notices.volumeRestored"] as const;
+export type MainNoticeKey = (typeof MAIN_NOTICE_KEYS)[number];
+
 export interface DevChannelPreview {
   app: string;
   firmware: string | null;
@@ -69,6 +74,11 @@ export interface DesktopSettings {
   // Which update feed the app follows: "stable" (everyone), or "dev" (opt-in
   // development builds, which also get every stable release).
   updateChannel: UpdateChannel;
+  // Linux: the player applied the Games fix that turns the controller's volume
+  // and microphone level up to full; while the app runs it sets them to full
+  // again whenever the controller's sound card reappears. Set by Apply, cleared
+  // by Undo (main process only, not a page setting).
+  controllerVolumeFull: boolean;
 }
 
 // App self-update state, pushed from the main process (electron/main/updater.ts).
@@ -132,7 +142,8 @@ export type ProtonInstallResult = { ok: true; name: string; installed: string[] 
 // noController: the change set the controller's volume, and it isn't connected (nothing undone).
 export type UndoResult =
   // audioRestartFailed: restored, but restarting the audio service (WirePlumber) failed.
-  | { ok: true; restored: string[]; reopenFailed?: LauncherId[]; audioRestartFailed?: string }
+  // volumeNotSaved: the old controller levels are back, but saving them as ALSA's saved state failed ("cancelled": the password prompt).
+  | { ok: true; restored: string[]; reopenFailed?: LauncherId[]; audioRestartFailed?: string; volumeNotSaved?: string }
   // error: SHOWN — desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted)
   | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem }
   // error: SHOWN — desktop.games.undoConflict
@@ -157,6 +168,7 @@ export interface DesktopApi {
   setTrayIcon(pngDataUrl: string): void;
   onTrayCommand(listener: (command: TrayCommand) => void): () => void;
   onShowError(listener: (key: MainErrorKey) => void): () => void;
+  onShowNotice(listener: (key: MainNoticeKey) => void): () => void;
   getSettings(): Promise<DesktopSettings>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
@@ -232,6 +244,7 @@ export const IPC = {
   setTrayIcon: "desktop:set-tray-icon",
   trayCommand: "desktop:tray-command",
   showError: "desktop:show-error",
+  showNotice: "desktop:show-notice",
   getSettings: "desktop:get-settings",
   setSetting: "desktop:set-setting",
   usbAccessInstalled: "desktop:usb-access-installed",

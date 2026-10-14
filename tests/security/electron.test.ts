@@ -337,7 +337,10 @@ describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
 
   it("runs pkexec through execFile with a fixed script and positional paths", () => {
-    expect(setupSource).toMatch(/execFile\("pkexec", \["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile \? PROFILE_DEST : ""\]/);
+    expect(setupSource).toMatch(/runPkexec\(\["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile \? PROFILE_DEST : ""\]\)/);
+    // One pkexec spawn in the app: runPkexec, execFile with the caller's argv (no shell option).
+    expect(setupSource.match(/execFile\("pkexec"/g)).toHaveLength(1);
+    expect(setupSource).toContain('execFile("pkexec", argv, (error) => {');
     expect(setupSource).toMatch(/'command -v udevadm >\/dev\/null \|\| exit 3; install -m 0644 "\$1" "\$2"/);
     // The sandbox profile: only fixed paths, positional ($3/$4), and only AppArmor's parser.
     expect(setupSource).toMatch(/' && \{ \[ -z "\$3" \] \|\| \{ install -m 0644 "\$3" "\$4" && apparmor_parser -r "\$4"; \}; \}'/);
@@ -393,6 +396,15 @@ describe("helper programs", () => {
       /if \(!\(MIXER_TARGETS as readonly string\[\]\)\.includes\(name\) \|\| !Number\.isInteger\(value\) \|\| value < 0\) throw new Error\("Not a controller volume control\."\);\n\s+await run\("amixer", \["-c", String\(card\), "-q", "cset", `name=\$\{name\}`, String\(value\)\], \{ env: \{ \.\.\.process\.env, LC_ALL: "C" \}, timeout: 5000 \}\);/,
     );
     expect(source.match(/run\("amixer"/g)).toHaveLength(2);
+    // Keeping the levels: root only through runPkexec, alsactl by a fixed absolute path, `store` + a card number.
+    expect(source).toContain('const ALSACTL_PATHS = ["/usr/sbin/alsactl", "/sbin/alsactl", "/usr/bin/alsactl"];');
+    expect(source).toMatch(/if \(!Number\.isInteger\(card\) \|\| card < 0\) throw new Error\("Not a sound card number\."\);\n[\s\S]{0,200}return pkexec\(\[alsactl, "store", String\(card\)\]\);/);
+    expect(source.match(/pkexec\(/g)).toHaveLength(1);
+    expect(source).not.toMatch(/execFile\("pkexec"|run\("pkexec"|run\("alsactl"/);
+    // The card watcher only reads /dev/snd's names and runs no program of its own.
+    const keeper = read("games/volumeKeeper.ts");
+    expect(keeper).toContain('watch("/dev/snd", (_event, file) => {');
+    expect(keeper).not.toMatch(/execFile|spawn|pkexec\(/);
     // The page names only a fix id; the backup manifest's values are schema-checked.
     expect(read("ipc.ts")).toContain("|^system:audio-(rule|profile|volume):[0-9a-f]{8}$/");
     expect(read("games/backup.ts")).toContain("changes: z.array(z.object({ name: z.enum(MIXER_TARGETS), from: z.number().int().min(0), to: z.number().int().min(0) }))");

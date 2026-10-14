@@ -4,7 +4,7 @@
 // re-scans and resolves ids against fresh state: the renderer can never name a
 // file, a value, or a stale plan.
 import { createHash } from "node:crypto";
-import { errorText } from "../../../src/errorText";
+import { errorText, logged } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDocument } from "yaml";
@@ -49,7 +49,19 @@ import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
 import { compatMapping, findSteamInstalls, installedTools, launchOptions, listSteamGames, readVdfFile, setCompatTool, steamInputState, valveProtons, type SteamInstall } from "./steam";
-import { findGlobalSdlVars, findProAudioRules, hidrawAccess, isProAudio, lowMixerControls, sdlVarForcing, SDL_FORCING_VARS, type AudioCard, type DualSenseMixer, type MixerChange } from "./system";
+import {
+  findGlobalSdlVars,
+  findProAudioRules,
+  hidrawAccess,
+  isProAudio,
+  lowMixerControls,
+  sdlVarForcing,
+  SDL_FORCING_VARS,
+  type AudioCard,
+  type DualSenseMixer,
+  type MixerChange,
+  type SaveResult,
+} from "./system";
 
 export { sdlVarForcing };
 import { ensureNode, getString, parseVdf, serializeVdf, setKey, type VdfNode } from "./vdf";
@@ -78,6 +90,7 @@ export interface ScanDeps {
   running: Set<LauncherId>;
   audioCards: AudioCard[];
   mixers?: DualSenseMixer[]; // Linux: the controller's ALSA volume controls (system.ts)
+  volumeKept?: boolean; // the player applied the volume fix before (the controllerVolumeFull setting)
   windowsStores?: WindowsStores; // Windows: GOG Galaxy and Epic (Linux has them through Heroic)
   notDetected?: Set<string>; // game keys the player marked "controller not detected"
   hdrMarked?: Set<string>; // game keys the player marked "Supports HDR"
@@ -843,13 +856,25 @@ export function scan(deps: ScanDeps): Scan {
       );
     }
   }
-  // The controller's hardware volume and mic gain, left low by the boot ALSA
-  // restore (PipeWire never sets them for the DualSense).
+  // The controller's hardware volume and mic gain, left low by the ALSA
+  // restore each time its card appears (PipeWire never sets them for the
+  // DualSense). Low live: set them to full and save them. Full live but low
+  // in ALSA's saved state: the next reconnect lowers them, so save them.
   // loop: NOT-WORTH — connected DualSense sound cards, 0-2; once per scan
   for (const m of deps.mixers ?? []) {
-    const changes = lowMixerControls(m.controls);
+    const changes = lowMixerControls(m.controls, m.saved);
     if (!changes.length) continue;
-    sfixes.push(fix(`system:audio-volume:${idHash(m.key)}`, "audio-volume", "system", msg("label.audioVolume"), msg("why.audioVolume"), true, [], { kind: "set-mixer", key: m.key, changes }));
+    // loop: NOT-WORTH — N ≤ 4 controls of one card
+    const liveLow = m.controls.some((c) => changes.some((x) => x.name === c.name) && c.value < c.max);
+    // Set to full before (and kept by the app) but low again: something else changed them.
+    const why = !liveLow ? "why.audioVolumeSaved" : deps.volumeKept ? "why.audioVolumeAgain" : "why.audioVolume";
+    sfixes.push(
+      fix(`system:audio-volume:${idHash(m.key)}`, "audio-volume", "system", msg(liveLow ? "label.audioVolume" : "label.audioVolumeSaved"), msg(why), true, [], {
+        kind: "set-mixer",
+        key: m.key,
+        changes,
+      }),
+    );
   }
   const system: SystemInfo = {
     audioProfile: deps.audioCards[0]?.activeProfile ?? null,
@@ -890,6 +915,8 @@ export interface ApplyDeps {
   restartWirePlumber: () => Promise<void>;
   setCardProfile: (card: string, profile: string) => Promise<void>;
   setMixer?: (key: string, changes: MixerChange[]) => Promise<void>; // Linux: the controller's ALSA controls (system.ts setDualSenseMixer)
+  saveMixer?: (key: string) => Promise<SaveResult>; // Linux: keep them as ALSA's saved state (pkexec alsactl store, system.ts)
+  keepVolume?: (on: boolean) => void; // remember the fix (controllerVolumeFull): the app sets the levels again when the card reappears
 }
 
 // Running launchers that own one of these changes: `allowed` (the ones the
@@ -965,6 +992,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
     );
   }
   const postErrors = new Map<string, Msg>();
+  const postNotes = new Map<string, Msg>(); // done, with something to say
   // loop: SERIAL-REQUIRED — process order: WirePlumber restart and profile switch must not overlap
   for (const [key, post] of posts) {
     try {
@@ -972,6 +1000,20 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
       else if (post.kind === "set-mixer") {
         if (!deps.setMixer) throw new Error("No mixer access.");
         await deps.setMixer(post.key, post.changes);
+        deps.keepVolume?.(true);
+        // Saved too, so the system's restore at the next reconnect keeps them
+        // (one password prompt, explained in the fix's text).
+        const saved = deps.saveMixer ? await deps.saveMixer(post.key) : null;
+        // error: SHOWN — desktop.games.msg.result.volumeNotSaved (on the change's row in the Done list; the page then offers to save them again)
+        if (saved && !saved.ok) postNotes.set(key, msg("result.volumeNotSaved", { error: saved.reason === "cancelled" ? msg("result.passwordCancelled") : saved.message }));
+        else if (saved && backupId && !("skipped" in saved)) {
+          try {
+            deps.backups.markMixerSaved(backupId);
+          } catch (cause) {
+            // error: LOGGED-OK — the levels are set and saved; only Undo won't put the old saved levels back (it still puts the live ones back)
+            logged("marking the volume change as saved in its change set")(cause);
+          }
+        }
       } else await deps.setCardProfile(post.card, post.profile);
     } catch (cause) {
       // error: SHOWN — desktop.games.msg.result.restartFailed (or volumeFailed / profileFailed, on the change's row in the Done list)
@@ -981,8 +1023,9 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
   }
   for (const p of chosen) {
     const message = p.post ? postErrors.get(JSON.stringify(p.post)) : undefined;
+    const note = p.post ? postNotes.get(JSON.stringify(p.post)) : undefined;
     // A failed profile switch means nothing changed; a failed restart still saved the file.
-    applied.push({ id: p.fix.id, ok: !(message && p.edits.length === 0), message });
+    applied.push({ id: p.fix.id, ok: !(message && p.edits.length === 0), message: message ?? note });
   }
   return { applied, backupId, blockedBy: [] };
 }

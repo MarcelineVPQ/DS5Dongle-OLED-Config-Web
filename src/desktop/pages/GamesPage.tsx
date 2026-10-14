@@ -313,7 +313,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       if (r.ok) {
         forgetApplied();
         // was SILENT-BUG: the audio service's failed restart was dropped
-        setCloseNote(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : restartText(r));
+        // The old controller levels are back, but not in ALSA's saved state (the password prompt cancelled or failed).
+        const volumeNote = r.volumeNotSaved
+          ? t("desktop.games.undoVolumeNotSaved", { error: r.volumeNotSaved === "cancelled" ? t("desktop.games.msg.result.passwordCancelled") : r.volumeNotSaved })
+          : null;
+        setCloseNote(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : (volumeNote ?? restartText(r)));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {

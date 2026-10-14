@@ -454,6 +454,7 @@
           "audioRule": "Die Audio-Regel abschalten, die den Controller auf „pro-audio“ zwingt",
           "audioProfile": "Controller-Audio auf das Profil „{{profile}}“ umstellen",
           "audioVolume": "Lautstärke und Mikrofonpegel des Controllers auf diesem Computer auf voll stellen",
+          "audioVolumeSaved": "Lautstärke und Mikrofonpegel des Controllers beim erneuten Verbinden auf voll halten",
           "gamepad": "Controller als Standard-Gamepad (XInput) an {{game}} übergeben",
           "hdr": "HDR für {{game}} einschalten",
           "hdrUpdate": "HDR von {{game}} auf gamescope umstellen",
@@ -472,7 +473,9 @@
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
           "audioRule": "{{file}} stellt die Audiokarte des DualSense auf das Pro-Audio-Profil, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Die Datei wird in .disabled umbenannt (nicht gelöscht) und der Audiodienst (WirePlumber) neu gestartet, der Ton setzt also kurz aus.",
           "audioProfile": "Die Audiokarte des DualSense steht auf „{{profile}}“, wodurch GE-Proton 11 Trigger ohne Kraft und kein haptisches Feedback sendet. Es ändern sich keine Dateien; es ist dasselbe wie die Profilwahl in deinen Sound-Einstellungen.",
-          "audioVolume": "Unter Linux behält die Soundkarte des Controllers ihre eigene Lautstärke und ihren eigenen Mikrofonpegel vom letzten Speichern, und die Regler deines Desktops ändern sie nicht. Hier sind sie niedrig, daher kann das Mikrofon fast stumm klingen und Headset und Lautsprecher spielen leiser. Sie werden auf voll gestellt (im Soundkarten-Mixer von Linux, ALSA); die Lautstärkeregler deines Desktops funktionieren wie bisher, und Rückgängig stellt die alten Pegel wieder her. Steht der Mikrofonpegel auf {{device_dat}} über 0, bestimmt stattdessen diese Einstellung den Mikrofonpegel.",
+          "audioVolume": "Unter Linux behält die Soundkarte des Controllers ihre eigene Lautstärke und ihren eigenen Mikrofonpegel, und die Regler deines Desktops ändern sie nicht. Jedes Mal, wenn die Soundkarte erscheint (beim Start des Computers, beim Anschließen des Controllers und jedes Mal, wenn {{device}} neu startet, zum Beispiel nach einem Firmware-Update), setzt Linux sie auf die zuletzt gespeicherten Pegel zurück. Hier sind sie niedrig, daher kann das Mikrofon fast stumm klingen und Headset und Lautsprecher spielen leiser. Sie werden auf voll gestellt (im Soundkarten-Mixer von Linux, ALSA) und als gespeicherte Pegel von Linux gesichert, damit sie nach dem erneuten Verbinden voll bleiben: Zum Speichern wird einmal dein Passwort abgefragt, in der Abfrage des Systems. Solange diese App läuft, stellt sie sie außerdem bei jedem erneuten Verbinden des Controllers wieder auf voll. Die Lautstärkeregler deines Desktops funktionieren wie bisher, und Rückgängig stellt die alten Pegel wieder her (wieder mit Passwortabfrage). Steht der Mikrofonpegel auf {{device_dat}} über 0, bestimmt stattdessen diese Einstellung den Mikrofonpegel.",
+          "audioVolumeSaved": "Lautstärke und Mikrofonpegel des Controllers stehen gerade auf voll, aber die Pegel, die Linux dafür gespeichert hat, sind niedrig. Beim nächsten erneuten Verbinden des Controllers sinken sie daher wieder (beim Start des Computers, beim Anschließen oder wenn {{device}} neu startet, zum Beispiel nach einem Firmware-Update). Die vollen Pegel werden als gespeicherte Pegel von Linux gesichert (ALSA); dafür wird einmal dein Passwort abgefragt, in der Abfrage des Systems. Rückgängig stellt die alten Pegel wieder her.",
+          "audioVolumeAgain": "Diese Pegel wurden schon auf voll gestellt, und diese App stellt sie bei jedem erneuten Verbinden des Controllers wieder auf voll, aber sie sind wieder niedrig. Etwas anderes als diese App hat sie gesenkt: ein Sound-Mixer (zum Beispiel alsamixer) oder eine andere App, nachdem der Controller verbunden war, oder ein erneutes Verbinden, während diese App nicht lief und noch niedrige Pegel gespeichert waren. Übernehmen stellt sie auf voll und speichert sie erneut (einmal dein Passwort).",
           "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
           "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}.",
@@ -506,7 +509,9 @@
           "stale": "Diese Änderung gilt nicht mehr (die Einrichtung hat sich seit der letzten Prüfung geändert).",
           "restartFailed": "Gespeichert, aber der Neustart des Audiodienstes ist fehlgeschlagen: {{error}}",
           "profileFailed": "Das Umschalten des Profils ist fehlgeschlagen: {{error}}",
-          "volumeFailed": "Das Einstellen der Controller-Lautstärke ist fehlgeschlagen: {{error}}"
+          "volumeFailed": "Das Einstellen der Controller-Lautstärke ist fehlgeschlagen: {{error}}",
+          "volumeNotSaved": "Auf voll gestellt, aber nicht für das nächste erneute Verbinden gespeichert ({{error}}). Solange diese App läuft, stellt sie sie bei jedem erneuten Verbinden des Controllers wieder auf voll, und diese Seite bietet erneut an, sie zu speichern.",
+          "passwordCancelled": "die Passwortabfrage wurde abgebrochen"
         },
         "legacy": "{{text}}"
       },
@@ -539,7 +544,8 @@
       "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet.",
       "details": "Details",
       "needsAttention": "Zu erledigen",
-      "undoAudioRestart": "Rückgängig gemacht, aber der Neustart des Audiodienstes ist fehlgeschlagen ({{error}}). Melde dich ab und wieder an oder starte den PC neu, damit die Audioänderung wirkt."
+      "undoAudioRestart": "Rückgängig gemacht, aber der Neustart des Audiodienstes ist fehlgeschlagen ({{error}}). Melde dich ab und wieder an oder starte den PC neu, damit die Audioänderung wirkt.",
+      "undoVolumeNotSaved": "Rückgängig gemacht: Die alten Pegel sind zurück, aber die von Linux gespeicherten Pegel konnten nicht wiederhergestellt werden ({{error}}). Nach dem nächsten erneuten Verbinden steht der Controller daher wieder auf voll."
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -1629,6 +1635,9 @@
       "boardFailed": "{{device, capitalize}} konnte das nicht abschließen (zum Beispiel das Speichern). Deine Änderung geht beim Ausschalten vielleicht verloren. Versuch es noch einmal; wenn es weiter fehlschlägt, zieh {{device_akk}} ab und steck es wieder ein.",
       "boardBusy": "{{device, capitalize}} ist gerade mit etwas anderem beschäftigt. Versuch es gleich noch einmal.",
       "boardRejected": "{{device, capitalize}} hat das nicht angenommen. Die Firmware ist vielleicht älter als diese App: Aktualisiere die Firmware und versuch es dann noch einmal."
+    },
+    "notices": {
+      "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig."
     }
   },
   "ad": {

@@ -454,6 +454,7 @@
           "audioRule": "Désactiver la règle audio qui impose « pro-audio » à la manette",
           "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »",
           "audioVolume": "Mettre le volume et le niveau du microphone de la manette au maximum sur cet ordinateur",
+          "audioVolumeSaved": "Garder le volume et le niveau du microphone de la manette au maximum quand elle se reconnecte",
           "gamepad": "Transmettre la manette à {{game}} comme manette standard (XInput)",
           "hdr": "Activer le HDR pour {{game}}",
           "hdrUpdate": "Passer le HDR de {{game}} à gamescope",
@@ -472,7 +473,9 @@
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
           "audioRule": "{{file}} met la carte audio de la DualSense sur le profil pro-audio, ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Le fichier est renommé en .disabled (pas supprimé) et le service audio (WirePlumber) redémarre : le son coupe une seconde.",
           "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio.",
-          "audioVolume": "Sous Linux, la carte son de la manette garde son propre volume et son propre niveau du microphone tels qu'ils ont été enregistrés la dernière fois, et les curseurs de ton bureau ne les changent pas. Ici ils sont bas : le microphone peut sembler presque muet, et le casque et le haut-parleur jouent moins fort. Ils sont mis au maximum (dans le mélangeur de la carte son de Linux, ALSA) ; les curseurs de volume de ton bureau fonctionnent comme avant, et Annuler remet les anciens niveaux. Si Niveau du microphone est au-dessus de 0 sur {{device}}, c'est ce réglage qui décide du niveau du microphone.",
+          "audioVolume": "Sous Linux, la carte son de la manette garde son propre volume et son propre niveau du microphone, et les curseurs de ton bureau ne les changent pas. Chaque fois que la carte apparaît (au démarrage de l'ordinateur, quand tu branches la manette et chaque fois que {{device}} redémarre, par exemple après une mise à jour du firmware), Linux remet les niveaux qu'il a enregistrés la dernière fois. Ici ils sont bas : le microphone peut sembler presque muet, et le casque et le haut-parleur jouent moins fort. Ils sont mis au maximum (dans le mélangeur de la carte son de Linux, ALSA) et enregistrés comme niveaux enregistrés de Linux, pour qu'ils restent au maximum après une reconnexion : l'enregistrement demande ton mot de passe une fois, dans la fenêtre du système. Tant que cette app tourne, elle les remet aussi au maximum chaque fois que la manette se reconnecte. Les curseurs de volume de ton bureau fonctionnent comme avant, et Annuler remet les anciens niveaux (de nouveau avec le mot de passe). Si Niveau du microphone est au-dessus de 0 sur {{device}}, c'est ce réglage qui décide du niveau du microphone.",
+          "audioVolumeSaved": "Le volume et le niveau du microphone de la manette sont au maximum en ce moment, mais les niveaux que Linux a enregistrés pour elle sont bas : ils redescendent donc à la prochaine reconnexion de la manette (au démarrage de l'ordinateur, quand tu la branches ou quand {{device}} redémarre, par exemple après une mise à jour du firmware). Les niveaux au maximum sont enregistrés comme niveaux enregistrés de Linux (ALSA), ce qui demande ton mot de passe une fois, dans la fenêtre du système. Annuler remet les anciens niveaux.",
+          "audioVolumeAgain": "Ils ont déjà été mis au maximum, et cette app les remet au maximum chaque fois que la manette se reconnecte, mais ils sont de nouveau bas. Autre chose que cette app les a baissés : un mélangeur de son (comme alsamixer) ou une autre app après la connexion de la manette, ou une reconnexion pendant que cette app ne tournait pas, avec des niveaux bas encore enregistrés. Appliquer les met au maximum et les enregistre de nouveau (ton mot de passe une fois).",
           "gamepad": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations.{{runner}}",
           "gamepadSteam": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations. Les options de lancement deviennent : {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignore cette option, donc le jeu passe aussi à {{proton}}.",
@@ -506,7 +509,9 @@
           "stale": "Ce changement ne s'applique plus (la configuration a changé depuis la dernière vérification).",
           "restartFailed": "Enregistré, mais le redémarrage du service audio a échoué : {{error}}",
           "profileFailed": "Le changement de profil a échoué : {{error}}",
-          "volumeFailed": "Le réglage du volume de la manette a échoué : {{error}}"
+          "volumeFailed": "Le réglage du volume de la manette a échoué : {{error}}",
+          "volumeNotSaved": "Mis au maximum, mais pas enregistré pour la prochaine reconnexion ({{error}}). Tant que cette app tourne, elle les remet au maximum chaque fois que la manette se reconnecte, et cette page propose de les enregistrer de nouveau.",
+          "passwordCancelled": "la demande de mot de passe a été annulée"
         },
         "legacy": "{{text}}"
       },
@@ -539,7 +544,8 @@
       "launcherOverwrote": "{{launcher}} a annulé un changement appliqué ici (il était ouvert). Applique-le à nouveau : si {{launcher}} est ouvert, il est d'abord fermé, puis rouvert.",
       "details": "Détails",
       "needsAttention": "À régler",
-      "undoAudioRestart": "Annulé, mais le redémarrage du service audio a échoué ({{error}}). Déconnecte-toi puis reconnecte-toi, ou redémarre le PC, pour que le changement audio prenne effet."
+      "undoAudioRestart": "Annulé, mais le redémarrage du service audio a échoué ({{error}}). Déconnecte-toi puis reconnecte-toi, ou redémarre le PC, pour que le changement audio prenne effet.",
+      "undoVolumeNotSaved": "Annulé : les anciens niveaux sont revenus, mais les niveaux enregistrés de Linux n'ont pas pu être remis ({{error}}), donc la manette revient au maximum à sa prochaine reconnexion."
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -1629,6 +1635,9 @@
       "boardFailed": "{{device, capitalize}} n'a pas pu terminer (par exemple l'enregistrement dans sa mémoire). Ta modification risque d'être perdue à l'extinction. Réessaie ; si ça échoue encore, débranche {{device}} puis rebranche-le.",
       "boardBusy": "{{device, capitalize}} est occupé par autre chose. Réessaie dans un instant.",
       "boardRejected": "{{device, capitalize}} n'a pas accepté ça. Son firmware est peut-être plus ancien que cette appli : mets le firmware à jour, puis réessaie."
+    },
+    "notices": {
+      "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette."
     }
   },
   "ad": {

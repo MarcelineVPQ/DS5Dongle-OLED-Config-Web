@@ -3,7 +3,7 @@
 // systems that restrict user namespaces (Ubuntu 23.10+), the AppArmor profile
 // that lets Chromium's sandbox run (without it the AppImage starts with
 // --no-sandbox; docs/SECURITY_AUDIT.md O1). Needs root once, via pkexec
-// (graphical password prompt). The script is fixed text
+// (graphical password prompt, runPkexec below). The script is fixed text
 // with no user input; the rule file is copied from the app's own resources
 // (through a temporary copy root can read).
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -77,26 +77,44 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
   }
   // Positional args ($1/$2 = rule source/dest, $3/$4 = profile source/dest,
   // empty when not needed) instead of string interpolation. Exit 3 = no
-  // udevadm (126/127 are pkexec's "dismissed"/"not authorized").
+  // udevadm.
   const script =
     'command -v udevadm >/dev/null || exit 3; install -m 0644 "$1" "$2" && udevadm control --reload-rules && udevadm trigger --subsystem-match=usb' +
     ' && { [ -z "$3" ] || { install -m 0644 "$3" "$4" && apparmor_parser -r "$4"; }; }';
-  return new Promise((resolve) => {
-    // lifetime: OK — exits when the user answers the password prompt; no timeout on purpose (a person types)
-    // error: SHOWN — main-english: Cancelled / not authorized / failed, under Set up USB access (batch E3)
-    execFile("pkexec", ["/bin/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile ? PROFILE_DEST : ""], (error) => {
-      rmSync(dir, { recursive: true, force: true });
-      if (!error)
-        resolve({
-          ok: true,
-          message: withProfile
-            ? "USB access set up, and the app's sandbox allowed. Unplug and replug your board; the sandbox is on from the next start."
-            : "USB access set up. Unplug and replug your board.",
-        });
-      else if ((error as NodeJS.ErrnoException).code === "ENOENT") resolve({ ok: false, message: "pkexec isn't installed. Copy the rule manually (see the README)." });
-      else if (error.code === 3) resolve({ ok: false, message: "udevadm isn't installed, so the rule can't be loaded. Copy it manually (see the README)." });
-      else if (error.code === 126 || error.code === 127) resolve({ ok: false, message: "Cancelled." });
-      else resolve({ ok: false, message: `Setup failed: ${error.message}` });
-    });
+  return runPkexec(["/bin/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile ? PROFILE_DEST : ""]).then((result) => {
+    rmSync(dir, { recursive: true, force: true });
+    if (result.ok)
+      return {
+        ok: true,
+        message: withProfile
+          ? "USB access set up, and the app's sandbox allowed. Unplug and replug your board; the sandbox is on from the next start."
+          : "USB access set up. Unplug and replug your board.",
+      };
+    if (result.reason === "missing") return { ok: false, message: "pkexec isn't installed. Copy the rule manually (see the README)." };
+    if (result.code === 3) return { ok: false, message: "udevadm isn't installed, so the rule can't be loaded. Copy it manually (see the README)." };
+    if (result.reason === "cancelled") return { ok: false, message: "Cancelled." };
+    return { ok: false, message: `Setup failed: ${result.message}` };
   });
 }
+
+// The app's one way to run something as root (Linux): pkexec, which shows the
+// desktop's own password prompt. Callers pass a fixed argv (no shell unless the
+// caller's fixed script is the program, as above); every caller explains what
+// runs and why on the page before it asks. Used by the USB access setup (above)
+// and by the controller volume fix (games/system.ts: `alsactl store <card>`).
+// error: PASSES-ON — each caller shows the outcome (the USB setup message; the Games Done list / Undo note)
+export type PkexecResult = { ok: true } | { ok: false; reason: "missing" | "cancelled" | "failed"; code: number | null; message: string };
+export type PkexecRunner = (argv: string[]) => Promise<PkexecResult>;
+
+export const runPkexec: PkexecRunner = (argv) =>
+  new Promise((resolve) => {
+    // lifetime: OK — exits when the user answers the password prompt; no timeout on purpose (a person types)
+    // error: PASSES-ON — the outcome goes to the caller, which shows it (USB setup message, the Games Done list / Undo note)
+    execFile("pkexec", argv, (error) => {
+      if (!error) resolve({ ok: true });
+      // 126/127 are pkexec's "dismissed" / "not authorized".
+      else if ((error as NodeJS.ErrnoException).code === "ENOENT") resolve({ ok: false, reason: "missing", code: null, message: "pkexec isn't installed" });
+      else if (error.code === 126 || error.code === 127) resolve({ ok: false, reason: "cancelled", code: Number(error.code), message: "Cancelled" });
+      else resolve({ ok: false, reason: "failed", code: typeof error.code === "number" ? error.code : null, message: error.message });
+    });
+  });

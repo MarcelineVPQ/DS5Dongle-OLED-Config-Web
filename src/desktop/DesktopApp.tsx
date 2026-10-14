@@ -17,7 +17,7 @@ import { useGameProfile } from "./library/useGameProfile";
 import { LibraryContext, profileTarget } from "./library/libraryContext";
 import { BusyButton } from "./controls";
 import { causeText, clearShownError, shown, showError, useShownError } from "./shownError";
-import { MAIN_ERROR_KEYS } from "./api";
+import { MAIN_ERROR_KEYS, MAIN_NOTICE_KEYS } from "./api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
@@ -53,6 +53,9 @@ export default function DesktopApp() {
   useApplyTheme();
   const bridge = useDs5Bridge();
   const shownError = useShownError();
+  // Something the app did on its own in the background (main process), e.g.
+  // the controller's volume set back to full after it reconnected.
+  const [mainNotice, setMainNotice] = useState<string | null>(null);
   // Remembered so the setup screen can tell "no dongle yet" from "the dongle
   // is waiting for its controller" (it stays off USB until one connects).
   // lifetime: OK — acquires nothing (remembers that a dongle was seen)
@@ -226,6 +229,8 @@ export default function DesktopApp() {
   // lifetime: OK — the effect returns the preload's unsubscribe for main-process errors (unmount)
   // Main-process failures of a user action (a tray toggle, a link): the same notice.
   useEffect(() => window.desktop?.onShowError((key) => (MAIN_ERROR_KEYS as readonly string[]).includes(key) && showError(key)), []);
+  // lifetime: OK — the effect returns the preload's unsubscribe for main-process notices (unmount)
+  useEffect(() => window.desktop?.onShowNotice((key) => (MAIN_NOTICE_KEYS as readonly string[]).includes(key) && setMainNotice(t(key))), [t]);
   // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for tray commands
   useEffect(
     () =>
@@ -306,6 +311,15 @@ export default function DesktopApp() {
               </div>
             )}
             <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
+            {mainNotice && (
+              <div className="dk-notice pinned" role="status">
+                <span>{mainNotice}</span>
+                <span className="dk-spacer" />
+                <button type="button" className="dk-btn" onClick={() => setMainNotice(null)}>
+                  {t("notice.dismiss")}
+                </button>
+              </div>
+            )}
             <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
             <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
             {main === "games" && (

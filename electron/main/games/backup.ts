@@ -62,6 +62,7 @@ const ManifestSchema = z.object({
     )
     .max(8)
     .optional(),
+  mixerSaved: z.boolean().optional(), // those levels were also saved as ALSA's saved state (Undo saves the old ones back)
   files: z.array(
     z.object({
       path: z.string(),
@@ -215,7 +216,7 @@ export class Backups {
   // Undo a set. Throws UndoConflictError (and changes nothing) if any file was
   // changed after our write; returns what to run afterwards (e.g. restart-wireplumber)
   // and the mixer values to put back (the caller sets them).
-  restore(id: string): { files: string[]; after: string[]; mixer: Mixer } {
+  restore(id: string): { files: string[]; after: string[]; mixer: Mixer; mixerSaved: boolean } {
     const manifest = this.manifest(id);
     if (manifest.restored) throw new Error("This change set was already undone.");
     const changed = manifest.files.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
@@ -224,7 +225,15 @@ export class Backups {
     this.putBack(setDir, manifest);
     manifest.restored = new Date().toISOString();
     writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
-    return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [], mixer: manifest.mixer ?? [] };
+    return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [], mixer: manifest.mixer ?? [], mixerSaved: manifest.mixerSaved ?? false };
+  }
+
+  // The set's mixer levels were saved as ALSA's saved state too (after run():
+  // the save comes after the password prompt).
+  markMixerSaved(id: string): void {
+    const manifest = this.manifest(id);
+    manifest.mixerSaved = true;
+    writeFileAtomic(join(this.dir, id, "manifest.json"), JSON.stringify(manifest, null, 2));
   }
 
   private putBack(setDir: string, manifest: BackupManifest): void {
