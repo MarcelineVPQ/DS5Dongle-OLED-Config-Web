@@ -55,7 +55,6 @@ const VERDICT_RE = new RegExp(`lifetime:\\s*(${VERDICTS.join("|")})\\s+—\\s+\\
 const receiverText = (call, sf) => (ts.isPropertyAccessExpression(call.expression) ? call.expression.expression.getText(sf) : "");
 const short = (s, n = 40) => s.replace(/\s+/g, " ").trim().slice(0, n);
 const EFFECTS = new Set(["useEffect", "useLayoutEffect"]);
-const isEffectCall = (n) => ts.isCallExpression(n) && EFFECTS.has(calleeName(n)) && n.arguments.length > 0 && isFn(n.arguments[0]);
 // Where the acquisition runs: the nearest function decides.
 function context(node) {
   for (let p = node.parent; p; p = p.parent) {
