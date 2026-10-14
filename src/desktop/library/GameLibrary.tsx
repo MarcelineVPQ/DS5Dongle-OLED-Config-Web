@@ -50,13 +50,17 @@ function useHiddenKinds(): [Set<AppKind>, (kind: AppKind, shown: boolean) => voi
 }
 
 // Home's accordion (game setup): its state, the panel's title, a note above
-// the sections and the sections themselves (null until the first scan).
+// the sections and the sections themselves (null until the first scan); and
+// the readouts at the top of Home's main view (This computer, a MainBlock),
+// with its last deep link (a link to it shows Home too).
 export interface HomePanel {
   acc: Accordion;
   title: string;
   sub: string;
   top?: ReactNode;
   sections: ReactNode;
+  blocks?: ReactNode;
+  blockLink?: unknown;
 }
 
 interface Props {
@@ -98,10 +102,15 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     setHandledOpen(openGame);
     setSelected(openGame.key);
   }
-  // A deep link into Home's sections shows Home.
+  // A deep link into Home's sections or its main-view blocks shows Home.
   const [handledLink, setHandledLink] = useState(home.acc.revealed);
   if (home.acc.revealed !== handledLink) {
     setHandledLink(home.acc.revealed);
+    setSelected(null);
+  }
+  const [handledBlockLink, setHandledBlockLink] = useState(home.blockLink);
+  if (home.blockLink !== handledBlockLink) {
+    setHandledBlockLink(home.blockLink);
     setSelected(null);
   }
 
@@ -239,6 +248,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
             main={
               <div className="lib-home-pane">
                 {!report && <p className="dk-hint">{t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")}</p>}
+                {home.blocks}
                 {report && <ContinuePlaying games={recent} details={details} running={running} hasProfile={(g) => !!library.games[g.key]?.profile} onOpen={setSelected} glass={glass} />}
                 {report && (
                   <section className="lib-section">

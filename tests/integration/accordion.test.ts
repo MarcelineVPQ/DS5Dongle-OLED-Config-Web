@@ -564,7 +564,6 @@ describe("App settings beside the live controller", () => {
 const GAMES_INVENTORY: Record<string, string[]> = {
   launchers: ["desktop.games.intro", "desktop.games.rescan"],
   proton: ["desktop.games.protonFound"],
-  computer: ["desktop.games.audio", "desktop.games.hidraw", "desktop.games.env", "desktop.games.hdr"],
   recommended: ["desktop.games.changesHint", "desktop.games.review"],
   history: ["desktop.games.undoShort"],
 };

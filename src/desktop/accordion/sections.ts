@@ -9,7 +9,7 @@ export const SECTIONS = {
   about: ["guide", "changes", "firmware", "proton", "roadmap", "credits"],
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots"],
   dongle: ["firmware", "device", "power", "oled", "usb"],
-  games: ["launchers", "proton", "computer", "recommended", "history"],
+  games: ["launchers", "proton", "recommended", "history"],
   game: ["profile", "setup", "hdr", "compatibility", "support", "notes"],
 } as const;
 
@@ -18,6 +18,7 @@ export const SECTIONS = {
 export const MAIN_BLOCKS = {
   controller: ["info"],
   dongle: ["diagnostics"],
+  games: ["computer"],
   game: ["details"],
 } as const;
 
