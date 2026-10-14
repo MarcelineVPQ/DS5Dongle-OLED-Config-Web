@@ -399,6 +399,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Thank-you wall", text: "The people who build and test the app, named in About.", areas: ["community"] },
   { column: "planned", title: "What's new", text: "A short summary of what changed after each update, and a link to the community.", areas: ["app", "community"] },
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
+  { column: "planned", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
