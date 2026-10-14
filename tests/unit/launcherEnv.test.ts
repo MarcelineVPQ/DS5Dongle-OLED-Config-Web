@@ -70,7 +70,8 @@ describe("launcherEnv", () => {
 });
 
 describe("openForUser", () => {
-  it("without a user systemd, spawns xdg-open with a fixed argv, no shell, detached, with the launcher env", async () => {
+  // Windows never calls it (links go through shell.openExternal) and starts through PowerShell: tested below.
+  it.skipIf(process.platform === "win32")("without a user systemd, spawns xdg-open with a fixed argv, no shell, detached, with the launcher env", async () => {
     const child = { once: vi.fn((ev: string, cb: () => void) => (ev === "spawn" ? cb() : undefined)), unref: vi.fn() };
     spawnMock.mockReturnValue(child);
     await expect(openForUser("heroic://launch?appName=1234&runner=gog")).resolves.toBe(true);
