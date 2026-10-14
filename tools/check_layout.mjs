@@ -298,7 +298,14 @@ const BASE_VIEWS = [
       await evaluate(`(() => { const h = document.querySelectorAll(".dk-sec-toggle")[${i}]; if (h && h.getAttribute("aria-expanded") !== "true") h.click(); })()`);
     }),
   ),
-  view("games", "games home", 1500, gamesHome),
+  view("games", "games home", 1500, async () => {
+    await gamesHome();
+    await closeBlocks(); // This computer folded, as a player first finds it
+  }),
+  view("games", "games home, This computer (main view)", 1800, async () => {
+    await gamesHome();
+    await openBlock("computer");
+  }),
   view("games", "games home, cover grid", 2300, async () => {
     await gamesHome();
     await sleep(800);

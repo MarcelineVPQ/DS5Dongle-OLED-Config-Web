@@ -130,12 +130,10 @@ describe("the settings gate", () => {
     expect(gateProblems([], [about]).stale).toContain(about);
   });
 
-  it("allows the readouts waiting for the owner's call only while they're still readouts", () => {
-    const [key] = Object.keys(READOUTS_PENDING);
-    const [file, id] = key.split("#");
-    const readout = { file, line: 1, kind: "readout" as const, detail: `section "${id}" has no setting or action` };
-    expect(gateProblems([readout], [file]).bad).toEqual([]);
-    expect(gateProblems([], [file]).stale).toContain(key);
-    expect(gateProblems([{ ...readout, detail: 'section "other" has no setting or action' }], [file]).bad).toHaveLength(1);
+  it("has no readouts waiting for the owner's call: a readout section is never allowed", () => {
+    expect(READOUTS_PENDING).toEqual({});
+    const file = "src/desktop/pages/GamesPage.tsx";
+    const readout = { file, line: 1, kind: "readout" as const, detail: 'section "computer" has no setting or action' };
+    expect(gateProblems([readout], [file]).bad).toHaveLength(1);
   });
 });

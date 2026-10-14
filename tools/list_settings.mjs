@@ -68,12 +68,10 @@ export const NAVIGATION_SECTIONS = {
 
 // Sections the readout rule found that only show something, waiting for the
 // owner's call on where they go (main view or not), each with its reason:
-// "file#section id". Never grows; an entry whose section has an action now,
+// "file#section id". Empty: Games → Home's This computer, the one found, is a
+// main-view block since 2026-10-14. An entry whose section has an action now,
 // or is gone, fails as stale.
-export const READOUTS_PENDING = {
-  "src/desktop/pages/GamesPage.tsx#computer":
-    "Games → Home's This computer: controller audio, controller access, environment and the HDR checklist are checks with ✗ and what to do, no control (found by this gate 2026-10-14; listed in the accordion-readouts report for the owner to decide)",
-};
+export const READOUTS_PENDING = {};
 
 const ROWS = new Set(["Row", "Toggle", "Slider", "Segmented", "KnobSlider", "GripHaptics", "BusyButton"]);
 // What makes a Section a place to set or do something (the readout rule).

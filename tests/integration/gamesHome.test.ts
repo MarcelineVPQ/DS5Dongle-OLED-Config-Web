@@ -19,6 +19,7 @@ import { fakeBridge, HDR_NO_LAYER, OUR_PROTON } from "../support/gamePage";
 import { homeDesktop, homeDetails, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
 import { GLASS_KEY } from "../../src/desktop/glass/glassPref";
 import { revealSection } from "../../src/desktop/accordion/useAccordion";
+import { revealBlock } from "../../src/desktop/accordion/MainBlock";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollTo ??= () => undefined;
@@ -75,13 +76,15 @@ const click = async (el: HTMLElement | undefined) => {
 };
 const sectionIds = () => $$(".dk-sec").map((x) => x.dataset.section);
 const openIds = () => $$(".dk-sec.open").map((x) => x.dataset.section);
-const status = (id: string) => $(`[data-section="${id}"] .dk-sec-status`)?.textContent;
-const hasDot = (id: string) => !!$(`[data-section="${id}"] .dk-sec-task`);
-// Opens a section (left open if it is) and gives its body.
+// A section, or a main-view block (This computer: a readout, MainBlock).
+const place = (id: string) => `:is([data-section="${id}"], .dk-split-main [data-block="${id}"])`;
+const status = (id: string) => $(`${place(id)} .dk-sec-status`)?.textContent;
+const hasDot = (id: string) => !!$(`${place(id)} .dk-sec-task`);
+// Opens a section or block (left open if it is) and gives its body.
 const open = async (id: string) => {
-  const head = $<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-toggle`)!;
+  const head = $<HTMLButtonElement>(`${place(id)} :is(.dk-sec-toggle, .dk-block-toggle)`)!;
   if (head.getAttribute("aria-expanded") !== "true") await click(head);
-  return $(`[data-section="${id}"] .dk-sec-body`)!;
+  return $(`${place(id)} :is(.dk-sec-body, .dk-block-body)`)!;
 };
 const linux = () => vi.stubGlobal("desktop", { platform: "linux" });
 
@@ -135,7 +138,12 @@ describe("Games → Home, healthy", () => {
     expect($(".dk-split-main .lib-continue")).not.toBeNull();
     expect($(".dk-split-head h2")!.textContent).toBe(i18n.t("desktop.games.title"));
     expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.allGood"));
-    expect(sectionIds()).toEqual(["launchers", "proton", "computer", "recommended", "history"]);
+    expect(sectionIds()).toEqual(["launchers", "proton", "recommended", "history"]);
+    // This computer is a readout: a block at the top of the main view, closed until opened.
+    expect($(".dk-split-main .lib-home-pane > [data-block='computer']")).not.toBeNull();
+    expect($(".dk-split-panel [data-block]")).toBeNull();
+    expect($(`${place("computer")} .dk-block-toggle`)!.getAttribute("aria-expanded")).toBe("false");
+    expect($$(".dk-block-body")).toHaveLength(0);
     expect($$(".dk-card")).toHaveLength(0);
     // Nothing needs the player: no dots, nothing open, nothing rendered in the sections.
     expect($$(".dk-sec-task")).toHaveLength(0);
@@ -240,6 +248,16 @@ describe("Games → Home, needs attention", () => {
     const hdr = (await open("computer")).querySelector<HTMLDetailsElement>(".hdr-row")!;
     expect(hdr.open).toBe(true);
     expect(hdr.textContent).toContain("✗");
+  });
+
+  it("a link to This computer shows Home and opens it, from a game page too", async () => {
+    await render("attention");
+    await click($$<HTMLButtonElement>(".lib-row")[0]);
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(true);
+    act(() => revealBlock("games", "computer"));
+    await settle();
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(false);
+    expect($(`${place("computer")} .dk-block-body .hdr-row`)).not.toBeNull();
   });
 
   it("the rail's count opens Recommended changes, from a game page too", async () => {

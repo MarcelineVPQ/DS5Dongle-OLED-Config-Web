@@ -2285,6 +2285,10 @@ html[data-theme="light"] .live-ctl {
 .lib-home-pane {
   container-type: inline-size; /* Continue playing sizes by the pane, not the window */
 }
+/* This computer (MainBlock) at the top of Home, above Continue playing. */
+.lib-home-pane > .dk-block {
+  margin-bottom: 14px;
+}
 
 /* ---- Game page ---- */
 .gp {

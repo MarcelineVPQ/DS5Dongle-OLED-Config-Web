@@ -2,10 +2,12 @@
 // and Epic on Windows) for settings that stop the DualSense's native features
 // (adaptive triggers, haptics) from reaching games, and fixes them with the
 // user's consent. Like every page: the library (Continue playing, the grid)
-// is the main view, and game setup is the accordion at the right: Launchers,
-// DualSense Proton and This computer (Linux), Recommended changes (the rail's
-// count: its task dot) and Change history. Each section says its state in
-// its header; what needs the player carries the yellow dot.
+// is the main view, with This computer (Linux: controller audio and access,
+// the environment, the HDR checklist; a readout, so a main-view MainBlock at
+// its top, closed until opened), and game setup is the accordion at the
+// right: Launchers, DualSense Proton (Linux), Recommended changes (the rail's
+// count: its task dot) and Change history. Each section and block says its
+// state in its header; what needs the player carries the yellow dot.
 //
 // Consent flow (load-bearing, see src/desktop/games/types.ts):
 //   allow (first visit: what will be read, nothing until the user agrees)
@@ -42,6 +44,7 @@ import { feedProblemKey } from "../useUpdates";
 import Notice from "../Notice";
 import { Section } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
+import { MainBlock, useMainBlock, type MainBlockState } from "../accordion/MainBlock";
 import type { SectionId } from "../accordion/sections";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
@@ -401,6 +404,7 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
   const setup = useGamesSetup({ onScanned, onDeclinedChange });
   // The rail's Games count opens Recommended changes (a deep link), so no section opens by itself.
   const acc = useAccordion("games", pinScope("games"));
+  const computer = useMainBlock("games", "computer");
   const { report, error } = setup;
   // What needs the player, as of the last scan (unticking a change doesn't
   // move it away while the player is looking at it).
@@ -429,8 +433,33 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
           </Notice>
         ),
         sections: report && status && <HomeSections setup={setup} report={report} status={status} />,
+        blocks: report && status && protonApplies() && <ComputerBlock state={computer} report={report} status={status} />,
+        blockLink: computer.revealed,
       }}
     />
+  );
+}
+
+// This computer (Linux), at the top of Home's main view: what the scan found
+// about the controller's audio and access, the environment and HDR, with a
+// yellow dot on its header while something there needs the player.
+function ComputerBlock({ state, report, status }: { state: MainBlockState; report: GamesReport; status: ReturnType<typeof homeStatus> }) {
+  const { t } = useTranslation();
+  const s = report.system;
+  // loop: HOT-PATH-OK — N = screens, 1-3; Home render
+  const hdrScreens = s.hdr.screens.filter((x) => x.hdr).map((x) => x.name);
+  const hdrLine = `${t("desktop.games.hdr")} ${hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}`;
+  return (
+    <MainBlock
+      state={state}
+      icon={Cpu}
+      title={t("desktop.games.systemTitle", "This computer")}
+      // loop: NOT-WORTH — N = 2 parts of one status line
+      status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
+      task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
+    >
+      {() => <SystemPart report={report} hdrOpen={status.hdr} />}
+    </MainBlock>
   );
 }
 
@@ -448,10 +477,6 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
   // The rail's count, as of the last scan: recommended changes the player hasn't declined.
   // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render
   const waiting = fixes.filter((f) => f.recommended && !setup.declinedAtScan.has(f.id)).length;
-  const s = report.system;
-  // loop: HOT-PATH-OK — N = screens, 1-3; Home render
-  const hdrScreens = linux ? s.hdr.screens.filter((x) => x.hdr).map((x) => x.name) : [];
-  const hdrLine = `${t("desktop.games.hdr")} ${hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}`;
   // loop: NOT-WORTH — N = backups (tens); Home render
   const lastChange = backups.reduce((n, b) => Math.max(n, Date.parse(b.created) || 0), 0);
 
@@ -544,18 +569,6 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
               {setup.protonMessage && <p className="dk-hint">{setup.protonMessage}</p>}
             </>
           )}
-        </Section>
-      )}
-      {linux && (
-        <Section
-          id="computer"
-          icon={Cpu}
-          title={t("desktop.games.systemTitle", "This computer")}
-          // loop: NOT-WORTH — N = 2 parts of one status line
-          status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
-          task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
-        >
-          {() => <SystemPart report={report} hdrOpen={status.hdr} />}
         </Section>
       )}
       <Section
