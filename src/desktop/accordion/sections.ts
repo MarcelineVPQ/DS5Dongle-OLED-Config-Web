@@ -7,7 +7,7 @@ export const SECTIONS = {
   app: ["language", "appearance", "accessibility", "startup", "graphics", "updates", "privacy", "dismissed", "developer"],
   about: ["guide", "changes", "firmware", "proton", "roadmap", "credits"],
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots", "info"],
-  dongle: ["firmware", "device", "power", "oled", "usb", "statusPin", "diagnostics"],
+  dongle: ["firmware", "device", "power", "oled", "usb", "diagnostics"],
   games: ["launchers", "proton", "computer", "recommended", "history"],
   game: ["profile", "setup", "hdr", "compatibility", "support", "notes", "details"],
 } as const;
@@ -17,4 +17,4 @@ export type SectionId<P extends AccordionPage> = (typeof SECTIONS)[P][number];
 
 // The pages built on Section/Row so far (the settings gate's whitelist
 // shrinks as this grows: tools/list_settings.mjs).
-export const MIGRATED: readonly AccordionPage[] = ["app", "about"];
+export const MIGRATED: readonly AccordionPage[] = ["app", "about", "controller", "dongle"];

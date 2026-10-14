@@ -1,10 +1,13 @@
-// The dongle's live diagnostics under its console, in two groups: the
-// Pico 2 W (chip temperature, clock and core voltage as dials; USB, Bluetooth
-// and signal as graphs over the last minute; the audio pipeline's counters,
-// with anything that went wrong lit) and the OLED (what it's doing). One poll
-// a second reads 0xFB diag, 0xFC CPU (with the per-stage timings on protocol
-// 1.11) and 0xF5 audio counters; the signal and the OLED mirror come from the
-// page's own polls (no second read of either).
+// The Pico 2 W page's live readouts. In its main view, under the console:
+// the chip temperature, clock and core voltage as dials, and the board's
+// facts (PicoGauges). In its Diagnostics section, only while that is open:
+// USB, Bluetooth, signal and mic as graphs over the last minute, the audio
+// pipeline's counters (anything that went wrong lit), the per-stage timings
+// with Reset, what the OLED is doing, and the board's and OLED module's specs
+// (DiagnosticsBody). One poll a second (useDongleTelemetry) reads 0xFB diag
+// and 0xFC CPU; with Diagnostics open it also reads the 0xF5 audio counters
+// and the timings (protocol 1.11). The signal and the OLED mirror come from
+// the page's own polls (no second read of either).
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -15,6 +18,8 @@ import { causeText } from "../shownError";
 import { BusyButton } from "../controls";
 import { boardProblems } from "./core1Status";
 import Notice from "../Notice";
+import { SectionGroup } from "../accordion/Section";
+import { hardwareName } from "../hardwareName";
 import { boardProblemKey } from "../openTasks";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
@@ -34,7 +39,7 @@ interface Sample {
   rssi: number;
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
-  counters: AudioCounters;
+  counters: AudioCounters | null; // read while Diagnostics is open
   core1Alive: boolean;
   oled: { power: string; screen: number; contrast: number; fps: number } | null;
   timings: CpuTimings | null; // protocol 1.11
@@ -43,14 +48,17 @@ interface Sample {
 // Core voltage codes 0..15 are 0.55 V + 0.05 V steps (the firmware's CPU screen).
 const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : null);
 
-function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null) {
+export type Telemetry = { sample: Sample | null; history: Sample[] };
+
+// `detail`: Diagnostics is open (the audio counters and the timings are read too).
+export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null, detail: boolean): Telemetry {
   const client = bridge.client;
-  const withTimings = supportsFeature2(bridge.identity, 11, FEATURES2.timings);
+  const withTimings = detail && supportsFeature2(bridge.identity, 11, FEATURES2.timings);
   // cache: OK — key=sample time; invalidated=sliding window; bound=HISTORY = 60 samples
   const history = useRef<Sample[]>([]);
   // seq null = no mirror frame in that sample (then no redraw rate).
   // cache: OK — key=none (previous counters); invalidated=each 1 s sample; bound=1 entry
-  const prev = useRef<{ at: number; usb: number; bt: number; mic: number; loops: number; seq: number | null } | null>(null);
+  const prev = useRef<{ at: number; usb: number; bt: number; mic: number | undefined; loops: number | null; seq: number | null } | null>(null);
   const latest = useRef({ frame: frameNow, rssi: rssiNow });
   // lifetime: OK — acquires nothing (latest frame / RSSI into a ref)
   useEffect(() => {
@@ -60,7 +68,8 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
   const sample = usePoll(
     async () => {
       if (!client) return null;
-      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters()]);
+      // loop: NOT-WORTH — not a loop: one batch of up to 3 reads per 1 s poll (the board serializes them)
+      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), detail ? client.readAudioCounters() : null]);
       const { frame, rssi: rssiRead } = latest.current;
       const rssi = rssiRead ?? 0;
       const at = performance.now();
@@ -76,17 +85,18 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
         uptime: diag.uptimeSeconds,
         usbFps: rate(diag.usbFrames, p?.usb),
         btPps: rate(diag.btPackets, p?.bt),
-        micFps: rate(counters.micFrames, p?.mic),
+        micFps: counters ? rate(counters.micFrames, p?.mic) : 0,
         rssi,
         peaks: [diag.peakSpeaker / 255, diag.peakHaptic / 255],
         hciErrors: diag.hciErrors,
         counters,
-        core1Alive: !p || counters.core1Loops !== p.loops,
+        // Without the counters (Diagnostics closed) not known here: the app's health read says it (useBoardProblems).
+        core1Alive: !counters || !p || p.loops === null || counters.core1Loops !== p.loops,
         // The frame counter is 8-bit: the difference mod 256.
         timings: cpu.timings,
         oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p && p.seq !== null && dt > 0 ? Math.round(((frame.seq - p.seq) & 0xff) / dt) : 0 } : null,
       };
-      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, mic: counters.micFrames, loops: counters.core1Loops, seq: frame?.seq ?? null };
+      prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, mic: counters?.micFrames, loops: counters?.core1Loops ?? null, seq: frame?.seq ?? null };
       history.current = [...history.current.slice(-(HISTORY - 1)), s];
       return { s, history: history.current };
     },
@@ -102,35 +112,91 @@ function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | nu
 const CLOCK_MAX_MHZ: Record<string, number> = { "Pico 2 W": 320, "Pico W": 200 };
 export const clockMaxMhz = (board: string | null): number => (board && CLOCK_MAX_MHZ[board]) || 320;
 
-export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs5BridgeResult; frame: OledFrame | null; rssi: number | null }) {
+// The main view's readouts: the chip's dials and the board's facts.
+export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs5BridgeResult; telemetry: Telemetry; onDiagnostics: () => void }) {
   const { t } = useTranslation();
-  const { sample: s, history } = useDongleTelemetry(bridge, frame, rssi);
+  const { sample: s, history } = telemetry;
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
-  // loop: HOT-PATH-OK — N = 60 samples per trend, a few trends per render
+  // loop: HOT-PATH-OK — N = 60 samples per trend, one trend per render
   const series = (pick: (x: Sample) => number) => history.map(pick);
-  const config = bridge.config;
-  const micLoss = micLossClimbing(history);
-  const specs = boardSpecs(bridge.identity?.boardName);
-  const problems = s ? boardProblems(t, s.counters, s.core1Alive) : [];
-
   return (
     <div className="dash">
-      <h3 className="dash-group">{td("pico")}</h3>
       <div className="dash-row">
         <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} trend={series((x) => x.tempC)} />
         <Gauge label={td("clock")} value={s?.realMhz} min={0} max={clockMaxMhz(bridge.identity?.boardName ?? null)} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
         <Gauge label={td("vcore")} value={s?.vcore ?? undefined} min={0.85} max={1.3} unit="V" digits={2} warn={1.2} bad={1.26} />
         <div className="dash-card dash-facts">
+          <h4>{td("pico", { deviceName: hardwareName(bridge.identity) })}</h4>
           <Fact label={td("uptime")} value={s ? formatUptime(s.uptime) : "—"} />
           <Fact label={td("protocol")} value={bridge.identity ? `${bridge.identity.protoMajor}.${bridge.identity.protoMinor}` : "—"} />
           {/* Every build is the OLED Edition: the short form fits the card; the tooltip has it all. */}
           <Fact label={td("firmware")} value={bridge.firmwareVersion?.replace("-oled-edition", "") ?? "—"} title={bridge.firmwareVersion ?? undefined} />
           <Fact label={td("hciErrors")} value={s ? String(s.hciErrors) : "—"} bad={!!s?.hciErrors} />
+          <button type="button" className="dk-btn dash-more" onClick={onDiagnostics}>
+            {t("desktop.accordion.moreInDiagnostics")}
+          </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// The Diagnostics section's body: everything the main view doesn't show.
+export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeResult; telemetry: Telemetry }) {
+  const { t } = useTranslation();
+  const { sample: s, history } = telemetry;
+  const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
+  if (!bridge.client) return null;
+  // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; only while Diagnostics is open
+  const series = (pick: (x: Sample) => number) => history.map(pick);
+  const micLoss = micLossClimbing(history);
+  const specs = boardSpecs(bridge.identity?.boardName);
+  const counters = s?.counters ?? null;
+  const problems = s && counters ? boardProblems(t, counters, s.core1Alive) : [];
+
+  return (
+    <div className="dash dash-sec">
+      <div className="dash-row">
+        <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
+        <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={s?.btPps} />
+        <Graph label={td("signal")} unit="dB" values={series((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
+        <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={counters ? s?.micFps : undefined} />
+      </div>
+      <SectionGroup title={td("audio")}>
+        {/* loop: HOT-PATH-OK — N ≤ 3 problems; the 1 s sample's render */}
+        {problems.map((p) => (
+          <Notice key={p.reason} error dismissKey={boardProblemKey(p)}>
+            {p.text}
+          </Notice>
+        ))}
+        <div className="dash-levels">
+          <Level label={td("speakerPeak")} value={s?.peaks[0] ?? 0} />
+          <Level label={td("hapticPeak")} value={s?.peaks[1] ?? 0} />
+        </div>
+        <div className="dash-counters">
+          {/* loop: HOT-PATH-OK — N ≈ 15 audio counters */}
+          {AUDIO_COUNTER_NAMES.filter((k) => k !== "setFeatureLast" && k !== "core1Loops").map((k) => (
+            <Fact key={k} label={t(`desktop.diag.counters.${k}`)} value={counters ? counters[k].toLocaleString() : "—"} bad={k === "micPlc" ? micLoss : BAD.has(k) && !!counters?.[k]} />
+          ))}
+        </div>
+      </SectionGroup>
+
+      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
+
+      <SectionGroup title={OLED_MODULE.name}>
+        <div className="dash-facts">
+          <Fact label={td("brightness")} value={s?.oled ? `${Math.round((s.oled.contrast / 255) * 100)}%` : "—"} />
+          <Fact label={td("oledState")} value={s?.oled ? td(`power.${s.oled.power}`) : td("noMirror")} />
+          <Fact label={td("oledScreen")} value={s?.oled ? `${s.oled.screen + 1}/${SCREEN_NAMES.length} · ${SCREEN_NAMES[s.oled.screen] ?? "?"}` : "—"} />
+          <Fact label={td("oledFps")} value={s?.oled ? `${s.oled.fps} /s` : "—"} />
+        </div>
+      </SectionGroup>
+
+      <SectionGroup title={td("specs.title")}>
         {specs && (
-          <div className="dash-card">
-            <h4>{td("specs.title")}</h4>
+          <>
+            <h4 className="dk-subhead">{hardwareName(bridge.identity)}</h4>
             <dl className="dk-kv">
               <dt>{td("specs.chip")}</dt>
               <dd>{s ? td("specs.chipClock", { chip: specs.chip, core: specs.core, mhz: Math.round(s.realMhz) }) : td("specs.chipValue", { chip: specs.chip, core: specs.core })}</dd>
@@ -141,71 +207,25 @@ export default function DongleDashboard({ bridge, frame, rssi }: { bridge: UseDs
               <dt>{td("specs.wireless")}</dt>
               <dd>{td("specs.wirelessValue", { chip: specs.wireless, bt: specs.bluetooth })}</dd>
             </dl>
-          </div>
+          </>
         )}
-      </div>
-      <div className="dash-row">
-        <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
-        <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={s?.btPps} />
-        <Graph label={td("signal")} unit="dB" values={series((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
-        <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={s?.micFps} />
-      </div>
-      <div className="dash-row">
-        <div className="dash-card dash-wide">
-          <h4>{td("audio")}</h4>
-          {/* loop: HOT-PATH-OK — N ≤ 3 problems; the 1 s sample's render */}
-          {problems.map((p) => (
-            <Notice key={p.reason} error dismissKey={boardProblemKey(p)}>
-              {p.text}
-            </Notice>
-          ))}
-          <div className="dash-levels">
-            <Level label={td("speakerPeak")} value={s?.peaks[0] ?? 0} />
-            <Level label={td("hapticPeak")} value={s?.peaks[1] ?? 0} />
-          </div>
-          <div className="dash-counters">
-            {/* loop: HOT-PATH-OK — N ≈ 15 audio counters */}
-            {AUDIO_COUNTER_NAMES.filter((k) => k !== "setFeatureLast" && k !== "core1Loops").map((k) => (
-              <Fact key={k} label={t(`desktop.diag.counters.${k}`)} value={s ? s.counters[k].toLocaleString() : "—"} bad={k === "micPlc" ? micLoss : BAD.has(k) && !!s?.counters[k]} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
-
-      <h3 className="dash-group">{OLED_MODULE.name}</h3>
-      <div className="dash-row">
-        <Gauge label={td("brightness")} value={s?.oled ? Math.round((s.oled.contrast / 255) * 100) : undefined} min={0} max={100} unit="%" />
-        <div className="dash-card dash-facts">
-          <Fact label={td("oledState")} value={s?.oled ? td(`power.${s.oled.power}`) : td("noMirror")} />
-          <Fact label={td("oledScreen")} value={s?.oled ? `${s.oled.screen + 1}/${SCREEN_NAMES.length} · ${SCREEN_NAMES[s.oled.screen] ?? "?"}` : "—"} />
-          <Fact label={td("oledFps")} value={s?.oled ? `${s.oled.fps} /s` : "—"} />
-        </div>
-        <div className="dash-card dash-facts">
-          <Fact label={td("dimAfter")} value={config ? (config.screenDimTimeout ? td("minutes", { n: config.screenDimTimeout }) : td("never")) : "—"} />
-          <Fact label={td("offAfter")} value={config ? (config.screenOffTimeout ? td("minutes", { n: config.screenOffTimeout }) : td("never")) : "—"} />
-          <Fact label={td("wakeOnInput")} value={config ? (config.controllerWakesDisplay ? td("yes") : td("no")) : "—"} />
-        </div>
-        <div className="dash-card">
-          <h4>{td("specs.title")}</h4>
-          <dl className="dk-kv">
-            <dt>{td("specs.model")}</dt>
-            <dd>{OLED_MODULE.name}</dd>
-            <dt>{td("specs.size")}</dt>
-            <dd>{OLED_MODULE.size}</dd>
-            <dt>{td("specs.resolution")}</dt>
-            <dd>{OLED_MODULE.resolution}</dd>
-            <dt>{td("specs.controller")}</dt>
-            <dd>{OLED_MODULE.controller}</dd>
-            <dt>{td("specs.interface")}</dt>
-            <dd>{OLED_MODULE.interface}</dd>
-            <dt>{td("specs.keys")}</dt>
-            <dd>{OLED_MODULE.keys}</dd>
-          </dl>
-          <p className="dk-hint">{td("specs.notDetected")}</p>
-        </div>
-      </div>
+        <h4 className="dk-subhead">{OLED_MODULE.name}</h4>
+        <dl className="dk-kv">
+          <dt>{td("specs.model")}</dt>
+          <dd>{OLED_MODULE.name}</dd>
+          <dt>{td("specs.size")}</dt>
+          <dd>{OLED_MODULE.size}</dd>
+          <dt>{td("specs.resolution")}</dt>
+          <dd>{OLED_MODULE.resolution}</dd>
+          <dt>{td("specs.controller")}</dt>
+          <dd>{OLED_MODULE.controller}</dd>
+          <dt>{td("specs.interface")}</dt>
+          <dd>{OLED_MODULE.interface}</dd>
+          <dt>{td("specs.keys")}</dt>
+          <dd>{OLED_MODULE.keys}</dd>
+        </dl>
+        <p className="dk-hint">{td("specs.notDetected")}</p>
+      </SectionGroup>
     </div>
   );
 }
@@ -235,36 +255,33 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
     }
   };
   return (
-    <div className="dash-row">
-      <div className="dash-card dash-wide">
-        <h4>{td("title")}</h4>
-        <p className="dk-hint">{td("hint")}</p>
-        {timings.timerFallback && <p className="dk-hint">{td("usTimer")}</p>}
-        {error && (
-          <Notice error onDismiss={() => setError(null)}>
-            {error}
-          </Notice>
-        )}
-        <div className="dash-timings">
-          <span />
-          <span>{td("average")}</span>
-          <span>{td("worst")}</span>
-          <span>{td("trend")}</span>
-          {/* loop: HOT-PATH-OK — N ≤ 8 timing stages */}
-          {timings.stages.slice(0, TIMING_STAGES.length).map((st, i) => {
-            const saturated = st.maxUs >= TIMING_MAX_SATURATED;
-            const bad = TIMING_STAGES[i] === "speaker" && st.maxUs >= SPEAKER_FRAME_US;
-            // loop: HOT-PATH-OK — N = 8 stages x 60 samples = 480 numbers
-            const trend = recent.map((x) => (x.timings?.stages[i]?.avgNs ?? 0) / 1000);
-            return <TimingRow key={TIMING_STAGES[i]} label={td(`stages.${TIMING_STAGES[i]}`)} avg={formatMicros(st.avgNs / 1000)} worst={formatMicros(st.maxUs, saturated)} bad={bad} trend={trend} />;
-          })}
-        </div>
-        <div className="dash-timing-foot">
-          <Fact label={td("sinceReset")} value={`${timings.sinceResetSeconds >= 0xffff ? "≥ " : ""}${formatUptime(timings.sinceResetSeconds)}`} />
-          <BusyButton onClick={reset}>{td("reset")}</BusyButton>
-        </div>
+    <SectionGroup title={td("title")}>
+      <p className="dk-hint">{td("hint")}</p>
+      {timings.timerFallback && <p className="dk-hint">{td("usTimer")}</p>}
+      {error && (
+        <Notice error onDismiss={() => setError(null)}>
+          {error}
+        </Notice>
+      )}
+      <div className="dash-timings">
+        <span />
+        <span>{td("average")}</span>
+        <span>{td("worst")}</span>
+        <span>{td("trend")}</span>
+        {/* loop: HOT-PATH-OK — N ≤ 8 timing stages */}
+        {timings.stages.slice(0, TIMING_STAGES.length).map((st, i) => {
+          const saturated = st.maxUs >= TIMING_MAX_SATURATED;
+          const bad = TIMING_STAGES[i] === "speaker" && st.maxUs >= SPEAKER_FRAME_US;
+          // loop: HOT-PATH-OK — N = 8 stages x 60 samples = 480 numbers
+          const trend = recent.map((x) => (x.timings?.stages[i]?.avgNs ?? 0) / 1000);
+          return <TimingRow key={TIMING_STAGES[i]} label={td(`stages.${TIMING_STAGES[i]}`)} avg={formatMicros(st.avgNs / 1000)} worst={formatMicros(st.maxUs, saturated)} bad={bad} trend={trend} />;
+        })}
       </div>
-    </div>
+      <div className="dash-timing-foot">
+        <Fact label={td("sinceReset")} value={`${timings.sinceResetSeconds >= 0xffff ? "≥ " : ""}${formatUptime(timings.sinceResetSeconds)}`} />
+        <BusyButton onClick={reset}>{td("reset")}</BusyButton>
+      </div>
+    </SectionGroup>
   );
 }
 
@@ -290,8 +307,9 @@ const BAD = new Set(["dropRaw", "dropEnc", "dropHap", "flashFailures"]);
 // a one-off that is benign. "In use": mic frames decoding at a real rate (a
 // stream is far above this; the connect-time packets far below).
 const MIC_IN_USE_FPS = 20;
-// loop: HOT-PATH-OK — N = 60 samples
-const micLossClimbing = (history: Sample[]): boolean => history.filter((x, i) => i > 0 && x.micFps >= MIC_IN_USE_FPS && x.counters.micPlc > history[i - 1].counters.micPlc).length >= 2;
+const micLossClimbing = (history: Sample[]): boolean =>
+  // loop: HOT-PATH-OK — N = 60 samples
+  history.filter((x, i) => i > 0 && x.micFps >= MIC_IN_USE_FPS && x.counters !== null && x.counters.micPlc > (history[i - 1].counters?.micPlc ?? x.counters.micPlc)).length >= 2;
 
 // A 240° dial; the arc turns warning / bad colors past the thresholds (the
 // number and the label carry the meaning too, never color alone).

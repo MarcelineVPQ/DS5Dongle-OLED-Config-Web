@@ -120,13 +120,11 @@
       }
     },
     "settings": {
-      "power": "Power",
       "idleDisconnect": "Disconnect when idle",
       "picoLed": "Pico status LED",
       "brightness": "Brightness",
       "zeroOff": "0 = never",
       "controllerWakes": "Controller input wakes the screen",
-      "usb": "USB",
       "usbHint": "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).",
       "speakerLevel": "Volume (Speaker for Controller)",
       "speakerLevelSub": "0 = unchanged; above 0 boosts and can clip",
@@ -251,8 +249,6 @@
       "micDecoderFailed": "Mic off: {{device}} couldn't create the controller mic's decoder when it started ({{kb}} KB free). The speaker, haptics, triggers and saving still work. Please report this on GitHub (issue #15) with your board and controller."
     },
     "firmware": {
-      "installed": "Installed firmware",
-      "device": "Device",
       "rebooting": "Restarting… press the PS button on the controller once it's back.",
       "reboot": "Restart {{device}}",
       "bootsel": "{{device, capitalize}} is now an RP2350 drive. Copy a .uf2 onto it, or unplug it to cancel.",
@@ -615,13 +611,8 @@
       "overview": "Your controller",
       "app": "App settings",
       "close": "Close",
-      "haptics": "Haptic feedback",
-      "speaker": "Speaker",
-      "mic": "Microphone",
       "remap": "Button assignments",
-      "remapActs": "Acts as",
       "remapDefault": "default",
-      "remapHint": "Button assignments are written to {{device}} when you press Apply and work in every game, with no software on the PC.",
       "remapApply": "Apply assignments",
       "remapReset": "Reset all buttons",
       "remapResetHint": "Every button back to itself",
@@ -633,7 +624,6 @@
         "2": "weapon",
         "3": "vibration"
       },
-      "position": "Position",
       "touchHint": "Touch the touch pad to see your fingers here. There's nothing to set up for it.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Speaker level now",
@@ -651,36 +641,6 @@
         "paddle": "One of the DualSense Edge's back buttons. The controller's custom profiles can make it act as any button. It lights up here when you press it.",
         "soon": "Assigning them needs the newest firmware on {{device}} ({{deviceName}} → Update)."
       },
-      "go": {
-        "intro": "Click a part of the drawing with your mouse, or pick a setting here:",
-        "lightbar": {
-          "title": "Light bar",
-          "sub": "Mode and favorite colors"
-        },
-        "triggers": {
-          "title": "Adaptive triggers",
-          "sub": "Try the effects on L2 / R2"
-        },
-        "haptics": {
-          "title": "Haptic feedback",
-          "sub": "Vibration intensity and Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Speaker",
-          "sub": "Level, with a live meter"
-        },
-        "mic": {
-          "title": "Microphone",
-          "sub": "The controller's built-in microphone"
-        },
-        "slots": {
-          "title": "Pairing slots",
-          "sub": "Switch or forget controllers"
-        },
-        "buttons": "To assign a button or stick, click it on the drawing.",
-        "bodyHint": "Haptic feedback: vibration intensity and Audio Auto Haptics"
-      },
-      "hidePanel": "Hide the settings panel (the controller gets bigger)",
       "autoInstall": "Install updates automatically",
       "autoInstallSub": "Downloads and checks them in the background; the new version starts the next time you open the app",
       "hapticSilent": "Silent: nothing is sending haptic feedback right now. It moves while a game plays haptic feedback, or with Audio Auto Haptics on while sound plays.",
@@ -693,8 +653,6 @@
       "headsetIn": "Headset in",
       "colorLabel": "Color:",
       "statusLabel": "Status:",
-      "triggersTitle": "Adaptive triggers",
-      "remapButton": "Assign {{button}}",
       "effectOther": "other effect ({{n}})",
       "checkForUpdatesSub": "Off: the app goes online for updates only when you press Check for updates."
     },
@@ -1213,7 +1171,6 @@
     },
     "calib": {
       "title": "Calibration",
-      "shortcut": "Stick drift, deadzones, trigger travel, gyroscope",
       "intro": "Corrects stick drift, deadzones, trigger travel and the gyroscope's zero inside {{device}}, for every game. Nothing is written to the controller; Reset undoes it.",
       "needsFirmware": "Update {{device}}'s firmware to calibrate.",
       "needsController": "Connect a controller to calibrate.",
@@ -1402,12 +1359,7 @@
         "dim": "Dimmed (idle)",
         "off": "Off (idle)"
       },
-      "dimAfter": "Dims after",
-      "offAfter": "Turns off after",
-      "wakeOnInput": "Wakes on controller input",
       "never": "never",
-      "yes": "yes",
-      "no": "no",
       "minutes": "{{n}} min",
       "mic": "Mic audio frames",
       "timing": {
@@ -1509,16 +1461,11 @@
       "normal": "Normal buttons",
       "needsFirmware": "Needs the newest firmware on {{device}} ({{deviceName}} → Update).",
       "noneForGame": "Save layouts on the Buttons page: pick a button on the controller.",
-      "allTitle": "Buttons",
-      "allHeading": "All buttons",
       "allHint_one": "{{count}} button changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "allHint_other": "{{count}} buttons changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "changed": "changed",
       "notApplied": "not applied yet",
       "notSaved": "not saved yet",
-      "shortcutTitle": "Buttons & layouts",
-      "shortcutSub": "Every button in one list, saved layouts for games",
-      "seeAll": "See all buttons and saved layouts",
       "off": "Off",
       "noChanges": "No changes (the controller's own buttons)",
       "loaded": "Loaded layout: {{name}}",
@@ -1700,7 +1647,27 @@
       "hidden_other": "{{count}} hidden",
       "devOnly": "Development builds only",
       "chapters_one": "{{count}} chapter",
-      "chapters_other": "{{count}} chapters"
+      "chapters_other": "{{count}} chapters",
+      "buttonsChanged_one": "{{count}} button changed",
+      "buttonsChanged_other": "{{count}} buttons changed",
+      "slotActive": "Slot {{slot}} active",
+      "moreInDiagnostics": "More in Diagnostics"
+    },
+    "sections": {
+      "lightbar": "Light bar",
+      "triggers": "Adaptive triggers",
+      "haptics": "Haptic feedback",
+      "speaker": "Speaker",
+      "mic": "Microphone",
+      "buttons": "Button assignments",
+      "sticks": "Sticks & calibration",
+      "slots": "Pairing slots",
+      "firmware": "Firmware",
+      "device": "Restart & reset",
+      "power": "Power & sleep",
+      "oled": "OLED screen",
+      "usb": "USB & status pin",
+      "diagnostics": "Diagnostics"
     }
   },
   "ad": {

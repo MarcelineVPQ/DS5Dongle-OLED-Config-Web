@@ -9,7 +9,7 @@ import i18n from "../../src/i18n";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { FEATURES3, type BridgeIdentity } from "../../src/protocol/bridgeClient";
 import { chargeState } from "../../src/protocol/controllerInfo";
-import ControllerInfo from "../../src/desktop/live/ControllerInfo";
+import ControllerInfo, { useControllerInfo } from "../../src/desktop/live/ControllerInfo";
 import LiveStrip, { BatteryIcon } from "../../src/desktop/live/LiveStrip";
 
 beforeAll(async () => {
@@ -45,7 +45,11 @@ describe("battery tile", () => {
 
 describe("Controller info's Charging row", () => {
   const bridge = { client: {}, identity } as unknown as UseDs5BridgeResult;
-  const card = (level: number) => renderToStaticMarkup(createElement(ControllerInfo, { bridge, batteryPct: level, power: chargeState(2, level, true) }));
+  // The section's body with the page's read (nothing read yet in a static render).
+  function Info({ level }: { level: number }) {
+    return createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: level, power: chargeState(2, level, true) });
+  }
+  const card = (level: number) => renderToStaticMarkup(createElement(Info, { level }));
   it("state 2 at 80% is plugged in, not charging; at 100% fully charged", () => {
     expect(card(80)).toContain("Plugged in, not charging");
     expect(card(80)).not.toContain("Fully charged");

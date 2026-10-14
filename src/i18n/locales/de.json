@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Energie",
       "idleDisconnect": "Bei Inaktivität trennen",
       "picoLed": "Pico-Status-LED",
       "brightness": "Helligkeit",
       "zeroOff": "0 = nie",
       "controllerWakes": "Controller-Eingabe weckt das Display",
-      "usb": "USB",
       "usbHint": "Wird erst nach „USB neu verbinden“ wirksam (der PC sieht {{device_akk}} kurz ab- und wieder angesteckt).",
       "speakerLevel": "Lautstärke (Lautsprecher für Controller)",
       "speakerLevelSub": "0 = unverändert; über 0 verstärkt und kann übersteuern",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Mikrofon aus: {{device, capitalize}} konnte beim Start den Decoder für das Controller-Mikrofon nicht anlegen ({{kb}} KB frei). Lautsprecher, Haptik, Trigger und Speichern funktionieren weiter. Bitte melde das auf GitHub (Issue #15) mit Board und Controller."
     },
     "firmware": {
-      "installed": "Installierte Firmware",
-      "device": "Gerät",
       "rebooting": "Startet neu… drück die PS-Taste am Controller, sobald er wieder da ist.",
       "reboot": "{{device_akk, capitalize}} neu starten",
       "bootsel": "{{device, capitalize}} ist jetzt ein RP2350-Laufwerk. Kopier eine .uf2 darauf oder zieh das USB-Kabel ab, um abzubrechen.",
@@ -616,19 +612,13 @@
       "overview": "Dein Controller",
       "app": "App-Einstellungen",
       "close": "Schließen",
-      "haptics": "Haptisches Feedback",
-      "speaker": "Lautsprecher",
-      "mic": "Mikrofon",
       "remap": "Tastenzuweisung",
-      "remapActs": "Wirkt als",
       "remapDefault": "Standard",
-      "remapHint": "Tastenzuweisungen werden beim Übernehmen auf {{device_akk}} geschrieben und funktionieren in jedem Spiel, ohne Software auf dem PC.",
       "remapApply": "Zuweisung übernehmen",
       "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
       "effect": "Effekt",
-      "position": "Position",
       "touchHint": "Berühre das Touchpad, um deine Finger hier zu sehen. Dafür gibt es nichts einzustellen.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Lautsprecherpegel jetzt",
@@ -652,36 +642,6 @@
         "2": "Waffe",
         "3": "Vibration"
       },
-      "go": {
-        "intro": "Klicke mit der Maus auf einen Teil der Abbildung oder wähle hier eine Einstellung:",
-        "lightbar": {
-          "title": "Leuchtleiste",
-          "sub": "Modus und Lieblingsfarben"
-        },
-        "triggers": {
-          "title": "Adaptive Trigger",
-          "sub": "Effekte an L2 / R2 ausprobieren"
-        },
-        "haptics": {
-          "title": "Haptisches Feedback",
-          "sub": "Vibrationsintensität und Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Lautsprecher",
-          "sub": "Pegel mit Live-Anzeige"
-        },
-        "mic": {
-          "title": "Mikrofon",
-          "sub": "Das integrierte Mikrofon des Controllers"
-        },
-        "slots": {
-          "title": "Kopplungsplätze",
-          "sub": "Controller wechseln oder entfernen"
-        },
-        "buttons": "Um einer Taste oder einem Stick etwas zuzuweisen, klicke in der Abbildung darauf.",
-        "bodyHint": "Haptisches Feedback: Vibrationsintensität und Audio Auto Haptics"
-      },
-      "hidePanel": "Einstellungsfeld ausblenden (der Controller wird größer)",
       "autoInstall": "Updates automatisch installieren",
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
       "hapticSilent": "Still: gerade sendet nichts haptisches Feedback. Der Pegel bewegt sich, wenn ein Spiel haptisches Feedback abspielt oder Audio Auto Haptics bei laufendem Ton an ist.",
@@ -694,8 +654,6 @@
       "headsetIn": "Headset eingesteckt",
       "colorLabel": "Farbe:",
       "statusLabel": "Status:",
-      "triggersTitle": "Adaptive Trigger",
-      "remapButton": "{{button}} zuweisen",
       "effectOther": "anderer Effekt ({{n}})",
       "checkForUpdatesSub": "Aus: Die App geht nur dann für Updates online, wenn du auf „Nach Updates suchen“ drückst."
     },
@@ -1214,7 +1172,6 @@
     },
     "calib": {
       "title": "Kalibrierung",
-      "shortcut": "Stick-Drift, Deadzones, Triggerweg, Gyroskop",
       "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops {{device_im}}, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
       "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um zu kalibrieren.",
       "needsController": "Verbinde einen Controller, um zu kalibrieren.",
@@ -1403,12 +1360,7 @@
         "dim": "Gedimmt (inaktiv)",
         "off": "Aus (inaktiv)"
       },
-      "dimAfter": "Dimmt nach",
-      "offAfter": "Schaltet ab nach",
-      "wakeOnInput": "Wacht bei Controller-Eingabe auf",
       "never": "nie",
-      "yes": "ja",
-      "no": "nein",
       "minutes": "{{n}} Min.",
       "mic": "Mikrofon-Audioframes",
       "timing": {
@@ -1510,16 +1462,11 @@
       "normal": "Normale Belegung",
       "needsFirmware": "Braucht die neueste Firmware auf {{device_dat}} ({{deviceName}} → Aktualisieren).",
       "noneForGame": "Belegungen speicherst du auf der Tastenseite: wähle eine Taste am Controller.",
-      "allTitle": "Tasten",
-      "allHeading": "Alle Tasten",
       "allHint_one": "{{count}} Taste weicht von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "allHint_other": "{{count}} Tasten weichen von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "changed": "geändert",
       "notApplied": "noch nicht angewendet",
       "notSaved": "noch nicht gespeichert",
-      "shortcutTitle": "Tasten & Belegungen",
-      "shortcutSub": "Alle Tasten in einer Liste, gespeicherte Belegungen für Spiele",
-      "seeAll": "Alle Tasten und gespeicherten Belegungen",
       "off": "Aus",
       "noChanges": "Keine Änderungen (die Controller-Belegung)",
       "loaded": "Geladene Belegung: {{name}}",
@@ -1701,7 +1648,27 @@
       "hidden_other": "{{count}} ausgeblendet",
       "devOnly": "Nur Entwicklungsversionen",
       "chapters_one": "{{count}} Kapitel",
-      "chapters_other": "{{count}} Kapitel"
+      "chapters_other": "{{count}} Kapitel",
+      "buttonsChanged_one": "{{count}} Taste geändert",
+      "buttonsChanged_other": "{{count}} Tasten geändert",
+      "slotActive": "Slot {{slot}} aktiv",
+      "moreInDiagnostics": "Mehr in Diagnose"
+    },
+    "sections": {
+      "lightbar": "Leuchtleiste",
+      "triggers": "Adaptive Trigger",
+      "haptics": "Haptisches Feedback",
+      "speaker": "Lautsprecher",
+      "mic": "Mikrofon",
+      "buttons": "Tastenzuweisung",
+      "sticks": "Sticks & Kalibrierung",
+      "slots": "Kopplungsplätze",
+      "firmware": "Firmware",
+      "device": "Neustart & Zurücksetzen",
+      "power": "Energie & Ruhezustand",
+      "oled": "OLED-Bildschirm",
+      "usb": "USB & Status-Pin",
+      "diagnostics": "Diagnose"
     }
   },
   "ad": {

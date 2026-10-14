@@ -146,7 +146,9 @@ describe("game page sections (profile draft)", () => {
     const sub = (label: string) => el.querySelector(`input[aria-label="${label}"]`)?.closest(".dk-row")?.querySelector(".dk-sub")?.textContent ?? "";
     expect(sub("Volume (Speaker for Controller)")).not.toContain("Your normal setting");
     expect(sub("Vibration intensity (left)")).toContain("Your normal setting");
-    expect(el.querySelectorAll("h2 .dk-chip")).toHaveLength(2); // lightbar mode + favorites
+    // The light bar's mode (its row's hint) and favorite colors (their heading's chip).
+    expect(el.querySelector(".dk-presets")?.closest(".dk-row")?.querySelector(".dk-sub")?.textContent).toContain("Your normal setting");
+    expect(el.querySelectorAll(".dk-subhead .dk-chip")).toHaveLength(1);
   });
 
   it("protocol 1.13: a profile holds trigger reduction, speaker boost and the volume lock, not the dongle's audio routing", () => {

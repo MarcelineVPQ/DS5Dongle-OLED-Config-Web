@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useFields, type SectionProps } from "./sectionFields";
 import { hexToRgb, rgbToHex, Row } from "../controls";
 import ColorPicker from "../colorPicker/ColorPicker";
+import { SectionGroup } from "../accordion/Section";
 
 export const LIGHTBAR_MODES = [
   { value: 8, key: "host", label: "Game controls it" },
@@ -15,11 +16,11 @@ export const LIGHTBAR_MODES = [
   { value: 0, key: "live", label: "Tilt color" },
 ] as const;
 
-// The live panel's lightbar sections; the game page shows them with a game
-// profile's draft (`fields`).
+// The Light bar section's rows (Controller page); the game page shows them
+// with a game profile's draft (`fields`).
 export default function LightbarPage(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, patch, mark } = useFields(props);
+  const { d, set, patch, mark, sub } = useFields(props);
 
   const setFav = (i: number, hex: string) => {
     const [r, g, b] = hexToRgb(hex);
@@ -28,33 +29,33 @@ export default function LightbarPage(props: SectionProps) {
   };
 
   return (
-    <div className="dk-grid">
-      <section className="dk-card">
-        <h2>
-          {t("desktop.lightbar.mode", "Mode")} {mark("lightbarMode")}
-        </h2>
+    <>
+      <Row label={t("desktop.lightbar.mode", "Mode")} sub={sub("lightbarMode")} stack>
         <div className="dk-presets">
-          {/* loop: HOT-PATH-OK — N ≈ 6 lightbar modes; page render */}
+          {/* loop: HOT-PATH-OK — N ≈ 9 lightbar modes; only while Light bar is open */}
           {LIGHTBAR_MODES.map((m) => (
             <button type="button" key={m.value} className={`dk-btn${d.lightbarMode === m.value ? " on" : ""}`} aria-pressed={d.lightbarMode === m.value} onClick={() => set("lightbarMode", m.value)}>
               {t(`desktop.lightbar.modes.${m.key}`, m.label)}
             </button>
           ))}
         </div>
-        <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")}</p>
-      </section>
-      <section className="dk-card">
-        <h2>
-          {t("desktop.lightbar.favorites", "Favorite colors")} {mark("lbFavR")}
-        </h2>
-        {/* loop: HOT-PATH-OK — N = 4 favorite slots; page render */}
+      </Row>
+      <SectionGroup
+        title={
+          <>
+            {t("desktop.lightbar.favorites", "Favorite colors")} {mark("lbFavR")}
+          </>
+        }
+      >
+        {/* loop: HOT-PATH-OK — N = 4 favorite slots; only while Light bar is open */}
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>
             <span className="dk-mono">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>
             <ColorPicker label={`FAV${i}`} value={rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]])} onChange={(hex) => setFav(i, hex)} />
           </Row>
         ))}
-      </section>
-    </div>
+      </SectionGroup>
+      <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")}</p>
+    </>
   );
 }

@@ -4,7 +4,7 @@
 // something is waiting), then the game's controller profile; a healthy Setup
 // is one "All set" line. Each fact has one place: the tier in DualSense
 // support, the Proton in Compatibility, store and launcher in Details.
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
@@ -310,15 +310,38 @@ function AllProfileSettings({ draft, normal, bridge, onChange }: { draft: Profil
   return (
     <div className="gp-sections">
       <p className="dk-hint">{t("desktop.library.profileHint")}</p>
-      <HapticsSection bridge={bridge} fields={fields} />
-      <AutoHapticsSection bridge={bridge} fields={fields} />
-      <TriggerIntensitySection bridge={bridge} fields={fields} />
-      <SpeakerSection bridge={bridge} fields={fields} />
-      <LightbarPage bridge={bridge} fields={fields} />
-      <MicSection bridge={bridge} fields={fields} />
+      <ProfileCard title={t("desktop.sections.haptics")}>
+        <HapticsSection bridge={bridge} fields={fields} />
+      </ProfileCard>
+      <ProfileCard title={t("autoHaptics.sectionTitle")}>
+        <AutoHapticsSection bridge={bridge} fields={fields} />
+      </ProfileCard>
+      <ProfileCard title={t("desktop.settings.triggerIntensity")}>
+        <TriggerIntensitySection bridge={bridge} fields={fields} />
+      </ProfileCard>
+      <ProfileCard title={t("desktop.sections.speaker")}>
+        <SpeakerSection bridge={bridge} fields={fields} />
+      </ProfileCard>
+      <ProfileCard title={t("desktop.sections.lightbar")}>
+        <LightbarPage bridge={bridge} fields={fields} />
+      </ProfileCard>
+      <ProfileCard title={t("desktop.sections.mic")}>
+        <MicSection bridge={bridge} fields={fields} />
+      </ProfileCard>
       <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
       <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
     </div>
+  );
+}
+
+// One of the controller page's section bodies as a card here (until the game
+// page moves onto the accordion, step 4).
+function ProfileCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="dk-card">
+      <h2>{title}</h2>
+      {children}
+    </section>
   );
 }
 
