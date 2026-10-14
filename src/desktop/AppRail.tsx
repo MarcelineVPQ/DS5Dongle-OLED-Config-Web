@@ -12,10 +12,14 @@ import { GLASS_KEY } from "./glass/glassPref";
 import { useFlagPref } from "./storage";
 import { lastBoardName } from "./hardwareName";
 import { useTranslation } from "react-i18next";
+import { protonApplies } from "./games/platform";
 import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
 const PIN_KEY = "ds5.railPinned";
+
+// The tooltip's key: Games mentions Proton only where Proton applies (Linux).
+export const railTip = (item: RailItem): string => (item === "games" && !protonApplies() ? "desktop.rail.tip.gamesWindows" : `desktop.rail.tip.${item}`);
 
 interface Props {
   active: RailItem;
@@ -59,7 +63,7 @@ export default function AppRail({ active, onSelect, gamesSupported, gamesBadge, 
       data-rail={item}
       aria-current={active === item ? "page" : undefined}
       // What's there, in one line; on Controller again, what a second click does.
-      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(`desktop.rail.tip.${item}`)}`}
+      title={item === "controller" && active === "controller" ? t("desktop.rail.controllerAgain") : `${label} · ${t(railTip(item))}`}
       onClick={(e) => {
         onSelect(item);
         // A pointer click (detail > 0), not Enter/Space: close the rail now.

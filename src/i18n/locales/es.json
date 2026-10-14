@@ -1057,6 +1057,7 @@
         "controller": "tu mando, en directo. Haz clic en cualquier parte para configurarla",
         "dongle": "firmware, pantalla OLED, energía y USB",
         "games": "tus juegos, perfiles por juego y configuración de Proton",
+        "gamesWindows": "tus juegos y perfiles por juego",
         "app": "idioma, aspecto, actualizaciones e inicio",
         "about": "la guía, novedades y créditos"
       },

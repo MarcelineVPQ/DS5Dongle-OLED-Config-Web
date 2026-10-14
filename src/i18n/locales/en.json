@@ -1056,6 +1056,7 @@
         "controller": "your controller, live. Click any part of it to set it up",
         "dongle": "firmware, the OLED screen, power and USB",
         "games": "your games, per-game profiles and Proton setup",
+        "gamesWindows": "your games and per-game profiles",
         "app": "language, look, updates and startup",
         "about": "the guide, what's new and credits"
       },

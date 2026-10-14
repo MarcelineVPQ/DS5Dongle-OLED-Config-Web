@@ -1057,6 +1057,7 @@
         "controller": "dein Controller, live. Klick auf ein Teil, um es einzustellen",
         "dongle": "Firmware, OLED-Display, Energie und USB",
         "games": "deine Spiele, Profile pro Spiel und Proton-Einrichtung",
+        "gamesWindows": "deine Spiele und Profile pro Spiel",
         "app": "Sprache, Aussehen, Updates und Start",
         "about": "Anleitung, Neuigkeiten und Credits"
       },

@@ -1057,6 +1057,7 @@
         "controller": "ta manette, en direct. Clique sur une partie pour la régler",
         "dongle": "firmware, écran OLED, alimentation et USB",
         "games": "tes jeux, profils par jeu et configuration de Proton",
+        "gamesWindows": "tes jeux et profils par jeu",
         "app": "langue, apparence, mises à jour et démarrage",
         "about": "le guide, les nouveautés et les crédits"
       },

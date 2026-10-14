@@ -144,11 +144,16 @@ describe.skipIf(process.platform === "win32")("POSIX without systemd: a started 
 describe.skipIf(process.platform !== "win32")("Windows: a started program survives the app exiting", () => {
   it("is detached from the app's job object", async () => {
     const pidFile = join(dir, "windows.pid");
-    const child = spawn(process.execPath, [app, pidFile], { stdio: "ignore" });
-    const pid = await waitFor(() => readPid(pidFile));
+    const child = spawn(process.execPath, [app, pidFile], { stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    child.stdout.on("data", (d) => (out += String(d)));
+    child.stderr.on("data", (d) => (out += String(d)));
+    const pid = await waitFor(() => readPid(pidFile)).catch((e: unknown) => {
+      throw new Error(`no program started; the app said: ${out || "(nothing)"}`, { cause: e });
+    });
     survivors.push(pid);
     child.kill();
     await new Promise((r) => setTimeout(r, 500));
     expect(alive(pid)).toBe(true);
-  }, 30_000);
+  }, 40_000);
 });
