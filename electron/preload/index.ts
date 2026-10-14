@@ -26,16 +26,16 @@ const api: DesktopApi = {
   getUpdateState: () => ipcRenderer.invoke(IPC.getUpdateState),
   installUpdate: () => ipcRenderer.invoke(IPC.installUpdate),
   backToStable: () => ipcRenderer.invoke(IPC.backToStable),
-  devChannelPreview: () => ipcRenderer.invoke(IPC.devChannelPreview),
+  devChannelPreview: (asked) => ipcRenderer.invoke(IPC.devChannelPreview, asked),
   restartToUpdate: () => ipcRenderer.send(IPC.restartToUpdate),
   onUpdateState: (listener) => {
     const handler = (_event: IpcRendererEvent, state: UpdateState) => listener(state);
     ipcRenderer.on(IPC.updateState, handler);
     return () => ipcRenderer.removeListener(IPC.updateState, handler);
   },
-  latestFirmware: () => ipcRenderer.invoke(IPC.latestFirmware),
+  latestFirmware: (asked = false) => ipcRenderer.invoke(IPC.latestFirmware, asked),
   officialControllerFirmware: (asked) => ipcRenderer.invoke(IPC.officialControllerFirmware, asked),
-  downloadFirmware: () => ipcRenderer.invoke(IPC.downloadFirmware),
+  downloadFirmware: (shown) => ipcRenderer.invoke(IPC.downloadFirmware, shown),
   setFirmwareWriting: (writing) => ipcRenderer.send(IPC.setFirmwareWriting, writing),
   getFirmwareHold: () => ipcRenderer.invoke(IPC.getFirmwareHold),
   onFirmwareHold: (listener) => {

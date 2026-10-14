@@ -8,6 +8,8 @@
 // installFirmware() flashes it directly (first-run setup).
 import type { Ds5BridgeClient } from "../protocol/bridgeClient";
 import { PicoflashAPI, parseUf2Regions, type PicoflashHandle } from "../flash";
+import i18n from "../i18n";
+import type { DesktopApi, LatestFirmware } from "./api";
 
 export type FirmwareStep = "downloading" | "rebooting" | "waiting-bootloader" | "flashing" | "restarting";
 
@@ -31,12 +33,21 @@ export async function whileWriting<T>(run: () => Promise<T>): Promise<T> {
   }
 }
 
-export async function updateFirmware(client: Ds5BridgeClient, onProgress: (p: FirmwareProgress) => void): Promise<string> {
+// Exactly the firmware the user was shown and confirmed (`shown`), or a
+// plain reason why not: the feed changed since (check again), or the file
+// didn't match.
+async function shownFirmware(desktop: DesktopApi, shown: LatestFirmware): Promise<{ version: string; bytes: Uint8Array }> {
+  const r = await desktop.downloadFirmware(shown);
+  if (!r.ok) throw new Error(i18n.t(r.reason === "changed" ? "desktop.firmware.feedChanged" : "desktop.firmware.hashMismatch"));
+  return r;
+}
+
+export async function updateFirmware(client: Ds5BridgeClient, shown: LatestFirmware, onProgress: (p: FirmwareProgress) => void): Promise<string> {
   const desktop = window.desktop;
   if (!desktop) throw new Error("Firmware updates need the desktop app.");
 
   onProgress({ step: "downloading" });
-  const { version, bytes } = await desktop.downloadFirmware();
+  const { version, bytes } = await shownFirmware(desktop, shown);
   // Parse before touching the device: a malformed file must fail here, while
   // the dongle is still running its current firmware.
   const regions = parseUf2Regions(bytes.slice().buffer);
@@ -54,11 +65,11 @@ export async function updateFirmware(client: Ds5BridgeClient, onProgress: (p: Fi
 }
 
 // First-run setup: a Pico already in BOOTSEL mode gets the app's firmware.
-export async function installFirmware(device: PicoflashHandle, onProgress: (p: FirmwareProgress) => void): Promise<string> {
+export async function installFirmware(device: PicoflashHandle, shown: LatestFirmware, onProgress: (p: FirmwareProgress) => void): Promise<string> {
   const desktop = window.desktop;
   if (!desktop) throw new Error("Installing firmware needs the desktop app.");
   onProgress({ step: "downloading" });
-  const { version, bytes } = await desktop.downloadFirmware();
+  const { version, bytes } = await shownFirmware(desktop, shown);
   const regions = parseUf2Regions(bytes.slice().buffer);
   await whileWriting(() => flash(device, regions, onProgress));
   return version;

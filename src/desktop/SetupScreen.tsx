@@ -36,21 +36,25 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   const installing = install.phase === "running";
   const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
+  // Online only with automatic checks on (main); otherwise the bundled build.
   useEffect(() => {
     if (!pico || firmware) return;
     void window.desktop
-      ?.latestFirmware()
+      ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
       .catch(() => undefined);
   }, [pico, firmware]);
 
   const start = async () => {
-    if (!pico) return;
+    if (!pico || !firmware) return;
     try {
-      const version = await installFirmware(pico, (progress) => setInstall({ phase: "running", progress }));
+      const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version });
     } catch (cause) {
       setInstall({ phase: "failed", detail: errorText(cause) });
+      // Look again: if the feed changed, the new offer shows (the failed
+      // install already fetched it, so this doesn't go online).
+      setFirmware(null);
     }
   };
 
@@ -123,14 +127,14 @@ function UpdatesWithoutDongle() {
   const [checked, setChecked] = useState<string | null>(null);
   useEffect(() => {
     void desktop
-      ?.latestFirmware()
+      ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
       .catch(() => undefined);
   }, [desktop]);
   if (!desktop) return null;
   const check = async () => {
     setChecked(null);
-    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware().catch(() => null)]);
+    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true).catch(() => null)]);
     if (lookup?.latest) setFirmware(lookup.latest);
     setChecked(
       !app || app.phase === "failed"

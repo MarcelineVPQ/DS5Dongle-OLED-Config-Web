@@ -140,6 +140,13 @@ export const ROADMAP: RoadmapItem[] = [
   },
   {
     column: "next",
+    title: "Update checks only when you allow them",
+    text: "With Check for updates automatically off, the app goes online for updates only when you press Check for updates, and a firmware update installs exactly the version it showed you.",
+    areas: ["app", "dongle"],
+    high: true,
+  },
+  {
+    column: "next",
     title: "No restart during a firmware update",
     text: "While {{device}}'s firmware is being written, the app waits to restart or quit, so an app update can't leave {{device}} half-written.",
     areas: ["app", "dongle"],

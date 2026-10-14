@@ -273,7 +273,10 @@
       "checkedCurrent": "Checked just now: you're up to date.",
       "checkedNone": "Checked just now: no release has been published yet.",
       "checkedOffline": "Couldn't check: the update server can't be reached (offline?).",
-      "backToStable": "Back to stable {{version}}"
+      "backToStable": "Back to stable {{version}}",
+      "disabled": "not checked (automatic checks are off)",
+      "feedChanged": "A newer firmware appeared. Check again.",
+      "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again."
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -674,7 +677,8 @@
       "statusLabel": "Status:",
       "triggersTitle": "Adaptive triggers",
       "remapButton": "Assign {{button}}",
-      "effectOther": "other effect ({{n}})"
+      "effectOther": "other effect ({{n}})",
+      "checkForUpdatesSub": "Off: the app goes online for updates only when you press Check for updates."
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",
@@ -1439,7 +1443,9 @@
       "joinNotesLink": "Read the release notes on GitHub",
       "joinOffline": "Can't reach the development feed right now (offline?). You can still join; the update shows when it's reachable.",
       "joinButton": "Join the Development channel",
-      "stayButton": "Stay on Stable"
+      "stayButton": "Stay on Stable",
+      "joinCheckOff": "Automatic update checks are off, so nothing has been fetched.",
+      "joinCheck": "Check the development feed"
     },
     "layouts": {
       "title": "Button layouts",
