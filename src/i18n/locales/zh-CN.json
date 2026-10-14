@@ -784,7 +784,6 @@
       "running": "运行中",
       "hasProfile": "已有控制器配置",
       "needsAttention": "需要设置",
-      "playing": "正在游玩",
       "lastPlayed": "上次游玩",
       "never": "从未",
       "playTime": "游玩时长",
@@ -792,15 +791,11 @@
       "hours_other": "{{count}} 小时",
       "runsWith": "运行方式",
       "launcherDefault": "启动器默认",
-      "dualsense": "DualSense",
-      "yourRating": "你的评分",
       "section": {
         "profile": "控制器配置",
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
-        "reviews": "玩家评分",
-        "configs": "共享配置",
         "rating": "你的评分",
         "notes": "笔记",
         "details": "详情"
@@ -827,6 +822,8 @@
       "favorites": "收藏颜色",
       "mic": "内置麦克风",
       "setupNone": "此游戏无需设置。",
+      "setupAllSet_other": "全部就绪（{{count}} 项检查）",
+      "setupPassed_other": "{{count}} 项检查通过",
       "setupReview": "检查更改",
       "setupApply": "应用",
       "setupDone": "完成。如果游戏正在运行,请重启。",
@@ -899,8 +896,6 @@
         "disconnects": "会断连"
       },
       "shareSoon": "已保存在此电脑。与其他玩家分享功能即将推出。",
-      "reviewsSoon": "即将推出:其他玩家的评分和反馈。",
-      "configsSoon": "即将推出:其他玩家为此游戏分享的配置。",
       "notesPlaceholder": "私人笔记,仅保存在此电脑",
       "id": "ID",
       "size": "磁盘占用",
@@ -974,6 +969,7 @@
       "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。",
       "supportsHdr": "支持 HDR",
       "supportsHdrHint": "如果该游戏在 PC 上有 HDR 设置，请勾选：应用会显示 HDR 需要的条件，并在一切就绪时提供“开启 HDR”。",
+      "marksTitle": "没有按预期工作?",
       "hdrTitle": "HDR"
     },
     "dongleConsole": {

@@ -787,7 +787,6 @@
       "running": "Läuft",
       "hasProfile": "Hat ein Controller-Profil",
       "needsAttention": "Einrichtung nötig",
-      "playing": "Läuft gerade",
       "lastPlayed": "Zuletzt gespielt",
       "never": "Nie",
       "playTime": "Spielzeit",
@@ -797,15 +796,11 @@
       "hours_other": "{{count}} Stunden",
       "runsWith": "Läuft mit",
       "launcherDefault": "Launcher-Standard",
-      "dualsense": "DualSense",
-      "yourRating": "Deine Wertung",
       "section": {
         "profile": "Controller-Profil",
         "setup": "Einrichtung",
         "compat": "Kompatibilität",
         "support": "DualSense-Support",
-        "reviews": "Spielerwertungen",
-        "configs": "Geteilte Configs",
         "rating": "Deine Wertung",
         "notes": "Notizen",
         "details": "Details"
@@ -832,6 +827,10 @@
       "favorites": "Favoritenfarben",
       "mic": "Integriertes Mikrofon",
       "setupNone": "Für dieses Spiel ist nichts einzurichten.",
+      "setupAllSet_one": "Alles eingerichtet ({{count}} Prüfung)",
+      "setupAllSet_other": "Alles eingerichtet ({{count}} Prüfungen)",
+      "setupPassed_one": "{{count}} Prüfung bestanden",
+      "setupPassed_other": "{{count}} Prüfungen bestanden",
       "setupReview": "Änderungen prüfen",
       "setupApply": "Übernehmen",
       "setupDone": "Fertig. Starte das Spiel neu, falls es läuft.",
@@ -905,8 +904,6 @@
         "disconnects": "Verbindungsabbrüche"
       },
       "shareSoon": "Auf diesem PC gespeichert. Teilen mit anderen Spielern kommt bald.",
-      "reviewsSoon": "Bald: Wertungen und Feedback anderer Spieler.",
-      "configsSoon": "Bald: Profile, die andere Spieler für dieses Spiel geteilt haben.",
       "notesPlaceholder": "Private Notizen, nur auf diesem PC",
       "id": "ID",
       "size": "Größe",
@@ -980,6 +977,7 @@
       "notDetectedHint": "Hake das an, wenn das Spiel nicht auf den Controller reagiert: Die App bietet dann an, ihn dem Spiel als Standard-Gamepad (XInput) zu übergeben.",
       "supportsHdr": "Unterstützt HDR",
       "supportsHdrHint": "Hake das an, wenn das Spiel am PC eine HDR-Einstellung hat: Die App zeigt dann, was HDR braucht, und bietet „HDR einschalten“ an, sobald alles bereit ist.",
+      "marksTitle": "Funktioniert etwas nicht wie erwartet?",
       "hdrTitle": "HDR"
     },
     "dongleConsole": {
