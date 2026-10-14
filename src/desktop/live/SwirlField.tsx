@@ -192,6 +192,7 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
 type Mode = "gpu" | "cpu";
 
 // Does the shader build here? Tried once on a throwaway canvas.
+// cache: OK — key=none (does the shader build); invalidated=never, hardware acceleration changes need a restart; bound=1 entry
 let gpuOk: boolean | null = null;
 function gpuWorks(): boolean {
   if (gpuOk === null) {
@@ -226,6 +227,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   // theme, focus and Reduce motion only change what it's handed or how often
   // it draws, never rebuild it.
   const renderer = useRef<Renderer | null>(null);
+  // cache: OK — key=none (the swirl colors); invalidated=rebuilt when the colors or theme change; bound=4 colors
   const palette = useRef<Rgb[]>([]);
   const stillRef = useRef(still);
   useEffect(() => {

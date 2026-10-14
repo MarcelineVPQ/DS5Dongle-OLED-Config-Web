@@ -44,6 +44,8 @@ jobs:
         run: node tools/check_identical_files.mjs
       - name: Loops that wait or sit on a hot path have a verdict (docs/LOOP_PASS_2026-10.md)
         run: node tools/list_loops.mjs --check
+      - name: Kept state (caches, memos, mirrors) has a verdict (docs/CACHE_PASS_2026-10.md)
+        run: node tools/list_caches.mjs --check
       - name: Every error path has a verdict, no silent failure (docs/ERROR_PASS_2026-10.md)
         run: node tools/list_errors.mjs --check
 

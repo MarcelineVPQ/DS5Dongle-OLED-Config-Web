@@ -54,7 +54,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
-import { ROOT, createProgram, enclosingFnName as displayFn, isFn, isOurs, relOf } from "./tsProgram.mjs";
+import { ROOT, checker, displayFn, isFn, isOurs, lineOf, relOf as relPaths, sources } from "./ts_program.mjs";
+
+const relOf = (sf) => relPaths.get(sf.fileName);
 
 export const VERDICTS = ["SHOWN", "LOGGED-OK", "SILENT-BUG", "SWALLOWED", "FLOATING", "NOT-WORTH", "PASSES-ON"];
 const VERDICT_RE = new RegExp(`error:\\s*(${VERDICTS.join("|")})\\s+—\\s+(.+?)\\s*(?:\\*\\/\\}?)?\\s*$`);
@@ -64,7 +66,6 @@ const CHILD_FNS = new Set(["spawn", "spawnSync", "exec", "execSync", "execFile",
 const GUARD_CALLS =
   /^(JSON\.parse|readFileSync|readFile|readdirSync|readdir|statSync|stat|lstatSync|existsSync|writeFileSync|writeFile|renameSync|rename|mkdirSync|mkdir|rmSync|rm|unlinkSync|unlink|copyFileSync|openSync|fetch|net\.fetch|decodeURIComponent|new URL)$/;
 
-const { checker, sources } = createProgram();
 const en = JSON.parse(readFileSync(join(ROOT, "src/i18n/locales/en.json"), "utf8"));
 const hasKey = (key) => key.split(".").reduce((o, k) => (o && typeof o === "object" ? o[k] : undefined), en) !== undefined;
 
@@ -132,7 +133,6 @@ const isFetch = (call) => {
 };
 
 // ---------- syntax helpers ----------
-const lineOf = (sf, pos) => sf.getLineAndCharacterOfPosition(pos).line + 1;
 // Throws in this block that aren't inside a nested function.
 function hasOwn(node, test) {
   let found = false;
@@ -196,37 +196,37 @@ for (const sf of sources) {
   const visit = (n) => {
     if (ts.isCatchClause(n)) {
       const tryStmt = n.parent;
-      addRow(sf, n, lineOf(sf, n.getStart(sf)), "catch", `${catchClass(n)}${guardsOf(tryStmt.tryBlock) ? `: ${guardsOf(tryStmt.tryBlock)}` : ""}`);
+      addRow(sf, n, lineOf(n), "catch", `${catchClass(n)}${guardsOf(tryStmt.tryBlock) ? `: ${guardsOf(tryStmt.tryBlock)}` : ""}`);
     } else if (ts.isCallExpression(n)) {
       const h = handlerOf(n);
       if (h && isThenable(n.expression.expression)) {
-        addRow(sf, n, lineOf(sf, n.expression.name.getStart(sf)), n.expression.name.text === "catch" ? ".catch" : ".then-reject", h.getText(sf).replace(/\s+/g, " ").slice(0, 60), { handler: h });
+        addRow(sf, n, lineOf(n.expression.name), n.expression.name.text === "catch" ? ".catch" : ".then-reject", h.getText(sf).replace(/\s+/g, " ").slice(0, 60), { handler: h });
       }
-      if (isDesktopApiMember(n) && isThenable(n)) addRow(sf, n, lineOf(sf, nameNode(n).getStart(sf)), "ipc-call", nameNode(n).getText(sf));
-      else if (fromZod(n)) addRow(sf, n, lineOf(sf, nameNode(n).getStart(sf)), "schema", `${n.expression.expression.getText(sf).slice(0, 40)}.${n.expression.name.text}`);
+      if (isDesktopApiMember(n) && isThenable(n)) addRow(sf, n, lineOf(nameNode(n)), "ipc-call", nameNode(n).getText(sf));
+      else if (fromZod(n)) addRow(sf, n, lineOf(nameNode(n)), "schema", `${n.expression.expression.getText(sf).slice(0, 40)}.${n.expression.name.text}`);
       else if (isSpawnCall(n)) {
         // Sync calls throw and promisified ones reject: those land like any call. Callback and event forms need their own verdict.
         const name = n.expression.getText(sf);
         const throws = /Sync$/.test(name) || (ts.isIdentifier(n.expression) && promisifiedChild.has(checker.getSymbolAtLocation(n.expression)));
-        addRow(sf, n, lineOf(sf, n.getStart(sf)), "spawn", `${name}(${(n.arguments[0]?.getText(sf) ?? "").slice(0, 40)})`, { throws });
-      } else if (isFetch(n)) addRow(sf, n, lineOf(sf, n.getStart(sf)), "fetch", qualifiedCallee(n));
-      else if (qualifiedCallee(n) === "JSON.parse") addRow(sf, n, lineOf(sf, n.getStart(sf)), "json-parse", (n.arguments[0]?.getText(sf) ?? "").slice(0, 40));
+        addRow(sf, n, lineOf(n), "spawn", `${name}(${(n.arguments[0]?.getText(sf) ?? "").slice(0, 40)})`, { throws });
+      } else if (isFetch(n)) addRow(sf, n, lineOf(n), "fetch", qualifiedCallee(n));
+      else if (qualifiedCallee(n) === "JSON.parse") addRow(sf, n, lineOf(n), "json-parse", (n.arguments[0]?.getText(sf) ?? "").slice(0, 40));
       if (relOf(sf) === "electron/main/ipc.ts") {
         const c = qualifiedCallee(n);
         if (["ipcMain.handle", "ipcMain.on", "invoke", "invokeWith"].includes(c) && n.arguments[0] && !isFn(n.parent)) {
           const ch = n.arguments[0].getText(sf);
-          if (ch !== "channel") addRow(sf, n, lineOf(sf, n.getStart(sf)), "ipc-handler", `${c === "ipcMain.on" ? "on" : "handle"} ${ch}`, { send: c === "ipcMain.on" });
+          if (ch !== "channel") addRow(sf, n, lineOf(n), "ipc-handler", `${c === "ipcMain.on" ? "on" : "handle"} ${ch}`, { send: c === "ipcMain.on" });
         }
       }
     } else if (ts.isVoidExpression(n) && isThenable(n.expression)) {
-      addRow(sf, n, lineOf(sf, n.getStart(sf)), "void", n.expression.getText(sf).replace(/\s+/g, " ").slice(0, 60));
+      addRow(sf, n, lineOf(n), "void", n.expression.getText(sf).replace(/\s+/g, " ").slice(0, 60));
     } else if (ts.isExpressionStatement(n)) {
       const e = n.expression;
       // .finally(f) passes its promise's outcome on: look through it (as ESLint's no-floating-promises does).
       let inner = e;
       while (ts.isCallExpression(inner) && ts.isPropertyAccessExpression(inner.expression) && inner.expression.name.text === "finally") inner = inner.expression.expression;
       if (!ts.isVoidExpression(e) && !ts.isAwaitExpression(e) && !ts.isBinaryExpression(e) && isThenable(e) && !(ts.isCallExpression(inner) && handlerOf(inner))) {
-        addRow(sf, n, lineOf(sf, n.getStart(sf)), "floating", e.getText(sf).replace(/\s+/g, " ").slice(0, 60));
+        addRow(sf, n, lineOf(n), "floating", e.getText(sf).replace(/\s+/g, " ").slice(0, 60));
       }
     } else if (
       ts.isPropertySignature(n) &&
@@ -245,7 +245,7 @@ for (const sf of sources) {
           : o && ts.isPropertySignature(o.parent ?? {})
             ? `${o.parent.parent?.name?.text ?? "?"}.${o.parent.name.getText(sf)}`
             : displayFn(n);
-      addRow(sf, n, lineOf(sf, n.getStart(sf)), "result-field", `${owner}.${n.name.text}: ${n.type?.getText(sf).replace(/\s+/g, " ").slice(0, 40) ?? "?"}`);
+      addRow(sf, n, lineOf(n), "result-field", `${owner}.${n.name.text}: ${n.type?.getText(sf).replace(/\s+/g, " ").slice(0, 40) ?? "?"}`);
     }
     ts.forEachChild(n, visit);
   };
@@ -311,7 +311,7 @@ function resolve(row, depth = 0) {
   const { sf, node } = row;
   let v;
   if (row.kind === "catch") {
-    const blockLine = lineOf(sf, node.block.getStart(sf));
+    const blockLine = lineOf(node.block);
     v = commentVerdict(
       sf,
       [row.line, row.line - 1, blockLine, blockLine + 1, blockLine + 2].filter((l, i, a) => a.indexOf(l) === i),

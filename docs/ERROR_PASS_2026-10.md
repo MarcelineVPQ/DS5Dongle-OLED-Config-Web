@@ -10,7 +10,7 @@ _2026-10-13. Done per CLAUDE.md "Error pass". This is the one doc for both repos
 
 Two listers, one per repo. Each lists every candidate mechanically; nothing is sampled by eye.
 
-**App** (`tools/list_errors.mjs`). It uses the TypeScript compiler API and the type checker, shares `tools/tsProgram.mjs` with the loop lister, and covers `src/` and `electron/` (tests and the vendored `src/flash/picoflash` are excluded). One row per:
+**App** (`tools/list_errors.mjs`). It uses the TypeScript compiler API and the type checker, shares `tools/ts_program.mjs` with the loop and cache listers, and covers `src/` and `electron/` (tests and the vendored `src/flash/picoflash` are excluded). One row per:
 
 | Kind | What |
 |---|---|
@@ -138,7 +138,7 @@ Shared pieces, one of each: `logged()` in `src/errorText.ts` (app and main proce
 - The rescan after a failed Apply or Undo wiped the error a moment after it appeared. It looked silent: the error-clearing at the start of `rescan()` ran after the message was set. The test for fix 1 found this.
 - `useDs5Bridge.ts` had its own copy of `errorText`, which said "Unexpected USB error" (in English) for anything that wasn't an Error. Merged into `causeText`.
 - Lister gaps the verdict pass found, now handled: `.finally()` passes its promise's outcome on (ESLint treats it the same way); conditional branches, `new Set(…)` arguments and object spreads pass a call's error on to where it lands.
-- `tools/tsProgram.mjs` now holds the TypeScript program and the `isFn` / `fnName` / enclosing-name helpers for both listers. `list_loops.mjs` uses it, and its output is byte-identical.
+- The lister uses `tools/ts_program.mjs`, the TypeScript program the loop and cache listers share (no second copy). Its `lineOf` moved there, and `list_caches.mjs` uses it too.
 
 ## Every row, by file
 
@@ -169,7 +169,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 23 | `feedSignedBy > some(cb)` | catch | `fallback` | **NOT-WORTH** | a key that can't be read verifies nothing: the update is refused as unsigned, which the banner says |
+| 23 | `feedSignedBy` | catch | `fallback` | **NOT-WORTH** | a key that can't be read verifies nothing: the update is refused as unsigned, which the banner says |
 
 #### electron/main/firmwareSource.ts
 
@@ -206,7 +206,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 198 | `run` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
 | 206 | `run` | catch | `empty` | **NOT-WORTH** | the change is made and its originals are saved; without the hashes Undo only can't detect later edits (next lines) |
 | 246 | `list` | catch | `fallback: readdirSync` | **NOT-WORTH** | no backup folder yet: History lists nothing, which is true |
-| 258 | `list > flatMap(cb)` | catch | `fallback` | **SWALLOWED** | a backup whose manifest can't be read is left out of History, so its Undo silently disappears; list it as damaged instead (batch E2) |
+| 258 | `list` | catch | `fallback` | **SWALLOWED** | a backup whose manifest can't be read is left out of History, so its Undo silently disappears; list it as damaged instead (batch E2) |
 | 267 | `manifest` | json-parse | `readFileSync(join(this.dir, id, "manifes` | **PASSES-ON** | throws to the caller: the caller of manifest handles it _(flow)_ |
 | 267 | `manifest` | schema | `ManifestSchema.parse` | **PASSES-ON** | returned: the caller of manifest handles it _(flow)_ |
 | 289 | `prune` | catch | `fallback` | **NOT-WORTH** | an unreadable backup is left for the user to inspect, not pruned (History: batch E2) |
@@ -215,9 +215,9 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 93 | `note` | catch | `fallback: statSync` | **NOT-WORTH** | the file went away between listing and stat: that art is skipped |
-| 110 | `steamArt` | catch | `empty: readdirSync` | **NOT-WORTH** | no per-app folder |
-| 199 | `lutrisDetails` | catch | `fallback` | **NOT-WORTH** | no readable Lutris database: no Lutris art or play time (the tile keeps its placeholder) |
+| 94 | `note` | catch | `fallback: statSync` | **NOT-WORTH** | the file went away between listing and stat: that art is skipped |
+| 111 | `steamArt` | catch | `empty: readdirSync` | **NOT-WORTH** | no per-app folder |
+| 200 | `lutrisDetails` | catch | `fallback` | **NOT-WORTH** | no readable Lutris database: no Lutris art or play time (the tile keeps its placeholder) |
 
 #### electron/main/games/files.ts
 
@@ -238,7 +238,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
 | 102 | `findOnPath` | catch | `empty: statSync` | **NOT-WORTH** | not here |
-| 127 | `hasLayer > some(cb)` | catch | `fallback: readdirSync` | **NOT-WORTH** | no layer folder: the HDR checklist shows the layer as missing |
+| 127 | `hasLayer` | catch | `fallback: readdirSync` | **NOT-WORTH** | no layer folder: the HDR checklist shows the layer as missing |
 | 152 | `screens` | catch | `fallback` | **SHOWN** | desktop.hdrCheck.screen.failed (check "failed" on the HDR checklist) |
 | 163 | `gamescopeVersion` | catch | `fallback` | **NOT-WORTH** | Older builds without --version print their usage and fail. |
 
@@ -249,8 +249,8 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 27 | `readLibrary` | json-parse | `readFileSync(path, "utf8")` | **PASSES-ON** | a file that doesn't fit reads as null like a broken one; the catch below has the verdict |
 | 27 | `readLibrary` | schema | `LibraryFileSchema.safeParse` | **PASSES-ON** | a file that doesn't fit reads as null like a broken one; the catch below has the verdict |
 | 29 | `readLibrary` | catch | `fallback: zod.safeParse, JSON.parse, readFileSync` | **SILENT-BUG** | a damaged library file is moved aside (.bad-<time>) and the app starts with an empty library: every game profile and layout seems gone with no word why (batch E1) |
-| 52 | `load` | catch | `empty: renameSync` | **NOT-WORTH** | can't move it; it gets overwritten on the next save |
-| 63 | `load` | catch | `empty` | **NOT-WORTH** | can't write it now; the next save tries again |
+| 53 | `load` | catch | `empty: renameSync` | **NOT-WORTH** | can't move it; it gets overwritten on the next save |
+| 64 | `load` | catch | `empty` | **NOT-WORTH** | can't write it now; the next save tries again |
 
 #### electron/main/games/lutris.ts
 
@@ -293,17 +293,17 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 60 | `readFull` | catch | `empty: readFileSync` | **NOT-WORTH** | environ unreadable (another session's process) |
-| 66 | `readFull` | catch | `empty` | **NOT-WORTH** | gone |
-| 90 | `readProcs` | catch | `fallback: readdirSync` | **NOT-WORTH** | no /proc: no running games seen (the watcher polls again) |
-| 111 | `readProcs` | catch | `empty: statSync, readFileSync` | **NOT-WORTH** | process exited while we looked |
-| 133 | `wineExe` | catch | `fallback` | **NOT-WORTH** | exe link unreadable: not counted as a Wine process |
-| 154 | `launched` | catch | `empty: readFileSync` | **NOT-WORTH** | gone, or not readable |
-| 164 | `readProcs` | catch | `empty` | **NOT-WORTH** | process exited while we looked |
-| 226 | `readWindowsProcs > <anonymous>` | spawn | `execFile(join(process.env.SystemRoot ?? "C:\\Wind)` | **NOT-WORTH** | tasklist failed: this pass sees no processes; the next pass (3 s) looks again |
-| 254 | `walk` | catch | `fallback: readdirSync` | **NOT-WORTH** | an unreadable folder is skipped while listing a game's executables |
-| 315 | `pass` | .catch | `logged("running-game watcher pass")` | **LOGGED-OK** | running-game watcher pass _(logged())_ |
-| 315 | `pass` | void | `Promise.resolve(this.tick()).catch(logged("running-game watc` | **LOGGED-OK** | running-game watcher pass _(via .catch L315)_ |
+| 62 | `readFull` | catch | `empty: readFileSync` | **NOT-WORTH** | environ unreadable (another session's process) |
+| 68 | `readFull` | catch | `empty` | **NOT-WORTH** | gone |
+| 92 | `readProcs` | catch | `fallback: readdirSync` | **NOT-WORTH** | no /proc: no running games seen (the watcher polls again) |
+| 113 | `readProcs` | catch | `empty: statSync, readFileSync` | **NOT-WORTH** | process exited while we looked |
+| 136 | `wineExe` | catch | `fallback` | **NOT-WORTH** | exe link unreadable: not counted as a Wine process |
+| 158 | `launched` | catch | `empty: readFileSync` | **NOT-WORTH** | gone, or not readable |
+| 168 | `readProcs` | catch | `empty` | **NOT-WORTH** | process exited while we looked |
+| 230 | `readWindowsProcs > <anonymous>` | spawn | `execFile(join(process.env.SystemRoot ?? "C:\\Wind)` | **NOT-WORTH** | tasklist failed: this pass sees no processes; the next pass (3 s) looks again |
+| 258 | `walk` | catch | `fallback: readdirSync` | **NOT-WORTH** | an unreadable folder is skipped while listing a game's executables |
+| 321 | `pass` | .catch | `logged("running-game watcher pass")` | **LOGGED-OK** | running-game watcher pass _(logged())_ |
+| 321 | `pass` | void | `Promise.resolve(this.tick()).catch(logged("running-game watc` | **LOGGED-OK** | running-game watcher pass _(via .catch L321)_ |
 
 #### electron/main/games/schemeHandler.ts
 
@@ -321,12 +321,12 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 75 | `exclusive` | .then-reject | `run` | **NOT-WORTH** | runs after a failed earlier job too: one job's failure must not block the next (it already went to that job's caller) |
-| 77 | `exclusive` | .catch | `() => undefined` | **NOT-WORTH** | the queue's own copy; the caller gets 'next' with the error |
-| 94 | `refreshLatest` | catch | `empty` | **NOT-WORTH** | offline: the scan keeps the last known Proton build and offers no update it can't see |
-| 274 | `undo > exclusive(cb)` | .catch | `(cause: unknown) => (audioRestartFailed = errorText(cause))` | **SHOWN** | desktop.games.undoAudioRestart (was SILENT-BUG: the failed restart was dropped) |
-| 283 | `undo > exclusive(cb)` | catch | `fallback` | **SHOWN** | main-english: the error text in GamesPage's error notice after Undo (batch E3) |
-| 328 | `installLatestProton > exclusive(cb)` | catch | `fallback` | **SHOWN** | main-english: the message on the Proton card (protonMessage) after Install (batch E3) |
+| 76 | `exclusive` | .then-reject | `run` | **NOT-WORTH** | runs after a failed earlier job too: one job's failure must not block the next (it already went to that job's caller) |
+| 78 | `exclusive` | .catch | `() => undefined` | **NOT-WORTH** | the queue's own copy; the caller gets 'next' with the error |
+| 95 | `refreshLatest` | catch | `empty` | **NOT-WORTH** | offline: the scan keeps the last known Proton build and offers no update it can't see |
+| 280 | `undo > exclusive(cb)` | .catch | `(cause: unknown) => (audioRestartFailed = errorText(cause))` | **SHOWN** | desktop.games.undoAudioRestart (was SILENT-BUG: the failed restart was dropped) |
+| 289 | `undo > exclusive(cb)` | catch | `fallback` | **SHOWN** | main-english: the error text in GamesPage's error notice after Undo (batch E3) |
+| 334 | `installLatestProton > exclusive(cb)` | catch | `fallback` | **SHOWN** | main-english: the message on the Proton card (protonMessage) after Install (batch E3) |
 
 #### electron/main/games/steam.ts
 
@@ -374,31 +374,31 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 67 | `isDirectory` | catch | `fallback: statSync` | **NOT-WORTH** | a missing folder is "no folder": the game action returns false and the page shows desktop.library.action.failed |
-| 84 | `<module>` | .catch | `(cause: unknown) => { dialog.showErrorBox("DS5 Dongle Config` | **SHOWN** | main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English) |
-| 100 | `recordGpuCrash > on(cb)` | catch | `fallback` | **LOGGED-OK** | not a user action: this run already falls back to software rendering; the next crash tries again |
-| 122 | `scheduledCheck` | .catch | `logged("scheduled update check (not started by the user; a f` | **LOGGED-OK** | scheduled update check (not started by the user; a failed check shows as the 'failed' banner state) _(logged())_ |
-| 128 | `start` | catch | `fallback` | **LOGGED-OK** | the start-up re-apply of an unchanged setting; changing it in App settings or the tray shows desktop.errors.settingNotSaved |
-| 145 | `setSetting` | catch | `fallback` | **SHOWN** | desktop.errors.settingNotSaved (the tray's checkbox goes back; updateSetting logged the cause) |
-| 154 | `checkForUpdates` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown _(logged())_ |
-| 198 | `start > <anonymous>` | .then-reject | `logged("background scan for the running-game watcher (the Ga` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(logged())_ |
-| 198 | `start > <anonymous>` | void | `games.scan().then( // Consent may have been turned off while` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(via .then-reject L198)_ |
-| 209 | `start > handle(cb)` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of handle(cb) handles it _(flow)_ |
-| 214 | `start > <anonymous>` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of <anonymous> handles it _(flow)_ |
-| 225 | `manifest` | catch | `fallback` | **SHOWN** | desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; a cached feed answers when offline) |
-| 264 | `gameAction` | .catch | `() => null` | **NOT-WORTH** | no quiet start for this game: the launcher link below starts it instead |
-| 271 | `gameAction` | .then-reject | `() => false` | **SHOWN** | desktop.library.action.failed (was SILENT-BUG: a failed open still answered true) |
-| 301 | `devChannelPreview` | catch | `fallback` | **SHOWN** | desktop.channel.joinOffline (offline or no dev build yet) |
-| 323 | `start > watchDesktopPalette(cb)` | void | `readDesktopPalette() .then((palette) => mainWindow?.webConte` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(via .catch L325)_ |
-| 325 | `start > watchDesktopPalette(cb)` | .catch | `logged("following the desktop's accent color (the theme keep` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(logged())_ |
-| 352 | `installInBackground` | .catch | `logged("automatic update install (a failure shows as the 'fa` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(logged())_ |
-| 352 | `installInBackground` | void | `updater.downloadAndInstall().catch(logged("automatic update ` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(via .catch L352)_ |
-| 369 | `updateSetting` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 374 | `updateSetting` | catch | `empty` | **NOT-WORTH** | the file couldn't be written a moment ago either; it still holds the old value |
-| 384 | `updateSetting` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner _(logged())_ |
-| 486 | `createWindow` | .catch | `logged("loading the app's own page")` | **LOGGED-OK** | loading the app's own page _(logged())_ |
-| 495 | `openExternalLink` | .then-reject | `() => showMainError("desktop.errors.linkNotOpened")` | **SHOWN** | desktop.errors.linkNotOpened (was SILENT-BUG: a link that didn't open showed nothing) |
-| 514 | `isAppUrl` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL is "not the app's page": navigation stays blocked, as intended |
+| 68 | `isDirectory` | catch | `fallback: statSync` | **NOT-WORTH** | a missing folder is "no folder": the game action returns false and the page shows desktop.library.action.failed |
+| 85 | `<module>` | .catch | `(cause: unknown) => { dialog.showErrorBox("DS5 Dongle Config` | **SHOWN** | main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English) |
+| 101 | `recordGpuCrash > on(cb)` | catch | `fallback` | **LOGGED-OK** | not a user action: this run already falls back to software rendering; the next crash tries again |
+| 123 | `scheduledCheck` | .catch | `logged("scheduled update check (not started by the user; a f` | **LOGGED-OK** | scheduled update check (not started by the user; a failed check shows as the 'failed' banner state) _(logged())_ |
+| 129 | `start` | catch | `fallback` | **LOGGED-OK** | the start-up re-apply of an unchanged setting; changing it in App settings or the tray shows desktop.errors.settingNotSaved |
+| 146 | `setSetting` | catch | `fallback` | **SHOWN** | desktop.errors.settingNotSaved (the tray's checkbox goes back; updateSetting logged the cause) |
+| 155 | `checkForUpdates` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown _(logged())_ |
+| 199 | `start > <anonymous>` | .then-reject | `logged("background scan for the running-game watcher (the Ga` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(logged())_ |
+| 199 | `start > <anonymous>` | void | `games.scan().then( // Consent may have been turned off while` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(via .then-reject L199)_ |
+| 210 | `start > handle(cb)` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of handle(cb) handles it _(flow)_ |
+| 215 | `start > <anonymous>` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of <anonymous> handles it _(flow)_ |
+| 226 | `manifest` | catch | `fallback` | **SHOWN** | desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; a cached feed answers when offline) |
+| 265 | `gameAction` | .catch | `() => null` | **NOT-WORTH** | no quiet start for this game: the launcher link below starts it instead |
+| 272 | `gameAction` | .then-reject | `() => false` | **SHOWN** | desktop.library.action.failed (was SILENT-BUG: a failed open still answered true) |
+| 302 | `devChannelPreview` | catch | `fallback` | **SHOWN** | desktop.channel.joinOffline (offline or no dev build yet) |
+| 324 | `start > watchDesktopPalette(cb)` | void | `readDesktopPalette() .then((palette) => mainWindow?.webConte` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(via .catch L326)_ |
+| 326 | `start > watchDesktopPalette(cb)` | .catch | `logged("following the desktop's accent color (the theme keep` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(logged())_ |
+| 353 | `installInBackground` | .catch | `logged("automatic update install (a failure shows as the 'fa` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(logged())_ |
+| 353 | `installInBackground` | void | `updater.downloadAndInstall().catch(logged("automatic update ` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(via .catch L353)_ |
+| 370 | `updateSetting` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 375 | `updateSetting` | catch | `empty` | **NOT-WORTH** | the file couldn't be written a moment ago either; it still holds the old value |
+| 385 | `updateSetting` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner _(logged())_ |
+| 487 | `createWindow` | .catch | `logged("loading the app's own page")` | **LOGGED-OK** | loading the app's own page _(logged())_ |
+| 496 | `openExternalLink` | .then-reject | `() => showMainError("desktop.errors.linkNotOpened")` | **SHOWN** | desktop.errors.linkNotOpened (was SILENT-BUG: a link that didn't open showed nothing) |
+| 515 | `isAppUrl` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL is "not the app's page": navigation stays blocked, as intended |
 
 #### electron/main/integration.ts
 
@@ -479,7 +479,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 37 | `readCapped` | void | `reader.cancel().catch(() => undefined)` | **NOT-WORTH** | cleanup before the "too large" throw on the next line |
 | 53 | `fetchOfficialFirmware` | fetch | `fetch` | **PASSES-ON** | awaited: the caller of fetchOfficialFirmware handles it _(flow)_ |
 | 55 | `fetchOfficialFirmware` | json-parse | `await readCapped(response, OFFICIAL_FIRM` | **PASSES-ON** | throws to the caller: the caller of fetchOfficialFirmware handles it _(flow)_ |
-| 84 | `lookup` | .catch | `(): OfficialFirmwareLookup => (this.cached ? { latest: this.` | **SHOWN** | desktop.ctrlInfo.officialUnavailable after Refresh (was SILENT-BUG: the card showed nothing); an automatic check keeps the last good answer quietly |
+| 86 | `lookup` | .catch | `(): OfficialFirmwareLookup => (this.cached ? { latest: this.` | **SHOWN** | desktop.ctrlInfo.officialUnavailable after Refresh (was SILENT-BUG: the card showed nothing); an automatic check keeps the last good answer quietly |
 
 #### electron/main/settings.ts
 
@@ -494,20 +494,20 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
 | 42 | `isLoopbackHttp` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL: no test feed |
-| 133 | `pruneStaleFiles` | catch | `empty: readdirSync, rmSync` | **NOT-WORTH** | Best effort; nothing depends on it. |
-| 164 | `check` | catch | `fallback` | **SHOWN** | desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install") |
-| 179 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
-| 184 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
-| 188 | `fetchManifest` | json-parse | `text` | **PASSES-ON** | rethrows to the caller _(via catch L189)_ |
-| 189 | `fetchManifest` | catch | `rethrow: JSON.parse` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 193 | `fetchManifest` | schema | `Manifest.safeParse` | **PASSES-ON** | a malformed manifest throws "the update manifest is malformed" to check()'s catch |
-| 213 | `downloadAndInstall` | catch | `fallback` | **SHOWN** | desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed) |
-| 223 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ |
-| 271 | `install` | catch | `rethrow: renameSync` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 295 | `restart` | spawn | `execFileSync("systemd-run")` | **NOT-WORTH** | systemd-run unavailable _(via catch L297)_ |
-| 297 | `restart` | catch | `empty: child_process` | **NOT-WORTH** | systemd-run unavailable |
-| 301 | `restart` | spawn | `spawn("/bin/sh")` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
-| 304 | `restart` | spawn | `spawn(target)` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
+| 135 | `pruneStaleFiles` | catch | `empty: readdirSync, rmSync` | **NOT-WORTH** | Best effort; nothing depends on it. |
+| 166 | `check` | catch | `fallback` | **SHOWN** | desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install") |
+| 181 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
+| 186 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
+| 190 | `fetchManifest` | json-parse | `text` | **PASSES-ON** | rethrows to the caller _(via catch L191)_ |
+| 191 | `fetchManifest` | catch | `rethrow: JSON.parse` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 195 | `fetchManifest` | schema | `Manifest.safeParse` | **PASSES-ON** | a malformed manifest throws "the update manifest is malformed" to check()'s catch |
+| 215 | `downloadAndInstall` | catch | `fallback` | **SHOWN** | desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed) |
+| 225 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ |
+| 273 | `install` | catch | `rethrow: renameSync` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 297 | `restart` | spawn | `execFileSync("systemd-run")` | **NOT-WORTH** | systemd-run unavailable _(via catch L299)_ |
+| 299 | `restart` | catch | `empty: child_process` | **NOT-WORTH** | systemd-run unavailable |
+| 303 | `restart` | spawn | `spawn("/bin/sh")` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
+| 306 | `restart` | spawn | `spawn(target)` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
 
 #### electron/main/urls.ts
 
@@ -526,18 +526,18 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 62 | `LanguageToggle > map(cb) > onClick=` | .catch | `logged("switching the language (resources are bundled, so no` | **LOGGED-OK** | switching the language (resources are bundled, so nothing to load can fail) _(logged())_ |
-| 62 | `LanguageToggle > map(cb) > onClick=` | void | `i18n.changeLanguage(lang.code).catch(logged("switching the l` | **LOGGED-OK** | switching the language (resources are bundled, so nothing to load can fail) _(via .catch L62)_ |
-| 65 | `LanguageToggle > map(cb) > onClick=` | catch | `empty` | **NOT-WORTH** | storage unavailable: the choice lasts for this session |
+| 62 | `LanguageToggle > onClick=` | .catch | `logged("switching the language (resources are bundled, so no` | **LOGGED-OK** | switching the language (resources are bundled, so nothing to load can fail) _(logged())_ |
+| 62 | `LanguageToggle > onClick=` | void | `i18n.changeLanguage(lang.code).catch(logged("switching the l` | **LOGGED-OK** | switching the language (resources are bundled, so nothing to load can fail) _(via .catch L62)_ |
+| 65 | `LanguageToggle > onClick=` | catch | `empty` | **NOT-WORTH** | storage unavailable: the choice lasts for this session |
 
 #### src/components/ThemeToggle.tsx
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
 | 26 | `readStoredTheme` | catch | `empty` | **NOT-WORTH** | storage blocked: fall back to the default |
-| 70 | `setStoredTheme` | catch | `empty` | **NOT-WORTH** | storage unavailable: the choice lasts for this session |
-| 105 | `useApplyTheme > useEffect(cb)` | ipc-call | `getDesktopPalette` | **LOGGED-OK** | reading the desktop's accent for the Desktop theme (the app's own colors stay) _(via .catch L107)_ |
-| 107 | `useApplyTheme > useEffect(cb)` | .catch | `logged("reading the desktop's accent for the Desktop theme (` | **LOGGED-OK** | reading the desktop's accent for the Desktop theme (the app's own colors stay) _(logged())_ |
+| 71 | `setStoredTheme` | catch | `empty` | **NOT-WORTH** | storage unavailable: the choice lasts for this session |
+| 106 | `useApplyTheme > useEffect(cb)` | ipc-call | `getDesktopPalette` | **LOGGED-OK** | reading the desktop's accent for the Desktop theme (the app's own colors stay) _(via .catch L108)_ |
+| 108 | `useApplyTheme > useEffect(cb)` | .catch | `logged("reading the desktop's accent for the Desktop theme (` | **LOGGED-OK** | reading the desktop's accent for the Desktop theme (the app's own colors stay) _(logged())_ |
 
 #### src/desktop/api.ts
 
@@ -597,12 +597,12 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 454 | `read` | ipc-call | `getDesktopPalette` | **LOGGED-OK** | reading whether the taskbar is dark (for the tray icon; the system setting answers instead) _(via .catch L454)_ |
 | 480 | `useWhatsNew > useState(cb)` | catch | `fallback` | **NOT-WORTH** | storage unavailable: no "What's new" banner this time |
 | 489 | `dismiss` | catch | `empty` | **NOT-WORTH** | storage unavailable: the banner just reappears next launch |
-| 517 | `useGamesAttention > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading the Games consent for the rail's count (the count stays hidden) _(via .catch L524)_ |
-| 522 | `useGamesAttention > useEffect(cb) > then(cb)` | .then-reject | `logged("the background scan for the rail's attention count (` | **LOGGED-OK** | the background scan for the rail's attention count (the Games page scans again and shows its errors) _(logged())_ |
-| 522 | `useGamesAttention > useEffect(cb) > then(cb)` | ipc-call | `gamesScan` | **LOGGED-OK** | the background scan for the rail's attention count (the Games page scans again and shows its errors) _(via .then-reject L522)_ |
-| 524 | `useGamesAttention > useEffect(cb)` | .catch | `logged("reading the Games consent for the rail's count (the ` | **LOGGED-OK** | reading the Games consent for the rail's count (the count stays hidden) _(logged())_ |
-| 541 | `useGamesAttention > useCallback(cb)` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
-| 541 | `useGamesAttention > useCallback(cb)` | void | `setGamesAllowed(value).catch(shown("desktop.errors.settingNo` | **SHOWN** | desktop.errors.settingNotSaved _(via .catch L541)_ |
+| 518 | `useGamesAttention > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading the Games consent for the rail's count (the count stays hidden) _(via .catch L525)_ |
+| 523 | `useGamesAttention > useEffect(cb) > then(cb)` | .then-reject | `logged("the background scan for the rail's attention count (` | **LOGGED-OK** | the background scan for the rail's attention count (the Games page scans again and shows its errors) _(logged())_ |
+| 523 | `useGamesAttention > useEffect(cb) > then(cb)` | ipc-call | `gamesScan` | **LOGGED-OK** | the background scan for the rail's attention count (the Games page scans again and shows its errors) _(via .then-reject L523)_ |
+| 525 | `useGamesAttention > useEffect(cb)` | .catch | `logged("reading the Games consent for the rail's count (the ` | **LOGGED-OK** | reading the Games consent for the rail's count (the count stays hidden) _(logged())_ |
+| 542 | `useGamesAttention > useCallback(cb)` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
+| 542 | `useGamesAttention > useCallback(cb)` | void | `setGamesAllowed(value).catch(shown("desktop.errors.settingNo` | **SHOWN** | desktop.errors.settingNotSaved _(via .catch L542)_ |
 
 #### src/desktop/dev/HdrTest.tsx
 
@@ -615,16 +615,16 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 125 | `<module>` | result-field | `OledFrameState.error: boolean` | **SHOWN** | desktop.dongleConsole.unavailable (the last good frame stays, retried) |
-| 146 | `tick` | catch | `fallback` | **SHOWN** | desktop.dongleConsole.unavailable (retried) |
-| 154 | `next` | .catch | `logged("the OLED mirror poll (it catches its own errors)")` | **LOGGED-OK** | the OLED mirror poll (it catches its own errors) _(logged())_ |
-| 154 | `next` | void | `tick().catch(logged("the OLED mirror poll (it catches its ow` | **LOGGED-OK** | the OLED mirror poll (it catches its own errors) _(via .catch L154)_ |
+| 126 | `<module>` | result-field | `OledFrameState.error: boolean` | **SHOWN** | desktop.dongleConsole.unavailable (the last good frame stays, retried) |
+| 147 | `tick` | catch | `fallback` | **SHOWN** | desktop.dongleConsole.unavailable (retried) |
+| 155 | `next` | .catch | `logged("the OLED mirror poll (it catches its own errors)")` | **LOGGED-OK** | the OLED mirror poll (it catches its own errors) _(logged())_ |
+| 155 | `next` | void | `tick().catch(logged("the OLED mirror poll (it catches its ow` | **LOGGED-OK** | the OLED mirror poll (it catches its own errors) _(via .catch L155)_ |
 
 #### src/desktop/dongle/DongleDashboard.tsx
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 237 | `reset` | catch | `fallback` | **SHOWN** | english: the error next to Reset (board errors are English, batch E3) |
+| 239 | `reset` | catch | `fallback` | **SHOWN** | english: the error next to Reset (board errors are English, batch E3) |
 
 #### src/desktop/firmwareUpdate.ts
 
@@ -669,31 +669,36 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 19 | `useLiquidGlass > useEffect(cb)` | json-parse | `c` | **PASSES-ON** | throws to the caller: the caller of useEffect(cb) handles it _(flow)_ |
 | 20 | `useLiquidGlass > useEffect(cb)` | json-parse | `r` | **PASSES-ON** | throws to the caller: the caller of useEffect(cb) handles it _(flow)_ |
 
+#### src/desktop/library/gameArt.ts
+
+| Line | Function | Kind | Detail | Verdict | Why |
+|---|---|---|---|---|---|
+| 35 | `useArtColor > useEffect(cb)` | void | `window .desktop!.gameArtColor(key) .then((color) => live && ` | **LOGGED-OK** | the game art's color for the page accent and tile (the theme accent stays) _(via .catch L38)_ |
+| 36 | `useArtColor > useEffect(cb)` | ipc-call | `gameArtColor` | **LOGGED-OK** | the game art's color for the page accent and tile (the theme accent stays) _(via .catch L38)_ |
+| 38 | `useArtColor > useEffect(cb)` | .catch | `logged("the game art's color for the page accent and tile (t` | **LOGGED-OK** | the game art's color for the page accent and tile (the theme accent stays) _(logged())_ |
+
 #### src/desktop/library/GameLibrary.tsx
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 86 | `GameLibrary > useEffect(cb)` | .then-reject | `logged("reading play time and art details (the tiles show wi` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(logged())_ |
-| 86 | `GameLibrary > useEffect(cb)` | ipc-call | `gamesDetails` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(via .then-reject L86)_ |
-| 86 | `GameLibrary > useEffect(cb)` | void | `desktop.gamesDetails().then(setDetails, logged("reading play` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(via .then-reject L86)_ |
+| 89 | `GameLibrary > useEffect(cb)` | .then-reject | `logged("reading play time and art details (the tiles show wi` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(logged())_ |
+| 89 | `GameLibrary > useEffect(cb)` | ipc-call | `gamesDetails` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(via .then-reject L89)_ |
+| 89 | `GameLibrary > useEffect(cb)` | void | `desktop.gamesDetails().then(setDetails, logged("reading play` | **LOGGED-OK** | reading play time and art details (the tiles show without them) _(via .then-reject L89)_ |
 
 #### src/desktop/library/GamePage.tsx
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 64 | `GamePage > useEffect(cb)` | void | `window .desktop!.gameArtColor(game.key) .then((c) => live &&` | **LOGGED-OK** | the game art's color for the page accent (the theme accent stays) _(via .catch L67)_ |
-| 65 | `GamePage > useEffect(cb)` | ipc-call | `gameArtColor` | **LOGGED-OK** | the game art's color for the page accent (the theme accent stays) _(via .catch L67)_ |
-| 67 | `GamePage > useEffect(cb)` | .catch | `logged("the game art's color for the page accent (the theme ` | **LOGGED-OK** | the game art's color for the page accent (the theme accent stays) _(logged())_ |
-| 163 | `ProfileFrame > useDebouncedSave(cb)` | ipc-call | `librarySetProfile` | **PASSES-ON** | useDebouncedSave shows a failed save (desktop.errors.librarySave) |
-| 168 | `create` | .catch | `shown("desktop.errors.profileCreate")` | **SHOWN** | desktop.errors.profileCreate _(shown())_ |
-| 168 | `create` | ipc-call | `librarySetProfile` | **SHOWN** | desktop.errors.profileCreate _(via .catch L168)_ |
-| 172 | `remove` | .catch | `shown("desktop.errors.profileDelete")` | **SHOWN** | desktop.errors.profileDelete _(shown())_ |
-| 172 | `remove` | ipc-call | `libraryDeleteProfile` | **SHOWN** | desktop.errors.profileDelete _(via .catch L172)_ |
-| 446 | `apply > thenRescan(cb)` | ipc-call | `gamesApply` | **PASSES-ON** | returned: the caller of thenRescan(cb) handles it _(flow)_ |
-| 451 | `apply` | catch | `fallback` | **SHOWN** | english: the note under Set up (main-process text, or desktop.errors.badRequest) |
-| 601 | `switchRunner > thenRescan(cb)` | ipc-call | `gamesApply` | **PASSES-ON** | returned: the caller of thenRescan(cb) handles it _(flow)_ |
-| 605 | `switchRunner` | catch | `fallback` | **SHOWN** | english: the note under the runner switch (main-process text, or desktop.errors.badRequest) |
-| 711 | `useMine > useDebouncedSave(cb)` | ipc-call | `librarySetMine` | **PASSES-ON** | returned: the caller of useDebouncedSave(cb) handles it _(flow)_ |
+| 154 | `ProfileFrame > useDebouncedSave(cb)` | ipc-call | `librarySetProfile` | **PASSES-ON** | useDebouncedSave shows a failed save (desktop.errors.librarySave) |
+| 159 | `create` | .catch | `shown("desktop.errors.profileCreate")` | **SHOWN** | desktop.errors.profileCreate _(shown())_ |
+| 159 | `create` | ipc-call | `librarySetProfile` | **SHOWN** | desktop.errors.profileCreate _(via .catch L159)_ |
+| 163 | `remove` | .catch | `shown("desktop.errors.profileDelete")` | **SHOWN** | desktop.errors.profileDelete _(shown())_ |
+| 163 | `remove` | ipc-call | `libraryDeleteProfile` | **SHOWN** | desktop.errors.profileDelete _(via .catch L163)_ |
+| 437 | `apply > thenRescan(cb)` | ipc-call | `gamesApply` | **PASSES-ON** | returned: the caller of thenRescan(cb) handles it _(flow)_ |
+| 442 | `apply` | catch | `fallback` | **SHOWN** | english: the note under Set up (main-process text, or desktop.errors.badRequest) |
+| 592 | `switchRunner > thenRescan(cb)` | ipc-call | `gamesApply` | **PASSES-ON** | returned: the caller of thenRescan(cb) handles it _(flow)_ |
+| 596 | `switchRunner` | catch | `fallback` | **SHOWN** | english: the note under the runner switch (main-process text, or desktop.errors.badRequest) |
+| 702 | `useMine > useDebouncedSave(cb)` | ipc-call | `librarySetMine` | **PASSES-ON** | returned: the caller of useDebouncedSave(cb) handles it _(flow)_ |
 
 #### src/desktop/library/playBar.tsx
 
@@ -757,7 +762,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 123 | `save` | catch | `fallback` | **SHOWN** | desktop.errors.boardFailed (causeText: board results in plain words; other board errors English, batch E3) |
+| 124 | `save` | catch | `fallback` | **SHOWN** | desktop.errors.boardFailed (causeText: board results in plain words; other board errors English, batch E3) |
 
 #### src/desktop/live/ControllerInfo.tsx
 
@@ -814,9 +819,9 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 434 | `save` | void | `desktop .librarySetLayout({ id, name: layoutName, table: rem` | **SHOWN** | desktop.errors.layoutSave _(via .catch L437)_ |
 | 435 | `save` | ipc-call | `librarySetLayout` | **SHOWN** | desktop.errors.layoutSave _(via .catch L437)_ |
 | 437 | `save` | .catch | `shown("desktop.errors.layoutSave")` | **SHOWN** | desktop.errors.layoutSave _(shown())_ |
-| 478 | `ButtonLayoutsSection > map(cb) > onClick=` | .catch | `shown("desktop.errors.layoutDelete")` | **SHOWN** | desktop.errors.layoutDelete _(shown())_ |
-| 478 | `ButtonLayoutsSection > map(cb) > onClick=` | ipc-call | `libraryDeleteLayout` | **SHOWN** | desktop.errors.layoutDelete _(via .catch L478)_ |
-| 478 | `ButtonLayoutsSection > map(cb) > onClick=` | void | `desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown` | **SHOWN** | desktop.errors.layoutDelete _(via .catch L478)_ |
+| 478 | `ButtonLayoutsSection > onClick=` | .catch | `shown("desktop.errors.layoutDelete")` | **SHOWN** | desktop.errors.layoutDelete _(shown())_ |
+| 478 | `ButtonLayoutsSection > onClick=` | ipc-call | `libraryDeleteLayout` | **SHOWN** | desktop.errors.layoutDelete _(via .catch L478)_ |
+| 478 | `ButtonLayoutsSection > onClick=` | void | `desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown` | **SHOWN** | desktop.errors.layoutDelete _(via .catch L478)_ |
 | 660 | `AppSettings > useEffect(cb)` | .catch | `shown("desktop.errors.settingsRead")` | **SHOWN** | desktop.errors.settingsRead _(shown())_ |
 | 660 | `AppSettings > useEffect(cb)` | ipc-call | `getSettings` | **SHOWN** | desktop.errors.settingsRead _(via .catch L660)_ |
 | 664 | `set` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
@@ -854,9 +859,9 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 70 | `gone` | void | `controllerSpeaker() .then((now) => { if (now !== sink) stopN` | **LOGGED-OK** | checking the controller's speaker after a device change _(via .catch L74)_ |
-| 74 | `gone` | .catch | `logged("checking the controller's speaker after a device cha` | **LOGGED-OK** | checking the controller's speaker after a device change _(logged())_ |
-| 101 | `playTune` | catch | `fallback` | **SHOWN** | desktop.audioTest.noSpeaker (noSpeaker: couldn't route to the controller) |
+| 71 | `gone` | void | `controllerSpeaker() .then((now) => { if (now !== sink) stopN` | **LOGGED-OK** | checking the controller's speaker after a device change _(via .catch L75)_ |
+| 75 | `gone` | .catch | `logged("checking the controller's speaker after a device cha` | **LOGGED-OK** | checking the controller's speaker after a device change _(logged())_ |
+| 102 | `playTune` | catch | `fallback` | **SHOWN** | desktop.audioTest.noSpeaker (noSpeaker: couldn't route to the controller) |
 
 #### src/desktop/live/StickCurves.tsx
 
@@ -868,8 +873,8 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 217 | `SwirlField > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading hardware acceleration for the backdrop (the CPU drawing is used) _(via .catch L219)_ |
-| 219 | `SwirlField > useEffect(cb)` | .catch | `logged("reading hardware acceleration for the backdrop (the ` | **LOGGED-OK** | reading hardware acceleration for the backdrop (the CPU drawing is used) _(logged())_ |
+| 218 | `SwirlField > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading hardware acceleration for the backdrop (the CPU drawing is used) _(via .catch L220)_ |
+| 220 | `SwirlField > useEffect(cb)` | .catch | `logged("reading hardware acceleration for the backdrop (the ` | **LOGGED-OK** | reading hardware acceleration for the backdrop (the CPU drawing is used) _(logged())_ |
 
 #### src/desktop/live/useRemap.ts
 
@@ -891,9 +896,9 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 57 | `setNarrator` | ipc-call | `setSetting` | **SHOWN** | desktop.errors.settingNotSaved _(via .catch L57)_ |
 | 63 | `setCaptions` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
 | 63 | `setCaptions` | ipc-call | `setSetting` | **SHOWN** | desktop.errors.settingNotSaved _(via .catch L63)_ |
-| 150 | `play > <anonymous>` | .catch | `() => resolve()` | **NOT-WORTH** | a line that won't play (no device, autoplay) just ends; its caption still shows |
-| 152 | `play` | catch | `empty` | **NOT-WORTH** | couldn't route to the controller: stay silent (the caption still shows) |
-| 173 | `sayInPassing` | .catch | `logged("a narrator line that couldn't play (decoration: its ` | **LOGGED-OK** | a narrator line that couldn't play (decoration: its caption still shows) _(logged())_ |
+| 151 | `play > <anonymous>` | .catch | `() => resolve()` | **NOT-WORTH** | a line that won't play (no device, autoplay) just ends; its caption still shows |
+| 153 | `play` | catch | `empty` | **NOT-WORTH** | couldn't route to the controller: stay silent (the caption still shows) |
+| 174 | `sayInPassing` | .catch | `logged("a narrator line that couldn't play (decoration: its ` | **LOGGED-OK** | a narrator line that couldn't play (decoration: its caption still shows) _(logged())_ |
 
 #### src/desktop/pages/AboutPage.tsx
 
@@ -957,8 +962,8 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 20 | `TriggersPage > useEffect(cb) > <anonymous>` | .catch | `() => undefined` | **NOT-WORTH** | leaving the page; a failed "off" leaves the test effect until a game sends its own |
 | 20 | `TriggersPage > useEffect(cb) > <anonymous>` | void | `client.previewTrigger(0).catch(() => undefined)` | **NOT-WORTH** | leaving the page; a failed "off" leaves the test effect until a game sends its own |
 | 31 | `pick` | catch | `fallback` | **SHOWN** | desktop.errors.boardFailed (causeText; other board errors English, batch E3) |
-| 52 | `TriggersPage > map(cb) > onClick=` | .catch | `logged("pick (it shows its own errors)")` | **LOGGED-OK** | pick (it shows its own errors) _(logged())_ |
-| 52 | `TriggersPage > map(cb) > onClick=` | void | `pick(i).catch(logged("pick (it shows its own errors)"))` | **LOGGED-OK** | pick (it shows its own errors) _(via .catch L52)_ |
+| 52 | `TriggersPage > onClick=` | .catch | `logged("pick (it shows its own errors)")` | **LOGGED-OK** | pick (it shows its own errors) _(logged())_ |
+| 52 | `TriggersPage > onClick=` | void | `pick(i).catch(logged("pick (it shows its own errors)"))` | **LOGGED-OK** | pick (it shows its own errors) _(via .catch L52)_ |
 
 #### src/desktop/SetupScreen.tsx
 
@@ -1072,8 +1077,8 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 411 | `command` | .catch | `() => undefined` | **NOT-WORTH** | the queue's own copy; the caller gets \'run\' with the error |
-| 427 | `runCommand` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 412 | `command` | .catch | `() => undefined` | **NOT-WORTH** | the queue's own copy; the caller gets \'run\' with the error |
+| 428 | `runCommand` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
 
 #### src/protocol/officialFirmware.ts
 

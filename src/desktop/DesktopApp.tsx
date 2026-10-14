@@ -501,6 +501,7 @@ function useGamesAttention() {
   const supported = gamesSupported();
   const [allowed, setAllowedState] = useState(false);
   const [count, setCount] = useState(0);
+  // cache: OK — key=none (the last games report); invalidated=each scan, cleared when Games consent is turned off; bound=1 report
   const last = useRef<GamesReport | null>(null);
   const recount = useCallback(() => setCount(last.current ? allFixes(last.current).filter((f) => f.recommended && !loadDeclined().has(f.id)).length : 0), []);
   const update = useCallback(

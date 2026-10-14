@@ -4,9 +4,12 @@
 // mark has a tooltip, so nothing is told by color alone. The Continue
 // playing tiles (ContinuePlaying.tsx) carry the same overlays.
 import { AlertTriangle, AudioWaveform, Crosshair, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameEntry, GameInfo } from "../games/types";
 import { artUrl } from "../games/types";
+import { glassCaption } from "../glass/glassCaption";
+import { firstArt, useArtColor } from "./gameArt";
 import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
 import { supportOf } from "./support";
 
@@ -56,12 +59,19 @@ export function TileOverlays({ game, running, hasProfile }: Omit<TileProps, "inf
   );
 }
 
-export function GameTile({ game, info, running, hasProfile, onOpen }: TileProps) {
-  const art = info?.art.includes("cover") ? "cover" : info?.art.includes("header") ? "header" : null;
+// Glass: the title becomes a caption over the art, tinted with the cover's
+// own color. Static (no backdrop filter): the grid holds every game, and a
+// live blur per tile would cost the GPU on every scrolled frame. The color is
+// asked for once the cover has loaded (covers load lazily, as they scroll in).
+export function GameTile({ game, info, running, hasProfile, onOpen, glass = false }: TileProps & { glass?: boolean }) {
+  const art = firstArt(info, ["cover", "header"]);
+  const [loaded, setLoaded] = useState(false);
+  const artColor = useArtColor(game.key, glass && loaded);
+  const tokens = useMemo(() => (glass ? glassCaption(artColor) : undefined), [glass, artColor]);
   return (
-    <button type="button" className="lib-tile" title={game.title} onClick={onOpen}>
+    <button type="button" className={`lib-tile${glass ? " lib-glass" : ""}`} style={tokens} title={game.title} onClick={onOpen}>
       <span className="lib-tile-art">
-        {art ? <img src={artUrl(game.key, art)} alt="" loading="lazy" /> : <span className="lib-tile-noart">{game.title}</span>}
+        {art ? <img src={artUrl(game.key, art)} alt="" loading="lazy" onLoad={() => setLoaded(true)} /> : <span className="lib-tile-noart">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </span>
       <span className="lib-tile-title">{game.title}</span>

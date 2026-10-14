@@ -72,13 +72,19 @@ repos:
         entry: node tools/list_loops.mjs --check
         language: system
         pass_filenames: false
-        files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/list_loops\.mjs$
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/(list_loops|ts_program)\.mjs$
+      - id: cache-verdicts
+        name: Kept state (caches, memos, mirrors) has a verdict
+        entry: node tools/list_caches.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/(list_caches|ts_program)\.mjs$
       - id: error-verdicts
         name: Every error path has a verdict (no silent failure)
         entry: node tools/list_errors.mjs --check
         language: system
         pass_filenames: false
-        files: ^(src|electron)/.*\.(ts|tsx|js)$|^src/i18n/locales/en\.json$|^tools/(list_errors|tsProgram)\.mjs$
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^src/i18n/locales/en\.json$|^tools/(list_errors|ts_program)\.mjs$
       - id: identical-files
         name: No byte-identical files
         entry: node tools/check_identical_files.mjs

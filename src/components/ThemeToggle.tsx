@@ -60,6 +60,7 @@ function applyDesktopPalette(palette: DesktopPalette | null): void {
 // One theme for the whole app: a tiny store, applied by useApplyTheme() at the
 // app root (so it holds whether or not a toggle is on screen); toggles only
 // read and change it.
+// cache: OK — key=none (the stored theme); invalidated=set by setTheme (writes localStorage too); bound=1 entry
 let currentTheme: Theme | null = null;
 const listeners = new Set<() => void>();
 const getTheme = () => (currentTheme ??= readStoredTheme());

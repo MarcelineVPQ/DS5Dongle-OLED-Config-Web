@@ -34,6 +34,7 @@ const BOLT: ReadonlyArray<[number, number]> = [
   [0.74, 0],
 ];
 
+// cache: FIX-STALE — key=none (the decoded tray art); invalidated=never, also not after a failed decode; bound=1 bitmap (docs/CACHE_PASS_2026-10.md)
 let artPromise: Promise<ImageBitmap> | null = null;
 function art(): Promise<ImageBitmap> {
   // An <img> rather than fetch(): the packaged app loads from file://, which

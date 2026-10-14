@@ -21,6 +21,7 @@ export interface SpeakerPlayback {
 let state: SpeakerPlayback = { playing: false, startedAt: 0, duration: tuneSeconds(), noSpeaker: false };
 const listeners = new Set<() => void>();
 let stopNow: (() => void) | null = null;
+// cache: OK — key=none (the playback in progress); invalidated=cleared when it ends; bound=1 entry
 let running: Promise<void> | null = null;
 
 function set(patch: Partial<SpeakerPlayback>): void {
