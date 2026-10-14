@@ -8,6 +8,23 @@ import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
 import { simulatedCore1Stage, simulatedDongleOn } from "../desktop/devPreview";
 import { logged } from "../errorText";
+import { isWindowShown } from "../desktop/useWindowShown";
+
+// While the window is hidden, an animated lightbar (rainbow, breathing, a
+// charging pulse) changes the identity on every 1 s poll, and each change
+// re-rendered the whole app (a hidden window still draws its frames: GPU
+// process and renderer) and redrew the tray icon (measured hidden with an
+// animated lightbar: ~4.9% of a core). Hidden, a change in nothing but the
+// lightbar color is taken once the color holds for one poll (a new static
+// color reaches the tray icon a second later), and while it keeps changing at
+// most every HIDDEN_LIGHTBAR_MS. Any other change is taken at once, and so is
+// everything while the window is shown.
+export const HIDDEN_LIGHTBAR_MS = 60_000;
+export function takeIdentity(prev: BridgeIdentity | null, next: BridgeIdentity, shown: boolean, lightbarSteady: boolean, takenAt: number, now: number): boolean {
+  if (sameIdentity(prev, next)) return false;
+  if (shown || !prev || lightbarSteady || now - takenAt >= HIDDEN_LIGHTBAR_MS) return true;
+  return !sameIdentity({ ...prev, lightbar: null }, { ...next, lightbar: null });
+}
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
@@ -279,12 +296,25 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     if (!client) return;
     let stopped = false;
     let tick = 0;
+    // When an identity was last taken, and the lightbar the last poll read
+    // (takeIdentity: hidden, a lightbar that keeps changing waits).
+    let takenAt = 0;
+    let lastLightbar: string | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const poll = async () => {
       try {
         if (!operationRef.current) {
           const id = await client.identity();
-          if (!stopped) setIdentity((prev) => (sameIdentity(prev, id) ? prev : id));
+          const now = Date.now();
+          const lightbar = String(id.lightbar);
+          const steady = lightbar === lastLightbar;
+          lastLightbar = lightbar;
+          if (!stopped)
+            setIdentity((prev) => {
+              if (!takeIdentity(prev, id, isWindowShown(), steady, takenAt, now)) return prev;
+              takenAt = now;
+              return id;
+            });
           // Saved by something else (a slot switch, the OLED): flash = RAM now.
           if (!stopped && id.unsaved === false && !isDirtyRef.current) setSavedConfig(configRef.current);
           if (++tick % 2 === 0 && !isDirtyRef.current && !operationRef.current) {

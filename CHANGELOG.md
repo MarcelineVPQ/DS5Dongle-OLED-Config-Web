@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **The app used about 2.6 % of a processor core while hidden in the tray** (6 hours overnight with the board and a controller connected). With an animated lightbar (rainbow, breathing, a charging pulse) the controller's color changed on every one-second check, and each change redrew the hidden window, redrew the tray icon and rebuilt the tray menu. While the window is hidden, a new lightbar color now reaches the tray icon once it holds for a second, and a color that keeps changing updates it at most once a minute; anything else, such as a slot switch, charging or the controller disconnecting, still shows at once, and nothing changes while the window is open. The tray icon is drawn without the graphics card, the tray menu is rebuilt only when what it shows changes, and the running-game check (for game profiles) checks each process's owner once instead of every 2 seconds. Measured hidden for 5 minutes with a simulated board: animated lightbar 4.9 % → 0.4 % of a core, steady lightbar 0.38 % → 0.32 %.
+
 ## [0.9.5-dev.11] - 2026-10-13
 
 ### Fixed
