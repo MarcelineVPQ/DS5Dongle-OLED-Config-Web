@@ -3,7 +3,21 @@
 // tools/budgets.json.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { cpuByType, cpuTotal, descendants, judgeBudgets, formatTable, growthPerWindow, parsePssKb, parseStat, passed, perSecond, procType, type Results } from "../../tools/budgets_lib.mjs";
+import {
+  cpuByType,
+  cpuTotal,
+  descendants,
+  judgeBudgets,
+  formatTable,
+  growthPerWindow,
+  memoryJudged,
+  parsePssKb,
+  parseStat,
+  passed,
+  perSecond,
+  procType,
+  type Results,
+} from "../../tools/budgets_lib.mjs";
 
 const config = JSON.parse(readFileSync(new URL("../../tools/budgets.json", import.meta.url), "utf8"));
 
@@ -114,7 +128,7 @@ describe("judgeBudgets", () => {
     mode: "quick",
     pages: [page("controller", 3, { main: 0.4, renderer: 1, "gpu-process": 40 }), page("about", 10, { main: 0.3, renderer: 0.5 })],
     hidden: { secs: 120, cpu: { main: 0.3, renderer: 0.05, "gpu-process": 0.05, "utility:TracingService": 3 } },
-    memory: { atS: 420, mb: 280 },
+    memory: { atS: 420, mb: 520, byType: { main: 95, renderer: 100, "gpu-process": 245, zygote: 24, "utility:NetworkService": 27, "utility:TracingService": 21 } }, // 246 without GPU and tracing
     soak: null,
     ...over,
   });
@@ -126,6 +140,8 @@ describe("judgeBudgets", () => {
     expect(rows.find((r) => r.budget === "CPU shown, idle" && r.scope === "controller")?.measured).toBe(1.4);
     expect(rows.find((r) => r.budget === "CPU hidden")?.measured).toBe(0.4); // the GPU process counts when hidden, DevTools tracing never
     expect(rows.find((r) => r.budget === "memory growth")?.verdict).toBe("SKIP");
+    expect(rows.find((r) => r.budget === "memory (PSS) without GPU")).toMatchObject({ measured: 246, verdict: "PASS" });
+    expect(rows.find((r) => r.budget === "memory, GPU process")).toMatchObject({ measured: 245, verdict: "INFO" });
     expect(rows.find((r) => r.budget === "CPU hidden, main")).toMatchObject({ measured: 0.3, verdict: "INFO" }); // the running-game check lives there
     expect(passed(rows)).toBe(true);
   });
@@ -136,13 +152,20 @@ describe("judgeBudgets", () => {
       results({
         pages: [page("controller", 54, { main: 0.5, renderer: 1.6 })],
         hidden: { secs: 300, cpu: { main: 0.5 } }, // 0.5 is not < 0.5
-        memory: { atS: 600, mb: 301 },
+        memory: { atS: 600, mb: 276 }, // no breakdown: the total is judged
         soak: { windowS: 1800, samples: Array.from({ length: 31 }, (_, i) => ({ t: i * 60, mb: 250 + i * 0.2 })) }, // 6 MB / 30 min
       }),
     );
     const failed = rows.filter((r) => r.verdict === "FAIL").map((r) => r.budget);
-    expect(failed).toEqual(["idle frames", "CPU shown, idle", "CPU hidden", "memory (PSS)", "memory growth"]);
+    expect(failed).toEqual(["idle frames", "CPU shown, idle", "CPU hidden", "memory (PSS) without GPU", "memory growth"]);
     expect(passed(rows)).toBe(false);
+  });
+
+  it("judges memory without the GPU process, at most the limit", () => {
+    expect(memoryJudged({ mb: 999, byType: { main: 100, renderer: 175, "gpu-process": 600, "utility:TracingService": 20 } })).toBe(275);
+    const at = (byType: Record<string, number>) => judgeBudgets(config, results({ memory: { atS: 600, mb: 0, byType } })).find((r) => r.budget === "memory (PSS) without GPU")?.verdict;
+    expect(at({ main: 100, renderer: 175, "gpu-process": 600 })).toBe("PASS"); // 275 = limit
+    expect(at({ main: 100, renderer: 175.1, "gpu-process": 1 })).toBe("FAIL");
   });
 
   it("passes a shrinking memory trend", () => {

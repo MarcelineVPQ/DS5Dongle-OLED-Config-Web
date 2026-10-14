@@ -9,10 +9,10 @@ The app is a little tool for a controller: it should sip resources, not drink th
 | **Idle frames** | ≤ 10 frames/s on every page | Window shown and focused, nothing changing (a resting controller), on Controller, Pico 2 W, Games Home, a game page, App settings and About. Frames drawn = `Display::DrawAndSwap` events in a DevTools trace. |
 | **CPU shown, idle** | < 2 % of a core per page | Main + renderer + utility processes over the same idle stretch (`/proc/<pid>/stat` ticks of the app's process tree). |
 | **CPU hidden** | < 0.5 % of a core over 5 min | Every app process together, GPU included, with the window hidden in the tray (`BrowserWindow.hide()`, the page sees `data-window-hidden`). For this stretch Fake games is turned off, so the real running-game check runs: it watches this PC's `/proc` (read-only) against the test home's library (`tools/seed_test_library.mjs`, one game with a profile; `DS5_BUDGET_PROFILES=0` takes it out). The main process's share (where that check runs) is its own INFO row. |
-| **Memory** | < 300 MB | PSS (not RSS: shared pages counted once across processes) of every app process together, 10 minutes after start, window in the tray. |
+| **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray. The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
 | **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). |
 
-**Reported, not judged:** the GPU process's CPU while shown. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
+**Reported, not judged:** the GPU process's CPU while shown, and its memory. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
 
 ### Why 10 frames a second (and not the swirl's 12.5)
 
@@ -73,9 +73,10 @@ Every new visual states its idle cost, in the commit and in a comment where it i
 | --- | --- | --- | --- |
 | CPU hidden, 5 min, test library with a game profile | 0.40 % (main 0.37) | 0.33 % (main 0.31) | PASS |
 | CPU hidden, 5 min, no game profiles | 0.40 % (main 0.38) | 0.11 % (main 0.08) | PASS |
-| Memory (PSS) at 10 min | 539 MB | 520 MB | FAIL |
+| Memory (PSS) at 10 min without the GPU process | 253 MB | 246 MB | PASS |
+| GPU process PSS (reported) | 286 MB | 274 MB | INFO |
 | Memory growth over 30 min | - | not run on this base (an earlier `--long` on Electron 43: +4.1 MB) | runs at the release check |
 
-**Memory** is the biggest gap: about 520 MB against 300. By process: GPU ~275 MB (SwiftShader's software framebuffers inflate this; a real GPU driver maps differently), renderer ~100, main ~95, network service ~27, zygote ~24 (DevTools' tracing service, ~21 MB, is left out). Even without the GPU process it is ~245 MB.
+**Memory** without the GPU process is within the 275 MB budget: renderer ~100 MB, main ~95, network service ~27, zygote ~24 (DevTools' tracing service, ~21 MB, is left out). The GPU process adds ~275 MB on SwiftShader (software framebuffers); it is reported so a jump shows.
 
 **The running-game check (Linux)** used ~3.2-3.7 ms a pass on a desktop with ~1000 processes, every 2 s. It now reads each of your processes' short `stat` file instead of `status`, does the costly reads (owner, Wine, environment, command line) once per process and program, and looks every 10 s while the window is in the tray and no game has a profile (2 s otherwise, so profile switching is as quick as before). Main-process JavaScript time over 2 minutes in the tray: 432 → 312 ms with a profile, 392 → 67 ms without.

@@ -77,6 +77,15 @@ export const GPU_TYPE = "gpu-process";
 // of every total.
 export const MEASUREMENT_TYPES = ["utility:TracingService"];
 
+// The memory the budget judges, in MB: every app process except the GPU
+// process (software rendering inflates it; reported apart) and the
+// processes that exist only because we measure. byType: { type: MB }; a
+// result without it falls back to its total.
+export function memoryJudged(memory) {
+  if (!memory.byType) return memory.mb;
+  return Math.round(Object.entries(memory.byType).reduce((sum, [type, mb]) => (type === GPU_TYPE || MEASUREMENT_TYPES.includes(type) ? sum : sum + mb), 0) * 10) / 10;
+}
+
 // Events per second from a trace's event counts.
 export const perSecond = (count, secs) => round1((count ?? 0) / secs);
 
@@ -103,7 +112,7 @@ const strictVerdict = (value, max) => (value == null ? "SKIP" : value < max ? "P
 // unit, verdict } with verdict PASS, FAIL, INFO (reported, not judged) or
 // SKIP (not measured in this mode).
 // results: { mode, pages: [{ page, framesPerS, cpu }], hidden: { secs, cpu },
-//            memory: { atS, mb }, soak: { windowS, samples } | null }
+//            memory: { atS, mb, byType? }, soak: { windowS, samples } | null }
 export function judgeBudgets(config, results) {
   const b = config.budgets;
   const rows = [];
@@ -133,15 +142,11 @@ export function judgeBudgets(config, results) {
     unit: b.hiddenCpu.unit,
     verdict: results.hidden ? "INFO" : "SKIP",
   });
-  const mem = results.memory?.mb ?? null;
-  rows.push({
-    budget: "memory (PSS)",
-    scope: results.memory ? `at ${Math.round(results.memory.atS / 60)} min` : "-",
-    measured: mem,
-    limit: `< ${b.memory.max}`,
-    unit: "MB",
-    verdict: strictVerdict(mem, b.memory.max),
-  });
+  const mem = results.memory ? memoryJudged(results.memory) : null;
+  const at = results.memory ? `at ${Math.round(results.memory.atS / 60)} min` : "-";
+  rows.push({ budget: "memory (PSS) without GPU", scope: at, measured: mem, limit: `≤ ${b.memory.max}`, unit: "MB", verdict: verdict(mem, b.memory.max) });
+  const gpuMem = results.memory?.byType?.[GPU_TYPE] ?? null;
+  rows.push({ budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
   const growth = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
   rows.push({
     budget: "memory growth",

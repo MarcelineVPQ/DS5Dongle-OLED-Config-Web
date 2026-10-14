@@ -9,7 +9,11 @@
       "what": "CPU of the main, renderer and utility processes, window shown and idle, per page (the GPU process is reported, not judged: software rendering on the test display inflates it)"
     },
     "hiddenCpu": { "max": 0.5, "unit": "% of a core", "what": "CPU of every app process together, window hidden in the tray" },
-    "memory": { "max": 300, "unit": "MB PSS", "what": "proportional set size of every app process together, 10 minutes after start (--quick: at the end of its run)" },
+    "memory": {
+      "max": 275,
+      "unit": "MB PSS",
+      "what": "proportional set size of every app process together except the GPU process (reported, not judged: software rendering inflates it), 10 minutes after start"
+    },
     "growth": { "max": 5, "unit": "MB / 30 min", "what": "memory trend over the soak after warm-up (least-squares slope), --long only" }
   },
   "modes": {

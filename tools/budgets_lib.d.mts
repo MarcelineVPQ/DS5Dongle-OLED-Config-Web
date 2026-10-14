@@ -14,7 +14,7 @@ export interface Results {
   mode: string;
   pages: PageResult[];
   hidden: { secs: number; cpu: Record<string, number>; pageSawHide?: boolean } | null;
-  memory: { atS: number; mb: number } | null;
+  memory: { atS: number; mb: number; byType?: Record<string, number> } | null;
   soak: { windowS: number; samples: Array<{ t: number; mb: number }> } | null;
 }
 export interface Row {
@@ -38,6 +38,7 @@ export function cpuByType(before: ProcSample[], after: ProcSample[], secs: numbe
 export function cpuTotal(byType: Record<string, number>, exclude?: string[]): number;
 export const GPU_TYPE: string;
 export const MEASUREMENT_TYPES: string[];
+export function memoryJudged(memory: { mb: number; byType?: Record<string, number> }): number;
 export function perSecond(count: number | undefined, secs: number): number;
 export function growthPerWindow(samples: Array<{ t: number; mb: number }>, windowS: number): number | null;
 export function judgeBudgets(config: BudgetConfig, results: Results): Row[];

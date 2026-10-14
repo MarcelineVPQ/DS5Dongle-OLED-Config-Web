@@ -30,6 +30,7 @@ import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
+import { GPU_TYPE } from "./budgets_lib.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -235,10 +236,16 @@ async function cpuOver(secs) {
 // macOS has no PSS. footprint (the "Memory" column of Activity Monitor:
 // phys_footprint, the process's dirty + compressed memory) is the closest
 // match; ps RSS (counts shared pages in every process) is reported beside it.
+// The budget's rule (tools/budgets_lib.mjs memoryJudged): every app process
+// except the GPU process is judged; the GPU process is reported apart.
 function memory() {
   const procs = appProcs();
-  const rssMb = Math.round(procs.reduce((s, p) => s + p.rssKb, 0) / 102.4) / 10;
+  const gpuPids = new Set(procs.filter((p) => p.type === GPU_TYPE).map((p) => p.pid));
+  const mb = (kb) => Math.round(kb / 102.4) / 10;
+  const rssMb = mb(procs.filter((p) => !gpuPids.has(p.pid)).reduce((s, p) => s + p.rssKb, 0));
+  const gpuRssMb = mb(procs.filter((p) => gpuPids.has(p.pid)).reduce((s, p) => s + p.rssKb, 0));
   let footprintMb = null;
+  let gpuFootprintMb = null;
   let raw;
   try {
     raw = execFileSync(
@@ -248,14 +255,20 @@ function memory() {
     );
     const unit = { KB: 1 / 1024, MB: 1, GB: 1024 };
     let sum = 0;
+    let gpu = 0;
     // footprint prints "<name> [pid]: <64-bit> Footprint: 123 MB (16384 bytes per page)" per process
-    for (const m of raw.matchAll(/Footprint:\s*([\d.]+)\s*(KB|MB|GB)/g)) sum += Number(m[1]) * unit[m[2]];
+    for (const m of raw.matchAll(/\[(\d+)\][^\n]*?Footprint:\s*([\d.]+)\s*(KB|MB|GB)/g)) {
+      const v = Number(m[2]) * unit[m[3]];
+      if (gpuPids.has(Number(m[1]))) gpu += v;
+      else sum += v;
+    }
     if (sum > 0) footprintMb = Math.round(sum * 10) / 10;
+    if (gpu > 0) gpuFootprintMb = Math.round(gpu * 10) / 10;
   } catch (e) {
     raw = `footprint failed: ${e.message}`;
   }
   writeFileSync(join(OUT, `footprint-${Date.now()}.txt`), raw);
-  return { footprintMb, rssMb, processes: procs.length, byType: Object.fromEntries(procs.map((p) => [`${p.type}:${p.pid}`, Math.round(p.rssKb / 102.4) / 10])) };
+  return { footprintMb, gpuFootprintMb, rssMb, gpuRssMb, processes: procs.length, byType: Object.fromEntries(procs.map((p) => [`${p.type}:${p.pid}`, mb(p.rssKb)])) };
 }
 
 const result = { app: opts.app, startedAt: new Date().toISOString() };
@@ -763,7 +776,7 @@ if (result.budgets) {
   md.push("", `Hidden (window in the menu bar, ${b.hidden.secs} s): **${b.hidden.cpu.total}%** of a core in all${lim("hiddenCpu")}; ${esc(JSON.stringify(b.hidden.cpu))}`);
   md.push(
     "",
-    `Memory, shown: footprint **${b.memory.shown.footprintMb ?? "n/a"} MB**, RSS ${b.memory.shown.rssMb} MB (${b.memory.shown.processes} processes); hidden: footprint ${b.memory.hidden.footprintMb ?? "n/a"} MB, RSS ${b.memory.hidden.rssMb} MB${lim("memory")}. macOS has no PSS: footprint (Activity Monitor's Memory) is the closest; RSS counts shared pages in every process.`,
+    `Memory without the GPU process (the budget's rule), shown: footprint **${b.memory.shown.footprintMb ?? "n/a"} MB**, RSS ${b.memory.shown.rssMb} MB (${b.memory.shown.processes} processes in all); hidden: footprint ${b.memory.hidden.footprintMb ?? "n/a"} MB, RSS ${b.memory.hidden.rssMb} MB${lim("memory")}${b.limits?.memory && b.memory.shown.footprintMb != null ? ` → ${b.memory.shown.footprintMb <= b.limits.memory.max ? "within" : "over"} budget` : ""}. GPU process (reported only): footprint ${b.memory.shown.gpuFootprintMb ?? "n/a"} MB, RSS ${b.memory.shown.gpuRssMb} MB. macOS has no PSS: footprint (Activity Monitor's Memory) is the closest; RSS counts shared pages in every process.`,
   );
 }
 md.push(
