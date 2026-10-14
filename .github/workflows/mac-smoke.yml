@@ -79,7 +79,9 @@ jobs:
 
       - name: Install it as a user would, and ask Gatekeeper
         run: |
-          set -uo pipefail
+          # Not -e: codesign / spctl answer "no" with a non-zero exit, which is
+          # what this step records. The setup commands stop it on failure.
+          set +e -uo pipefail
           OUT="$RUNNER_TEMP/mac-smoke"
           mkdir -p "$OUT/screenshots"
           echo "OUT=$OUT" >> "$GITHUB_ENV"
@@ -92,12 +94,12 @@ jobs:
           } > "$G"
           # A browser download carries the quarantine flag; unzipping with
           # ditto (like Archive Utility) passes it to the app.
-          cp "$zip" ~/Downloads/
+          cp "$zip" ~/Downloads/ || exit 1
           dl=~/Downloads/"$(basename "$zip")"
-          xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;$(uuidgen)" "$dl"
+          xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;$(uuidgen)" "$dl" || exit 1
           mkdir -p ~/Downloads/unzipped
-          ditto -x -k "$dl" ~/Downloads/unzipped
-          ditto ~/Downloads/unzipped/"$APP_NAME.app" "$app"
+          ditto -x -k "$dl" ~/Downloads/unzipped || exit 1
+          ditto ~/Downloads/unzipped/"$APP_NAME.app" "$app" || exit 1
           {
             echo "== lipo -archs (main binary, Electron Framework)"
             lipo -archs "$app/Contents/MacOS/$APP_NAME"
@@ -130,7 +132,7 @@ jobs:
           sleep 3
           # README: the first start needs Open (right-click / Open Anyway);
           # here, as the README's fallback, the flag comes off.
-          xattr -dr com.apple.quarantine "$app"
+          xattr -dr com.apple.quarantine "$app" || exit 1
           {
             echo "== spctl --assess after xattr -dr com.apple.quarantine"
             spctl --assess --type execute -vvv "$app" 2>&1; echo "exit $?"
