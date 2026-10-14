@@ -1,0 +1,195 @@
+name: macOS smoke test
+
+# We have no Mac: this is where the app is run on one. GitHub's macOS runner
+# is a real Apple Silicon Mac with a logged-in desktop. The job builds the
+# universal app the way the release does (firmware repo,
+# .github/workflows/release.yml: electron-vite build + electron-builder --mac,
+# the zip users download), with the Developer card built in (DS5_DEV_TOOLS=1,
+# for the simulated board and Fake games). It then installs it the way a user
+# does (a quarantined download, unzipped, moved to /Applications), records
+# what Gatekeeper says, starts it and drives it (tools/mac_smoke.mjs).
+# Screenshots, logs and numbers are the run's "mac-smoke" artifact; the job
+# summary has the table.
+#
+# When: once per release check, never on every push (docs: the gate levels).
+#   - every release tag (tools/release.sh pushes vX.Y.Z[-dev.N]-oled-edition
+#     to this repo too): runs on the tagged app;
+#   - before tagging, or any time: gh workflow run mac-smoke.yml --ref master
+#     (or a branch). macOS minutes are free on this public repo.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+-oled-edition"
+      - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+-oled-edition"
+  workflow_dispatch:
+    inputs:
+      firmware:
+        description: "Firmware release to bundle (a vX.Y.Z[-dev.N]-oled-edition tag); empty = the newest one"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mac-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: DS5 Dongle OLED Edition Configurator
+  FIRMWARE_REPO: MarcelineVPQ/DS5Dongle-OLED-Edition
+
+jobs:
+  smoke:
+    name: macOS smoke test
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - run: npx -y npm@11.6.2 ci
+
+      - name: Bundle a published firmware (as the release does)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WANT: ${{ inputs.firmware }}
+        run: |
+          set -euo pipefail
+          tag="$WANT"
+          if [ -z "$tag" ]; then
+            tag="$(gh release list -R "$FIRMWARE_REPO" --exclude-drafts -L 30 --json tagName -q '[.[] | select(.tagName | endswith("-oled-edition"))][0].tagName')"
+          fi
+          echo "Firmware: $tag"
+          mkdir -p fw resources/firmware
+          gh release download "$tag" -R "$FIRMWARE_REPO" -p 'ds5-bridge-oled-*.uf2' -D fw
+          cp fw/ds5-bridge-oled-*.uf2 resources/firmware/ds5-bridge-oled.uf2
+          printf '{"version":"%s","file":"ds5-bridge-oled.uf2","sha256":"%s"}\n' "$tag" "$(shasum -a 256 resources/firmware/ds5-bridge-oled.uf2 | cut -d' ' -f1)" > resources/firmware/firmware.json
+          curl -fsSL "https://raw.githubusercontent.com/$FIRMWARE_REPO/$tag/CHANGELOG.md" -o resources/firmware/CHANGELOG.md
+
+      - name: Build the universal app (dev tools on)
+        env:
+          DS5_DEV_TOOLS: "1"
+          DS5_REQUIRE_FIRMWARE_CHANGELOG: "1"
+        run: npx electron-vite build && npx electron-builder --mac --publish never
+
+      - name: Install it as a user would, and ask Gatekeeper
+        timeout-minutes: 8
+        run: |
+          # Not -e: codesign / spctl answer "no" with a non-zero exit, which is
+          # what this step records. The setup commands stop it on failure.
+          set +e -uo pipefail
+          # A time limit for anything that can wait on a dialog (macOS has no timeout(1)).
+          limit() { perl -e '$t = shift; alarm $t; exec @ARGV or die "exec: $!"' "$@"; }
+          # Gatekeeper's "Not Opened" dialogs: press Done, as a user would.
+          dismiss() {
+            for _ in 1 2 3 4 5; do
+              limit 15 osascript -e 'tell application "System Events" to tell process "CoreServicesUIAgent" to click button "Done" of window 1' > /dev/null 2>&1 || break
+              sleep 1
+            done
+          }
+          OUT="$RUNNER_TEMP/mac-smoke"
+          mkdir -p "$OUT/screenshots"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          G="$OUT/gatekeeper.txt"
+          zip="$(ls release/*-mac-universal.zip)"
+          app="/Applications/$APP_NAME.app"
+          {
+            echo "== sw_vers"; sw_vers
+            echo "== the download: $(basename "$zip"), $(du -h "$zip" | cut -f1)"
+          } > "$G"
+          # A browser download carries the quarantine flag; unzipping with
+          # ditto (like Archive Utility) passes it to the app.
+          cp "$zip" ~/Downloads/ || exit 1
+          dl=~/Downloads/"$(basename "$zip")"
+          xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;$(uuidgen)" "$dl" || exit 1
+          mkdir -p ~/Downloads/unzipped
+          ditto -x -k "$dl" ~/Downloads/unzipped || exit 1
+          ditto ~/Downloads/unzipped/"$APP_NAME.app" "$app" || exit 1
+          {
+            echo "== lipo -archs (main binary, Electron Framework)"
+            lipo -archs "$app/Contents/MacOS/$APP_NAME"
+            lipo -archs "$app/Contents/Frameworks/Electron Framework.framework/Electron Framework"
+            echo "== xattr -l (after unzip + move to Applications)"
+            xattr -l "$app"
+            echo "== codesign -dv --verbose=4"
+            codesign -dv --verbose=4 "$app" 2>&1
+            echo "== codesign --verify --deep --strict"
+            codesign --verify --deep --strict --verbose=2 "$app" 2>&1; echo "exit $?"
+            echo "== spctl --assess --type execute (quarantined, as downloaded)"
+            spctl --assess --type execute -vvv "$app" 2>&1; echo "exit $?"
+          } >> "$G" 2>&1
+          archs="$(lipo -archs "$app/Contents/MacOS/$APP_NAME")"
+          case "$archs" in *arm64*x86_64*|*x86_64*arm64*) ;; *) echo "::error::not universal: $archs"; cat "$G"; exit 1 ;; esac
+          # Double-click it, as a user would on first start (Gatekeeper's check).
+          limit 30 open "$app" 2>&1 | tee -a "$G"
+          sleep 15
+          limit 20 screencapture -x "$OUT/screenshots/000-gatekeeper-first-open.png" || echo "screencapture failed" >> "$G"
+          {
+            echo "== first open of the quarantined app: did it start?"
+            pgrep -fl "$app/Contents/MacOS/" || echo "no app process: Gatekeeper blocked it"
+            echo "== the dialog's text (System Events)"
+            limit 20 osascript -e 'tell application "System Events" to get value of static texts of windows of process "CoreServicesUIAgent"' 2>&1 || echo "(no answer: exit $?)"
+            echo "== syspolicyd's log"
+            limit 60 log show --last 2m --style compact --predicate 'process == "syspolicyd" AND (eventMessage CONTAINS[c] "DS5" OR eventMessage CONTAINS[c] "assess" OR eventMessage CONTAINS[c] "Gatekeeper")' 2>&1 | tail -n 25
+          } >> "$G" 2>&1
+          pkill -f "$app/Contents/MacOS/" || true
+          dismiss
+          sleep 3
+          # The usual advice once macOS refused it (and what "Open Anyway" in
+          # System Settings → Privacy & Security amounts to): take the flag off.
+          xattr -dr com.apple.quarantine "$app" || exit 1
+          {
+            echo "== spctl --assess after xattr -dr com.apple.quarantine"
+            spctl --assess --type execute -vvv "$app" 2>&1; echo "exit $?"
+            echo "== open again after xattr -dr com.apple.quarantine"
+            limit 30 open "$app" 2>&1; echo "exit $?"
+            sleep 10
+            pgrep -fl "$app/Contents/MacOS/" || echo "no app process: still refused"
+          } >> "$G" 2>&1
+          pkill -f "$app/Contents/MacOS/" || true
+          dismiss
+          sleep 3
+          # The run itself uses a copy that was never refused: extracted from
+          # the zip without the download flag, so its first open is a clean one.
+          rm -rf "$app" ~/Downloads/fresh
+          ditto -x -k "$zip" ~/Downloads/fresh || exit 1
+          ditto ~/Downloads/fresh/"$APP_NAME.app" "$app" || exit 1
+          cat "$G"
+
+      - name: Start it from /Applications and drive it
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          app="/Applications/$APP_NAME.app"
+          # As a user starts it (LaunchServices: Finder, Dock, Spotlight).
+          if ! open -a "$app" --stdout "$OUT/main-stdout.log" --stderr "$OUT/main-stderr.log" --args --remote-debugging-port=9334 --inspect=9335; then
+            echo "::error::LaunchServices refused to open the installed app; starting the binary directly so the rest still runs"
+            echo "LaunchServices refused the clean install (open -a failed)" > "$OUT/launch-refused.txt"
+            nohup "$app/Contents/MacOS/$APP_NAME" --remote-debugging-port=9334 --inspect=9335 > "$OUT/main-stdout.log" 2> "$OUT/main-stderr.log" &
+          fi
+          node tools/mac_smoke.mjs --app "$app" --port 9334 --inspect 9335 --log "$OUT/main-stdout.log,$OUT/main-stderr.log" --out "$OUT"
+
+      - name: Job summary
+        if: always()
+        run: |
+          [ -f "$OUT/summary.md" ] && cat "$OUT/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo
+            echo "<details><summary>What Gatekeeper says (unsigned build)</summary>"
+            echo
+            echo '```'
+            cat "$OUT/gatekeeper.txt" 2>/dev/null
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots, logs and numbers
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mac-smoke
+          path: ${{ runner.temp }}/mac-smoke/
+          retention-days: 30

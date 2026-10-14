@@ -285,7 +285,9 @@ export default function DesktopApp() {
     // loop: NOT-WORTH — N = 3 numbers; only when the tray icon's inputs change
     const rgb = lightbarKey ? (lightbarKey.split(",").map(Number) as [number, number, number]) : null;
     let cancelled = false;
-    void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", darkTaskbar, lightbar: rgb, charging })
+    // macOS: a template image (the menu bar tints it; trayIcon.ts).
+    const template = window.desktop.platform === "darwin";
+    void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", darkTaskbar, lightbar: rgb, charging, template })
       .then((png) => !cancelled && window.desktop?.setTrayIcon(png))
       .catch(logged("drawing the tray icon (the tray keeps its last icon)"));
     return () => {

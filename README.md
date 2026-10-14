@@ -75,7 +75,7 @@ It can come back if a real DualSense is plugged into the PC by USB again; press 
 
 We don't have a Mac to test on, but 0.9.5-dev.6 was [reported working on macOS 27.0.1](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues/17) (thanks, @wfsg00098!). More reports are welcome.
 
-Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time, right-click the app and choose **Open**. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
+Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time macOS says *"DS5 Dongle OLED Edition Configurator" Not Opened: Apple could not verify it is free of malware* and offers only **Move to Trash** or **Done**. Choose **Done**, then open *System Settings → Privacy & Security*, scroll down to the message about the app and choose **Open Anyway**. (On macOS 14 and older, right-click the app and choose **Open** instead.) Or, in Terminal: `xattr -dr com.apple.quarantine "/Applications/DS5 Dongle OLED Edition Configurator.app"`, then open it as usual. After that it starts normally. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
 
 ## Updates
 
