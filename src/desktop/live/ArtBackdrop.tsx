@@ -13,6 +13,7 @@ import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { readPref, usePref } from "../storage";
 import { artUrl } from "../games/types";
+import { gamesSupported } from "../games/platform";
 import SwirlField from "./SwirlField";
 import { useWindowFocused, useWindowShown } from "../useWindowShown";
 import { useReducedMotion } from "../motion";
@@ -61,12 +62,13 @@ function useBackdropKeys(): string[] {
   const [running, setRunning] = useState<string | null>(null);
   // lifetime: OK — cleanup: stops the retry timer, drops late reads, unsubscribes the running game
   useEffect(() => {
-    if (!desktop) return;
+    // No Games where it isn't supported (macOS): no art to ask for, colors only
+    // (asking threw in the main process at every start: macOS smoke test).
+    if (!desktop || !gamesSupported()) return;
     let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     // The first scan runs in the background at start: until it's done the
-    // details are empty, so ask again for a minute (no consent / not Linux:
-    // colors only).
+    // details are empty, so ask again for a minute (no consent: colors only).
     const load = (tries: number): void =>
       void desktop
         .gamesDetails()

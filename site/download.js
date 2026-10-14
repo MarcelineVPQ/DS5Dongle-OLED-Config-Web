@@ -86,7 +86,7 @@ async function main() {
   } else if (os === "macos") {
     note.hidden = false;
     note.textContent =
-      "We can't test the macOS build ourselves, but it has been reported working on macOS 27.0.1. Unzip it, move the app to Applications, and right-click → Open the first time (it isn't notarized). Reports welcome!";
+      "We can't test the macOS build ourselves, but it has been reported working on macOS 27.0.1. Unzip it and move the app to Applications. It isn't signed yet: the first time macOS refuses it, choose Done, then System Settings → Privacy & Security → Open Anyway (macOS 14 and older: right-click → Open). Reports welcome!";
   }
 }
 

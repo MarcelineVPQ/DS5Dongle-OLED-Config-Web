@@ -39,6 +39,8 @@ The app is meant to sip resources, not drink them. Measured before and after thi
 
 ### Fixed
 
+- **macOS: the menu-bar icon follows a light or dark menu bar.** It is now a template image, which macOS tints: a filled dot when the controller is connected, a hollow ring when the board has no controller, no dot and a faded controller without a board, and the charging bolt cut out of the controller. Linux and Windows keep their colored icon.
+- **macOS: no error lines at every start.** Launch at login is only changed when it differs from the setting (unregistering a login item that was never registered logged an error), and the Controller page no longer asks for game art where the Games page doesn't exist.
 - **Firmware updates and first-time setup** (found by running them against the simulated board):
   - The first install's progress bar on the setup screen never showed; it now fills as the firmware is written.
   - After a finished update, the board leaving USB again (its controller turning off, or unplugging it) brought back "Updating firmware, don't unplug" and hid the setup screen. A finished update now stays finished.

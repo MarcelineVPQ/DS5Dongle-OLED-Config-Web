@@ -65,6 +65,8 @@ export class AppTray {
     const image = nativeImage.createEmpty();
     image.addRepresentation({ scaleFactor: 2, dataURL: pngDataUrl });
     if (image.isEmpty()) return;
+    // macOS: the renderer drew a template image (black + alpha); the menu bar tints it.
+    if (process.platform === "darwin") image.setTemplateImage(true);
     this.custom = true;
     this.tray.setImage(image);
   }
@@ -79,6 +81,13 @@ export class AppTray {
   }
 
   private icon(state: TrayState) {
+    // macOS: one template image (tools/prepare_tray_template.py) until the
+    // renderer draws the live one with its state; the menu bar tints it.
+    if (process.platform === "darwin") {
+      const template = nativeImage.createFromPath(join(this.resourcesDir, "trayTemplate.png"));
+      template.setTemplateImage(true);
+      return template;
+    }
     // nativeImage picks up the @2x file next to it for HiDPI trays.
     const size = process.platform === "win32" ? 32 : 22;
     return nativeImage.createFromPath(join(this.resourcesDir, `tray-${state}-${size}.png`));

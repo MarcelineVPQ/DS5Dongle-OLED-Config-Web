@@ -206,6 +206,15 @@ describe("the background's pan and zoom", () => {
     // No CSS crossfade either: the opacity follows --bd-fade.
     expect(/\.art-bd-layer \{[^}]*\}/.exec(css)?.[0]).not.toMatch(/transition/);
   });
+
+  it("doesn't ask for game art where Games isn't supported (macOS: it threw in the main process)", async () => {
+    vi.resetModules();
+    const gamesDetails = vi.fn(() => Promise.resolve({}));
+    vi.stubGlobal("desktop", { ...window.desktop, platform: "darwin", gamesDetails });
+    await mountArt();
+    await advance(5000);
+    expect(gamesDetails).not.toHaveBeenCalled();
+  });
 });
 
 describe("the Connected dot", () => {
