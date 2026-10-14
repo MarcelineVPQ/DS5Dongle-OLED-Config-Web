@@ -33,6 +33,12 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = ["next", "progress", "planned", 
 export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
+  {
+    column: "next",
+    title: "Notifications in the app",
+    text: "Short messages for what just happened, at the bottom right: changes saved, copied, a game's profile on or off, a controller connected. They close by themselves, wait while you point at them, and have a × to close.",
+    areas: ["app"],
+  },
   { column: "next", title: "Our own color picker", text: "A color picker in the app's look, with hex and R/G/B fields, recent colors and full keyboard use.", areas: ["app"], high: true },
   {
     column: "next",
@@ -394,7 +400,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "A small always-on-top window (or a KDE widget) with your controller moving live: buttons, sticks, triggers and the light bar, plus battery and signal.",
     areas: ["controller", "app"],
   },
-  { column: "planned", title: "Notifications in the app", text: "Short messages for what just happened: a change saved, a game's profile switched on, an error with what to do next.", areas: ["app"] },
+
   {
     column: "planned",
     title: "Desktop notifications",

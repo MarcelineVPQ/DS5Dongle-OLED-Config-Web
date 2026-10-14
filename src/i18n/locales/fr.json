@@ -1669,6 +1669,12 @@
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette."
+    },
+    "toast": {
+      "region": "Notifications",
+      "controllerConnected": "Manette connectée",
+      "controllerDisconnected": "Manette déconnectée",
+      "profileOff": "Profil {{title}} désactivé : tes paramètres habituels sont rétablis"
     }
   },
   "ad": {

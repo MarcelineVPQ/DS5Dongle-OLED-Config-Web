@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Added
 
 - **Developer: "Fake games"** (dev builds, Developer card): Games shows a made-up library of 20 games across Steam, Heroic (GOG, Epic, Amazon, sideloaded) and Lutris, with generated art, every DualSense support tier, setup that needs attention, HDR in each state, a running game and play history, so the Games pages can be worked on without launchers, a board or a controller. Play, Apply, Undo and Install change only the made-up library: no launcher file is read or written and nothing is started. Turning it off brings back the real scan. All 7 languages.
+- **Short notifications at the bottom right.** One kind of message for the whole app, for what just happened: "All changes saved" after Save, "Copied" for the HDR lines, the factory reset done, a game's profile going on or off by itself, and a controller connecting or disconnecting. Each closes by itself after a few seconds (longer for longer text), waits while you point at it or tab to it, and has a × to close; screen readers read it out without interrupting. At most three show at once, the same message never twice, and nothing piles up while the app is in the tray. When the narrator's caption already says it, the notification stays away. Errors and things you need to act on still stay at the top of the page until you close them.
 
 ### Changed
 

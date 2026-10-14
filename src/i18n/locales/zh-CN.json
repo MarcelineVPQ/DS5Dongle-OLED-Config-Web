@@ -1661,6 +1661,12 @@
     },
     "notices": {
       "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "控制器已连接",
+      "controllerDisconnected": "控制器已断开连接",
+      "profileOff": "{{title}} 配置文件已关闭：已恢复常规设置"
     }
   },
   "ad": {

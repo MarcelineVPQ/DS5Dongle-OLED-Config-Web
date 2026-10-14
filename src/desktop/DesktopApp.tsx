@@ -36,6 +36,8 @@ import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
+import Toasts from "./Toasts";
+import { announce, showToast } from "./toast";
 import { firmwareNarratorValue, sayInPassing, useNarrator } from "./narrator";
 import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 import { identityChargeState } from "../protocol/controllerInfo";
@@ -173,6 +175,37 @@ export default function DesktopApp() {
   const barRef = useGlass(glass, CLEAR_GLASS_BAR);
   const firmware = bridge.firmwareVersion;
   const controllerOn = Boolean(connected && liveIdentity?.controllerConnected);
+  // Events (toasts): a controller connecting or going away while the board
+  // stays connected (not the one already there at start), and a game's
+  // profile going on or off by itself (not while one is being edited).
+  const wasControllerOn = useRef<boolean | null>(null);
+  const hasIdentity = connected && !!liveIdentity;
+  const firmwareNarrates = !!((liveIdentity?.features ?? 0) & IDENTITY_FEATURES.narrator);
+  // lifetime: OK — acquires nothing (a toast when the controller comes or goes)
+  useEffect(() => {
+    if (!hasIdentity) {
+      wasControllerOn.current = null;
+      return;
+    }
+    const was = wasControllerOn.current;
+    wasControllerOn.current = controllerOn;
+    if (was === null || was === controllerOn) return;
+    // The board says its own "Connected" when it has the narrator.
+    if (controllerOn) announce("desktop.toast.controllerConnected", firmwareNarrates ? null : "app_controller");
+    else showToast("desktop.toast.controllerDisconnected");
+  }, [hasIdentity, controllerOn, firmwareNarrates]);
+  const activeProfile = profiles.active?.title ?? null;
+  const wasProfile = useRef<string | null>(null);
+  const editingProfile = !!profiles.editing;
+  // lifetime: OK — acquires nothing (a toast when a game profile goes on or off)
+  useEffect(() => {
+    const was = wasProfile.current;
+    // A profile being edited is on because of that: not an event.
+    wasProfile.current = editingProfile ? null : activeProfile;
+    if (editingProfile || was === activeProfile) return;
+    if (activeProfile) showToast("desktop.bar.profileActive", { vars: { title: activeProfile } });
+    else if (was) showToast("desktop.toast.profileOff", { vars: { title: was } });
+  }, [activeProfile, editingProfile]);
   const charge = controllerOn && liveIdentity ? identityChargeState(liveIdentity) : null;
   const power = charge === "charging" || charge === "pluggedIn" || charge === "full" ? charge : null;
   const charging = power === "charging";
@@ -377,6 +410,7 @@ export default function DesktopApp() {
                 <SetupScreen supported={bridge.supported} />
               ))}
           </main>
+          <Toasts />
 
           {connected && !standalone && (
             <footer className="dk-bar" ref={barRef}>
@@ -412,7 +446,7 @@ export default function DesktopApp() {
                     disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
                     onClick={() =>
                       bridge.saveToFlash().then((ok) => {
-                        if (ok) sayInPassing("app_saved");
+                        if (ok) announce("desktop.bar.saved", "app_saved");
                       })
                     }
                   >

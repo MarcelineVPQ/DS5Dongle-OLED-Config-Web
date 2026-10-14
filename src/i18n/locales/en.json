@@ -1668,6 +1668,12 @@
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected."
+    },
+    "toast": {
+      "region": "Notifications",
+      "controllerConnected": "Controller connected",
+      "controllerDisconnected": "Controller disconnected",
+      "profileOff": "{{title}} profile is off: your normal settings are back"
     }
   },
   "ad": {

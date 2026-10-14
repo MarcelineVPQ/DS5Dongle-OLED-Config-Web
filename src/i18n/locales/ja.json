@@ -1661,6 +1661,12 @@
     },
     "notices": {
       "volumeRestored": "コントローラーの音量を最大に戻しました: コントローラーの再接続後にまた低くなっていました。"
+    },
+    "toast": {
+      "region": "通知",
+      "controllerConnected": "コントローラーが接続されました",
+      "controllerDisconnected": "コントローラーの接続が切れました",
+      "profileOff": "{{title}} のプロファイルをオフにしました。通常の設定に戻りました"
     }
   },
   "ad": {

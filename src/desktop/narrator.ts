@@ -115,6 +115,12 @@ export function hasLine(key: string): boolean {
   return URLS.has(`en/${key}`);
 }
 
+// Whether saying `key` now puts its caption on screen: then a toast for the
+// same event would say it twice (the toast system's "never duplicated" rule).
+export function captionShows(key: string): boolean {
+  return captionsOn && setting !== "ask" && onScreen() && hasLine(key);
+}
+
 // cache: OK — key=none (the clip playing); invalidated=replaced or cleared when a clip ends; bound=1 element
 let current: HTMLAudioElement | null = null;
 let chain: Promise<void> = Promise.resolve();
@@ -130,8 +136,8 @@ export function stopNarrator(): void {
 
 // lifetime: OK — fires once (caption linger)
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-// Long enough to read: about 60 ms a character, at least 2 s.
-const readingTime = (text: string) => Math.max(2000, text.length * 60);
+// Long enough to read: about 60 ms a character, at least 2 s (the captions; toasts keep theirs longer).
+export const readingTime = (text: string, minMs = 2000) => Math.max(minMs, text.length * 60);
 
 // Voice through the controller (when it's there) with the caption, or the
 // caption alone. The caption lingers a moment after she stops.

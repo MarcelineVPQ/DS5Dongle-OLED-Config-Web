@@ -1669,6 +1669,12 @@
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou."
+    },
+    "toast": {
+      "region": "Notificações",
+      "controllerConnected": "Controle conectado",
+      "controllerDisconnected": "Controle desconectado",
+      "profileOff": "Perfil de {{title}} desativado: suas configurações normais voltaram"
     }
   },
   "ad": {
