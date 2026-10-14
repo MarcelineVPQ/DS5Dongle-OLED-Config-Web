@@ -31,6 +31,7 @@ import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, Rest
 import { allFixes } from "../games/types";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import { logged } from "../../errorText";
+import { feedProblemKey } from "../useUpdates";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -348,7 +349,9 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
     setProtonMessage(null);
     try {
       const r = await desktop.installProton();
-      setProtonMessage(r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.message);
+      setProtonMessage(
+        r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.problem ? t(feedProblemKey(r.problem, "desktop.updateFeed.offline")) : r.message,
+      );
       await rescan();
     } catch (cause) {
       // error: SHOWN — english: the Proton card's message (main-process text, batch E3)

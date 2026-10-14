@@ -6,7 +6,7 @@ import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
 import { sayInPassing } from "../narrator";
-import type { FirmwareUpdate } from "../useUpdates";
+import { feedProblemKey, type FirmwareUpdate } from "../useUpdates";
 import { logged } from "../../errorText";
 
 export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
@@ -53,7 +53,11 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                 ? t("desktop.firmware.unpublished")
                 : fw.problem === "disabled"
                   ? t("desktop.firmware.disabled")
-                  : t("desktop.firmware.offline")}
+                  : fw.problem === "unsigned"
+                    ? t("desktop.firmware.unsigned")
+                    : fw.problem === "malformed"
+                      ? t("desktop.firmware.malformed")
+                      : t("desktop.firmware.offline")}
           </dd>
         </dl>
         <div className="dk-ctl" style={{ justifyContent: "flex-start", flexWrap: "wrap", gap: 8, paddingBottom: 6 }}>
@@ -86,7 +90,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           <BusyButton
             onClick={async () => {
               setChecked(null);
-              // error: NOT-WORTH — the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline)
+              // error: NOT-WORTH — the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline, or desktop.updateFeed.unsigned / .malformed)
               const [, lookup] = await Promise.all([window.desktop?.checkForUpdates().catch(() => undefined), fw.refreshLatest()]);
               setChecked(
                 lookup.latest
@@ -95,7 +99,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                     : t("desktop.firmware.checkedCurrent")
                   : lookup.problem === "unpublished"
                     ? t("desktop.firmware.checkedNone")
-                    : t("desktop.firmware.checkedOffline"),
+                    : t(feedProblemKey(lookup.problem, "desktop.firmware.checkedOffline")),
               );
             }}
           >

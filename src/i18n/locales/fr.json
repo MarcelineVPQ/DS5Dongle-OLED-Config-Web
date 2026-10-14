@@ -270,6 +270,8 @@
       "updateHint": "{{device, capitalize}} redémarre dans son bootloader, reçoit le firmware puis redémarre automatiquement. Ne débranche rien ; appuie ensuite sur PS sur la manette.",
       "unpublished": "aucune version publiée pour l'instant",
       "offline": "vérification impossible (hors ligne)",
+      "unsigned": "vérification impossible (le flux de mises à jour n’a pas passé son contrôle de sécurité)",
+      "malformed": "vérification impossible (flux de mises à jour illisible)",
       "bundled": "incluse dans l'app",
       "checkedNewer": "Vérifié à l'instant : {{version}} est disponible.",
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",
@@ -573,6 +575,11 @@
       "checkedFwNewer": "Le firmware {{version}} est disponible pour {{device}} : vois le bandeau en haut.",
       "checkedFwCurrent": "Le firmware {{device_de}} est à jour ({{version}}).",
       "checkFailed": "Impossible de vérifier les mises à jour. Es-tu en ligne ?"
+    },
+    "updateFeed": {
+      "offline": "Impossible de joindre le serveur de mises à jour. Vérifie la connexion Internet et réessaie.",
+      "unsigned": "Le flux de mises à jour n’a pas passé son contrôle de sécurité, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
+      "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard."
     },
     "live": {
       "part": {
@@ -1455,6 +1462,7 @@
       "joinNoNotes": "Pas encore de notes pour cette version dans le flux.",
       "joinNotesLink": "Lire les notes de version sur GitHub",
       "joinOffline": "Le canal de développement est injoignable pour l’instant (hors ligne ?). Tu peux quand même rejoindre ; la mise à jour apparaîtra dès qu’il sera joignable.",
+      "joinUnpublished": "Aucune version de développement n’a encore été publiée. Tu peux quand même rejoindre ; la mise à jour apparaîtra dès qu’il y en aura une.",
       "joinButton": "Rejoindre le canal de développement",
       "stayButton": "Rester sur stable",
       "joinCheckOff": "La recherche automatique de mises à jour est désactivée, rien n’a donc été récupéré.",

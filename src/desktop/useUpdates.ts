@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
-import type { FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
+import type { FeedProblem, FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
 import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
 import { logged } from "../errorText";
@@ -53,10 +53,19 @@ export function firmwareOffer(latest: string | null | undefined, installed: stri
   return { available: isNewer(latest, installed) || backToStable, backToStable };
 }
 
+// The message for a failed update check: the refused feed's own words, or
+// `offlineKey` when the server couldn't be reached (never "offline?" when the
+// network worked).
+export function feedProblemKey(problem: FeedProblem | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+  if (problem === "unsigned") return "desktop.updateFeed.unsigned";
+  if (problem === "malformed") return "desktop.updateFeed.malformed";
+  return offlineKey;
+}
+
 export interface FirmwareUpdate {
   latest: LatestFirmware | null;
-  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest)
-  problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, or offline
+  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline / unsigned / malformed under Latest)
+  problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, offline, or the feed was refused
   available: boolean;
   backToStable: boolean; // the offer is the stable version, older than this development build
   state: FirmwareUpdateState;

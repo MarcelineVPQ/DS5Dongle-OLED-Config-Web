@@ -270,6 +270,8 @@
       "updateHint": "{{device}} 会重启到引导程序、写入固件并自动重启。请保持插入；之后按控制器上的 PS 键。",
       "unpublished": "尚未发布版本",
       "offline": "无法检查（离线）",
+      "unsigned": "无法检查（更新源未通过安全检查）",
+      "malformed": "无法检查（无法读取更新源）",
       "bundled": "随应用附带",
       "checkedNewer": "刚刚检查：{{version}} 可用。",
       "checkedCurrent": "刚刚检查：已是最新版本。",
@@ -570,6 +572,11 @@
       "checkedFwNewer": "{{device}} 的固件 {{version}} 可用：请查看顶部的横幅。",
       "checkedFwCurrent": "{{device}} 的固件已是最新（{{version}}）。",
       "checkFailed": "无法检查更新。你在线吗？"
+    },
+    "updateFeed": {
+      "offline": "无法连接更新服务器。请检查网络连接后重试。",
+      "unsigned": "更新源未通过安全检查，因此没有安装任何内容。这是我们这边的问题，与你的网络无关：请稍后再试。",
+      "malformed": "无法读取更新源，因此没有安装任何内容。这是我们这边的问题，与你的网络无关：请稍后再试。"
     },
     "live": {
       "part": {
@@ -1447,6 +1454,7 @@
       "joinNoNotes": "此版本在更新源中还没有说明。",
       "joinNotesLink": "在 GitHub 上阅读发布说明",
       "joinOffline": "暂时无法连接开发通道（离线？）。你仍可以加入；可连接时会显示更新。",
+      "joinUnpublished": "尚未发布开发版本。你仍然可以加入；有新版本时会显示更新。",
       "joinButton": "加入开发通道",
       "stayButton": "保持稳定版",
       "joinCheckOff": "自动检查更新已关闭，因此尚未获取任何内容。",
