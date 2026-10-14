@@ -550,6 +550,96 @@ await step("appearance", async () => {
   await sleep(3000);
 });
 
+// GPU: what Chromium really runs on (informational: the runner's GPU is
+// virtual), and the HDR lighting path (live/HdrGlow.tsx): WebGPU, an
+// rgba16float canvas in extended tone mapping. The runner's display isn't
+// HDR, so the glow itself never shows; this proves the path starts cleanly.
+await step("gpu", async () => {
+  const gpu = await mainEv(`(async () => {
+    const { app } = ${E};
+    const info = await app.getGPUInfo("basic");
+    return { status: app.getGPUFeatureStatus(), devices: info.gpuDevice ?? [], aux: info.auxAttributes ?? {}, machine: info.machineModelName ?? null };
+  })()`);
+  const accel = await ev(`window.desktop.getSettings().then((s) => s.hardwareAcceleration)`);
+  result.gpu = { ...gpu, hardwareAccelerationSetting: accel };
+  const st = gpu.status;
+  const software = !/^enabled/.test(st.gpu_compositing ?? "");
+  record("gpu", "compositing on the GPU while Hardware acceleration is on", !(software && accel), `gpu_compositing=${st.gpu_compositing}, setting=${accel}`);
+  const dev = gpu.devices.find((d) => d.active) ?? gpu.devices[0];
+  record(
+    "gpu",
+    "Chromium's GPU status",
+    null,
+    `${dev ? `${dev.vendorString || dev.vendorId} ${dev.deviceString || dev.deviceId}` : "no device"}; ${[
+      "gpu_compositing",
+      "rasterization",
+      "webgl",
+      "webgl2",
+      "webgpu",
+      "video_decode",
+      "skia_graphite",
+    ]
+      .map((k) => `${k}=${st[k] ?? "?"}`)
+      .join(", ")}`,
+  );
+  // The HDR path, as HdrGlow.tsx starts it, on a canvas that is never shown.
+  const hdr = await ev(`(async () => {
+    const out = { dynamicRangeHigh: matchMedia("(dynamic-range: high)").matches, videoDynamicRangeHigh: matchMedia("(video-dynamic-range: high)").matches, hasGpu: "gpu" in navigator };
+    if (!out.hasGpu) return out;
+    try {
+      out.preferredFormat = navigator.gpu.getPreferredCanvasFormat();
+      const adapter = await navigator.gpu.requestAdapter();
+      out.adapter = !!adapter;
+      if (!adapter) return out;
+      const i = adapter.info ?? {};
+      out.adapterInfo = { vendor: i.vendor, architecture: i.architecture, description: i.description, device: i.device };
+      out.features = [...adapter.features].sort();
+      const device = await adapter.requestDevice();
+      const errors = [];
+      device.pushErrorScope("validation");
+      const canvas = document.createElement("canvas");
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext("webgpu");
+      ctx.configure({ device, format: "rgba16float", toneMapping: { mode: "extended" }, alphaMode: "premultiplied" });
+      out.configured = ctx.getConfiguration ? ctx.getConfiguration().toneMapping?.mode ?? "configured" : "configured";
+      const enc = device.createCommandEncoder();
+      const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), clearValue: { r: 4, g: 4, b: 4, a: 1 }, loadOp: "clear", storeOp: "store" }] });
+      pass.end();
+      device.queue.submit([enc.finish()]);
+      await device.queue.onSubmittedWorkDone();
+      const e = await device.popErrorScope();
+      if (e) errors.push(e.message);
+      out.validationErrors = errors;
+      ctx.unconfigure?.();
+      device.destroy();
+    } catch (e) {
+      out.error = String(e && e.message || e);
+    }
+    return out;
+  })()`);
+  result.hdr = hdr;
+  record("hdr", "WebGPU there (navigator.gpu)", hdr.hasGpu, `dynamic-range: high = ${hdr.dynamicRangeHigh} (the runner's display isn't HDR)`);
+  record("hdr", "an adapter", hdr.adapter === true, hdr.adapterInfo ? JSON.stringify(hdr.adapterInfo) : (hdr.error ?? ""));
+  record(
+    "hdr",
+    "rgba16float + extended tone mapping configures and draws with no error",
+    hdr.configured && !hdr.error && (hdr.validationErrors ?? []).length === 0,
+    hdr.error ?? `toneMapping=${hdr.configured}; ${(hdr.features ?? []).length} features`,
+  );
+  // The Developer card's HDR test (three swatches; only a person on an HDR
+  // display can judge them), screenshotted.
+  await tap('[data-rail="app"]');
+  await sleep(800);
+  await expandSection("developer");
+  await sleep(1500);
+  const swatch = await ev(
+    `(() => { const t = document.querySelector(".hdr-test"); t?.scrollIntoView({ block: "center" }); return t ? [...t.querySelectorAll("figcaption")].map((f) => f.textContent).join(" | ") : null; })()`,
+  );
+  await sleep(600);
+  await shot("app-developer-hdr-test");
+  record("hdr", "Developer card's HDR test: the WebGPU swatch starts", !!swatch && !/✗/.test(swatch), swatch ?? "no HDR test on the page");
+});
+
 // 5. Budgets (before the single-instance and quit checks, which hide and end it)
 const budgetsFile = join(ROOT, "tools/budgets.json");
 const budgets = existsSync(budgetsFile) ? JSON.parse(readFileSync(budgetsFile, "utf8")).budgets : null;
@@ -697,6 +787,21 @@ if (result.system)
   );
 md.push("| | Area | Check | Detail |", "|---|---|---|---|");
 for (const c of checks) md.push(`| ${c.ok === null ? "ℹ️" : c.ok ? "✅" : "❌"} | ${c.area} | ${esc(c.name)} | ${esc(c.detail).slice(0, 200)} |`);
+if (result.gpu) {
+  const st = result.gpu.status;
+  md.push("", "### GPU and HDR path", "", "| | |", "|---|---|");
+  for (const [k, v] of Object.entries(st)) md.push(`| ${k} | ${v} |`);
+  for (const d of result.gpu.devices) md.push(`| GPU device${d.active ? " (active)" : ""} | ${esc(`${d.vendorString || d.vendorId} ${d.deviceString || d.deviceId}`)} |`);
+  if (result.hdr) {
+    const h = result.hdr;
+    md.push(`| dynamic-range: high | ${h.dynamicRangeHigh} |`, `| navigator.gpu | ${h.hasGpu} |`, `| preferred canvas format | ${h.preferredFormat ?? "?"} |`);
+    md.push(
+      `| adapter | ${esc(JSON.stringify(h.adapterInfo ?? h.adapter ?? null))} |`,
+      `| rgba16float, extended | ${h.error ? esc(h.error) : `toneMapping ${h.configured}, ${(h.validationErrors ?? []).length} validation errors`} |`,
+    );
+    md.push(`| adapter features | ${esc((h.features ?? []).join(", "))} |`);
+  }
+}
 if (result.budgets) {
   const b = result.budgets;
   const lim = (k) => (b.limits?.[k] ? ` (budget ${b.limits[k].max})` : "");
