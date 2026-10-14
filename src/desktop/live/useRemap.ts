@@ -104,33 +104,44 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     }
   }, [client, draft, state, t, extraDevice, extraDraft]);
 
-  return {
-    supported: client ? supported : null,
-    device,
-    draft,
-    dirty: !tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice)),
-    busy,
-    error,
-    setTarget: useCallback((source: number, target: number) => setDraft((d) => d.map((v, i) => (i === source ? target : v))), []),
-    apply,
-    revert: useCallback(() => {
-      setDraft(device.slice());
-      if (extraDevice) setExtraDraft(extraDevice.slice());
-    }, [device, extraDevice]),
-    resetAll: useCallback(() => {
-      setDraft(identityTable());
-      setExtraDraft(defaultExtra());
-      setLoaded(null);
-    }, []),
-    load: useCallback((table: number[], layout?: { id: string; name: string }, extra?: number[]) => {
-      setDraft(table.slice());
-      setExtraDraft(extra ? extra.slice() : defaultExtra());
-      setLoaded(layout ? { ...layout, table: table.slice() } : null);
-    }, []),
-    extraDevice,
-    extraDraft,
-    setExtra: useCallback((index: number, value: number) => setExtraDraft((d) => d.map((v, i) => (i === index ? value : v))), []),
-    loaded,
-    temporary: !!temporary,
-  };
+  const setTarget = useCallback((source: number, target: number) => setDraft((d) => d.map((v, i) => (i === source ? target : v))), []);
+  const revert = useCallback(() => {
+    setDraft(device.slice());
+    if (extraDevice) setExtraDraft(extraDevice.slice());
+  }, [device, extraDevice]);
+  const resetAll = useCallback(() => {
+    setDraft(identityTable());
+    setExtraDraft(defaultExtra());
+    setLoaded(null);
+  }, []);
+  const load = useCallback((table: number[], layout?: { id: string; name: string }, extra?: number[]) => {
+    setDraft(table.slice());
+    setExtraDraft(extra ? extra.slice() : defaultExtra());
+    setLoaded(layout ? { ...layout, table: table.slice() } : null);
+  }, []);
+  const setExtra = useCallback((index: number, value: number) => setExtraDraft((d) => d.map((v, i) => (i === index ? value : v))), []);
+
+  // One object per change, not per render: the Buttons list and the saved
+  // layouts are memo()ed on it and skip the live view's ~30 renders a second.
+  return useMemo(
+    () => ({
+      supported: client ? supported : null,
+      device,
+      draft,
+      dirty: !tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice)),
+      busy,
+      error,
+      setTarget,
+      apply,
+      revert,
+      resetAll,
+      load,
+      extraDevice,
+      extraDraft,
+      setExtra,
+      loaded,
+      temporary: !!temporary,
+    }),
+    [client, supported, device, draft, extraDevice, extraDraft, busy, error, setTarget, apply, revert, resetAll, load, setExtra, loaded, temporary],
+  );
 }

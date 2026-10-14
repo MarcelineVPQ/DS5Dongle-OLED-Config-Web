@@ -51,6 +51,7 @@ export async function downloadVerified(download: Download, path: string, progres
   let got = 0;
   let lastReport = 0;
   try {
+    // loop: SERIAL-REQUIRED — stream order: each chunk is hashed and written in sequence, stall deadline
     for (;;) {
       let timer: ReturnType<typeof setTimeout> | undefined;
       // lifetime: OK — cleared in .finally() after every read

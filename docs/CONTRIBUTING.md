@@ -62,6 +62,7 @@ Gates in `tools/` (also in `npm run gates` and CI):
 
 - **`list_duplicates.mjs --check`** fails on a duplicate candidate (CSS selector, top-level name, repeated 4-line block) with no verdict in `docs/DEDUPE_AUDIT.md`'s "Every row now" table, or a table row the lister no longer finds. Merge the copy, or add a row with its verdict.
 - **`check_identical_files.mjs`** fails on byte-identical git-tracked files. `node tools/check_identical_files.mjs ../DS5Dongle` also checks across the app and firmware repos (for the firmware's `tools/release.sh`). Allowlisted groups live in the script, each with the finding that removes it.
+- **`list_loops.mjs --check`** fails on a loop that awaits, sits on a hot path (render, useEffect, rAF, setInterval, a poll, a WebUSB handler, the audio worklet, the library scan, or what they call) or is nested in another loop, and has no `// loop: VERDICT — reason` comment on its line or the line above (`{/* loop: … */}` in JSX). Verdicts: PARALLELIZE, BATCH, SERIAL-REQUIRED (give the reason), HOT-PATH-OK (state N), FIX-HOT-PATH, NOT-WORTH. Add the comment in the same commit as the loop. When a release touches hot paths, re-run the full pass: run `node tools/list_loops.mjs` here and `python3 tools/list_loops.py` in the firmware, re-check every verdict, and update the tables in `docs/LOOP_PASS_<date>.md`. See CLAUDE.md "Loop pass".
 
 Gates in the tests:
 

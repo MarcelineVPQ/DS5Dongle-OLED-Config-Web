@@ -23,6 +23,7 @@ export function profileFields(base: ConfigBody, normal: ProfileSettings, draft: 
     },
     issue: (f) => Boolean(fieldIssue(issues, f)),
     normal: (f) => {
+      // loop: NOT-WORTH — N = 12 profile groups; per field lookup when a game page control renders
       const group = PROFILE_GROUPS.find((g) => (g.fields as readonly string[]).includes(f));
       return !!group && !own.has(group.id);
     },

@@ -46,15 +46,20 @@ export interface Circularity {
 }
 
 export function circularity(outline: Outline, tolerance = ROUND_TOLERANCE): Circularity {
+  // loop: HOT-PATH-OK — N = 72 buckets per live frame
   const reached = outline.filter((r) => r > 0);
   const n = reached.length;
   const pct = (k: number) => (n ? (k / n) * 100 : 0);
   return {
     covered: n,
     coveragePct: (n / outline.length) * 100,
+    // loop: HOT-PATH-OK — N ≤ 72 reached buckets
     errorPct: n ? (reached.reduce((a, r) => a + Math.abs(r - 1), 0) / n) * 100 : null,
+    // loop: HOT-PATH-OK — N ≤ 72 reached buckets
     meanReach: n ? reached.reduce((a, r) => a + r, 0) / n : null,
+    // loop: HOT-PATH-OK — N ≤ 72 reached buckets
     overPct: pct(reached.filter((r) => r > 1 + tolerance).length),
+    // loop: HOT-PATH-OK — N ≤ 72 reached buckets
     underPct: pct(reached.filter((r) => r < 1 - tolerance).length),
   };
 }
@@ -99,16 +104,23 @@ export interface Drift {
 
 export function driftStats(samples: readonly DriftSample[], zone?: StickZone): Drift | null {
   if (!samples.length) return null;
+  // loop: HOT-PATH-OK — N ≈ 300 samples; once per finished drift test (StickTests useMemo)
   const pts = samples.map((s) => [normAxis(s.x), normAxis(s.y)] as const);
+  // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
   const dist = pts.map(([x, y]) => Math.hypot(x, y));
+  // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
   const mx = pts.reduce((a, [x]) => a + x, 0) / pts.length;
+  // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
   const my = pts.reduce((a, [, y]) => a + y, 0) / pts.length;
+  // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
   const spread = Math.max(...pts.map(([x, y]) => Math.hypot(x - mx, y - my)));
   const maxOff = Math.max(...dist);
+  // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
   const beyondDeadzone = zone && zone.deadzone > 0 ? samples.some((s) => Math.hypot(s.x - 128 - zone.cx, s.y - 128 - zone.cy) > zone.deadzone) : null;
   return {
     samples: samples.length,
     maxPct: maxOff * 100,
+    // loop: HOT-PATH-OK — N ≈ 300; once per finished drift test (StickTests useMemo)
     avgPct: (dist.reduce((a, d) => a + d, 0) / dist.length) * 100,
     spreadPct: spread * 100,
     beyondDeadzone,

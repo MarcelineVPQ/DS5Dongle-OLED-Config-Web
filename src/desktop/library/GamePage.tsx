@@ -100,6 +100,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
 
   // HDR games on Linux: the checklist decides whether Setup needs the player.
   const isHdr = isProtonGame(game) && game.hdr !== undefined;
+  // loop: HOT-PATH-OK — N = 3 launchers
   const flatpak = !!report.launchers.find((l) => l.id === game.launcher)?.flatpak;
   const hdrReqs = isHdr ? hdrGameReqs(report.system.hdr, game, { ourProton: report.ourProton.name, flatpak }) : [];
   const status = setupStatus(game, hdrReqs);
@@ -233,6 +234,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
     },
     favorites: () =>
       [0, 1, 2, 3]
+        // loop: NOT-WORTH — N = 4 slots x 3 channels; per profile summary
         .filter((i) => !normal || (["lbFavR", "lbFavG", "lbFavB"] as const).some((k) => v[k]?.[i] !== normal[k]?.[i]))
         .map((i) => `FAV${i}`)
         .join(", "),
@@ -257,6 +259,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
     micLevel: t("desktop.library.micLevel"),
     echoCancel: t("desktop.library.echoCancel"),
   };
+  // loop: HOT-PATH-OK — N ≤ 12 profile groups
   const chips: Array<{ key: string; text: string; clear: () => ProfileSettings }> = gameGroups(draft, normal).map((g) => ({
     key: g,
     text: `${label[g]}: ${value[g]()}`,
@@ -265,6 +268,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
   const layout = draft.buttonLayout ? library.layouts?.[draft.buttonLayout] : undefined;
   if (draft.buttonLayout)
     chips.push({ key: "layout", text: `${t("desktop.layouts.profileLabel")}: ${layout?.name ?? t("desktop.layouts.normal")}`, clear: () => ({ ...draft, buttonLayout: undefined }) });
+  // loop: HOT-PATH-OK — N = 2 sticks
   for (const side of ["left", "right"] as const) {
     const curve = draft.stickCurves?.[side];
     if (!curve) continue;
@@ -283,6 +287,7 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
       <p className="dk-hint">{chips.length ? t("desktop.profile.changes") : t("desktop.profile.allNormal")}</p>
       {chips.length > 0 && (
         <div className="lib-filters" role="group" aria-label={t("desktop.library.section.profile")}>
+          {/* loop: HOT-PATH-OK — N ≤ 15 chips */}
           {chips.map((c) => (
             <button
               key={c.key}
@@ -329,6 +334,7 @@ function AllProfileSettings({ draft, normal, bridge, onChange }: { draft: Profil
 function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; bridge: UseDs5BridgeResult; onChange: (id: string | undefined) => void }) {
   const { t } = useTranslation();
   const { library } = useLibrary();
+  // loop: HOT-PATH-OK — N = saved button layouts (a few)
   const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
   const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 8, FEATURES2.temporaryRemap);
   return (
@@ -336,6 +342,7 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
       <Row label={t("desktop.layouts.profileLabel")}>
         <select className="dk-select" value={value ?? ""} disabled={oldFirmware || (layouts.length === 0 && !value)} onChange={(e) => onChange(e.target.value || undefined)}>
           <option value="">{t("desktop.layouts.normal")}</option>
+          {/* loop: HOT-PATH-OK — N = saved button layouts (a few) */}
           {layouts.map(([id, l]) => (
             <option key={id} value={id}>
               {l.name}
@@ -355,6 +362,7 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
               library.layouts[value].table,
               t("desktop.layouts.off"),
               t("desktop.layouts.noChanges"),
+              // loop: HOT-PATH-OK — N = 4 extra buttons
               library.layouts[value].extra ? { values: library.layouts[value].extra!, names: ["fn-l", "fn-r", "paddle-l", "paddle-r"].map((p) => t(`desktop.live.part.${p}`)) } : undefined,
             )}
           </p>
@@ -380,10 +388,12 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
   };
   return (
     <>
+      {/* loop: HOT-PATH-OK — N = 2 sticks */}
       {(["left", "right"] as const).map((side) => (
         <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")}>
           <select className="dk-select" value={value?.[side]?.type ?? ""} disabled={oldFirmware} onChange={(e) => pick(side, e.target.value)}>
             <option value="">{t("desktop.curves.profileSaved")}</option>
+            {/* loop: HOT-PATH-OK — N = 2 sticks x ≤ 5 curve presets */}
             {CURVE_PRESETS.map((type) => (
               <option key={type} value={type}>
                 {t(`desktop.curves.type.${type}`)}
@@ -487,6 +497,7 @@ function SetupFrame({
       {game.fixes.length > 0 && (
         <>
           <ul className="dk-review">
+            {/* loop: HOT-PATH-OK — N = one game's fixes (≤ ~5) */}
             {game.fixes.map((f) => (
               <li key={f.id}>
                 <b>{m(f.label)}</b>
@@ -579,6 +590,7 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
   const { t } = useTranslation();
   const restartText = useRestartText();
   const ours = report.ourProton.name;
+  // loop: HOT-PATH-OK — N = one game's fixes (≤ ~5)
   const runnerFix = game.fixes.find((f) => f.kind === "set-runner");
   // A running launcher is closed and reopened for the switch: said first, then
   // confirmed. Which ones run is checked when the page opens and after each scan.
@@ -654,6 +666,7 @@ function SupportFrame({ game }: { game: GameEntry }) {
       </p>
       {fixesFor(game.title).length > 0 && (
         <ul className="dk-review">
+          {/* loop: HOT-PATH-OK — N = known game fixes (GAME_FIXES, empty now) */}
           {fixesFor(game.title).map((f) => (
             <li key={f.app + f.note}>
               <b>{t("desktop.library.fixedIn", { version: f.app })}</b> {t(`desktop.library.fix.${f.note}`)}
@@ -664,6 +677,7 @@ function SupportFrame({ game }: { game: GameEntry }) {
       <details className="gp-legend">
         <summary>{t("desktop.library.tierLegend")}</summary>
         <ul className="dk-review">
+          {/* loop: HOT-PATH-OK — N = 6 support tiers */}
           {(["verified", "works", "needs-setup", "partial", "broken", "unknown"] as const).map((tier) => (
             <li key={tier}>
               <b>
@@ -675,6 +689,7 @@ function SupportFrame({ game }: { game: GameEntry }) {
         </ul>
       </details>
       <ul className="gp-features">
+        {/* loop: HOT-PATH-OK — N = 5 features */}
         {(["triggers", "haptics", "speaker", "mic", "lightbar"] as const).map((f) => (
           <li key={f} title={t(`desktop.library.feature.${s.features[f]}`)}>
             <span aria-hidden="true">{FEATURE_ICON[s.features[f]]}</span> {t(`desktop.library.featureName.${f}`)}
@@ -716,12 +731,15 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
   const [mine, update] = mineState;
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
   // "Controller not detected" lives in Setup where it's a mark that acts.
+  // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const tags = FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
+  // loop: HOT-PATH-OK — N = feedback tags (under 10)
   const picked = tags.filter((tag) => mine.tags?.includes(tag)).length;
   return (
     <section className="dk-card" id="gp-rating">
       <h2>{t("desktop.library.section.rating")}</h2>
       <div className="gp-stars" role="radiogroup" aria-label={t("desktop.library.section.rating")}>
+        {/* loop: HOT-PATH-OK — N = 5 stars */}
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
@@ -754,6 +772,7 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
           {picked > 0 && ` (${picked})`}
         </summary>
         <ul className="gp-tags">
+          {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
           {tags.map((tag) => {
             const on = mine.tags?.includes(tag) ?? false;
             return (
@@ -843,6 +862,7 @@ function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo
   return (
     <div className="gp-actions">
       {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
+      {/* loop: HOT-PATH-OK — N = 5 game actions */}
       {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
         .filter((a) => actions.includes(a))
         .map((a) => (

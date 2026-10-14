@@ -90,6 +90,7 @@ export interface Scan {
 }
 
 const SDL_ASSIGN = new RegExp(`(^|\\s)(${SDL_FORCING_VARS.join("|")})=(\\S*)`, "g");
+// loop: HOT-PATH-OK — env assignments in one launch-options line
 export const sdlVarsIn = (opts: string) => [...new Set([...opts.matchAll(SDL_ASSIGN)].filter((m) => sdlVarForcing(m[2], m[3])).map((m) => m[2]))];
 // Remove the forcing assignments only; everything else (spacing inside quotes included) stays.
 // Each forcing assignment goes together with the one space before it.
@@ -109,7 +110,9 @@ export const hasPreferSdl = (opts: string) => sdlVarsIn(opts).includes(PREFER_SD
 // options (and other variables) stay as they are, an earlier value of these
 // variables is replaced (game arguments without %command% go after it).
 export function withEnvVars(opts: string, vars: readonly string[]): string {
+  // loop: NOT-WORTH — 1-2 variables, only when a fix is built
   const rest = vars.reduce((o, v) => o.replace(new RegExp(`(^|\\s)${v}=\\S*`, "g"), ""), opts).trim();
+  // loop: NOT-WORTH — 1-2 variables, only when a fix is built
   const set = vars.map((v) => `${v}=1`).join(" ");
   if (!rest) return `${set} %command%`;
   return rest.includes("%command%") ? `${set} ${rest}` : `${set} %command% ${rest}`;
@@ -166,6 +169,7 @@ export function hdrPlan(o: { gamescope: boolean; old: boolean; ready: boolean })
 }
 
 const enabled = (value: unknown) => value !== undefined && value !== null && value !== false && !["", "0", "false"].includes(String(value).replace(/^(["'])(.*)\1$/, "$2"));
+// loop: NOT-WORTH — fixed list of old HDR variables
 const hasOldEnv = (env: Record<string, unknown>) => OLD_HDR_VARS.some((v) => enabled(env[v]));
 
 // Heroic: its own gamescope settings at the screen's mode, our flags in
@@ -271,6 +275,7 @@ export function scan(deps: ScanDeps): Scan {
       ? { label: msg(gamescope ? "label.hdrUpdate" : "label.hdrRemoveOld", { game }), why: msg("why.hdrOld", { game, next: gamescope ? why : msg("why.hdrOldOnly") }) }
       : { label: msg("label.hdr", { game }), why };
   const fix = (id: string, kind: FixKind, launcher: Fix["launcher"], label: Msg, why: Msg, recommended: boolean, edits: Edit[], post?: PostAction): Fix => {
+    // loop: NOT-WORTH — edits of one fix
     const f: Fix = { id, kind, launcher, label, why, files: [...new Set(edits.flatMap((e) => (e.format === "disable" ? [e.file, `${e.file}.disabled`] : [e.file])))], recommended };
     add({ fix: f, edits, post });
     return f;
@@ -298,6 +303,7 @@ export function scan(deps: ScanDeps): Scan {
 
   // ---- Steam ----
   const steamInstalls = findSteamInstalls(deps.home);
+  // loop: NOT-WORTH — Steam installs found
   steamInstalls.forEach((install) => scanSteam(install, `steam-${idHash(install.root)}`));
   function scanSteam(install: SteamInstall, prefix: string) {
     const config = readVdfFile(install.configPath);
@@ -328,8 +334,10 @@ export function scan(deps: ScanDeps): Scan {
     const steamGames = listSteamGames(install);
     const kinds = steamAppTypes(
       install.root,
+      // loop: HOT-PATH-OK — app ids for the appinfo lookup, one array
       steamGames.map((g) => g.appid),
     );
+    // loop: BATCH — per game 3 linear getString lookups in localconfig apps (1000s of keys)
     for (const g of steamGames) {
       const kind = kinds.get(g.appid);
       // Soundtracks, videos and software don't run as games: no controller
@@ -482,6 +490,7 @@ export function scan(deps: ScanDeps): Scan {
   }
 
   // ---- Heroic ----
+  // loop: NOT-WORTH — Heroic installs found
   findHeroicInstalls(deps.home).forEach((install) => scanHeroic(install, `heroic-${idHash(install.root)}`));
   function scanHeroic(install: HeroicInstall, prefix: string) {
     const tools = heroicTools(install);
@@ -499,10 +508,12 @@ export function scan(deps: ScanDeps): Scan {
     }
     launchers.push({ id: "heroic", found: true, flatpak: install.flatpak, running: deps.running.has("heroic"), protonInstalled, defaultRunner: def?.name ?? null, defaultIsOurs, fixes: lfixes });
 
+    // loop: BATCH — per game reads the runner's version file again (buildHonoursPreferSdl)
     for (const g of listHeroicGames(install)) {
       const support = dualSenseSupport(g.title);
       const runnerMissing = !!g.wineVersion && !existsSync(g.wineVersion.bin);
       const effective = g.wineVersion?.name ?? def?.name ?? null;
+      // loop: HOT-PATH-OK — env entries of one game
       const envFlags = [...new Set(g.env.filter((e) => sdlVarForcing(e.key, e.value)).map((e) => e.key))];
       const hasConfig = existsSync(g.configPath);
       const gfixes: Fix[] = [];
@@ -519,6 +530,7 @@ export function scan(deps: ScanDeps): Scan {
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && hasConfig) {
         const runner = runnerFix ? ourWine : (g.wineVersion ?? def);
         const p = gamepadPlan({
+          // loop: HOT-PATH-OK — env entries of one game
           envSet: g.env.some((e) => e.key === PREFER_SDL && sdlVarForcing(e.key, e.value)),
           honours: !runner || buildHonoursPreferSdl(runner.name, [install.toolsDir, dirname(dirname(runner.bin))]),
           target: preferSdlBuild(tools, [install.toolsDir, ...(runner ? [dirname(dirname(runner.bin))] : [])], runner?.name),
@@ -567,6 +579,7 @@ export function scan(deps: ScanDeps): Scan {
       let hdr: HdrState | undefined;
       if (isHdrGame(g.title, key) && hasConfig) {
         const runner = g.wineVersion ?? def;
+        // loop: NOT-WORTH — env entries, HDR games only
         const old = g.wineWayland || g.hdr || hasOldEnv(Object.fromEntries(g.env.map((e) => [e.key, e.value])));
         const p = hdrPlan({ gamescope: heroicHasGamescopeHdr(g.gamescope), old, ready: hdrReady(hdrSys, install.flatpak) && !!hdrScr });
         hdr = p.state;
@@ -632,7 +645,9 @@ export function scan(deps: ScanDeps): Scan {
   }
 
   // ---- Lutris ----
+  // loop: NOT-WORTH — Steam installs, a readdir each
   const steamToolNames = steamInstalls.flatMap((s) => [...installedTools(s), ...valveProtons(s)]);
+  // loop: NOT-WORTH — Lutris installs found
   findLutrisInstalls(deps.home).forEach((install) => scanLutris(install, `lutris-${idHash(install.dataDir)}`));
   function scanLutris(install: LutrisInstall, prefix: string) {
     // Native Lutris also lists Steam's compatibility tools; the Flatpak only sees its own dir.
@@ -642,6 +657,7 @@ export function scan(deps: ScanDeps): Scan {
     const lfixes: Fix[] = [];
     const setVersion = (file: string, version = ours): Edit => ({ file, format: "yaml", mutate: (doc) => doc.setIn(["wine", "version"], version) });
     // Where Lutris finds Proton builds (for their version files).
+    // loop: NOT-WORTH — Steam installs
     const buildDirs = [install.wineDir, ...(install.flatpak ? [] : steamInstalls.map((s) => s.toolsDir))];
     if (protonInstalled && def !== ours) {
       lfixes.push(
@@ -661,6 +677,7 @@ export function scan(deps: ScanDeps): Scan {
       fixes: lfixes,
     });
 
+    // loop: BATCH — per game reads the runner's version file again (buildHonoursPreferSdl)
     for (const g of listLutrisGames(install)) {
       const support = dualSenseSupport(g.name);
       const runnerMissing = !!g.runner && !visible.has(g.runner) && !hasBuild(install.wineDir, g.runner);
@@ -675,6 +692,7 @@ export function scan(deps: ScanDeps): Scan {
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key))) {
         const runner = runnerFix ? ours : effective;
         const p = gamepadPlan({
+          // loop: HOT-PATH-OK — env entries of one game
           envSet: Object.entries(g.env).some(([k, v]) => k === PREFER_SDL && sdlVarForcing(k, v)),
           honours: !runner || buildHonoursPreferSdl(runner, buildDirs),
           // Lutris runs Proton builds through umu.
@@ -758,10 +776,12 @@ export function scan(deps: ScanDeps): Scan {
   }
 
   // ---- GOG Galaxy and Epic (Windows) ----
+  // loop: NOT-WORTH — two stores, Windows only
   for (const id of ["gog", "epic"] as const) {
     const store = deps.windowsStores?.[id];
     if (!store) continue;
     launchers.push({ id, found: store.found, flatpak: false, running: false, protonInstalled: false, defaultRunner: null, defaultIsOurs: false, fixes: [] });
+    // loop: HOT-PATH-OK — plain object per store game, no I/O
     for (const g of store.games) {
       games.push({
         key: storeKey(g),
@@ -783,6 +803,7 @@ export function scan(deps: ScanDeps): Scan {
   // ---- System ----
   const rules = findProAudioRules(deps.home);
   const sfixes: Fix[] = [];
+  // loop: NOT-WORTH — PipeWire rule files found
   rules
     .filter((r) => r.editable)
     .forEach((r) =>
@@ -801,6 +822,7 @@ export function scan(deps: ScanDeps): Scan {
         ),
       ),
     );
+  // loop: NOT-WORTH — DualSense audio cards
   for (const card of deps.audioCards) {
     if (isProAudio(card.activeProfile) && card.hifiProfile && rules.length === 0) {
       sfixes.push(
@@ -823,6 +845,7 @@ export function scan(deps: ScanDeps): Scan {
   }
   // The controller's hardware volume and mic gain, left low by the boot ALSA
   // restore (PipeWire never sets them for the DualSense).
+  // loop: NOT-WORTH — connected DualSense sound cards, 0-2; once per scan
   for (const m of deps.mixers ?? []) {
     const changes = lowMixerControls(m.controls);
     if (!changes.length) continue;
@@ -830,7 +853,9 @@ export function scan(deps: ScanDeps): Scan {
   }
   const system: SystemInfo = {
     audioProfile: deps.audioCards[0]?.activeProfile ?? null,
+    // loop: NOT-WORTH — DualSense audio cards
     proAudio: deps.audioCards.some((c) => isProAudio(c.activeProfile)),
+    // loop: NOT-WORTH — PipeWire rule files found
     proAudioRules: rules.map((r) => r.path.replace(deps.home, "~")),
     envWarnings: findGlobalSdlVars(deps.home),
     hidrawAccess: hidrawAccess(),
@@ -908,12 +933,14 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
   // Group edits by file (each file is read and written once), keeping its owner.
   const byFile = new Map<string, { owner: Owner; edits: Edit[] }>();
   for (const p of chosen) {
+    // loop: NOT-WORTH — edits of the chosen fixes, in memory
     for (const e of p.edits) {
       const entry = byFile.get(e.file) ?? { owner: p.fix.launcher, edits: [] };
       entry.edits.push(e);
       byFile.set(e.file, entry);
     }
   }
+  // loop: NOT-WORTH — edited files, in memory
   const files = [...byFile].flatMap(([file, { owner, edits }]) => (edits.some((e) => e.format === "disable") ? [file, `${file}.disabled`] : [file]).map((path) => ({ path, owner })));
 
   // Post actions run once each, whatever number of fixes asked for them.
@@ -937,6 +964,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
     );
   }
   const postErrors = new Map<string, Msg>();
+  // loop: SERIAL-REQUIRED — process order: WirePlumber restart and profile switch must not overlap
   for (const [key, post] of posts) {
     try {
       if (post.kind === "restart-wireplumber") await deps.restartWirePlumber();

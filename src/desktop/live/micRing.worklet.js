@@ -22,6 +22,7 @@ class MicRing extends AudioWorkletProcessor {
   process(inputs) {
     const ch = inputs[0] && inputs[0][0];
     if (ch) {
+      // loop: HOT-PATH-OK — N = 128 samples per audio quantum, a ring write, no allocation
       for (let i = 0; i < ch.length; i++) {
         this.ring[this.pos] = ch[i];
         this.pos = (this.pos + 1) % this.ring.length;

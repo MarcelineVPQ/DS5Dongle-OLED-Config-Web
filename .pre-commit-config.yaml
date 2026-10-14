@@ -67,6 +67,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^(src|electron|tools|\.hooks)/.*\.(css|ts|tsx|mjs)$|^docs/DEDUPE_AUDIT\.md$
+      - id: loop-verdicts
+        name: Loops that wait or sit on a hot path have a verdict
+        entry: node tools/list_loops.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/list_loops\.mjs$
       - id: identical-files
         name: No byte-identical files
         entry: node tools/check_identical_files.mjs

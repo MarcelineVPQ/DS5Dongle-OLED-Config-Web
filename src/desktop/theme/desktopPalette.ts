@@ -85,11 +85,13 @@ export function luminance([r, g, b]: Rgb): number {
 }
 
 export function contrast(a: Rgb, b: Rgb): number {
+  // loop: HOT-PATH-OK — N = 2 values; per color computed on theme change or render
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 }
 
 export function mix(a: Rgb, b: Rgb, t: number): Rgb {
+  // loop: HOT-PATH-OK — N = 3 channels
   return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t)) as Rgb;
 }
 
@@ -100,6 +102,7 @@ export function parseColor(value: string): Rgb | null {
   if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
   return /^#[0-9a-f]{6}$/i.test(v) ? hexToRgb(v) : null;
 }
+// loop: HOT-PATH-OK — N = 3 channels; also in LiveController render
 export const hexToRgb = (h: string): Rgb => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as Rgb;
 
 // HSV: hue 0..360 (degrees), saturation and value 0..1. The app's one RGB <->
@@ -144,6 +147,7 @@ export const wantsLightInk = (bg: Rgb) => contrast([255, 255, 255], bg) >= contr
 // on several grounds.
 export function ensureContrast(fg: Rgb, bg: Rgb, target: number, toward: Rgb = wantsLightInk(bg) ? [255, 255, 255] : [0, 0, 0]): Rgb {
   if (contrast(fg, bg) >= target) return fg;
+  // loop: NOT-WORTH — ≤ 20 steps; one-shot rAF on game page open or theme change
   for (let t = 0.05; t <= 1; t += 0.05) {
     const c = mix(fg, toward, t);
     if (contrast(c, bg) >= target) return c;
@@ -200,6 +204,7 @@ export function paletteToCssVars(p: DesktopPalette): Record<string, string> {
 // worst the ink itself).
 export function legibleOnAll(fg: Rgb, grounds: Rgb[], target: number, ink: Rgb): Rgb {
   let c = fg;
+  // loop: NOT-WORTH — ≤ 5 passes x ≤ 4 grounds; theme change or game page open only
   for (let i = 0; i < 5 && grounds.some((g) => contrast(c, g) < target); i++) c = grounds.reduce((acc, g) => ensureContrast(acc, g, target, ink), c);
   return c;
 }

@@ -53,6 +53,7 @@ export const isProAudio = (profile: string) => /pro-audio/i.test(profile);
 
 // A rule file that forces pro-audio onto the DualSense card.
 export function forcesProAudio(text: string): boolean {
+  // loop: NOT-WORTH — lines of one small PipeWire rule file
   const live = text
     .split("\n")
     .filter((l) => !/^\s*(#|--)/.test(l))
@@ -75,13 +76,16 @@ export function findProAudioRules(home: string): ProAudioRule[] {
     ["/etc/wireplumber/main.lua.d", false],
   ];
   const out: ProAudioRule[] = [];
+  // loop: NOT-WORTH — six fixed rule folders
   for (const [dir, editable] of dirs) {
     let files: string[];
     try {
+      // loop: NOT-WORTH — files in one rule folder
       files = readdirSync(dir).filter((f) => f.endsWith(".conf") || f.endsWith(".lua"));
     } catch {
       continue;
     }
+    // loop: NOT-WORTH — rule files, a small read each
     for (const f of files) {
       try {
         if (forcesProAudio(readFileSync(join(dir, f), "utf8"))) out.push({ path: join(dir, f), editable });
@@ -103,8 +107,10 @@ export interface SdlVarSource {
 
 export function findGlobalSdlVars(home: string): SdlVarSource[] {
   const files = [join(home, ".profile"), join(home, ".bash_profile"), join(home, ".bashrc"), join(home, ".zshenv"), join(home, ".pam_environment"), "/etc/environment"];
+  // loop: NOT-WORTH — three environment folders
   for (const dir of [join(home, ".config/environment.d"), join(home, ".config/plasma-workspace/env"), "/etc/environment.d"]) {
     try {
+      // loop: NOT-WORTH — files in one environment folder
       for (const f of readdirSync(dir)) files.push(join(dir, f));
     } catch {
       // missing dir
@@ -112,8 +118,10 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
   }
   const out: SdlVarSource[] = [];
   const pattern = new RegExp(`^\\s*(?:export\\s+)?(${SDL_FORCING_VARS.join("|")})\\s*=\\s*["']?([^"'\\s#]*)`, "gm");
+  // loop: NOT-WORTH — shell profile and environment files, a small read each
   for (const f of files) {
     try {
+      // loop: NOT-WORTH — matches in one profile file
       for (const m of readFileSync(f, "utf8").matchAll(pattern)) {
         if (sdlVarForcing(m[1], m[2])) out.push({ variable: m[1], file: f.startsWith(home) ? f.replace(home, "~") : f });
       }
@@ -121,6 +129,7 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
       // missing file
     }
   }
+  // loop: NOT-WORTH — SDL-forcing variable names
   for (const v of SDL_FORCING_VARS) if (sdlVarForcing(v, process.env[v] ?? "")) out.push({ variable: v, file: null });
   return out;
 }
@@ -134,6 +143,7 @@ export function hidrawAccess(): boolean | null {
     return null;
   }
   let found = false;
+  // loop: NOT-WORTH — hidraw nodes, a small sysfs read each
   for (const n of nodes) {
     try {
       const uevent = readFileSync(`/sys/class/hidraw/${n}/device/uevent`, "utf8");
@@ -211,7 +221,9 @@ export function parseAmixerContents(text: string): MixerControl[] {
 /** What to change on one card: the target controls below full. */
 export function lowMixerControls(controls: MixerControl[]): MixerChange[] {
   const out: MixerChange[] = [];
+  // loop: NOT-WORTH — N = 4 mixer targets per card; once per scan
   for (const name of MIXER_TARGETS) {
+    // loop: NOT-WORTH — ~20 controls per card; once per scan
     const c = controls.find((x) => x.name === name);
     if (c && c.value < c.max) out.push({ name, from: c.value, to: c.max });
   }
@@ -267,6 +279,7 @@ export const amixerLayer: MixerLayer = {
 /** Every connected DualSense card with its controls (none without ALSA or amixer). */
 export async function dualSenseMixers(layer: MixerLayer = amixerLayer): Promise<DualSenseMixer[]> {
   const out: DualSenseMixer[] = [];
+  // loop: NOT-WORTH — DualSense cards, 0-2, one amixer read each; once per scan
   for (const { card, key } of layer.cards()) {
     try {
       out.push({ card, key, controls: parseAmixerContents(await layer.contents(card)) });
@@ -281,6 +294,7 @@ export async function dualSenseMixers(layer: MixerLayer = amixerLayer): Promise<
 export async function setDualSenseMixer(key: string, changes: MixerChange[], layer: MixerLayer = amixerLayer): Promise<void> {
   const card = layer.cards().find((c) => c.key === key)?.card;
   if (card === undefined) throw new Error("The controller isn't connected.");
+  // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per apply
   for (const c of changes) await layer.set(card, c.name, c.to);
 }
 
@@ -290,5 +304,6 @@ export async function restoreDualSenseMixer(key: string, changes: MixerChange[],
   const card = layer.cards().find((c) => c.key === key)?.card;
   if (card === undefined) throw new Error("The controller isn't connected.");
   const now = parseAmixerContents(await layer.contents(card));
+  // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per Undo
   for (const c of changes) if (now.find((x) => x.name === c.name)?.value === c.to) await layer.set(card, c.name, c.from);
 }

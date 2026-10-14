@@ -63,6 +63,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
       <header className="dcon-head">
         <span className="dcon-title">{t("desktop.dongleConsole.title")}</span>
         <div className="dcon-tabs" role="tablist">
+          {/* loop: HOT-PATH-OK — N = 2 tabs */}
           {(["screen", "log"] as const).map((p) => (
             <button
               key={p}
@@ -103,6 +104,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
         </div>
       ) : (
         <div className="dcon-pane dcon-log" role="log" aria-live="polite">
+          {/* loop: FIX-HOT-PATH — ≤ 200 log rows re-rendered, toLocaleTimeString each, per 10/s mirror frame */}
           {log.map((l) => (
             <div key={l.id} className="dcon-row">
               <span className="dcon-time">{new Date(l.at).toLocaleTimeString()}</span> {l.text}
@@ -168,8 +170,11 @@ function OledCanvas({ frame }: { frame: OledFrame | null }) {
     // The panel's contrast as brightness, never fully black when lit (the
     // lowest steps are still readable on the real panel).
     const level = frame ? 0.35 + 0.65 * (frame.contrast / 255) : 0;
+    // loop: HOT-PATH-OK — N = 3 color channels per mirror frame
     const on = ON.map((c) => Math.round(OFF[0] + (c - OFF[0]) * level));
+    // loop: HOT-PATH-OK — N = 64 rows per mirror frame, 10/s, only while shown
     for (let y = 0; y < FB_H; y++) {
+      // loop: HOT-PATH-OK — N = 128 x 64 = 8192 pixels per mirror frame, 10/s, only while shown
       for (let x = 0; x < FB_W; x++) {
         const lit = !!frame && frame.power !== "off" && (frame.pixels[y * 16 + (x >> 3)] & (0x80 >> (x & 7))) !== 0;
         const c = lit ? on : OFF;

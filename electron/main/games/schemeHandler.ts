@@ -253,6 +253,7 @@ export function desktopExec(text: string): string | null {
 export async function schemeHandlerExec(scheme: string): Promise<string | null> {
   const { entry } = await defaultHandler(scheme);
   if (!entry || !/^[\w.-]+\.desktop$/.test(entry)) return null;
+  // loop: SERIAL-REQUIRED — data dependency: the first XDG folder with the entry wins
   for (const dir of applicationDirs(launcherEnv(process.env, realHome()), realHome())) {
     try {
       return desktopExec(await readFile(join(dir, entry), "utf8"));

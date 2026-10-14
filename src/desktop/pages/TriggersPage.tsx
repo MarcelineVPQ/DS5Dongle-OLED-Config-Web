@@ -39,6 +39,7 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
         <p className="dk-hint">{t("desktop.triggers.hint", "Pick an effect, then pull L2 and R2. Games override this as soon as they send their own trigger effects.")}</p>
         {error && <div className="dk-notice error">{error}</div>}
         <div className="dk-presets">
+          {/* loop: HOT-PATH-OK — N = 7 presets; page render */}
           {PRESETS.map((name, i) => (
             <button type="button" key={name} className={`dk-btn${active === i ? " on" : ""}`} aria-pressed={active === i} disabled={!client} onClick={() => void pick(i)}>
               {t(`desktop.triggers.presets.${name.toLowerCase()}`, name)}

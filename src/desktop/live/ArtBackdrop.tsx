@@ -85,6 +85,7 @@ function useBackdropKeys(): string[] {
     };
   }, [desktop]);
   if (pin) {
+    // loop: HOT-PATH-OK — N ≤ 8 recent games with art, on render
     const pinned = keys.find((k) => k.endsWith(`:${pin}`));
     if (pinned) return [pinned];
   }
@@ -146,6 +147,7 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   const art = background === "art" && keys.length > 0;
   return (
     <div className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
+      {/* loop: HOT-PATH-OK — N ≤ 8 backdrop images; renders on a 20 s cycle tick */}
       {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero")} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} />}
       <div className="art-bd-dim" />
     </div>

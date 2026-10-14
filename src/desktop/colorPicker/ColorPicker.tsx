@@ -117,6 +117,7 @@ function ColorPopover({
     setSeen(value);
     setHsv((h) => hsvFromHex(value, h));
     setHexText(value);
+    // loop: HOT-PATH-OK — N = 3 channels; only when the value changes from outside
     setChannels((parseHex(value) ?? [0, 0, 0]).map(String));
   }
 
@@ -275,6 +276,7 @@ function ColorPopover({
   const hexValid = normalizeHex(hexText) !== null;
   const pct = (x: number) => Math.round(x * 100);
   const hue = Math.round(hsv.h) % 360;
+  // loop: HOT-PATH-OK — N = 3 channel names
   const channelNames = (["R", "G", "B"] as const).map((c) => t(`desktop.colorPicker.channel${c}`));
 
   return (
@@ -329,6 +331,7 @@ function ColorPopover({
             onKeyDown={(e) => e.key === "Enter" && commitHex()}
           />
         </label>
+        {/* loop: HOT-PATH-OK — N = 3 channel fields */}
         {channelNames.map((name, i) => (
           <label key={name} className="cp-field" title={name}>
             <span aria-hidden="true">{name.slice(0, 1)}</span>
@@ -350,6 +353,7 @@ function ColorPopover({
             {t("desktop.colorPicker.recent")}
           </span>
           <div className="cp-recent-row">
+            {/* loop: HOT-PATH-OK — N ≤ 8 recent colors (RECENT_MAX) */}
             {recent.map((hex) => (
               <button
                 key={hex}

@@ -43,6 +43,7 @@ export function parseKscreenOutputs(text: string): KscreenOutput[] {
     .flatMap((block) => {
       const name = /^\s*\d+\s+(\S+)/.exec(block)?.[1];
       if (!name) return [];
+      // loop: NOT-WORTH — lines of one kscreen output block
       const lines = block.split("\n").map((l) => l.trim());
       const joined = lines.join("\n");
       const modes = /^Modes:(.*)$/m.exec(joined)?.[1] ?? "";
@@ -80,6 +81,7 @@ export function gnomeScreens(text: string): HdrScreen[] {
   const starts = [...text.matchAll(/\(\('([^']*)', '[^']*', '[^']*', '[^']*'\), \[/g)];
   return starts.flatMap((m, i) => {
     const chunk = text.slice(m.index, starts[i + 1]?.index ?? text.length);
+    // loop: NOT-WORTH — modes of one GNOME monitor
     const mode = [...chunk.matchAll(/\('[^']*', (\d+), (\d+), ([\d.]+), [\d.]+, \[[^\]]*\], (?:@a\{sv\} )?\{([^}]*)\}\)/g)].find((x) => /'is-current': <true>/.test(x[4]));
     if (!mode) return []; // not lit up
     return [{ name: m[1], hdr: /'color-mode': <uint32 1>/.test(chunk), width: Number(mode[1]), height: Number(mode[2]), refresh: Number(mode[3]) }];
@@ -120,6 +122,7 @@ export const WSI_LAYER = /^VkLayer_FROG_gamescope_wsi\..+\.json$/;
 const hasLayer = (dirs: string[]) =>
   dirs.some((d) => {
     try {
+      // loop: NOT-WORTH — files in a few Vulkan layer folders
       return readdirSync(d).some((f) => WSI_LAYER.test(f));
     } catch {
       return false;

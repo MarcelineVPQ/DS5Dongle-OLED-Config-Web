@@ -18,6 +18,7 @@ export function isDongle(device: USBDevice): boolean {
 // (or the device is a real controller plugged in over USB).
 export function configuratorInterface(device: USBDevice): number {
   const config = device.configuration ?? device.configurations[0];
+  // loop: HOT-PATH-OK — N = 2-4 interfaces x 1-2 alternates
   const itf = config?.interfaces.find((i) => i.alternates.some((a) => a.interfaceClass === VENDOR_CLASS));
   return itf?.interfaceNumber ?? -1;
 }
@@ -35,6 +36,7 @@ export class WebUsbTransport implements Ds5Transport {
   static async findPermitted(): Promise<USBDevice | undefined> {
     if (!webUsbAvailable()) return undefined;
     const devices = await navigator.usb.getDevices();
+    // loop: HOT-PATH-OK — N = permitted USB devices, 1-2
     return devices.find((d) => isDongle(d) && configuratorInterface(d) >= 0);
   }
 

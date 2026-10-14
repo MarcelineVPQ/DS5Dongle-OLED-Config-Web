@@ -63,10 +63,12 @@ function simFirmware(updateVersion: number): Uint8Array {
   const v = new DataView(out.buffer);
   out[0] = 1;
   out.set(
+    // loop: NOT-WORTH — dev/test fake only; 11 chars per controller info read
     [..."Jun 13 2024"].map((c) => c.charCodeAt(0)),
     1,
   );
   out.set(
+    // loop: NOT-WORTH — dev/test fake only; 8 chars per controller info read
     [..."10:22:31"].map((c) => c.charCodeAt(0)),
     12,
   );
@@ -100,9 +102,12 @@ function simTelemetry(edge: boolean): Uint8Array {
   u16(68, 1204); // Bluetooth connects
   u16(70, 7); // Bluetooth timeouts
   const buttons = edge ? [86, 90, 94, 98, 102, 106, 110, 114, 118, 134, 154, 158, 162, 166] : [110, 114, 118, 122, 126, 130, 134, 138, 142, 146, 150, 154, 158, 162, 170, 174, 178, 182, 186];
+  // loop: NOT-WORTH — dev/test fake only; telemetry pages are read rarely
   buttons.forEach((o, i) => u32(o, 1000 + ((i * 7919) % 60000)));
   if (edge) {
+    // loop: NOT-WORTH — dev/test fake only; telemetry pages are read rarely
     [122, 126, 130, 138, 142, 146].forEach((o, i) => u32(o, 4000 + i * 900));
+    // loop: NOT-WORTH — dev/test fake only; telemetry pages are read rarely
     [170, 174, 178].forEach((o, i) => u16(o + 2, 300 + i * 40)); // mute, paddles
     u32(199, 88000);
     u32(205, 91000);
@@ -231,6 +236,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (state === 1) g.fillText("~--m", kEtaX, kBattY);
     const px = g.getImageData(0, 0, 128, 64).data;
     const out = new Uint8Array(1024);
+    // loop: HOT-PATH-OK — dev/test fake only: 128x64 px per simulated OLED mirror read
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) if (px[(y * 128 + x) * 4] > 127) out[y * 16 + (x >> 3)] |= 0x80 >> (x & 7);
     const fb = packedCanvas(out);
     drawBattery(fb, pct);
@@ -264,6 +270,7 @@ export class SimulatedDongle implements Ds5Transport {
     v.setUint8(11, 1 | (this.timerFallback ? 0x80 : 0));
     v.setUint8(12, SIM_TIMINGS.length);
     v.setUint16(13, Math.min(0xffff, Math.floor(since)), true);
+    // loop: HOT-PATH-OK — dev/test fake only; N = 8 timing stages
     SIM_TIMINGS.forEach(([avgNs, maxUs], i) => {
       const wobble = 1 + 0.08 * Math.sin(t * 0.7 + i);
       const grown = Math.min(1, 0.25 + since / 40); // worst cases accumulate
@@ -296,6 +303,7 @@ export class SimulatedDongle implements Ds5Transport {
         const live = this.opts.live ? this.liveScreen() : null;
         out.set([0, live ? 0 : 2, 0xff, this.seq & 0xff]);
         if (live) out.set(live, 4);
+        // loop: HOT-PATH-OK — dev/test fake only: 1024-byte test pattern
         else for (let i = 0; i < 1024; i++) out[4 + i] = i % 2 ? 0xaa : 0x55;
         return out.subarray(0, length);
       }
@@ -354,6 +362,7 @@ export class SimulatedDongle implements Ds5Transport {
       }
       case 0xfa: {
         const out = new Uint8Array(28);
+        // loop: HOT-PATH-OK — dev/test fake only; N = 4 slots
         this.slots.forEach((occupied, i) => {
           if (occupied) out.set([0x14, 0x3a, 0x9a, 0xff, 0xd9, i], i * 6);
           out[24 + i] = occupied ? 1 : 0;
@@ -610,11 +619,13 @@ export class SimulatedDongle implements Ds5Transport {
     out[16] = 4;
     out[17] = this.currentSlot;
     out[18] = 1;
+    // loop: HOT-PATH-OK — dev/test fake only; N ≤ 50 config bytes, early exit
     out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) || this.tail.some((b, i) => b !== this.flashTail[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0) | (this.tempCurves ? 0x04 : 0); // unsaved settings, temporary remap (1.8), temporary curves (1.10)
     out[24] = 8; // 80 % battery
     out[25] = this.playerLeds;
     out[26] = this.edge ? 1 : 0;
     out.set(
+      // loop: HOT-PATH-OK — dev/test fake only; N = 2 colorway chars
       [...this.colorwayCode].map((c) => c.charCodeAt(0)),
       27,
     );
@@ -626,6 +637,7 @@ export class SimulatedDongle implements Ds5Transport {
       if (minor >= 10) out[29] |= 0x40; // stick response curves (1.10)
       if (minor >= 11) out[29] |= 0x80; // per-stage timings in 0xFC, reset 0x15 (1.11)
       out.set(
+        // loop: HOT-PATH-OK — dev/test fake only; N = 8 board-name chars
         [..."Pico 2 W"].map((c) => c.charCodeAt(0)),
         30,
       );

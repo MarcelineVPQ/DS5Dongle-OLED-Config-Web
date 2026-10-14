@@ -26,6 +26,7 @@ async function readCapped(response: Response, max: number): Promise<string> {
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
+  // loop: SERIAL-REQUIRED — stream order: reads the capped body chunk by chunk
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;

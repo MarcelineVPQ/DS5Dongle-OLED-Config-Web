@@ -103,6 +103,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
 
   const remapped = useMemo(() => {
     const set = new Set<PartId>();
+    // loop: HOT-PATH-OK — N = 16 remap slots, useMemo on the device table
     for (const [part, index] of Object.entries(REMAP_INDEX)) if (remap.device[index!] !== index) set.add(part as PartId);
     return set;
   }, [remap.device]);

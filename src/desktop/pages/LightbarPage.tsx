@@ -34,6 +34,7 @@ export default function LightbarPage(props: SectionProps) {
           {t("desktop.lightbar.mode", "Mode")} {mark("lightbarMode")}
         </h2>
         <div className="dk-presets">
+          {/* loop: HOT-PATH-OK — N ≈ 6 lightbar modes; page render */}
           {LIGHTBAR_MODES.map((m) => (
             <button type="button" key={m.value} className={`dk-btn${d.lightbarMode === m.value ? " on" : ""}`} aria-pressed={d.lightbarMode === m.value} onClick={() => set("lightbarMode", m.value)}>
               {t(`desktop.lightbar.modes.${m.key}`, m.label)}
@@ -46,6 +47,7 @@ export default function LightbarPage(props: SectionProps) {
         <h2>
           {t("desktop.lightbar.favorites", "Favorite colors")} {mark("lbFavR")}
         </h2>
+        {/* loop: HOT-PATH-OK — N = 4 favorite slots; page render */}
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>
             <span className="dk-mono">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>

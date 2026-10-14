@@ -204,6 +204,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [idle, index, armedStep]);
   // Step 2 collects the different buttons pressed since it appeared.
   const [pressed, setPressed] = useState<{ step: number | null; labels: string[] }>({ step: null, labels: [] });
+  // loop: HOT-PATH-OK — N = 19 buttons, 30 Hz input renders while the tour is open
   const heldNow = input ? BUTTONS.filter(([, held]) => held(input)).map(([label]) => label) : [];
   const heldKey = heldNow.join(",");
   // lifetime: OK — cleanup cancels the frame
@@ -213,6 +214,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     const frame = requestAnimationFrame(() =>
       setPressed((p) => {
         const base = p.step === index ? p.labels : [];
+        // loop: HOT-PATH-OK — N <= 19 button labels, only when the held set changes on the press step
         const merged = [...base, ...heldKey.split(",").filter((l) => !base.includes(l))];
         return merged.length === base.length && p.step === index ? p : { step: index, labels: merged };
       }),
@@ -402,6 +404,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
         )}
         {step.key === "press" && pressedLabels.length > 0 && (
           <p className="tour-chips" aria-label={t("desktop.tour.pressedLabel")}>
+            {/* loop: HOT-PATH-OK — N ≤ 4 chips (PRESS_GOAL), per input render during the tour */}
             {pressedLabels.map((l) => (
               <span key={l} className="tour-chip">
                 {l}

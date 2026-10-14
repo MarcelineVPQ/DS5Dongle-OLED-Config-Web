@@ -183,6 +183,7 @@ function surfacesFor(body: Rgb, trim: Rgb): Record<string, string> {
   const input = mix(body, away, 0.15);
   const grounds = [body, inset, segment, input];
   // Always pushed toward the ink: at worst the ink itself (the best this body allows).
+  // loop: HOT-PATH-OK — N = 4 grounds x ≤ 20 steps, once per accent/theme change
   const legible = (c: Rgb, target: number) => grounds.reduce((acc, g) => ensureContrast(acc, g, target, ink), c);
   const text = (target: number, soften: number) => css(legible(mix(ink, body, soften), target));
   const accent = ensureContrast(trim, body, 3);
@@ -285,6 +286,7 @@ export function useControllerAccent(code: string | null, choice: (typeof ACCENTS
     setShade(code);
     if (controllerCode !== code) {
       controllerCode = code;
+      // loop: NOT-WORTH — a few listeners, only when the connected colorway changes
       codeListeners.forEach((l) => l());
     }
     controllerColor = choice === "controller" ? colorwayAccent(code) : null;

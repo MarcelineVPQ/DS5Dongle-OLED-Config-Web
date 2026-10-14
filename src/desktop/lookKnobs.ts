@@ -40,6 +40,7 @@ export function useKnob(k: Knob): [number, (v: number) => void] {
   return [Number(v), setNumber];
 }
 
+// loop: NOT-WORTH — N ≈ 4 look knobs; on a settings control render
 export const knob = (key: string) => KNOBS.find((k) => k.key === key)!;
 
 // App root: keeps the CSS variables in step with the knobs (one listener
@@ -59,6 +60,7 @@ export function useLookKnobs(): void {
   // lifetime: OK — acquires nothing (writes CSS variables on <html>)
   useEffect(() => {
     const root = document.documentElement;
+    // loop: NOT-WORTH — N ≈ 4 CSS variables; only when a knob changes
     KNOBS.forEach((k, i) => root.style.setProperty(k.cssVar, k.css(vals[i])));
     root.toggleAttribute("data-cards-translucent", vals[0] < 100);
   }, [vals]);

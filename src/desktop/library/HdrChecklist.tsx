@@ -11,6 +11,7 @@ export function HdrChecklist({ reqs }: { reqs: HdrReq[] }) {
   const { t } = useTranslation();
   return (
     <ul className="hdr-check">
+      {/* loop: HOT-PATH-OK — N ≈ 6 HDR requirements; renders on page open or rescan */}
       {reqs.map((r) => (
         <li key={r.id}>
           <span className={r.ok ? "hdr-ok" : "hdr-no"} aria-label={t(r.ok ? "desktop.hdrCheck.yes" : "desktop.hdrCheck.no")}>

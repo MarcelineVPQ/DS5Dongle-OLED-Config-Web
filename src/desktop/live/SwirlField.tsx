@@ -59,12 +59,14 @@ export function swirlPixel(x: number, y: number, t: number, out: number[]): void
   const d = Math.hypot(u - 0.5, v - 0.5);
   const f = [Math.sin(6.2 * u + 2.0 * Math.sin(2 * a + t * 0.05)), Math.cos(5.4 * v - 6.0 * d + t * 0.07), Math.sin(8.0 * d - 2 * a + t * 0.04), Math.cos(4.4 * (u + v) + t * 0.09)];
   let sum = 0;
+  // loop: HOT-PATH-OK — N = 4 colors per pixel; the cost is the pixel loop at 173
   for (let i = 0; i < 4; i++) {
     // Power 4: each band mostly one color, so they don't average into grey.
     const w = (f[i] + 1.2) ** 4;
     out[i] = w;
     sum += w;
   }
+  // loop: HOT-PATH-OK — N = 4 colors per pixel; the cost is the pixel loop at 173
   for (let i = 0; i < 4; i++) out[i] /= sum;
 }
 
@@ -170,10 +172,13 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
   return {
     draw(t, palette) {
       const px = image.data;
+      // loop: FIX-HOT-PATH — CPU fallback: 128 x 72 px in JS every 80 ms (no GPU / GPU lost)
       for (let y = 0; y < CPU_H; y++)
+        // loop: FIX-HOT-PATH — CPU fallback pixel loop, inner row
         for (let x = 0; x < CPU_W; x++) {
           swirlPixel(x / CPU_W, y / CPU_H, t, weights);
           const o = (y * CPU_W + x) * 4;
+          // loop: FIX-HOT-PATH — CPU fallback, 3 channels per pixel
           for (let ch = 0; ch < 3; ch++) px[o + ch] = weights[0] * palette[0][ch] + weights[1] * palette[1][ch] + weights[2] * palette[2][ch] + weights[3] * palette[3][ch];
           px[o + 3] = 255;
         }

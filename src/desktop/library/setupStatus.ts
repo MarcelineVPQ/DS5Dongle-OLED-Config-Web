@@ -13,6 +13,7 @@ export interface SetupStatus {
 }
 
 export function setupStatus(game: Pick<GameEntry, "fixes" | "gamepad" | "mode">, hdrReqs: HdrReq[]): SetupStatus {
+  // loop: HOT-PATH-OK — N ≈ 6 HDR requirements; per game page render
   const hdrOk = hdrReqs.every((r) => r.ok);
   const attention = game.fixes.length > 0 || game.gamepad === "no-build" || game.mode?.state === "own" || !hdrOk;
   const passed = (game.gamepad === "set" ? 1 : 0) + (game.mode?.state === "set" ? 1 : 0) + (hdrOk ? hdrReqs.length : 0);
@@ -30,7 +31,9 @@ export function canMarkNotDetected(game: Pick<GameEntry, "support" | "launcher">
 // This computer's HDR checklist (Home). gamescope from the Flatpak extension
 // only when every launcher found that runs Proton is a Flatpak.
 export function systemHdrReqs(report: GamesReport): HdrReq[] {
+  // loop: HOT-PATH-OK — N ≤ 4 launchers; Home and game page render
   const protonLaunchers = report.launchers.filter((l) => l.found && (l.id === "steam" || l.id === "heroic" || l.id === "lutris"));
+  // loop: HOT-PATH-OK — N ≤ 3 Proton launchers
   const flatpak = protonLaunchers.length > 0 && protonLaunchers.every((l) => l.flatpak);
   return hdrSystemReqs(report.system.hdr, { ourProton: report.ourProton.name, flatpak });
 }
@@ -49,9 +52,11 @@ export interface HomeStatus {
 export function homeStatus(report: GamesReport, declined: ReadonlySet<string>): HomeStatus {
   const linux = protonApplies();
   const s = report.system;
+  // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render
   const fixes = allFixes(report).some((f) => !declined.has(f.id));
   const proton = linux && (!report.ourProton.name || (report.ourProton.updateAvailable && !!report.ourProton.latest));
   const system = linux && (s.proAudio || s.hidrawAccess === false || s.envWarnings.length > 0);
+  // loop: HOT-PATH-OK — games (hundreds) until one has HDR, then ≤ 4 HDR checks; Home render
   const hdr = linux && report.games.some((g) => g.hdr !== undefined) && !systemHdrReqs(report).every((r) => r.ok);
   return { attention: fixes || proton || system || hdr, fixes, proton, system, hdr };
 }

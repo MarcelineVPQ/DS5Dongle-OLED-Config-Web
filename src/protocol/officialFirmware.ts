@@ -64,9 +64,12 @@ export type OfficialStatus = { status: "current" } | { status: "newer"; version:
 // lines that disagree), so the card shows nothing rather than a guess.
 export function compareOfficial(current: number, edge: boolean, official: OfficialFirmware): OfficialStatus | null {
   if (!isComparableVersion(current)) return null;
+  // loop: HOT-PATH-OK — N ≤ 3 firmware lines
   const candidates = FIRMWARE_LINES[edge ? "edge" : "dualsense"].filter((line) => line in official && current >= (LINE_FLOOR[line] ?? 0) && official[line] >= current).map((line) => official[line]);
   if (candidates.length === 0) return null;
+  // loop: HOT-PATH-OK — N ≤ 3 firmware lines
   if (candidates.every((v) => v === current)) return { status: "current" };
+  // loop: HOT-PATH-OK — N ≤ 3 firmware lines
   if (candidates.every((v) => v === candidates[0])) return { status: "newer", version: candidates[0] };
   return null;
 }
