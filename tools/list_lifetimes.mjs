@@ -75,7 +75,11 @@ function effectOfCleanup(fn) {
   if (!r) return null;
   let body = null;
   if (ts.isReturnStatement(r)) {
-    for (let p = r.parent; p; p = p.parent) if (isFn(p)) { body = p; break; }
+    for (let p = r.parent; p; p = p.parent)
+      if (isFn(p)) {
+        body = p;
+        break;
+      }
   } else if (ts.isArrowFunction(r) && r.body === fn) body = r;
   if (!body) return null;
   const call = body.parent;
@@ -119,7 +123,11 @@ const isGlobalCall = (call, names) => {
 function rearms(call) {
   const cb = call.arguments[0];
   let owner = null;
-  for (let p = call.parent; p; p = p.parent) if (isFn(p) && p !== cb) { owner = p; break; }
+  for (let p = call.parent; p; p = p.parent)
+    if (isFn(p) && p !== cb) {
+      owner = p;
+      break;
+    }
   if (!owner || !cb) return false;
   const name = fnName(owner);
   if (ts.isIdentifier(cb)) return cb.text === name;
@@ -132,7 +140,20 @@ function rearms(call) {
   return hit;
 }
 const OBSERVERS = new Set(["ResizeObserver", "MutationObserver", "IntersectionObserver", "PerformanceObserver"]);
-const ELECTRON_NEW = new Set(["BrowserWindow", "Tray", "Notification", "Worker", "MessageChannel", "WebSocket", "AudioContext", "OfflineAudioContext", "AudioWorkletNode", "Audio", "MediaRecorder", "SharedWorker"]);
+const ELECTRON_NEW = new Set([
+  "BrowserWindow",
+  "Tray",
+  "Notification",
+  "Worker",
+  "MessageChannel",
+  "WebSocket",
+  "AudioContext",
+  "OfflineAudioContext",
+  "AudioWorkletNode",
+  "Audio",
+  "MediaRecorder",
+  "SharedWorker",
+]);
 const PROC = new Set(["spawn", "exec", "execFile", "fork"]);
 const EMIT_ON = new Set(["on", "once", "addListener", "prependListener", "prependOnceListener"]);
 
@@ -145,7 +166,8 @@ function classify(n, sf) {
   }
   if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(n.left)) {
     const name = n.left.name.text;
-    if (/^on[a-z]+$/.test(name) && n.right.kind !== ts.SyntaxKind.NullKeyword && !(ts.isIdentifier(n.right) && n.right.text === "undefined")) return ["listener", `${short(n.left.expression.getText(sf), 30)}.${name} =`];
+    if (/^on[a-z]+$/.test(name) && n.right.kind !== ts.SyntaxKind.NullKeyword && !(ts.isIdentifier(n.right) && n.right.text === "undefined"))
+      return ["listener", `${short(n.left.expression.getText(sf), 30)}.${name} =`];
     return null;
   }
   if (!ts.isCallExpression(n)) return null;
@@ -165,7 +187,11 @@ function classify(n, sf) {
   }
   // The app's own subscriptions: onX(listener) returning an unsubscribe
   // (window.desktop.onWindowVisible, onThemeChange, store subscribe helpers).
-  if (/^on[A-Z]\w*$/.test(name) && n.arguments.some((a) => isFn(a) || checker.getNonNullableType(checker.getTypeAtLocation(a)).getCallSignatures().length > 0) && checker.getNonNullableType(checker.getTypeAtLocation(n)).getCallSignatures().length > 0) {
+  if (
+    /^on[A-Z]\w*$/.test(name) &&
+    n.arguments.some((a) => isFn(a) || checker.getNonNullableType(checker.getTypeAtLocation(a)).getCallSignatures().length > 0) &&
+    checker.getNonNullableType(checker.getTypeAtLocation(n)).getCallSignatures().length > 0
+  ) {
     return ["subscribe", `${recv ? short(recv, 30) + "." : ""}${name}`];
   }
   if ((name === "handle" || name === "handleOnce") && recv === "ipcMain") return ["ipc", `ipcMain.${name} "${strArg(n)}"`];
