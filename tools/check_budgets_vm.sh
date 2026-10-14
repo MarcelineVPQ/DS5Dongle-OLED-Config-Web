@@ -19,7 +19,7 @@
 #
 #   tools/check_budgets_vm.sh --installer <...>-win-x64-setup.exe     --quick (~12 min)
 #   tools/check_budgets_vm.sh --long --installer <exe>                ~60 min, with the soak
-#   tools/check_budgets_vm.sh --build                                 cross-build a dev installer from this tree first (~5 min), then measure it
+#   tools/check_budgets_vm.sh --build                                 cross-build a dev installer from this tree first (~5 min, into tmp/budgets-vm-build), then measure it
 #   tools/check_budgets_vm.sh                                         measure the app already installed in the VM
 #   DS5_BUDGET_PAGES / DS5_BUDGET_MODE work as for tools/check_budgets.sh; DS5_BUDGET_KEEP=1 leaves the copy running
 #
@@ -28,6 +28,7 @@
 set -euo pipefail
 APP="$(cd "$(dirname "$0")/.." && pwd)"
 STATE="$APP/tmp/budgets-vm"
+BUILT="$APP/tmp/budgets-vm-build"
 VM="${DS5_BUDGET_VM:-win11-test}"
 PORT="${DS5_BUDGET_PORT:-9420}"
 ISO="$HOME/VMs/test-budgets.iso"
@@ -64,7 +65,7 @@ ga '{"execute":"guest-ping"}' > /dev/null || { echo "The VM's guest agent doesn'
 
 cd "$APP"
 rm -rf "$STATE"
-mkdir -p "$STATE/cd/tools"
+mkdir -p "$STATE/cd/tools" "$BUILT"
 
 if [ "$BUILD" = 1 ]; then
   echo "== Building a dev installer (DS5_DEV_TOOLS=1, NSIS, nice 19)"
@@ -72,14 +73,14 @@ if [ "$BUILD" = 1 ]; then
   # Windows one (the running-game check, electron/main/games/winProcs.ts).
   koffi="$(node -p 'require("./package.json").dependencies.koffi')"
   if [ ! -d node_modules/@koromix/koffi-win32-x64 ]; then
-    mkdir -p "$STATE/koffi" node_modules/@koromix/koffi-win32-x64
-    (cd "$STATE/koffi" && npm pack -q "@koromix/koffi-win32-x64@$koffi" > /dev/null)
-    tar xzf "$STATE/koffi"/koromix-koffi-win32-x64-*.tgz -C node_modules/@koromix/koffi-win32-x64 --strip-components=1
+    mkdir -p "$BUILT/koffi" node_modules/@koromix/koffi-win32-x64
+    (cd "$BUILT/koffi" && npm pack -q "@koromix/koffi-win32-x64@$koffi" > /dev/null)
+    tar xzf "$BUILT/koffi"/koromix-koffi-win32-x64-*.tgz -C node_modules/@koromix/koffi-win32-x64 --strip-components=1
   fi
-  rm -rf "$STATE/release"
-  DS5_DEV_TOOLS=1 nice -n 19 npx electron-vite build > "$STATE/build.log" 2>&1
-  nice -n 19 npx electron-builder --win -c.directories.output="$STATE/release" >> "$STATE/build.log" 2>&1 || { echo "The build failed; see $STATE/build.log" >&2; exit 1; }
-  INSTALLER="$(ls "$STATE"/release/*-setup.exe | head -n 1)"
+  rm -rf "$BUILT/release"
+  DS5_DEV_TOOLS=1 nice -n 19 npx electron-vite build > "$BUILT/build.log" 2>&1
+  nice -n 19 npx electron-builder --win -c.directories.output="$BUILT/release" >> "$BUILT/build.log" 2>&1 || { echo "The build failed; see $BUILT/build.log" >&2; exit 1; }
+  INSTALLER="$(ls "$BUILT"/release/*-setup.exe | head -n 1)"
 fi
 
 echo "== Preparing the CD"
