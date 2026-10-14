@@ -19,6 +19,7 @@ import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
+import { FeedCache, FeedMissingError } from "./updateFeed";
 
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
@@ -65,17 +66,12 @@ function downloadAllowed(url: string): boolean {
 
 type Platform = "linux" | "windows" | "macos";
 
-// The feed isn't there (yet): no release has been published. Not a network error.
-export class FeedMissingError extends Error {
-  constructor() {
-    super("No release has been published yet.");
-  }
-}
-
 export class Updater {
   private state: UpdateState = { phase: "idle" };
-  // cache: FIX-STALE — key=none (the feed of the channel at check time); invalidated=each update check (6 h, never with automatic checks off); bound=1 entry (docs/CACHE_PASS_2026-10.md)
+  // cache: OK — key=none (the feed the app offer on screen came from); invalidated=each update check; bound=1 entry. Only the app update installs from it; firmware downloads use the entry the user was shown (firmwareSource.ts)
   private manifest: Manifest | null = null;
+  // The feed, shared by the update check and the firmware lookups (one fetch per check).
+  readonly feed = new FeedCache((channel) => this.fetchManifest(channel));
   private busy = false;
   // cache: OK — key=none (the installed update); invalidated=replaced by the next install, used once on restart; bound=1 entry
   private installedPath: string | null = null;
@@ -91,10 +87,6 @@ export class Updater {
 
   getState(): UpdateState {
     return this.state;
-  }
-
-  getManifest(): Manifest | null {
-    return this.manifest;
   }
 
   // Why this copy can't replace itself, or null if it can.
@@ -152,7 +144,7 @@ export class Updater {
     if (this.busy || this.state.phase === "ready") return this.state;
     this.set({ phase: "checking" });
     try {
-      const manifest = await this.fetchManifest();
+      const manifest = await this.feed.get(this.channel(), 0);
       this.manifest = manifest;
       const remote = manifest.app.version;
       const offer = allowOlder ? !sameVersion(remote, app.getVersion()) : isNewer(remote, app.getVersion());
@@ -228,17 +220,13 @@ export class Updater {
     return text.length > CHANGELOG_MAX_CHARS ? text.slice(0, CHANGELOG_MAX_CHARS) : text;
   }
 
-  // Firmware for the renderer's flasher: downloaded and verified here (the
-  // renderer's CSP can't reach the network), returned as bytes.
-  async downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }> {
-    const manifest = this.manifest ?? (await this.fetchManifest());
-    this.manifest = manifest;
-    const fw = manifest.firmware;
-    if (!fw) throw new Error("No firmware is published in the update manifest.");
-    if (fw.uf2.size > FIRMWARE_MAX_BYTES) throw new Error("The published firmware is implausibly large.");
-    if (!downloadAllowed(fw.uf2.url)) throw new Error("The firmware points somewhere other than GitHub; refusing.");
-    const bytes = await downloadBytes(fw.uf2);
-    return { version: fw.version, bytes };
+  // A published firmware file for the renderer's flasher: downloaded and
+  // verified (size + SHA-256 of `uf2`) here, since the renderer's CSP can't
+  // reach the network. Which entry to download is firmwareSource.ts's call.
+  async downloadFirmwareFile(uf2: Download): Promise<Uint8Array> {
+    if (uf2.size > FIRMWARE_MAX_BYTES) throw new Error("The published firmware is implausibly large.");
+    if (!downloadAllowed(uf2.url)) throw new Error("The firmware points somewhere other than GitHub; refusing.");
+    return downloadBytes(uf2);
   }
 
   // Where the new build goes. Linux: a versioned file beside the running

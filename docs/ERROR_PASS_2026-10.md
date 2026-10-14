@@ -49,25 +49,25 @@ PASSES-ON closes mechanically. Every promise the app creates ends at one of: a c
 
 ## Counts
 
-### App (`MarcelineVPQ/DS5Dongle-OLED-Config-Web`): 515 rows
+### App (`MarcelineVPQ/DS5Dongle-OLED-Config-Web`): 520 rows
 
 | Kind | SHOWN | LOGGED-OK | SILENT-BUG | SWALLOWED | FLOATING | NOT-WORTH | PASSES-ON | Total |
 |---|---|---|---|---|---|---|---|---|
-| catch | 43 | 3 | 1 | 1 | 0 | 95 | 10 | 153 |
+| catch | 43 | 3 | 1 | 1 | 0 | 95 | 11 | 154 |
 | .catch | 34 | 57 | 0 | 0 | 0 | 13 | 1 | 105 |
-| .then-reject | 6 | 4 | 0 | 0 | 0 | 6 | 0 | 16 |
+| .then-reject | 6 | 5 | 0 | 0 | 0 | 6 | 0 | 17 |
 | void | 7 | 25 | 0 | 0 | 0 | 4 | 0 | 36 |
 | floating | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | ipc-handler | 0 | 3 | 0 | 0 | 0 | 2 | 33 | 38 |
-| ipc-call | 29 | 18 | 0 | 0 | 0 | 3 | 14 | 64 |
+| ipc-call | 29 | 19 | 0 | 0 | 0 | 3 | 13 | 64 |
 | schema | 2 | 3 | 0 | 0 | 0 | 3 | 3 | 11 |
 | spawn | 6 | 0 | 0 | 0 | 0 | 14 | 8 | 28 |
-| fetch | 0 | 0 | 0 | 0 | 0 | 0 | 8 | 8 |
+| fetch | 0 | 0 | 0 | 0 | 0 | 0 | 9 | 9 |
 | json-parse | 0 | 0 | 0 | 0 | 0 | 6 | 7 | 13 |
-| result-field | 41 | 0 | 0 | 0 | 0 | 2 | 0 | 43 |
-| **Total** | **168** | **113** | **1** | **1** | **0** | **148** | **84** | **515** |
+| result-field | 43 | 0 | 0 | 0 | 0 | 2 | 0 | 45 |
+| **Total** | **170** | **115** | **1** | **1** | **0** | **148** | **85** | **520** |
 
-Electron main process 227 rows, renderer 288. How each verdict was reached: 281 by a comment, 61 from `logged()`, 15 from `shown()`, 11 from a rethrow, 33 IPC handlers that pass a throw to the page, and 114 by following the call to where its error lands.
+Electron main process 229 rows, renderer 291. How each verdict was reached: 284 by a comment, 62 from `logged()`, 15 from `shown()`, 12 from a rethrow, 33 IPC handlers that pass a throw to the page, and 114 by following the call to where its error lands.
 
 **As found, before the fixes.** ESLint's `no-floating-promises` (with `void` not exempt) flagged **95 floating promises**, all behind `void`, with no handler. There were **23 silent failures** in user actions. 22 are fixed below, and 1 is left (E1). There were **6 swallowed errors**: BusyButton and Toggle dropped every rejection with "the caller reports its own errors" (several callers didn't), and the main process dropped three malformed IPC sends without a log. 5 are fixed, and 1 is left (E2). There was also **1 raw message**: board results read "Command 0x04 failed".
 
@@ -157,13 +157,13 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 23 | `downloadBytes` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of downloadBytes handles it _(flow)_ |
-| 34 | `downloadVerified` | .catch | `(cause: unknown) => { throw cause instanceof Error && cause.` | **PASSES-ON** | the handler rethrows _(rethrow)_ |
-| 34 | `downloadVerified` | fetch | `net.fetch` | **PASSES-ON** | the handler rethrows _(via .catch L34)_ |
-| 50 | `downloadVerified` | .catch | `() => undefined` | **NOT-WORTH** | only marks the write-error promise handled; the same rejection is awaited through Promise.race below and rethrown |
-| 71 | `downloadVerified` | catch | `rethrow` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
-| 74 | `downloadVerified` | .catch | `() => undefined` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
-| 74 | `downloadVerified` | void | `reader.cancel().catch(() => undefined)` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
+| 29 | `downloadBytes` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of downloadBytes handles it _(flow)_ |
+| 40 | `downloadVerified` | .catch | `(cause: unknown) => { throw cause instanceof Error && cause.` | **PASSES-ON** | the handler rethrows _(rethrow)_ |
+| 40 | `downloadVerified` | fetch | `net.fetch` | **PASSES-ON** | the handler rethrows _(via .catch L40)_ |
+| 56 | `downloadVerified` | .catch | `() => undefined` | **NOT-WORTH** | only marks the write-error promise handled; the same rejection is awaited through Promise.race below and rethrown |
+| 77 | `downloadVerified` | catch | `rethrow` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
+| 80 | `downloadVerified` | .catch | `() => undefined` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
+| 80 | `downloadVerified` | void | `reader.cancel().catch(() => undefined)` | **NOT-WORTH** | cleanup while the real error is rethrown below; a failed cancel adds nothing |
 
 #### electron/main/feedSignature.ts
 
@@ -175,10 +175,12 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 31 | `readBundled` | json-parse | `readFileSync(join(dir, "firmware.json"),` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used _(via catch L33)_ |
-| 31 | `readBundled` | schema | `BundleInfo.parse` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used _(via catch L33)_ |
-| 33 | `readBundled` | catch | `fallback: zod.parse, JSON.parse, readFileSync` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used |
-| 59 | `<module>` | result-field | `FirmwareSourceDeps.manifest.problem: FirmwareLookup["problem"]` | **SHOWN** | desktop.firmware.offline (FirmwarePage: desktop.firmware.unpublished / offline under Latest, checkedNone / checkedOffline after Check now) |
+| 33 | `readBundled` | json-parse | `readFileSync(join(dir, "firmware.json"),` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used _(via catch L35)_ |
+| 33 | `readBundled` | schema | `BundleInfo.parse` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used _(via catch L35)_ |
+| 35 | `readBundled` | catch | `fallback: zod.parse, JSON.parse, readFileSync` | **NOT-WORTH** | development builds have no bundled firmware: the published one is used |
+| 63 | `<module>` | result-field | `FirmwareSourceDeps.manifest.problem: FirmwareLookup["problem"]` | **SHOWN** | desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest, checkedNone / checkedOffline after Check now) |
+| 82 | `firmwareFeed > <anonymous>` | catch | `fallback` | **SHOWN** | desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; the last feed fetched answers when offline) |
+| 118 | `firmwareBytes` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
 
 #### electron/main/games/appinfo.ts
 
@@ -374,31 +376,29 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 68 | `isDirectory` | catch | `fallback: statSync` | **NOT-WORTH** | a missing folder is "no folder": the game action returns false and the page shows desktop.library.action.failed |
-| 85 | `<module>` | .catch | `(cause: unknown) => { dialog.showErrorBox("DS5 Dongle Config` | **SHOWN** | main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English) |
-| 101 | `recordGpuCrash > on(cb)` | catch | `fallback` | **LOGGED-OK** | not a user action: this run already falls back to software rendering; the next crash tries again |
-| 123 | `scheduledCheck` | .catch | `logged("scheduled update check (not started by the user; a f` | **LOGGED-OK** | scheduled update check (not started by the user; a failed check shows as the 'failed' banner state) _(logged())_ |
-| 129 | `start` | catch | `fallback` | **LOGGED-OK** | the start-up re-apply of an unchanged setting; changing it in App settings or the tray shows desktop.errors.settingNotSaved |
-| 146 | `setSetting` | catch | `fallback` | **SHOWN** | desktop.errors.settingNotSaved (the tray's checkbox goes back; updateSetting logged the cause) |
-| 155 | `checkForUpdates` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown _(logged())_ |
-| 199 | `start > <anonymous>` | .then-reject | `logged("background scan for the running-game watcher (the Ga` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(logged())_ |
-| 199 | `start > <anonymous>` | void | `games.scan().then( // Consent may have been turned off while` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(via .then-reject L199)_ |
-| 210 | `start > handle(cb)` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of handle(cb) handles it _(flow)_ |
-| 215 | `start > <anonymous>` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of <anonymous> handles it _(flow)_ |
-| 226 | `manifest` | catch | `fallback` | **SHOWN** | desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; a cached feed answers when offline) |
-| 265 | `gameAction` | .catch | `() => null` | **NOT-WORTH** | no quiet start for this game: the launcher link below starts it instead |
-| 272 | `gameAction` | .then-reject | `() => false` | **SHOWN** | desktop.library.action.failed (was SILENT-BUG: a failed open still answered true) |
-| 302 | `devChannelPreview` | catch | `fallback` | **SHOWN** | desktop.channel.joinOffline (offline or no dev build yet) |
-| 324 | `start > watchDesktopPalette(cb)` | void | `readDesktopPalette() .then((palette) => mainWindow?.webConte` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(via .catch L326)_ |
-| 326 | `start > watchDesktopPalette(cb)` | .catch | `logged("following the desktop's accent color (the theme keep` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(logged())_ |
-| 353 | `installInBackground` | .catch | `logged("automatic update install (a failure shows as the 'fa` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(logged())_ |
-| 353 | `installInBackground` | void | `updater.downloadAndInstall().catch(logged("automatic update ` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(via .catch L353)_ |
-| 370 | `updateSetting` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 375 | `updateSetting` | catch | `empty` | **NOT-WORTH** | the file couldn't be written a moment ago either; it still holds the old value |
-| 385 | `updateSetting` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner _(logged())_ |
-| 487 | `createWindow` | .catch | `logged("loading the app's own page")` | **LOGGED-OK** | loading the app's own page _(logged())_ |
-| 496 | `openExternalLink` | .then-reject | `() => showMainError("desktop.errors.linkNotOpened")` | **SHOWN** | desktop.errors.linkNotOpened (was SILENT-BUG: a link that didn't open showed nothing) |
-| 515 | `isAppUrl` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL is "not the app's page": navigation stays blocked, as intended |
+| 69 | `isDirectory` | catch | `fallback: statSync` | **NOT-WORTH** | a missing folder is "no folder": the game action returns false and the page shows desktop.library.action.failed |
+| 86 | `<module>` | .catch | `(cause: unknown) => { dialog.showErrorBox("DS5 Dongle Config` | **SHOWN** | main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English) |
+| 102 | `recordGpuCrash > on(cb)` | catch | `fallback` | **LOGGED-OK** | not a user action: this run already falls back to software rendering; the next crash tries again |
+| 124 | `scheduledCheck` | .catch | `logged("scheduled update check (not started by the user; a f` | **LOGGED-OK** | scheduled update check (not started by the user; a failed check shows as the 'failed' banner state) _(logged())_ |
+| 130 | `start` | catch | `fallback` | **LOGGED-OK** | the start-up re-apply of an unchanged setting; changing it in App settings or the tray shows desktop.errors.settingNotSaved |
+| 147 | `setSetting` | catch | `fallback` | **SHOWN** | desktop.errors.settingNotSaved (the tray's checkbox goes back; updateSetting logged the cause) |
+| 156 | `checkForUpdates` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown _(logged())_ |
+| 200 | `start > <anonymous>` | .then-reject | `logged("background scan for the running-game watcher (the Ga` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(logged())_ |
+| 200 | `start > <anonymous>` | void | `games.scan().then( // Consent may have been turned off while` | **LOGGED-OK** | background scan for the running-game watcher (the Games page scans again and shows its own errors) _(via .then-reject L200)_ |
+| 211 | `start > handle(cb)` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of handle(cb) handles it _(flow)_ |
+| 216 | `start > <anonymous>` | fetch | `net.fetch` | **PASSES-ON** | returned: the caller of <anonymous> handles it _(flow)_ |
+| 262 | `gameAction` | .catch | `() => null` | **NOT-WORTH** | no quiet start for this game: the launcher link below starts it instead |
+| 269 | `gameAction` | .then-reject | `() => false` | **SHOWN** | desktop.library.action.failed (was SILENT-BUG: a failed open still answered true) |
+| 313 | `start > watchDesktopPalette(cb)` | void | `readDesktopPalette() .then((palette) => mainWindow?.webConte` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(via .catch L315)_ |
+| 315 | `start > watchDesktopPalette(cb)` | .catch | `logged("following the desktop's accent color (the theme keep` | **LOGGED-OK** | following the desktop's accent color (the theme keeps its last colors) _(logged())_ |
+| 342 | `installInBackground` | .catch | `logged("automatic update install (a failure shows as the 'fa` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(logged())_ |
+| 342 | `installInBackground` | void | `updater.downloadAndInstall().catch(logged("automatic update ` | **LOGGED-OK** | automatic update install (a failure shows as the 'failed' banner) _(via .catch L342)_ |
+| 359 | `updateSetting` | catch | `rethrow` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 364 | `updateSetting` | catch | `empty` | **NOT-WORTH** | the file couldn't be written a moment ago either; it still holds the old value |
+| 376 | `updateSetting` | .catch | `logged("updater.check() doesn't reject: a failed check is th` | **LOGGED-OK** | updater.check() doesn't reject: a failed check is the 'failed' banner _(logged())_ |
+| 478 | `createWindow` | .catch | `logged("loading the app's own page")` | **LOGGED-OK** | loading the app's own page _(logged())_ |
+| 487 | `openExternalLink` | .then-reject | `() => showMainError("desktop.errors.linkNotOpened")` | **SHOWN** | desktop.errors.linkNotOpened (was SILENT-BUG: a link that didn't open showed nothing) |
+| 506 | `isAppUrl` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL is "not the app's page": navigation stays blocked, as intended |
 
 #### electron/main/integration.ts
 
@@ -416,50 +416,50 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 42 | `parseRequest` | schema | `schema.safeParse` | **SHOWN** | desktop.errors.badRequest (the page maps BAD_REQUEST to it) |
-| 108 | `<module>` | result-field | `IpcHandlers.setupUsbAccess.ok: boolean` | **SHOWN** | main-english: the message under Set up USB access (UsbAccessSetup) (batch E3) |
-| 110 | `<module>` | result-field | `IpcHandlers.repairWindowsUsb.ok: boolean` | **SHOWN** | main-english: the message under the Windows USB repair (WindowsUsbRepair) (batch E3) |
-| 137 | `registerIpc` | ipc-handler | `on IPC.reportStatus` | **LOGGED-OK** | a status that doesn't fit is logged (an app bug); the tray keeps its last status |
-| 140 | `registerIpc > on(cb)` | schema | `DeviceStatusSchema.safeParse` | **LOGGED-OK** | our own page's status report not fitting is an app bug, logged; the tray keeps its last status |
-| 146 | `registerIpc` | ipc-handler | `on IPC.setTrayIcon` | **LOGGED-OK** | an icon that doesn't fit is logged (an app bug); the tray keeps its last icon |
-| 149 | `registerIpc > on(cb)` | schema | `TrayIconSchema.safeParse` | **LOGGED-OK** | an icon from our own page that doesn't fit is an app bug, logged; the tray keeps its last icon |
-| 154 | `registerIpc` | ipc-handler | `handle IPC.getSettings` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 160 | `registerIpc` | ipc-handler | `on IPC.appVersion` | **NOT-WORTH** | a synchronous read of a constant; an untrusted sender gets "" |
-| 169 | `registerIpc` | ipc-handler | `handle IPC.checkForUpdates` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 170 | `registerIpc` | ipc-handler | `handle IPC.getUpdateState` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 171 | `registerIpc` | ipc-handler | `handle IPC.installUpdate` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 172 | `registerIpc` | ipc-handler | `handle IPC.backToStable` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 173 | `registerIpc` | ipc-handler | `handle IPC.devChannelPreview` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 174 | `registerIpc` | ipc-handler | `handle IPC.latestFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 175 | `registerIpc` | ipc-handler | `handle IPC.downloadFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 176 | `registerIpc` | ipc-handler | `handle IPC.getDesktopPalette` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 177 | `registerIpc` | ipc-handler | `handle IPC.firmwareChangelog` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 179 | `registerIpc` | ipc-handler | `handle IPC.getFirmwareHold` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 181 | `registerIpc` | ipc-handler | `on IPC.setFirmwareWriting` | **LOGGED-OK** | a value that doesn't fit is logged (an app bug) |
-| 184 | `registerIpc > on(cb)` | schema | `z.boolean().safeParse` | **LOGGED-OK** | only our own page sends it, always a boolean; a misfit is an app bug, logged |
-| 190 | `registerIpc` | ipc-handler | `on IPC.restartToUpdate` | **NOT-WORTH** | no payload to reject; an untrusted sender is ignored, as for every channel |
-| 194 | `registerIpc` | ipc-handler | `handle IPC.usbAccessInstalled` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 199 | `registerIpc` | ipc-handler | `handle IPC.setupUsbAccess` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 204 | `registerIpc` | ipc-handler | `handle IPC.repairWindowsUsb` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 209 | `registerIpc` | ipc-handler | `handle IPC.gamesScan` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 210 | `registerIpc` | ipc-handler | `handle IPC.gamesBackups` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 211 | `registerIpc` | ipc-handler | `handle IPC.gamesRunningLaunchers` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 212 | `registerIpc` | ipc-handler | `handle IPC.installProton` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 218 | `registerIpc` | ipc-handler | `handle IPC.gamesApply` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 219 | `registerIpc` | ipc-handler | `handle IPC.gamesUndo` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 220 | `registerIpc` | ipc-handler | `handle IPC.gamesDetails` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 221 | `registerIpc` | ipc-handler | `handle IPC.gamesRunning` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 222 | `registerIpc` | ipc-handler | `handle IPC.libraryGet` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 223 | `registerIpc` | ipc-handler | `handle IPC.librarySetProfile` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 224 | `registerIpc` | ipc-handler | `handle IPC.libraryDeleteProfile` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 225 | `registerIpc` | ipc-handler | `handle IPC.librarySetMine` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 226 | `registerIpc` | ipc-handler | `handle IPC.librarySetRestore` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 227 | `registerIpc` | ipc-handler | `handle IPC.librarySetLayout` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 228 | `registerIpc` | ipc-handler | `handle IPC.libraryDeleteLayout` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 229 | `registerIpc` | ipc-handler | `handle IPC.gameAction` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 230 | `registerIpc` | ipc-handler | `handle IPC.gameArtColor` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 231 | `registerIpc` | ipc-handler | `handle IPC.officialControllerFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
-| 233 | `registerIpc` | ipc-handler | `handle IPC.setSetting` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 44 | `parseRequest` | schema | `schema.safeParse` | **SHOWN** | desktop.errors.badRequest (the page maps BAD_REQUEST to it) |
+| 121 | `<module>` | result-field | `IpcHandlers.setupUsbAccess.ok: boolean` | **SHOWN** | main-english: the message under Set up USB access (UsbAccessSetup) (batch E3) |
+| 123 | `<module>` | result-field | `IpcHandlers.repairWindowsUsb.ok: boolean` | **SHOWN** | main-english: the message under the Windows USB repair (WindowsUsbRepair) (batch E3) |
+| 150 | `registerIpc` | ipc-handler | `on IPC.reportStatus` | **LOGGED-OK** | a status that doesn't fit is logged (an app bug); the tray keeps its last status |
+| 153 | `registerIpc > on(cb)` | schema | `DeviceStatusSchema.safeParse` | **LOGGED-OK** | our own page's status report not fitting is an app bug, logged; the tray keeps its last status |
+| 159 | `registerIpc` | ipc-handler | `on IPC.setTrayIcon` | **LOGGED-OK** | an icon that doesn't fit is logged (an app bug); the tray keeps its last icon |
+| 162 | `registerIpc > on(cb)` | schema | `TrayIconSchema.safeParse` | **LOGGED-OK** | an icon from our own page that doesn't fit is an app bug, logged; the tray keeps its last icon |
+| 167 | `registerIpc` | ipc-handler | `handle IPC.getSettings` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 173 | `registerIpc` | ipc-handler | `on IPC.appVersion` | **NOT-WORTH** | a synchronous read of a constant; an untrusted sender gets "" |
+| 182 | `registerIpc` | ipc-handler | `handle IPC.checkForUpdates` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 183 | `registerIpc` | ipc-handler | `handle IPC.getUpdateState` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 184 | `registerIpc` | ipc-handler | `handle IPC.installUpdate` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 185 | `registerIpc` | ipc-handler | `handle IPC.backToStable` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 186 | `registerIpc` | ipc-handler | `handle IPC.getDesktopPalette` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 187 | `registerIpc` | ipc-handler | `handle IPC.firmwareChangelog` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 189 | `registerIpc` | ipc-handler | `handle IPC.getFirmwareHold` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 191 | `registerIpc` | ipc-handler | `on IPC.setFirmwareWriting` | **LOGGED-OK** | a value that doesn't fit is logged (an app bug) |
+| 194 | `registerIpc > on(cb)` | schema | `z.boolean().safeParse` | **LOGGED-OK** | only our own page sends it, always a boolean; a misfit is an app bug, logged |
+| 200 | `registerIpc` | ipc-handler | `on IPC.restartToUpdate` | **NOT-WORTH** | no payload to reject; an untrusted sender is ignored, as for every channel |
+| 204 | `registerIpc` | ipc-handler | `handle IPC.usbAccessInstalled` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 209 | `registerIpc` | ipc-handler | `handle IPC.setupUsbAccess` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 214 | `registerIpc` | ipc-handler | `handle IPC.repairWindowsUsb` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 219 | `registerIpc` | ipc-handler | `handle IPC.gamesScan` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 220 | `registerIpc` | ipc-handler | `handle IPC.gamesBackups` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 221 | `registerIpc` | ipc-handler | `handle IPC.gamesRunningLaunchers` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 222 | `registerIpc` | ipc-handler | `handle IPC.installProton` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 228 | `registerIpc` | ipc-handler | `handle IPC.gamesApply` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 229 | `registerIpc` | ipc-handler | `handle IPC.gamesUndo` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 230 | `registerIpc` | ipc-handler | `handle IPC.gamesDetails` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 231 | `registerIpc` | ipc-handler | `handle IPC.gamesRunning` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 232 | `registerIpc` | ipc-handler | `handle IPC.libraryGet` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 233 | `registerIpc` | ipc-handler | `handle IPC.librarySetProfile` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 234 | `registerIpc` | ipc-handler | `handle IPC.libraryDeleteProfile` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 235 | `registerIpc` | ipc-handler | `handle IPC.librarySetMine` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 236 | `registerIpc` | ipc-handler | `handle IPC.librarySetRestore` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 237 | `registerIpc` | ipc-handler | `handle IPC.librarySetLayout` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 238 | `registerIpc` | ipc-handler | `handle IPC.libraryDeleteLayout` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 239 | `registerIpc` | ipc-handler | `handle IPC.gameAction` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 240 | `registerIpc` | ipc-handler | `handle IPC.gameArtColor` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 241 | `registerIpc` | ipc-handler | `handle IPC.officialControllerFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 242 | `registerIpc` | ipc-handler | `handle IPC.devChannelPreview` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 243 | `registerIpc` | ipc-handler | `handle IPC.latestFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 244 | `registerIpc` | ipc-handler | `handle IPC.downloadFirmware` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
+| 246 | `registerIpc` | ipc-handler | `handle IPC.setSetting` | **PASSES-ON** | a throw rejects the renderer's call; that ipc-call row has the verdict _(ipc)_ |
 
 #### electron/main/linuxSetup.ts
 
@@ -489,25 +489,32 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 65 | `loadSettings` | schema | `SettingsFile.safeParse` | **NOT-WORTH** | a settings file that doesn't fit: the defaults, written back on the next save |
 | 67 | `loadSettings` | catch | `fallback: zod.safeParse, JSON.parse, readFileSync` | **NOT-WORTH** | no file yet (first start) or a broken one: the defaults, which the next save writes back |
 
+#### electron/main/updateFeed.ts
+
+| Line | Function | Kind | Detail | Verdict | Why |
+|---|---|---|---|---|---|
+| 38 | `get` | fetch | `fetch` | **PASSES-ON** | returned to get()'s caller (check(), firmwareFeed(), devChannelPreview() each have the verdict) |
+| 63 | `devChannelPreview` | catch | `fallback` | **SHOWN** | desktop.channel.joinOffline (offline or no dev build yet) |
+
 #### electron/main/updater.ts
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 42 | `isLoopbackHttp` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL: no test feed |
-| 135 | `pruneStaleFiles` | catch | `empty: readdirSync, rmSync` | **NOT-WORTH** | Best effort; nothing depends on it. |
-| 166 | `check` | catch | `fallback` | **SHOWN** | desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install") |
-| 181 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
-| 186 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
-| 190 | `fetchManifest` | json-parse | `text` | **PASSES-ON** | rethrows to the caller _(via catch L191)_ |
-| 191 | `fetchManifest` | catch | `rethrow: JSON.parse` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 195 | `fetchManifest` | schema | `Manifest.safeParse` | **PASSES-ON** | a malformed manifest throws "the update manifest is malformed" to check()'s catch |
-| 215 | `downloadAndInstall` | catch | `fallback` | **SHOWN** | desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed) |
-| 225 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ |
-| 273 | `install` | catch | `rethrow: renameSync` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
-| 297 | `restart` | spawn | `execFileSync("systemd-run")` | **NOT-WORTH** | systemd-run unavailable _(via catch L299)_ |
-| 299 | `restart` | catch | `empty: child_process` | **NOT-WORTH** | systemd-run unavailable |
-| 303 | `restart` | spawn | `spawn("/bin/sh")` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
-| 306 | `restart` | spawn | `spawn(target)` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
+| 43 | `isLoopbackHttp` | catch | `fallback: new URL` | **NOT-WORTH** | not a URL: no test feed |
+| 127 | `pruneStaleFiles` | catch | `empty: readdirSync, rmSync` | **NOT-WORTH** | Best effort; nothing depends on it. |
+| 158 | `check` | catch | `fallback` | **SHOWN** | desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install") |
+| 173 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
+| 178 | `fetchManifest` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of fetchManifest handles it _(flow)_ |
+| 182 | `fetchManifest` | json-parse | `text` | **PASSES-ON** | rethrows to the caller _(via catch L183)_ |
+| 183 | `fetchManifest` | catch | `rethrow: JSON.parse` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 187 | `fetchManifest` | schema | `Manifest.safeParse` | **PASSES-ON** | a malformed manifest throws "the update manifest is malformed" to check()'s catch |
+| 207 | `downloadAndInstall` | catch | `fallback` | **SHOWN** | desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed) |
+| 217 | `firmwareChangelog` | fetch | `net.fetch` | **PASSES-ON** | awaited: the caller of firmwareChangelog handles it _(flow)_ |
+| 261 | `install` | catch | `rethrow: renameSync` | **PASSES-ON** | rethrows to the caller _(rethrow)_ |
+| 285 | `restart` | spawn | `execFileSync("systemd-run")` | **NOT-WORTH** | systemd-run unavailable _(via catch L287)_ |
+| 287 | `restart` | catch | `empty: child_process` | **NOT-WORTH** | systemd-run unavailable |
+| 291 | `restart` | spawn | `spawn("/bin/sh")` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
+| 294 | `restart` | spawn | `spawn(target)` | **NOT-WORTH** | relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again) |
 
 #### electron/main/urls.ts
 
@@ -543,18 +550,20 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 98 | `<module>` | result-field | `FirmwareLookup.problem: "unpublished" \| "offline" \| null` | **SHOWN** | desktop.firmware.offline (or desktop.firmware.unpublished) |
-| 107 | `<module>` | result-field | `OfficialFirmwareLookup.problem: "disabled" \| "unavailable" \| null` | **SHOWN** | desktop.ctrlInfo.officialUnavailable after Refresh ("disabled" is a choice, not an error) |
-| 119 | `<module>` | result-field | `ProtonInstallResult.ok: false` | **SHOWN** | english: the Proton card's message (main-process text, batch E3) |
-| 127 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
-| 127 | `<module>` | result-field | `UndoResult.blockedBy: LauncherId[]` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
-| 127 | `<module>` | result-field | `UndoResult.problem: CloseProblem` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
-| 129 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.undoConflict |
-| 131 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.undoNoController |
-| 133 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | english: the Games page's error notice (main-process text, batch E3) |
-| 133 | `<module>` | result-field | `UndoResult.error: string` | **SHOWN** | english: the Games page's error notice (main-process text, batch E3) |
-| 155 | `<module>` | result-field | `DesktopApi.ok: boolean` | **SHOWN** | english: the message under Set up USB access (batch E3) |
-| 159 | `<module>` | result-field | `DesktopApi.ok: boolean` | **SHOWN** | english: the message under the Windows USB repair (batch E3) |
+| 100 | `<module>` | result-field | `FirmwareDownload.ok: false` | **SHOWN** | desktop.firmware.feedChanged (or desktop.firmware.hashMismatch; firmwareUpdate.ts throws it to the firmware banner) |
+| 100 | `<module>` | result-field | `FirmwareDownload.reason: "changed" \| "mismatch"` | **SHOWN** | desktop.firmware.feedChanged (or desktop.firmware.hashMismatch; firmwareUpdate.ts throws it to the firmware banner) |
+| 108 | `<module>` | result-field | `FirmwareLookup.problem: "unpublished" \| "offline" \| "disabled" \|` | **SHOWN** | desktop.firmware.offline (or desktop.firmware.unpublished; "disabled" is a choice, not an error) |
+| 117 | `<module>` | result-field | `OfficialFirmwareLookup.problem: "disabled" \| "unavailable" \| null` | **SHOWN** | desktop.ctrlInfo.officialUnavailable after Refresh ("disabled" is a choice, not an error) |
+| 129 | `<module>` | result-field | `ProtonInstallResult.ok: false` | **SHOWN** | english: the Proton card's message (main-process text, batch E3) |
+| 137 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
+| 137 | `<module>` | result-field | `UndoResult.blockedBy: LauncherId[]` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
+| 137 | `<module>` | result-field | `UndoResult.problem: CloseProblem` | **SHOWN** | desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted) |
+| 139 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.undoConflict |
+| 141 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | desktop.games.undoNoController |
+| 143 | `<module>` | result-field | `UndoResult.ok: false` | **SHOWN** | english: the Games page's error notice (main-process text, batch E3) |
+| 143 | `<module>` | result-field | `UndoResult.error: string` | **SHOWN** | english: the Games page's error notice (main-process text, batch E3) |
+| 165 | `<module>` | result-field | `DesktopApi.ok: boolean` | **SHOWN** | english: the message under Set up USB access (batch E3) |
+| 169 | `<module>` | result-field | `DesktopApi.ok: boolean` | **SHOWN** | english: the message under the Windows USB repair (batch E3) |
 
 #### src/desktop/AutoUpdateAsk.tsx
 
@@ -630,8 +639,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 39 | `updateFirmware` | ipc-call | `downloadFirmware` | **PASSES-ON** | awaited: the caller of updateFirmware handles it _(flow)_ |
-| 61 | `installFirmware` | ipc-call | `downloadFirmware` | **PASSES-ON** | awaited: the caller of installFirmware handles it _(flow)_ |
+| 40 | `shownFirmware` | ipc-call | `downloadFirmware` | **PASSES-ON** | awaited: the caller of shownFirmware handles it _(flow)_ |
 
 #### src/desktop/games/consent.ts
 
@@ -826,27 +834,27 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 660 | `AppSettings > useEffect(cb)` | ipc-call | `getSettings` | **SHOWN** | desktop.errors.settingsRead _(via .catch L660)_ |
 | 664 | `set` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
 | 664 | `set` | ipc-call | `setSetting` | **SHOWN** | desktop.errors.settingNotSaved _(via .catch L664)_ |
-| 764 | `AppSettings > onClick=` | ipc-call | `backToStable` | **PASSES-ON** | awaited: the caller of onClick= handles it _(flow)_ |
-| 765 | `AppSettings > onClick=` | ipc-call | `getSettings` | **PASSES-ON** | awaited: the caller of onClick= handles it _(flow)_ |
-| 801 | `GameLaunchersSetting > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading the Games consent for App settings (the card stays hidden) _(via .catch L803)_ |
-| 803 | `GameLaunchersSetting > useEffect(cb)` | .catch | `logged("reading the Games consent for App settings (the card` | **LOGGED-OK** | reading the Games consent for App settings (the card stays hidden) _(logged())_ |
-| 821 | `GameLaunchersSetting > onChange=` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
-| 833 | `GameLaunchersSetting > onClick=` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
-| 856 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (null: the line below says the check failed) |
-| 856 | `check` | ipc-call | `checkForUpdates` | **SHOWN** | desktop.setup.checkFailed (null: the line below says the check failed) |
-| 981 | `<module>` | result-field | `MicNote.problem: MicProblem` | **SHOWN** | desktop.audioTest.problem.failed (the status line says desktop.audioTest.problem.<problem>) |
-| 1010 | `MicTest > useEffect(cb) > <anonymous>` | .catch | `logged("closing the mic test on unmount")` | **LOGGED-OK** | closing the mic test on unmount _(logged())_ |
-| 1010 | `MicTest > useEffect(cb) > <anonymous>` | void | `stopAll().catch(logged("closing the mic test on unmount"))` | **LOGGED-OK** | closing the mic test on unmount _(via .catch L1010)_ |
-| 1015 | `MicTest > useEffect(cb)` | .catch | `logged("closing the mic test when the window hides")` | **LOGGED-OK** | closing the mic test when the window hides _(logged())_ |
-| 1037 | `start > startMicTest(cb)` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed |
-| 1046 | `start` | .catch | `logged("closing a mic test that was replaced")` | **LOGGED-OK** | closing a mic test that was replaced _(logged())_ |
-| 1046 | `start` | void | `r.session.stop().catch(logged("closing a mic test that was r` | **LOGGED-OK** | closing a mic test that was replaced _(via .catch L1046)_ |
-| 1130 | `MicTest > onClick=` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
-| 1130 | `MicTest > onClick=` | void | `(running ? stopTest() : start()).catch(failed)` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
-| 1143 | `MicTest > onClick=` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
-| 1143 | `MicTest > onClick=` | void | `listen().catch(failed)` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
-| 1268 | `DevChannelDialog > useEffect(cb)` | .then-reject | `() => live && setPreview(null)` | **SHOWN** | desktop.channel.joinOffline |
-| 1268 | `DevChannelDialog > useEffect(cb)` | ipc-call | `devChannelPreview` | **SHOWN** | desktop.channel.joinOffline |
+| 765 | `AppSettings > onClick=` | ipc-call | `backToStable` | **PASSES-ON** | awaited: the caller of onClick= handles it _(flow)_ |
+| 766 | `AppSettings > onClick=` | ipc-call | `getSettings` | **PASSES-ON** | awaited: the caller of onClick= handles it _(flow)_ |
+| 802 | `GameLaunchersSetting > useEffect(cb)` | ipc-call | `getSettings` | **LOGGED-OK** | reading the Games consent for App settings (the card stays hidden) _(via .catch L804)_ |
+| 804 | `GameLaunchersSetting > useEffect(cb)` | .catch | `logged("reading the Games consent for App settings (the card` | **LOGGED-OK** | reading the Games consent for App settings (the card stays hidden) _(logged())_ |
+| 822 | `GameLaunchersSetting > onChange=` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
+| 834 | `GameLaunchersSetting > onClick=` | .catch | `shown("desktop.errors.settingNotSaved")` | **SHOWN** | desktop.errors.settingNotSaved _(shown())_ |
+| 857 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (null: the line below says the check failed) |
+| 857 | `check` | ipc-call | `checkForUpdates` | **SHOWN** | desktop.setup.checkFailed (null: the line below says the check failed) |
+| 982 | `<module>` | result-field | `MicNote.problem: MicProblem` | **SHOWN** | desktop.audioTest.problem.failed (the status line says desktop.audioTest.problem.<problem>) |
+| 1011 | `MicTest > useEffect(cb) > <anonymous>` | .catch | `logged("closing the mic test on unmount")` | **LOGGED-OK** | closing the mic test on unmount _(logged())_ |
+| 1011 | `MicTest > useEffect(cb) > <anonymous>` | void | `stopAll().catch(logged("closing the mic test on unmount"))` | **LOGGED-OK** | closing the mic test on unmount _(via .catch L1011)_ |
+| 1016 | `MicTest > useEffect(cb)` | .catch | `logged("closing the mic test when the window hides")` | **LOGGED-OK** | closing the mic test when the window hides _(logged())_ |
+| 1038 | `start > startMicTest(cb)` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed |
+| 1047 | `start` | .catch | `logged("closing a mic test that was replaced")` | **LOGGED-OK** | closing a mic test that was replaced _(logged())_ |
+| 1047 | `start` | void | `r.session.stop().catch(logged("closing a mic test that was r` | **LOGGED-OK** | closing a mic test that was replaced _(via .catch L1047)_ |
+| 1131 | `MicTest > onClick=` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
+| 1131 | `MicTest > onClick=` | void | `(running ? stopTest() : start()).catch(failed)` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
+| 1144 | `MicTest > onClick=` | .catch | `failed` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
+| 1144 | `MicTest > onClick=` | void | `listen().catch(failed)` | **SHOWN** | desktop.audioTest.problem.failed (failed() ends on the status line) |
+| 1276 | `DevChannelDialog > useEffect(cb)` | .then-reject | `() => live && setPreview(null)` | **SHOWN** | desktop.channel.joinOffline |
+| 1276 | `DevChannelDialog > useEffect(cb)` | ipc-call | `devChannelPreview` | **SHOWN** | desktop.channel.joinOffline |
 
 #### src/desktop/live/slotSettings.tsx
 
@@ -912,9 +920,9 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
 | 30 | `act` | catch | `fallback` | **SHOWN** | desktop.errors.boardFailed (causeText; other board errors English, batch E3) |
-| 69 | `FirmwarePage > onClick=` | .catch | `logged("fw.start (it shows its own errors in the firmware ba` | **LOGGED-OK** | fw.start (it shows its own errors in the firmware banner) _(logged())_ |
-| 88 | `FirmwarePage > onClick=` | .catch | `() => undefined` | **NOT-WORTH** | the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline) |
-| 88 | `FirmwarePage > onClick=` | ipc-call | `checkForUpdates` | **NOT-WORTH** | the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline) |
+| 71 | `FirmwarePage > onClick=` | .catch | `logged("fw.start (it shows its own errors in the firmware ba` | **LOGGED-OK** | fw.start (it shows its own errors in the firmware banner) _(logged())_ |
+| 90 | `FirmwarePage > onClick=` | .catch | `() => undefined` | **NOT-WORTH** | the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline) |
+| 90 | `FirmwarePage > onClick=` | ipc-call | `checkForUpdates` | **NOT-WORTH** | the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline) |
 
 #### src/desktop/pages/GamesPage.tsx
 
@@ -969,15 +977,15 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|
-| 43 | `SetupScreen > useEffect(cb)` | ipc-call | `latestFirmware` | **LOGGED-OK** | looking up the firmware to install (without it, Install says desktop.setup.noFirmware) _(via .catch L45)_ |
-| 45 | `SetupScreen > useEffect(cb)` | .catch | `logged("looking up the firmware to install (without it, Inst` | **LOGGED-OK** | looking up the firmware to install (without it, Install says desktop.setup.noFirmware) _(logged())_ |
-| 53 | `start` | catch | `fallback` | **SHOWN** | english: the install's failure text next to Install (flash errors are English, batch E3) |
-| 128 | `UpdatesWithoutDongle > useEffect(cb)` | ipc-call | `latestFirmware` | **LOGGED-OK** | looking up the latest firmware (Check now reports it when asked) _(via .catch L130)_ |
-| 130 | `UpdatesWithoutDongle > useEffect(cb)` | .catch | `logged("looking up the latest firmware (Check now reports it` | **LOGGED-OK** | looking up the latest firmware (Check now reports it when asked) _(logged())_ |
-| 136 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
-| 136 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
-| 136 | `check` | ipc-call | `checkForUpdates` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
-| 136 | `check` | ipc-call | `latestFirmware` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
+| 44 | `SetupScreen > useEffect(cb)` | ipc-call | `latestFirmware` | **LOGGED-OK** | looking up the firmware to install (without it, Install says desktop.setup.noFirmware) _(via .catch L46)_ |
+| 46 | `SetupScreen > useEffect(cb)` | .catch | `logged("looking up the firmware to install (without it, Inst` | **LOGGED-OK** | looking up the firmware to install (without it, Install says desktop.setup.noFirmware) _(logged())_ |
+| 54 | `start` | catch | `fallback` | **SHOWN** | english: the install's failure text next to Install (flash errors are English, batch E3) |
+| 132 | `UpdatesWithoutDongle > useEffect(cb)` | ipc-call | `latestFirmware` | **LOGGED-OK** | looking up the latest firmware (Check now reports it when asked) _(via .catch L134)_ |
+| 134 | `UpdatesWithoutDongle > useEffect(cb)` | .catch | `logged("looking up the latest firmware (Check now reports it` | **LOGGED-OK** | looking up the latest firmware (Check now reports it when asked) _(logged())_ |
+| 140 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
+| 140 | `check` | .catch | `() => null` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
+| 140 | `check` | ipc-call | `checkForUpdates` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
+| 140 | `check` | ipc-call | `latestFirmware` | **SHOWN** | desktop.setup.checkFailed (a failed check reads as null, which the line below says) |
 
 #### src/desktop/storage.ts
 
@@ -1039,11 +1047,13 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 | 28 | `useFirmwareHold > useEffect(cb)` | .catch | `logged("reading the firmware-write hold at start (changes st` | **LOGGED-OK** | reading the firmware-write hold at start (changes still arrive through onFirmwareHold) _(logged())_ |
 | 28 | `useFirmwareHold > useEffect(cb)` | ipc-call | `getFirmwareHold` | **LOGGED-OK** | reading the firmware-write hold at start (changes still arrive through onFirmwareHold) _(via .catch L28)_ |
 | 55 | `<module>` | result-field | `FirmwareUpdate.problem: FirmwareLookup["problem"]` | **SHOWN** | desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest) |
-| 73 | `useFirmwareUpdate > useCallback(cb)` | ipc-call | `latestFirmware` | **SHOWN** | desktop.firmware.checkedOffline (an unanswered lookup reads as offline) _(via catch L74)_ |
-| 74 | `useFirmwareUpdate > useCallback(cb)` | catch | `fallback: ipc:latestFirmware` | **SHOWN** | desktop.firmware.checkedOffline (an unanswered lookup reads as offline) |
-| 87 | `useFirmwareUpdate > useEffect(cb)` | .then-reject | `() => live && setProblem("offline")` | **SHOWN** | desktop.firmware.offline (an unanswered lookup reads as offline) |
-| 87 | `useFirmwareUpdate > useEffect(cb)` | ipc-call | `latestFirmware` | **SHOWN** | desktop.firmware.offline (an unanswered lookup reads as offline) |
-| 117 | `useFirmwareUpdate > useCallback(cb)` | catch | `fallback` | **SHOWN** | english: the firmware banner's error notice with Dismiss (flash errors are English, batch E3) |
+| 74 | `useFirmwareUpdate > useCallback(cb)` | ipc-call | `latestFirmware` | **SHOWN** | desktop.firmware.checkedOffline (an unanswered lookup reads as offline) _(via catch L75)_ |
+| 75 | `useFirmwareUpdate > useCallback(cb)` | catch | `fallback: ipc:latestFirmware` | **SHOWN** | desktop.firmware.checkedOffline (an unanswered lookup reads as offline) |
+| 93 | `useFirmwareUpdate > useEffect(cb)` | .then-reject | `() => live && setProblem("offline")` | **SHOWN** | desktop.firmware.offline (an unanswered lookup reads as offline) |
+| 93 | `useFirmwareUpdate > useEffect(cb)` | ipc-call | `latestFirmware` | **SHOWN** | desktop.firmware.offline (an unanswered lookup reads as offline) |
+| 124 | `useFirmwareUpdate > useCallback(cb)` | catch | `fallback` | **SHOWN** | english: the firmware banner's error notice with Dismiss (flash errors are English, batch E3) |
+| 129 | `useFirmwareUpdate > useCallback(cb)` | .then-reject | `logged("refreshing the offer after a failed install (the fai` | **LOGGED-OK** | refreshing the offer after a failed install (the failure is already shown) _(logged())_ |
+| 129 | `useFirmwareUpdate > useCallback(cb)` | ipc-call | `latestFirmware` | **LOGGED-OK** | refreshing the offer after a failed install (the failure is already shown) _(via .then-reject L129)_ |
 
 #### src/desktop/WindowsUsbRepair.tsx
 

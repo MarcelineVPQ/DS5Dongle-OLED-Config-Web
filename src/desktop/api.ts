@@ -88,14 +88,24 @@ export interface LatestFirmware {
   version: string;
   notesUrl?: string;
   source: "bundled" | "online"; // bundled = shipped inside this app, works offline
+  // Online only: the exact feed entry shown, so Install downloads that one.
+  sha256?: string;
+  channel?: UpdateChannel;
 }
+
+// The firmware the user confirmed, or why it wasn't downloaded: "changed" =
+// the feed now offers something else (check again), "mismatch" = the file
+// didn't match the entry shown.
+// error: SHOWN — desktop.firmware.feedChanged (or desktop.firmware.hashMismatch; firmwareUpdate.ts throws it to the firmware banner)
+export type FirmwareDownload = { ok: true; version: string; bytes: Uint8Array } | { ok: false; reason: "changed" | "mismatch" };
 
 // Result of looking for firmware to offer. problem says why the feed gave no
 // answer: "unpublished" (no release in the feed yet) or "offline".
 export interface FirmwareLookup {
   latest: LatestFirmware | null;
-  // error: SHOWN — desktop.firmware.offline (or desktop.firmware.unpublished)
-  problem: "unpublished" | "offline" | null;
+  // "disabled": automatic checks are off and the user hasn't asked.
+  // error: SHOWN — desktop.firmware.offline (or desktop.firmware.unpublished; "disabled" is a choice, not an error)
+  problem: "unpublished" | "offline" | "disabled" | null;
 }
 
 // Sony's official controller firmware (check only): the latest version per
@@ -166,11 +176,13 @@ export interface DesktopApi {
   backToStable(): Promise<UpdateState>;
   // The newest development build (app and firmware versions, the app's notes)
   // from the signed dev feed, shown before joining the Development channel.
-  devChannelPreview(): Promise<DevChannelPreview | null>;
+  // `asked`: the user pressed the dialog's check button (allowed with automatic checks off).
+  devChannelPreview(asked: boolean): Promise<DevChannelPreview | null>;
   restartToUpdate(): void;
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
-  latestFirmware(): Promise<FirmwareLookup>;
+  // `asked`: the user pressed a check button (allowed with automatic checks off).
+  latestFirmware(asked?: boolean): Promise<FirmwareLookup>;
   // Sony's latest DualSense / Edge firmware versions (fetched by the main
   // process; `asked` = the user pressed Refresh, allowed with automatic checks off).
   officialControllerFirmware(asked: boolean): Promise<OfficialFirmwareLookup>;
@@ -182,7 +194,8 @@ export interface DesktopApi {
   // The window was shown or hidden (tray, minimize). Chromium's own visibility
   // stays "visible" while hidden here (background throttling is off).
   onWindowVisible(listener: (visible: boolean) => void): () => void;
-  downloadFirmware(): Promise<{ version: string; bytes: Uint8Array }>;
+  // Exactly the firmware shown (`latest` from latestFirmware), verified.
+  downloadFirmware(shown: LatestFirmware): Promise<FirmwareDownload>;
   // Firmware write in progress (firmwareUpdate.ts): restart, quit and the
   // app update's install wait for it to end.
   setFirmwareWriting(writing: boolean): void;

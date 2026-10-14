@@ -274,7 +274,10 @@
       "checkedCurrent": "刚刚检查：已是最新版本。",
       "checkedNone": "刚刚检查：尚未发布任何版本。",
       "checkedOffline": "无法检查：连接不到更新服务器（离线？）。",
-      "backToStable": "回到稳定版 {{version}}"
+      "backToStable": "回到稳定版 {{version}}",
+      "disabled": "未检查（自动检查已关闭）",
+      "feedChanged": "出现了更新的固件。请重新检查。",
+      "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。"
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -674,7 +677,8 @@
       "statusLabel": "状态：",
       "triggersTitle": "自适应扳机",
       "remapButton": "配置 {{button}}",
-      "effectOther": "其他效果（{{n}}）"
+      "effectOther": "其他效果（{{n}}）",
+      "checkForUpdatesSub": "关闭时：只有你按“检查更新”时，应用才会联网检查更新。"
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",
@@ -1435,7 +1439,9 @@
       "joinNotesLink": "在 GitHub 上阅读发布说明",
       "joinOffline": "暂时无法连接开发通道（离线？）。你仍可以加入；可连接时会显示更新。",
       "joinButton": "加入开发通道",
-      "stayButton": "保持稳定版"
+      "stayButton": "保持稳定版",
+      "joinCheckOff": "自动检查更新已关闭，因此尚未获取任何内容。",
+      "joinCheck": "检查开发通道"
     },
     "layouts": {
       "title": "按键布局",

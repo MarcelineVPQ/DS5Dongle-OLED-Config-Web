@@ -274,7 +274,10 @@
       "checkedCurrent": "Comprobado ahora: estás al día.",
       "checkedNone": "Comprobado ahora: aún no se ha publicado ninguna versión.",
       "checkedOffline": "No se pudo comprobar: el servidor de actualizaciones no responde (¿sin conexión?).",
-      "backToStable": "Volver a estable {{version}}"
+      "backToStable": "Volver a estable {{version}}",
+      "disabled": "sin comprobar (la búsqueda automática está desactivada)",
+      "feedChanged": "Ha aparecido un firmware más reciente. Vuelve a comprobar.",
+      "hashMismatch": "El firmware descargado no coincide con el mostrado, así que no se ha instalado nada. Vuelve a comprobar."
     },
     "usbAccess": {
       "label": "Regla de acceso USB",
@@ -677,7 +680,8 @@
       "statusLabel": "Estado:",
       "triggersTitle": "Gatillos adaptativos",
       "remapButton": "Asignar {{button}}",
-      "effectOther": "otro efecto ({{n}})"
+      "effectOther": "otro efecto ({{n}})",
+      "checkForUpdatesSub": "Desactivado: la app solo se conecta para buscar actualizaciones cuando pulsas Buscar actualizaciones."
     },
     "tour": {
       "stepOf": "Paso {{n}} de {{total}}",
@@ -1443,7 +1447,9 @@
       "joinNotesLink": "Leer las notas de la versión en GitHub",
       "joinOffline": "No se puede acceder al canal de desarrollo ahora (¿sin conexión?). Puedes unirte igualmente; la actualización aparecerá cuando sea accesible.",
       "joinButton": "Unirme al canal de desarrollo",
-      "stayButton": "Seguir en estable"
+      "stayButton": "Seguir en estable",
+      "joinCheckOff": "La búsqueda automática de actualizaciones está desactivada, así que no se ha consultado nada.",
+      "joinCheck": "Consultar el canal de desarrollo"
     },
     "layouts": {
       "title": "Distribuciones de botones",

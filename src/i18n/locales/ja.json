@@ -274,7 +274,10 @@
       "checkedCurrent": "確認しました：最新の状態です。",
       "checkedNone": "確認しました：まだリリースが公開されていません。",
       "checkedOffline": "確認できません：更新サーバーに接続できません（オフライン？）。",
-      "backToStable": "安定版 {{version}} に戻す"
+      "backToStable": "安定版 {{version}} に戻す",
+      "disabled": "未確認（自動確認はオフ）",
+      "feedChanged": "新しいファームウェアが公開されました。もう一度確認してください。",
+      "hashMismatch": "ダウンロードしたファームウェアが表示されたものと一致しないため、何もインストールしていません。もう一度確認してください。"
     },
     "usbAccess": {
       "label": "USB アクセスルール",
@@ -674,7 +677,8 @@
       "statusLabel": "状態：",
       "triggersTitle": "アダプティブトリガー",
       "remapButton": "{{button}} の割り当て",
-      "effectOther": "その他の効果（{{n}}）"
+      "effectOther": "その他の効果（{{n}}）",
+      "checkForUpdatesSub": "オフ：「アップデートを確認」を押したときだけ、アプリはアップデートのためにオンラインになります。"
     },
     "tour": {
       "stepOf": "ステップ {{n}} / {{total}}",
@@ -1435,7 +1439,9 @@
       "joinNotesLink": "GitHub でリリースノートを読む",
       "joinOffline": "今は開発フィードに接続できません（オフライン？）。参加はできます。接続できるようになると更新が表示されます。",
       "joinButton": "開発チャンネルに参加",
-      "stayButton": "安定版のままにする"
+      "stayButton": "安定版のままにする",
+      "joinCheckOff": "アップデートの自動確認がオフなので、まだ何も取得していません。",
+      "joinCheck": "開発フィードを確認"
     },
     "layouts": {
       "title": "ボタン配置",

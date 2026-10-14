@@ -37,22 +37,26 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   const installing = install.phase === "running";
   const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
+  // Online only with automatic checks on (main); otherwise the bundled build.
   useEffect(() => {
     if (!pico || firmware) return;
     window.desktop
-      ?.latestFirmware()
+      ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
       .catch(logged("looking up the firmware to install (without it, Install says desktop.setup.noFirmware)"));
   }, [pico, firmware]);
 
   const start = async () => {
-    if (!pico) return;
+    if (!pico || !firmware) return;
     try {
-      const version = await installFirmware(pico, (progress) => setInstall({ phase: "running", progress }));
+      const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version });
     } catch (cause) {
       // error: SHOWN — english: the install's failure text next to Install (flash errors are English, batch E3)
       setInstall({ phase: "failed", detail: causeText(cause) });
+      // Look again: if the feed changed, the new offer shows (the failed
+      // install already fetched it, so this doesn't go online).
+      setFirmware(null);
     }
   };
 
@@ -125,7 +129,7 @@ function UpdatesWithoutDongle() {
   const [checked, setChecked] = useState<string | null>(null);
   useEffect(() => {
     desktop
-      ?.latestFirmware()
+      ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
       .catch(logged("looking up the latest firmware (Check now reports it when asked)"));
   }, [desktop]);
@@ -133,7 +137,7 @@ function UpdatesWithoutDongle() {
   const check = async () => {
     setChecked(null);
     // error: SHOWN — desktop.setup.checkFailed (a failed check reads as null, which the line below says)
-    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware().catch(() => null)]);
+    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true).catch(() => null)]);
     if (lookup?.latest) setFirmware(lookup.latest);
     setChecked(
       !app || app.phase === "failed"

@@ -9,7 +9,13 @@ import { createWriteStream, rmSync } from "node:fs";
 import { net } from "electron";
 import type { Download } from "../../src/update/manifest";
 
-const corrupt = () => new Error("The download is corrupt (size or checksum mismatch).");
+// Size or SHA-256 didn't match what the feed said: nothing is kept or used.
+export class CorruptDownloadError extends Error {
+  constructor() {
+    super("The download is corrupt (size or checksum mismatch).");
+  }
+}
+const corrupt = () => new CorruptDownloadError();
 const CONNECT_TIMEOUT_MS = 20_000;
 const STALL_TIMEOUT_MS = 60_000;
 const stalled = () => new Error("The download stopped (no data for a minute). Check the connection and try again.");

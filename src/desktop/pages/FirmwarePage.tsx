@@ -51,7 +51,9 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
               ? `${fw.latest.version}${fw.latest.source === "bundled" ? ` (${t("desktop.firmware.bundled")})` : ""}`
               : fw.problem === "unpublished"
                 ? t("desktop.firmware.unpublished")
-                : t("desktop.firmware.offline")}
+                : fw.problem === "disabled"
+                  ? t("desktop.firmware.disabled")
+                  : t("desktop.firmware.offline")}
           </dd>
         </dl>
         <div className="dk-ctl" style={{ justifyContent: "flex-start", flexWrap: "wrap", gap: 8, paddingBottom: 6 }}>

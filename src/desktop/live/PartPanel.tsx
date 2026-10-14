@@ -725,7 +725,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
           </section>
           <section className="dk-card">
             <h2>{t("desktop.settings2.updates")}</h2>
-            <Toggle label={t("desktop.live.checkForUpdates")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
+            <Toggle label={t("desktop.live.checkForUpdates")} sub={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
             <Toggle
               label={t("desktop.live.autoInstall")}
               sub={t("desktop.live.autoInstallSub")}
@@ -747,6 +747,7 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
             />
             {joiningDev && (
               <DevChannelDialog
+                automatic={settings.checkForUpdates}
                 onJoin={() => {
                   setJoiningDev(false);
                   set("updateChannel", "dev");
@@ -1259,22 +1260,31 @@ function ReduceMotionSetting() {
 
 // Joining the Development channel: before any dev update is offered (app or
 // dongle firmware), say what it means and what's in the newest dev build.
-function DevChannelDialog({ onJoin, onCancel }: { onJoin: () => void; onCancel: () => void }) {
+// With automatic checks off it goes online only when its check button is pressed.
+export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: boolean; onJoin: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
-  const [preview, setPreview] = useState<DevChannelPreview | null | "loading">("loading");
+  const [preview, setPreview] = useState<DevChannelPreview | null | "loading" | "ask">(automatic ? "loading" : "ask");
+  const [asked, setAsked] = useState(false);
+  const check = () => {
+    setPreview("loading");
+    setAsked(true);
+  };
   useEffect(() => {
+    if (!automatic && !asked) return;
     let live = true;
     // error: SHOWN — desktop.channel.joinOffline
-    window.desktop?.devChannelPreview().then(
+    window.desktop?.devChannelPreview(asked).then(
       (p) => live && setPreview(p),
       () => live && setPreview(null),
     );
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
-    window.addEventListener("keydown", onKey);
     return () => {
       live = false;
-      window.removeEventListener("keydown", onKey);
     };
+  }, [automatic, asked]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
   return (
     <div className="dk-dialog-backdrop" onClick={onCancel}>
@@ -1287,7 +1297,14 @@ function DevChannelDialog({ onJoin, onCancel }: { onJoin: () => void; onCancel: 
           <li>{t("desktop.channel.joinBack")}</li>
         </ul>
         <h3>{t("desktop.channel.joinLatest")}</h3>
-        {preview === "loading" ? (
+        {preview === "ask" ? (
+          <div className="dk-row-btns">
+            <span className="dk-hint">{t("desktop.channel.joinCheckOff")}</span>
+            <button type="button" className="dk-btn" onClick={check}>
+              {t("desktop.channel.joinCheck")}
+            </button>
+          </div>
+        ) : preview === "loading" ? (
           <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
         ) : preview ? (
           <>
