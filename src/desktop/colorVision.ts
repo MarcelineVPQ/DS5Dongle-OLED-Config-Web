@@ -40,6 +40,7 @@ export const PALETTES: Record<ColorVision, Palette> = {
 export const AXIS_DASH: ReadonlyArray<number[]> = [[], [6, 4], [1.5, 3]];
 
 const KEY = "ds5.colorVision";
+// cache: OK — key=ds5.colorVision; invalidated=read once at load, setColorVision updates the module value and the pref together; bound=1 entry
 const stored = readPref(KEY);
 let current: ColorVision = stored && (COLOR_VISIONS as readonly string[]).includes(stored) ? (stored as ColorVision) : "standard";
 const listeners = new Set<() => void>();

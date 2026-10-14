@@ -61,6 +61,7 @@ export class GamesService {
   private readonly home = homedir();
   private readonly backups: Backups;
   private readonly launchers: LauncherControl;
+  // cache: OK — key=none (the published Proton build); invalidated=refreshed on each scan (5 s timeout), the last known one is kept when offline; bound=1 entry
   private latest: Manifest["proton"] | null = null;
   // Apply, undo and install never overlap (each reads and writes launcher files).
   private queue: Promise<unknown> = Promise.resolve();
@@ -97,6 +98,7 @@ export class GamesService {
   // The HDR check (screens, gamescope, its layer) runs again whenever a page
   // scans, e.g. when the Games page or an HDR game's page opens; a scan within
   // a few seconds of the last one reuses its answer.
+  // cache: OK — key=none (the HDR check); invalidated=3 s TTL (HDR_CACHE_MS); bound=1 entry
   private hdrCache: { at: number; value: Promise<HdrSystem> } | null = null;
   private hdrCheck(probe: () => Promise<HdrSystem>): Promise<HdrSystem> {
     const now = Date.now();
@@ -166,8 +168,11 @@ export class GamesService {
   }
 
   // ---- Games library: details, artwork, the running game ----
+  // cache: OK — key=none (the last scan's games); invalidated=replaced by every scan; bound=games in the library
   private lastGames: GameEntry[] = [];
+  // cache: OK — key=none (Windows store listing); invalidated=replaced by every scan; bound=1 entry
   private lastStores: WindowsStores | undefined;
+  // cache: OK — key=game key; invalidated=replaced by every scan; bound=games in the library
   private lastDetails = new Map<string, GameDetails>();
 
   // Install folder, size, play time and which artwork exists, per game key
@@ -217,6 +222,7 @@ export class GamesService {
   }
 
   // A game's signature color from its art (cached per game).
+  // cache: OK — key=game key; invalidated=cleared by every scan; bound=games in the library
   private colors = new Map<string, string | null>();
   artColor(key: string): string | null {
     this.requireConsent();

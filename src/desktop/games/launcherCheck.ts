@@ -50,6 +50,7 @@ export const startedSinceCheck = (r: { blockedBy?: LauncherId[]; problem?: Close
 // over ours. A change applied this session that a later scan recommends
 // again was taken back: the page says which launcher did it.
 const RECENT_MS = 15 * 60_000;
+// cache: OK — key=fix id; invalidated=cleared on Undo, entries older than RECENT_MS are ignored, not removed; bound=distinct fix ids applied this session
 const applied = new Map<string, number>(); // fix id → when it was applied
 
 export function rememberApplied(ids: string[], now = Date.now()): void {

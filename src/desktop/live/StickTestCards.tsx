@@ -66,6 +66,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   // The results of a finished test: its samples don't change, so worked out
   // once, not on every live input frame (~30 a second).
   const driftResults = useMemo(() => (typeof drift === "object" ? ([driftStats(drift[0], sticks[0]), driftStats(drift[1], sticks[1])] as const) : null), [drift, sticks]);
+  // cache: OK — key=stick; invalidated=reset when a drift test starts; bound=DRIFT_MS = 10 s at ~30 Hz, 2 sticks
   const samples = useRef<[DriftSample[], DriftSample[]]>([[], []]);
   useEffect(() => {
     if (drift !== "running") return;

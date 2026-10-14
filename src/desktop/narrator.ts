@@ -110,6 +110,7 @@ export function hasLine(key: string): boolean {
   return URLS.has(`en/${key}`);
 }
 
+// cache: OK — key=none (the clip playing); invalidated=replaced or cleared when a clip ends; bound=1 element
 let current: HTMLAudioElement | null = null;
 let chain: Promise<void> = Promise.resolve();
 

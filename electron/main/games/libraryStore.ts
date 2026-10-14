@@ -31,6 +31,7 @@ function readLibrary(path: string): LibraryFile | null {
 }
 
 export class LibraryStore {
+  // cache: OK — key=none (the whole library.json); invalidated=write-through: every change saves the file, single-instance app, nothing else writes it; bound=one file (games x profiles)
   private data: LibraryFile;
   private readonly path: string;
   private readonly oldPath: string;

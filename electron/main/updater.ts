@@ -73,8 +73,10 @@ export class FeedMissingError extends Error {
 
 export class Updater {
   private state: UpdateState = { phase: "idle" };
+  // cache: FIX-STALE — key=none (the feed of the channel at check time); invalidated=each update check (6 h, never with automatic checks off); bound=1 entry (docs/CACHE_PASS_2026-10.md)
   private manifest: Manifest | null = null;
   private busy = false;
+  // cache: OK — key=none (the installed update); invalidated=replaced by the next install, used once on restart; bound=1 entry
   private installedPath: string | null = null;
   // "Back to stable" was chosen: the stable version stays on offer (even
   // though it's older) until it's installed or the Development channel is

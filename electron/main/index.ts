@@ -36,6 +36,7 @@ let updater: Updater;
 let hold: FirmwareHold;
 const UPDATE_FIRST_CHECK_MS = 20_000;
 const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
+// cache: OK — key=none (settings.json); invalidated=write-through: updateSetting saves the file; bound=1 entry
 let settings: DesktopSettings;
 // Set when the user really quits (tray Quit, OS logout), so close-to-tray
 // doesn't swallow it.

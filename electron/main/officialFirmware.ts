@@ -56,7 +56,9 @@ export async function fetchOfficialFirmware(fetch: Fetch, url = OFFICIAL_FIRMWAR
 }
 
 export class OfficialFirmwareSource {
+  // cache: OK — key=none (Sony's one info file, all models); invalidated=24 h TTL, Refresh refetches when over 1 min old; bound=1 entry
   private cached: { at: number; latest: OfficialFirmware } | null = null;
+  // cache: OK — key=none (the request in flight); invalidated=cleared when it settles; bound=1 entry
   private pending: Promise<OfficialFirmwareLookup> | null = null;
 
   constructor(

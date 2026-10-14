@@ -4,7 +4,9 @@
 // gradient in desktop.css). One shared listener, updated at most once a frame.
 import { useEffect } from "react";
 
+// cache: OK — key=element; invalidated=removed on unmount; bound=mounted glass elements
 const elements = new Set<HTMLElement>();
+// cache: OK — key=none (the pending rAF id); invalidated=cleared when the frame runs; bound=1 entry
 let frame = 0;
 let pointer = { x: window.innerWidth * 0.3, y: 0 };
 

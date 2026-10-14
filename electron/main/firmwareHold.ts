@@ -10,6 +10,7 @@ const ORDER: HeldAction[] = ["install", "restart", "quit"];
 
 export class FirmwareHold {
   private writing = false;
+  // cache: OK — key=held action (install/restart/quit); invalidated=when the firmware write ends (run, then cleared); bound=3 actions
   private held = new Map<HeldAction, () => void>();
 
   constructor(private readonly emit: (state: FirmwareHoldState) => void) {}
