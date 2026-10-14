@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.10] - 2026-10-13
+
 ### Fixed
 
 - **An update feed that failed its security check read as "Are you online?".** When the update feed's signature didn't check out (the development feed's signature was stale for hours), every place that checks for updates said you might be offline: App settings' **Check for updates**, the setup screen, the firmware card (**can't check (offline)**) and the Development channel dialog, while Games → Proton install showed the raw English error. The app now tells the failures apart: no network still asks about the connection; a feed that fails its signature check says **The update feed didn't pass its security check, so nothing was installed. This is on our side, not your connection: try again later.**; a feed it can't read says so the same way; the Development channel dialog says when no development build is published yet, and the Proton install shows the same plain messages (the raw error goes to the log). All 7 languages.
