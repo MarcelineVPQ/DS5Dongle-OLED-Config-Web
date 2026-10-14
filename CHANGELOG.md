@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- **A game's rating now says what it rates: your DualSense in that game, not the game.** Five stars under a game's banner read as a rating of the game. The rating moved into **DualSense support**, under the per-feature list, and asks **How well does your DualSense work in this game?** Each star says what it means when you point at it or move to it with the keyboard (**Doesn't work**, **Barely works**, **Works with problems**, **Works well**, **Works perfectly**), and the one you pick stays written next to the stars. The arrow keys, Home and End pick a star. **What did you notice?** and **Saved on this PC** are kept, and ratings you already gave stay as they are. All 7 languages.
 - **Games uses less memory for game art.** The app loaded every picture at its full size (Steam heroes are 1920 px wide, Heroic and Lutris art often larger) even where it is shown small: the library's 20 px icons, the cover grid, the logos and the Controller page's blurred background. Each place now gets a copy scaled to the size it shows, sharp on 1x to 2x screens, made once and kept in the app's settings folder (at most 128 MB, oldest removed first; deleted when you turn off Games' access to your launchers). In a test library of 40 games the decoded image memory dropped by about half on Games and by about 75% for the Controller page's art background.
 
 ### Fixed

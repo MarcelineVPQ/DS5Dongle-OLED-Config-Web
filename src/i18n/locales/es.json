@@ -836,7 +836,6 @@
         "setup": "Configuración",
         "compat": "Compatibilidad",
         "support": "Soporte DualSense",
-        "rating": "Tu valoración",
         "notes": "Notas",
         "details": "Detalles"
       },
@@ -921,8 +920,16 @@
         "mic": "Micrófono",
         "lightbar": "Barra luminosa"
       },
-      "stars_one": "{{count}} estrella",
-      "stars_other": "{{count}} estrellas",
+      "stars_one": "{{count}} estrella: {{label}}",
+      "stars_other": "{{count}} estrellas: {{label}}",
+      "rateTitle": "¿Qué tal funciona tu mando DualSense en este juego?",
+      "rateLabel": {
+        "1": "No funciona",
+        "2": "Apenas funciona",
+        "3": "Funciona con problemas",
+        "4": "Funciona bien",
+        "5": "Funciona perfectamente"
+      },
       "feedbackHint": "¿Qué has notado?",
       "tag": {
         "triggers-work": "Gatillos adaptativos OK",

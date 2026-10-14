@@ -836,7 +836,6 @@
         "setup": "Einrichtung",
         "compat": "Kompatibilität",
         "support": "DualSense-Support",
-        "rating": "Deine Wertung",
         "notes": "Notizen",
         "details": "Details"
       },
@@ -921,8 +920,16 @@
         "mic": "Mikrofon",
         "lightbar": "Leuchtleiste"
       },
-      "stars_one": "{{count}} Stern",
-      "stars_other": "{{count}} Sterne",
+      "stars_one": "{{count}} Stern: {{label}}",
+      "stars_other": "{{count}} Sterne: {{label}}",
+      "rateTitle": "Wie gut funktioniert dein DualSense in diesem Spiel?",
+      "rateLabel": {
+        "1": "Funktioniert nicht",
+        "2": "Funktioniert kaum",
+        "3": "Funktioniert mit Problemen",
+        "4": "Funktioniert gut",
+        "5": "Funktioniert perfekt"
+      },
       "feedbackHint": "Was ist dir aufgefallen?",
       "tag": {
         "triggers-work": "Adaptive Trigger gehen",

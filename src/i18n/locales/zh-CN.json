@@ -831,7 +831,6 @@
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
-        "rating": "你的评分",
         "notes": "笔记",
         "details": "详情"
       },
@@ -914,7 +913,15 @@
         "mic": "麦克风",
         "lightbar": "光条"
       },
-      "stars_other": "{{count}} 星",
+      "stars_other": "{{count}} 星：{{label}}",
+      "rateTitle": "你的 DualSense 控制器在这款游戏中表现如何？",
+      "rateLabel": {
+        "1": "无法使用",
+        "2": "勉强能用",
+        "3": "能用但有问题",
+        "4": "运行良好",
+        "5": "完美运行"
+      },
       "feedbackHint": "你注意到了什么?",
       "tag": {
         "triggers-work": "自适应扳机正常",

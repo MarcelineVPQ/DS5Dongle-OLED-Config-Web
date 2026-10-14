@@ -831,7 +831,6 @@
         "setup": "セットアップ",
         "compat": "互換性",
         "support": "DualSense 対応",
-        "rating": "あなたの評価",
         "notes": "メモ",
         "details": "詳細"
       },
@@ -914,7 +913,15 @@
         "mic": "マイク",
         "lightbar": "ライトバー"
       },
-      "stars_other": "星 {{count}}",
+      "stars_other": "星 {{count}}：{{label}}",
+      "rateTitle": "このゲームでDualSenseはどのくらい快適に使えますか？",
+      "rateLabel": {
+        "1": "動作しない",
+        "2": "ほとんど動作しない",
+        "3": "問題はあるが動作する",
+        "4": "問題なく動作する",
+        "5": "完璧に動作する"
+      },
       "feedbackHint": "気づいたことは?",
       "tag": {
         "triggers-work": "アダプティブトリガー動作",

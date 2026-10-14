@@ -835,7 +835,6 @@
         "setup": "Setup",
         "compat": "Compatibility",
         "support": "DualSense support",
-        "rating": "Your rating",
         "notes": "Notes",
         "details": "Details"
       },
@@ -920,8 +919,16 @@
         "mic": "Microphone",
         "lightbar": "Light bar"
       },
-      "stars_one": "{{count}} star",
-      "stars_other": "{{count}} stars",
+      "stars_one": "{{count}} star: {{label}}",
+      "stars_other": "{{count}} stars: {{label}}",
+      "rateTitle": "How well does your DualSense work in this game?",
+      "rateLabel": {
+        "1": "Doesn't work",
+        "2": "Barely works",
+        "3": "Works with problems",
+        "4": "Works well",
+        "5": "Works perfectly"
+      },
       "feedbackHint": "What did you notice?",
       "tag": {
         "triggers-work": "Adaptive triggers work",
