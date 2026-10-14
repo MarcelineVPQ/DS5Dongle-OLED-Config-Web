@@ -9,6 +9,9 @@ import { vi } from "vitest";
 
 type Entry = { target: EventTarget; type: string; listener: unknown; capture: boolean };
 
+// window.desktop's plain values in the preload (the rest are calls).
+const VALUES: Record<string, string> = { platform: "linux", appVersion: "0.9.5-dev.11" };
+
 export interface LeakCounts {
   listeners: number;
   timers: number;
@@ -188,9 +191,10 @@ export function installLeakProbe(): LeakProbe {
       ...[...subs].filter(([, s]) => s.size).map(([n, s]) => `desktop.${n} × ${s.size}`),
       ...[...observing].map((o) => `observer ${o.constructor.name}`),
     ],
+    // appVersion is a value, not a call: a call would render as a function (About's version line).
     desktop: (known = {}) =>
       new Proxy(known, {
-        get: (t, p: string) => (/^on[A-Z]/.test(p) ? subscribe(p) : t[p] !== undefined ? t[p] : p === "platform" ? "linux" : () => Promise.resolve({})),
+        get: (t, p: string) => (/^on[A-Z]/.test(p) ? subscribe(p) : t[p] !== undefined ? t[p] : p in VALUES ? VALUES[p] : () => Promise.resolve({})),
       }),
     emit: (name, ...args) => subs.get(name)?.forEach((l) => l(...args)),
     restore: () => {

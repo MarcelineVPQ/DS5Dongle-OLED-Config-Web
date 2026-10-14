@@ -15,12 +15,14 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const SKIP = /(node_modules|dist|out|release|src\/flash\/picoflash|src\/i18n|\.d\.ts$)/;
+// Matched against the repo-relative path (forward slashes), never the absolute
+// one: a checkout under ".../about-light/" or ".../dist/" must not skip everything.
+const SKIP = /(^|\/)(node_modules|dist|out|release)\/|^src\/flash\/picoflash\/|^src\/i18n\/|\.d\.ts$/;
 const files = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (SKIP.test(p)) continue;
+    if (SKIP.test(relative(ROOT, p).replace(/\\/g, "/"))) continue;
     if (statSync(p).isDirectory()) walk(p);
     else if (/\.(ts|tsx|css|mjs)$/.test(p)) files.push(p);
   }

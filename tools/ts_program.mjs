@@ -10,11 +10,14 @@ import ts from "typescript";
 
 // Forward slashes on every OS, as the TypeScript API reports file names.
 const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\\/g, "/");
-const SKIP = /(node_modules|src\/flash\/picoflash|\.d\.ts$)/;
+// Matched against the repo-relative path, never the absolute one (a checkout
+// path may contain "node_modules" or anything else).
+const SKIP = /(^|\/)node_modules\/|^src\/flash\/picoflash\/|\.d\.ts$/;
+const skipped = (p) => SKIP.test(relative(ROOT, p).replace(/\\/g, "/"));
 const ITER_METHODS = new Set(["map", "forEach", "reduce", "reduceRight", "filter", "some", "every", "find", "findIndex", "findLast", "findLastIndex", "flatMap", "sort", "toSorted"]);
 const ITER_OWNERS = /^(Array|ReadonlyArray|Set|ReadonlySet|Map|ReadonlyMap|\w+Array)$/;
 
-const files = ["src", "electron"].flatMap((d) => ts.sys.readDirectory(join(ROOT, d), [".ts", ".tsx", ".js"])).filter((p) => !SKIP.test(p));
+const files = ["src", "electron"].flatMap((d) => ts.sys.readDirectory(join(ROOT, d), [".ts", ".tsx", ".js"])).filter((p) => !skipped(p));
 
 const program = ts.createProgram(files, {
   target: ts.ScriptTarget.ES2022,
@@ -34,7 +37,7 @@ const program = ts.createProgram(files, {
 const checker = program.getTypeChecker();
 const sources = files.map((f) => program.getSourceFile(f)).filter(Boolean);
 const relOf = new Map(sources.map((sf) => [sf.fileName, relative(ROOT, sf.fileName).replace(/\\/g, "/")]));
-const isOurs = (sf) => !!sf && !sf.isDeclarationFile && sf.fileName.startsWith(ROOT) && !SKIP.test(sf.fileName);
+const isOurs = (sf) => !!sf && !sf.isDeclarationFile && sf.fileName.startsWith(ROOT) && !skipped(sf.fileName);
 
 // ---------- helpers ----------
 const isFn = (n) =>
