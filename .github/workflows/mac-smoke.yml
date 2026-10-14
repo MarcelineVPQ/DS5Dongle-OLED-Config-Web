@@ -133,13 +133,25 @@ jobs:
           pkill -f "$app/Contents/MacOS/" || true
           killall CoreServicesUIAgent 2>/dev/null || true
           sleep 3
-          # README: the first start needs Open (right-click / Open Anyway);
-          # here, as the README's fallback, the flag comes off.
+          # The usual advice once macOS refused it (and what "Open Anyway" in
+          # System Settings → Privacy & Security amounts to): take the flag off.
           xattr -dr com.apple.quarantine "$app" || exit 1
           {
             echo "== spctl --assess after xattr -dr com.apple.quarantine"
             spctl --assess --type execute -vvv "$app" 2>&1; echo "exit $?"
+            echo "== open again after xattr -dr com.apple.quarantine"
+            limit 30 open "$app" 2>&1; echo "exit $?"
+            sleep 10
+            pgrep -fl "$app/Contents/MacOS/" || echo "no app process: still refused"
           } >> "$G" 2>&1
+          pkill -f "$app/Contents/MacOS/" || true
+          killall CoreServicesUIAgent 2>/dev/null || true
+          sleep 3
+          # The run itself uses a copy that was never refused: extracted from
+          # the zip without the download flag, so its first open is a clean one.
+          rm -rf "$app" ~/Downloads/fresh
+          ditto -x -k "$zip" ~/Downloads/fresh || exit 1
+          ditto ~/Downloads/fresh/"$APP_NAME.app" "$app" || exit 1
           cat "$G"
 
       - name: Start it from /Applications and drive it
@@ -147,7 +159,12 @@ jobs:
         run: |
           set -euo pipefail
           app="/Applications/$APP_NAME.app"
-          open -a "$app" --stdout "$OUT/main-stdout.log" --stderr "$OUT/main-stderr.log" --args --remote-debugging-port=9334 --inspect=9335
+          # As a user starts it (LaunchServices: Finder, Dock, Spotlight).
+          if ! open -a "$app" --stdout "$OUT/main-stdout.log" --stderr "$OUT/main-stderr.log" --args --remote-debugging-port=9334 --inspect=9335; then
+            echo "::error::LaunchServices refused to open the installed app; starting the binary directly so the rest still runs"
+            echo "LaunchServices refused the clean install (open -a failed)" > "$OUT/launch-refused.txt"
+            nohup "$app/Contents/MacOS/$APP_NAME" --remote-debugging-port=9334 --inspect=9335 > "$OUT/main-stdout.log" 2> "$OUT/main-stderr.log" &
+          fi
           node tools/mac_smoke.mjs --app "$app" --port 9334 --inspect 9335 --log "$OUT/main-stdout.log,$OUT/main-stderr.log" --out "$OUT"
 
       - name: Job summary

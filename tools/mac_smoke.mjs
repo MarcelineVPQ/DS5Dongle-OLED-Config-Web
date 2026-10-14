@@ -313,8 +313,14 @@ await step("system", async () => {
   })()`);
   log("system:", JSON.stringify(result.system));
   check("system", "native arm64, not under Rosetta", result.system.arch === "arm64" && !result.system.isTranslated, `${result.system.arch}, translated=${result.system.isTranslated}`);
-  // A fixed size: screenshots match between runs and the display.
-  await win(`w.setBounds({ x: 40, y: 60, width: 1280, height: 860 }); w.show(); w.focus(); return true;`);
+  // A fixed size that fits the runner's display (1024 x 768 on GitHub's
+  // macOS runners): screenshots match between runs.
+  log(
+    "window:",
+    await win(
+      `const a = ${E}.screen.getPrimaryDisplay().workArea; w.setBounds({ x: a.x, y: a.y, width: Math.min(1100, a.width), height: Math.min(900, a.height) }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`,
+    ),
+  );
   await sleep(1000);
   await shot("first-start");
 });
@@ -629,6 +635,9 @@ await step("quit", async () => {
   result.quit = { how, secs: Math.round((Date.now() - t) / 100) / 10, left: left.map((p) => p.cmd.slice(0, 120)) };
   check("mac", `Quit ends every process (${how.split(" (")[0]})`, left.length === 0, left.length ? `${left.length} left after ${result.quit.secs} s` : `${result.quit.secs} s`);
 });
+
+if (existsSync(join(OUT, "launch-refused.txt"))) check("mac", "starts from /Applications with open -a (LaunchServices)", false, readFileSync(join(OUT, "launch-refused.txt"), "utf8").trim());
+else check("mac", "starts from /Applications with open -a (LaunchServices)", true);
 
 // Crash reports macOS wrote for the app during the run.
 const reports = (() => {
