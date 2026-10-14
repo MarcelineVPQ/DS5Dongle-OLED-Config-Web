@@ -385,6 +385,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Share a profile", text: "Turn a game profile or button layout into a short code a friend can paste in.", areas: ["buttons", "community"] },
   { column: "planned", title: "Thank-you wall", text: "The people who build and test the app, named in About.", areas: ["community"] },
   { column: "planned", title: "What's new", text: "A short summary of what changed after each update, and a link to the community.", areas: ["app", "community"] },
+  { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
   { column: "ideas", title: "Simpler layout and wording", text: "Shorter labels, fewer clicks to common things, and pairing slots that are easy to find.", areas: ["app"] },
