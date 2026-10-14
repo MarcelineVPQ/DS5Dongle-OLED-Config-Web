@@ -43,11 +43,11 @@ Line numbers are as of this commit; if code moves, the function and name find th
 | Kind | OK | FIX-STALE | FIX-UNBOUNDED | ADD-CACHE | REMOVE | NOT-WORTH | Total |
 |---|---|---|---|---|---|---|---|
 | module | 12 | 1 | - | - | - | - | 13 |
-| field | 12 | 2 | - | - | - | - | 14 |
+| field | 11 | 2 | - | 1 | - | - | 14 |
 | closure | 3 | - | - | - | - | - | 3 |
 | ref | 15 | - | - | - | - | - | 15 |
 | snapshot | 2 | - | - | - | - | - | 2 |
-| useMemo | 18 | - | - | - | - | - | 18 |
+| useMemo | 20 | - | - | - | - | - | 20 |
 | useCallback | 54 | - | - | - | 1 | - | 55 |
 | memo | 4 | - | - | - | - | - | 4 |
 | storage | 30 | - | - | - | - | 1 | 31 |
@@ -58,7 +58,7 @@ Line numbers are as of this commit; if code moves, the function and name find th
 | dup-read | - | - | - | 2 | - | 3 | 5 |
 | fw-table | 1 | - | - | - | - | - | 1 |
 | fw-static | 12 | - | - | - | 1 | - | 13 |
-| **Total** | **190** | **3** | **0** | **14** | **2** | **114** | **323** |
+| **Total** | **191** | **3** | **0** | **15** | **2** | **114** | **325** |
 
 
 No row is FIX-UNBOUNDED: every growing structure is keyed by something finite (games, fixes, processes, parts) or is pruned or windowed. The closest is the `ds5.slotControllers` preference (one entry per controller ever seen in a slot, never pruned), which stays a handful in practice (NOT-WORTH).
@@ -76,7 +76,7 @@ private colors = new Map<string, string | null>();
 
 **Not gated:** `useMemo` / `useCallback` / `memo` (the deps are the key and React bounds them; 77 comments would be noise), the localStorage keys (preferences), the clock checks, and the I/O rows (`poll-io`, `effect-io`, `repeat-io`, `dup-read`). Those are suggestions, not state; their verdicts live in this doc and the pass is re-run when a release touches them (CLAUDE.md "Cache pass").
 
-## The work: proposed changes in 5 batches (biggest effect first)
+## The work: proposed changes in 6 batches (biggest effect first)
 
 Nothing below is done yet. Each change keeps the current behaviour except the stale data it fixes, and needs a test that pins it.
 
@@ -87,14 +87,20 @@ Nothing below is done yet. Each change keeps the current behaviour except the st
 | `electron/main/updater.ts:77` `Updater.manifest`, used by `downloadFirmware` (`:229`) | FIX-STALE | `firmwareBytes` (`firmwareSource.ts`) decides "download the published firmware" from a **fresh** feed, then `downloadPublished` → `updater.downloadFirmware()` downloads from `this.manifest`, the feed of the last update check (up to 6 h old, or from app start with automatic checks off, or the other channel's after a switch whose re-check failed). The board can get an older build than the one the card offered. | Pass the fresh feed's `firmware` entry from `firmwareBytes` to the download (the smallest fix), or make one feed cache (below) the only source. |
 | `src/desktop/useUpdates.ts:81` `useFirmwareUpdate` effect | ADD-CACHE | `latestFirmware()` fetches the feed and its `.sig` fresh on every call, and the effect runs on every update phase change: idle → checking → result is 2-3 feed fetches per check, next to the updater's own fetch of the same feed. | Main keeps the last verified feed with its channel and fetch time; `latestFirmware` reuses one under ~60 s old for the same channel. Key = channel, invalidated = 60 s or a channel change, bound = 1 per channel. |
 
-### Batch 2: two sticky values
+### Batch 2: the game art colors (Glass look)
+
+| Location | Rows | Why | Change |
+|---|---|---|---|
+| `electron/main/games/service.ts:226` `GamesService.colors`, asked by `useArtColor` (`src/desktop/library/gameArt.ts:31`) | ADD-CACHE | With the Glass look, every tile whose art has loaded (and Continue playing, and each game page) asks main for the game's color. `colors` is cleared by every scan, so after each scan (every Games page open, every apply) main decodes every cover again: `dominantColor` is a full `nativeImage` decode + resize per game, synchronous on the main process, so hundreds of them hold up IPC and the tray. The art rarely changes. | Key the color by the art file's path + mtime and keep it across scans (drop entries whose game is gone). Bound = games in the library. |
+
+### Batch 3: two sticky values
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
 | `electron/main/games/running.ts:288` `RunningGameWatcher.exeCache` (Windows) | FIX-STALE | The program files found in a game's folder are cached for the app's life. A folder indexed while the game was still installing (empty), or before an update renamed its `.exe`, stays wrong until the app restarts, so the game is never seen as Playing and its profile never switches. | Clear the cache when the candidate list changes (each library scan), or re-index a folder whose cached set is empty. |
 | `src/desktop/tray/trayIcon.ts:38` `artPromise` | FIX-STALE | The tray art's decode promise is kept even when it rejected, so one failed decode leaves the tray icon blank for the session. | Clear `artPromise` on rejection. |
 
-### Batch 3: the library scan's repeated reads (same work as LOOP_PASS Batch 3)
+### Batch 4: the library scan's repeated reads (same work as LOOP_PASS Batch 3)
 
 These are the same reads as the loop pass's Batch 3, seen from the cache side. Doing that batch fixes them; they are listed here so the rows have verdicts, not as separate work.
 
@@ -107,13 +113,13 @@ These are the same reads as the loop pass's Batch 3, seen from the cache side. D
 
 Not repeated here: Steam's `localconfig` linear search per game is CPU work, not a read; it stays LOOP_PASS Batch 3 (a `Map` index).
 
-### Batch 4: firmware, one clock measurement
+### Batch 5: firmware, one clock measurement
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
 | `src/oled.cpp:1051` `cached_real_khz` (firmware) | REMOVE | A second copy of `cmd.cpp:594`'s measured clock. This one re-measures on every CPU-screen entry: `frequency_count_khz` busy-waits a few ms on core0, though clk_sys is fixed at boot. | One lazy `measured_clk_khz()` shared by `cmd.cpp` and `oled.cpp` (measured once). |
 
-### Batch 5: cleanup
+### Batch 6: cleanup
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
@@ -122,7 +128,7 @@ Not repeated here: Steam's `localconfig` linear search per game is CPU work, not
 ## Cross-reference: the loop pass
 
 - **Already done by LOOP_PASS Batch 1 (on master):** the stick-curve nodes (`stickCurve.ts` `nodeCache`, a WeakMap per curve), the Buttons-list sections (`memo`), the layout sort and use count (`useMemo`), the drift results and plot (`useMemo` / `memo`), and the trigger stops and touchpad box looked up once per mount (`LiveController.tsx` refs). Their rows are here as **OK**, with key, invalidation and bound stated.
-- **Still LOOP_PASS Batch 3:** `buildVersion` per scan, the shared Steam manifest read, and the `localconfig` index. Batch 3 above points at the same work.
+- **Still LOOP_PASS Batch 3:** `buildVersion` per scan, the shared Steam manifest read, and the `localconfig` index. Batch 4 above points at the same work.
 - **LOOP_PASS Batch 2 (firmware):** `bt_peek_feature` copies a `std::vector` out of the feature-report cache on every call. The cache itself (`feature_data`) is OK here.
 
 ## Found along the way
@@ -174,7 +180,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 89 | `steamArt` | closure | `found` | Map<string, { path: string; mtime: number; }>; written by a nested function (.set), looked up with .get | **OK** | key=art file name; invalidated=per call (one game's art folder); bound=files in one game's librarycache folder |
 | 106 | `steamArt` | repeat-io | `readdirSync` | in forof (line 102); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 115 | `pick` | repeat-io | `existing` | in forof (line 114); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 141 | `heroicDetails` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_library.json")) (lines 141, 141) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 3) |
+| 141 | `heroicDetails` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_library.json")) (lines 141, 141) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4) |
 | 159 | `heroicDetails` | repeat-io | `heroicPrefix` | in forof (line 146); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 161 | `heroicDetails` | dup-read | `cached` | 2× cached(e.art_cover) (lines 161, 165) | **NOT-WORTH** | two existence checks of the same small file per game, per scan |
 | 161 | `heroicDetails` | repeat-io | `cached` | in forof (line 146); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
@@ -221,7 +227,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
 | 50 | `findHeroicInstalls` | repeat-io | `existsSync` | in forof (line 46); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 92 | `listHeroicGames` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_install_info.json")) (lines 92, 94) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 3) |
+| 92 | `listHeroicGames` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_install_info.json")) (lines 92, 94) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4) |
 | 122 | `listHeroicGames` | repeat-io | `readJson` | in .map (line 118); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 
 #### electron/main/games/libraryStore.ts
@@ -297,7 +303,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 172 | `GamesService` | field | `lastGames` | GameEntry[]; written by = | **OK** | key=none (the last scan's games); invalidated=replaced by every scan; bound=games in the library |
 | 174 | `GamesService` | field | `lastStores` | WindowsStores \| undefined; memo by name | **OK** | key=none (Windows store listing); invalidated=replaced by every scan; bound=1 entry |
 | 176 | `GamesService` | field | `lastDetails` | Map<string, GameDetails>; written by = | **OK** | key=game key; invalidated=replaced by every scan; bound=games in the library |
-| 226 | `GamesService` | field | `colors` | Map<string, string \| null>; written by .clear .set | **OK** | key=game key; invalidated=cleared by every scan; bound=games in the library |
+| 226 | `GamesService` | field | `colors` | Map<string, string \| null>; written by .clear .set | **ADD-CACHE** | key=game key; invalidated=cleared by every scan; bound=games in the library. over-invalidated: with the Glass look every tile whose art has loaded asks for its color, so each scan (every Games page open, every apply) decodes every cover again, synchronously on the main process (nativeImage full decode + resize); key it by art file + mtime and keep it across scans |
 | 260 | `undo > exclusive(cb)` | dup-read | `owners` | 2× this.backups.owners(backupId) (lines 260, 262) | **NOT-WORTH** | small manifest read twice on Undo |
 | 268 | `undo > exclusive(cb)` | repeat-io | `cards` | in .some (line 268); reaches fs | **NOT-WORTH** | N ≤ 2 controllers, on Undo only |
 | 277 | `undo > exclusive(cb)` | repeat-io | `restoreDualSenseMixer` | in forof (line 277); reaches fs | **NOT-WORTH** | N ≤ 2 controllers, on Undo only |
@@ -374,7 +380,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
 | 34 | `AppRail` | storage | `"ds5.railPinned"` | 1 site(s): src/desktop/AppRail.tsx:34 useFlagPref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
-| 35 | `AppRail` | storage | `"ds5.glass"` | 4 site(s): src/desktop/AppRail.tsx:35 useFlagPref, src/desktop/DesktopApp.tsx:144 useFlagPref, src/desktop/live/ControllerView.tsx:160 useFlagPref, src/desktop/live/PartPanel.tsx:1148 useFlagPref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
+| 35 | `AppRail` | storage | `"ds5.glass"` | 5 site(s): src/desktop/AppRail.tsx:35 useFlagPref, src/desktop/DesktopApp.tsx:144 useFlagPref, src/desktop/library/GameLibrary.tsx:71 useFlagPref, src/desktop/live/ControllerView.tsx:160 useFlagPref, src/desktop/live/PartPanel.tsx:1148 useFlagPref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
 
 #### src/desktop/AutoUpdateAsk.tsx
 
@@ -414,7 +420,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 439 | `useDarkTaskbar` | effect-io | `getDesktopPalette onDesktopPalette` | deps []; reaches ipc | **OK** | subscribes or reads once per mount; main answers from memory |
 | 465 | `useWhatsNew > useState(cb)` | storage | `"ds5-last-seen-version"` | 3 site(s): src/desktop/DesktopApp.tsx:465 getItem, src/desktop/DesktopApp.tsx:466 setItem, src/desktop/DesktopApp.tsx:474 setItem | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
 | 491 | `useGamesAttention` | ref | `last` | MutableRefObject<GamesReport \| null>; name | **OK** | key=none (the last games report); invalidated=each scan; cleared when Games consent is turned off; bound=1 report |
-| 492 | `useGamesAttention > useCallback(cb)` | repeat-io | `loadDeclined` | in .filter (line 492); reaches storage | **ADD-CACHE** | N = recommended fixes (tens) per recount: the same localStorage key read and JSON-parsed once per fix; read it once before the filter (Batch 3) |
+| 492 | `useGamesAttention > useCallback(cb)` | repeat-io | `loadDeclined` | in .filter (line 492); reaches storage | **ADD-CACHE** | N = recommended fixes (tens) per recount: the same localStorage key read and JSON-parsed once per fix; read it once before the filter (Batch 4) |
 | 492 | `useGamesAttention` | useCallback | `recount` | deps [] | **OK** | returned by a hook: callers put it in deps / effects |
 | 493 | `useGamesAttention` | useCallback | `update` | deps [recount] | **OK** | returned by a hook: callers put it in deps / effects |
 | 500 | `useGamesAttention` | effect-io | `then getSettings gamesScan update` | deps [supported, update]; reaches ipc,storage | **OK** | one scan at startup for the badge, only with consent |
@@ -484,23 +490,35 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 |---|---|---|---|---|---|---|
 | 13 | `lastBoardName` | storage | `"ds5.lastBoard"` | 2 site(s): src/desktop/hardwareName.ts:13 readPref, src/desktop/hardwareName.ts:24 writePref | **OK** | the last board's name for wording while none is connected; rewritten on every connect |
 
+#### src/desktop/library/ContinuePlaying.tsx
+
+| Line | Function | Kind | Name | Found | Verdict | Why |
+|---|---|---|---|---|---|---|
+| 66 | `useGlassBar` | useMemo | `tokens` | deps [glass, artColor] | **OK** | glass tokens per art color, not per render |
+
+#### src/desktop/library/gameArt.ts
+
+| Line | Function | Kind | Name | Found | Verdict | Why |
+|---|---|---|---|---|---|---|
+| 31 | `useArtColor` | effect-io | `gameArtColor` | deps [key, enabled]; reaches ipc | **OK** | the client side; main keeps the color per game (GamesService.colors, whose over-invalidation is Batch 2) |
+
 #### src/desktop/library/GameLibrary.tsx
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 33 | `useHiddenKinds > useState(cb)` | storage | `"ds5.libraryHiddenKinds"` | 2 site(s): src/desktop/library/GameLibrary.tsx:33 readPref, src/desktop/library/GameLibrary.tsx:41 writePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
-| 67 | `GameLibrary` | storage | `"ds5.librarySort"` | 1 site(s): src/desktop/library/GameLibrary.tsx:67 usePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
-| 70 | `GameLibrary` | useMemo | `kindCounts` | deps [report] | **OK** | one pass over the report's games per scan |
-| 85 | `GameLibrary` | effect-io | `gamesDetails` | deps [desktop, report]; reaches ipc | **OK** | main answers from the last scan (no file reads) |
-| 89 | `GameLibrary` | useMemo | `games` | deps [report, sort, details] | **OK** | sort of the library per report/sort/details change |
-| 95 | `GameLibrary` | useMemo | `recent` | deps [report, details, hiddenKinds] | **OK** | filter + sort per report/details change |
-| 103 | `GameLibrary` | useMemo | `searched` | deps [games, query, hiddenKinds] | **OK** | filter per keystroke, not per render |
+| 34 | `useHiddenKinds > useState(cb)` | storage | `"ds5.libraryHiddenKinds"` | 2 site(s): src/desktop/library/GameLibrary.tsx:34 readPref, src/desktop/library/GameLibrary.tsx:42 writePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
+| 68 | `GameLibrary` | storage | `"ds5.librarySort"` | 1 site(s): src/desktop/library/GameLibrary.tsx:68 usePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
+| 73 | `GameLibrary` | useMemo | `kindCounts` | deps [report] | **OK** | one pass over the report's games per scan |
+| 88 | `GameLibrary` | effect-io | `gamesDetails` | deps [desktop, report]; reaches ipc | **OK** | main answers from the last scan (no file reads) |
+| 92 | `GameLibrary` | useMemo | `games` | deps [report, sort, details] | **OK** | sort of the library per report/sort/details change |
+| 98 | `GameLibrary` | useMemo | `recent` | deps [report, details, hiddenKinds] | **OK** | filter + sort per report/details change |
+| 106 | `GameLibrary` | useMemo | `searched` | deps [games, query, hiddenKinds] | **OK** | filter per keystroke, not per render |
 
-#### src/desktop/library/GamePage.tsx
+#### src/desktop/library/GameTile.tsx
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 61 | `GamePage` | effect-io | `gameArtColor` | deps [game.key]; reaches ipc | **OK** | main caches the color per game (GamesService.colors) |
+| 70 | `GameTile` | useMemo | `tokens` | deps [glass, artColor] | **OK** | glass tokens per art color, not per render |
 
 #### src/desktop/library/useDebouncedSave.ts
 

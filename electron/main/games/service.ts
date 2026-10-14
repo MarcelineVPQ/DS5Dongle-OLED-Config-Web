@@ -222,7 +222,7 @@ export class GamesService {
   }
 
   // A game's signature color from its art (cached per game).
-  // cache: OK — key=game key; invalidated=cleared by every scan; bound=games in the library
+  // cache: ADD-CACHE — key=game key; invalidated=cleared by every scan; bound=games in the library (docs/CACHE_PASS_2026-10.md)
   private colors = new Map<string, string | null>();
   artColor(key: string): string | null {
     this.requireConsent();
