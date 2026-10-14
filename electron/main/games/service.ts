@@ -9,7 +9,8 @@ import { homedir } from "node:os";
 import { readWindowsStores, type WindowsStores } from "./windowsStores";
 import { dominantColor } from "./artColor";
 import { actionUrl, availableActions, execWords, quietPlay, type QuietPlaySystem } from "./actions";
-import { errorText } from "../../../src/errorText";
+import { errorText, logged } from "../../../src/errorText";
+import { FeedMissingError, feedProblem } from "../updateFeed";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
 import type { ArtKind, Fix, GameAction, GameEntry, GameInfo, LauncherId } from "../../../src/desktop/games/types";
@@ -342,7 +343,16 @@ export class GamesService {
     return this.exclusive(async () => {
       try {
         this.requireConsent();
-        const build = (await this.deps.fetchManifest()).proton;
+        let manifest: Manifest;
+        try {
+          manifest = await this.deps.fetchManifest();
+        } catch (cause) {
+          // error: SHOWN — desktop.updateFeed.offline / .unsigned / .malformed by problem on the Proton card (the raw text goes to the log)
+          if (cause instanceof FeedMissingError) return { ok: false, message: "No Proton build is published yet." };
+          logged("installing Proton: the update feed")(cause);
+          return { ok: false, message: errorText(cause), problem: feedProblem(cause) };
+        }
+        const build = manifest.proton;
         if (!build) return { ok: false, message: "No Proton build is published yet." };
         const steam = findSteamInstalls(this.home);
         const heroic = findHeroicInstalls(this.home);

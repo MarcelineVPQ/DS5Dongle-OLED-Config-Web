@@ -577,6 +577,7 @@
       "checkFailed": "No se pudo buscar actualizaciones. ¿Tienes conexión?"
     },
     "updateFeed": {
+      "offline": "No se pudo conectar con el servidor de actualizaciones. Comprueba la conexión a internet y vuelve a intentarlo.",
       "unsigned": "El canal de actualizaciones no superó su comprobación de seguridad, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
       "malformed": "No se pudo leer el canal de actualizaciones, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde."
     },

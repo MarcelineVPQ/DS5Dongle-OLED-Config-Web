@@ -3,7 +3,8 @@
 // "Are you online?" everywhere). The updater says why a check failed
 // (network / unsigned / malformed) and every page that reports a check says
 // it in those words: App settings' Check for updates, the setup screen, the
-// firmware card (Latest and Check now) and the Development channel dialog.
+// firmware card (Latest and Check now), the Development channel dialog and
+// the Games page's Proton install.
 import { generateKeyPairSync, sign } from "node:crypto";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -17,6 +18,13 @@ import { firmwareFeed, latestFirmware } from "../../electron/main/firmwareSource
 import SetupScreen from "../../src/desktop/SetupScreen";
 import FirmwarePage from "../../src/desktop/pages/FirmwarePage";
 import { CheckNow, DevChannelDialog } from "../../src/desktop/live/PartPanel";
+import GamesPage from "../../src/desktop/pages/GamesPage";
+import { GamesService } from "../../electron/main/games/service";
+import { fakeBridge } from "../support/gamePage";
+import { homeDesktop, homeLibrary, homeReport } from "../support/gamesHome";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -78,10 +86,16 @@ describe("the updater says why a feed check failed", () => {
 });
 
 // The words each page shows, per problem.
-const WORDS: Record<FeedProblem, { check: string; card: string; checked: string; join: string }> = {
-  offline: { check: "Are you online?", card: "can't check (offline)", checked: "can't be reached (offline?)", join: "Can't reach the development feed" },
-  unsigned: { check: "didn't pass its security check", card: "failed its security check", checked: "didn't pass its security check", join: "didn't pass its security check" },
-  malformed: { check: "couldn't be read", card: "couldn't be read", checked: "couldn't be read", join: "couldn't be read" },
+const WORDS: Record<FeedProblem, { check: string; card: string; checked: string; join: string; proton: string }> = {
+  offline: { check: "Are you online?", card: "can't check (offline)", checked: "can't be reached (offline?)", join: "Can't reach the development feed", proton: "Couldn't reach the update server" },
+  unsigned: {
+    check: "didn't pass its security check",
+    card: "failed its security check",
+    checked: "didn't pass its security check",
+    join: "didn't pass its security check",
+    proton: "didn't pass its security check",
+  },
+  malformed: { check: "couldn't be read", card: "couldn't be read", checked: "couldn't be read", join: "couldn't be read", proton: "couldn't be read" },
 };
 const failure = (problem: FeedProblem) => (problem === "offline" ? new Error("net::ERR_INTERNET_DISCONNECTED") : new FeedError(problem, "refused"));
 
@@ -177,5 +191,41 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
     await act(async () => root.render(createElement(DevChannelDialog, { automatic: true, onJoin: () => undefined, onCancel: () => undefined })));
     expect(text()).toContain(words.join);
     notOffline(text());
+  });
+
+  it("Games → Home: installing Proton (raw error text only in the log)", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const service = new GamesService({
+      userData: mkdtempSync(join(tmpdir(), "ds5-feed-")),
+      allowed: () => true,
+      fetchManifest: () => Promise.reject(failure(problem)),
+      download: () => Promise.reject(new Error("not reached")),
+      onProtonProgress: () => undefined,
+      notDetected: () => new Set(),
+      hdrMarked: () => new Set(),
+    });
+    const report = homeReport("attention");
+    report.ourProton = { ...report.ourProton, updateAvailable: true };
+    const base = homeDesktop("attention", [], report);
+    const overrides: Record<string, unknown> = { installProton: () => service.installLatestProton(), onProtonProgress: () => () => undefined };
+    window.desktop = new Proxy(overrides, { get: (o, p: string) => (p in o ? o[p] : base[p]) }) as unknown as DesktopApi;
+    await act(async () =>
+      root.render(
+        createElement(GamesPage, {
+          allowed: true,
+          onAllowedChange: () => undefined,
+          bridge: fakeBridge(),
+          profiles: { library: homeLibrary(report.games), setLibrary: () => undefined, running: null } as never,
+        }),
+      ),
+    );
+    await act(async () => [...container.querySelectorAll("button")].find((b) => b.textContent?.startsWith("Install "))!.click());
+    await act(async () => button("Download and install").click());
+    expect(text()).toContain(words.proton);
+    expect(text()).not.toContain("refused");
+    expect(text()).not.toContain("ERR_INTERNET_DISCONNECTED");
+    notOffline(text());
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

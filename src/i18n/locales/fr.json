@@ -577,6 +577,7 @@
       "checkFailed": "Impossible de vérifier les mises à jour. Es-tu en ligne ?"
     },
     "updateFeed": {
+      "offline": "Impossible de joindre le serveur de mises à jour. Vérifie la connexion Internet et réessaie.",
       "unsigned": "Le flux de mises à jour n’a pas passé son contrôle de sécurité, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
       "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard."
     },

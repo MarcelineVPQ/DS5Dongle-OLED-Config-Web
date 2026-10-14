@@ -577,6 +577,7 @@
       "checkFailed": "Suche nach Updates fehlgeschlagen. Bist du online?"
     },
     "updateFeed": {
+      "offline": "Der Update-Server ist nicht erreichbar. Prüf die Internetverbindung und versuch es noch einmal.",
       "unsigned": "Der Update-Feed hat die Sicherheitsprüfung nicht bestanden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal.",
       "malformed": "Der Update-Feed konnte nicht gelesen werden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal."
     },

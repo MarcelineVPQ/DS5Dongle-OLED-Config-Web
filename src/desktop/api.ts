@@ -147,8 +147,9 @@ export interface GameBackup {
 }
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
-// error: SHOWN — english: the Proton card's message (main-process text, batch E3)
-export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
+// problem: the update feed itself failed (the page shows its own words for it; message is English, for the log).
+// error: SHOWN — english: the Proton card's message (main-process text, batch E3); a feed problem shows desktop.updateFeed.offline / .unsigned / .malformed
+export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string; problem?: FeedProblem };
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 // blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
 // noController: the change set the controller's volume, and it isn't connected (nothing undone).
