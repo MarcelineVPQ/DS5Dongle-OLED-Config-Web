@@ -54,6 +54,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Controller plugins": "Controller plugins: an API",
   "More games in the background": "Game-art background: more games",
   "Pick any Proton version": "Game page: Proton version picker",
+  "Collapse all and clear pins": "Accordion panel menu: Collapse all, Clear pins",
   "Clear message when new firmware won't start": "Firmware update: say when the board came back still in BOOTSEL",
   "What the app stands for": "About: the app's philosophy",
   "Rate how your DualSense works": "Game page: rating says what it rates, inside DualSense support",
