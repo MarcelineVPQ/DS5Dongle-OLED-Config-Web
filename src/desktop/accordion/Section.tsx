@@ -20,12 +20,13 @@
 // Idle cost: none. Opening plays one height transition (CSS, interpolate-size)
 // and a deep link one flash (a CSS animation that ends); nothing repeats, and
 // reduce motion turns both off.
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, PanelRightClose, PanelRightOpen, type LucideIcon } from "lucide-react";
 import { useFlagPref } from "../storage";
 import { reducedMotionNow } from "../motion";
 import type { Accordion as AccordionState } from "./useAccordion";
+import { InfoTip } from "../controls";
 
 const AccordionContext = createContext<AccordionState | null>(null);
 
@@ -109,8 +110,8 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
 
 // What a header button shows, for a Section and a main-view MainBlock alike:
 // the icon (with the yellow dot for an open task), the title, the live status
-// (or the task, said instead) and the chevron.
-export function HeadContent({ icon: Icon, title, status, task }: { icon: LucideIcon; title: string; status?: string | null; task?: string | null | false }) {
+// (or the task, said instead) and, for a Section, the chevron.
+export function HeadContent({ icon: Icon, title, status, task, chevron = true }: { icon: LucideIcon; title: string; status?: string | null; task?: string | null | false; chevron?: boolean }) {
   const shown = task || status || null;
   return (
     <>
@@ -124,7 +125,7 @@ export function HeadContent({ icon: Icon, title, status, task }: { icon: LucideI
           {shown}
         </span>
       )}
-      <ChevronDown className="dk-sec-chev" size={15} aria-hidden="true" />
+      {chevron && <ChevronDown className="dk-sec-chev" size={15} aria-hidden="true" />}
     </>
   );
 }
@@ -155,17 +156,30 @@ export const SectionSub = ({ children }: { children: ReactNode }) => <h3 classNa
 
 // A group of rows inside a section's body, with its small heading (what a
 // card was before the accordion): a line above it separates it from the rows before.
-export function SectionGroup({ title, children }: { title?: ReactNode; children: ReactNode }) {
+// `info`: the group's longer explanation, behind the ⓘ beside its heading (InfoTip).
+export function SectionGroup({ title, info, children }: { title?: ReactNode; info?: string; children: ReactNode }) {
   return (
     <div className="dk-sec-group">
-      {title && <SectionSub>{title}</SectionSub>}
+      {title && (
+        <SectionSub>
+          {title}
+          {info && <InfoTip text={info} />}
+        </SectionSub>
+      )}
       {children}
     </div>
   );
 }
 
 // Whether a page's panel is hidden (its hide button, or the rail's item clicked again).
+// Remembered per page (storage.ts, saved at once); a page not visited yet shows it.
+// Narrow (the drawer), the same state: shown = the drawer open.
 export const PANEL_HIDDEN_KEY = (page: string) => `ds5.accordion.hidden.${page}`;
+
+// The rail's item of the page you're on, clicked again (or Enter / Space on
+// it): the shown page's SplitView shows or hides its panel. Every page alike.
+const PANEL_TOGGLE_EVENT = "ds5:toggle-panel";
+export const togglePanel = () => window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
 
 // A page with its main view on the left and the accordion panel on the
 // right. Below ~760 px (the page's width, a container query) the panel is a
@@ -197,7 +211,6 @@ export function SplitView({
 }) {
   const { t } = useTranslation();
   const [hidden, setHidden] = useFlagPref(PANEL_HIDDEN_KEY(page));
-  const [drawer, setDrawer] = useState(false);
   const panel = useRef<HTMLElement | null>(null);
   // Stable, so the panel's ref isn't handed over again on every render.
   const setPanel = useCallback(
@@ -207,25 +220,35 @@ export function SplitView({
     },
     [panelRef],
   );
-  // Narrow (the drawer) is a layout the stylesheet picks; asked at the click.
+  // Narrow (the drawer) is a layout the stylesheet picks; asked at the key press.
   const narrow = () => !!panel.current && getComputedStyle(panel.current).position === "absolute";
-  const show = () => (narrow() ? setDrawer(true) : setHidden(false));
-  const hide = () => (narrow() ? setDrawer(false) : setHidden(true));
-  // A deep link on a narrow page opens the drawer to show it.
-  const [link, setLink] = useState(state.revealed);
-  if (link !== state.revealed) {
-    setLink(state.revealed);
-    if (state.revealed) setDrawer(true);
-  }
+  const show = () => setHidden(false);
+  const hide = () => setHidden(true);
+  // The rail's toggle: only the page on screen answers (a hidden pane, like
+  // Games → Home behind a game page, stays as it is).
+  // lifetime: OK — cleanup: removes the rail's toggle listener (unmount / the panel's state changes)
+  useEffect(() => {
+    const onToggle = () => {
+      if (panel.current?.closest(".dk-split")?.getClientRects().length) setHidden(!hidden);
+    };
+    // lifetime: OK — removed in the effect cleanup
+    window.addEventListener(PANEL_TOGGLE_EVENT, onToggle);
+    return () => window.removeEventListener(PANEL_TOGGLE_EVENT, onToggle);
+  }, [hidden, setHidden]);
+  // A deep link shows the panel (the drawer, narrow) to show its place.
+  // lifetime: OK — acquires nothing (writes the remembered state once per link)
+  useEffect(() => {
+    if (state.revealed) setHidden(false);
+  }, [state.revealed, setHidden]);
   return (
-    <div className={`dk-split${hidden ? " panel-hidden" : ""}${drawer ? " drawer-open" : ""}`}>
+    <div className={`dk-split${hidden ? " panel-hidden" : " drawer-open"}`}>
       <div className="dk-split-main" key={mainKey}>
         {main}
       </div>
       <button type="button" className="dk-btn dk-icon-btn dk-split-show" onClick={show} title={t("desktop.accordion.showPanel")} aria-label={t("desktop.accordion.showPanel")}>
         <PanelRightOpen size={14} />
       </button>
-      <aside ref={setPanel} className="dk-split-panel" aria-label={typeof title === "string" ? title : undefined} onKeyDown={(e) => e.key === "Escape" && narrow() && setDrawer(false)}>
+      <aside ref={setPanel} className="dk-split-panel" aria-label={typeof title === "string" ? title : undefined} onKeyDown={(e) => e.key === "Escape" && narrow() && hide()}>
         <header className="dk-split-head">
           <div className="dk-split-titles">
             <h2 tabIndex={-1}>{title}</h2>

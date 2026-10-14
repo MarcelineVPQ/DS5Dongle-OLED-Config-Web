@@ -1,9 +1,9 @@
 // The Pico 2 W page: the board's console (its OLED mirror and log), dials and
 // Diagnostics (a main-view block: readouts don't go in the accordion) as the
 // main view, its accordion at the right: Firmware, Restart & reset, Power &
-// sleep, OLED screen, USB & status pin. Diagnostics' extra reads (the audio
-// counters, the timings) run only while its block is open
-// (DongleDashboard.tsx); a closed block or folded section renders nothing.
+// sleep, OLED screen, USB & status pin. The dials and Diagnostics read the
+// board once when the page opens (a snapshot, "as of" its time) and again
+// only during Watch live (DongleDashboard.tsx); a folded section renders nothing.
 import { useTranslation } from "react-i18next";
 import { Activity, Download, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -24,7 +24,7 @@ import FirmwareSection, { DeviceSection } from "../pages/FirmwarePage";
 import { DisplaySection, PcSleepSection, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
 import type { FirmwareUpdate } from "../useUpdates";
 import DongleConsole, { type OledFrameState } from "./DongleConsole";
-import { DiagnosticsBody, PicoGauges, useDongleTelemetry } from "./DongleDashboard";
+import { DiagnosticsBody, PicoGauges, useDongleTelemetry, WatchLive } from "./DongleDashboard";
 
 const minutesOrNever = (t: (k: string, o?: Record<string, unknown>) => string, n: number) => (n ? t("desktop.dash.minutes", { n }) : t("desktop.dash.never"));
 
@@ -48,7 +48,7 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const boardTask = tasks.find((x) => x.section === BOARD_PROBLEM_BLOCK)?.text ?? null;
   const acc = useAccordion("dongle", pinScope("dongle"), fwTask ? "firmware" : null);
   const diagnostics = useMainBlock("dongle", BOARD_PROBLEM_BLOCK);
-  const telemetry = useDongleTelemetry(bridge, oled.frame, rssi, diagnostics.open);
+  const telemetry = useDongleTelemetry(bridge, oled.frame, rssi);
   const target = useProfileTarget();
   const s = telemetry.sample;
   const d = bridge.draft;
@@ -59,8 +59,8 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
     <div className="live-stage dongle-main">
       <DongleConsole client={bridge.client} identity={identity} controllerOn={controllerOn} frame={oled} />
       <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealBlock("dongle", BOARD_PROBLEM_BLOCK)} />
-      <MainBlock state={diagnostics} icon={Activity} title={t("desktop.sections.diagnostics")} status={s ? `${s.tempC.toFixed(1)} °C · ${Math.round(s.realMhz)} MHz` : null} task={boardTask}>
-        {() => <DiagnosticsBody bridge={bridge} telemetry={telemetry} />}
+      <MainBlock state={diagnostics} icon={Activity} title={t("desktop.sections.diagnostics")} task={boardTask} actions={bridge.client && <WatchLive poll={telemetry.poll} />}>
+        <DiagnosticsBody bridge={bridge} telemetry={telemetry} />
       </MainBlock>
     </div>
   );

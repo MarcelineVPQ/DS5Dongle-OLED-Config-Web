@@ -104,7 +104,8 @@
     },
     "common": {
       "cancel": "取消",
-      "stop": "停止"
+      "stop": "停止",
+      "moreInfo": "更多信息"
     },
     "overview": {
       "firmware": "固件",
@@ -1022,7 +1023,6 @@
       "label": "导航",
       "pin": "保持展开",
       "collapse": "收起",
-      "controllerAgain": "控制器 · 再次点击可显示或隐藏设置",
       "tip": {
         "controller": "实时显示你的控制器，点击任意部位进行设置",
         "dongle": "固件、OLED 屏幕、电源和 USB",
@@ -1032,7 +1032,8 @@
         "about": "指南、新功能和致谢"
       },
       "development": "开发版",
-      "devHint": "开发版本：比稳定版更新，测试较少"
+      "devHint": "开发版本：比稳定版更新，测试较少",
+      "again": "再次点击可显示或隐藏设置"
     },
     "audioTest": {
       "speakerTitle": "扬声器测试",
@@ -1145,7 +1146,7 @@
       "fakeSlots": "模拟更多控制器",
       "fakeSlotsHint": "一只午夜黑 Edge 和一只银河紫 DualSense 显示为已配对，占用最前面的空槽位。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
       "fakeGames": "测试游戏",
-      "fakeGamesHint": "“游戏”页面显示一个虚构的游戏库（Steam、Heroic、Lutris 共 20 款，配生成的图片），而不读取你的启动器。开始游戏、应用、撤销和安装只会更改虚构的游戏库：不读写任何启动器文件，也不启动任何程序。会重新加载页面。",
+      "fakeGamesHint": "“游戏”页面显示一个虚构的游戏库（Steam、Heroic、Lutris 共 20 款，配生成的图片），而不读取你的启动器。开始游戏、应用、撤销和安装只会更改虚构的游戏库：不读写任何启动器文件，也不启动任何程序。",
       "fakeRunning": "运行中的游戏",
       "fakeRunningHint": "显示为运行中的测试游戏。在游戏页面点 ▶ 开始游戏会让它运行一分钟。",
       "fakeRunningNone": "无",
@@ -1157,9 +1158,9 @@
         "no-gamescope": "未安装 gamescope"
       },
       "simulated": "模拟{{device}}（无需硬件）",
-      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。会重新加载页面。",
+      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。",
       "simCore1": "模拟 Core1",
-      "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。会重新加载页面。",
+      "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。",
       "simCore1Runs": "正常运行",
       "simCore1Stage": "停在步骤 {{stage}}：{{step}}",
       "simBoard": "模拟的开发板",
@@ -1185,7 +1186,8 @@
         "fast": "立即",
         "normal": "几秒",
         "real": "与真实开发板相同（约 12 秒）"
-      }
+      },
+      "restartsPage": "会重新加载页面。"
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",
@@ -1428,7 +1430,10 @@
         "interface": "接口",
         "keys": "按键",
         "notDetected": "无法检测：只要装上，{{device}}就会驱动它。"
-      }
+      },
+      "asOf": "截至 {{time}}",
+      "watchLive": "实时查看（{{seconds}} 秒）",
+      "liveLeft": "实时 · 剩余 {{seconds}} 秒"
     },
     "hdr": {
       "label": "HDR 灯光（实验性）",

@@ -15,7 +15,7 @@ import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
 import { type ChargeState, type ControllerFirmware, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
 import { compareOfficial, type OfficialStatus } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
-import { BusyButton } from "../controls";
+import { BusyButton, InfoTip } from "../controls";
 import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInfo";
 import Notice from "../Notice";
 import { SectionGroup } from "../accordion/Section";
@@ -145,6 +145,7 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
 
   let body;
   let presses = null;
+  // hint: MUST-SHOW — why it's empty: what to update
   if (!supported) body = <p className="dk-hint">{t("desktop.ctrlInfo.needsFirmware")}</p>;
   else if (!connected) body = <p className="dk-hint">{t("desktop.ctrlInfo.noController")}</p>;
   else {
@@ -266,6 +267,7 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
           </div>
         </div>
         {!tm && (
+          // hint: MUST-SHOW — a status: why the lifetime counters are missing, and how to get them
           <p className="dk-hint">
             {loading
               ? t("desktop.ctrlInfo.reading")
@@ -277,11 +279,11 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
                   : "—"}
           </p>
         )}
-        <p className="dk-hint">{t("desktop.ctrlInfo.privacy")}</p>
         <div className="dk-row-btns">
           <BusyButton disabled={loading} onClick={refresh}>
             {t("desktop.ctrlInfo.refresh")}
           </BusyButton>
+          <InfoTip text={t("desktop.ctrlInfo.privacy")} />
         </div>
       </>
     );
@@ -310,6 +312,7 @@ function HowToUpdate() {
   return (
     <details className="dk-advanced">
       <summary>{t("desktop.ctrlInfo.howToUpdate")}</summary>
+      {/* hint: MUST-SHOW — the steps' own text (opened on purpose to read them) */}
       <ul className="dk-hint dk-fw-steps">
         <li>
           {t("desktop.ctrlInfo.howToPc")}{" "}

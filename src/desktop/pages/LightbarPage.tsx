@@ -30,7 +30,7 @@ export default function LightbarPage(props: SectionProps) {
 
   return (
     <>
-      <Row label={t("desktop.lightbar.mode", "Mode")} sub={sub("lightbarMode")} stack>
+      <Row label={t("desktop.lightbar.mode", "Mode")} sub={sub("lightbarMode")} info={t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")} stack>
         <div className="dk-presets">
           {/* loop: HOT-PATH-OK — N ≈ 9 lightbar modes; only while Light bar is open */}
           {LIGHTBAR_MODES.map((m) => (
@@ -55,7 +55,6 @@ export default function LightbarPage(props: SectionProps) {
           </Row>
         ))}
       </SectionGroup>
-      <p className="dk-hint">{t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")}</p>
     </>
   );
 }

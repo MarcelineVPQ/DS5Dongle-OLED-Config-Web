@@ -60,7 +60,9 @@ export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrS
   return (
     <details className="gp-legend hdr-manual">
       <summary>{t("desktop.hdrManual.title")}</summary>
+      {/* hint: MUST-SHOW — the manual's own text (opened on purpose to read it) */}
       <p className="dk-hint">{t("desktop.hdrManual.intro")}</p>
+      {/* hint: MUST-SHOW — a warning: the resolution in the commands is a guess, put yours in */}
       {!screen && <p className="dk-hint">{t("desktop.hdrManual.noMode")}</p>}
       <ol className="dk-review">
         <li>{t(`desktop.hdrManual.${launcher}.proton`, p)}</li>
@@ -90,6 +92,7 @@ export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrS
         )}
         <li>{t("desktop.hdrManual.inGame")}</li>
       </ol>
+      {/* hint: MUST-SHOW — the manual's own text (opened on purpose to read it) */}
       <p className="dk-hint">{t("desktop.hdrManual.guide")}</p>
     </details>
   );

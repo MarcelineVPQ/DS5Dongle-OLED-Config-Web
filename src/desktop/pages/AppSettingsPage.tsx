@@ -153,7 +153,8 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
               <>
                 <Toggle
                   label={t("desktop.live.hardwareAcceleration")}
-                  sub={gpuChanged ? t("desktop.live.restartToApply") : t("desktop.live.hardwareAccelerationSub")}
+                  sub={gpuChanged ? t("desktop.live.restartToApply") : undefined}
+                  info={t("desktop.live.hardwareAccelerationSub")}
                   value={settings.hardwareAcceleration}
                   onChange={(v) => {
                     setGpuChanged(true);
@@ -162,7 +163,8 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
                 />
                 <Toggle
                   label={t("desktop.hdr.label")}
-                  sub={hdrChanged ? t("desktop.live.restartToApply") : t("desktop.hdr.sub")}
+                  sub={hdrChanged ? t("desktop.live.restartToApply") : undefined}
+                  info={t("desktop.hdr.sub")}
                   value={settings.hdrLighting}
                   disabled={!settings.hardwareAcceleration}
                   onChange={(v) => {
@@ -177,10 +179,10 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           <Section id="updates" icon={RefreshCw} title={t("desktop.settings2.updates")} status={updates} task={updateTask}>
             {() => (
               <>
-                <Toggle label={t("desktop.live.checkForUpdates")} sub={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
+                <Toggle label={t("desktop.live.checkForUpdates")} info={t("desktop.live.checkForUpdatesSub")} value={settings.checkForUpdates} onChange={(v) => set("checkForUpdates", v)} />
                 <Toggle
                   label={t("desktop.live.autoInstall")}
-                  sub={t("desktop.live.autoInstallSub")}
+                  info={t("desktop.live.autoInstallSub")}
                   value={settings.checkForUpdates && settings.autoInstallUpdates}
                   disabled={!settings.checkForUpdates}
                   onChange={(v) => {
@@ -190,7 +192,7 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
                 />
                 <Segmented
                   label={t("desktop.channel.label")}
-                  sub={settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}
+                  info={settings.updateChannel === "dev" ? t("desktop.channel.devHint") : t("desktop.channel.stableHint")}
                   value={settings.updateChannel === "dev" ? 1 : 0}
                   options={[
                     { value: 0, label: t("desktop.channel.stable") },
@@ -379,8 +381,8 @@ function NarratorSettings() {
   const captions = useCaptionsOn();
   return (
     <>
-      <Toggle label={t("desktop.narrator.voice")} sub={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
-      <Toggle label={t("desktop.narrator.captions")} sub={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
+      <Toggle label={t("desktop.narrator.voice")} info={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
+      <Toggle label={t("desktop.narrator.captions")} info={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
       <div className="dk-row-btns">
         <BusyButton className="dk-btn" disabled={voice !== "on"} onClick={() => say("app_controller", { cut: true })}>
           {t("desktop.narrator.test", "Test the voice")}
@@ -394,7 +396,7 @@ function BackdropSetting() {
   const { t } = useTranslation();
   const [background, setBackground] = useBackground();
   return (
-    <Row label={t("desktop.backdrop.label")} sub={t(`desktop.backdrop.sub.${background}`)}>
+    <Row label={t("desktop.backdrop.label")} info={t(`desktop.backdrop.sub.${background}`)}>
       <select className="dk-select" aria-label={t("desktop.backdrop.label")} value={background} onChange={(e) => setBackground(e.target.value as Background)}>
         {/* loop: HOT-PATH-OK — N = 3 backgrounds per render */}
         {BACKGROUNDS.map((b) => (
@@ -437,7 +439,7 @@ function CustomColorsSetting() {
   return (
     <>
       <SectionSub>{t("desktop.customColors.title")}</SectionSub>
-      <Toggle label={t("desktop.customColors.toggle")} sub={t("desktop.customColors.toggleSub")} value={on} onChange={setOn} />
+      <Toggle label={t("desktop.customColors.toggle")} info={t("desktop.customColors.toggleSub")} value={on} onChange={setOn} />
       {on && (
         <>
           {/* loop: HOT-PATH-OK — N = 6 color parts per render */}
@@ -446,6 +448,7 @@ function CustomColorsSetting() {
               <ColorPicker label={t(`desktop.customColors.part.${part}`)} value={colors[part] ?? base[part]} onChange={(hex) => setColors({ ...colors, [part]: hex })} />
             </Row>
           ))}
+          {/* hint: MUST-SHOW — a status: what the app just did to the outline the player picked */}
           {lineAdjusted && <p className="dk-hint">{t("desktop.customColors.lineAdjusted")}</p>}
           <div className="dk-row-btns">
             <button type="button" className="dk-btn" disabled={!detected} onClick={() => detected && setColors({ ...detected })}>
@@ -485,7 +488,7 @@ export function AccentSetting() {
 function ReduceMotionSetting() {
   const { t } = useTranslation();
   const [on, setOn] = useFlagPref(REDUCE_MOTION_KEY);
-  return <Toggle label={t("desktop.settings2.reduceMotion")} sub={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
+  return <Toggle label={t("desktop.settings2.reduceMotion")} info={t("desktop.settings2.reduceMotionSub")} value={on} onChange={setOn} />;
 }
 
 // Joining the Development channel: before any dev update is offered (app or
@@ -532,6 +535,7 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
         <h3>{t("desktop.channel.joinLatest")}</h3>
         {preview === "ask" ? (
           <div className="dk-row-btns">
+            {/* hint: MUST-SHOW — a status: why nothing was fetched yet, beside the button that fetches it */}
             <span className="dk-hint">{t("desktop.channel.joinCheckOff")}</span>
             <button type="button" className="dk-btn" onClick={check}>
               {t("desktop.channel.joinCheck")}
@@ -540,6 +544,7 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
         ) : preview === "loading" ? (
           <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
         ) : preview && "problem" in preview ? (
+          // hint: MUST-SHOW — a status: the feed couldn't be read (what happened, what you can still do)
           <p className="dk-hint">{t(preview.problem === "unpublished" ? "desktop.channel.joinUnpublished" : feedProblemKey(preview.problem, "desktop.channel.joinOffline"))}</p>
         ) : preview ? (
           <>
@@ -554,6 +559,7 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
             )}
           </>
         ) : (
+          // hint: MUST-SHOW — a status: the feed couldn't be read (what happened, what you can still do)
           <p className="dk-hint">{t("desktop.channel.joinOffline")}</p>
         )}
         <div className="dk-row-btns">
@@ -585,8 +591,7 @@ export function DeveloperSettings() {
   const codes = MODEL_COLORWAYS[model];
   return (
     <>
-      <p className="dk-hint">{t("desktop.dev.hint")}</p>
-      <Row label={t("desktop.dev.model")}>
+      <Row label={t("desktop.dev.model")} info={t("desktop.dev.hint")}>
         <select
           className="dk-select"
           aria-label={t("desktop.dev.model")}
@@ -616,7 +621,8 @@ export function DeveloperSettings() {
       </Row>
       <Toggle
         label={t("desktop.dev.simulated")}
-        sub={t("desktop.dev.simulatedHint")}
+        sub={t("desktop.dev.restartsPage")}
+        info={t("desktop.dev.simulatedHint")}
         value={simulated}
         onChange={(on) => {
           writePref(SIMULATED_KEY, on ? "1" : "0");
@@ -624,7 +630,7 @@ export function DeveloperSettings() {
         }}
       />
       {simulated && (
-        <Row label={t("desktop.dev.simCore1")} sub={t("desktop.dev.simCore1Hint")}>
+        <Row label={t("desktop.dev.simCore1")} sub={t("desktop.dev.restartsPage")} info={t("desktop.dev.simCore1Hint")}>
           <select
             className="dk-select"
             aria-label={t("desktop.dev.simCore1")}
@@ -644,9 +650,9 @@ export function DeveloperSettings() {
         </Row>
       )}
       {simulated && <SimulatedBoard />}
-      <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
+      <Toggle label={t("desktop.dev.fakeSlots")} info={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <FakeGames />
-      <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
+      <Row label={t("desktop.dev.updates")} info={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
           {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}
           {UPDATE_PREVIEWS.map((p) => (

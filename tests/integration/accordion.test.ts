@@ -8,7 +8,7 @@
 // accordion sketch's MAPPING.md) renders in exactly one section, nothing
 // lost, no dupes; and every deep link target exists. Readouts (Pico
 // diagnostics, Controller info, a game's details) are main-view blocks
-// (MainBlock), never sections: closed by default, reading nothing until opened.
+// (MainBlock), never sections: always shown, no fold, nothing remembered.
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -113,8 +113,8 @@ const head = (id: string) => container.querySelector<HTMLButtonElement>(`[data-s
 const pinOf = (id: string) => container.querySelector<HTMLButtonElement>(`[data-section="${id}"] .dk-sec-pin`)!;
 const openIds = () => [...container.querySelectorAll<HTMLElement>(".dk-sec.open")].map((s) => s.dataset.section);
 const click = (b: HTMLElement) => act(() => b.click());
-// A main-view block (MainBlock): its header, and whether its body is there.
-const blockHead = (id: string) => container.querySelector<HTMLButtonElement>(`.dk-split-main [data-block="${id}"] .dk-block-toggle`)!;
+// A main-view block (MainBlock): its heading, and its body.
+const blockHead = (id: string) => container.querySelector<HTMLElement>(`.dk-split-main [data-block="${id}"] .dk-block-head`)!;
 const blockBody = (id: string) => container.querySelector<HTMLElement>(`.dk-split-main [data-block="${id}"] .dk-block-body`);
 
 // A small page on the accordion: the body counts how often it renders.
@@ -255,7 +255,14 @@ const labelsIn = (id: string) => {
   if (!body) return [];
   const labels = [...body.querySelectorAll(".dk-row > .dk-label")].map((l) => l.firstChild?.textContent?.trim() ?? "");
   const buttons = [...body.querySelectorAll("button")].map((b) => b.textContent?.trim() ?? "");
-  const texts = [...body.querySelectorAll("p, h3")].map((p) => p.textContent?.trim() ?? "");
+  // A heading's own text (its ⓘ's tooltip text isn't on screen).
+  const own = (el: Element) =>
+    [...el.childNodes]
+      .filter((n) => !(n instanceof Element && n.matches("[role=tooltip], .dk-info")))
+      .map((n) => n.textContent)
+      .join("")
+      .trim();
+  const texts = [...body.querySelectorAll("p, h3")].map(own);
   return [...labels, ...buttons, ...texts];
 };
 const appSettings = () =>
@@ -466,22 +473,19 @@ describe("the Controller page on the accordion", () => {
     for (const id of m.sections.SECTIONS.controller) expect(container.querySelector(`[data-section="${id}"] .dk-sec-status`)?.textContent, id).toBeTruthy();
   });
 
-  it("shows Controller info in the main view under the drawing, closed until opened, with Refresh next to it", async () => {
+  it("shows Controller info in the main view under the drawing, always open (no fold), with Refresh next to it", async () => {
     await live("overview");
     expect(container.querySelector(".dk-split-panel [data-block], .dk-split-panel [data-section='info']")).toBeNull();
     expect(blockHead("info").textContent).toContain(m.i18n.t("desktop.ctrlInfo.title"));
-    expect(blockHead("info").getAttribute("aria-expanded")).toBe("false");
-    expect(blockBody("info")).toBeNull();
+    // A heading, not a toggle: nothing to fold, nothing remembered.
+    expect(blockHead("info").tagName).toBe("H3");
+    expect(container.querySelector(".dk-block-toggle, .dk-block [aria-expanded]")).toBeNull();
     // Under the drawing.
     const ctl = container.querySelector(".dk-split-main .live-ctl")!;
     expect(ctl.compareDocumentPosition(blockHead("info")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    click(blockHead("info"));
     await act(() => new Promise((r) => setTimeout(r, 30)));
     expect(blockBody("info")?.textContent).toContain(m.i18n.t("desktop.ctrlInfo.refresh"));
-    // Remembered: open again on the next visit.
-    act(() => root.render(null));
-    await live("overview");
-    expect(blockBody("info")).not.toBeNull();
+    expect(Object.keys(localStorage).filter((k) => k.startsWith("ds5.block."))).toEqual([]);
   });
 
   it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
@@ -500,43 +504,55 @@ describe("the Controller page on the accordion", () => {
 });
 
 describe("the Pico 2 W page on the accordion", () => {
-  it("has every section of the plan, each setting in exactly one; Diagnostics is in the main view and reads its extras only while open", async () => {
+  it("has every section of the plan, each setting in exactly one; Diagnostics is in the main view: one snapshot read, then reads only while Watch live", async () => {
     const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
-    const counters = vi.spyOn(Ds5BridgeClient.prototype, "readAudioCounters");
+    const counters = vi.spyOn(Ds5BridgeClient.prototype, "readAudioCounters"); // 0xF5
+    const cpu = vi.spyOn(Ds5BridgeClient.prototype, "readCpu"); // 0xFC
     await live("dongle");
     expect(container.querySelector(".dk-split-panel [data-block]")).toBeNull();
-    expect(blockHead("diagnostics").getAttribute("aria-expanded")).toBe("false");
-    expect(blockBody("diagnostics")).toBeNull();
-    await act(() => new Promise((r) => setTimeout(r, 1200))); // a poll or two with Diagnostics closed
-    expect(counters).not.toHaveBeenCalled();
-    click(blockHead("diagnostics"));
-    await act(() => new Promise((r) => setTimeout(r, 1200)));
-    expect(counters).toHaveBeenCalled();
-    // Graphs, audio counters, the OLED, the specs: all in the block.
+    expect(container.querySelector(".dk-block-toggle, .dk-block [aria-expanded]")).toBeNull();
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    // The snapshot: one read of each, and when it was read.
+    expect(counters).toHaveBeenCalledTimes(1);
+    expect(cpu).toHaveBeenCalledTimes(1);
+    const top = () => container.querySelector('[data-block="diagnostics"] .dk-block-actions')!;
+    expect(top().textContent).toMatch(/As of \d/);
+    // Nothing more while nobody asks.
+    await act(() => new Promise((r) => setTimeout(r, 2300)));
+    expect(counters, "no 0xF5 read after the snapshot").toHaveBeenCalledTimes(1);
+    expect(cpu, "no 0xFC read after the snapshot").toHaveBeenCalledTimes(1);
+    // Graphs, audio counters, the timings, the OLED, the specs: all in the block, shown.
     // loop: test
     for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.specs.title"]) expect(blockBody("diagnostics")?.textContent, key).toContain(m.i18n.t(key));
-    click(blockHead("diagnostics"));
-    expect(blockBody("diagnostics")).toBeNull();
-    const calls = counters.mock.calls.length;
-    await act(() => new Promise((r) => setTimeout(r, 1200)));
-    expect(counters.mock.calls.length, "closed: no more counter reads").toBeLessThanOrEqual(calls + 1); // one read may have been in flight
+    // Watch live: a read a second, a countdown, the button pressed.
+    const watch = top().querySelector<HTMLButtonElement>("button.dash-watch")!;
+    expect(watch.textContent).toBe(m.i18n.t("desktop.dash.watchLive", { seconds: 30 }));
+    click(watch);
+    await act(() => new Promise((r) => setTimeout(r, 2300)));
+    expect(counters.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(cpu.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(watch.getAttribute("aria-pressed")).toBe("true");
+    expect(top().textContent).toMatch(/Live · (29|28|27) s left/);
     counters.mockRestore();
+    cpu.mockRestore();
     await inventory("dongle", DONGLE_INVENTORY);
     expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Pico 2 W");
     // The dials stay in the main view.
     expect(container.querySelectorAll(".dk-split-main .dash-gauge")).toHaveLength(3);
-  });
+  }, 15_000);
 
-  it("a deep link (the rail's board-problem dot, the tray's Diagnostics) opens the Diagnostics block", async () => {
+  it("a deep link (the rail's board-problem dot, the tray's Diagnostics) scrolls to the Diagnostics block and flashes it", async () => {
     m.block.revealBlock("dongle", "diagnostics"); // before the page mounts: taken when it does
     await live("dongle");
-    expect(blockHead("diagnostics").getAttribute("aria-expanded")).toBe("true");
     expect(blockBody("diagnostics")).not.toBeNull();
     expect(document.activeElement).toBe(blockHead("diagnostics"));
+    expect(container.querySelector('[data-block="diagnostics"]')?.classList.contains("dk-flash")).toBe(true);
     // "More in Diagnostics" under the dials does the same.
-    click(blockHead("diagnostics"));
+    blockHead("diagnostics").blur();
+    container.querySelector('[data-block="diagnostics"]')!.classList.remove("dk-flash");
     click(container.querySelector<HTMLButtonElement>(".dash-more")!);
-    expect(blockBody("diagnostics")).not.toBeNull();
+    expect(document.activeElement).toBe(blockHead("diagnostics"));
+    expect(container.querySelector('[data-block="diagnostics"]')?.classList.contains("dk-flash")).toBe(true);
   });
 
   it("a firmware update and a board problem open their places from the rail", () => {
@@ -639,12 +655,10 @@ describe("a game's page on the accordion", () => {
     );
     expect(container.querySelector(".dk-split-main .gp-hero")).not.toBeNull();
     expect(container.querySelectorAll(".dk-split-main .gp-tile")).toHaveLength(4);
-    // Details: a block in the main view under the tiles, closed until opened.
-    expect(blockHead("details").getAttribute("aria-expanded")).toBe("false");
-    click(blockHead("details"));
+    // Details: a block in the main view under the tiles, always shown.
+    expect(blockHead("details").textContent).toContain(m.i18n.t("desktop.library.section.details"));
     // loop: test
     for (const key of ["desktop.library.launcher", "desktop.library.id"]) expect(blockBody("details")?.textContent, key).toContain(m.i18n.t(key));
-    click(blockHead("details"));
     expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Ghostrunner");
     await textInventory("game", GAME_INVENTORY);
     expect(container.querySelector('[data-section="notes"] .dk-sec-toggle')).not.toBeNull();

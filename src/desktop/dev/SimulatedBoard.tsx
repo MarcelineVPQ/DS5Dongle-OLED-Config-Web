@@ -17,7 +17,7 @@ export default function SimulatedBoard() {
   if (!sim.board) return null;
   return (
     <>
-      <Row label={t("desktop.dev.simBoard")} sub={t("desktop.dev.simBoardHint")}>
+      <Row label={t("desktop.dev.simBoard")} info={t("desktop.dev.simBoardHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.simBoard")} value={sim.state} onChange={(e) => sim.set(e.target.value as SimBoardShown)}>
           {/* loop: HOT-PATH-OK — N = 4 states, Developer card only */}
           {STATES.map((s) => (

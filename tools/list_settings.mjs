@@ -80,16 +80,16 @@ const CONTROLS = new Set(["Toggle", "Slider", "Segmented", "KnobSlider", "GripHa
 const NOT_ACTIONS = new Set(["Notice"]);
 export const READOUT_RULE = "the accordion holds settings and actions only; readouts and info go in the page's main view (MainBlock)";
 const ROW_LIKE = new Set(["Row", "Toggle", "Slider", "Segmented", "KnobSlider", "GripHaptics"]);
-const tagOf = (n) => (ts.isJsxElement(n) ? n.openingElement.tagName.getText() : ts.isJsxSelfClosingElement(n) ? n.tagName.getText() : null);
-const attrsOf = (n) => (ts.isJsxElement(n) ? n.openingElement.attributes : n.attributes).properties;
-const attr = (n, name) => attrsOf(n).find((a) => ts.isJsxAttribute(a) && a.name.getText() === name);
+export const tagOf = (n) => (ts.isJsxElement(n) ? n.openingElement.tagName.getText() : ts.isJsxSelfClosingElement(n) ? n.tagName.getText() : null);
+export const attrsOf = (n) => (ts.isJsxElement(n) ? n.openingElement.attributes : n.attributes).properties;
+export const attr = (n, name) => attrsOf(n).find((a) => ts.isJsxAttribute(a) && a.name.getText() === name);
 const attrText = (n, name) => {
   const a = attr(n, name);
   if (!a?.initializer) return "";
   if (ts.isStringLiteral(a.initializer)) return a.initializer.text;
   return a.initializer.getText();
 };
-const lineOf = (sf, n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+export const lineOf = (sf, n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
 const exempt = (x, n) => {
   const lines = x.text.split("\n");
   const at = lineOf(x.sf, n) - 1;
@@ -119,7 +119,7 @@ const componentOf = (n) => {
   }
   return top && /^[A-Z]/.test(top) ? top : null;
 };
-const walk = (node, fn) => {
+export const walk = (node, fn) => {
   fn(node);
   ts.forEachChild(node, (c) => walk(c, fn));
 };

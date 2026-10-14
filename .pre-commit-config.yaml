@@ -91,6 +91,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^src/desktop/.*\.tsx$|^tools/list_settings\.mjs$
+      - id: hint-gate
+        name: Long hints sit behind the ⓘ unless they must stay visible
+        entry: node tools/list_hints.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^src/desktop/.*\.tsx$|^src/i18n/locales/en\.json$|^tools/list_(hints|settings)\.mjs$
       - id: identical-files
         name: No byte-identical files
         entry: node tools/check_identical_files.mjs

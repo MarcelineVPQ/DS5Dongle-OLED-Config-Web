@@ -103,7 +103,8 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   const pct = (v: number) => `${v.toFixed(1)}%`;
   return (
     <>
-      <SectionGroup title={t("desktop.stickTest.circleTitle")}>
+      <SectionGroup title={t("desktop.stickTest.circleTitle")} info={t("desktop.stickTest.circleGood")}>
+        {/* hint: MUST-SHOW — the test's instruction: what to do with the sticks */}
         <p className="dk-hint">{t("desktop.stickTest.circleHow")}</p>
         <Segmented
           label={t("desktop.stickTest.show")}
@@ -131,6 +132,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
                     <>
                       <span className="dk-mono">{t("desktop.stickTest.error", { pct: pct(c.errorPct) })}</span>
                       <span className="dk-mono">{t("desktop.stickTest.coverage", { pct: pct(c.coveragePct) })}</span>
+                      {/* hint: MUST-SHOW — a result: the measurement itself */}
                       <span className="dk-hint">{t("desktop.stickTest.overUnder", { over: pct(c.overPct), under: pct(c.underPct) })}</span>
                       {c.meanReach !== null && c.meanReach < 0.85 && <span className="dk-hint">{t("desktop.stickTest.short")}</span>}
                     </>
@@ -150,7 +152,6 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
           </svg>
           {t("desktop.stickTest.keyOutline")}
         </p>
-        <p className="dk-hint">{t("desktop.stickTest.circleGood")}</p>
         <div className="dk-row-btns">
           <button type="button" className="dk-btn" onClick={() => setOutlines(fresh(calKey))}>
             {t("desktop.stickTest.reset")}
@@ -159,6 +160,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
       </SectionGroup>
 
       <SectionGroup title={t("desktop.stickTest.driftTitle")}>
+        {/* hint: MUST-SHOW — the test's instruction: leave the sticks alone */}
         <p className="dk-hint">{t("desktop.stickTest.driftHow", { seconds: DRIFT_MS / 1000 })}</p>
         {drift === "running" ? (
           <div className="calib-step" role="status">
@@ -191,6 +193,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
                 {d.noticeable && d.beyondDeadzone !== false ? (
                   <span className="dk-bad">{t("desktop.stickTest.driftWarn")}</span>
                 ) : d.noticeable ? (
+                  // hint: MUST-SHOW — a result: what the drift found means
                   <span className="dk-hint">{t("desktop.stickTest.driftHidden")}</span>
                 ) : (
                   <span className="dk-good">✓ {t("desktop.stickTest.steady")}</span>

@@ -66,12 +66,8 @@ const open = (id: string) => {
   if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
   return body(id)!;
 };
-// Details: a block in the main view (readouts aren't sections), opened.
-const openDetails = () => {
-  const head = $<HTMLButtonElement>('.dk-split-main [data-block="details"] .dk-block-toggle')!;
-  if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
-  return $('.dk-split-main [data-block="details"] .dk-block-body')!;
-};
+// Details: a block in the main view (readouts aren't sections), always shown.
+const openDetails = () => $('.dk-split-main [data-block="details"] .dk-block-body')!;
 const checks = () => $<HTMLDetailsElement>('[data-section="setup"] details.gp-checks');
 
 describe("setupStatus", () => {
@@ -178,7 +174,7 @@ describe("game page", () => {
     expect(buttons).toContain(i18n.t("desktop.editing.open"));
     expect(buttons).toContain(i18n.t("desktop.library.profileCopyCurrent"));
     expect(buttons).toContain(i18n.t("desktop.library.profileDelete"));
-    expect([...profile.querySelectorAll(".dk-row > .dk-label")].map((l) => l.textContent)).toEqual([
+    expect([...profile.querySelectorAll(".dk-row > .dk-label")].map((l) => l.firstChild?.textContent)).toEqual([
       i18n.t("desktop.layouts.profileLabel"),
       i18n.t("desktop.curves.profileLeft"),
       i18n.t("desktop.curves.profileRight"),

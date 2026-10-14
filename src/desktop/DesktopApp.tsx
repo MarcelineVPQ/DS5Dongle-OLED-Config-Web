@@ -1,4 +1,4 @@
-import AppRail, { type RailItem } from "./AppRail";
+import AppRail, { railPress, type RailItem } from "./AppRail";
 import Notice from "./Notice";
 import { NoticeTasksContext, pruneStored, railReminders } from "./notices";
 import { openTasks } from "./openTasks";
@@ -16,7 +16,6 @@ import { useFlagPref, usePref, writePref } from "./storage";
 import { colorway } from "./live/colorways";
 import { mergeColors, useCustomColors } from "./live/customColors";
 import ArtBackdrop from "./live/ArtBackdrop";
-import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { LibraryContext, profileTarget } from "./library/libraryContext";
 import { BusyButton } from "./controls";
@@ -97,6 +96,8 @@ export default function DesktopApp() {
   };
   // A rail item's page, and the section (or main-view block) there that holds a task (rail dots,
   // App settings → Dismissed notices' Go to): the accordion opens it.
+  // The rail's item for the page shown (the Pico 2 W page is the controller view's dongle panel).
+  const railActive: RailItem = main === "controller" ? (panel === "dongle" ? "dongle" : "controller") : main;
   const goTo = (item: RailItem, section?: string) => {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
@@ -498,30 +499,30 @@ export default function DesktopApp() {
             )}
           </div>
           <AppRail
-            active={main === "controller" ? (panel === "dongle" ? "dongle" : "controller") : main}
-            onSelect={(item) => {
-              // After the page or panel renders, focus moves into it (the page
-              // in the middle; App settings / Pico open in the side panel), so
-              // the keyboard and screen readers continue there, not in the rail.
-              // lifetime: OK — fires once (moves focus after the page renders)
-              requestAnimationFrame(() => {
-                const target = item === "dongle" || item === "app" || item === "about" ? document.querySelector<HTMLElement>(".dk-split-head h2") : document.querySelector<HTMLElement>("main.dk-body");
-                // A deep link already moved the focus to its section.
-                if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
-              });
-              // A dot on the item: its first task with a section there opens.
-              // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
-              const section = tasks.find((task) => task.place === item && task.section)?.section;
-              if (item === "games" || item === "about" || item === "app") goTo(item, section);
-              else if (item === "controller") {
-                // Already there: show / hide its settings panel.
-                if (main === "controller" && panel !== "dongle") window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
-                else {
+            active={railActive}
+            onSelect={(pressed) =>
+              // The page you're on, again: show / hide its settings panel (every page alike: SplitView keeps it per page, remembered).
+              railPress(pressed, railActive, (item) => {
+                // After the page or panel renders, focus moves into it (the page
+                // in the middle; App settings / Pico open in the side panel), so
+                // the keyboard and screen readers continue there, not in the rail.
+                // lifetime: OK — fires once (moves focus after the page renders)
+                requestAnimationFrame(() => {
+                  const target =
+                    item === "dongle" || item === "app" || item === "about" ? document.querySelector<HTMLElement>(".dk-split-head h2") : document.querySelector<HTMLElement>("main.dk-body");
+                  // A deep link already moved the focus to its section.
+                  if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
+                });
+                // A dot on the item: its first task with a section there opens.
+                // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
+                const section = tasks.find((task) => task.place === item && task.section)?.section;
+                if (item === "games" || item === "about" || item === "app") goTo(item, section);
+                else if (item === "controller") {
                   setMain("controller");
                   setPanel("overview");
-                }
-              } else goTo(item, section);
-            }}
+                } else goTo(item, section);
+              })
+            }
             gamesSupported={games.supported}
             reminders={reminders}
             connected={connected}

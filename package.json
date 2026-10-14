@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "start:desktop": "electron-vite preview -- --no-sandbox",
-    "gates": "./.hooks/check_electron_security.sh && ./.hooks/check_dom_sinks.sh && node .hooks/check_theme_colors.mjs && node tools/list_duplicates.mjs --check && node tools/check_identical_files.mjs && node tools/list_loops.mjs --check && node tools/list_caches.mjs --check && node tools/list_errors.mjs --check && node tools/list_lifetimes.mjs --check && node tools/list_settings.mjs --check",
+    "gates": "./.hooks/check_electron_security.sh && ./.hooks/check_dom_sinks.sh && node .hooks/check_theme_colors.mjs && node tools/list_duplicates.mjs --check && node tools/check_identical_files.mjs && node tools/list_loops.mjs --check && node tools/list_caches.mjs --check && node tools/list_errors.mjs --check && node tools/list_lifetimes.mjs --check && node tools/list_settings.mjs --check && node tools/list_hints.mjs --check",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run gates && npm test",
     "dist:linux": "electron-vite build && electron-builder --linux",
     "dist:win": "electron-vite build && electron-builder --win",

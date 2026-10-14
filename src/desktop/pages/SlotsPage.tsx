@@ -89,6 +89,7 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
     c ? `${t(c.model === "edge" ? "desktop.slots.edge" : "desktop.slots.dualsense")} · ${COLORWAYS[c.colorway]?.name ?? c.colorway}` : null;
   return (
     <>
+      {/* hint: MUST-SHOW — a warning: switching disconnects the controller, and how to pair one */}
       <p className="dk-hint">
         {t(
           "desktop.slots.hint",

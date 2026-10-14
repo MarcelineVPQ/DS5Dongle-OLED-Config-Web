@@ -1,15 +1,18 @@
-// The Pico 2 W page's live readouts. In its main view, under the console:
-// the chip temperature, clock and core voltage as dials, and the board's
-// facts (PicoGauges). In its Diagnostics block below them (a main-view
-// MainBlock: readouts stay out of the accordion), only while that is open:
-// USB, Bluetooth, signal and mic as graphs over the last minute, the audio
-// pipeline's counters (anything that went wrong lit), the per-stage timings
-// with Reset, what the OLED is doing, and the board's and OLED module's specs
-// (DiagnosticsBody). One poll a second (useDongleTelemetry) reads 0xFB diag
-// and 0xFC CPU; with the Diagnostics block open it also reads the 0xF5 audio counters
-// and the timings (protocol 1.11). The signal and the OLED mirror come from
-// the page's own polls (no second read of either).
+// The Pico 2 W page's readouts. In its main view, under the console: the
+// chip temperature, clock and core voltage as dials, and the board's facts
+// (PicoGauges). In its Diagnostics block below them (a main-view MainBlock:
+// readouts stay out of the accordion): USB, Bluetooth, signal and mic as
+// graphs, the audio pipeline's counters (anything that went wrong lit), the
+// per-stage timings with Reset, what the OLED is doing, and the board's and
+// OLED module's specs (DiagnosticsBody).
+// Lean reads (useDongleTelemetry, useSnapshotPoll): opening the page reads
+// the board ONCE (0xFB diag, 0xFC CPU with the timings, 0xF5 audio counters)
+// as a snapshot, "as of" its time; nothing more until Watch live, which reads
+// every second for 30 s (the graphs fill) and stops by itself. The signal
+// and the OLED mirror come from the page's own polls (no second read of
+// either).
 import { useEffect, useRef, useState } from "react";
+import { Radio } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
@@ -23,7 +26,7 @@ import { SectionGroup } from "../accordion/Section";
 import { hardwareName } from "../hardwareName";
 import { boardProblemKey } from "../openTasks";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
-import { usePoll } from "../usePoll";
+import { LIVE_WATCH_MS, useSnapshotPoll, type SnapshotPoll } from "../usePoll";
 
 const HISTORY = 60;
 
@@ -37,10 +40,11 @@ interface Sample {
   usbFps: number;
   btPps: number;
   micFps: number; // mic audio frames decoded per second
+  rated: boolean; // the rates above are known (a previous read to compare with)
   rssi: number;
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
-  counters: AudioCounters | null; // read while the Diagnostics block is open
+  counters: AudioCounters | null; // null: older firmware
   core1Alive: boolean;
   oled: { power: string; screen: number; contrast: number; fps: number } | null;
   timings: CpuTimings | null; // protocol 1.11
@@ -49,12 +53,13 @@ interface Sample {
 // Core voltage codes 0..15 are 0.55 V + 0.05 V steps (the firmware's CPU screen).
 const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : null);
 
-export type Telemetry = { sample: Sample | null; history: Sample[] };
+// `frame`: the OLED mirror's latest frame (the page's own poll), for what the OLED shows now.
+export type Telemetry = { sample: Sample | null; history: Sample[]; poll: SnapshotPoll<unknown>; frame: OledFrame | null };
 
-// `detail`: the Diagnostics block is open (the audio counters and the timings are read too).
-export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null, detail: boolean): Telemetry {
+// The page's one read as a snapshot, then Watch live (useSnapshotPoll).
+export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null): Telemetry {
   const client = bridge.client;
-  const withTimings = detail && supportsFeature2(bridge.identity, 11, FEATURES2.timings);
+  const withTimings = supportsFeature2(bridge.identity, 11, FEATURES2.timings);
   // cache: OK — key=sample time; invalidated=sliding window; bound=HISTORY = 60 samples
   const history = useRef<Sample[]>([]);
   // seq null = no mirror frame in that sample (then no redraw rate).
@@ -65,15 +70,23 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFra
   useEffect(() => {
     latest.current = { frame: frameNow, rssi: rssiNow };
   }, [frameNow, rssiNow]);
-  // lifetime: OK — usePoll: 1 s, stops when hidden, without a client, or on unmount
-  const sample = usePoll(
-    async () => {
+  // A Watch live run starts its graphs over (a gap of minutes isn't a line).
+  const liveRun = useRef(false);
+  // lifetime: OK — useSnapshotPoll: one read on mount (or a new board), then 1 s only during Watch live (30 s), stops when hidden or on unmount
+  const poll = useSnapshotPoll(
+    async (live: boolean) => {
       if (!client) return null;
-      // loop: NOT-WORTH — not a loop: one batch of up to 3 reads per 1 s poll (the board serializes them)
-      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), detail ? client.readAudioCounters() : null]);
+      // loop: NOT-WORTH — not a loop: one batch of up to 3 reads per sample (the board serializes them)
+      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters()]);
       const { frame, rssi: rssiRead } = latest.current;
       const rssi = rssiRead ?? 0;
       const at = performance.now();
+      // The first read of a Watch live run compares with nothing (the snapshot may be minutes old).
+      if (live && !liveRun.current) {
+        prev.current = null;
+        history.current = [];
+      }
+      liveRun.current = live;
       const p = prev.current;
       const dt = p ? (at - p.at) / 1000 : 0;
       const rate = (now: number, then: number | undefined) => (p && dt > 0 && then !== undefined ? Math.max(0, (now - then) / dt) : 0);
@@ -87,11 +100,12 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFra
         usbFps: rate(diag.usbFrames, p?.usb),
         btPps: rate(diag.btPackets, p?.bt),
         micFps: counters ? rate(counters.micFrames, p?.mic) : 0,
+        rated: !!p && dt > 0,
         rssi,
         peaks: [diag.peakSpeaker / 255, diag.peakHaptic / 255],
         hciErrors: diag.hciErrors,
         counters,
-        // Without the counters (Diagnostics closed) not known here: the app's health read says it (useBoardProblems).
+        // With one read only, not known here: the app's health read says it (useBoardProblems).
         core1Alive: !counters || !p || p.loops === null || counters.core1Loops !== p.loops,
         // The frame counter is 8-bit: the difference mod 256.
         timings: cpu.timings,
@@ -103,8 +117,10 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFra
     },
     1000,
     Boolean(client),
-  ).value;
-  return { sample: sample?.s ?? null, history: sample?.history ?? [] };
+    client,
+  );
+  const sample = poll.value;
+  return { sample: sample?.s ?? null, history: sample?.history ?? [], poll, frame: frameNow };
 }
 
 // The clock gauge's scale is the board's own ceiling (the fastest the dongle
@@ -112,6 +128,24 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFra
 // instead of each filling the dial.
 const CLOCK_MAX_MHZ: Record<string, number> = { "Pico 2 W": 320, "Pico W": 200 };
 export const clockMaxMhz = (board: string | null): number => (board && CLOCK_MAX_MHZ[board]) || 320;
+
+// The readouts' state at the Diagnostics heading: "As of 14:02:11" (the
+// snapshot) or the Watch live countdown, and the Watch live button (30 s at
+// 1 s; pressed again, another 30 s).
+export function WatchLive({ poll }: { poll: Telemetry["poll"] }) {
+  const { t, i18n } = useTranslation();
+  const time = poll.asOf === null ? null : new Date(poll.asOf).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return (
+    <>
+      {poll.error && <span className="dk-bad">{poll.error}</span>}
+      <span className="dash-asof">{poll.live ? t("desktop.dash.liveLeft", { seconds: poll.secondsLeft }) : time && t("desktop.dash.asOf", { time })}</span>
+      <button type="button" className={`dk-btn dash-watch${poll.live ? " on" : ""}`} aria-pressed={poll.live} onClick={poll.watch}>
+        <Radio size={13} aria-hidden="true" />
+        {t("desktop.dash.watchLive", { seconds: LIVE_WATCH_MS / 1000 })}
+      </button>
+    </>
+  );
+}
 
 // The main view's readouts: the chip's dials and the board's facts.
 export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs5BridgeResult; telemetry: Telemetry; onDiagnostics: () => void }) {
@@ -149,8 +183,11 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   const { sample: s, history } = telemetry;
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
-  // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; only while the Diagnostics block is open
-  const series = (pick: (x: Sample) => number) => history.map(pick);
+  // A rate needs two reads: the snapshot alone shows none ("—"), Watch live draws them.
+  // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; a render per read (the snapshot, or Watch live's 1 s)
+  const series = (pick: (x: Sample) => number) => history.filter((x) => x.rated).map(pick);
+  const rated = s?.rated ? s : null;
+  const oled = telemetry.frame; // the mirror's own poll: what the OLED shows now
   const micLoss = micLossClimbing(history);
   const specs = boardSpecs(bridge.identity?.boardName);
   const counters = s?.counters ?? null;
@@ -159,10 +196,11 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   return (
     <div className="dash dash-block">
       <div className="dash-row">
-        <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
-        <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={s?.btPps} />
-        <Graph label={td("signal")} unit="dB" values={series((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
-        <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={counters ? s?.micFps : undefined} />
+        <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={rated?.usbFps} />
+        <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={rated?.btPps} />
+        {/* loop: HOT-PATH-OK — N = 60 samples; a render per read (the snapshot, or Watch live's 1 s) */}
+        <Graph label={td("signal")} unit="dB" values={history.map((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
+        <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={counters ? rated?.micFps : undefined} />
       </div>
       <SectionGroup title={td("audio")}>
         {/* loop: HOT-PATH-OK — N ≤ 3 problems; the 1 s sample's render */}
@@ -183,14 +221,15 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
         </div>
       </SectionGroup>
 
-      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
+      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} onReset={telemetry.poll.refresh} />}
 
       <SectionGroup title={OLED_MODULE.name}>
         <div className="dash-facts">
-          <Fact label={td("brightness")} value={s?.oled ? `${Math.round((s.oled.contrast / 255) * 100)}%` : "—"} />
-          <Fact label={td("oledState")} value={s?.oled ? td(`power.${s.oled.power}`) : td("noMirror")} />
-          <Fact label={td("oledScreen")} value={s?.oled ? `${s.oled.screen + 1}/${SCREEN_NAMES.length} · ${SCREEN_NAMES[s.oled.screen] ?? "?"}` : "—"} />
-          <Fact label={td("oledFps")} value={s?.oled ? `${s.oled.fps} /s` : "—"} />
+          <Fact label={td("brightness")} value={oled ? `${Math.round((oled.contrast / 255) * 100)}%` : "—"} />
+          <Fact label={td("oledState")} value={oled ? td(`power.${oled.power}`) : td("noMirror")} />
+          <Fact label={td("oledScreen")} value={oled ? `${oled.screen + 1}/${SCREEN_NAMES.length} · ${SCREEN_NAMES[oled.screen] ?? "?"}` : "—"} />
+          {/* A redraw rate needs two reads: Watch live's. */}
+          <Fact label={td("oledFps")} value={rated?.oled ? `${rated.oled.fps} /s` : "—"} />
         </div>
       </SectionGroup>
 
@@ -237,7 +276,8 @@ const SPEAKER_FRAME_US = 10000;
 
 // Protocol 1.11: how long each stage of the firmware takes (average and worst
 // case since the reset), the averages' last minute, and a Reset.
-function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[] }) {
+// `onReset`: a fresh read after a Reset (the numbers start over at once, even outside Watch live).
+function TimingCard({ client, timings, history, onReset }: { client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[]; onReset: () => void }) {
   const { t } = useTranslation();
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.timing.${k}`, o);
   // The graphs start over at a reset, like the numbers.
@@ -250,14 +290,15 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
       setError(null);
       await client.resetTimings();
       setResetAt(performance.now());
+      onReset();
     } catch (cause) {
       // error: SHOWN — english: the error next to Reset (board errors are English, batch E3)
       setError(causeText(cause));
     }
   };
   return (
-    <SectionGroup title={td("title")}>
-      <p className="dk-hint">{td("hint")}</p>
+    <SectionGroup title={td("title")} info={td("hint")}>
+      {/* hint: MUST-SHOW — a state of this board: why the numbers are rounded */}
       {timings.timerFallback && <p className="dk-hint">{td("usTimer")}</p>}
       {error && (
         <Notice error onDismiss={() => setError(null)}>

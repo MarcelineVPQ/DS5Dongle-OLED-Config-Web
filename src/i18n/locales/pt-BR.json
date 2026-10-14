@@ -104,7 +104,8 @@
     },
     "common": {
       "cancel": "Cancelar",
-      "stop": "Parar"
+      "stop": "Parar",
+      "moreInfo": "Mais informações"
     },
     "overview": {
       "firmware": "Firmware",
@@ -1032,7 +1033,6 @@
       "label": "Navegação",
       "pin": "Manter aberto",
       "collapse": "Recolher",
-      "controllerAgain": "Controle · clique de novo para mostrar ou ocultar as configurações",
       "tip": {
         "controller": "seu controle, ao vivo. Clique em qualquer parte para configurá-la",
         "dongle": "firmware, tela OLED, energia e USB",
@@ -1042,7 +1042,8 @@
         "about": "o guia, novidades e créditos"
       },
       "development": "Desenvolvimento",
-      "devHint": "Uma versão de desenvolvimento: mais nova que a estável e menos testada"
+      "devHint": "Uma versão de desenvolvimento: mais nova que a estável e menos testada",
+      "again": "clique de novo para mostrar ou ocultar as configurações"
     },
     "audioTest": {
       "speakerTitle": "Teste do alto-falante",
@@ -1155,7 +1156,7 @@
       "fakeSlots": "Simular mais controles",
       "fakeSlotsHint": "Um Edge Midnight Black e um DualSense Galactic Purple aparecem emparelhados nos primeiros slots livres. Troque para eles em Slots de emparelhamento: o app age como se esse controle tivesse conectado. Nada é enviado {{device_a}}.",
       "fakeGames": "Jogos de teste",
-      "fakeGamesHint": "Jogos mostra uma biblioteca inventada de 20 jogos (Steam, Heroic, Lutris) com imagens geradas em vez de ler seus inicializadores. Jogar, Aplicar, Desfazer e Instalar só mudam a biblioteca inventada: nenhum arquivo dos inicializadores é lido ou gravado e nada é iniciado. Recarrega a página.",
+      "fakeGamesHint": "Jogos mostra uma biblioteca inventada de 20 jogos (Steam, Heroic, Lutris) com imagens geradas em vez de ler seus inicializadores. Jogar, Aplicar, Desfazer e Instalar só mudam a biblioteca inventada: nenhum arquivo dos inicializadores é lido ou gravado e nada é iniciado.",
       "fakeRunning": "Jogo em execução",
       "fakeRunningHint": "O jogo de teste mostrado em execução. ▶ Jogar na página de um jogo o deixa em execução por um minuto.",
       "fakeRunningNone": "Nenhum",
@@ -1167,9 +1168,9 @@
         "no-gamescope": "O gamescope não está instalado"
       },
       "simulated": "Simular {{device}} (sem hardware)",
-      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo). Recarrega a página.",
+      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo).",
       "simCore1": "Core1 simulado",
-      "simCore1Hint": "Faz o Core1 da simulação parar em uma etapa de inicialização, para ver o aviso em {{deviceName}}. Recarrega a página.",
+      "simCore1Hint": "Faz o Core1 da simulação parar em uma etapa de inicialização, para ver o aviso em {{deviceName}}.",
       "simCore1Runs": "Funciona normalmente",
       "simCore1Stage": "Para na etapa {{stage}}: {{step}}",
       "simBoard": "Placa simulada",
@@ -1195,7 +1196,8 @@
         "fast": "Instantânea",
         "normal": "Alguns segundos",
         "real": "Como uma placa real (cerca de 12 s)"
-      }
+      },
+      "restartsPage": "Recarrega a página."
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",
@@ -1438,7 +1440,10 @@
         "interface": "Interface",
         "keys": "Teclas",
         "notDetected": "Não detectada: {{device}} a controla sempre que estiver encaixada."
-      }
+      },
+      "asOf": "Lido às {{time}}",
+      "watchLive": "Ver ao vivo ({{seconds}} s)",
+      "liveLeft": "Ao vivo · faltam {{seconds}} s"
     },
     "hdr": {
       "label": "Iluminação HDR (experimental)",

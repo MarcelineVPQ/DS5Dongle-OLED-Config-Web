@@ -39,7 +39,8 @@ export default function FakeGames() {
     <>
       <Toggle
         label={t("desktop.dev.fakeGames")}
-        sub={t("desktop.dev.fakeGamesHint")}
+        sub={t("desktop.dev.restartsPage")}
+        info={t("desktop.dev.fakeGamesHint")}
         value={!!state?.on}
         onChange={(on) =>
           // error: SHOWN — desktop.errors.actionFailed (the Developer card has no status line)
@@ -52,7 +53,7 @@ export default function FakeGames() {
       />
       {status && (
         <>
-          <Row label={t("desktop.dev.fakeRunning")} sub={t("desktop.dev.fakeRunningHint")}>
+          <Row label={t("desktop.dev.fakeRunning")} info={t("desktop.dev.fakeRunningHint")}>
             <select className="dk-select" aria-label={t("desktop.dev.fakeRunning")} value={status.running ?? ""} onChange={(e) => change({ running: e.target.value || null })}>
               <option value="">{t("desktop.dev.fakeRunningNone")}</option>
               {/* loop: NOT-WORTH — 20 fake games, Developer card only (dev builds) */}

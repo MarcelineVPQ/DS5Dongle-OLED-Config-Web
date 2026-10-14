@@ -59,6 +59,7 @@ export default function HdrTest() {
   const hdr = typeof matchMedia === "function" && matchMedia("(dynamic-range: high)").matches;
   return (
     <div className="hdr-test">
+      {/* hint: MUST-SHOW — a live status: whether the display reports HDR, and what to look for */}
       <p className="dk-hint">{t("desktop.dev.hdrHint", { state: hdr ? t("desktop.dev.hdrYes") : t("desktop.dev.hdrNo") })}</p>
       <div className="hdr-swatches">
         <figure className="hdr-swatch">

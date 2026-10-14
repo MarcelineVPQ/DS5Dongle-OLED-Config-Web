@@ -103,6 +103,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
             : t("desktop.setup.noFirmware", "Looking for the firmware…")}
         </span>
         <span className="dk-hint">{t("desktop.setup.replaces", "This replaces whatever is on the Pico now.")}</span>
+        {/* hint: MUST-SHOW — the first-run setup: the step's own instruction, read while doing it */}
         <span className="dk-hint">{t("desktop.setup.driveNote")}</span>
         {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
         <BusyButton className="dk-btn primary" disabled={!firmware} onClick={start}>
@@ -118,6 +119,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
           dongle waiting to pair looks like no dongle at all. */}
       <strong>{t(hadDongle ? "desktop.setup.turnOnTitle" : "desktop.empty.title")}</strong>
       <span>{t("desktop.setup.pairHint")}</span>
+      {/* hint: MUST-SHOW — the first-run setup: the step's own instruction, read while doing it */}
       <span className="dk-hint">{t("desktop.setup.whyHidden")}</span>
       <span>{t("desktop.setup.newPico")}</span>
       {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
@@ -165,6 +167,7 @@ function UpdatesWithoutDongle() {
     <div className="dk-setup-updates" data-testid="setup-updates">
       <strong>{t("desktop.setup.updatesTitle")}</strong>
       {firmware && <span>{t("desktop.setup.fwReady", { version: shortVersion(firmware.version) })}</span>}
+      {/* hint: MUST-SHOW — the first-run setup: the step's own instruction, read while doing it */}
       <span className="dk-hint">{t("desktop.setup.fwHowTo")}</span>
       <BusyButton onClick={check}>{t("desktop.setup.checkUpdates")}</BusyButton>
       {checked && <span className="dk-hint">{checked}</span>}
