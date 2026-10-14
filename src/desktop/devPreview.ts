@@ -2,10 +2,11 @@
 // pretend another controller model / colorway is connected, to check the
 // UI's colors (drawing, title, accent, tint) for every controller without
 // owning them. Only changes what the app shows; nothing is sent to the dongle.
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import type { BridgeIdentity } from "../protocol/bridgeClient";
+import { SIM_BOARD_FAULTS, SIM_FLASH_SPEEDS, SimulatedBoard, type SimBoardFault, type SimBoardState, type SimFlashSpeed } from "../protocol/simulatedBoard";
 import { COLORWAYS } from "./live/colorways";
-import { readPref, useFlagPref, usePref } from "./storage";
+import { readPref, useFlagPref, usePref, writePref } from "./storage";
 
 export const DEV_TOOLS_KEY = "ds5.devTools";
 // Built into dev builds only (electron.vite.config.ts). Without it every
@@ -108,6 +109,71 @@ export function simulatedRest(): "still" | "noise" | undefined {
 export function simulatedCore1Stage(): number | undefined {
   const v = readPref(SIM_CORE1_KEY);
   return v && (SIM_CORE1_STAGES as readonly string[]).includes(v) ? Number(v) : undefined;
+}
+
+// The simulated board's USB side (protocol/simulatedBoard.ts): running the
+// firmware, in BOOTSEL, a blank Pico, or off USB; the firmware version it
+// runs, kept across its restarts and the app's (like the other simulated
+// state); and the Developer card's failure and speed for firmware updates.
+export const SIM_BOARD_KEY = "ds5.dev.simBoard";
+export const SIM_VERSION_KEY = "ds5.dev.simVersion"; // "" = nothing in flash (a blank Pico)
+export const SIM_FAULT_KEY = "ds5.dev.simFault";
+export const SIM_SPEED_KEY = "ds5.dev.simSpeed";
+const SIM_STATES: readonly SimBoardState[] = ["dongle", "bootsel", "away"];
+const SIM_SPEEDS = Object.keys(SIM_FLASH_SPEEDS) as SimFlashSpeed[];
+const pick = <T extends string>(key: string, allowed: readonly T[]): T | undefined => {
+  const v = readPref(key);
+  return v !== null && (allowed as readonly string[]).includes(v) ? (v as T) : undefined;
+};
+// cache: OK — key=none (one simulated board per page load); invalidated=never (the Developer card's switch reloads the page); bound=1 board
+let simBoard: SimulatedBoard | null = null;
+// The simulated board, in dev builds with "Simulate the board" on; else null.
+export function simulatedBoard(): SimulatedBoard | null {
+  if (!simulatedDongleOn()) return null;
+  if (simBoard) return simBoard;
+  const version = readPref(SIM_VERSION_KEY);
+  const board = new SimulatedBoard({
+    state: pick(SIM_BOARD_KEY, SIM_STATES),
+    version: version === "" ? null : (version ?? undefined),
+    fault: pick(SIM_FAULT_KEY, SIM_BOARD_FAULTS),
+    speed: pick(SIM_SPEED_KEY, SIM_SPEEDS),
+    dongle: { live: true, protoMinor: 17, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
+  });
+  // lifetime: NOT-WORTH — one listener on the one board per page load: keeps its state across restarts
+  board.onChange(() => {
+    writePref(SIM_BOARD_KEY, board.state);
+    writePref(SIM_VERSION_KEY, board.version ?? "");
+  });
+  simBoard = board;
+  return board;
+}
+
+// The Developer card's view of the simulated board.
+export type SimBoardShown = SimBoardState | "blank";
+export function useSimulatedBoard() {
+  const board = simulatedBoard();
+  // lifetime: OK — useSyncExternalStore calls the returned unsubscribe (unmount)
+  const subscribe = useCallback((l: () => void) => board?.onChange(l) ?? (() => undefined), [board]);
+  const shown = useSyncExternalStore(subscribe, () => (board ? `${board.state === "bootsel" && board.version === null ? "blank" : board.state}|${board.version ?? ""}` : ""));
+  const [fault, setFault] = usePref<SimBoardFault>(SIM_FAULT_KEY, "", SIM_BOARD_FAULTS);
+  const [speed, setSpeed] = usePref<SimFlashSpeed>(SIM_SPEED_KEY, "normal", SIM_SPEEDS);
+  const [state, version] = shown.split("|");
+  return {
+    board,
+    state: state as SimBoardShown,
+    version: version || null,
+    set: (next: SimBoardShown) => board?.set(next),
+    fault,
+    setFault: (next: SimBoardFault) => {
+      setFault(next);
+      board?.configure({ fault: next });
+    },
+    speed,
+    setSpeed: (next: SimFlashSpeed) => {
+      setSpeed(next);
+      board?.configure({ speed: next });
+    },
+  };
 }
 
 export function useDevPreview() {

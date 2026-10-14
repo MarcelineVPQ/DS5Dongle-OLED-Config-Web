@@ -277,7 +277,9 @@
       "writeFailed": "La mise à jour du firmware s’est arrêtée avant la fin : {{device}} attend en mode BOOTSEL, sans firmware actif. Ne débranche rien : l’app s’en aperçoit et propose de réinstaller le firmware. Si rien n’apparaît, débranche puis rebranche {{device}}.",
       "disabled": "non vérifié (recherche automatique désactivée)",
       "feedChanged": "Un firmware plus récent est apparu. Vérifie à nouveau.",
-      "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau."
+      "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau.",
+      "wrongFile": "Ce fichier n’est pas un firmware pour {{device}} (il est pour une autre puce, ou abîmé) : rien n’a été écrit. Recherche à nouveau les mises à jour ; si ça se reproduit, réinstalle l’app.",
+      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie."
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -1153,11 +1155,35 @@
         "no-gamescope": "gamescope n'est pas installé"
       },
       "simulated": "Simuler {{device}} (sans matériel)",
-      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
+      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous). Recharge la page.",
       "simCore1": "Core1 simulé",
       "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}. Recharge la page.",
       "simCore1Runs": "Fonctionne normalement",
-      "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}"
+      "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}",
+      "simBoard": "Carte simulée",
+      "simBoardHint": "Ce que fait la simulation en ce moment. Mettre à jour sur la carte Firmware et Installer sur l’écran de configuration s’y déroulent du début à la fin.",
+      "simBoardState": {
+        "dongle": "Firmware {{version}} en marche",
+        "bootsel": "En mode BOOTSEL",
+        "blank": "Un Pico vierge en BOOTSEL (première installation)",
+        "away": "Hors USB (attend une manette)"
+      },
+      "simFault": "Échec de mise à jour du firmware",
+      "simFaultHint": "Fait échouer la prochaine mise à jour, pour voir ce que dit l’app.",
+      "simFaults": {
+        "none": "Aucun",
+        "write10": "Erreur d’écriture à 10 %",
+        "write50": "Erreur d’écriture à 50 %",
+        "write90": "Erreur d’écriture à 90 %",
+        "noBootsel": "N’apparaît pas en BOOTSEL",
+        "noReturn": "Ne revient pas après la mise à jour"
+      },
+      "simSpeed": "Vitesse d’écriture",
+      "simSpeeds": {
+        "fast": "Instantanée",
+        "normal": "Quelques secondes",
+        "real": "Comme une vraie carte (environ 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",

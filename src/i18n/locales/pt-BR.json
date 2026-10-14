@@ -277,7 +277,9 @@
       "writeFailed": "A atualização do firmware parou antes de terminar: {{device}} está esperando no modo BOOTSEL, sem firmware rodando. Não desconecte nada: o app percebe e oferece instalar o firmware de novo. Se nada aparecer, desconecte e conecte {{device}} de novo.",
       "disabled": "não verificado (a busca automática está desligada)",
       "feedChanged": "Apareceu um firmware mais novo. Verifique de novo.",
-      "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo."
+      "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo.",
+      "wrongFile": "Este arquivo não é firmware para {{device}} (é para outro chip, ou está danificado), então nada foi gravado. Procure atualizações de novo; se acontecer outra vez, reinstale o app.",
+      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez."
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -1153,11 +1155,35 @@
         "no-gamescope": "O gamescope não está instalado"
       },
       "simulated": "Simular {{device}} (sem hardware)",
-      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, emparelhamento e atualizações de firmware não são simulados. Recarrega a página.",
+      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo). Recarrega a página.",
       "simCore1": "Core1 simulado",
       "simCore1Hint": "Faz o Core1 da simulação parar em uma etapa de inicialização, para ver o aviso em {{deviceName}}. Recarrega a página.",
       "simCore1Runs": "Funciona normalmente",
-      "simCore1Stage": "Para na etapa {{stage}}: {{step}}"
+      "simCore1Stage": "Para na etapa {{stage}}: {{step}}",
+      "simBoard": "Placa simulada",
+      "simBoardHint": "O que a simulação está fazendo agora. Atualizar no cartão de firmware e Instalar na tela de configuração rodam com ela do começo ao fim.",
+      "simBoardState": {
+        "dongle": "Rodando o firmware {{version}}",
+        "bootsel": "No modo BOOTSEL",
+        "blank": "Uma Pico vazia no BOOTSEL (primeira instalação)",
+        "away": "Fora do USB (esperando um controle)"
+      },
+      "simFault": "Falha na atualização de firmware",
+      "simFaultHint": "Faz a próxima atualização falhar, para ver o que o app diz.",
+      "simFaults": {
+        "none": "Nenhuma",
+        "write10": "Erro de gravação em 10 %",
+        "write50": "Erro de gravação em 50 %",
+        "write90": "Erro de gravação em 90 %",
+        "noBootsel": "Não aparece no BOOTSEL",
+        "noReturn": "Não volta depois da atualização"
+      },
+      "simSpeed": "Velocidade de gravação",
+      "simSpeeds": {
+        "fast": "Instantânea",
+        "normal": "Alguns segundos",
+        "real": "Como uma placa real (cerca de 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",

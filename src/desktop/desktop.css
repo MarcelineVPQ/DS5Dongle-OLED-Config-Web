@@ -1129,7 +1129,9 @@ html[data-theme="dark"] .dk {
   gap: 8px;
   max-width: 460px;
 }
+/* Not flex: 1 here: in this column it took the height and drew nothing. */
 .dk-setup .dk-progress {
+  flex: none;
   width: 260px;
 }
 /* No dongle: updates without one (SetupScreen.tsx UpdatesWithoutDongle). */

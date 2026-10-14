@@ -12,6 +12,7 @@ import type { DesktopSettings, DevChannelAnswer, FirmwareLookup } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
 import FakeGames from "../dev/FakeGames";
+import SimulatedBoard from "../dev/SimulatedBoard";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "../live/colorways";
 import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColors } from "../live/customColors";
@@ -642,6 +643,7 @@ export function DeveloperSettings() {
           </select>
         </Row>
       )}
+      {simulated && <SimulatedBoard />}
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
       <FakeGames />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>

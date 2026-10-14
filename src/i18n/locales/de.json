@@ -277,7 +277,9 @@
       "writeFailed": "Das Firmware-Update wurde nicht fertig, darum wartet {{device}} im BOOTSEL-Modus, ohne laufende Firmware. Nicht abziehen: Die App erkennt das und bietet an, die Firmware erneut zu installieren. Erscheint nichts, {{device_akk}} abziehen und wieder einstecken.",
       "disabled": "nicht geprüft (automatische Suche ist aus)",
       "feedChanged": "Eine neuere Firmware ist erschienen. Prüfe erneut.",
-      "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut."
+      "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut.",
+      "wrongFile": "Diese Datei ist keine Firmware für {{device_akk}} (sie ist für einen anderen Chip oder beschädigt), darum wurde nichts geschrieben. Such noch einmal nach Updates; passiert es wieder, installiere die App neu.",
+      "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal."
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
@@ -1153,11 +1155,35 @@
         "no-gamescope": "gamescope ist nicht installiert"
       },
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
-      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
+      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten). Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",
       "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen. Startet die Seite neu.",
       "simCore1Runs": "Läuft normal",
-      "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}"
+      "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}",
+      "simBoard": "Simuliertes Board",
+      "simBoardHint": "Was die Simulation gerade tut. Aktualisieren auf der Firmware-Karte und Installieren auf dem Einrichtungsbildschirm laufen damit von Anfang bis Ende.",
+      "simBoardState": {
+        "dongle": "Firmware {{version}} läuft",
+        "bootsel": "Im BOOTSEL-Modus",
+        "blank": "Ein leerer Pico im BOOTSEL-Modus (Ersteinrichtung)",
+        "away": "Nicht an USB (wartet auf einen Controller)"
+      },
+      "simFault": "Fehler beim Firmware-Update",
+      "simFaultHint": "Lässt das nächste Update scheitern, um zu sehen, was die App sagt.",
+      "simFaults": {
+        "none": "Keiner",
+        "write10": "Schreibfehler bei 10 %",
+        "write50": "Schreibfehler bei 50 %",
+        "write90": "Schreibfehler bei 90 %",
+        "noBootsel": "Erscheint nicht im BOOTSEL-Modus",
+        "noReturn": "Kommt nach dem Update nicht zurück"
+      },
+      "simSpeed": "Schreibgeschwindigkeit",
+      "simSpeeds": {
+        "fast": "Sofort",
+        "normal": "Ein paar Sekunden",
+        "real": "Wie ein echtes Board (etwa 12 s)"
+      }
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",

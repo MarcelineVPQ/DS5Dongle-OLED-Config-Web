@@ -7,8 +7,9 @@
 // A new (or non-dongle) Pico plugged in with BOOTSEL held skips step 2:
 // installFirmware() flashes it directly (first-run setup).
 import type { Ds5BridgeClient } from "../protocol/bridgeClient";
-import { PicoflashAPI, parseUf2Regions, type PicoflashHandle } from "../flash";
+import { PicoflashAPI, parseUf2Regions, Uf2FileError, type PicoflashHandle } from "../flash";
 import i18n from "../i18n";
+import { simulatedBoard } from "./devPreview";
 import type { DesktopApi, LatestFirmware } from "./api";
 
 export type FirmwareStep = "downloading" | "rebooting" | "waiting-bootloader" | "flashing" | "restarting";
@@ -50,7 +51,7 @@ export async function updateFirmware(client: Ds5BridgeClient, shown: LatestFirmw
   const { version, bytes } = await shownFirmware(desktop, shown);
   // Parse before touching the device: a malformed file must fail here, while
   // the dongle is still running its current firmware.
-  const regions = parseUf2Regions(bytes.slice().buffer);
+  const regions = firmwareRegions(bytes);
 
   return whileWriting(async () => {
     onProgress({ step: "rebooting" });
@@ -70,13 +71,28 @@ export async function installFirmware(device: PicoflashHandle, shown: LatestFirm
   if (!desktop) throw new Error("Installing firmware needs the desktop app.");
   onProgress({ step: "downloading" });
   const { version, bytes } = await shownFirmware(desktop, shown);
-  const regions = parseUf2Regions(bytes.slice().buffer);
+  const regions = firmwareRegions(bytes);
   await whileWriting(() => flash(device, regions, onProgress));
   return version;
 }
 
-// A Pico in BOOTSEL mode (PICOBOOT), if one is plugged in.
+// The firmware file's flash regions, or a plain reason it isn't firmware for
+// this board (another chip's UF2, a cut-off or damaged file): nothing is written.
+function firmwareRegions(bytes: Uint8Array): ReturnType<typeof parseUf2Regions> {
+  try {
+    return parseUf2Regions(bytes.slice().buffer);
+  } catch (cause) {
+    // error: SHOWN — desktop.firmware.wrongFile: rethrown in plain words (the parser's reason kept as its cause); the firmware banner and the setup screen show it
+    if (cause instanceof Uf2FileError) throw new Error(i18n.t("desktop.firmware.wrongFile"), { cause });
+    throw cause;
+  }
+}
+
+// A Pico in BOOTSEL mode (PICOBOOT), if one is plugged in. Dev builds with
+// the simulated board: its RP2350 bootloader while it is in BOOTSEL.
 export async function findBootloader(): Promise<PicoflashHandle | null> {
+  const sim = simulatedBoard();
+  if (sim) return sim.bootloader();
   return (await PicoflashAPI.getDevices())[0] ?? null;
 }
 
@@ -91,6 +107,8 @@ const FLASH_CHUNK = 0x10000; // 64 KB: 16 flash sectors
 export async function flash(device: PicoflashHandle, regions: ReturnType<typeof parseUf2Regions>, onProgress: (p: FirmwareProgress) => void): Promise<void> {
   onProgress({ step: "flashing", fraction: 0 });
   const total = regions.reduce((n, r) => n + r.data.byteLength, 0);
+  // The simulated bootloader (dev builds) fails "at N %" of this; real boards have no such call.
+  (device as { expectBytes?: (n: number) => void }).expectBytes?.(total);
   let done = 0;
   try {
     // lifetime: OK — released in the finally below (disconnect), on success and on every failure
@@ -130,5 +148,5 @@ async function waitForBootloader(): Promise<PicoflashHandle> {
     // lifetime: OK — fires once (300 ms between bootloader looks, bounded by the deadline)
     await new Promise((r) => setTimeout(r, 300));
   }
-  throw new Error("Your board didn't come back in BOOTSEL mode. Unplug it, hold BOOTSEL while plugging it in, and try again.");
+  throw new Error(i18n.t("desktop.firmware.noBootsel"));
 }
