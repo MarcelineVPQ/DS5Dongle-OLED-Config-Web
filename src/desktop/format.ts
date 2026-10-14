@@ -28,3 +28,6 @@ export function formatMicros(us: number, saturated = false): string {
   const text = us < 10 ? `${us.toFixed(1)} µs` : us < 1000 ? `${Math.round(us)} µs` : us < 10000 ? `${(us / 1000).toFixed(2)} ms` : `${(us / 1000).toFixed(1)} ms`;
   return saturated ? `≥ ${text}` : text;
 }
+
+// A download size in MB, one decimal ("12.3 MB").
+export const formatMb = (bytes: number): string => `${(bytes / 1048576).toFixed(1)} MB`;

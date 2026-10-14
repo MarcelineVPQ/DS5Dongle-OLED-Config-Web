@@ -18,6 +18,7 @@ import StickCurves from "./StickCurves";
 import { useProfileTarget } from "../library/libraryContext";
 import StickTests from "./StickTestCards";
 import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
+import Notice from "../Notice";
 
 type Measure = "center" | "edges" | "triggers" | "gyro";
 type Step = "idle" | "done" | { measure: Measure; ready: boolean };
@@ -150,7 +151,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
         <h2>{t("desktop.calib.title")}</h2>
         <p className="dk-hint">{t("desktop.calib.intro")}</p>
         <p className="dk-hint">{t("desktop.calib.forSlot", { slot })}</p>
-        {target && <div className="dk-notice">{t("desktop.editing.calibrationNote", { title: target.title })}</div>}
+        {target && <Notice closable>{t("desktop.editing.calibrationNote", { title: target.title })}</Notice>}
         {running ? (
           <div className="calib-step" role="status">
             <b>

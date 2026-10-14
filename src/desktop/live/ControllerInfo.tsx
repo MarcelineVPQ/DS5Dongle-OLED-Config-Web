@@ -13,6 +13,7 @@ import { compareOfficial } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
 import { BusyButton } from "../controls";
 import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInfo";
+import Notice from "../Notice";
 
 export const supportsControllerInfo = (identity: UseDs5BridgeResult["identity"]) => supportsFeature3(identity, 12, FEATURES3.controllerInfo);
 
@@ -279,7 +280,11 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
       <section className="live-data-card ctrl-info">
         <h3>{t("desktop.ctrlInfo.title")}</h3>
         {body}
-        {error && <div className="dk-notice error">{error}</div>}
+        {error && (
+          <Notice error onDismiss={() => setError(null)}>
+            {error}
+          </Notice>
+        )}
       </section>
       {presses}
     </>

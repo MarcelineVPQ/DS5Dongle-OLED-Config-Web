@@ -17,6 +17,7 @@ export interface Remap {
   busy: boolean;
   // error: SHOWN — english: the remap card's error notice (remap.verifyFailed, desktop.errors.board*, other board errors English, batch E3)
   error: string | null;
+  clearError: () => void; // the notice's ×
   setTarget: (source: number, target: number) => void;
   apply: () => Promise<void>;
   revert: () => void;
@@ -40,6 +41,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState<{ id: string; name: string; table: number[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
   const [extraDevice, setExtraDevice] = useState<number[] | null>(null);
   const [extraDraft, setExtraDraft] = useState<number[]>(defaultExtra);
 
@@ -136,6 +138,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       dirty: !tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice)),
       busy,
       error,
+      clearError,
       setTarget,
       apply,
       revert,
@@ -147,6 +150,6 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       loaded,
       temporary: !!temporary,
     }),
-    [client, supported, device, draft, extraDevice, extraDraft, busy, error, setTarget, apply, revert, resetAll, load, setExtra, loaded, temporary],
+    [client, supported, device, draft, extraDevice, extraDraft, busy, error, clearError, setTarget, apply, revert, resetAll, load, setExtra, loaded, temporary],
   );
 }

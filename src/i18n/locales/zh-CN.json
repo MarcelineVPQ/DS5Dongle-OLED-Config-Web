@@ -1652,7 +1652,12 @@
       "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。"
     },
     "notices": {
-      "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。"
+      "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。",
+      "dismissedTitle": "已关闭的通知",
+      "none": "没有已关闭的通知。",
+      "showAgain": "再次显示",
+      "showAllAgain": "全部再次显示",
+      "goTo": "前往{{place}}"
     }
   },
   "ad": {

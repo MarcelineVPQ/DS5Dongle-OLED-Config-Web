@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
+- **Every notice can be dismissed with a small × in its corner.** An update or a problem with your board stays hidden after you dismiss it, also after a restart, until something changes (a newer version, a different problem); an error comes back if the same thing fails again. The rail keeps a yellow dot on the page where something is still waiting (an app update on App settings, a firmware update or a board problem on the board's page (Pico 2 W)) until it's done, with what's waiting in its tooltip. App settings → Dismissed notices lists what you dismissed that still applies, with a way to it and Show again. All 7 languages.
 - **Developer: "Fake games"** (dev builds, Developer card): Games shows a made-up library of 20 games across Steam, Heroic (GOG, Epic, Amazon, sideloaded) and Lutris, with generated art, every DualSense support tier, setup that needs attention, HDR in each state, a running game and play history, so the Games pages can be worked on without launchers, a board or a controller. Play, Apply, Undo and Install change only the made-up library: no launcher file is read or written and nothing is started. Turning it off brings back the real scan. All 7 languages.
 
 ### Changed
@@ -16,6 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **A game's Play or launcher link that couldn't be opened said so for only 6 seconds.** The error now stays until you dismiss it or try again (Games → Home and the game page).
 - **The app used about 2.6 % of a processor core while hidden in the tray** (6 hours overnight with the board and a controller connected). With an animated lightbar (rainbow, breathing, a charging pulse) the controller's color changed on every one-second check, and each change redrew the hidden window, redrew the tray icon and rebuilt the tray menu. While the window is hidden, a new lightbar color now reaches the tray icon once it holds for a second, and a color that keeps changing updates it at most once a minute; anything else, such as a slot switch, charging or the controller disconnecting, still shows at once, and nothing changes while the window is open. The tray icon is drawn without the graphics card, the tray menu is rebuilt only when what it shows changes, and the running-game check (for game profiles) checks each process's owner once instead of every 2 seconds. Measured hidden for 5 minutes with a simulated board: animated lightbar 4.9 % → 0.4 % of a core, steady lightbar 0.38 % → 0.32 %.
 
 ## [0.9.5-dev.11] - 2026-10-13

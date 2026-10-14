@@ -3,6 +3,7 @@ import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { logged } from "../../errorText";
+import Notice from "../Notice";
 
 // Same order as the OLED Trigger Test screen (firmware oled.cpp kTrigPresetNames).
 const PRESETS = ["Off", "Feedback", "Weapon", "Vibration", "Bow", "Gallop", "Machine"] as const;
@@ -40,7 +41,11 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
       <section className="dk-card" style={{ gridColumn: "1 / -1" }}>
         <h2>{t("desktop.triggers.title", "Adaptive trigger test")}</h2>
         <p className="dk-hint">{t("desktop.triggers.hint", "Pick an effect, then pull L2 and R2. Games override this as soon as they send their own trigger effects.")}</p>
-        {error && <div className="dk-notice error">{error}</div>}
+        {error && (
+          <Notice error onDismiss={() => setError(null)}>
+            {error}
+          </Notice>
+        )}
         <div className="dk-presets">
           {/* loop: HOT-PATH-OK — N = 7 presets; page render */}
           {PRESETS.map((name, i) => (

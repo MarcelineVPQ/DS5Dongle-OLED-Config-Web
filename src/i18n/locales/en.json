@@ -1659,7 +1659,12 @@
       "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again."
     },
     "notices": {
-      "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected."
+      "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
+      "dismissedTitle": "Dismissed notices",
+      "none": "No dismissed notices.",
+      "showAgain": "Show again",
+      "showAllAgain": "Show all again",
+      "goTo": "Go to {{place}}"
     }
   },
   "ad": {

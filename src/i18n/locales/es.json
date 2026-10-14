@@ -1660,7 +1660,12 @@
       "boardRejected": "{{device, capitalize}} no aceptó eso. Puede que su firmware sea más antiguo que esta app: actualiza el firmware e inténtalo otra vez."
     },
     "notices": {
-      "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando."
+      "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",
+      "dismissedTitle": "Avisos cerrados",
+      "none": "No hay avisos cerrados.",
+      "showAgain": "Volver a mostrar",
+      "showAllAgain": "Volver a mostrar todos",
+      "goTo": "Ir a {{place}}"
     }
   },
   "ad": {

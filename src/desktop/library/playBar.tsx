@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
 import type { GameAction, GameEntry, GameInfo } from "../games/types";
+import Notice from "../Notice";
 
 function hours(min: number, t: (k: string, o?: Record<string, unknown>) => string): string {
   return min < 60 ? t("desktop.library.minutes", { count: min }) : t("desktop.library.hours", { count: Math.round(min / 6) / 10 });
@@ -33,18 +34,15 @@ export function PlayStats({ info, running }: { info: GameInfo | undefined; runni
 }
 
 // Runs a launcher action for a game (built in the main process from the
-// scan); `failed` names one that couldn't be opened, for a few seconds.
-// error: SHOWN — desktop.library.action.failed (\`failed\` names the action for a few seconds)
-export function useGameAction(game: GameEntry): { run: (action: GameAction) => Promise<void>; failed: GameAction | null } {
+// scan); `failed` names one that couldn't be opened, until it's dismissed or
+// the next action (an error never goes away on its own).
+// error: SHOWN — desktop.library.action.failed (ActionFailed, until dismissed or the next action)
+export function useGameAction(game: GameEntry): { run: (action: GameAction) => Promise<void>; failed: GameAction | null; clearFailed: () => void } {
   const [failed, setFailed] = useState<GameAction | null>(null);
   const run = async (action: GameAction) => {
     setFailed(null);
     try {
-      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) {
-        setFailed(action);
-        // lifetime: NOT-WORTH — one-shot 6 s that only clears the error label; harmless after unmount
-        setTimeout(() => setFailed((f) => (f === action ? null : f)), 6000);
-      }
+      if (!(await window.desktop!.gameAction({ gameKey: game.key, action }))) setFailed(action);
     } catch {
       // error: SHOWN — desktop.library.action.failed
       setFailed(action);
@@ -53,7 +51,18 @@ export function useGameAction(game: GameEntry): { run: (action: GameAction) => P
     // lifetime: NOT-WORTH — one-shot 0.6-3 s that ends the busy button's wait; fires once
     await new Promise((resolve) => setTimeout(resolve, action === "play" ? 3000 : 600));
   };
-  return { run, failed };
+  return { run, failed, clearFailed: () => setFailed(null) };
+}
+
+// The failed action's notice (game page and Games → Home's tiles).
+export function ActionFailed({ action, onDismiss, className }: { action: GameAction | null; onDismiss: () => void; className?: string }) {
+  const { t } = useTranslation();
+  if (!action) return null;
+  return (
+    <Notice error className={className} role="alert" onDismiss={onDismiss}>
+      {t("desktop.library.action.failed")}
+    </Notice>
+  );
 }
 
 // ▶ Play, or ● Running while the game runs (then it can't be started again).

@@ -36,7 +36,8 @@ import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
-import { PlayButton, PlayStats, useGameAction } from "./playBar";
+import { ActionFailed, PlayButton, PlayStats, useGameAction } from "./playBar";
+import Notice from "../Notice";
 
 interface Props {
   game: GameEntry;
@@ -750,16 +751,18 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
         ))}
       </div>
       {stale && (
-        <p className="dk-notice">
-          {stale.kind === "our-fix"
-            ? t("desktop.library.staleFix", { version: stale.app })
-            : stale.at
-              ? t("desktop.library.staleUpdateOn", { date: new Date(stale.at * 1000).toLocaleDateString() })
-              : t("desktop.library.staleUpdate")}{" "}
-          <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ tags: mine.tags ?? [] })}>
-            {t("desktop.library.stillAccurate")}
-          </button>
-        </p>
+        <Notice closable>
+          <span>
+            {stale.kind === "our-fix"
+              ? t("desktop.library.staleFix", { version: stale.app })
+              : stale.at
+                ? t("desktop.library.staleUpdateOn", { date: new Date(stale.at * 1000).toLocaleDateString() })
+                : t("desktop.library.staleUpdate")}{" "}
+            <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ tags: mine.tags ?? [] })}>
+              {t("desktop.library.stillAccurate")}
+            </button>
+          </span>
+        </Notice>
       )}
       <details className="gp-legend">
         <summary>
@@ -850,22 +853,24 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
 // the main process from the scan; only the actions this game has).
 function GameActions({ game, info, running }: { game: GameEntry; info?: GameInfo; running: boolean }) {
   const { t } = useTranslation();
-  const { run, failed } = useGameAction(game);
+  const { run, failed, clearFailed } = useGameAction(game);
   const actions = info?.actions ?? [];
   if (actions.length === 0) return null;
   const launcher = t(`desktop.library.launcherName.${game.launcher}`);
   return (
-    <div className="gp-actions">
-      {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
-      {/* loop: HOT-PATH-OK — N = 5 game actions */}
-      {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
-        .filter((a) => actions.includes(a))
-        .map((a) => (
-          <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
-            {t(`desktop.library.action.${a}`)}
-          </BusyButton>
-        ))}
-      {failed && <span className="dk-hint gp-action-failed">{t("desktop.library.action.failed")}</span>}
-    </div>
+    <>
+      <div className="gp-actions">
+        {actions.includes("play") && <PlayButton game={game} running={running} run={run} />}
+        {/* loop: HOT-PATH-OK — N = 5 game actions */}
+        {(["properties", "steamInput", "libraryPage", "installFolder", "prefixFolder"] as const)
+          .filter((a) => actions.includes(a))
+          .map((a) => (
+            <BusyButton key={a} className="dk-btn" title={t(`desktop.library.action.${a}Hint`, { launcher })} onClick={() => run(a)}>
+              {t(`desktop.library.action.${a}`)}
+            </BusyButton>
+          ))}
+      </div>
+      <ActionFailed action={failed} onDismiss={clearFailed} />
+    </>
   );
 }

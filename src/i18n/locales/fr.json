@@ -1660,7 +1660,12 @@
       "boardRejected": "{{device, capitalize}} n'a pas accepté ça. Son firmware est peut-être plus ancien que cette appli : mets le firmware à jour, puis réessaie."
     },
     "notices": {
-      "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette."
+      "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",
+      "dismissedTitle": "Notifications fermées",
+      "none": "Aucune notification fermée.",
+      "showAgain": "Afficher à nouveau",
+      "showAllAgain": "Tout afficher à nouveau",
+      "goTo": "Aller à {{place}}"
     }
   },
   "ad": {

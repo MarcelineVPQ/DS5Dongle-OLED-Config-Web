@@ -207,6 +207,31 @@ html[data-theme="dark"] .dk {
 .dk-notice .dk-spacer {
   flex: 1;
 }
+/* Notice.tsx: the × in the corner (the notice's own colors). */
+.dk-notice.has-x {
+  padding-right: 32px;
+}
+.dk-notice.has-x:not(.pinned) {
+  position: relative;
+}
+.dk-notice-x {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.dk-notice-x:hover {
+  border-color: currentColor;
+}
 
 /* ---- Layout blocks ---- */
 .dk-grid {
@@ -971,6 +996,15 @@ html[data-theme="dark"] .dk {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
+}
+/* App settings → Dismissed notices (DismissedNotices.tsx) */
+.dk-dismissed {
+  padding: 6px 0;
+}
+.dk-dismissed-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .dk-confirm {
   margin-top: 6px;
@@ -2720,6 +2754,15 @@ html[data-cards-translucent] .gp-sections .dk-card {
   line-height: 15px;
   text-align: center;
 }
+/* A task with no number (an update, a board problem): the same badge, as a dot. */
+.rail-badge.dot {
+  top: -3px;
+  right: -4px;
+  min-width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+}
 .rail-dot {
   display: grid;
   place-items: center;
@@ -3142,9 +3185,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
 .gp-play {
   min-width: 110px;
   font-weight: 700;
-}
-.gp-action-failed {
-  color: var(--text-warn);
 }
 /* X / Y / Z side by side while the card has room; stacked (label left, value
    right, like the other cards' rows) when it doesn't, so 4-5 digit

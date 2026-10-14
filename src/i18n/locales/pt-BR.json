@@ -1660,7 +1660,12 @@
       "boardRejected": "{{device, capitalize}} não aceitou isso. O firmware pode ser mais antigo que este app: atualize o firmware e tente de novo."
     },
     "notices": {
-      "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou."
+      "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",
+      "dismissedTitle": "Avisos fechados",
+      "none": "Nenhum aviso fechado.",
+      "showAgain": "Mostrar de novo",
+      "showAllAgain": "Mostrar todos de novo",
+      "goTo": "Ir para {{place}}"
     }
   },
   "ad": {

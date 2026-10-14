@@ -1660,7 +1660,12 @@
       "boardRejected": "{{device, capitalize}} hat das nicht angenommen. Die Firmware ist vielleicht älter als diese App: Aktualisiere die Firmware und versuch es dann noch einmal."
     },
     "notices": {
-      "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig."
+      "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",
+      "dismissedTitle": "Geschlossene Hinweise",
+      "none": "Keine geschlossenen Hinweise.",
+      "showAgain": "Wieder anzeigen",
+      "showAllAgain": "Alle wieder anzeigen",
+      "goTo": "Zu {{place}}"
     }
   },
   "ad": {

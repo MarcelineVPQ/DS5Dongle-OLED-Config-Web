@@ -32,6 +32,7 @@ import { allFixes } from "../games/types";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import { logged } from "../../errorText";
 import { feedProblemKey } from "../useUpdates";
+import Notice from "../Notice";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -72,9 +73,9 @@ export function RestartNotice({ launchers, undo }: { launchers: LauncherId[]; un
     <>
       {/* loop: HOT-PATH-OK — N ≤ 3 launchers; shown only after applying fixes */}
       {launchers.map((l) => (
-        <div key={l} className="dk-notice">
+        <Notice key={l} closable>
           {t(undo ? "desktop.games.willRestartUndo" : "desktop.games.willRestart", { launcher: LAUNCHER_NAME[l] })}
-        </div>
+        </Notice>
       ))}
     </>
   );
@@ -87,9 +88,9 @@ export function OverwrittenNotice({ launchers }: { launchers: LauncherId[] }) {
     <>
       {/* loop: HOT-PATH-OK — N ≤ 3 launchers; shown only after a launcher overwrote a fix */}
       {launchers.map((l) => (
-        <div key={l} className="dk-notice">
+        <Notice key={l} closable>
           {t("desktop.games.launcherOverwrote", { launcher: LAUNCHER_NAME[l] })}
-        </div>
+        </Notice>
       ))}
     </>
   );
@@ -554,7 +555,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         </section>
       )}
 
-      {closeNote && <div className="dk-notice">{closeNote}</div>}
+      {closeNote && <Notice onDismiss={() => setCloseNote(null)}>{closeNote}</Notice>}
       {undoAsk && (
         <div className="dk-confirm">
           <RestartNotice launchers={undoAsk.launchers} undo />
@@ -568,7 +569,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
           </div>
         </div>
       )}
-      {error && <div className="dk-notice error">{error}</div>}
+      {error && (
+        <Notice error onDismiss={() => setError(null)}>
+          {error}
+        </Notice>
+      )}
 
       {step === "review" && (
         <section className="dk-card">

@@ -150,7 +150,7 @@ describe("the update banner", () => {
     vi.stubGlobal("desktop", { platform: "linux", getFirmwareHold: () => Promise.resolve({ writing: false, restartQueued: false, quitQueued: false }), onFirmwareHold: () => () => undefined });
     renderBanner({ phase: "failed", detail: "The download stopped. Your current version is untouched.", during: "install" });
     expect(container.textContent).toContain(i18n.t("desktop.update.appFailed", { detail: "The download stopped. Your current version is untouched." }));
-    act(() => button(i18n.t("notice.dismiss"))!.click());
+    act(() => container.querySelector<HTMLButtonElement>(`button[aria-label="${i18n.t("notice.dismiss")}"]`)!.click());
     expect(container.textContent).not.toContain("The download stopped");
   });
 

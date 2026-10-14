@@ -17,6 +17,7 @@ import {
 import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
 import { OLED_MODULE } from "../dongle/boardSpecs";
+import Notice from "../Notice";
 
 // Settings sections, each a card the live view's side panel shows for the
 // part it belongs to. Changes apply to the dongle's RAM right away
@@ -271,9 +272,9 @@ export function MicLevelSlider(props: SectionProps) {
         onChange={(v) => set("micLevel", v)}
       />
       {silent && (
-        <p className="dk-notice" role="status">
+        <Notice role="status" closable>
           {t("desktop.settings.micLevelPcZero")}
-        </p>
+        </Notice>
       )}
     </>
   );
