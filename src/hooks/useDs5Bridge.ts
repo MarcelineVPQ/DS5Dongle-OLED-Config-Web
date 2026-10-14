@@ -6,7 +6,7 @@ import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normal
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
-import { simulatedCore1Stage, simulatedDongleOn } from "../desktop/devPreview";
+import { simulatedCore1Stage, simulatedDongleOn, simulatedRest } from "../desktop/devPreview";
 import { logged } from "../errorText";
 import { isWindowShown } from "../desktop/useWindowShown";
 
@@ -160,7 +160,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const autoConnect = useCallback(async () => {
     if (clientRef.current) return;
     if (simulatedDongleOn()) {
-      await attachTransport(new SimulatedDongle({ live: true, protoMinor: 17, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage() }));
+      await attachTransport(
+        new SimulatedDongle({ live: true, protoMinor: 17, version: "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated", core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() }),
+      );
       return;
     }
     if (!supported) return;

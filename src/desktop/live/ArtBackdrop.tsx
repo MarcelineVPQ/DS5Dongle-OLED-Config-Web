@@ -5,15 +5,18 @@
 // turn (a crossfade every 20 s); without any (Games scanning off, Windows /
 // macOS), slow swirls in the controller's colors (SwirlField). Cheap on purpose: each
 // image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
-// for free, so only a slow CSS transform animates (fine with software
-// rendering). Still with "reduce motion". Toggle: App settings.
+// for free, so only a slow transform moves it (backdropPan.ts: 10 steps a
+// second, 4 behind another window, none while a game runs and the window
+// isn't focused). Still with "reduce motion". Toggle: App settings.
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { readPref, usePref } from "../storage";
 import { artUrl } from "../games/types";
 import SwirlField from "./SwirlField";
-import { useWindowShown } from "../useWindowShown";
+import { useWindowFocused, useWindowShown } from "../useWindowShown";
+import { useReducedMotion } from "../motion";
+import { PAN_MS, PAN_UNFOCUSED_MS, panClock, panTransform } from "./backdropPan";
 import { logged } from "../../errorText";
 
 // The background: "default" (the swirl field, what a new install shows),
@@ -49,8 +52,8 @@ const subscribePage = (l: () => void) => {
 const PIN_KEY = "ds5.dev.backdropGame";
 
 // The open game page's art, else the running game's, else the most recently
-// played games in turn.
-function useBackdropKeys(): string[] {
+// played games in turn; and whether a game is running.
+function useBackdropKeys(): { keys: string[]; gameRunning: boolean } {
   const pin = readPref(PIN_KEY);
   const page = useSyncExternalStore(subscribePage, () => pageGame);
   const desktop = window.desktop;
@@ -89,13 +92,14 @@ function useBackdropKeys(): string[] {
       off();
     };
   }, [desktop]);
+  const gameRunning = running !== null;
   if (pin) {
     // loop: HOT-PATH-OK — N ≤ 8 recent games with art, on render
     const pinned = keys.find((k) => k.endsWith(`:${pin}`));
-    if (pinned) return [pinned];
+    if (pinned) return { keys: [pinned], gameRunning };
   }
-  if (page) return [page];
-  return running && keys.includes(running) ? [running] : keys;
+  if (page) return { keys: [page], gameRunning };
+  return { keys: running && keys.includes(running) ? [running] : keys, gameRunning };
 }
 
 // One image, drawn small (= blurred) into a canvas.
@@ -133,7 +137,7 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
 export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null }) {
   const [background] = useBackground();
   const [blur] = useKnob(knob("backdropBlur"));
-  const keys = useBackdropKeys();
+  const { keys, gameRunning } = useBackdropKeys();
   // The cycle position belongs to one set of games; a new set starts at 0.
   const sig = keys.join("|");
   const [pos, setPos] = useState({ sig, i: 0 });
@@ -141,19 +145,43 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
   // The art cycles only while the window is on screen (a crossfade nobody sees
   // still costs frames).
   const shown = useWindowShown();
-  // lifetime: OK — cleanup: clears the cycle timer; none while hidden or with one game
+  const focused = useWindowFocused();
+  const still = useReducedMotion();
+  // Playing with the window behind the game: the background holds still.
+  const hold = gameRunning && !focused;
+  const art = background === "art" && keys.length > 0;
+  const root = useRef<HTMLDivElement>(null);
+  // The art's pan (the swirls pan with their own frames, SwirlField): a step
+  // every 100 ms (250 ms behind another window), none while hidden, holding
+  // or with Reduce motion.
+  // lifetime: OK — cleanup: clears the pan timer; none while hidden, holding or still
   useEffect(() => {
-    if (keys.length < 2 || !shown) return;
+    const el = root.current;
+    if (!el || !art) return;
+    if (still) {
+      el.style.removeProperty("--bd-pan");
+      return;
+    }
+    const now = panClock();
+    const step = () => el.style.setProperty("--bd-pan", panTransform(now()));
+    step();
+    if (!shown || hold) return;
+    // lifetime: OK — cleared in the effect cleanup; runs only while shown and moving
+    const id = setInterval(step, focused ? PAN_MS : PAN_UNFOCUSED_MS);
+    return () => clearInterval(id);
+  }, [art, still, shown, hold, focused]);
+  // lifetime: OK — cleanup: clears the cycle timer; none while hidden, holding or with one game
+  useEffect(() => {
+    if (keys.length < 2 || !shown || hold) return;
     // lifetime: OK — cleared in the effect cleanup; runs only while shown with 2+ games
     const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
-  }, [sig, keys.length, shown]);
+  }, [sig, keys.length, shown, hold]);
   if (background === "off") return null;
-  const art = background === "art" && keys.length > 0;
   return (
-    <div className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
+    <div ref={root} className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
       {/* loop: HOT-PATH-OK — N ≤ 8 backdrop images; renders on a 20 s cycle tick */}
-      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero", BACKDROP_PX, 1)} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} />}
+      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero", BACKDROP_PX, 1)} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} hold={hold} />}
       <div className="art-bd-dim" />
     </div>
   );

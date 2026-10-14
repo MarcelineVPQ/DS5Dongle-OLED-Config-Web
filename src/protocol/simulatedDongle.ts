@@ -36,6 +36,12 @@ export interface SimulatedDongleOptions {
   // For the app (not the tests): input that moves on its own, live diagnostics,
   // and this firmware version string.
   live?: boolean;
+  // Live mode with the controller put down instead of moving: "still" = the
+  // report never changes; "noise" = as a real DualSense resting on a desk
+  // (the report counter and motion clock advance, the gyro and accelerometer
+  // jitter by a few counts, sticks and triggers stay put). For measuring
+  // what an idle Controller page costs.
+  rest?: "still" | "noise";
   // 0xF5 core1 health: core1 couldn't create the speaker encoder (issue #15).
   speakerEncoderFailed?: boolean;
   // 0xF5 core1 health: core1 couldn't create the mic decoder.
@@ -250,6 +256,15 @@ export class SimulatedDongle implements Ds5Transport {
     const t = (Date.now() - this.started) / 1000;
     const b = this.input.slice();
     b[53] |= 0x01 | 0x04;
+    if (this.opts.rest === "still") return b;
+    if (this.opts.rest === "noise") {
+      const n = Math.floor(t * 250); // the controller's 250 Hz report clock
+      b[6] = n & 0xff;
+      new DataView(b.buffer).setUint32(27, Math.floor(t * 3e6) >>> 0, true);
+      // loop: HOT-PATH-OK — dev/test fake only; N = 6 motion axes per read
+      for (let axis = 0; axis < 6; axis++) new DataView(b.buffer).setInt16(15 + axis * 2, (axis === 4 ? 8000 : 0) + Math.round(Math.sin(n * (axis + 1.7)) * 2), true);
+      return b;
+    }
     const axis = (v: number) => Math.round(128 + 60 * v);
     b[0] = axis(Math.cos(t * 0.8));
     b[1] = axis(Math.sin(t * 0.8));

@@ -3222,7 +3222,9 @@ html[data-cards-translucent] .gp-sections .dk-card {
   object-fit: cover;
   opacity: 0;
   transition: opacity 2.5s ease;
-  animation: art-bd-kenburns 46s ease-in-out infinite alternate;
+  /* The slow pan and zoom (Ken Burns), stepped from script (backdropPan.ts):
+     a CSS animation would redraw the window at the screen's refresh rate. */
+  transform: var(--bd-pan, none);
   will-change: transform;
 }
 .art-bd-layer.on {
@@ -3249,19 +3251,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
 /* The soft shapes need less dimming than game art to keep text readable. */
 .art-bd.blobs .art-bd-dim {
   --bd-dim: calc(var(--backdrop-dim, 55%) * 0.5);
-}
-@keyframes art-bd-kenburns {
-  from {
-    transform: scale(1) translate(-2%, -1%);
-  }
-  to {
-    transform: scale(1.12) translate(2%, 1.5%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .art-bd-layer {
-    animation: none;
-  }
 }
 
 /* The backdrop sits behind the whole window (the rail and the save bar float

@@ -121,7 +121,7 @@ export default function PartPanel({ view, bridge, fw, input, remap, onClose, onO
       {view === "buttons" && remap.supported && <SavedLayouts remap={remap} />}
       {view === "calibration" && <Calibration bridge={bridge} input={input} />}
       {view === "dongle" && <DongleSections bridge={bridge} fw={fw} />}
-      {view === "app" && <AppSettings bridge={bridge} fw={fw} />}
+      {view === "app" && <AppSettingsPanel bridge={bridge} fw={fw} />}
       {typeof view === "object" && <PartSections part={view.part} bridge={bridge} input={input} remap={remap} onButtons={onButtons} />}
     </div>
   );
@@ -652,6 +652,10 @@ function DongleSections({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: Firmwa
 }
 
 // The app's own settings (stored by the main process), plus theme and language.
+// memo()ed: the controller view re-renders on every live input frame (~30 a
+// second) and App settings uses none of it (bridge and fw only change with
+// the app's state), so the long settings page isn't rebuilt each frame.
+const AppSettingsPanel = memo(AppSettings);
 function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   // Joining the Development channel asks first (what it means, what's in it).
   const [joiningDev, setJoiningDev] = useState(false);

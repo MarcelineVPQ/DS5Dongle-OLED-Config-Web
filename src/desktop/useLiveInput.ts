@@ -5,11 +5,15 @@
 // tray-minimized app costs nothing.
 import { useEffect, useState } from "react";
 import { IDENTITY_FEATURES, type BridgeIdentity, type Ds5BridgeClient } from "../protocol/bridgeClient";
-import type { InputReport } from "../oled/inputReport";
+import { sameShownInput, type InputReport } from "../oled/inputReport";
 import { useWindowShown } from "./useWindowShown";
 import { logged } from "../errorText";
 
 const POLL_MS = 33;
+// A report that shows nothing new still repaints this many times (the spark
+// lines' history, LiveData's HISTORY), so their lines scroll on to the still
+// value, then the page stops drawing until something changes.
+export const STILL_REPAINTS = 150;
 // The lightbar: 10 reads a second, enough for the animated modes with the
 // strip's fill transition (desktop.css) gliding between samples.
 const LIGHTBAR_MS = 100;
@@ -32,6 +36,9 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
     if (!active || !client) return;
     let live = true;
     let latest: InputReport | null = null;
+    // The last report handed to the page, and how many in a row since showed nothing new.
+    let shownReport: InputReport | null = null;
+    let still = 0;
     let fresh = false;
     let frame = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -47,6 +54,8 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
         const t0 = performance.now();
         latest = await client.readInput();
         const t1 = performance.now();
+        const same = latest !== null && shownReport !== null && sameShownInput(latest, shownReport);
+        still = same ? still + 1 : 0;
         liveStats.ms = t1 - t0;
         count++;
         if (t1 - since >= 1000) {
@@ -54,9 +63,13 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
           count = 0;
           since = t1;
         }
-        fresh = true;
-        // lifetime: OK — at most one pending; cancelled in the cleanup, never armed after it
-        if (live && !frame) frame = requestAnimationFrame(paint);
+        // Nothing new on screen for a while (a controller put down): no render, no frame.
+        if (still <= STILL_REPAINTS) {
+          shownReport = latest;
+          fresh = true;
+          // lifetime: OK — at most one pending; cancelled in the cleanup, never armed after it
+          if (live && !frame) frame = requestAnimationFrame(paint);
+        }
       } catch {
         // error: NOT-WORTH — dongle busy or gone: the connection hook handles reconnecting (and says so)
       }
