@@ -13,7 +13,7 @@ import { COLOR_PARTS, FALLBACK_BASE, hasCustomColors, mergeColors, useCustomColo
 import { MODEL_COLORWAYS, SIM_CORE1_KEY, SIM_CORE1_STAGES, SIMULATED_KEY, useDevPreview, useDevToolsShown, useFakeSlots, type DevModel } from "../devPreview";
 import { UPDATE_PREVIEWS, useUpdatePreview, type UpdatePreview } from "../updatePreview";
 import { REDUCE_MOTION_KEY } from "../motion";
-import { ACCENT_KEY, ACCENTS, useControllerCode } from "./controllerAccent";
+import { ACCENT_KEY, ACCENTS, useControllerCode, useDesktopAccentUnreadable } from "./controllerAccent";
 import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
@@ -1251,11 +1251,13 @@ function CustomColorsSetting() {
   );
 }
 
-function AccentSetting() {
+export function AccentSetting() {
   const { t } = useTranslation();
   const [choice, setChoice] = usePref(ACCENT_KEY, "controller", ACCENTS);
+  // Desktop, but no accent could be read: say so instead of a silent theme accent.
+  const unreadable = useDesktopAccentUnreadable() && choice === "desktop";
   return (
-    <Row label={t("desktop.accent.label")} sub={t("desktop.accent.sub")}>
+    <Row label={t("desktop.accent.label")} sub={t(unreadable ? "desktop.accent.unreadable" : "desktop.accent.sub")} invalid={unreadable}>
       <select className="dk-select" aria-label={t("desktop.accent.label")} value={choice} onChange={(e) => setChoice(e.target.value as (typeof ACCENTS)[number])}>
         {/* loop: HOT-PATH-OK — N = 2 accents per render */}
         {ACCENTS.map((a) => (

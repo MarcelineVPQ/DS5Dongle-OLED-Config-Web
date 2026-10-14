@@ -1,20 +1,66 @@
 // Reads the desktop's colors for the "Match desktop" theme and watches for
 // changes so the open app follows along.
-//   KDE Plasma: the full color scheme from ~/.config/kdeglobals.
+// Also the accent for App settings -> Accent color -> Desktop, in any theme.
+//   KDE Plasma: the full color scheme from ~/.config/kdeglobals (else just its
+//   accent).
 //   Windows / macOS: the system accent color + light/dark.
 //   Other Linux desktops: the accent from the XDG settings portal, if any.
+//   Last: Electron's system accent (also on Linux).
 import { execFile } from "node:child_process";
-import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
+import { existsSync, readdirSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { nativeTheme, systemPreferences } from "electron";
-import { parseKdeGlobals, type DesktopPalette, type Rgb } from "../../src/desktop/theme/desktopPalette";
+import { kdeAccent, parseKdeGlobals, type DesktopPalette, type Rgb } from "../../src/desktop/theme/desktopPalette";
 
 const configDir = process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
 const kdeGlobals = join(configDir, "kdeglobals");
 
+// KDE Plasma, also when the app was started without XDG_CURRENT_DESKTOP
+// (systemd-run, some autostart entries, Flatpak/AppImage launchers): the
+// session variables KDE sets, else a kdeglobals plus a running Plasma shell or
+// KWin. `kdeRunning` is only asked when no variable answers.
+export function isKdeSession(env: NodeJS.ProcessEnv, hasKdeGlobals: boolean, kdeRunning: () => boolean): boolean {
+  if (/kde/i.test(env.XDG_CURRENT_DESKTOP ?? "")) return true;
+  if (env.KDE_FULL_SESSION === "true") return true;
+  if (/^(kde|plasma)/i.test(env.XDG_SESSION_DESKTOP ?? "") || /(^|\/)(kde|plasma)/i.test(env.DESKTOP_SESSION ?? "")) return true;
+  return hasKdeGlobals && kdeRunning();
+}
+
+// Whether plasmashell or KWin runs (one pass over /proc; Linux only).
+function plasmaRunning(): boolean {
+  try {
+    // loop: NOT-WORTH — one pass over the process list, once per app run (isKde caches it)
+    for (const pid of readdirSync("/proc")) {
+      if (!/^\d+$/.test(pid)) continue;
+      try {
+        if (/^(plasmashell|kwin_wayland|kwin_x11)$/.test(readFileSync(`/proc/${pid}/comm`, "utf8").trim())) return true;
+      } catch {
+        // error: NOT-WORTH — the process ended meanwhile: skip it
+      }
+    }
+  } catch {
+    // error: NOT-WORTH — no /proc: not KDE; the portal and the system accent are tried next
+  }
+  return false;
+}
+
+// cache: OK — key=none (the desktop session); invalidated=never, the session can't change under a running app; bound=1 entry
+let kde: boolean | null = null;
 function isKde(): boolean {
-  return process.platform === "linux" && /kde/i.test(process.env.XDG_CURRENT_DESKTOP ?? "") && existsSync(kdeGlobals);
+  if (process.platform !== "linux") return false;
+  kde ??= isKdeSession(process.env, existsSync(kdeGlobals), plasmaRunning);
+  return kde && existsSync(kdeGlobals);
+}
+
+// Electron's system accent ("rrggbbaa"; empty where the system has none).
+function systemAccent(): Rgb | null {
+  try {
+    return hexAccent(systemPreferences.getAccentColor() ?? "");
+  } catch {
+    // error: NOT-WORTH — not available here: null, and the Accent color row says the desktop's accent couldn't be read
+    return null;
+  }
 }
 
 function hexAccent(hex: string): Rgb | null {
@@ -26,7 +72,7 @@ function hexAccent(hex: string): Rgb | null {
 function portalAccent(): Promise<Rgb | null> {
   return new Promise((resolve) => {
     // lifetime: OK — exits on its own; the 2 s timeout kills a hung gdbus
-    // error: NOT-WORTH — no portal or no gdbus answers null: the Desktop theme keeps the app's own accent (nothing the user started)
+    // error: NOT-WORTH — no portal or no gdbus answers null: the system accent is tried next, else the Accent color row says it couldn't be read
     execFile(
       "gdbus",
       [
@@ -52,21 +98,26 @@ function portalAccent(): Promise<Rgb | null> {
   });
 }
 
+function readKdeGlobals(): string | null {
+  try {
+    return readFileSync(kdeGlobals, "utf8");
+  } catch {
+    // error: NOT-WORTH — no readable kdeglobals: the portal and the system accent are tried next
+    return null;
+  }
+}
+
+// Null only when no accent can be read at all (the renderer says so).
 export async function readDesktopPalette(): Promise<DesktopPalette | null> {
-  if (isKde()) {
-    try {
-      return parseKdeGlobals(readFileSync(kdeGlobals, "utf8"));
-    } catch {
-      // error: NOT-WORTH — no readable kdeglobals: no desktop palette, the app's own colors stay
-      return null;
-    }
-  }
   const isDark = nativeTheme.shouldUseDarkColors;
-  if (process.platform === "win32" || process.platform === "darwin") {
-    const accent = hexAccent(systemPreferences.getAccentColor());
-    return accent ? { source: "accent", isDark, accent } : null;
+  const text = isKde() ? readKdeGlobals() : null;
+  if (text) {
+    const full = parseKdeGlobals(text);
+    if (full) return full;
+    const accent = kdeAccent(text);
+    if (accent) return { source: "accent", isDark, accent };
   }
-  const accent = await portalAccent();
+  const accent = (process.platform === "linux" ? await portalAccent() : null) ?? systemAccent();
   return accent ? { source: "accent", isDark, accent } : null;
 }
 

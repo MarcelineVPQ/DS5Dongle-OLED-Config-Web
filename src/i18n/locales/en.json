@@ -1105,7 +1105,8 @@
       "label": "Accent color",
       "sub": "Buttons, selection and highlights",
       "controller": "Controller",
-      "desktop": "Desktop"
+      "desktop": "Desktop",
+      "unreadable": "Couldn't read your desktop's accent color — using the app's"
     },
     "customColors": {
       "title": "My controller's colors",
