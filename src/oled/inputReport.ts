@@ -200,3 +200,27 @@ export function emptyInputReport(): InputReport {
     usbPower: false,
   };
 }
+
+// Would the app show anything different? Every field the screen uses; the
+// report counter and the motion clock (seq, sensorTime) advance with every
+// report and are never drawn, so they don't count.
+export function sameShownInput(a: InputReport, b: InputReport): boolean {
+  // loop: HOT-PATH-OK — N ≈ 40 fields, once per live poll (~30 Hz)
+  for (const key of Object.keys(a) as Array<keyof InputReport>) {
+    if (key === "seq" || key === "sensorTime") continue;
+    const x = a[key];
+    const y = b[key];
+    if (x === y) continue;
+    if (typeof x !== "object" || typeof y !== "object") return false;
+    if (key === "fingers") {
+      const [f0, f1] = x as InputReport["fingers"];
+      const [g0, g1] = y as InputReport["fingers"];
+      if (f0.x !== g0.x || f0.y !== g0.y || f0.touching !== g0.touching || f1.x !== g1.x || f1.y !== g1.y || f1.touching !== g1.touching) return false;
+    } else {
+      const s = x as Stick;
+      const t = y as Stick;
+      if (s.x !== t.x || s.y !== t.y) return false;
+    }
+  }
+  return true;
+}
