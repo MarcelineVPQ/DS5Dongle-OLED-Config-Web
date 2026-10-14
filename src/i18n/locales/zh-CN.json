@@ -1430,10 +1430,7 @@
         "interface": "接口",
         "keys": "按键",
         "notDetected": "无法检测：只要装上，{{device}}就会驱动它。"
-      },
-      "asOf": "截至 {{time}}",
-      "watchLive": "实时查看（{{seconds}} 秒）",
-      "liveLeft": "实时 · 剩余 {{seconds}} 秒"
+      }
     },
     "hdr": {
       "label": "HDR 灯光（实验性）",

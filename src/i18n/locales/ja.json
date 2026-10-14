@@ -1430,10 +1430,7 @@
         "interface": "インターフェース",
         "keys": "キー",
         "notDetected": "検出はできません。取り付けられていれば {{device}} が常に駆動します。"
-      },
-      "asOf": "{{time}} 時点",
-      "watchLive": "ライブ表示（{{seconds}} 秒）",
-      "liveLeft": "ライブ · 残り {{seconds}} 秒"
+      }
     },
     "hdr": {
       "label": "HDR ライティング（実験的）",

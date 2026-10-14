@@ -120,27 +120,36 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
 }
 
 // Polls the mirror while visible; after a failed read it waits before trying
-// again and keeps the last good frame (shown as "not available").
+// again and keeps the last good frame (shown as "not available"). A read of
+// the same picture keeps the frame shown (readOledFrame(last)): no render,
+// no repaint. `changes` counts the changed pictures (Diagnostics' Redraws /s).
 export interface OledFrameState {
   frame: OledFrame | null;
+  changes: number;
   // error: SHOWN — desktop.dongleConsole.unavailable (the last good frame stays, retried)
   error: boolean;
 }
 export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): OledFrameState {
-  const [frame, setFrame] = useState<OledFrame | null>(null);
+  const [shown, setShown] = useState<{ frame: OledFrame; changes: number } | null>(null);
   const [error, setError] = useState(false);
   // lifetime: OK — cleanup: stops the 100 ms mirror poll (hidden / page left / unmount)
   useEffect(() => {
     if (!client || !enabled) return;
     let live = true;
     let timer: ReturnType<typeof setTimeout>;
+    // cache: OK — key=none (the frame shown now); invalidated=each changed read; bound=1 entry
+    let last: OledFrame | null = null;
+    let changes = 0;
     const tick = async () => {
       let wait = FRAME_MS;
       try {
-        const f = await client.readOledFrame();
+        const f = await client.readOledFrame(last);
         if (!live) return;
         if (f) {
-          setFrame(f);
+          if (f !== last) {
+            last = f;
+            setShown({ frame: f, changes: ++changes });
+          }
           setError(false);
         } else {
           setError(true);
@@ -162,16 +171,19 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
       clearTimeout(timer);
     };
   }, [client, enabled]);
-  return { frame: client ? frame : null, error };
+  return { frame: client ? (shown?.frame ?? null) : null, changes: shown?.changes ?? 0, error };
 }
 
 function OledCanvas({ frame }: { frame: OledFrame | null }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  // lifetime: HOT-ALLOC — a new 128x64 ImageData (32 KB) per mirror frame (10 Hz); nothing to release
+  // cache: OK — key=none (the canvas's one 128x64 ImageData, 32 KB); invalidated=never (rewritten per changed frame); bound=1 entry
+  const imgRef = useRef<ImageData | null>(null);
+  // Runs only when the frame changes (useOledFrame keeps an unchanged one).
+  // lifetime: OK — reuses one ImageData; nothing to release
   useEffect(() => {
     const ctx = ref.current?.getContext("2d");
     if (!ctx) return;
-    const img = ctx.createImageData(FB_W, FB_H);
+    const img = (imgRef.current ??= ctx.createImageData(FB_W, FB_H));
     // The panel's contrast as brightness, never fully black when lit (the
     // lowest steps are still readable on the real panel).
     const level = frame ? 0.35 + 0.65 * (frame.contrast / 255) : 0;

@@ -1440,10 +1440,7 @@
         "interface": "Interface",
         "keys": "Touches",
         "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché."
-      },
-      "asOf": "Relevé à {{time}}",
-      "watchLive": "Suivre en direct ({{seconds}} s)",
-      "liveLeft": "En direct · encore {{seconds}} s"
+      }
     },
     "hdr": {
       "label": "Éclairage HDR (expérimental)",

@@ -255,8 +255,7 @@ const BASE_VIEWS = [
     await rail("dongle");
     await sleep(300);
     await openBlock("diagnostics");
-    await click(".dash-watch"); // Watch live: the graphs fill
-    await sleep(1200);
+    await sleep(1200); // a poll or two: the graphs and counters filled in
     await openBlock("diagnostics"); // scrolled to again at its full height
   }),
   view("dongle", "dongle, scrolled", 800, async () => {

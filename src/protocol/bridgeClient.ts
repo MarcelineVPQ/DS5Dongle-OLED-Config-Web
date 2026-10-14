@@ -107,6 +107,13 @@ export const POWER_FLAGS = {
 export const IDENTITY_BYTES = 49;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
+// The mirror's 1024 image bytes against a 0xEF answer's (they start at [4]).
+function samePixels(pixels: Uint8Array, report: Uint8Array): boolean {
+  // loop: HOT-PATH-OK — N = 1024 bytes per mirror read (10/s, only while the mirror is shown); stops at the first difference
+  for (let i = 0; i < pixels.length; i++) if (pixels[i] !== report[i + 4]) return false;
+  return true;
+}
+
 export interface OledFrame {
   power: "on" | "dim" | "off"; // dim = the idle breathing dot
   screen: number; // the firmware's current screen, 0-based
@@ -643,10 +650,16 @@ export class Ds5BridgeClient {
     await this.command(FUNC.calibration, [0x43, 0x4c, CALIB_PROTO_VER, slot, ...encodeCalibration(c)]);
   }
 
-  async readOledFrame(): Promise<OledFrame | null> {
+  // `last`: the frame shown now. When the board's picture is the same (power,
+  // screen, contrast and all 1024 image bytes; the frame counter [3] is left
+  // out, since the firmware resends an unchanged frame every 20th flush), it
+  // is returned as is: no new object or pixel copy, and the caller sees no change.
+  async readOledFrame(last?: OledFrame | null): Promise<OledFrame | null> {
     const bytes = await this.transport.getReport(REPORT.oledMirror, OLED_MIRROR_BYTES);
     if (bytes.length < OLED_MIRROR_BYTES) return null;
-    return { power: bytes[0] === 2 ? "off" : bytes[0] === 1 ? "dim" : "on", screen: bytes[1], contrast: bytes[2], seq: bytes[3], pixels: bytes.slice(4) };
+    const power = bytes[0] === 2 ? "off" : bytes[0] === 1 ? "dim" : "on";
+    if (last && last.power === power && last.screen === bytes[1] && last.contrast === bytes[2] && samePixels(last.pixels, bytes)) return last;
+    return { power, screen: bytes[1], contrast: bytes[2], seq: bytes[3], pixels: bytes.slice(4) };
   }
 
   // Protocol 1.12: what the dongle knows about the controller right now.

@@ -1439,10 +1439,7 @@
         "interface": "Interface",
         "keys": "Keys",
         "notDetected": "Not detected: {{device}} drives it whenever it's attached."
-      },
-      "asOf": "As of {{time}}",
-      "watchLive": "Watch live ({{seconds}} s)",
-      "liveLeft": "Live · {{seconds}} s left"
+      }
     },
     "hdr": {
       "label": "HDR lighting (experimental)",

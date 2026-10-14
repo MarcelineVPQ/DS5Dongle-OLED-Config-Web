@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // The owner's review notes of 2026-10-14 (laptop build): the main view's
-// readouts read once and then only while Watch live runs (useSnapshotPoll);
+// readouts are live (usePoll: every second while shown, paused while the
+// window is hidden, gone with the page);
 // a Row stacks its control under the label when it doesn't fit beside it,
 // and every inline select is one width; the ⓘ (InfoTip) shows its text on
 // hover and on keyboard focus, closes with Esc and gives it to screen
@@ -10,7 +11,7 @@ import { act, createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
-import { LIVE_WATCH_MS, useSnapshotPoll, type SnapshotPoll } from "../../src/desktop/usePoll";
+import { usePoll } from "../../src/desktop/usePoll";
 import { InfoTip, Row, SELECT_PX } from "../../src/desktop/controls";
 import { PANEL_HIDDEN_KEY, SplitView } from "../../src/desktop/accordion/Section";
 import { railPress, type RailItem } from "../../src/desktop/AppRail";
@@ -41,83 +42,54 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("useSnapshotPoll: one read, then only Watch live (30 s)", () => {
-  let poll: SnapshotPoll<number>;
-  let reads: boolean[];
+describe("usePoll: the readouts are live while shown", () => {
+  let reads: number;
+  let value: number | null;
   function Probe() {
-    poll = useSnapshotPoll(
-      (live) => {
-        reads.push(live);
-        return Promise.resolve(reads.length);
-      },
-      1000,
-      true,
-    );
+    value = usePoll(() => Promise.resolve(++reads), 1000, true).value;
     return null;
   }
   const advance = async (ms: number) => {
     // loop: test — 100 ms steps, so the read promises settle between ticks
     for (let t = 0; t < ms; t += 100) await act(() => vi.advanceTimersByTimeAsync(100));
   };
+  const setVisible = (visible: boolean) => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: visible ? "visible" : "hidden" });
+    act(() => void document.dispatchEvent(new Event("visibilitychange")));
+  };
+  afterEach(() => setVisible(true));
 
-  it("reads once as a snapshot (with its time) and then nothing, however long the page stays open", async () => {
+  it("polls every second while shown, stops while the window is hidden, resumes when shown, and stops when the page is left", async () => {
     vi.useFakeTimers();
-    reads = [];
+    reads = 0;
     act(() => root.render(createElement(Probe)));
+    await advance(10_200);
+    expect(reads, "one read a second while shown").toBeGreaterThanOrEqual(10);
+    expect(reads).toBeLessThanOrEqual(12);
+    expect(value).toBe(reads);
+    // Hidden (minimized / in the tray): no reads, no timer; the last value stays.
+    setVisible(false);
     await advance(200);
-    expect(reads).toEqual([false]);
-    expect(poll.value).toBe(1);
-    expect(poll.asOf).not.toBeNull();
-    expect(poll.live).toBe(false);
-    await advance(120_000);
-    expect(reads, "no read without Watch live").toEqual([false]);
-    expect(vi.getTimerCount(), "no timer left running").toBe(0);
-  });
-
-  it("Watch live reads every second for 30 s with a countdown, stops by itself, and a press restarts the 30 s", async () => {
-    vi.useFakeTimers();
-    reads = [];
-    act(() => root.render(createElement(Probe)));
-    await advance(200);
-    act(() => poll.watch());
-    await advance(100);
-    expect(poll.live).toBe(true);
-    expect(poll.secondsLeft).toBe(30);
-    await advance(10_000);
-    expect(poll.secondsLeft).toBeLessThanOrEqual(20);
-    // Pressed again: another 30 s from now.
-    act(() => poll.watch());
-    await advance(100);
-    expect(poll.secondsLeft).toBe(30);
-    await advance(LIVE_WATCH_MS + 1000);
-    expect(poll.live).toBe(false);
-    const live = reads.filter(Boolean).length;
-    expect(live).toBeGreaterThanOrEqual(38); // ~10 + ~30 reads, one a second
-    expect(live).toBeLessThanOrEqual(43);
-    // The last live read stays shown; nothing more is read.
-    expect(poll.value).toBe(reads.length);
-    await advance(60_000);
-    expect(reads.filter(Boolean)).toHaveLength(live);
+    const hiddenAt = reads;
+    await advance(30_000);
+    expect(reads, "no read while hidden").toBe(hiddenAt);
+    expect(vi.getTimerCount(), "no timer while hidden").toBe(0);
+    expect(value).toBe(hiddenAt);
+    // Shown again: live again.
+    setVisible(true);
+    await advance(3_200);
+    expect(reads).toBeGreaterThanOrEqual(hiddenAt + 3);
+    // The page left (unmounted): nothing more.
+    act(() => root.render(null));
+    const leftAt = reads;
+    await advance(30_000);
+    expect(reads, "no read after the page is left").toBe(leftAt);
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("refresh() takes one new snapshot (after the timings' Reset)", async () => {
-    vi.useFakeTimers();
-    reads = [];
-    act(() => root.render(createElement(Probe)));
-    await advance(200);
-    act(() => poll.refresh());
-    await advance(200);
-    expect(reads).toEqual([false, false]);
-    expect(poll.value).toBe(2);
-  });
-
-  it("says As of, Watch live and the countdown in all 7 languages", () => {
+  it("has the notes' strings in all 7 languages", () => {
     // loop: test — 7 locales
     for (const l of [de, en, es, fr, ja, ptBR, zhCN]) {
-      expect(l.desktop.dash.asOf).toContain("{{time}}");
-      expect(l.desktop.dash.watchLive).toContain("{{seconds}}");
-      expect(l.desktop.dash.liveLeft).toContain("{{seconds}}");
       expect(l.desktop.common.moreInfo).toBeTruthy();
       expect(l.desktop.dev.restartsPage).toBeTruthy();
       expect(l.desktop.rail.again).toBeTruthy();

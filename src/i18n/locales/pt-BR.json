@@ -1440,10 +1440,7 @@
         "interface": "Interface",
         "keys": "Teclas",
         "notDetected": "Não detectada: {{device}} a controla sempre que estiver encaixada."
-      },
-      "asOf": "Lido às {{time}}",
-      "watchLive": "Ver ao vivo ({{seconds}} s)",
-      "liveLeft": "Ao vivo · faltam {{seconds}} s"
+      }
     },
     "hdr": {
       "label": "Iluminação HDR (experimental)",

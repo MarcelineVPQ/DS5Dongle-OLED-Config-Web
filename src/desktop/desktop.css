@@ -5029,17 +5029,6 @@ main.dk-body:focus:not(:focus-visible),
   flex: none;
   gap: 14px;
 }
-/* Diagnostics' heading: "As of …" or the Watch live countdown, and the button. */
-.dash-asof {
-  font-variant-numeric: tabular-nums;
-}
-.dash-watch {
-  gap: 5px;
-}
-.dash-watch.on {
-  border-color: var(--dk-accent);
-  color: var(--dk-accent-text);
-}
 /* Rows side by side where the body is wide (App settings → Appearance). */
 .dk-sec-cols {
   display: grid;

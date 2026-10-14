@@ -114,9 +114,9 @@ const controllerAt = (section: "sticks" | "speaker" | "mic") => () => {
 // Opens and folds every accordion section on the page, one after another
 // (closed sections mount nothing; open ones must give back what they took),
 // then, in the main-view blocks (MainBlock: Diagnostics, Controller info,
-// Details: always shown), starts Watch live where there is one (the Pico's
-// 1 s reads and its countdown) and opens an ⓘ tooltip (its scroll and resize
-// listeners), so both unmount with the page while they run.
+// Details: always shown) lets their reads run (the Pico's 1 s reads) and
+// opens an ⓘ tooltip (its scroll and resize listeners), so both unmount with
+// the page while they run.
 const everySection = async () => {
   const heads = () => [...container.querySelectorAll<HTMLButtonElement>(".dk-sec-toggle")];
   expect(heads().length).toBeGreaterThan(3);
@@ -127,12 +127,7 @@ const everySection = async () => {
     expect(heads()[i].getAttribute("aria-expanded")).toBe("true");
     act(() => heads()[i].click());
   }
-  const watch = container.querySelector<HTMLButtonElement>(".dash-watch");
-  if (watch) {
-    act(() => watch.click());
-    await advance(1200); // a live read or two and the countdown
-    expect(watch.getAttribute("aria-pressed")).toBe("true");
-  }
+  await advance(1200); // a poll or two (the Pico's counters and timings)
   const info = container.querySelector<HTMLButtonElement>(".dk-info");
   if (info) act(() => info.focus());
 };

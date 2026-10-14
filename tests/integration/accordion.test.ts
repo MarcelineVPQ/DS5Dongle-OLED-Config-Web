@@ -504,7 +504,7 @@ describe("the Controller page on the accordion", () => {
 });
 
 describe("the Pico 2 W page on the accordion", () => {
-  it("has every section of the plan, each setting in exactly one; Diagnostics is in the main view: one snapshot read, then reads only while Watch live", async () => {
+  it("has every section of the plan, each setting in exactly one; Diagnostics is in the main view, read live every second", async () => {
     const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
     const counters = vi.spyOn(Ds5BridgeClient.prototype, "readAudioCounters"); // 0xF5
     const cpu = vi.spyOn(Ds5BridgeClient.prototype, "readCpu"); // 0xFC
@@ -512,27 +512,17 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(container.querySelector(".dk-split-panel [data-block]")).toBeNull();
     expect(container.querySelector(".dk-block-toggle, .dk-block [aria-expanded]")).toBeNull();
     await act(() => new Promise((r) => setTimeout(r, 300)));
-    // The snapshot: one read of each, and when it was read.
-    expect(counters).toHaveBeenCalledTimes(1);
-    expect(cpu).toHaveBeenCalledTimes(1);
-    const top = () => container.querySelector('[data-block="diagnostics"] .dk-block-actions')!;
-    expect(top().textContent).toMatch(/As of \d/);
-    // Nothing more while nobody asks.
+    // Live: a read of each about every second, no button to press.
+    expect(counters).toHaveBeenCalled();
+    expect(cpu).toHaveBeenCalled();
+    const first = cpu.mock.calls.length;
     await act(() => new Promise((r) => setTimeout(r, 2300)));
-    expect(counters, "no 0xF5 read after the snapshot").toHaveBeenCalledTimes(1);
-    expect(cpu, "no 0xFC read after the snapshot").toHaveBeenCalledTimes(1);
+    expect(cpu.mock.calls.length, "0xFC read live").toBeGreaterThanOrEqual(first + 2);
+    expect(counters.mock.calls.length, "0xF5 read live").toBeGreaterThanOrEqual(first + 2);
+    expect(container.querySelector('[data-block="diagnostics"] button.dash-watch')).toBeNull();
     // Graphs, audio counters, the timings, the OLED, the specs: all in the block, shown.
     // loop: test
     for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.specs.title"]) expect(blockBody("diagnostics")?.textContent, key).toContain(m.i18n.t(key));
-    // Watch live: a read a second, a countdown, the button pressed.
-    const watch = top().querySelector<HTMLButtonElement>("button.dash-watch")!;
-    expect(watch.textContent).toBe(m.i18n.t("desktop.dash.watchLive", { seconds: 30 }));
-    click(watch);
-    await act(() => new Promise((r) => setTimeout(r, 2300)));
-    expect(counters.mock.calls.length).toBeGreaterThanOrEqual(3);
-    expect(cpu.mock.calls.length).toBeGreaterThanOrEqual(3);
-    expect(watch.getAttribute("aria-pressed")).toBe("true");
-    expect(top().textContent).toMatch(/Live · (29|28|27) s left/);
     counters.mockRestore();
     cpu.mockRestore();
     await inventory("dongle", DONGLE_INVENTORY);

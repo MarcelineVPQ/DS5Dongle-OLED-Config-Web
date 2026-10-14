@@ -1440,10 +1440,7 @@
         "interface": "Schnittstelle",
         "keys": "Tasten",
         "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist."
-      },
-      "asOf": "Stand {{time}}",
-      "watchLive": "Live ansehen ({{seconds}} s)",
-      "liveLeft": "Live · noch {{seconds}} s"
+      }
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",

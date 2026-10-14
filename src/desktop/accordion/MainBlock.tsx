@@ -10,7 +10,7 @@
 // card with a small heading (an icon, the title, a live status and, for an
 // open task, the yellow dot with the task as the status) and its readouts.
 // What a readout reads from the board is up to its page (the Pico 2 W page:
-// one snapshot, then Watch live; DongleDashboard.tsx).
+// live, once a second while shown; DongleDashboard.tsx).
 //
 // Deep links: revealBlock(page, id) from anywhere (the rail's board-problem
 // dot, the tray's Diagnostics, "More in Diagnostics") scrolls the block into
@@ -73,7 +73,7 @@ export function useMainBlock<P extends BlockPage>(page: P, id: BlockId<P>): Main
 
 // The heading's icon, title, status and task (the yellow dot, said as the
 // status): as a Section's, without the chevron. `actions`: the readout's own
-// controls at the heading's end (Watch live).
+// controls or read error at the heading's end.
 type Props = Omit<Parameters<typeof HeadContent>[0], "chevron"> & {
   state: MainBlockState;
   actions?: ReactNode;
