@@ -115,7 +115,8 @@ describe("game art requests (ds5-art://)", () => {
 
   it("serves only the scanned file or a copy made from it (the URL never names a path)", () => {
     // index.ts: the width only picks a copy of the file the scan resolved.
-    expect(mainSource).toMatch(/const source = target \? games\?\.artPath\(target\.key, target\.kind\) : undefined;/);
+    // (Fake games, dev builds only: the fake library's own generated pictures.)
+    expect(mainSource).toMatch(/const source = !target \? undefined : fakeArt \? await fakeArt\.artFile\(target\.key, target\.kind\) : games\?\.artPath\(target\.key, target\.kind\);/);
     expect(mainSource).toMatch(/const file = source && target\?\.width \? await thumbs\.path\(source, target\.kind, target\.width\) : source;/);
   });
 });
