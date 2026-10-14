@@ -18,9 +18,9 @@ import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "./ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
-import { runMicTest } from "./micTest";
+import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -30,6 +30,7 @@ import { REMAP_BUTTON_OPTIONS, REMAP_DISABLED, REMAP_EXTRA_OFF, REMAP_EXTRA_SELF
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { DesktopSettings, FirmwareLookup } from "../api";
+import type { SpeakerSelect } from "../../protocol/config";
 import ColorPicker from "../colorPicker/ColorPicker";
 import { firmwareOffer } from "../useUpdates";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
@@ -180,7 +181,7 @@ function PartSections({ part, bridge, input, remap, onButtons }: { part: PartId;
       {part === "body" && <LevelMeter bridge={bridge} which="haptic" />}
       {part === "body" && <AutoHapticsSection bridge={bridge} />}
       {part === "mute" && <MicSection bridge={bridge} />}
-      {part === "mute" && <MicTest />}
+      {part === "mute" && <MicTest headset={input?.headphones ?? false} output={bridge.draft.speakerSelect} />}
       {part === "ps" && <SlotsPage bridge={bridge} />}
       {EDGE_PARTS.has(part) && <EdgePartInfo part={part} />}
       {index !== undefined && <RemapSection index={index} remap={remap} onButtons={onButtons} />}
@@ -898,53 +899,181 @@ export function SpeakerTest() {
   );
 }
 
-// Records 3 s from the controller's mic and plays it back on its speaker
-// (micTest.ts), with the level while recording. Closing the panel or hiding
-// the window stops the test (stream, level loop and playback).
-export function MicTest() {
+// The microphone test (micTest.ts): one button starts and stops it; while it
+// runs a segmented meter shows the controller's mic live, and with a headset
+// in the controller (the input report's headset jack bit, as on Live data's
+// Connection card) the mic is heard live on it. Without a headset there's no
+// live sound (it would feed back on the speaker), nor with Audio output set to
+// Speaker: Listen back plays the last 3 seconds, after the mic is closed. A status line always says what is
+// happening, so silence with text is a visible error, never silence alone.
+// Closing the panel or hiding the window stops everything.
+const VU_SEGMENTS = 20;
+type MicPhase = "idle" | "starting" | "testing" | "stopping" | "playing";
+type MicNote = { kind: "stopped" | "done" | "quiet" } | { kind: "problem"; problem: MicProblem } | null;
+
+export function MicTest({ headset, output }: { headset: boolean; output: SpeakerSelect }) {
   const { t } = useTranslation();
   const shown = useWindowShown();
-  const [phase, setPhase] = useState<"idle" | "recording" | "playing" | "done" | "quiet" | "error">("idle");
-  const [problem, setProblem] = useState<string | null>(null);
-  const [level, setLevel] = useState(0);
-  const test = useRef<AbortController | null>(null);
-  useEffect(() => () => test.current?.abort(), []);
+  const [phase, setPhase] = useState<MicPhase>("idle");
+  const [note, setNote] = useState<MicNote>(null);
+  const [lit, setLit] = useState(0); // meter segments lit, 0..VU_SEGMENTS
+  const [played, setPlayed] = useState(0); // 0..1 of the clip played
+  const [playing, setPlaying] = useState<{ since: number; seconds: number } | null>(null);
+  const [hasClip, setHasClip] = useState(false);
+  const session = useRef<MicSession | null>(null);
+  const clip = useRef<MicClip | null>(null);
+  const playback = useRef<AbortController | null>(null);
+  const run = useRef(0); // bumps on every start/stop, so a late answer is ignored
+
+  // Closes the mic (keeping the last seconds for Listen back) and any playback.
+  const stopAll = useCallback(async (): Promise<void> => {
+    run.current++;
+    playback.current?.abort();
+    playback.current = null;
+    const s = session.current;
+    session.current = null;
+    setLit(0);
+    if (!s) return;
+    const kept = await s.stop();
+    if (kept) clip.current = kept;
+    setHasClip(clip.current !== null);
+  }, []);
+  useEffect(() => () => void stopAll(), [stopAll]);
   useEffect(() => {
-    if (!shown) test.current?.abort();
-  }, [shown]);
-  const run = async () => {
-    test.current?.abort();
-    const current = new AbortController();
-    test.current = current;
-    setProblem(null);
-    setLevel(0);
-    setPhase("recording");
-    const r = await runMicTest({ signal: current.signal, onLevel: setLevel, onPlayback: () => setPhase("playing") });
-    if (current.signal.aborted) return setPhase("idle");
-    if (!r.ok) {
-      setProblem(r.problem ?? "failed");
-      setPhase("error");
-    } else setPhase(r.peak < 0.02 ? "quiet" : "done");
+    if (shown) return;
+    void stopAll().then(() => setPhase("idle"));
+  }, [shown, stopAll]);
+
+  const start = async () => {
+    await stopAll();
+    const id = ++run.current;
+    setNote(null);
+    setPhase("starting");
+    const r = await startMicTest(() => {
+      if (run.current !== id) return;
+      void stopAll().then(() => {
+        setNote({ kind: "problem", problem: "lost" });
+        setPhase("idle");
+      });
+    });
+    if ("problem" in r) {
+      if (run.current === id) {
+        setNote({ kind: "problem", problem: r.problem });
+        setPhase("idle");
+      }
+      return;
+    }
+    if (run.current !== id) return void r.session.stop();
+    session.current = r.session;
+    setPhase("testing");
   };
+  const stopTest = async () => {
+    setPhase("stopping");
+    await stopAll();
+    setNote({ kind: "stopped" });
+    setPhase("idle");
+  };
+  const listen = async () => {
+    setPhase("stopping");
+    await stopAll(); // the mic is closed and the clip in hand before anything plays
+    const kept = clip.current;
+    if (!kept) {
+      setNote({ kind: "problem", problem: "failed" });
+      return setPhase("idle");
+    }
+    const id = run.current;
+    const ctl = new AbortController();
+    playback.current = ctl;
+    setNote(null);
+    setPlayed(0);
+    setPhase("playing");
+    const r = await listenBack(kept, ctl.signal, (seconds) => setPlaying({ since: Date.now(), seconds }));
+    if (run.current !== id || ctl.signal.aborted) return;
+    playback.current = null;
+    setPlaying(null);
+    setNote(r.problem ? { kind: "problem", problem: r.problem } : { kind: r.quiet ? "quiet" : "done" });
+    setPhase("idle");
+  };
+
+  // The live loopback: on only with a headset that Audio output plays to,
+  // and follows it being plugged in or out (or the setting changing).
+  const loopback = headset && (output === 0 || output === 2);
+  useEffect(() => {
+    if (phase === "testing") session.current?.setLoopback(loopback);
+  }, [phase, loopback]);
+  // The meter: one frame loop only while testing and on screen; a new React
+  // render only when the number of lit segments changes.
+  useEffect(() => {
+    if (phase !== "testing" || !shown) return;
+    let frame = requestAnimationFrame(function tick() {
+      const level = session.current?.level() ?? 0;
+      setLit(Math.min(VU_SEGMENTS, Math.round(Math.sqrt(level) * VU_SEGMENTS)));
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [phase, shown]);
+  // The playback line, the same way.
+  useEffect(() => {
+    if (phase !== "playing" || !playing || !shown) return;
+    let frame = requestAnimationFrame(function tick() {
+      setPlayed(Math.min(1, Math.round(((Date.now() - playing.since) / (playing.seconds * 1000)) * 100) / 100));
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [phase, playing, shown]);
+
+  const running = phase !== "idle";
+  const status =
+    phase === "starting"
+      ? t("desktop.audioTest.micStarting")
+      : phase === "testing"
+        ? t(output === 3 ? "desktop.audioTest.micOutputOff" : loopback ? "desktop.audioTest.micLive" : headset ? "desktop.audioTest.micNoLiveSpeaker" : "desktop.audioTest.micNoLive")
+        : phase === "stopping"
+          ? t("desktop.audioTest.micStopping")
+          : phase === "playing"
+            ? t("desktop.audioTest.playingBack")
+            : note?.kind === "problem"
+              ? t(`desktop.audioTest.problem.${note.problem}`)
+              : note?.kind === "stopped"
+                ? t(hasClip ? "desktop.audioTest.micStopped" : "desktop.audioTest.micStoppedNoClip", { seconds: LISTEN_SECONDS })
+                : note?.kind === "done"
+                  ? `✓ ${t("desktop.audioTest.micDone")}`
+                  : note?.kind === "quiet"
+                    ? t("desktop.audioTest.micQuiet")
+                    : "";
   return (
     <section className="dk-card">
       <h2>{t("desktop.audioTest.micTitle")}</h2>
-      <p className="dk-hint">{t("desktop.audioTest.micHint")}</p>
-      {phase === "recording" && (
-        <div className="live-level">
-          <Meter value={level} />
-          <span className="live-level-pct">{Math.round(level * 100)}%</span>
+      <p className="dk-hint">{t("desktop.audioTest.micHint", { seconds: LISTEN_SECONDS })}</p>
+      <div className="mic-test-row">
+        <button type="button" className="dk-btn" aria-pressed={running} onClick={() => void (running ? stopTest() : start())}>
+          {running ? t("desktop.audioTest.micStop") : t("desktop.audioTest.micButton")}
+        </button>
+        <div className="mic-vu" role="meter" aria-label={t("desktop.audioTest.micLevel")} aria-valuemin={0} aria-valuemax={VU_SEGMENTS} aria-valuenow={lit} data-on={phase === "testing" || undefined}>
+          {Array.from({ length: VU_SEGMENTS }, (_, i) => (
+            <i key={i} data-lit={i < lit || undefined} data-zone={i >= VU_SEGMENTS * 0.9 ? "bad" : i >= VU_SEGMENTS * 0.7 ? "warn" : undefined} />
+          ))}
+        </div>
+      </div>
+      {(phase === "testing" || (phase === "idle" && hasClip)) && (
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn" onClick={() => void listen()}>
+            {t("desktop.audioTest.listenBack", { seconds: LISTEN_SECONDS })}
+          </button>
         </div>
       )}
-      <div className="dk-row-btns">
-        {/* The phase stays in the label: it tells the user when to speak. */}
-        <BusyButton className="dk-btn" onClick={run}>
-          {phase === "recording" ? t("desktop.audioTest.recording") : phase === "playing" ? t("desktop.audioTest.playingBack") : t("desktop.audioTest.micButton")}
-        </BusyButton>
-      </div>
-      {phase === "done" && <p className="dk-good">✓ {t("desktop.audioTest.micDone")}</p>}
-      {phase === "quiet" && <p className="dk-hint">{t("desktop.audioTest.micQuiet")}</p>}
-      {phase === "error" && <p className="dk-hint">{t(`desktop.audioTest.problem.${problem ?? "failed"}`)}</p>}
+      {phase === "playing" && (
+        <div className="live-level" role="progressbar" aria-label={t("desktop.audioTest.playingBack")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(played * 100)}>
+          <Meter value={played} />
+        </div>
+      )}
+      <p
+        className={note?.kind === "problem" && phase === "idle" ? "dk-bad mic-status" : note?.kind === "done" && phase === "idle" ? "dk-good mic-status" : "mic-status"}
+        role="status"
+        aria-live="polite"
+      >
+        {status}
+      </p>
     </section>
   );
 }

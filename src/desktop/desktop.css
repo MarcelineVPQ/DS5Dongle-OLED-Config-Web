@@ -1397,6 +1397,47 @@ html[data-theme="light"] .live-ctl {
   align-items: center;
   gap: 8px;
 }
+/* The mic test: its Start/Stop button with a segmented level meter beside
+   it (like a voice app's), then the status line, which always says what's
+   happening. Lit segments are the accent, the top ones warn and bad. */
+.mic-test-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.mic-vu {
+  display: flex;
+  flex: 1;
+  min-width: 160px;
+  gap: 3px;
+  height: 18px;
+}
+.mic-vu i {
+  flex: 1;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+.mic-vu:not([data-on]) i {
+  opacity: 0.6;
+}
+.mic-vu i[data-lit] {
+  background: var(--cv-good, var(--dk-accent));
+}
+.mic-vu i[data-lit][data-zone="warn"] {
+  background: var(--cv-warn, var(--text-warning));
+}
+.mic-vu i[data-lit][data-zone="bad"] {
+  background: var(--cv-bad, var(--text-error));
+}
+.mic-status {
+  min-height: 1.4em;
+  margin: 8px 0 0;
+}
+.mic-status:not(.dk-bad, .dk-good) {
+  color: var(--text-strong);
+}
 .live-level-pct {
   min-width: 3.5ch;
   color: var(--text-strong);
