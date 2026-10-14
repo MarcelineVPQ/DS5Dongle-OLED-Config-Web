@@ -7,9 +7,9 @@ The app is a little tool for a controller: it should sip resources, not drink th
 | Budget | Limit | Measured how |
 | --- | --- | --- |
 | **Idle frames** | ≤ 10 frames/s on every page | Window shown and focused, nothing changing (a resting controller), on Controller, Pico 2 W, Games Home, a game page, App settings and About. Frames drawn = `Display::DrawAndSwap` events in a DevTools trace. |
-| **CPU shown, idle** | < 2 % of a core per page | Main + renderer + utility processes over the same idle stretch (`/proc/<pid>/stat` ticks of the app's process tree). |
+| **CPU shown, idle** | < 2 % of a core per page | Main + renderer + utility processes over the same idle stretch (CPU time of the app's process tree: `/proc/<pid>/stat` on Linux, user + kernel time on Windows). |
 | **CPU hidden** | < 0.5 % of a core over 5 min | Every app process together, GPU included, with the window hidden in the tray (`BrowserWindow.hide()`, the page sees `data-window-hidden`). For this stretch Fake games is turned off, so the real running-game check runs: it watches this PC's `/proc` (read-only) against the test home's library (`tools/seed_test_library.mjs`, one game with a profile; `DS5_BUDGET_PROFILES=0` takes it out). The main process's share (where that check runs) is its own INFO row. |
-| **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray. The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
+| **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray (Windows has no PSS: its private working set is judged, see [Windows](#windows-vm-overnight)). The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
 | **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). |
 
 **Reported, not judged:** the GPU process's CPU while shown, and its memory. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
@@ -44,7 +44,38 @@ It prints one row per budget (and per page) with PASS, FAIL, INFO (reported only
 
 - **Every dev release (X.Y.Z-dev.N):** `--quick`, in the same step as the fast UI check (`docs/TEST_PLAN.md`, "before a release").
 - **A stable release candidate:** `--long`, for the memory growth.
+- **Overnight only** (owner's rule, 2026-10-14): every budget run, on any OS, is started at night or when the owner leaves; never during her day.
+- **Windows:** the same mode in the VM, the same night ([below](#windows-vm-overnight)).
 - **Not in CI, not in agents' spot checks.** It needs a display server and minutes of wall time, and the shared CI runners' timing is far too noisy to judge 0.5 % of a core. An agent working on rendering measures the page it changed with `DS5_BUDGET_PAGES=<page>`.
+
+## Windows (VM, overnight)
+
+Most users run Windows, so the budgets are measured there too, on the **installed** app (the per-user installer) in the Windows test VM (libvirt `win11-test`). The measurement is the same script as on Linux (`tools/measure_budgets.mjs`: the same pages, frames, CPU, hidden-in-the-tray stretch, memory and soak, the same `tools/budgets.json`); only the process reader differs (`tools/procs_windows.mjs`, beside `tools/procs_linux.mjs` and the macOS smoke test's `tools/procs_mac.mjs`; the tree, roles and maths are shared in `tools/budgets_lib.mjs`).
+
+```bash
+tools/check_budgets_vm.sh --installer <...>-setup.exe      # --quick, ~12 min: install if needed, measure, table
+tools/check_budgets_vm.sh --long --installer <...>.exe     # ~60 min, with the 30-minute soak
+tools/check_budgets_vm.sh --build                          # cross-build a dev installer from this tree first (~5 min)
+tools/check_budgets_vm.sh                                  # the app already installed in the VM
+```
+
+What it does: it puts the measuring scripts, the test game library (`tools/seed_test_library.mjs`) and the installer on a CD image (`~/VMs/test-budgets.iso`, swapped into the VM's CD drive and the previous disc put back afterwards), then runs `tools/budgets_vm.ps1` in the VM through the QEMU guest agent. That script installs the installer for the signed-in user when the installed version differs (silent, per user, as her), **stops every running copy of the app in the VM** (a second copy would share the 2 vCPUs), and starts the installed app in her signed-in session through the "DS5 gate launch" scheduled task (an interactive token: it never goes around the sign-in; a locked session still runs it) with its own settings folder (`C:\ds5test\budgets\userdata`), DevTools on 9420 and the main-process inspector on 9421. The VM's Node (`C:\ds5test\node`, a portable Node 22) runs the measurement as SYSTEM; the results come back to `tmp/budgets-vm/results.json` (`vm.log`, `measure.log` beside it), the copy is stopped and `C:\ds5test\budgets` removed. The script never starts, shuts down or restarts the VM; when nobody is signed in it stops and says so. The build must be a dev build (X.Y.Z-dev.N or `DS5_DEV_TOOLS=1`): the simulated board and Fake games live on the Developer card. `DS5_BUDGET_PAGES`, `DS5_BUDGET_MODE` and `DS5_BUDGET_KEEP=1` work as on Linux.
+
+**How Windows numbers are read** (one CIM query per sample, from outside the app, so the app does no extra work because it is measured; the PowerShell and WMI processes the query starts aren't in the app's tree):
+
+- **CPU:** `Win32_Process` user + kernel time (100 ns units), per process of the app's tree (main and its children by `--type=`: renderer, GPU, utilities by sub-type), over the measured stretch. The stretch is timed by the clock, since a sample takes about a second.
+- **Memory: the private working set** (`Win32_PerfRawData_PerfProc_Process` `WorkingSetPrivate`, Task Manager's "Memory" column) is judged against the same 275 MB. It is Windows' closest match to PSS: both count the pages only this process uses that are in RAM; PSS also adds a share of the shared pages (Electron's DLLs), which the private working set leaves out, so it reads a little lower for the same app. The **commit** (`PrivatePageCount`, Task Manager's "Commit size": private memory whether in RAM or not, including V8's and Chromium's committed heaps) is reported beside it per process type, not judged.
+- **GPU:** the VM has no graphics card either (WARP / SwiftShader), so the GPU process is reported, not judged, as on Linux.
+- **Screen:** the window is set to 1920 x 1080 like on Linux; the results record the VM's screen and the window size Windows allowed (`display`).
+
+**One table, three OSes:**
+
+```bash
+gh run download <mac-smoke run id> -n mac-smoke -D tmp/mac-smoke     # macOS: the smoke test's results.json
+node tools/budgets_report.mjs --linux tmp/budgets/results.json --windows tmp/budgets-vm/results.json --mac tmp/mac-smoke/results.json
+```
+
+One row per budget (and page), a "measured VERDICT" column per OS, `n/a` where an OS didn't measure it, and the memory measure each OS used under it (PSS, private working set, footprint). macOS is best effort: its column comes from the smoke test (shorter stretches, footprint as memory) and never changes the exit code; Linux and Windows do.
 
 ## New visuals
 

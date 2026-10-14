@@ -14,10 +14,11 @@ export interface Results {
   mode: string;
   pages: PageResult[];
   hidden: { secs: number; cpu: Record<string, number>; pageSawHide?: boolean } | null;
-  memory: { atS: number; mb: number; byType?: Record<string, number> } | null;
+  memory: { atS: number; mb: number; byType?: Record<string, number>; metric?: string; commitByType?: Record<string, number> } | null;
   soak: { windowS: number; samples: Array<{ t: number; mb: number }> } | null;
 }
 export interface Row {
+  id: string;
   budget: string;
   scope: string;
   measured: number | null;
@@ -33,6 +34,11 @@ export interface BudgetConfig {
 export function parseStat(text: string): { ppid: number; ticks: number };
 export function procType(cmdline: string): string;
 export function parsePssKb(text: string): number | null;
+export function appTree<T extends { pid: number; ppid: number }>(main: number, rows: T[], cmdOf: (row: T) => string): Array<T & { type: string }>;
+export function memorySummary(
+  procs: Array<{ type: string; memKb?: number | null; commitKb?: number | null }>,
+  metric: string,
+): { mb: number; byType: Record<string, number>; metric: string; commitByType?: Record<string, number> };
 export function descendants(root: number, procs: Array<{ pid: number; ppid: number }>): number[];
 export function cpuByType(before: ProcSample[], after: ProcSample[], secs: number, hz?: number): Record<string, number>;
 export function cpuTotal(byType: Record<string, number>, exclude?: string[]): number;
@@ -44,3 +50,13 @@ export function growthPerWindow(samples: Array<{ t: number; mb: number }>, windo
 export function judgeBudgets(config: BudgetConfig, results: Results): Row[];
 export function passed(rows: Row[]): boolean;
 export function formatTable(rows: Row[]): string;
+export function fromMacSmoke(smoke: unknown): Results | null;
+export interface CombinedRow {
+  id: string;
+  budget: string;
+  limit: string;
+  unit: string;
+  cells: Record<string, { measured: number | null; verdict: Row["verdict"]; scope: string }>;
+}
+export function combineResults(config: BudgetConfig, byOs: Record<string, Results | null | undefined>): CombinedRow[];
+export function formatCombined(rows: CombinedRow[], oses: string[]): string;

@@ -1,8 +1,11 @@
 // The resource budget gate's arithmetic (tools/check_budgets.sh,
-// tools/measure_budgets.mjs): reading /proc text, CPU and frame rates,
-// the memory trend, and the PASS/FAIL table against tools/budgets.json.
-// Pure functions, so tests/unit/budgets.test.ts can check them without
-// an app running.
+// tools/check_budgets_vm.sh, tools/measure_budgets.mjs): reading /proc text,
+// the app's process tree and roles, CPU and frame rates, memory per process
+// type, the memory trend, the PASS/FAIL table against tools/budgets.json and
+// the three-OS table. Shared by the per-OS process readers
+// (tools/procs_linux.mjs, procs_windows.mjs, procs_mac.mjs). Pure
+// functions, so tests/unit/budgets.test.ts can check them without an app
+// running.
 
 // /proc/<pid>/stat: CPU ticks used (utime + stime) and the parent pid. The
 // command name in parentheses may hold spaces and ")", so fields are
@@ -49,6 +52,44 @@ export function descendants(root, procs) {
   }
   return out;
 }
+
+// The app's processes in one platform snapshot: the rows ([{ pid, ppid }])
+// of `main` and its descendants, each with its role (`type`: "main" or
+// procType of its command line). cmdOf(row) gives the command line; a row
+// whose process ended meanwhile (cmdOf throws) is left out.
+export function appTree(main, rows, cmdOf) {
+  const tree = new Set(descendants(main, rows));
+  const out = [];
+  // loop: NOT-WORTH — a snapshot of the PC's processes, a few passes per measurement
+  for (const r of rows) {
+    if (!tree.has(r.pid)) continue;
+    try {
+      out.push({ ...r, type: r.pid === main ? "main" : procType(cmdOf(r)) });
+    } catch {
+      // gone between the snapshot and the read
+    }
+  }
+  return out;
+}
+
+// Memory per process type in MB from [{ type, memKb, commitKb? }] (what the
+// platform reader measured: PSS on Linux, the private working set on
+// Windows), and the total without the processes that exist only because we
+// measure. `metric` names the measure for the report. Windows' commit (its
+// private bytes, resident or not) is kept beside it as commitByType.
+export function memorySummary(procs, metric) {
+  const sum = (key) => {
+    const byType = {};
+    for (const p of procs) if (p[key] != null) byType[p.type] = (byType[p.type] ?? 0) + p[key] / 1024;
+    return byType;
+  };
+  const byType = sum("memKb");
+  const total = Object.entries(byType).reduce((s, [type, v]) => (MEASUREMENT_TYPES.includes(type) ? s : s + v), 0);
+  const out = { mb: round1(total), byType: roundAll(byType), metric };
+  if (procs.some((p) => p.commitKb != null)) out.commitByType = roundAll(sum("commitKb"));
+  return out;
+}
+const roundAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, round1(v)]));
 
 const round1 = (v) => Math.round(v * 10) / 10;
 const round2 = (v) => Math.round(v * 100) / 100;
@@ -108,24 +149,34 @@ export function growthPerWindow(samples, windowS) {
 const verdict = (value, max) => (value == null ? "SKIP" : value <= max ? "PASS" : "FAIL");
 const strictVerdict = (value, max) => (value == null ? "SKIP" : value < max ? "PASS" : "FAIL");
 
-// One table row per budget and page: { budget, scope, measured, limit,
+// One table row per budget and page: { id, budget, scope, measured, limit,
 // unit, verdict } with verdict PASS, FAIL, INFO (reported, not judged) or
-// SKIP (not measured in this mode).
+// SKIP (not measured in this mode). `id` is the same on every OS (the
+// three-OS table lines rows up by it).
 // results: { mode, pages: [{ page, framesPerS, cpu }], hidden: { secs, cpu },
-//            memory: { atS, mb, byType? }, soak: { windowS, samples } | null }
+//            memory: { atS, mb, byType?, metric? }, soak: { windowS, samples } | null }
 export function judgeBudgets(config, results) {
   const b = config.budgets;
   const rows = [];
   for (const p of results.pages) {
-    rows.push({ budget: "idle frames", scope: p.page, measured: p.framesPerS, limit: `≤ ${b.idleFrames.max}`, unit: b.idleFrames.unit, verdict: verdict(p.framesPerS, b.idleFrames.max) });
+    rows.push({
+      id: `frames:${p.page}`,
+      budget: "idle frames",
+      scope: p.page,
+      measured: p.framesPerS,
+      limit: `≤ ${b.idleFrames.max}`,
+      unit: b.idleFrames.unit,
+      verdict: verdict(p.framesPerS, b.idleFrames.max),
+    });
   }
   for (const p of results.pages) {
     const cpu = cpuTotal(p.cpu, [GPU_TYPE, ...MEASUREMENT_TYPES]);
-    rows.push({ budget: "CPU shown, idle", scope: p.page, measured: cpu, limit: `< ${b.shownCpu.max}`, unit: b.shownCpu.unit, verdict: strictVerdict(cpu, b.shownCpu.max) });
-    rows.push({ budget: "GPU process, shown", scope: p.page, measured: p.cpu[GPU_TYPE] ?? 0, limit: "info", unit: b.shownCpu.unit, verdict: "INFO" });
+    rows.push({ id: `cpu:${p.page}`, budget: "CPU shown, idle", scope: p.page, measured: cpu, limit: `< ${b.shownCpu.max}`, unit: b.shownCpu.unit, verdict: strictVerdict(cpu, b.shownCpu.max) });
+    rows.push({ id: `gpu:${p.page}`, budget: "GPU process, shown", scope: p.page, measured: p.cpu[GPU_TYPE] ?? 0, limit: "info", unit: b.shownCpu.unit, verdict: "INFO" });
   }
   const hidden = results.hidden ? cpuTotal(results.hidden.cpu, MEASUREMENT_TYPES) : null;
   rows.push({
+    id: "hidden",
     budget: "CPU hidden",
     scope: results.hidden ? `all processes, ${results.hidden.secs} s` : "-",
     measured: hidden,
@@ -135,6 +186,7 @@ export function judgeBudgets(config, results) {
   });
   // The main process alone (the running-game check's /proc scan, the board's polls): reported.
   rows.push({
+    id: "hiddenMain",
     budget: "CPU hidden, main",
     scope: results.hidden ? "main process (running-game check)" : "-",
     measured: results.hidden?.cpu.main ?? null,
@@ -144,11 +196,13 @@ export function judgeBudgets(config, results) {
   });
   const mem = results.memory ? memoryJudged(results.memory) : null;
   const at = results.memory ? `at ${Math.round(results.memory.atS / 60)} min` : "-";
-  rows.push({ budget: "memory (PSS) without GPU", scope: at, measured: mem, limit: `≤ ${b.memory.max}`, unit: "MB", verdict: verdict(mem, b.memory.max) });
+  const metric = results.memory?.metric ?? "PSS";
+  rows.push({ id: "memory", budget: `memory (${metric}) without GPU`, scope: at, measured: mem, limit: `≤ ${b.memory.max}`, unit: "MB", verdict: verdict(mem, b.memory.max) });
   const gpuMem = results.memory?.byType?.[GPU_TYPE] ?? null;
-  rows.push({ budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
+  rows.push({ id: "memoryGpu", budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
   const growth = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
   rows.push({
+    id: "growth",
     budget: "memory growth",
     scope: results.soak ? `${Math.round(results.soak.windowS / 60)} min soak, ${results.soak.samples.length} samples` : "--long only",
     measured: growth,
@@ -165,7 +219,14 @@ export const passed = (rows) => rows.every((r) => r.verdict !== "FAIL");
 // A plain-text table for the terminal (and the release notes).
 export function formatTable(rows) {
   const head = ["Budget", "Scope", "Measured", "Limit", "Unit", "Verdict"];
-  const cells = rows.map((r) => [r.budget, r.scope, r.measured == null ? "-" : String(r.measured), r.limit, r.unit, r.verdict]);
+  return textTable(
+    head,
+    rows.map((r) => [r.budget, r.scope, r.measured == null ? "-" : String(r.measured), r.limit, r.unit, r.verdict]),
+  );
+}
+
+// Left-aligned columns two spaces apart, a dashed line under the head.
+function textTable(head, cells) {
   const widths = head.map((h, i) => Math.max(h.length, ...cells.map((c) => c[i].length)));
   const line = (c) =>
     c
@@ -173,4 +234,54 @@ export function formatTable(rows) {
       .join("  ")
       .trimEnd();
   return [line(head), line(widths.map((w) => "-".repeat(w))), ...cells.map(line)].join("\n");
+}
+
+// The macOS smoke test's results.json (tools/mac_smoke.mjs, the "mac-smoke"
+// artifact) as measure_budgets.mjs results, so the three-OS table can judge
+// it: its pages and hidden CPU (without its `total`), and the memory it took
+// hidden as footprint (macOS has no PSS; Activity Monitor's Memory). null
+// when the run has no budgets step.
+export function fromMacSmoke(smoke) {
+  const b = smoke?.budgets;
+  if (!b) return null;
+  const noTotal = (cpu) => Object.fromEntries(Object.entries(cpu ?? {}).filter(([k]) => k !== "total"));
+  const mem = b.memory?.hidden ?? b.memory?.shown;
+  return {
+    mode: "mac smoke",
+    pages: b.pages.map((p) => ({ page: p.page, framesPerS: p.framesPerS, cpu: noTotal(p.cpu), reached: true })),
+    hidden: b.hidden ? { secs: b.hidden.secs, cpu: noTotal(b.hidden.cpu), pageSawHide: b.hidden.pageSawHide } : null,
+    memory:
+      mem?.footprintMb != null
+        ? { atS: 0, mb: mem.footprintMb, byType: { app: mem.footprintMb, ...(mem.gpuFootprintMb != null ? { [GPU_TYPE]: mem.gpuFootprintMb } : {}) }, metric: "footprint" }
+        : null,
+    soak: null,
+  };
+}
+
+// One table for several OSes: judgeBudgets per OS, lined up by row id in the
+// order they first appear. byOs: { Linux: results, Windows: results, ... }
+// (a missing OS is left out). Each row: { id, budget, limit, unit, cells: {
+// os: { measured, verdict, scope } } }.
+export function combineResults(config, byOs) {
+  const rows = new Map();
+  for (const [os, results] of Object.entries(byOs)) {
+    if (!results) continue;
+    for (const r of judgeBudgets(config, results)) {
+      const label = r.id === "memory" ? "memory without GPU" : r.budget;
+      if (!rows.has(r.id)) rows.set(r.id, { id: r.id, budget: label, limit: r.limit, unit: r.unit, cells: {} });
+      rows.get(r.id).cells[os] = { measured: r.measured, verdict: r.verdict, scope: r.scope };
+    }
+  }
+  return [...rows.values()];
+}
+
+// The three-OS table as plain text: Budget, Page (per-page rows), a
+// "measured VERDICT" column per OS, Limit, Unit.
+export function formatCombined(rows, oses) {
+  const page = (r) => (r.id.includes(":") ? r.id.split(":")[1] : "");
+  const cell = (c) => (c ? `${c.measured == null ? "-" : c.measured} ${c.verdict}` : "n/a");
+  return textTable(
+    ["Budget", "Page", ...oses, "Limit", "Unit"],
+    rows.map((r) => [r.budget, page(r), ...oses.map((os) => cell(r.cells[os])), r.limit, r.unit]),
+  );
 }

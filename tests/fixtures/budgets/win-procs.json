@@ -1,0 +1,44 @@
+{
+  "procs": [
+    {
+      "pid": 9344,
+      "ppid": 6536,
+      "user": 2563593750,
+      "kernel": 6676718750,
+      "commit": 105668608,
+      "cmd": "\"C:\\Users\\marcy\\AppData\\Local\\Temp\\3KfewjYWfn6W58O8fai27u0RDUN\\DS5 Dongle OLED Edition Configurator.exe\" --hidden"
+    },
+    {
+      "pid": 8352,
+      "ppid": 9344,
+      "user": 1875000,
+      "kernel": 3750000,
+      "commit": 19079168,
+      "cmd": "\"C:\\Users\\marcy\\AppData\\Local\\Temp\\3KfewjYWfn6W58O8fai27u0RDUN\\DS5 Dongle OLED Edition Configurator.exe\" --type=gpu-process --user-data-dir=\"C:\\Users\\marcy\\AppData\\Roaming\\DS5 Dongle OLED Edition Configurator\" --gpu-preferences=… --use-gl=angle --use-angle=d3d11-warp-webgl --field-trial-handle=… --enable-features=PdfUseShowSaveFilePicker --disable-features=DropInputEventsWhilePaintHolding,LocalNetworkAccessChecks,NetworkServiceSandbox,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=1916,i,13019647811971839869,9644654469460699785,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=… /prefetch:2"
+    },
+    {
+      "pid": 8376,
+      "ppid": 9344,
+      "user": 2656250,
+      "kernel": 2812500,
+      "commit": 12509184,
+      "cmd": "\"C:\\Users\\marcy\\AppData\\Local\\Temp\\3KfewjYWfn6W58O8fai27u0RDUN\\DS5 Dongle OLED Edition Configurator.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\marcy\\AppData\\Roaming\\DS5 Dongle OLED Edition Configurator\" --standard-schemes=ds5-art --secure-schemes=ds5-art --field-trial-handle=… --enable-features=PdfUseShowSaveFilePicker --disable-features=DropInputEventsWhilePaintHolding,LocalNetworkAccessChecks,NetworkServiceSandbox,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=1916,i,13019647811971839869,9644654469460699785,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=… /prefetch:11"
+    },
+    {
+      "pid": 2556,
+      "ppid": 9344,
+      "user": 27031250,
+      "kernel": 3437500,
+      "commit": 70934528,
+      "cmd": "\"C:\\Users\\marcy\\AppData\\Local\\Temp\\3KfewjYWfn6W58O8fai27u0RDUN\\DS5 Dongle OLED Edition Configurator.exe\" --type=renderer --user-data-dir=\"C:\\Users\\marcy\\AppData\\Roaming\\DS5 Dongle OLED Edition Configurator\" --standard-schemes=ds5-art --secure-schemes=ds5-art --app-user-model-id=io.github.MarcelineVPQ.DS5DongleConfigurator --app-path=\"C:\\Users\\marcy\\AppData\\Local\\Temp\\3KfewjYWfn6W58O8fai27u0RDUN\\resources\\app.asar\" --enable-sandbox --disable-gpu-compositing --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1 --num-raster-threads=1 --renderer-client-id=4 --time-ticks-at-unix-epoch=-1791945211073944 --launch-time-ticks=54859608523 --field-trial-handle=… --enable-features=PdfUseShowSaveFilePicker --disable-features=DropInputEventsWhilePaintHolding,LocalNetworkAccessChecks,NetworkServiceSandbox,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=1916,i,13019647811971839869,9644654469460699785,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=… /prefetch:1"
+    }
+  ],
+  "perf": [
+    { "pid": 0, "ws": 8192 },
+    { "pid": 4, "ws": 12288 },
+    { "pid": 9344, "ws": 18964480 },
+    { "pid": 8352, "ws": 1044480 },
+    { "pid": 8376, "ws": 1290240 },
+    { "pid": 2556, "ws": 3309568 }
+  ]
+}

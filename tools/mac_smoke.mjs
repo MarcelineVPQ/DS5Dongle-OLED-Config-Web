@@ -30,7 +30,8 @@ import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
-import { GPU_TYPE } from "./budgets_lib.mjs";
+import { GPU_TYPE, cpuByType, cpuTotal } from "./budgets_lib.mjs";
+import { appProcs as macAppProcs, procTable } from "./procs_mac.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -191,46 +192,15 @@ async function expandSection(id) {
   })()`);
 }
 
-// --- processes (ps: cumulative CPU time, RSS)
-const parseTime = (t) => t.split(":").reduce((acc, part) => acc * 60 + Number(part), 0);
-function procTable() {
-  const out = execFileSync("ps", ["-A", "-o", "pid=,ppid=,time=,rss=,command="], { encoding: "utf8", maxBuffer: 16 << 20 });
-  return out
-    .split("\n")
-    .filter(Boolean)
-    .map((l) => {
-      const m = /^\s*(\d+)\s+(\d+)\s+(\S+)\s+(\d+)\s+(.*)$/.exec(l);
-      return m && { pid: Number(m[1]), ppid: Number(m[2]), cpuS: parseTime(m[3]), rssKb: Number(m[4]), cmd: m[5] };
-    })
-    .filter(Boolean);
-}
+// --- processes (ps: cumulative CPU time, RSS; tools/procs_mac.mjs)
 const MAIN_PID = await mainEv("process.pid");
-function appProcs() {
-  const all = procTable();
-  const tree = new Set([MAIN_PID]);
-  // loop: NOT-WORTH — a few hundred processes, a handful of passes, measuring only
-  for (let grew = true; grew;) {
-    grew = false;
-    for (const p of all) {
-      if (tree.has(p.ppid) && !tree.has(p.pid)) {
-        tree.add(p.pid);
-        grew = true;
-      }
-    }
-  }
-  return all.filter((p) => tree.has(p.pid)).map((p) => ({ ...p, type: p.pid === MAIN_PID ? "main" : (/--type=([\w-]+)/.exec(p.cmd)?.[1] ?? p.cmd.replace(/^.*\//, "").slice(0, 40)) }));
-}
+const ourProcs = () => macAppProcs(MAIN_PID);
 async function cpuOver(secs) {
-  const a = new Map(appProcs().map((p) => [p.pid, p]));
+  const ticks = () => ourProcs().map((p) => ({ pid: p.pid, type: p.type, ticks: p.cpuS }));
+  const a = ticks();
   await sleep(secs * 1000);
-  const byType = {};
-  for (const p of appProcs()) {
-    const before = a.get(p.pid);
-    if (!before) continue;
-    byType[p.type] = (byType[p.type] ?? 0) + ((p.cpuS - before.cpuS) / secs) * 100;
-  }
-  const r = Object.fromEntries(Object.entries(byType).map(([k, v]) => [k, Math.round(v * 100) / 100]));
-  r.total = Math.round(Object.values(byType).reduce((s, v) => s + v, 0) * 100) / 100;
+  const r = cpuByType(a, ticks(), secs, 1);
+  r.total = cpuTotal(r);
   return r;
 }
 // macOS has no PSS. footprint (the "Memory" column of Activity Monitor:
@@ -239,7 +209,7 @@ async function cpuOver(secs) {
 // The budget's rule (tools/budgets_lib.mjs memoryJudged): every app process
 // except the GPU process is judged; the GPU process is reported apart.
 function memory() {
-  const procs = appProcs();
+  const procs = ourProcs();
   const gpuPids = new Set(procs.filter((p) => p.type === GPU_TYPE).map((p) => p.pid));
   const mb = (kb) => Math.round(kb / 102.4) / 10;
   const rssMb = mb(procs.filter((p) => !gpuPids.has(p.pid)).reduce((s, p) => s + p.rssKb, 0));

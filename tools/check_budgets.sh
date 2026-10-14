@@ -100,7 +100,7 @@ fi
 [ "${DS5_BUDGET_KEEP:-}" = 1 ] || trap stop EXIT
 
 status=0
-nice -n 19 node tools/measure_budgets.mjs --port "$PORT" --state "$STATE" --mode "$MODE" --out "$STATE/results.json" || status=$?
+nice -n 19 node tools/measure_budgets.mjs --port "$PORT" --mode "$MODE" --out "$STATE/results.json" || status=$?
 if [ "$status" != 0 ]; then
   echo "Measuring failed (exit $status); see $STATE/app.log" >&2
   exit "$status"
