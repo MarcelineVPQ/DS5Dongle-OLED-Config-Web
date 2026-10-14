@@ -4,6 +4,7 @@
 // touches them). The math is in stickTests.ts.
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SectionGroup } from "../accordion/Section";
 import type { InputReport } from "../../oled/inputReport";
 import { correctStick, type StickCal } from "../../protocol/calibration";
 import { Segmented } from "../controls";
@@ -102,8 +103,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
   const pct = (v: number) => `${v.toFixed(1)}%`;
   return (
     <>
-      <section className="dk-card">
-        <h2>{t("desktop.stickTest.circleTitle")}</h2>
+      <SectionGroup title={t("desktop.stickTest.circleTitle")}>
         <p className="dk-hint">{t("desktop.stickTest.circleHow")}</p>
         <Segmented
           label={t("desktop.stickTest.show")}
@@ -156,10 +156,9 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
             {t("desktop.stickTest.reset")}
           </button>
         </div>
-      </section>
+      </SectionGroup>
 
-      <section className="dk-card">
-        <h2>{t("desktop.stickTest.driftTitle")}</h2>
+      <SectionGroup title={t("desktop.stickTest.driftTitle")}>
         <p className="dk-hint">{t("desktop.stickTest.driftHow", { seconds: DRIFT_MS / 1000 })}</p>
         {drift === "running" ? (
           <div className="calib-step" role="status">
@@ -211,7 +210,7 @@ export default function StickTests({ input, sticks }: { input: InputReport | nul
             {t("desktop.stickTest.keyY")}
           </p>
         )}
-      </section>
+      </SectionGroup>
     </>
   );
 }

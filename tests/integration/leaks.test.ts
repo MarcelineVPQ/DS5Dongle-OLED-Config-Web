@@ -38,6 +38,7 @@ let mods: {
   GamePage: typeof import("../../src/desktop/library/GamePage").default;
   AppSettingsPage: typeof import("../../src/desktop/pages/AppSettingsPage").default;
   AboutPage: typeof import("../../src/desktop/pages/AboutPage").default;
+  revealSection: typeof import("../../src/desktop/accordion/useAccordion").revealSection;
 };
 
 beforeAll(async () => {
@@ -66,6 +67,7 @@ beforeAll(async () => {
     GamePage: (await import("../../src/desktop/library/GamePage")).default,
     AppSettingsPage: (await import("../../src/desktop/pages/AppSettingsPage")).default,
     AboutPage: (await import("../../src/desktop/pages/AboutPage")).default,
+    revealSection: (await import("../../src/desktop/accordion/useAccordion")).revealSection,
   };
   container = document.createElement("div");
   document.body.append(container);
@@ -87,7 +89,7 @@ const press = (label: string) => {
   act(() => b.click());
 };
 
-type View = import("../../src/desktop/live/PartPanel").PanelView;
+type View = import("../../src/desktop/live/ControllerView").PanelView;
 // The controller view as DesktopApp shows it: the app's connection to the
 // (simulated) dongle, its update state, and the view around the live controller.
 function Controller({ view }: { view: View }) {
@@ -97,13 +99,18 @@ function Controller({ view }: { view: View }) {
   return bridge.isConnected ? createElement(mods.ControllerView, { bridge, fw, view, onView: () => undefined }) : null;
 }
 
-// App settings as DesktopApp shows it (the board and update state for its Updates section).
+// App settings without a board (no drawing beside it to poll).
 function AppSettings() {
   const bridge = mods.useDs5Bridge();
   const app = mods.useAppUpdate();
   const fw = mods.useFirmwareUpdate(bridge, app);
   return createElement(mods.AppSettingsPage, { bridge, fw });
 }
+// A Controller page section opened by a deep link as the page mounts.
+const controllerAt = (section: "sticks" | "speaker" | "mic") => () => {
+  mods.revealSection("controller", section);
+  return createElement(Controller, { view: "overview" });
+};
 // Opens and folds every accordion section on the page, one after another
 // (closed sections mount nothing; open ones must give back what they took).
 const everySection = async () => {
@@ -127,14 +134,17 @@ interface Page {
 }
 const PAGES: Page[] = [
   { name: "controller view", element: () => createElement(Controller, { view: "overview" }), ready: () => !!container.querySelector("[data-part]") },
+  { name: "Controller page, every section opened", element: () => createElement(Controller, { view: "overview" }), use: everySection },
   { name: "Pico page (dongle)", element: () => createElement(Controller, { view: "dongle" }) },
-  { name: "App settings, every section opened", element: () => createElement(AppSettings), use: everySection },
+  { name: "Pico page, every section opened", element: () => createElement(Controller, { view: "dongle" }), use: everySection },
+  { name: "App settings beside the live controller, every section opened", element: () => createElement(Controller, { view: "app" }), use: everySection },
+  { name: "App settings without a board, every section opened", element: () => createElement(AppSettings), use: everySection },
   { name: "About, every section opened", element: () => createElement(mods.AboutPage), use: everySection },
-  { name: "Calibration", element: () => createElement(Controller, { view: "calibration" }) },
-  { name: "Speaker panel", element: () => createElement(Controller, { view: { part: "speaker" } }) },
+  { name: "Sticks & calibration", element: controllerAt("sticks") },
+  { name: "Speaker section", element: controllerAt("speaker") },
   {
-    name: "Mic panel with the mic test running",
-    element: () => createElement(Controller, { view: { part: "mute" } }),
+    name: "Microphone section with the mic test running",
+    element: controllerAt("mic"),
     use: async () => {
       const { tracks, audioContexts } = probe.snapshot();
       press("Mic Test");

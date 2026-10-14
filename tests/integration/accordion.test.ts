@@ -3,7 +3,7 @@
 // dot keeps one open, what's open and pinned is remembered (pins per board and
 // slot on the controller page), closed sections render nothing, the keyboard
 // moves between headers, and deep links open their section. Then the pages
-// built on it so far (App settings, About): every setting from the plan's
+// built on it (App settings, About, the Controller and Pico 2 W pages): every setting from the plan's
 // table (the accordion sketch's MAPPING.md) renders in exactly one section,
 // nothing lost, no dupes; and every deep link target exists.
 import { act, createElement, type ReactNode } from "react";
@@ -14,6 +14,10 @@ import type { TFunction } from "i18next";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 Element.prototype.scrollIntoView ??= () => undefined;
 Element.prototype.scrollTo ??= () => undefined;
+// jsdom lacks these: SVG shape geometry, media queries and canvases (the live drawing).
+(globalThis as Record<string, unknown>).SVGGeometryElement ??= class extends SVGElement {};
+window.matchMedia ??= ((media: string) => Object.assign(new EventTarget(), { media, matches: false, onchange: null, addListener() {}, removeListener() {} })) as never;
+HTMLCanvasElement.prototype.getContext = (() => null) as never;
 (globalThis as Record<string, unknown>).ResizeObserver ??= class {
   observe() {}
   unobserve() {}
@@ -30,6 +34,10 @@ let m: {
   AboutPage: typeof import("../../src/desktop/pages/AboutPage").default;
   notices: typeof import("../../src/desktop/notices");
   openTasks: typeof import("../../src/desktop/openTasks");
+  ControllerView: typeof import("../../src/desktop/live/ControllerView");
+  useDs5Bridge: typeof import("../../src/hooks/useDs5Bridge").useDs5Bridge;
+  storage: typeof import("../../src/desktop/storage");
+  devPreview: typeof import("../../src/desktop/devPreview");
 };
 const t = ((key: string, o?: Record<string, unknown>) => m.i18n.t(key, o)) as TFunction;
 
@@ -45,6 +53,10 @@ beforeAll(async () => {
     AboutPage: (await import("../../src/desktop/pages/AboutPage")).default,
     notices: await import("../../src/desktop/notices"),
     openTasks: await import("../../src/desktop/openTasks"),
+    ControllerView: await import("../../src/desktop/live/ControllerView"),
+    useDs5Bridge: (await import("../../src/hooks/useDs5Bridge")).useDs5Bridge,
+    storage: await import("../../src/desktop/storage"),
+    devPreview: await import("../../src/desktop/devPreview"),
   };
   await m.i18n.changeLanguage("en");
 });
@@ -344,6 +356,154 @@ describe("About on the accordion", () => {
     expect(openIds()).toEqual(["changes"]); // the first section with a task opens on a first visit
     expect(container.querySelector('[data-section="changes"] .dk-sec-task')).not.toBeNull();
     expect(seen).toHaveBeenCalled();
+  });
+});
+
+// Firmware up to date (no update service in this test).
+const FW = {
+  available: false,
+  backToStable: false,
+  latest: null,
+  problem: null,
+  state: { phase: "idle" },
+  start: () => Promise.resolve(),
+  refreshLatest: () => Promise.resolve({ latest: null }),
+  dismiss: () => undefined,
+} as never;
+// The live pages as DesktopApp shows them: the app's connection to the
+// simulated board, its update state, and the view around the live controller.
+function Live({ view }: { view: "overview" | "dongle" | "app" }) {
+  const bridge = m.useDs5Bridge();
+  return bridge.isConnected ? createElement(m.ControllerView.default, { bridge, fw: FW, view, onView: () => undefined }) : null;
+}
+const live = async (view: "overview" | "dongle" | "app") => {
+  m.storage.writePref(m.devPreview.SIMULATED_KEY, "1");
+  Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+  document.dispatchEvent(new Event("visibilitychange"));
+  await render(createElement(Live, { view }));
+  // loop: test — until the simulated board answers (connect, identity, settings)
+  for (let i = 0; i < 100 && !container.querySelector(".dk-sec"); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
+  await act(() => new Promise((r) => setTimeout(r, 50)));
+};
+
+// The plan's table (MAPPING.md, "Controller page" and "Pico 2 W page"), by
+// what each section shows: its rows' labels, headings and buttons.
+const CONTROLLER_INVENTORY: Record<string, string[]> = {
+  lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
+  triggers: ["desktop.live.pull", "desktop.settings.triggerReduce", "desktop.triggers.title", "desktop.triggers.presets.weapon"],
+  haptics: ["haptics.audioBufferLabel", "desktop.live.hapticLevel", "autoHaptics.sectionTitle", "autoHaptics.modeLabel"],
+  speaker: [
+    "desktop.settings.speakerLevel",
+    "desktop.settings.speakerBoost",
+    "desktop.settings.lockVolume",
+    "desktop.settings.audioOutput",
+    "desktop.live.speakerLevel",
+    "desktop.audioTest.speakerTitle",
+  ],
+  mic: ["haptics.btMicLabel", "desktop.settings.micInput", "desktop.settings.micLevel", "desktop.settings.echoCancel", "desktop.audioTest.micTitle"],
+  buttons: ["desktop.live.remapApply", "desktop.layouts.title", "desktop.layouts.saveAs"],
+  sticks: ["desktop.calib.title", "desktop.calib.leftStick", "desktop.curves.title", "desktop.calib.triggers"],
+  slots: ["desktop.slots.wipe"],
+  info: ["desktop.ctrlInfo.refresh"],
+};
+const DONGLE_INVENTORY: Record<string, string[]> = {
+  firmware: ["desktop.firmware.check"],
+  device: ["desktop.firmware.enterBootsel", "desktop.firmware.factoryReset"],
+  power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.picoLed", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
+  oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
+  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
+  diagnostics: ["desktop.dash.audio", "desktop.dash.specs.title"],
+};
+// Each section opened in turn: everything listed shows in it, and no row or
+// heading shows in two sections (nothing lost, no dupes).
+async function inventory(page: "controller" | "dongle", table: Record<string, string[]>) {
+  expect([...container.querySelectorAll<HTMLElement>(".dk-sec")].map((s) => s.dataset.section)).toEqual([...m.sections.SECTIONS[page]]);
+  expect(Object.keys(table)).toEqual([...m.sections.SECTIONS[page]]);
+  expect(container.querySelectorAll(".dk-card, .live-data-card.ctrl-info")).toHaveLength(0); // no settings cards left
+  const rows = new Map<string, Set<string>>();
+  for (const id of m.sections.SECTIONS[page]) {
+    click(head(id));
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    expect(openIds()).toEqual([id]);
+    const seen = labelsIn(id);
+    // loop: test
+    for (const key of table[id]) expect(seen, `${key} in ${id}`).toContain(m.i18n.t(key));
+    const body = container.querySelector(`[data-section="${id}"] .dk-sec-body`)!;
+    // loop: test
+    for (const x of body.querySelectorAll(".dk-row > .dk-label, .dk-subhead")) {
+      // A row by its label under its group's heading ("Mode" of the light bar and of Audio Auto Haptics are two settings).
+      const group = x.closest(".dk-sec-group")?.querySelector(".dk-subhead")?.textContent?.trim() ?? "";
+      const l = `${group}/${(x.firstChild?.textContent ?? "").trim()}`;
+      rows.set(l, new Set([...(rows.get(l) ?? []), id]));
+    }
+  }
+  click(head(m.sections.SECTIONS[page].at(-1)!));
+  expect(openIds()).toEqual([]);
+  expect(container.querySelectorAll(".dk-sec-body")).toHaveLength(0); // folded: nothing rendered
+  expect([...rows].filter(([, ids]) => ids.size > 1)).toEqual([]);
+}
+
+describe("the Controller page on the accordion", () => {
+  it("has every section of the plan, each setting in exactly one", async () => {
+    await live("overview");
+    await inventory("controller", CONTROLLER_INVENTORY);
+    // The panel's title is the controller's colorway and model.
+    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Cosmic Red DualSense");
+    // Every header says its state.
+    // loop: test
+    for (const id of m.sections.SECTIONS.controller) expect(container.querySelector(`[data-section="${id}"] .dk-sec-status`)?.textContent, id).toBeTruthy();
+  });
+
+  it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
+    await live("overview");
+    const part = (p: string) => container.querySelector(`.live-ctl [data-part="${p}"]`)!;
+    act(() => void part("lightbar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(openIds()).toEqual(["lightbar"]);
+    act(() => void part("speaker").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(openIds()).toEqual(["speaker"]);
+    act(() => void part("cross").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(openIds()).toEqual(["buttons"]);
+    expect(container.querySelector('[data-row="btn-13"]')?.classList.contains("dk-flash")).toBe(true);
+    act(() => void part("ps").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(openIds()).toEqual(["slots"]);
+  });
+});
+
+describe("the Pico 2 W page on the accordion", () => {
+  it("has every section of the plan, each setting in exactly one; Diagnostics reads its extras only while open", async () => {
+    const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
+    const counters = vi.spyOn(Ds5BridgeClient.prototype, "readAudioCounters");
+    await live("dongle");
+    await act(() => new Promise((r) => setTimeout(r, 1200))); // a poll or two with Diagnostics folded
+    expect(counters).not.toHaveBeenCalled();
+    click(head("diagnostics"));
+    await act(() => new Promise((r) => setTimeout(r, 1200)));
+    expect(counters).toHaveBeenCalled();
+    click(head("diagnostics"));
+    counters.mockRestore();
+    await inventory("dongle", DONGLE_INVENTORY);
+    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Pico 2 W");
+    // The dials stay in the main view.
+    expect(container.querySelectorAll(".dk-split-main .dash-gauge")).toHaveLength(3);
+  });
+
+  it("a firmware update and a board problem open their sections from the rail", () => {
+    const { tasks } = m.openTasks.openTasks(t, {
+      app: { phase: "idle" } as never,
+      fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never },
+      connected: true,
+      board: [{ reason: "mic-decoder", text: "mic" }],
+      gamesCount: 0,
+    });
+    expect(tasks.filter((x) => x.place === "dongle").map((x) => x.section)).toEqual(["firmware", "diagnostics"]);
+  });
+});
+
+describe("App settings beside the live controller", () => {
+  it("shows the drawing in the main view and its sections at the right, like every page", async () => {
+    await live("app");
+    expect(container.querySelector(".dk-split-main .live-ctl")).not.toBeNull();
+    expect([...container.querySelectorAll<HTMLElement>(".dk-split-panel .dk-sec")].map((s) => s.dataset.section)).toEqual([...m.sections.SECTIONS.app]);
   });
 });
 

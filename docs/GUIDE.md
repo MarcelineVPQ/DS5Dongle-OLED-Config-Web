@@ -57,11 +57,12 @@ Your controller (a DualSense in its colorway, or a DualSense Edge with its Fn bu
 
 ![The Controller page: the live drawing, the status tiles and the data cards](screenshots/live-controller.png)
 
-- **Click any part of the drawing** to set it up: its settings open in the panel on the right. Or pick a setting from the list in that panel.
+- **The panel on the right** lists everything to set up, one section each: **Light bar**, **Adaptive triggers**, **Haptic feedback**, **Speaker**, **Microphone**, **Button assignments**, **Sticks & calibration**, **Pairing slots** and **Controller info**. Its title is your controller (for example **Cosmic Red DualSense**). Click a section's name to open it (the one open before folds); the small dot in its top-right corner pins it open, remembered for each board and pairing slot. The line next to each name says how it's set now, and a yellow dot means something is waiting there (a newer official firmware under **Controller info**).
+- **Click any part of the drawing** to open its section: a button opens **Button assignments** at its row.
 - **The tiles** under the drawing: battery, signal, light bar mode, and the player light and pairing slot.
 - **Under the drawing's Mute button:** **Mic muted** while the controller's mute light is on, and **Headset in** while headphones are plugged into its headset jack.
 - **The cards**: inputs (sticks, triggers, buttons, touch pad), gyroscope, accelerometer, and the connection (update rate, round trip, headset and mic).
-- **Controller info:** the controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch) with **Up to date** or **Newer official firmware available**, its battery (level, charge state, voltage), and the lifetime counters it keeps itself (time played, charging, haptic feedback and trigger time, charges, connections; in a fold-out, every button's presses and each stick's round trips). **How to update** explains Sony's way: a USB-C cable to a Windows PC with Sony's **PlayStation Accessories** app, or a PS5 (not through your board; pair the controller with your board again afterwards if needed). The app only checks Sony's version list; it never installs Sony firmware. Read only, and the controller's serial number is never read into the app.
+- **Controller info** (its section in the panel): the controller's own firmware (version, build date, hardware, bootloader, DSP, Bluetooth patch) with **Up to date** or **Newer official firmware available**, its battery (level, charge state, voltage), and the lifetime counters it keeps itself (time played, charging, haptic feedback and trigger time, charges, connections; in a fold-out, every button's presses and each stick's round trips). **How to update** explains Sony's way: a USB-C cable to a Windows PC with Sony's **PlayStation Accessories** app, or a PS5 (not through your board; pair the controller with your board again afterwards if needed). The app only checks Sony's version list; it never installs Sony firmware. Read only, and the controller's serial number is never read into the app.
 - **Changes apply right away.** **Save to the Pico 2 W** (the button names your board) in the bottom bar keeps them after your board is unplugged; **Revert** goes back to what's saved.
 
 ## 4. Each part of the controller
@@ -124,7 +125,7 @@ When all four slots are taken, your board won't pair a new controller (it just b
 
 ![Calibration: the guided run and the raw vs corrected previews](screenshots/guide-calibration.png)
 
-For stick drift, sticks that don't reach the edge, triggers that don't reach full, and a gyroscope that creeps. Open it from the settings list (**Calibration**).
+For stick drift, sticks that don't reach the edge, triggers that don't reach full, and a gyroscope that creeps. Open **Sticks & calibration** in the panel (or click a stick on the drawing).
 
 1. **Start calibration** and follow the four steps, each with a short "get ready" pause first:
    1. let go of both sticks;
@@ -147,20 +148,18 @@ The side bar names this page after your board (**Pico 2 W**, for example), and t
 ![Your board's page: the console with the live screen, the dashboard below](screenshots/guide-dongle.png)
 
 - **Console:** your board's screen, pixel for pixel and live (even without the OLED add-on), and a **Log** of what happened this session. Change screens with KEY0 / KEY1 on your board.
-- **The dashboard:** your board's chip temperature, CPU clock and core voltage, and a **Specs** card with its chip (and the clock it runs at), SRAM, flash and wireless chip (Pico 2 W and Pico W); graphs of USB audio, Bluetooth traffic, signal and temperature over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); and, under **Waveshare Pico-OLED-1.3** (the supported screen add-on), its brightness, state and timeouts, with a **Specs** card for the module (size, resolution, controller, interface, keys). The app can't tell whether the screen is attached: your board drives it whenever it is.
-- **Timing** (firmware with protocol 1.11): how long each part of the firmware takes, average and worst case since the last **Reset**, for tracking down audio stutters.
+- **Under it:** your board's chip temperature, CPU clock and core voltage, and its uptime, protocol, firmware and Bluetooth errors; **More in Diagnostics** opens the rest.
 
 ![The dashboard's gauges and graphs](screenshots/guide-dashboard.png)
 
-In the panel on the right:
+In the panel on the right, one section each (they work like the Controller page's; a yellow dot marks a firmware update or a board problem):
 
 - **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards). While firmware is being written, the app doesn't restart or quit: an app update's **Restart now** waits ("Wait for the firmware update to finish."), and closing the window or quitting from the tray waits until the write is done, then the app closes.
-- **Device:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
-- **Power:** disconnect the controller when idle, the timeout, the Pico's status LED.
-- **PC sleep:** turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
-- **Waveshare Pico-OLED-1.3:** the screen's brightness, dim and off timeouts, whether controller input wakes it.
-- **USB:** polling rate and controller mode (these apply after **Reconnect USB**).
-- **Status pin:** a Pico pin (GPIO) that gives 3.3 V while a controller is connected (**On while connected**), or a 0.2 s pulse when one connects (**Pulse on connect**): for an LED (with a resistor) or a PC case's power-button header. Only pins nothing else uses are offered. Needs the newest firmware on your board.
+- **Restart & reset:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
+- **Power & sleep:** disconnect the controller when idle, the timeout, the Pico's status LED; under **PC sleep**: turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
+- **OLED screen** (the Waveshare Pico-OLED-1.3 add-on): its brightness, dim and off timeouts, whether controller input wakes it.
+- **USB & status pin:** polling rate and controller mode (these apply after **Reconnect USB**); under **Status pin**, a Pico pin (GPIO) that gives 3.3 V while a controller is connected (**On while connected**), or a 0.2 s pulse when one connects (**Pulse on connect**): for an LED (with a resistor) or a PC case's power-button header. Only pins nothing else uses are offered. Needs the newest firmware on your board.
+- **Diagnostics:** graphs of USB audio, Bluetooth traffic, signal and mic audio over the last minute; the audio pipeline's levels and counters (anything that went wrong is marked); **Timing** (firmware with protocol 1.11: how long each part of the firmware takes, average and worst case since the last **Reset**, for tracking down audio stutters); what the **Waveshare Pico-OLED-1.3** is doing (brightness, state, screen, redraws); and the **Specs** of your board (chip and the clock it runs at, SRAM, flash, wireless chip) and of the OLED module (size, resolution, controller, interface, keys). The app can't tell whether the screen is attached: your board drives it whenever it is. These readings run only while the section is open.
 
 ## 7. Games
 
@@ -236,7 +235,7 @@ Proton normally runs games through XWayland, which has no HDR, so a game like In
 
 ![App settings](screenshots/guide-app-settings.png)
 
-Open with the ⚙ in the rail. Each group of settings is a section: click its name to open it (the one open before folds), and the small dot in its top-right corner pins it open. The line next to each name says how it's set now; a yellow dot means something is waiting there (an app update under **Updates**). The app remembers which sections were open.
+Open with the ⚙ in the rail. Your controller stays on the left, so a theme, accent or color change shows on it right away; the settings are in the panel on the right, like on every page. Each group of settings is a section: click its name to open it (the one open before folds), and the small dot in its top-right corner pins it open. The line next to each name says how it's set now; a yellow dot means something is waiting there (an app update under **Updates**). The app remembers which sections were open.
 
 - **Language.**
 - **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).

@@ -36,20 +36,8 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\\/g, "/");
 const FRAMEWORK = new Set(["src/desktop/controls.tsx", "src/desktop/accordion/Section.tsx"]);
 
 // Pages and panels not on the accordion yet: their cards and rows are allowed
-// until their step moves them (the accordion plan, steps 3 and 4).
+// until their step moves them (the accordion plan, step 4).
 export const PENDING = {
-  "src/desktop/live/PartPanel.tsx": "step 3: Controller and Pico 2 W panels",
-  "src/desktop/live/Calibration.tsx": "step 3: Controller → Sticks & calibration",
-  "src/desktop/live/StickCurves.tsx": "step 3: Controller → Sticks & calibration",
-  "src/desktop/live/StickTestCards.tsx": "step 3: Controller → Sticks & calibration",
-  "src/desktop/live/ControllerInfo.tsx": "step 3: Controller → Controller info",
-  "src/desktop/live/slotSettings.tsx": "step 3: Controller → Pairing slots",
-  "src/desktop/pages/SettingsPage.tsx": "step 3: Controller and Pico 2 W sections",
-  "src/desktop/pages/FirmwarePage.tsx": "step 3: Pico 2 W → Firmware, Restart & reset",
-  "src/desktop/pages/LightbarPage.tsx": "step 3: Controller → Light bar",
-  "src/desktop/pages/SlotsPage.tsx": "step 3: Controller → Pairing slots",
-  "src/desktop/pages/TriggersPage.tsx": "step 3: Controller → Adaptive triggers",
-  "src/desktop/dongle/DongleDashboard.tsx": "step 3: Pico 2 W → Diagnostics",
   "src/desktop/pages/GamesPage.tsx": "step 4: Games Home",
   "src/desktop/library/GamePage.tsx": "step 4: game page",
 };
@@ -59,7 +47,6 @@ export const NOT_SETTINGS = {
   "src/desktop/DesktopApp.tsx": "the app shell: the save bar and the profile-editing bar (they stay as they are)",
   "src/desktop/UpdateBanners.tsx": "the update notices' actions (Download and install)",
   "src/desktop/SetupScreen.tsx": "the first-run setup flow (flash the board), not a settings page",
-  "src/desktop/UsbAccessSetup.tsx": "a one-time setup step (the Linux USB rule), shown in a notice",
   "src/desktop/WindowsUsbRepair.tsx": "a one-time repair flow (the Windows driver), shown in a notice",
   "src/desktop/library/playBar.tsx": "the game page's Play bar (its main view)",
   "src/desktop/library/GameLibrary.tsx": "the game library's toolbar (sort and filter), not settings",

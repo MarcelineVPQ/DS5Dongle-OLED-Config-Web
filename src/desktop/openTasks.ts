@@ -14,8 +14,9 @@ export const APP_UPDATE_ID = "app-update";
 export const FIRMWARE_UPDATE_ID = "firmware-update";
 export const GAMES_SETUP_ID = "games-setup";
 // The accordion section each task opens (rail dots, Dismissed notices' Go to).
-// Firmware and board tasks get theirs when the Pico 2 W page moves onto the accordion.
 export const APP_UPDATE_SECTION: SectionId<"app"> = "updates";
+export const FIRMWARE_UPDATE_SECTION: SectionId<"dongle"> = "firmware";
+export const BOARD_PROBLEM_SECTION: SectionId<"dongle"> = "diagnostics";
 
 // The app update notice's key: the offered version, or (once it's installed
 // and waits for a restart) "ready:" plus it, a new step that shows again.
@@ -59,7 +60,7 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
   const writing = fw.state.phase === "running" || fw.state.phase === "verifying";
   if (fw.available && fw.latest && !writing) {
     const key = firmwareUpdateKey(fw.latest.version);
-    tasks.push({ id: FIRMWARE_UPDATE_ID, place: "dongle", text: t("desktop.update.fwAvailable", { version: fw.latest.version }), key });
+    tasks.push({ id: FIRMWARE_UPDATE_ID, place: "dongle", section: FIRMWARE_UPDATE_SECTION, text: t("desktop.update.fwAvailable", { version: fw.latest.version }), key });
     settled.set(FIRMWARE_UPDATE_ID, [key]);
   } else if (input.connected && fw.latest && !fw.available && fw.state.phase === "idle") settled.set(FIRMWARE_UPDATE_ID, []);
 
@@ -69,7 +70,7 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
     for (const p of input.board) {
       const key = boardProblemKey(p);
       keys.push(key);
-      tasks.push({ id: BOARD_PROBLEM_ID, place: "dongle", text: p.text, key });
+      tasks.push({ id: BOARD_PROBLEM_ID, place: "dongle", section: BOARD_PROBLEM_SECTION, text: p.text, key });
     }
     settled.set(BOARD_PROBLEM_ID, keys);
   }

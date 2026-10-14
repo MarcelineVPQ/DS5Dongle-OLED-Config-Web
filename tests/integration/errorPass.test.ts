@@ -230,13 +230,15 @@ describe("Controller info", () => {
   it("Refresh with Sony unreachable says so (the line was left blank)", async () => {
     const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
     const { FakeDongle } = await import("../support/fakeDongle");
-    const { default: ControllerInfo } = await import("../../src/desktop/live/ControllerInfo");
+    const { default: ControllerInfo, useControllerInfo } = await import("../../src/desktop/live/ControllerInfo");
     const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 17 }));
     await client.checkCompatible();
     const identity = await client.identity();
     vi.stubGlobal("desktop", { platform: "linux", officialControllerFirmware: () => Promise.reject(new Error("offline")) });
     const bridge = { client, identity } as never;
-    act(() => root.render(createElement(ControllerInfo, { bridge, batteryPct: 80, power: null })));
+    // The Controller page keeps the read (useControllerInfo); the section shows it.
+    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: 80, power: null });
+    act(() => root.render(createElement(Info)));
     for (let i = 0; i < 100 && !container.textContent?.includes(i18n.t("desktop.ctrlInfo.built")); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
     expect(container.textContent).not.toContain(i18n.t("desktop.ctrlInfo.officialUnavailable")); // an automatic check stays quiet
     act(() => button(i18n.t("desktop.ctrlInfo.refresh"))!.click());

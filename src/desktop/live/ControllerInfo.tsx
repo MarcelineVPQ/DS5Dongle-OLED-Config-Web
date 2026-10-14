@@ -1,19 +1,23 @@
-// "Controller info" in the overview (protocol 1.12): the connected controller's
-// own firmware, its battery (level and charge state from the live input, the
-// voltage from a test command) and its lifetime counters. Read once when a
-// controller connects and on Refresh; nothing here polls. Serial numbers never
-// reach the app (the dongle blanks them), so nothing identifying is shown.
-import { memo, useEffect, useRef, useState } from "react";
+// The Controller page's "Controller info" section (protocol 1.12): the
+// connected controller's own firmware, its battery (level and charge state
+// from the live input, the voltage from a test command) and its lifetime
+// counters. Read once when a controller connects and on Refresh
+// (useControllerInfo, kept by the page so the section's status and its
+// "newer firmware" task dot are known while it's folded); nothing here polls.
+// Serial numbers never reach the app (the dongle blanks them), so nothing
+// identifying is shown.
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
 import { type ChargeState, type ControllerFirmware, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
-import { compareOfficial } from "../../protocol/officialFirmware";
+import { compareOfficial, type OfficialStatus } from "../../protocol/officialFirmware";
 import type { OfficialFirmwareLookup } from "../api";
 import { BusyButton } from "../controls";
 import { type ControllerInfoData, loadControllerInfo } from "./loadControllerInfo";
 import Notice from "../Notice";
+import { SectionGroup } from "../accordion/Section";
 
 export const supportsControllerInfo = (identity: UseDs5BridgeResult["identity"]) => supportsFeature3(identity, 12, FEATURES3.controllerInfo);
 
@@ -52,17 +56,12 @@ const BUTTON_LABEL: Record<string, string> = {
   paddleRight: "desktop.live.part.paddle-r",
 };
 
-interface Props {
-  bridge: UseDs5BridgeResult;
-  // From the live input (0xF0): level in %, and the shown power (chargeState()).
-  batteryPct: number | null;
-  power: ChargeState | null;
-  // The controller's firmware report once read (null until then), for the drawing's player lights.
-  onFirmware?: (firmware: ControllerFirmware | null) => void;
-}
+export type ControllerInfoState = ReturnType<typeof useControllerInfo>;
 
-function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
-  const { t, i18n } = useTranslation();
+// The read: once per controller connection, and again on Refresh. (While none
+// is connected there are no numbers; a new one starts from blank.)
+// `onFirmware`: the firmware report once read (null until then), for the drawing's player lights.
+export function useControllerInfo(bridge: UseDs5BridgeResult, onFirmware?: (firmware: ControllerFirmware | null) => void) {
   const client = bridge.client;
   const supported = supportsControllerInfo(bridge.identity);
   const connected = !!bridge.identity?.controllerConnected;
@@ -81,8 +80,6 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
       setLoadTry((n) => n + 1);
     });
 
-  // Once per controller connection, and again on Refresh. (While none is
-  // connected the card shows no numbers; a new one starts from blank.)
   // lifetime: OK — cleanup: drops a late read and settles the Refresh promise
   useEffect(() => {
     if (!client || !supported || !connected) return;
@@ -119,10 +116,28 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
     };
   }, [client, supported, connected, loadTry]);
 
-  const firmware = info?.firmware ?? null;
+  // A controller gone: its numbers go with it (the next one is read afresh).
+  const shown = connected ? info : null;
+  const firmware = shown?.firmware ?? null;
   // lifetime: OK — acquires nothing (reports the firmware to the parent)
   useEffect(() => onFirmware?.(firmware), [firmware, onFirmware]);
 
+  const edge = shown?.edge ?? null;
+  const officialStatus: OfficialStatus | null = firmware && edge !== null && official?.latest ? compareOfficial(firmware.updateVersion, edge, official.latest) : null;
+  return { client, supported, connected, info: shown, error, setError, loading, official, officialStatus, loadTry, refresh };
+}
+
+interface Props {
+  data: ControllerInfoState;
+  // From the live input (0xF0): level in %, and the shown power (chargeState()).
+  batteryPct: number | null;
+  power: ChargeState | null;
+}
+
+// The section's body.
+export default function ControllerInfo({ data, batteryPct, power }: Props) {
+  const { t, i18n } = useTranslation();
+  const { client, supported, connected, info, error, setError, loading, official, officialStatus, loadTry, refresh } = data;
   if (!client) return null;
   const num = (n: number) => n.toLocaleString(i18n.resolvedLanguage);
   const hours = (s: number) => t("desktop.ctrlInfo.hours", { value: (s / 3600).toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) });
@@ -134,8 +149,6 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
   else {
     const chargeBad = power === "voltageError" || power === "temperatureError" || power === "chargeError";
     const fw = info?.firmware;
-    const edge = info?.edge ?? null;
-    const officialStatus = fw && edge !== null && official?.latest ? compareOfficial(fw.updateVersion, edge, official.latest) : null;
     const tm = info?.telemetry;
     // "Button presses and stick use": its own card below this one, from the
     // same read (shown only when the controller has the counters), one small
@@ -159,8 +172,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
         return { title, pairs };
       }).filter((g) => g.pairs.length > 0);
       presses = (
-        <section className="live-data-card ctrl-info">
-          <h3>{t("desktop.ctrlInfo.presses")}</h3>
+        <SectionGroup title={t("desktop.ctrlInfo.presses")}>
           <div className="ctrl-info-groups">
             {/* loop: HOT-PATH-OK — N ≤ 6 groups, memo component */}
             {groups.map((g) => (
@@ -170,7 +182,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
               </div>
             ))}
           </div>
-        </section>
+        </SectionGroup>
       );
     }
     const errors = tm ? tm.chargeErrors.voltage + tm.chargeErrors.temperature + tm.chargeErrors.pmic : 0;
@@ -273,21 +285,16 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
       </>
     );
   }
-  // A full-width card under the live data (the same card look), not in the
-  // settings panel: it's something to read, not a setting.
   return (
-    <>
-      <section className="live-data-card ctrl-info">
-        <h3>{t("desktop.ctrlInfo.title")}</h3>
-        {body}
-        {error && (
-          <Notice error onDismiss={() => setError(null)}>
-            {error}
-          </Notice>
-        )}
-      </section>
+    <div className="ctrl-info">
+      {error && (
+        <Notice error onDismiss={() => setError(null)}>
+          {error}
+        </Notice>
+      )}
+      {body}
       {presses}
-    </>
+    </div>
   );
 }
 
@@ -326,6 +333,12 @@ function Pair({ label, value }: { label: string; value: string }) {
   );
 }
 
-// The overview re-renders with every live input report: this card only
-// redraws when the battery level / state or the dongle connection changes.
-export default memo(ControllerInfo);
+// The section's status: the task (a newer official firmware), else the firmware and battery.
+export function controllerInfoStatus(t: (k: string, o?: Record<string, unknown>) => string, data: ControllerInfoState, batteryPct: number | null): { status: string | null; task: string | null } {
+  const s = data.officialStatus;
+  const task = s?.status === "newer" ? t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(s.version) }) : null;
+  const fw = data.info?.firmware;
+  // loop: NOT-WORTH — N = 2 parts of one status line
+  const status = [fw ? `${t("desktop.overview.firmware")} ${formatUpdateVersion(fw.updateVersion)}` : null, batteryPct !== null ? `${batteryPct}%` : null].filter(Boolean).join(" · ") || null;
+  return { status, task };
+}

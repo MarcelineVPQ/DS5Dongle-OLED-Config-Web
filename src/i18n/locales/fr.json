@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Alimentation",
       "idleDisconnect": "Déconnecter si inactif",
       "picoLed": "LED d'état du Pico",
       "brightness": "Luminosité",
       "zeroOff": "0 = jamais",
       "controllerWakes": "La manette réveille l'écran",
-      "usb": "USB",
       "usbHint": "Pris en compte après Reconnecter USB (le PC voit {{device}} se débrancher puis se rebrancher).",
       "speakerLevel": "Volume (haut-parleur de la manette)",
       "speakerLevelSub": "0 = inchangé ; au-dessus de 0, amplifie et peut saturer",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Micro coupé : {{device}} n’a pas pu créer le décodeur du micro de la manette au démarrage ({{kb}} Ko libres). Haut-parleur, retours haptiques, gâchettes et enregistrement fonctionnent toujours. Signale-le sur GitHub (issue #15) avec ta carte et ta manette."
     },
     "firmware": {
-      "installed": "Firmware installé",
-      "device": "Appareil",
       "rebooting": "Redémarrage… appuie sur la touche PS sur la manette dès que {{device}} est de retour.",
       "reboot": "Redémarrer {{device}}",
       "bootsel": "{{device, capitalize}} est maintenant un lecteur RP2350. Copie un .uf2 dessus, ou débranche le câble USB pour annuler.",
@@ -617,19 +613,13 @@
       "overview": "Ta manette",
       "app": "Réglages de l'app",
       "close": "Fermer",
-      "haptics": "Retour haptique",
-      "speaker": "Haut-parleur",
-      "mic": "Micro",
       "remap": "Attribution des touches",
-      "remapActs": "Agit comme",
       "remapDefault": "par défaut",
-      "remapHint": "L'attribution des touches est écrite sur {{device}} quand tu appuies sur Appliquer et marche dans tous les jeux, sans logiciel sur le PC.",
       "remapApply": "Appliquer l'attribution",
       "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
       "effect": "Effet",
-      "position": "Position",
       "touchHint": "Touche le pavé tactile pour voir tes doigts ici. Il n'y a rien à régler.",
       "finger": "Doigt {{n}}",
       "speakerLevel": "Niveau du haut-parleur",
@@ -653,36 +643,6 @@
         "2": "arme",
         "3": "vibration"
       },
-      "go": {
-        "intro": "Clique sur une partie du dessin avec la souris, ou choisis un réglage ici :",
-        "lightbar": {
-          "title": "Barre lumineuse",
-          "sub": "Mode et couleurs favorites"
-        },
-        "triggers": {
-          "title": "Gâchettes adaptatives",
-          "sub": "Essaie les effets sur L2 / R2"
-        },
-        "haptics": {
-          "title": "Retour haptique",
-          "sub": "Intensité des vibrations et Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Haut-parleur",
-          "sub": "Niveau, avec un indicateur en direct"
-        },
-        "mic": {
-          "title": "Micro",
-          "sub": "Le microphone intégré de la manette"
-        },
-        "slots": {
-          "title": "Emplacements d'association",
-          "sub": "Changer ou oublier des manettes"
-        },
-        "buttons": "Pour attribuer une touche ou un joystick, clique dessus sur le dessin.",
-        "bodyHint": "Retour haptique : intensité des vibrations et Audio Auto Haptics"
-      },
-      "hidePanel": "Masquer le panneau des réglages (la manette s'agrandit)",
       "autoInstall": "Installer les mises à jour automatiquement",
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
       "hapticSilent": "Silence : rien n'envoie de retour haptique en ce moment. Le niveau bouge quand un jeu joue du retour haptique, ou avec Audio Auto Haptics activé pendant que du son joue.",
@@ -695,8 +655,6 @@
       "headsetIn": "Casque branché",
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
-      "triggersTitle": "Gâchettes adaptatives",
-      "remapButton": "Attribuer {{button}}",
       "effectOther": "autre effet ({{n}})",
       "checkForUpdatesSub": "Désactivé : l’app ne va en ligne pour les mises à jour que quand tu appuies sur Rechercher des mises à jour."
     },
@@ -1215,7 +1173,6 @@
     },
     "calib": {
       "title": "Calibrage",
-      "shortcut": "Dérive des joysticks, zones inertes, course des gâchettes, gyro",
       "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans {{device}}, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
       "needsFirmware": "Mets à jour le firmware {{device_de}} pour calibrer.",
       "needsController": "Connectez une manette pour calibrer.",
@@ -1404,12 +1361,7 @@
         "dim": "Atténué (inactif)",
         "off": "Éteint (inactif)"
       },
-      "dimAfter": "S'atténue après",
-      "offAfter": "S'éteint après",
-      "wakeOnInput": "Se réveille avec la manette",
       "never": "jamais",
-      "yes": "oui",
-      "no": "non",
       "minutes": "{{n}} min",
       "mic": "Trames audio du micro",
       "timing": {
@@ -1511,16 +1463,11 @@
       "normal": "Boutons habituels",
       "needsFirmware": "Nécessite le dernier firmware sur {{device}} ({{deviceName}} → Mettre à jour).",
       "noneForGame": "Enregistre des dispositions sur la page des boutons : choisis un bouton de la manette.",
-      "allTitle": "Boutons",
-      "allHeading": "Tous les boutons",
       "allHint_one": "{{count}} bouton modifié par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "allHint_other": "{{count}} boutons modifiés par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "changed": "modifié",
       "notApplied": "pas encore appliqué",
       "notSaved": "pas encore enregistré",
-      "shortcutTitle": "Boutons et dispositions",
-      "shortcutSub": "Tous les boutons dans une liste, dispositions enregistrées pour les jeux",
-      "seeAll": "Voir tous les boutons et les dispositions",
       "off": "Désactivé",
       "noChanges": "Aucune modification (les boutons de la manette)",
       "loaded": "Disposition chargée : {{name}}",
@@ -1703,7 +1650,27 @@
       "hidden_other": "{{count}} masquées",
       "devOnly": "Versions de développement uniquement",
       "chapters_one": "{{count}} chapitre",
-      "chapters_other": "{{count}} chapitres"
+      "chapters_other": "{{count}} chapitres",
+      "buttonsChanged_one": "{{count}} touche modifiée",
+      "buttonsChanged_other": "{{count}} touches modifiées",
+      "slotActive": "Slot {{slot}} actif",
+      "moreInDiagnostics": "Plus dans Diagnostic"
+    },
+    "sections": {
+      "lightbar": "Barre lumineuse",
+      "triggers": "Gâchettes adaptatives",
+      "haptics": "Retour haptique",
+      "speaker": "Haut-parleur",
+      "mic": "Micro",
+      "buttons": "Attribution des touches",
+      "sticks": "Joysticks et calibrage",
+      "slots": "Emplacements d'association",
+      "firmware": "Firmware",
+      "device": "Redémarrage et réinitialisation",
+      "power": "Alimentation et veille",
+      "oled": "Écran OLED",
+      "usb": "USB et broche d'état",
+      "diagnostics": "Diagnostic"
     }
   },
   "ad": {

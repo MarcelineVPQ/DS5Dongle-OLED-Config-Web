@@ -10,7 +10,8 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
-import type { PanelView } from "../live/PartPanel";
+// What the tour sees and opens: the Controller page's open section (null: none).
+type PanelView = string | null;
 import { narratorIdle, say, sayInPassing, setNarrator, stopNarrator, useNarrator } from "../narrator";
 import { useWindowShown } from "../useWindowShown";
 import { logged } from "../../errorText";
@@ -80,16 +81,16 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { key: "welcome", target: null, enter: (go) => go("overview") },
+  { key: "welcome", target: null, enter: (go) => go(null) },
   { key: "press", target: ".live-ctl svg", pad: true }, // done: PRESS_GOAL different buttons (below)
   { key: "trigger", target: ".live-ctl svg", pad: true, done: (i) => !!i && (i.triggerLeft > 200 || i.triggerRight > 200) },
   { key: "data", target: ".live-readouts" },
   // The spotlight frames the strips and the touchpad between them, so a
   // click on the touchpad counts too (and opens the lightbar, below).
-  { key: "click", target: '.live-ctl [data-part="lightbar"]', done: (_i, v) => typeof v === "object" && (v.part === "lightbar" || v.part === "touchpad") },
-  // (opens the lightbar's panel if the click step was skipped)
-  { key: "panel", target: ".live-panel", enter: (go) => go({ part: "lightbar" }) },
-  { key: "list", target: ".live-shortcuts", enter: (go) => go("overview") },
+  { key: "click", target: '.live-ctl [data-part="lightbar"]', done: (_i, v) => v === "lightbar" || v === "buttons" },
+  // (opens the Light bar section if the click step was skipped)
+  { key: "panel", target: ".dk-split-panel", enter: (go) => go("lightbar") },
+  { key: "list", target: ".dk-accordion", enter: (go) => go(null) },
   { key: "save", target: ".dk-bar" },
   { key: "top", target: ".dk-top" },
   { key: "finish", target: null },
@@ -179,7 +180,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [onClickStep]);
   // lifetime: OK — acquires nothing (opens the lightbar panel)
   useEffect(() => {
-    if (onClickStep && typeof view === "object" && view.part === "touchpad") onView({ part: "lightbar" });
+    if (onClickStep && view === "buttons") onView("lightbar");
   }, [onClickStep, view, onView]);
   // lifetime: OK — cleanup turns the trigger preview off (step change, unmount)
   useEffect(() => {

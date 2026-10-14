@@ -121,13 +121,11 @@
       }
     },
     "settings": {
-      "power": "Energía",
       "idleDisconnect": "Desconectar en inactividad",
       "picoLed": "LED de estado del Pico",
       "brightness": "Brillo",
       "zeroOff": "0 = nunca",
       "controllerWakes": "Usar el mando activa la pantalla",
-      "usb": "USB",
       "usbHint": "Se aplican tras Reconectar USB (el PC ve {{device}} desconectarse y reconectarse).",
       "speakerLevel": "Volumen (altavoz para mando)",
       "speakerLevelSub": "0 = sin cambios; por encima de 0 amplifica y puede saturar",
@@ -252,8 +250,6 @@
       "micDecoderFailed": "Micrófono desactivado: {{device}} no pudo crear el decodificador del micrófono del mando al arrancar ({{kb}} KB libres). Altavoz, hápticos, gatillos y guardado siguen funcionando. Repórtalo en GitHub (issue #15) con tu placa y mando."
     },
     "firmware": {
-      "installed": "Firmware instalado",
-      "device": "Dispositivo",
       "rebooting": "Reiniciando… pulsa el botón PS en el mando cuando vuelva.",
       "reboot": "Reiniciar {{device}}",
       "bootsel": "{{device, capitalize}} es ahora una unidad RP2350. Copia un .uf2 en ella o desconecta el cable USB para cancelar.",
@@ -617,19 +613,13 @@
       "overview": "Tu mando",
       "app": "Ajustes de la app",
       "close": "Cerrar",
-      "haptics": "Retroalimentación háptica",
-      "speaker": "Altavoz",
-      "mic": "Micrófono",
       "remap": "Asignaciones de botones",
-      "remapActs": "Actúa como",
       "remapDefault": "predeterminado",
-      "remapHint": "Las asignaciones de botones se guardan en {{device}} al pulsar Aplicar y funcionan en todos los juegos, sin software en el PC.",
       "remapApply": "Aplicar asignaciones",
       "remapReset": "Restablecer todos los botones",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
       "effect": "Efecto",
-      "position": "Posición",
       "touchHint": "Toca el panel táctil para ver tus dedos aquí. No hay nada que configurar.",
       "finger": "Dedo {{n}}",
       "speakerLevel": "Nivel del altavoz ahora",
@@ -653,36 +643,6 @@
         "2": "arma",
         "3": "vibración"
       },
-      "go": {
-        "intro": "Haz clic con el ratón en una parte del dibujo, o elige un ajuste aquí:",
-        "lightbar": {
-          "title": "Barra luminosa",
-          "sub": "Modo y colores favoritos"
-        },
-        "triggers": {
-          "title": "Gatillos adaptativos",
-          "sub": "Prueba los efectos en L2 / R2"
-        },
-        "haptics": {
-          "title": "Retroalimentación háptica",
-          "sub": "Intensidad de la vibración y Audio Auto Haptics"
-        },
-        "speaker": {
-          "title": "Altavoz",
-          "sub": "Nivel, con medidor en directo"
-        },
-        "mic": {
-          "title": "Micrófono",
-          "sub": "El micrófono integrado del mando"
-        },
-        "slots": {
-          "title": "Ranuras de emparejamiento",
-          "sub": "Cambiar u olvidar mandos"
-        },
-        "buttons": "Para asignar un botón o un joystick, haz clic en él en el dibujo.",
-        "bodyHint": "Retroalimentación háptica: intensidad de la vibración y Audio Auto Haptics"
-      },
-      "hidePanel": "Ocultar el panel de ajustes (el mando se agranda)",
       "autoInstall": "Instalar actualizaciones automáticamente",
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
       "hapticSilent": "Silencio: ahora nada envía retroalimentación háptica. Se mueve cuando un juego reproduce retroalimentación háptica, o con Audio Auto Haptics activado mientras suena audio.",
@@ -695,8 +655,6 @@
       "headsetIn": "Auriculares conectados",
       "colorLabel": "Color:",
       "statusLabel": "Estado:",
-      "triggersTitle": "Gatillos adaptativos",
-      "remapButton": "Asignar {{button}}",
       "effectOther": "otro efecto ({{n}})",
       "checkForUpdatesSub": "Desactivado: la app solo se conecta para buscar actualizaciones cuando pulsas Buscar actualizaciones."
     },
@@ -1215,7 +1173,6 @@
     },
     "calib": {
       "title": "Calibración",
-      "shortcut": "Deriva de joysticks, zonas muertas, recorrido de gatillos, giroscopio",
       "intro": "Corrige la deriva de los joysticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en {{device}}, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
       "needsFirmware": "Actualiza el firmware {{device_de}} para calibrar.",
       "needsController": "Conecta un mando para calibrar.",
@@ -1404,12 +1361,7 @@
         "dim": "Atenuada (inactiva)",
         "off": "Apagada (inactiva)"
       },
-      "dimAfter": "Se atenúa tras",
-      "offAfter": "Se apaga tras",
-      "wakeOnInput": "Se activa con el mando",
       "never": "nunca",
-      "yes": "sí",
-      "no": "no",
       "minutes": "{{n}} min",
       "mic": "Tramas de audio del micrófono",
       "timing": {
@@ -1511,16 +1463,11 @@
       "normal": "Botones normales",
       "needsFirmware": "Necesita el firmware más reciente en {{device}} ({{deviceName}} → Actualizar).",
       "noneForGame": "Guarda distribuciones en la página de botones: elige un botón del mando.",
-      "allTitle": "Botones",
-      "allHeading": "Todos los botones",
       "allHint_one": "{{count}} botón cambiado respecto al mando. Elige en esta lista o haz clic en un botón del dibujo; ambos cambian lo mismo.",
       "allHint_other": "{{count}} botones cambiados respecto al mando. Elige en esta lista o haz clic en un botón del dibujo; ambos cambian lo mismo.",
       "changed": "cambiado",
       "notApplied": "sin aplicar",
       "notSaved": "sin guardar",
-      "shortcutTitle": "Botones y distribuciones",
-      "shortcutSub": "Todos los botones en una lista, distribuciones guardadas para juegos",
-      "seeAll": "Ver todos los botones y distribuciones guardadas",
       "off": "Desactivado",
       "noChanges": "Sin cambios (los botones del mando)",
       "loaded": "Distribución cargada: {{name}}",
@@ -1703,7 +1650,27 @@
       "hidden_other": "{{count}} ocultos",
       "devOnly": "Solo versiones de desarrollo",
       "chapters_one": "{{count}} capítulo",
-      "chapters_other": "{{count}} capítulos"
+      "chapters_other": "{{count}} capítulos",
+      "buttonsChanged_one": "{{count}} botón cambiado",
+      "buttonsChanged_other": "{{count}} botones cambiados",
+      "slotActive": "Slot {{slot}} activo",
+      "moreInDiagnostics": "Más en Diagnóstico"
+    },
+    "sections": {
+      "lightbar": "Barra luminosa",
+      "triggers": "Gatillos adaptativos",
+      "haptics": "Retroalimentación háptica",
+      "speaker": "Altavoz",
+      "mic": "Micrófono",
+      "buttons": "Asignaciones de botones",
+      "sticks": "Joysticks y calibración",
+      "slots": "Ranuras de emparejamiento",
+      "firmware": "Firmware",
+      "device": "Reinicio y restablecimiento",
+      "power": "Energía y suspensión",
+      "oled": "Pantalla OLED",
+      "usb": "USB y pin de estado",
+      "diagnostics": "Diagnóstico"
     }
   },
   "ad": {

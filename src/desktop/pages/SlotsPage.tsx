@@ -29,6 +29,7 @@ function formatMac(addr: Uint8Array): string {
   return [...addr].map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(":");
 }
 
+// The Pairing slots section's body (Controller page); its slot poll runs only while it's open.
 export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
   const client = bridge.client;
@@ -87,95 +88,92 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
   const describe = (c: { model: "dualsense" | "edge"; colorway: string } | undefined) =>
     c ? `${t(c.model === "edge" ? "desktop.slots.edge" : "desktop.slots.dualsense")} · ${COLORWAYS[c.colorway]?.name ?? c.colorway}` : null;
   return (
-    <div className="dk-grid">
-      <section className="dk-card" style={{ gridColumn: "1 / -1" }}>
-        <h2>{t("desktop.slots.title", "Pairing slots")}</h2>
-        <p className="dk-hint">
-          {t(
-            "desktop.slots.hint",
-            "Each slot remembers one controller. Switching disconnects the current controller; press PS on the one in the new slot. To pair a new controller into an empty slot, switch to it and hold Create + PS.",
-          )}
-        </p>
-        {error && (
-          <Notice error onDismiss={() => setError(null)}>
-            {error}
-          </Notice>
+    <>
+      <p className="dk-hint">
+        {t(
+          "desktop.slots.hint",
+          "Each slot remembers one controller. Switching disconnects the current controller; press PS on the one in the new slot. To pair a new controller into an empty slot, switch to it and hold Create + PS.",
         )}
-        {/* Real occupancy only: the pretend controllers fill free slots in the table, not on the board. */}
-        {v && allSlotsTaken(v.slots) && (
-          <Notice role="status" closable>
-            {t("desktop.slots.allTaken", { total: v.slots.occupied.length })}
-          </Notice>
-        )}
-        <table className="dk-table slots">
-          <colgroup>
-            <col className="slot" />
-            <col />
-            <col className="acts" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{t("desktop.slots.slot", "Slot")}</th>
-              <th>{t("desktop.slots.controller", "Controller")}</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {/* loop: HOT-PATH-OK — N = 4 slots; re-render per 1.5 s slot poll */}
-            {[0, 1, 2, 3].map((i) => {
-              const fakeHere = fake.placed[i];
-              const active = fakeSlot !== null ? fakeSlot === i : id?.currentSlot === i;
-              const occupied = (v?.slots.occupied[i] ?? false) || !!fakeHere;
-              const mac = v && v.slots.occupied[i] ? formatMac(v.slots.addrs[i]) : null;
-              const name = fakeHere ? `${describe(fakeHere)} (${t("desktop.slots.pretend")})` : mac ? describe(memory[mac]) : null;
-              return (
-                <tr key={i}>
-                  <td>{i}</td>
-                  <td title={mac ?? undefined}>{v ? (occupied ? (name ?? <span className="dk-mono">{mac}</span>) : t("desktop.slots.empty", "Empty")) : "—"}</td>
-                  <td>
-                    <div className="acts-cell">
-                      {active ? (
-                        <span className="dk-chip ok">{t("desktop.slots.active", "Active")}</span>
-                      ) : (
-                        <BusyButton
-                          className="dk-btn"
-                          disabled={!client || busy}
-                          onClick={() =>
-                            // A pretend controller, or back from one to the real slot: shown only, nothing sent.
-                            fakeHere ? fake.switchTo(fakeHere) : fakeSlot !== null && id?.currentSlot === i ? fake.switchTo(null) : act(() => switchSlot(i))
-                          }
-                        >
-                          {t("desktop.slots.switch", "Switch to")}
-                        </BusyButton>
-                      )}
-                      <BusyButton className="dk-btn danger" disabled={!client || busy || !occupied || !!fakeHere} onClick={() => act(() => client!.forgetSlot(i))}>
-                        {t("desktop.slots.forget", "Forget")}
+      </p>
+      {error && (
+        <Notice error onDismiss={() => setError(null)}>
+          {error}
+        </Notice>
+      )}
+      {/* Real occupancy only: the pretend controllers fill free slots in the table, not on the board. */}
+      {v && allSlotsTaken(v.slots) && (
+        <Notice role="status" closable>
+          {t("desktop.slots.allTaken", { total: v.slots.occupied.length })}
+        </Notice>
+      )}
+      <table className="dk-table slots">
+        <colgroup>
+          <col className="slot" />
+          <col />
+          <col className="acts" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>{t("desktop.slots.slot", "Slot")}</th>
+            <th>{t("desktop.slots.controller", "Controller")}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {/* loop: HOT-PATH-OK — N = 4 slots; re-render per 1.5 s slot poll */}
+          {[0, 1, 2, 3].map((i) => {
+            const fakeHere = fake.placed[i];
+            const active = fakeSlot !== null ? fakeSlot === i : id?.currentSlot === i;
+            const occupied = (v?.slots.occupied[i] ?? false) || !!fakeHere;
+            const mac = v && v.slots.occupied[i] ? formatMac(v.slots.addrs[i]) : null;
+            const name = fakeHere ? `${describe(fakeHere)} (${t("desktop.slots.pretend")})` : mac ? describe(memory[mac]) : null;
+            return (
+              <tr key={i}>
+                <td>{i}</td>
+                <td title={mac ?? undefined}>{v ? (occupied ? (name ?? <span className="dk-mono">{mac}</span>) : t("desktop.slots.empty", "Empty")) : "—"}</td>
+                <td>
+                  <div className="acts-cell">
+                    {active ? (
+                      <span className="dk-chip ok">{t("desktop.slots.active", "Active")}</span>
+                    ) : (
+                      <BusyButton
+                        className="dk-btn"
+                        disabled={!client || busy}
+                        onClick={() =>
+                          // A pretend controller, or back from one to the real slot: shown only, nothing sent.
+                          fakeHere ? fake.switchTo(fakeHere) : fakeSlot !== null && id?.currentSlot === i ? fake.switchTo(null) : act(() => switchSlot(i))
+                        }
+                      >
+                        {t("desktop.slots.switch", "Switch to")}
                       </BusyButton>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="dk-ctl" style={{ justifyContent: "flex-end", padding: "8px 0 4px" }}>
-          {confirmWipe ? (
-            <>
-              <span className="dk-bad">{t("desktop.slots.wipeConfirm", "Forget all four controllers?")}</span>
-              <button type="button" className="dk-btn" onClick={() => setConfirmWipe(false)}>
-                {t("desktop.common.cancel", "Cancel")}
-              </button>
-              <BusyButton className="dk-btn danger" disabled={busy} onClick={() => act(() => client!.wipeSlots())}>
-                {t("desktop.slots.wipe", "Forget all")}
-              </BusyButton>
-            </>
-          ) : (
-            <button type="button" className="dk-btn danger" disabled={!client || busy} onClick={() => setConfirmWipe(true)}>
-              {t("desktop.slots.wipe", "Forget all")}
+                    )}
+                    <BusyButton className="dk-btn danger" disabled={!client || busy || !occupied || !!fakeHere} onClick={() => act(() => client!.forgetSlot(i))}>
+                      {t("desktop.slots.forget", "Forget")}
+                    </BusyButton>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="dk-row-btns dk-row-btns-end">
+        {confirmWipe ? (
+          <>
+            <span className="dk-bad">{t("desktop.slots.wipeConfirm", "Forget all four controllers?")}</span>
+            <button type="button" className="dk-btn" onClick={() => setConfirmWipe(false)}>
+              {t("desktop.common.cancel", "Cancel")}
             </button>
-          )}
-        </div>
-      </section>
-    </div>
+            <BusyButton className="dk-btn danger" disabled={busy} onClick={() => act(() => client!.wipeSlots())}>
+              {t("desktop.slots.wipe", "Forget all")}
+            </BusyButton>
+          </>
+        ) : (
+          <button type="button" className="dk-btn danger" disabled={!client || busy} onClick={() => setConfirmWipe(true)}>
+            {t("desktop.slots.wipe", "Forget all")}
+          </button>
+        )}
+      </div>
+    </>
   );
 }

@@ -295,12 +295,6 @@ html[data-theme="dark"] .dk {
 }
 
 /* ---- Layout blocks ---- */
-.dk-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-  gap: var(--dk-gap);
-  align-items: start;
-}
 .dk-card {
   border: 1px solid var(--border-default);
   border-radius: var(--dk-radius);
@@ -805,9 +799,6 @@ html[data-theme="dark"] .dk {
 }
 .dk-advanced[open] > summary {
   margin-bottom: 6px;
-}
-.dk-advanced .dk-grid {
-  margin-top: 8px;
 }
 .dk-advanced .dk-card {
   border: 0;
@@ -1389,24 +1380,6 @@ html[data-theme="light"] .live-ctl {
 .dk-icon-btn {
   padding: 0 7px;
 }
-/* The live screen fills the body; the panel scrolls on its own. */
-.dk-body.dk-body-live {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.live-view {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: var(--dk-gap);
-  position: relative;
-  isolation: isolate; /* the art backdrop (ArtBackdrop.tsx) layers inside it */
-}
-.live-view.collapsed {
-  grid-template-columns: minmax(0, 1fr);
-}
 .live-stage {
   min-height: 0;
   /* Vertical scroll only, with its space always reserved: a glow or a longer
@@ -1452,27 +1425,6 @@ html[data-theme="light"] .live-ctl {
   margin: 0;
   font-size: 12px;
   color: var(--text-muted);
-}
-.live-panel {
-  min-height: 0;
-  overflow: auto;
-  padding-right: 2px;
-}
-.live-panel .dk-grid,
-.gp-sections .dk-grid {
-  grid-template-columns: minmax(0, 1fr);
-}
-.live-panel-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.live-panel-head h2 {
-  margin: 0;
-  flex: 1;
-  font-family: var(--font-display);
-  font-size: 15px;
-  color: var(--text-strong);
 }
 .live-meter {
   position: relative;
@@ -1566,12 +1518,6 @@ html[data-theme="light"] .live-ctl {
 }
 /* Narrow windows: the panel goes under the controller. */
 @media (max-width: 860px) {
-  .dk-body.dk-body-live {
-    overflow: auto;
-  }
-  .live-view {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .live-stage .live-ctl {
     max-height: 50vh;
   }
@@ -1665,33 +1611,6 @@ html[data-theme="light"] .live-ctl {
   margin: 0;
 }
 
-/* Overview shortcuts to each panel. */
-.live-shortcuts {
-  display: grid;
-  gap: 6px;
-  margin: 8px 0;
-}
-.live-shortcut {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  padding: 8px 10px;
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  background: var(--bg-inset);
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.live-shortcut span {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-.live-shortcut:hover,
-.live-shortcut:focus-visible {
-  border-color: var(--dk-accent);
-  outline: none;
-}
 /* The body opens haptics: show it's clickable like the buttons are. */
 .live-ctl [data-part="body"] {
   transition: filter 120ms;
@@ -3328,11 +3247,6 @@ html[data-cards-translucent] .gp-sections .dk-card {
 }
 
 /* ---- Controller page backdrop (ArtBackdrop.tsx) ---- */
-.live-view > .live-stage,
-.live-view > .live-panel {
-  position: relative;
-  z-index: 1;
-}
 .art-bd {
   position: absolute;
   inset: 0;
@@ -3726,18 +3640,15 @@ html[data-glass] .rail-label {
 .live-hero.titled .live-ctl svg {
   max-height: max(260px, calc(100vh - 532px));
 }
-/* The settings panel (inspector), regular glass: docked against the rail,
-   full height, more frost; the cards inside are standard (translucent, no
-   lensing) so there's no glass on glass. */
-html[data-glass] .live-panel {
-  position: relative;
-  margin: calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) calc(-1 * var(--dk-pad)) 0;
-  padding: var(--dk-pad) 10px;
+/* The accordion panel (inspector), regular glass: full height against the
+   rail, more frost; the sections inside are standard surfaces (translucent,
+   no lensing) so there's no glass on glass. */
+html[data-glass] .dk-split-panel {
   backdrop-filter: var(--glass-clear, blur(18px));
   background: rgb(8 10 16 / 30%); /* theme-exempt: Liquid Glass light/shade layer */
   box-shadow: -8px 0 24px rgb(0 0 0 / 22%);
 }
-html[data-glass] .live-panel::before {
+html[data-glass] .dk-split-panel::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
@@ -3745,11 +3656,11 @@ html[data-glass] .live-panel::before {
   background: linear-gradient(to bottom, rgb(255 255 255 / 35%), rgb(255 255 255 / 8%)); /* theme-exempt: Liquid Glass light/shade layer */
   pointer-events: none;
 }
-html[data-glass] .live-panel .dk-card {
+html[data-glass] .dk-split-panel .dk-sec {
   background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
 }
 @media (prefers-reduced-transparency: reduce) {
-  html[data-glass] .live-panel {
+  html[data-glass] .dk-split-panel {
     backdrop-filter: none !important;
     background: var(--bg-panel);
   }
@@ -3785,7 +3696,7 @@ html[data-reduce-motion] .dk-bar .dk-btn:active {
 }
 /* In the settings panel the language button sits at the left: open the menu
    to the right, so it stays inside the panel instead of being cut off. */
-.live-panel .language-toggle-menu {
+.dk-split-panel .language-toggle-menu {
   right: auto;
   left: 0;
 }
@@ -3812,7 +3723,6 @@ html[data-cards-translucent] .live-data-card {
 }
 .live-tile-button,
 .lib-tile,
-.live-shortcut,
 .lib-row,
 .dk-btn {
   transition:
@@ -3822,8 +3732,7 @@ html[data-cards-translucent] .live-data-card {
     border-color 0.15s;
 }
 .live-tile-button:hover,
-.lib-tile:hover,
-.live-shortcut:hover {
+.lib-tile:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-2);
 }
@@ -3851,7 +3760,6 @@ html[data-cards-translucent] .live-data-card {
 @media (prefers-reduced-motion: reduce) {
   .live-tile-button:hover,
   .lib-tile:hover,
-  .live-shortcut:hover,
   .dk-btn:not(:disabled):hover,
   .lib-row:hover {
     transform: none;
@@ -3860,7 +3768,6 @@ html[data-cards-translucent] .live-data-card {
 }
 html[data-reduce-motion] .live-tile-button:hover,
 html[data-reduce-motion] .lib-tile:hover,
-html[data-reduce-motion] .live-shortcut:hover,
 html[data-reduce-motion] .dk-btn:not(:disabled):hover,
 html[data-reduce-motion] .lib-row:hover {
   transform: none !important;
@@ -4547,32 +4454,25 @@ html[data-cards-translucent] .dash-card {
 }
 /* All buttons: one row per button (name, acts as, changed / not applied). */
 .dk-buttons-table {
-  display: grid;
-  /* name (with its changed / not applied note under it), then the picker */
-  grid-template-columns: minmax(84px, auto) minmax(0, 1fr);
-  gap: 4px 8px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   margin-bottom: 8px;
 }
-.dk-buttons-row {
-  display: contents;
+/* Name (with its changed / not applied note under it), then the picker. */
+.dk-sec-body .dk-buttons-row .dk-row {
+  grid-template-columns: minmax(84px, 1fr) minmax(0, 1.4fr);
+  padding: 2px 0;
 }
-.dk-buttons-row.changed label {
+.dk-buttons-row.changed .dk-label {
   font-weight: 700;
 }
 /* The row of the button picked on the drawing (or focused here). */
-.dk-buttons-row.focused label {
+.dk-buttons-row.focused .dk-label {
   color: var(--dk-sel-text);
 }
 .dk-buttons-row.focused select {
   border-color: var(--dk-sel-border);
   box-shadow: 0 0 0 2px var(--dk-sel-bg);
-}
-.dk-buttons-row label small {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 10.5px;
-  font-weight: 400;
 }
 .dk-buttons-row select {
   width: 100%;
@@ -4676,19 +4576,14 @@ html[data-cards-translucent] .dash-card {
 /* Focus moved here after picking a page in the rail (DesktopApp): no ring for
    a pointer pick; keyboard users still see :focus-visible. */
 main.dk-body:focus:not(:focus-visible),
-.live-panel-head h2:focus:not(:focus-visible),
-.dk-page-head h1:focus:not(:focus-visible),
 .dk-split-head h2:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Controller info (ControllerInfo.tsx): full width under the live data, one
-   column per child (battery & firmware · lifetime), one on narrow. The
-   presses card below it puts its groups on one line when they fit and
-   wraps them when they don't (each group keeps its natural width). */
-.live-readouts > .ctrl-info {
-  margin-top: 8px;
-}
+/* Controller info (ControllerInfo.tsx, its section): one column per child
+   (battery & firmware · lifetime) where the body is wide, else one. The
+   presses group puts its groups on one line when they fit and wraps them
+   when they don't (each group keeps its natural width). */
 .ctrl-info-groups {
   display: flex;
   flex-wrap: wrap;
@@ -4902,6 +4797,88 @@ main.dk-body:focus:not(:focus-visible),
 .dk-sec-body .dk-row-btns {
   padding: 6px 0 2px;
 }
+/* A group of rows with its small heading (SectionGroup: what a card was). */
+.dk-sec-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+}
+.dk-sec-body > .dk-sec-group:first-child {
+  margin-top: 0;
+  border-top: 0;
+}
+.dk-sec-group > .dk-subhead {
+  margin: 6px 0 2px;
+}
+.dk-sec-body p {
+  margin: 4px 0;
+}
+.dk-row-btns-end {
+  justify-content: flex-end;
+  align-items: center;
+}
+/* The live pages' main view (the drawing, the Pico 2 W console) fills the
+   split's main column; that column scrolls. */
+.dk-split-main > .live-stage {
+  min-height: 100%;
+  overflow: visible;
+  padding: 0;
+}
+/* Choices as a grid of buttons (the light bar's modes, the trigger test) take the body's width. */
+.dk-sec-body .dk-row.stack > .dk-ctl {
+  width: 100%;
+}
+.dk-sec-body .dk-presets {
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+.dk-sec-body .dk-presets .dk-btn {
+  height: auto;
+  min-height: 32px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+/* The Pico 2 W page: the dials right under the console. */
+.dongle-main {
+  justify-content: flex-start;
+}
+.dongle-main > .dcon {
+  margin-bottom: 0;
+}
+.dash-more {
+  justify-self: start;
+  margin-top: 4px;
+}
+/* The Diagnostics section's readouts: the dashboard's pieces, at the panel's width. */
+.dash.dash-sec {
+  margin: 0;
+  width: 100%;
+}
+.dash-sec .dash-facts {
+  align-content: start;
+}
+/* The four graphs two by two at the panel's width (the dashboard's own
+   rule would stack them one per row there). */
+.dash.dash-sec .dash-row,
+.dash.dash-sec .dash-row > :last-child:nth-child(n) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: auto;
+}
+.dash-sec .dash-card {
+  padding: 8px 10px;
+}
+/* The timings at the panel's width: the stage names and the column heads wrap, the numbers don't. */
+.dash-sec .dash-timings {
+  grid-template-columns: minmax(0, 1fr) auto auto minmax(28px, 56px);
+  gap: 3px 10px;
+}
+.dash-sec .dash-timings > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 /* Rows side by side where the body is wide (App settings → Appearance). */
 .dk-sec-cols {
   display: grid;
@@ -4941,30 +4918,13 @@ main.dk-body:focus:not(:focus-visible),
   }
 }
 
-/* App settings: one centered, full-width accordion. */
-.dk-app-settings {
-  max-width: 900px;
-  margin: 0 auto;
-}
-.dk-page-head {
-  display: flex;
-  flex-direction: column;
-  padding: 4px 2px 8px;
-}
-.dk-page-head h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-strong);
-}
-.dk-page-sub,
 .dk-split-sub {
   color: var(--text-muted);
   font-size: var(--dk-small);
 }
 
-/* A page with the accordion panel at the right (About; the others follow).
+/* Every page with the accordion panel at the right (the Controller and
+   Pico 2 W pages, App settings, About; the Games pages follow).
    The body is the container: below ~760 px the panel is a drawer. */
 .dk-body.dk-body-split {
   display: flex;
@@ -4977,7 +4937,7 @@ main.dk-body:focus:not(:focus-visible),
   margin: var(--dk-pad) var(--dk-pad) 0;
 }
 .dk-split {
-  --dk-acc-w: 372px;
+  --dk-acc-w: 390px;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -5007,6 +4967,7 @@ main.dk-body:focus:not(:focus-visible),
   display: inline-flex;
 }
 .dk-split-panel {
+  position: relative;
   min-height: 0;
   overflow-y: auto;
   display: flex;

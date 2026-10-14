@@ -1,17 +1,21 @@
-// The one screen: the live controller on the left, the selected part's
-// settings on the right, the controller's status under it. Everything about
-// the controller and the dongle is configured from here.
-import DongleConsole, { supportsOledMirror, useOledFrame } from "../dongle/DongleConsole";
+// The live pages: the controller drawing (or, on the Pico 2 W page, the
+// board's console and dials) as the main view on the left, the page's
+// accordion on the right (SplitView). The Controller page's sections are in
+// PartPanel.tsx, the Pico 2 W page's in dongle/DonglePage.tsx; App settings
+// shows its own sections next to the same drawing, so a theme or color change
+// shows on it live. Everything about the controller and the dongle is
+// configured from here.
+import { supportsOledMirror, useOledFrame } from "../dongle/DongleConsole";
 import { knob, useKnob } from "../lookKnobs";
 import HdrGlow from "./HdrGlow";
-import DongleDashboard from "../dongle/DongleDashboard";
+import DonglePage from "../dongle/DonglePage";
 import { hasColorwayColor } from "./controllerAccent";
 import { useDevPreview, useShownIdentity } from "../devPreview";
 import { REGULAR_GLASS } from "../glass/variants";
 import { useGlass } from "../glass/useGlass";
 import { GLASS_KEY } from "../glass/glassPref";
 import { useFlagPref } from "../storage";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { playerNumber } from "../../protocol/bridgeClient";
@@ -25,24 +29,44 @@ import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
 import LiveController from "./LiveController";
 import LiveData from "./LiveData";
-import ControllerInfo from "./ControllerInfo";
+import { useControllerInfo } from "./ControllerInfo";
 import LiveStrip from "./LiveStrip";
-import PartPanel, { type PanelView } from "./PartPanel";
+import ControllerSections from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
+import { PANEL_HIDDEN_KEY, SplitView } from "../accordion/Section";
+import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion";
+import { SECTIONS, type SectionId } from "../accordion/sections";
+import AppSettingsPage from "../pages/AppSettingsPage";
+import Notice from "../Notice";
 import { useRemap } from "./useRemap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { logged } from "../../errorText";
 
-const PANEL_KEY = "ds5.panelHidden";
 // The rail's Controller item, clicked while already on the controller: show or
 // hide the settings panel (the panel's own hide button does the same).
 export const PANEL_TOGGLE_EVENT = "ds5:toggle-panel";
+
+// Which page: the Controller page, the Pico 2 W page or App settings.
+export type PanelView = "overview" | "dongle" | "app";
+
+// The section a click on a part of the drawing opens.
+export function sectionForPart(part: PartId): SectionId<"controller"> {
+  if (part === "lightbar") return "lightbar";
+  if (part === "l2" || part === "r2") return "triggers";
+  if (part === "body") return "haptics";
+  if (part === "speaker") return "speaker";
+  if (part === "mute") return "mic";
+  if (part === "ps") return "slots";
+  if (part === "stick-l" || part === "stick-r") return "sticks";
+  return "buttons"; // the remap-only buttons, the touch pad, the Edge's Fn buttons and paddles
+}
 
 interface Props {
   bridge: UseDs5BridgeResult;
   fw: FirmwareUpdate;
   view: PanelView;
+  // App settings: a click on the drawing goes to the Controller page.
   onView: (view: PanelView) => void;
 }
 
@@ -60,12 +84,14 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const look = colorway(id?.colorwayCode ?? null, id?.model ?? null);
   // Its colors, with the player's own on top (App settings).
   const lookColors = useControllerColors(id?.colorwayCode ?? null, id?.model ?? null);
-  // Its player lights' wiring, from the firmware report the Controller info card reads.
+  // Its player lights' wiring, from the firmware report Controller info reads
+  // (once per connection, kept here: the section's status and task need it folded too).
   const [ctrlFirmware, setCtrlFirmware] = useState<ControllerFirmware | null>(null);
+  const info = useControllerInfo(bridge, setCtrlFirmware);
   const playerWiring = playerLightWiring(on ? ctrlFirmware?.hwInfo : null);
   const modelName = id?.model === "edge" ? "DualSense Edge" : "DualSense";
   const liveCapable = supportsLiveInput(bridge.identity);
-  // The drawing's live input isn't shown on the Dongle page: no polling there.
+  // The drawing's live input isn't shown on the Pico 2 W page: no polling there.
   const dongleView = view === "dongle";
   const input = useLiveInput(client, on && liveCapable && !dongleView);
   const liveLightbar = useLiveLightbar(client, on && liveCapable && !dongleView);
@@ -103,31 +129,41 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     return set;
   }, [remap.device]);
 
+  // The accordion: pins per board and pairing slot.
+  const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
   // The Buttons list's focused button (from the drawing or a row) and the
   // row under the pointer: both light up on the drawing.
   const [buttonFocus, setButtonFocus] = useState<number | null>(null);
   const [buttonHover, setButtonHover] = useState<number | null>(null);
-  const openButtons = (index: number | null) => {
-    setButtonFocus(index);
-    onView("buttons");
-  };
+  // The part clicked last: lit while its section is open.
+  const [picked, setPicked] = useState<PartId | null>(null);
   const listPart = (i: number | null) => (i === null ? null : partForRemapIndex(i));
-  const selected = typeof view === "object" ? view.part : view === "buttons" ? (listPart(buttonHover) ?? listPart(buttonFocus)) : null;
-  // A click on the drawing: in the Buttons list a button just gets focused
-  // there (no jump away); a remap-only button opens the list at its row.
+  const buttonsOpen = view === "overview" && acc.isOpen("buttons");
+  const selected = buttonsOpen ? (listPart(buttonHover) ?? listPart(buttonFocus)) : picked && view === "overview" && acc.isOpen(sectionForPart(picked)) ? picked : null;
+  // A click on the drawing opens its section; a button opens Button
+  // assignments at its row (with the list open already, the row just gets
+  // the focus: no jump away).
   const pickPart = (part: PartId) => {
     const index = REMAP_INDEX[part];
     // The Edge's Fn buttons and paddles live in the Buttons list too (firmware with protocol 1.9).
     const edgeRow = remap.extraDevice ? EDGE_REMAP_ROWS.indexOf(part) : -1;
-    if (edgeRow >= 0) openButtons(16 + edgeRow);
-    else if (index !== undefined && (view === "buttons" || REMAP_ONLY.has(part))) openButtons(index);
-    else onView({ part });
+    const row = edgeRow >= 0 ? 16 + edgeRow : index !== undefined && (buttonsOpen || REMAP_ONLY.has(part)) ? index : null;
+    const section = row !== null ? "buttons" : sectionForPart(part);
+    if (view === "app") {
+      // App settings: to the Controller page's section.
+      revealSection("controller", section, row !== null ? `btn-${row}` : undefined);
+      onView("overview");
+      return;
+    }
+    setPicked(part);
+    if (row !== null) {
+      setButtonFocus(row);
+      if (!buttonsOpen) acc.reveal("buttons", `btn-${row}`);
+    } else acc.reveal(section);
   };
 
-  // The settings panel can be hidden on the start view, so the controller
-  // gets the whole width; opening any part (or "Settings") brings it back.
-  const [panelHidden, hidePanel] = useFlagPref(PANEL_KEY);
-  const collapsed = panelHidden && view === "overview";
+  // The settings panel can be hidden, so the controller gets the whole width.
+  const [panelHidden, hidePanel] = useFlagPref(PANEL_HIDDEN_KEY("controller"));
   // The model title fits the gap between the drawing's triggers (~46% of its
   // width; a bold cap is ~0.6 em), measured from the drawing as drawn.
   const heroRef = useRef<HTMLDivElement>(null);
@@ -163,7 +199,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // Glass style: the settings panel is an inspector, the regular variant
   // (more frost, for text); its cards stay standard surfaces.
   const [glass] = useFlagPref(GLASS_KEY);
-  const panelGlass = useGlass(glass && !collapsed, REGULAR_GLASS);
+  const panelGlass = useGlass(glass && !(panelHidden && view === "overview"), REGULAR_GLASS);
 
   // The tour points at the settings list, so it brings the panel back.
   // lifetime: OK — cleanup: removes the tour listener
@@ -173,141 +209,151 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     window.addEventListener(TOUR_EVENT, show);
     return () => window.removeEventListener(TOUR_EVENT, show);
   }, [hidePanel]);
-  // lifetime: HOT-ALLOC — no deps: re-adds its window listener every render (~30 Hz live input)
+  // lifetime: OK — cleanup: removes the rail's toggle listener (unmount / the hidden state changes)
   useEffect(() => {
-    const toggle = () => {
-      if (collapsed) hidePanel(false);
-      else {
-        hidePanel(true);
-        onView("overview");
-      }
-    };
-    // lifetime: OK — removed in the effect cleanup (re-added per render: see the effect above)
+    const toggle = () => hidePanel(!panelHidden);
+    // lifetime: OK — removed in the effect cleanup
     window.addEventListener(PANEL_TOGGLE_EVENT, toggle);
     return () => window.removeEventListener(PANEL_TOGGLE_EVENT, toggle);
-  });
+  }, [panelHidden, hidePanel]);
+  // The Tour's view: the open section.
+  // loop: NOT-WORTH — N = 9 sections; per render (a Set lookup each)
+  const openSection = SECTIONS.controller.find((x) => acc.isOpen(x)) ?? null;
+  const reveal = acc.reveal;
+  const tourView = useCallback(
+    (section: string | null) => {
+      if (section) reveal(section);
+    },
+    [reveal],
+  );
+  const target = useProfileTarget();
 
-  return (
-    <div className={`live-view${collapsed ? " collapsed" : ""}`}>
-      <div className="live-stage">
-        {view === "dongle" ? (
-          <>
-            <DongleConsole client={client} identity={id ?? bridge.identity} controllerOn={on} frame={oled} />
-            <DongleDashboard bridge={bridge} frame={oled.frame} rssi={status?.rssi ?? null} />
-          </>
-        ) : (
-          <>
-            {/* Magazine-cover title: the model in big caps behind the drawing,
+  if (view === "dongle") return <DonglePage bridge={bridge} fw={fw} identity={id ?? bridge.identity} controllerOn={on} oled={oled} rssi={status?.rssi ?? null} panelRef={panelGlass} />;
+
+  const main = (
+    <div className="live-stage">
+      {/* Magazine-cover title: the model in big caps behind the drawing,
                 which overlaps its lower part; "Model:" small above it. */}
-            <div ref={heroRef} className={`live-hero${on && id?.model ? " titled" : ""}`} style={{ ["--title-size" as string]: `${titleSize}px` }}>
-              {on && id?.model && (
-                <div className="live-title" aria-hidden="true">
-                  <span className="live-title-label">
-                    {t("desktop.live.modelLabel")}
-                    {preview && <span className="live-preview-badge">{t("desktop.dev.previewBadge")}</span>}
-                  </span>
-                  <span className="live-title-name">{modelName}</span>
-                </div>
-              )}
-              <LiveController
-                model={shownModel}
-                input={input}
-                lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
-                playerLeds={on ? (id?.playerLeds ?? 0) : 0}
-                playerWiring={playerWiring}
-                colors={on ? lookColors : null}
-                selected={selected}
-                remapped={remapped}
-                onSelect={pickPart}
-              />
-              {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
-            </div>
-            {on && id?.model && (
-              <div className="live-specs">
-                {look && (
-                  <span className="live-spec">
-                    <span className="live-title-label">{t("desktop.live.colorLabel")}</span>
-                    <span className={`live-spec-value${hasColorwayColor(id?.colorwayCode ?? null) ? " accent" : ""}`}>{look.name}</span>
-                  </span>
-                )}
-                <span className="live-spec">
-                  <span className="live-title-label">{t("desktop.live.statusLabel")}</span>
-                  <span className="live-spec-value">
-                    <ConnectedDot />
-                    {t("desktop.overview.connected", "Connected")}
-                  </span>
-                </span>
-              </div>
-            )}
-            <div className="live-readouts">
-              {on && id && liveCapable && (
-                <LiveStrip
-                  id={id}
-                  power={power}
-                  playerWiring={playerWiring}
-                  rssi={status?.rssi ?? null}
-                  lightbarMode={bridge.config?.lightbarMode ?? null}
-                  lightbar={liveLightbar ?? id.lightbar}
-                  onLightbar={() => onView({ part: "lightbar" })}
-                />
-              )}
-              {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
-              {on && liveCapable && <ControllerInfo bridge={bridge} batteryPct={batteryPct} power={input ? power : null} onFirmware={setCtrlFirmware} />}
-            </div>
-            {!(on && id && liveCapable) && (
-              <div className="live-status">
-                <span className={on ? "dk-good" : ""}>
-                  <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press the PS button)")) : "—"}</strong>
-                </span>
-                <span>
-                  {t("desktop.controller.battery", "Battery")}{" "}
-                  <strong>
-                    {on && id?.battery !== null && id?.battery !== undefined ? `${id.battery}%` : "—"}
-                    {power === "charging" || power === "pluggedIn" || power === "full" ? ` · ${t(`desktop.ctrlInfo.chargeState.${power}`)}` : ""}
-                  </strong>
-                </span>
-                <span>
-                  {t("desktop.overview.signal", "Signal")}{" "}
-                  <strong>{on && status && status.rssi !== null ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
-                </span>
-                {on && id && playerNumber(id.playerLeds) && (
-                  <span>
-                    {t("desktop.live.player", "Player")} <strong>{playerNumber(id.playerLeds)}</strong>
-                  </span>
-                )}
-                <span>
-                  {t("desktop.overview.slot", "Pairing slot")} <strong>{id ? id.currentSlot : "—"}</strong>
-                </span>
-              </div>
-            )}
-            {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
-            {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
-            {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
-          </>
+      <div ref={heroRef} className={`live-hero${on && id?.model ? " titled" : ""}`} style={{ ["--title-size" as string]: `${titleSize}px` }}>
+        {on && id?.model && (
+          <div className="live-title" aria-hidden="true">
+            <span className="live-title-label">
+              {t("desktop.live.modelLabel")}
+              {preview && <span className="live-preview-badge">{t("desktop.dev.previewBadge")}</span>}
+            </span>
+            <span className="live-title-name">{modelName}</span>
+          </div>
         )}
+        <LiveController
+          model={shownModel}
+          input={input}
+          lightbar={on ? (liveLightbar ?? id?.lightbar ?? null) : null}
+          playerLeds={on ? (id?.playerLeds ?? 0) : 0}
+          playerWiring={playerWiring}
+          colors={on ? lookColors : null}
+          selected={selected}
+          remapped={remapped}
+          onSelect={pickPart}
+        />
+        {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
       </div>
-      <Tour client={client} input={input} view={view} onView={onView} ready={on && liveCapable} />
-      {!collapsed && (
-        <aside className="live-panel" ref={panelGlass}>
-          <PartPanel
-            view={view}
-            bridge={bridge}
-            fw={fw}
-            input={input}
-            remap={remap}
-            onClose={() => onView("overview")}
-            onOpen={pickPart}
-            onCalibrate={() => onView("calibration")}
-            onButtons={(index) => openButtons(index ?? null)}
-            buttonFocus={buttonFocus}
-            edge={id?.model === "edge"}
-            onButtonFocus={setButtonFocus}
-            onButtonHover={setButtonHover}
-            onHide={() => hidePanel(true)}
-          />
-        </aside>
+      {on && id?.model && (
+        <div className="live-specs">
+          {look && (
+            <span className="live-spec">
+              <span className="live-title-label">{t("desktop.live.colorLabel")}</span>
+              <span className={`live-spec-value${hasColorwayColor(id?.colorwayCode ?? null) ? " accent" : ""}`}>{look.name}</span>
+            </span>
+          )}
+          <span className="live-spec">
+            <span className="live-title-label">{t("desktop.live.statusLabel")}</span>
+            <span className="live-spec-value">
+              <ConnectedDot />
+              {t("desktop.overview.connected", "Connected")}
+            </span>
+          </span>
+        </div>
       )}
+      <div className="live-readouts">
+        {on && id && liveCapable && (
+          <LiveStrip
+            id={id}
+            power={power}
+            playerWiring={playerWiring}
+            rssi={status?.rssi ?? null}
+            lightbarMode={bridge.config?.lightbarMode ?? null}
+            lightbar={liveLightbar ?? id.lightbar}
+            onLightbar={() => pickPart("lightbar")}
+          />
+        )}
+        {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
+      </div>
+      {!(on && id && liveCapable) && (
+        <div className="live-status">
+          <span className={on ? "dk-good" : ""}>
+            <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press the PS button)")) : "—"}</strong>
+          </span>
+          <span>
+            {t("desktop.controller.battery", "Battery")}{" "}
+            <strong>
+              {on && id?.battery !== null && id?.battery !== undefined ? `${id.battery}%` : "—"}
+              {power === "charging" || power === "pluggedIn" || power === "full" ? ` · ${t(`desktop.ctrlInfo.chargeState.${power}`)}` : ""}
+            </strong>
+          </span>
+          <span>
+            {t("desktop.overview.signal", "Signal")}{" "}
+            <strong>{on && status && status.rssi !== null ? t(`desktop.overview.signalQ.${signalQuality(status.rssi)}`, signalQuality(status.rssi)) : "—"}</strong>
+          </span>
+          {on && id && playerNumber(id.playerLeds) && (
+            <span>
+              {t("desktop.live.player", "Player")} <strong>{playerNumber(id.playerLeds)}</strong>
+            </span>
+          )}
+          <span>
+            {t("desktop.overview.slot", "Pairing slot")} <strong>{id ? id.currentSlot : "—"}</strong>
+          </span>
+        </div>
+      )}
+      {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
+      {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
+      {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
     </div>
+  );
+  if (view === "app") return <AppSettingsPage bridge={bridge} fw={fw} main={main} panelRef={panelGlass} />;
+  const slot = id?.currentSlot;
+  return (
+    <>
+      <SplitView
+        page="controller"
+        main={main}
+        title={on && id?.model ? (look ? `${look.name} ${modelName}` : modelName) : t("desktop.live.overview")}
+        sub={slot !== undefined ? `${t("desktop.overview.slot")} ${slot}` : undefined}
+        top={
+          target && (
+            <Notice role="status" closable>
+              {t("desktop.editing.title", { title: target.title })}
+            </Notice>
+          )
+        }
+        state={acc}
+        panelRef={panelGlass}
+      >
+        <ControllerSections
+          bridge={bridge}
+          input={input}
+          remap={remap}
+          buttonFocus={buttonFocus}
+          onButtonFocus={setButtonFocus}
+          onButtonHover={setButtonHover}
+          edge={id?.model === "edge"}
+          trigger={picked === "l2" ? "l2" : "r2"}
+          info={info}
+          batteryPct={batteryPct}
+          power={input ? power : null}
+        />
+      </SplitView>
+      <Tour client={client} input={input} view={openSection} onView={tourView} ready={on && liveCapable} />
+    </>
   );
 }
 
