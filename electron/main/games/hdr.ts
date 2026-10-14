@@ -100,7 +100,7 @@ export function findOnPath(name: string, env: NodeJS.ProcessEnv): string | null 
       accessSync(file, constants.X_OK);
       if (statSync(file).isFile()) return file;
     } catch {
-      // not here
+      // error: NOT-WORTH — not here
     }
   }
   return null;
@@ -125,6 +125,7 @@ const hasLayer = (dirs: string[]) =>
       // loop: NOT-WORTH — files in a few Vulkan layer folders
       return readdirSync(d).some((f) => WSI_LAYER.test(f));
     } catch {
+      // error: NOT-WORTH — no layer folder: the HDR checklist shows the layer as missing
       return false;
     }
   });
@@ -149,6 +150,7 @@ async function screens(check: HdrDesktop, env: NodeJS.ProcessEnv, exec: Runner):
     if (check === "kde") return { check, screens: kscreenScreens((await exec("kscreen-doctor", ["-o"], OPTS(env))).stdout) };
     if (check === "gnome") return { check, screens: gnomeScreens((await exec("gdbus", MUTTER, OPTS(env))).stdout) };
   } catch {
+    // error: SHOWN — desktop.hdrCheck.screen.failed (check "failed" on the HDR checklist)
     return { check: "failed", screens: [] };
   }
   return { check, screens: [] };
@@ -159,7 +161,7 @@ async function gamescopeVersion(path: string, env: NodeJS.ProcessEnv, exec: Runn
     const { stdout, stderr } = await exec(path, ["--version"], OPTS(env));
     return parseGamescopeVersion(`${stdout}\n${stderr ?? ""}`);
   } catch (e) {
-    // Older builds without --version print their usage and fail.
+    // error: NOT-WORTH — Older builds without --version print their usage and fail.
     const out = e as { stdout?: string; stderr?: string };
     return parseGamescopeVersion(`${out.stdout ?? ""}\n${out.stderr ?? ""}`);
   }

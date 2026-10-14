@@ -46,6 +46,7 @@ export async function downloadVerified(download: Download, path: string, progres
       reject(err);
     }),
   );
+  // error: NOT-WORTH — only marks the write-error promise handled; the same rejection is awaited through Promise.race below and rethrown
   failed.catch(() => undefined);
   let got = 0;
   let lastReport = 0;
@@ -68,6 +69,8 @@ export async function downloadVerified(download: Download, path: string, progres
     }
     await Promise.race([new Promise<void>((resolve, reject) => file.end((err?: Error | null) => (err ? reject(err) : resolve()))), failed]);
   } catch (cause) {
+    // error: NOT-WORTH — cleanup while the real error is rethrown below; a failed cancel adds nothing
+    // error: NOT-WORTH — cleanup while the real error is rethrown below; a failed cancel adds nothing
     void reader.cancel().catch(() => undefined);
     file.destroy();
     rmSync(path, { force: true });

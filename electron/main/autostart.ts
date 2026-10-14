@@ -17,20 +17,19 @@ function linuxExec(): string {
   return execArg(launchPath());
 }
 
+// Throws when the autostart entry can't be written or removed: a change from
+// App settings or the tray is then put back and shown (updateSetting); the
+// start-up re-apply only logs it.
 export function applyAutostart(enabled: boolean, startMinimized: boolean): void {
   if (process.platform === "linux") {
     const dir = join(process.env.XDG_CONFIG_HOME || join(homedir(), ".config"), "autostart");
     const file = join(dir, `${APP_ID}.desktop`);
-    try {
-      if (enabled) {
-        mkdirSync(dir, { recursive: true });
-        const exec = linuxExec() + (startMinimized ? ` ${HIDDEN_FLAG}` : "");
-        writeFileSync(file, `[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\nExec=${exec}\nIcon=${APP_ID}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`);
-      } else if (existsSync(file)) {
-        unlinkSync(file);
-      }
-    } catch (cause) {
-      console.error("autostart update failed:", cause instanceof Error ? cause.message : cause);
+    if (enabled) {
+      mkdirSync(dir, { recursive: true });
+      const exec = linuxExec() + (startMinimized ? ` ${HIDDEN_FLAG}` : "");
+      writeFileSync(file, `[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\nExec=${exec}\nIcon=${APP_ID}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`);
+    } else if (existsSync(file)) {
+      unlinkSync(file);
     }
     return;
   }

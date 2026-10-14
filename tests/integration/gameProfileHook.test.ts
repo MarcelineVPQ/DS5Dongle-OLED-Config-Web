@@ -270,6 +270,27 @@ describe("game profile hook (never-flash guarantee)", () => {
     expect(s.desktop.calls.slice(-2)).toEqual([`profile:${B}`, `layout:${id}`]);
   });
 
+  // Error pass: these used to be only logged (console.error), with nothing on screen.
+  it("the restore point can't be saved: the profile doesn't go on, and the page says so", async () => {
+    const s = await setup({ running: A });
+    s.desktop.failRestore = true;
+    await s.start();
+    await until(() => !!s.profiles().error, "the failure to be shown");
+    expect(s.profiles().error).toContain("Game A");
+    expect(s.profiles().error).toContain("disk full");
+    expect(ram(s.dongle).hapticsGain).toBe(NORMAL.hapticsGain);
+    expect(s.flashWrites()).toEqual([]);
+  });
+
+  it("the normal settings can't be put back after the game: the page says so", async () => {
+    const s = await setup({ running: null, library: { restore: { gameKey: A, settings: { format: 2, hapticsGain: NORMAL.hapticsGain } } } });
+    s.desktop.failRestore = true;
+    await s.start();
+    await until(() => !!s.profiles().error, "the failure to be shown");
+    expect(s.profiles().error).toMatch(/normal settings didn't go back/);
+    expect(s.profiles().error).toContain("disk full");
+  });
+
   it("a step dropped while another switch runs is retried", async () => {
     const s = await setup({ running: A });
     const restore = gate();

@@ -40,6 +40,7 @@ function isLoopbackHttp(raw: string | undefined): boolean {
     const u = new URL(raw);
     return u.protocol === "http:" && (u.hostname === "127.0.0.1" || u.hostname === "localhost");
   } catch {
+    // error: NOT-WORTH — not a URL: no test feed
     return false;
   }
 }
@@ -130,7 +131,7 @@ export class Updater {
         rmSync(`${exe}.part`, { force: true });
       }
     } catch {
-      // Best effort; nothing depends on it.
+      // error: NOT-WORTH — Best effort; nothing depends on it.
     }
   }
 
@@ -161,6 +162,7 @@ export class Updater {
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url });
     } catch (cause) {
+      // error: SHOWN — desktop.setup.checkFailed (after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
       return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}` });
     }
   }
@@ -187,6 +189,7 @@ export class Updater {
     } catch {
       throw new Error("the update manifest is malformed");
     }
+    // error: PASSES-ON — a malformed manifest throws "the update manifest is malformed" to check()'s catch
     const parsed = Manifest.safeParse(json);
     if (!parsed.success) throw new Error("the update manifest is malformed");
     return parsed.data;
@@ -208,7 +211,8 @@ export class Updater {
       this.returningToStable = false;
       return this.set({ phase: "ready", version });
     } catch (cause) {
-      return this.set({ phase: "failed", detail: `${errorText(cause)} Your current version is untouched.` });
+      // error: SHOWN — desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed)
+      return this.set({ phase: "failed", detail: `${errorText(cause)} Your current version is untouched.`, during: "install" });
     } finally {
       this.busy = false;
     }
@@ -291,10 +295,12 @@ export class Updater {
         execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, ...setenv, "--", target], { stdio: "ignore" });
         started = true;
       } catch {
-        // systemd-run unavailable
+        // error: NOT-WORTH — systemd-run unavailable
       }
+      // error: NOT-WORTH — relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again)
       if (!started) spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env }).unref();
     } else {
+      // error: NOT-WORTH — relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again)
       spawn(target, [], { detached: true, stdio: "ignore" }).unref();
     }
     app.exit(0);

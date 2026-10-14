@@ -31,6 +31,7 @@ export function readBundled(resourcesDir: string): Bundled | null {
     const info = BundleInfo.parse(JSON.parse(readFileSync(join(dir, "firmware.json"), "utf8")));
     return { version: info.version, path: join(dir, info.file), sha256: info.sha256 };
   } catch {
+    // error: NOT-WORTH — development builds have no bundled firmware: the published one is used
     return null; // development builds have no bundled firmware
   }
 }
@@ -54,6 +55,7 @@ export function choose(bundled: Bundled | null, published: Published | null): "b
 export interface FirmwareSourceDeps {
   bundled: () => Bundled | null;
   // The feed, or why there's none: "unpublished" (nothing released yet) or "offline".
+  // error: SHOWN — desktop.firmware.offline (FirmwarePage: desktop.firmware.unpublished / offline under Latest, checkedNone / checkedOffline after Check now)
   manifest: () => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"] }>;
   downloadPublished: () => Promise<{ version: string; bytes: Uint8Array }>;
 }

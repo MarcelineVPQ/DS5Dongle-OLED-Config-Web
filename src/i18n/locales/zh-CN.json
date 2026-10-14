@@ -327,7 +327,8 @@
       "askBody": "新版本可以自动下载并安装（与每次更新一样经过校验），下次打开应用时启动。你可以随时在应用设置中更改。",
       "askYes": "自动更新",
       "askNo": "每次都问我",
-      "fwUpdate": "更新"
+      "fwUpdate": "更新",
+      "appFailed": "应用更新未能安装：{{detail}}"
     },
     "controller": {
       "battery": "电量",
@@ -530,7 +531,8 @@
       "launcherStarted": "{{launcher}} 正在运行，因此尚未做任何更改。将为此更改关闭它，之后重新打开。请再次确认以继续。",
       "launcherOverwrote": "{{launcher}} 撤回了在此应用的更改（当时它正在运行）。请再次应用：如果 {{launcher}} 正在运行，会先关闭它，之后重新打开。",
       "details": "详细信息",
-      "needsAttention": "待设置"
+      "needsAttention": "待设置",
+      "undoAudioRestart": "已撤销，但重启音频服务失败（{{error}}）。请注销并重新登录，或重启电脑，使音频更改生效。"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -1295,7 +1297,8 @@
       "sonyPage": "Sony 页面",
       "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设定 → 周边设备 → 控制器（常规）→ DualSense无线控制器设备软件。",
       "howToCable": "更新无法通过 {{device}} 进行。更新后如控制器未重新连接，请再次将其与 {{device}} 配对。",
-      "windowsOnly": "Sony 的 PlayStation Accessories 应用仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。"
+      "windowsOnly": "Sony 的 PlayStation Accessories 应用仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。",
+      "officialUnavailable": "无法连接 Sony 来比较版本。请检查网络连接，然后点击刷新。"
     },
     "stickTest": {
       "circleTitle": "圆度测试",
@@ -1503,7 +1506,8 @@
       "applyFailed": "{{title}} 的配置文件未能应用到 {{device}}（{{reason}}）。当前为你的常规设置。",
       "partlyOn": "{{title}} 的配置文件可能已生效，但没有其按键或操作杆曲线（{{reason}}）。{{device}} 重新连接时会再试一次。",
       "saveFailed": "未保存到 {{title}} 的配置文件：{{reason}}",
-      "notOn": "{{title}} 的配置文件尚未应用到 {{device}}，因此没有保存任何内容。待其生效后再试。"
+      "notOn": "{{title}} 的配置文件尚未应用到 {{device}}，因此没有保存任何内容。待其生效后再试。",
+      "restoreFailed": "游戏结束后，未能将你的常规设置恢复到 {{device}}（{{reason}}）。{{device}} 重新连接时会再次尝试。"
     },
     "colorPicker": {
       "swatch": "{{name}}：{{hex}}。更改颜色",
@@ -1593,6 +1597,23 @@
       },
       "inGame": "启动游戏，并在游戏自己的显示设置中开启 HDR。",
       "guide": "指南（关于页面）解释了每一步：游戏 → Linux 游戏中的 HDR。"
+    },
+    "errors": {
+      "settingNotSaved": "无法保存该设置，已恢复为原来的值。请检查你的主文件夹是否已满或只读，然后重试。",
+      "settingsRead": "无法读取应用设置，因此“应用设置”无法显示它们。请重启应用；如果反复出现，请反馈此问题。",
+      "linkNotOpened": "无法打开该链接：没有浏览器响应。请先打开浏览器，然后重试。",
+      "badRequest": "未做任何更改：应用以它不接受的格式发送了此请求。这是应用的错误。请重启应用后重试；如果再次出现，请反馈此问题。",
+      "actionFailed": "操作未成功：{{reason}}。请重试；如果仍然失败，请重启应用。",
+      "slotSwitch": "无法切换到槽位 {{slot}}：{{reason}}",
+      "profileCreate": "无法创建此游戏的配置文件。请重试；如果仍然失败，请重启应用。",
+      "profileDelete": "无法删除此游戏的配置文件，它仍然存在。请重试；如果仍然失败，请重启应用。",
+      "librarySave": "你对此游戏的最后一次更改未保存。请再改一次；如果仍然失败，请重启应用。",
+      "libraryRead": "无法读取你的游戏库，因此游戏配置文件和已保存的按键布局暂时不可用。请重启应用；如果反复出现，请反馈此问题。",
+      "layoutSave": "无法保存按键布局。请重试；如果仍然失败，请重启应用。",
+      "layoutDelete": "无法删除按键布局，它仍然存在。请重试；如果仍然失败，请重启应用。",
+      "boardFailed": "{{device}} 未能完成该操作（例如保存到其存储器）。你的更改可能会在断电后丢失。请重试；如果仍然失败，请拔下 {{device}} 再插上。",
+      "boardBusy": "{{device}} 正在忙于其他操作。请稍后重试。",
+      "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。"
     }
   },
   "ad": {

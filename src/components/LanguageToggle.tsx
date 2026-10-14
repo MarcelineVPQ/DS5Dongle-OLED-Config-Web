@@ -5,6 +5,7 @@ import { Check, Globe } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
+import { logged } from "../errorText";
 
 export default function LanguageToggle() {
   const { i18n, t } = useTranslation();
@@ -58,11 +59,11 @@ export default function LanguageToggle() {
                   aria-pressed={active}
                   className={active ? "active" : ""}
                   onClick={() => {
-                    void i18n.changeLanguage(lang.code);
+                    void i18n.changeLanguage(lang.code).catch(logged("switching the language (resources are bundled, so nothing to load can fail)"));
                     try {
                       window.localStorage.setItem(LANGUAGE_KEY, lang.code); // remember an explicit choice
                     } catch {
-                      // storage unavailable: the choice lasts for this session
+                      // error: NOT-WORTH — storage unavailable: the choice lasts for this session
                     }
                     setOpen(false);
                   }}

@@ -20,6 +20,7 @@ export default function WindowsUsbRepair() {
   const windows = desktop?.platform === "win32";
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  // error: SHOWN — english: the repair's message below the button (batch E3)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   // Plugged in but not connected: the case this repairs (polled only while
@@ -28,11 +29,16 @@ export default function WindowsUsbRepair() {
 
   if (!windows || !desktop) return null;
 
+  // A rejected call reaches BusyButton (desktop.errors.actionFailed); the
+  // dialog never stays stuck busy (it used to).
   const run = async () => {
     setBusy(true);
-    setResult(await desktop.repairWindowsUsb());
-    setBusy(false);
-    setConfirming(false);
+    try {
+      setResult(await desktop.repairWindowsUsb());
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
   };
 
   return (

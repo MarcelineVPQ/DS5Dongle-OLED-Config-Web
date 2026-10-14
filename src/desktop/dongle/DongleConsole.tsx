@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
 import { identityChargeState } from "../../protocol/controllerInfo";
 import { SCREEN_NAMES } from "../../oled/screenNames";
+import { logged } from "../../errorText";
 
 const FB_W = 128;
 const FB_H = 64;
@@ -120,6 +121,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
 // again and keeps the last good frame (shown as "not available").
 export interface OledFrameState {
   frame: OledFrame | null;
+  // error: SHOWN — desktop.dongleConsole.unavailable (the last good frame stays, retried)
   error: boolean;
 }
 export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): OledFrameState {
@@ -142,13 +144,15 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
           wait = RETRY_MS;
         }
       } catch {
+        // error: SHOWN — desktop.dongleConsole.unavailable (retried)
         if (!live) return;
         setError(true);
         wait = RETRY_MS;
       }
-      timer = setTimeout(() => void tick(), wait);
+      timer = setTimeout(next, wait);
     };
-    void tick();
+    const next = () => void tick().catch(logged("the OLED mirror poll (it catches its own errors)"));
+    next();
     return () => {
       live = false;
       clearTimeout(timer);

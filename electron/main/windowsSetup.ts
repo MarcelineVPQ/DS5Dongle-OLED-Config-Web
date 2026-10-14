@@ -33,11 +33,13 @@ export function launcherScript(powershell: string, script: string): string {
   ].join("\n");
 }
 
+// error: SHOWN — main-english: the message under the Windows USB repair (batch E3)
 export function repairWindowsUsb(): Promise<{ ok: boolean; message: string }> {
   if (process.platform !== "win32") return Promise.resolve({ ok: false, message: "Only needed on Windows." });
   // Full path, never PATH lookup.
   const powershell = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   return new Promise((resolve) => {
+    // error: SHOWN — main-english: Repaired / Cancelled / "Repair failed: …" under the Windows USB repair (batch E3)
     execFile(powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodeCommand(launcherScript(powershell, REPAIR_SCRIPT))], { windowsHide: true }, (error) => {
       if (!error) resolve({ ok: true, message: "Repaired. Now unplug your board and plug it back in." });
       else if (error.code === CANCELLED) resolve({ ok: false, message: "Cancelled." });

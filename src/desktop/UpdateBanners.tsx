@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UpdateState } from "./api";
 import { BusyButton } from "./controls";
@@ -8,6 +9,7 @@ function mb(bytes: number): string {
 }
 
 // One notice: its text, then (pushed right) an optional action.
+// error: NOT-WORTH — \`error\` is the notice's style, not a failure result
 function Notice({ error, children, action }: { error?: boolean; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className={`dk-notice${error ? " error" : ""}`}>
@@ -37,6 +39,8 @@ export default function UpdateBanners({
   onFirmwareChanges: () => void; // About → Firmware changes
 }) {
   const { t } = useTranslation();
+  // A failed install stays said until dismissed (a failed scheduled check stays quiet).
+  const [dismissedFailure, setDismissedFailure] = useState<string | null>(null);
   const desktop = window.desktop;
   const dismiss = <Action onClick={fw.dismiss}>{t("notice.dismiss")}</Action>;
   // While firmware is written, restarting or installing the app waits (the
@@ -70,6 +74,13 @@ export default function UpdateBanners({
             defaultValue: "Downloading {{version}}: {{got}} of {{total}} ({{pct}}%)",
           })}
         </span>
+      </Notice>
+    );
+  else if (app.phase === "failed" && app.during === "install" && dismissedFailure !== app.detail)
+    // was SILENT-BUG: when Download and install failed, the banner just went away
+    appNotice = (
+      <Notice error action={<Action onClick={() => setDismissedFailure(app.detail)}>{t("notice.dismiss")}</Action>}>
+        <span>{t("desktop.update.appFailed", { detail: app.detail })}</span>
       </Notice>
     );
   else if (app.phase === "installing") appNotice = <Notice>{t("desktop.update.installing", "Installing the update…")}</Notice>;

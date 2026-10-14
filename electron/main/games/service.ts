@@ -71,7 +71,9 @@ export class GamesService {
   }
 
   private exclusive<T>(run: () => Promise<T>): Promise<T> {
+    // error: NOT-WORTH — runs after a failed earlier job too: one job's failure must not block the next (it already went to that job's caller)
     const next = this.queue.then(run, run);
+    // error: NOT-WORTH — the queue's own copy; the caller gets `next` with the error
     this.queue = next.catch(() => undefined);
     return next;
   }
@@ -90,6 +92,7 @@ export class GamesService {
       const manifest = await Promise.race([this.deps.fetchManifest(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), MANIFEST_TIMEOUT_MS))]);
       this.latest = manifest.proton ?? null;
     } catch {
+      // error: NOT-WORTH — offline: the scan keeps the last known Proton build and offers no update it can't see
       // keep the last known build
     }
   }
@@ -266,11 +269,19 @@ export class GamesService {
         });
         if (!run.ok) return { ok: false, blockedBy: restart, problem: run.problem };
         if ("late" in run.value) return { ok: false, blockedBy: run.value.late };
-        if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch(() => undefined);
+        let audioRestartFailed: string | undefined;
+        // error: SHOWN — desktop.games.undoAudioRestart (was SILENT-BUG: the failed restart was dropped)
+        if (run.value.after.includes("restart-wireplumber")) await restartWirePlumber().catch((cause: unknown) => (audioRestartFailed = errorText(cause)));
         // loop: SERIAL-REQUIRED — ALSA order: one card's restore after another, ≤ 2 cards; per Undo
         for (const m of run.value.mixer) await restoreDualSenseMixer(m.key, m.changes, mixer!);
-        return { ok: true, restored: run.value.files.map((f) => this.tilde(f)), ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}) };
+        return {
+          ok: true,
+          restored: run.value.files.map((f) => this.tilde(f)),
+          ...(run.reopenFailed.length ? { reopenFailed: run.reopenFailed } : {}),
+          ...(audioRestartFailed ? { audioRestartFailed } : {}),
+        };
       } catch (cause) {
+        // error: SHOWN — main-english: the error text in GamesPage's error notice after Undo (batch E3)
         if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };
         return { ok: false, error: errorText(cause) };
       }
@@ -315,6 +326,7 @@ export class GamesService {
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);
         return { ok: true, name: build.name, installed: installed.map((p) => this.tilde(p)) };
       } catch (cause) {
+        // error: SHOWN — main-english: the message on the Proton card (protonMessage) after Install (batch E3)
         return { ok: false, message: errorText(cause) };
       }
     });

@@ -45,6 +45,7 @@ export async function dualSenseCards(): Promise<AudioCard[]> {
     const { stdout } = await run("pactl", ["list", "cards"], { env: { ...process.env, LC_ALL: "C" }, maxBuffer: 8 * 1024 * 1024, timeout: 5000 });
     return parseDualSenseCards(stdout);
   } catch {
+    // error: NOT-WORTH — no pactl (no PipeWire/Pulse): no cards, and the audio check shows the controller as not found
     return [];
   }
 }
@@ -83,6 +84,7 @@ export function findProAudioRules(home: string): ProAudioRule[] {
       // loop: NOT-WORTH — files in one rule folder
       files = readdirSync(dir).filter((f) => f.endsWith(".conf") || f.endsWith(".lua"));
     } catch {
+      // error: NOT-WORTH — rule folder missing: no rules there
       continue;
     }
     // loop: NOT-WORTH — rule files, a small read each
@@ -90,7 +92,7 @@ export function findProAudioRules(home: string): ProAudioRule[] {
       try {
         if (forcesProAudio(readFileSync(join(dir, f), "utf8"))) out.push({ path: join(dir, f), editable });
       } catch {
-        // unreadable: skip
+        // error: NOT-WORTH — unreadable: skip
       }
     }
   }
@@ -113,7 +115,7 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
       // loop: NOT-WORTH — files in one environment folder
       for (const f of readdirSync(dir)) files.push(join(dir, f));
     } catch {
-      // missing dir
+      // error: NOT-WORTH — missing dir
     }
   }
   const out: SdlVarSource[] = [];
@@ -126,7 +128,7 @@ export function findGlobalSdlVars(home: string): SdlVarSource[] {
         if (sdlVarForcing(m[1], m[2])) out.push({ variable: m[1], file: f.startsWith(home) ? f.replace(home, "~") : f });
       }
     } catch {
-      // missing file
+      // error: NOT-WORTH — missing file
     }
   }
   // loop: NOT-WORTH — SDL-forcing variable names
@@ -140,6 +142,7 @@ export function hidrawAccess(): boolean | null {
   try {
     nodes = readdirSync("/sys/class/hidraw");
   } catch {
+    // error: NOT-WORTH — no hidraw class: access unknown (null), so the check isn't shown
     return null;
   }
   let found = false;
@@ -152,7 +155,7 @@ export function hidrawAccess(): boolean | null {
       accessSync(`/dev/${n}`, constants.R_OK | constants.W_OK);
       return true;
     } catch {
-      // not this node / no access
+      // error: NOT-WORTH — not this node / no access
     }
   }
   return found ? false : null;
@@ -237,6 +240,7 @@ export function findDualSenseAlsaCards(sysSound = "/sys/class/sound", procAsound
   try {
     entries = readdirSync(sysSound);
   } catch {
+    // error: NOT-WORTH — no sound class: no cards
     return [];
   }
   const out: Array<{ card: number; key: string }> = [];
@@ -254,7 +258,7 @@ export function findDualSenseAlsaCards(sysSound = "/sys/class/sound", procAsound
         continue;
       out.push({ card: Number(card), key: basename(realpathSync(join(sysSound, entry, "device"))).replace(/:.*$/, "") });
     } catch {
-      // not a USB card, or it went away
+      // error: NOT-WORTH — not a USB card, or it went away
     }
   }
   return out.sort((a, b) => a.card - b.card);
@@ -284,7 +288,7 @@ export async function dualSenseMixers(layer: MixerLayer = amixerLayer): Promise<
     try {
       out.push({ card, key, controls: parseAmixerContents(await layer.contents(card)) });
     } catch {
-      // amixer missing or the card went away
+      // error: NOT-WORTH — amixer missing or the card went away
     }
   }
   return out;

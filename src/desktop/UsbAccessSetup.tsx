@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "./controls";
+import { logged } from "../errorText";
 
 // Linux only: installs the app's udev rule (via the main process and pkexec)
 // so the logged-in user can open the dongle and the RP2350 boot device.
@@ -12,7 +13,7 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
 
   useEffect(() => {
     if (desktop?.platform !== "linux") return;
-    void desktop.usbAccessInstalled().then(setInstalled);
+    desktop.usbAccessInstalled().then(setInstalled).catch(logged("checking for the USB access rule (unknown: the button stays offered)"));
   }, [desktop]);
 
   if (desktop?.platform !== "linux") return null;

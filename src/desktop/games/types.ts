@@ -179,11 +179,14 @@ export interface GamesReport {
 export type CloseProblem = "game-running" | "timeout" | "failed";
 
 export interface ApplyResult {
+  // error: SHOWN — desktop.library.setupFailed (and each change's message in the Done list)
   applied: Array<{ id: string; ok: boolean; message?: Msg }>;
   backupId: string | null;
   // Running launchers that own a selected change: not in the request's
   // `restart` list (the page explains and asks again), or not closed (`problem`).
+  // error: SHOWN — desktop.games.launcherStarted (useRestartText names the launcher)
   blockedBy: LauncherId[];
+  // error: SHOWN — desktop.games.restartGameRunning (or restartTimeout / restartFailed)
   problem?: CloseProblem;
   reopenFailed?: LauncherId[]; // closed for the change, but couldn't be started again
 }

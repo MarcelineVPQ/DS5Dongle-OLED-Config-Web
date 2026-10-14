@@ -6,6 +6,7 @@ export function readParsed<T>(path: string, parse: (text: string) => T): T | nul
   try {
     return parse(readFileSync(path, "utf8"));
   } catch {
+    // error: NOT-WORTH — readParsed's contract: a missing or broken file reads as null, which each caller treats as "not set up"
     return null;
   }
 }

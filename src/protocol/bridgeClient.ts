@@ -407,6 +407,7 @@ export class Ds5BridgeClient {
   // Reboot / BOOTSEL resolve "gone" once the device leaves the bus.
   command(func: number, args: number[] = []): Promise<"ok" | "gone"> {
     const run = this.commandQueue.then(() => this.runCommand(func, args));
+    // error: NOT-WORTH — the queue's own copy; the caller gets \`run\` with the error
     this.commandQueue = run.catch(() => undefined);
     return run;
   }

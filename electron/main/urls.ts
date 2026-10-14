@@ -8,6 +8,7 @@ export function isAllowedHttpsUrl(raw: string, hosts: ReadonlySet<string>): bool
   try {
     url = new URL(raw);
   } catch {
+    // error: NOT-WORTH — not a URL: not allowed, the link stays blocked
     return false;
   }
   return url.protocol === "https:" && hosts.has(url.hostname) && url.port === "" && url.username === "" && url.password === "";

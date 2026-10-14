@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tourDone } from "./tour/Tour";
+import { logged } from "../errorText";
+import { shown } from "./shownError";
 
 const ASK_AFTER_MS = 60_000;
 
@@ -12,7 +14,10 @@ export default function AutoUpdateAsk() {
   const [asked, setAsked] = useState(true);
   const [due, setDue] = useState(false);
   useEffect(() => {
-    void window.desktop?.getSettings().then((s) => setAsked(s.updatesAsked));
+    window.desktop
+      ?.getSettings()
+      .then((s) => setAsked(s.updatesAsked))
+      .catch(logged("reading whether automatic updates were asked about (unread: not asked now)"));
     const started = Date.now();
     const timer = setInterval(() => {
       const tourOpen = Boolean(document.querySelector(".tour-card"));
@@ -23,7 +28,10 @@ export default function AutoUpdateAsk() {
   if (asked || !due || !window.desktop) return null;
   const answer = (on: boolean) => {
     setAsked(true);
-    void window.desktop?.setSetting("autoInstallUpdates", on).then(() => window.desktop?.setSetting("updatesAsked", true));
+    window.desktop
+      ?.setSetting("autoInstallUpdates", on)
+      .then(() => window.desktop?.setSetting("updatesAsked", true))
+      .catch(shown("desktop.errors.settingNotSaved"));
   };
   return (
     <div className="dk-notice" role="dialog" aria-label={t("desktop.update.askTitle")}>

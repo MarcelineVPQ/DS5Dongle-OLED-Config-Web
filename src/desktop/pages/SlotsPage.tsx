@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { usePoll } from "../usePoll";
@@ -17,6 +17,7 @@ function readMemory(): Remembered {
   try {
     return JSON.parse(readPref(SLOT_MEMORY_KEY) ?? "{}") as Remembered;
   } catch {
+    // error: NOT-WORTH — unreadable memory of each slot's controller: the slots show without its model
     return {};
   }
 }
@@ -52,7 +53,8 @@ export default function SlotsPage({ bridge }: { bridge: UseDs5BridgeResult }) {
     try {
       await task();
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.boardFailed (a slot switch / forget / wipe whose save failed; firmware error pass)
+      setError(causeText(cause));
     } finally {
       setBusy(false);
       setConfirmWipe(false);

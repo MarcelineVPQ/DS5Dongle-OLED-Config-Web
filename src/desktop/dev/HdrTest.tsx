@@ -5,6 +5,7 @@
 // Screenshots can't show it (captured as SDR), so a person has to look.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { logged } from "../../errorText";
 
 const BOOST = 4; // x SDR white
 
@@ -20,7 +21,7 @@ function GpuSwatch() {
   const [ok, setOk] = useState<boolean | null>(null);
   useEffect(() => {
     let live = true;
-    void (async () => {
+    (async () => {
       try {
         const canvas = ref.current;
         const gpu = (navigator as Navigator & { gpu?: Gpu }).gpu;
@@ -35,9 +36,10 @@ function GpuSwatch() {
         device.queue.submit([enc.finish()]);
         setOk(true);
       } catch {
+        // error: SHOWN — english: the dev HDR test's swatch reads "no" (Developer card only, not translated)
         if (live) setOk(false);
       }
-    })();
+    })().catch(logged("the dev HDR test's WebGPU swatch"));
     return () => {
       live = false;
     };

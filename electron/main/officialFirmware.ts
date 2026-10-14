@@ -32,6 +32,8 @@ async function readCapped(response: Response, max: number): Promise<string> {
     if (done) break;
     size += value.byteLength;
     if (size > max) {
+      // error: NOT-WORTH — cleanup before the "too large" throw on the next line
+      // error: NOT-WORTH — cleanup before the "too large" throw on the next line
       void reader.cancel().catch(() => undefined);
       throw new Error("too large");
     }
@@ -78,6 +80,7 @@ export class OfficialFirmwareSource {
       })
       // Offline or an answer we don't understand: the last good answer if
       // there is one, otherwise the card shows nothing.
+      // error: SHOWN — desktop.ctrlInfo.officialUnavailable after Refresh (was SILENT-BUG: the card showed nothing); an automatic check keeps the last good answer quietly
       .catch((): OfficialFirmwareLookup => (this.cached ? { latest: this.cached.latest, problem: null } : { latest: null, problem: "unavailable" }))
       .finally(() => (this.pending = null));
     return this.pending;

@@ -14,6 +14,7 @@ import fr from "./locales/fr.json";
 import ja from "./locales/ja.json";
 import ptBR from "./locales/pt-BR.json";
 import { capitalize, deviceVariables } from "./deviceForms";
+import { logged } from "../errorText";
 
 // Use bare BCP47 language codes only. We only support one variant of
 // each, so "zh" / "pt" is enough; the previous "zh-CN" / "pt-BR" codes
@@ -41,7 +42,8 @@ const deviceDefaults: Record<string, string> = {};
 let deviceBoard: string | null = null;
 const fillDevice = () => Object.assign(deviceDefaults, deviceVariables(i18n.resolvedLanguage ?? i18n.language, deviceBoard));
 
-void i18n
+// Resources are bundled: init can't fail to load them (a key without text would show as the key).
+i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -74,7 +76,8 @@ void i18n
       caches: [],
       lookupLocalStorage: LANGUAGE_KEY,
     },
-  });
+  })
+  .catch(logged("starting i18next"));
 
 fillDevice();
 i18n.on("languageChanged", fillDevice);

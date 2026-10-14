@@ -112,6 +112,7 @@ export const manualSteamLine = (screen: Size) => withGamescopeHdr("", screen);
 export type HdrReqId = "wayland" | "screen" | "gamescope" | "layer" | "proton" | "game" | "runner" | "setup";
 export interface HdrReq {
   id: HdrReqId;
+  // error: SHOWN — desktop.hdrCheck.screen.failed (each ✗ line is its desktop.hdrCheck.<key> text)
   ok: boolean;
   key: string; // text under desktop.hdrCheck.<key>
   params?: Record<string, string>;

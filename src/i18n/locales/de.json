@@ -327,7 +327,8 @@
       "askBody": "Neue Versionen können sich selbst herunterladen und installieren, geprüft wie jedes Update, und starten beim nächsten Öffnen der App. Das kannst du in den App-Einstellungen ändern.",
       "askYes": "Automatisch aktualisieren",
       "askNo": "Jedes Mal fragen",
-      "fwUpdate": "Aktualisieren"
+      "fwUpdate": "Aktualisieren",
+      "appFailed": "Das App-Update wurde nicht installiert: {{detail}}"
     },
     "controller": {
       "battery": "Akku",
@@ -533,7 +534,8 @@
       "launcherStarted": "{{launcher}} läuft gerade, deshalb wurde noch nichts geändert. Er wird für diese Änderung geschlossen und danach wieder geöffnet. Bestätige erneut, um fortzufahren.",
       "launcherOverwrote": "{{launcher}} hat eine hier angewendete Änderung zurückgeschrieben (er lief dabei). Wende sie erneut an: Läuft {{launcher}}, wird er zuerst geschlossen und danach wieder geöffnet.",
       "details": "Details",
-      "needsAttention": "Zu erledigen"
+      "needsAttention": "Zu erledigen",
+      "undoAudioRestart": "Rückgängig gemacht, aber der Neustart des Audiodienstes ist fehlgeschlagen ({{error}}). Melde dich ab und wieder an oder starte den PC neu, damit die Audioänderung wirkt."
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -1303,7 +1305,8 @@
       "sonyPage": "Sonys Seite",
       "howToPs5": "Oder an einer PS5: per USB-Kabel anschließen, dann Einstellungen → Zubehör → Controller (Allgemein) → Gerätesoftware des DualSense Wireless-Controllers.",
       "howToCable": "Das Update geht nicht über {{device_akk}}. Danach den Controller erneut mit {{device_dat}} koppeln, falls er sich nicht wieder verbindet.",
-      "windowsOnly": "Sonys App „PlayStation Accessories“ läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden."
+      "windowsOnly": "Sonys App „PlayStation Accessories“ läuft nur unter Windows: Unter Linux und macOS einen Windows-PC oder eine PS5 verwenden.",
+      "officialUnavailable": "Sony war für den Versionsvergleich nicht erreichbar. Prüfe die Internetverbindung und drücke auf Aktualisieren."
     },
     "stickTest": {
       "circleTitle": "Rundheitstest",
@@ -1511,7 +1514,8 @@
       "applyFailed": "Das Profil von {{title}} wurde nicht auf {{device_akk}} übertragen ({{reason}}). Deine normalen Einstellungen sind aktiv.",
       "partlyOn": "Das Profil von {{title}} ist eventuell ohne seine Tasten oder Stick-Kurven aktiv ({{reason}}). Es wird erneut versucht, wenn {{device}} sich wieder verbindet.",
       "saveFailed": "Nicht im Profil von {{title}} gespeichert: {{reason}}",
-      "notOn": "Das Profil von {{title}} ist noch nicht auf {{device_dat}}, daher wurde nichts darin gespeichert. Versuche es erneut, sobald es aktiv ist."
+      "notOn": "Das Profil von {{title}} ist noch nicht auf {{device_dat}}, daher wurde nichts darin gespeichert. Versuche es erneut, sobald es aktiv ist.",
+      "restoreFailed": "Deine normalen Einstellungen wurden nach dem Spiel nicht wieder auf {{device_akk}} übertragen ({{reason}}). Das wird erneut versucht, wenn sich {{device}} wieder verbindet."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Farbe ändern",
@@ -1601,6 +1605,23 @@
       },
       "inGame": "Starte das Spiel und schalte HDR in seinen eigenen Anzeigeeinstellungen ein.",
       "guide": "Das Handbuch (Seite „Über“) erklärt jeden Teil: Spiele → HDR in Spielen unter Linux."
+    },
+    "errors": {
+      "settingNotSaved": "Die Einstellung konnte nicht gespeichert werden und ist wieder wie vorher. Prüfe, ob dein Home-Ordner voll oder schreibgeschützt ist, und versuch es noch einmal.",
+      "settingsRead": "Die App-Einstellungen konnten nicht gelesen werden, daher kann App-Einstellungen sie nicht anzeigen. Starte die App neu; wenn das wieder passiert, melde es bitte.",
+      "linkNotOpened": "Der Link konnte nicht geöffnet werden: Kein Browser hat reagiert. Öffne deinen Browser und versuch es noch einmal.",
+      "badRequest": "Nichts wurde geändert: Die App hat das in einer Form gesendet, die sie nicht annimmt. Das ist ein Fehler in der App. Starte sie neu und versuch es noch einmal; wenn es wieder passiert, melde es bitte.",
+      "actionFailed": "Das hat nicht geklappt: {{reason}}. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "slotSwitch": "Konnte nicht zu Slot {{slot}} wechseln: {{reason}}",
+      "profileCreate": "Das Profil für dieses Spiel konnte nicht erstellt werden. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "profileDelete": "Das Profil für dieses Spiel konnte nicht entfernt werden und ist noch da. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "librarySave": "Deine letzte Änderung an diesem Spiel wurde nicht gespeichert. Mach sie noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "libraryRead": "Deine Spielebibliothek konnte nicht gelesen werden, daher sind Spielprofile und gespeicherte Tastenbelegungen vorerst aus. Starte die App neu; wenn das wieder passiert, melde es bitte.",
+      "layoutSave": "Die Tastenbelegung konnte nicht gespeichert werden. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "layoutDelete": "Die Tastenbelegung konnte nicht gelöscht werden und ist noch da. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
+      "boardFailed": "{{device, capitalize}} konnte das nicht abschließen (zum Beispiel das Speichern). Deine Änderung geht beim Ausschalten vielleicht verloren. Versuch es noch einmal; wenn es weiter fehlschlägt, zieh {{device_akk}} ab und steck es wieder ein.",
+      "boardBusy": "{{device, capitalize}} ist gerade mit etwas anderem beschäftigt. Versuch es gleich noch einmal.",
+      "boardRejected": "{{device, capitalize}} hat das nicht angenommen. Die Firmware ist vielleicht älter als diese App: Aktualisiere die Firmware und versuch es dann noch einmal."
     }
   },
   "ad": {

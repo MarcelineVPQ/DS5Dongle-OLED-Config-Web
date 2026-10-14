@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { IDENTITY_FEATURES, type BridgeIdentity, type Ds5BridgeClient } from "../protocol/bridgeClient";
 import type { InputReport } from "../oled/inputReport";
 import { useWindowShown } from "./useWindowShown";
+import { logged } from "../errorText";
 
 const POLL_MS = 33;
 // The lightbar: 10 reads a second, enough for the animated modes with the
@@ -55,11 +56,12 @@ export function useLiveInput(client: Ds5BridgeClient | null, enabled: boolean): 
         fresh = true;
         if (!frame) frame = requestAnimationFrame(paint);
       } catch {
-        // dongle busy or gone: the connection hook handles reconnecting
+        // error: NOT-WORTH — dongle busy or gone: the connection hook handles reconnecting (and says so)
       }
-      if (live) timer = setTimeout(() => void poll(), POLL_MS);
+      if (live) timer = setTimeout(next, POLL_MS);
     };
-    void poll();
+    const next = () => void poll().catch(logged("the live input poll (it catches its own errors)"));
+    next();
     return () => {
       live = false;
       if (timer) clearTimeout(timer);
@@ -93,11 +95,12 @@ export function useLiveLightbar(client: Ds5BridgeClient | null, enabled: boolean
           setRgb(color ? [color[0], color[1], color[2]] : null);
         }
       } catch {
-        // dongle busy or gone: the connection hook handles reconnecting
+        // error: NOT-WORTH — dongle busy or gone: the connection hook handles reconnecting (and says so)
       }
-      if (live) timer = setTimeout(() => void poll(), LIGHTBAR_MS);
+      if (live) timer = setTimeout(next, LIGHTBAR_MS);
     };
-    void poll();
+    const next = () => void poll().catch(logged("the lightbar poll (it catches its own errors)"));
+    next();
     return () => {
       live = false;
       if (timer) clearTimeout(timer);

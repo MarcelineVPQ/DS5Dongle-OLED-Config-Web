@@ -22,6 +22,8 @@ import captionTexts from "../assets/voice/captions.json";
 import { NARRATOR_LANGS, NARRATOR_OFF } from "../protocol/bridgeClient";
 import { isWindowShown } from "./useWindowShown";
 import { controllerAudio } from "./controllerAudio";
+import { logged } from "../errorText";
+import { shown } from "./shownError";
 
 export type NarratorSetting = DesktopSettings["narratorVoice"];
 
@@ -40,22 +42,25 @@ let caption: { key: string; text: string } | null = null;
 const listeners = new Set<() => void>();
 // loop: NOT-WORTH — N ≤ 3 listeners; on narrator state change, not per frame
 const notify = () => listeners.forEach((l) => l());
-void window.desktop?.getSettings().then((s) => {
-  setting = s.narratorVoice ?? "ask";
-  captionsOn = s.narratorCaptions ?? true;
-  notify();
-});
+window.desktop
+  ?.getSettings()
+  .then((s) => {
+    setting = s.narratorVoice ?? "ask";
+    captionsOn = s.narratorCaptions ?? true;
+    notify();
+  })
+  .catch(logged("reading the narrator settings at start (the defaults stay: ask, captions on)"));
 
 export function setNarrator(next: Exclude<NarratorSetting, "ask">): void {
   setting = next;
   notify();
-  void window.desktop?.setSetting("narratorVoice", next);
+  window.desktop?.setSetting("narratorVoice", next).catch(shown("desktop.errors.settingNotSaved"));
 }
 
 export function setCaptions(next: boolean): void {
   captionsOn = next;
   notify();
-  void window.desktop?.setSetting("narratorCaptions", next);
+  window.desktop?.setSetting("narratorCaptions", next).catch(shown("desktop.errors.settingNotSaved"));
 }
 
 const subscribe = (l: () => void) => {
@@ -141,10 +146,11 @@ async function play(key: string, voice: boolean, withCaption: boolean): Promise<
       spoke = true;
       await new Promise<void>((resolve) => {
         audio.onended = audio.onerror = audio.onpause = () => resolve();
+        // error: NOT-WORTH — a line that won't play (no device, autoplay) just ends; its caption still shows
         audio.play().catch(() => resolve());
       });
     } catch {
-      // couldn't route to the controller: stay silent
+      // error: NOT-WORTH — couldn't route to the controller: stay silent (the caption still shows)
     }
     if (current === audio) current = null;
   }
@@ -161,6 +167,12 @@ export function narratorIdle(): Promise<void> {
 
 // Say a line if the narrator is on (or `ask` is allowed, for the tour's
 // question). `cut` stops whatever is playing first (tour steps).
+// A line said in passing (an event, not the Speaker test): one that can't
+// play is decoration, its caption still shows, so a failure is only logged.
+export function sayInPassing(key: string, opts: { allowAsk?: boolean; cut?: boolean } = {}): void {
+  say(key, opts).catch(logged("a narrator line that couldn't play (decoration: its caption still shows)"));
+}
+
 export function say(key: string, opts: { allowAsk?: boolean; cut?: boolean } = {}): Promise<void> {
   const voice = setting === "on" || (opts.allowAsk === true && setting === "ask");
   // Captions follow the voice; with the voice turned off they still show the

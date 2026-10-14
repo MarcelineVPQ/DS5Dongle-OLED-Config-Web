@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { appVersionLabel } from "../appVersion";
 import { Bug, Code, Github, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -86,7 +86,8 @@ export default function AboutPage({ initialTab = "guide" }: { initialTab?: About
     window.desktop
       .firmwareChangelog()
       .then(setFirmware)
-      .catch((cause) => setFirmwareError(errorText(cause)));
+      // error: SHOWN — english: the firmware changes tab's error (main-process text, batch E3)
+      .catch((cause) => setFirmwareError(causeText(cause)));
   }, [tab, firmware]);
 
   // Our DualSense Proton runs Windows games on Linux: its tab shows where the

@@ -37,6 +37,7 @@ export const OfficialInfoSchema = z.record(z.string().max(64), z.unknown()).refi
 export type OfficialFirmware = Record<string, number>;
 
 export function parseOfficialInfo(raw: unknown): OfficialFirmware | null {
+  // error: SHOWN — desktop.ctrlInfo.officialUnavailable (null makes the lookup "unavailable", said after Refresh)
   const parsed = OfficialInfoSchema.safeParse(raw);
   if (!parsed.success || Array.isArray(raw)) return null;
   const out: OfficialFirmware = {};

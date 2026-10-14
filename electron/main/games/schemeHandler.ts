@@ -40,6 +40,7 @@ export function realHome(): string {
   try {
     return userInfo().homedir; // the passwd entry, which ignores a HOME override
   } catch {
+    // error: NOT-WORTH — no passwd entry: HOME is used
     return process.env.HOME ?? "/";
   }
 }
@@ -138,6 +139,7 @@ export interface StartDeps {
 
 function spawnDetached(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
   return new Promise((resolve) => {
+    // error: SHOWN — desktop.library.action.failed (a start that fails resolves false up to the game action)
     const child = spawn(cmd, args, { detached: true, stdio: "ignore", env });
     child.once("error", () => resolve(false));
     child.once("spawn", () => {
@@ -151,12 +153,14 @@ const realDeps: StartDeps = {
   platform: process.platform,
   env: () => launcherEnv(process.env, realHome()),
   userSystemd: (env) => {
+    // error: NOT-WORTH — no user systemd answers null: the program is started without it
     const run = (args: string[]) => new Promise<string | null>((resolve) => execFile("systemctl", args, { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve(err ? null : out)));
     return Promise.all([run(["--user", "show-environment"]), run(["--version"])]).then(([vars, version]) =>
       vars === null ? null : { env: parseManagerEnv(vars), version: parseSystemdVersion(version ?? "") },
     );
   },
   systemdRun: (argv, env) =>
+    // error: NOT-WORTH — "failed" / "timeout" make startIndependent fall back to a detached start
     new Promise((resolve) => execFile("systemd-run", argv, { timeout: 10_000, env }, (err) => resolve(!err ? "ok" : (err as { killed?: boolean }).killed ? "timeout" : "failed"))),
   spawnDetached,
   now: Date.now,
@@ -196,6 +200,7 @@ export function openForUser(target: string): Promise<boolean> {
 function defaultHandler(scheme: string): Promise<{ err: boolean; entry: string | null }> {
   const env = process.platform === "linux" ? launcherEnv(process.env, realHome()) : process.env;
   return new Promise((resolve) =>
+    // error: NOT-WORTH — no xdg-mime (err): Electron's own lookup answers instead
     execFile("xdg-mime", ["query", "default", `x-scheme-handler/${scheme}`], { encoding: "utf8", timeout: 3000, env }, (err, out) => resolve({ err: !!err, entry: err ? null : out.trim() || null })),
   );
 }
@@ -214,6 +219,7 @@ export async function hasSchemeHandler(url: string, nameForProtocol: (url: strin
     try {
       return nameForProtocol(`${scheme}://`) !== "";
     } catch {
+      // error: NOT-WORTH — can't tell: the open attempt decides, and a failed open shows desktop.library.action.failed
       return true; // can't tell: let the open attempt decide
     }
   };
@@ -251,7 +257,7 @@ export async function schemeHandlerExec(scheme: string): Promise<string | null> 
     try {
       return desktopExec(await readFile(join(dir, entry), "utf8"));
     } catch {
-      // not in this folder
+      // error: NOT-WORTH — not in this folder
     }
   }
   return null;

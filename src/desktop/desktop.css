@@ -199,6 +199,11 @@ html[data-theme="dark"] .dk {
   background: var(--notice-error-bg);
   color: var(--text-error);
 }
+.dk-notice.pinned {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
 .dk-notice .dk-spacer {
   flex: 1;
 }

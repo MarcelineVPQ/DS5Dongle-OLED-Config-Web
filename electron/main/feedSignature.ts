@@ -21,6 +21,7 @@ export function feedSignedBy(text: string, signatureB64: string, keys: readonly 
       const key = createPublicKey({ key: Buffer.from(k, "base64"), format: "der", type: "spki" });
       return verify(null, Buffer.from(text, "utf8"), key, signature);
     } catch {
+      // error: NOT-WORTH — a key that can't be read verifies nothing: the update is refused as unsigned, which the banner says
       return false;
     }
   });

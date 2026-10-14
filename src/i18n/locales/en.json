@@ -326,7 +326,8 @@
       "askBody": "New versions can download and install by themselves, checked like every update, and start the next time you open the app. You can change this in App settings.",
       "askYes": "Update automatically",
       "askNo": "Ask me each time",
-      "fwUpdate": "Update"
+      "fwUpdate": "Update",
+      "appFailed": "The app update didn't install: {{detail}}"
     },
     "controller": {
       "battery": "Battery",
@@ -532,7 +533,8 @@
       "launcherStarted": "{{launcher}} is running now, so nothing was changed yet. It will be closed for this change and reopened afterwards. Confirm again to go ahead.",
       "launcherOverwrote": "{{launcher}} wrote back a change applied here (it was running). Apply it again: if {{launcher}} is running, it's closed first and reopened afterwards.",
       "details": "Details",
-      "needsAttention": "Needs attention"
+      "needsAttention": "Needs attention",
+      "undoAudioRestart": "Undone, but restarting the audio service failed ({{error}}). Log out and back in, or restart the PC, for the audio change to take effect."
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -1302,7 +1304,8 @@
       "sonyPage": "Sony's page",
       "howToPs5": "Or on a PS5: connect it with a USB cable, then Settings → Accessories → Controller (General) → DualSense Wireless Controller Device Software.",
       "howToCable": "The update can't go through {{device}}. Afterwards, pair the controller with {{device}} again if it doesn't reconnect.",
-      "windowsOnly": "Sony's PlayStation Accessories app runs on Windows only: on Linux and macOS, use a Windows PC or a PS5."
+      "windowsOnly": "Sony's PlayStation Accessories app runs on Windows only: on Linux and macOS, use a Windows PC or a PS5.",
+      "officialUnavailable": "Couldn't reach Sony to compare versions. Check the internet connection and press Refresh."
     },
     "stickTest": {
       "circleTitle": "Circularity test",
@@ -1510,7 +1513,8 @@
       "applyFailed": "{{title}}'s profile didn't go on {{device}} ({{reason}}). Your normal settings are on.",
       "partlyOn": "{{title}}'s profile may be on without its buttons or stick curves ({{reason}}). It's tried again when {{device}} reconnects.",
       "saveFailed": "Not saved to {{title}}'s profile: {{reason}}",
-      "notOn": "{{title}}'s profile isn't on {{device}} yet, so nothing was saved into it. Try again once it's on."
+      "notOn": "{{title}}'s profile isn't on {{device}} yet, so nothing was saved into it. Try again once it's on.",
+      "restoreFailed": "Your normal settings didn't go back on {{device}} after the game ({{reason}}). They're tried again when {{device}} reconnects."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Change the color",
@@ -1600,6 +1604,23 @@
       },
       "inGame": "Start the game and turn on HDR in its own display settings.",
       "guide": "The Guide (About page) explains each part: Games → HDR in games on Linux."
+    },
+    "errors": {
+      "settingNotSaved": "Couldn't save that setting, so it's back to how it was. Check that your home folder isn't full or read-only, then try again.",
+      "settingsRead": "Couldn't read the app's settings, so App settings can't show them. Restart the app; if this keeps happening, please report it.",
+      "linkNotOpened": "Couldn't open that link: no browser answered. Open your browser and try again.",
+      "badRequest": "Nothing was changed: the app sent this in a form it doesn't accept. That's a bug in the app. Restart it and try again, and please report it if it happens again.",
+      "actionFailed": "That didn't work: {{reason}}. Try again; if it keeps failing, restart the app.",
+      "slotSwitch": "Couldn't switch to slot {{slot}}: {{reason}}",
+      "profileCreate": "Couldn't create this game's profile. Try again; if it keeps failing, restart the app.",
+      "profileDelete": "Couldn't remove this game's profile, so it's still there. Try again; if it keeps failing, restart the app.",
+      "librarySave": "Your last change to this game wasn't saved. Make it again; if it keeps failing, restart the app.",
+      "libraryRead": "Couldn't read your game library, so game profiles and saved button layouts are off for now. Restart the app; if this keeps happening, please report it.",
+      "layoutSave": "Couldn't save the button layout. Try again; if it keeps failing, restart the app.",
+      "layoutDelete": "Couldn't delete the button layout, so it's still there. Try again; if it keeps failing, restart the app.",
+      "boardFailed": "{{device, capitalize}} couldn't finish that (for example, saving to its memory). What you changed may be lost when it powers off. Try again; if it keeps failing, unplug {{device}} and plug it back in.",
+      "boardBusy": "{{device, capitalize}} is busy with something else. Try again in a moment.",
+      "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again."
     }
   },
   "ad": {

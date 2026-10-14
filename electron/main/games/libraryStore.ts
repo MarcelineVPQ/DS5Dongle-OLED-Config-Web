@@ -23,9 +23,11 @@ export const OLD_LIBRARY_FILE = "game-library.json";
 // The file parsed and validated, or null when it can't be read or is bad.
 function readLibrary(path: string): LibraryFile | null {
   try {
+    // error: PASSES-ON — a file that doesn't fit reads as null like a broken one; the catch below has the verdict
     const parsed = LibraryFileSchema.safeParse(JSON.parse(readFileSync(path, "utf8")));
     return parsed.success ? parsed.data : null;
   } catch {
+    // error: SILENT-BUG — a damaged library file is moved aside (.bad-<time>) and the app starts with an empty library: every game profile and layout seems gone with no word why (batch E1)
     return null;
   }
 }
@@ -48,7 +50,7 @@ export class LibraryStore {
       try {
         renameSync(this.path, `${this.path}.bad-${Date.now()}`);
       } catch {
-        // can't move it; it gets overwritten on the next save
+        // error: NOT-WORTH — can't move it; it gets overwritten on the next save
       }
       return structuredClone(EMPTY_LIBRARY);
     }
@@ -59,7 +61,7 @@ export class LibraryStore {
     try {
       writeFileAtomic(this.path, JSON.stringify(old, null, 2) + "\n");
     } catch {
-      // can't write it now; the next save tries again
+      // error: NOT-WORTH — can't write it now; the next save tries again
     }
     return old;
   }

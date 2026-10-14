@@ -16,8 +16,9 @@
 // on the audio thread (micRing.worklet.js), in memory only: nothing is
 // written to disk. Everything stops with stop() (the button, the panel
 // closing, the window hiding).
-import { controllerAudio } from "../controllerAudio";
+import { closeQuietly, controllerAudio } from "../controllerAudio";
 import { PEAK } from "./speakerTune";
+import { logged } from "../../errorText";
 
 export const LISTEN_SECONDS = 3;
 export const MIC_QUIET = 0.02; // a clip peaking below this is "almost silent"
@@ -46,10 +47,12 @@ export interface MicSession {
 }
 
 export interface ListenResult {
+  // error: SHOWN — desktop.audioTest.problem.failed (\`problem\` picks the desktop.audioTest.problem.<problem> line)
   ok: boolean;
   quiet: boolean; // peaking below MIC_QUIET
   peak: number; // 0..1, the recording's own peak
   gain: number; // the gain applied for playback
+  // error: SHOWN — desktop.audioTest.problem.failed (each problem has its line)
   problem?: MicProblem;
 }
 
@@ -80,6 +83,7 @@ function peakOf(samples: Float32Array): number {
 
 // Opens the controller's mic (and its output, for the loopback). `onLost`
 // runs if the mic goes away while testing (controller off or unplugged).
+// error: SHOWN — desktop.audioTest.problem.no-mic (a \`problem\` result is said on the Mic test's status line)
 export async function startMicTest(onLost: () => void): Promise<{ session: MicSession } | { problem: MicProblem }> {
   const [mic, speaker] = await Promise.all([controllerAudio("audioinput"), controllerAudio("audiooutput")]);
   if (!mic) return { problem: "no-mic" };
@@ -90,7 +94,8 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
     try {
       await ctx.setSinkId(speaker);
     } catch {
-      void ctx.close();
+      // error: SHOWN — desktop.audioTest.problem.no-speaker
+      closeQuietly(ctx);
       return { problem: "no-speaker" };
     }
     stream = await navigator.mediaDevices.getUserMedia({
@@ -99,8 +104,9 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
     });
     await ctx.audioWorklet.addModule(RING_URL);
   } catch {
+    // error: SHOWN — desktop.audioTest.problem.failed
     stream?.getTracks().forEach((t) => t.stop());
-    void ctx.close();
+    closeQuietly(ctx);
     return { problem: "failed" };
   }
   const input = stream;
@@ -150,7 +156,7 @@ export async function startMicTest(onLost: () => void): Promise<{ session: MicSe
         try {
           return await dump();
         } finally {
-          void ctx.close();
+          closeQuietly(ctx);
         }
       },
     },
@@ -172,6 +178,7 @@ export async function listenBack(clip: MicClip, signal: AbortSignal, onPlaying: 
     try {
       await ctx.setSinkId(speaker);
     } catch {
+      // error: SHOWN — desktop.audioTest.problem.no-speaker
       return result("no-speaker");
     }
     const buffer = ctx.createBuffer(1, samples.length, clip.sampleRate);
@@ -179,9 +186,10 @@ export async function listenBack(clip: MicClip, signal: AbortSignal, onPlaying: 
     await playClip(ctx, buffer, speaker, signal, () => onPlaying(buffer.duration));
     return result();
   } catch {
+    // error: SHOWN — desktop.audioTest.problem.playback (or failed when stopped)
     return result(signal.aborted ? "failed" : "playback");
   } finally {
-    void ctx.close();
+    closeQuietly(ctx);
   }
 }
 
@@ -204,15 +212,17 @@ function playClip(ctx: AudioContext, buffer: AudioBuffer, speaker: string, signa
       try {
         src.stop();
       } catch {
-        // never started
+        // error: NOT-WORTH — never started
       }
       reject(error);
     };
     const abort = () => end(new Error("aborted"));
     const gone = () =>
-      void controllerAudio("audiooutput").then((now) => {
-        if (now !== speaker) end(new Error("output gone"));
-      });
+      void controllerAudio("audiooutput")
+        .then((now) => {
+          if (now !== speaker) end(new Error("output gone"));
+        })
+        .catch(logged("checking the controller's output after a device change (the watchdog still ends playback)"));
     const watchdog = setTimeout(() => end(new Error("playback didn't end")), buffer.duration * 1000 + PLAYBACK_GRACE_MS);
     if (signal.aborted) return abort();
     signal.addEventListener("abort", abort);
@@ -222,6 +232,7 @@ function playClip(ctx: AudioContext, buffer: AudioBuffer, speaker: string, signa
       src.start();
       onStart();
     } catch {
+      // error: SHOWN — desktop.audioTest.problem.playback (rejects playClip)
       end(new Error("couldn't start"));
     }
   });

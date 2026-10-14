@@ -40,7 +40,7 @@ export function findLutrisInstalls(home: string): LutrisInstall[] {
     try {
       if (readdirSync(join(configHome, "games")).length > 0) configDir = configHome;
     } catch {
-      // no ~/.config/lutris/games: Lutris uses the data dir
+      // error: NOT-WORTH — no ~/.config/lutris/games: Lutris uses the data dir
     }
     out.push({
       dataDir,
@@ -104,12 +104,14 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
       db.close();
     }
   } catch {
+    // error: NOT-WORTH — no readable pga.db: the yml game files are listed instead
     try {
       // loop: NOT-WORTH — yml fallback only when pga.db can't be read
       rows = readdirSync(join(install.configDir, "games"))
         .filter((f) => f.endsWith(".yml"))
         .map((f) => ({ slug: f.replace(/-\d+\.yml$/, ""), name: f.replace(/-\d+\.yml$/, ""), configpath: f.slice(0, -4) }));
     } catch {
+      // error: NOT-WORTH — no games folder: no Lutris games, which the page shows
       rows = [];
     }
   }
@@ -129,6 +131,7 @@ export function lutrisWineBuilds(install: LutrisInstall): string[] {
     // loop: NOT-WORTH — Wine/Proton builds in Lutris' runner folder, 2 stats each
     return readdirSync(install.wineDir).filter((d) => existsSync(join(install.wineDir, d, "proton")) || existsSync(join(install.wineDir, d, "bin/wine")));
   } catch {
+    // error: NOT-WORTH — no runner folder: no Lutris Wine builds
     return [];
   }
 }

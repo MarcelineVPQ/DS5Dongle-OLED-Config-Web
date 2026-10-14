@@ -11,8 +11,9 @@ import { useTranslation } from "react-i18next";
 import type { InputReport } from "../../oled/inputReport";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import type { PanelView } from "../live/PartPanel";
-import { narratorIdle, say, setNarrator, stopNarrator, useNarrator } from "../narrator";
+import { narratorIdle, say, sayInPassing, setNarrator, stopNarrator, useNarrator } from "../narrator";
 import { useWindowShown } from "../useWindowShown";
+import { logged } from "../../errorText";
 
 const DONE_KEY = "ds5.tourDone";
 // Off until the guide is rebuilt for the rail / console / library layout
@@ -152,10 +153,12 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     if (index === null) return;
     const key = STEPS[index].key;
     if (key === "welcome") {
-      void say("tour_welcome", { allowAsk: true, cut: true }).then(() => {
-        if (narratorRef.current === "ask") void say("tour_voice_ask", { allowAsk: true });
-      });
-    } else void say(`tour_${key}`, { cut: true });
+      say("tour_welcome", { allowAsk: true, cut: true })
+        .then(() => {
+          if (narratorRef.current === "ask") sayInPassing("tour_voice_ask", { allowAsk: true });
+        })
+        .catch(logged("the tour's welcome line (decoration: its caption still shows)"));
+    } else sayInPassing(`tour_${key}`, { cut: true });
   }, [index]);
   // The trigger step's surprise: both triggers get the "Weapon" effect (they
   // resist, then snap through) while it's open; off again when it closes.
@@ -174,8 +177,9 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   }, [onClickStep, view, onView]);
   useEffect(() => {
     if (!onTriggerStep || !client) return;
-    void client.previewTrigger(WEAPON_PRESET).catch(() => undefined);
-    return () => void client.previewTrigger(0).catch(() => undefined);
+    // The tour's trigger surprise: decoration; a busy or gone board just doesn't buzz.
+    client.previewTrigger(WEAPON_PRESET).catch(logged("the tour's trigger effect"));
+    return () => void client.previewTrigger(0).catch(logged("turning the tour's trigger effect off"));
   }, [onTriggerStep, client]);
 
   const answer = useCallback(
@@ -217,7 +221,7 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     const frame = requestAnimationFrame(() => {
       setTickedStep(index);
       // Her reaction (if the step has one): after the step's own line.
-      void say(`tour_${STEPS[index].key}_done`);
+      sayInPassing(`tour_${STEPS[index].key}_done`);
     });
     return () => cancelAnimationFrame(frame);
   }, [isDone, ticked, index]);
@@ -319,7 +323,9 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     if (!ticked || index === null || index >= STEPS.length - 1 || STEPS[index].pad) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      void narratorIdle().then(() => !cancelled && go(index + 1));
+      narratorIdle()
+        .then(() => !cancelled && go(index + 1))
+        .catch(logged("waiting for the narrator before the tour's next step"));
     }, 1400);
     return () => {
       cancelled = true;

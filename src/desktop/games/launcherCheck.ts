@@ -17,6 +17,7 @@ export function useFreshRunning(key: string | null): LauncherId[] | null | undef
   useEffect(() => {
     if (key === null || !window.desktop) return;
     let live = true;
+    // error: NOT-WORTH — unknown (null): Apply's own check in the main process still names a running launcher (desktop.games.launcherStarted)
     window.desktop.gamesRunningLaunchers().then(
       (list) => live && setRunning({ key, list }),
       () => live && setRunning({ key, list: null }),
@@ -43,6 +44,7 @@ export function restartFor(report: GamesReport, fixes: Fix[], running?: Launcher
 
 // A launcher the page didn't name runs (started since the check): nothing was
 // written; the review now names it, and Apply asks again.
+// error: SHOWN — desktop.games.launcherStarted (an input here; the text comes from useRestartText)
 export const startedSinceCheck = (r: { blockedBy?: LauncherId[]; problem?: CloseProblem }) => !!r.blockedBy?.length && !r.problem;
 
 // ---- A change the launcher wrote back ----

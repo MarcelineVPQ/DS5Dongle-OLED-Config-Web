@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { errorText } from "../errorText";
+import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
 import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
+import { logged } from "../errorText";
 
 // App self-update state, mirrored from the main process.
 export function useAppUpdate(): UpdateState {
@@ -12,7 +13,7 @@ export function useAppUpdate(): UpdateState {
   useEffect(() => {
     const desktop = window.desktop;
     if (!desktop) return;
-    void desktop.getUpdateState().then(setState);
+    desktop.getUpdateState().then(setState).catch(logged("reading the update state at start (updates still arrive through onUpdateState)"));
     return desktop.onUpdateState(setState);
   }, []);
   return state;
@@ -24,7 +25,7 @@ export function useFirmwareHold(): FirmwareHoldState {
   useEffect(() => {
     const desktop = window.desktop;
     if (!desktop) return;
-    void desktop.getFirmwareHold().then(setState);
+    desktop.getFirmwareHold().then(setState).catch(logged("reading the firmware-write hold at start (changes still arrive through onFirmwareHold)"));
     return desktop.onFirmwareHold(setState);
   }, []);
   return state;
@@ -50,6 +51,7 @@ export function firmwareOffer(latest: string | null | undefined, installed: stri
 
 export interface FirmwareUpdate {
   latest: LatestFirmware | null;
+  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest)
   problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, or offline
   available: boolean;
   backToStable: boolean; // the offer is the stable version, older than this development build
@@ -70,6 +72,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     try {
       r = (await window.desktop?.latestFirmware()) ?? { latest: null, problem: "offline" };
     } catch {
+      // error: SHOWN — desktop.firmware.checkedOffline (an unanswered lookup reads as offline)
       r = { latest: null, problem: "offline" };
     }
     setLatest(r.latest);
@@ -80,6 +83,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // Look up the published firmware whenever the app checks for updates.
   useEffect(() => {
     let live = true;
+    // error: SHOWN — desktop.firmware.offline (an unanswered lookup reads as offline)
     window.desktop?.latestFirmware().then(
       (r) => {
         if (!live) return;
@@ -111,7 +115,8 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       // return isn't a failure: keep waiting, and ask for PS.
       timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
     } catch (cause) {
-      setState({ phase: "failed", detail: errorText(cause) });
+      // error: SHOWN — english: the firmware banner's error notice with Dismiss (flash errors are English, batch E3)
+      setState({ phase: "failed", detail: causeText(cause) });
     }
   }, [appUpdate.phase, bridge.client, state.phase]);
 

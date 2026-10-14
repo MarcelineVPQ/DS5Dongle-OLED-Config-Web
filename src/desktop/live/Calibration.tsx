@@ -8,7 +8,7 @@
 // (uncalibrated) values.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
@@ -121,7 +121,8 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
       await client.setCalibration(slot, c);
       loaded(await readCal(client));
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.boardFailed (causeText: board results in plain words; other board errors English, batch E3)
+      setError(causeText(cause));
     }
   };
   const editStick = (i: 0 | 1, patch: Partial<Cal["sticks"][0]>) =>

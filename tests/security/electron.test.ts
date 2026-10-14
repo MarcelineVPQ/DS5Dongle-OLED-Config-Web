@@ -160,7 +160,8 @@ describe("IPC payload validation", async () => {
 
   it("validates every renderer message and checks the sender", () => {
     expect(ipcSource).toMatch(/DeviceStatusSchema\.safeParse\(raw\)/);
-    expect(ipcSource).toMatch(/SettingUpdate\.parse\(raw\)/);
+    expect(ipcSource).toMatch(/parseRequest\(IPC\.setSetting, SettingUpdate, raw\)/);
+    expect(ipcSource).toMatch(/run\(parseRequest\(channel, schema, raw\)\)/);
     expect((ipcSource.match(/trusted\(event\)/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 
@@ -222,7 +223,7 @@ describe("game links, folders and web links on Linux", () => {
     expect(mainSource.match(/openForUser\(/g)).toHaveLength(3);
     expect(mainSource).toContain("return openForUser(target.url);");
     expect(mainSource).toContain("return openForUser(target.folder);");
-    expect(mainSource).toContain('if (process.platform === "linux") void openForUser(url);');
+    expect(mainSource).toContain('const opened = process.platform === "linux" ? openForUser(url) : shell.openExternal(url).then(() => true);');
     expect(mainSource.match(/openExternalLink\(url\)/g)).toHaveLength(2);
     expect(mainSource).toMatch(/if \(isAllowedExternalUrl\(url\)\) openExternalLink\(url\);[\s\S]*if \(isAllowedExternalUrl\(url\)\) openExternalLink\(url\);/);
   });
@@ -441,8 +442,9 @@ describe("no restart or quit while firmware is written", () => {
     expect(mainSource).toContain('hold.whenDone("restart", () => updater.restart())');
     expect(mainSource.match(/updater\.restart\(\)/g)).toHaveLength(1);
     expect(mainSource).toContain("installUpdate: () => (hold.active ? Promise.resolve(updater.getState()) : updater.downloadAndInstall()),");
-    expect(mainSource.match(/updater\.downloadAndInstall\(\)/g)).toHaveLength(3);
-    expect(mainSource.match(/hold\.whenDone\("install", \(\) => void updater\.downloadAndInstall\(\)\)/g)).toHaveLength(2);
+    expect(mainSource.match(/updater\.downloadAndInstall\(\)/g)).toHaveLength(2);
+    expect(mainSource).toContain("const installInBackground = () => void updater.downloadAndInstall()");
+    expect(mainSource.match(/hold\.whenDone\("install", installInBackground\)/g)).toHaveLength(2);
     expect(mainSource).toMatch(/app\.on\("before-quit", \(event\) => \{\n\s+if \(hold\.allowQuit\(event, \(\) => app\.quit\(\)\)\)/);
     expect(mainSource).toContain("} else if (!hold.allowQuit(event, () => app.quit())) {");
     expect(mainSource).not.toMatch(/app\.(relaunch|exit)\(/);

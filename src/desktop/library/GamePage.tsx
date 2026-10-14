@@ -18,7 +18,7 @@ import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onThemeChange, scopedAccent } from "../live/controllerAccent";
-import { errorText } from "../../errorText";
+import { causeText, shown } from "../shownError";
 import { captureProfile, clearGroup, gameGroups, pruneProfile, settingsFrom, shownValues, upgradeProfile, type ProfileGroup } from "./profileValues";
 import { X } from "lucide-react";
 import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
@@ -36,6 +36,7 @@ import { artUrl } from "../games/types";
 import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { PlayButton, PlayStats, useGameAction } from "./playBar";
+import { logged } from "../../errorText";
 
 interface Props {
   game: GameEntry;
@@ -63,7 +64,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     void window
       .desktop!.gameArtColor(game.key)
       .then((c) => live && setArtColor(c))
-      .catch(() => undefined);
+      .catch(logged("the game art's color for the page accent (the theme accent stays)"));
     return () => {
       live = false;
     };
@@ -158,16 +159,17 @@ function ProfileFrame({ game, record, running, bridge, onLibrary }: { game: Game
     cancel,
   } = useDebouncedSave<ProfileSettings | null>(
     record?.profile?.settings ?? null,
+    // error: PASSES-ON — useDebouncedSave shows a failed save (desktop.errors.librarySave)
     (next) => (next ? desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: pruneProfile(next, normal) }).then(onLibrary) : Promise.resolve()),
     400,
   );
   const create = (from: ProfileSettings) => {
     cancel();
-    void desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: from }).then(onLibrary);
+    desktop.librarySetProfile({ gameKey: game.key, title: game.title, settings: from }).then(onLibrary).catch(shown("desktop.errors.profileCreate"));
   };
   const remove = () => {
     cancel();
-    void desktop.libraryDeleteProfile(game.key).then(onLibrary);
+    desktop.libraryDeleteProfile(game.key).then(onLibrary).catch(shown("desktop.errors.profileDelete"));
   };
 
   return (
@@ -447,7 +449,8 @@ function SetupFrame({
       setNote(restartText(r) ?? (r.applied.length > 0 && r.applied.every((a) => a.ok) ? t("desktop.library.setupDone") : t("desktop.library.setupFailed")));
       setConfirm(false);
     } catch (cause) {
-      setNote(errorText(cause));
+      // error: SHOWN — english: the note under Set up (main-process text, or desktop.errors.badRequest)
+      setNote(causeText(cause));
       setConfirm(false);
     }
   };
@@ -600,7 +603,8 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
       setNote(restartText(r));
       again = startedSinceCheck(r); // nothing written: the notice names it, the button asks again
     } catch (cause) {
-      setNote(errorText(cause));
+      // error: SHOWN — english: the note under the runner switch (main-process text, or desktop.errors.badRequest)
+      setNote(causeText(cause));
     }
     setConfirm(again);
   };

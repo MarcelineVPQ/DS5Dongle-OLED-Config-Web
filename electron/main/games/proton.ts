@@ -62,6 +62,7 @@ export function protonBuilds(dir: string): string[] {
     // loop: NOT-WORTH — folders in one tools dir, a stat each
     return readdirSync(dir).filter((d) => hasBuild(dir, d));
   } catch {
+    // error: NOT-WORTH — no tools folder: no builds
     return [];
   }
 }
@@ -107,7 +108,7 @@ export function buildVersion(folders: string[]): string | null {
     try {
       return readFileSync(join(folder, "version"), "utf8").slice(0, 200).trim();
     } catch {
-      // not in this folder
+      // error: NOT-WORTH — not in this folder
     }
   }
   return null;
@@ -157,6 +158,7 @@ function freeBytes(dir: string): number {
     const s = statfsSync(dir);
     return Number(s.bavail) * Number(s.bsize);
   } catch {
+    // error: NOT-WORTH — free space unknown: the install goes ahead, and a full disk fails it with its own message
     return Number.POSITIVE_INFINITY;
   }
 }
@@ -170,7 +172,7 @@ function cleanStaging(dir: string): void {
   try {
     for (const d of readdirSync(dir)) if (d.startsWith(".ds5-staging-")) rmSync(join(dir, d), { recursive: true, force: true });
   } catch {
-    // dir not there yet
+    // error: NOT-WORTH — dir not there yet
   }
 }
 

@@ -327,7 +327,8 @@
       "askBody": "Las nuevas versiones pueden descargarse e instalarse solas, verificadas como cada actualización, y se inician la próxima vez que abras la app. Puedes cambiarlo en los ajustes de la app.",
       "askYes": "Actualizar automáticamente",
       "askNo": "Preguntarme cada vez",
-      "fwUpdate": "Actualizar"
+      "fwUpdate": "Actualizar",
+      "appFailed": "La actualización de la app no se instaló: {{detail}}"
     },
     "controller": {
       "battery": "Batería",
@@ -533,7 +534,8 @@
       "launcherStarted": "{{launcher}} se está ejecutando, así que todavía no se cambió nada. Se cerrará para este cambio y luego se volverá a abrir. Confirma de nuevo para continuar.",
       "launcherOverwrote": "{{launcher}} revirtió un cambio aplicado aquí (estaba en ejecución). Vuelve a aplicarlo: si {{launcher}} está abierto, se cierra primero y luego se vuelve a abrir.",
       "details": "Detalles",
-      "needsAttention": "Por revisar"
+      "needsAttention": "Por revisar",
+      "undoAudioRestart": "Deshecho, pero no se pudo reiniciar el servicio de audio ({{error}}). Cierra sesión y vuelve a entrar, o reinicia el PC, para que el cambio de audio surta efecto."
     },
     "setup": {
       "installing": "Instalando el firmware…",
@@ -1303,7 +1305,8 @@
       "sonyPage": "Página de Sony",
       "howToPs5": "O en una PS5: conéctalo con un cable USB y ve a Ajustes → Accesorios → Mando (general) → Software del mando inalámbrico DualSense.",
       "howToCable": "La actualización no puede hacerse a través {{device_de}}. Después, vuelve a emparejar el mando con {{device}} si no se reconecta.",
-      "windowsOnly": "La aplicación PlayStation Accessories de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5."
+      "windowsOnly": "La aplicación PlayStation Accessories de Sony solo funciona en Windows: en Linux y macOS, usa un PC con Windows o una PS5.",
+      "officialUnavailable": "No se pudo contactar con Sony para comparar versiones. Comprueba la conexión a internet y pulsa Actualizar."
     },
     "stickTest": {
       "circleTitle": "Prueba de circularidad",
@@ -1511,7 +1514,8 @@
       "applyFailed": "El perfil de {{title}} no se pudo poner en {{device}} ({{reason}}). Están activos tus ajustes normales.",
       "partlyOn": "Puede que el perfil de {{title}} esté activo sin sus botones ni sus curvas de joystick ({{reason}}). Se volverá a intentar cuando {{device}} se reconecte.",
       "saveFailed": "No se guardó en el perfil de {{title}}: {{reason}}",
-      "notOn": "El perfil de {{title}} aún no está en {{device}}, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo."
+      "notOn": "El perfil de {{title}} aún no está en {{device}}, así que no se guardó nada en él. Vuelve a intentarlo cuando esté activo.",
+      "restoreFailed": "Tus ajustes normales no se pudieron volver a poner en {{device}} después del juego ({{reason}}). Se intentará otra vez cuando {{device}} se vuelva a conectar."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Cambiar el color",
@@ -1601,6 +1605,23 @@
       },
       "inGame": "Inicia el juego y activa el HDR en sus propios ajustes de pantalla.",
       "guide": "La Guía (página Acerca de) explica cada paso: Juegos → HDR en juegos en Linux."
+    },
+    "errors": {
+      "settingNotSaved": "No se pudo guardar ese ajuste, así que vuelve a estar como antes. Comprueba que tu carpeta personal no esté llena ni sea de solo lectura e inténtalo otra vez.",
+      "settingsRead": "No se pudieron leer los ajustes de la app, así que Ajustes de la app no puede mostrarlos. Reinicia la app; si vuelve a pasar, avísanos.",
+      "linkNotOpened": "No se pudo abrir ese enlace: ningún navegador respondió. Abre tu navegador e inténtalo otra vez.",
+      "badRequest": "No se cambió nada: la app envió esto de una forma que no acepta. Es un error de la app. Reiníciala e inténtalo otra vez, y avísanos si vuelve a pasar.",
+      "actionFailed": "Eso no funcionó: {{reason}}. Inténtalo otra vez; si sigue fallando, reinicia la app.",
+      "slotSwitch": "No se pudo cambiar a la ranura {{slot}}: {{reason}}",
+      "profileCreate": "No se pudo crear el perfil de este juego. Inténtalo otra vez; si sigue fallando, reinicia la app.",
+      "profileDelete": "No se pudo quitar el perfil de este juego, así que sigue ahí. Inténtalo otra vez; si sigue fallando, reinicia la app.",
+      "librarySave": "Tu último cambio en este juego no se guardó. Vuelve a hacerlo; si sigue fallando, reinicia la app.",
+      "libraryRead": "No se pudo leer tu biblioteca de juegos, así que los perfiles de juego y las distribuciones de botones guardadas quedan desactivados por ahora. Reinicia la app; si vuelve a pasar, avísanos.",
+      "layoutSave": "No se pudo guardar la distribución de botones. Inténtalo otra vez; si sigue fallando, reinicia la app.",
+      "layoutDelete": "No se pudo borrar la distribución de botones, así que sigue ahí. Inténtalo otra vez; si sigue fallando, reinicia la app.",
+      "boardFailed": "{{device, capitalize}} no pudo terminar eso (por ejemplo, guardarlo en su memoria). Lo que cambiaste puede perderse al apagarse. Inténtalo otra vez; si sigue fallando, desconecta {{device}} y vuelve a conectarlo.",
+      "boardBusy": "{{device, capitalize}} está ocupado con otra cosa. Inténtalo de nuevo en un momento.",
+      "boardRejected": "{{device, capitalize}} no aceptó eso. Puede que su firmware sea más antiguo que esta app: actualiza el firmware e inténtalo otra vez."
     }
   },
   "ad": {

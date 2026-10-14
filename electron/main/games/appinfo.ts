@@ -130,7 +130,7 @@ export function parseAppTypes(buf: Buffer, wanted: Set<string>): Map<string, App
       pos = next;
     }
   } catch {
-    // damaged entry: keep what was read
+    // error: NOT-WORTH — damaged entry: keep what was read
   }
   return out;
 }
@@ -140,6 +140,7 @@ export function steamAppTypes(steamRoot: string, appids: string[]): Map<string, 
   try {
     return parseAppTypes(readFileSync(join(steamRoot, "appcache", "appinfo.vdf")), new Set(appids));
   } catch {
+    // error: NOT-WORTH — no appinfo.vdf: app types unknown, so every Steam entry is listed as a game
     return new Map();
   }
 }

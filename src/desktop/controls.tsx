@@ -1,6 +1,8 @@
 // Compact controls for the desktop layout. Each renders one .dk-row.
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { causeText, shown } from "./shownError";
+import { logged } from "../errorText";
 
 interface RowProps {
   label: string;
@@ -128,7 +130,8 @@ export function Toggle({ label, sub, value, disabled, onChange }: ToggleProps) {
     if (!(pending instanceof Promise)) return;
     setBusy(true);
     void pending
-      .catch(() => undefined) // the caller reports its own errors; the switch just never sticks
+      // error: SHOWN — desktop.errors.actionFailed (was SWALLOWED: the safety net for a caller that doesn't report its own error)
+      .catch((cause: unknown) => shown("desktop.errors.actionFailed", { reason: causeText(cause) })(cause))
       .finally(() => {
         if (live.current) setBusy(false);
       });
@@ -258,8 +261,9 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
     setBusy(true);
     try {
       await onClick();
-    } catch {
-      // the caller reports its own errors; the button just never sticks
+    } catch (cause) {
+      // error: SHOWN — desktop.errors.actionFailed (was SWALLOWED: the safety net for a caller that doesn't report its own error; callers that do catch it first)
+      shown("desktop.errors.actionFailed", { reason: causeText(cause) })(cause);
     } finally {
       if (live.current) setBusy(false);
     }
@@ -272,7 +276,7 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
       aria-busy={busy || undefined}
       title={title}
       autoFocus={autoFocus}
-      onClick={() => void run()}
+      onClick={() => void run().catch(logged("BusyButton.run (it shows its own errors)"))}
     >
       {busy && <span className="dk-btn-spinner" aria-hidden="true" />}
       {children}

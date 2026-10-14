@@ -1,8 +1,9 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { statSync } from "node:fs";
-import { app, BrowserWindow, net, protocol, shell, session, type WebContents } from "electron";
-import { IPC, type DesktopSettings } from "../../src/desktop/api";
+import { app, BrowserWindow, dialog, net, protocol, shell, session, type WebContents } from "electron";
+import { IPC, type DesktopSettings, type MainErrorKey } from "../../src/desktop/api";
+import { errorText, logged } from "../../src/errorText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
 import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
@@ -64,6 +65,7 @@ const isDirectory = (path: string) => {
   try {
     return statSync(path).isDirectory();
   } catch {
+    // error: NOT-WORTH — a missing folder is "no folder": the game action returns false and the page shows desktop.library.action.failed
     return false;
   }
 };
@@ -74,7 +76,15 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   // Launching it again just brings the running copy forward.
   app.on("second-instance", showWindow);
-  void app.whenReady().then(start);
+  // The app couldn't set itself up: without a window, a dialog says so.
+  app
+    .whenReady()
+    .then(start)
+    // error: SHOWN — main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English)
+    .catch((cause: unknown) => {
+      dialog.showErrorBox("DS5 Dongle Configurator", `The app couldn't start: ${errorText(cause)}\n\nTry starting it again. If this keeps happening, reinstall the app.`);
+      app.quit();
+    });
 }
 
 // A crashed GPU process means hardware rendering isn't safe on this PC:
@@ -85,7 +95,12 @@ function recordGpuCrash(): void {
     if (details.type !== "GPU" || details.reason === "clean-exit" || details.reason === "killed") return;
     if (!settings?.hardwareAcceleration) return;
     console.warn(`[gpu] GPU process gone (${details.reason}); software rendering from the next start`);
-    updateSetting("hardwareAcceleration", false);
+    try {
+      updateSetting("hardwareAcceleration", false);
+    } catch (cause) {
+      // error: LOGGED-OK — not a user action: this run already falls back to software rendering; the next crash tries again
+      logged("turning hardware acceleration off after a GPU crash")(cause);
+    }
   });
 }
 
@@ -103,9 +118,17 @@ function start(): void {
   );
   updater.pruneStaleFiles();
   hold = new FirmwareHold((state) => mainWindow?.webContents.send(IPC.firmwareHold, state));
-  setTimeout(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_FIRST_CHECK_MS);
-  setInterval(() => settings.checkForUpdates && void checkForUpdates(), UPDATE_INTERVAL_MS);
-  applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  const scheduledCheck = () => {
+    if (settings.checkForUpdates) checkForUpdates().catch(logged("scheduled update check (not started by the user; a failed check shows as the 'failed' banner state)"));
+  };
+  setTimeout(scheduledCheck, UPDATE_FIRST_CHECK_MS);
+  setInterval(scheduledCheck, UPDATE_INTERVAL_MS);
+  try {
+    applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  } catch (cause) {
+    // error: LOGGED-OK — the start-up re-apply of an unchanged setting; changing it in App settings or the tray shows desktop.errors.settingNotSaved
+    logged("re-applying launch at login at start")(cause);
+  }
   lockDownSession();
 
   tray = new AppTray(
@@ -116,11 +139,19 @@ function start(): void {
         if (command.type === "openPage") showWindow();
         mainWindow?.webContents.send(IPC.trayCommand, command);
       },
-      setSetting: (key, value) => void updateSetting(key, value),
+      setSetting: (key, value) => {
+        try {
+          updateSetting(key, value);
+        } catch {
+          // error: SHOWN — desktop.errors.settingNotSaved (the tray's checkbox goes back; updateSetting logged the cause)
+          showWindow();
+          showMainError("desktop.errors.settingNotSaved");
+        }
+      },
       createDesktopShortcut: process.platform === "win32" ? () => void createDesktopShortcut() : undefined,
       checkForUpdates: () => {
         showWindow();
-        void updater.check();
+        updater.check().catch(logged("updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown"));
       },
       restartToUpdate,
       // before-quit marks it quitting, or holds it while firmware is written.
@@ -167,7 +198,7 @@ function start(): void {
       void games.scan().then(
         // Consent may have been turned off while the scan ran.
         () => settings.gamesScanAllowed && watcher.start(),
-        () => undefined,
+        logged("background scan for the running-game watcher (the Games page scans again and shows its own errors)"),
       );
     else watcher.stop();
   };
@@ -192,6 +223,7 @@ function start(): void {
       try {
         return { manifest: await updater.fetchManifest(), problem: null };
       } catch (cause) {
+        // error: SHOWN — desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; a cached feed answers when offline)
         if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished" };
         const cached = updater.getManifest();
         return cached ? { manifest: cached, problem: null } : { manifest: null, problem: "offline" };
@@ -228,14 +260,18 @@ function start(): void {
         // ▶ Play with the launcher closed: it starts in the background with
         // the game (Steam -silent, Heroic --no-gui; actions.ts), in its own
         // unit like everything we start; if that can't start, the link.
+        // error: NOT-WORTH — no quiet start for this game: the launcher link below starts it instead
         const quiet = u.action === "play" ? await withGames((g) => g.quietPlay(u.gameKey)).catch(() => null) : null;
         if (quiet && (await startForUser(quiet.cmd, quiet.args))) return true;
         // Linux: xdg-open with the real home, so a launcher that wasn't
         // running doesn't start inside the dev copy's test HOME, in its own
         // unit, so it outlives the app (schemeHandler.ts).
         if (process.platform === "linux") return openForUser(target.url);
-        shell.openExternal(target.url).catch(() => undefined);
-        return true;
+        // error: SHOWN — desktop.library.action.failed (was SILENT-BUG: a failed open still answered true)
+        return shell.openExternal(target.url).then(
+          () => true,
+          () => false,
+        );
       }
       // Only a folder: launcher configs could name a file, which openPath would run.
       if (target.folder && isDirectory(target.folder)) {
@@ -263,7 +299,8 @@ function start(): void {
         const m = await updater.fetchManifest("dev");
         return { app: m.app.version, firmware: m.firmware?.version ?? null, notes: m.app.notes ?? null, notesUrl: m.app.notes_url ?? null };
       } catch {
-        return null; // offline or no dev build yet: the dialog says so
+        // error: SHOWN — desktop.channel.joinOffline (offline or no dev build yet)
+        return null;
       }
     },
     backToStable: () => {
@@ -281,7 +318,12 @@ function start(): void {
   });
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
-  watchDesktopPalette(() => void readDesktopPalette().then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette)));
+  watchDesktopPalette(
+    () =>
+      void readDesktopPalette()
+        .then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette))
+        .catch(logged("following the desktop's accent color (the theme keeps its last colors)")),
+  );
   app.on("activate", showWindow);
   // Quitting (tray Quit, Ctrl+Q, logout) mid-write would leave the board
   // half-written: show the window, which says it closes when the write ends.
@@ -303,18 +345,43 @@ function restartToUpdate(): void {
 // button), and starts the next time the app opens.
 async function checkForUpdates(): Promise<void> {
   const state = await updater.check();
-  if (state.phase === "available" && settings.autoInstallUpdates) hold.whenDone("install", () => void updater.downloadAndInstall());
+  if (state.phase === "available" && settings.autoInstallUpdates) hold.whenDone("install", installInBackground);
 }
 
+// downloadAndInstall() doesn't reject: a failure is the "failed" banner state.
+const installInBackground = () => void updater.downloadAndInstall().catch(logged("automatic update install (a failure shows as the 'failed' banner)"));
+
+// A user action outside the page failed (a tray toggle, a link): the page's notice says so.
+function showMainError(key: MainErrorKey): void {
+  mainWindow?.webContents.send(IPC.showError, key);
+}
+
+// Throws when the setting can't be saved (or launch at login can't be
+// changed): it is put back first, and the caller shows
+// desktop.errors.settingNotSaved (the page through setSetting's rejection,
+// the tray through showMainError).
 function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K], recheck = true): DesktopSettings {
+  const before = settings;
   settings = { ...settings, [key]: value };
-  saveSettings(settings);
-  if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  try {
+    saveSettings(settings);
+    if (key === "launchAtLogin" || key === "startMinimized") applyAutostart(settings.launchAtLogin, settings.startMinimized);
+  } catch (cause) {
+    logged(`saving the setting ${key}`)(cause);
+    settings = before;
+    try {
+      saveSettings(before);
+    } catch {
+      // error: NOT-WORTH — the file couldn't be written a moment ago either; it still holds the old value
+    }
+    tray?.updateSettings(settings);
+    throw new Error(`The setting ${key} couldn't be saved: ${errorText(cause)}`, { cause });
+  }
   // Turned on with an update already waiting: install it now.
-  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", () => void updater.downloadAndInstall());
+  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", installInBackground);
   if (key === "gamesScanAllowed") syncRunningWatcher();
   // A different feed: look again (a development build may now be offered).
-  if (key === "updateChannel" && recheck && updater.getState().phase !== "ready") void updater.check();
+  if (key === "updateChannel" && recheck && updater.getState().phase !== "ready") updater.check().catch(logged("updater.check() doesn't reject: a failed check is the 'failed' banner"));
   tray?.updateSettings(settings);
   return settings;
 }
@@ -415,16 +482,20 @@ function createWindow(visible: boolean): void {
     }
   });
 
-  if (devServerUrl) void mainWindow.loadURL(devServerUrl);
-  else void mainWindow.loadFile(join(here, "../renderer/index.html"));
+  // A page that can't load is a broken install or a stopped dev server; Chromium logs did-fail-load too.
+  (devServerUrl ? mainWindow.loadURL(devServerUrl) : mainWindow.loadFile(join(here, "../renderer/index.html"))).catch(logged("loading the app's own page"));
 }
 
 // An allowlisted web link in the system browser. Linux: through xdg-open in
 // its own unit (openForUser), so a browser it starts outlives the app and
 // gets the real home; elsewhere the OS starts it (LaunchServices / ShellExecute).
 function openExternalLink(url: string): void {
-  if (process.platform === "linux") void openForUser(url);
-  else void shell.openExternal(url);
+  const opened = process.platform === "linux" ? openForUser(url) : shell.openExternal(url).then(() => true);
+  // error: SHOWN — desktop.errors.linkNotOpened (was SILENT-BUG: a link that didn't open showed nothing)
+  opened.then(
+    (ok) => ok || showMainError("desktop.errors.linkNotOpened"),
+    () => showMainError("desktop.errors.linkNotOpened"),
+  );
 }
 
 // Exactly the app's own page: the dev server's origin, or the packaged
@@ -441,6 +512,7 @@ function isAppUrl(url: string): boolean {
   try {
     parsed = new URL(url);
   } catch {
+    // error: NOT-WORTH — not a URL is "not the app's page": navigation stays blocked, as intended
     return false;
   }
   if (devServerUrl) return parsed.origin === new URL(devServerUrl).origin;

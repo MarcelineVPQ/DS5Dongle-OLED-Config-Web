@@ -162,6 +162,7 @@ export function launcherControl(layer: ProcLayer = realLayer(), timeoutMs = 30_0
   };
 }
 
+// error: SHOWN — desktop.games.restartFailed (useRestartText: problem game-running / timeout / failed)
 export type ClosedRun<T> = { ok: true; value: T; reopenFailed: LauncherId[] } | { ok: false; problem: CloseProblem; launcher: LauncherId };
 
 // Run `work` with these launchers closed (the ones that are running), then
@@ -176,12 +177,14 @@ export async function withLaunchersClosed<T>(launchers: LauncherId[], control: L
   const reopenAll = async () => {
     const failed: LauncherId[] = [];
     // loop: SERIAL-REQUIRED — launcher order: reopen one at a time, as they were closed
+    // error: SHOWN — desktop.games.reopenFailed (a launcher that didn't start again is in reopenFailed)
     for (const { launcher, plan } of closed) if (!plan || !(await control.reopen(plan).catch(() => false))) failed.push(launcher);
     return failed;
   };
   // loop: SERIAL-REQUIRED — launcher order: stop at the first that won't close and reopen the rest
   for (const launcher of toClose) {
     const plan = await control.plan(launcher);
+    // error: SHOWN — desktop.games.restartFailed (problem "failed", nothing written)
     const result = await control.close(launcher).catch(() => "failed" as const);
     if (result === "closed") closed.push({ launcher, plan });
     else if (result !== "not-running") {
@@ -208,6 +211,7 @@ function envOf(pid: number, key: string): string | undefined {
       .find((e) => e.startsWith(`${key}=`));
     return kv?.slice(key.length + 1);
   } catch {
+    // error: NOT-WORTH — environ unreadable (another user's or a gone process): no value
     return undefined;
   }
 }
@@ -216,13 +220,14 @@ const posixLayer: ProcLayer = {
   list: () => readProcs(),
   env: envOf,
   exists: existsSync,
+  // error: SHOWN — desktop.games.restartTimeout (a quit request that fails leaves the launcher running, which the close then reports)
   run: (cmd, args) => execFile(cmd, args, { timeout: 15_000, env: launcherEnv(process.env, realHome()) }, () => undefined),
   start: startForUser,
   signal: (pid) => {
     try {
       process.kill(pid, "SIGTERM");
     } catch {
-      // already gone
+      // error: NOT-WORTH — already gone
     }
   },
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
@@ -242,6 +247,7 @@ export const steamAppRunning = (regOutput: string): boolean => {
 
 function steamReportsGame(): Promise<boolean> {
   return new Promise((resolve) =>
+    // error: NOT-WORTH — no answer from reg.exe reads as "Steam reports no game"; the process list is checked too
     execFile(system32("reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "RunningAppID"], { encoding: "utf8", windowsHide: true, timeout: 3000 }, (error, stdout) =>
       resolve(!error && steamAppRunning(stdout)),
     ),
@@ -263,8 +269,10 @@ function windowsLayer(libraryGame: () => boolean): ProcLayer {
     list: readWindowsProcs,
     env: () => undefined,
     exists: existsSync,
+    // error: SHOWN — desktop.games.restartTimeout (a quit request that fails leaves the launcher running, which the close then reports)
     run: (cmd, args) => execFile(cmd, args, { timeout: 15_000, windowsHide: true, env: launcherEnv(process.env, realHome()) }, () => undefined),
     start: startForUser,
+    // error: SHOWN — desktop.games.restartTimeout (a taskkill that fails leaves the launcher running, which the close then reports)
     signal: (pid) => execFile(system32("taskkill.exe"), taskkillArgs(pid), { timeout: 5000, windowsHide: true }, () => undefined),
     sleep: posixLayer.sleep,
     windows: {

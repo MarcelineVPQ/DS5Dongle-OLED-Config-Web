@@ -73,6 +73,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/list_loops\.mjs$
+      - id: error-verdicts
+        name: Every error path has a verdict (no silent failure)
+        entry: node tools/list_errors.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^src/i18n/locales/en\.json$|^tools/(list_errors|tsProgram)\.mjs$
       - id: identical-files
         name: No byte-identical files
         entry: node tools/check_identical_files.mjs

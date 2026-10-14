@@ -327,7 +327,8 @@
       "askBody": "Novas versões podem se baixar e instalar sozinhas, verificadas como toda atualização, e abrem na próxima vez que você abrir o app. Você pode mudar isso nas configurações do app.",
       "askYes": "Atualizar automaticamente",
       "askNo": "Perguntar sempre",
-      "fwUpdate": "Atualizar"
+      "fwUpdate": "Atualizar",
+      "appFailed": "A atualização do app não foi instalada: {{detail}}"
     },
     "controller": {
       "battery": "Bateria",
@@ -533,7 +534,8 @@
       "launcherStarted": "O {{launcher}} está aberto agora, então nada foi alterado ainda. Ele será fechado para esta mudança e depois aberto de novo. Confirme de novo para continuar.",
       "launcherOverwrote": "O {{launcher}} desfez uma mudança aplicada aqui (ele estava aberto). Aplique de novo: se o {{launcher}} estiver aberto, ele é fechado antes e aberto de novo depois.",
       "details": "Detalhes",
-      "needsAttention": "A revisar"
+      "needsAttention": "A revisar",
+      "undoAudioRestart": "Desfeito, mas reiniciar o serviço de áudio falhou ({{error}}). Saia e entre de novo na sessão, ou reinicie o PC, para a mudança de áudio valer."
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -1303,7 +1305,8 @@
       "sonyPage": "Página da Sony",
       "howToPs5": "Ou em um PS5: conecte-o com um cabo USB e vá em Configurações → Acessórios → Controle (Geral) → Software de dispositivo do controle sem fio DualSense.",
       "howToCable": "A atualização não passa {{device_por}}. Depois, emparelhe o controle com {{device}} de novo se ele não reconectar.",
-      "windowsOnly": "O aplicativo PlayStation Accessories da Sony só funciona no Windows: no Linux e no macOS, use um PC com Windows ou um PS5."
+      "windowsOnly": "O aplicativo PlayStation Accessories da Sony só funciona no Windows: no Linux e no macOS, use um PC com Windows ou um PS5.",
+      "officialUnavailable": "Não foi possível falar com a Sony para comparar as versões. Verifique a conexão com a internet e pressione Atualizar."
     },
     "stickTest": {
       "circleTitle": "Teste de circularidade",
@@ -1511,7 +1514,8 @@
       "applyFailed": "O perfil de {{title}} não foi colocado {{device_em}} ({{reason}}). Suas configurações normais estão ativas.",
       "partlyOn": "O perfil de {{title}} pode estar ativo sem seus botões ou curvas de analógico ({{reason}}). Uma nova tentativa é feita quando {{device}} se reconectar.",
       "saveFailed": "Não salvo no perfil de {{title}}: {{reason}}",
-      "notOn": "O perfil de {{title}} ainda não está {{device_em}}, então nada foi salvo nele. Tente de novo quando ele estiver ativo."
+      "notOn": "O perfil de {{title}} ainda não está {{device_em}}, então nada foi salvo nele. Tente de novo quando ele estiver ativo.",
+      "restoreFailed": "Suas configurações normais não voltaram {{device_em}} depois do jogo ({{reason}}). Isso é tentado de novo quando {{device}} reconectar."
     },
     "colorPicker": {
       "swatch": "{{name}}: {{hex}}. Mudar a cor",
@@ -1601,6 +1605,23 @@
       },
       "inGame": "Inicie o jogo e ative o HDR nas configurações de tela dele.",
       "guide": "O Guia (página Sobre) explica cada parte: Jogos → HDR em jogos no Linux."
+    },
+    "errors": {
+      "settingNotSaved": "Não foi possível salvar essa configuração, então ela voltou ao que era. Verifique se a sua pasta pessoal não está cheia ou somente leitura e tente de novo.",
+      "settingsRead": "Não foi possível ler as configurações do app, então Configurações do app não consegue mostrá-las. Reinicie o app; se continuar acontecendo, avise a gente.",
+      "linkNotOpened": "Não foi possível abrir esse link: nenhum navegador respondeu. Abra o seu navegador e tente de novo.",
+      "badRequest": "Nada foi alterado: o app enviou isso num formato que ele não aceita. É um bug do app. Reinicie e tente de novo, e avise a gente se acontecer outra vez.",
+      "actionFailed": "Não deu certo: {{reason}}. Tente de novo; se continuar falhando, reinicie o app.",
+      "slotSwitch": "Não foi possível mudar para o slot {{slot}}: {{reason}}",
+      "profileCreate": "Não foi possível criar o perfil deste jogo. Tente de novo; se continuar falhando, reinicie o app.",
+      "profileDelete": "Não foi possível remover o perfil deste jogo, então ele continua aí. Tente de novo; se continuar falhando, reinicie o app.",
+      "librarySave": "Sua última alteração neste jogo não foi salva. Faça de novo; se continuar falhando, reinicie o app.",
+      "libraryRead": "Não foi possível ler a sua biblioteca de jogos, então os perfis de jogo e os layouts de botões salvos ficam desligados por enquanto. Reinicie o app; se continuar acontecendo, avise a gente.",
+      "layoutSave": "Não foi possível salvar o layout de botões. Tente de novo; se continuar falhando, reinicie o app.",
+      "layoutDelete": "Não foi possível excluir o layout de botões, então ele continua aí. Tente de novo; se continuar falhando, reinicie o app.",
+      "boardFailed": "{{device, capitalize}} não conseguiu concluir isso (por exemplo, salvar na memória). O que você mudou pode se perder ao desligar. Tente de novo; se continuar falhando, desconecte {{device}} e conecte de novo.",
+      "boardBusy": "{{device, capitalize}} está ocupado com outra coisa. Tente de novo daqui a pouco.",
+      "boardRejected": "{{device, capitalize}} não aceitou isso. O firmware pode ser mais antigo que este app: atualize o firmware e tente de novo."
     }
   },
   "ad": {

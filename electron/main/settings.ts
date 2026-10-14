@@ -61,19 +61,19 @@ function settingsPath(): string {
 
 export function loadSettings(): DesktopSettings {
   try {
+    // error: NOT-WORTH — a settings file that doesn't fit: the defaults, written back on the next save
     const parsed = SettingsFile.safeParse(JSON.parse(readFileSync(settingsPath(), "utf8")));
     return { ...DEFAULT_SETTINGS, ...(parsed.success ? parsed.data : {}) };
   } catch {
+    // error: NOT-WORTH — no file yet (first start) or a broken one: the defaults, which the next save writes back
     return { ...DEFAULT_SETTINGS };
   }
 }
 
+// Throws when the file can't be written: the caller (updateSetting) puts the
+// setting back and the page says so (error pass: it used to be only logged).
 export function saveSettings(settings: DesktopSettings): void {
-  try {
-    // Atomic (temp file, fsync, rename): a crash mid-save can't leave a
-    // half-written file, which would reset every setting (and autostart).
-    writeFileAtomic(settingsPath(), JSON.stringify(settings, null, 2) + "\n");
-  } catch (cause) {
-    console.error("settings save failed:", cause instanceof Error ? cause.message : cause);
-  }
+  // Atomic (temp file, fsync, rename): a crash mid-save can't leave a
+  // half-written file, which would reset every setting (and autostart).
+  writeFileAtomic(settingsPath(), JSON.stringify(settings, null, 2) + "\n");
 }

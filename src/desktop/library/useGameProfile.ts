@@ -7,12 +7,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { errorText } from "../../errorText";
+import { causeText, shown } from "../shownError";
 import { normalizeConfig } from "../../protocol/config";
 import { EMPTY_LIBRARY, type LibraryFile, type ProfileSettings } from "../games/library";
 import { profileTarget } from "./libraryContext";
 import { applyGameProfile, gamePartsOf, ProfileNotApplied, profileCaps, putGameParts, restoreNormal } from "./profileDongle";
 import { captureProfile, layoutForButtons, profileConfig, profileCurves, profileToSave, profileUnsaved, sameGameCurves, settingsFrom, withSettings, type GameCurves } from "./profileValues";
+import { logged } from "../../errorText";
 
 export { nonConfigParts, settingsFrom } from "./profileValues";
 
@@ -26,6 +27,7 @@ export type ProfileStep =
   | { kind: "clear-active" }
   | { kind: "none" };
 
+// error: NOT-WORTH — \`failed\` is an input (the step that failed, so it isn't retried in a loop); the failure itself is shown where it happens
 export function decideProfileStep(s: { running: string | null; library: LibraryFile; appliedFor: string | null; failed: string | null; active: boolean }): ProfileStep {
   const record = s.running ? s.library.games[s.running] : undefined;
   const profile = record?.profile;
@@ -77,6 +79,7 @@ export interface GameProfileState {
   // first and the profile follows again after.
   switchSlot: (slot: number) => Promise<void>;
   // A profile that didn't go on or wasn't saved (shown as a notice).
+  // error: SHOWN — desktop.profile.applyFailed (DesktopApp's ErrorNotice; also partlyOn / restoreFailed / saveFailed / notOn)
   error: string | null;
   clearError: () => void;
   startEditing: (gameKey: string, title: string) => void;
@@ -125,6 +128,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
       await switching.current;
     }
     const run = task();
+    // error: NOT-WORTH — the wait's own copy; \`run\` is awaited below with its error
     switching.current = run.catch(() => undefined);
     try {
       await run;
@@ -142,12 +146,16 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
 
   useEffect(() => {
     if (!desktop) return;
-    void desktop.libraryGet().then((f) => {
-      // A restore point left from before (a crash or quit mid-game): a game's config may still be on.
-      profileInRam.current = f.restore?.settings ?? null;
-      setLibrary(f);
-      setLoaded(true);
-    });
+    desktop
+      .libraryGet()
+      .then((f) => {
+        // A restore point left from before (a crash or quit mid-game): a game's config may still be on.
+        profileInRam.current = f.restore?.settings ?? null;
+        setLibrary(f);
+        setLoaded(true);
+      })
+      .catch(shown("desktop.errors.libraryRead"));
+    // error: NOT-WORTH — unknown reads as "no game running"; onRunningGame corrects it within one watcher pass (2-3 s)
     void desktop.gamesRunning().then(
       (key) => {
         setRunning(key);
@@ -181,7 +189,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     if (step.kind === "clear-active") setActive(null);
     const capsNow = { layouts, edgeExtras, curves: curvesSupported, slot };
     if (step.kind === "apply") {
-      void switchOnce(async () => {
+      switchOnce(async () => {
         try {
           let file = library;
           // The normal values: kept before the first profile goes on, and
@@ -197,9 +205,12 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
           setAppliedStamp(step.stamp);
           setActive({ gameKey: step.gameKey, title: step.title });
         } catch (cause) {
+          // error: SHOWN — desktop.profile.applyFailed (or partlyOn)
           failed.current = step.stamp;
           console.error("Game profile not applied", cause);
-          if (!(cause instanceof ProfileNotApplied)) return; // before anything went to the dongle
+          // Before anything went to the dongle (the restore point wasn't saved): the normal
+          // settings are still on (was SILENT-BUG: only logged).
+          if (!(cause instanceof ProfileNotApplied)) return setError(t("desktop.profile.applyFailed", { title: step.title, reason: causeText(cause) }));
           appliedFor.current = null;
           if (cause.left === "normal") {
             // The normal values are back on: the normal mode (and its Save to dongle) is right.
@@ -212,14 +223,14 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
             setAppliedStamp(step.stamp);
             setActive({ gameKey: step.gameKey, title: step.title });
           }
-          setError(t(cause.left === "normal" ? "desktop.profile.applyFailed" : "desktop.profile.partlyOn", { title: step.title, reason: errorText(cause) }));
+          setError(t(cause.left === "normal" ? "desktop.profile.applyFailed" : "desktop.profile.partlyOn", { title: step.title, reason: causeText(cause) }));
         }
-      });
+      }).catch(logged("switchOnce's apply task (it shows its own errors)"));
     }
     // No profile running (the game closed, editing is done, or the app
     // started after a crash mid-game): put the normal values back.
     if (step.kind === "restore") {
-      void switchOnce(async () => {
+      switchOnce(async () => {
         try {
           await restoreNormal({ client, caps: capsNow, applyConfig: applyBody, config, normal: step.settings });
           profileInRam.current = null;
@@ -228,14 +239,17 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
           setAppliedStamp(null);
           setActive(null);
         } catch (cause) {
+          // error: SHOWN — desktop.profile.restoreFailed (was SILENT-BUG: only logged; the game's settings stayed on with no word)
           failed.current = "restore";
           console.error("Normal settings not restored", cause);
+          setError(t("desktop.profile.restoreFailed", { reason: causeText(cause) }));
         }
-      });
+      }).catch(logged("switchOnce's restore task (it shows its own errors)"));
     }
     // A game's layout still on the dongle with no game running (the app was
     // closed mid-game and the restore point is gone): back to the saved one.
-    if (step.kind === "none" && !restoreNeeded(wanted, library) && gameTemporary && !active && client) void switchOnce(() => putGameParts(client, capsNow, null).catch(() => undefined));
+    if (step.kind === "none" && !restoreNeeded(wanted, library) && gameTemporary && !active && client)
+      switchOnce(() => putGameParts(client, capsNow, null)).catch(logged("taking a game's layout off with no game running (busy or gone: tried again on the next change or reconnect)"));
   }, [
     desktop,
     loaded,
@@ -308,8 +322,9 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
       setError(null);
       return true;
     } catch (cause) {
+      // error: SHOWN — desktop.profile.saveFailed
       if (file) setLibrary(file); // the profile saved, its layout didn't
-      setError(t("desktop.profile.saveFailed", { title: target.title, reason: errorText(cause) }));
+      setError(t("desktop.profile.saveFailed", { title: target.title, reason: causeText(cause) }));
       return false;
     }
   }, [desktop, editing, active, config, library, normal, buttonsDraft, curvesDirty, curvesDraft, t]);

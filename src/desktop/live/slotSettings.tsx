@@ -4,7 +4,7 @@
 // both cards.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { BusyButton } from "../controls";
@@ -48,7 +48,8 @@ export function useSlotSettings<T>(bridge: UseDs5BridgeResult, supported: boolea
         loaded(r);
         setError(null);
       })
-      .catch((cause) => live && setError(errorText(cause)))
+      // error: SHOWN — english: SlotReadError with Retry (board errors are English, batch E3)
+      .catch((cause) => live && setError(causeText(cause)))
       .finally(settle);
     return () => {
       live = false;
@@ -64,6 +65,7 @@ export function useSlotSettings<T>(bridge: UseDs5BridgeResult, supported: boolea
 }
 
 // The error line, with Retry while nothing could be read yet.
+// error: SHOWN — english: the read error itself, with Retry
 export function SlotReadError({ error, retry }: { error: string | null; retry: (() => Promise<void>) | null }) {
   const { t } = useTranslation();
   if (!error) return null;
