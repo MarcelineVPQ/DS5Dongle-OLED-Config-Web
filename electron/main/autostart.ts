@@ -33,6 +33,12 @@ export function applyAutostart(enabled: boolean, startMinimized: boolean): void 
     }
     return;
   }
+  // macOS: only when the system's login item differs from the setting. The
+  // start-up re-apply otherwise unregistered a login item that was never
+  // registered, and Electron logged "Unable to set login item ... Operation
+  // not permitted" at every start (the macOS smoke test, 2026-10-14). The
+  // args (start minimized) aren't used by macOS 13+ login items.
+  if (process.platform === "darwin" && app.getLoginItemSettings().openAtLogin === enabled) return;
   // Windows: the installed exe (launchPath). Applied at every start, so an
   // entry written by an older build (the portable exe's path) is corrected.
   // The uninstaller removes it (build/installer.nsh).
