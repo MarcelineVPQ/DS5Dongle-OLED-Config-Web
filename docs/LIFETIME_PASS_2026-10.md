@@ -805,7 +805,7 @@ Nothing below is done yet. Each change keeps the current behaviour and needs a t
 |---|---|---|---|---|---|---|
 | 33 | `usePref` | effect | useEffect cleanup:all | render | **OK** | cleanup: removes the pref listener (unmount / key change) |
 | 39 | `usePref > useEffect(cb)` | listener | window "PREF_EVENT" | effect | **OK** | removed in the effect cleanup |
-| 64 | `useRawPref` | effect | useEffect cleanup:all | render | **OK** | cleanup: removes the pref listener (unmount / key change) |
+| 64 | `useRawPref` | effect | useEffect cleanup:all | render | **OK** | cleanup: removes this raw pref's listener (unmount / key change) |
 | 70 | `useRawPref > useEffect(cb)` | listener | window "PREF_EVENT" | effect | **OK** | removed in the effect cleanup |
 
 #### src/desktop/tour/Tour.tsx
