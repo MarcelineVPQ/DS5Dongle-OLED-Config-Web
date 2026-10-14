@@ -9,6 +9,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Changed
 
 - **Games uses less memory for game art.** The app loaded every picture at its full size (Steam heroes are 1920 px wide, Heroic and Lutris art often larger) even where it is shown small: the library's 20 px icons, the cover grid, the logos and the Controller page's blurred background. Each place now gets a copy scaled to the size it shows, sharp on 1x to 2x screens, made once and kept in the app's settings folder (at most 128 MB, oldest removed first; deleted when you turn off Games' access to your launchers). In a test library of 40 games the decoded image memory dropped by about half on Games and by about 75% for the Controller page's art background.
+### Fixed
+
+- **The app used about 2.6 % of a processor core while hidden in the tray** (6 hours overnight with the board and a controller connected). With an animated lightbar (rainbow, breathing, a charging pulse) the controller's color changed on every one-second check, and each change redrew the hidden window, redrew the tray icon and rebuilt the tray menu. While the window is hidden, a new lightbar color now reaches the tray icon once it holds for a second, and a color that keeps changing updates it at most once a minute; anything else, such as a slot switch, charging or the controller disconnecting, still shows at once, and nothing changes while the window is open. The tray icon is drawn without the graphics card, the tray menu is rebuilt only when what it shows changes, and the running-game check (for game profiles) checks each process's owner once instead of every 2 seconds. Measured hidden for 5 minutes with a simulated board: animated lightbar 4.9 % → 0.4 % of a core, steady lightbar 0.38 % → 0.32 %.
 
 ## [0.9.5-dev.11] - 2026-10-13
 

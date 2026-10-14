@@ -49,10 +49,13 @@ function art(): Promise<ImageBitmap> {
 }
 
 // Size in device pixels; the main process registers it as the @2x image.
+// Both canvases are software ones (willReadFrequently): a 44 px icon encoded
+// to PNG costs next to nothing on the CPU, while a GPU canvas made the GPU
+// process do a context and a read-back for every redraw.
 export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<string> {
   const img = await art();
   const canvas = new OffscreenCanvas(size, size);
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.imageSmoothingQuality = "high";
 
   // Controller sits low and slightly left, leaving the top-right for the dot.
@@ -61,7 +64,7 @@ export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<str
   const oy = size - ch - size / 24;
   // The silhouette in the taskbar's contrasting ink.
   const ink = new OffscreenCanvas(size, size);
-  const ictx = ink.getContext("2d")!;
+  const ictx = ink.getContext("2d", { willReadFrequently: true })!;
   ictx.imageSmoothingQuality = "high";
   ictx.drawImage(img, 0, oy, cw, ch);
   ictx.globalCompositeOperation = "source-in";

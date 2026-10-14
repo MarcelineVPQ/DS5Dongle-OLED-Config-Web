@@ -179,17 +179,20 @@ export default function DesktopApp() {
   const battery = controllerOn ? (liveIdentity?.battery ?? null) : null;
   const lightbar = controllerOn ? (liveIdentity?.lightbar ?? null) : null;
   const lightbarKey = lightbar ? lightbar.join(",") : "";
+  const slot = connected && liveIdentity ? liveIdentity.currentSlot : -1;
+  // Only when what the tray shows changes (not on every identity change: the
+  // main process rebuilds the tray menu for each report).
   // lifetime: OK — acquires nothing (sends the status to the tray over IPC)
   useEffect(() => {
     window.desktop?.reportStatus({
       dongle: connected,
       controller: controllerOn,
-      slot: connected && liveIdentity ? liveIdentity.currentSlot : -1,
+      slot,
       firmware: connected ? firmware : null,
       power,
       battery,
     });
-  }, [connected, controllerOn, liveIdentity, firmware, power, battery]);
+  }, [connected, controllerOn, slot, firmware, power, battery]);
 
   // The dongle has her too (connected, slot, battery low; firmware 1.3):
   // keep it in step with the app's narrator setting and language. Written

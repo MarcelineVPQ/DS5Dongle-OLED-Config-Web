@@ -132,6 +132,20 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), heroic)).toBe("h");
   });
 
+  it("checks a process's owner once, yet still sees it start a launcher (status read every pass)", () => {
+    const tmp = fakeProc([
+      { pid: 10, name: "systemd", ppid: 0 },
+      { pid: 15, name: "plasmashell", ppid: 10 },
+      { pid: 16, name: "bash", ppid: 15 },
+    ]);
+    expect(readProcs(true, tmp).some((p) => p.pid === 16)).toBe(false);
+    // The same process runs Steam (exec: a new name on the same pid).
+    writeFileSync(join(tmp, "16", "status"), `Name:\tsteam\nPPid:\t15\nUid:\t${process.getuid?.() ?? 1000}\n`);
+    writeFileSync(join(tmp, "16", "comm"), "steam\n");
+    expect(readProcs(true, tmp).some((p) => p.pid === 16)).toBe(true);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
   it("reads a plain orphan's environment once, and again for a new process on its pid", () => {
     const env = join(root, "15", "environ");
     readProcs(true, root); // looked at once, no launch variable
