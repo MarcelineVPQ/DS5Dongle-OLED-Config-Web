@@ -66,6 +66,12 @@ const open = (id: string) => {
   if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
   return body(id)!;
 };
+// Details: a block in the main view (readouts aren't sections), opened.
+const openDetails = () => {
+  const head = $<HTMLButtonElement>('.dk-split-main [data-block="details"] .dk-block-toggle')!;
+  if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
+  return $('.dk-split-main [data-block="details"] .dk-block-body')!;
+};
 const checks = () => $<HTMLDetailsElement>('[data-section="setup"] details.gp-checks');
 
 describe("setupStatus", () => {
@@ -96,7 +102,7 @@ describe("game page", () => {
     expect($(".dk-split-main .gp-hero")).not.toBeNull();
     expect($(".dk-split-main .gp-bar .gp-play")).not.toBeNull();
     expect($(".dk-split-head h2")!.textContent).toBe("Ghostrunner");
-    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "notes", "details"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "notes"]);
     expect(container!.querySelectorAll(".dk-card")).toHaveLength(0); // no cards left
     // Nothing needs the player: nothing opens by itself, and a folded section renders nothing.
     expect(openIds()).toEqual([]);
@@ -160,7 +166,7 @@ describe("game page", () => {
     expect(compat.textContent!.split(i18n.t("desktop.library.runsWith")).length - 1).toBe(1);
     expect(compat.textContent).not.toContain(i18n.t("desktop.library.recommended")); // already on ours
     expect(compat.textContent).not.toContain(i18n.t("desktop.library.store"));
-    expect(open("details").textContent).toContain(i18n.t("desktop.library.storeName.gog"));
+    expect(openDetails().textContent).toContain(i18n.t("desktop.library.storeName.gog"));
   });
 
   it("Controller profile: what it changes, Edit in controller view, the layout and curves; no copy of the controller view's settings", () => {
@@ -223,11 +229,11 @@ describe("game page", () => {
 
   it("Windows: no Proton or HDR sections, the store and launcher in Details", () => {
     render(ghostrunner({ hdr: undefined, gamepad: undefined, runner: null, usesOurProton: false, envFlags: [] }), HDR_READY, "win32");
-    expect(sectionIds()).toEqual(["profile", "setup", "support", "notes", "details"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "support", "notes"]);
     expect([...container!.querySelectorAll(".gp-tile")]).toHaveLength(3);
     expect(open("setup").textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
     expect(checks()!.querySelector("summary")!.textContent).toBe("✓ All set (1 check)");
-    expect(open("details").textContent).toContain(i18n.t("desktop.library.launcher"));
+    expect(openDetails().textContent).toContain(i18n.t("desktop.library.launcher"));
   });
 });
 

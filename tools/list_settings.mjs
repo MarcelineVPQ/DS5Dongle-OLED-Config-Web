@@ -17,6 +17,22 @@
 //            typed list), a lucide icon, a translated title (t(...)), a
 //            unique id in its file, or a body that is a function (so a
 //            closed section renders nothing).
+//   readout  a <Section> with no setting or action in it: no control (Toggle,
+//            Slider, Segmented, KnobSlider, GripHaptics, BusyButton, a
+//            button, input, select, textarea or link) in its body or in the
+//            components it renders (followed by name; a Notice's × doesn't
+//            count). The operating rule: the accordion holds SETTINGS and
+//            ACTIONS only; readouts and info live in the page's main view
+//            (MainBlock, src/desktop/accordion/MainBlock.tsx).
+//            Also: a <Section> that renders a MainBlock's body component
+//            (DiagnosticsBody, ControllerInfo, …): a readout moved to the
+//            main view doesn't come back with its Reset or Refresh.
+//   nav      a <Section> whose controls include navigation (inside a <nav>):
+//            allowed only in NAVIGATION_SECTIONS, each with its reason;
+//            elsewhere a jump link doesn't count as the section's action.
+// An action button (BusyButton) in a MainBlock is a readout's own action
+// (Reset next to the timings, Refresh next to Controller info), not a
+// setting: allowed there. A setting row in a MainBlock is still a "row".
 // Every page is on the accordion: no page is allowed findings. Files that
 // aren't settings pages at all (the setup flow, the shell's bars, the game
 // library's views) are NOT_SETTINGS, each with its reason; an entry with no
@@ -44,7 +60,27 @@ export const NOT_SETTINGS = {
   "src/desktop/library/GameLibrary.tsx": "the game library's toolbar (sort and filter), not settings",
 };
 
+// Sections that are a navigation index (their controls jump within the page):
+// the readout rule counts their <nav> links as the section's actions.
+export const NAVIGATION_SECTIONS = {
+  "src/desktop/pages/AboutPage.tsx": "About's sections are the index of its texts (Guide, the changelogs, Coming soon, Credits): each lists its chapters to jump to, the text itself is the main view",
+};
+
+// Sections the readout rule found that only show something, waiting for the
+// owner's call on where they go (main view or not), each with its reason:
+// "file#section id". Never grows; an entry whose section has an action now,
+// or is gone, fails as stale.
+export const READOUTS_PENDING = {
+  "src/desktop/pages/GamesPage.tsx#computer":
+    "Games → Home's This computer: controller audio, controller access, environment and the HDR checklist are checks with ✗ and what to do, no control (found by this gate 2026-10-14; listed in the accordion-readouts report for the owner to decide)",
+};
+
 const ROWS = new Set(["Row", "Toggle", "Slider", "Segmented", "KnobSlider", "GripHaptics", "BusyButton"]);
+// What makes a Section a place to set or do something (the readout rule).
+const CONTROLS = new Set(["Toggle", "Slider", "Segmented", "KnobSlider", "GripHaptics", "BusyButton", "button", "input", "select", "textarea", "a"]);
+// Components whose own buttons aren't the section's action (a notice's ×).
+const NOT_ACTIONS = new Set(["Notice"]);
+export const READOUT_RULE = "the accordion holds settings and actions only; readouts and info go in the page's main view (MainBlock)";
 const ROW_LIKE = new Set(["Row", "Toggle", "Slider", "Segmented", "KnobSlider", "GripHaptics"]);
 const tagOf = (n) => (ts.isJsxElement(n) ? n.openingElement.tagName.getText() : ts.isJsxSelfClosingElement(n) ? n.tagName.getText() : null);
 const attrsOf = (n) => (ts.isJsxElement(n) ? n.openingElement.attributes : n.attributes).properties;
@@ -91,40 +127,95 @@ const walk = (node, fn) => {
 };
 
 // Every finding in these sources ({ file, text }: TSX, paths from the repo root).
+// `lookup: true` sources (src/components) are only followed into (LanguageToggle), never checked.
 export function settingsFindings(sources) {
   const parsed = sources.map((x) => ({ ...x, sf: ts.createSourceFile(x.file, x.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX) }));
   // Components rendered inside a Section, followed transitively by name.
   const bodies = new Map(); // component name -> its declaration nodes
+  const frameworkDecl = new Set(); // declarations in the framework files (Row's own markup isn't a section's control)
   for (const x of parsed)
     walk(x.sf, (n) => {
       const name = ts.isFunctionDeclaration(n) && n.name ? n.name.text : ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.initializer && /^[A-Z]/.test(n.name.text) ? n.name.text : null;
-      if (name && /^[A-Z]/.test(name)) bodies.set(name, [...(bodies.get(name) ?? []), n]);
+      if (name && /^[A-Z]/.test(name)) {
+        bodies.set(name, [...(bodies.get(name) ?? []), n]);
+        if (FRAMEWORK.has(x.file)) frameworkDecl.add(n);
+      }
     });
-  const inSection = new Set();
-  const queue = [];
-  const tagsUnder = (node, add) =>
+  const tagsUnder = (node, add, stop) =>
     walk(node, (n) => {
       const tag = tagOf(n);
-      if (tag && /^[A-Z]/.test(tag) && tag !== "Section") add(tag);
+      if (tag && /^[A-Z]/.test(tag) && tag !== stop) add(tag);
       // memo(Component): the memoized one renders the component.
       if (ts.isCallExpression(n) && n.expression.getText() === "memo" && n.arguments[0] && ts.isIdentifier(n.arguments[0])) add(n.arguments[0].text);
     });
-  const add = (name) => {
-    if (!inSection.has(name)) {
-      inSection.add(name);
-      queue.push(name);
-    }
+  // The components the given roots render, followed transitively by name (`stop`: a nested container isn't followed).
+  const rendered = (roots, stop) => {
+    const found = new Set();
+    const queue = [];
+    const add = (name) => {
+      if (!found.has(name)) {
+        found.add(name);
+        queue.push(name);
+      }
+    };
+    // loop: NOT-WORTH — N = the roots (≤ ~100 elements); once per gate run
+    for (const root of roots) tagsUnder(root, add, stop);
+    // loop: NOT-WORTH — N = the components reached (≈ 200); once per gate run
+    while (queue.length) for (const decl of bodies.get(queue.pop()) ?? []) tagsUnder(decl, add, stop);
+    return found;
   };
-  for (const x of parsed)
-    walk(x.sf, (n) => {
-      if (tagOf(n) === "Section") tagsUnder(n, add);
+  // Every <container> element in the sources.
+  const all = (container) => {
+    const out = [];
+    for (const x of parsed)
+      walk(x.sf, (n) => {
+        if (tagOf(n) === container) out.push(n);
+      });
+    return out;
+  };
+  // Components rendered inside a Section or a MainBlock.
+  const inSection = rendered(all("Section"), "Section");
+  const inBlock = rendered(all("MainBlock"), "MainBlock");
+  // The readouts themselves: what a MainBlock's body renders directly (DiagnosticsBody, ControllerInfo, …).
+  const blockBodies = new Set();
+  // loop: NOT-WORTH — N = the MainBlocks (≈ 3); once per gate run
+  for (const n of all("MainBlock")) tagsUnder(n, (name) => blockBodies.add(name), "MainBlock");
+  // A control in this node, or in a component it renders (by name, once each).
+  // `nav`: links inside a <nav> count (a navigation section).
+  const controlIn = (node, nav, seen) => {
+    const tag = tagOf(node);
+    if (tag) {
+      if (NOT_ACTIONS.has(tag) || (tag === "nav" && !nav)) return false;
+      if (CONTROLS.has(tag)) return true;
+      if (/^[A-Z]/.test(tag) && !seen.has(tag)) {
+        seen.add(tag);
+        // loop: NOT-WORTH — N = a name's declarations (1, rarely 2); once per gate run
+        for (const decl of bodies.get(tag) ?? []) if (!frameworkDecl.has(decl) && controlIn(decl, nav, seen)) return true;
+      }
+    }
+    // memo(Component): the memoized one renders the component.
+    if (ts.isCallExpression(node) && node.expression.getText() === "memo" && node.arguments[0] && ts.isIdentifier(node.arguments[0])) {
+      const name = node.arguments[0].text;
+      if (!seen.has(name)) {
+        seen.add(name);
+        // loop: NOT-WORTH — N = a name's declarations (1, rarely 2); once per gate run
+        for (const decl of bodies.get(name) ?? []) if (controlIn(decl, nav, seen)) return true;
+      }
+    }
+    return ts.forEachChild(node, (c) => controlIn(c, nav, seen) || undefined) ?? false;
+  };
+  const navControlIn = (node) => {
+    let hit = false;
+    walk(node, (n) => {
+      if (!hit && tagOf(n) === "nav" && controlIn(n, true, new Set())) hit = true;
     });
-  while (queue.length) for (const decl of bodies.get(queue.pop()) ?? []) tagsUnder(decl, add);
+    return hit;
+  };
 
   const rows = [];
   const finding = (x, n, kind, detail) => rows.push({ file: x.file, line: lineOf(x.sf, n), kind, detail });
   for (const x of parsed) {
-    if (FRAMEWORK.has(x.file)) continue;
+    if (FRAMEWORK.has(x.file) || x.lookup) continue;
     const ids = new Map();
     const lucide = new Set();
     walk(x.sf, (n) => {
@@ -149,6 +240,16 @@ export function settingsFindings(sources) {
         const kids = ts.isJsxElement(n) ? n.children.filter((c) => !(ts.isJsxText(c) && !c.text.trim())) : [];
         const fnBody = kids.length === 1 && ts.isJsxExpression(kids[0]) && kids[0].expression && (ts.isArrowFunction(kids[0].expression) || ts.isFunctionExpression(kids[0].expression));
         if (!fnBody) finding(x, n, "section", "body is not a function ({() => …}): a closed section would still render it");
+        const nav = navControlIn(n);
+        if (nav) finding(x, n, "nav", `section "${idText}" navigates (a <nav> of jump links)`);
+        // Its body only (not the header's status or notice).
+        // loop: NOT-WORTH — N = the body's children (1); once per gate run
+        if (!kids.some((k) => controlIn(k, nav && x.file in NAVIGATION_SECTIONS, new Set())))
+          finding(x, n, "readout", `section "${idText}" has no setting or action (a control, a button, a link): ${READOUT_RULE}`);
+        // A readout moved to the main view doesn't come back into a section (its Reset or Refresh would pass the check above).
+        // loop: NOT-WORTH — N = the components one section reaches (≈ 20); once per gate run
+        const shown = [...rendered([n], "Section")].filter((name) => blockBodies.has(name));
+        if (shown.length) finding(x, n, "readout", `section "${idText}" shows ${shown.map((c) => `<${c}>`).join(", ")}, a main-view readout (a MainBlock's body): ${READOUT_RULE}`);
         return;
       }
       const cls = attrText(n, "className");
@@ -157,7 +258,9 @@ export function settingsFindings(sources) {
       const ancestors = jsxAncestors(n);
       if (ROWS.has(tag)) {
         const comp = componentOf(n);
-        if (!ancestors.includes("Section") && !(comp && inSection.has(comp))) finding(x, n, "row", `<${tag}> outside a Section${comp ? ` (in ${comp})` : ""}`);
+        // A readout's own action (Reset, Refresh) goes with it in its main-view block.
+        const blockAction = tag === "BusyButton" && (ancestors.includes("MainBlock") || (comp && inBlock.has(comp)));
+        if (!ancestors.includes("Section") && !(comp && inSection.has(comp)) && !blockAction) finding(x, n, "row", `<${tag}> outside a Section${comp ? ` (in ${comp})` : ""}`);
       }
       const bareControl = tag === "select" || (tag === "input" && attrText(n, "type") === "range");
       if (bareControl && !ancestors.some((a) => ROW_LIKE.has(a))) finding(x, n, "bare", `<${tag}> outside a Row`);
@@ -167,18 +270,27 @@ export function settingsFindings(sources) {
 }
 
 // The gate's verdict: findings outside the lists, and list entries with none left.
+const readoutKey = (r) => `${r.file}#${/section "([^"]*)"/.exec(r.detail)?.[1] ?? ""}`;
 export function gateProblems(rows, files) {
-  const allowed = (r) => r.kind !== "section" && r.file in NOT_SETTINGS;
+  const allowed = (r) => (r.kind === "nav" ? r.file in NAVIGATION_SECTIONS : r.kind === "readout" ? readoutKey(r) in READOUTS_PENDING : r.kind !== "section" && r.file in NOT_SETTINGS);
   const known = new Set(files);
   // loop: NOT-WORTH — N = the list's entries (≈ 10); once per gate run
-  const stale = Object.keys(NOT_SETTINGS).filter((f) => !known.has(f) || !rows.some((r) => r.file === f));
-  return { bad: rows.filter((r) => !allowed(r)), stale };
+  const stale = Object.keys(NOT_SETTINGS).filter((f) => !known.has(f) || !rows.some((r) => r.file === f && r.kind !== "nav"));
+  // loop: NOT-WORTH — N = the navigation list's entries (1); once per gate run
+  const staleNav = Object.keys(NAVIGATION_SECTIONS).filter((f) => !known.has(f) || !rows.some((r) => r.file === f && r.kind === "nav"));
+  // loop: NOT-WORTH — N = the pending list's entries (≤ a few); once per gate run
+  const staleReadouts = Object.keys(READOUTS_PENDING).filter((k) => !rows.some((r) => r.kind === "readout" && readoutKey(r) === k));
+  return { bad: rows.filter((r) => !allowed(r)), stale: [...stale, ...staleNav, ...staleReadouts] };
 }
 
 function main() {
-  const files = ts.sys.readDirectory(join(ROOT, "src/desktop"), [".tsx"]).map((f) => relative(ROOT, f).replace(/\\/g, "/"));
+  const list = (dir) => ts.sys.readDirectory(join(ROOT, dir), [".tsx"]).map((f) => relative(ROOT, f).replace(/\\/g, "/"));
+  const files = list("src/desktop");
   // loop: NOT-WORTH — N = the app's TSX files (≈ 150); once per gate run
-  const rows = settingsFindings(files.map((file) => ({ file, text: readFileSync(join(ROOT, file), "utf8") })));
+  const sources = files.map((file) => ({ file, text: readFileSync(join(ROOT, file), "utf8") }));
+  // loop: NOT-WORTH — N = 2 shared components; once per gate run
+  const lookup = list("src/components").map((file) => ({ file, text: readFileSync(join(ROOT, file), "utf8"), lookup: true }));
+  const rows = settingsFindings([...sources, ...lookup]);
   if (!process.argv.includes("--check")) {
     console.log("file\tline\tkind\tdetail");
     // loop: NOT-WORTH — N = the findings; once per run
@@ -189,9 +301,11 @@ function main() {
   // loop: NOT-WORTH — N = the problems; once per gate run
   for (const r of bad) console.error(`${r.file}:${r.line}: ${r.kind}: ${r.detail}`);
   // loop: NOT-WORTH — N = the stale entries; once per gate run
-  for (const f of stale) console.error(`${f}: listed in tools/list_settings.mjs but has no findings (no buttons or rows left, or gone): take it off the list`);
+  for (const f of stale) console.error(`${f}: listed in tools/list_settings.mjs but has no findings (no buttons, rows, navigation or readout left, or gone): take it off the list`);
   if (bad.length || stale.length) {
-    console.error(`\n${bad.length + stale.length} settings-gate problem(s). Every setting goes in a Row inside a Section (src/desktop/accordion/Section.tsx).`);
+    console.error(
+      `\n${bad.length + stale.length} settings-gate problem(s). Every setting goes in a Row inside a Section (src/desktop/accordion/Section.tsx); ${READOUT_RULE} (src/desktop/accordion/MainBlock.tsx).`,
+    );
     process.exit(1);
   }
   console.log(`settings gate: ${rows.length} findings, all in files that aren't settings pages (${Object.keys(NOT_SETTINGS).length}).`);

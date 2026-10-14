@@ -2,9 +2,11 @@
 // setting. A settings card, a row or a bare control outside a Section, or a
 // Section that isn't lazy or named properly, is a finding; only the files
 // that aren't settings pages are allowed theirs, and that list only shrinks.
+// The operating rule: a Section holds settings and actions only; a Section
+// that only shows something (a readout) fails, readouts go in a MainBlock.
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { gateProblems, NOT_SETTINGS, settingsFindings } from "../../tools/list_settings.mjs";
+import { gateProblems, NAVIGATION_SECTIONS, NOT_SETTINGS, READOUT_RULE, READOUTS_PENDING, settingsFindings } from "../../tools/list_settings.mjs";
 
 const page = (body: string) => [{ file: "src/desktop/pages/NewPage.tsx", text: `import { Globe } from "lucide-react";\n${body}` }];
 const kinds = (body: string) => settingsFindings(page(body)).map((f) => `${f.kind}: ${f.detail}`);
@@ -63,6 +65,7 @@ describe("the settings gate", () => {
       "section: title is not translated (t(...))",
       "section: body is not a function ({() => …}): a closed section would still render it",
       'section: id "a" used twice',
+      `readout: section "a" has no setting or action (a control, a button, a link): ${READOUT_RULE}`,
     ]);
   });
 
@@ -76,5 +79,63 @@ describe("the settings gate", () => {
     expect(gateProblems([{ ...finding, file: "src/desktop/pages/GamesPage.tsx" }], [other, "src/desktop/pages/GamesPage.tsx"]).bad).toHaveLength(1);
     // A Section problem is never allowed anywhere.
     expect(gateProblems([{ ...finding, kind: "section" }], [other]).bad).toHaveLength(1);
+  });
+
+  it("fails a Section that only shows something: readouts go in the page's main view", () => {
+    expect(
+      kinds(`
+      function Facts() { return <dl><dt>Firmware</dt><dd>1.2</dd><Notice closable>gone</Notice></dl>; }
+      export default function P() {
+        return <Accordion state={acc}>
+          <Section id="facts" icon={Globe} title={t("x")}>{() => <Facts />}</Section>
+          <Section id="act" icon={Globe} title={t("y")}>{() => <><Facts /><button type="button">Go</button></>}</Section>
+        </Accordion>;
+      }`),
+    ).toEqual([`readout: section "facts" has no setting or action (a control, a button, a link): ${READOUT_RULE}`]);
+  });
+
+  it("follows a Section's controls into memo()ed components and other files", () => {
+    const sources = [
+      ...page(`
+      const List = memo(ListBody);
+      function ListBody() { return <ul><li><LanguageToggle /></li></ul>; }
+      export default function P() { return <Accordion state={acc}><Section id="a" icon={Globe} title={t("x")}>{() => <List />}</Section></Accordion>; }`),
+      { file: "src/components/LanguageToggle.tsx", text: "export default function LanguageToggle() { return <select />; }", lookup: true },
+    ];
+    expect(settingsFindings(sources)).toEqual([]);
+  });
+
+  it("lets a readout keep its own action in its MainBlock, never a setting; a MainBlock's body never comes back into a Section", () => {
+    expect(
+      kinds(`
+      function Timings() { return <><dl /><BusyButton onClick={reset}>Reset</BusyButton></>; }
+      function Info() { return <Toggle label="a" value onChange={() => {}} />; }
+      export default function P() {
+        return <>
+          <MainBlock state={b} icon={Globe} title={t("d")}>{() => <Timings />}</MainBlock>
+          <MainBlock state={c} icon={Globe} title={t("i")}>{() => <Info />}</MainBlock>
+          <Accordion state={acc}><Section id="back" icon={Globe} title={t("x")}>{() => <Timings />}</Section></Accordion>
+        </>;
+      }`),
+    ).toEqual(["row: <Toggle> outside a Section (in Info)", `readout: section "back" shows <Timings>, a main-view readout (a MainBlock's body): ${READOUT_RULE}`]);
+  });
+
+  it("counts jump links in a <nav> only on the listed navigation pages", () => {
+    const nav = `export default function P() { return <Accordion state={acc}><Section id="toc" icon={Globe} title={t("x")}>{() => <nav><button type="button">Ch 1</button></nav>}</Section></Accordion>; }`;
+    expect(kinds(nav)).toEqual(['nav: section "toc" navigates (a <nav> of jump links)', `readout: section "toc" has no setting or action (a control, a button, a link): ${READOUT_RULE}`]);
+    const about = Object.keys(NAVIGATION_SECTIONS)[0];
+    const rows = settingsFindings([{ file: about, text: `import { Globe } from "lucide-react";\n${nav}` }]);
+    expect(rows.map((r) => r.kind)).toEqual(["nav"]);
+    expect(gateProblems(rows, [about]).bad).toEqual([]);
+    expect(gateProblems([], [about]).stale).toContain(about);
+  });
+
+  it("allows the readouts waiting for the owner's call only while they're still readouts", () => {
+    const [key] = Object.keys(READOUTS_PENDING);
+    const [file, id] = key.split("#");
+    const readout = { file, line: 1, kind: "readout" as const, detail: `section "${id}" has no setting or action` };
+    expect(gateProblems([readout], [file]).bad).toEqual([]);
+    expect(gateProblems([], [file]).stale).toContain(key);
+    expect(gateProblems([{ ...readout, detail: 'section "other" has no setting or action' }], [file]).bad).toHaveLength(1);
   });
 });

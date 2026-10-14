@@ -1,8 +1,9 @@
-// The Pico 2 W page: the board's console (its OLED mirror and log) and dials
-// as the main view, its accordion at the right: Firmware, Restart & reset,
-// Power & sleep, OLED screen, USB & status pin, Diagnostics. Diagnostics'
-// extra reads (the audio counters, the timings) run only while it's open
-// (DongleDashboard.tsx); a folded section renders nothing.
+// The Pico 2 W page: the board's console (its OLED mirror and log), dials and
+// Diagnostics (a main-view block: readouts don't go in the accordion) as the
+// main view, its accordion at the right: Firmware, Restart & reset, Power &
+// sleep, OLED screen, USB & status pin. Diagnostics' extra reads (the audio
+// counters, the timings) run only while its block is open
+// (DongleDashboard.tsx); a closed block or folded section renders nothing.
 import { useTranslation } from "react-i18next";
 import { Activity, Download, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
@@ -11,13 +12,14 @@ import { STATUS_GPIO_OFF } from "../../protocol/config";
 import { shortVersion } from "../../update/manifest";
 import { named, onOff } from "../accordion/status";
 import { Section, SectionGroup, SplitView } from "../accordion/Section";
-import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion";
+import { pinScope, useAccordion } from "../accordion/useAccordion";
+import { MainBlock, revealBlock, useMainBlock } from "../accordion/MainBlock";
 import { useProfileTarget } from "../library/libraryContext";
 import { hardwareName } from "../hardwareName";
 import { formatUptime } from "../format";
 import Notice from "../Notice";
 import { useNoticeTasks } from "../notices";
-import { BOARD_PROBLEM_SECTION, FIRMWARE_UPDATE_SECTION } from "../openTasks";
+import { BOARD_PROBLEM_BLOCK, FIRMWARE_UPDATE_SECTION } from "../openTasks";
 import FirmwareSection, { DeviceSection } from "../pages/FirmwarePage";
 import { DisplaySection, PcSleepSection, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
 import type { FirmwareUpdate } from "../useUpdates";
@@ -43,9 +45,10 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   // loop: NOT-WORTH — N ≤ ~3 board tasks; the page's render
   const fwTask = tasks.find((x) => x.section === FIRMWARE_UPDATE_SECTION)?.text ?? null;
   // loop: NOT-WORTH — N ≤ ~3 board tasks; the page's render
-  const boardTask = tasks.find((x) => x.section === BOARD_PROBLEM_SECTION)?.text ?? null;
-  const acc = useAccordion("dongle", pinScope("dongle"), fwTask ? "firmware" : boardTask ? "diagnostics" : null);
-  const telemetry = useDongleTelemetry(bridge, oled.frame, rssi, acc.isOpen("diagnostics"));
+  const boardTask = tasks.find((x) => x.section === BOARD_PROBLEM_BLOCK)?.text ?? null;
+  const acc = useAccordion("dongle", pinScope("dongle"), fwTask ? "firmware" : null);
+  const diagnostics = useMainBlock("dongle", BOARD_PROBLEM_BLOCK);
+  const telemetry = useDongleTelemetry(bridge, oled.frame, rssi, diagnostics.open);
   const target = useProfileTarget();
   const s = telemetry.sample;
   const d = bridge.draft;
@@ -55,7 +58,10 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const main = (
     <div className="live-stage dongle-main">
       <DongleConsole client={bridge.client} identity={identity} controllerOn={controllerOn} frame={oled} />
-      <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealSection("dongle", "diagnostics")} />
+      <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealBlock("dongle", BOARD_PROBLEM_BLOCK)} />
+      <MainBlock state={diagnostics} icon={Activity} title={t("desktop.sections.diagnostics")} status={s ? `${s.tempC.toFixed(1)} °C · ${Math.round(s.realMhz)} MHz` : null} task={boardTask}>
+        {() => <DiagnosticsBody bridge={bridge} telemetry={telemetry} />}
+      </MainBlock>
     </div>
   );
   return (
@@ -128,9 +134,6 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
             </SectionGroup>
           </>
         )}
-      </Section>
-      <Section id="diagnostics" icon={Activity} title={t("desktop.sections.diagnostics")} status={s ? `${s.tempC.toFixed(1)} °C · ${Math.round(s.realMhz)} MHz` : null} task={boardTask}>
-        {() => <DiagnosticsBody bridge={bridge} telemetry={telemetry} />}
       </Section>
     </SplitView>
   );

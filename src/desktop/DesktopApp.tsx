@@ -29,7 +29,8 @@ import { useDs5Bridge } from "../hooks/useDs5Bridge";
 import { renderTrayIcon } from "./tray/trayIcon";
 import AboutPage from "./pages/AboutPage";
 import { revealSection } from "./accordion/useAccordion";
-import { SECTIONS } from "./accordion/sections";
+import { MAIN_BLOCKS, SECTIONS } from "./accordion/sections";
+import { revealBlock } from "./accordion/MainBlock";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
@@ -94,13 +95,15 @@ export default function DesktopApp() {
     setMain("controller");
     setPanel(view);
   };
-  // A rail item's page, and the section there that holds a task (rail dots,
+  // A rail item's page, and the section (or main-view block) there that holds a task (rail dots,
   // App settings → Dismissed notices' Go to): the accordion opens it.
   const goTo = (item: RailItem, section?: string) => {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
-    if (section && (SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
+    if (!section) return;
+    if ((SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
+    else if (item in MAIN_BLOCKS && (MAIN_BLOCKS[item as keyof typeof MAIN_BLOCKS] as readonly string[]).includes(section)) revealBlock(item as keyof typeof MAIN_BLOCKS, section as never);
   };
 
   // Open tasks: the rail's dots, and which dismissed notices still apply.
@@ -301,11 +304,11 @@ export default function DesktopApp() {
       // lifetime: OK — the effect returns its unsubscribe (unmount)
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
-          // The tray's "Diagnostics" opens the Pico 2 W page's Diagnostics section.
+          // The tray's "Diagnostics" opens the Pico 2 W page's Diagnostics (its main view).
           if (command.page === "diagnostics") {
             setMain("controller");
             setPanel("dongle");
-            revealSection("dongle", "diagnostics");
+            revealBlock("dongle", "diagnostics");
           } else if (command.page === "games" || command.page === "about") setMain(command.page);
           else {
             setMain("controller");

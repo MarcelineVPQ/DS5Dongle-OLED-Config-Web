@@ -2385,6 +2385,12 @@ html[data-theme="light"] .live-ctl {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Details under the tiles (MainBlock.tsx), at the tiles' padding. */
+.gp-blocks {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--dk-pad) var(--dk-pad);
+}
 /* The game at a glance: a tile per section, each opening it. */
 .gp-glance {
   display: grid;
@@ -3668,7 +3674,8 @@ html[data-reduce-motion] .dk-bar .dk-btn:active {
    background through, blurred a little behind them for legibility. */
 html[data-cards-translucent] .dk-card,
 html[data-cards-translucent] .live-tile,
-html[data-cards-translucent] .live-data-card {
+html[data-cards-translucent] .live-data-card,
+html[data-cards-translucent] .dk-block {
   background: color-mix(in srgb, var(--bg-panel) var(--card-opacity, 100%), transparent) !important;
   backdrop-filter: blur(10px);
 }
@@ -4544,7 +4551,7 @@ main.dk-body:focus:not(:focus-visible),
   outline: none;
 }
 
-/* Controller info (ControllerInfo.tsx, its section): one column per child
+/* Controller info (ControllerInfo.tsx, its main-view block): one column per child
    (battery & firmware · lifetime) where the body is wide, else one. The
    presses group puts its groups on one line when they fit and wraps them
    when they don't (each group keeps its natural width). */
@@ -4612,14 +4619,16 @@ main.dk-body:focus:not(:focus-visible),
   flex-direction: column;
   gap: 6px;
 }
-.dk-sec {
+.dk-sec,
+.dk-block {
   position: relative;
   flex: none;
   border: 1px solid var(--border-default);
   border-radius: var(--dk-radius);
   background: var(--bg-panel);
 }
-.dk-sec.open {
+.dk-sec.open,
+.dk-block.open {
   border-color: var(--border-soft);
 }
 .dk-sec-head {
@@ -4627,7 +4636,8 @@ main.dk-body:focus:not(:focus-visible),
   display: flex;
   align-items: center;
 }
-.dk-sec-toggle {
+.dk-sec-toggle,
+.dk-block-toggle {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -4650,7 +4660,8 @@ main.dk-body:focus:not(:focus-visible),
   place-items: center;
   color: var(--text-soft);
 }
-.dk-sec.open .dk-sec-ic {
+.dk-sec.open .dk-sec-ic,
+.dk-block.open .dk-sec-ic {
   color: var(--dk-accent-text);
 }
 /* An open task: a yellow dot on the icon (the status says what it is). */
@@ -4690,7 +4701,8 @@ main.dk-body:focus:not(:focus-visible),
   color: var(--text-muted);
   transition: transform 150ms;
 }
-.dk-sec.open .dk-sec-chev {
+.dk-sec.open .dk-sec-chev,
+.dk-block.open .dk-sec-chev {
   transform: rotate(180deg);
 }
 /* The pin: a ring folds with the others; filled, the section stays open. */
@@ -4726,7 +4738,8 @@ main.dk-body:focus:not(:focus-visible),
   box-shadow: 0 0 0 2px var(--dk-sel-bg);
   opacity: 1;
 }
-.dk-sec-body {
+.dk-sec-body,
+.dk-block-body {
   display: flex;
   flex-direction: column;
   padding: 2px 10px 10px;
@@ -4737,7 +4750,8 @@ main.dk-body:focus:not(:focus-visible),
   transition: height 150ms ease-out;
 }
 @starting-style {
-  .dk-sec-body {
+  .dk-sec-body,
+  .dk-block-body {
     height: 0;
   }
 }
@@ -4764,7 +4778,8 @@ main.dk-body:focus:not(:focus-visible),
   padding-top: 4px;
   border-top: 1px solid var(--border-subtle);
 }
-.dk-sec-body > .dk-sec-group:first-child {
+.dk-sec-body > .dk-sec-group:first-child,
+.dk-block-body > .dk-sec-group:first-child {
   margin-top: 0;
   border-top: 0;
 }
@@ -4773,6 +4788,23 @@ main.dk-body:focus:not(:focus-visible),
 }
 .dk-sec-body p {
   margin: 4px 0;
+}
+/* A readout in a page's main view (MainBlock.tsx): a section's look, as wide
+   as the cards above it (on the Pico 2 W page, its dials: .dongle-main); no
+   pin, so the header runs to the edge. */
+.dk-block {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 100%;
+  margin-inline: auto;
+  scroll-margin-top: 8px; /* a deep link's scroll leaves its border in view */
+}
+.dk-block-toggle {
+  padding-right: 10px;
+}
+.dk-block-body {
+  padding: 8px 12px 12px;
 }
 .dk-row-btns-end {
   justify-content: flex-end;
@@ -4807,34 +4839,26 @@ main.dk-body:focus:not(:focus-visible),
 .dongle-main > .dcon {
   margin-bottom: 0;
 }
+.dongle-main > .dk-block {
+  width: min(100%, 900px);
+}
 .dash-more {
   justify-self: start;
   margin-top: 4px;
 }
-/* The Diagnostics section's readouts: the dashboard's pieces, at the panel's width. */
-.dash.dash-sec {
+/* The Diagnostics block's readouts (under the dials, MainBlock.tsx): the dashboard's pieces at the block's width. */
+.dash.dash-block {
   margin: 0;
   width: 100%;
 }
-.dash-sec .dash-facts {
+.dash-block .dash-facts {
   align-content: start;
 }
-/* The four graphs two by two at the panel's width (the dashboard's own
-   rule would stack them one per row there). */
-.dash.dash-sec .dash-row,
-.dash.dash-sec .dash-row > :last-child:nth-child(n) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-column: auto;
-}
-.dash-sec .dash-card {
-  padding: 8px 10px;
-}
-/* The timings at the panel's width: the stage names and the column heads wrap, the numbers don't. */
-.dash-sec .dash-timings {
-  grid-template-columns: minmax(0, 1fr) auto auto minmax(28px, 56px);
+.dash-block .dash-timings {
+  grid-template-columns: minmax(0, 1fr) auto auto minmax(28px, 120px);
   gap: 3px 10px;
 }
-.dash-sec .dash-timings > span {
+.dash-block .dash-timings > span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -4852,7 +4876,7 @@ main.dk-body:focus:not(:focus-visible),
     border-top: 0;
   }
 }
-/* A deep link's one flash (useAccordion's revealSection). */
+/* A deep link's one flash (useAccordion's revealSection, MainBlock's revealBlock). */
 .dk-flash {
   animation: dk-flash 900ms ease-out 1;
 }
@@ -4869,6 +4893,7 @@ main.dk-body:focus:not(:focus-visible),
 }
 @media (prefers-reduced-motion: reduce) {
   .dk-sec-body,
+  .dk-block-body,
   .dk-sec-chev {
     transition: none;
   }

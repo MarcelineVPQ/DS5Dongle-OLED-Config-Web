@@ -112,15 +112,24 @@ const controllerAt = (section: "sticks" | "speaker" | "mic") => () => {
   return createElement(Controller, { view: "overview" });
 };
 // Opens and folds every accordion section on the page, one after another
-// (closed sections mount nothing; open ones must give back what they took).
+// (closed sections mount nothing; open ones must give back what they took),
+// then opens every main-view block (MainBlock: Diagnostics, Controller info,
+// Details) and leaves it open, so it unmounts with the page while its reads run.
 const everySection = async () => {
   const heads = () => [...container.querySelectorAll<HTMLButtonElement>(".dk-sec-toggle")];
   expect(heads().length).toBeGreaterThan(3);
+  // loop: test — every section header once
   for (let i = 0; i < heads().length; i++) {
     act(() => heads()[i].click());
     await advance(300);
     expect(heads()[i].getAttribute("aria-expanded")).toBe("true");
     act(() => heads()[i].click());
+  }
+  // loop: test — every main-view block once (≤ 1 per page)
+  for (const head of container.querySelectorAll<HTMLButtonElement>(".dk-block-toggle")) {
+    if (head.getAttribute("aria-expanded") !== "true") act(() => head.click());
+    await advance(1200); // a poll or two (the Pico's counters and timings)
+    expect(head.getAttribute("aria-expanded")).toBe("true");
   }
 };
 

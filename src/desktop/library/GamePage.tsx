@@ -1,9 +1,10 @@
 // One game's page in the Games library, like every page: the main view is the
 // artwork (hero + logo), one bar with Play, the quick links and the play
-// stats, and the game "at a glance" (tiles that each open their section);
-// the accordion at the right holds the rest: Controller profile, Setup, HDR,
+// stats, the game "at a glance" (tiles that each open their section) and
+// Details (a main-view block: readouts don't go in the accordion); the
+// accordion at the right holds the rest: Controller profile, Setup, HDR,
 // Compatibility (Proton games on Linux), DualSense support (with the
-// player's rating), Notes and Details. Each fact has one place: the tier in
+// player's rating) and Notes. Each fact has one place: the tier in
 // DualSense support, the Proton in Compatibility, store and launcher in
 // Details. The page keeps the game's own accent (scopedAccent), panel
 // included; the pins are shared by every game's page.
@@ -42,6 +43,7 @@ import { GameActions, PlayStats } from "./playBar";
 import Notice from "../Notice";
 import { Section, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
+import { MainBlock, useMainBlock } from "../accordion/MainBlock";
 import type { SectionId } from "../accordion/sections";
 
 interface Props {
@@ -115,6 +117,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   // The first visit opens what needs the player; the pins are every game page's.
   const hdrTask = isHdr && !status.hdrOk;
   const acc = useAccordion("game", pinScope("game"), status.attention ? "setup" : hdrTask ? "hdr" : null);
+  const details = useMainBlock("game", "details");
 
   // Each section's status line (and the tiles that open them).
   const normal = library.restore?.settings ?? (bridge.config ? settingsFrom(bridge.config) : null);
@@ -159,6 +162,12 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         {tile("profile", t("desktop.library.section.profile"), profileStatus)}
         {tile("setup", t("desktop.library.section.setup"), setupTask || setupLine)}
       </div>
+      <div className="gp-blocks">
+        {/* loop: NOT-WORTH — N = 2 parts of one status line */}
+        <MainBlock state={details} icon={Info} title={t("desktop.library.section.details")} status={[store, info?.sizeBytes && `${(info.sizeBytes / 1e9).toFixed(1)} GB`].filter(Boolean).join(" · ")}>
+          {() => <DetailsBody game={game} info={info} />}
+        </MainBlock>
+      </div>
     </>
   );
 
@@ -196,10 +205,6 @@ export default function GamePage({ game, info, record, running, report, bridge, 
               onChange={(e) => mineState[1]({ notes: e.target.value })}
             />
           )}
-        </Section>
-        {/* loop: NOT-WORTH — N = 2 parts of one status line */}
-        <Section id="details" icon={Info} title={t("desktop.library.section.details")} status={[store, info?.sizeBytes && `${(info.sizeBytes / 1e9).toFixed(1)} GB`].filter(Boolean).join(" · ")}>
-          {() => <DetailsBody game={game} info={info} />}
         </Section>
       </SplitView>
     </div>

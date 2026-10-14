@@ -69,48 +69,22 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
   const pinned = acc.isPinned(id);
   const uid = useId();
   const ref = useRef<HTMLElement>(null);
-  const shown = task || status || null;
   const revealed = acc.revealed?.id === id ? acc.revealed : null;
   // A deep link: scroll to it (or its row), focus the header, flash once.
-  // lifetime: OK — the animationend / transitionend listeners fire once (once: true); the cleanup removes the latter
+  // lifetime: OK — showLinked's cleanup removes its transitionend listener (unmount / the next link)
   useEffect(() => {
     const el = ref.current;
     if (!revealed || !el) return;
     const row = revealed.row ? el.querySelector<HTMLElement>(`[data-row="${CSS.escape(revealed.row)}"]`) : null;
-    const target = row ?? el;
-    target.scrollIntoView({ block: "nearest" });
-    // A row in a body that's opening: again once its height has grown (the open transition), or it stays out of view.
-    const body = el.querySelector<HTMLElement>(".dk-sec-body");
-    const again = () => target.scrollIntoView({ block: "nearest" });
-    // lifetime: OK — fires once (once: true), when the body's open transition ends; removed in the cleanup if it never does
-    if (row && body) body.addEventListener("transitionend", again, { once: true });
-    // The focus goes to the header, unless the link already put it inside (a drawing click focuses its button's row).
-    if (!el.contains(document.activeElement)) el.querySelector<HTMLElement>(".dk-sec-toggle")?.focus({ preventScroll: true });
-    const cleanup = () => body?.removeEventListener("transitionend", again);
-    if (reducedMotionNow()) return cleanup;
-    target.classList.remove("dk-flash");
-    void target.offsetWidth; // restart the animation for a second link to the same place
-    target.classList.add("dk-flash");
-    // lifetime: OK — fires once (once: true), when the one-shot flash ends
-    target.addEventListener("animationend", () => target.classList.remove("dk-flash"), { once: true });
-    return cleanup;
+    // A row in a body that's opening is scrolled to again once the body has grown, or it stays out of view.
+    return showLinked(el, row ?? el, row ? el.querySelector<HTMLElement>(".dk-sec-body") : null, el.querySelector<HTMLElement>(".dk-sec-toggle"), "nearest");
   }, [revealed]);
   const keepOpen = t("desktop.accordion.keepOpen", { section: title });
   return (
     <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}`} data-section={id}>
       <div className="dk-sec-head">
         <button type="button" className="dk-sec-toggle" id={`${uid}-h`} aria-expanded={open} aria-controls={open ? `${uid}-b` : undefined} onClick={() => acc.toggle(id)}>
-          <span className="dk-sec-ic" aria-hidden="true">
-            <Icon size={15} />
-            {task && <i className="dk-sec-task" />}
-          </span>
-          <span className="dk-sec-title">{title}</span>
-          {shown && (
-            <span className={`dk-sec-status${task ? " warn" : ""}`} title={shown}>
-              {shown}
-            </span>
-          )}
-          <ChevronDown className="dk-sec-chev" size={15} aria-hidden="true" />
+          <HeadContent icon={Icon} title={title} status={status} task={task} />
         </button>
         <button
           type="button"
@@ -131,6 +105,49 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
       )}
     </section>
   );
+}
+
+// What a header button shows, for a Section and a main-view MainBlock alike:
+// the icon (with the yellow dot for an open task), the title, the live status
+// (or the task, said instead) and the chevron.
+export function HeadContent({ icon: Icon, title, status, task }: { icon: LucideIcon; title: string; status?: string | null; task?: string | null | false }) {
+  const shown = task || status || null;
+  return (
+    <>
+      <span className="dk-sec-ic" aria-hidden="true">
+        <Icon size={15} />
+        {task && <i className="dk-sec-task" />}
+      </span>
+      <span className="dk-sec-title">{title}</span>
+      {shown && (
+        <span className={`dk-sec-status${task ? " warn" : ""}`} title={shown}>
+          {shown}
+        </span>
+      )}
+      <ChevronDown className="dk-sec-chev" size={15} aria-hidden="true" />
+    </>
+  );
+}
+
+// Where a deep link lands (a Section, or a main-view MainBlock): `target`
+// (the place, or a row in it) scrolled into view, and again once `body` has
+// grown (its open transition); the focus to `head`, unless the link already
+// put it inside `el` (a drawing click focuses its button's row); `target`
+// flashed once. Returns the cleanup (the transitionend listener).
+export function showLinked(el: HTMLElement, target: HTMLElement, body: HTMLElement | null, head: HTMLElement | null, block: ScrollLogicalPosition): () => void {
+  const scroll = () => target.scrollIntoView({ block });
+  scroll();
+  // lifetime: OK — fires once (once: true), when the body's open transition ends; removed by the returned cleanup if it never does
+  body?.addEventListener("transitionend", scroll, { once: true });
+  const cleanup = () => body?.removeEventListener("transitionend", scroll);
+  if (!el.contains(document.activeElement)) head?.focus({ preventScroll: true });
+  if (reducedMotionNow()) return cleanup;
+  target.classList.remove("dk-flash");
+  void target.offsetWidth; // restart the animation for a second link to the same place
+  target.classList.add("dk-flash");
+  // lifetime: OK — fires once (once: true), when the one-shot flash ends
+  target.addEventListener("animationend", () => target.classList.remove("dk-flash"), { once: true });
+  return cleanup;
 }
 
 // A small heading inside a section's body (a group of rows).

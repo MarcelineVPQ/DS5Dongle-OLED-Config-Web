@@ -1,11 +1,12 @@
 // The Pico 2 W page's live readouts. In its main view, under the console:
 // the chip temperature, clock and core voltage as dials, and the board's
-// facts (PicoGauges). In its Diagnostics section, only while that is open:
+// facts (PicoGauges). In its Diagnostics block below them (a main-view
+// MainBlock: readouts stay out of the accordion), only while that is open:
 // USB, Bluetooth, signal and mic as graphs over the last minute, the audio
 // pipeline's counters (anything that went wrong lit), the per-stage timings
 // with Reset, what the OLED is doing, and the board's and OLED module's specs
 // (DiagnosticsBody). One poll a second (useDongleTelemetry) reads 0xFB diag
-// and 0xFC CPU; with Diagnostics open it also reads the 0xF5 audio counters
+// and 0xFC CPU; with the Diagnostics block open it also reads the 0xF5 audio counters
 // and the timings (protocol 1.11). The signal and the OLED mirror come from
 // the page's own polls (no second read of either).
 import { useEffect, useRef, useState } from "react";
@@ -39,7 +40,7 @@ interface Sample {
   rssi: number;
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
-  counters: AudioCounters | null; // read while Diagnostics is open
+  counters: AudioCounters | null; // read while the Diagnostics block is open
   core1Alive: boolean;
   oled: { power: string; screen: number; contrast: number; fps: number } | null;
   timings: CpuTimings | null; // protocol 1.11
@@ -50,7 +51,7 @@ const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : nu
 
 export type Telemetry = { sample: Sample | null; history: Sample[] };
 
-// `detail`: Diagnostics is open (the audio counters and the timings are read too).
+// `detail`: the Diagnostics block is open (the audio counters and the timings are read too).
 export function useDongleTelemetry(bridge: UseDs5BridgeResult, frameNow: OledFrame | null, rssiNow: number | null, detail: boolean): Telemetry {
   const client = bridge.client;
   const withTimings = detail && supportsFeature2(bridge.identity, 11, FEATURES2.timings);
@@ -142,13 +143,13 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
   );
 }
 
-// The Diagnostics section's body: everything the main view doesn't show.
+// The Diagnostics block's body: everything the dials above don't show.
 export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeResult; telemetry: Telemetry }) {
   const { t } = useTranslation();
   const { sample: s, history } = telemetry;
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
-  // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; only while Diagnostics is open
+  // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; only while the Diagnostics block is open
   const series = (pick: (x: Sample) => number) => history.map(pick);
   const micLoss = micLossClimbing(history);
   const specs = boardSpecs(bridge.identity?.boardName);
@@ -156,7 +157,7 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   const problems = s && counters ? boardProblems(t, counters, s.core1Alive) : [];
 
   return (
-    <div className="dash dash-sec">
+    <div className="dash dash-block">
       <div className="dash-row">
         <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={s?.usbFps} />
         <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={s?.btPps} />
