@@ -31,6 +31,7 @@ import { dirname, join } from "node:path";
 import { z } from "zod";
 import type { LauncherId, Msg } from "../../../src/desktop/games/types";
 import type { GameBackup } from "../../../src/desktop/api";
+import { MIXER_TARGETS } from "./system";
 
 const KEEP = 10;
 
@@ -50,6 +51,17 @@ const ManifestSchema = z.object({
   description: z.string().optional(), // sets written before messages were translatable
   restored: z.string().optional(), // when it was undone
   after: z.array(z.string()).optional(), // what to run after restoring, e.g. "restart-wireplumber"
+  // Settings that aren't files: the controller's ALSA controls (system.ts),
+  // per card (its USB port), with the values before and after the change.
+  mixer: z
+    .array(
+      z.object({
+        key: z.string().max(100),
+        changes: z.array(z.object({ name: z.enum(MIXER_TARGETS), from: z.number().int().min(0), to: z.number().int().min(0) })).max(MIXER_TARGETS.length),
+      }),
+    )
+    .max(8)
+    .optional(),
   files: z.array(
     z.object({
       path: z.string(),
@@ -61,6 +73,7 @@ const ManifestSchema = z.object({
   ),
 });
 export type BackupManifest = z.infer<typeof ManifestSchema>;
+export type Mixer = NonNullable<BackupManifest["mixer"]>;
 
 // What the page lists (api.ts GameBackup), plus whether it was undone.
 export interface BackupSummary extends GameBackup {
@@ -144,7 +157,7 @@ export class Backups {
   constructor(private readonly dir: string) {}
 
   // Snapshot `files`, then run `write`. If writing throws, everything is rolled back.
-  run(changes: Msg[], files: BackupFile[], write: () => void, after: string[] = []): string {
+  run(changes: Msg[], files: BackupFile[], write: () => void, after: string[] = [], mixer: Mixer = []): string {
     const stamp = new Date()
       .toISOString()
       .replace(/[-:]/g, "")
@@ -162,6 +175,7 @@ export class Backups {
         created: new Date().toISOString(),
         changes,
         after,
+        ...(mixer.length ? { mixer } : {}),
         files: unique.map(({ path, owner }, i) => {
           if (!existsSync(path)) return { path, owner, backup: null };
           const backup = `${i}.orig`;
@@ -196,8 +210,9 @@ export class Backups {
   }
 
   // Undo a set. Throws UndoConflictError (and changes nothing) if any file was
-  // changed after our write; returns what to run afterwards (e.g. restart-wireplumber).
-  restore(id: string): { files: string[]; after: string[] } {
+  // changed after our write; returns what to run afterwards (e.g. restart-wireplumber)
+  // and the mixer values to put back (the caller sets them).
+  restore(id: string): { files: string[]; after: string[]; mixer: Mixer } {
     const manifest = this.manifest(id);
     if (manifest.restored) throw new Error("This change set was already undone.");
     const changed = manifest.files.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
@@ -206,7 +221,7 @@ export class Backups {
     this.putBack(setDir, manifest);
     manifest.restored = new Date().toISOString();
     writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
-    return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [] };
+    return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [], mixer: manifest.mixer ?? [] };
   }
 
   private putBack(setDir: string, manifest: BackupManifest): void {

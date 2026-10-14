@@ -16,6 +16,7 @@ export type FixKind =
   | "steam-input-off" // per-game Steam Input off (Steam)
   | "remove-env" // drop PROTON_PREFER_SDL from the game's env / launch options
   | "audio-hifi" // disable a pro-audio rule for the DualSense
+  | "audio-volume" // Linux: the controller's hardware volume and mic gain (ALSA) to full
   | "standard-gamepad" // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
   | "hdr-on" // HDR game: run it inside gamescope with HDR (and move it to our Proton); also replaces the old PROTON_ENABLE_WAYLAND/HDR variant
   | "graphics-mode"; // start the game in DirectX 12 / Vulkan with its own game argument (knownGames.ts MODES)

@@ -448,6 +448,7 @@
           "envHeroic": "Retirer {{vars}} des variables d'environnement de {{game}}",
           "audioRule": "Désactiver la règle audio qui impose « pro-audio » à la manette",
           "audioProfile": "Passer l'audio de la manette sur le profil « {{profile}} »",
+          "audioVolume": "Mettre le volume et le niveau du microphone de la manette au maximum sur cet ordinateur",
           "gamepad": "Transmettre la manette à {{game}} comme manette standard (XInput)",
           "hdr": "Activer le HDR pour {{game}}",
           "hdrUpdate": "Passer le HDR de {{game}} à gamescope",
@@ -466,6 +467,7 @@
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
           "audioRule": "{{file}} met la carte audio de la DualSense sur le profil pro-audio, ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Le fichier est renommé en .disabled (pas supprimé) et le service audio (WirePlumber) redémarre : le son coupe une seconde.",
           "audioProfile": "La carte audio de la DualSense est sur « {{profile}} », ce qui fait envoyer à GE-Proton 11 des gâchettes sans force et aucun retour haptique. Aucun fichier ne change ; c'est comme choisir le profil dans tes réglages audio.",
+          "audioVolume": "Sous Linux, la carte son de la manette garde son propre volume et son propre niveau du microphone tels qu'ils ont été enregistrés la dernière fois, et les curseurs de ton bureau ne les changent pas. Ici ils sont bas : le microphone peut sembler presque muet, et le casque et le haut-parleur jouent moins fort. Ils sont mis au maximum (dans le mélangeur de la carte son de Linux, ALSA) ; les curseurs de volume de ton bureau fonctionnent comme avant, et Annuler remet les anciens niveaux. Si Niveau du microphone est au-dessus de 0 sur {{device}}, c'est ce réglage qui décide du niveau du microphone.",
           "gamepad": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations.{{runner}}",
           "gamepadSteam": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations. Les options de lancement deviennent : {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignore cette option, donc le jeu passe aussi à {{proton}}.",
@@ -498,7 +500,8 @@
         "result": {
           "stale": "Ce changement ne s'applique plus (la configuration a changé depuis la dernière vérification).",
           "restartFailed": "Enregistré, mais le redémarrage du service audio a échoué : {{error}}",
-          "profileFailed": "Le changement de profil a échoué : {{error}}"
+          "profileFailed": "Le changement de profil a échoué : {{error}}",
+          "volumeFailed": "Le réglage du volume de la manette a échoué : {{error}}"
         },
         "legacy": "{{text}}"
       },
@@ -516,6 +519,7 @@
       "readLaunchersOff": "Le désactiver masque ta bibliothèque de jeux et les profils de manette par jeu jusqu'à ce que tu le réactives. Rien n'est supprimé.",
       "readLaunchersTurnOff": "Désactiver",
       "undoConflict": "Non annulé : {{files}} a changé après l'application (le lanceur a enregistré ses propres réglages). Annuler effacerait ces changements.",
+      "undoNoController": "Non annulé : la manette n'est pas connectée. Connecte-la et appuie de nouveau sur Annuler.",
       "scanningWindows": "Vérification de Steam, GOG Galaxy et Epic…",
       "consentIntroWindows": "La configuration des jeux liste tes jeux Steam, GOG Galaxy et Epic et cherche dans Steam les réglages qui empêchent gâchettes adaptatives et retour haptique de leur parvenir. Pour cela, elle lit, sur cet ordinateur uniquement :",
       "consentLaunchersWindows": "les réglages et les listes de jeux installés de Steam, GOG Galaxy et Epic",

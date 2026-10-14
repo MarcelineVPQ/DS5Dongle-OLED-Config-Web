@@ -192,6 +192,20 @@ export const ROADMAP: RoadmapItem[] = [
     text: "Steam and Heroic reopened by the app after a Games change, and games you start with Play, keep running when the app restarts, updates or quits.",
     areas: ["games", "app"],
   },
+  {
+    column: "next",
+    title: "Launcher check on every OS",
+    text: "Games knows whether a launcher is installed on Windows and macOS too, so a game page says when a launcher link can't open instead of assuming it can.",
+    areas: ["games"],
+  },
+  {
+    column: "next",
+    title: "Full headset mic and volume",
+    text: "Games → This computer finds the controller's mic level and volume left low by the system and sets them to full, with Undo.",
+    areas: ["audio", "app"],
+    platform: "linux",
+    high: true,
+  },
 
   // In progress
   {
@@ -260,7 +274,6 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "planned", title: "Games on macOS", text: "The Games area on macOS too: your Steam, Heroic, Epic and GOG Galaxy games and the game that's running.", areas: ["games"] },
   { column: "planned", title: "Heroic games on Windows and macOS", text: "Games finds your Heroic games on Windows and macOS too.", areas: ["games"] },
-  { column: "planned", title: "Launcher check on every OS", text: "Games knows whether a launcher is installed on Windows and macOS too, instead of assuming it is.", areas: ["games"] },
   {
     column: "planned",
     title: "Controller buttons as keyboard keys",
@@ -302,14 +315,6 @@ export const ROADMAP: RoadmapItem[] = [
     column: "planned",
     title: "Stereo when headphones go in",
     text: "Plug headphones into the controller and its sound switches to stereo; unplug them and the speaker comes back. Undo and your own choice always win.",
-    areas: ["audio", "app"],
-    platform: "linux",
-    high: true,
-  },
-  {
-    column: "planned",
-    title: "Full headset mic and volume",
-    text: "The app finds the controller's mic gain and volume left low by the system and sets them right, with Undo.",
     areas: ["audio", "app"],
     platform: "linux",
     high: true,
