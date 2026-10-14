@@ -1,6 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { statSync } from "node:fs";
+import { existsSync, statSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { app, BrowserWindow, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, logged } from "../../src/errorText";
@@ -24,11 +25,13 @@ import { devChannelPreview } from "./updateFeed";
 import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
-import { loadSettings, saveSettings } from "./settings";
+import { loadSettings, settingsPath, saveSettings } from "./settings";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
 import { Updater } from "./updater";
 import { FirmwareHold } from "./firmwareHold";
+import { pruneUnpackLeftovers } from "./portableTemp";
+import { firstInstalledStart, isInstalledApp } from "./windowsInstall";
 import { isAllowedExternalUrl } from "./urls";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +53,10 @@ let settings: DesktopSettings;
 // Set when the user really quits (tray Quit, OS logout), so close-to-tray
 // doesn't swallow it.
 let quitting = false;
+// Windows is ending the session: no update install at quit (see will-quit).
+let sessionEnding = false;
+// This start installed the app over the portable exe: the page says so once.
+let movedFromPortable = false;
 // Starts/stops the running-game watcher with the Games consent (set in start()).
 let syncRunningWatcher: () => void = () => undefined;
 // Linux: keeps the controller's volume at full while the app runs, once the
@@ -135,6 +142,28 @@ function start(): void {
     () => settings.updateChannel,
   );
   updater.pruneStaleFiles();
+  if (process.platform === "win32") {
+    // The portable exe this installed app replaced left unpacked copies in Temp.
+    // Electron's own fs, without .asar support: an app.asar is a file to delete here.
+    const originalFs = createRequire(import.meta.url)("original-fs") as typeof import("node:fs");
+    const remove = (dir: string) => originalFs.promises.rm(dir, { recursive: true, force: true });
+    // lifetime: OK — fires once
+    // Also the update installer that started this version (it was still running at start).
+    setTimeout(() => {
+      updater.pruneStaleFiles();
+      void pruneUnpackLeftovers(app.getPath("temp"), process.execPath, Date.now(), remove).catch(logged("tidying the portable exe's leftovers in Temp (best effort, retried next start)"));
+    }, 20_000);
+    // The first start of the installed app over a portable exe's settings: say so once.
+    if (app.isPackaged && isInstalledApp(process.execPath, app.getName(), existsSync)) {
+      try {
+        const marker = join(app.getPath("userData"), "installed-app");
+        movedFromPortable = firstInstalledStart(settingsPath(), marker, existsSync, (path) => writeFileSync(path, `${app.getVersion()}\n`)) === "moved";
+      } catch (cause) {
+        // error: LOGGED-OK — only the one-time "now installed" notice depends on it
+        logged("the first start of the installed app")(cause);
+      }
+    }
+  }
   hold = new FirmwareHold((state) => mainWindow?.webContents.send(IPC.firmwareHold, state));
   const scheduledCheck = () => {
     if (settings.checkForUpdates) checkForUpdates().catch(logged("scheduled update check (not started by the user; a failed check shows as the 'failed' banner state)"));
@@ -414,6 +443,13 @@ function start(): void {
     if (hold.allowQuit(event, () => app.quit())) quitting = true;
     else showWindow();
   });
+  // Windows: an update that is downloaded and verified but wasn't restarted
+  // into installs as the app quits (not when Windows is signing out or
+  // shutting down: an installer cut short would leave a broken app).
+  // lifetime: NOT-WORTH — one per app, fires at quit
+  app.on("will-quit", () => {
+    if (!sessionEnding) updater.installOnQuit();
+  });
   // lifetime: NOT-WORTH — one per app, lives until quit
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
@@ -555,6 +591,8 @@ function createWindow(visible: boolean): void {
       showWindow();
     }
   });
+  // Windows is signing out, restarting or shutting down (Windows only event).
+  mainWindow.on("session-end", () => (sessionEnding = true)); // lifetime: OK — goes with the window (destroyed on "closed")
   // lifetime: OK — goes with the window (destroyed on "closed")
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -568,6 +606,12 @@ function createWindow(visible: boolean): void {
   // lifetime: OK — goes with the window (destroyed on "closed")
   for (const event of ["show", "hide", "minimize", "restore"] as const) mainWindow.on(event as "show", sendVisible);
   mainWindow.webContents.on("did-finish-load", sendVisible); // lifetime: OK — goes with the window (destroyed on "closed")
+  // lifetime: OK — goes with the window (destroyed on "closed"); acts once
+  mainWindow.webContents.on("did-finish-load", () => {
+    if (!movedFromPortable) return;
+    movedFromPortable = false;
+    showMainNotice("desktop.notices.nowInstalled");
+  });
 
   const contents = mainWindow.webContents;
   // External links open in the system browser, and only to allowlisted hosts.

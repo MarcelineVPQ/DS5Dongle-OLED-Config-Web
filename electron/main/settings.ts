@@ -59,7 +59,7 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("updateChannel"), value: z.enum(["stable", "dev"]) }),
 ]);
 
-function settingsPath(): string {
+export function settingsPath(): string {
   return join(app.getPath("userData"), "settings.json");
 }
 

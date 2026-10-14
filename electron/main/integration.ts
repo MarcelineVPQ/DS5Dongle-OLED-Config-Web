@@ -6,9 +6,8 @@
 // the menu entry, autostart and pinned launchers never go stale (Sonata's
 // lesson: a versioned Exec= path broke after every update).
 //
-// Windows (portable exe): electron-builder's portable build unpacks to a temp
-// folder and runs from there; PORTABLE_EXECUTABLE_FILE is the real .exe. A
-// Start Menu shortcut points at that path, which self-updates replace in place.
+// Windows: the per-user installer adds the Start menu entry and the
+// uninstaller (electron-builder.yml); the tray menu can add a desktop shortcut.
 import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -20,20 +19,19 @@ import { execArg } from "./desktopEntry";
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
 const SHORTCUT_NAME = "DS5 Dongle OLED Edition Configurator.lnk";
 
-// The path launchers should run: the stable AppImage symlink, the real portable
-// exe, or the plain executable in development.
+// The path launchers should run: the stable AppImage symlink, or the
+// executable itself (installed on Windows; in development the plain one).
 export function launchPath(): string {
   if (process.env.APPIMAGE) {
     const stable = join(dirname(realpathOrSelf(process.env.APPIMAGE)), STABLE_APPIMAGE);
     return existsSync(stable) ? stable : process.env.APPIMAGE;
   }
-  return process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+  return process.execPath;
 }
 
 export function integrateDesktop(resourcesDir: string): void {
   try {
     if (process.platform === "linux" && process.env.APPIMAGE) integrateAppImage(resourcesDir);
-    else if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) ensureStartMenuShortcut();
   } catch (cause) {
     // error: LOGGED-OK — start-up desktop integration (menu entry, Start menu shortcut): nothing the user asked for, and the app works without it
     console.error("desktop integration failed:", cause instanceof Error ? cause.message : cause);
@@ -95,24 +93,9 @@ function integrateAppImage(resourcesDir: string): void {
   }
 }
 
-function startMenuShortcutPath(): string {
-  return join(app.getPath("appData"), "Microsoft", "Windows", "Start Menu", "Programs", SHORTCUT_NAME);
-}
-
-function ensureStartMenuShortcut(): void {
-  const target = process.env.PORTABLE_EXECUTABLE_FILE!;
-  shell.writeShortcutLink(startMenuShortcutPath(), existsSync(startMenuShortcutPath()) ? "update" : "create", {
-    target,
-    appUserModelId: APP_ID,
-    description: "Configure the DS5 Dongle OLED Edition",
-    icon: target,
-    iconIndex: 0,
-  });
-}
-
 // Windows only: offered from the tray menu.
 export function createDesktopShortcut(): boolean {
   if (process.platform !== "win32") return false;
-  const target = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+  const target = process.execPath;
   return shell.writeShortcutLink(join(app.getPath("desktop"), SHORTCUT_NAME), "create", { target, appUserModelId: APP_ID, icon: target, iconIndex: 0 });
 }

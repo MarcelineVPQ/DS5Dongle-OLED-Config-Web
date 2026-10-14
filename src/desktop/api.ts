@@ -39,7 +39,7 @@ export type MainErrorKey = (typeof MAIN_ERROR_KEYS)[number];
 
 // News from the main process the page shows as a notice (not an error):
 // something the app did on its own in the background. Fixed keys only.
-export const MAIN_NOTICE_KEYS = ["desktop.notices.volumeRestored"] as const;
+export const MAIN_NOTICE_KEYS = ["desktop.notices.volumeRestored", "desktop.notices.nowInstalled"] as const;
 export type MainNoticeKey = (typeof MAIN_NOTICE_KEYS)[number];
 
 export interface DevChannelPreview {

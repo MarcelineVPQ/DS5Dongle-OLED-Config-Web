@@ -201,9 +201,25 @@ export function emptyInputReport(): InputReport {
   };
 }
 
-// Would the app show anything different? Every field the screen uses; the
-// report counter and the motion clock (seq, sensorTime) advance with every
-// report and are never drawn, so they don't count.
+// A resting controller's motion sensors jitter by a few counts every report;
+// changes this small don't count as new (a fraction of a pixel on the spark
+// lines: their ranges are ±8000 and ±10000).
+export const GYRO_DEADBAND = 10;
+export const ACCEL_DEADBAND = 20;
+const MOTION_BAND: Partial<Record<keyof InputReport, number>> = {
+  gyroX: GYRO_DEADBAND,
+  gyroY: GYRO_DEADBAND,
+  gyroZ: GYRO_DEADBAND,
+  accelX: ACCEL_DEADBAND,
+  accelY: ACCEL_DEADBAND,
+  accelZ: ACCEL_DEADBAND,
+};
+
+// Is a redraw worth it? Every field the screen uses; the report counter and
+// the motion clock (seq, sensorTime) advance with every report and are never
+// drawn, so they don't count, and the motion sensors count once they move
+// past their noise (MOTION_BAND, measured from `b`, the report last shown,
+// so a slow drift still counts in the end). A redraw shows the real values.
 export function sameShownInput(a: InputReport, b: InputReport): boolean {
   // loop: HOT-PATH-OK — N ≈ 40 fields, once per live poll (~30 Hz)
   for (const key of Object.keys(a) as Array<keyof InputReport>) {
@@ -211,6 +227,8 @@ export function sameShownInput(a: InputReport, b: InputReport): boolean {
     const x = a[key];
     const y = b[key];
     if (x === y) continue;
+    const band = MOTION_BAND[key];
+    if (band !== undefined && Math.abs((x as number) - (y as number)) <= band) continue;
     if (typeof x !== "object" || typeof y !== "object") return false;
     if (key === "fingers") {
       const [f0, f1] = x as InputReport["fingers"];

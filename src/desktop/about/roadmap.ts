@@ -32,6 +32,15 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = ["next", "progress", "planned", 
 
 export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
+  {
+    column: "next",
+    title: "Quicker second start on Windows",
+    text: "The app installs for your Windows user (no admin rights), opens in about a second, shows its window right away when started again, and leaves no copies in Temp.",
+    areas: ["app"],
+    platform: "windows",
+  },
+  { column: "next", title: "Lighter game check on Windows", text: "Noticing which game is running costs almost no CPU while the app is in the tray.", areas: ["app", "games"], platform: "windows" },
+  { column: "next", title: "Desktop accent color on Windows", text: "The Desktop accent color follows the Windows accent color, also when you change it.", areas: ["app"], platform: "windows" },
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   {
     column: "next",
@@ -367,15 +376,7 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "planned", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
   { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"] },
-  { column: "planned", title: "Desktop accent color on Windows", text: "Make the Desktop accent color follow the Windows accent color.", areas: ["app"], platform: "windows" },
-  {
-    column: "planned",
-    title: "Quicker second start on Windows",
-    text: "Opening the app again while it's in the tray shows the window right away, and no unpacked copies are left behind.",
-    areas: ["app"],
-    platform: "windows",
-  },
-  { column: "planned", title: "Lighter game check on Windows", text: "Noticing which game is running costs almost no CPU while the app is in the tray.", areas: ["app", "games"], platform: "windows" },
+
   { column: "planned", title: "Guide in every language", text: "The Guide translated into all the app's languages.", areas: ["app"] },
   { column: "planned", title: "A new welcome tour", text: "A short tour of the app, rebuilt for the current layout.", areas: ["app"] },
 

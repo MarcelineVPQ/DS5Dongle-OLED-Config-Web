@@ -3262,14 +3262,18 @@ html[data-cards-translucent] .gp-sections .dk-card {
   /* Keep the art's own aspect ratio: fill the window and crop the overflow. */
   object-fit: cover;
   opacity: 0;
-  transition: opacity 2.5s ease;
   /* The slow pan and zoom (Ken Burns), stepped from script (backdropPan.ts):
      a CSS animation would redraw the window at the screen's refresh rate. */
   transform: var(--bd-pan, none);
   will-change: transform;
 }
 .art-bd-layer.on {
-  opacity: 0.55;
+  /* The crossfade between games (--bd-fade, 0..1), stepped from script with
+     the pan: no fade running at the screen's refresh rate. */
+  opacity: calc(0.55 * var(--bd-fade, 1));
+}
+.art-bd-layer.leaving {
+  opacity: calc(0.55 * (1 - var(--bd-fade, 1)));
 }
 /* The swirl field (SwirlField.tsx) needs no CSS blur: the GPU shader draws it
    at a third of the window's size (smooth when stretched), and the CPU
@@ -3593,7 +3597,9 @@ html[data-glass] .rail-label {
 }
 /* The pulse: a ring that grows and fades, on its own compositor layer
    (transform and opacity only: no repaint per frame, unlike an animated
-   box-shadow). Reduce motion (system or App settings) stops it. */
+   box-shadow), three times when the controller connects, then a steady dot
+   (an endless pulse kept the page drawing at the screen's refresh rate).
+   Reduce motion (system or App settings) stops it. */
 .live-spec-dot::after {
   content: "";
   position: absolute;
@@ -3602,7 +3608,9 @@ html[data-glass] .rail-label {
   background: color-mix(in srgb, var(--status-good) 60%, transparent);
   opacity: 0;
   will-change: transform, opacity;
-  animation: live-spec-pulse 2.4s ease-out infinite;
+}
+.live-spec-dot.pulse::after {
+  animation: live-spec-pulse 2.4s ease-out 3;
 }
 @keyframes live-spec-pulse {
   0% {
@@ -3619,7 +3627,7 @@ html[data-glass] .rail-label {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .live-spec-dot::after {
+  .live-spec-dot.pulse::after {
     animation: none;
   }
 }

@@ -2,13 +2,13 @@
 // panning and zooming (Ken Burns), behind the controller and its data.
 //
 // Which art: the running game's banner, else the recently played games in
-// turn (a crossfade every 20 s); without any (Games scanning off, Windows /
+// turn (a 4 s crossfade every 20 s); without any (Games scanning off, Windows /
 // macOS), slow swirls in the controller's colors (SwirlField). Cheap on purpose: each
 // image is drawn once into a small canvas (24-320 px wide, the Background blur knob) and stretched up, which blurs it
-// for free, so only a slow transform moves it (backdropPan.ts: 10 steps a
-// second, 4 behind another window, none while a game runs and the window
-// isn't focused). Still with "reduce motion". Toggle: App settings.
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+// for free, so only a slow transform moves it and the crossfade steps with it
+// (backdropPan.ts: 10 steps a second, none while the window isn't focused).
+// Still with "reduce motion" (games switch without a fade). Toggle: App settings.
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { knob, useKnob } from "../lookKnobs";
 import type { ColorwayColors } from "./colorways";
 import { readPref, usePref } from "../storage";
@@ -16,7 +16,7 @@ import { artUrl } from "../games/types";
 import SwirlField from "./SwirlField";
 import { useWindowFocused, useWindowShown } from "../useWindowShown";
 import { useReducedMotion } from "../motion";
-import { PAN_MS, PAN_UNFOCUSED_MS, panClock, panTransform } from "./backdropPan";
+import { PAN_MS, fadeProgress, panClock, panTransform } from "./backdropPan";
 import { logged } from "../../errorText";
 
 // The background: "default" (the swirl field, what a new install shows),
@@ -52,8 +52,8 @@ const subscribePage = (l: () => void) => {
 const PIN_KEY = "ds5.dev.backdropGame";
 
 // The open game page's art, else the running game's, else the most recently
-// played games in turn; and whether a game is running.
-function useBackdropKeys(): { keys: string[]; gameRunning: boolean } {
+// played games in turn.
+function useBackdropKeys(): string[] {
   const pin = readPref(PIN_KEY);
   const page = useSyncExternalStore(subscribePage, () => pageGame);
   const desktop = window.desktop;
@@ -92,18 +92,18 @@ function useBackdropKeys(): { keys: string[]; gameRunning: boolean } {
       off();
     };
   }, [desktop]);
-  const gameRunning = running !== null;
   if (pin) {
     // loop: HOT-PATH-OK — N ≤ 8 recent games with art, on render
     const pinned = keys.find((k) => k.endsWith(`:${pin}`));
-    if (pinned) return { keys: [pinned], gameRunning };
+    if (pinned) return [pinned];
   }
-  if (page) return { keys: [page], gameRunning };
-  return { keys: running && keys.includes(running) ? [running] : keys, gameRunning };
+  if (page) return [page];
+  return running && keys.includes(running) ? [running] : keys;
 }
 
 // One image, drawn small (= blurred) into a canvas.
-function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean; blurKnob: number }) {
+// `role`: "on" fades in (or is shown), "leaving" fades out, with --bd-fade.
+function BlurredArt({ src, role, blurKnob }: { src: string; role: "on" | "leaving" | null; blurKnob: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   // lifetime: OK — cleanup: drops the image's onload and src
@@ -131,57 +131,79 @@ function BlurredArt({ src, visible, blurKnob }: { src: string; visible: boolean;
       img.src = "";
     };
   }, [src, blurKnob]);
-  return <canvas ref={ref} className={`art-bd-layer${visible && ready ? " on" : ""}`} aria-hidden="true" />;
+  return <canvas ref={ref} className={`art-bd-layer${role && ready ? ` ${role}` : ""}`} aria-hidden="true" />;
 }
 
 export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null }) {
   const [background] = useBackground();
   const [blur] = useKnob(knob("backdropBlur"));
-  const { keys, gameRunning } = useBackdropKeys();
-  // The cycle position belongs to one set of games; a new set starts at 0.
+  const keys = useBackdropKeys();
+  // The cycle position belongs to one set of games; a new set starts at 0
+  // (prev: the game fading out, -1 for none).
   const sig = keys.join("|");
-  const [pos, setPos] = useState({ sig, i: 0 });
+  const [pos, setPos] = useState({ sig, i: 0, prev: -1 });
   const index = pos.sig === sig ? pos.i : 0;
-  // The art cycles only while the window is on screen (a crossfade nobody sees
-  // still costs frames).
+  const prev = pos.sig === sig ? pos.prev : -1;
+  // The art moves and cycles only while the window is on screen and focused
+  // (behind another window or a game it holds still: frames nobody watches).
   const shown = useWindowShown();
   const focused = useWindowFocused();
   const still = useReducedMotion();
-  // Playing with the window behind the game: the background holds still.
-  const hold = gameRunning && !focused;
+  const hold = !focused;
+  const moving = shown && !hold && !still;
   const art = background === "art" && keys.length > 0;
   const root = useRef<HTMLDivElement>(null);
-  // The art's pan (the swirls pan with their own frames, SwirlField): a step
-  // every 100 ms (250 ms behind another window), none while hidden, holding
-  // or with Reduce motion.
-  // lifetime: OK — cleanup: clears the pan timer; none while hidden, holding or still
+  // When the crossfade started (performance.now()); it starts at mount too,
+  // so the first game fades in.
+  // cache: OK — key=none (the current crossfade's start); invalidated=reset on every game change; bound=1 number
+  const fadeAt = useRef(0); // set before the first paint (the layout effect below)
+  // A new game: its fade starts at 0 before the frame is drawn (no flash of
+  // the new game at full strength); no fade with Reduce motion.
+  // lifetime: OK — acquires nothing (resets the crossfade before paint)
+  useLayoutEffect(() => {
+    fadeAt.current = performance.now();
+    root.current?.style.setProperty("--bd-fade", still ? "1" : "0");
+  }, [index, sig, still]);
+  // The art's pan and crossfade (the swirls pan with their own frames,
+  // SwirlField): a step every 100 ms while moving; holding, a fade underway
+  // finishes at once and the picture stays where it is.
+  // lifetime: OK — cleanup: clears the pan timer; none unless shown, focused and moving
   useEffect(() => {
     const el = root.current;
     if (!el || !art) return;
-    if (still) {
-      el.style.removeProperty("--bd-pan");
+    if (still) el.style.removeProperty("--bd-pan");
+    if (!moving) {
+      el.style.setProperty("--bd-fade", "1");
       return;
     }
     const now = panClock();
-    const step = () => el.style.setProperty("--bd-pan", panTransform(now()));
+    let fade = "";
+    const step = () => {
+      el.style.setProperty("--bd-pan", panTransform(now()));
+      const f = fadeProgress(performance.now() - fadeAt.current);
+      if (f !== fade) el.style.setProperty("--bd-fade", (fade = f));
+    };
     step();
-    if (!shown || hold) return;
-    // lifetime: OK — cleared in the effect cleanup; runs only while shown and moving
-    const id = setInterval(step, focused ? PAN_MS : PAN_UNFOCUSED_MS);
+    // lifetime: OK — cleared in the effect cleanup; runs only while shown, focused and moving
+    const id = setInterval(step, PAN_MS);
     return () => clearInterval(id);
-  }, [art, still, shown, hold, focused]);
+  }, [art, still, moving]);
   // lifetime: OK — cleanup: clears the cycle timer; none while hidden, holding or with one game
   useEffect(() => {
     if (keys.length < 2 || !shown || hold) return;
-    // lifetime: OK — cleared in the effect cleanup; runs only while shown with 2+ games
-    const id = setInterval(() => setPos((p) => ({ sig, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
+    // lifetime: OK — cleared in the effect cleanup; runs only while shown and focused with 2+ games
+    const id = setInterval(() => setPos((p) => ({ sig, prev: p.sig === sig ? p.i : -1, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
     return () => clearInterval(id);
   }, [sig, keys.length, shown, hold]);
   if (background === "off") return null;
   return (
     <div ref={root} className={`art-bd${art ? "" : " blobs"}`} aria-hidden="true">
-      {/* loop: HOT-PATH-OK — N ≤ 8 backdrop images; renders on a 20 s cycle tick */}
-      {art ? keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero", BACKDROP_PX, 1)} visible={i === index} blurKnob={blur} />) : <SwirlField colors={colors} hold={hold} />}
+      {art ? (
+        // loop: HOT-PATH-OK — N ≤ 8 backdrop images; renders on a 20 s cycle tick
+        keys.map((key, i) => <BlurredArt key={key} src={artUrl(key, "hero", BACKDROP_PX, 1)} role={i === index ? "on" : i === prev ? "leaving" : null} blurKnob={blur} />)
+      ) : (
+        <SwirlField colors={colors} hold={hold} />
+      )}
       <div className="art-bd-dim" />
     </div>
   );

@@ -1617,6 +1617,7 @@
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",
+      "nowInstalled": "Die App ist jetzt auf diesem PC installiert: Öffne sie über das Startmenü. Die portable .exe-Datei, die du vorher benutzt hast, wird nicht mehr gebraucht und kann gelöscht werden.",
       "dismissedTitle": "Geschlossene Hinweise",
       "none": "Keine geschlossenen Hinweise.",
       "showAgain": "Wieder anzeigen",

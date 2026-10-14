@@ -41,8 +41,8 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 
 Tested on Windows 11, end to end in a test machine (`tools/windows_vm_test.py`) and by users. The Games page lists your Steam, GOG Galaxy and Epic games with per-game profiles; Proton setup and the Linux system checks don't apply on Windows. Everything else works the same. Problems? Please report them in the [issues](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/issues).
 
-1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64.exe` and put it somewhere permanent, for example a folder in Documents. It's a portable app, so there's no installer.
-2. Run it. The first time, Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. The app adds itself to the Start Menu, and the tray menu can also create a desktop shortcut.
+1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64-setup.exe` and run it. Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. It installs for your Windows user only (no admin rights needed) into `%LOCALAPPDATA%\Programs`, adds the app to the Start menu and opens it; the tray menu can also create a desktop shortcut. Updates install themselves from inside the app. To remove it: Settings → Apps → Installed apps → DS5 Dongle OLED Edition Configurator → Uninstall (your settings and game profiles stay, in `%APPDATA%\DS5 Dongle OLED Edition Configurator`).
+2. Used the older portable `…-win-x64.exe`? It can't update itself to the installer: download the installer once and run it. Your settings and game profiles carry over, and afterwards the old `.exe` file can be deleted.
 3. Windows loads the USB driver for the dongle automatically.
 4. **If the app says "The Pico 2 W is plugged in, but Windows hasn't set up its driver"** (it names your board) (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. See below for exactly what it does.
 
@@ -99,7 +99,7 @@ git clone https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web.git
 cd DS5Dongle-OLED-Config-Web
 npx -y npm@11.6.2 ci          # install dependencies (npm 11; older npm versions crash on this tree)
 npm run dist:linux           # Linux AppImage
-npm run dist:win             # Windows portable exe (on Windows, or on Linux with Wine)
+npm run dist:win             # Windows per-user installer (on Windows, or on Linux)
 npm run dist:mac             # macOS zip (on a Mac)
 ```
 
