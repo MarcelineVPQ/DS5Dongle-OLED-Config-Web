@@ -196,6 +196,7 @@
       "forget": "Forget",
       "wipeConfirm": "Forget all four controllers?",
       "wipe": "Forget all",
+      "allTaken": "All {{total}} slots are taken. To pair a new controller, forget one first.",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "pretend"

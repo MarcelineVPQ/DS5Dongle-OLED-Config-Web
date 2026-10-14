@@ -17,6 +17,7 @@ import { ROADMAP, type RoadmapColumn } from "../../src/desktop/about/roadmap";
 /** Roadmap title → the start of its BACKLOG row's Item cell. */
 const BACKLOG_ROW: Record<string, string> = {
   "Lighter on your PC": "App runs lean when hidden",
+  "Full pairing slots say so": "Pairing slots says when all slots are taken",
   "Our own color picker": "Our own color picker",
   "Your controller's colors": "My controller's colors",
   "Mic muted and headset indicators": "Mic muted and headset indicators",

@@ -197,6 +197,7 @@
       "forget": "Esquecer",
       "wipeConfirm": "Esquecer os quatro controles?",
       "wipe": "Esquecer todos",
+      "allTaken": "Os {{total}} slots estão ocupados. Para emparelhar um controle novo, esqueça um primeiro.",
       "dualsense": "DualSense",
       "edge": "DualSense Edge",
       "pretend": "simulado"
