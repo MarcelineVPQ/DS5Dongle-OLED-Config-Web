@@ -64,7 +64,7 @@ const ALLOW = [
     re: /ERROR:base\/process\/process_mac\.cc:\d+\] task_policy_set TASK_SUPPRESSION_POLICY: \(os\/kern\) invalid argument/,
     why: "Chromium on macOS, at quit: lowering the priority of a helper process that has already exited",
   },
-  // Findings of this test, allowed until fixed (each a BACKLOG row):
+  // Findings of this test (reported 2026-10-14), allowed until fixed; remove the entry with the fix:
   {
     re: /ERROR:electron\/shell\/common\/platform_util_mac\.mm:\d+\] Unable to set login item: .*Operation not permitted/,
     why: "mac-smoke finding 1: every start re-applies Launch at login off (index.ts applyAutostart), and Electron logs this unregistering a login item that was never registered; harmless",

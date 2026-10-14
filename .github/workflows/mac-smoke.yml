@@ -19,8 +19,6 @@ name: macOS smoke test
 
 on:
   push:
-    # TEMPORARY while the branch is iterated (workflow_dispatch needs the file on master); removed before merge.
-    branches: [mac-smoke]
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+-oled-edition"
       - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+-oled-edition"
