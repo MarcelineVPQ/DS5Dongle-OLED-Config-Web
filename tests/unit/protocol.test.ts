@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import { HIDDEN_LIGHTBAR_MS, takeIdentity } from "../../src/hooks/useDs5Bridge";
 import {
   CONFIG_BODY_SIZE,
   CONFIG_BODY_SIZE_V13,
@@ -198,6 +199,32 @@ describe("identity report (0xF1)", () => {
     expect(sameIdentity(decodeIdentity(lit()), decodeIdentity(seq))).toBe(false);
     expect(sameIdentity(null, decodeIdentity(lit()))).toBe(false);
     expect(sameIdentity(null, null)).toBe(true);
+  });
+
+  it("hidden, takes a lightbar-only change once the color holds, or at most every 60 s while it keeps changing; anything else at once", () => {
+    const lit = (green: number, slot = 2) => {
+      const b = new Uint8Array(29);
+      b.set(sample());
+      b.set([0, 10, green, 30], 20);
+      b[17] = slot;
+      return decodeIdentity(b);
+    };
+    const prev = lit(20);
+    // Shown: every change, right away.
+    expect(takeIdentity(prev, lit(21), true, false, 1000, 2000)).toBe(true);
+    // Nothing changed: never.
+    expect(takeIdentity(prev, lit(20), true, true, 0, 600_000)).toBe(false);
+    expect(takeIdentity(prev, lit(20), false, true, 0, 600_000)).toBe(false);
+    // Hidden, an animated lightbar (a new color every poll): waits HIDDEN_LIGHTBAR_MS since the last one taken.
+    expect(takeIdentity(prev, lit(21), false, false, 1000, 2000)).toBe(false);
+    expect(takeIdentity(prev, lit(21), false, false, 1000, 1000 + HIDDEN_LIGHTBAR_MS - 1)).toBe(false);
+    expect(takeIdentity(prev, lit(21), false, false, 1000, 1000 + HIDDEN_LIGHTBAR_MS)).toBe(true);
+    // Hidden, a new color that held for a poll (changed on the OLED, a profile): taken.
+    expect(takeIdentity(prev, lit(21), false, true, 1000, 2000)).toBe(true);
+    // Hidden: another field (a slot switch) at once, with the new lightbar too.
+    expect(takeIdentity(prev, lit(21, 3), false, false, 1000, 2000)).toBe(true);
+    // The first identity is always taken.
+    expect(takeIdentity(null, lit(21), false, false, 1000, 2000)).toBe(true);
   });
 
   it("reads the third feature byte (protocol 1.12) only from a 47-byte identity", () => {

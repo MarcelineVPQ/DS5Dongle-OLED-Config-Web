@@ -49,6 +49,13 @@ let uidRe: { uid: number; re: RegExp } | null = null;
 // Orphans whose environment has no launch variable, by "<root>/<pid>:<name>".
 // cache: OK — key=<proc root>/<pid>:<name>; invalidated=each pass forgets orphans that are gone (a reused pid has a new name or is re-read); bound=live orphan processes without a launch variable
 const plainOrphans = new Set<string>();
+// Whether a process's /proc folder is the user's, by "<root>/<pid>": the
+// owner check (a stat of each of the PC's processes, ~15% of a pass) runs once per
+// process instead of every 2 s. Linux hands out pids in order up to pid_max
+// (4 million) before reusing one, and a pid that left is forgotten at the
+// next pass, so a new process on an old pid is checked again.
+// cache: OK — key=<proc root>/<pid>; invalidated=each pass forgets pids that are gone; bound=live processes
+const ownsDir = new Map<string, boolean>();
 
 // Everything detectRunning looks at, for one process.
 function readFull(dir: string, pid: number): ProcView {
@@ -94,13 +101,20 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     return out;
   }
   const own: Array<{ pid: number; name: string; ppid: number }> = [];
-  // loop: HOT-PATH-OK — all PIDs; cheap first pass (stat, status of own only); runs hidden on purpose
+  const seen = new Set<string>();
+  // loop: HOT-PATH-OK — all PIDs; cheap first pass (owner checked once per process, status of own only); runs hidden on purpose
   for (const entry of entries) {
     if (!/^\d+$/.test(entry)) continue;
     try {
       // Watcher: someone else's process (its /proc folder isn't ours) is
       // skipped without generating its status text (the costly part).
-      if (gamesOnly && uid !== undefined && statSync(`${root}/${entry}`).uid !== uid) continue;
+      if (gamesOnly && uid !== undefined) {
+        const dir = `${root}/${entry}`;
+        seen.add(dir);
+        let mine = ownsDir.get(dir);
+        if (mine === undefined) ownsDir.set(dir, (mine = statSync(dir).uid === uid));
+        if (!mine) continue;
+      }
       const status = readFileSync(`${root}/${entry}/status`, "utf8");
       if (uidRe && !uidRe.re.test(status)) continue;
       if (!gamesOnly) {
@@ -115,6 +129,9 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     }
   }
   if (!gamesOnly) return out;
+  // Forget the owners of processes that are gone (a later process may get the pid).
+  // loop: HOT-PATH-OK — one Map of live processes, a delete only for those that left
+  for (const dir of ownsDir.keys()) if (dir.startsWith(`${root}/`) && !seen.has(dir)) ownsDir.delete(dir);
   // Possible games: a launcher or Wine process, anything started under one,
   // and Wine processes that outlived their launcher.
   // loop: HOT-PATH-OK — one Map over own processes for the ancestry walk
