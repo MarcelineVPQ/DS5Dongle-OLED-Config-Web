@@ -360,6 +360,7 @@
       "source": "Code source (MIT)",
       "issues": "Signaler un problème",
       "roadmapTab": "Bientôt",
+      "showOlder": "Afficher les versions précédentes",
       "roadmap": {
         "intro": "Ce sont des projets, pas des promesses : ils peuvent changer et aucun n'a de date.",
         "suggest": "Les suggestions sont bienvenues sur GitHub.",

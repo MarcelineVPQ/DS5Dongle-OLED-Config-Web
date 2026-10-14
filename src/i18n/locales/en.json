@@ -359,6 +359,7 @@
       "source": "Source code (MIT)",
       "issues": "Report an issue",
       "roadmapTab": "Coming soon",
+      "showOlder": "Show older releases",
       "roadmap": {
         "intro": "These are plans, not promises: they can change, and none has a date.",
         "suggest": "Suggestions are welcome on GitHub.",

@@ -318,6 +318,26 @@ describe("About on the accordion", () => {
     expect([...container.querySelectorAll('[data-section="roadmap"] .dk-chapter')].map((c) => c.textContent)).toEqual(["In the next build", "In progress", "Planned", "Ideas"]);
   });
 
+  it("App changes opens on its newest releases; older ones show on request or from their chapter", async () => {
+    const releases = () => [...container.querySelectorAll(".dk-about-text h2")].map((h) => h.textContent);
+    const older = () => [...container.querySelectorAll<HTMLButtonElement>(".dk-about-text .dk-btn")].find((b) => b.textContent === m.i18n.t("desktop.about.showOlder"));
+    await render(createElement(m.AboutPage));
+    click(head("changes"));
+    const chapters = [...container.querySelectorAll<HTMLButtonElement>('[data-section="changes"] .dk-chapter')];
+    const shown = releases();
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown.length).toBeLessThan(chapters.length);
+    click(older()!);
+    expect(releases()).toHaveLength(chapters.length);
+    expect(older()).toBeUndefined();
+    // Folded and opened again: the newest releases; the last chapter shows the older ones.
+    click(head("guide"));
+    click(head("changes"));
+    expect(releases()).toEqual(shown);
+    click(container.querySelectorAll<HTMLButtonElement>('[data-section="changes"] .dk-chapter')[chapters.length - 1]);
+    expect(releases()).toHaveLength(chapters.length);
+  });
+
   it("App changes carries the 'Updated to' task until it's opened", async () => {
     const seen = vi.fn();
     await render(createElement(m.AboutPage, { whatsNew: "0.9.5-dev.12", onSeen: seen }));

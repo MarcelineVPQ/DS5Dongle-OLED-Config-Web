@@ -360,6 +360,7 @@
       "source": "源代码 (MIT)",
       "issues": "报告问题",
       "roadmapTab": "即将推出",
+      "showOlder": "显示更早的版本",
       "roadmap": {
         "intro": "这些是计划，不是承诺：可能会变，也都没有日期。",
         "suggest": "欢迎在 GitHub 上提出建议。",

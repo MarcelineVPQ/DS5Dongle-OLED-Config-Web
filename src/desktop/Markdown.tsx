@@ -43,6 +43,24 @@ export function markdownHeadings(text: string): string[] {
   return out["## "].length ? out["## "] : out["### "];
 }
 
+// A long text cut to its first chapters (a changelog's newest releases):
+// whole level-2 chapters (outside code blocks) while they fit in `budget`
+// characters, at least one. null when the whole text fits.
+export function firstChapters(text: string, budget: number): { text: string; chapters: number } | null {
+  const starts: number[] = []; // where each chapter's heading line starts
+  let fenced = false;
+  let at = 0;
+  // loop: NOT-WORTH — N = the text's lines (a few thousand at most); once per text at load
+  for (const line of text.split("\n")) {
+    if (line.startsWith("```")) fenced = !fenced;
+    else if (!fenced && line.startsWith("## ")) starts.push(at);
+    at += line.length + 1;
+  }
+  let kept = 1;
+  while (kept < starts.length && (starts[kept + 1] ?? text.length) <= budget) kept++; // loop: NOT-WORTH — N = the text's chapters; once per text at load
+  return kept < starts.length ? { text: text.slice(0, starts[kept]), chapters: kept } : null;
+}
+
 // Scrolls to the first heading under `root` that matches (smoothly, unless motion is reduced).
 export function scrollToHeading(root: ParentNode | null | undefined, match: (heading: string) => boolean): void {
   // loop: NOT-WORTH — N = the shown text's headings (≤ ~100); on a click
@@ -77,8 +95,8 @@ const components: Components = {
 // A text parsed once: react-markdown's parse (remark, GFM, to React elements)
 // is the costly part (~100 ms for the app's CHANGELOG), and its result is a
 // plain element tree that can be shown again as is. Keyed by the text itself;
-// the oldest drops past the bound (About's bundled texts plus a feed's notes).
-const PARSED_MAX = 8;
+// the oldest drops past the bound (About's bundled texts, a changelog's newest releases, a feed's notes).
+const PARSED_MAX = 10;
 // cache: OK — key=the Markdown text; invalidated=never needed (same text, same elements); bound=PARSED_MAX texts (about 1 MB for the CHANGELOG's elements), oldest dropped
 const parsed = new Map<string, ReactElement>();
 function parse(text: string): ReactElement {
