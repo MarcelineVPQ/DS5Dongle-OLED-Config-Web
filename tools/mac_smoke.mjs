@@ -60,6 +60,15 @@ const ALLOW = [
   { re: /^DevTools listening on ws:\/\//, why: "the DevTools port this test starts (--remote-debugging-port)" },
   { re: /^Debugger attached\.$/, why: "this test attaching to the main-process inspector" },
   { re: /^(Debugger ending on ws:\/\/|Waiting for the debugger to disconnect)/, why: "the inspector this test attached, at quit" },
+  // Findings of this test, allowed until fixed (each a BACKLOG row):
+  {
+    re: /ERROR:electron\/shell\/common\/platform_util_mac\.mm:\d+\] Unable to set login item: .*Operation not permitted/,
+    why: "mac-smoke finding 1: every start re-applies Launch at login off (index.ts applyAutostart), and Electron logs this unregistering a login item that was never registered; harmless",
+  },
+  {
+    re: /^Error occurred in handler for 'desktop:games-details': Error: The Games page isn't available on this system yet\./,
+    why: "mac-smoke finding 2: the controller page's backdrop (live/ArtBackdrop.tsx) asks for game art on macOS, where Games isn't available; harmless (colors-only backdrop)",
+  },
 ];
 const allowed = (line) => ALLOW.find((a) => a.re.test(line.trim()));
 
@@ -418,18 +427,32 @@ await step("pages", async () => {
 
 // 3. Mac-specific checks
 await step("tray", async () => {
-  // The Tray object(s) the main process holds (Runtime.queryObjects).
-  const proto = await main.send("Runtime.evaluate", { expression: `${E}.Tray.prototype`, includeCommandLineAPI: true });
-  const objs = await main.send("Runtime.queryObjects", { prototypeObjectId: proto.result.result.objectId });
-  const info = await main.send("Runtime.callFunctionOn", {
-    objectId: objs.result.objects.objectId,
-    functionDeclaration: `function () { return this.filter((t) => !t.isDestroyed()).map((t) => ({ bounds: t.getBounds(), title: t.getTitle(), ignoreDoubleClick: t.getIgnoreDoubleClickEvents() })); }`,
-    returnByValue: true,
-  });
-  const trays = info.result?.result?.value ?? [];
-  result.tray = trays;
-  check("mac", "menu-bar (tray) icon exists", trays.length === 1, JSON.stringify(trays));
-  const b = trays[0]?.bounds;
+  // The app's status items in the menu bar, as macOS sees them
+  // (accessibility: System Events, menu bar 2 = the status area).
+  let items = [];
+  try {
+    const out = execFileSync("osascript", ["-e", `tell application "System Events" to tell process "${APP_NAME}" to get {position, size} of every menu bar item of menu bar 2`], {
+      encoding: "utf8",
+      timeout: 30000,
+      stdio: "pipe",
+    });
+    // "x, y, w, h" per item, flattened: positions first, then sizes.
+    const n = out.trim() ? out.split(",").map((v) => Number(v.trim())) : [];
+    const half = n.length / 2;
+    for (let i = 0; i < half / 2; i++) items.push({ x: n[i * 2], y: n[i * 2 + 1], width: n[half + i * 2], height: n[half + i * 2 + 1] });
+  } catch (e) {
+    check(
+      "mac",
+      "menu-bar items readable (System Events)",
+      false,
+      String(e.stderr ?? e.message)
+        .trim()
+        .split("\n")[0],
+    );
+  }
+  result.tray = items;
+  check("mac", "menu-bar (tray) icon exists", items.length === 1, JSON.stringify(items));
+  const b = items[0];
   check("mac", "menu-bar icon is on screen in the menu bar", b && b.width > 0 && b.y < 40, JSON.stringify(b));
   // Template images follow the menu bar's light/dark look; ours are colored
   // status icons (tray.ts). Reported for the owner to decide.

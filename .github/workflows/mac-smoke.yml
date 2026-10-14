@@ -85,6 +85,13 @@ jobs:
           set +e -uo pipefail
           # A time limit for anything that can wait on a dialog (macOS has no timeout(1)).
           limit() { perl -e '$t = shift; alarm $t; exec @ARGV or die "exec: $!"' "$@"; }
+          # Gatekeeper's "Not Opened" dialogs: press Done, as a user would.
+          dismiss() {
+            for _ in 1 2 3 4 5; do
+              limit 15 osascript -e 'tell application "System Events" to tell process "CoreServicesUIAgent" to click button "Done" of window 1' > /dev/null 2>&1 || break
+              sleep 1
+            done
+          }
           OUT="$RUNNER_TEMP/mac-smoke"
           mkdir -p "$OUT/screenshots"
           echo "OUT=$OUT" >> "$GITHUB_ENV"
@@ -131,7 +138,7 @@ jobs:
             limit 60 log show --last 2m --style compact --predicate 'process == "syspolicyd" AND (eventMessage CONTAINS[c] "DS5" OR eventMessage CONTAINS[c] "assess" OR eventMessage CONTAINS[c] "Gatekeeper")' 2>&1 | tail -n 25
           } >> "$G" 2>&1
           pkill -f "$app/Contents/MacOS/" || true
-          killall CoreServicesUIAgent 2>/dev/null || true
+          dismiss
           sleep 3
           # The usual advice once macOS refused it (and what "Open Anyway" in
           # System Settings → Privacy & Security amounts to): take the flag off.
@@ -145,7 +152,7 @@ jobs:
             pgrep -fl "$app/Contents/MacOS/" || echo "no app process: still refused"
           } >> "$G" 2>&1
           pkill -f "$app/Contents/MacOS/" || true
-          killall CoreServicesUIAgent 2>/dev/null || true
+          dismiss
           sleep 3
           # The run itself uses a copy that was never refused: extracted from
           # the zip without the download flag, so its first open is a clean one.
