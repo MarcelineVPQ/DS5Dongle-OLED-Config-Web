@@ -52,6 +52,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Thank-you wall": "Thank-you wall in About",
   "What's new": "What's new and community link",
   "Controller plugins": "Controller plugins: an API",
+  "More games in the background": "Game-art background: more games",
   "One Update button": "One Update flow",
   "The board's OLED settings in the app": "Board's OLED settings in the app",
   "OLED screens in Sony's words": "OLED screens use Sony's names",
