@@ -1,6 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { app, BrowserWindow, dialog, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, logged } from "../../src/errorText";
@@ -26,6 +27,7 @@ import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
 import { Updater } from "./updater";
 import { FirmwareHold } from "./firmwareHold";
+import { pruneUnpackLeftovers } from "./portableTemp";
 import { isAllowedExternalUrl } from "./urls";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -132,6 +134,14 @@ function start(): void {
     () => settings.updateChannel,
   );
   updater.pruneStaleFiles();
+  // Portable exe: earlier runs' unpacked copies left in Temp, once the window is up.
+  if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) {
+    // Electron's own fs, without .asar support: an app.asar is a file to delete here.
+    const originalFs = createRequire(import.meta.url)("original-fs") as typeof import("node:fs");
+    const remove = (dir: string) => originalFs.promises.rm(dir, { recursive: true, force: true });
+    // lifetime: OK — fires once
+    setTimeout(() => void pruneUnpackLeftovers(process.execPath, Date.now(), remove).catch(logged("tidying the portable exe's leftovers in Temp (best effort, retried next start)")), 20_000);
+  }
   hold = new FirmwareHold((state) => mainWindow?.webContents.send(IPC.firmwareHold, state));
   const scheduledCheck = () => {
     if (settings.checkForUpdates) checkForUpdates().catch(logged("scheduled update check (not started by the user; a failed check shows as the 'failed' banner state)"));

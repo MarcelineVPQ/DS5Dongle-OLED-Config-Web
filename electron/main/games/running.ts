@@ -9,13 +9,14 @@
 //           fallback for the others).
 //
 // Windows has no /proc and a game's environment can't be read, so there the
-// running programs (tasklist, cheap) are matched against the program files in
-// each installed game's folder (indexed once, cached).
+// running programs (a native process snapshot, winProcs.ts) are matched
+// against the program files in each installed game's folder (indexed once, cached).
 import { execFile } from "node:child_process";
 import { readFileSync, readdirSync, readlinkSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { LauncherId } from "../../../src/desktop/games/types";
 import { logged } from "../../../src/errorText";
+import { windowsProcReader } from "./winProcs";
 
 export interface ProcView {
   pid: number;
@@ -238,10 +239,11 @@ export function detectRunning(procs: ProcView[], games: RunningCandidate[]): str
 
 // ---- Windows ----
 
-// Running programs: image names only (tasklist is fast; paths would need
-// PowerShell or WMI, too slow to run every few seconds). Asynchronous, so the
-// main process never waits for it.
-export function readWindowsProcs(): Promise<ProcView[]> {
+// Running programs through tasklist: image names only (paths would need
+// PowerShell or WMI). Asynchronous, so the main process never waits for it.
+// Only the fallback now: each run costs ~160 ms of CPU plus ~60-230 ms in
+// this process to spawn it (winProcs.ts).
+export function readTasklist(): Promise<ProcView[]> {
   return new Promise((resolve) => {
     // lifetime: OK — tasklist exits on its own; the 4 s timeout kills a hung one
     // error: NOT-WORTH — tasklist failed: this pass sees no processes; the next pass (3 s) looks again
@@ -250,6 +252,10 @@ export function readWindowsProcs(): Promise<ProcView[]> {
     );
   });
 }
+
+// Running programs (image names): one native snapshot in this process,
+// tasklist where that can't load.
+export const readWindowsProcs = windowsProcReader(readTasklist);
 
 // tasklist's CSV ("image","pid",...) as processes.
 export function parseTasklist(csv: string): ProcView[] {
