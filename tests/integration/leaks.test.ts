@@ -250,6 +250,7 @@ describe(`leak test: ${N} mounts and unmounts per page`, () => {
       const extra = [...now].filter(([d, n]) => n > (held.get(d) ?? 0)).map(([d, n]) => `${d}: ${held.get(d) ?? 0} -> ${n}`);
       expect({ diff: diff(before, after), extra }).toEqual({ diff: {}, extra: [] });
     },
-    120_000,
+    // About renders every bundled text 50 times (~50 s here, ~2.5x that in CI with coverage).
+    300_000,
   );
 });
