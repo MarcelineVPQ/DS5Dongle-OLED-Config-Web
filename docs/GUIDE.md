@@ -236,7 +236,7 @@ Proton normally runs games through XWayland, which has no HDR, so a game like In
 
 ![App settings](screenshots/guide-app-settings.png)
 
-Open with the ⚙ in the rail.
+Open with the ⚙ in the rail. Each group of settings is a section: click its name to open it (the one open before folds), and the small dot in its top-right corner pins it open. The line next to each name says how it's set now; a yellow dot means something is waiting there (an app update under **Updates**). The app remembers which sections were open.
 
 - **Language.**
 - **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).
@@ -244,7 +244,10 @@ Open with the ⚙ in the rail.
 - **Startup and window:** close to tray, start at login, start minimized.
 - **Privacy** (Linux and Windows): **Read my game launchers**, the permission Games asks for the first time. Turning it off asks first, then hides your game library and per-game controller profiles until you turn it back on; nothing is deleted.
 - **Updates:** check automatically, install automatically, and the **update channel**: Stable (the default) or **Development**, which brings development builds of the app and firmware before they're released (newer, less tested), plus every stable release. **Back to stable** returns to the latest stable app and firmware.
-- **Advanced:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
+- **Graphics:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
+- **Dismissed notices:** the notices you closed that still apply, with a way to each one and **Show again**.
+
+**About** (the ⓘ in the rail) shows the guide, the app's, the firmware's and Proton's changes, what's coming and the credits. Pick one in the panel on the right; its chapters are listed there, and a click jumps to one.
 
 ## 9. Troubleshooting
 

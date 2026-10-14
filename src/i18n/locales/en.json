@@ -706,7 +706,6 @@
       "next": "Next",
       "finishButton": "Let's go",
       "waiting": "Waiting for you…",
-      "helpTitle": "Help",
       "helpHint": "The quick guided tour from the first start.",
       "replay": "Show the tour again",
       "welcome": {
@@ -1152,9 +1151,10 @@
       "startup": "Startup and window",
       "privacy": "Privacy",
       "updates": "Updates",
-      "advanced": "Advanced",
+      "graphics": "Graphics",
       "reduceMotion": "Reduce motion",
-      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)"
+      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)",
+      "sub": "This PC only · saved as you change them"
     },
     "dev": {
       "title": "Developer",
@@ -1450,7 +1450,8 @@
     },
     "hdr": {
       "label": "HDR lighting (experimental)",
-      "sub": "The light bar glows brighter than white on an HDR display, like the real LEDs. Needs hardware acceleration; applies at restart."
+      "sub": "The light bar glows brighter than white on an HDR display, like the real LEDs. Needs hardware acceleration; applies at restart.",
+      "short": "HDR lighting"
     },
     "grips": {
       "link": "Link left and right",
@@ -1679,6 +1680,27 @@
       "controllerConnected": "Controller connected",
       "controllerDisconnected": "Controller disconnected",
       "profileOff": "{{title}} profile is off: your normal settings are back"
+    },
+    "accordion": {
+      "keepOpen": "Keep {{section}} open",
+      "pin": "Pin: keep open",
+      "pinned": "Pinned: stays open",
+      "showPanel": "Show the panel",
+      "hidePanel": "Hide the panel",
+      "on": "{{name}} on",
+      "off": "{{name}} off",
+      "value": "{{name}}: {{value}}",
+      "allOff": "All off",
+      "updatesAuto": "installs automatically",
+      "updatesAsk": "asks before installing",
+      "updatesOff": "no automatic checks",
+      "launchersRead": "Games may read your launchers",
+      "launchersNotRead": "Games doesn't read your launchers",
+      "hidden_one": "{{count}} hidden",
+      "hidden_other": "{{count}} hidden",
+      "devOnly": "Development builds only",
+      "chapters_one": "{{count}} chapter",
+      "chapters_other": "{{count}} chapters"
     }
   },
   "ad": {

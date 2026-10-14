@@ -1,4 +1,6 @@
-// Compact controls for the desktop layout. Each renders one .dk-row.
+// Compact controls for the desktop layout. Each renders one .dk-row: Row is
+// the settings framework's row (one label, an optional hint, one control),
+// and every setting sits in one inside a Section (accordion/Section.tsx).
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { causeText, shown } from "./shownError";
@@ -12,12 +14,14 @@ interface RowProps {
   wide?: boolean;
   // A wide control (long segmented choices): it goes under the label.
   stack?: boolean;
+  // A deep link to this row (revealSection's row): scrolled to and flashed.
+  id?: string;
   children: ReactNode;
 }
 
-export function Row({ label, sub, invalid, wide, stack, children }: RowProps) {
+export function Row({ label, sub, invalid, wide, stack, id, children }: RowProps) {
   return (
-    <div className={`dk-row${invalid ? " invalid" : ""}${wide ? " wide" : ""}${stack ? " stack" : ""}${sub ? " has-sub" : ""}`}>
+    <div className={`dk-row${invalid ? " invalid" : ""}${wide ? " wide" : ""}${stack ? " stack" : ""}${sub ? " has-sub" : ""}`} data-row={id}>
       <span className="dk-label">
         {label}
         {sub && <span className="dk-sub">{sub}</span>}

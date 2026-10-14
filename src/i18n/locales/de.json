@@ -707,7 +707,6 @@
       "next": "Weiter",
       "finishButton": "Los geht's",
       "waiting": "Wartet auf dich…",
-      "helpTitle": "Hilfe",
       "helpHint": "Die kurze Tour vom ersten Start.",
       "replay": "Tour erneut zeigen",
       "welcome": {
@@ -1153,9 +1152,10 @@
       "startup": "Start und Fenster",
       "privacy": "Datenschutz",
       "updates": "Updates",
-      "advanced": "Erweitert",
+      "graphics": "Grafik",
       "reduceMotion": "Bewegung reduzieren",
-      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)"
+      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)",
+      "sub": "Nur dieser PC · wird beim Ändern gespeichert"
     },
     "dev": {
       "title": "Entwickler",
@@ -1451,7 +1451,8 @@
     },
     "hdr": {
       "label": "HDR-Beleuchtung (experimentell)",
-      "sub": "Die Leuchtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart."
+      "sub": "Die Leuchtleiste leuchtet auf einem HDR-Display heller als Weiß, wie die echten LEDs. Braucht Hardwarebeschleunigung; gilt nach einem Neustart.",
+      "short": "HDR-Beleuchtung"
     },
     "grips": {
       "link": "Links und rechts koppeln",
@@ -1680,6 +1681,27 @@
       "controllerConnected": "Controller verbunden",
       "controllerDisconnected": "Controller getrennt",
       "profileOff": "Profil „{{title}}“ aus: deine normalen Einstellungen sind zurück"
+    },
+    "accordion": {
+      "keepOpen": "{{section}} offen lassen",
+      "pin": "Anheften: bleibt offen",
+      "pinned": "Angeheftet: bleibt offen",
+      "showPanel": "Feld einblenden",
+      "hidePanel": "Feld ausblenden",
+      "on": "{{name}} an",
+      "off": "{{name}} aus",
+      "value": "{{name}}: {{value}}",
+      "allOff": "Alles aus",
+      "updatesAuto": "installiert automatisch",
+      "updatesAsk": "fragt vor dem Installieren",
+      "updatesOff": "keine automatische Prüfung",
+      "launchersRead": "Spiele darf deine Launcher lesen",
+      "launchersNotRead": "Spiele liest deine Launcher nicht",
+      "hidden_one": "{{count}} ausgeblendet",
+      "hidden_other": "{{count}} ausgeblendet",
+      "devOnly": "Nur Entwicklungsversionen",
+      "chapters_one": "{{count}} Kapitel",
+      "chapters_other": "{{count}} Kapitel"
     }
   },
   "ad": {

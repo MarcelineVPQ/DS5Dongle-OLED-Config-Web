@@ -6,6 +6,7 @@
 // system browser through the main process's URL allowlist.
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { reducedMotionNow } from "./motion";
 
 const bundled = import.meta.glob("../../docs/screenshots/*.png", { eager: true, query: "?url", import: "default" }) as Record<string, string>;
 // By file name: "docs/screenshots/x.png" (README) and "screenshots/x.png" (docs/GUIDE.md) are the same file.
@@ -17,6 +18,37 @@ const slug = (text: string) =>
     .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .replace(/\s/g, "-");
 
+// A heading's text without Markdown marks: "[0.9.5] - date" and a linked
+// "0.9.5 - date" read the same.
+export const plainHeading = (text: string): string =>
+  text
+    .replace(/\[([^\]]*)\](\([^)]*\))?/g, "$1")
+    .replace(/[*_`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// The chapters of a Markdown text (outside code blocks), plain: its level-2
+// headings, or its level-3 ones when it has none (Credits). About's sections
+// list them.
+export function markdownHeadings(text: string): string[] {
+  let fenced = false;
+  const out: Record<"## " | "### ", string[]> = { "## ": [], "### ": [] };
+  // loop: NOT-WORTH — N = the text's lines (a few thousand at most); once per text (About memoizes it)
+  for (const line of text.split("\n")) {
+    if (line.startsWith("```")) fenced = !fenced;
+    else if (!fenced && line.startsWith("## ")) out["## "].push(plainHeading(line.slice(3)));
+    else if (!fenced && line.startsWith("### ")) out["### "].push(plainHeading(line.slice(4)));
+  }
+  return out["## "].length ? out["## "] : out["### "];
+}
+
+// Scrolls to the first heading under `root` that matches (smoothly, unless motion is reduced).
+export function scrollToHeading(root: ParentNode | null | undefined, match: (heading: string) => boolean): void {
+  // loop: NOT-WORTH — N = the shown text's headings (≤ ~100); on a click
+  const target = [...(root?.querySelectorAll("h1, h2, h3, h4") ?? [])].find((h) => match(h.textContent ?? ""));
+  target?.scrollIntoView({ behavior: reducedMotionNow() ? "auto" : "smooth", block: "start" });
+}
+
 const components: Components = {
   a: ({ href, children }) =>
     href?.startsWith("#") ? (
@@ -24,9 +56,7 @@ const components: Components = {
         href={href}
         onClick={(e) => {
           e.preventDefault();
-          const root = e.currentTarget.closest(".dk-md");
-          const target = [...(root?.querySelectorAll("h1, h2, h3, h4") ?? [])].find((h) => slug(h.textContent ?? "") === decodeURIComponent(href.slice(1)));
-          target?.scrollIntoView({ behavior: "smooth", block: "start" });
+          scrollToHeading(e.currentTarget.closest(".dk-md"), (h) => slug(h) === decodeURIComponent(href.slice(1)));
         }}
       >
         {children}

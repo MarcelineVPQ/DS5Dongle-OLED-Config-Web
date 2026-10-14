@@ -10,9 +10,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import AboutPage from "../../src/desktop/pages/AboutPage";
+import { revealSection } from "../../src/desktop/accordion/useAccordion";
 import { FIRMWARE_CHANGELOG_MISSING, firmwareChangelogPath } from "../../firmwareChangelog.config";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+Element.prototype.scrollIntoView ??= () => undefined; // jsdom has none (a deep link scrolls to its section)
 const ROOT = resolve(__dirname, "../..");
 
 let root: Root | null = null;
@@ -38,7 +40,8 @@ describe("About → Firmware changes", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    act(() => root!.render(createElement(AboutPage, { initialTab: "firmware" })));
+    revealSection("about", "firmware"); // as About → Firmware changes opens from the update notice
+    act(() => root!.render(createElement(AboutPage)));
     const bundled = readFileSync(firmwareChangelogPath(ROOT), "utf8");
     const firstHeading = /^# (.+)$/m.exec(bundled)![1];
     expect([...container.querySelectorAll("h1")].map((h) => h.textContent)).toContain(firstHeading);

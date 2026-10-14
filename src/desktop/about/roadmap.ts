@@ -417,7 +417,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },
   { column: "ideas", title: "Controller switcher in the side bar", text: "Your paired controllers listed under Controller, one click to switch.", areas: ["controller", "app"] },
   { column: "ideas", title: "Simpler layout and wording", text: "Shorter labels, fewer clicks to common things, and pairing slots that are easy to find.", areas: ["app"] },
-  { column: "ideas", title: "Settings that unfold in place", text: "The settings panel's sections open and close in place, with small icons, instead of switching pages.", areas: ["app"] },
+  { column: "progress", title: "Settings that unfold in place", text: "The settings panel's sections open and close in place, with small icons, instead of switching pages.", areas: ["app"] },
   { column: "ideas", title: "Compact layout", text: "A Compact choice in Appearance: tighter spacing so more fits on small screens.", areas: ["app"] },
   { column: "ideas", title: "Overview at a glance", text: "One screen with the connection and audio status, quick tests and quick sliders.", areas: ["app"] },
   { column: "ideas", title: "Low / Medium / High presets", text: "Quick preset buttons under strength sliders.", areas: ["app"] },

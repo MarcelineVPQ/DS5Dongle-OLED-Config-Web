@@ -36,6 +36,8 @@ let mods: {
   useFirmwareUpdate: typeof import("../../src/desktop/useUpdates").useFirmwareUpdate;
   GamesPage: typeof import("../../src/desktop/pages/GamesPage").default;
   GamePage: typeof import("../../src/desktop/library/GamePage").default;
+  AppSettingsPage: typeof import("../../src/desktop/pages/AppSettingsPage").default;
+  AboutPage: typeof import("../../src/desktop/pages/AboutPage").default;
 };
 
 beforeAll(async () => {
@@ -62,6 +64,8 @@ beforeAll(async () => {
     useFirmwareUpdate: updates.useFirmwareUpdate,
     GamesPage: (await import("../../src/desktop/pages/GamesPage")).default,
     GamePage: (await import("../../src/desktop/library/GamePage")).default,
+    AppSettingsPage: (await import("../../src/desktop/pages/AppSettingsPage")).default,
+    AboutPage: (await import("../../src/desktop/pages/AboutPage")).default,
   };
   container = document.createElement("div");
   document.body.append(container);
@@ -93,6 +97,26 @@ function Controller({ view }: { view: View }) {
   return bridge.isConnected ? createElement(mods.ControllerView, { bridge, fw, view, onView: () => undefined }) : null;
 }
 
+// App settings as DesktopApp shows it (the board and update state for its Updates section).
+function AppSettings() {
+  const bridge = mods.useDs5Bridge();
+  const app = mods.useAppUpdate();
+  const fw = mods.useFirmwareUpdate(bridge, app);
+  return createElement(mods.AppSettingsPage, { bridge, fw });
+}
+// Opens and folds every accordion section on the page, one after another
+// (closed sections mount nothing; open ones must give back what they took).
+const everySection = async () => {
+  const heads = () => [...container.querySelectorAll<HTMLButtonElement>(".dk-sec-toggle")];
+  expect(heads().length).toBeGreaterThan(3);
+  for (let i = 0; i < heads().length; i++) {
+    act(() => heads()[i].click());
+    await advance(300);
+    expect(heads()[i].getAttribute("aria-expanded")).toBe("true");
+    act(() => heads()[i].click());
+  }
+};
+
 interface Page {
   name: string;
   element: () => ReactElement;
@@ -104,7 +128,8 @@ interface Page {
 const PAGES: Page[] = [
   { name: "controller view", element: () => createElement(Controller, { view: "overview" }), ready: () => !!container.querySelector("[data-part]") },
   { name: "Pico page (dongle)", element: () => createElement(Controller, { view: "dongle" }) },
-  { name: "App settings", element: () => createElement(Controller, { view: "app" }) },
+  { name: "App settings, every section opened", element: () => createElement(AppSettings), use: everySection },
+  { name: "About, every section opened", element: () => createElement(mods.AboutPage), use: everySection },
   { name: "Calibration", element: () => createElement(Controller, { view: "calibration" }) },
   { name: "Speaker panel", element: () => createElement(Controller, { view: { part: "speaker" } }) },
   {

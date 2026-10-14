@@ -6,7 +6,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
-import { AccentSetting } from "../../src/desktop/live/PartPanel";
+import { AccentSetting } from "../../src/desktop/pages/AppSettingsPage";
 import { ACCENT_KEY, setDesktopAccent, useControllerAccent } from "../../src/desktop/live/controllerAccent";
 import { parseColor, type DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 

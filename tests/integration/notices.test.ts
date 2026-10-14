@@ -167,7 +167,7 @@ describe("the rail's dots", () => {
 describe("App settings → Dismissed notices", () => {
   const tasks: NoticeTask[] = [
     { id: "firmware-update", place: "dongle", text: "Firmware v2 is available for Pico 2 W.", key: "firmware-update:v2" },
-    { id: "app-update", place: "app", text: "App update 1.0.0 is available (1.0 MB).", key: "app-update:1.0.0" },
+    { id: "app-update", place: "app", section: "updates", text: "App update 1.0.0 is available (1.0 MB).", key: "app-update:1.0.0" },
     { id: "games-setup", place: "games", text: "2 changes waiting", count: 2 },
   ];
   const goTo = vi.fn();
@@ -187,11 +187,13 @@ describe("App settings → Dismissed notices", () => {
     list();
     const rows = [...container.querySelectorAll(".dk-dismissed")].map((r) => r.querySelector("span")!.textContent);
     expect(rows).toEqual(["Firmware v2 is available for Pico 2 W.", "App update 1.0.0 is available (1.0 MB)."]);
-    // The board's page by its name ("Go to Pico 2 W"); App settings is already open, so no button there.
+    // The board's page by its name ("Go to Pico 2 W"); the app update opens App settings → Updates.
     const go = button("Pico 2 W")!;
     expect(go.title).toBe("Go to Pico 2 W");
     act(() => go.click());
-    expect(goTo).toHaveBeenCalledWith("dongle");
+    expect(goTo).toHaveBeenCalledWith("dongle", undefined);
+    act(() => button("App settings")!.click());
+    expect(goTo).toHaveBeenCalledWith("app", "updates");
     act(() => button("Show again")!.click());
     expect(container.querySelectorAll(".dk-dismissed")).toHaveLength(1);
     act(() => button("Show all again")!.click());
