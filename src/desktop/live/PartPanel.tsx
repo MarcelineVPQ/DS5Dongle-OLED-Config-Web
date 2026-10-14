@@ -6,6 +6,7 @@ import Markdown from "../Markdown";
 import type { DevChannelAnswer } from "../api";
 import { hardwareName } from "../hardwareName";
 import HdrTest from "../dev/HdrTest";
+import FakeGames from "../dev/FakeGames";
 import Calibration from "./Calibration";
 import { KNOBS, knob, useKnob, type Knob } from "../lookKnobs";
 import { COLORWAYS, colorway } from "./colorways";
@@ -1435,6 +1436,7 @@ function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
         </Row>
       )}
       <Toggle label={t("desktop.dev.fakeSlots")} sub={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
+      <FakeGames />
       <Row label={t("desktop.dev.updates")} sub={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
           {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}

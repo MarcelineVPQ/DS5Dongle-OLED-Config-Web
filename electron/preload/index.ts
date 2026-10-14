@@ -100,6 +100,8 @@ const api: DesktopApi = {
   libraryDeleteLayout: (id) => ipcRenderer.invoke(IPC.libraryDeleteLayout, id),
   gameAction: (update) => ipcRenderer.invoke(IPC.gameAction, update),
   gameArtColor: (gameKey) => ipcRenderer.invoke(IPC.gameArtColor, gameKey),
+  // Dev builds only: a release registers no handler for it (electron/main/devTools.ts).
+  devFakeGames: (change) => ipcRenderer.invoke(IPC.devFakeGames, change),
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

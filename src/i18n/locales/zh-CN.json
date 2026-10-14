@@ -1165,6 +1165,18 @@
       },
       "fakeSlots": "模拟更多控制器",
       "fakeSlotsHint": "一只午夜黑 Edge 和一只银河紫 DualSense 显示为已配对，占用最前面的空槽位。在配对槽位中切换过去，应用会表现得像那只控制器已连接。不会向 {{device}} 发送任何内容。",
+      "fakeGames": "测试游戏",
+      "fakeGamesHint": "“游戏”页面显示一个虚构的游戏库（Steam、Heroic、Lutris 共 20 款，配生成的图片），而不读取你的启动器。开始游戏、应用、撤销和安装只会更改虚构的游戏库：不读写任何启动器文件，也不启动任何程序。会重新加载页面。",
+      "fakeRunning": "运行中的游戏",
+      "fakeRunningHint": "显示为运行中的测试游戏。在游戏页面点 ▶ 开始游戏会让它运行一分钟。",
+      "fakeRunningNone": "无",
+      "fakeHdr": "这台电脑的 HDR",
+      "fakeHdrHint": "测试电脑的 HDR 条件，用于 HDR 检查清单。",
+      "fakeHdrState": {
+        "ready": "就绪",
+        "hdr-off": "显示器的 HDR 已关闭",
+        "no-gamescope": "未安装 gamescope"
+      },
       "simulated": "模拟{{device}}（无需硬件）",
       "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频、配对和固件更新。会重新加载页面。",
       "simCore1": "模拟 Core1",

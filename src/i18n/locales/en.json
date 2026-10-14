@@ -1172,6 +1172,18 @@
       },
       "fakeSlots": "Pretend more controllers",
       "fakeSlotsHint": "A Midnight Black Edge and a Galactic Purple DualSense show as paired in the first empty slots. Switch to them under Pairing slots: the app acts as if that controller connected. Nothing is sent to {{device}}.",
+      "fakeGames": "Fake games",
+      "fakeGamesHint": "Games shows a made-up library of 20 games (Steam, Heroic, Lutris) with generated art instead of reading your launchers. Play, Apply, Undo and Install only change the made-up library: no launcher file is read or written and nothing is started. Restarts the page.",
+      "fakeRunning": "Running game",
+      "fakeRunningHint": "The fake game shown as running. ▶ Play on a game page runs one for a minute.",
+      "fakeRunningNone": "None",
+      "fakeHdr": "HDR on this computer",
+      "fakeHdrHint": "What the fake computer has for HDR, for the HDR checklists.",
+      "fakeHdrState": {
+        "ready": "Ready",
+        "hdr-off": "HDR is off on the screen",
+        "no-gamescope": "gamescope isn't installed"
+      },
       "simulated": "Simulate {{device}} (no hardware)",
       "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio, pairing and firmware updates aren't simulated. Restarts the page.",
       "simCore1": "Simulated core1",

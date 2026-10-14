@@ -1173,6 +1173,18 @@
       },
       "fakeSlots": "Weitere Controller vortäuschen",
       "fakeSlotsHint": "Ein Midnight Black Edge und ein Galactic Purple DualSense erscheinen in den ersten freien Slots gekoppelt. Wechsle unter Kopplungsplätze zu ihnen: Die App tut so, als wäre dieser Controller verbunden. An {{device_akk}} wird nichts gesendet.",
+      "fakeGames": "Testspiele",
+      "fakeGamesHint": "Spiele zeigt eine erfundene Bibliothek mit 20 Spielen (Steam, Heroic, Lutris) und generierten Bildern, statt deine Launcher zu lesen. Spielen, Übernehmen, Rückgängig und Installieren ändern nur die erfundene Bibliothek: Keine Launcher-Datei wird gelesen oder geschrieben und nichts wird gestartet. Lädt die Seite neu.",
+      "fakeRunning": "Laufendes Spiel",
+      "fakeRunningHint": "Das Testspiel, das als laufend angezeigt wird. ▶ Spielen auf einer Spielseite lässt eins eine Minute lang laufen.",
+      "fakeRunningNone": "Keins",
+      "fakeHdr": "HDR auf diesem Computer",
+      "fakeHdrHint": "Was der Testcomputer für HDR hat, für die HDR-Checklisten.",
+      "fakeHdrState": {
+        "ready": "Bereit",
+        "hdr-off": "HDR ist am Bildschirm aus",
+        "no-gamescope": "gamescope ist nicht installiert"
+      },
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
       "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio, Kopplung und Firmware-Updates werden nicht simuliert. Lädt die Seite neu.",
       "simCore1": "Simulierter Core1",

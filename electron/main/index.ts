@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { statSync } from "node:fs";
-import { app, BrowserWindow, dialog, net, protocol, shell, session, type WebContents } from "electron";
+import { app, BrowserWindow, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, logged } from "../../src/errorText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
@@ -10,6 +10,9 @@ import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService } from "./games/service";
+import { DEV_TOOLS_BUILT } from "./devTools";
+import { FakeGamesService } from "./games/fake/service";
+import { dominantColor } from "./games/artColor";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
@@ -221,6 +224,29 @@ function start(): void {
     return run(games);
   };
 
+  // Developer card → Fake games (dev builds only: DEV_TOOLS_BUILT is the
+  // constant false in a release, so all of this is left out of it). While on,
+  // Games answers from a made-up library (games/fake/) that never touches the
+  // launchers, their files or the player's own library.
+  // cache: OK — key=none (the fake library service); invalidated=dropped when Fake games is turned off (a fresh one next time); bound=1 instance
+  let fake: FakeGamesService | null = null;
+  const fakeGames = (): FakeGamesService | null => {
+    if (!DEV_TOOLS_BUILT || !settings.devFakeGames) return null;
+    return (fake ??= new FakeGamesService({
+      dir: join(app.getPath("userData"), "dev-fake-games"),
+      platform: process.platform,
+      encode: (b, png) => {
+        const img = nativeImage.createFromBitmap(Buffer.from(b.data.buffer, b.data.byteOffset, b.data.byteLength), { width: b.width, height: b.height });
+        return png ? img.toPNG() : img.toJPEG(90);
+      },
+      colorOf: dominantColor,
+      onRunning: (key) => mainWindow?.webContents.send(IPC.runningGame, key),
+      onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
+      layouts: () => library.get().layouts,
+    }));
+  };
+  const lib = (): LibraryStore => fakeGames()?.library() ?? library;
+
   // The running game (polled only while Games is allowed).
   const watcher = games
     ? new RunningGameWatcher(
@@ -230,7 +256,9 @@ function start(): void {
     : null;
   syncRunningWatcher = () => {
     if (!games || !watcher) return;
-    if (settings.gamesScanAllowed)
+    // Fake games: no real game is looked for (the fake library says which one runs).
+    if (fakeGames()) watcher.stop();
+    else if (settings.gamesScanAllowed)
       void games.scan().then(
         // Consent may have been turned off while the scan ran.
         () => settings.gamesScanAllowed && watcher.start(),
@@ -248,7 +276,8 @@ function start(): void {
   // lifetime: NOT-WORTH — one scheme handler per app, lives until quit
   protocol.handle("ds5-art", async (request) => {
     const target = artRequestTarget(request.url);
-    const source = target ? games?.artPath(target.key, target.kind) : undefined;
+    const fakeArt = fakeGames();
+    const source = !target ? undefined : fakeArt ? await fakeArt.artFile(target.key, target.kind) : games?.artPath(target.key, target.kind);
     const file = source && target?.width ? await thumbs.path(source, target.kind, target.width) : source;
     return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
   });
@@ -274,23 +303,45 @@ function start(): void {
 
   registerIpc({
     isTrusted,
-    gamesScan: () => withGames((g) => g.scan()),
-    gamesApply: (r) => withGames((g) => g.apply(r.fixIds, r.restart)),
-    gamesUndo: (r) => withGames((g) => g.undo(r.backupId, r.restart)),
-    gamesBackups: () => withGames((g) => g.listBackups()),
-    gamesRunningLaunchers: () => withGames((g) => g.runningLaunchers()),
-    installProton: () => withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
-    gamesDetails: () => withGames((g) => g.details()),
-    gamesRunning: () => watcher?.running ?? null,
-    libraryGet: () => library.get(),
-    librarySetProfile: (u) => library.setProfile(u.gameKey, u.title, u.settings),
-    libraryDeleteProfile: (key) => library.deleteProfile(key),
-    librarySetMine: (u) => library.setMine(u.gameKey, u.title, u.mine),
-    librarySetRestore: (r) => library.setRestore(r ?? undefined),
-    librarySetLayout: (u) => library.setLayout(u.id, u.name, u.table, u.extra),
-    libraryDeleteLayout: (id) => library.deleteLayout(id),
-    gameArtColor: (key) => withGames((g) => g.artColor(key)),
+    gamesScan: () => fakeGames()?.scan() ?? withGames((g) => g.scan()),
+    gamesApply: (r) => fakeGames()?.apply(r.fixIds, r.restart) ?? withGames((g) => g.apply(r.fixIds, r.restart)),
+    gamesUndo: (r) => fakeGames()?.undo(r.backupId, r.restart) ?? withGames((g) => g.undo(r.backupId, r.restart)),
+    gamesBackups: () => fakeGames()?.listBackups() ?? withGames((g) => g.listBackups()),
+    gamesRunningLaunchers: () => fakeGames()?.runningLaunchers() ?? withGames((g) => g.runningLaunchers()),
+    installProton: () => fakeGames()?.installLatestProton() ?? withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
+    gamesDetails: () => fakeGames()?.details() ?? withGames((g) => g.details()),
+    gamesRunning: () => {
+      const f = fakeGames();
+      return f ? f.running : (watcher?.running ?? null);
+    },
+    libraryGet: () => lib().get(),
+    librarySetProfile: (u) => lib().setProfile(u.gameKey, u.title, u.settings),
+    libraryDeleteProfile: (key) => lib().deleteProfile(key),
+    librarySetMine: (u) => lib().setMine(u.gameKey, u.title, u.mine),
+    librarySetRestore: (r) => lib().setRestore(r ?? undefined),
+    librarySetLayout: (u) => lib().setLayout(u.id, u.name, u.table, u.extra),
+    libraryDeleteLayout: (id) => lib().deleteLayout(id),
+    gameArtColor: (key) => fakeGames()?.artColor(key) ?? withGames((g) => g.artColor(key)),
+    // Dev builds only: the Developer card's Fake games switch, running game and HDR setup.
+    devFakeGames: DEV_TOOLS_BUILT
+      ? (c) => {
+          if (c.on !== undefined && c.on !== settings.devFakeGames) {
+            if (!c.on) fake?.stop();
+            fake = null;
+            updateSetting("devFakeGames", c.on);
+            // The page reloads after the switch; the watcher follows (stopped while on).
+            syncRunningWatcher();
+          }
+          const f = fakeGames();
+          if (f && c.running !== undefined) f.setRunning(c.running);
+          if (f && c.hdr) f.setHdr(c.hdr);
+          return Promise.resolve({ on: !!f, status: f?.status() ?? null });
+        }
+      : undefined,
     gameAction: async (u) => {
+      // Fake games: ▶ Play "runs" the game; nothing is opened or started.
+      const f = fakeGames();
+      if (f) return f.gameAction(u.gameKey, u.action);
       const target = withGames((g) => g.gameAction(u.gameKey, u.action));
       if (target.url) {
         // Launchers often exit non-zero after handing the link to their

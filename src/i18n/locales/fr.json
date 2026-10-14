@@ -1173,6 +1173,18 @@
       },
       "fakeSlots": "Simuler d’autres manettes",
       "fakeSlotsHint": "Une Edge Midnight Black et une DualSense Galactic Purple apparaissent associées dans les premiers emplacements libres. Passe sur eux dans Emplacements d’association : l’app fait comme si cette manette était connectée. Rien n’est envoyé {{device_a}}.",
+      "fakeGames": "Jeux fictifs",
+      "fakeGamesHint": "Jeux affiche une bibliothèque inventée de 20 jeux (Steam, Heroic, Lutris) avec des images générées, au lieu de lire tes lanceurs. Jouer, Appliquer, Annuler et Installer ne modifient que la bibliothèque inventée : aucun fichier de lanceur n'est lu ni écrit et rien n'est lancé. Recharge la page.",
+      "fakeRunning": "Jeu en cours",
+      "fakeRunningHint": "Le jeu fictif affiché comme en cours. ▶ Jouer sur la page d'un jeu le lance pendant une minute.",
+      "fakeRunningNone": "Aucun",
+      "fakeHdr": "HDR sur cet ordinateur",
+      "fakeHdrHint": "Ce que l'ordinateur fictif a pour le HDR, pour les listes de contrôle HDR.",
+      "fakeHdrState": {
+        "ready": "Prêt",
+        "hdr-off": "Le HDR est désactivé sur l'écran",
+        "no-gamescope": "gamescope n'est pas installé"
+      },
       "simulated": "Simuler {{device}} (sans matériel)",
       "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio, association et mises à jour du firmware ne sont pas simulés. Recharge la page.",
       "simCore1": "Core1 simulé",
