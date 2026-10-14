@@ -23,12 +23,12 @@
 // 5. Soak (--long): the window shown again, every sampleS it visits every
 //    page and comes back to Controller, then PSS is sampled; samples from
 //    the warm-up are dropped.
-/* global WebSocket -- Node 22's built-in client */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { setTimeout as sleepFor } from "node:timers/promises";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
 import { MEASUREMENT_TYPES, cpuByType, descendants, parsePssKb, parseStat, perSecond, procType } from "./budgets_lib.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -49,50 +49,16 @@ const STATE = resolve(opts.state);
 const PAGES = process.env.DS5_BUDGET_PAGES ? process.env.DS5_BUDGET_PAGES.split(",") : config.pages;
 const HZ = Number(execFileSync("getconf", ["CLK_TCK"], { encoding: "utf8" }).trim());
 const pause = (ms) => sleepFor(ms);
-const log = (...a) => console.error("[budgets]", ...a);
+const note = (...a) => console.error("[budgets]", ...a);
 
 // --- CDP
-async function connect(url) {
-  const ws = new WebSocket(url);
-  await new Promise((r, j) => {
-    ws.addEventListener("open", r);
-    ws.addEventListener("error", j);
-  });
-  let id = 0;
-  const wait = new Map();
-  const handlers = new Set();
-  ws.addEventListener("message", (m) => {
-    const d = JSON.parse(m.data);
-    if (d.id && wait.has(d.id)) {
-      wait.get(d.id)(d);
-      wait.delete(d.id);
-    } else handlers.forEach((h) => h(d));
-  });
-  const send = (method, params = {}) =>
-    new Promise((r) => {
-      const i = ++id;
-      wait.set(i, r);
-      ws.send(JSON.stringify({ id: i, method, params }));
-    });
-  return { send, handlers, close: () => ws.close() };
-}
 const page = await connect((await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((p) => p.type === "page").webSocketDebuggerUrl);
 const main = await connect((await (await fetch(`http://127.0.0.1:${PORT + 1}/json`)).json())[0].webSocketDebuggerUrl);
-async function ev(expression) {
-  const r = await page.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
-  if (r.result?.exceptionDetails) throw new Error(`page: ${JSON.stringify(r.result.exceptionDetails).slice(0, 400)}`);
-  return r.result?.result?.value;
-}
-async function mainEv(expression) {
-  const r = await main.send("Runtime.evaluate", { expression, includeCommandLineAPI: true, returnByValue: true, awaitPromise: true });
-  if (r.result?.exceptionDetails) throw new Error(`main: ${JSON.stringify(r.result.exceptionDetails).slice(0, 400)}`);
-  return r.result?.result?.value;
-}
-const win = (body) => mainEv(`(() => { const w = require("electron").BrowserWindow.getAllWindows()[0]; ${body} })()`);
+const { ev, win } = evaluators(page, main);
 
 // --- the app's processes: the main process with our --user-data-dir and its tree
 const ELECTRON = `${ROOT}node_modules/electron/dist/electron`;
-function procTable() {
+function procStats() {
   const out = [];
   for (const pid of readdirSync("/proc")) {
     if (!/^\d+$/.test(pid)) continue;
@@ -106,7 +72,7 @@ function procTable() {
   return out;
 }
 function mainPid() {
-  for (const p of procTable()) {
+  for (const p of procStats()) {
     try {
       const cmd = readFileSync(`/proc/${p.pid}/cmdline`, "utf8");
       if (cmd.startsWith(ELECTRON) && procType(cmd) === "main" && cmd.includes(`--user-data-dir=${STATE}/userdata`)) return p.pid;
@@ -118,7 +84,7 @@ function mainPid() {
 }
 const MAIN = mainPid();
 function sample() {
-  const all = procTable();
+  const all = procStats();
   const tree = new Set(descendants(MAIN, all));
   const out = [];
   for (const p of all) {
@@ -136,7 +102,7 @@ function sample() {
 // service, which only runs because we measure), and per process type.
 function pss() {
   const byType = {};
-  for (const pid of descendants(MAIN, procTable())) {
+  for (const pid of descendants(MAIN, procStats())) {
     try {
       const kb = parsePssKb(readFileSync(`/proc/${pid}/smaps_rollup`, "utf8")) ?? 0;
       const type = pid === MAIN ? "main" : procType(readFileSync(`/proc/${pid}/cmdline`, "utf8"));
@@ -155,37 +121,19 @@ function uptimeOfMain() {
   const start = Number(f.slice(f.lastIndexOf(")") + 2).split(" ")[19]) / HZ;
   return Number(readFileSync("/proc/uptime", "utf8").split(" ")[0]) - start;
 }
-async function cpuOver(secs) {
+async function cpuDuring(secs) {
   const a = sample();
   await pause(secs * 1000);
   return cpuByType(a, sample(), secs, HZ);
 }
 
-// --- frames: a trace's Display::DrawAndSwap events
-async function framesOver(secs) {
-  const counts = {};
-  let done;
-  const finished = new Promise((r) => (done = r));
-  const h = (d) => {
-    if (d.method === "Tracing.dataCollected") for (const e of d.params.value) counts[e.name] = (counts[e.name] ?? 0) + 1;
-    if (d.method === "Tracing.tracingComplete") done();
-  };
-  page.handlers.add(h);
-  await page.send("Tracing.start", { traceConfig: { includedCategories: ["viz", "disabled-by-default-devtools.timeline.frame"], recordMode: "recordContinuously" }, transferMode: "ReportEvents" });
-  await pause(secs * 1000);
-  await page.send("Tracing.end");
-  await finished;
-  page.handlers.delete(h);
-  return perSecond(counts["Display::DrawAndSwap"], secs);
-}
-
 // --- pages
-const clickOn = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.clickOn(); return !!el; })()`);
+const clickOn = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`);
 const NAV = {
   controller: () => clickOn('[data-rail="controller"]'),
   dongle: () => clickOn('[data-rail="dongle"]'),
   gameshome: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await clickOn(".lib-home")),
-  gamepage: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.clickOn(); return !!r; })()`)),
+  gamepage: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
   app: () => clickOn('[data-rail="app"]'),
   about: () => clickOn('[data-rail="about"]'),
 };
@@ -208,7 +156,7 @@ await ev(`(async () => {
 })()`);
 await page.send("Page.reload");
 await pause(10000);
-log("window:", await win(`w.setBounds({ x: 0, y: 0, width: 1920, height: 1080 }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`));
+note("window:", await win(`w.setBounds({ x: 0, y: 0, width: 1920, height: 1080 }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`));
 await pause(3000);
 
 // 2. Pages
@@ -218,13 +166,13 @@ for (const name of PAGES) {
   const reached = await NAV[name]();
   await pause(mode.settleS * 1000);
   const raf0 = await ev("window.__raf");
-  const cpu = await cpuOver(mode.cpuS);
+  const cpu = await cpuDuring(mode.cpuS);
   const raf1 = await ev("window.__raf");
-  const framesPerS = await framesOver(mode.traceS);
+  const framesPerS = await framesOver(page, mode.traceS);
   const info = await ev(`({ focus: document.hasFocus(), size: innerWidth + "x" + innerHeight, rail: document.querySelector(".rail-link.active")?.dataset.rail ?? null,
     anims: [...new Set(document.getAnimations().filter((a) => a.playState === "running").map((a) => (a.animationName ?? a.transitionProperty ?? "?") + "@" + String(a.effect?.target?.className?.baseVal ?? a.effect?.target?.className ?? "").split(" ")[0]))] })`);
   const r = { page: name, reached: !!reached, framesPerS, cpu, rafPerS: perSecond(raf1 - raf0, mode.cpuS), ...info };
-  log(JSON.stringify(r));
+  note(JSON.stringify(r));
   pages.push(r);
 }
 
@@ -238,15 +186,15 @@ await win("w.hide(); return true;");
 // The library scan and art that follow the reload finish first.
 await pause(mode.hiddenSettleS * 1000);
 const hiddenAttr = await ev(`document.documentElement.hasAttribute("data-window-hidden")`);
-if (!hiddenAttr) log("warning: the page never saw the window hide (no data-window-hidden)");
-const hidden = { secs: mode.hiddenS, cpu: await cpuOver(mode.hiddenS), pageSawHide: hiddenAttr };
-log("hidden:", JSON.stringify(hidden));
+if (!hiddenAttr) note("warning: the page never saw the window hide (no data-window-hidden)");
+const hidden = { secs: mode.hiddenS, cpu: await cpuDuring(mode.hiddenS), pageSawHide: hiddenAttr };
+note("hidden:", JSON.stringify(hidden));
 
 // 4. Memory (still hidden)
 const waitS = mode.memoryAtS - uptimeOfMain();
 if (waitS > 0) await pause(waitS * 1000);
 const memory = { atS: Math.round(uptimeOfMain()), ...pss() };
-log("memory:", JSON.stringify(memory));
+note("memory:", JSON.stringify(memory));
 
 // 5. Soak
 let soak = null;
@@ -265,13 +213,13 @@ if (mode.soakS > 0) {
     const t = (Date.now() - t0) / 1000;
     const { mb } = pss();
     if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb });
-    log(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
+    note(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
   }
   soak = { windowS: mode.soakS, samples };
 }
 
 const results = { mode: opts.mode, pages, hidden, memory, soak };
 if (opts.out) writeFileSync(opts.out, JSON.stringify(results, null, 2));
-else console.log(JSON.stringify(results, null, 2));
+else console.note(JSON.stringify(results, null, 2));
 page.close();
 main.close();
