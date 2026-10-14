@@ -27,6 +27,16 @@ export type TrayCommand = { type: "switchSlot"; slot: number } | { type: "openPa
 
 export type UpdateChannel = "stable" | "dev";
 
+// The main process's answer to a request that doesn't fit its schema (an app
+// bug; ipc.ts logs the details). The page shows desktop.errors.badRequest.
+export const BAD_REQUEST = "DS5_BAD_REQUEST";
+
+// Errors the main process asks the page to show (CLAUDE.md "Error pass"):
+// failures of something the user did outside the page (a tray toggle, a link
+// opened from the page). Fixed keys only; the page shows them with shown().
+export const MAIN_ERROR_KEYS = ["desktop.errors.settingNotSaved", "desktop.errors.linkNotOpened"] as const;
+export type MainErrorKey = (typeof MAIN_ERROR_KEYS)[number];
+
 export interface DevChannelPreview {
   app: string;
   firmware: string | null;
@@ -71,7 +81,8 @@ export type UpdateState =
   | { phase: "downloading"; version: string; got: number; total: number }
   | { phase: "installing"; version: string }
   | { phase: "ready"; version: string }
-  | { phase: "failed"; detail: string };
+  // during "install": the user's Download and install (or an automatic one) failed, which the banner shows.
+  | { phase: "failed"; detail: string; during?: "install" };
 
 export interface LatestFirmware {
   version: string;
@@ -85,6 +96,7 @@ export interface LatestFirmware {
 // The firmware the user confirmed, or why it wasn't downloaded: "changed" =
 // the feed now offers something else (check again), "mismatch" = the file
 // didn't match the entry shown.
+// error: SHOWN — desktop.firmware.feedChanged (or desktop.firmware.hashMismatch; firmwareUpdate.ts throws it to the firmware banner)
 export type FirmwareDownload = { ok: true; version: string; bytes: Uint8Array } | { ok: false; reason: "changed" | "mismatch" };
 
 // Result of looking for firmware to offer. problem says why the feed gave no
@@ -92,6 +104,7 @@ export type FirmwareDownload = { ok: true; version: string; bytes: Uint8Array } 
 export interface FirmwareLookup {
   latest: LatestFirmware | null;
   // "disabled": automatic checks are off and the user hasn't asked.
+  // error: SHOWN — desktop.firmware.offline (or desktop.firmware.unpublished; "disabled" is a choice, not an error)
   problem: "unpublished" | "offline" | "disabled" | null;
 }
 
@@ -100,6 +113,7 @@ export interface FirmwareLookup {
 // and the user hasn't asked; "unavailable": offline or an unexpected answer).
 export interface OfficialFirmwareLookup {
   latest: OfficialFirmware | null;
+  // error: SHOWN — desktop.ctrlInfo.officialUnavailable after Refresh ("disabled" is a choice, not an error)
   problem: "disabled" | "unavailable" | null;
 }
 
@@ -111,15 +125,21 @@ export interface GameBackup {
 }
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
+// error: SHOWN — english: the Proton card's message (main-process text, batch E3)
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string };
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 // blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
 // noController: the change set the controller's volume, and it isn't connected (nothing undone).
 export type UndoResult =
-  | { ok: true; restored: string[]; reopenFailed?: LauncherId[] }
+  // audioRestartFailed: restored, but restarting the audio service (WirePlumber) failed.
+  | { ok: true; restored: string[]; reopenFailed?: LauncherId[]; audioRestartFailed?: string }
+  // error: SHOWN — desktop.games.restartGameRunning (useRestartText: restartTimeout / restartFailed / launcherStarted)
   | { ok: false; blockedBy: LauncherId[]; problem?: CloseProblem }
+  // error: SHOWN — desktop.games.undoConflict
   | { ok: false; conflict: string[] }
+  // error: SHOWN — desktop.games.undoNoController
   | { ok: false; noController: true }
+  // error: SHOWN — english: the Games page's error notice (main-process text, batch E3)
   | { ok: false; error: string };
 
 // Firmware being written to the board, and what waits for it to finish
@@ -136,13 +156,16 @@ export interface DesktopApi {
   // A PNG data URL drawn by the renderer (src/desktop/tray/trayIcon.ts).
   setTrayIcon(pngDataUrl: string): void;
   onTrayCommand(listener: (command: TrayCommand) => void): () => void;
+  onShowError(listener: (key: MainErrorKey) => void): () => void;
   getSettings(): Promise<DesktopSettings>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
+  // error: SHOWN — english: the message under Set up USB access (batch E3)
   setupUsbAccess(): Promise<{ ok: boolean; message: string }>;
   // Windows: forget Windows' cached USB setup for the dongle's IDs (one UAC
   // prompt), so it sets up the WinUSB driver again on the next plug-in.
+  // error: SHOWN — english: the message under the Windows USB repair (batch E3)
   repairWindowsUsb(): Promise<{ ok: boolean; message: string }>;
   appVersion: string;
   // App updates.
@@ -208,6 +231,7 @@ export const IPC = {
   reportStatus: "desktop:report-status",
   setTrayIcon: "desktop:set-tray-icon",
   trayCommand: "desktop:tray-command",
+  showError: "desktop:show-error",
   getSettings: "desktop:get-settings",
   setSetting: "desktop:set-setting",
   usbAccessInstalled: "desktop:usb-access-installed",

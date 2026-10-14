@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
-import { say } from "../narrator";
+import { sayInPassing } from "../narrator";
 import type { FirmwareUpdate } from "../useUpdates";
+import { logged } from "../../errorText";
 
 export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   const { t } = useTranslation();
@@ -27,7 +28,8 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
       await task();
       setMessage(done);
     } catch (cause) {
-      setMessage(errorText(cause));
+      // error: SHOWN — desktop.errors.boardFailed (causeText; other board errors English, batch E3)
+      setMessage(causeText(cause));
     } finally {
       setBusy(false);
       setConfirmReset(false);
@@ -66,7 +68,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                 disabled={!client || fw.state.phase === "running" || fw.state.phase === "verifying"}
                 onClick={() => {
                   setConfirmFlash(false);
-                  void fw.start();
+                  fw.start().catch(logged("fw.start (it shows its own errors in the firmware banner)"));
                 }}
               >
                 {t("desktop.firmware.confirmInstall", { version: shortVersion(fw.latest?.version), defaultValue: "Install {{version}} now" })}
@@ -84,6 +86,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
           <BusyButton
             onClick={async () => {
               setChecked(null);
+              // error: NOT-WORTH — the app check only refreshes the app banner; this button reports the firmware (desktop.firmware.checkedOffline)
               const [, lookup] = await Promise.all([window.desktop?.checkForUpdates().catch(() => undefined), fw.refreshLatest()]);
               setChecked(
                 lookup.latest
@@ -143,7 +146,7 @@ export default function FirmwarePage({ bridge, fw }: { bridge: UseDs5BridgeResul
                     async () => {
                       await client!.factoryReset();
                       await bridge.readConfig();
-                      void say("app_reset");
+                      sayInPassing("app_reset");
                     },
                     t("desktop.firmware.resetDone", "Settings reset to defaults and saved."),
                   )

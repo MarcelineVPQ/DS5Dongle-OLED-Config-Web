@@ -32,6 +32,22 @@ import {
 import type { ApplyResult, GamesReport, LauncherId, RestartList } from "../../src/desktop/games/types";
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
+import { logged } from "../../src/errorText";
+import { BAD_REQUEST } from "../../src/desktop/api";
+
+// A request from our own page that doesn't fit its schema is an app bug: the
+// details are logged, and the page gets BAD_REQUEST, which it shows in plain
+// words (desktop.errors.badRequest) instead of a raw ZodError (the error pass;
+// Apply's graphics-mode ids were rejected that way with no message).
+export function parseRequest<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T {
+  // error: SHOWN — desktop.errors.badRequest (the page maps BAD_REQUEST to it)
+  const r = schema.safeParse(raw);
+  if (!r.success) {
+    logged(`${channel}: the request doesn't fit its schema`)(z.prettifyError(r.error));
+    throw new Error(BAD_REQUEST);
+  }
+  return r.data;
+}
 
 export const DeviceStatusSchema = z.strictObject({
   dongle: z.boolean(),
@@ -101,7 +117,9 @@ export interface IpcHandlers {
   getSettings: () => DesktopSettings;
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
+  // error: SHOWN — main-english: the message under Set up USB access (UsbAccessSetup) (batch E3)
   setupUsbAccess: () => Promise<{ ok: boolean; message: string }>;
+  // error: SHOWN — main-english: the message under the Windows USB repair (WindowsUsbRepair) (batch E3)
   repairWindowsUsb: () => Promise<{ ok: boolean; message: string }>;
   appVersion: () => string;
   checkForUpdates: () => Promise<UpdateState>;
@@ -128,17 +146,23 @@ export function registerIpc(h: IpcHandlers): void {
   const trusted = (event: IpcMainEvent | IpcMainInvokeEvent) => h.isTrusted(event.sender, event.senderFrame?.url ?? "");
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: LOGGED-OK — a status that doesn't fit is logged (an app bug); the tray keeps its last status
   ipcMain.on(IPC.reportStatus, (event, raw: unknown) => {
     if (!trusted(event)) return;
-    const parsed = DeviceStatusSchema.safeParse(raw);
-    if (parsed.success) h.onStatus(parsed.data);
+    // error: LOGGED-OK — our own page's status report not fitting is an app bug, logged; the tray keeps its last status
+    const status = DeviceStatusSchema.safeParse(raw);
+    if (status.success) h.onStatus(status.data);
+    else logged("reportStatus: the status doesn't fit its schema")(z.prettifyError(status.error));
   });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: LOGGED-OK — an icon that doesn't fit is logged (an app bug); the tray keeps its last icon
   ipcMain.on(IPC.setTrayIcon, (event, raw: unknown) => {
     if (!trusted(event)) return;
-    const parsed = TrayIconSchema.safeParse(raw);
-    if (parsed.success) h.onTrayIcon(parsed.data);
+    // error: LOGGED-OK — an icon from our own page that doesn't fit is an app bug, logged; the tray keeps its last icon
+    const icon = TrayIconSchema.safeParse(raw);
+    if (icon.success) h.onTrayIcon(icon.data);
+    else logged("setTrayIcon: the icon doesn't fit its schema")(z.prettifyError(icon.error));
   });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
@@ -148,6 +172,7 @@ export function registerIpc(h: IpcHandlers): void {
   });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: NOT-WORTH — a synchronous read of a constant; an untrusted sender gets ""
   ipcMain.on(IPC.appVersion, (event) => {
     event.returnValue = trusted(event) ? h.appVersion() : "";
   });
@@ -166,13 +191,17 @@ export function registerIpc(h: IpcHandlers): void {
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: LOGGED-OK — a value that doesn't fit is logged (an app bug)
   ipcMain.on(IPC.setFirmwareWriting, (event, raw: unknown) => {
     if (!trusted(event)) return;
-    const parsed = z.boolean().safeParse(raw);
-    if (parsed.success) h.setFirmwareWriting(parsed.data);
+    // error: LOGGED-OK — only our own page sends it, always a boolean; a misfit is an app bug, logged
+    const writing = z.boolean().safeParse(raw);
+    if (writing.success) h.setFirmwareWriting(writing.data);
+    else logged("setFirmwareWriting: not a boolean")(z.prettifyError(writing.error));
   });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: NOT-WORTH — no payload to reject; an untrusted sender is ignored, as for every channel
   ipcMain.on(IPC.restartToUpdate, (event) => {
     if (trusted(event)) h.restartToUpdate();
   });
@@ -203,7 +232,7 @@ export function registerIpc(h: IpcHandlers): void {
     // lifetime: NOT-WORTH — one handler per channel, registered once by registerIpc(), lives until quit
     ipcMain.handle(channel, (event, raw: unknown) => {
       if (!trusted(event)) throw new Error("untrusted sender");
-      return run(schema.parse(raw));
+      return run(parseRequest(channel, schema, raw));
     });
   invokeWith(IPC.gamesApply, ApplyRequestSchema, h.gamesApply);
   invokeWith(IPC.gamesUndo, UndoRequestSchema, h.gamesUndo);
@@ -226,7 +255,7 @@ export function registerIpc(h: IpcHandlers): void {
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {
     if (!trusted(event)) throw new Error("untrusted sender");
-    const { key, value } = SettingUpdate.parse(raw);
+    const { key, value } = parseRequest(IPC.setSetting, SettingUpdate, raw);
     return h.setSetting(key, value);
   });
 }

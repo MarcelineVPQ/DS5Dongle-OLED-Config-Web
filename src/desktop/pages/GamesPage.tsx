@@ -18,18 +18,19 @@ import { protonApplies } from "../games/platform";
 import { latestOnly } from "../games/scanOrder";
 import { HdrChecklist } from "../library/HdrChecklist";
 import { homeStatus, systemHdrReqs } from "../library/setupStatus";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { readPref, writePref } from "../storage";
 import GameLibrary from "../library/GameLibrary";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { GameProfileState } from "../library/useGameProfile";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
-import { say } from "../narrator";
+import { sayInPassing } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
 import { allFixes } from "../games/types";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
+import { logged } from "../../errorText";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
@@ -44,7 +45,8 @@ export function loadDeclined(): Set<string> {
     const raw = readPref(DECLINED_KEY);
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
   } catch {
-    return new Set(); // unreadable: nothing declined
+    // error: NOT-WORTH — unreadable: nothing declined (every recommended fix is ticked again)
+    return new Set();
   }
 }
 
@@ -93,6 +95,7 @@ export function OverwrittenNotice({ launchers }: { launchers: LauncherId[] }) {
 }
 
 // Why a launcher wasn't closed (nothing was written), or that one wasn't started again.
+// error: SHOWN — desktop.games.restartGameRunning (inputs here; this is where blockedBy / problem become text)
 export function useRestartText(): (r: { blockedBy?: LauncherId[]; problem?: CloseProblem; reopenFailed?: LauncherId[] }) => string | null {
   const { t } = useTranslation();
   return useCallback(
@@ -217,7 +220,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         const r = await latest(desktop.gamesScan());
         if (r.current) await receive(r.value, keepSelection);
       } catch (cause) {
-        setError(errorText(cause));
+        // error: SHOWN — english: the scan's error on the Games page (main-process text, batch E3)
+        setError(causeText(cause));
       }
     },
     [desktop, receive, latest],
@@ -227,9 +231,11 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   // lifetime: OK — acquires nothing; the cleanup drops a late scan result (unmount)
   useEffect(() => {
     let live = true;
+    // error: SHOWN — english: the scan's error on the Games page (main-process text, batch E3; receive's own failure too)
     latest(desktop.gamesScan()).then(
-      (r) => live && r.current && void receive(r.value, false),
-      (cause: unknown) => live && setError(errorText(cause)),
+      // error: SHOWN — english: receive's failure (the backups list) on the Games page (batch E3)
+      (r) => live && r.current && void receive(r.value, false).catch((cause: unknown) => setError(causeText(cause))),
+      (cause: unknown) => live && setError(causeText(cause)),
     );
     return () => {
       live = false;
@@ -241,7 +247,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
   const firstToken = useRef(rescanToken);
   // lifetime: OK — acquires nothing (one rescan per token change)
   useEffect(() => {
-    if (rescanToken !== firstToken.current) void rescan(true);
+    if (rescanToken !== firstToken.current) rescan(true).catch(logged("rescan (it shows its own errors)"));
   }, [rescanToken, rescan]);
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
@@ -287,11 +293,12 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
       setResult({ ...r, labels });
       setStep("done");
-      if (r.applied.length > 0 && r.applied.every((a) => a.ok)) void say("app_games_ready");
+      if (r.applied.length > 0 && r.applied.every((a) => a.ok)) sayInPassing("app_games_ready");
       await rescan();
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.badRequest (causeText: a refused request in plain words; main-process text English, batch E3). Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true); // something may have been written before it failed
+      setError(causeText(cause));
     } finally {
       setBusy(null);
     }
@@ -305,7 +312,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       setCloseNote(null);
       if (r.ok) {
         forgetApplied();
-        setCloseNote(restartText(r));
+        // was SILENT-BUG: the audio service's failed restart was dropped
+        setCloseNote(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : restartText(r));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {
@@ -317,13 +325,14 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         setCloseNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
       } else if ("noController" in r) {
         setCloseNote(t("desktop.games.undoNoController"));
-      } else {
-        setError(r.error);
       }
       await rescan();
+      // After the rescan, which clears the error line (was SILENT-BUG: Undo's error vanished at once).
+      if (!r.ok && "error" in r) setError(r.error);
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.badRequest (causeText; main-process text English, batch E3). Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true);
+      setError(causeText(cause));
     } finally {
       setBusy(null);
     }
@@ -338,7 +347,8 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
       setProtonMessage(r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.message);
       await rescan();
     } catch (cause) {
-      setProtonMessage(errorText(cause));
+      // error: SHOWN — english: the Proton card's message (main-process text, batch E3)
+      setProtonMessage(causeText(cause));
     } finally {
       setProtonProgress(null);
       setBusy(null);
@@ -412,7 +422,7 @@ function GamesSetup({ onScanned, onDeclinedChange, rescanToken }: Omit<GamesPage
         <div className="dk-confirm">
           <p>{t("desktop.games.protonConfirm", { name: report.ourProton.latest, size: report.ourProton.latestSize ? formatMB(report.ourProton.latestSize) : "?" })}</p>
           <div className="dk-row-btns">
-            <button type="button" className="dk-btn primary" onClick={() => void installProton()}>
+            <button type="button" className="dk-btn primary" onClick={() => void installProton().catch(logged("installProton (it shows its own errors)"))}>
               {t("desktop.games.protonGo", "Download and install")}
             </button>
             <button type="button" className="dk-btn" onClick={() => setProtonConfirm(false)}>

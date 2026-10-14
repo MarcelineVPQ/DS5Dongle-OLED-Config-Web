@@ -78,7 +78,7 @@ export class WebUsbTransport implements Ds5Transport {
       if (itf >= 0) await this.device.releaseInterface(itf);
       await this.device.close();
     } catch {
-      // Already gone.
+      // error: NOT-WORTH — already gone
     }
   }
 
@@ -121,7 +121,9 @@ export class WebUsbTransport implements Ds5Transport {
   }
 
   private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    // error: NOT-WORTH — a task runs after a failed one too; the failure already went to its own caller
     const run = this.queue.then(task, task);
+    // error: NOT-WORTH — the queue's own copy; the caller gets \`run\` with the error
     this.queue = run.catch(() => undefined);
     return run;
   }

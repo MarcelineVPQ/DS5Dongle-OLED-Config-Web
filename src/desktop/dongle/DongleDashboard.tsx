@@ -22,7 +22,7 @@ import {
 } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { boardSpecs, OLED_MODULE } from "./boardSpecs";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { BusyButton } from "../controls";
 import { core1StoppedText } from "./core1Status";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
@@ -239,7 +239,8 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
       await client.resetTimings();
       setResetAt(performance.now());
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — english: the error next to Reset (board errors are English, batch E3)
+      setError(causeText(cause));
     }
   };
   return (

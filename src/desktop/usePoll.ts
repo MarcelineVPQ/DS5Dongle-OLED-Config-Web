@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { errorText } from "../errorText";
+import { causeText } from "./shownError";
 import { useWindowShown } from "./useWindowShown";
+import { logged } from "../errorText";
 
 // Calls `read` every `intervalMs` while `enabled` and the window is on screen
 // (paused while it's minimized or in the tray, keeping the last value), never
 // overlapping two reads. Returns the latest value and the latest error (null
 // once a read succeeds). For UI-only readouts: what the tray, game profiles
 // or saved-state sync need polls on its own (useDs5Bridge).
+// error: SHOWN — english: each caller shows \`error\` next to its readout (board errors are English, batch E3)
 export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: boolean): { value: T | null; error: string | null } {
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +34,13 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
           setError(null);
         }
       } catch (cause) {
-        if (!stopped) setError(errorText(cause));
+        // error: SHOWN — english: returned as \`error\`, which the caller shows next to its readout
+        if (!stopped) setError(causeText(cause));
       }
       // lifetime: OK — self re-arming; cleared in the cleanup, stops once stopped is set
       if (!stopped) timer = setTimeout(tick, intervalMs);
     };
-    void tick();
+    tick().catch(logged("usePoll's tick (it catches its own errors)"));
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);

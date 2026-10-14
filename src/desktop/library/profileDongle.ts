@@ -90,8 +90,10 @@ export async function applyGameProfile(o: {
   } catch (cause) {
     // The game's config may be on (it landed before the layout or curves
     // failed, or a transfer failed after it landed): the normal values go back.
+    // error: SHOWN — desktop.profile.partlyOn (false: the profile may still be on, which the thrown error says)
     const back = await o.applyConfig(withSettings(o.config, o.normal)).catch(() => false);
-    if (back && o.client) await putGameParts(o.client, o.caps, null).catch(() => undefined); // whatever went on of the parts (RAM only)
+    // error: NOT-WORTH — taking off whatever went on of the parts (RAM only) while the real error is thrown below
+    if (back && o.client) await putGameParts(o.client, o.caps, null).catch(() => undefined);
     throw new ProfileNotApplied(back ? "normal" : "profile", cause);
   }
 }

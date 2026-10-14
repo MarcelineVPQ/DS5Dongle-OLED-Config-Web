@@ -18,6 +18,7 @@ import { useWindowFocused, useWindowShown } from "../useWindowShown";
 import { useReducedMotion } from "../motion";
 import { hsvToRgb, rgbToHsv, type Rgb } from "../theme/desktopPalette";
 import { onThemeChange } from "./controllerAccent";
+import { logged } from "../../errorText";
 
 // The CPU fallback's size (stretched and blurred by CSS).
 export const CPU_W = 128;
@@ -214,10 +215,11 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
   const [mode, setMode] = useState<Mode | null>(() => (window.desktop ? null : "cpu"));
   // lifetime: OK — acquires nothing (one settings read picks GPU or CPU)
   useEffect(() => {
-    void window.desktop?.getSettings().then(
-      (s) => setMode((m) => m ?? (s.hardwareAcceleration && gpuWorks() ? "gpu" : "cpu")),
-      () => setMode("cpu"),
-    );
+    window.desktop
+      ?.getSettings()
+      .then((s) => setMode((m) => m ?? (s.hardwareAcceleration && gpuWorks() ? "gpu" : "cpu")))
+      .catch(logged("reading hardware acceleration for the backdrop (the CPU drawing is used)"))
+      .finally(() => setMode((m) => m ?? "cpu"));
   }, []);
   const shown = useWindowShown();
   const focused = useWindowFocused();

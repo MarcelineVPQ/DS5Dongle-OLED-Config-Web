@@ -15,6 +15,7 @@ import { execFile } from "node:child_process";
 import { readFileSync, readdirSync, readlinkSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { LauncherId } from "../../../src/desktop/games/types";
+import { logged } from "../../../src/errorText";
 
 export interface ProcView {
   pid: number;
@@ -59,13 +60,13 @@ function readFull(dir: string, pid: number): ProcView {
       if (i > 0 && ENV_KEYS.includes(kv.slice(0, i))) env[kv.slice(0, i)] = kv.slice(i + 1);
     }
   } catch {
-    // environ unreadable (another session's process)
+    // error: NOT-WORTH — environ unreadable (another session's process)
   }
   let cwd: string | null = null;
   try {
     cwd = readlinkSync(`${dir}/cwd`);
   } catch {
-    // gone
+    // error: NOT-WORTH — gone
   }
   return {
     pid,
@@ -89,6 +90,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   try {
     entries = readdirSync(root);
   } catch {
+    // error: NOT-WORTH — no /proc: no running games seen (the watcher polls again)
     return out;
   }
   const own: Array<{ pid: number; name: string; ppid: number }> = [];
@@ -109,7 +111,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
       const ppid = Number(/^PPid:\s*(\d+)/m.exec(status)?.[1] ?? 0);
       own.push({ pid: Number(entry), name, ppid });
     } catch {
-      // process exited while we looked
+      // error: NOT-WORTH — process exited while we looked
     }
   }
   if (!gamesOnly) return out;
@@ -132,6 +134,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     try {
       return WINE_EXE.test(readlinkSync(`${root}/${pid}/exe`));
     } catch {
+      // error: NOT-WORTH — exe link unreadable: not counted as a Wine process
       return false;
     }
   };
@@ -153,7 +156,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
       if (ENV_KEYS.some((k) => env.includes(`\0${k}=`))) return true;
       plainOrphans.add(id);
     } catch {
-      // gone, or not readable
+      // error: NOT-WORTH — gone, or not readable
     }
     return false;
   };
@@ -163,7 +166,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     try {
       out.push(readFull(`${root}/${p.pid}`, p.pid));
     } catch {
-      // process exited while we looked
+      // error: NOT-WORTH — process exited while we looked
     }
   }
   // Forget orphans that are gone (a new process may get the same pid).
@@ -224,6 +227,7 @@ export function detectRunning(procs: ProcView[], games: RunningCandidate[]): str
 export function readWindowsProcs(): Promise<ProcView[]> {
   return new Promise((resolve) => {
     // lifetime: OK — tasklist exits on its own; the 4 s timeout kills a hung one
+    // error: NOT-WORTH — tasklist failed: this pass sees no processes; the next pass (3 s) looks again
     execFile(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tasklist.exe"), ["/fo", "csv", "/nh"], { encoding: "utf8", windowsHide: true, timeout: 4000 }, (error, stdout) =>
       resolve(error ? [] : parseTasklist(stdout)),
     );
@@ -253,6 +257,7 @@ export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 })
     try {
       entries = readdirSync(d, { withFileTypes: true });
     } catch {
+      // error: NOT-WORTH — an unreadable folder is skipped while listing a game's executables
       return;
     }
     for (const e of entries) {
@@ -313,9 +318,11 @@ export class RunningGameWatcher {
 
   start(): void {
     if (this.timer) return;
-    void this.tick();
-    // lifetime: OK — cleared in stop() (Games consent off); runs while hidden on purpose: game profiles need it
-    this.timer = setInterval(() => void this.tick(), this.everyMs);
+    // A failed pass changes nothing; the next one (2-3 s) looks again.
+    const pass = () => void Promise.resolve(this.tick()).catch(logged("running-game watcher pass"));
+    pass();
+    // lifetime: OK — cleared in stop() (Games consent off); runs while hidden on purpose (game profiles)
+    this.timer = setInterval(pass, this.everyMs);
   }
 
   // Stopping (Games consent turned off) also ends a running game's state, so

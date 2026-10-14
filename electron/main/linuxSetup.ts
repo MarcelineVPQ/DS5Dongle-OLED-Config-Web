@@ -26,6 +26,7 @@ export function sandboxProfileNeeded(): boolean {
     const restricted = readFileSync("/proc/sys/kernel/apparmor_restrict_unprivileged_userns", "utf8").trim() === "1";
     return restricted && (existsSync("/usr/sbin/apparmor_parser") || existsSync("/sbin/apparmor_parser"));
   } catch {
+    // error: NOT-WORTH — no AppArmor knob: no sandbox profile needed
     return false;
   }
 }
@@ -34,11 +35,13 @@ function sameFile(dest: string, source: string): boolean {
   try {
     return existsSync(dest) && readFileSync(dest, "utf8") === readFileSync(source, "utf8");
   } catch {
+    // error: NOT-WORTH — unreadable: treated as different, so the file is installed again
     return false;
   }
 }
 
 export interface SetupResult {
+  // error: SHOWN — main-english: the message under Set up USB access (batch E3)
   ok: boolean;
   message: string;
 }
@@ -69,6 +72,7 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     }
     chmodSync(dir, 0o755);
   } catch (cause) {
+    // error: SHOWN — main-english: "Setup failed: …" under Set up USB access (batch E3)
     return Promise.resolve({ ok: false, message: `Setup failed: ${errorText(cause)}` });
   }
   // Positional args ($1/$2 = rule source/dest, $3/$4 = profile source/dest,
@@ -79,6 +83,7 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     ' && { [ -z "$3" ] || { install -m 0644 "$3" "$4" && apparmor_parser -r "$4"; }; }';
   return new Promise((resolve) => {
     // lifetime: OK — exits when the user answers the password prompt; no timeout on purpose (a person types)
+    // error: SHOWN — main-english: Cancelled / not authorized / failed, under Set up USB access (batch E3)
     execFile("pkexec", ["/bin/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile ? PROFILE_DEST : ""], (error) => {
       rmSync(dir, { recursive: true, force: true });
       if (!error)

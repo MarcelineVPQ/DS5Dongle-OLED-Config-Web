@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
+import { logged } from "../../errorText";
 
 // Same order as the OLED Trigger Test screen (firmware oled.cpp kTrigPresetNames).
 const PRESETS = ["Off", "Feedback", "Weapon", "Vibration", "Bow", "Gallop", "Machine"] as const;
@@ -16,7 +17,8 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
   // lifetime: OK — acquires nothing; the cleanup turns the trigger preview off
   useEffect(
     () => () => {
-      void client?.previewTrigger(0).catch(() => undefined);
+      // error: NOT-WORTH — leaving the page; a failed "off" leaves the test effect until a game sends its own
+      if (client) void client.previewTrigger(0).catch(() => undefined);
     },
     [client],
   );
@@ -28,7 +30,8 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
       await client.previewTrigger(preset);
       setActive(preset);
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.boardFailed (causeText; other board errors English, batch E3)
+      setError(causeText(cause));
     }
   };
 
@@ -41,7 +44,14 @@ export default function TriggersPage({ bridge }: { bridge: UseDs5BridgeResult })
         <div className="dk-presets">
           {/* loop: HOT-PATH-OK — N = 7 presets; page render */}
           {PRESETS.map((name, i) => (
-            <button type="button" key={name} className={`dk-btn${active === i ? " on" : ""}`} aria-pressed={active === i} disabled={!client} onClick={() => void pick(i)}>
+            <button
+              type="button"
+              key={name}
+              className={`dk-btn${active === i ? " on" : ""}`}
+              aria-pressed={active === i}
+              disabled={!client}
+              onClick={() => void pick(i).catch(logged("pick (it shows its own errors)"))}
+            >
               {t(`desktop.triggers.presets.${name.toLowerCase()}`, name)}
             </button>
           ))}

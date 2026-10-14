@@ -5,7 +5,7 @@
 // reach the app (the dongle blanks them), so nothing identifying is shown.
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3 } from "../../protocol/bridgeClient";
 import { type ChargeState, type ControllerFirmware, formatDspVersion, formatHex32, formatThreePart, formatUpdateVersion } from "../../protocol/controllerInfo";
@@ -88,7 +88,7 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
     let live = true;
     const done = refreshDone.current;
     refreshDone.current = null;
-    void Promise.resolve()
+    Promise.resolve()
       .then(() => {
         if (live) {
           setInfo(null);
@@ -97,15 +97,17 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
           setOfficial(null);
           // Sony's latest versions, alongside (main process; only with
           // automatic checks on, or now that Refresh was pressed).
-          void window.desktop
+          window.desktop
             ?.officialControllerFirmware(loadTry > 0)
             .then((lookup) => live && setOfficial(lookup))
-            .catch(() => undefined);
+            // error: SHOWN — desktop.ctrlInfo.officialUnavailable (after Refresh; was SILENT-BUG: nothing was said)
+            .catch(() => live && setOfficial({ latest: null, problem: "unavailable" }));
         }
         return loadControllerInfo(client);
       })
       .then((next) => live && setInfo(next))
-      .catch((cause) => live && setError(errorText(cause)))
+      // error: SHOWN — english: the read error in the card, with Refresh (board errors are English, batch E3)
+      .catch((cause) => live && setError(causeText(cause)))
       .finally(() => {
         if (live) setLoading(false);
         done?.();
@@ -189,6 +191,8 @@ function ControllerInfo({ bridge, batteryPct, power, onFirmware }: Props) {
                     {officialStatus.status === "current" ? t("desktop.firmware.upToDate") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
                   </span>
                 )}
+                {/* Refresh asked Sony and got no answer: said, not left blank. */}
+                {loadTry > 0 && fw && official?.problem === "unavailable" && <span className="dk-fw-note">{t("desktop.ctrlInfo.officialUnavailable")}</span>}
               </dd>
               {officialStatus?.status === "newer" && (
                 <dd className="dk-fw-howto">

@@ -4,7 +4,7 @@
 // here: the page uses WebUSB, which the main process limits to the dongle and
 // the RP2350 boot device.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import { IPC, type DesktopApi, type FirmwareHoldState, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
+import { IPC, type DesktopApi, type FirmwareHoldState, type MainErrorKey, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
 import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
@@ -16,6 +16,12 @@ const api: DesktopApi = {
     // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
     ipcRenderer.on(IPC.trayCommand, handler);
     return () => ipcRenderer.removeListener(IPC.trayCommand, handler);
+  },
+  onShowError: (listener) => {
+    const handler = (_event: IpcRendererEvent, key: MainErrorKey) => listener(key);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
+    ipcRenderer.on(IPC.showError, handler);
+    return () => ipcRenderer.removeListener(IPC.showError, handler);
   },
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),

@@ -33,6 +33,7 @@ export function readBundled(resourcesDir: string): Bundled | null {
     const info = BundleInfo.parse(JSON.parse(readFileSync(join(dir, "firmware.json"), "utf8")));
     return { version: info.version, path: join(dir, info.file), sha256: info.sha256 };
   } catch {
+    // error: NOT-WORTH — development builds have no bundled firmware: the published one is used
     return null; // development builds have no bundled firmware
   }
 }
@@ -58,6 +59,7 @@ export interface FirmwareSourceDeps {
   // The feed, or why there's none: "unpublished" (nothing released yet),
   // "offline", or "disabled" (automatic checks are off and nobody asked).
   // `asked`: the user pressed a check button. See firmwareFeed().
+  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest, checkedNone / checkedOffline after Check now)
   manifest: (asked: boolean) => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"]; channel: UpdateChannel }>;
   // A fresh look at one channel's feed (the user pressed Install).
   freshFeed: (channel: UpdateChannel) => Promise<Manifest>;
@@ -78,6 +80,7 @@ export function firmwareFeed(feed: Pick<FeedCache, "get" | "last">, automatic: (
     try {
       return { manifest: await feed.get(ch, FEED_REUSE_MS), problem: null, channel: ch };
     } catch (cause) {
+      // error: SHOWN — desktop.firmware.offline (problem "unpublished" / "offline" on the Firmware card; the last feed fetched answers when offline)
       if (cause instanceof FeedMissingError) return { manifest: null, problem: "unpublished", channel: ch };
       // Offline: the last one fetched for this channel, if any.
       const last = feed.last(ch);

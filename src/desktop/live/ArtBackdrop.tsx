@@ -14,6 +14,7 @@ import { readPref, usePref } from "../storage";
 import { artUrl } from "../games/types";
 import SwirlField from "./SwirlField";
 import { useWindowShown } from "../useWindowShown";
+import { logged } from "../../errorText";
 
 // The background: "default" (the swirl field, what a new install shows),
 // "art" (game artwork when there is some, else the swirls) or "off".
@@ -60,8 +61,8 @@ function useBackdropKeys(): string[] {
     // The first scan runs in the background at start: until it's done the
     // details are empty, so ask again for a minute (no consent / not Linux:
     // colors only).
-    const load = (tries: number) =>
-      desktop
+    const load = (tries: number): void =>
+      void desktop
         .gamesDetails()
         .then((d) => {
           if (!live) return;
@@ -72,11 +73,11 @@ function useBackdropKeys(): string[] {
             .map(([key]) => key);
           if (recent.length > 0) setKeys(recent);
           // lifetime: OK — cleared in the effect cleanup (unmount)
-          else if (tries > 0) timer = setTimeout(() => void load(tries - 1), 3000);
+          else if (tries > 0) timer = setTimeout(() => load(tries - 1), 3000);
         })
-        .catch(() => undefined);
-    void load(20);
-    void desktop.gamesRunning().then(setRunning, () => undefined);
+        .catch(logged("game art for the backdrop (the colors-only backdrop stays)"));
+    load(20);
+    void desktop.gamesRunning().then(setRunning, logged("the running game for the backdrop (onRunningGame updates it)"));
     // lifetime: OK — off() in the effect cleanup
     const off = desktop.onRunningGame(setRunning);
     return () => {

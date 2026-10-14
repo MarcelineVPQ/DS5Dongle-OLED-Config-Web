@@ -12,13 +12,13 @@ import { readPref, useFlagPref, usePref, writePref } from "../storage";
 import { GLASS_KEY } from "../glass/glassPref";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { APP_KINDS, type AppKind, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
-import { artUrl } from "../games/types";
+import { APP_KINDS, type AppKind, artUrl, type GameEntry, type GameInfo, type GamesReport } from "../games/types";
 import type { LibraryFile } from "../games/library";
 import GamePage from "./GamePage";
 import { GameTile } from "./GameTile";
 import { ContinuePlaying, continueCount } from "./ContinuePlaying";
 import { supportOf } from "./support";
+import { logged } from "../../errorText";
 
 const FILTERS = ["all", "profile", "dualsense", "attention"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -87,7 +87,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
 
   // lifetime: OK — acquires nothing (one IPC read of the game details)
   useEffect(() => {
-    if (report) void desktop.gamesDetails().then(setDetails, () => undefined);
+    if (report) void desktop.gamesDetails().then(setDetails, logged("reading play time and art details (the tiles show without them)"));
   }, [desktop, report]);
 
   const games = useMemo(() => {

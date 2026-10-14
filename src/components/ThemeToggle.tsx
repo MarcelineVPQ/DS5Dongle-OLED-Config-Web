@@ -11,6 +11,7 @@ import { controllerShade, onControllerShade } from "../desktop/live/controllerAc
 import { useTranslation } from "react-i18next";
 import { isDesktop } from "../desktop/api";
 import { paletteToCssVars, type DesktopPalette } from "../desktop/theme/desktopPalette";
+import { logged } from "../errorText";
 
 export type Theme = "light" | "dark" | "system" | "desktop" | "controller";
 
@@ -23,7 +24,7 @@ function readStoredTheme(): Theme {
   try {
     stored = window.localStorage.getItem(STORAGE_KEY);
   } catch {
-    // storage blocked: fall back to the default
+    // error: NOT-WORTH — storage blocked: fall back to the default
   }
   if (stored === "light" || stored === "dark" || stored === "system") return stored;
   if ((stored === "desktop" || stored === "controller") && isDesktop()) return stored;
@@ -68,7 +69,7 @@ function setStoredTheme(next: Theme): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, next);
   } catch {
-    // storage unavailable: the choice lasts for this session
+    // error: NOT-WORTH — storage unavailable: the choice lasts for this session
   }
   for (const l of listeners) l();
 }
@@ -102,7 +103,10 @@ export function useApplyTheme(): void {
       return;
     }
     let active = true;
-    void desktop.getDesktopPalette().then((p) => active && applyDesktopPalette(p));
+    desktop
+      .getDesktopPalette()
+      .then((p) => active && applyDesktopPalette(p))
+      .catch(logged("reading the desktop's accent for the Desktop theme (the app's own colors stay)"));
     // lifetime: OK — unsubscribed in the effect cleanup
     const unsubscribe = desktop.onDesktopPalette((p) => active && applyDesktopPalette(p));
     return () => {

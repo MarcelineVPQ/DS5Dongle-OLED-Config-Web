@@ -112,6 +112,7 @@ export async function flash(device: PicoflashHandle, regions: ReturnType<typeof 
     onProgress({ step: "restarting" });
     await device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS);
   } catch (cause) {
+    // error: SHOWN — desktop.firmware.writeFailed: rethrown in plain words (the USB error kept as its cause); the firmware card and the setup screen show it
     throw new Error(i18n.t("desktop.firmware.writeFailed"), { cause });
   } finally {
     // Never throws (picoflash logs a failed release). After the restart

@@ -101,6 +101,7 @@ function target(path: string): string {
   try {
     return realpathSync(path);
   } catch {
+    // error: NOT-WORTH — no real path (a new file): the path itself is used
     return path;
   }
 }
@@ -113,7 +114,7 @@ export function writeFileAtomic(path: string, data: string | Buffer): void {
   try {
     mode = statSync(dest).mode & 0o777;
   } catch {
-    // new file
+    // error: NOT-WORTH — new file
   }
   try {
     const fd = openSync(tmp, "w", mode);
@@ -149,6 +150,7 @@ function isLink(path: string): boolean {
   try {
     return lstatSync(path).isSymbolicLink();
   } catch {
+    // error: NOT-WORTH — a missing path is not a link
     return false;
   }
 }
@@ -202,6 +204,7 @@ export class Backups {
     try {
       save();
     } catch {
+      // error: NOT-WORTH — the change is made and its originals are saved; without the hashes Undo only can't detect later edits (next lines)
       // The change is made and its originals are saved; without the hashes,
       // Undo just can't detect later edits to these files.
     }
@@ -241,6 +244,7 @@ export class Backups {
     try {
       ids = readdirSync(this.dir).filter((d) => BACKUP_ID.test(d));
     } catch {
+      // error: NOT-WORTH — no backup folder yet: History lists nothing, which is true
       return [];
     }
     return ids
@@ -252,6 +256,7 @@ export class Backups {
           // loop: NOT-WORTH — files per backup set, a handful
           return [{ id, created: m.created, changes: m.changes ?? [{ key: "legacy", params: { text: m.description ?? "" } }], files: m.files.map((f) => f.path), restored: !!m.restored }];
         } catch {
+          // error: SWALLOWED — a backup whose manifest can't be read is left out of History, so its Undo silently disappears; list it as damaged instead (batch E2)
           return [];
         }
       });
@@ -282,6 +287,7 @@ export class Backups {
       try {
         m = this.manifest(id);
       } catch {
+        // error: NOT-WORTH — an unreadable backup is left for the user to inspect, not pruned (History: batch E2)
         continue; // unreadable: leave it for the user to inspect
       }
       if (m.restored) continue;

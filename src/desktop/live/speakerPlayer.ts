@@ -7,7 +7,9 @@
 // SpeakerTest subscribes to show its countdown and progress line.
 import { useSyncExternalStore } from "react";
 import { controllerSpeaker } from "../narrator";
+import { closeQuietly } from "../controllerAudio";
 import { renderTune, tuneSeconds } from "./speakerTune";
+import { logged } from "../../errorText";
 
 export interface SpeakerPlayback {
   playing: boolean;
@@ -67,9 +69,11 @@ async function playTune(): Promise<void> {
   const ctx = new AudioContext();
   let noSpeaker = false;
   const gone = () =>
-    void controllerSpeaker().then((now) => {
-      if (now !== sink) stopNow?.();
-    });
+    void controllerSpeaker()
+      .then((now) => {
+        if (now !== sink) stopNow?.();
+      })
+      .catch(logged("checking the controller's speaker after a device change"));
   // lifetime: OK — removed in playTune's finally
   navigator.mediaDevices?.addEventListener?.("devicechange", gone);
   try {
@@ -99,11 +103,12 @@ async function playTune(): Promise<void> {
       }
     });
   } catch {
-    noSpeaker = true; // couldn't route to the controller: stay silent
+    // error: SHOWN — desktop.audioTest.noSpeaker (noSpeaker: couldn't route to the controller)
+    noSpeaker = true;
   } finally {
     navigator.mediaDevices?.removeEventListener?.("devicechange", gone);
     stopNow = null;
     set({ playing: false, startedAt: 0, noSpeaker });
-    void ctx.close();
+    closeQuietly(ctx);
   }
 }

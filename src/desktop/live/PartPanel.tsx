@@ -61,6 +61,8 @@ import { onGamesAllowed, setGamesAllowed } from "../games/consent";
 import type { FirmwareUpdate } from "../useUpdates";
 import { EDGE_PARTS, EDGE_REMAP_ROWS, REMAP_INDEX, type PartId } from "./parts";
 import type { Remap } from "./useRemap";
+import { logged } from "../../errorText";
+import { shown } from "../shownError";
 
 export type PanelView = "overview" | "dongle" | "app" | "calibration" | "buttons" | { part: PartId };
 
@@ -431,7 +433,10 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   // loop: HOT-PATH-OK — N = 4 Edge names per render
   const extraNames = EDGE_REMAP_ROWS.map((p) => t(`desktop.live.part.${p}`));
   const save = (id: string, layoutName: string) =>
-    void desktop.librarySetLayout({ id, name: layoutName, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) }).then(setLibrary);
+    void desktop
+      .librarySetLayout({ id, name: layoutName, table: remap.draft, ...(remap.extraDevice ? { extra: remap.extraDraft } : {}) })
+      .then(setLibrary)
+      .catch(shown("desktop.errors.layoutSave"));
   return (
     <section className="dk-card">
       <h2>{t("desktop.layouts.title")}</h2>
@@ -468,7 +473,12 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
                 >
                   {t("desktop.layouts.update")}
                 </button>
-                <button type="button" className="dk-btn danger" title={t("desktop.layouts.deleteHint")} onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary)}>
+                <button
+                  type="button"
+                  className="dk-btn danger"
+                  title={t("desktop.layouts.deleteHint")}
+                  onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown("desktop.errors.layoutDelete"))}
+                >
                   {t("desktop.layouts.delete")}
                 </button>
               </div>
@@ -651,9 +661,12 @@ function AppSettings({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareU
   const [hdrChanged, setHdrChanged] = useState(false);
   // lifetime: OK — acquires nothing (one settings read)
   useEffect(() => {
-    void window.desktop?.getSettings().then(setSettings);
+    window.desktop?.getSettings().then(setSettings).catch(shown("desktop.errors.settingsRead"));
   }, []);
-  const set = <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => void window.desktop?.setSetting(key, value).then(setSettings);
+  // error: SHOWN — desktop.errors.settingNotSaved (was SILENT-BUG: a toggle that didn't save showed nothing)
+  const set = <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => {
+    window.desktop?.setSetting(key, value).then(setSettings).catch(shown("desktop.errors.settingNotSaved"));
+  };
   return (
     <>
       <section className="dk-card">
@@ -790,7 +803,10 @@ export function GameLaunchersSetting() {
   // lifetime: OK — cleanup: drops a late read, unsubscribes the games-allowed event
   useEffect(() => {
     let live = true;
-    void window.desktop?.getSettings().then((s) => live && setAllowed(s.gamesScanAllowed));
+    window.desktop
+      ?.getSettings()
+      .then((s) => live && setAllowed(s.gamesScanAllowed))
+      .catch(logged("reading the Games consent for App settings (the card stays hidden)"));
     // lifetime: OK — off() in the effect cleanup
     const off = onGamesAllowed(setAllowed);
     return () => {
@@ -804,7 +820,13 @@ export function GameLaunchersSetting() {
   return (
     <section className="dk-card">
       <h2>{t("desktop.settings2.privacy")}</h2>
-      <Toggle label={t("desktop.games.readLaunchers")} sub={`${reads} ${offText}`} value={allowed} disabled={confirmOff} onChange={(v) => (v ? setGamesAllowed(true) : setConfirmOff(true))} />
+      <Toggle
+        label={t("desktop.games.readLaunchers")}
+        sub={`${reads} ${offText}`}
+        value={allowed}
+        disabled={confirmOff}
+        onChange={(v) => (v ? setGamesAllowed(true).catch(shown("desktop.errors.settingNotSaved")) : setConfirmOff(true))}
+      />
       {confirmOff && (
         <div className="dk-row-btns" role="alert">
           <span className="dk-bad">{offText}</span>
@@ -815,7 +837,7 @@ export function GameLaunchersSetting() {
           <BusyButton
             className="dk-btn danger"
             onClick={async () => {
-              await setGamesAllowed(false);
+              await setGamesAllowed(false).catch(shown("desktop.errors.settingNotSaved"));
               setConfirmOff(false);
             }}
           >
@@ -837,6 +859,7 @@ function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInstalled: s
   if (!desktop) return null;
   const check = async () => {
     setResult([]);
+    // error: SHOWN — desktop.setup.checkFailed (null: the line below says the check failed)
     const app = await desktop.checkForUpdates().catch(() => null);
     const lines: string[] = [];
     if (!app || app.phase === "failed") lines.push(t("desktop.setup.checkFailed"));
@@ -913,12 +936,12 @@ export function SpeakerTest() {
   const { t } = useTranslation();
   const { playing, startedAt, duration, noSpeaker } = useSpeakerPlayback();
   const [progress, setProgress] = useState(0); // 0..1 of the tune played
-  const shown = useWindowShown();
+  const onScreen = useWindowShown();
   // The song-length line: one frame loop only while playing and on screen;
   // it catches up from the start time when the window comes back.
   // lifetime: OK — cleanup: cancels the frame loop; runs only while playing and shown
   useEffect(() => {
-    if (!playing || !startedAt || !shown) return;
+    if (!playing || !startedAt || !onScreen) return;
     const length = duration * 1000;
     // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
@@ -927,7 +950,7 @@ export function SpeakerTest() {
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
-  }, [playing, startedAt, duration, shown]);
+  }, [playing, startedAt, duration, onScreen]);
   const played = playing && startedAt ? progress : 0;
   return (
     <section className="dk-card">
@@ -964,11 +987,12 @@ export function SpeakerTest() {
 // level slider) sits right under the meter, so a change shows on it live.
 const VU_SEGMENTS = 20;
 type MicPhase = "idle" | "starting" | "testing" | "stopping" | "playing";
+// error: SHOWN — desktop.audioTest.problem.failed (the status line says desktop.audioTest.problem.<problem>)
 type MicNote = { kind: "stopped" | "done" | "quiet" } | { kind: "problem"; problem: MicProblem } | null;
 
 export function MicTest({ headset, output, level }: { headset: boolean; output: SpeakerSelect; level?: ReactNode }) {
   const { t } = useTranslation();
-  const shown = useWindowShown();
+  const onScreen = useWindowShown();
   const [phase, setPhase] = useState<MicPhase>("idle");
   const [note, setNote] = useState<MicNote>(null);
   const [lit, setLit] = useState(0); // meter segments lit, 0..VU_SEGMENTS
@@ -994,12 +1018,20 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
     setHasClip(clip.current !== null);
   }, []);
   // lifetime: OK — cleanup: closes the mic session and any playback on unmount
-  useEffect(() => () => void stopAll(), [stopAll]);
+  useEffect(() => () => void stopAll().catch(logged("closing the mic test on unmount")), [stopAll]);
   // lifetime: OK — acquires nothing (closes the mic test when the window hides)
   useEffect(() => {
-    if (shown) return;
-    void stopAll().then(() => setPhase("idle"));
-  }, [shown, stopAll]);
+    if (onScreen) return;
+    stopAll()
+      .then(() => setPhase("idle"))
+      .catch(logged("closing the mic test when the window hides"));
+  }, [onScreen, stopAll]);
+  // An unexpected failure still ends on a status line, never silence alone.
+  const failed = (cause: unknown) => {
+    logged("the mic test")(cause);
+    setNote({ kind: "problem", problem: "failed" });
+    setPhase("idle");
+  };
 
   const start = async () => {
     await stopAll();
@@ -1008,10 +1040,13 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
     setPhase("starting");
     const r = await startMicTest(() => {
       if (run.current !== id) return;
-      void stopAll().then(() => {
-        setNote({ kind: "problem", problem: "lost" });
-        setPhase("idle");
-      });
+      stopAll()
+        .then(() => {
+          setNote({ kind: "problem", problem: "lost" });
+          setPhase("idle");
+        })
+        // error: SHOWN — desktop.audioTest.problem.failed
+        .catch(failed);
     });
     if ("problem" in r) {
       if (run.current === id) {
@@ -1020,7 +1055,7 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       }
       return;
     }
-    if (run.current !== id) return void r.session.stop();
+    if (run.current !== id) return void r.session.stop().catch(logged("closing a mic test that was replaced"));
     session.current = r.session;
     setPhase("testing");
   };
@@ -1063,7 +1098,7 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
   // render only when the number of lit segments changes.
   // lifetime: OK — cleanup: cancels the meter's frame loop (testing and shown only)
   useEffect(() => {
-    if (phase !== "testing" || !shown) return;
+    if (phase !== "testing" || !onScreen) return;
     // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
       const level = session.current?.level() ?? 0;
@@ -1072,11 +1107,11 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
-  }, [phase, shown]);
+  }, [phase, onScreen]);
   // The playback line, the same way.
   // lifetime: OK — cleanup: cancels the playback line's frame loop (playing and shown only)
   useEffect(() => {
-    if (phase !== "playing" || !playing || !shown) return;
+    if (phase !== "playing" || !playing || !onScreen) return;
     // lifetime: OK — cancelled in the effect cleanup (stop, hidden, unmount)
     let frame = requestAnimationFrame(function tick() {
       setPlayed(Math.min(1, Math.round(((Date.now() - playing.since) / (playing.seconds * 1000)) * 100) / 100));
@@ -1084,7 +1119,7 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
-  }, [phase, playing, shown]);
+  }, [phase, playing, onScreen]);
 
   const running = phase !== "idle";
   const status =
@@ -1110,7 +1145,8 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       <h2>{t("desktop.audioTest.micTitle")}</h2>
       <p className="dk-hint">{t("desktop.audioTest.micHint", { seconds: LISTEN_SECONDS })}</p>
       <div className="mic-test-row">
-        <button type="button" className="dk-btn" aria-pressed={running} onClick={() => void (running ? stopTest() : start())}>
+        {/* error: SHOWN — desktop.audioTest.problem.failed (failed() ends on the status line) */}
+        <button type="button" className="dk-btn" aria-pressed={running} onClick={() => void (running ? stopTest() : start()).catch(failed)}>
           {running ? t("desktop.audioTest.micStop") : t("desktop.audioTest.micButton")}
         </button>
         <div className="mic-vu" role="meter" aria-label={t("desktop.audioTest.micLevel")} aria-valuemin={0} aria-valuemax={VU_SEGMENTS} aria-valuenow={lit} data-on={phase === "testing" || undefined}>
@@ -1122,7 +1158,8 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
       {level}
       {(phase === "testing" || (phase === "idle" && hasClip)) && (
         <div className="dk-row-btns">
-          <button type="button" className="dk-btn" onClick={() => void listen()}>
+          {/* error: SHOWN — desktop.audioTest.problem.failed (failed() ends on the status line) */}
+          <button type="button" className="dk-btn" onClick={() => void listen().catch(failed)}>
             {t("desktop.audioTest.listenBack", { seconds: LISTEN_SECONDS })}
           </button>
         </div>
@@ -1254,7 +1291,8 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
   useEffect(() => {
     if (!automatic && !asked) return;
     let live = true;
-    void window.desktop?.devChannelPreview(asked).then(
+    // error: SHOWN — desktop.channel.joinOffline
+    window.desktop?.devChannelPreview(asked).then(
       (p) => live && setPreview(p),
       () => live && setPreview(null),
     );
@@ -1322,13 +1360,13 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
 // under the channel switch, so switching shows it appear.
 function DeveloperSettings({ devChannel }: { devChannel: boolean }) {
   const { t } = useTranslation();
-  const [shown] = useDevToolsShown();
+  const [onScreen] = useDevToolsShown();
   const dev = useDevPreview();
   const [updatePreview, setUpdatePreview] = useUpdatePreview();
   const fakeSlots = useFakeSlots();
   const [simulated] = useFlagPref(SIMULATED_KEY);
   const [simCore1] = usePref<(typeof SIM_CORE1_STAGES)[number]>(SIM_CORE1_KEY, "", SIM_CORE1_STAGES);
-  if (!shown || !devChannel) return null;
+  if (!onScreen || !devChannel) return null;
   const model = dev.model || "dualsense";
   const codes = MODEL_COLORWAYS[model];
   return (

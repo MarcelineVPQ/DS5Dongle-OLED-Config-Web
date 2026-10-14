@@ -34,6 +34,7 @@ export class FeedCache {
     if (this.inflight?.channel === channel) return this.inflight.promise;
     const v = this.verified;
     if (v && v.channel === channel && this.now() - v.at < maxAgeMs) return Promise.resolve(v.manifest);
+    // error: PASSES-ON — returned to get()'s caller (check(), firmwareFeed(), devChannelPreview() each have the verdict)
     const promise = this.fetch(channel)
       .then((manifest) => {
         this.verified = { channel, at: this.now(), manifest };
@@ -60,6 +61,7 @@ export async function devChannelPreview(feed: Pick<FeedCache, "get">, automatic:
     const m = await feed.get("dev", FEED_REUSE_MS);
     return { app: m.app.version, firmware: m.firmware?.version ?? null, notes: m.app.notes ?? null, notesUrl: m.app.notes_url ?? null };
   } catch {
-    return null; // offline or no dev build yet: the dialog says so
+    // error: SHOWN — desktop.channel.joinOffline (offline or no dev build yet)
+    return null;
   }
 }

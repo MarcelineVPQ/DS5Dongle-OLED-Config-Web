@@ -66,6 +66,7 @@ function useGripTest(client: UseDs5BridgeResult["client"], connected: boolean, t
           await client.gripTest(side, GRIP_TEST_S);
           if (!stopped) await until(GRIP_TEST_S * 1000);
           // Stopped early: the dongle would keep buzzing to the end.
+          // error: NOT-WORTH — stopping a test the user stopped; it ends by itself within 3 s
           if (stopped) await client.gripTest(side, 0).catch(() => undefined);
         } else {
           // The last pulse ends by the 3 s mark.

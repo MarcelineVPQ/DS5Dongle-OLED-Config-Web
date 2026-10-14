@@ -78,6 +78,22 @@ A standing rule for both repos (the AVIEW pass pattern, for resource lifetimes).
 3. **The leak test must pass** (`tests/integration/leaks.test.ts`, in `npm test`): every main page and panel (controller view, Pico page, App settings, Calibration, Speaker, Mic with the Mic Test running, Games Home, a game page) mounts and unmounts 50 times and the live listeners, timers/rAF, mic tracks, AudioContexts, observers and `window.desktop` subscriptions come back to baseline. A new page or panel joins its `PAGES` list in the same commit.
 4. **Re-run the full pass when a release adds pages, polls, audio or device code.** Run both listers, re-check every verdict, and update the tables in `docs/LIFETIME_PASS_<date>.md` (this repo holds the doc for both repos). LEAK, WASTE and HOT-ALLOC rows are fixed in batches, biggest effect first, with tests. The owner picks the batches.
 
+## Error pass
+
+A standing rule for both repos, made after three actions failed silently in one day (Apply refused by the IPC check, a write refused while Heroic ran, the library disappearing on "Stop checking"). Full table: [`docs/ERROR_PASS_2026-10.md`](docs/ERROR_PASS_2026-10.md).
+
+1. **No silent failure.** Every error a user's action can hit is either **shown**, in plain words (what happened, what to do), in all 7 languages, never "dongle", or **logged on purpose**, with a one-line reason why the user needn't see it. An empty catch, `() => undefined` or a bare `void promise` is neither.
+2. **Use the one mechanism**:
+   - `.catch(shown("desktop.errors.…"))` / `showError(key)` (`src/desktop/shownError.ts`): the app's one pinned notice. A page with its own status line uses that instead.
+   - `.catch(logged("why"))` / `logged("why")(cause)` (`src/errorText.ts`, also in the main process).
+   - `causeText(cause)` for any error text put on screen: it takes off Electron's IPC wrapper and says a refused request (`BAD_REQUEST`) and board results in plain words.
+   - Main process: a refused request answers `BAD_REQUEST` through `parseRequest` (ipc.ts). A failure of something the user did outside the page (a tray toggle, a link) goes to the page with `showMainError(key)` (fixed `MAIN_ERROR_KEYS`).
+3. **Every candidate carries one verdict**, in the same commit as the code: SHOWN (cite the key), LOGGED-OK (the reason), SILENT-BUG / SWALLOWED / FLOATING (name the batch), NOT-WORTH (why it can't fail, or why the "failure" is a state the caller shows), PASSES-ON (the caller has the verdict). Write it as a comment on the line or the line above, `// error: VERDICT — reason` (`{/* error: … */}` in JSX; for a catch, the `catch` line or its first line). `shown("key")` / `logged("why")` handlers and rethrows need no comment.
+   - App: `tools/list_errors.mjs` lists every try/catch, `.catch`, `.then(ok, onRejected)`, `void` promise, floating promise, IPC handler and renderer IPC call, zod parse, child process, fetch, `JSON.parse` and failure field in a result type.
+   - Firmware: `tools/list_errors.py` lists every failure path: dropped and checked status returns, failure returns, 0xF1 result codes, stored-data checks, drop counters, silent guards in user actions.
+4. **Gates.** App: `node tools/list_errors.mjs --check` (in `npm run gates`, pre-commit and CI) and ESLint's `@typescript-eslint/no-floating-promises` (`ignoreVoid: false`: `void` only in front of a handled chain), `no-misused-promises` and `no-empty` (`allowEmptyCatch: false`). Firmware: `python3 tools/list_errors.py --check` in its CI.
+5. **A new failure test**: when a fix makes a failure visible, its test makes the call fail and checks the words on screen (`tests/integration/errorPass.test.ts` has the pattern).
+
 ## Cache pass
 
 A standing rule (the same pattern as the loop pass). Every piece of kept state that can go stale or grow is listed mechanically and carries its key, invalidation and bound.

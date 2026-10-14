@@ -37,6 +37,7 @@ export function parseCustomColors(raw: string | null): CustomColors {
   try {
     data = JSON.parse(raw ?? "{}");
   } catch {
+    // error: NOT-WORTH — stored colors that don't parse: the colorway's own colors
     return {};
   }
   if (!data || typeof data !== "object") return {};

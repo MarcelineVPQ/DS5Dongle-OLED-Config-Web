@@ -34,6 +34,7 @@ export function PlayStats({ info, running }: { info: GameInfo | undefined; runni
 
 // Runs a launcher action for a game (built in the main process from the
 // scan); `failed` names one that couldn't be opened, for a few seconds.
+// error: SHOWN — desktop.library.action.failed (\`failed\` names the action for a few seconds)
 export function useGameAction(game: GameEntry): { run: (action: GameAction) => Promise<void>; failed: GameAction | null } {
   const [failed, setFailed] = useState<GameAction | null>(null);
   const run = async (action: GameAction) => {
@@ -45,6 +46,7 @@ export function useGameAction(game: GameEntry): { run: (action: GameAction) => P
         setTimeout(() => setFailed((f) => (f === action ? null : f)), 6000);
       }
     } catch {
+      // error: SHOWN — desktop.library.action.failed
       setFailed(action);
     }
     // Launching takes the launcher a moment; keep the button busy briefly.

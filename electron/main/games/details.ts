@@ -92,6 +92,7 @@ function steamArt(cache: string, appid: string): Partial<Record<ArtKind, string>
     try {
       mtime = statSync(path).mtimeMs;
     } catch {
+      // error: NOT-WORTH — the file went away between listing and stat: that art is skipped
       return;
     }
     const prev = found.get(name);
@@ -108,7 +109,7 @@ function steamArt(cache: string, appid: string): Partial<Record<ArtKind, string>
       else note(entry.name, full);
     }
   } catch {
-    // no per-app folder
+    // error: NOT-WORTH — no per-app folder
   }
   const pick = (kind: ArtKind) => {
     for (const name of STEAM_NAMES[kind]) {
@@ -197,6 +198,7 @@ function lutrisDetails(install: LutrisInstall, home: string, out: Map<string, Ga
       db.close();
     }
   } catch {
+    // error: NOT-WORTH — no readable Lutris database: no Lutris art or play time (the tile keeps its placeholder)
     return;
   }
   const icons = join(home, ".local/share/icons/hicolor/128x128/apps");

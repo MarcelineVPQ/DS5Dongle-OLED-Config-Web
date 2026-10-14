@@ -6,6 +6,7 @@
 // shows it instead of an empty panel.
 import { useEffect, useState, type CSSProperties } from "react";
 import { artUrl, type ArtKind, type GameInfo } from "../games/types";
+import { logged } from "../../errorText";
 
 // loop: HOT-PATH-OK — N ≤ 3 art kinds per tile, each a lookup in ≤ 5
 export const firstArt = (info: GameInfo | undefined, kinds: ArtKind[]): ArtKind | null => kinds.find((k) => info?.art.includes(k)) ?? null;
@@ -35,7 +36,7 @@ export function useArtColor(key: string, enabled = true): string | null {
     void window
       .desktop!.gameArtColor(key)
       .then((color) => live && setGot({ key, color }))
-      .catch(() => undefined);
+      .catch(logged("the game art's color for the page accent and tile (the theme accent stays)"));
     return () => {
       live = false;
     };

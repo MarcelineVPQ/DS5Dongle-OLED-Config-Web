@@ -10,6 +10,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { parseColor } from "../theme/desktopPalette";
 import { hdrBoost, ledLinear } from "./hdrColor";
+import { logged } from "../../errorText";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Gpu = { requestAdapter(): Promise<{ requestDevice(): Promise<any> } | null>; getPreferredCanvasFormat(): string };
@@ -65,6 +66,7 @@ async function shapeAlpha(svg: SVGSVGElement, sel: string, w: number, h: number)
   try {
     await img.decode();
   } catch {
+    // error: NOT-WORTH — a part's mask that won't decode: that part gets no HDR glow (the normal glow shows)
     return null;
   }
   const c = document.createElement("canvas");
@@ -133,7 +135,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       ctx?.unconfigure?.();
       device?.destroy();
     };
-    void (async () => {
+    (async () => {
       const adapter = await gpu.requestAdapter();
       // lifetime: OK — destroyed in release() (cleanup, or at once if unmounted while starting)
       device = (await adapter?.requestDevice()) ?? null;
@@ -196,8 +198,8 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       // lifetime: OK — disconnected in the effect cleanup
       ro = new ResizeObserver(() => {
         cancelAnimationFrame(resizeFrame);
-        // lifetime: OK — cancelled in the effect cleanup
-        resizeFrame = requestAnimationFrame(() => void rebuild());
+        // lifetime: OK — cancelled by the next resize and in the effect cleanup
+        resizeFrame = requestAnimationFrame(() => void rebuild().catch(logged("rebuilding the HDR glow mask after a resize")));
       });
       ro.observe(el);
       if (el.parentElement) ro.observe(el.parentElement);
@@ -240,12 +242,12 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       // class changes elsewhere (button presses) don't touch the mask
       // lifetime: OK — disconnected in the effect cleanup
       svgWatch = new MutationObserver((records) => {
-        if (records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) void rebuild();
+        if (records.some((m) => (m.target as Element).hasAttribute?.("data-led"))) rebuild().catch(logged("rebuilding the HDR glow mask after an LED change"));
       });
       svgWatch.observe(el, { subtree: true, attributes: true, attributeFilter: ["class"] });
       redraw.current = schedule;
       draw();
-    })();
+    })().catch(logged("starting the HDR glow (WebGPU): the normal glow stays"));
     return () => {
       live = false;
       redraw.current = null;

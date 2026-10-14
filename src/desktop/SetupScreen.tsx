@@ -6,7 +6,7 @@
 //     dongle. A dongle only appears on USB once a controller is connected (it
 //     takes on the controller's identity), so the next step is pairing.
 import { useEffect, useState } from "react";
-import { errorText } from "../errorText";
+import { causeText } from "./shownError";
 import { useTranslation } from "react-i18next";
 import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
@@ -17,6 +17,7 @@ import { usePoll } from "./usePoll";
 import { shortVersion } from "../update/manifest";
 import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
+import { logged } from "../errorText";
 
 const POLL_MS = 1000;
 
@@ -41,10 +42,10 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   // lifetime: OK — acquires nothing (one firmware lookup once a Pico shows up)
   useEffect(() => {
     if (!pico || firmware) return;
-    void window.desktop
+    window.desktop
       ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
-      .catch(() => undefined);
+      .catch(logged("looking up the firmware to install (without it, Install says desktop.setup.noFirmware)"));
   }, [pico, firmware]);
 
   const start = async () => {
@@ -53,7 +54,8 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version });
     } catch (cause) {
-      setInstall({ phase: "failed", detail: errorText(cause) });
+      // error: SHOWN — english: the install's failure text next to Install (flash errors are English, batch E3)
+      setInstall({ phase: "failed", detail: causeText(cause) });
       // Look again: if the feed changed, the new offer shows (the failed
       // install already fetched it, so this doesn't go online).
       setFirmware(null);
@@ -129,14 +131,15 @@ function UpdatesWithoutDongle() {
   const [checked, setChecked] = useState<string | null>(null);
   // lifetime: OK — acquires nothing (one firmware lookup on mount)
   useEffect(() => {
-    void desktop
+    desktop
       ?.latestFirmware(false)
       .then((r) => setFirmware(r.latest))
-      .catch(() => undefined);
+      .catch(logged("looking up the latest firmware (Check now reports it when asked)"));
   }, [desktop]);
   if (!desktop) return null;
   const check = async () => {
     setChecked(null);
+    // error: SHOWN — desktop.setup.checkFailed (a failed check reads as null, which the line below says)
     const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true).catch(() => null)]);
     if (lookup?.latest) setFirmware(lookup.latest);
     setChecked(

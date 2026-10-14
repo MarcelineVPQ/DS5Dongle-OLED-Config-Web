@@ -5,6 +5,7 @@
 // still waiting when the page closes is sent, not dropped; cancel() drops it
 // (before a delete or a replace, so the old edit can't land after them).
 import { useCallback, useEffect, useRef, useState } from "react";
+import { shown } from "../shownError";
 
 export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unknown>, ms: number) {
   const [value, setValue] = useState(stored);
@@ -36,7 +37,7 @@ export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unkno
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
-      if (waiting.current) void saveRef.current(waiting.current.value);
+      if (waiting.current) saveRef.current(waiting.current.value).catch(shown("desktop.errors.librarySave"));
     },
     [],
   );
@@ -50,7 +51,8 @@ export function useDebouncedSave<T>(stored: T, save: (value: T) => Promise<unkno
       timer.current = setTimeout(() => {
         timer.current = null;
         waiting.current = null;
-        void saveRef.current(next);
+        // was SILENT-BUG: a save that failed (a game's profile or its own notes) showed nothing
+        saveRef.current(next).catch(shown("desktop.errors.librarySave"));
       }, ms);
     },
     [ms],

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { causeText } from "../desktop/shownError";
 import { useTranslation } from "react-i18next";
 import { type BridgeIdentity, Ds5BridgeClient, sameIdentity } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
@@ -6,6 +7,7 @@ import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTr
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
 import { simulatedCore1Stage, simulatedDongleOn } from "../desktop/devPreview";
+import { logged } from "../errorText";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
@@ -31,6 +33,7 @@ export interface UseDs5BridgeResult {
   issues: ConfigValidationIssue[];
   saveState: SaveState;
   operation: Operation;
+  // error: SHOWN — english: DesktopApp's ErrorNotice with Dismiss (USB and protocol errors are English, batch E3)
   error: string | null;
   statusText: string;
   isConnected: boolean;
@@ -122,10 +125,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("idle");
       setError(null);
     } catch (cause) {
+      // error: SHOWN — english: the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
       // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
       // vanished during Repair USB driver). The setup screen explains that
       // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
-      if (!(window.desktop?.platform === "win32" && isOpenFailure(cause))) setError(errorMessage(cause));
+      if (!(window.desktop?.platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
     } finally {
       setOperation(null);
     }
@@ -151,7 +155,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await attach(await WebUsbTransport.request());
     } catch (cause) {
-      if (!(cause instanceof DOMException && cause.name === "NotFoundError")) setError(errorMessage(cause));
+      // error: SHOWN — english: the error notice (bridge.error); NotFoundError is the user closing the device picker, not an error
+      if (!(cause instanceof DOMException && cause.name === "NotFoundError")) setError(causeText(cause));
     }
   }, [attach]);
 
@@ -164,7 +169,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setError(null);
       return true;
     } catch (cause) {
-      setError(errorMessage(cause));
+      // error: SHOWN — english: the error notice (bridge.error), and the caller gets false
+      setError(causeText(cause));
       return false;
     } finally {
       setOperation(null);
@@ -252,7 +258,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   // lifetime: OK — acquires nothing (one auto-connect attempt)
   useEffect(() => {
-    void autoConnect();
+    void autoConnect().catch(logged("connecting to an already-permitted board at start (without one, the setup screen shows)"));
   }, [autoConnect]);
 
   // Keep up with the dongle: its identity every second (unsaved flag, slot,
@@ -290,13 +296,15 @@ export function useDs5Bridge(): UseDs5BridgeResult {
           }
         }
       } catch {
-        // gone or busy: the USB events handle reconnecting
+        // error: NOT-WORTH — gone or busy: the USB events handle reconnecting
       }
       // lifetime: OK — self re-arming 1 s poll, runs hidden on purpose (tray); cleared in the cleanup
-      if (!stopped) timer = setTimeout(() => void poll(), 1000);
+      if (!stopped) timer = setTimeout(next, 1000);
     };
+    // poll() catches its own errors; this only keeps a bug from being unhandled.
+    const next = () => void poll().catch(logged("the board's identity/settings poll"));
     // lifetime: OK — the first tick; cleared in the cleanup
-    timer = setTimeout(() => void poll(), 1000);
+    timer = setTimeout(next, 1000);
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
@@ -313,7 +321,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       if (current instanceof WebUsbTransport && current.device === event.device) detach();
     };
     const onConnect = (event: USBConnectionEvent) => {
-      if (isDongle(event.device)) void autoConnect();
+      if (isDongle(event.device)) autoConnect().catch(logged("connecting to a board that was plugged in (it stays on the setup screen)"));
     };
     // lifetime: OK — removed in the effect cleanup
     navigator.usb.addEventListener("disconnect", onDisconnect);
@@ -355,9 +363,4 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     applyBody,
     clearError: () => setError(null),
   };
-}
-
-function errorMessage(cause: unknown): string {
-  if (cause instanceof Error) return cause.message;
-  return "Unexpected USB error";
 }

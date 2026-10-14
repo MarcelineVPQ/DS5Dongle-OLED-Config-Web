@@ -27,12 +27,13 @@ import LiveController from "./LiveController";
 import LiveData from "./LiveData";
 import ControllerInfo from "./ControllerInfo";
 import LiveStrip from "./LiveStrip";
-import { say } from "../narrator";
+import { sayInPassing } from "../narrator";
 import PartPanel, { type PanelView } from "./PartPanel";
 import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
 import { useRemap } from "./useRemap";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
+import { logged } from "../../errorText";
 
 const PANEL_KEY = "ds5.panelHidden";
 // The rail's Controller item, clicked while already on the controller: show or
@@ -85,7 +86,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   useEffect(() => {
     if (!id) return;
     // The dongle says its own "Connected" when it has the narrator.
-    if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) void say("app_controller");
+    if (wasOn.current === false && on && !(id.features & IDENTITY_FEATURES.narrator)) sayInPassing("app_controller");
     wasOn.current = on;
   }, [on, id]);
   const { appliedStamp, library, setButtonsDraft } = useLibrary();
@@ -141,7 +142,10 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const [hdrSetting, setHdrSetting] = useState(false);
   // lifetime: OK — acquires nothing (one settings read; a late answer only sets state)
   useEffect(() => {
-    void window.desktop?.getSettings().then((s) => setHdrSetting(s.hdrLighting && s.hardwareAcceleration));
+    window.desktop
+      ?.getSettings()
+      .then((s) => setHdrSetting(s.hdrLighting && s.hardwareAcceleration))
+      .catch(logged("reading the HDR lighting setting (the normal glow stays)"));
   }, []);
   const [hdrNits] = useKnob(knob("hdrNits"));
   // The drawing shown (LiveController), which the HDR glow follows too.

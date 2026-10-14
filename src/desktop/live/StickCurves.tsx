@@ -6,7 +6,7 @@
 // (after the calibration above) and what the dongle sends out.
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
 import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
@@ -102,7 +102,8 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       const back = await readCurves(client);
       if (back) loaded(back);
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — desktop.errors.boardFailed (causeText; other board errors English, batch E3)
+      setError(causeText(cause));
     }
   };
 

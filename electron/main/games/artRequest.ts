@@ -15,10 +15,12 @@ export function artRequestTarget(url: string): { key: string; kind: ArtKind } | 
     if (u.protocol !== "ds5-art:") return null;
     parts = u.pathname.split("/").filter(Boolean).map(decodeURIComponent);
   } catch {
+    // error: NOT-WORTH — a malformed art URL answers 404: the tile keeps its placeholder
     return null; // bad URL or bad percent-encoding
   }
   if (parts.length !== 2) return null;
   const [key, kind] = parts;
+  // error: NOT-WORTH — a key that isn't a game key answers 404 (the page only asks for keys from the scan)
   if (!GameKeySchema.safeParse(key).success || !(ART_KINDS as readonly string[]).includes(kind)) return null;
   return { key, kind: kind as ArtKind };
 }

@@ -894,6 +894,7 @@ export interface ApplyDeps {
 
 // Running launchers that own one of these changes: `allowed` (the ones the
 // page said it will close and reopen) and the rest, which block.
+// error: SHOWN — desktop.games.restartGameRunning (useRestartText names the launcher: restartGameRunning / restartTimeout / restartFailed / launcherStarted; Apply and Undo on Home and the game page)
 export function launchersToRestart(owners: Iterable<string>, running: Set<LauncherId>, allowed: RestartList): { restart: LauncherId[]; blockedBy: LauncherId[] } {
   const busy = [...new Set(owners)].filter((l): l is LauncherId => l !== "system" && running.has(l as LauncherId));
   return { restart: busy.filter((l) => (allowed as string[]).includes(l)), blockedBy: busy.filter((l) => !(allowed as string[]).includes(l)) };
@@ -973,6 +974,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
         await deps.setMixer(post.key, post.changes);
       } else await deps.setCardProfile(post.card, post.profile);
     } catch (cause) {
+      // error: SHOWN — desktop.games.msg.result.restartFailed (or volumeFailed / profileFailed, on the change's row in the Done list)
       const failed = post.kind === "restart-wireplumber" ? "result.restartFailed" : post.kind === "set-mixer" ? "result.volumeFailed" : "result.profileFailed";
       postErrors.set(key, msg(failed, { error: errorText(cause) }));
     }

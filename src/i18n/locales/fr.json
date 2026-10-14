@@ -331,7 +331,8 @@
       "askBody": "Les nouvelles versions peuvent se télécharger et s'installer toutes seules, vérifiées comme chaque mise à jour, et démarrer à la prochaine ouverture de l'app. Tu peux changer ça dans les réglages de l'app.",
       "askYes": "Mettre à jour automatiquement",
       "askNo": "Me demander à chaque fois",
-      "fwUpdate": "Mettre à jour"
+      "fwUpdate": "Mettre à jour",
+      "appFailed": "La mise à jour de l'appli ne s'est pas installée : {{detail}}"
     },
     "controller": {
       "battery": "Batterie",
@@ -537,7 +538,8 @@
       "launcherStarted": "{{launcher}} est en cours d'exécution, donc rien n'a encore été modifié. Il sera fermé pour ce changement, puis rouvert. Confirme à nouveau pour continuer.",
       "launcherOverwrote": "{{launcher}} a annulé un changement appliqué ici (il était ouvert). Applique-le à nouveau : si {{launcher}} est ouvert, il est d'abord fermé, puis rouvert.",
       "details": "Détails",
-      "needsAttention": "À régler"
+      "needsAttention": "À régler",
+      "undoAudioRestart": "Annulé, mais le redémarrage du service audio a échoué ({{error}}). Déconnecte-toi puis reconnecte-toi, ou redémarre le PC, pour que le changement audio prenne effet."
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -1308,7 +1310,8 @@
       "sonyPage": "Page de Sony",
       "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manette (général) → Logiciel de la manette sans fil DualSense.",
       "howToCable": "La mise à jour ne peut pas passer par {{device}}. Ensuite, associe de nouveau la manette {{device_a}} si elle ne se reconnecte pas.",
-      "windowsOnly": "L'application PlayStation Accessories de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5."
+      "windowsOnly": "L'application PlayStation Accessories de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5.",
+      "officialUnavailable": "Impossible de joindre Sony pour comparer les versions. Vérifie la connexion internet et appuie sur Actualiser."
     },
     "stickTest": {
       "circleTitle": "Test de circularité",
@@ -1518,7 +1521,8 @@
       "applyFailed": "Le profil de {{title}} n'a pas pu être mis sur {{device}} ({{reason}}). Tes réglages normaux sont actifs.",
       "partlyOn": "Le profil de {{title}} est peut-être actif sans ses boutons ni ses courbes de joystick ({{reason}}). Nouvel essai quand {{device}} se reconnecte.",
       "saveFailed": "Non enregistré dans le profil de {{title}} : {{reason}}",
-      "notOn": "Le profil de {{title}} n'est pas encore sur {{device}} : rien n'y a été enregistré. Réessaie une fois qu'il est actif."
+      "notOn": "Le profil de {{title}} n'est pas encore sur {{device}} : rien n'y a été enregistré. Réessaie une fois qu'il est actif.",
+      "restoreFailed": "Tes réglages normaux n'ont pas pu être remis sur {{device}} après le jeu ({{reason}}). Ça sera réessayé quand {{device}} se reconnectera."
     },
     "colorPicker": {
       "swatch": "{{name}} : {{hex}}. Changer la couleur",
@@ -1608,6 +1612,23 @@
       },
       "inGame": "Lancez le jeu et activez le HDR dans ses propres réglages d'affichage.",
       "guide": "Le Guide (page À propos) explique chaque étape : Jeux → Le HDR dans les jeux sous Linux."
+    },
+    "errors": {
+      "settingNotSaved": "Impossible d'enregistrer ce réglage, il est revenu comme avant. Vérifie que ton dossier personnel n'est pas plein ou en lecture seule, puis réessaie.",
+      "settingsRead": "Impossible de lire les réglages de l'appli, Réglages de l'appli ne peut donc pas les afficher. Redémarre l'appli ; si ça se reproduit, signale-le.",
+      "linkNotOpened": "Impossible d'ouvrir ce lien : aucun navigateur n'a répondu. Ouvre ton navigateur et réessaie.",
+      "badRequest": "Rien n'a été modifié : l'appli a envoyé ça sous une forme qu'elle n'accepte pas. C'est un bug de l'appli. Redémarre-la et réessaie, et signale-le si ça se reproduit.",
+      "actionFailed": "Ça n'a pas marché : {{reason}}. Réessaie ; si ça échoue encore, redémarre l'appli.",
+      "slotSwitch": "Impossible de passer à l'emplacement {{slot}} : {{reason}}",
+      "profileCreate": "Impossible de créer le profil de ce jeu. Réessaie ; si ça échoue encore, redémarre l'appli.",
+      "profileDelete": "Impossible de supprimer le profil de ce jeu, il est toujours là. Réessaie ; si ça échoue encore, redémarre l'appli.",
+      "librarySave": "Ta dernière modification de ce jeu n'a pas été enregistrée. Refais-la ; si ça échoue encore, redémarre l'appli.",
+      "libraryRead": "Impossible de lire ta bibliothèque de jeux : les profils de jeu et les dispositions de boutons enregistrées sont désactivés pour l'instant. Redémarre l'appli ; si ça se reproduit, signale-le.",
+      "layoutSave": "Impossible d'enregistrer la disposition des boutons. Réessaie ; si ça échoue encore, redémarre l'appli.",
+      "layoutDelete": "Impossible de supprimer la disposition des boutons, elle est toujours là. Réessaie ; si ça échoue encore, redémarre l'appli.",
+      "boardFailed": "{{device, capitalize}} n'a pas pu terminer (par exemple l'enregistrement dans sa mémoire). Ta modification risque d'être perdue à l'extinction. Réessaie ; si ça échoue encore, débranche {{device}} puis rebranche-le.",
+      "boardBusy": "{{device, capitalize}} est occupé par autre chose. Réessaie dans un instant.",
+      "boardRejected": "{{device, capitalize}} n'a pas accepté ça. Son firmware est peut-être plus ancien que cette appli : mets le firmware à jour, puis réessaie."
     }
   },
   "ad": {

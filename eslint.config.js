@@ -31,6 +31,22 @@ export default tseslint.config(
       ],
     },
   },
+  // The error pass (CLAUDE.md "Error pass", docs/ERROR_PASS_2026-10.md): no
+  // silent failure. Every promise is awaited, returned, or ends in a handler:
+  // .catch(shown("key")) when the user should see it, .catch(logged("why"))
+  // when not. \`void\` only goes in front of a handled chain (ignoreVoid off),
+  // and an async function can't be handed to a void callback (onClick) where
+  // its rejection would be lost. No empty blocks, catch included; what each
+  // catch does is a verdict that tools/list_errors.mjs --check gates.
+  {
+    files: ["src/**/*.{ts,tsx}", "electron/**/*.ts"],
+    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    rules: {
+      "@typescript-eslint/no-floating-promises": ["error", { ignoreVoid: false }],
+      "@typescript-eslint/no-misused-promises": "error",
+      "no-empty": ["error", { allowEmptyCatch: false }],
+    },
+  },
   {
     files: ["electron/**/*.ts", "*.config.{ts,js}", "tools/**/*.{js,mjs}", ".hooks/**/*.mjs"],
     languageOptions: { globals: { process: "readonly", console: "readonly", Buffer: "readonly", fetch: "readonly", URL: "readonly" } },

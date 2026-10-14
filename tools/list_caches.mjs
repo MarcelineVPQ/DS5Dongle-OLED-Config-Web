@@ -48,7 +48,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import ts from "typescript";
-import { checker as tc, displayFn, isFn as isFunctionLike, isOurs as ours, isStmtLoop, iterCallOf, relOf, resolveFns, sources as files } from "./ts_program.mjs";
+import { checker as tc, displayFn, isFn as isFunctionLike, isOurs as ours, isStmtLoop, iterCallOf, lineOf, relOf, resolveFns, sources as files } from "./ts_program.mjs";
 
 export const CACHE_VERDICTS = ["OK", "FIX-STALE", "FIX-UNBOUNDED", "ADD-CACHE", "REMOVE", "NOT-WORTH"];
 const COMMENT_RE = new RegExp(`cache:\\s*(${CACHE_VERDICTS.join("|")})\\s+—\\s+key=[^;]+;\\s*invalidated=[^;]+;\\s*bound=\\S`);
@@ -62,7 +62,6 @@ const DOM_READS = /\b(querySelector|querySelectorAll|getAttribute|getComputedSty
 const MUTATORS = new Set(["set", "add", "delete", "clear", "push", "pop", "shift", "unshift", "splice", "sort", "fill"]);
 
 const relPath = (sf) => relOf.get(sf.fileName);
-const lineOf = (node) => node.getSourceFile().getLineAndCharacterOfPosition(node.getStart()).line + 1;
 const enclosingFn = (n) => {
   for (let p = n.parent; p; p = p.parent) if (isFunctionLike(p)) return p;
   return null;

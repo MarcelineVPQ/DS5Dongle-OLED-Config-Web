@@ -26,6 +26,7 @@ function hexAccent(hex: string): Rgb | null {
 function portalAccent(): Promise<Rgb | null> {
   return new Promise((resolve) => {
     // lifetime: OK — exits on its own; the 2 s timeout kills a hung gdbus
+    // error: NOT-WORTH — no portal or no gdbus answers null: the Desktop theme keeps the app's own accent (nothing the user started)
     execFile(
       "gdbus",
       [
@@ -56,6 +57,7 @@ export async function readDesktopPalette(): Promise<DesktopPalette | null> {
     try {
       return parseKdeGlobals(readFileSync(kdeGlobals, "utf8"));
     } catch {
+      // error: NOT-WORTH — no readable kdeglobals: no desktop palette, the app's own colors stay
       return null;
     }
   }
@@ -84,6 +86,7 @@ export function watchDesktopPalette(onChange: () => void): () => void {
         if (file === "kdeglobals") fire();
       });
     } catch {
+      // error: NOT-WORTH — no KDE config folder to watch: an accent change is picked up at the next start
       watcher = null;
     }
   }

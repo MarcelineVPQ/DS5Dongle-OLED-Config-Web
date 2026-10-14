@@ -28,7 +28,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: $NPM ci
-      - name: ESLint
+      - name: ESLint (incl. no-floating-promises, no-misused-promises, no-empty)
         run: npx eslint . --max-warnings=1
       - name: Prettier
         run: npx prettier --check .
@@ -46,6 +46,8 @@ jobs:
         run: node tools/list_loops.mjs --check
       - name: Kept state (caches, memos, mirrors) has a verdict (docs/CACHE_PASS_2026-10.md)
         run: node tools/list_caches.mjs --check
+      - name: Every error path has a verdict, no silent failure (docs/ERROR_PASS_2026-10.md)
+        run: node tools/list_errors.mjs --check
 
   typecheck:
     name: Typecheck

@@ -1,3 +1,5 @@
+import { logged } from "../errorText";
+
 // The controller's own audio devices, found by the name the OS gives the
 // board's USB audio interface ("DualSense Wireless Controller", on Windows
 // e.g. "Microphone (DualSense Wireless Controller)"). One matcher for the
@@ -29,6 +31,12 @@ export async function controllerAudio(kind: ControllerAudioKind): Promise<string
   try {
     return findControllerAudio(await navigator.mediaDevices.enumerateDevices(), kind);
   } catch {
+    // error: NOT-WORTH — no device list (no permission): null is "the controller's audio isn't there", which each test shows
     return null;
   }
+}
+
+// Closes a test's audio context; it's done either way, so a failure is only logged.
+export function closeQuietly(ctx: AudioContext): void {
+  ctx.close().catch(logged("closing a test's audio context (it's done either way)"));
 }

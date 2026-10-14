@@ -3,11 +3,11 @@
 // (the firmware writes remaps straight to flash, so there is no "save" step;
 // Apply is the commit, verified by re-reading the table and its revision).
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { errorText } from "../../errorText";
+import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { defaultExtra, identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
-import { say } from "../narrator";
+import { sayInPassing } from "../narrator";
 
 export interface Remap {
   supported: boolean | null; // null while loading
@@ -15,6 +15,7 @@ export interface Remap {
   draft: number[];
   dirty: boolean;
   busy: boolean;
+  // error: SHOWN — english: the remap card's error notice (remap.verifyFailed, desktop.errors.board*, other board errors English, batch E3)
   error: string | null;
   setTarget: (source: number, target: number) => void;
   apply: () => Promise<void>;
@@ -47,6 +48,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     if (!client) return;
     let live = true;
     // Firmware without the Edge extras answers nothing (or stalls): no rows then.
+    // error: NOT-WORTH — firmware without the Edge extras answers nothing: no extra rows
     client.readRemapExtra().then(
       (e) => {
         if (!live) return;
@@ -55,6 +57,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       },
       () => live && setExtraDevice(null),
     );
+    // error: SHOWN — english: the remap card's error notice (board errors are English, batch E3)
     client.readRemap().then(
       (s) => {
         if (!live) return;
@@ -63,7 +66,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
         setDraft(s ? s.table.slice() : identityTable());
         setError(null);
       },
-      (cause: unknown) => live && setError(errorText(cause)),
+      (cause: unknown) => live && setError(causeText(cause)),
     );
     return () => {
       live = false;
@@ -90,11 +93,13 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
         setExtraDevice(afterExtra);
         setExtraDraft(afterExtra.slice());
       }
-      void say("app_remapped");
+      sayInPassing("app_remapped");
     } catch (cause) {
-      setError(errorText(cause));
+      // error: SHOWN — remap.verifyFailed (or the board's failure, via causeText)
+      setError(causeText(cause));
       // The dongle may have applied it anyway (in RAM, when only saving to
       // flash failed): show what it really has now.
+      // error: NOT-WORTH — a re-read after the failure that is already shown; the old table stays
       await client.readRemap().then(
         (now) => now && setState(now),
         () => undefined,

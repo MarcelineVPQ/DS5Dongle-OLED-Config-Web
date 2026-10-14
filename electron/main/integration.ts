@@ -35,6 +35,7 @@ export function integrateDesktop(resourcesDir: string): void {
     if (process.platform === "linux" && process.env.APPIMAGE) integrateAppImage(resourcesDir);
     else if (process.platform === "win32" && process.env.PORTABLE_EXECUTABLE_FILE) ensureStartMenuShortcut();
   } catch (cause) {
+    // error: LOGGED-OK — start-up desktop integration (menu entry, Start menu shortcut): nothing the user asked for, and the app works without it
     console.error("desktop integration failed:", cause instanceof Error ? cause.message : cause);
   }
 }
@@ -43,6 +44,7 @@ function realpathOrSelf(path: string): string {
   try {
     return realpathSync(path);
   } catch {
+    // error: NOT-WORTH — no real path: the path itself
     return path;
   }
 }
@@ -57,7 +59,7 @@ function integrateAppImage(resourcesDir: string): void {
       symlinkSync(installed, stable);
       launch = stable;
     } catch {
-      // Read-only folder: fall back to the versioned path.
+      // error: NOT-WORTH — Read-only folder: fall back to the versioned path.
     }
   }
 
@@ -79,13 +81,16 @@ function integrateAppImage(resourcesDir: string): void {
   try {
     current = readFileSync(desktopPath, "utf8");
   } catch {
-    // First run.
+    // error: NOT-WORTH — First run.
   }
   if (current !== entry) {
     writeFileSync(desktopPath, entry);
+    // lifetime: OK — exits on its own; only when the desktop entry changed
     // Refresh the menu caches (no-ops where the tool doesn't exist).
-    execFile("update-desktop-database", [appsDir], () => undefined); // lifetime: OK — exits on its own; only when the entry changed
+    // error: NOT-WORTH — menu cache refresh, a no-op where the tool doesn't exist
+    execFile("update-desktop-database", [appsDir], () => undefined);
     // lifetime: OK — each exits on its own; only when the desktop entry changed
+    // error: NOT-WORTH — menu cache refresh, a no-op where the tool doesn't exist
     execFile("kbuildsycoca6", () => execFile("kbuildsycoca5", () => undefined));
   }
 }

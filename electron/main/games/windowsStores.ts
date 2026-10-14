@@ -48,6 +48,7 @@ export function parseEpicManifest(text: string): StoreGame | null {
   try {
     m = JSON.parse(text.replace(/^\uFEFF/, "")) as Record<string, unknown>; // tolerate a BOM
   } catch {
+    // error: NOT-WORTH — a broken Epic manifest: that game isn't listed
     return null;
   }
   const str = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
@@ -68,6 +69,7 @@ export function readGogGames(run: () => string = () => execFileSync(regExe(), ["
   try {
     return parseGogRegistry(run());
   } catch {
+    // error: NOT-WORTH — no GOG registry key: no GOG games
     return []; // no GOG games (the key doesn't exist)
   }
 }
@@ -77,6 +79,7 @@ export function readEpicGames(dir = epicManifestDir()): StoreGame[] {
   try {
     files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".item"));
   } catch {
+    // error: NOT-WORTH — no Epic manifests folder: no Epic games
     return [];
   }
   const out: StoreGame[] = [];
@@ -85,7 +88,7 @@ export function readEpicGames(dir = epicManifestDir()): StoreGame[] {
       const g = parseEpicManifest(readFileSync(join(dir, f), "utf8"));
       if (g) out.push(g);
     } catch {
-      // unreadable manifest
+      // error: NOT-WORTH — unreadable manifest
     }
   }
   return out;

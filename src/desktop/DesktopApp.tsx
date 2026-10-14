@@ -16,6 +16,8 @@ import { PANEL_TOGGLE_EVENT } from "./live/ControllerView";
 import { useGameProfile } from "./library/useGameProfile";
 import { LibraryContext, profileTarget } from "./library/libraryContext";
 import { BusyButton } from "./controls";
+import { causeText, clearShownError, shown, showError, useShownError } from "./shownError";
+import { MAIN_ERROR_KEYS } from "./api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApplyTheme } from "../components/ThemeToggle";
@@ -34,9 +36,10 @@ import AutoUpdateAsk from "./AutoUpdateAsk";
 import { useAppUpdate, useFirmwareUpdate } from "./useUpdates";
 import "./desktop.css";
 import NarratorCaption from "./NarratorCaption";
-import { firmwareNarratorValue, say, useNarrator } from "./narrator";
+import { firmwareNarratorValue, sayInPassing, useNarrator } from "./narrator";
 import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 import { identityChargeState } from "../protocol/controllerInfo";
+import { logged } from "../errorText";
 
 // One screen: the live controller with its settings panel. Games and About
 // replace it while open (with a way back); the dongle and the app's own
@@ -49,6 +52,7 @@ export default function DesktopApp() {
   const { t, i18n } = useTranslation();
   useApplyTheme();
   const bridge = useDs5Bridge();
+  const shownError = useShownError();
   // Remembered so the setup screen can tell "no dongle yet" from "the dongle
   // is waiting for its controller" (it stays off USB until one connects).
   // lifetime: OK — acquires nothing (remembers that a dongle was seen)
@@ -92,9 +96,11 @@ export default function DesktopApp() {
     if (!isDirty || issues.length > 0 || operation || draft === failedDraft.current) return;
     // lifetime: OK — cleared in the effect cleanup
     const timer = setTimeout(() => {
-      void applyConfig().then((ok) => {
-        failedDraft.current = ok ? null : draft;
-      });
+      applyConfig()
+        .then((ok) => {
+          failedDraft.current = ok ? null : draft;
+        })
+        .catch(logged("applying the draft live (applyConfig shows its own error and resolves false)"));
     }, APPLY_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [isDirty, issues.length, operation, applyConfig, draft]);
@@ -106,7 +112,7 @@ export default function DesktopApp() {
   const wasConnected = useRef(false);
   // lifetime: OK — acquires nothing (narrator line on connect)
   useEffect(() => {
-    if (connected && !wasConnected.current) void say("app_dongle_online");
+    if (connected && !wasConnected.current) sayInPassing("app_dongle_online");
     wasConnected.current = connected;
   }, [connected]);
   const offered = useRef<string | null>(null);
@@ -115,12 +121,12 @@ export default function DesktopApp() {
     const version = fw.available ? fw.latest?.version : null;
     if (version && offered.current !== version) {
       offered.current = version;
-      void say("app_fw_available");
+      sayInPassing("app_fw_available");
     }
   }, [fw.available, fw.latest?.version]);
   // lifetime: OK — acquires nothing (narrator line when an update finishes)
   useEffect(() => {
-    if (fw.state.phase === "done") void say("app_fw_updated");
+    if (fw.state.phase === "done") sayInPassing("app_fw_updated");
   }, [fw.state.phase]);
   const busy = bridge.operation !== null;
   // Leave the profile being edited: back to the game page it started from
@@ -195,7 +201,7 @@ export default function DesktopApp() {
     void client
       .readNarrator()
       .then((have) => (!cancelled && have !== null && have !== want ? client.setNarrator(want) : undefined))
-      .catch(() => undefined); // busy or gone: tried again on the next change or reconnect
+      .catch(logged("syncing the board's narrator setting (busy or gone: tried again on the next change or reconnect)"));
     return () => {
       cancelled = true;
     };
@@ -211,12 +217,15 @@ export default function DesktopApp() {
     let cancelled = false;
     void renderTrayIcon({ dot: !connected ? "none" : controllerOn ? "ok" : "away", darkTaskbar, lightbar: rgb, charging })
       .then((png) => !cancelled && window.desktop?.setTrayIcon(png))
-      .catch(() => undefined);
+      .catch(logged("drawing the tray icon (the tray keeps its last icon)"));
     return () => {
       cancelled = true;
     };
   }, [connected, controllerOn, charging, lightbarKey, darkTaskbar]);
 
+  // lifetime: OK — the effect returns the preload's unsubscribe for main-process errors (unmount)
+  // Main-process failures of a user action (a tray toggle, a link): the same notice.
+  useEffect(() => window.desktop?.onShowError((key) => (MAIN_ERROR_KEYS as readonly string[]).includes(key) && showError(key)), []);
   // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for tray commands
   useEffect(
     () =>
@@ -233,7 +242,8 @@ export default function DesktopApp() {
             if (command.page === "dongle") setPanel("dongle");
           }
         } else if (command.type === "switchSlot") {
-          void switchSlot(command.slot).catch(() => undefined);
+          // error: SHOWN — desktop.errors.slotSwitch (was SILENT-BUG: the tray's slot switch failed with nothing shown)
+          switchSlot(command.slot).catch((cause: unknown) => shown("desktop.errors.slotSwitch", { slot: String(command.slot), reason: causeText(cause) })(cause));
         }
       }),
     [switchSlot],
@@ -295,24 +305,9 @@ export default function DesktopApp() {
                 </button>
               </div>
             )}
-            {bridge.error && (
-              <div className="dk-notice error" role="alert">
-                <span>{bridge.error}</span>
-                <span className="dk-spacer" />
-                <button type="button" className="dk-btn" onClick={bridge.clearError}>
-                  {t("notice.dismiss")}
-                </button>
-              </div>
-            )}
-            {profiles.error && (
-              <div className="dk-notice error" role="alert">
-                <span>{profiles.error}</span>
-                <span className="dk-spacer" />
-                <button type="button" className="dk-btn" onClick={profiles.clearError}>
-                  {t("notice.dismiss")}
-                </button>
-              </div>
-            )}
+            <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
+            <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
+            <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
             {main === "games" && (
               <GamesPage bridge={bridge} profiles={profiles} openGame={openGame} allowed={games.allowed} onAllowedChange={games.setAllowed} onScanned={games.update} onDeclinedChange={games.recount} />
             )}
@@ -400,7 +395,7 @@ export default function DesktopApp() {
                     disabled={busy || !bridge.hasUnsavedChanges || bridge.isDirty}
                     onClick={() =>
                       bridge.saveToFlash().then((ok) => {
-                        if (ok) void say("app_saved");
+                        if (ok) sayInPassing("app_saved");
                       })
                     }
                   >
@@ -447,6 +442,22 @@ export default function DesktopApp() {
 
 // Whether the taskbar is dark, from the desktop's own colors (KDE's color
 // scheme, or the system's dark/light setting): independent of the app's theme.
+// An error notice with Dismiss; `pinned` stays at the top of a scrolled page
+// (the one for shown() errors, which can come from anywhere on the page).
+function ErrorNotice({ message, onDismiss, pinned }: { message: string | null; onDismiss: () => void; pinned?: boolean }) {
+  const { t } = useTranslation();
+  if (!message) return null;
+  return (
+    <div className={`dk-notice error${pinned ? " pinned" : ""}`} role="alert">
+      <span>{message}</span>
+      <span className="dk-spacer" />
+      <button type="button" className="dk-btn" onClick={onDismiss}>
+        {t("notice.dismiss")}
+      </button>
+    </div>
+  );
+}
+
 function useDarkTaskbar(): boolean {
   const query = () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? true;
   const [dark, setDark] = useState(query);
@@ -455,11 +466,14 @@ function useDarkTaskbar(): boolean {
     const desktop = window.desktop;
     let live = true;
     const fromPalette = (p: { isDark: boolean } | null) => live && setDark(p ? p.isDark : query());
-    void desktop?.getDesktopPalette().then(fromPalette);
+    const read = () => {
+      if (desktop) desktop.getDesktopPalette().then(fromPalette).catch(logged("reading whether the taskbar is dark (for the tray icon; the system setting answers instead)"));
+    };
+    read();
     // lifetime: OK — off() in the effect cleanup
     const off = desktop?.onDesktopPalette(fromPalette);
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const onChange = () => void desktop?.getDesktopPalette().then(fromPalette);
+    const onChange = read;
     // lifetime: OK — removed in the effect cleanup
     mq?.addEventListener("change", onChange);
     return () => {
@@ -482,6 +496,7 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
       seen = window.localStorage.getItem(SEEN_KEY);
       if (!seen) window.localStorage.setItem(SEEN_KEY, current);
     } catch {
+      // error: NOT-WORTH — storage unavailable: no "What's new" banner this time
       return null;
     }
     return seen && seen !== current ? current : null;
@@ -490,7 +505,7 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
     try {
       if (current) window.localStorage.setItem(SEEN_KEY, current);
     } catch {
-      // storage unavailable: the banner just reappears next launch
+      // error: NOT-WORTH — storage unavailable: the banner just reappears next launch
     }
     setVersion(null);
   };
@@ -518,15 +533,15 @@ function useGamesAttention() {
   useEffect(() => {
     if (!supported) return;
     let live = true;
-    void window.desktop!.getSettings().then((s) => {
-      if (!live) return;
-      setAllowedState(s.gamesScanAllowed);
-      if (s.gamesScanAllowed)
-        window.desktop!.gamesScan().then(
-          (r) => live && update(r),
-          () => undefined,
-        );
-    });
+    window
+      .desktop!.getSettings()
+      .then((s) => {
+        if (!live) return;
+        setAllowedState(s.gamesScanAllowed);
+        if (s.gamesScanAllowed)
+          window.desktop!.gamesScan().then((r) => live && update(r), logged("the background scan for the rail's attention count (the Games page scans again and shows its errors)"));
+      })
+      .catch(logged("reading the Games consent for the rail's count (the count stays hidden)"));
     return () => {
       live = false;
     };
@@ -545,6 +560,6 @@ function useGamesAttention() {
       }),
     [recount],
   );
-  const setAllowed = useCallback((value: boolean) => void setGamesAllowed(value), []);
+  const setAllowed = useCallback((value: boolean) => void setGamesAllowed(value).catch(shown("desktop.errors.settingNotSaved")), []);
   return { supported, allowed, setAllowed, count, update, recount };
 }

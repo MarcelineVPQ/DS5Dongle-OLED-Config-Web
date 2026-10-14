@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tourDone } from "./tour/Tour";
+import { logged } from "../errorText";
+import { shown } from "./shownError";
 import { useWindowShown } from "./useWindowShown";
 
 const ASK_AFTER_MS = 60_000;
@@ -12,13 +14,16 @@ export default function AutoUpdateAsk() {
   const { t } = useTranslation();
   const [asked, setAsked] = useState(true);
   const [due, setDue] = useState(false);
-  const shown = useWindowShown();
+  const onScreen = useWindowShown();
   // The minute counts from the app's start, also while it's hidden.
   const [started] = useState(() => Date.now());
   // lifetime: OK — acquires nothing (reads whether the question was answered)
   useEffect(() => {
     let live = true;
-    void window.desktop?.getSettings().then((s) => live && setAsked(s.updatesAsked));
+    window.desktop
+      ?.getSettings()
+      .then((s) => live && setAsked(s.updatesAsked))
+      .catch(logged("reading whether automatic updates were asked about (unread: not asked now)"));
     return () => {
       live = false;
     };
@@ -27,18 +32,21 @@ export default function AutoUpdateAsk() {
   // window is on screen: none once answered (or due), none while hidden.
   // lifetime: OK — cleanup clears the interval (answered, due, window hidden, unmount)
   useEffect(() => {
-    if (asked || due || !shown) return;
+    if (asked || due || !onScreen) return;
     // lifetime: OK — cleared in the effect cleanup once answered, due or hidden
     const timer = setInterval(() => {
       const tourOpen = Boolean(document.querySelector(".tour-card"));
       setDue(!tourOpen && (tourDone() || Date.now() - started > ASK_AFTER_MS));
     }, 1000);
     return () => clearInterval(timer);
-  }, [asked, due, shown, started]);
+  }, [asked, due, onScreen, started]);
   if (asked || !due || !window.desktop) return null;
   const answer = (on: boolean) => {
     setAsked(true);
-    void window.desktop?.setSetting("autoInstallUpdates", on).then(() => window.desktop?.setSetting("updatesAsked", true));
+    window.desktop
+      ?.setSetting("autoInstallUpdates", on)
+      .then(() => window.desktop?.setSetting("updatesAsked", true))
+      .catch(shown("desktop.errors.settingNotSaved"));
   };
   return (
     <div className="dk-notice" role="dialog" aria-label={t("desktop.update.askTitle")}>

@@ -279,8 +279,12 @@ function report({ tool, rule, prefix, verdicts, rows, noun, what, failLine, hint
   }
 }
 
+// A node's 1-based line.
+const lineOf = (node) => node.getSourceFile().getLineAndCharacterOfPosition(node.getStart()).line + 1;
+
 export {
   ROOT,
+  lineOf,
   SKIP,
   program,
   checker,

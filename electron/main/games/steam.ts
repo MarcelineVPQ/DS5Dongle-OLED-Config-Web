@@ -41,7 +41,7 @@ export function windowsSteamRoots(): string[] {
     const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(out);
     if (m) roots.push(m[1].trim().replace(/\//g, "\\"));
   } catch {
-    // no Steam in the registry
+    // error: NOT-WORTH — no Steam in the registry
   }
   // loop: NOT-WORTH — N = 2 Program Files folders, Windows only, once per scan
   for (const pf of [process.env["ProgramFiles(x86)"], process.env.ProgramFiles]) if (pf) roots.push(join(pf, "Steam"));
@@ -69,6 +69,7 @@ export function findSteamInstalls(home: string, platform: NodeJS.Platform = proc
     try {
       root = realpathSync(path);
     } catch {
+      // error: NOT-WORTH — a candidate Steam folder that isn't there
       continue;
     }
     if (seen.has(root) || !existsSync(join(root, "config/config.vdf"))) continue;
@@ -89,10 +90,11 @@ function newestLocalConfig(root: string): string | null {
         const m = statSync(p).mtimeMs;
         if (!best || m > best.mtime) best = { path: p, mtime: m };
       } catch {
-        // no localconfig for this account
+        // error: NOT-WORTH — no localconfig for this account
       }
     }
   } catch {
+    // error: NOT-WORTH — no userdata folder: no localconfig, so the launch options read as empty
     return null;
   }
   return best?.path ?? null;
@@ -126,6 +128,7 @@ export function steamAppManifests(install: SteamInstall): Array<{ steamapps: str
       // loop: HOT-PATH-OK — names in one steamapps folder, one regex test each
       files = readdirSync(steamapps).filter((f) => /^appmanifest_\d+\.acf$/.test(f));
     } catch {
+      // error: NOT-WORTH — a library folder without steamapps: no games there
       continue;
     }
     // loop: PARALLELIZE — one sync read + VDF parse per appmanifest blocks the main process

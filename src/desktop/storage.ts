@@ -10,6 +10,7 @@ export function readPref(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
   } catch {
+    // error: NOT-WORTH — storage blocked: no saved preference, the default applies
     return null;
   }
 }
@@ -18,7 +19,7 @@ export function writePref(key: string, value: string): void {
   try {
     window.localStorage.setItem(key, value);
   } catch {
-    // storage blocked: lasts for this session
+    // error: NOT-WORTH — storage blocked: lasts for this session
   }
   window.dispatchEvent(new CustomEvent(PREF_EVENT, { detail: { key, value } }));
 }
