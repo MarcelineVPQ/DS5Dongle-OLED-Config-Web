@@ -1099,7 +1099,8 @@
       "label": "强调色",
       "sub": "按钮、选中项和高亮",
       "controller": "控制器",
-      "desktop": "桌面"
+      "desktop": "桌面",
+      "unreadable": "无法读取桌面的强调色，正在使用应用自带的颜色"
     },
     "customColors": {
       "title": "我的控制器配色",

@@ -54,11 +54,11 @@ export function parseKdeGlobals(text: string): DesktopPalette | null {
   const win = ini["Colors:Window"] ?? {};
   const view = ini["Colors:View"] ?? {};
   const button = ini["Colors:Button"] ?? {};
-  const selection = ini["Colors:Selection"] ?? {};
   const window = rgb(win.BackgroundNormal);
   const windowText = rgb(win.ForegroundNormal);
   if (!window || !windowText) return null;
-  const accent = rgb(ini.General?.AccentColor) ?? rgb(selection.BackgroundNormal) ?? rgb(view.DecorationFocus) ?? [61, 174, 233];
+  // KDE's accent, else the focus decoration color, else Breeze blue.
+  const accent = kdeAccent(ini) ?? rgb(view.DecorationFocus) ?? [61, 174, 233];
   return {
     source: "kde",
     isDark: luminance(window) < 0.4,
@@ -240,4 +240,11 @@ export function accentVars(accent: Rgb, panel: Rgb, isDark: boolean, grounds: Rg
     "--accent-border": css(accent),
     "--text-on-primary": css(onAccent),
   };
+}
+
+// KDE's accent: [General] AccentColor (set when the user picks one), else the
+// color scheme's selection color. Null when neither is there.
+export function kdeAccent(text: string | Ini): Rgb | null {
+  const ini = typeof text === "string" ? parseIni(text) : text;
+  return rgb(ini.General?.AccentColor) ?? rgb(ini["Colors:Selection"]?.BackgroundNormal) ?? null;
 }

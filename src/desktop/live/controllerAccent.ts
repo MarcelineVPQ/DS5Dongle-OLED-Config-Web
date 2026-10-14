@@ -10,9 +10,14 @@
 // grey, silver, pearl) have no color to give, so the theme's accent stays.
 // ACCENT_OVERRIDES fixes any colorway the formula gets wrong. The player's own
 // colors (customColors.ts) count as the controller's: their body color gives
-// the accent, the shade and the Controller theme's surfaces.
+// the accent, the shade and the Controller theme's surfaces. Accent ->
+// Desktop: the desktop's accent color (KDE's, the portal's or the system's,
+// read by the main process) in every theme, surfaces untinted; when none can
+// be read the theme's own accent stays and the setting says so.
 import { useEffect, useSyncExternalStore } from "react";
 import { colorway, type ColorwayColors } from "./colorways";
+import { logged } from "../../errorText";
+import { rgbToHex } from "../colorPicker/colorMath";
 import { mergeColors, type CustomColors } from "./customColors";
 import { accentVars, contrast, ensureContrast, hexToRgb as hex, legibleOnAll, mix, parseColor as parse, wantsLightInk, type Rgb } from "../theme/desktopPalette";
 
@@ -56,6 +61,27 @@ let controllerColor: string | null = null;
 let controllerCode: string | null = null;
 // The player's own colors while on (else null).
 let customColors: CustomColors | null = null;
+// The Accent color setting.
+let accentChoice: (typeof ACCENTS)[number] = "controller";
+// The desktop's accent (#rrggbb) for Accent -> Desktop: undefined while not
+// read yet, null when it couldn't be read.
+// cache: OK — key=none (the desktop's accent); invalidated=set on every desktop palette read or change; bound=1 entry
+let desktopAccent: string | null | undefined;
+const desktopAccentListeners = new Set<() => void>();
+const onDesktopAccent = (l: () => void) => {
+  desktopAccentListeners.add(l);
+  return () => desktopAccentListeners.delete(l);
+};
+// "unreadable" once the desktop's accent was asked for and none came back.
+export const useDesktopAccentUnreadable = (): boolean => useSyncExternalStore(onDesktopAccent, () => desktopAccent === null);
+export function setDesktopAccent(accent: Rgb | null | undefined): void {
+  const next = accent ? rgbToHex(accent) : accent;
+  if (next === desktopAccent) return;
+  desktopAccent = next;
+  // loop: NOT-WORTH — a few listeners, only when the desktop's accent changes
+  desktopAccentListeners.forEach((l) => l());
+  applyAccent();
+}
 
 // The controller's colors: its colorway with the player's on top.
 const colorsOf = (code: string | null, custom: CustomColors | null = customColors): ColorwayColors | null => mergeColors(colorway(code)?.colors ?? null, custom);
@@ -136,13 +162,16 @@ const WARN_TEXT = "--text-warn";
 // theme's panel, accent and selection text on every tinted surface. `base`:
 // the theme's own tokens, without our layer. Pure, so the UI checker
 // (tools/colorway_contrast.mjs) computes colorways with it.
-export function accentTokens(color: string, base: Record<string, Rgb | null | undefined>): Record<string, string> {
+// `tintSurfaces` false (the desktop's accent): only the accent tokens.
+export function accentTokens(color: string, base: Record<string, Rgb | null | undefined>, tintSurfaces = true): Record<string, string> {
   const panel = base["--bg-panel"] ?? [27, 35, 54];
   const isDark = wantsLightInk(panel);
   const accent = legibleAccent(color, panel, isDark, true) ?? hex(color); // allowNeutral: never null
   const tint = hex(color);
-  const tinted = SURFACES.flatMap(([name, t]) => (base[name] ? [[name, mix(base[name], tint, t)] as const] : []));
-  const grounds = tinted.filter(([name]) => name.startsWith("--bg-")).map(([, c]) => c);
+  // Untinted (the desktop's accent): the theme's own surfaces, kept as they are.
+  const surfaces = SURFACES.flatMap(([name, t]) => (base[name] ? [[name, tintSurfaces ? mix(base[name], tint, t) : base[name]] as const] : []));
+  const tinted = tintSurfaces ? surfaces : [];
+  const grounds = surfaces.filter(([name]) => name.startsWith("--bg-")).map(([, c]) => c);
   const on = grounds.length ? grounds : [panel];
   return { ...Object.fromEntries(tinted.map(([name, c]) => [name, `rgb(${c.join(", ")})`])), ...warnText(base, on), ...accentVars(accent, panel, isDark, on) };
 }
@@ -161,10 +190,10 @@ export function warnText(base: Record<string, Rgb | null | undefined>, grounds?:
 
 // The "Controller" theme's surfaces: cards and panels in the controller's
 // own body color, text black or white (whichever reads), the accent the
-// colorway's line color made legible on that body.
-export function controllerSurfaces(code: string | null, custom: CustomColors | null = customColors): Record<string, string> | null {
+// colorway's line color (or `trim`, the desktop's accent) made legible on that body.
+export function controllerSurfaces(code: string | null, custom: CustomColors | null = customColors, trim: string | null = null): Record<string, string> | null {
   const c = colorsOf(code, custom);
-  return c ? surfacesFor(hex(c.body), hex(c.line)) : null;
+  return c ? surfacesFor(hex(c.body), hex(trim ?? c.line)) : null;
 }
 
 // Card and panel surfaces in one color, text black or white (whichever
@@ -253,7 +282,8 @@ export function applyAccent(): void {
   const cs = getComputedStyle(root);
   const base = Object.fromEntries([...SURFACES.map(([name]) => name), WARN_TEXT].map((name) => [name, parse(cs.getPropertyValue(name))]));
   if (old) old.disabled = false;
-  const full = document.documentElement.hasAttribute("data-controller-theme") ? controllerSurfaces(controllerCode) : null;
+  const desktop = accentChoice === "desktop" ? (desktopAccent ?? null) : null;
+  const full = document.documentElement.hasAttribute("data-controller-theme") ? controllerSurfaces(controllerCode, customColors, desktop) : null;
   if (full) {
     const text = `html:root, html:root .dk { ${Object.entries(full)
       .map(([k, v]) => `${k}: ${v} !important;`)
@@ -264,10 +294,11 @@ export function applyAccent(): void {
     changed();
     return;
   }
-  // Sets the accent tokens (or, without a colorway accent, only the legible
-  // warning text). Wins over the desktop palette's !important tokens by
-  // specificity.
-  const body = Object.entries(controllerColor ? accentTokens(controllerColor, base) : warnText(base))
+  // Sets the accent tokens (the colorway's, or the desktop's without tinting;
+  // else only the legible warning text). Wins over the desktop palette's
+  // !important tokens by specificity.
+  const tokens = controllerColor ? accentTokens(controllerColor, base) : desktop ? accentTokens(desktop, base, false) : warnText(base);
+  const body = Object.entries(tokens)
     .map(([k, v]) => `${k}: ${v} !important;`)
     .join(" ");
   const text = `html:root, html:root .dk { ${body} }`;
@@ -291,9 +322,31 @@ export function useControllerAccent(code: string | null, choice: (typeof ACCENTS
       // loop: NOT-WORTH — a few listeners, only when the connected colorway changes
       codeListeners.forEach((l) => l());
     }
+    accentChoice = choice;
     controllerColor = choice === "controller" ? colorwayAccent(code) : null;
     applyAccent();
   }, [code, choice, custom]);
+  // Accent -> Desktop: reads the desktop's accent and follows its changes.
+  // lifetime: OK — cleanup: unsubscribes the desktop palette (one, at the app root)
+  useEffect(() => {
+    if (choice !== "desktop") return;
+    const desktop = window.desktop;
+    if (!desktop) return setDesktopAccent(null);
+    let live = true;
+    const take = (p: { accent: Rgb } | null) => live && setDesktopAccent(p?.accent ?? null);
+    const failed = (e: unknown) => {
+      logged("reading the desktop's accent color")(e);
+      take(null);
+    };
+    // error: SHOWN — desktop.accent.unreadable (a failed read counts as no accent, and the Accent color row says so)
+    desktop.getDesktopPalette().then(take).catch(failed);
+    // lifetime: OK — off() in the effect cleanup
+    const off = desktop.onDesktopPalette(take);
+    return () => {
+      live = false;
+      off();
+    };
+  }, [choice]);
   // lifetime: OK — cleanup: disconnects the observer and removes the scheme listener
   useEffect(() => {
     // lifetime: OK — disconnected in the effect cleanup (one, at the app root)

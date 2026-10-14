@@ -1107,7 +1107,8 @@
       "label": "Couleur d'accent",
       "sub": "Boutons, sélection et mises en avant",
       "controller": "Manette",
-      "desktop": "Bureau"
+      "desktop": "Bureau",
+      "unreadable": "Impossible de lire la couleur d'accent de votre bureau : celle de l'app est utilisée"
     },
     "customColors": {
       "title": "Les couleurs de ma manette",

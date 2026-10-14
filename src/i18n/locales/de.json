@@ -1107,7 +1107,8 @@
       "label": "Akzentfarbe",
       "sub": "Schaltflächen, Auswahl und Hervorhebungen",
       "controller": "Controller",
-      "desktop": "Desktop"
+      "desktop": "Desktop",
+      "unreadable": "Die Akzentfarbe deines Desktops konnte nicht gelesen werden – die der App wird verwendet"
     },
     "customColors": {
       "title": "Farben meines Controllers",

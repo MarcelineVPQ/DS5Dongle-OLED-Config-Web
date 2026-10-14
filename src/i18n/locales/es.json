@@ -1107,7 +1107,8 @@
       "label": "Color de acento",
       "sub": "Botones, selección y resaltados",
       "controller": "Mando",
-      "desktop": "Escritorio"
+      "desktop": "Escritorio",
+      "unreadable": "No se pudo leer el color de acento de tu escritorio: se usa el de la app"
     },
     "customColors": {
       "title": "Los colores de mi mando",

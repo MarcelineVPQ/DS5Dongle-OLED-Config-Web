@@ -1107,7 +1107,8 @@
       "label": "Cor de destaque",
       "sub": "Botões, seleção e realces",
       "controller": "Controle",
-      "desktop": "Área de trabalho"
+      "desktop": "Área de trabalho",
+      "unreadable": "Não foi possível ler a cor de destaque da sua área de trabalho; usando a do app"
     },
     "customColors": {
       "title": "As cores do meu controle",
