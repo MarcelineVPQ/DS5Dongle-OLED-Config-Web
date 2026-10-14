@@ -196,8 +196,38 @@ export interface ApplyResult {
 export type RestartList = Array<"steam" | "heroic" | "lutris">;
 
 // A scanned game's artwork, served by the main process (ds5-art://, see
-// electron/main/games/artRequest.ts).
-export const artUrl = (key: string, kind: ArtKind) => `ds5-art://art/${encodeURIComponent(key)}/${kind}`;
+// electron/main/games/artRequest.ts), downscaled to the width it is shown
+// at: `shown` is that width in CSS pixels, times the screen's pixel ratio,
+// rounded up to one of ART_WIDTHS (the main process accepts only those and
+// never scales up). Without `shown`, or wider than the largest, the file as
+// it is. Decoded art costs width x height x 4 bytes in the page and the GPU,
+// so a 600x900 cover shown 150 px wide is 2 MB for nothing.
+export const ART_WIDTHS = [64, 128, 192, 256, 320, 384, 512, 640, 768, 1024, 1280, 1600, 1920, 2560, 3840] as const;
+export type ArtWidth = (typeof ART_WIDTHS)[number];
+
+export function artWidth(shown: number, ratio = 1): ArtWidth | null {
+  const px = Math.ceil(shown * (ratio > 0 ? ratio : 1));
+  // loop: NOT-WORTH — N = 15 widths, once per art URL
+  return ART_WIDTHS.find((w) => w >= px) ?? null;
+}
+
+export function artUrl(key: string, kind: ArtKind, shown?: number, ratio = globalThis.devicePixelRatio ?? 1): string {
+  const base = `ds5-art://art/${encodeURIComponent(key)}/${kind}`;
+  const w = shown && shown > 0 ? artWidth(shown, ratio) : null;
+  return w ? `${base}?w=${w}` : base;
+}
+
+// How wide each place shows art, in CSS pixels (desktop.css). The wide
+// headers stretch with the window, so they ask for the screen's width.
+const screenWidth = (): number => Math.max(globalThis.screen?.availWidth ?? 0, globalThis.innerWidth ?? 0) || 1920;
+export const ART_SHOWN = {
+  rowIcon: () => 20, // .lib-row img: 20 x 20
+  tile: () => 256, // .lib-grid columns: minmax(124px, 1fr), so under 2 x 124 + gap
+  logo: () => 360, // .gp-logo: at most 360 px wide (Continue playing: 320)
+  tallCover: () => 300, // .gp-hero.tall: the cover at the header's height (up to 450 px tall)
+  continueSide: () => screenWidth() / 3, // Continue playing's side tiles: at most a third of the page
+  wide: screenWidth, // .gp-hero: the window's width (cover-sized)
+} as const;
 
 // Every fix in a report: what the Games page lists and Home counts as recommended changes.
 export function allFixes(r: GamesReport): Fix[] {

@@ -4,6 +4,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
+import { artRequestTarget } from "../../electron/main/games/artRequest";
+import { ART_WIDTHS } from "../../src/desktop/games/types";
 // Imported up front: a cold import of the IPC module took over 5 s inside a test on the Windows runner.
 import { ApplyRequestSchema, FixIdsSchema, UndoRequestSchema } from "../../electron/main/ipc";
 import { allowPermissionCheck, allowPermissionRequest } from "../../electron/main/permissions";
@@ -79,6 +81,42 @@ describe("outbound requests from the main process", () => {
     // index.ts: the local ds5-art:// files, and Sony's info.json through OfficialFirmwareSource.
     expect([...mainSource.matchAll(/net\.fetch\(([^,)]*)/g)].map((m) => m[1])).toEqual(["pathToFileURL(file", "url"]);
     expect(mainSource).toMatch(/new OfficialFirmwareSource\(\s*\(url, init\) => net\.fetch\(url, init\)/);
+  });
+});
+
+describe("game art requests (ds5-art://)", () => {
+  const base = `ds5-art://art/${encodeURIComponent("steam-1a2b3c4d:steam:4078430")}/cover`;
+  it("accepts a width only from the fixed list", () => {
+    for (const w of ART_WIDTHS) expect(artRequestTarget(`${base}?w=${w}`)?.width, String(w)).toBe(w);
+    expect(artRequestTarget(base)?.width).toBeNull();
+  });
+
+  it("refuses any other query, width or fragment", () => {
+    for (const q of [
+      "?w=100",
+      "?w=0",
+      "?w=-64",
+      "?w=0256",
+      "?w=256.0",
+      "?w=1e3",
+      "?w=99999",
+      "?w=",
+      "?w=256&w=512",
+      "?w=256&x=1",
+      "?x=1",
+      "?%77=256",
+      "?w=256#x",
+      "#x",
+      "?path=/etc/passwd",
+      "?w=256%00",
+    ])
+      expect(artRequestTarget(`${base}${q}`), q).toBeNull();
+  });
+
+  it("serves only the scanned file or a copy made from it (the URL never names a path)", () => {
+    // index.ts: the width only picks a copy of the file the scan resolved.
+    expect(mainSource).toMatch(/const source = target \? games\?\.artPath\(target\.key, target\.kind\) : undefined;/);
+    expect(mainSource).toMatch(/const file = source && target\?\.width \? await thumbs\.path\(source, target\.kind, target\.width\) : source;/);
   });
 });
 

@@ -5,7 +5,7 @@
 // The gradient also sits under every picture, so a file that won't load
 // shows it instead of an empty panel.
 import { useEffect, useState, type CSSProperties } from "react";
-import { artUrl, type ArtKind, type GameInfo } from "../games/types";
+import { ART_SHOWN, artUrl, type ArtKind, type GameInfo } from "../games/types";
 import { logged } from "../../errorText";
 
 // loop: HOT-PATH-OK — N ≤ 3 art kinds per tile, each a lookup in ≤ 5
@@ -22,7 +22,9 @@ export interface HeaderArt {
 export function headerArt(key: string, info: GameInfo | undefined): HeaderArt {
   const kind = firstArt(info, HEADER_ART);
   if (!kind) return { kind, shape: "plain", style: undefined };
-  return { kind, shape: kind === "cover" ? "tall" : "wide", style: { "--gp-art": `url("${artUrl(key, kind)}")` } as CSSProperties };
+  const tall = kind === "cover";
+  const shown = tall ? ART_SHOWN.tallCover() : ART_SHOWN.wide();
+  return { kind, shape: tall ? "tall" : "wide", style: { "--gp-art": `url("${artUrl(key, kind, shown)}")` } as CSSProperties };
 }
 
 // The game's signature color from its art (the main process votes and

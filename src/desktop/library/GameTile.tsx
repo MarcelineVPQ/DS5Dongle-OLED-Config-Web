@@ -7,7 +7,7 @@ import { AlertTriangle, AudioWaveform, Crosshair, SlidersHorizontal } from "luci
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameEntry, GameInfo } from "../games/types";
-import { artUrl } from "../games/types";
+import { ART_SHOWN, artUrl } from "../games/types";
 import { glassCaption } from "../glass/glassCaption";
 import { firstArt, useArtColor } from "./gameArt";
 import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
@@ -71,7 +71,7 @@ export function GameTile({ game, info, running, hasProfile, onOpen, glass = fals
   return (
     <button type="button" className={`lib-tile${glass ? " lib-glass" : ""}`} style={tokens} title={game.title} onClick={onOpen}>
       <span className="lib-tile-art">
-        {art ? <img src={artUrl(game.key, art)} alt="" loading="lazy" onLoad={() => setLoaded(true)} /> : <span className="lib-tile-noart">{game.title}</span>}
+        {art ? <img src={artUrl(game.key, art, ART_SHOWN.tile())} alt="" loading="lazy" onLoad={() => setLoaded(true)} /> : <span className="lib-tile-noart">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </span>
       <span className="lib-tile-title">{game.title}</span>

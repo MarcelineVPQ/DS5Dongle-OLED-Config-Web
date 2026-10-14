@@ -14,6 +14,7 @@ import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
+import { ArtThumbs } from "./games/artThumbs";
 import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser } from "./games/schemeHandler";
 import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { devChannelPreview } from "./updateFeed";
@@ -37,6 +38,8 @@ let tray: AppTray | null = null;
 let updater: Updater;
 // Restart, quit and the app update's install wait while firmware is written.
 let hold: FirmwareHold;
+// Scaled game art copies (ds5-art://…?w=), deleted with Games consent.
+let artThumbs: ArtThumbs | null = null;
 const UPDATE_FIRST_CHECK_MS = 20_000;
 const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
 // cache: OK — key=none (settings.json); invalidated=write-through: updateSetting saves the file; bound=1 entry
@@ -236,10 +239,17 @@ function start(): void {
     else watcher.stop();
   };
   syncRunningWatcher();
+  // Art asked for at a width (?w=) is served from scaled-down copies kept in
+  // userData/art-cache (artThumbs.ts); only ever derived from a scanned file.
+  const thumbs = new ArtThumbs(join(app.getPath("userData"), "art-cache"));
+  artThumbs = thumbs;
+  // Consent was turned off while a delete failed, or before this version: none kept without it.
+  if (!settings.gamesScanAllowed) thumbs.forget();
   // lifetime: NOT-WORTH — one scheme handler per app, lives until quit
-  protocol.handle("ds5-art", (request) => {
+  protocol.handle("ds5-art", async (request) => {
     const target = artRequestTarget(request.url);
-    const file = target ? games?.artPath(target.key, target.kind) : undefined;
+    const source = target ? games?.artPath(target.key, target.kind) : undefined;
+    const file = source && target?.width ? await thumbs.path(source, target.kind, target.width) : source;
     return file ? net.fetch(pathToFileURL(file).toString()) : new Response(null, { status: 404 });
   });
 
@@ -408,6 +418,8 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   // Turned on with an update already waiting: install it now.
   if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", installInBackground);
   if (key === "gamesScanAllowed") syncRunningWatcher();
+  // The scaled art copies are made from the library: they go with consent.
+  if (key === "gamesScanAllowed" && value === false) artThumbs?.forget();
   if (key === "controllerVolumeFull") syncVolumeKeeper();
   // A different feed: look again (a development build may now be offered),
   // only with automatic checks on (off: the next "Check for updates" does).

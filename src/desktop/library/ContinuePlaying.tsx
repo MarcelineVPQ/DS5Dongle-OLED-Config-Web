@@ -7,7 +7,7 @@
 import { useMemo, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameEntry, GameInfo } from "../games/types";
-import { artUrl } from "../games/types";
+import { ART_SHOWN, artUrl } from "../games/types";
 import { glassCaption } from "../glass/glassCaption";
 import { useGlass } from "../glass/useGlass";
 import { REGULAR_GLASS } from "../glass/variants";
@@ -79,7 +79,7 @@ function LeadTile({ game, info, running, hasProfile, onOpen, glass }: ContinuePr
     <div className={`lib-tile lib-continue-tile lead${glassClass}`} style={tokens ?? undefined}>
       {/* The game page's header, as a button that opens the page. */}
       <button type="button" className={`gp-hero ${art.shape} lib-continue-art`} style={style} title={game.title} onClick={onOpen}>
-        {logo ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <span className="gp-title">{game.title}</span>}
+        {logo ? <img className="gp-logo" src={artUrl(game.key, "logo", ART_SHOWN.logo())} alt={game.title} /> : <span className="gp-title">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </button>
       <div className="gp-bar lib-continue-bar" ref={barRef}>
@@ -99,7 +99,7 @@ function SmallTile({ game, info, running, hasProfile, onOpen, glass }: ContinueP
   return (
     <div className={`lib-tile lib-continue-tile${glassClass}`} style={tokens ?? undefined}>
       <button type="button" className="lib-continue-art" title={game.title} onClick={onOpen}>
-        {art ? <img src={artUrl(game.key, art)} alt="" loading="lazy" /> : <span className="lib-tile-noart">{game.title}</span>}
+        {art ? <img src={artUrl(game.key, art, ART_SHOWN.continueSide())} alt="" loading="lazy" /> : <span className="lib-tile-noart">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
       </button>
       <div className="lib-continue-bar" ref={barRef}>

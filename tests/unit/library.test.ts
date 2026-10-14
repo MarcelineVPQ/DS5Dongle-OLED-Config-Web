@@ -184,7 +184,7 @@ describe("the running-game watcher with an asynchronous reader (Windows)", () =>
 describe("game artwork requests (ds5-art)", () => {
   const key = games[0].key;
   it("accepts only a known game key and kind", () => {
-    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/hero`)).toEqual({ key, kind: "hero" });
+    expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/hero`)).toEqual({ key, kind: "hero", width: null });
     expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/secrets`)).toBeNull(); // unknown kind
     expect(artRequestTarget("ds5-art://art/not-a-key/hero")).toBeNull(); // bad key
     expect(artRequestTarget(`ds5-art://art/${encodeURIComponent(key)}/hero/extra`)).toBeNull(); // extra segment
