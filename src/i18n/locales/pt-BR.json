@@ -1173,6 +1173,18 @@
       },
       "fakeSlots": "Simular mais controles",
       "fakeSlotsHint": "Um Edge Midnight Black e um DualSense Galactic Purple aparecem emparelhados nos primeiros slots livres. Troque para eles em Slots de emparelhamento: o app age como se esse controle tivesse conectado. Nada é enviado {{device_a}}.",
+      "fakeGames": "Jogos de teste",
+      "fakeGamesHint": "Jogos mostra uma biblioteca inventada de 20 jogos (Steam, Heroic, Lutris) com imagens geradas em vez de ler seus inicializadores. Jogar, Aplicar, Desfazer e Instalar só mudam a biblioteca inventada: nenhum arquivo dos inicializadores é lido ou gravado e nada é iniciado. Recarrega a página.",
+      "fakeRunning": "Jogo em execução",
+      "fakeRunningHint": "O jogo de teste mostrado em execução. ▶ Jogar na página de um jogo o deixa em execução por um minuto.",
+      "fakeRunningNone": "Nenhum",
+      "fakeHdr": "HDR neste computador",
+      "fakeHdrHint": "O que o computador de teste tem para HDR, para as listas de HDR.",
+      "fakeHdrState": {
+        "ready": "Pronto",
+        "hdr-off": "O HDR está desligado na tela",
+        "no-gamescope": "O gamescope não está instalado"
+      },
       "simulated": "Simular {{device}} (sem hardware)",
       "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio, emparelhamento e atualizações de firmware não são simulados. Recarrega a página.",
       "simCore1": "Core1 simulado",

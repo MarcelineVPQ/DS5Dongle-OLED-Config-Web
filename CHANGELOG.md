@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Developer: "Fake games"** (dev builds, Developer card): Games shows a made-up library of 20 games across Steam, Heroic (GOG, Epic, Amazon, sideloaded) and Lutris, with generated art, every DualSense support tier, setup that needs attention, HDR in each state, a running game and play history, so the Games pages can be worked on without launchers, a board or a controller. Play, Apply, Undo and Install change only the made-up library: no launcher file is read or written and nothing is started. Turning it off brings back the real scan. All 7 languages.
+
 ### Changed
 
 - **Games uses less memory for game art.** The app loaded every picture at its full size (Steam heroes are 1920 px wide, Heroic and Lutris art often larger) even where it is shown small: the library's 20 px icons, the cover grid, the logos and the Controller page's blurred background. Each place now gets a copy scaled to the size it shows, sharp on 1x to 2x screens, made once and kept in the app's settings folder (at most 128 MB, oldest removed first; deleted when you turn off Games' access to your launchers). In a test library of 40 games the decoded image memory dropped by about half on Games and by about 75% for the Controller page's art background.
