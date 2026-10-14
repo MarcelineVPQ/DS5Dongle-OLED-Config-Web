@@ -307,6 +307,7 @@
     },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
+      "dropsDevTools": "这是开发者版本；安装此更新会将其替换为不含开发者工具的普通版本。",
       "download": "下载并安装",
       "downloading": "正在下载 {{version}}：{{got}} / {{total}}（{{pct}}%）",
       "installing": "正在安装更新…",

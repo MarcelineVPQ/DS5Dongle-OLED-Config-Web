@@ -96,7 +96,8 @@ export type UpdateState =
   | { phase: "idle" }
   | { phase: "checking" }
   | { phase: "up-to-date"; version: string }
-  | { phase: "available"; version: string; size: number; notesUrl?: string }
+  // dropsDevTools: this is a developer build and the update is a regular one (the banner says so; never installed automatically).
+  | { phase: "available"; version: string; size: number; notesUrl?: string; dropsDevTools?: true }
   | { phase: "manual"; version: string; notesUrl?: string; detail: string }
   | { phase: "downloading"; version: string; got: number; total: number }
   | { phase: "installing"; version: string }

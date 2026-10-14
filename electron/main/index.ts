@@ -377,8 +377,8 @@ function restartToUpdate(): void {
 // verified and installed in the background (the same path as the banner's
 // button), and starts the next time the app opens.
 async function checkForUpdates(): Promise<void> {
-  const state = await updater.check();
-  if (state.phase === "available" && settings.autoInstallUpdates) hold.whenDone("install", installInBackground);
+  await updater.check();
+  if (updater.autoInstallable() && settings.autoInstallUpdates) hold.whenDone("install", installInBackground);
 }
 
 // downloadAndInstall() doesn't reject: a failure is the "failed" banner state.
@@ -416,7 +416,7 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
     throw new Error(`The setting ${key} couldn't be saved: ${errorText(cause)}`, { cause });
   }
   // Turned on with an update already waiting: install it now.
-  if (key === "autoInstallUpdates" && value === true && updater.getState().phase === "available") hold.whenDone("install", installInBackground);
+  if (key === "autoInstallUpdates" && value === true && updater.autoInstallable()) hold.whenDone("install", installInBackground);
   if (key === "gamesScanAllowed") syncRunningWatcher();
   // The scaled art copies are made from the library: they go with consent.
   if (key === "gamesScanAllowed" && value === false) artThumbs?.forget();
