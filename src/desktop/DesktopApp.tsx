@@ -220,6 +220,7 @@ export default function DesktopApp() {
   // lifetime: OK — cleanup: the preload's unsubscribe (removeListener) for tray commands
   useEffect(
     () =>
+      // lifetime: OK — the effect returns its unsubscribe (unmount)
       window.desktop?.onTrayCommand((command) => {
         if (command.type === "openPage") {
           // The tray's "Diagnostics" opens the Dongle page (its live diagnostics).
@@ -455,6 +456,7 @@ function useDarkTaskbar(): boolean {
     let live = true;
     const fromPalette = (p: { isDark: boolean } | null) => live && setDark(p ? p.isDark : query());
     void desktop?.getDesktopPalette().then(fromPalette);
+    // lifetime: OK — off() in the effect cleanup
     const off = desktop?.onDesktopPalette(fromPalette);
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     const onChange = () => void desktop?.getDesktopPalette().then(fromPalette);
@@ -532,6 +534,7 @@ function useGamesAttention() {
   // lifetime: OK — cleanup: onGamesAllowed's remover (removeEventListener)
   useEffect(
     () =>
+      // lifetime: OK — the effect returns its remover (unmount)
       onGamesAllowed((value) => {
         setAllowedState(value);
         if (!value) {

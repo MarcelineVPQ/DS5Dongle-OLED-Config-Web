@@ -77,6 +77,7 @@ function useBackdropKeys(): string[] {
         .catch(() => undefined);
     void load(20);
     void desktop.gamesRunning().then(setRunning, () => undefined);
+    // lifetime: OK — off() in the effect cleanup
     const off = desktop.onRunningGame(setRunning);
     return () => {
       live = false;

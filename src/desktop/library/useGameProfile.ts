@@ -156,6 +156,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
       },
       () => setRunningKnown(true),
     );
+    // lifetime: OK — the effect returns its unsubscribe
     return desktop.onRunningGame((key) => {
       setRunning(key);
       setRunningKnown(true);

@@ -284,6 +284,7 @@ export default function SwirlField({ colors }: { colors: SwirlColors | null }) {
       if (stillRef.current) renderer.current?.draw(0, palette.current);
     };
     update();
+    // lifetime: OK — the effect returns its unsubscribe
     return onThemeChange(update);
   }, [colors, mode]);
   // The clock: a frame now, then ~12 a second (4 behind another window), none

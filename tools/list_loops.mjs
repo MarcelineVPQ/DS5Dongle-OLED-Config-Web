@@ -27,13 +27,9 @@
 //   {/* loop: HOT-PATH-OK — N ≤ 6 slots */}      (inside JSX)
 // Verdicts: PARALLELIZE BATCH SERIAL-REQUIRED HOT-PATH-OK FIX-HOT-PATH NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Loop pass".
-import { join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { calleeName, checker, displayFn as displayFnSkipping, fnName, isComponentOrHook, isFn, isOurs, relOf, sources } from "./ts_source.mjs";
 
-// Forward slashes on every OS, as the TypeScript API reports file names.
-const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\\/g, "/");
-const SKIP = /(node_modules|src\/flash\/picoflash|\.d\.ts$)/;
 export const VERDICTS = ["PARALLELIZE", "BATCH", "SERIAL-REQUIRED", "HOT-PATH-OK", "FIX-HOT-PATH", "NOT-WORTH"];
 const VERDICT_RE = new RegExp(`loop:\\s*(${VERDICTS.join("|")})\\s+—\\s+\\S`);
 const ITER_METHODS = new Set(["map", "forEach", "reduce", "reduceRight", "filter", "some", "every", "find", "findIndex", "findLast", "findLastIndex", "flatMap", "sort", "toSorted"]);
@@ -41,44 +37,8 @@ const ITER_OWNERS = /^(Array|ReadonlyArray|Set|ReadonlySet|Map|ReadonlyMap|\w+Ar
 // Library scan roots: the game library scan (electron/main/games/games.ts).
 const SCAN_ROOTS = new Set(["electron/main/games/games.ts:scan"]);
 
-const files = ["src", "electron"].flatMap((d) => ts.sys.readDirectory(join(ROOT, d), [".ts", ".tsx", ".js"])).filter((p) => !SKIP.test(p));
-
-const program = ts.createProgram(files, {
-  target: ts.ScriptTarget.ES2022,
-  lib: ["lib.es2023.d.ts", "lib.dom.d.ts", "lib.dom.iterable.d.ts"],
-  types: ["node", "w3c-web-usb", "vite/client"],
-  typeRoots: [join(ROOT, "node_modules/@types"), join(ROOT, "node_modules")],
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  jsx: ts.JsxEmit.ReactJSX,
-  allowJs: true,
-  checkJs: false,
-  noEmit: true,
-  skipLibCheck: true,
-  strict: true,
-  resolveJsonModule: true,
-});
-const checker = program.getTypeChecker();
-const sources = files.map((f) => program.getSourceFile(f)).filter(Boolean);
-const relOf = new Map(sources.map((sf) => [sf.fileName, relative(ROOT, sf.fileName).replace(/\\/g, "/")]));
-const isOurs = (sf) => !!sf && !sf.isDeclarationFile && sf.fileName.startsWith(ROOT) && !SKIP.test(sf.fileName);
-
 // ---------- helpers ----------
-const isFn = (n) =>
-  ts.isFunctionDeclaration(n) ||
-  ts.isFunctionExpression(n) ||
-  ts.isArrowFunction(n) ||
-  ts.isMethodDeclaration(n) ||
-  ts.isConstructorDeclaration(n) ||
-  ts.isGetAccessorDeclaration(n) ||
-  ts.isSetAccessorDeclaration(n);
 const isStmtLoop = (n) => ts.isForStatement(n) || ts.isForOfStatement(n) || ts.isForInStatement(n) || ts.isWhileStatement(n) || ts.isDoStatement(n);
-const calleeName = (call) => {
-  const e = call.expression;
-  if (ts.isIdentifier(e)) return e.text;
-  if (ts.isPropertyAccessExpression(e)) return e.name.text;
-  return "";
-};
 // An array iteration call: x.map(cb) where map is the lib's Array/Set/Map method.
 const iterCache = new Map();
 function isIterCall(n) {
@@ -110,41 +70,8 @@ const isCallbackOf = (fn, names) => {
   const p = fn.parent;
   return p && ts.isCallExpression(p) && p.arguments.includes(fn) && names.includes(calleeName(p));
 };
-// A function's display name.
-function fnName(fn) {
-  if (!fn) return "<module>";
-  if (fn.name && (ts.isIdentifier(fn.name) || ts.isPrivateIdentifier(fn.name))) return fn.name.text;
-  if (ts.isConstructorDeclaration(fn)) return "constructor";
-  const p = fn.parent;
-  if (p && ts.isVariableDeclaration(p) && ts.isIdentifier(p.name)) return p.name.text;
-  if (p && (ts.isPropertyAssignment(p) || ts.isPropertyDeclaration(p)) && p.name && ts.isIdentifier(p.name)) return p.name.text;
-  if (p && ts.isCallExpression(p)) {
-    const c = calleeName(p);
-    // memo(function X) / forwardRef(...) assigned to a const: take the const's name.
-    if ((c === "memo" || c === "forwardRef") && p.parent && ts.isVariableDeclaration(p.parent) && ts.isIdentifier(p.parent.name)) return p.parent.name.text;
-    return `${c || "?"}(cb)`;
-  }
-  if (p && ts.isJsxExpression(p) && p.parent && ts.isJsxAttribute(p.parent)) return `${p.parent.name.getText()}=`;
-  return "<anonymous>";
-}
-// Enclosing named function (skipping anonymous callbacks) for the row's "function" column.
-function displayFn(node) {
-  const names = [];
-  for (let p = node.parent; p; p = p.parent) {
-    if (!isFn(p)) continue;
-    if (iterCallOf(p)) continue;
-    const n = fnName(p);
-    names.unshift(n);
-    if (!/\(cb\)$|^<anonymous>$|=$/.test(n)) break;
-  }
-  return names.length ? names.join(" > ") : "<module>";
-}
-const isComponentOrHook = (fn) => {
-  const n = fnName(fn);
-  const file = fn.getSourceFile().fileName;
-  if (/\(cb\)$/.test(n)) return false; // useEffect(cb), useCallback(cb): not the render itself
-  return /^use[A-Z]/.test(n) || (/\.tsx$/.test(file) && /^[A-Z]/.test(n) && !ts.isMethodDeclaration(fn));
-};
+// Enclosing named function (skipping array iteration callbacks) for the row's "function" column.
+const displayFn = (node) => displayFnSkipping(node, (fn) => !!iterCallOf(fn));
 // Resolve an identifier / property access to our own function-like declarations.
 // The functions a value can be: f, a ? f : g, a ?? f (a default parameter
 // "read = isWin ? readWindowsProcs : readGameProcs").

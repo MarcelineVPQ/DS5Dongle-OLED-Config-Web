@@ -102,6 +102,7 @@ export function useApplyTheme(): void {
     }
     let active = true;
     void desktop.getDesktopPalette().then((p) => active && applyDesktopPalette(p));
+    // lifetime: OK — unsubscribed in the effect cleanup
     const unsubscribe = desktop.onDesktopPalette((p) => active && applyDesktopPalette(p));
     return () => {
       active = false;

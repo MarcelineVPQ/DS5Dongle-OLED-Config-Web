@@ -75,6 +75,7 @@ export async function flash(device: PicoflashHandle, regions: ReturnType<typeof 
   onProgress({ step: "flashing", fraction: 0 });
   const total = regions.reduce((n, r) => n + r.data.byteLength, 0);
   let done = 0;
+  // lifetime: LEAK — no disconnect() when a write throws: the PICOBOOT session stays claimed until replug
   await device.connect();
   // In pieces, so the progress moves (the firmware is usually one region).
   // Regions are whole flash sectors (alignRegionToSector), and a piece is a

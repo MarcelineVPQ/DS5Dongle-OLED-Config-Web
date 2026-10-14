@@ -14,6 +14,7 @@ export function useAppUpdate(): UpdateState {
     const desktop = window.desktop;
     if (!desktop) return;
     void desktop.getUpdateState().then(setState);
+    // lifetime: OK — the effect returns its unsubscribe
     return desktop.onUpdateState(setState);
   }, []);
   return state;
@@ -27,6 +28,7 @@ export function useFirmwareHold(): FirmwareHoldState {
     const desktop = window.desktop;
     if (!desktop) return;
     void desktop.getFirmwareHold().then(setState);
+    // lifetime: OK — the effect returns its unsubscribe
     return desktop.onFirmwareHold(setState);
   }, []);
   return state;

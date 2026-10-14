@@ -164,6 +164,7 @@ function Spark({ values, range }: { values: [number, number, number]; range: num
   const colors = useRef<SparkColors | null>(null);
   // lifetime: OK — cleanup: the theme watcher's unsubscribe
   useEffect(() => {
+    // lifetime: OK — the effect returns its unsubscribe
     return onThemeChange(() => (colors.current = null));
   }, []);
   // lifetime: OK — acquires nothing (draws a frame; the history is capped at HISTORY)

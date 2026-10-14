@@ -80,6 +80,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       frame = requestAnimationFrame(() => setAccent(scopedAccent(artColor, el)));
     };
     update();
+    // lifetime: OK — off() in the effect cleanup
     const off = onThemeChange(update);
     return () => {
       off();

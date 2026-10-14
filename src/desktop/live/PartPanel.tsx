@@ -790,6 +790,7 @@ export function GameLaunchersSetting() {
   useEffect(() => {
     let live = true;
     void window.desktop?.getSettings().then((s) => live && setAllowed(s.gamesScanAllowed));
+    // lifetime: OK — off() in the effect cleanup
     const off = onGamesAllowed(setAllowed);
     return () => {
       live = false;

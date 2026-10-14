@@ -33,6 +33,7 @@ const notify = () => {
 function wire(): void {
   if (wired || typeof window === "undefined") return;
   wired = true;
+  // lifetime: NOT-WORTH — wired once per page (the shared store), lives as long as the window
   window.desktop?.onWindowVisible((shown) => {
     windowShown = shown;
     notify();

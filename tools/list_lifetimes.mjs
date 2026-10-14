@@ -24,6 +24,8 @@
 //   electron   BrowserWindow, Tray, Menu.buildFromTemplate, Notification,
 //              powerSaveBlocker.start, globalShortcut.register, protocol.handle,
 //              Worker, MessageChannel
+//   subscribe  the app's own onX(listener) calls that return an unsubscribe
+//              (window.desktop.on*, theme / store subscriptions)
 //   url        URL.createObjectURL
 //   effect     useEffect / useLayoutEffect (the cleanup column says whether it
 //              returns a cleanup on every path, some paths, or none)
@@ -43,82 +45,17 @@
 //   {/* lifetime: NOT-WORTH — one per app, lives until quit */}   (inside JSX)
 // Verdicts: OK (the release point named), LEAK, WASTE, HOT-ALLOC, NOT-WORTH,
 // each followed by " — " and the reason. See CLAUDE.md "Lifetime pass".
-import { join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { calleeName, checker, displayFn, fnName, isComponentOrHook, isFn, relOf, sources } from "./ts_source.mjs";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\\/g, "/");
-const SKIP = /(node_modules|src\/flash\/picoflash|\.d\.ts$)/;
 export const VERDICTS = ["OK", "LEAK", "WASTE", "HOT-ALLOC", "NOT-WORTH"];
 const VERDICT_RE = new RegExp(`lifetime:\\s*(${VERDICTS.join("|")})\\s+—\\s+\\S`);
 
-const files = ["src", "electron"].flatMap((d) => ts.sys.readDirectory(join(ROOT, d), [".ts", ".tsx", ".js"])).filter((p) => !SKIP.test(p));
-const program = ts.createProgram(files, {
-  target: ts.ScriptTarget.ES2022,
-  lib: ["lib.es2023.d.ts", "lib.dom.d.ts", "lib.dom.iterable.d.ts"],
-  types: ["node", "w3c-web-usb", "vite/client"],
-  typeRoots: [join(ROOT, "node_modules/@types"), join(ROOT, "node_modules")],
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  jsx: ts.JsxEmit.ReactJSX,
-  allowJs: true,
-  noEmit: true,
-  skipLibCheck: true,
-  strict: true,
-  resolveJsonModule: true,
-});
-const checker = program.getTypeChecker();
-const sources = files.map((f) => program.getSourceFile(f)).filter(Boolean);
-const rel = (sf) => relative(ROOT, sf.fileName).replace(/\\/g, "/");
-
 // ---------- helpers ----------
-const isFn = (n) =>
-  ts.isFunctionDeclaration(n) ||
-  ts.isFunctionExpression(n) ||
-  ts.isArrowFunction(n) ||
-  ts.isMethodDeclaration(n) ||
-  ts.isConstructorDeclaration(n) ||
-  ts.isGetAccessorDeclaration(n) ||
-  ts.isSetAccessorDeclaration(n);
-const calleeName = (call) => {
-  const e = call.expression;
-  if (ts.isIdentifier(e)) return e.text;
-  if (ts.isPropertyAccessExpression(e)) return e.name.text;
-  return "";
-};
 const receiverText = (call, sf) => (ts.isPropertyAccessExpression(call.expression) ? call.expression.expression.getText(sf) : "");
 const short = (s, n = 40) => s.replace(/\s+/g, " ").trim().slice(0, n);
-function fnName(fn) {
-  if (fn.name && (ts.isIdentifier(fn.name) || ts.isPrivateIdentifier(fn.name))) return fn.name.text;
-  if (ts.isConstructorDeclaration(fn)) return "constructor";
-  const p = fn.parent;
-  if (p && ts.isVariableDeclaration(p) && ts.isIdentifier(p.name)) return p.name.text;
-  if (p && (ts.isPropertyAssignment(p) || ts.isPropertyDeclaration(p)) && p.name && ts.isIdentifier(p.name)) return p.name.text;
-  if (p && ts.isCallExpression(p)) {
-    const c = calleeName(p);
-    if ((c === "memo" || c === "forwardRef") && p.parent && ts.isVariableDeclaration(p.parent) && ts.isIdentifier(p.parent.name)) return p.parent.name.text;
-    return `${c || "?"}(cb)`;
-  }
-  if (p && ts.isJsxExpression(p) && p.parent && ts.isJsxAttribute(p.parent)) return `${p.parent.name.getText()}=`;
-  return "<anonymous>";
-}
-function displayFn(node) {
-  const names = [];
-  for (let p = node.parent; p; p = p.parent) {
-    if (!isFn(p)) continue;
-    const n = fnName(p);
-    names.unshift(n);
-    if (!/\(cb\)$|^<anonymous>$|=$/.test(n)) break;
-  }
-  return names.length ? names.join(" > ") : "<module>";
-}
 const EFFECTS = new Set(["useEffect", "useLayoutEffect"]);
 const isEffectCall = (n) => ts.isCallExpression(n) && EFFECTS.has(calleeName(n)) && n.arguments.length > 0 && isFn(n.arguments[0]);
-const isComponentOrHook = (fn) => {
-  const n = fnName(fn);
-  if (/\(cb\)$/.test(n)) return false;
-  return /^use[A-Z]/.test(n) || (/\.tsx$/.test(fn.getSourceFile().fileName) && /^[A-Z]/.test(n) && !ts.isMethodDeclaration(fn));
-};
 // Where the acquisition runs: the nearest function decides.
 function context(node) {
   for (let p = node.parent; p; p = p.parent) {
@@ -226,15 +163,20 @@ function classify(n, sf) {
     if (recv === "ipcMain" || recv === "ipcRenderer") return ["listener", `${recv}.${name} "${strArg(n)}"`];
     return ["listener", `${short(recv, 30)}.${name} "${strArg(n)}"`];
   }
+  // The app's own subscriptions: onX(listener) returning an unsubscribe
+  // (window.desktop.onWindowVisible, onThemeChange, store subscribe helpers).
+  if (/^on[A-Z]\w*$/.test(name) && n.arguments.some((a) => isFn(a) || checker.getNonNullableType(checker.getTypeAtLocation(a)).getCallSignatures().length > 0) && checker.getNonNullableType(checker.getTypeAtLocation(n)).getCallSignatures().length > 0) {
+    return ["subscribe", `${recv ? short(recv, 30) + "." : ""}${name}`];
+  }
   if ((name === "handle" || name === "handleOnce") && recv === "ipcMain") return ["ipc", `ipcMain.${name} "${strArg(n)}"`];
   if (name === "handle" && recv === "protocol") return ["electron", `protocol.handle "${strArg(n)}"`];
   if (name === "getUserMedia") return ["media", "getUserMedia"];
   if (name === "addModule" && /audioWorklet/.test(recv)) return ["media", "audioWorklet.addModule"];
   if (/^createMedia(Stream|Element)(Source|Destination)$/.test(name)) return ["media", name];
   if (name === "createObjectURL") return ["url", "createObjectURL"];
-  if ((name === "open" || name === "claimInterface" || name === "requestDevice") && recv) {
+  if ((name === "open" || name === "connect" || name === "claimInterface" || name === "requestDevice") && recv) {
     const t = typeName(n.expression.expression);
-    if (/USBDevice|HIDDevice|USB\b|HID\b/.test(t) || name === "requestDevice") return ["device", `${t || recv}.${name}`];
+    if (/USBDevice|HIDDevice|USB\b|HID\b|Picoflash/.test(t) || name === "requestDevice") return ["device", `${t || recv}.${name}`];
     return null;
   }
   if (PROC.has(name) && (ts.isIdentifier(n.expression) || /^(child_process|cp|utilityProcess|childProcess)$/.test(recv))) {
@@ -286,7 +228,7 @@ for (const sf of sources) {
     const c = classify(n, sf);
     if (c) {
       const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
-      rows.push({ file: rel(sf), line, fn: displayFn(n), kind: c[0], detail: c[1], ctx: context(n), verdict: verdictOf(sf, n), head: short(n.getText(sf).split("\n")[0], 90) });
+      rows.push({ file: relOf.get(sf.fileName), line, fn: displayFn(n), kind: c[0], detail: c[1], ctx: context(n), verdict: verdictOf(sf, n), head: short(n.getText(sf).split("\n")[0], 90) });
     }
     ts.forEachChild(n, visit);
   };

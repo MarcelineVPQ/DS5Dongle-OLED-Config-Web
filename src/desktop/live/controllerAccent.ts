@@ -235,6 +235,7 @@ export function onThemeChange(l: () => void): () => void {
   const scheme = matchMedia("(prefers-color-scheme: dark)");
   // lifetime: OK — removed by the unsubscribe onThemeChange returns
   scheme.addEventListener("change", l);
+  // lifetime: OK — off() in the unsubscribe onThemeChange returns
   const off = onAccentChange(l);
   return () => {
     mo.disconnect();
