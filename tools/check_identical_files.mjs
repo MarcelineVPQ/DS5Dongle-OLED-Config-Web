@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Each entry: the exact set of "label:path" files that are allowed to be
 // identical, and why (the review finding and the batch that removes it).
@@ -41,7 +42,7 @@ const labelOf = (dir) => {
   return REPO_LABELS[name] ?? name;
 };
 
-const self = resolve(new URL("..", import.meta.url).pathname);
+const self = resolve(fileURLToPath(new URL("..", import.meta.url))); // not .pathname: Windows paths
 const repos = [self, ...process.argv.slice(2).map((d) => resolve(d))];
 const byHash = new Map();
 const labels = new Set();
