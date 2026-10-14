@@ -788,7 +788,6 @@
       "running": "En cours",
       "hasProfile": "A un profil de manette",
       "needsAttention": "À configurer",
-      "playing": "En jeu",
       "lastPlayed": "Dernière partie",
       "never": "Jamais",
       "playTime": "Temps de jeu",
@@ -798,15 +797,11 @@
       "hours_other": "{{count}} heures",
       "runsWith": "Tourne avec",
       "launcherDefault": "Défaut du launcher",
-      "dualsense": "DualSense",
-      "yourRating": "Ta note",
       "section": {
         "profile": "Profil de manette",
         "setup": "Réglages",
         "compat": "Compatibilité",
         "support": "Support DualSense",
-        "reviews": "Notes des joueurs",
-        "configs": "Configs partagées",
         "rating": "Ta note",
         "notes": "Notes",
         "details": "Détails"
@@ -833,6 +828,10 @@
       "favorites": "Couleurs favorites",
       "mic": "Microphone intégré",
       "setupNone": "Rien à configurer pour ce jeu.",
+      "setupAllSet_one": "Tout est prêt ({{count}} vérification)",
+      "setupAllSet_other": "Tout est prêt ({{count}} vérifications)",
+      "setupPassed_one": "{{count}} vérification réussie",
+      "setupPassed_other": "{{count}} vérifications réussies",
       "setupReview": "Vérifier les changements",
       "setupApply": "Appliquer",
       "setupDone": "Terminé. Relance le jeu s'il est ouvert.",
@@ -906,8 +905,6 @@
         "disconnects": "Déconnexions"
       },
       "shareSoon": "Enregistré sur ce PC. Le partage avec les autres joueurs arrive bientôt.",
-      "reviewsSoon": "Bientôt : notes et retours des autres joueurs.",
-      "configsSoon": "Bientôt : profils partagés par d'autres joueurs pour ce jeu.",
       "notesPlaceholder": "Notes privées, uniquement sur ce PC",
       "id": "ID",
       "size": "Taille sur disque",
@@ -981,6 +978,7 @@
       "notDetectedHint": "Coche ceci si le jeu ne réagit pas à la manette : l'application proposera alors de la transmettre au jeu comme manette standard (XInput).",
       "supportsHdr": "Prend en charge le HDR",
       "supportsHdrHint": "Cochez si le jeu a un réglage HDR sur PC : l'app montre alors ce qu'il faut pour le HDR et propose Activer le HDR dès que tout est prêt.",
+      "marksTitle": "Ça ne fonctionne pas comme prévu ?",
       "hdrTitle": "HDR"
     },
     "dongleConsole": {

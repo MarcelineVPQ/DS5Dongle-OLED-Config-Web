@@ -787,7 +787,6 @@
       "running": "Running",
       "hasProfile": "Has a controller profile",
       "needsAttention": "Needs setup",
-      "playing": "Playing now",
       "lastPlayed": "Last played",
       "never": "Never",
       "playTime": "Play time",
@@ -797,15 +796,11 @@
       "hours_other": "{{count}} hours",
       "runsWith": "Runs with",
       "launcherDefault": "Launcher default",
-      "dualsense": "DualSense",
-      "yourRating": "Your rating",
       "section": {
         "profile": "Controller profile",
         "setup": "Setup",
         "compat": "Compatibility",
         "support": "DualSense support",
-        "reviews": "Player ratings",
-        "configs": "Shared configs",
         "rating": "Your rating",
         "notes": "Notes",
         "details": "Details"
@@ -832,6 +827,10 @@
       "favorites": "Favorite colors",
       "mic": "Built-in microphone",
       "setupNone": "Nothing to set up for this game.",
+      "setupAllSet_one": "All set ({{count}} check)",
+      "setupAllSet_other": "All set ({{count}} checks)",
+      "setupPassed_one": "{{count}} check passed",
+      "setupPassed_other": "{{count}} checks passed",
       "setupReview": "Review changes",
       "setupApply": "Apply",
       "setupDone": "Done. Restart the game if it's running.",
@@ -905,8 +904,6 @@
         "disconnects": "Disconnects"
       },
       "shareSoon": "Saved on this PC. Sharing with other players is coming.",
-      "reviewsSoon": "Coming soon: ratings and feedback from other players.",
-      "configsSoon": "Coming soon: profiles other players shared for this game.",
       "notesPlaceholder": "Private notes, only on this PC",
       "id": "ID",
       "size": "Size on disk",
@@ -980,6 +977,7 @@
       "notDetectedHint": "Tick this if the game doesn't react to the controller: the app then offers to pass it to the game as a standard gamepad (XInput).",
       "supportsHdr": "Supports HDR",
       "supportsHdrHint": "Tick this if the game has an HDR setting on PC: the app then shows what HDR needs and offers Turn on HDR once everything is ready.",
+      "marksTitle": "Not working as expected?",
       "hdrTitle": "HDR"
     },
     "dongleConsole": {

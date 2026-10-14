@@ -785,7 +785,6 @@
       "running": "実行中",
       "hasProfile": "コントローラープロファイルあり",
       "needsAttention": "設定が必要",
-      "playing": "プレイ中",
       "lastPlayed": "最終プレイ",
       "never": "なし",
       "playTime": "プレイ時間",
@@ -793,15 +792,11 @@
       "hours_other": "{{count}} 時間",
       "runsWith": "実行環境",
       "launcherDefault": "ランチャー既定",
-      "dualsense": "DualSense",
-      "yourRating": "あなたの評価",
       "section": {
         "profile": "コントローラープロファイル",
         "setup": "セットアップ",
         "compat": "互換性",
         "support": "DualSense 対応",
-        "reviews": "プレイヤー評価",
-        "configs": "共有設定",
         "rating": "あなたの評価",
         "notes": "メモ",
         "details": "詳細"
@@ -828,6 +823,8 @@
       "favorites": "お気に入りカラー",
       "mic": "内蔵マイク",
       "setupNone": "このゲームで設定することはありません。",
+      "setupAllSet_other": "すべて設定済み（{{count}} 項目）",
+      "setupPassed_other": "{{count}} 項目は問題なし",
       "setupReview": "変更を確認",
       "setupApply": "適用",
       "setupDone": "完了しました。ゲームが起動中の場合は再起動してください。",
@@ -900,8 +897,6 @@
         "disconnects": "接続が切れる"
       },
       "shareSoon": "このPCに保存しました。他のプレイヤーとの共有は近日対応予定です。",
-      "reviewsSoon": "近日公開:他のプレイヤーの評価とフィードバック。",
-      "configsSoon": "近日公開:他のプレイヤーがこのゲーム用に共有したプロファイル。",
       "notesPlaceholder": "非公開メモ(このPCのみ)",
       "id": "ID",
       "size": "ディスク使用量",
@@ -975,6 +970,7 @@
       "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。",
       "supportsHdr": "HDR 対応",
       "supportsHdrHint": "PC 版に HDR 設定があるゲームならチェックしてください: HDR に必要なものが表示され、準備ができると「HDR をオンにする」が提案されます。",
+      "marksTitle": "思いどおりに動かない?",
       "hdrTitle": "HDR"
     },
     "dongleConsole": {

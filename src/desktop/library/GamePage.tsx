@@ -1,7 +1,9 @@
 // One game's page in the Games library, laid out like Steam's: the artwork
-// (hero + logo), a stats bar, quick links, then frames in two columns. The
-// game's controller profile comes first: what this game changes on the dongle.
-// Community reviews and shared configs have their frames reserved (phase 2).
+// (hero + logo), one bar with Play, the quick links and the play stats, then
+// frames in two columns. What needs the player comes first (Setup, when
+// something is waiting), then the game's controller profile; a healthy Setup
+// is one "All set" line. Each fact has one place: the tier in DualSense
+// support, the Proton in Compatibility, store and launcher in Details.
 import { useEffect, useRef, useState } from "react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
@@ -10,7 +12,8 @@ import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { knownHdr } from "../games/knownGames";
 import { HdrChecklist, HdrManual } from "./HdrChecklist";
-import { hdrGameReqs } from "../games/hdrSetup";
+import { hdrGameReqs, type HdrReq } from "../games/hdrSetup";
+import { canMarkNotDetected, setupStatus } from "./setupStatus";
 import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
@@ -47,19 +50,8 @@ interface Props {
 export default function GamePage({ game, info, record, running, report, bridge, onLibrary, onRescan }: Props) {
   const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement>(null);
-  const support = supportOf(game);
   const mineState = useMine(game, info, record, onLibrary, onRescan);
   const has = (k: string) => info?.art.includes(k as never) ?? false;
-  // A stat that points at a frame: bring it into view and flash it, so the
-  // click always shows something even when the frame is already on screen.
-  const jump = (id: string) => {
-    const el = scroller.current?.querySelector<HTMLElement>(`#gp-${id}`);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    el.classList.remove("gp-flash");
-    void el.offsetWidth; // restart the animation
-    el.classList.add("gp-flash");
-  };
   // The page takes the game's artwork color as its accent (the rest of the
   // app keeps the controller's); same legibility rules, scoped to the page.
   // Recomputed when the theme, the controller tint or the look changes (the
@@ -101,56 +93,49 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     scroller.current?.scrollTo({ top: 0 });
   }, [game.key]);
 
+  // HDR games on Linux: the checklist decides whether Setup needs the player.
+  const isHdr = isProtonGame(game) && game.hdr !== undefined;
+  const flatpak = !!report.launchers.find((l) => l.id === game.launcher)?.flatpak;
+  const hdrReqs = isHdr ? hdrGameReqs(report.system.hdr, game, { ourProton: report.ourProton.name, flatpak }) : [];
+  const status = setupStatus(game, hdrReqs);
+  // Setup comes first while it needs the player. Keyed, so moving it keeps
+  // its state (Apply's result note) and the profile's pending edits.
+  const setup = <SetupFrame key="setup" game={game} report={report} mineState={mineState} onRescan={onRescan} hdrReqs={hdrReqs} isHdr={isHdr} attention={status.attention} />;
+  const profile = <ProfileFrame key="profile" game={game} record={record} running={running} bridge={bridge} onLibrary={onLibrary} />;
+
   return (
     <div className="gp" ref={scroller} style={accent ?? undefined}>
       <header className={`gp-hero${has("hero") ? "" : " plain"}`} style={has("hero") ? { backgroundImage: `url("${artUrl(game.key, "hero")}")` } : undefined}>
         {has("logo") ? <img className="gp-logo" src={artUrl(game.key, "logo")} alt={game.title} /> : <h1 className="gp-title">{game.title}</h1>}
       </header>
 
-      <div className="gp-stats">
-        <Stat
-          label={running ? t("desktop.library.playing") : t("desktop.library.lastPlayed")}
-          value={running ? `● ${t("desktop.library.running")}` : info?.lastPlayed ? new Date(info.lastPlayed * 1000).toLocaleDateString() : t("desktop.library.never")}
-          accent={running}
-        />
-        <Stat label={t("desktop.library.playTime")} value={info?.playtimeMin ? hours(info.playtimeMin, t) : "—"} />
-        {protonApplies() && (
-          <Stat
-            label={t("desktop.library.runsWith")}
-            value={`${game.runnerMissing || (!game.usesOurProton && support.features.triggers === "yes") ? "⚠ " : ""}${game.runner ?? t("desktop.library.launcherDefault")}`}
-            onClick={() => jump("compat")}
-          />
-        )}
-        <Stat label={t("desktop.library.dualsense")} value={`${TIER_ICON[support.tier]} ${t(`desktop.library.tier.${support.tier}`)}`} onClick={() => jump("support")} />
-        {record?.mine?.rating && <Stat label={t("desktop.library.yourRating")} value={"★".repeat(record.mine.rating)} />}
+      <div className="gp-bar">
+        <GameActions game={game} info={info} running={running} />
+        <div className="gp-stats">
+          {/* While it runs, the Play button says so. */}
+          {!running && <Stat label={t("desktop.library.lastPlayed")} value={info?.lastPlayed ? new Date(info.lastPlayed * 1000).toLocaleDateString() : t("desktop.library.never")} />}
+          <Stat label={t("desktop.library.playTime")} value={info?.playtimeMin ? hours(info.playtimeMin, t) : "—"} />
+        </div>
       </div>
-
-      <GameActions game={game} info={info} running={running} />
 
       <div className="gp-cols">
         <div className="gp-col">
-          <ProfileFrame game={game} record={record} running={running} bridge={bridge} onLibrary={onLibrary} />
-          <SetupFrame game={game} report={report} mineState={mineState} onRescan={onRescan} />
+          {status.attention ? [setup, profile] : [profile, setup]}
           <RatingFrame game={game} info={info} mineState={mineState} />
-          <section className="dk-card" id="gp-reviews">
-            <h2>{t("desktop.library.section.reviews")}</h2>
-            <p className="dk-hint">{t("desktop.library.reviewsSoon")}</p>
-          </section>
-          <section className="dk-card" id="gp-configs">
-            <h2>{t("desktop.library.section.configs")}</h2>
-            <p className="dk-hint">{t("desktop.library.configsSoon")}</p>
-          </section>
+          <NotesFrame mineState={mineState} />
         </div>
         <div className="gp-col">
-          {protonApplies() && <CompatFrame game={game} report={report} onRescan={onRescan} />}
           <SupportFrame game={game} />
-          <NotesFrame mineState={mineState} />
+          {protonApplies() && <CompatFrame game={game} report={report} onRescan={onRescan} />}
           <DetailsFrame game={game} info={info} />
         </div>
       </div>
     </div>
   );
 }
+
+// A game Proton runs (Linux, a launcher with per-game Proton settings).
+const isProtonGame = (game: GameEntry) => protonApplies() && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
 
 const TIER_ICON: Record<string, string> = { verified: "✓✓", works: "✓", "needs-setup": "⚙", partial: "◐", broken: "✗", unknown: "?" };
 const FEATURE_ICON: Record<FeatureState, string> = { yes: "✓", no: "✗", unknown: "?" };
@@ -159,21 +144,14 @@ function hours(min: number, t: (k: string, o?: Record<string, unknown>) => strin
   return min < 60 ? t("desktop.library.minutes", { count: min }) : t("desktop.library.hours", { count: Math.round(min / 6) / 10 });
 }
 
-function Stat({ label, value, accent, onClick }: { label: string; value: string; accent?: boolean; onClick?: () => void }) {
-  const body = (
-    <>
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="gp-stat">
       <span className="gp-stat-label">{label}</span>
-      <span className={`gp-stat-value${accent ? " dk-good" : ""}`} title={value}>
+      <span className="gp-stat-value" title={value}>
         {value}
       </span>
-    </>
-  );
-  return onClick ? (
-    <button type="button" className="gp-stat link" onClick={onClick}>
-      {body}
-    </button>
-  ) : (
-    <div className="gp-stat">{body}</div>
+    </div>
   );
 }
 
@@ -431,7 +409,28 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
 }
 
 // ---- Setup (this game's recommended fixes) ----
-function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; report: GamesReport; mineState: MineState; onRescan: () => void }) {
+// What needs the player is shown open: the fixes with Review / Apply, a
+// standard gamepad that can't be set, the player's own graphics mode, an HDR
+// checklist with a ✗. Everything that passed folds into one line ("All set",
+// or "N checks passed" under the open part), and the player's marks for games
+// we don't know fold under "Not working as expected? (n marked)".
+function SetupFrame({
+  game,
+  report,
+  mineState,
+  onRescan,
+  hdrReqs,
+  isHdr,
+  attention,
+}: {
+  game: GameEntry;
+  report: GamesReport;
+  mineState: MineState;
+  onRescan: () => void;
+  hdrReqs: HdrReq[];
+  isHdr: boolean;
+  attention: boolean;
+}) {
   const { t } = useTranslation();
   const m = useMsg();
   const restartText = useRestartText();
@@ -459,31 +458,42 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
   };
   // XInput-only games on our list get the standard-gamepad fix by themselves;
   // for any other Proton game the player can say the controller isn't detected.
-  const native = game.support === "triggers" || game.support === "haptics";
-  const canMark = protonApplies() && !native && game.support !== "xinput" && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
+  const canMark = canMarkNotDetected(game);
   const marked = !!mine.tags?.includes("not-detected");
   const toggleMark = () => update({ tags: marked ? (mine.tags ?? []).filter((x) => x !== "not-detected") : [...(mine.tags ?? []), "not-detected"] });
   // HDR games on our list get "Turn on HDR" by themselves; the player can mark others.
-  const protonGame = protonApplies() && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
-  const canMarkHdr = protonGame && !knownHdr(game.title);
+  const canMarkHdr = isProtonGame(game) && !knownHdr(game.title);
+  const marks = (canMark && marked ? 1 : 0) + (canMarkHdr && mine.hdr ? 1 : 0);
   const hdrSys = report.system.hdr;
-  const flatpak = !!report.launchers.find((l) => l.id === game.launcher)?.flatpak;
+  const { hdrOk, passed } = setupStatus(game, hdrReqs);
   // An HDR game's page checks again when it opens (the main process answers
   // from a few seconds' cache): HDR turned on in the desktop's settings, or
   // gamescope just installed, shows without a manual rescan.
-  const isHdr = protonGame && game.hdr !== undefined; // Linux only
   const rescanned = useRef<string | null>(null);
   useEffect(() => {
     if (!isHdr || rescanned.current === game.key) return;
     rescanned.current = game.key;
     onRescan();
   }, [isHdr, game.key, onRescan]);
+  const hdr = isHdr && (
+    <div className="hdr-game">
+      <h3>{t("desktop.library.hdrTitle")}</h3>
+      <HdrChecklist reqs={hdrReqs} />
+      <HdrManual game={game} sys={hdrSys} ourProton={report.ourProton.name} />
+    </div>
+  );
   return (
     <section className="dk-card" id="gp-setup">
-      <h2>{t("desktop.library.section.setup")}</h2>
-      {game.fixes.length === 0 ? (
-        <p className="dk-good">✓ {t("desktop.library.setupNone")}</p>
-      ) : (
+      <h2>
+        {t("desktop.library.section.setup")}{" "}
+        {attention && (
+          <span className="dk-chip warn">
+            <span className="dot" aria-hidden="true" />
+            {t("desktop.library.needsAttention")}
+          </span>
+        )}
+      </h2>
+      {game.fixes.length > 0 && (
         <>
           <ul className="dk-review">
             {game.fixes.map((f) => (
@@ -515,36 +525,50 @@ function SetupFrame({ game, report, mineState, onRescan }: { game: GameEntry; re
           </div>
         </>
       )}
-      {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
-      {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
-      {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
-      {game.mode && game.mode.state !== "needed" && <ModeNote game={game} mode={game.mode} />}
-      {isHdr && (
-        <div className="hdr-game">
-          <h3>{t("desktop.library.hdrTitle")}</h3>
-          <HdrChecklist reqs={hdrGameReqs(hdrSys, game, { ourProton: report.ourProton.name, flatpak })} />
-          <HdrManual game={game} sys={hdrSys} ourProton={report.ourProton.name} />
-        </div>
-      )}
-      {canMark && (
-        <label className="dk-fix">
-          <input type="checkbox" checked={marked} onChange={toggleMark} />
-          <span>
-            <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
-            <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
-          </span>
-        </label>
-      )}
-      {canMarkHdr && (
-        <label className="dk-fix">
-          <input type="checkbox" checked={!!mine.hdr} onChange={() => update({ hdr: mine.hdr ? undefined : true })} />
-          <span>
-            <span className="dk-fix-label">{t("desktop.library.supportsHdr")}</span>
-            <span className="dk-fix-why">{t("desktop.library.supportsHdrHint")}</span>
-          </span>
-        </label>
-      )}
       {note && <p className="dk-hint">{note}</p>}
+      {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
+      {game.mode?.state === "own" && <ModeNote game={game} mode={game.mode} />}
+      {!hdrOk && hdr}
+      {passed > 0 ? (
+        <details className="gp-legend gp-checks">
+          <summary>{attention ? t("desktop.library.setupPassed", { count: passed }) : <span className="dk-good">✓ {t("desktop.library.setupAllSet", { count: passed })}</span>}</summary>
+          {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
+          {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
+          {game.mode?.state === "set" && <ModeNote game={game} mode={game.mode} />}
+          {hdrOk && hdr}
+        </details>
+      ) : (
+        <>
+          {!attention && <p className="dk-good">✓ {t("desktop.library.setupNone")}</p>}
+          {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
+        </>
+      )}
+      {(canMark || canMarkHdr) && (
+        <details className="gp-legend">
+          <summary>
+            {t("desktop.library.marksTitle")}
+            {marks > 0 && ` (${marks})`}
+          </summary>
+          {canMark && (
+            <label className="dk-fix">
+              <input type="checkbox" checked={marked} onChange={toggleMark} />
+              <span>
+                <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
+                <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
+              </span>
+            </label>
+          )}
+          {canMarkHdr && (
+            <label className="dk-fix">
+              <input type="checkbox" checked={!!mine.hdr} onChange={() => update({ hdr: mine.hdr ? undefined : true })} />
+              <span>
+                <span className="dk-fix-label">{t("desktop.library.supportsHdr")}</span>
+                <span className="dk-fix-why">{t("desktop.library.supportsHdrHint")}</span>
+              </span>
+            </label>
+          )}
+        </details>
+      )}
     </section>
   );
 }
@@ -558,6 +582,8 @@ function ModeNote({ game, mode }: { game: GameEntry; mode: ModeInfo }) {
 }
 
 // ---- Compatibility (Proton) ----
+// Which Proton runs the game; the recommended one and why only while it's
+// another (the store is in Details).
 function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: GamesReport; onRescan: () => void }) {
   const { t } = useTranslation();
   const restartText = useRestartText();
@@ -585,22 +611,20 @@ function CompatFrame({ game, report, onRescan }: { game: GameEntry; report: Game
   return (
     <section className="dk-card" id="gp-compat">
       <h2>{t("desktop.library.section.compat")}</h2>
-      <Row label={t("desktop.library.store")}>
-        <span className="launcher-name">
-          <LauncherIcon id={game.store} />
-          {t(`desktop.library.storeName.${game.store}`)}
-        </span>
-      </Row>
       <Row label={t("desktop.library.runsWith")} invalid={game.runnerMissing} stack>
         <span className="dk-mono" title={game.runner ?? undefined}>
           {game.runnerMissing ? "⚠ " : ""}
           {game.runner ?? t("desktop.library.launcherDefault")}
         </span>
       </Row>
-      <Row label={t("desktop.library.recommended")} stack>
-        <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
-      </Row>
-      {native && <p className="dk-hint">{t("desktop.library.compatHint")}</p>}
+      {!game.usesOurProton && (
+        <>
+          <Row label={t("desktop.library.recommended")} stack>
+            <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
+          </Row>
+          {native && <p className="dk-hint">{t("desktop.library.compatHint")}</p>}
+        </>
+      )}
       {game.usesOurProton ? (
         <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>
       ) : runnerFix ? (
@@ -700,6 +724,9 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
   const { t } = useTranslation();
   const [mine, update] = mineState;
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
+  // "Controller not detected" lives in Setup where it's a mark that acts.
+  const tags = FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
+  const picked = tags.filter((tag) => mine.tags?.includes(tag)).length;
   return (
     <section className="dk-card" id="gp-rating">
       <h2>{t("desktop.library.section.rating")}</h2>
@@ -730,20 +757,25 @@ function RatingFrame({ game, info, mineState }: { game: GameEntry; info?: GameIn
           </button>
         </p>
       )}
-      <p className="dk-hint">{t("desktop.library.feedbackHint")}</p>
-      <ul className="gp-tags">
-        {FEEDBACK_TAGS.map((tag) => {
-          const on = mine.tags?.includes(tag) ?? false;
-          return (
-            <li key={tag}>
-              <label>
-                <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} />{" "}
-                {t(`desktop.library.tag.${tag}`)}
-              </label>
-            </li>
-          );
-        })}
-      </ul>
+      <details className="gp-legend">
+        <summary>
+          {t("desktop.library.feedbackHint")}
+          {picked > 0 && ` (${picked})`}
+        </summary>
+        <ul className="gp-tags">
+          {tags.map((tag) => {
+            const on = mine.tags?.includes(tag) ?? false;
+            return (
+              <li key={tag}>
+                <label>
+                  <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} />{" "}
+                  {t(`desktop.library.tag.${tag}`)}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
       <p className="dk-hint">{t("desktop.library.shareSoon")}</p>
     </section>
   );
@@ -766,6 +798,16 @@ function DetailsFrame({ game, info }: { game: GameEntry; info?: GameInfo }) {
     <section className="dk-card" id="gp-details">
       <h2>{t("desktop.library.section.details")}</h2>
       <dl className="live-data-rows">
+        {/* The store only when it isn't the launcher's own (GOG through Heroic). */}
+        {game.store !== game.launcher && (
+          <div>
+            <dt>{t("desktop.library.store")}</dt>
+            <dd className="launcher-name">
+              <LauncherIcon id={game.store} />
+              {t(`desktop.library.storeName.${game.store}`)}
+            </dd>
+          </div>
+        )}
         <div>
           <dt>{t("desktop.library.launcher")}</dt>
           <dd className="launcher-name">

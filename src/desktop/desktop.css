@@ -2257,31 +2257,28 @@ html[data-theme="light"] .live-ctl {
   color: var(--text-strong);
   text-shadow: none;
 }
+/* One bar under the art: Play and the quick links on the left, the play
+   stats on the right (below them when the window is narrow). */
+.gp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  padding: 10px var(--dk-pad);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-panel);
+}
 .gp-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 22px;
-  padding: 10px var(--dk-pad);
-  border-bottom: 1px solid var(--border-default);
-  background: var(--bg-panel);
+  margin-left: auto;
 }
 .gp-stat {
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-.gp-stat.link {
-  cursor: pointer;
-}
-.gp-stat.link:hover .gp-stat-value {
-  text-decoration: underline;
 }
 .gp-stat-label {
   color: var(--text-muted);
@@ -2874,24 +2871,11 @@ html[data-cards-translucent] .gp-sections .dk-card {
   font-size: var(--dk-small);
   cursor: pointer;
 }
-@keyframes gp-flash {
-  0%,
-  40% {
-    box-shadow: 0 0 0 2px var(--dk-sel-border);
-  }
-  100% {
-    box-shadow: 0 0 0 2px transparent;
-  }
-}
-.gp-flash {
-  animation: gp-flash 1.2s ease-out;
-}
 .gp-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 10px var(--dk-pad) 0;
 }
 .gp-play {
   min-width: 110px;
@@ -4294,7 +4278,9 @@ main.dk-body:focus:not(:focus-visible),
   min-width: 0;
   resize: none;
 }
-.hdr-row summary {
+/* A summary that is itself the status ("✓ All set"), not a small aside. */
+.hdr-row summary,
+.gp-checks > summary {
   color: inherit;
   font-size: inherit;
 }
