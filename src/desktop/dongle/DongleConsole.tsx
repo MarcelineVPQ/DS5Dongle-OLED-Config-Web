@@ -3,7 +3,7 @@
 // matches, whatever screen it's on) and a log of what the dongle did. Dark in
 // every theme, like any console. Works without the OLED add-on too: the
 // firmware draws the same frames whether or not a panel is fitted.
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import HoldButton from "./HoldButton";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
@@ -28,7 +28,7 @@ export const supportsOledMirror = (identity: BridgeIdentity | null) => supportsF
 type Pane = "screen" | "log";
 interface LogLine {
   id: number; // increasing, so "unread" still works once the log is full
-  at: number;
+  time: string; // formatted once, when the line is added (loop pass batch 4)
   text: string;
 }
 
@@ -111,18 +111,24 @@ export default function DongleConsole({
         </div>
       ) : (
         <div className="dcon-pane dcon-log" role="log" aria-live="polite">
-          {/* loop: FIX-HOT-PATH — ≤ 200 log rows re-rendered, toLocaleTimeString each, per 10/s mirror frame */}
-          {log.map((l) => (
-            <div key={l.id} className="dcon-row">
-              <span className="dcon-time">{new Date(l.at).toLocaleTimeString()}</span> {l.text}
-            </div>
-          ))}
+          <LogRows log={log} />
           {log.length === 0 && <div className="dcon-row dcon-muted">{t("desktop.dongleConsole.logEmpty")}</div>}
         </div>
       )}
     </section>
   );
 }
+
+// The log's rows, rendered again only when a line is added, not on each
+// mirror frame (loop pass batch 4).
+const LogRows = memo(function LogRows({ log }: { log: LogLine[] }) {
+  // loop: HOT-PATH-OK — N ≤ 200 rows, rendered only when a line is added (memo; the time is formatted once per line)
+  return log.map((l) => (
+    <div key={l.id} className="dcon-row">
+      <span className="dcon-time">{l.time}</span> {l.text}
+    </div>
+  ));
+});
 
 // Polls the mirror while visible; after a failed read it waits before trying
 // again and keeps the last good frame (shown as "not available"). A read of
@@ -328,7 +334,8 @@ function useDongleLog(client: Ds5BridgeClient | null, identity: BridgeIdentity |
   const nextId = useRef(1);
   const add = (text: string) => {
     const id = nextId.current++;
-    setLines((l) => [...l.slice(-199), { id, at: Date.now(), text }]);
+    const time = new Date().toLocaleTimeString();
+    setLines((l) => [...l.slice(-199), { id, time, text }]);
   };
   // cache: OK — key=none (the previous status); invalidated=each status change; bound=1 entry
   const prev = useRef<{ client: boolean; on: boolean; slot: number | null; battery: number | null; unsaved: boolean | null; charging: boolean } | null>(null);

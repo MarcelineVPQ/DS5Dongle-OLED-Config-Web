@@ -4,7 +4,7 @@
 // mark has a tooltip, so nothing is told by color alone. The Continue
 // playing tiles (ContinuePlaying.tsx) carry the same overlays.
 import { AlertTriangle, AudioWaveform, Crosshair, SlidersHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameEntry, GameInfo } from "../games/types";
 import { ART_SHOWN, artUrl } from "../games/types";
@@ -63,13 +63,15 @@ export function TileOverlays({ game, running, hasProfile }: Omit<TileProps, "inf
 // own color. Static (no backdrop filter): the grid holds every game, and a
 // live blur per tile would cost the GPU on every scrolled frame. The color is
 // asked for once the cover has loaded (covers load lazily, as they scroll in).
-export function GameTile({ game, info, running, hasProfile, onOpen, glass = false }: TileProps & { glass?: boolean }) {
+// memo, with onOpen taking the game's key (one stable handler for the whole
+// grid): a library render redraws only the tiles whose game changed (loop pass batch 4).
+export const GameTile = memo(function GameTile({ game, info, running, hasProfile, onOpen, glass = false }: Omit<TileProps, "onOpen"> & { onOpen: (key: string) => void; glass?: boolean }) {
   const art = firstArt(info, ["cover", "header"]);
   const [loaded, setLoaded] = useState(false);
   const artColor = useArtColor(game.key, glass && loaded);
   const tokens = useMemo(() => (glass ? glassCaption(artColor) : undefined), [glass, artColor]);
   return (
-    <button type="button" className={`lib-tile${glass ? " lib-glass" : ""}`} style={tokens} title={game.title} onClick={onOpen}>
+    <button type="button" className={`lib-tile${glass ? " lib-glass" : ""}`} style={tokens} title={game.title} onClick={() => onOpen(game.key)}>
       <span className="lib-tile-art">
         {art ? <img src={artUrl(game.key, art, ART_SHOWN.tile())} alt="" loading="lazy" onLoad={() => setLoaded(true)} /> : <span className="lib-tile-noart">{game.title}</span>}
         <TileOverlays game={game} running={running} hasProfile={hasProfile} />
@@ -77,4 +79,4 @@ export function GameTile({ game, info, running, hasProfile, onOpen, glass = fals
       <span className="lib-tile-title">{game.title}</span>
     </button>
   );
-}
+});

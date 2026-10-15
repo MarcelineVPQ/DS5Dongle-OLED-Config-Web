@@ -310,10 +310,10 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                     </div>
                     {visible.length > 0 ? (
                       <ul className="lib-grid">
-                        {/* loop: FIX-HOT-PATH — a tile per game (hundreds) re-rendered per library render, even hidden */}
+                        {/* loop: HOT-PATH-OK — a tile element per game; GameTile is memo with a stable onOpen, so only changed tiles render (loop pass batch 4) */}
                         {visible.map((g) => (
                           <li key={g.key}>
-                            <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={() => setSelected(g.key)} glass={glass} />
+                            <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={setSelected} glass={glass} />
                           </li>
                         ))}
                       </ul>

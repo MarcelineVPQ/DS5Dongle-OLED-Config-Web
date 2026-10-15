@@ -83,13 +83,16 @@ async function shapeAlpha(svg: SVGSVGElement, sel: string, w: number, h: number)
   return [sharp, soft];
 }
 
+// A resize's mask waits until the size has stayed the same this long.
+const MASK_SETTLE_MS = 150;
+
 // The mask: R/G = the lightbar strips (sharp/blurred), B/A = the lit player lights.
 async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<ImageData | null> {
   const bar = await shapeAlpha(svg, ".led, .led *", w, h);
   const player = await shapeAlpha(svg, ".pled rect.on", w, h);
   if (!bar || !player) return null;
   const out = new ImageData(w, h);
-  // loop: FIX-HOT-PATH — full-size mask, w x h px (~1M), rebuilt every resize frame
+  // loop: HOT-PATH-OK — full-size mask, w x h px (~1M), built once per settled size (MASK_SETTLE_MS after a resize ends), not per resize frame
   for (let i = 0; i < out.data.length; i += 4) {
     out.data[i] = bar[0].data[i + 3];
     out.data[i + 1] = bar[1].data[i + 3];
@@ -122,6 +125,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
     let live = true;
     let frame = 0;
     let resizeFrame = 0;
+    let settle: ReturnType<typeof setTimeout> | undefined;
     let ro: ResizeObserver | undefined;
     let styleWatch: MutationObserver | undefined;
     let svgWatch: MutationObserver | undefined;
@@ -162,6 +166,14 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
 
       // The mask for the drawing's current size and place. Only the newest
       // rebuild lands (resizes can overlap).
+      // Placed over the drawing measured from the canvas's own containing
+      // block (the drawing's offsetParent can be a different element).
+      const place = () => {
+        const r = el.getBoundingClientRect();
+        const host = (cv.offsetParent ?? document.body).getBoundingClientRect();
+        Object.assign(cv.style, { left: `${r.left - host.left}px`, top: `${r.top - host.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        return r;
+      };
       const rebuild = async () => {
         const mine = ++generation;
         const svg = el.querySelector("svg");
@@ -170,10 +182,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
         const dpr = window.devicePixelRatio || 1;
         const w = Math.round(r.width * dpr);
         const h = Math.round(r.height * dpr);
-        // Placed over the drawing measured from the canvas's own containing
-        // block (the drawing's offsetParent can be a different element).
-        const host = (cv.offsetParent ?? document.body).getBoundingClientRect();
-        Object.assign(cv.style, { left: `${r.left - host.left}px`, top: `${r.top - host.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        place();
         const mask = await buildMask(svg as SVGSVGElement, w, h);
         if (!mask || !live || mine !== generation) return;
         if (cv.width !== w) cv.width = w; // resizing clears the canvas: redrawn below
@@ -196,10 +205,16 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       await rebuild();
       if (!live) return release();
       // lifetime: OK — disconnected in the effect cleanup
+      // During a resize (a window drag) the glow follows the drawing every
+      // frame with the mask it has, stretched; the full-size mask is built
+      // again once the size has settled (loop pass batch 4: not every frame).
       ro = new ResizeObserver(() => {
         cancelAnimationFrame(resizeFrame);
         // lifetime: OK — cancelled by the next resize and in the effect cleanup
-        resizeFrame = requestAnimationFrame(() => void rebuild().catch(logged("rebuilding the HDR glow mask after a resize")));
+        resizeFrame = requestAnimationFrame(() => void place());
+        clearTimeout(settle);
+        // lifetime: OK — cleared by the next resize and in the effect cleanup
+        settle = setTimeout(() => void rebuild().catch(logged("rebuilding the HDR glow mask after a resize")), MASK_SETTLE_MS);
       });
       ro.observe(el);
       if (el.parentElement) ro.observe(el.parentElement);
@@ -255,6 +270,7 @@ export default function HdrGlow({ hero, model, nits }: { hero: RefObject<HTMLEle
       svgWatch?.disconnect();
       cancelAnimationFrame(frame);
       cancelAnimationFrame(resizeFrame);
+      clearTimeout(settle);
       ro?.disconnect();
       release();
     };
