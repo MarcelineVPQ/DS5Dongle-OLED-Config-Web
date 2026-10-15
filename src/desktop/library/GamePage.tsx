@@ -731,7 +731,9 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
       {canPick && (
         <Row label={t("desktop.library.protonPick")} info={t("desktop.library.protonPickInfo")} stack>
           <select className="dk-select" aria-label={t("desktop.library.protonPick")} value={picked} onChange={(e) => pick(e.target.value)}>
-            {!current && <option value="">{game.runnerMissing ? t("desktop.library.protonGone", { name: game.runner ?? "" }) : option(t("desktop.library.launcherDefault"), false, true)}</option>}
+            {!current && (
+              <option value="">{game.runnerMissing ? t("desktop.library.protonGone", { name: game.runner ?? "" }) : option(game.runner ?? t("desktop.library.launcherDefault"), false, true)}</option>
+            )}
             {/* loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20) */}
             {choices.map((c) => (
               <option key={c.name} value={c.name}>
