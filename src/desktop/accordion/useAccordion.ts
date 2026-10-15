@@ -18,7 +18,10 @@
 // Deep links: revealSection(page, id, row?) from anywhere (a rail dot, a
 // notice's "Go to", a tile) opens that section on its page, scrolls it into
 // view, moves the focus to its header and flashes it once. A page that isn't
-// shown yet picks the link up when it mounts.
+// shown yet picks the link up when it mounts. A link made with keepHidden
+// (arriving on a page through its rail item's task dot) leaves a hidden panel
+// hidden: the section opens, and is scrolled to and flashed once the panel is
+// shown (SplitView, Section.tsx).
 //
 // Idle cost: none. No timers, no polling, no animation loops; state changes
 // only on a click, a key or a deep link.
@@ -53,6 +56,7 @@ export interface Reveal {
   id: string;
   row?: string;
   n: number; // a new link to the same section reveals it again
+  keepHidden?: boolean; // a hidden panel stays hidden (the rail's task dot)
 }
 
 // The pending deep link (one at a time: the newest wins).
@@ -60,8 +64,8 @@ export interface Reveal {
 const pending = externalStore<Reveal | null>(null);
 let revealCount = 0;
 
-export function revealSection<P extends AccordionPage>(page: P, id: SectionId<P>, row?: string): void {
-  pending.set({ page, id, row, n: ++revealCount });
+export function revealSection<P extends AccordionPage>(page: P, id: SectionId<P>, row?: string, opts?: { keepHidden?: boolean }): void {
+  pending.set({ page, id, row, n: ++revealCount, keepHidden: opts?.keepHidden });
 }
 
 export interface Accordion {

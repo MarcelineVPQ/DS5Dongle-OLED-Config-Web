@@ -2,7 +2,8 @@
 // A game's page, like every page: the main view is the art, the Play bar and
 // the game at a glance (tiles that open their section); the accordion at the
 // right holds Controller profile, Setup, HDR, Compatibility, DualSense
-// support, Notes and Details. What needs the player carries a yellow dot (and
+// support, Feedback and Notes; Details is a main-view block. Nothing inside a
+// section folds on its own (passed checks, marks, the tier legend: shown, compact). What needs the player carries a yellow dot (and
 // opens on a first visit); what's fine is one line. Each fact has one place.
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -68,7 +69,8 @@ const open = (id: string) => {
 };
 // Details: a block in the main view (readouts aren't sections), always shown.
 const openDetails = () => $('.dk-split-main [data-block="details"] .dk-block-body')!;
-const checks = () => $<HTMLDetailsElement>('[data-section="setup"] details.gp-checks');
+const checks = () => $('[data-section="setup"] .gp-checks');
+const checksHead = () => checks()!.querySelector(".gp-checks-head")!.textContent;
 
 describe("setupStatus", () => {
   const reqs = (game: GameEntry, hdr: HdrSystem) => hdrGameReqs(hdr, game, { ourProton: OUR_PROTON });
@@ -98,7 +100,7 @@ describe("game page", () => {
     expect($(".dk-split-main .gp-hero")).not.toBeNull();
     expect($(".dk-split-main .gp-bar .gp-play")).not.toBeNull();
     expect($(".dk-split-head h2")!.textContent).toBe("Ghostrunner");
-    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "notes"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "feedback", "notes"]);
     expect(container!.querySelectorAll(".dk-card")).toHaveLength(0); // no cards left
     // Nothing needs the player: nothing opens by itself, and a folded section renders nothing.
     expect(openIds()).toEqual([]);
@@ -125,13 +127,14 @@ describe("game page", () => {
     });
   });
 
-  it("all set: Setup is one ✓ line (its list folded), HDR its own section with the checklist", () => {
+  it("all set: Setup's passed checks are shown (no fold), HDR its own section with the checklist", () => {
     render(ghostrunner());
     expect(status("setup")).toBe("✓ All set (2 checks)");
     expect(hasDot("setup")).toBe(false);
     open("setup");
-    expect(checks()!.open).toBe(false);
-    expect(checks()!.querySelector("summary")!.textContent).toBe("✓ All set (2 checks)");
+    expect(checksHead()).toBe("✓ All set (2 checks)");
+    expect(checks()!.textContent).toContain(i18n.t("desktop.library.gamepadSet"));
+    expect(container!.querySelector(".dk-sec-body details")).toBeNull();
     expect(status("hdr")).toBe(`${i18n.t("desktop.library.supportsHdr")} · on for DP-1`);
     expect(hasDot("hdr")).toBe(false);
     expect(open("hdr").querySelector(".hdr-check")!.textContent).not.toContain("✗");
@@ -143,7 +146,7 @@ describe("game page", () => {
     expect(hasDot("setup")).toBe(true);
     expect(status("setup")).toBe(i18n.t("desktop.library.needsAttention"));
     expect([...body("setup")!.querySelectorAll("button")].some((b) => b.textContent === i18n.t("desktop.library.setupReview"))).toBe(true);
-    expect(checks()!.querySelector("summary")!.textContent).toBe("1 check passed");
+    expect(checksHead()).toBe("1 check passed");
     expect(body("setup")!.querySelector(".hdr-check")).toBeNull(); // HDR has its own section
     expect(hasDot("hdr")).toBe(true);
     const hdr = open("hdr");
@@ -184,25 +187,57 @@ describe("game page", () => {
 
   it("the player's marks: Controller not detected in Setup (or in the feedback, not both), Supports HDR in HDR", () => {
     render(ghostrunner({ support: "unknown", gamepad: undefined }));
-    const marks = open("setup").querySelector<HTMLDetailsElement>("details.gp-marks")!;
-    expect(marks.open).toBe(false);
-    expect(marks.querySelector("summary")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
+    // Shown under its question, no fold.
+    const marks = open("setup").querySelector(".gp-marks")!.closest(".dk-sec-group")!;
+    expect(marks.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
     expect(marks.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
     expect(marks.textContent).not.toContain(i18n.t("desktop.library.supportsHdr"));
+    expect(body("setup")!.querySelector("details")).toBeNull();
     const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
     expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
-    expect(open("support").querySelector("#gp-rating")!.textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(open("feedback").textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
     // A game on our XInput list: no mark, so the feedback keeps it.
     render(ghostrunner());
-    expect(open("support").querySelector("#gp-rating")!.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(open("feedback").textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
   });
 
-  it("feedback folds under its question with the number ticked", () => {
+  it("the tier legend is shown in DualSense support (compact, no fold)", () => {
     render(ghostrunner());
-    const fold = open("support").querySelector<HTMLDetailsElement>("#gp-rating details")!;
-    expect(fold.open).toBe(false);
-    expect(fold.querySelector("summary")!.textContent).toBe(`${i18n.t("desktop.library.feedbackHint")} (2)`);
-    expect(fold.querySelectorAll("input[type=checkbox]").length).toBeGreaterThan(0);
+    const support = open("support");
+    expect(support.querySelector("details")).toBeNull();
+    const legend = support.querySelector(".gp-legend-list")!;
+    expect(legend.closest(".dk-sec-group")!.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.tierLegend"));
+    expect(legend.querySelectorAll("li")).toHaveLength(6);
+  });
+
+  it("feedback is a setting: its own section in the panel (icon, the number ticked as its status), saved with the rating", () => {
+    vi.useFakeTimers();
+    try {
+      render(ghostrunner());
+      expect(sectionIds().indexOf("feedback")).toBe(sectionIds().indexOf("support") + 1);
+      expect(sec("feedback")!.querySelector(".dk-sec-ic svg")).not.toBeNull();
+      expect(status("feedback")).toBe("2 picked");
+      // Not in DualSense support any more (one place).
+      expect(open("support").querySelector(".gp-tags")).toBeNull();
+      const box = open("feedback").querySelector(".gp-tags")!;
+      expect(box.getAttribute("aria-label")).toBe(i18n.t("desktop.library.feedbackHint"));
+      const boxes = [...box.querySelectorAll<HTMLInputElement>("input[type=checkbox]")];
+      expect(boxes.filter((b) => b.checked)).toHaveLength(2);
+      const calls: string[] = [];
+      vi.stubGlobal("desktop", fakeDesktop("linux", calls));
+      const disconnects = boxes.find((b) => b.parentElement!.textContent!.includes(i18n.t("desktop.library.tag.disconnects")))!;
+      act(() => disconnects.click());
+      expect(status("feedback")).toBe("3 picked");
+      act(() => void vi.advanceTimersByTime(1000));
+      const saved = calls.find((c) => c.startsWith("librarySetMine"))!;
+      expect(saved).toContain('"disconnects"');
+      expect(saved).toContain('"ratedOn"'); // a feedback change re-stamps what it was given on
+      // Nothing ticked: the question is the status.
+      for (const b of [...open("feedback").querySelectorAll<HTMLInputElement>("input:checked")]) act(() => b.click());
+      expect(status("feedback")).toBe(i18n.t("desktop.library.feedbackHint"));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("Notes: the first line is the status; a folded section keeps what was typed", () => {
@@ -225,10 +260,10 @@ describe("game page", () => {
 
   it("Windows: no Proton or HDR sections, the store and launcher in Details", () => {
     render(ghostrunner({ hdr: undefined, gamepad: undefined, runner: null, usesOurProton: false, envFlags: [] }), HDR_READY, "win32");
-    expect(sectionIds()).toEqual(["profile", "setup", "support", "notes"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "support", "feedback", "notes"]);
     expect([...container!.querySelectorAll(".gp-tile")]).toHaveLength(3);
     expect(open("setup").textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
-    expect(checks()!.querySelector("summary")!.textContent).toBe("✓ All set (1 check)");
+    expect(checksHead()).toBe("✓ All set (1 check)");
     expect(openDetails().textContent).toContain(i18n.t("desktop.library.launcher"));
   });
 });
@@ -246,14 +281,14 @@ describe("rating: how well the DualSense works in this game", () => {
   const label = () => $("#gp-rating .gp-rate-label");
   const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
 
-  it("lives in DualSense support under the per-feature list, with its question, feedback and the saved-on-this-PC line", () => {
+  it("lives in DualSense support under the per-feature list, with its question and the saved-on-this-PC line (feedback is its own section)", () => {
     show();
     const rating = $('[data-section="support"] #gp-rating')!;
     expect(rating).not.toBeNull();
     expect($('[data-section="support"] .gp-features')!.compareDocumentPosition(rating) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(rating.querySelector("h3")!.textContent).toBe("How well does your DualSense work in this game?");
     expect(rating.querySelector("[role=radiogroup]")!.getAttribute("aria-labelledby")).toBe(rating.querySelector("h3")!.id);
-    expect(rating.querySelector("summary")!.textContent).toContain(i18n.t("desktop.library.feedbackHint"));
+    expect(rating.querySelector(".gp-tags")).toBeNull();
     expect(rating.textContent).toContain(i18n.t("desktop.library.shareSoon"));
   });
 

@@ -9,7 +9,7 @@
 // Details. The page keeps the game's own accent (scopedAccent), panel
 // included; the pins are shared by every game's page.
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { BadgeCheck, Info, Layers, NotebookPen, SlidersHorizontal, Sun, Wrench } from "lucide-react";
+import { BadgeCheck, Info, Layers, MessageSquareText, NotebookPen, SlidersHorizontal, Sun, Wrench } from "lucide-react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
 import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
@@ -41,7 +41,7 @@ import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type Profi
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { GameActions, PlayStats } from "./playBar";
 import Notice from "../Notice";
-import { Section, SplitView } from "../accordion/Section";
+import { Section, SectionGroup, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
 import { MainBlock, useMainBlock } from "../accordion/MainBlock";
 import type { SectionId } from "../accordion/sections";
@@ -129,6 +129,9 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     : t("desktop.library.profileNoneShort");
   const setupLine = status.passed > 0 ? `✓ ${t("desktop.library.setupAllSet", { count: status.passed })}` : `✓ ${t("desktop.library.setupNone")}`;
   const setupTask = status.attention && t("desktop.library.needsAttention");
+  // loop: HOT-PATH-OK — N = feedback tags (under 10); game page render
+  const feedbackCount = feedbackTags(game).filter((tag) => mine.tags?.includes(tag)).length;
+  const feedbackStatus = feedbackCount ? t("desktop.library.feedbackPicked", { count: feedbackCount }) : t("desktop.library.feedbackHint");
   // loop: HOT-PATH-OK — N = screens, 1-3; game page render
   const hdrScreens = report.system.hdr.screens.filter((x) => x.hdr).map((x) => x.name);
   const hdrLine = isHdr
@@ -194,6 +197,9 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         )}
         <Section id="support" icon={BadgeCheck} title={t("desktop.library.section.support")} status={mine.rating ? `${tier} · ${"★".repeat(mine.rating)}${"☆".repeat(5 - mine.rating)}` : tier}>
           {() => <SupportBody game={game} info={info} mineState={mineState} />}
+        </Section>
+        <Section id="feedback" icon={MessageSquareText} title={t("desktop.library.section.feedback")} status={feedbackStatus}>
+          {() => <FeedbackBody game={game} mineState={mineState} />}
         </Section>
         <Section id="notes" icon={NotebookPen} title={t("desktop.library.section.notes")} status={mine.notes?.trim().split("\n")[0] || t("desktop.library.notesEmpty")}>
           {() => (
@@ -557,15 +563,16 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
       {game.gamepad === "no-build" && <p className="dk-hint">{t("desktop.library.gamepadNoBuild", { runner: game.runner ?? "" })}</p>}
       {game.mode?.state === "own" && <ModeNote game={game} mode={game.mode} />}
       {status.passed > 0 ? (
-        <details className="gp-legend gp-checks">
-          <summary>
+        // The passed checks: always shown, compact (no fold).
+        <div className="gp-checks">
+          <p className="gp-checks-head">
             {status.attention ? t("desktop.library.setupPassed", { count: status.passed }) : <span className="dk-good">✓ {t("desktop.library.setupAllSet", { count: status.passed })}</span>}
-          </summary>
+          </p>
           {game.gamepad === "set" && <p className="dk-good">✓ {t("desktop.library.gamepadSet")}</p>}
           {/* hint: MUST-SHOW — a status: why the standard gamepad option isn't needed */}
           {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
           {game.mode?.state === "set" && <ModeNote game={game} mode={game.mode} />}
-        </details>
+        </div>
       ) : (
         <>
           {!status.attention && <p className="dk-good">✓ {t("desktop.library.setupNone")}</p>}
@@ -574,19 +581,15 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
         </>
       )}
       {canMark && (
-        <details className="gp-legend gp-marks">
-          <summary>
-            {t("desktop.library.marksTitle")}
-            {marked && " (1)"}
-          </summary>
-          <label className="dk-fix">
+        <SectionGroup title={t("desktop.library.marksTitle")}>
+          <label className="dk-fix gp-marks">
             <input type="checkbox" checked={marked} onChange={toggleMark} />
             <span>
               <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
               <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
             </span>
           </label>
-        </details>
+        </SectionGroup>
       )}
     </>
   );
@@ -805,9 +808,8 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
           ))}
         </ul>
       )}
-      <details className="gp-legend">
-        <summary>{t("desktop.library.tierLegend")}</summary>
-        <ul className="dk-review">
+      <SectionGroup title={t("desktop.library.tierLegend")}>
+        <ul className="gp-legend-list">
           {/* loop: HOT-PATH-OK — N = 6 support tiers */}
           {(["verified", "works", "needs-setup", "partial", "broken", "unknown"] as const).map((tier) => (
             <li key={tier}>
@@ -819,7 +821,7 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
             </li>
           ))}
         </ul>
-      </details>
+      </SectionGroup>
       <ul className="gp-features">
         {/* loop: HOT-PATH-OK — N = 5 features */}
         {(["triggers", "haptics", "speaker", "mic", "lightbar"] as const).map((f) => (
@@ -870,11 +872,6 @@ function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInf
   // cache: NOT-WORTH — key=star 1-5; invalidated=React's ref callbacks on mount/unmount; bound=5 elements
   const stars = useRef<(HTMLButtonElement | null)[]>([]);
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
-  // "Controller not detected" lives in Setup where it's a mark that acts.
-  // loop: HOT-PATH-OK — N = feedback tags (under 10)
-  const tags = FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
-  // loop: HOT-PATH-OK — N = feedback tags (under 10)
-  const picked = tags.filter((tag) => mine.tags?.includes(tag)).length;
   const rating = mine.rating;
   const lit = preview ?? rating;
   // One tab stop for the group (the chosen star, else the first); arrows pick.
@@ -941,28 +938,36 @@ function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInf
           </span>
         </Notice>
       )}
-      <details className="gp-legend">
-        <summary>
-          {t("desktop.library.feedbackHint")}
-          {picked > 0 && ` (${picked})`}
-        </summary>
-        <ul className="gp-tags">
-          {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
-          {tags.map((tag) => {
-            const on = mine.tags?.includes(tag) ?? false;
-            return (
-              <li key={tag}>
-                <label>
-                  <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} />{" "}
-                  {t(`desktop.library.tag.${tag}`)}
-                </label>
-              </li>
-            );
-          })}
-        </ul>
-      </details>
       <p className="dk-hint">{t("desktop.library.shareSoon")}</p>
     </div>
+  );
+}
+
+// ---- Feedback ----
+// What the player noticed (their input, so a section of its own): tick what
+// applies. Saved with the rating (useMine: a change re-stamps what it was
+// given on). "Controller not detected" lives in Setup where it's a mark that acts.
+const feedbackTags = (game: GameEntry) =>
+  // loop: HOT-PATH-OK — N = feedback tags (under 10)
+  FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
+
+function FeedbackBody({ game, mineState }: { game: GameEntry; mineState: MineState }) {
+  const { t } = useTranslation();
+  const [mine, update] = mineState;
+  return (
+    <ul className="gp-tags" aria-label={t("desktop.library.feedbackHint")}>
+      {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
+      {feedbackTags(game).map((tag) => {
+        const on = mine.tags?.includes(tag) ?? false;
+        return (
+          <li key={tag}>
+            <label>
+              <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} /> {t(`desktop.library.tag.${tag}`)}
+            </label>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

@@ -13,7 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import { usePoll } from "../../src/desktop/usePoll";
 import { InfoTip, Row, SELECT_PX } from "../../src/desktop/controls";
-import { PANEL_HIDDEN_KEY, SplitView } from "../../src/desktop/accordion/Section";
+import { PANEL_HIDDEN_KEY, Section, SplitView } from "../../src/desktop/accordion/Section";
+import { revealSection, useAccordion } from "../../src/desktop/accordion/useAccordion";
 import { railPress, type RailItem } from "../../src/desktop/AppRail";
 import de from "../../src/i18n/locales/de.json";
 import en from "../../src/i18n/locales/en.json";
@@ -24,6 +25,7 @@ import ptBR from "../../src/i18n/locales/pt-BR.json";
 import zhCN from "../../src/i18n/locales/zh-CN.json";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+Element.prototype.scrollIntoView ??= () => undefined;
 
 let container: HTMLDivElement;
 let root: Root;
@@ -238,6 +240,51 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
     vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [] as unknown as DOMRectList);
     act(() => railPress("games", "games", vi.fn()));
     expect(hidden()).toBe(false);
+  });
+
+  // 900×650 (decision 2026-10-15): Games → Home and a game page keep the
+  // drawer (the standard narrow layout); it follows the same remembered state
+  // as the wide panel, the rail's task dot leaves it closed, and its header
+  // has the same ⋮ menu.
+  it.each(["games", "game"] as const)("%s, narrow: the drawer follows the remembered state, a task dot leaves it closed, its ⋮ menu works", (page) => {
+    // The drawer is the narrow layout's panel (positioned over the main view).
+    const real = window.getComputedStyle;
+    vi.spyOn(window, "getComputedStyle").mockImplementation((el) =>
+      el instanceof HTMLElement && el.classList.contains("dk-split-panel") ? ({ position: "absolute" } as CSSStyleDeclaration) : real(el),
+    );
+    const ids = page === "games" ? (["launchers", "proton"] as const) : (["profile", "setup"] as const);
+    function Drawer() {
+      const acc = useAccordion(page, page);
+      const Icon = (() => null) as never;
+      return createElement(SplitView, {
+        page,
+        main: createElement("p", null, "main"),
+        title: page,
+        state: acc,
+        // loop: test fixture
+        children: ids.map((id, i) => createElement(Section, { key: id, id, icon: Icon, title: id, task: i === 1 ? "waiting" : null, children: () => createElement("p", null, id) })),
+      });
+    }
+    localStorage.setItem(PANEL_HIDDEN_KEY(page), "1");
+    act(() => root.render(createElement(Drawer)));
+    expect(split().classList.contains("drawer-open"), "remembered closed").toBe(false);
+    expect(container.querySelector(".dk-split-show .dk-sec-task"), "the task's dot on the drawer's button").not.toBeNull();
+    // The rail's task dot: the drawer stays closed, the section opens.
+    act(() => revealSection(page, ids[1] as never, undefined, { keepHidden: true }));
+    expect(split().classList.contains("drawer-open")).toBe(false);
+    expect(container.querySelector(`[data-section="${ids[1]}"]`)!.classList.contains("open")).toBe(true);
+    // The rail's own item: opens it (remembered), Escape closes it again (remembered).
+    act(() => railPress("games", "games", vi.fn()));
+    expect(split().classList.contains("drawer-open")).toBe(true);
+    expect(localStorage.getItem(PANEL_HIDDEN_KEY(page))).toBe("0");
+    // The ⋮ menu in the drawer's header: Collapse all folds the open section.
+    const menu = container.querySelector<HTMLButtonElement>('.dk-split-panel .dk-split-head [aria-haspopup="menu"]')!;
+    act(() => menu.click());
+    act(() => document.querySelector<HTMLButtonElement>('.dk-menu [role="menuitem"]')!.click());
+    expect(container.querySelector(".dk-sec.open")).toBeNull();
+    act(() => void container.querySelector(".dk-split-panel")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(split().classList.contains("drawer-open")).toBe(false);
+    expect(localStorage.getItem(PANEL_HIDDEN_KEY(page))).toBe("1");
   });
 
   it("each item's tooltip says what a second press does on the page you're on", () => {

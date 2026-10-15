@@ -99,12 +99,13 @@ export default function DesktopApp() {
   // App settings → Dismissed notices' Go to): the accordion opens it.
   // The rail's item for the page shown (the Pico 2 W page is the controller view's dongle panel).
   const railActive: RailItem = main === "controller" ? (panel === "dongle" ? "dongle" : "controller") : main;
-  const goTo = (item: RailItem, section?: string) => {
+  // `keepHidden`: arriving through the rail (its task dot): a hidden panel stays hidden (useAccordion).
+  const goTo = (item: RailItem, section?: string, keepHidden = false) => {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
     if (!section) return;
-    if ((SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
+    if ((SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never, undefined, { keepHidden });
     else if (item in MAIN_BLOCKS && (MAIN_BLOCKS[item as keyof typeof MAIN_BLOCKS] as readonly string[]).includes(section)) revealBlock(item as keyof typeof MAIN_BLOCKS, section as never);
   };
 
@@ -516,14 +517,14 @@ export default function DesktopApp() {
                   // A deep link already moved the focus to its section.
                   if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
                 });
-                // A dot on the item: its first task with a section there opens.
+                // A dot on the item: its first task with a section there opens (a hidden panel stays hidden: shown later, it scrolls there).
                 // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
                 const section = tasks.find((task) => task.place === item && task.section)?.section;
-                if (item === "games" || item === "about" || item === "app") goTo(item, section);
+                if (item === "games" || item === "about" || item === "app") goTo(item, section, true);
                 else if (item === "controller") {
                   setMain("controller");
                   setPanel("overview");
-                } else goTo(item, section);
+                } else goTo(item, section, true);
               })
             }
             gamesSupported={games.supported}

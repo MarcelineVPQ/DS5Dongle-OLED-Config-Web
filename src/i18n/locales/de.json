@@ -840,6 +840,7 @@
         "setup": "Einrichtung",
         "compat": "Kompatibilität",
         "support": "DualSense-Support",
+        "feedback": "Feedback",
         "notes": "Notizen",
         "details": "Details"
       },
@@ -942,6 +943,8 @@
         "5": "Funktioniert perfekt"
       },
       "feedbackHint": "Was ist dir aufgefallen?",
+      "feedbackPicked_one": "{{count}} ausgewählt",
+      "feedbackPicked_other": "{{count}} ausgewählt",
       "tag": {
         "triggers-work": "Adaptive Trigger gehen",
         "haptics-work": "Haptisches Feedback geht",
@@ -1836,6 +1839,7 @@
       "pin": "Anheften: bleibt offen",
       "pinned": "Angeheftet: bleibt offen",
       "showPanel": "Feld einblenden",
+      "showPanelTask": "Feld einblenden: {{task}}",
       "hidePanel": "Feld ausblenden",
       "on": "{{name}} an",
       "off": "{{name}} aus",

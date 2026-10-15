@@ -840,6 +840,7 @@
         "setup": "Réglages",
         "compat": "Compatibilité",
         "support": "Support DualSense",
+        "feedback": "Retours",
         "notes": "Notes",
         "details": "Détails"
       },
@@ -942,6 +943,8 @@
         "5": "Fonctionne parfaitement"
       },
       "feedbackHint": "Qu'as-tu remarqué ?",
+      "feedbackPicked_one": "{{count}} cochée",
+      "feedbackPicked_other": "{{count}} cochées",
       "tag": {
         "triggers-work": "Gâchettes adaptatives OK",
         "haptics-work": "Retour haptique OK",
@@ -1836,6 +1839,7 @@
       "pin": "Épingler : reste ouvert",
       "pinned": "Épinglé : reste ouvert",
       "showPanel": "Afficher le panneau",
+      "showPanelTask": "Afficher le panneau : {{task}}",
       "hidePanel": "Masquer le panneau",
       "on": "{{name}} activé",
       "off": "{{name}} désactivé",

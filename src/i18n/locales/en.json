@@ -839,6 +839,7 @@
         "setup": "Setup",
         "compat": "Compatibility",
         "support": "DualSense support",
+        "feedback": "Feedback",
         "notes": "Notes",
         "details": "Details"
       },
@@ -941,6 +942,8 @@
         "5": "Works perfectly"
       },
       "feedbackHint": "What did you notice?",
+      "feedbackPicked_one": "{{count}} picked",
+      "feedbackPicked_other": "{{count}} picked",
       "tag": {
         "triggers-work": "Adaptive triggers work",
         "haptics-work": "Haptic feedback works",
@@ -1835,6 +1838,7 @@
       "pin": "Pin: keep open",
       "pinned": "Pinned: stays open",
       "showPanel": "Show the panel",
+      "showPanelTask": "Show the panel: {{task}}",
       "hidePanel": "Hide the panel",
       "on": "{{name}} on",
       "off": "{{name}} off",

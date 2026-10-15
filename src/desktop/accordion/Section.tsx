@@ -20,7 +20,7 @@
 // Idle cost: none. Opening plays one height transition (CSS, interpolate-size)
 // and a deep link one flash (a CSS animation that ends); nothing repeats, and
 // reduce motion turns both off.
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronsDownUp, EllipsisVertical, PanelRightClose, PanelRightOpen, PinOff, type LucideIcon } from "lucide-react";
 import { useFlagPref } from "../storage";
@@ -30,6 +30,14 @@ import { InfoTip } from "../controls";
 import { useTopLayer } from "../topLayer";
 
 const AccordionContext = createContext<AccordionState | null>(null);
+// The panel around the sections (SplitView): whether it's shown, and where a
+// section reports its open task (the dot on the panel's show button). Outside
+// a SplitView: shown, no report.
+interface PanelInfo {
+  shown: boolean;
+  reportTask: (id: string, task: string | null) => void;
+}
+const PanelContext = createContext<PanelInfo>({ shown: true, reportTask: () => undefined });
 
 // Arrow keys between the headers of one accordion.
 function onHeaderKeys(e: KeyboardEvent<HTMLDivElement>) {
@@ -72,15 +80,27 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
   const uid = useId();
   const ref = useRef<HTMLElement>(null);
   const revealed = acc.revealed?.id === id ? acc.revealed : null;
-  // A deep link: scroll to it (or its row), focus the header, flash once.
-  // lifetime: OK — showLinked's cleanup removes its transitionend listener (unmount / the next link)
+  const { shown, reportTask } = useContext(PanelContext);
+  // The open task, for the dot on the panel's show button (SplitView).
+  // lifetime: OK — cleanup: takes the task back (unmount / the task changes)
+  useEffect(() => {
+    if (!task) return;
+    reportTask(id, task);
+    return () => reportTask(id, null);
+  }, [id, task, reportTask]);
+  // The deep link already shown (a link that came while the panel was hidden is shown when it's shown).
+  // cache: NOT-WORTH — key=none (the last link's number); invalidated=each new link; bound=1 number
+  const shownLink = useRef(0);
+  // A deep link: scroll to it (or its row), focus the header, flash once (the panel hidden: once it's shown).
+  // lifetime: OK — showLinked's cleanup removes its transitionend listener (unmount / the next link / the panel hidden)
   useEffect(() => {
     const el = ref.current;
-    if (!revealed || !el) return;
+    if (!revealed || !el || !shown || shownLink.current === revealed.n) return;
+    shownLink.current = revealed.n;
     const row = revealed.row ? el.querySelector<HTMLElement>(`[data-row="${CSS.escape(revealed.row)}"]`) : null;
     // A row in a body that's opening is scrolled to again once the body has grown, or it stays out of view.
     return showLinked(el, row ?? el, row ? el.querySelector<HTMLElement>(".dk-sec-body") : null, el.querySelector<HTMLElement>(".dk-sec-toggle"), "nearest");
-  }, [revealed]);
+  }, [revealed, shown]);
   const keepOpen = t("desktop.accordion.keepOpen", { section: title });
   return (
     <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}`} data-section={id}>
@@ -236,18 +256,30 @@ export function SplitView({
     window.addEventListener(PANEL_TOGGLE_EVENT, onToggle);
     return () => window.removeEventListener(PANEL_TOGGLE_EVENT, onToggle);
   }, [hidden, setHidden]);
-  // A deep link shows the panel (the drawer, narrow) to show its place.
+  // A deep link shows the panel (the drawer, narrow) to show its place;
+  // arriving through the rail's task dot (keepHidden) leaves a hidden panel
+  // hidden: the section is opened and marked, and shown when the panel is.
   // lifetime: OK — acquires nothing (writes the remembered state once per link)
   useEffect(() => {
-    if (state.revealed) setHidden(false);
+    if (state.revealed && !state.revealed.keepHidden) setHidden(false);
   }, [state.revealed, setHidden]);
+  // The sections' open tasks: a dot on the show button while the panel is hidden.
+  const [tasks, setTasks] = useState<ReadonlyArray<readonly [string, string]>>([]);
+  const reportTask = useCallback((id: string, task: string | null) => {
+    // loop: NOT-WORTH — N ≤ a page's sections; when a section's task changes
+    setTasks((now) => [...now.filter(([at]) => at !== id), ...(task ? [[id, task] as const] : [])]);
+  }, []);
+  const panelInfo = useMemo(() => ({ shown: !hidden, reportTask }), [hidden, reportTask]);
+  const task = tasks[0]?.[1];
+  const showLabel = task ? t("desktop.accordion.showPanelTask", { task }) : t("desktop.accordion.showPanel");
   return (
     <div className={`dk-split${hidden ? " panel-hidden" : " drawer-open"}`}>
       <div className="dk-split-main" key={mainKey}>
         {main}
       </div>
-      <button type="button" className="dk-btn dk-icon-btn dk-split-show" onClick={show} title={t("desktop.accordion.showPanel")} aria-label={t("desktop.accordion.showPanel")}>
+      <button type="button" className="dk-btn dk-icon-btn dk-split-show" onClick={show} title={showLabel} aria-label={showLabel}>
         <PanelRightOpen size={14} />
+        {task && <i className="dk-sec-task" aria-hidden="true" />}
       </button>
       {/* Hidden: display none (wide) or the closed drawer, still laid out
           off-screen under visibility hidden (narrow); said hidden in both. */}
@@ -269,7 +301,9 @@ export function SplitView({
           </button>
         </header>
         {top}
-        <Accordion state={state}>{children}</Accordion>
+        <PanelContext.Provider value={panelInfo}>
+          <Accordion state={state}>{children}</Accordion>
+        </PanelContext.Provider>
       </aside>
     </div>
   );

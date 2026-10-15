@@ -305,14 +305,15 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
 const SONY_PAGE_LANG: Record<string, string> = { de: "de", es: "es", fr: "fr", ja: "jp", "pt-BR": "pt" };
 const sonyUpdaterPage = (lang: string | undefined) => `https://controller.dl.playstation.net/controller/lang/${SONY_PAGE_LANG[lang ?? ""] ?? "en"}/2100004.html`;
 
-// Sony's route for a newer official firmware. The app only checks: Sony's
-// firmware is installed with Sony's own tools, never by this app.
+// Sony's route for a newer official firmware, shown (compact, no fold) while
+// one is out. The app only checks: Sony's firmware is installed with Sony's
+// own tools, never by this app.
 function HowToUpdate() {
   const { t, i18n } = useTranslation();
   return (
-    <details className="dk-advanced">
-      <summary>{t("desktop.ctrlInfo.howToUpdate")}</summary>
-      {/* hint: MUST-SHOW — the steps' own text (opened on purpose to read them) */}
+    <>
+      <h4 className="dk-subhead">{t("desktop.ctrlInfo.howToUpdate")}</h4>
+      {/* hint: MUST-SHOW — Sony's steps, shown only while a newer official firmware is out */}
       <ul className="dk-hint dk-fw-steps">
         <li>
           {t("desktop.ctrlInfo.howToPc")}{" "}
@@ -324,7 +325,7 @@ function HowToUpdate() {
         <li>{t("desktop.ctrlInfo.howToCable")}</li>
         {window.desktop?.platform !== "win32" && <li>{t("desktop.ctrlInfo.windowsOnly")}</li>}
       </ul>
-    </details>
+    </>
   );
 }
 

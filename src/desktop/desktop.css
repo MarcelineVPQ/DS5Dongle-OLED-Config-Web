@@ -874,23 +874,6 @@ html[data-theme="dark"] .dk {
   flex-direction: column;
   gap: var(--dk-gap);
 }
-.dk-advanced > summary {
-  cursor: pointer;
-  font-size: var(--dk-small);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-eyebrow);
-  padding: 2px 0;
-}
-.dk-advanced[open] > summary {
-  margin-bottom: 6px;
-}
-.dk-advanced .dk-card {
-  border: 0;
-  padding: 0;
-  background: transparent;
-}
 
 /* ---- About → Coming soon: the roadmap board (about/ComingSoon.tsx).
    Four columns side by side, stacked when the page is narrow. ---- */
@@ -3640,6 +3623,19 @@ html[data-theme="light"] .live-ctl {
 .gp-legend {
   margin: 0 0 8px;
 }
+/* Setup's passed checks and DualSense support's tier legend: always shown, compact. */
+.gp-checks-head {
+  font-weight: 600;
+}
+.gp-legend-list {
+  margin: 2px 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--dk-small);
+}
+.gp-legend-list li {
+  margin: 2px 0;
+}
 .gp-legend summary {
   color: var(--text-muted);
   font-size: var(--dk-small);
@@ -5021,6 +5017,9 @@ html[data-cards-translucent] .dash-card {
 .dk-kv > .dk-fw-howto {
   grid-column: 1 / -1;
 }
+.dk-fw-howto > .dk-subhead {
+  margin: 2px 0;
+}
 .dk-fw-steps {
   margin: 0;
   padding-left: 16px;
@@ -5067,6 +5066,22 @@ main.dk-body:focus:not(:focus-visible),
   gap: 6px;
   margin: 3px 0;
 }
+/* Every item passing: one compact wrapping line. */
+.hdr-check.compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: var(--dk-small);
+  color: var(--text-muted);
+}
+.hdr-check.compact li {
+  margin: 0;
+}
+/* A ✗ item: highlighted (its text says what to do, so colour isn't the only sign). */
+.hdr-check li.hdr-fail {
+  color: var(--text-strong);
+  font-weight: 600;
+}
 .hdr-ok {
   color: var(--cv-good, var(--dk-accent-text));
 }
@@ -5083,12 +5098,6 @@ main.dk-body:focus:not(:focus-visible),
   flex: 1;
   min-width: 0;
   resize: none;
-}
-/* A summary that is itself the status ("✓ All set"), not a small aside. */
-.hdr-row summary,
-.gp-checks > summary {
-  color: inherit;
-  font-size: inherit;
 }
 
 /* ---- Accordion (src/desktop/accordion/Section.tsx): the one settings

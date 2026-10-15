@@ -404,6 +404,52 @@ describe("App settings on the accordion", () => {
     expect(container.querySelector('[data-section="updates"] .dk-sec-status')!.textContent).toBe(task.text);
   });
 
+  // Decision 2026-10-15 (owner, best judgement): a hidden panel stays hidden.
+  // Arriving through a rail item's task dot (DesktopApp's goTo(item, section,
+  // keepHidden)) opens and marks the section; it's scrolled to and flashed
+  // when the panel is shown, once.
+  it("the rail's task dot leaves a hidden panel hidden: the dot on the show button, the section opened, shown when the panel is", async () => {
+    const app = { phase: "available" as const, version: "1.2.3", size: 1_000_000 };
+    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 0 });
+    const task = tasks.find((x) => x.place === "app")!;
+    localStorage.setItem(m.Section.PANEL_HIDDEN_KEY("app"), "1");
+    m.acc.revealSection("app", "updates", undefined, { keepHidden: true });
+    await render(createElement(m.notices.NoticeTasksContext.Provider, { value: { tasks, goTo: () => undefined } }, appSettings()));
+    const split = container.querySelector(".dk-split")!;
+    const sec = container.querySelector<HTMLElement>('[data-section="updates"]')!;
+    expect(split.classList.contains("panel-hidden"), "still hidden").toBe(true);
+    expect(localStorage.getItem(m.Section.PANEL_HIDDEN_KEY("app"))).toBe("1");
+    expect(openIds()).toEqual(["updates"]); // opened and marked, ready
+    expect(sec.querySelector(".dk-sec-task")).not.toBeNull();
+    expect(sec.classList.contains("dk-flash"), "not flashed while hidden").toBe(false);
+    // The dot on the panel's show button, the task in its name.
+    const show = container.querySelector<HTMLButtonElement>(".dk-split-show")!;
+    expect(show.querySelector(".dk-sec-task")).not.toBeNull();
+    expect(show.getAttribute("aria-label")).toBe(m.i18n.t("desktop.accordion.showPanelTask", { task: task.text }));
+    // Shown: the section is scrolled to, focused and flashed.
+    const scrolled = vi.spyOn(Element.prototype, "scrollIntoView");
+    click(show);
+    expect(split.classList.contains("panel-hidden")).toBe(false);
+    expect(scrolled).toHaveBeenCalled();
+    expect(sec.classList.contains("dk-flash")).toBe(true);
+    expect(document.activeElement).toBe(head("updates"));
+    // Hidden and shown again: no second flash for the same link.
+    sec.classList.remove("dk-flash");
+    click(container.querySelector<HTMLButtonElement>(`.dk-split-head button[aria-label="${m.i18n.t("desktop.accordion.hidePanel")}"]`)!);
+    click(show);
+    expect(sec.classList.contains("dk-flash")).toBe(false);
+  });
+
+  it("any other deep link (a notice's Go to, a tile) still shows a hidden panel", async () => {
+    localStorage.setItem(m.Section.PANEL_HIDDEN_KEY("app"), "1");
+    await render(appSettings());
+    expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(true);
+    expect(container.querySelector(".dk-split-show .dk-sec-task")).toBeNull(); // no task: no dot
+    await act(async () => m.acc.revealSection("app", "graphics"));
+    expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(false);
+    expect(openIds()).toEqual(["graphics"]);
+  });
+
   it("Privacy's turn-off question is a notice inside its section", async () => {
     await render(appSettings());
     click(head("privacy"));
@@ -573,6 +619,27 @@ describe("the Controller page on the accordion", () => {
     await act(() => new Promise((r) => setTimeout(r, 30)));
     expect(blockBody("info")?.textContent).toContain(m.i18n.t("desktop.ctrlInfo.refresh"));
     expect(Object.keys(localStorage).filter((k) => k.startsWith("ds5.block."))).toEqual([]);
+  });
+
+  it("a newer official firmware: Sony's How to update steps are shown in Controller info, compact (no fold)", async () => {
+    const { Ds5BridgeClient } = await import("../../src/protocol/bridgeClient");
+    const { FakeDongle } = await import("../support/fakeDongle");
+    const { default: ControllerInfo, useControllerInfo } = await import("../../src/desktop/live/ControllerInfo");
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 17 }));
+    await client.checkCompatible();
+    const identity = await client.identity();
+    // Sony publishes 9.90 on every DualSense line: newer than any controller.
+    const latest = { "0004": 0x0990, "000B": 0x0990, "000E": 0x0990 };
+    vi.stubGlobal("desktop", { platform: "linux", officialControllerFirmware: () => Promise.resolve({ latest, problem: null }) });
+    const bridge = { client, identity } as never;
+    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: 80, power: null });
+    act(() => root.render(createElement(Info)));
+    // loop: test — waits for the reads (≤ 1 s)
+    for (let i = 0; i < 100 && !container.querySelector(".dk-fw-steps"); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
+    const steps = container.querySelector(".dk-fw-howto")!;
+    expect(steps.querySelector("details, summary")).toBeNull();
+    expect(steps.querySelector(".dk-subhead")!.textContent).toBe(m.i18n.t("desktop.ctrlInfo.howToUpdate"));
+    expect(steps.querySelector(".dk-fw-steps")!.textContent).toContain(m.i18n.t("desktop.ctrlInfo.howToPs5"));
   });
 
   it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
@@ -771,7 +838,8 @@ const GAME_INVENTORY: Record<string, string[]> = {
   setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
   hdr: ["desktop.hdrManual.title"],
   compatibility: ["desktop.library.runsWith"],
-  support: ["desktop.library.tierLegend", "desktop.library.rateTitle", "desktop.library.feedbackHint"],
+  support: ["desktop.library.tierLegend", "desktop.library.rateTitle"],
+  feedback: ["desktop.library.tag.weak-vibration"],
   notes: [],
 };
 // Each section opened in turn: everything listed is in it (by text; some

@@ -834,6 +834,7 @@
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
+        "feedback": "反馈",
         "notes": "笔记",
         "details": "详情"
       },
@@ -933,6 +934,7 @@
         "5": "完美运行"
       },
       "feedbackHint": "你注意到了什么?",
+      "feedbackPicked_other": "已选 {{count}} 项",
       "tag": {
         "triggers-work": "自适应扳机正常",
         "haptics-work": "触觉反馈正常",
@@ -1826,6 +1828,7 @@
       "pin": "固定：保持展开",
       "pinned": "已固定：保持展开",
       "showPanel": "显示面板",
+      "showPanelTask": "显示面板：{{task}}",
       "hidePanel": "隐藏面板",
       "on": "{{name}} 开",
       "off": "{{name}} 关",

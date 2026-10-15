@@ -8,13 +8,17 @@ import { showToast } from "../toast";
 import { HEROIC_GAMESCOPE_OPTIONS, LUTRIS_GAMESCOPE_FLAGS, lineScreen, WSI_ENV, manualSteamLine, type HdrReq } from "../games/hdrSetup";
 import type { GameEntry, HdrSystem } from "../games/types";
 
+// Always shown: every item passing, a compact line of ✓ items; else one item
+// per line, each ✗ highlighted.
 export function HdrChecklist({ reqs }: { reqs: HdrReq[] }) {
   const { t } = useTranslation();
+  // loop: HOT-PATH-OK — N ≈ 6 HDR requirements; renders on page open or rescan
+  const allOk = reqs.every((r) => r.ok);
   return (
-    <ul className="hdr-check">
+    <ul className={`hdr-check${allOk ? " compact" : ""}`}>
       {/* loop: HOT-PATH-OK — N ≈ 6 HDR requirements; renders on page open or rescan */}
       {reqs.map((r) => (
-        <li key={r.id}>
+        <li key={r.id} className={r.ok ? undefined : "hdr-fail"}>
           <span className={r.ok ? "hdr-ok" : "hdr-no"} aria-label={t(r.ok ? "desktop.hdrCheck.yes" : "desktop.hdrCheck.no")}>
             {r.ok ? "✓" : "✗"}
           </span>

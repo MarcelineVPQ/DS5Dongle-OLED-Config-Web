@@ -149,7 +149,7 @@ function GamesConsent({ onAllow }: { onAllow: () => void }) {
   const { t } = useTranslation();
   return (
     <div className="dk-stack">
-      {/* settings-gate: not-settings — the first-visit consent (nothing is read before it), not a settings card */}
+      {/* settings-gate: not-settings — a gate screen: the first-visit consent (nothing is read before it), one card without a panel (decided 2026-10-15) */}
       <section className="dk-card">
         <h2>{t("desktop.games.title", "Game setup")}</h2>
         <p>{t(protonApplies() ? "desktop.games.consentIntro" : "desktop.games.consentIntroWindows")}</p>
@@ -462,7 +462,7 @@ function ComputerBlock({ state, report, status }: { state: MainBlockState; repor
       status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
       task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
     >
-      <SystemPart report={report} hdrOpen={status.hdr} />
+      <SystemPart report={report} hdrBad={status.hdr} />
     </MainBlock>
   );
 }
@@ -755,9 +755,9 @@ function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string
 }
 
 // This computer's body (Linux): the controller's audio and access, the
-// environment and HDR (its checklist opens from the row; open already when it
-// has a ✗ that matters).
-function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean }) {
+// environment and HDR (its checklist always shown: compact when every item
+// passes, a ✗ that matters highlighted).
+function SystemPart({ report, hdrBad }: { report: GamesReport; hdrBad: boolean }) {
   const { t } = useTranslation();
   const s = report.system;
   const proAudio = s.proAudio;
@@ -786,10 +786,10 @@ function SystemPart({ report, hdrOpen }: { report: GamesReport; hdrOpen: boolean
         </dd>
         <dt>{t("desktop.games.hdr")}</dt>
         <dd>
-          <details className="gp-legend hdr-row" open={hdrOpen || undefined}>
-            <summary className={hdrOpen ? "dk-bad" : undefined}>{hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}</summary>
+          <div className="hdr-row">
+            <span className={hdrBad ? "dk-bad" : undefined}>{hdrScreens.length ? t("desktop.games.hdrOn", { outputs: hdrScreens.join(", ") }) : t(`desktop.games.hdrOff.${s.hdr.check}`)}</span>
             <HdrChecklist reqs={reqs} />
-          </details>
+          </div>
         </dd>
       </dl>
       {s.envWarnings.length > 0 && (

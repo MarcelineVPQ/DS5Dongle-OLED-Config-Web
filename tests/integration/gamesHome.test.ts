@@ -164,8 +164,10 @@ describe("Games → Home, healthy", () => {
     expect(button(i18n.t("desktop.games.rescan"), launchers)).toBeTruthy();
     expect((await open("proton")).textContent).toContain(`${OUR_PROTON} ${i18n.t("desktop.games.protonFound")}`);
     const computer = await open("computer");
-    expect(computer.querySelector(".hdr-row .hdr-check")).toBeTruthy();
-    expect(computer.querySelector<HTMLDetailsElement>(".hdr-row")!.open).toBe(false);
+    // The HDR checklist is always shown (no fold): every item passing, one compact line.
+    expect(computer.querySelector("details")).toBeNull();
+    expect(computer.querySelector(".hdr-row .hdr-check.compact")).toBeTruthy();
+    expect(computer.querySelector(".hdr-fail")).toBeNull();
     expect((await open("recommended")).textContent).toContain(i18n.t("desktop.games.allGood"));
     const history = await open("history");
     await click(button(i18n.t("desktop.games.undoShort"), history));
@@ -253,10 +255,11 @@ describe("Games → Home, needs attention", () => {
     expect(changes.textContent).toContain(i18n.t("desktop.games.msg.label.defaultSteam", { proton: OUR_PROTON, interpolation: { escapeValue: false } }));
     expect(changes.querySelector<HTMLInputElement>(".dk-fix input")!.checked).toBe(true);
     expect((await open("launchers")).textContent).toContain("Steam · running");
-    // HDR ✗: its checklist open with the ✗.
-    const hdr = (await open("computer")).querySelector<HTMLDetailsElement>(".hdr-row")!;
-    expect(hdr.open).toBe(true);
-    expect(hdr.textContent).toContain("✗");
+    // HDR ✗: the checklist one item per line (not compact), the ✗ highlighted.
+    const hdr = (await open("computer")).querySelector(".hdr-row")!;
+    expect(hdr.querySelector(".dk-bad")).not.toBeNull();
+    expect(hdr.querySelector(".hdr-check.compact")).toBeNull();
+    expect(hdr.querySelector(".hdr-fail")!.textContent).toContain("✗");
   });
 
   it("a link to This computer shows Home and opens it, from a game page too", async () => {

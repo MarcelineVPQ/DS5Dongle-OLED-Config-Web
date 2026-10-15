@@ -10,7 +10,7 @@ export const SECTIONS = {
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots"],
   dongle: ["firmware", "device", "power", "oled", "usb"],
   games: ["launchers", "proton", "recommended", "history"],
-  game: ["profile", "setup", "hdr", "compatibility", "support", "notes"],
+  game: ["profile", "setup", "hdr", "compatibility", "support", "feedback", "notes"],
 } as const;
 
 // The readouts in each page's main view (MainBlock.tsx): deep links to them
