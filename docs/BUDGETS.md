@@ -83,7 +83,7 @@ Every new visual states its idle cost, in the commit and in a comment where it i
 
 | Visual | Idle cost (shown, focused) | Hidden |
 | --- | --- | --- |
-| Swirl background (default) | 10 frames/s on the shared frame clock (`frameTick.ts`); none unfocused; one with Reduce motion. The pan and zoom are a shader uniform, so a step changes only the canvas (no re-layout of the page) | none |
+| Swirl background (default) | 10 frames/s on the shared frame clock (`frameTick.ts`); none unfocused; one with Reduce motion. The pan and zoom are a shader uniform, so a step changes only the canvas (no re-layout of the page). Without a real graphics card (acceleration off, no WebGL2, software rendering such as SwiftShader): one still frame, 0 frames/s, redrawn only on a color or theme change (`live/swirlGpu.ts`); the gate keeps the shader animated on SwiftShader with `ds5.dev.swirlGpu` so it still measures the GPU path | none |
 | Art background pan | 10 steps/s on the shared frame clock; none unfocused or while a game runs | none |
 | Once-a-second readouts (Pico 2 W live numbers and graphs, link rates, signal) | no frames of their own: their updates wait for the next frame clock tick (≤ 100 ms) and go out with the background's step; at once when nothing draws | none (their polls stop) |
 | Pico 2 W screen mirror | reads the board's screen every 100 ms; redraws only when the picture changed, on the next frame clock tick | none |
