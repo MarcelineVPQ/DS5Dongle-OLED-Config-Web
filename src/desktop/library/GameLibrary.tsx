@@ -8,7 +8,8 @@
 // Home stays mounted while a game is open, so switching back doesn't rescan;
 // a deep link into Home's sections (the rail's Games count) shows Home again.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { useTopLayer } from "../topLayer";
+import { MenuButton } from "../MenuButton";
+import { Check } from "lucide-react";
 import { SplitView } from "../accordion/Section";
 import type { Accordion } from "../accordion/useAccordion";
 import { protonApplies } from "../games/platform";
@@ -97,11 +98,6 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     return APP_KINDS.filter((k) => m.has(k)).map((k) => [k, m.get(k)!] as const);
   }, [report]);
   const listRef = useRef<HTMLUListElement>(null);
-  // The Show menu (a <details>): in the top layer while open, under its button.
-  const [showOpen, setShowOpen] = useState(false);
-  const showButton = useRef<HTMLElement>(null);
-  const showMenu = useRef<HTMLDivElement>(null);
-  useTopLayer(showMenu, showOpen, { anchor: showButton, gap: 4 });
   // Adjusting state on a prop change during render (React's pattern), not in an effect.
   const [handledOpen, setHandledOpen] = useState<{ key: string } | null>(null);
   if (openGame && openGame !== handledOpen) {
@@ -290,22 +286,34 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                         </select>
                       </label>
                       {kindCounts.length > 1 && (
-                        <details className="lib-show" onToggle={(e) => setShowOpen(e.currentTarget.open)}>
-                          <summary ref={showButton} className="dk-btn" title={t("desktop.library.showHint")}>
-                            {t("desktop.library.show")}
-                            {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
-                            {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
-                          </summary>
-                          <div ref={showMenu} className="lib-show-menu top-layer">
-                            {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
-                            {kindCounts.map(([k, n]) => (
-                              <label key={k} className="lib-show-item">
-                                <input type="checkbox" checked={!hiddenKinds.has(k)} onChange={(e) => setKindShown(k, e.target.checked)} />
-                                {t(`desktop.library.kinds.${k}`)} ({n})
-                              </label>
-                            ))}
-                          </div>
-                        </details>
+                        // The Show menu: the app's one popup menu (MenuButton); each kind a checkbox item, the menu stays open while you tick.
+                        <MenuButton
+                          label={t("desktop.library.show")}
+                          title={t("desktop.library.showHint")}
+                          className="dk-btn lib-show"
+                          align="end"
+                          iconOnly={false}
+                          content={
+                            <>
+                              {t("desktop.library.show")}
+                              {/* loop: HOT-PATH-OK — N ≤ 7 app kinds */}
+                              {hiddenKinds.size > 0 && ` · ${t("desktop.library.hiddenCount", { count: kindCounts.filter(([k]) => hiddenKinds.has(k)).length })}`}
+                            </>
+                          }
+                        >
+                          {
+                            // loop: HOT-PATH-OK — N ≤ 7 app kinds
+                            kindCounts.map(([k, n]) => {
+                              const on = !hiddenKinds.has(k);
+                              return (
+                                <button key={k} type="button" role="menuitemcheckbox" aria-checked={on} onClick={() => setKindShown(k, !on)}>
+                                  <Check size={14} aria-hidden="true" className={on ? undefined : "dk-menu-off"} />
+                                  {t(`desktop.library.kinds.${k}`)} ({n})
+                                </button>
+                              );
+                            })
+                          }
+                        </MenuButton>
                       )}
                     </div>
                     {visible.length > 0 ? (

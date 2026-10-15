@@ -385,22 +385,64 @@ describe("Games → Home, art and the Glass look", () => {
   });
 });
 
-describe("Games' Show menu (the app kinds) is a popup on top", () => {
-  it("opens in the top layer, placed under its button", async () => {
+describe("Games' Show menu (the app kinds): the app's one popup menu (MenuButton), like the panel's ⋮", () => {
+  const withTool = async () => {
+    const report = homeReport("healthy");
+    await render("healthy", { ...report, games: report.games.map((g, i) => (i === 0 ? { ...g, kind: "tool" as const } : g)) });
+  };
+  const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
+  const items = () => [...document.querySelectorAll<HTMLButtonElement>('.dk-menu [role="menuitemcheckbox"]')];
+  afterEach(() => vi.restoreAllMocks());
+
+  it("is a button with a menu in the top layer, placed under it (no <details>)", async () => {
     const shown = vi.fn();
     // jsdom has no Popover API: record the request for the top layer.
     HTMLElement.prototype.showPopover = shown;
-    const report = homeReport("healthy");
-    await render("healthy", { ...report, games: report.games.map((g, i) => (i === 0 ? { ...g, kind: "tool" as const } : g)) });
-    const details = $<HTMLDetailsElement>(".lib-show")!;
-    expect(details).not.toBeNull();
-    details.open = true;
-    act(() => void details.dispatchEvent(new Event("toggle")));
-    await settle();
-    const menu = $(".lib-show-menu")!;
+    await withTool();
+    expect($("details, summary")).toBeNull();
+    const button = $<HTMLButtonElement>("button.lib-show")!;
+    expect(button.getAttribute("aria-haspopup")).toBe("menu");
+    expect(button.textContent).toBe(i18n.t("desktop.library.show"));
+    await click(button);
+    const menu = $('.dk-menu[role="menu"]')!;
     expect(menu.classList.contains("top-layer")).toBe(true);
     expect(menu.getAttribute("popover")).toBe("manual");
     expect(shown).toHaveBeenCalled();
     expect(menu.style.top).not.toBe("");
+  });
+
+  it("keyboard like every menu: ↓ opens on the first item, arrows / Home / End move, a tick keeps it open, Escape returns to the button", async () => {
+    // jsdom keeps a popover="…" element's contents unfocusable: the menu stays in the page flow here.
+    const set = Element.prototype.setAttribute;
+    vi.spyOn(Element.prototype, "setAttribute").mockImplementation(function (this: Element, name: string, value: string) {
+      if (name !== "popover") set.call(this, name, value);
+    });
+    await withTool();
+    const button = $<HTMLButtonElement>("button.lib-show")!;
+    act(() => button.focus());
+    key(button, "ArrowDown");
+    await settle();
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(items().length).toBeGreaterThan(1);
+    expect(document.activeElement).toBe(items()[0]);
+    key(items()[0], "ArrowDown");
+    expect(document.activeElement).toBe(items()[1]);
+    key(items()[1], "Home");
+    expect(document.activeElement).toBe(items()[0]);
+    key(items()[0], "End");
+    expect(document.activeElement).toBe(items().at(-1));
+    // A tick: the kind is hidden, the menu stays open, the button counts it.
+    const first = items()[0];
+    expect(first.getAttribute("aria-checked")).toBe("true");
+    await click(first);
+    expect(items()[0].getAttribute("aria-checked")).toBe("false");
+    expect(button.textContent).toBe(`${i18n.t("desktop.library.show")} · ${i18n.t("desktop.library.hiddenCount", { count: 1 })}`);
+    key(items()[0], "Escape");
+    await settle();
+    expect($(".dk-menu")).toBeNull();
+    expect(document.activeElement).toBe(button);
+    await click(button); // Enter / a click opens it again
+    await click(items()[0]);
+    expect(items()[0].getAttribute("aria-checked")).toBe("true");
   });
 });

@@ -113,7 +113,7 @@ describe("the CSS: one mechanism, nothing clipped when settled", () => {
   it("the top layer's reset is there, and no popup has a z-index of its own", () => {
     expect(rule("[popover].top-layer")).toMatch(/position: fixed;[\s\S]*inset: auto;/);
     // loop: test — the popups' classes
-    for (const sel of [".language-toggle-menu", ".cp-pop", ".dk-info-tip", ".lib-show-menu", ".dk-dialog-backdrop"]) expect(rule(sel), sel).not.toMatch(/z-index/);
+    for (const sel of [".language-toggle-menu", ".cp-pop", ".dk-info-tip", ".dk-menu", ".dk-dialog-backdrop"]) expect(rule(sel), sel).not.toMatch(/z-index/);
     expect(css, "the old card-stacking hack is gone").not.toMatch(/:has\(\.language-toggle-menu\)/);
   });
 });

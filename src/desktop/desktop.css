@@ -3343,11 +3343,6 @@ html[data-theme="light"] .live-ctl {
 .lib-toolbar .dk-spacer {
   flex: 1;
 }
-/* Show opens under its button, right-aligned with it (the toolbar's end). */
-.lib-toolbar .lib-show-menu {
-  right: 0;
-  left: auto;
-}
 .lib-count {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -4797,34 +4792,6 @@ html[data-cards-translucent] .dash-card {
   font-size: 10.5px;
   font-weight: 600;
 }
-.lib-show {
-  position: relative;
-}
-.lib-show summary {
-  height: 24px;
-  list-style: none;
-  font-size: var(--dk-small);
-}
-.lib-show summary::-webkit-details-marker {
-  display: none;
-}
-.lib-show-menu {
-  display: grid;
-  min-width: 190px;
-  gap: 4px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--dk-radius);
-  background: var(--bg-panel);
-  box-shadow: var(--shadow-1);
-}
-.lib-show-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: var(--dk-small);
-  white-space: nowrap;
-}
 
 /* Saved button layouts (Buttons page). */
 .dk-layouts {
@@ -5570,8 +5537,8 @@ main.dk-body:focus:not(:focus-visible),
   display: flex;
   flex-direction: column;
 }
-/* The panel menu (Section.tsx PanelMenu): in the top layer under its ⋮,
-   right edges lined up. No animation (idle cost 0). */
+/* The app's one popup menu (MenuButton.tsx: the panel ⋮, Games' Show): in
+   the top layer under its button, right edges lined up. No animation (idle cost 0). */
 .dk-menu {
   display: grid;
   min-width: 170px;
@@ -5605,6 +5572,14 @@ main.dk-body:focus:not(:focus-visible),
 .dk-menu button:focus-visible {
   outline: 2px solid var(--dk-focus);
   outline-offset: -2px;
+}
+/* A checkbox item (menuitemcheckbox): the check shows its state; off, the space stays. */
+.dk-menu .dk-menu-off {
+  visibility: hidden;
+}
+.lib-show {
+  height: 24px;
+  font-size: var(--dk-small);
 }
 .dk-menu button:disabled {
   color: var(--text-muted);
