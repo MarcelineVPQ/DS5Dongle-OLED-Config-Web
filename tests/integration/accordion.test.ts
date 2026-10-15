@@ -520,7 +520,7 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(cpu.mock.calls.length, "0xFC read live").toBeGreaterThanOrEqual(first + 2);
     expect(counters.mock.calls.length, "0xF5 read live").toBeGreaterThanOrEqual(first + 2);
     expect(container.querySelector('[data-block="diagnostics"] button.dash-watch')).toBeNull();
-    // Graphs, audio counters, the timings, the OLED, the specs: all in the block, shown.
+    // Graphs, audio counters, the timings, the board's specs: all in the block, shown (the OLED's are in the hero).
     // loop: test
     for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.specs.title"]) expect(blockBody("diagnostics")?.textContent, key).toContain(m.i18n.t(key));
     counters.mockRestore();
@@ -530,6 +530,30 @@ describe("the Pico 2 W page on the accordion", () => {
     // The dials stay in the main view.
     expect(container.querySelectorAll(".dk-split-main .dash-gauge")).toHaveLength(3);
   }, 15_000);
+
+  it("puts the OLED first: the module named, the mirror with KEY0 / KEY1, its live readings and specs beside it, none of it in Diagnostics", async () => {
+    await live("dongle");
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    const hero = container.querySelector<HTMLElement>(".dk-split-main .oled-hero")!;
+    expect(hero).not.toBeNull();
+    // The first thing in the main view, before the dials and Diagnostics.
+    expect(container.querySelector(".dk-split-main .dongle-main")?.firstElementChild).toBe(hero);
+    expect(hero.querySelector("h3")?.textContent).toBe("Waveshare Pico-OLED-1.3");
+    expect(hero.textContent).toContain("DS5 Dongle OLED Edition");
+    expect(hero.textContent).toContain("128 × 64 · SH1107");
+    expect(hero.querySelector(".dcon canvas.dcon-oled")).not.toBeNull();
+    // The keys sit on the module, KEY0 above KEY1.
+    expect([...hero.querySelectorAll(".dcon-module .dcon-key")].map((k) => k.getAttribute("aria-label"))).toEqual(["KEY0", "KEY1"]);
+    // Its readings and specs: in the hero, once.
+    // loop: test
+    for (const key of ["desktop.dash.oledState", "desktop.dash.oledScreen", "desktop.dash.oledFps", "desktop.dash.oledFrame", "desktop.dash.specs.controller", "desktop.dash.specs.keys"]) {
+      expect(hero.textContent, key).toContain(m.i18n.t(key));
+      expect(blockBody("diagnostics")?.textContent ?? "", key).not.toContain(m.i18n.t(key));
+    }
+    expect(blockBody("diagnostics")?.textContent ?? "").not.toContain("Pico-OLED-1.3");
+    // Live: the simulated board's screen named, e.g. "1/11 · Status".
+    expect(hero.querySelector(".oled-stats")?.textContent).toMatch(/\d+\/11 · \w/);
+  });
 
   it("a deep link (the rail's board-problem dot, the tray's Diagnostics) scrolls to the Diagnostics block and flashes it", async () => {
     m.block.revealBlock("dongle", "diagnostics"); // before the page mounts: taken when it does

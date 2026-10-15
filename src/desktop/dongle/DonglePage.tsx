@@ -1,4 +1,6 @@
-// The Pico 2 W page: the board's console (its OLED mirror and log), dials and
+// The Pico 2 W page: the OLED Edition's screen as its centerpiece (OledHero:
+// the module named, the mirror with KEY0 / KEY1, what the screen is doing and
+// its specs; the console's Log tab beside the mirror), then dials and
 // Diagnostics (a main-view block: readouts don't go in the accordion) as the
 // main view, its accordion at the right: Firmware, Restart & reset, Power &
 // sleep, OLED screen, USB & status pin. The dials and Diagnostics read the
@@ -23,7 +25,8 @@ import { BOARD_PROBLEM_BLOCK, FIRMWARE_UPDATE_SECTION } from "../openTasks";
 import FirmwareSection, { DeviceSection } from "../pages/FirmwarePage";
 import { DisplaySection, PcSleepSection, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
 import type { FirmwareUpdate } from "../useUpdates";
-import DongleConsole, { type OledFrameState } from "./DongleConsole";
+import DongleConsole, { supportsOledMirror, type OledFrameState } from "./DongleConsole";
+import OledHero from "./OledHero";
 import { DiagnosticsBody, PicoGauges, useDongleTelemetry } from "./DongleDashboard";
 
 const minutesOrNever = (t: (k: string, o?: Record<string, unknown>) => string, n: number) => (n ? t("desktop.dash.minutes", { n }) : t("desktop.dash.never"));
@@ -57,7 +60,15 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
 
   const main = (
     <div className="live-stage dongle-main">
-      <DongleConsole client={bridge.client} identity={identity} controllerOn={controllerOn} frame={oled} />
+      <OledHero frame={oled.frame} capable={supportsOledMirror(identity)} redraws={s?.rated && s.oled ? s.oled.fps : null}>
+        <DongleConsole
+          client={bridge.client}
+          identity={identity}
+          controllerOn={controllerOn}
+          frame={oled}
+          keys={{ supported: false, press: null }} // the key-press protocol: next commit
+        />
+      </OledHero>
       <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealBlock("dongle", BOARD_PROBLEM_BLOCK)} />
       <MainBlock
         state={diagnostics}

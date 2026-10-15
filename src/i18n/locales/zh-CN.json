@@ -568,7 +568,7 @@
       "newPico": "新的 Pico？按住它的 BOOTSEL 按钮插上（全新的 Pico 不需要按）。应用会发现它并安装固件。",
       "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。",
       "turnOnTitle": "请打开控制器",
-      "pairHint": "按下控制器上的 PS 键。新控制器：同时按住创建键和 PS 键直到光条闪烁（{{device}} 的屏幕显示“Pair your DualSense”）。",
+      "pairHint": "按下控制器上的 PS 键。新控制器：同时按住创建键和 PS 键直到光条闪烁（OLED 显示“Pair your DualSense”）。",
       "whyHidden": "只有控制器连上{{device}}后，{{device}}才会出现在这台电脑上。",
       "updatesTitle": "更新",
       "fwReady": "此应用会安装固件 {{version}}。",
@@ -990,22 +990,19 @@
       "glanceOpen": "打开{{section}}"
     },
     "dongleConsole": {
-      "title": "{{deviceName}} 控制台",
+      "title": "OLED 屏幕",
       "pane": {
         "screen": "屏幕",
         "log": "日志"
       },
       "noDongle": "正在等待 {{device}}",
-      "needsFirmware": "更新 {{device}} 的固件后即可查看其屏幕",
+      "needsFirmware": "更新 {{device}} 的固件后即可在此查看 OLED",
       "unavailable": "屏幕暂不可用，正在重试",
       "connecting": "正在读取屏幕…",
       "live": "实时",
       "dim": "已调暗（空闲）",
       "off": "屏幕已关闭（空闲）",
-      "screenN": "第 {{n}}/{{total}} 屏",
-      "brightness": "亮度 {{pct}}%",
-      "frame": "第 {{n}} 帧",
-      "hint": "与 {{device}} 的屏幕显示的内容逐像素一致。没有 OLED 模块也能使用。在 {{device}} 上用 KEY0 / KEY1 切换屏幕。",
+      "hint": "与 OLED 显示的内容逐像素一致。没有 OLED 模块也能使用。用 KEY0 / KEY1 切换屏幕，在这里或在 OLED 上均可。",
       "logEmpty": "暂无内容。",
       "log": {
         "online": "{{deviceName}} 已连接（协议 {{version}}）",
@@ -1017,6 +1014,11 @@
         "notCharging": "控制器停止充电",
         "battery": "电量 {{pct}}%",
         "saved": "设置已保存到 {{device}}"
+      },
+      "keys": {
+        "key0": "KEY0：下一屏（{{screen}}）",
+        "key1": "KEY1：上一屏（{{screen}}）。按住 {{s}} 秒：亮度 {{pct}}%",
+        "needsFirmware": "更新 {{device}} 的固件后即可使用按键"
       }
     },
     "rail": {
@@ -1385,6 +1387,7 @@
       "oledState": "状态",
       "oledScreen": "屏幕",
       "oledFps": "刷新",
+      "oledFrame": "帧",
       "noMirror": "需要固件 1.4",
       "power": {
         "on": "开启",

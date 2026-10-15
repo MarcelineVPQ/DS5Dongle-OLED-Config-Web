@@ -2614,6 +2614,11 @@ html[data-theme="light"] .live-ctl {
   --dcon-text: #e6e6e6;
   --dcon-border: #2a2a2a;
   --dcon-muted: #8a8a8a;
+  --dcon-pcb: #101418; /* the module's black board around the panel */
+  --dcon-key: #23272c;
+  --dcon-key-edge: #3a4048;
+  --dcon-key-cap: #4a5058;
+  --dcon-key-cap-hi: #6c737c;
   display: flex;
   flex-direction: column;
   width: min(100%, 900px);
@@ -2697,13 +2702,6 @@ html[data-theme="light"] .live-ctl {
   border: 1px solid #1f1f1f; /* theme-exempt: console: dark in every theme */
   border-radius: 2px;
 }
-.dcon-line {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px 18px;
-  color: var(--dcon-muted);
-}
 .dcon-hint {
   margin: 0;
   color: var(--dcon-muted);
@@ -2722,6 +2720,215 @@ html[data-theme="light"] .live-ctl {
 .dcon-time,
 .dcon-muted {
   color: var(--dcon-muted);
+}
+
+/* The Waveshare Pico-OLED-1.3 as it looks: the panel on its black board, the
+   two keys at its left edge, KEY0 level with the '>' the firmware draws at
+   the top of its button strip (y 8..15 of 64), KEY1 with the '<' at the
+   bottom (y 49..56). The strip is as tall as the canvas, so the keys' places
+   are fractions of it. */
+.dcon-module {
+  display: flex;
+  align-items: stretch;
+  padding: 12px 14px 12px 0;
+  border: 1px solid var(--dcon-border);
+  border-radius: 8px;
+  background: var(--dcon-pcb);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.dcon-keys {
+  position: relative;
+  flex: none;
+  width: 50px;
+}
+.dcon-key {
+  position: absolute;
+  left: 6px;
+  width: 38px;
+  height: 44px;
+  padding: 0 0 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--dcon-key-edge);
+  border-radius: 7px;
+  background: var(--dcon-key);
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.7),
+    0 4px 8px rgba(0, 0, 0, 0.4);
+  color: var(--dcon-muted);
+  cursor: pointer;
+  overflow: hidden;
+  transform: translateY(-50%);
+  transition:
+    transform 60ms ease-out,
+    box-shadow 60ms ease-out;
+}
+.dcon-key-0 {
+  top: calc(11.5 / 64 * 100%);
+}
+.dcon-key-1 {
+  top: calc(52.5 / 64 * 100%);
+}
+/* The round tactile cap of the real switch. */
+.dcon-key-cap {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, var(--dcon-key-cap-hi), var(--dcon-key-cap) 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.dcon-key-name {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  color: var(--dcon-text);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.dcon-key:hover .dcon-key-cap {
+  background: radial-gradient(circle at 40% 35%, var(--dcon-text), var(--dcon-key-cap-hi) 70%);
+}
+.dcon-key.held,
+.dcon-key:active {
+  transform: translateY(calc(-50% + 2px));
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+}
+/* Held: a bar fills over the long-press time; full = a long press on release. */
+.dcon-key::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 3px;
+  width: 0;
+  background: var(--dk-accent);
+}
+.dcon-key.held::after {
+  animation: dcon-hold var(--long-ms, 1500ms) linear forwards;
+}
+@keyframes dcon-hold {
+  to {
+    width: 100%;
+  }
+}
+.dcon-key:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 2px;
+}
+.dcon-key.bad {
+  border-color: var(--status-bad);
+}
+.dcon-key[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dcon-key[aria-disabled="true"] .dcon-key-cap {
+  background: var(--dcon-key-cap);
+}
+
+/* ---- The Pico 2 W page's centerpiece (OledHero.tsx): the OLED Edition's
+   screen named, the mirror with the module's live readings and specs beside
+   it (below it in a narrow window). ---- */
+.oled-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  flex: none;
+  container-type: inline-size;
+}
+.oled-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.oled-hero-head h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.oled-hero-edition {
+  flex-basis: 100%;
+  color: var(--dk-accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.oled-hero-sub {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--dk-small);
+}
+.oled-hero-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.oled-hero-screen > .dcon {
+  width: 100%;
+  margin: 0;
+}
+.oled-hero-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-content: start;
+  gap: 10px;
+}
+@container (min-width: 820px) {
+  .oled-hero-body {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+  .oled-hero-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container (max-width: 460px) {
+  .oled-hero-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.oled-stats {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.oled-stat {
+  display: grid;
+  gap: 1px;
+  font-size: var(--dk-small);
+}
+.oled-stat span {
+  color: var(--text-muted);
+}
+.oled-stat b {
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.oled-stat-big b {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.oled-stat-bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--dk-accent) calc(var(--level, 0) * 100%), var(--border-default) 0);
+}
+.oled-specs .dk-hint {
+  margin: 8px 0 0;
 }
 
 /* ---- Navigation rail (AppRail.tsx): AVIEW's sidebar, on the right ----
@@ -4952,7 +5159,7 @@ main.dk-body:focus:not(:focus-visible),
   justify-content: flex-end;
   align-items: center;
 }
-/* The live pages' main view (the drawing, the Pico 2 W console) fills the
+/* The live pages' main view (the drawing, the OLED screen) fills the
    split's main column; that column scrolls. */
 .dk-split-main > .live-stage {
   min-height: 100%;
@@ -4978,11 +5185,10 @@ main.dk-body:focus:not(:focus-visible),
 .dongle-main {
   justify-content: flex-start;
 }
-.dongle-main > .dcon {
-  margin-bottom: 0;
-}
-.dongle-main > .dk-block {
-  width: min(100%, 900px);
+/* The dials and Diagnostics as wide as the OLED above them. */
+.dongle-main > .dk-block,
+.dongle-main > .dash {
+  width: min(100%, 1180px);
 }
 .dash-more {
   justify-self: start;

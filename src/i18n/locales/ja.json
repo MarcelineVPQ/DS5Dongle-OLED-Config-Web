@@ -568,7 +568,7 @@
       "newPico": "新しい Pico ですか？BOOTSEL ボタンを押しながら接続してください（新品の Pico はボタン不要）。アプリが見つけてファームウェアをインストールします。",
       "driveNote": "パソコンには RP2350 という名前のドライブとしても表示されることがありますが、開く必要はありません。",
       "turnOnTitle": "コントローラーの電源を入れてください",
-      "pairHint": "コントローラーの PSボタンを押してください。新しいコントローラーは、ライトバーが点滅するまでクリエイトボタンと PSボタンを同時に長押しします（{{device}} の画面に「Pair your DualSense」と表示されます）。",
+      "pairHint": "コントローラーの PSボタンを押してください。新しいコントローラーは、ライトバーが点滅するまでクリエイトボタンと PSボタンを同時に長押しします（OLED に「Pair your DualSense」と表示されます）。",
       "whyHidden": "{{device}} は、コントローラーが接続されて初めてこの PC に表示されます。",
       "updatesTitle": "アップデート",
       "fwReady": "このアプリはファームウェア {{version}} をインストールします。",
@@ -990,22 +990,19 @@
       "glanceOpen": "{{section}} を開く"
     },
     "dongleConsole": {
-      "title": "{{deviceName}} コンソール",
+      "title": "OLED画面",
       "pane": {
         "screen": "画面",
         "log": "ログ"
       },
       "noDongle": "{{device}} を待っています",
-      "needsFirmware": "画面を表示するには {{device}} のファームウェアを更新してください",
+      "needsFirmware": "OLED をここに表示するには {{device}} のファームウェアを更新してください",
       "unavailable": "画面を取得できません。再試行中",
       "connecting": "画面を読み込み中…",
       "live": "ライブ",
       "dim": "減光中（アイドル）",
       "off": "画面オフ（アイドル）",
-      "screenN": "画面 {{n}}/{{total}}",
-      "brightness": "明るさ {{pct}}%",
-      "frame": "フレーム {{n}}",
-      "hint": "{{device}} の画面の表示を1ピクセル単位でそのまま表示します。OLEDモジュールがなくても使えます。画面の切り替えは {{device}} の KEY0 / KEY1 で行います。",
+      "hint": "OLED の表示を1ピクセル単位でそのまま表示します。OLEDモジュールがなくても使えます。画面の切り替えは KEY0 / KEY1 で、ここでも OLED でもできます。",
       "logEmpty": "まだありません。",
       "log": {
         "online": "{{deviceName}} 接続（プロトコル {{version}}）",
@@ -1017,6 +1014,11 @@
         "notCharging": "コントローラーの充電停止",
         "battery": "バッテリー {{pct}}%",
         "saved": "設定を {{device}} に保存しました"
+      },
+      "keys": {
+        "key0": "KEY0：次の画面（{{screen}}）",
+        "key1": "KEY1：前の画面（{{screen}}）。{{s}} 秒長押し：明るさ {{pct}}%",
+        "needsFirmware": "キーを使うには {{device}} のファームウェアを更新してください"
       }
     },
     "rail": {
@@ -1385,6 +1387,7 @@
       "oledState": "状態",
       "oledScreen": "画面",
       "oledFps": "再描画",
+      "oledFrame": "フレーム",
       "noMirror": "ファームウェア 1.4 が必要",
       "power": {
         "on": "オン",

@@ -251,6 +251,16 @@ const BASE_VIEWS = [
     await sleep(300);
     await closeBlocks();
   }),
+  // The OLED's KEY0 pressed (the simulated board goes to its next screen): the keys, their held look and the hero's readings after a change.
+  view("dongle", "dongle OLED, KEY0 pressed", 900, async () => {
+    await rail("dongle");
+    await sleep(300);
+    await closeBlocks();
+    await evaluate(
+      `(() => { const k = document.querySelector(".dcon-key-0"); if (!k) return; const o = { bubbles: true, button: 0, pointerId: 1 }; k.dispatchEvent(new PointerEvent("pointerdown", o)); k.dispatchEvent(new PointerEvent("pointerup", o)); })()`,
+    );
+    await sleep(600);
+  }),
   view("dongle", "dongle diagnostics (main view)", 1500, async () => {
     await rail("dongle");
     await sleep(300);

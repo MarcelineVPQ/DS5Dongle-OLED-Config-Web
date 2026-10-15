@@ -572,7 +572,7 @@
       "newPico": "Neuer Pico? Steck ihn ein, während du seinen BOOTSEL-Knopf hältst (ein fabrikneuer Pico braucht den Knopf nicht). Die App findet ihn und installiert die Firmware.",
       "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
       "turnOnTitle": "Schalte deinen Controller ein",
-      "pairHint": "Drück die PS-Taste am Controller. Ein neuer Controller: Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt (das Display {{device_gen}} zeigt „Pair your DualSense“).",
+      "pairHint": "Drück die PS-Taste am Controller. Ein neuer Controller: Halte die Create-Taste und die PS-Taste, bis die Leuchtleiste blinkt (das OLED zeigt „Pair your DualSense“).",
       "whyHidden": "{{device, capitalize}} erscheint an diesem PC erst, wenn ein Controller damit verbunden ist.",
       "updatesTitle": "Updates",
       "fwReady": "Diese App installiert Firmware {{version}}.",
@@ -1000,22 +1000,19 @@
       "glanceOpen": "{{section}} öffnen"
     },
     "dongleConsole": {
-      "title": "Konsole: {{deviceName}}",
+      "title": "OLED-Bildschirm",
       "pane": {
         "screen": "Display",
         "log": "Protokoll"
       },
       "noDongle": "Warte auf {{device_akk}}",
-      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um das Display zu sehen",
+      "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um das OLED hier zu sehen",
       "unavailable": "Display nicht verfügbar, neuer Versuch",
       "connecting": "Display wird gelesen…",
       "live": "Live",
       "dim": "Gedimmt (inaktiv)",
       "off": "Display aus (inaktiv)",
-      "screenN": "Seite {{n}}/{{total}}",
-      "brightness": "Helligkeit {{pct}} %",
-      "frame": "Bild {{n}}",
-      "hint": "Genau das, was das Display {{device_gen}} zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1 an {{device_dat}}.",
+      "hint": "Genau das, was das OLED zeigt, Pixel für Pixel. Funktioniert auch ohne das OLED-Modul. Seiten wechselst du mit KEY0 / KEY1, hier oder am OLED.",
       "logEmpty": "Noch nichts.",
       "log": {
         "online": "{{deviceName}} verbunden (Protokoll {{version}})",
@@ -1027,6 +1024,11 @@
         "notCharging": "Controller lädt nicht mehr",
         "battery": "Akku {{pct}} %",
         "saved": "Einstellungen auf {{device_dat}} gespeichert"
+      },
+      "keys": {
+        "key0": "KEY0: nächste Seite ({{screen}})",
+        "key1": "KEY1: vorherige Seite ({{screen}}). {{s}} s halten: Helligkeit {{pct}} %",
+        "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um die Tasten zu nutzen"
       }
     },
     "rail": {
@@ -1395,6 +1397,7 @@
       "oledState": "Zustand",
       "oledScreen": "Seite",
       "oledFps": "Neuzeichnungen",
+      "oledFrame": "Bild",
       "noMirror": "benötigt Firmware 1.4",
       "power": {
         "on": "An",

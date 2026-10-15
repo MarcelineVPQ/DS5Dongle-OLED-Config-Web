@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **The OLED is the centerpiece of the Pico 2 W page again.** The page opens on the DS5 Dongle OLED Edition's screen, named as what it is (Waveshare Pico-OLED-1.3 · 1.3″ · 128 × 64 · SH1107), mirrored live and large, with what it's doing now beside it (brightness, on / dimmed / off, which of the 11 screens, redraws per second, frame) and the module's specs. They had ended up at the bottom of Diagnostics; they're in one place now, the OLED's, and the mirror's line under the picture is gone (it said the same). Below it in a narrow window. The dials and Diagnostics follow. All 7 languages.
+
+### Added
+
+- **KEY0 and KEY1 on the screen, like on the module.** Two keys beside the live screen, where they sit on the Waveshare board, level with the `>` and `<` the screen draws: click KEY0 for the next screen and KEY1 for the previous one; hold KEY1 for 1.5 s (a bar fills while you hold) to step the brightness, as on the board. Each key's tooltip says what it does on the screen shown; Space or Enter work the same from the keyboard. Firmware without key presses from the app shows the keys with what to update. All 7 languages.
+
 ## [0.9.5-dev.12] - 2026-10-14
 
 ### Performance

@@ -14,8 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
-import { SCREEN_NAMES } from "../../oled/screenNames";
-import { boardSpecs, OLED_MODULE } from "./boardSpecs";
+import { boardSpecs } from "./boardSpecs";
 import { causeText } from "../shownError";
 import { BusyButton } from "../controls";
 import { boardProblems } from "./core1Status";
@@ -162,7 +161,6 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   // loop: HOT-PATH-OK — N = 60 samples per graph, 4 graphs; the 1 s sample's render
   const series = (pick: (x: Sample) => number) => history.filter((x) => x.rated).map(pick);
   const rated = s?.rated ? s : null;
-  const oled = telemetry.frame; // the mirror's own poll: what the OLED shows now
   const micLoss = micLossClimbing(history);
   const specs = boardSpecs(bridge.identity?.boardName);
   const counters = s?.counters ?? null;
@@ -198,49 +196,21 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
 
       {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
 
-      <SectionGroup title={OLED_MODULE.name}>
-        <div className="dash-facts">
-          <Fact label={td("brightness")} value={oled ? `${Math.round((oled.contrast / 255) * 100)}%` : "—"} />
-          <Fact label={td("oledState")} value={oled ? td(`power.${oled.power}`) : td("noMirror")} />
-          <Fact label={td("oledScreen")} value={oled ? `${oled.screen + 1}/${SCREEN_NAMES.length} · ${SCREEN_NAMES[oled.screen] ?? "?"}` : "—"} />
-          {/* A redraw rate needs two reads. */}
-          <Fact label={td("oledFps")} value={rated?.oled ? `${rated.oled.fps} /s` : "—"} />
-        </div>
-      </SectionGroup>
-
-      <SectionGroup title={td("specs.title")}>
-        {specs && (
-          <>
-            <h4 className="dk-subhead">{hardwareName(bridge.identity)}</h4>
-            <dl className="dk-kv">
-              <dt>{td("specs.chip")}</dt>
-              <dd>{s ? td("specs.chipClock", { chip: specs.chip, core: specs.core, mhz: Math.round(s.realMhz) }) : td("specs.chipValue", { chip: specs.chip, core: specs.core })}</dd>
-              <dt>{td("specs.sram")}</dt>
-              <dd>{specs.sramKb} KB</dd>
-              <dt>{td("specs.flash")}</dt>
-              <dd>{specs.flashMb} MB</dd>
-              <dt>{td("specs.wireless")}</dt>
-              <dd>{td("specs.wirelessValue", { chip: specs.wireless, bt: specs.bluetooth })}</dd>
-            </dl>
-          </>
-        )}
-        <h4 className="dk-subhead">{OLED_MODULE.name}</h4>
-        <dl className="dk-kv">
-          <dt>{td("specs.model")}</dt>
-          <dd>{OLED_MODULE.name}</dd>
-          <dt>{td("specs.size")}</dt>
-          <dd>{OLED_MODULE.size}</dd>
-          <dt>{td("specs.resolution")}</dt>
-          <dd>{OLED_MODULE.resolution}</dd>
-          <dt>{td("specs.controller")}</dt>
-          <dd>{OLED_MODULE.controller}</dd>
-          <dt>{td("specs.interface")}</dt>
-          <dd>{OLED_MODULE.interface}</dd>
-          <dt>{td("specs.keys")}</dt>
-          <dd>{OLED_MODULE.keys}</dd>
-        </dl>
-        <p className="dk-hint">{td("specs.notDetected")}</p>
-      </SectionGroup>
+      {specs && (
+        <SectionGroup title={td("specs.title")}>
+          <h4 className="dk-subhead">{hardwareName(bridge.identity)}</h4>
+          <dl className="dk-kv">
+            <dt>{td("specs.chip")}</dt>
+            <dd>{s ? td("specs.chipClock", { chip: specs.chip, core: specs.core, mhz: Math.round(s.realMhz) }) : td("specs.chipValue", { chip: specs.chip, core: specs.core })}</dd>
+            <dt>{td("specs.sram")}</dt>
+            <dd>{specs.sramKb} KB</dd>
+            <dt>{td("specs.flash")}</dt>
+            <dd>{specs.flashMb} MB</dd>
+            <dt>{td("specs.wireless")}</dt>
+            <dd>{td("specs.wirelessValue", { chip: specs.wireless, bt: specs.bluetooth })}</dd>
+          </dl>
+        </SectionGroup>
+      )}
     </div>
   );
 }

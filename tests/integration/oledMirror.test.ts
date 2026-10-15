@@ -60,7 +60,7 @@ function Page() {
   useEffect(() => {
     state = frame;
   }, [frame]);
-  return createElement(DongleConsole, { client, identity, controllerOn: true, frame });
+  return createElement(DongleConsole, { client, identity, controllerOn: true, frame, keys: { supported: false, press: null } });
 }
 const advance = async (ms: number) => {
   // loop: test — 50 ms steps, so each read settles

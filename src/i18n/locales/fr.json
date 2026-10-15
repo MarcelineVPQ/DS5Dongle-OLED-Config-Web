@@ -572,7 +572,7 @@
       "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
       "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
       "turnOnTitle": "Allume ta manette",
-      "pairHint": "Appuie sur la touche PS de la manette. Une nouvelle manette : maintiens la touche de création et la touche PS jusqu’à ce que la barre lumineuse clignote (l’écran {{device_de}} affiche « Pair your DualSense »).",
+      "pairHint": "Appuie sur la touche PS de la manette. Une nouvelle manette : maintiens la touche de création et la touche PS jusqu’à ce que la barre lumineuse clignote (l’OLED affiche « Pair your DualSense »).",
       "whyHidden": "{{device, capitalize}} n’apparaît sur ce PC qu’une fois une manette connectée.",
       "updatesTitle": "Mises à jour",
       "fwReady": "Cette app installe le firmware {{version}}.",
@@ -1000,22 +1000,19 @@
       "glanceOpen": "Ouvrir {{section}}"
     },
     "dongleConsole": {
-      "title": "Console : {{deviceName}}",
+      "title": "Écran OLED",
       "pane": {
         "screen": "Écran",
         "log": "Journal"
       },
       "noDongle": "En attente {{device_de}}",
-      "needsFirmware": "Mets à jour le firmware {{device_de}} pour voir son écran",
+      "needsFirmware": "Mets à jour le firmware {{device_de}} pour voir l’OLED ici",
       "unavailable": "Écran indisponible, nouvel essai",
       "connecting": "Lecture de l'écran…",
       "live": "En direct",
       "dim": "Atténué (inactif)",
       "off": "Écran éteint (inactif)",
-      "screenN": "Écran {{n}}/{{total}}",
-      "brightness": "Luminosité {{pct}} %",
-      "frame": "Image {{n}}",
-      "hint": "Exactement ce qu'affiche l'écran {{device_de}}, pixel par pixel. Fonctionne aussi sans le module OLED. Change d'écran avec KEY0 / KEY1 sur {{device}}.",
+      "hint": "Exactement ce qu'affiche l’OLED, pixel par pixel. Fonctionne aussi sans le module OLED. Change d'écran avec KEY0 / KEY1, ici ou sur l’OLED.",
       "logEmpty": "Rien pour l'instant.",
       "log": {
         "online": "Connecté : {{deviceName}} (protocole {{version}})",
@@ -1027,6 +1024,11 @@
         "notCharging": "Manette plus en charge",
         "battery": "Batterie {{pct}} %",
         "saved": "Réglages enregistrés sur {{device}}"
+      },
+      "keys": {
+        "key0": "KEY0 : écran suivant ({{screen}})",
+        "key1": "KEY1 : écran précédent ({{screen}}). Maintenir {{s}} s : luminosité {{pct}} %",
+        "needsFirmware": "Mets à jour le firmware {{device_de}} pour utiliser les touches"
       }
     },
     "rail": {
@@ -1395,6 +1397,7 @@
       "oledState": "État",
       "oledScreen": "Écran",
       "oledFps": "Rafraîchissements",
+      "oledFrame": "Image",
       "noMirror": "firmware 1.4 requis",
       "power": {
         "on": "Allumé",

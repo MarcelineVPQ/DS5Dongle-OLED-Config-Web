@@ -1,4 +1,4 @@
-// The dongle's console: its OLED screen mirrored pixel for pixel (protocol
+// The OLED screen (the Waveshare Pico-OLED-1.3), mirrored pixel for pixel (protocol
 // 1.4, 0xEF: the image the firmware last sent to the panel, so it always
 // matches, whatever screen it's on) and a log of what the dongle did. Dark in
 // every theme, like any console. Works without the OLED add-on too: the
@@ -9,6 +9,7 @@ import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, s
 import { identityChargeState } from "../../protocol/controllerInfo";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { logged } from "../../errorText";
+import { causeText } from "../shownError";
 
 const FB_W = 128;
 const FB_H = 64;
@@ -30,7 +31,19 @@ interface LogLine {
 // `identity` is the page's own 1 Hz poll and `frame` its mirror poll
 // (useOledFrame, shared with the dashboard), so the console adds no USB
 // traffic of its own.
-export default function DongleConsole({ client, identity, controllerOn, frame }: { client: Ds5BridgeClient | null; identity: BridgeIdentity | null; controllerOn: boolean; frame: OledFrameState }) {
+export default function DongleConsole({
+  client,
+  identity,
+  controllerOn,
+  frame,
+  keys,
+}: {
+  client: Ds5BridgeClient | null;
+  identity: BridgeIdentity | null;
+  controllerOn: boolean;
+  frame: OledFrameState;
+  keys: OledKeysProps;
+}) {
   const { t } = useTranslation();
   const [pane, setPane] = useState<Pane>("screen");
   const capable = supportsOledMirror(identity);
@@ -45,7 +58,6 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
     else if (newest > seen.current) setUnread(true);
   }, [newest, pane]);
 
-  const screenName = frame.frame ? (SCREEN_NAMES[frame.frame.screen] ?? `#${frame.frame.screen}`) : null;
   const status = !client
     ? t("desktop.dongleConsole.noDongle")
     : !capable
@@ -88,20 +100,7 @@ export default function DongleConsole({ client, identity, controllerOn, frame }:
       </header>
       {pane === "screen" ? (
         <div className="dcon-pane dcon-screen">
-          <OledCanvas frame={capable ? frame.frame : null} />
-          <div className="dcon-line">
-            {frame.frame && capable ? (
-              <>
-                <span>
-                  {t("desktop.dongleConsole.screenN", { n: frame.frame.screen + 1, total: SCREEN_NAMES.length })} · {screenName}
-                </span>
-                <span>{t("desktop.dongleConsole.brightness", { pct: Math.round((frame.frame.contrast / 255) * 100) })}</span>
-                <span>{t("desktop.dongleConsole.frame", { n: frame.frame.seq })}</span>
-              </>
-            ) : (
-              <span>{status}</span>
-            )}
-          </div>
+          <OledCanvas frame={capable ? frame.frame : null} keys={keys} />
           <p className="dcon-hint">{t("desktop.dongleConsole.hint")}</p>
         </div>
       ) : (
@@ -174,7 +173,7 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
   return { frame: client ? (shown?.frame ?? null) : null, changes: shown?.changes ?? 0, error };
 }
 
-function OledCanvas({ frame }: { frame: OledFrame | null }) {
+function OledCanvas({ frame, keys }: { frame: OledFrame | null; keys: OledKeysProps }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // cache: OK — key=none (the canvas's one 128x64 ImageData, 32 KB); invalidated=never (rewritten per changed frame); bound=1 entry
   const imgRef = useRef<ImageData | null>(null);
@@ -211,7 +210,8 @@ function OledCanvas({ frame }: { frame: OledFrame | null }) {
   useEffect(() => {
     const el = box.current;
     if (!el) return;
-    const fit = () => setScale(Math.max(1, Math.min(6, Math.floor(el.clientWidth / FB_W))));
+    // The key strip at the panel's left takes KEYS_W of the width.
+    const fit = () => setScale(Math.max(1, Math.min(6, Math.floor((el.clientWidth - KEYS_W) / FB_W))));
     fit();
     // lifetime: OK — disconnected in the effect cleanup
     const ro = new ResizeObserver(fit);
@@ -220,7 +220,104 @@ function OledCanvas({ frame }: { frame: OledFrame | null }) {
   }, []);
   return (
     <div ref={box} className="dcon-oled-box">
-      <canvas ref={ref} className="dcon-oled" width={FB_W} height={FB_H} style={{ width: FB_W * scale, height: FB_H * scale }} role="img" aria-label="OLED" />
+      <div className="dcon-module">
+        <OledKeys {...keys} frame={frame} />
+        <canvas ref={ref} className="dcon-oled" width={FB_W} height={FB_H} style={{ width: FB_W * scale, height: FB_H * scale }} role="img" aria-label="OLED" />
+      </div>
+    </div>
+  );
+}
+
+// KEY0 and KEY1 as on the Waveshare Pico-OLED-1.3: two keys at the screen's
+// left edge, KEY0 level with the '>' the firmware draws at the top of its
+// button strip, KEY1 with the '<' at the bottom. A click is a short press;
+// held for the firmware's long-press time it is a long press (a bar fills
+// while held). Space / Enter work the same way. Older firmware: shown, with
+// a tooltip that says to update it.
+const KEYS_W = 66; // px beside the canvas: the key strip and the module's edge (desktop.css: .dcon-module, .dcon-keys)
+export const OLED_LONG_PRESS_MS = 1500; // the firmware's kLongPressUs (src/oled.cpp)
+const BRIGHT_LEVELS = [255, 127, 63, 16]; // the firmware's kBrightLevels, KEY1 long press cycles them
+export interface OledKeysProps {
+  supported: boolean; // the firmware takes key presses from the app
+  press: ((key: 0 | 1, long: boolean) => Promise<void>) | null; // null: no board
+}
+function OledKeys({ supported, press, frame }: OledKeysProps & { frame: OledFrame | null }) {
+  const { t } = useTranslation();
+  const [holding, setHolding] = useState<0 | 1 | null>(null);
+  // error: SHOWN — english: the key's tooltip and its red outline until the next press (board errors are English, batch E3)
+  const [error, setError] = useState<string | null>(null);
+  // cache: OK — key=none (when the held key went down); invalidated=each press; bound=1 entry
+  const downAt = useRef<{ key: 0 | 1; at: number } | null>(null);
+  const usable = supported && !!press;
+  const n = SCREEN_NAMES.length;
+  const screen = frame?.screen ?? null;
+  const name = (i: number) => SCREEN_NAMES[((i % n) + n) % n];
+  // loop: HOT-PATH-OK — N = 4 brightness levels
+  const level = frame ? BRIGHT_LEVELS.findIndex((c) => frame.contrast >= c) : -1;
+  const nextPct = Math.round((BRIGHT_LEVELS[(Math.max(0, level) + 1) % BRIGHT_LEVELS.length] / 255) * 100);
+  const tip = (key: 0 | 1) =>
+    !supported
+      ? t("desktop.dongleConsole.keys.needsFirmware")
+      : error
+        ? error
+        : key === 0
+          ? t("desktop.dongleConsole.keys.key0", { screen: screen === null ? "—" : name(screen + 1) })
+          : t("desktop.dongleConsole.keys.key1", { screen: screen === null ? "—" : name(screen - 1), pct: nextPct, s: OLED_LONG_PRESS_MS / 1000 });
+  const down = (key: 0 | 1, at: number) => {
+    if (!usable || downAt.current) return;
+    downAt.current = { key, at };
+    setHolding(key);
+  };
+  const up = (key: 0 | 1, at: number) => {
+    const d = downAt.current;
+    if (!d || d.key !== key || !press) return;
+    downAt.current = null;
+    setHolding(null);
+    const long = at - d.at >= OLED_LONG_PRESS_MS;
+    setError(null);
+    // error: SHOWN — english: the key's tooltip and its red outline until the next press (board errors are English, batch E3)
+    press(key, long).catch((cause: unknown) => setError(causeText(cause)));
+  };
+  const cancel = () => {
+    downAt.current = null;
+    setHolding(null);
+  };
+  return (
+    <div className="dcon-keys" style={{ "--long-ms": `${OLED_LONG_PRESS_MS}ms` } as React.CSSProperties}>
+      {/* loop: HOT-PATH-OK — N = 2 keys */}
+      {([0, 1] as const).map((key) => (
+        <button
+          key={key}
+          type="button"
+          className={`dcon-key dcon-key-${key}${holding === key ? " held" : ""}${error ? " bad" : ""}`}
+          aria-disabled={!usable}
+          aria-label={`KEY${key}`}
+          title={tip(key)}
+          onPointerDown={(e) => {
+            if (e.button !== 0) return;
+            e.currentTarget.setPointerCapture(e.pointerId);
+            down(key, e.timeStamp);
+          }}
+          onPointerUp={(e) => up(key, e.timeStamp)}
+          onPointerCancel={cancel}
+          onKeyDown={(e) => {
+            if ((e.key === " " || e.key === "Enter") && !e.repeat) {
+              e.preventDefault();
+              down(key, e.timeStamp);
+            }
+          }}
+          onKeyUp={(e) => {
+            if (e.key === " " || e.key === "Enter") {
+              e.preventDefault();
+              up(key, e.timeStamp);
+            }
+          }}
+          onBlur={cancel}
+        >
+          <span className="dcon-key-cap" aria-hidden="true" />
+          <span className="dcon-key-name">KEY{key}</span>
+        </button>
+      ))}
     </div>
   );
 }

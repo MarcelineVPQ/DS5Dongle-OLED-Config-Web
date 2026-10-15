@@ -571,7 +571,7 @@
       "newPico": "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.",
       "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it.",
       "turnOnTitle": "Turn on your controller",
-      "pairHint": "Press the PS button on the controller. A new controller: hold the Create button and the PS button until the light bar blinks ({{device}}'s screen shows \"Pair your DualSense\").",
+      "pairHint": "Press the PS button on the controller. A new controller: hold the Create button and the PS button until the light bar blinks (the OLED shows \"Pair your DualSense\").",
       "whyHidden": "{{device, capitalize}} only shows up on this PC once a controller is connected to it.",
       "updatesTitle": "Updates",
       "fwReady": "This app installs firmware {{version}}.",
@@ -999,22 +999,19 @@
       "glanceOpen": "Open {{section}}"
     },
     "dongleConsole": {
-      "title": "{{deviceName}} console",
+      "title": "OLED screen",
       "pane": {
         "screen": "Screen",
         "log": "Log"
       },
       "noDongle": "Waiting for {{device}}",
-      "needsFirmware": "Update {{device}}'s firmware to see its screen",
+      "needsFirmware": "Update {{device}}'s firmware to see the OLED here",
       "unavailable": "Screen not available, retrying",
       "connecting": "Reading the screen…",
       "live": "Live",
       "dim": "Dimmed (idle)",
       "off": "Screen off (idle)",
-      "screenN": "Screen {{n}}/{{total}}",
-      "brightness": "Brightness {{pct}}%",
-      "frame": "Frame {{n}}",
-      "hint": "Exactly what {{device}}'s screen shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1 on {{device}}.",
+      "hint": "Exactly what the OLED shows, pixel for pixel. Works without the OLED add-on too. Change screens with KEY0 / KEY1, here or on the OLED.",
       "logEmpty": "Nothing yet.",
       "log": {
         "online": "{{deviceName}} connected (protocol {{version}})",
@@ -1026,6 +1023,11 @@
         "notCharging": "Controller stopped charging",
         "battery": "Battery {{pct}}%",
         "saved": "Settings saved on {{device}}"
+      },
+      "keys": {
+        "key0": "KEY0: next screen ({{screen}})",
+        "key1": "KEY1: previous screen ({{screen}}). Hold {{s}} s: brightness {{pct}}%",
+        "needsFirmware": "Update {{device}}'s firmware to use the keys"
       }
     },
     "rail": {
@@ -1394,6 +1396,7 @@
       "oledState": "State",
       "oledScreen": "Screen",
       "oledFps": "Redraws",
+      "oledFrame": "Frame",
       "noMirror": "needs firmware 1.4",
       "power": {
         "on": "On",

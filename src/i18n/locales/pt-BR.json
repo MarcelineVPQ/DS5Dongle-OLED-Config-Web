@@ -572,7 +572,7 @@
       "newPico": "Pico novo? Conecte-o segurando o botão BOOTSEL (um Pico novinho não precisa do botão). O app o encontra e instala o firmware.",
       "driveNote": "Seu computador também pode mostrá-lo como uma unidade chamada RP2350. Não precisa abrir.",
       "turnOnTitle": "Ligue seu controle",
-      "pairHint": "Aperte o botão PS no controle. Um controle novo: segure o botão Criar e o botão PS até a barra de luz piscar (a tela {{device_de}} mostra “Pair your DualSense”).",
+      "pairHint": "Aperte o botão PS no controle. Um controle novo: segure o botão Criar e o botão PS até a barra de luz piscar (o OLED mostra “Pair your DualSense”).",
       "whyHidden": "{{device, capitalize}} só aparece neste PC depois que um controle se conecta.",
       "updatesTitle": "Atualizações",
       "fwReady": "Este app instala o firmware {{version}}.",
@@ -1000,22 +1000,19 @@
       "glanceOpen": "Abrir {{section}}"
     },
     "dongleConsole": {
-      "title": "Console: {{deviceName}}",
+      "title": "Tela OLED",
       "pane": {
         "screen": "Tela",
         "log": "Registro"
       },
       "noDongle": "Aguardando {{device}}",
-      "needsFirmware": "Atualize o firmware {{device_de}} para ver a tela",
+      "needsFirmware": "Atualize o firmware {{device_de}} para ver o OLED aqui",
       "unavailable": "Tela indisponível, tentando de novo",
       "connecting": "Lendo a tela…",
       "live": "Ao vivo",
       "dim": "Escurecida (inativa)",
       "off": "Tela desligada (inativa)",
-      "screenN": "Tela {{n}}/{{total}}",
-      "brightness": "Brilho {{pct}}%",
-      "frame": "Quadro {{n}}",
-      "hint": "Exatamente o que a tela {{device_de}} mostra, pixel por pixel. Funciona também sem o módulo OLED. Troque de tela com KEY0 / KEY1 {{device_em}}.",
+      "hint": "Exatamente o que o OLED mostra, pixel por pixel. Funciona também sem o módulo OLED. Troque de tela com KEY0 / KEY1, aqui ou no OLED.",
       "logEmpty": "Nada ainda.",
       "log": {
         "online": "Conectado: {{deviceName}} (protocolo {{version}})",
@@ -1027,6 +1024,11 @@
         "notCharging": "Controle parou de carregar",
         "battery": "Bateria {{pct}}%",
         "saved": "Configurações salvas {{device_em}}"
+      },
+      "keys": {
+        "key0": "KEY0: próxima tela ({{screen}})",
+        "key1": "KEY1: tela anterior ({{screen}}). Segure {{s}} s: brilho {{pct}}%",
+        "needsFirmware": "Atualize o firmware {{device_de}} para usar as teclas"
       }
     },
     "rail": {
@@ -1395,6 +1397,7 @@
       "oledState": "Estado",
       "oledScreen": "Tela",
       "oledFps": "Redesenhos",
+      "oledFrame": "Quadro",
       "noMirror": "requer firmware 1.4",
       "power": {
         "on": "Ligada",
