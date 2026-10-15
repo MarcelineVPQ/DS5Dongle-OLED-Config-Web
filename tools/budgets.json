@@ -14,7 +14,11 @@
       "unit": "MB PSS",
       "what": "proportional set size of every app process together except the GPU process (reported, not judged: software rendering inflates it), 10 minutes after start"
     },
-    "growth": { "max": 5, "unit": "MB / 30 min", "what": "memory trend over the soak after warm-up (least-squares slope), --long only" }
+    "growth": {
+      "max": 5,
+      "unit": "MB / 30 min",
+      "what": "memory trend over the soak after warm-up (least-squares slope) of every app process except the GPU process (owner's decision 2026-10-15: the software GPU in the hidden copy swings ±15 MB; the total is reported), --long only"
+    }
   },
   "modes": {
     "quick": { "settleS": 8, "cpuS": 20, "traceS": 5, "hiddenSettleS": 45, "hiddenS": 300, "memoryAtS": 0, "soakWarmupS": 0, "soakS": 0, "sampleS": 60 },

@@ -241,7 +241,7 @@ describe("judgeBudgets", () => {
     expect(rows.find((r) => r.budget === "GPU process, shown")?.verdict).toBe("INFO");
     expect(rows.find((r) => r.budget === "CPU shown, idle" && r.scope === "controller")?.measured).toBe(1.4);
     expect(rows.find((r) => r.budget === "CPU hidden")?.measured).toBe(0.4); // the GPU process counts when hidden, DevTools tracing never
-    expect(rows.find((r) => r.budget === "memory growth")?.verdict).toBe("SKIP");
+    expect(rows.find((r) => r.id === "growth")?.verdict).toBe("SKIP");
     expect(rows.find((r) => r.budget === "memory (PSS) without GPU")).toMatchObject({ measured: 246, verdict: "PASS" });
     expect(rows.find((r) => r.budget === "memory, GPU process")).toMatchObject({ measured: 245, verdict: "INFO" });
     expect(rows.find((r) => r.budget === "CPU hidden, main")).toMatchObject({ measured: 0.3, verdict: "INFO" }); // the running-game check lives there
@@ -259,7 +259,7 @@ describe("judgeBudgets", () => {
       }),
     );
     const failed = rows.filter((r) => r.verdict === "FAIL").map((r) => r.budget);
-    expect(failed).toEqual(["idle frames", "CPU shown, idle", "CPU hidden", "memory (PSS) without GPU", "memory growth"]);
+    expect(failed).toEqual(["idle frames", "CPU shown, idle", "CPU hidden", "memory (PSS) without GPU", "memory growth without GPU"]);
     expect(passed(rows)).toBe(false);
   });
 
@@ -272,18 +272,22 @@ describe("judgeBudgets", () => {
 
   it("passes a shrinking memory trend", () => {
     const rows = judgeBudgets(config, results({ soak: { windowS: 1800, samples: Array.from({ length: 31 }, (_, i) => ({ t: i * 60, mb: 300 - i })) } }));
-    expect(rows.find((r) => r.budget === "memory growth")?.verdict).toBe("PASS");
+    expect(rows.find((r) => r.id === "growth")?.verdict).toBe("PASS");
   });
 
-  it("reports the trend without the GPU process beside the judged one, never judging it", () => {
-    // The GPU process's PSS swings between samples; the app's own processes are flat.
+  it("judges growth without the GPU process and reports the total beside it", () => {
+    // The GPU process's PSS swings between samples and creeps; the app's own processes are flat.
     const samples = Array.from({ length: 31 }, (_, i) => ({ t: i * 60, mb: 560 + (i % 2 ? 15 : 0) + i * 0.5, mbWithoutGpu: 260 }));
     const rows = judgeBudgets(config, results({ soak: { windowS: 1800, samples } }));
-    expect(rows.find((r) => r.id === "growth")?.verdict).toBe("FAIL");
-    expect(rows.find((r) => r.id === "growthNoGpu")).toMatchObject({ measured: 0, verdict: "INFO" });
-    // Older results without the split: skipped, not zero.
+    expect(rows.find((r) => r.id === "growth")).toMatchObject({ budget: "memory growth without GPU", measured: 0, verdict: "PASS" });
+    expect(rows.find((r) => r.id === "growthTotal")?.verdict).toBe("INFO");
+    expect(rows.find((r) => r.id === "growthTotal")?.measured).toBeGreaterThan(5);
+    // The app's own processes growing: fails whatever the GPU process does.
+    const leaking = samples.map((s, i) => ({ ...s, mbWithoutGpu: 260 + i * 0.2 }));
+    expect(judgeBudgets(config, results({ soak: { windowS: 1800, samples: leaking } })).find((r) => r.id === "growth")?.verdict).toBe("FAIL");
+    // Older results without the split: the total is judged (and says so).
     const old = judgeBudgets(config, results({ soak: { windowS: 1800, samples: samples.map(({ t, mb }) => ({ t, mb })) } }));
-    expect(old.find((r) => r.id === "growthNoGpu")?.verdict).toBe("SKIP");
+    expect(old.find((r) => r.id === "growth")).toMatchObject({ verdict: "FAIL", scope: "30 min soak, 31 samples (no split: total)" });
   });
 
   it("names the memory measure the OS used", () => {

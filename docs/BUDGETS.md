@@ -10,9 +10,9 @@ The app is a little tool for a controller: it should sip resources, not drink th
 | **CPU shown, idle** | < 2 % of a core per page | Main + renderer + utility processes over the same idle stretch (CPU time of the app's process tree: `/proc/<pid>/stat` on Linux, user + kernel time on Windows). |
 | **CPU hidden** | < 0.5 % of a core over 5 min | Every app process together, GPU included, with the window hidden in the tray (`BrowserWindow.hide()`, the page sees `data-window-hidden`). For this stretch Fake games is turned off, so the real running-game check runs: it watches this PC's `/proc` (read-only) against the test home's library (`tools/seed_test_library.mjs`, one game with a profile; `DS5_BUDGET_PROFILES=0` takes it out). The main process's share (where that check runs) is its own INFO row. |
 | **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray (Windows has no PSS: its commit is judged, see [Windows](#windows-vm-overnight)). The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
-| **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). The lap presses a rail button only to change page: pressing the button of the page it was already on (Controller at the start of each lap, Games for the game page) showed or hid that page's settings panel, so the samples alternated between two page states with the renderer's PSS ~13 MB apart. The same slope without the GPU process is reported beside it (INFO): SwiftShader's PSS swings ±15 MB between samples. |
+| **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). The lap presses a rail button only to change page: pressing the button of the page it was already on (Controller at the start of each lap, Games for the game page) showed or hid that page's settings panel, so the samples alternated between two page states with the renderer's PSS ~13 MB apart. Growth is judged without the GPU process, decided by the owner 2026-10-15: the software GPU in the hidden copy swings ±15 MB between samples (the same rule as the memory budget). The slope of the total, GPU process included, is reported beside it (INFO). Windows: the commit without the GPU process. |
 
-**Reported, not judged:** the GPU process's CPU while shown, and its memory. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
+**Reported, not judged:** the GPU process's CPU while shown, its memory, and its share of the memory growth. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
 
 ### Why 10 frames a second (and not the swirl's 12.5)
 
@@ -89,6 +89,26 @@ Every new visual states its idle cost, in the commit and in a comment where it i
 | Pico 2 W screen mirror | reads the board's screen every 100 ms; redraws only when the picture changed, on the next frame clock tick | none |
 
 ## Last measurement
+
+2026-10-15, `--long` on Linux (the test copy above, a quiet machine: 1-minute load 1.4-2.1 during the page rows) and in the Windows VM (the installed branch build, window 1024 x 720 on its 1024 x 768 screen), branch `budget-fixes` (the shared frame clock, the swirl's pan in its shader, the frame and memory measurement fixes) on master `5e5d377`. Idle frames are the judged interval rate; master `5e5d377` measured the same night with the same tools is beside it (frames / CPU shown).
+
+| Page | Linux master → branch | Windows branch |
+| --- | --- | --- |
+| Controller | 10.5 / 2.10 % → 10.0 / 1.48 % | 10.0 / 0.05 % |
+| Pico 2 W | 11.0 / 2.80 % → 10.0 / 1.77 % | 10.0 / 0.26 % |
+| Games Home | 10.0 / 2.25 % → 10.0 / 1.40 % | 10.0 / 0.10 % |
+| Game page | 10.0 / 1.37 % → 10.0 / 1.10 % | 10.0 / 0.18 % |
+| App settings | 10.5 / 1.91 % → 10.0 / 1.31 % | 10.0 / 0.10 % |
+| About | 10.0 / 1.33 % → 10.0 / 1.15 % | 10.0 / 0.13 % |
+
+| Budget | Linux branch | Windows branch |
+| --- | --- | --- |
+| CPU hidden | 0.36 % | 0.22 % |
+| Memory without GPU | 256.8 MB PSS | 186.9 MB commit |
+| Memory growth without GPU | 3.9 MB / 30 min, PASS | 8.86 MB / 30 min, FAIL (the commit creeps on Windows: an older build crept 222 → 229 MB too; open) |
+| Memory growth, all processes (INFO) | 8.27 | 8.85 |
+
+### Earlier: 2026-10-14
 
 2026-10-14, `--quick` (and `--long` for growth), on the test copy above (Xvfb 1920 x 1080, SwiftShader, Electron 45 beta), master at `d790438` (which has the idle-frame fixes from `gpu-lean-2`) against this branch (swirl at 10 Hz, the cheaper running-game check). Per-page CPU is main + renderer + utility in % of one core over 20 s; ±0.3 between runs is noise.
 

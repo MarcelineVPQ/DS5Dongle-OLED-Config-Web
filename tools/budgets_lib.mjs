@@ -241,31 +241,36 @@ export function judgeBudgets(config, results) {
   rows.push({ id: "memory", budget: `memory (${metric}) without GPU`, scope: at, measured: mem, limit: `≤ ${b.memory.max}`, unit: "MB", verdict: verdict(mem, b.memory.max) });
   const gpuMem = results.memory?.byType?.[GPU_TYPE] ?? null;
   rows.push({ id: "memoryGpu", budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
-  const growth = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
-  // The same trend without the GPU process (reported, not judged): software rendering's PSS swings ±15 MB between samples.
-  const noGpu = results.soak?.samples.every((s) => s.mbWithoutGpu != null)
+  // Growth is judged without the GPU process, like the memory budget (owner's
+  // decision 2026-10-15: the software GPU in the hidden copy swings ±15 MB
+  // between samples). Results without the split (older runs) judge the total.
+  // The total with the GPU process is reported beside it.
+  const total = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
+  const split = !!results.soak?.samples.length && results.soak.samples.every((s) => s.mbWithoutGpu != null);
+  const growth = split
     ? growthPerWindow(
         results.soak.samples.map((s) => ({ t: s.t, mb: s.mbWithoutGpu })),
         1800,
       )
-    : null;
+    : total;
+  const soakScope = results.soak ? `${Math.round(results.soak.windowS / 60)} min soak, ${results.soak.samples.length} samples` : "--long only";
   rows.push({
     id: "growth",
-    budget: "memory growth",
-    scope: results.soak ? `${Math.round(results.soak.windowS / 60)} min soak, ${results.soak.samples.length} samples` : "--long only",
+    budget: "memory growth without GPU",
+    scope: split || !results.soak ? soakScope : `${soakScope} (no split: total)`,
     measured: growth,
     limit: `< ${b.growth.max}`,
     unit: b.growth.unit,
     verdict: strictVerdict(growth, b.growth.max),
   });
   rows.push({
-    id: "growthNoGpu",
-    budget: "memory growth without GPU",
-    scope: noGpu == null ? "-" : "same soak",
-    measured: noGpu,
+    id: "growthTotal",
+    budget: "memory growth, all processes",
+    scope: results.soak ? "same soak, GPU process included" : "-",
+    measured: total,
     limit: "info",
     unit: b.growth.unit,
-    verdict: noGpu == null ? "SKIP" : "INFO",
+    verdict: total == null ? "SKIP" : "INFO",
   });
   return rows;
 }
