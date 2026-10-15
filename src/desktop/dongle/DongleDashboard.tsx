@@ -25,8 +25,7 @@ import { boardProblemKey } from "../openTasks";
 import { adcToCelsius, formatMicros, formatUptime, signalQuality } from "../format";
 import { usePoll } from "../usePoll";
 import type { OledFrameState } from "./DongleConsole";
-
-const HISTORY = 60;
+import { HISTORY, TREND_MAX_SAMPLES, trendCapacity } from "./trendHistory";
 
 interface Sample {
   at: number;
@@ -53,15 +52,16 @@ const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : nu
 
 // `frame`: the OLED mirror's latest frame (the page's own poll), for what the OLED shows now.
 // `error`: the last read's failure (null once a read succeeds).
+// `history`: the last minute; `longHistory`: up to TREND_MAX_SAMPLES (the Timing card's width-sized trends).
 // error: SHOWN — english: at the Diagnostics heading (DonglePage, MainBlock actions; board errors are English, batch E3)
-export type Telemetry = { sample: Sample | null; history: Sample[]; error: string | null; frame: OledFrame | null };
+export type Telemetry = { sample: Sample | null; history: Sample[]; longHistory: Sample[]; error: string | null; frame: OledFrame | null };
 
 // The page's live reads: every second while shown (usePoll).
 export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrameState, rssiNow: number | null): Telemetry {
   const frameNow = mirror.frame;
   const client = bridge.client;
   const withTimings = supportsFeature2(bridge.identity, 11, FEATURES2.timings);
-  // cache: OK — key=sample time; invalidated=sliding window; bound=HISTORY = 60 samples
+  // cache: OK — key=sample time; invalidated=sliding window; bound=TREND_MAX_SAMPLES = 600 samples (10 min)
   const history = useRef<Sample[]>([]);
   // changes null = no mirror frame in that sample (then no redraw rate).
   // cache: OK — key=none (previous counters); invalidated=each 1 s sample; bound=1 entry
@@ -105,14 +105,14 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
         oled: frame ? { power: frame.power, screen: frame.screen, contrast: frame.contrast, fps: p && p.changes !== null && dt > 0 ? Math.round((changes - p.changes) / dt) : 0 } : null,
       };
       prev.current = { at, usb: diag.usbFrames, bt: diag.btPackets, mic: counters?.micFrames, loops: counters?.core1Loops ?? null, changes: frame ? changes : null };
-      history.current = [...history.current.slice(-(HISTORY - 1)), s];
-      return { s, history: history.current };
+      history.current = [...history.current.slice(-(TREND_MAX_SAMPLES - 1)), s];
+      return { s, history: history.current.slice(-HISTORY), longHistory: history.current };
     },
     1000,
     Boolean(client),
   );
   const sample = poll.value;
-  return { sample: sample?.s ?? null, history: sample?.history ?? [], error: poll.error, frame: frameNow };
+  return { sample: sample?.s ?? null, history: sample?.history ?? [], longHistory: sample?.longHistory ?? [], error: poll.error, frame: frameNow };
 }
 
 // The clock gauge's scale is the board's own ceiling (the fastest the dongle
@@ -154,7 +154,7 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
 // The Diagnostics block's body: everything the dials above don't show.
 export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeResult; telemetry: Telemetry }) {
   const { t } = useTranslation();
-  const { sample: s, history } = telemetry;
+  const { sample: s, history, longHistory } = telemetry;
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   if (!bridge.client) return null;
   // A rate needs two reads: the first read shows none ("—").
@@ -194,7 +194,7 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
         </div>
       </SectionGroup>
 
-      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={history} />}
+      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={longHistory} />}
 
       {specs && (
         <SectionGroup title={td("specs.title")}>
@@ -220,15 +220,30 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
 const SPEAKER_FRAME_US = 10000;
 
 // Protocol 1.11: how long each stage of the firmware takes (average and worst
-// case since the reset), the averages' last minute, and a Reset.
+// case since the reset), the averages over time, and a Reset. The trend column
+// takes the card's spare width; the line keeps one sample per few pixels of it
+// (trendCapacity), so it fills the column from left to right over time.
 function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[] }) {
   const { t } = useTranslation();
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.timing.${k}`, o);
   // The graphs start over at a reset, like the numbers.
   const [resetAt, setResetAt] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  // loop: HOT-PATH-OK — N = 60 samples
-  const recent = history.filter((x) => x.at >= resetAt && x.timings);
+  // The trend column's drawn width (its header cell spans it): re-measured only when it resizes.
+  const trendHead = useRef<HTMLSpanElement>(null);
+  const [trendWidth, setTrendWidth] = useState(0);
+  // lifetime: OK — the ResizeObserver is disconnected on unmount
+  useEffect(() => {
+    const el = trendHead.current;
+    if (!el) return;
+    // lifetime: OK — cleanup: disconnects the ResizeObserver (unmount)
+    const ro = new ResizeObserver(([entry]) => setTrendWidth(Math.round(entry.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const capacity = trendCapacity(trendWidth);
+  // loop: HOT-PATH-OK — N ≤ TREND_MAX_SAMPLES = 600 samples; the 1 s sample's render
+  const recent = history.slice(-capacity).filter((x) => x.at >= resetAt && x.timings);
   const reset = async () => {
     try {
       setError(null);
@@ -252,14 +267,24 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
         <span />
         <span>{td("average")}</span>
         <span>{td("worst")}</span>
-        <span>{td("trend")}</span>
+        <span ref={trendHead}>{td("trend")}</span>
         {/* loop: HOT-PATH-OK — N ≤ 8 timing stages */}
         {timings.stages.slice(0, TIMING_STAGES.length).map((st, i) => {
           const saturated = st.maxUs >= TIMING_MAX_SATURATED;
           const bad = TIMING_STAGES[i] === "speaker" && st.maxUs >= SPEAKER_FRAME_US;
-          // loop: HOT-PATH-OK — N = 8 stages x 60 samples = 480 numbers
+          // loop: HOT-PATH-OK — N = 8 stages x ≤ 600 samples; the 1 s sample's render
           const trend = recent.map((x) => (x.timings?.stages[i]?.avgNs ?? 0) / 1000);
-          return <TimingRow key={TIMING_STAGES[i]} label={td(`stages.${TIMING_STAGES[i]}`)} avg={formatMicros(st.avgNs / 1000)} worst={formatMicros(st.maxUs, saturated)} bad={bad} trend={trend} />;
+          return (
+            <TimingRow
+              key={TIMING_STAGES[i]}
+              label={td(`stages.${TIMING_STAGES[i]}`)}
+              avg={formatMicros(st.avgNs / 1000)}
+              worst={formatMicros(st.maxUs, saturated)}
+              bad={bad}
+              trend={trend}
+              capacity={capacity}
+            />
+          );
         })}
       </div>
       <div className="dash-timing-foot">
@@ -270,7 +295,7 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
   );
 }
 
-function TimingRow({ label, avg, worst, bad, trend }: { label: string; avg: string; worst: string; bad: boolean; trend: number[] }) {
+function TimingRow({ label, avg, worst, bad, trend, capacity }: { label: string; avg: string; worst: string; bad: boolean; trend: number[]; capacity: number }) {
   return (
     <>
       <span>{label}</span>
@@ -279,7 +304,7 @@ function TimingRow({ label, avg, worst, bad, trend }: { label: string; avg: stri
         {bad ? "⚠ " : ""}
         {worst}
       </b>
-      {trend.length > 1 ? <Trend values={trend} /> : <span />}
+      {trend.length > 1 ? <Trend values={trend} capacity={capacity} /> : <span />}
     </>
   );
 }
@@ -351,14 +376,15 @@ function Gauge({
   );
 }
 
-// A small trend line (a gauge's last minute).
-function Trend({ values }: { values: number[] }) {
+// A small trend line: `capacity` samples span its width (a gauge's last minute
+// by default), so it fills from the left as samples arrive.
+function Trend({ values, capacity = HISTORY }: { values: number[]; capacity?: number }) {
   const w = 120;
   const h = 18;
   const lo = Math.min(...values);
   const hi = Math.max(...values, lo + 0.5);
-  // loop: HOT-PATH-OK — N = 60 points per trend line
-  const pts = values.map((v, i) => `${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
+  // loop: HOT-PATH-OK — N ≤ capacity ≤ 600 points per trend line; the 1 s sample's render
+  const pts = values.map((v, i) => `${((i / (capacity - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
   return (
     <svg className="dash-gauge-trend" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
       <polyline points={pts} />

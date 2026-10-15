@@ -5233,9 +5233,9 @@ main.dk-body:focus:not(:focus-visible),
     padding-left: 22px;
   }
 }
+/* The trend column takes all the card's spare width (it fills over time). */
 .dash-block .dash-timings {
-  grid-template-columns: max-content max-content max-content minmax(60px, 160px);
-  justify-content: start;
+  grid-template-columns: max-content max-content max-content minmax(60px, 1fr);
   gap: 3px 14px;
 }
 .dash-block .dash-timing-foot {
