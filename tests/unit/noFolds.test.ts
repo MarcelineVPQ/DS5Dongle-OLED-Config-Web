@@ -5,7 +5,7 @@
 // page are not folds: Games' Show menu (GameLibrary.tsx, a <details> used as
 // a menu button in the top layer) is the one allowed <details>.
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = join(__dirname, "../..");
@@ -22,8 +22,8 @@ function files(dir: string): string[] {
 describe("no folds in the pages", () => {
   it("has no <details>/<summary> disclosure outside the Show menu", () => {
     const found = files(join(ROOT, "src"))
-      .map((path) => relative(ROOT, path))
-      .filter((path) => !MENUS.has(path) && /<(details|summary)[\s>]/.test(readFileSync(join(ROOT, path), "utf8")));
+      .map((path) => relative(ROOT, path).split(sep).join("/"))
+      .filter((path) => !MENUS.has(path) && /<(details|summary)[\s>]/.test(readFileSync(join(ROOT, ...path.split("/")), "utf8")));
     expect(found).toEqual([]);
   });
 });
