@@ -7,21 +7,32 @@ import { usePoll } from "../usePoll";
 import { BusyButton } from "../controls";
 import { noteSlotOccupancy, useFakeSlots } from "../devPreview";
 import { COLORWAYS } from "../live/colorways";
-import { readPref, writePref } from "../storage";
+import { writePref } from "../storage";
+import { readPrefJson } from "../persistedPref";
+import { salvageRecord } from "../../persisted";
+import { z } from "zod";
 import { useLibrary } from "../library/libraryContext";
 import Notice from "../Notice";
 
 // Which controller each pairing slot holds, remembered by its Bluetooth
 // address whenever it connects (the dongle only stores the address).
-const SLOT_MEMORY_KEY = "ds5.slotControllers";
-type Remembered = Record<string, { model: "dualsense" | "edge"; colorway: string }>;
-function readMemory(): Remembered {
-  try {
-    return JSON.parse(readPref(SLOT_MEMORY_KEY) ?? "{}") as Remembered;
-  } catch {
-    // error: NOT-WORTH — unreadable memory of each slot's controller: the slots show without its model
-    return {};
-  }
+export const SLOT_MEMORY_KEY = "ds5.slotControllers";
+const RememberedSlot = z.strictObject({ model: z.enum(["dualsense", "edge"]), colorway: z.string().max(8) });
+type Remembered = Record<string, z.infer<typeof RememberedSlot>>;
+// A damaged memory keeps the slots that still read, and the notice says so
+// (readPrefJson, batch E1); a slot it forgot shows without its model until
+// that controller connects again.
+export function readMemory(): Remembered {
+  return readPrefJson(SLOT_MEMORY_KEY, {
+    kind: "slotControllers",
+    salvage: (data) =>
+      salvageRecord(data, z.string().max(17), (v) => {
+        // error: NOT-WORTH — a slot entry that doesn't fit is left out and counted as lost (the notice says so)
+        const slot = RememberedSlot.safeParse(v);
+        return slot.success ? { value: slot.data, lost: false } : null;
+      }),
+    fallback: () => ({}),
+  });
 }
 
 function formatMac(addr: Uint8Array): string {

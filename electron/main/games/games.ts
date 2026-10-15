@@ -38,17 +38,32 @@ import type {
   LauncherInfo,
   ModeInfo,
   Msg,
+  ProtonChoice,
   RestartList,
   SystemInfo,
 } from "../../../src/desktop/games/types";
 import { Backups, writeFileAtomic, type Owner } from "./backup";
-import { findHeroicInstalls, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
-import { findLutrisInstalls, listLutrisGames, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
+import { findHeroicInstalls, heroicBuilds, heroicDefaultWine, heroicTools, listHeroicGames, type HeroicInstall, type WineVersion } from "./heroic";
+import { findLutrisInstalls, listLutrisGames, lutrisBuilds, lutrisDefaultRunner, lutrisWineBuilds, type LutrisInstall } from "./lutris";
 import { buildHonoursPreferSdl, hasBuild, preferSdlBuild } from "./proton";
 import { withLaunchersClosed, type LauncherControl } from "./processes";
 import { steamAppTypes } from "./appinfo";
 import { storeKey, type WindowsStores } from "./windowsStores";
-import { compatMapping, findSteamInstalls, installedTools, launchOptions, listSteamGames, readVdfFile, setCompatTool, steamInputState, valveProtons, type SteamInstall } from "./steam";
+import {
+  compatMapping,
+  findSteamInstalls,
+  installedTools,
+  launchOptions,
+  listSteamGames,
+  readVdfFile,
+  setCompatTool,
+  steamInputState,
+  steamTools,
+  valveProtonPaths,
+  valveProtons,
+  type SteamInstall,
+  type SteamTool,
+} from "./steam";
 import {
   findGlobalSdlVars,
   findProAudioRules,
@@ -99,7 +114,8 @@ export interface ScanDeps {
 
 export interface Scan {
   report: GamesReport;
-  plan: Map<string, Planned>;
+  plan: Map<string, Planned>; // the recommended changes (and every fix the pages list)
+  choices: Map<string, Planned>; // the game page's Proton version picker ("set-proton"), applied the same way
 }
 
 const SDL_ASSIGN = new RegExp(`(^|\\s)(${SDL_FORCING_VARS.join("|")})=(\\S*)`, "g");
@@ -236,7 +252,12 @@ export function gamepadPlan(o: { envSet: boolean; honours: boolean; target: stri
 }
 
 // A game entry's optional states (only set for the games they apply to).
-const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined, mode?: ModeInfo) => ({ ...(gamepad ? { gamepad } : {}), ...(hdr ? { hdr } : {}), ...(mode ? { mode } : {}) });
+export const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | undefined, mode?: ModeInfo, protons?: ProtonChoice[]) => ({
+  ...(gamepad ? { gamepad } : {}),
+  ...(hdr ? { hdr } : {}),
+  ...(mode ? { mode } : {}),
+  ...(protons ? { protons } : {}),
+});
 
 // Fix ids are built from what they point at (an install root, a file path),
 // never a list position, so an id from the review screen can only resolve to
@@ -267,12 +288,42 @@ export function newestLocalBuild(names: string[]): string | null {
   return names.filter((n) => PROTON_NAME.test(n)).sort((a, b) => compareProtonNames(b, a))[0] ?? null;
 }
 
+// ---- The game page's Proton version picker (Linux) ----
+// One game's builds, as its launcher offers them: `key` is what the game's
+// setting holds (the one matching `current` is the current build), `label`
+// what the launcher shows, `edit` the change that sets it.
+interface PickerBuilds<B> {
+  builds: B[];
+  key: (b: B) => string;
+  label: (b: B) => string;
+  ours: (b: B) => boolean; // our newest DualSense build: recommended
+  edit: (b: B) => Edit;
+}
+interface PickerGame {
+  idBase: string; // `${prefix}:proton:${game id}`
+  launcher: LauncherId;
+  game: string;
+  current: string | null; // key of what the game runs with now (its own setting or the default)
+  currentLabel: string | Msg;
+  note?: Msg; // said with every choice (Steam: a game that follows the default)
+}
+
+// Our recommended build at the top, then by family (GE-Proton, Proton,
+// wine-ge, …) and newest first within one.
+const family = (name: string) => name.toLowerCase().replace(/\d+/g, "#");
+export const byPick = (a: ProtonChoice, b: ProtonChoice) => {
+  const fa = family(a.name);
+  const fb = family(b.name);
+  return Number(b.recommended) - Number(a.recommended) || (fa < fb ? -1 : fa > fb ? 1 : 0) || b.name.localeCompare(a.name, undefined, { numeric: true });
+};
+
 export function scan(deps: ScanDeps): Scan {
   const plan = new Map<string, Planned>();
+  const choices = new Map<string, Planned>();
   const games: GameEntry[] = [];
   const launchers: LauncherInfo[] = [];
   const ours = deps.ourProton;
-  const add = (p: Planned) => plan.set(p.fix.id, p);
+  const linux = process.platform === "linux";
   const hdrSys: HdrSystem = deps.hdr ?? NO_HDR_SYSTEM;
   const hdrScr = hdrScreen(hdrSys);
   // HDR through gamescope is Linux-only (Windows games do HDR themselves):
@@ -287,11 +338,31 @@ export function scan(deps: ScanDeps): Scan {
     state === "update"
       ? { label: msg(gamescope ? "label.hdrUpdate" : "label.hdrRemoveOld", { game }), why: msg("why.hdrOld", { game, next: gamescope ? why : msg("why.hdrOldOnly") }) }
       : { label: msg("label.hdr", { game }), why };
-  const fix = (id: string, kind: FixKind, launcher: Fix["launcher"], label: Msg, why: Msg, recommended: boolean, edits: Edit[], post?: PostAction): Fix => {
+  const fix = (id: string, kind: FixKind, launcher: Fix["launcher"], label: Msg, why: Msg, recommended: boolean, edits: Edit[], post?: PostAction, into = plan): Fix => {
     // loop: NOT-WORTH — edits of one fix
     const f: Fix = { id, kind, launcher, label, why, files: [...new Set(edits.flatMap((e) => (e.format === "disable" ? [e.file, `${e.file}.disabled`] : [e.file])))], recommended };
-    add({ fix: f, edits, post });
+    into.set(id, { fix: f, edits, post });
     return f;
+  };
+  // Every build the game's launcher can run it with, the current one marked;
+  // each other one carries its own "set-proton" fix (in `choices`, never a
+  // recommended change). Linux only: Proton is a Linux thing.
+  const pickerFor = <B>(g: PickerGame, p: PickerBuilds<B>): ProtonChoice[] | undefined => {
+    if (process.platform !== "linux" || p.builds.length === 0) return undefined;
+    // loop: NOT-WORTH — one launcher's builds (≤ ~20) per game, no I/O; once per scan
+    const list = p.builds.map((b): ProtonChoice => {
+      const name = p.label(b);
+      const base = { name, recommended: p.ours(b) };
+      if (p.key(b) === g.current) return { ...base, current: true };
+      const why = msg("why.protonPick", { game: g.game, proton: name, current: g.currentLabel, note: g.note ?? "" });
+      return {
+        ...base,
+        current: false,
+        fix: fix(`${g.idBase}:${idHash(p.key(b))}`, "set-proton", g.launcher, msg("label.runner", { game: g.game, proton: name }), why, false, [p.edit(b)], undefined, choices),
+      };
+    });
+    // loop: NOT-WORTH — one launcher's builds (≤ ~20), once per game
+    return list.sort(byPick);
   };
   // A game's graphics mode from its arguments line, and the fix that adds the
   // flag when it's needed (`edit` writes the line through withArg).
@@ -325,6 +396,10 @@ export function scan(deps: ScanDeps): Scan {
     const defaultRunner = mapping ? (getString(mapping, "0", "name") ?? null) : null;
     const tools = installedTools(install);
     const protonInstalled = !!ours && tools.includes(ours);
+    // The picker's builds, and how Steam shows a tool's internal name.
+    const pickTools = linux && config ? steamTools(install) : [];
+    // loop: NOT-WORTH — Steam's builds (≤ ~20), once per scan
+    const toolLabel = new Map(pickTools.map((x) => [x.name, x.label]));
     const lfixes: Fix[] = [];
     if (config && ours && protonInstalled && defaultRunner !== ours) {
       lfixes.push(
@@ -483,6 +558,26 @@ export function scan(deps: ScanDeps): Scan {
         playable && local && localPath
           ? modeFor(graphicsMode(g.name, "steam"), opts, g.name, `${prefix}:mode:${g.appid}`, "steam", "why.modeSteam", (change) => editLaunchOptions(localPath, g.appid, change), gfixes)
           : undefined;
+      // A game on the default may be a Linux one: the choice says what a Proton does to it.
+      const protons = playable
+        ? pickerFor<SteamTool>(
+            {
+              idBase: `${prefix}:proton:${g.appid}`,
+              launcher: "steam",
+              game: g.name,
+              current: effective,
+              currentLabel: effective ? (toolLabel.get(effective) ?? effective) : msg("fallback.steamProton"),
+              note: override === null ? msg("why.protonPickDefault", { game: g.name }) : undefined,
+            },
+            {
+              builds: pickTools,
+              key: (b) => b.name,
+              label: (b) => b.label,
+              ours: (b) => b.name === ours,
+              edit: (b) => ({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, b.name) }),
+            },
+          )
+        : undefined;
       games.push({
         key,
         launcher: "steam",
@@ -495,7 +590,7 @@ export function scan(deps: ScanDeps): Scan {
         steamInput: input,
         envFlags,
         support,
-        ...gameStates(gamepad, hdr, mode),
+        ...gameStates(gamepad, hdr, mode, protons),
         fixes: playable ? gfixes : [],
         ...(kind && kind !== "game" ? { kind } : {}),
       });
@@ -503,6 +598,16 @@ export function scan(deps: ScanDeps): Scan {
   }
 
   // ---- Heroic ----
+  // Steam's builds as Heroic stores a Wine version (the native Heroic offers them too).
+  const steamWines: WineVersion[] = linux
+    ? // loop: NOT-WORTH — Steam installs and their builds (≤ ~20), once per scan
+      steamInstalls.flatMap((s) => [
+        // loop: NOT-WORTH — one install's builds in compatibilitytools.d (≤ ~20), once per scan
+        ...installedTools(s).map((name) => ({ bin: join(s.toolsDir, name, "proton"), name, type: "proton" })),
+        // loop: NOT-WORTH — one install's Valve Protons (≤ ~8), once per scan
+        ...valveProtonPaths(s).map(({ name, dir }) => ({ bin: join(dir, "proton"), name, type: "proton" })),
+      ])
+    : [];
   // loop: NOT-WORTH — Heroic installs found
   findHeroicInstalls(deps.home).forEach((install) => scanHeroic(install, `heroic-${idHash(install.root)}`));
   function scanHeroic(install: HeroicInstall, prefix: string) {
@@ -511,6 +616,7 @@ export function scan(deps: ScanDeps): Scan {
     const ourWine: WineVersion | null = ours && protonInstalled ? { bin: join(install.toolsDir, ours, "proton"), name: ours, type: "proton" } : null;
     const def = heroicDefaultWine(install);
     const defaultIsOurs = !!ours && def?.name === ours && existsSync(def.bin);
+    const pickBuilds = linux ? heroicBuilds(install, steamWines) : [];
     const lfixes: Fix[] = [];
     if (ourWine && !defaultIsOurs) {
       lfixes.push(
@@ -630,6 +736,12 @@ export function scan(deps: ScanDeps): Scan {
             gfixes,
           )
         : undefined;
+      const protons = hasConfig
+        ? pickerFor<WineVersion>(
+            { idBase: `${prefix}:proton:${g.appName}`, launcher: "heroic", game: g.title, current: (g.wineVersion ?? def)?.bin ?? null, currentLabel: orMsg(effective, "fallback.none") },
+            { builds: pickBuilds, key: (b) => b.bin, label: (b) => b.name, ours: (b) => b.name === ours, edit: (b) => editGame((cfg) => (cfg.wineVersion = { ...b })) },
+          )
+        : undefined;
       if (nativeSupport(support) && envFlags.length && hasConfig) {
         gfixes.push(
           fix(`${prefix}:env:${g.appName}`, "remove-env", "heroic", msg("label.envHeroic", { vars: envFlags.join(", "), game: g.title }), msg("why.envHeroic", { vars: envFlags.join(", ") }), true, [
@@ -651,7 +763,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours && !runnerMissing,
         envFlags,
         support,
-        ...gameStates(gamepad, hdr, mode),
+        ...gameStates(gamepad, hdr, mode, protons),
         fixes: gfixes,
       });
     }
@@ -672,6 +784,7 @@ export function scan(deps: ScanDeps): Scan {
     // Where Lutris finds Proton builds (for their version files).
     // loop: NOT-WORTH — Steam installs
     const buildDirs = [install.wineDir, ...(install.flatpak ? [] : steamInstalls.map((s) => s.toolsDir))];
+    const pickBuilds = linux ? lutrisBuilds(install, steamToolNames) : [];
     if (protonInstalled && def !== ours) {
       lfixes.push(
         fix(`${prefix}:default`, "set-default", "lutris", msg("label.defaultLutris", { proton: ours }), msg("why.defaultLutris", { current: orMsg(def, "fallback.lutrisDefault") }), true, [
@@ -771,6 +884,10 @@ export function scan(deps: ScanDeps): Scan {
         }
       }
       const mode = modeFor(graphicsMode(g.name, "lutris"), g.args, g.name, `${prefix}:mode:${g.configId}`, "lutris", "why.modeLutris", (change) => editLutrisArgs(g.configPath, change), gfixes);
+      const protons = pickerFor<string>(
+        { idBase: `${prefix}:proton:${g.configId}`, launcher: "lutris", game: g.name, current: effective, currentLabel: orMsg(effective, "fallback.lutrisDefault") },
+        { builds: pickBuilds, key: (b) => b, label: (b) => b, ours: (b) => b === ours, edit: (b) => setVersion(g.configPath, b) },
+      );
       games.push({
         key,
         launcher: "lutris",
@@ -782,7 +899,7 @@ export function scan(deps: ScanDeps): Scan {
         usesOurProton: !!ours && effective === ours,
         envFlags: [],
         support,
-        ...gameStates(gamepad, hdr, mode),
+        ...gameStates(gamepad, hdr, mode, protons),
         fixes: gfixes,
       });
     }
@@ -903,6 +1020,7 @@ export function scan(deps: ScanDeps): Scan {
       scannedAt: new Date().toISOString(),
     },
     plan,
+    choices,
   };
 }
 
@@ -928,7 +1046,7 @@ export function launchersToRestart(owners: Iterable<string>, running: Set<Launch
 }
 
 export async function applyFixes(fresh: Scan, fixIds: string[], allowed: RestartList, deps: ApplyDeps): Promise<ApplyResult> {
-  const selected = fixIds.map((id) => fresh.plan.get(id));
+  const selected = fixIds.map((id) => fresh.plan.get(id) ?? fresh.choices.get(id));
   const unknown = fixIds.filter((_, i) => !selected[i]);
   const chosen = selected.filter((p): p is Planned => !!p);
 

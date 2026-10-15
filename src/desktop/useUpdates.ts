@@ -4,8 +4,9 @@ import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FeedProblem, FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
 import { deviceText } from "./hardwareName";
-import { type FirmwareProgress, updateFirmware } from "./firmwareUpdate";
+import { type FirmwareProgress, findBootloader, installFirmware, updateFirmware } from "./firmwareUpdate";
 import { logged } from "../errorText";
+import i18n from "../i18n";
 
 // App self-update state, mirrored from the main process.
 export function useAppUpdate(): UpdateState {
@@ -40,9 +41,18 @@ export type FirmwareUpdateState =
   | { phase: "running"; progress: FirmwareProgress }
   | { phase: "verifying"; version: string; slow?: boolean }
   | { phase: "done"; version: string }
+  // The board came back in BOOTSEL after the write: the new firmware didn't start.
+  | { phase: "notStarted"; version: string }
   | { phase: "failed"; detail: string };
 
 const RECONNECT_TIMEOUT_MS = 45_000;
+// After the write, how often and for how long to look for the bootloader
+// coming back (an image the boot ROM won't start: it re-enters BOOTSEL about
+// a second after the restart). A board still in BOOTSEL this long after the
+// restart, with no gap seen between two looks, didn't start either.
+const BOOTLOADER_LOOK_MS = 500;
+const BOOTLOADER_WATCH_MS = 30_000;
+const STILL_IN_BOOTSEL_MS = 8_000;
 
 // Whether `latest` is offered to a dongle running `installed`: a newer
 // version; or, on a dongle running a development build, the stable version
@@ -70,6 +80,8 @@ export interface FirmwareUpdate {
   backToStable: boolean; // the offer is the stable version, older than this development build
   state: FirmwareUpdateState;
   start: () => Promise<void>;
+  // After "notStarted": write the same firmware again to the board in BOOTSEL.
+  reinstall: () => Promise<void>;
   refreshLatest: () => Promise<FirmwareLookup>;
   dismiss: () => void;
 }
@@ -79,6 +91,8 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   const [problem, setProblem] = useState<FirmwareLookup["problem"]>(null);
   const [state, setState] = useState<FirmwareUpdateState>({ phase: "idle" });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The firmware entry the last write installed (Install again writes exactly it).
+  const written = useRef<LatestFirmware | null>(null);
 
   const refreshLatest = useCallback(async (): Promise<FirmwareLookup> => {
     let r: FirmwareLookup;
@@ -120,6 +134,15 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   const installed = bridge.firmwareVersion;
   const { available, backToStable } = firmwareOffer(latest?.version, installed);
 
+  // Written and restarted: wait for the board to come back with `version`.
+  const verify = useCallback((version: string) => {
+    setState({ phase: "verifying", version });
+    // The dongle only shows up on USB once a controller connects, so a slow
+    // return isn't a failure: keep waiting, and ask for PS.
+    // lifetime: OK — cleared once the update settles, and on unmount (effects below)
+    timer.current = setTimeout(() => setState((s) => (s.phase === "verifying" && s.version === version ? { phase: "verifying", version, slow: true } : s)), RECONNECT_TIMEOUT_MS);
+  }, []);
+
   const start = useCallback(async () => {
     const client = bridge.client;
     if (!client || !latest || state.phase === "running" || state.phase === "verifying") return;
@@ -130,12 +153,8 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     }
     try {
       // The entry shown on the card, exactly (never a newer feed's).
-      const version = await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress }));
-      setState({ phase: "verifying", version });
-      // The dongle only shows up on USB once a controller connects, so a slow
-      // return isn't a failure: keep waiting, and ask for PS.
-      // lifetime: OK — cleared once the update settles, and on unmount (effects below)
-      timer.current = setTimeout(() => setState({ phase: "verifying", version, slow: true }), RECONNECT_TIMEOUT_MS);
+      written.current = latest;
+      verify(await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress })));
     } catch (cause) {
       // error: SHOWN — english: the firmware banner's error notice with Dismiss (flash errors are English, batch E3)
       setState({ phase: "failed", detail: causeText(cause) });
@@ -146,7 +165,22 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
         setProblem(r.problem);
       }, logged("refreshing the offer after a failed install (the failure is already shown)"));
     }
-  }, [appUpdate.phase, bridge.client, latest, state.phase]);
+  }, [appUpdate.phase, bridge.client, latest, state.phase, verify]);
+
+  // Install again, after the new firmware didn't start: the board waits in
+  // BOOTSEL, so this writes it directly (no reboot command first).
+  const reinstall = useCallback(async () => {
+    const firmware = written.current;
+    if (state.phase !== "notStarted" || !firmware) return;
+    try {
+      const device = await findBootloader();
+      if (!device) throw new Error(i18n.t("desktop.firmware.noBootsel"));
+      verify(await installFirmware(device, firmware, (progress) => setState({ phase: "running", progress })));
+    } catch (cause) {
+      // error: SHOWN — desktop.firmware.writeFailed: the firmware banner's error notice with Dismiss (also noBootsel / wrongFile, in plain words)
+      setState({ phase: "failed", detail: causeText(cause) });
+    }
+  }, [state.phase, verify]);
 
   // The hook reconnects to the rebooted dongle by itself; the outcome is the
   // version it reports. Kept once known (set while rendering, React's pattern
@@ -165,6 +199,43 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     if (!verifying && timer.current) clearTimeout(timer.current);
   }, [verifying]);
 
+  // An image the boot ROM won't start leaves the board in BOOTSEL: the
+  // bootloader goes away with the restart and comes back. Look for it for a
+  // while after the write (the running firmware never shows up as one).
+  const waitingFor = state.phase === "verifying" ? state.version : null;
+  // lifetime: OK — cleanup: stops the bootloader look (settled, a new write, unmount)
+  useEffect(() => {
+    if (!waitingFor) return;
+    const since = Date.now();
+    let stopped = false;
+    let gone = false;
+    let look: ReturnType<typeof setTimeout> | undefined;
+    const tick = async () => {
+      let device: unknown;
+      try {
+        device = await findBootloader();
+      } catch (cause) {
+        // error: LOGGED-OK — one look at the USB devices failed; the next look (500 ms) tries again, and the wait for the board goes on as before
+        logged("looking for the bootloader after a firmware write")(cause);
+        device = undefined;
+      }
+      if (stopped) return;
+      if (device === null) gone = true;
+      else if (device && (gone || Date.now() - since > STILL_IN_BOOTSEL_MS)) {
+        setState((s) => (s.phase === "verifying" && s.version === waitingFor ? { phase: "notStarted", version: waitingFor } : s));
+        return;
+      }
+      // loop: SERIAL-REQUIRED — a deadline: one USB look every 500 ms, for 30 s after the write
+      // lifetime: OK — self re-arming until the deadline; cleared in the cleanup
+      if (Date.now() - since < BOOTLOADER_WATCH_MS) look = setTimeout(() => void tick().catch(logged("the bootloader look (it catches its own errors)")), BOOTLOADER_LOOK_MS);
+    };
+    tick().catch(logged("the bootloader look (it catches its own errors)"));
+    return () => {
+      stopped = true;
+      if (look) clearTimeout(look);
+    };
+  }, [waitingFor]);
+
   // lifetime: OK — cleanup: clears the slow-return timer on unmount
   useEffect(
     () => () => {
@@ -180,6 +251,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     backToStable,
     state: shown,
     start,
+    reinstall,
     refreshLatest,
     dismiss: () => setState({ phase: "idle" }),
   };

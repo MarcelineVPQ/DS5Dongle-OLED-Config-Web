@@ -30,6 +30,7 @@ const api: DesktopApi = {
     return () => ipcRenderer.removeListener(IPC.showNotice, handler);
   },
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
+  recoveredFiles: () => ipcRenderer.invoke(IPC.recoveredFiles),
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),
@@ -102,6 +103,8 @@ const api: DesktopApi = {
   gameArtColor: (gameKey) => ipcRenderer.invoke(IPC.gameArtColor, gameKey),
   // Dev builds only: a release registers no handler for it (electron/main/devTools.ts).
   devFakeGames: (change) => ipcRenderer.invoke(IPC.devFakeGames, change),
+  saveOledImage: (image) => ipcRenderer.invoke(IPC.saveOledImage, image),
+  copyOledImage: (png) => ipcRenderer.invoke(IPC.copyOledImage, png),
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

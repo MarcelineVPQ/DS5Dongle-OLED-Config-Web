@@ -279,7 +279,24 @@
       "feedChanged": "A newer firmware appeared. Check again.",
       "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again.",
       "wrongFile": "This file isn't firmware for {{device}} (it's for another chip, or damaged), so nothing was written. Check for updates again; if it happens again, reinstall the app.",
-      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again."
+      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again.",
+      "didntStart": "The new firmware didn't start: {{device}} came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.",
+      "installAgain": "Install again"
+    },
+    "recovered": {
+      "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
+      "whole": "{{what}} couldn't be read (it was damaged), so it starts from the defaults. The damaged copy is saved as {{kept}}.",
+      "notKept": "{{what}} couldn't be read, so the defaults are used for now. The damaged data was left where it is.",
+      "what": {
+        "settings": "Your app settings",
+        "library": "Your game library (game profiles, button layouts, ratings and notes)",
+        "oldLibrary": "The game library from the earlier app version",
+        "dismissedNotices": "The list of notices you dismissed",
+        "pins": "Your pinned sections",
+        "slotControllers": "The app's memory of which controller is in each pairing slot",
+        "customColors": "Your controller's colors",
+        "declinedFixes": "The Games changes you unticked"
+      }
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -492,7 +509,9 @@
           "modeSteam": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. The launch options become: {{args}}{{proton}}",
           "modeHeroic": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its game arguments in Heroic become: {{args}}{{proton}}",
           "modeLutris": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its arguments in Lutris become: {{args}}{{proton}}",
-          "modeVkd3d": " Under Proton, DirectX 12 runs through vkd3d-proton, so the first starts can take longer while shaders are built."
+          "modeVkd3d": " Under Proton, DirectX 12 runs through vkd3d-proton, so the first starts can take longer while shaders are built.",
+          "protonPick": "{{game}} will run with {{proton}} instead of {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} follows Steam's default now: if it has a Linux version, Steam runs its Windows version with this Proton instead."
         },
         "unlock": {
           "rayTracing": "Ray Tracing",
@@ -858,6 +877,14 @@
       "anyProton": "Any recent Proton",
       "usesOurs": "Uses the DualSense Proton build.",
       "switchTo": "Switch to {{name}}",
+      "protonPick": "Proton version",
+      "protonPickInfo": "Every Proton and Wine build the game's launcher can run it with. Switching changes the game's own setting in the launcher (backed up first), and Undo puts the old one back.",
+      "protonRecommended": "{{name}} (recommended)",
+      "protonCurrent": "{{name}} (current)",
+      "protonBoth": "{{name}} (recommended, current)",
+      "protonGone": "⚠ {{name}} (not installed)",
+      "protonSwitched": "Switched to {{name}}. The game uses it from its next start.",
+      "protonUndone": "Undone: the game is back on its previous version.",
       "tier": {
         "verified": "Verified",
         "works": "Works",
@@ -1064,6 +1091,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Share",
+      "title": "Save or copy exactly what the OLED shows (PNG or animated GIF)",
+      "bar": "Share the OLED",
+      "size": "Size",
+      "sizeTitle": "{{w}} × {{h}} pixels",
+      "frame": "Board frame",
+      "savePng": "Save PNG…",
+      "copy": "Copy",
+      "copyTitle": "Copy the picture (PNG), ready to paste into Discord",
+      "record": "Record GIF",
+      "recordTitle": "Records up to {{s}} s, a frame each time the picture changes, then asks where to save it",
+      "recording": "Recording {{s}} s of {{max}} s · {{n}} frames",
+      "stop": "Stop and save",
+      "cancel": "Cancel",
+      "working": "Making the file…",
+      "saved": "Saved {{name}}",
+      "copied": "Copied. Paste it into Discord or anywhere else.",
+      "noPicture": "Nothing to share yet: waiting for the screen.",
+      "errors": {
+        "encode": "Couldn't make the picture: {{reason}}. Try again.",
+        "tooBig": "The file came out too big to share (over {{mb}} MB). Pick a smaller size or a shorter recording, then try again.",
+        "save": "Couldn't save the file: {{reason}}. Pick another folder and try again.",
+        "copy": "Couldn't copy the picture: {{reason}}. Use Save PNG instead."
+      }
+    },
     "rail": {
       "label": "Navigation",
       "pin": "Keep open",
@@ -1078,7 +1131,9 @@
       },
       "development": "Development",
       "devHint": "A development build: newer than the stable release and less tested",
-      "again": "click again to show or hide its settings"
+      "again": "click again to show or hide its settings",
+      "lock": "Lock the rail small (icons only)",
+      "unlock": "Unlock the rail (it opens when you point at it again)"
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
@@ -1224,7 +1279,8 @@
         "write50": "Write error at 50 %",
         "write90": "Write error at 90 %",
         "noBootsel": "Doesn't show up in BOOTSEL",
-        "noReturn": "Doesn't come back after the update"
+        "noReturn": "Doesn't come back after the update",
+        "noStart": "Image that won't start"
       },
       "simSpeed": "Writing speed",
       "simSpeeds": {
@@ -1729,7 +1785,14 @@
       "buttonsChanged_one": "{{count}} button changed",
       "buttonsChanged_other": "{{count}} buttons changed",
       "slotActive": "Slot {{slot}} active",
-      "moreInDiagnostics": "More in Diagnostics"
+      "moreInDiagnostics": "More in Diagnostics",
+      "menu": "Panel options",
+      "collapseAll": "Collapse all",
+      "collapseAllTip": "Fold every section, pinned ones too (they stay pinned and open again next time)",
+      "nothingOpen": "Every section is already folded",
+      "clearPins": "Clear pins",
+      "clearPinsTip": "Unpin every pinned section on this page",
+      "noPins": "No pinned sections on this page"
     },
     "sections": {
       "lightbar": "Light bar",

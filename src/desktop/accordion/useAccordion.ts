@@ -10,6 +10,11 @@
 // First visit (nothing remembered yet): the first section with a task dot
 // opens, else none (the pinned ones stay open as always).
 //
+// The panel menu (SplitView): Collapse all folds every section, the pinned
+// ones too, for this visit only (the pins are kept, so they open again the
+// next time the page mounts; a folded pinned section's header opens it
+// again); Clear pins removes this scope's pins.
+//
 // Deep links: revealSection(page, id, row?) from anywhere (a rail dot, a
 // notice's "Go to", a tile) opens that section on its page, scrolls it into
 // view, moves the focus to its header and flashes it once. A page that isn't
@@ -20,6 +25,8 @@
 import { useEffect, useState } from "react";
 import { externalStore } from "../externalStore";
 import { readPref, writePref } from "../storage";
+import { readPrefJson } from "../persistedPref";
+import { salvageStrings } from "../../persisted";
 import type { SectionId, AccordionPage } from "./sections";
 
 export const OPEN_KEY = (page: AccordionPage) => `ds5.accordion.open.${page}`;
@@ -35,16 +42,10 @@ export function pinScope(page: AccordionPage, board?: string | null, slot?: numb
   return page;
 }
 
-export function parsePins(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    // loop: NOT-WORTH — N ≤ a page's sections (≤ 12); at mount
-    return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-  } catch {
-    // error: NOT-WORTH — a broken pin list reads as no pins: the sections just fold
-    return [];
-  }
+// A scope's stored pins. A damaged list keeps the pins that still read, and
+// the notice says so (readPrefJson, batch E1).
+export function readPins(scope: string): string[] {
+  return readPrefJson(PINS_KEY(scope), { kind: "pins", salvage: (data) => salvageStrings(data), fallback: () => [] });
 }
 
 export interface Reveal {
@@ -70,6 +71,11 @@ export interface Accordion {
   toggle: (id: string) => void;
   pin: (id: string) => void;
   reveal: (id: string, row?: string) => void;
+  // The panel menu: fold everything for now (pins kept), and clear this scope's pins.
+  anyOpen: boolean;
+  hasPins: boolean;
+  collapseAll: () => void;
+  clearPins: () => void;
   // The last deep link this page took, to scroll to and flash (Section.tsx).
   revealed: Reveal | null;
 }
@@ -86,12 +92,15 @@ export function useAccordion<P extends AccordionPage>(page: P, scope: string, fi
     if (stored === null) return firstTask; // first visit
     return stored === NONE ? null : stored;
   });
-  const [pins, setPins] = useState<string[]>(() => parsePins(readPref(PINS_KEY(scope))));
+  const [pins, setPins] = useState<string[]>(() => readPins(scope));
+  // Pinned sections folded by Collapse all, for this visit (not remembered: they open again next time).
+  const [foldedPins, setFoldedPins] = useState<string[]>([]);
   // Another board or slot on the controller page: its own pins.
   const [shownScope, setShownScope] = useState(scope);
   if (shownScope !== scope) {
     setShownScope(scope);
-    setPins(parsePins(readPref(PINS_KEY(scope))));
+    setPins(readPins(scope));
+    setFoldedPins([]);
   }
 
   // Deep links: one made before this page mounted, then each new one.
@@ -112,6 +121,8 @@ export function useAccordion<P extends AccordionPage>(page: P, scope: string, fi
   if (link && link !== revealed) {
     setRevealed(link);
     if (!pins.includes(link.id)) setOpen(link.id);
+    // loop: NOT-WORTH — N ≤ a page's sections; once per deep link
+    else if (foldedPins.includes(link.id)) setFoldedPins(foldedPins.filter((p) => p !== link.id));
   }
 
   // The open section is remembered (after the first visit: only once something changed it).
@@ -129,12 +140,28 @@ export function useAccordion<P extends AccordionPage>(page: P, scope: string, fi
     writePref(PINS_KEY(scope), JSON.stringify(next));
   };
   const isPinned = (id: string) => pins.includes(id);
+  const isFolded = (id: string) => foldedPins.includes(id);
+  // loop: HOT-PATH-OK — N ≤ a page's sections (≤ 12); per render
+  const anyOpen = open !== null || pins.some((p) => !isFolded(p));
   return {
     page,
     isPinned,
-    isOpen: (id) => open === id || isPinned(id),
+    isOpen: (id) => open === id || (isPinned(id) && !isFolded(id)),
+    anyOpen,
+    hasPins: pins.length > 0,
+    collapseAll: () => {
+      setOpen(null);
+      setFoldedPins(pins);
+    },
+    clearPins: () => {
+      savePins([]);
+      setFoldedPins([]);
+    },
     toggle: (id) => {
-      if (isPinned(id)) {
+      // A pinned section folded by Collapse all: its header opens it again (still pinned).
+      // loop: NOT-WORTH — N ≤ a page's sections; on a click
+      if (isPinned(id) && isFolded(id)) setFoldedPins(foldedPins.filter((p) => p !== id));
+      else if (isPinned(id)) {
         // A pinned section's header folds it: the pin goes too (else the header would do nothing).
         // loop: NOT-WORTH — N ≤ a page's sections; on a click
         savePins(pins.filter((p) => p !== id));
@@ -147,6 +174,8 @@ export function useAccordion<P extends AccordionPage>(page: P, scope: string, fi
         // loop: NOT-WORTH — N ≤ a page's sections; on a click
         savePins(pins.filter((p) => p !== id));
         setOpen(id);
+        // loop: NOT-WORTH — N ≤ a page's sections; on a click
+        if (isFolded(id)) setFoldedPins(foldedPins.filter((p) => p !== id));
       } else {
         savePins([...pins, id]);
         if (open === id) setOpen(null);

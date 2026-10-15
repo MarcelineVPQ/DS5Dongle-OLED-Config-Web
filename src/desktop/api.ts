@@ -1,3 +1,4 @@
+import type { Recovered } from "../persisted";
 import type { ApplyResult, CloseProblem, GamesReport, LauncherId, Msg, RestartList } from "./games/types";
 import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
@@ -202,6 +203,9 @@ export interface DesktopApi {
   onShowError(listener: (key: MainErrorKey) => void): () => void;
   onShowNotice(listener: (key: MainNoticeKey) => void): () => void;
   getSettings(): Promise<DesktopSettings>;
+  // The main process's files that were damaged at start (settings, game
+  // library): what was kept and where the damaged copy is (RecoveredNotice).
+  recoveredFiles(): Promise<Recovered[]>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
@@ -271,7 +275,15 @@ export interface DesktopApi {
   gameArtColor(gameKey: string): Promise<string | null>;
   // Dev builds only: Developer card → Fake games (a release has no handler, so it rejects).
   devFakeGames?(change: DevFakeGamesChange): Promise<DevFakeGamesState>;
+  // Share your OLED: the PNG or GIF the page made, saved where the user picks
+  // in the system save dialog (the page never names a path), or a PNG put on
+  // the clipboard. The main process checks the format and size (oledShare.ts).
+  saveOledImage(image: { kind: "png" | "gif"; bytes: Uint8Array }): Promise<SaveOledResult>;
+  copyOledImage(png: Uint8Array): Promise<void>;
 }
+
+// error: SHOWN — desktop.oledShare.saved; a cancel shows nothing; a failed write rejects (desktop.oledShare.errors.save)
+export type SaveOledResult = { saved: true; name: string } | { saved: false };
 
 export const IPC = {
   reportStatus: "desktop:report-status",
@@ -280,6 +292,7 @@ export const IPC = {
   showError: "desktop:show-error",
   showNotice: "desktop:show-notice",
   getSettings: "desktop:get-settings",
+  recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",
   usbAccessInstalled: "desktop:usb-access-installed",
   appVersion: "desktop:app-version",
@@ -321,6 +334,8 @@ export const IPC = {
   gameAction: "desktop:game-action",
   gameArtColor: "desktop:game-art-color",
   devFakeGames: "desktop:dev-fake-games",
+  saveOledImage: "desktop:save-oled-image",
+  copyOledImage: "desktop:copy-oled-image",
 } as const;
 
 declare global {

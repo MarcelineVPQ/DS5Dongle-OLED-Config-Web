@@ -1,5 +1,6 @@
 // userData/game-library-2.json: written atomically, read leniently (a bad
-// file never stops the app; it starts empty and keeps the bad file aside).
+// file never stops the app: what still reads is kept, the damaged file is
+// copied aside, and the page says so).
 //
 // Why a second file: apps before format-2 profiles (0.9.4, 0.9.5-dev.1 to
 // dev.5) read userData/game-library.json with a strict schema, and a library
@@ -10,27 +11,75 @@
 // they are, profileValues.ts upgrades them), and from then on only the new file
 // is used. Going back to an older app finds its old library, as it was when
 // this app first started (stale, but intact).
-import { existsSync, readFileSync, renameSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { EMPTY_LIBRARY, LibraryFileSchema, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../../../src/desktop/games/library";
+import { z } from "zod";
+import { ButtonLayoutSchema, EMPTY_LIBRARY, GameKeySchema, GameRecordSchema, LayoutIdSchema, LibraryFileSchema, MineSchema, ProfileSettingsSchema } from "../../../src/desktop/games/library";
+import type { GameRecord, LibraryFile, Mine, ProfileSettings } from "../../../src/desktop/games/library";
+import { isObject, salvageObject, salvageRecord, type PersistedKind, type PersistedSpec, type Salvaged } from "../../../src/persisted";
 import { writeFileAtomic } from "./backup";
+import { prettyJson, readPersistedFile } from "../persistedFile";
 
 // The library this app reads and writes.
 export const LIBRARY_FILE = "game-library-2.json";
 // The older apps' library: read once to migrate, never written.
 export const OLD_LIBRARY_FILE = "game-library.json";
 
-// The file parsed and validated, or null when it can't be read or is bad.
-function readLibrary(path: string): LibraryFile | null {
-  try {
-    // error: PASSES-ON — a file that doesn't fit reads as null like a broken one; the catch below has the verdict
-    const parsed = LibraryFileSchema.safeParse(JSON.parse(readFileSync(path, "utf8")));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    // error: SILENT-BUG — a damaged library file is moved aside (.bad-<time>) and the app starts with an empty library: every game profile and layout seems gone with no word why (batch E1)
-    return null;
+// One game's entry from a damaged file: the title and whatever of its
+// profile and the player's own data still reads (a profile keeps its settings
+// that fit). An entry with nothing left but its title is dropped.
+function salvageGame(data: unknown): Salvaged<GameRecord> | null {
+  // error: NOT-WORTH — an entry that doesn't fit is salvaged part by part below; what's lost is counted, which the notice says
+  const whole = GameRecordSchema.safeParse(data);
+  if (whole.success) return { value: whole.data, lost: false };
+  if (!isObject(data)) return null;
+  // error: NOT-WORTH — no readable title: the entry is dropped and counted as lost
+  const title = GameRecordSchema.shape.title.safeParse(data.title);
+  if (!title.success) return null;
+  const record: GameRecord = { title: title.data };
+  const profile = data.profile;
+  if (isObject(profile)) {
+    const settings = salvageObject(ProfileSettingsSchema, profile.settings);
+    // error: NOT-WORTH — a profile without a readable time is dropped and counted as lost
+    const updated = z.number().safeParse(profile.updated);
+    if (settings && updated.success) record.profile = { settings: settings.value, updated: updated.data };
   }
+  const mine = salvageObject(MineSchema, data.mine);
+  if (mine) record.mine = mine.value;
+  return record.profile || record.mine ? { value: record, lost: true } : null;
 }
+
+// What of a damaged library still reads: every game entry and button layout
+// that fits (part by part), and the restore point if it fits.
+function salvageLibrary(data: unknown): Salvaged<LibraryFile> | null {
+  // error: NOT-WORTH — a file that doesn't fit whole is salvaged part by part below; what's lost is counted, which the notice says
+  const whole = LibraryFileSchema.safeParse(data);
+  if (whole.success) return { value: whole.data, lost: false };
+  if (!isObject(data)) return null;
+  const games = salvageRecord(data.games, GameKeySchema, salvageGame);
+  const layouts =
+    data.layouts === undefined
+      ? null
+      : salvageRecord(data.layouts, LayoutIdSchema, (v) => {
+          // error: NOT-WORTH — a layout that doesn't fit is left out and counted as lost
+          const layout = ButtonLayoutSchema.safeParse(v);
+          return layout.success ? { value: layout.data, lost: false } : null;
+        });
+  // error: NOT-WORTH — a restore point that doesn't fit is left out (the dongle keeps its settings); counted as lost
+  const restore = LibraryFileSchema.shape.restore.safeParse(data.restore);
+  const value: LibraryFile = { version: 1, games: games?.value ?? {} };
+  if (layouts && Object.keys(layouts.value).length > 0) value.layouts = layouts.value;
+  if (restore.success && restore.data) value.restore = restore.data;
+  // The whole didn't fit, so something was left out.
+  return { value, lost: true };
+}
+
+const librarySpec = (kind: PersistedKind): PersistedSpec<LibraryFile> => ({
+  kind,
+  salvage: salvageLibrary,
+  fallback: () => structuredClone(EMPTY_LIBRARY),
+  serialize: prettyJson,
+});
 
 export class LibraryStore {
   // cache: OK — key=none (the whole library.json); invalidated=write-through: every change saves the file, single-instance app, nothing else writes it; bound=one file (games x profiles)
@@ -44,23 +93,18 @@ export class LibraryStore {
     this.data = this.load();
   }
 
+  // A damaged file (batch E1, was SILENT-BUG: it was moved aside and the app
+  // started empty with no word): what still reads is kept, the damaged file
+  // is copied to `.corrupt-<date>` and the page says so (readPersistedFile).
   private load(): LibraryFile {
-    if (existsSync(this.path)) {
-      const data = readLibrary(this.path);
-      if (data) return data;
-      try {
-        renameSync(this.path, `${this.path}.bad-${Date.now()}`);
-      } catch {
-        // error: NOT-WORTH — can't move it; it gets overwritten on the next save
-      }
-      return structuredClone(EMPTY_LIBRARY);
-    }
-    // First start of this app: bring the older apps' library over (a bad or
-    // missing old file is left where it is, and the library starts empty).
-    const old = existsSync(this.oldPath) ? readLibrary(this.oldPath) : null;
-    if (!old) return structuredClone(EMPTY_LIBRARY);
+    if (existsSync(this.path)) return readPersistedFile(this.path, librarySpec("library"));
+    // First start of this app: bring the older apps' library over. It's only
+    // read (a damaged one is left exactly as it is, and the page says so),
+    // and the new file is written at once, so this happens only once.
+    if (!existsSync(this.oldPath)) return structuredClone(EMPTY_LIBRARY);
+    const old = readPersistedFile(this.oldPath, librarySpec("oldLibrary"), { readOnly: true });
     try {
-      writeFileAtomic(this.path, JSON.stringify(old, null, 2) + "\n");
+      writeFileAtomic(this.path, prettyJson(old));
     } catch {
       // error: NOT-WORTH — can't write it now; the next save tries again
     }
@@ -68,7 +112,7 @@ export class LibraryStore {
   }
 
   private save(): LibraryFile {
-    writeFileAtomic(this.path, JSON.stringify(this.data, null, 2) + "\n");
+    writeFileAtomic(this.path, prettyJson(this.data));
     return this.get();
   }
 

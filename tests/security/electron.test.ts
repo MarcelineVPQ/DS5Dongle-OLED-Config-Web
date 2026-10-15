@@ -211,6 +211,49 @@ describe("IPC payload validation", async () => {
   });
 });
 
+describe("Share your OLED: the page never names a path", async () => {
+  const { OledImageSchema, OledPngSchema } = await import("../../electron/main/oledShare");
+  const { GIF_MAX_BYTES, PNG_MAX_BYTES, PNG_MAGIC, GIF_MAGIC } = await import("../../src/oled/oledShare");
+  const ipcSource = readFileSync(new URL("../../electron/main/ipc.ts", import.meta.url), "utf8");
+  const png = Uint8Array.from([...PNG_MAGIC, 0]);
+  const gif = Uint8Array.from([...GIF_MAGIC, 0]);
+
+  it("takes only a kind and bytes of that format, within its size cap", () => {
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: png }).success).toBe(true);
+    expect(OledImageSchema.safeParse({ kind: "gif", bytes: gif }).success).toBe(true);
+    // A path, a name or any other field is refused: the save dialog alone picks where.
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: png, path: "/home/me/.bashrc" }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: png, name: "x.sh" }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "sh", bytes: png }).success).toBe(false);
+    // The bytes must be the format they claim.
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: gif }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "gif", bytes: Uint8Array.from([0x23, 0x21, 0x2f]) }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: [...png] }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: "iVBORw0KGgo=" }).success).toBe(false);
+    // Size caps.
+    const big = (magic: readonly number[], n: number) => {
+      const b = new Uint8Array(n);
+      b.set(magic);
+      return b;
+    };
+    expect(OledImageSchema.safeParse({ kind: "png", bytes: big(PNG_MAGIC, PNG_MAX_BYTES + 1) }).success).toBe(false);
+    expect(OledImageSchema.safeParse({ kind: "gif", bytes: big(GIF_MAGIC, GIF_MAX_BYTES) }).success).toBe(true);
+    expect(OledImageSchema.safeParse({ kind: "gif", bytes: big(GIF_MAGIC, GIF_MAX_BYTES + 1) }).success).toBe(false);
+    expect(OledPngSchema.safeParse(png).success).toBe(true);
+    expect(OledPngSchema.safeParse(gif).success).toBe(false);
+  });
+
+  it("checks the sender and parses the payload on both channels", () => {
+    expect(ipcSource).toMatch(/h\.saveOledImage\(parseRequest\(IPC\.saveOledImage, OledImageSchema, raw\), event\.sender\)/);
+    expect(ipcSource).toMatch(/invokeWith\(IPC\.copyOledImage, OledPngSchema, h\.copyOledImage\)/);
+  });
+
+  it("the path is the dialog's, written by the main process", () => {
+    expect(mainSource).toMatch(/dialog\.showSaveDialog\(win, options\)/);
+    expect(mainSource).toMatch(/write: writeFileAtomic/);
+  });
+});
+
 describe("trusted page", () => {
   const mainSource = readFileSync(new URL("../../electron/main/index.ts", import.meta.url), "utf8");
 

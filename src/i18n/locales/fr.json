@@ -280,7 +280,24 @@
       "feedChanged": "Un firmware plus récent est apparu. Vérifie à nouveau.",
       "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau.",
       "wrongFile": "Ce fichier n’est pas un firmware pour {{device}} (il est pour une autre puce, ou abîmé) : rien n’a été écrit. Recherche à nouveau les mises à jour ; si ça se reproduit, réinstalle l’app.",
-      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie."
+      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie.",
+      "didntStart": "Le nouveau firmware n’a pas démarré : {{device}} est revenu en mode BOOTSEL et attend toujours un firmware. Laisse-le branché et réinstalle-le.",
+      "installAgain": "Réinstaller"
+    },
+    "recovered": {
+      "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
+      "whole": "{{what}} : lecture impossible (c’était endommagé), on repart donc des valeurs par défaut. La copie endommagée est enregistrée sous {{kept}}.",
+      "notKept": "{{what}} : lecture impossible, les valeurs par défaut sont donc utilisées pour l’instant. Les données endommagées sont restées à leur place.",
+      "what": {
+        "settings": "Tes réglages de l’app",
+        "library": "Ta bibliothèque de jeux (profils de jeu, configurations de boutons, notes et commentaires)",
+        "oldLibrary": "La bibliothèque de jeux de la version précédente de l’app",
+        "dismissedNotices": "La liste des avis que tu as masqués",
+        "pins": "Tes sections épinglées",
+        "slotControllers": "Ce que l’app retient de la manette de chaque emplacement d’appairage",
+        "customColors": "Les couleurs de ta manette",
+        "declinedFixes": "Les changements de Jeux que tu as décochés"
+      }
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -493,7 +510,9 @@
           "modeSteam": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Les options de lancement deviennent : {{args}}{{proton}}",
           "modeHeroic": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Ses arguments de jeu dans Heroic deviennent : {{args}}{{proton}}",
           "modeLutris": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Ses arguments dans Lutris deviennent : {{args}}{{proton}}",
-          "modeVkd3d": " Sous Proton, DirectX 12 passe par vkd3d-proton : les premiers lancements peuvent être plus longs, le temps de compiler les shaders."
+          "modeVkd3d": " Sous Proton, DirectX 12 passe par vkd3d-proton : les premiers lancements peuvent être plus longs, le temps de compiler les shaders.",
+          "protonPick": "{{game}} tournera avec {{proton}} au lieu de {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} suit pour l'instant le réglage par défaut de Steam : s'il a une version Linux, Steam lancera à la place sa version Windows avec ce Proton."
         },
         "unlock": {
           "rayTracing": "le ray tracing",
@@ -859,6 +878,14 @@
       "anyProton": "Tout Proton récent",
       "usesOurs": "Utilise le build Proton DualSense.",
       "switchTo": "Passer à {{name}}",
+      "protonPick": "Version de Proton",
+      "protonPickInfo": "Tous les builds Proton et Wine avec lesquels le launcher du jeu peut le lancer. Changer modifie le réglage propre au jeu dans le launcher (sauvegardé avant), et Annuler remet l'ancien.",
+      "protonRecommended": "{{name}} (recommandé)",
+      "protonCurrent": "{{name}} (actuel)",
+      "protonBoth": "{{name}} (recommandé, actuel)",
+      "protonGone": "⚠ {{name}} (non installé)",
+      "protonSwitched": "Passé à {{name}}. Le jeu l'utilise dès son prochain lancement.",
+      "protonUndone": "Annulé : le jeu revient à sa version précédente.",
       "tier": {
         "verified": "Vérifié",
         "works": "Fonctionne",
@@ -1065,6 +1092,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Partager",
+      "title": "Enregistrer ou copier exactement ce qu'affiche l'OLED (PNG ou GIF animé)",
+      "bar": "Partager l'OLED",
+      "size": "Taille",
+      "sizeTitle": "{{w}} × {{h}} pixels",
+      "frame": "Cadre de la carte",
+      "savePng": "Enregistrer en PNG…",
+      "copy": "Copier",
+      "copyTitle": "Copier l'image (PNG), prête à coller dans Discord",
+      "record": "Enregistrer un GIF",
+      "recordTitle": "Enregistre jusqu'à {{s}} s, une image à chaque changement, puis demande où l'enregistrer",
+      "recording": "Enregistrement {{s}} s sur {{max}} s · {{n}} images",
+      "stop": "Arrêter et enregistrer",
+      "cancel": "Annuler",
+      "working": "Création du fichier…",
+      "saved": "{{name}} enregistré",
+      "copied": "Copié. Collez-le dans Discord ou ailleurs.",
+      "noPicture": "Rien à partager pour l'instant : en attente de l'écran.",
+      "errors": {
+        "encode": "Impossible de créer l'image : {{reason}}. Réessayez.",
+        "tooBig": "Le fichier est trop lourd pour être partagé (plus de {{mb}} Mo). Choisissez une taille plus petite ou un enregistrement plus court, puis réessayez.",
+        "save": "Impossible d'enregistrer le fichier : {{reason}}. Choisissez un autre dossier et réessayez.",
+        "copy": "Impossible de copier l'image : {{reason}}. Utilisez plutôt Enregistrer en PNG."
+      }
+    },
     "rail": {
       "label": "Navigation",
       "pin": "Garder ouvert",
@@ -1079,7 +1132,9 @@
       },
       "development": "Développement",
       "devHint": "Une version de développement : plus récente que la version stable et moins testée",
-      "again": "cliquez à nouveau pour afficher ou masquer ses réglages"
+      "again": "cliquez à nouveau pour afficher ou masquer ses réglages",
+      "lock": "Verrouiller la barre étroite (icônes seules)",
+      "unlock": "Déverrouiller la barre (elle s'ouvre à nouveau au survol)"
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
@@ -1225,7 +1280,8 @@
         "write50": "Erreur d’écriture à 50 %",
         "write90": "Erreur d’écriture à 90 %",
         "noBootsel": "N’apparaît pas en BOOTSEL",
-        "noReturn": "Ne revient pas après la mise à jour"
+        "noReturn": "Ne revient pas après la mise à jour",
+        "noStart": "Image qui ne démarre pas"
       },
       "simSpeed": "Vitesse d’écriture",
       "simSpeeds": {
@@ -1730,7 +1786,14 @@
       "buttonsChanged_one": "{{count}} touche modifiée",
       "buttonsChanged_other": "{{count}} touches modifiées",
       "slotActive": "Slot {{slot}} actif",
-      "moreInDiagnostics": "Plus dans Diagnostic"
+      "moreInDiagnostics": "Plus dans Diagnostic",
+      "menu": "Options du panneau",
+      "collapseAll": "Tout replier",
+      "collapseAllTip": "Replie toutes les sections, épinglées comprises (elles restent épinglées et se rouvrent la prochaine fois)",
+      "nothingOpen": "Toutes les sections sont déjà repliées",
+      "clearPins": "Retirer les épingles",
+      "clearPinsTip": "Désépingle toutes les sections épinglées de cette page",
+      "noPins": "Aucune section épinglée sur cette page"
     },
     "sections": {
       "lightbar": "Barre lumineuse",

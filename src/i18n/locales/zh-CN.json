@@ -280,7 +280,24 @@
       "feedChanged": "出现了更新的固件。请重新检查。",
       "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。",
       "wrongFile": "此文件不是{{device}}的固件（用于其他芯片，或已损坏），因此没有写入任何内容。请再次检查更新；如果再次发生，请重新安装应用。",
-      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。"
+      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。",
+      "didntStart": "新固件没有启动：{{device}}回到了 BOOTSEL 模式，仍在等待固件。请保持连接，然后重新安装。",
+      "installAgain": "重新安装"
+    },
+    "recovered": {
+      "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
+      "whole": "{{what}}无法读取（已损坏），因此从默认值开始。损坏的副本已保存为 {{kept}}。",
+      "notKept": "{{what}}无法读取，因此暂时使用默认值。损坏的数据保留在原处。",
+      "what": {
+        "settings": "你的应用设置",
+        "library": "你的游戏库（游戏配置文件、按键布局、评分和备注）",
+        "oldLibrary": "旧版应用的游戏库",
+        "dismissedNotices": "你已关闭的通知列表",
+        "pins": "你固定的部分",
+        "slotControllers": "应用记住的每个配对槽位中的手柄",
+        "customColors": "你的手柄颜色",
+        "declinedFixes": "你在“游戏”中取消勾选的更改"
+      }
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -490,7 +507,9 @@
           "modeSteam": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。启动选项将变为：{{args}}{{proton}}",
           "modeHeroic": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Heroic 中的游戏参数将变为：{{args}}{{proton}}",
           "modeLutris": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Lutris 中的参数将变为：{{args}}{{proton}}",
-          "modeVkd3d": " 在 Proton 下，DirectX 12 通过 vkd3d-proton 运行，因此前几次启动在构建着色器时可能更慢。"
+          "modeVkd3d": " 在 Proton 下，DirectX 12 通过 vkd3d-proton 运行，因此前几次启动在构建着色器时可能更慢。",
+          "protonPick": "{{game}} 将使用 {{proton}} 运行，而不是 {{current}}。{{note}}",
+          "protonPickDefault": "{{game}} 目前跟随 Steam 的默认设置：如果它有 Linux 版本，Steam 会改为用此 Proton 运行其 Windows 版本。"
         },
         "unlock": {
           "rayTracing": "光线追踪",
@@ -851,6 +870,14 @@
       "anyProton": "任意较新的 Proton",
       "usesOurs": "使用 DualSense Proton 版本。",
       "switchTo": "切换到 {{name}}",
+      "protonPick": "Proton 版本",
+      "protonPickInfo": "游戏所在启动器可用来运行它的所有 Proton 和 Wine 版本。切换会更改启动器中该游戏自己的设置（先备份），“撤销”可恢复原来的设置。",
+      "protonRecommended": "{{name}}（推荐）",
+      "protonCurrent": "{{name}}（当前）",
+      "protonBoth": "{{name}}（推荐，当前）",
+      "protonGone": "⚠ {{name}}（未安装）",
+      "protonSwitched": "已切换到 {{name}}。游戏下次启动时生效。",
+      "protonUndone": "已撤销：游戏已恢复为之前的版本。",
       "tier": {
         "verified": "已验证",
         "works": "可用",
@@ -1055,6 +1082,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "分享",
+      "title": "保存或复制 OLED 上显示的画面（PNG 或 GIF 动图）",
+      "bar": "分享 OLED",
+      "size": "尺寸",
+      "sizeTitle": "{{w}} × {{h}} 像素",
+      "frame": "板子边框",
+      "savePng": "保存 PNG…",
+      "copy": "复制",
+      "copyTitle": "复制图片（PNG），可直接粘贴到 Discord",
+      "record": "录制 GIF",
+      "recordTitle": "最多录制 {{s}} 秒，画面每次变化时记录一帧，然后询问保存位置",
+      "recording": "正在录制 {{s}} / {{max}} 秒 · {{n}} 帧",
+      "stop": "停止并保存",
+      "cancel": "取消",
+      "working": "正在生成文件…",
+      "saved": "已保存 {{name}}",
+      "copied": "已复制。可粘贴到 Discord 或其他地方。",
+      "noPicture": "暂无可分享的内容：正在等待屏幕。",
+      "errors": {
+        "encode": "无法生成图片：{{reason}}。请重试。",
+        "tooBig": "文件太大，无法分享（超过 {{mb}} MB）。请选择更小的尺寸或更短的录制，然后重试。",
+        "save": "无法保存文件：{{reason}}。请选择其他文件夹后重试。",
+        "copy": "无法复制图片：{{reason}}。请改用“保存 PNG”。"
+      }
+    },
     "rail": {
       "label": "导航",
       "pin": "保持展开",
@@ -1069,7 +1122,9 @@
       },
       "development": "开发版",
       "devHint": "开发版本：比稳定版更新，测试较少",
-      "again": "再次点击可显示或隐藏设置"
+      "again": "再次点击可显示或隐藏设置",
+      "lock": "锁定导航栏为窄条（仅图标）",
+      "unlock": "解锁导航栏（指向时会再次展开）"
     },
     "audioTest": {
       "speakerTitle": "扬声器测试",
@@ -1215,7 +1270,8 @@
         "write50": "50 % 时写入出错",
         "write90": "90 % 时写入出错",
         "noBootsel": "不以 BOOTSEL 出现",
-        "noReturn": "更新后不再出现"
+        "noReturn": "更新后不再出现",
+        "noStart": "无法启动的镜像"
       },
       "simSpeed": "写入速度",
       "simSpeeds": {
@@ -1718,7 +1774,14 @@
       "buttonsChanged_one": "已更改 {{count}} 个按键",
       "buttonsChanged_other": "已更改 {{count}} 个按键",
       "slotActive": "槽位 {{slot}} 使用中",
-      "moreInDiagnostics": "诊断中查看更多"
+      "moreInDiagnostics": "诊断中查看更多",
+      "menu": "面板选项",
+      "collapseAll": "全部折叠",
+      "collapseAllTip": "折叠所有部分，包括已固定的（它们保持固定，下次会再次展开）",
+      "nothingOpen": "所有部分都已折叠",
+      "clearPins": "清除固定",
+      "clearPinsTip": "取消固定此页面上所有已固定的部分",
+      "noPins": "此页面上没有固定的部分"
     },
     "sections": {
       "lightbar": "光条",

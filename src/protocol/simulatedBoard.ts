@@ -16,8 +16,9 @@ import { SimulatedDongle, type SimulatedDongleOptions } from "./simulatedDongle"
 export type SimBoardState = "dongle" | "bootsel" | "away";
 // Failures to try the app's error paths with: a write error partway through
 // (at about 10, 50 or 90 % of the firmware), a board that never shows up in
-// BOOTSEL, and one that never comes back after the update.
-export const SIM_BOARD_FAULTS = ["", "write10", "write50", "write90", "noBootsel", "noReturn"] as const;
+// BOOTSEL, one that never comes back after the update, and an image the boot
+// ROM won't start (the board comes back in BOOTSEL, as with no IMAGE_DEF).
+export const SIM_BOARD_FAULTS = ["", "write10", "write50", "write90", "noBootsel", "noReturn", "noStart"] as const;
 export type SimBoardFault = (typeof SIM_BOARD_FAULTS)[number];
 // Milliseconds per 64 KB erase + write: "real" is about a real RP2350's pace
 // (~12 s for the firmware), "normal" a few seconds, "fast" for the tests.
@@ -128,8 +129,10 @@ export class SimulatedBoard {
   }
 
   // The bootloader's reboot: off the bus, then the firmware starts if the
-  // image is bootable (else the boot ROM is back in BOOTSEL).
+  // image is bootable (else the boot ROM is back in BOOTSEL; "noStart" makes
+  // any written image one it won't start).
   restart(delayMs: number): void {
+    if (this.fault === "noStart") this.bootable = false;
     this.later(delayMs, () => {
       this.go("away");
       if (!this.bootable) {

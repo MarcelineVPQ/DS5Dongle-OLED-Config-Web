@@ -28,7 +28,9 @@ import { latestOnly } from "../games/scanOrder";
 import { HdrChecklist } from "../library/HdrChecklist";
 import { homeStatus, systemHdrReqs } from "../library/setupStatus";
 import { causeText } from "../shownError";
-import { readPref, writePref } from "../storage";
+import { writePref } from "../storage";
+import { readPrefJson } from "../persistedPref";
+import { salvageStrings } from "../../persisted";
 import GameLibrary from "../library/GameLibrary";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { GameProfileState } from "../library/useGameProfile";
@@ -53,16 +55,12 @@ type Step = "pick" | "review" | "done";
 
 // Changes the user unticked stay unticked across rescans and visits until
 // they tick them again (a recommendation is a suggestion, not a default).
-const DECLINED_KEY = "ds5-games-declined";
+export const DECLINED_KEY = "ds5-games-declined";
 
+// A damaged list keeps the changes that still read, and the notice says so
+// (readPrefJson, batch E1).
 export function loadDeclined(): Set<string> {
-  try {
-    const raw = readPref(DECLINED_KEY);
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
-  } catch {
-    // error: NOT-WORTH — unreadable: nothing declined (every recommended fix is ticked again)
-    return new Set();
-  }
+  return new Set(readPrefJson(DECLINED_KEY, { kind: "declinedFixes", salvage: (data) => salvageStrings(data), fallback: () => [] }));
 }
 
 const saveDeclined = (ids: Set<string>) => writePref(DECLINED_KEY, JSON.stringify([...ids]));

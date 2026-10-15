@@ -1,5 +1,6 @@
 // IPC from the renderer. Every message is checked against its sender (our own
 // window, on our own page) and its payload schema before anything acts on it.
+import type { Recovered } from "../../src/persisted";
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import {
   ButtonLayoutSchema,
@@ -33,7 +34,8 @@ import type { ApplyResult, GamesReport, LauncherId, RestartList } from "../../sr
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 import { logged } from "../../src/errorText";
-import { BAD_REQUEST } from "../../src/desktop/api";
+import { BAD_REQUEST, type SaveOledResult } from "../../src/desktop/api";
+import { OledImageSchema, OledPngSchema, type OledImage } from "./oledShare";
 
 // A request from our own page that doesn't fit its schema is an app bug: the
 // details are logged, and the page gets BAD_REQUEST, which it shows in plain
@@ -72,7 +74,9 @@ export const FixIdsSchema = z
       .string()
       .max(200)
       // Same shapes games.ts builds (a test checks every id a scan produces passes).
-      .regex(/^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+|hdr:[\w.-]+|mode:[\w.-]+)$|^system:audio-(rule|profile|volume):[0-9a-f]{8}$/),
+      .regex(
+        /^(steam|heroic|lutris)-[0-9a-f]{8}:(default|runner:[\w.-]+|input:\d+|env:[\w.-]+|xinput:[\w.-]+|hdr:[\w.-]+|mode:[\w.-]+|proton:[\w.-]+:[0-9a-f]{8})$|^system:audio-(rule|profile|volume):[0-9a-f]{8}$/,
+      ),
   )
   .max(500);
 // The firmware the user confirmed (latestFirmware's `latest`, sent back).
@@ -120,6 +124,7 @@ export interface IpcHandlers {
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
   getSettings: () => DesktopSettings;
+  recoveredFiles: () => Recovered[];
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
   // error: SHOWN — main-english: the message under Set up USB access (UsbAccessSetup) (batch E3)
@@ -145,6 +150,9 @@ export interface IpcHandlers {
   gamesBackups: () => GameBackup[];
   gamesRunningLaunchers: () => LauncherId[] | Promise<LauncherId[]>;
   installProton: () => Promise<ProtonInstallResult>;
+  // Share your OLED (oledShare.ts): `sender` is the asking page, for a modal save dialog.
+  saveOledImage: (image: OledImage, sender: WebContents) => Promise<SaveOledResult>;
+  copyOledImage: (png: Uint8Array) => Promise<void>;
 }
 
 export function registerIpc(h: IpcHandlers): void {
@@ -193,6 +201,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.installUpdate, h.installUpdate);
   invoke(IPC.backToStable, h.backToStable);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
+  invoke(IPC.recoveredFiles, h.recoveredFiles);
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
@@ -257,6 +266,14 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.devChannelPreview, z.boolean(), h.devChannelPreview);
   invokeWith(IPC.latestFirmware, z.boolean(), h.latestFirmware);
   invokeWith(IPC.downloadFirmware, ShownFirmwareSchema, h.downloadFirmware);
+  invokeWith(IPC.copyOledImage, OledPngSchema, h.copyOledImage);
+
+  // Share your OLED: the kind and the bytes only (format and size checked), never a path.
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  ipcMain.handle(IPC.saveOledImage, (event, raw: unknown) => {
+    if (!trusted(event)) throw new Error("untrusted sender");
+    return h.saveOledImage(parseRequest(IPC.saveOledImage, OledImageSchema, raw), event.sender);
+  });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {

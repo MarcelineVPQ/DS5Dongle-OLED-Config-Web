@@ -280,7 +280,24 @@
       "feedChanged": "Apareceu um firmware mais novo. Verifique de novo.",
       "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo.",
       "wrongFile": "Este arquivo não é firmware para {{device}} (é para outro chip, ou está danificado), então nada foi gravado. Procure atualizações de novo; se acontecer outra vez, reinstale o app.",
-      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez."
+      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez.",
+      "didntStart": "O firmware novo não iniciou: {{device}} voltou no modo BOOTSEL, ainda esperando firmware. Deixe conectado e instale de novo.",
+      "installAgain": "Instalar de novo"
+    },
+    "recovered": {
+      "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
+      "whole": "{{what}}: não deu para ler (estava danificado), então começa do padrão. A cópia danificada foi salva como {{kept}}.",
+      "notKept": "{{what}}: não deu para ler, então o padrão é usado por enquanto. Os dados danificados ficaram onde estavam.",
+      "what": {
+        "settings": "Suas configurações do app",
+        "library": "Sua biblioteca de jogos (perfis de jogo, mapeamentos de botões, avaliações e notas)",
+        "oldLibrary": "A biblioteca de jogos da versão anterior do app",
+        "dismissedNotices": "A lista de avisos que você dispensou",
+        "pins": "Suas seções fixadas",
+        "slotControllers": "O que o app lembra do controle em cada slot de pareamento",
+        "customColors": "As cores do seu controle",
+        "declinedFixes": "As mudanças de Jogos que você desmarcou"
+      }
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -493,7 +510,9 @@
           "modeSteam": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. As opções de inicialização ficam: {{args}}{{proton}}",
           "modeHeroic": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos de jogo dele no Heroic ficam: {{args}}{{proton}}",
           "modeLutris": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos dele no Lutris ficam: {{args}}{{proton}}",
-          "modeVkd3d": " No Proton, o DirectX 12 roda pelo vkd3d-proton, então as primeiras inicializações podem demorar mais enquanto os shaders são criados."
+          "modeVkd3d": " No Proton, o DirectX 12 roda pelo vkd3d-proton, então as primeiras inicializações podem demorar mais enquanto os shaders são criados.",
+          "protonPick": "{{game}} vai rodar com {{proton}} em vez de {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} segue agora o padrão do Steam: se tiver versão para Linux, o Steam passa a rodar a versão de Windows com este Proton."
         },
         "unlock": {
           "rayTracing": "o Ray Tracing",
@@ -859,6 +878,14 @@
       "anyProton": "Qualquer Proton recente",
       "usesOurs": "Usa o build do Proton para DualSense.",
       "switchTo": "Trocar para {{name}}",
+      "protonPick": "Versão do Proton",
+      "protonPickInfo": "Todos os builds de Proton e Wine com que o launcher do jogo consegue rodá-lo. Trocar muda a configuração própria do jogo no launcher (com backup antes), e Desfazer volta a anterior.",
+      "protonRecommended": "{{name}} (recomendado)",
+      "protonCurrent": "{{name}} (atual)",
+      "protonBoth": "{{name}} (recomendado, atual)",
+      "protonGone": "⚠ {{name}} (não instalado)",
+      "protonSwitched": "Trocado para {{name}}. O jogo usa a partir da próxima vez que abrir.",
+      "protonUndone": "Desfeito: o jogo voltou para a versão anterior.",
       "tier": {
         "verified": "Verificado",
         "works": "Funciona",
@@ -1065,6 +1092,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Compartilhar",
+      "title": "Salve ou copie exatamente o que a OLED mostra (PNG ou GIF animado)",
+      "bar": "Compartilhar a OLED",
+      "size": "Tamanho",
+      "sizeTitle": "{{w}} × {{h}} pixels",
+      "frame": "Moldura da placa",
+      "savePng": "Salvar PNG…",
+      "copy": "Copiar",
+      "copyTitle": "Copia a imagem (PNG), pronta para colar no Discord",
+      "record": "Gravar GIF",
+      "recordTitle": "Grava até {{s}} s, um quadro a cada mudança da imagem, e depois pergunta onde salvar",
+      "recording": "Gravando {{s}} s de {{max}} s · {{n}} quadros",
+      "stop": "Parar e salvar",
+      "cancel": "Cancelar",
+      "working": "Criando o arquivo…",
+      "saved": "{{name}} salvo",
+      "copied": "Copiado. Cole no Discord ou onde quiser.",
+      "noPicture": "Nada para compartilhar ainda: aguardando a tela.",
+      "errors": {
+        "encode": "Não foi possível criar a imagem: {{reason}}. Tente de novo.",
+        "tooBig": "O arquivo ficou grande demais para compartilhar (mais de {{mb}} MB). Escolha um tamanho menor ou uma gravação mais curta e tente de novo.",
+        "save": "Não foi possível salvar o arquivo: {{reason}}. Escolha outra pasta e tente de novo.",
+        "copy": "Não foi possível copiar a imagem: {{reason}}. Use Salvar PNG."
+      }
+    },
     "rail": {
       "label": "Navegação",
       "pin": "Manter aberto",
@@ -1079,7 +1132,9 @@
       },
       "development": "Desenvolvimento",
       "devHint": "Uma versão de desenvolvimento: mais nova que a estável e menos testada",
-      "again": "clique de novo para mostrar ou ocultar as configurações"
+      "again": "clique de novo para mostrar ou ocultar as configurações",
+      "lock": "Travar a barra estreita (só ícones)",
+      "unlock": "Destravar a barra (ela abre de novo ao apontar)"
     },
     "audioTest": {
       "speakerTitle": "Teste do alto-falante",
@@ -1225,7 +1280,8 @@
         "write50": "Erro de gravação em 50 %",
         "write90": "Erro de gravação em 90 %",
         "noBootsel": "Não aparece no BOOTSEL",
-        "noReturn": "Não volta depois da atualização"
+        "noReturn": "Não volta depois da atualização",
+        "noStart": "Imagem que não inicia"
       },
       "simSpeed": "Velocidade de gravação",
       "simSpeeds": {
@@ -1730,7 +1786,14 @@
       "buttonsChanged_one": "{{count}} botão alterado",
       "buttonsChanged_other": "{{count}} botões alterados",
       "slotActive": "Slot {{slot}} ativo",
-      "moreInDiagnostics": "Mais em Diagnóstico"
+      "moreInDiagnostics": "Mais em Diagnóstico",
+      "menu": "Opções do painel",
+      "collapseAll": "Recolher tudo",
+      "collapseAllTip": "Recolhe todas as seções, inclusive as fixadas (continuam fixadas e abrem de novo na próxima vez)",
+      "nothingOpen": "Todas as seções já estão recolhidas",
+      "clearPins": "Desafixar tudo",
+      "clearPinsTip": "Desafixa todas as seções fixadas desta página",
+      "noPins": "Nenhuma seção fixada nesta página"
     },
     "sections": {
       "lightbar": "Barra de luz",
