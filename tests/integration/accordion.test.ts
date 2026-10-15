@@ -555,6 +555,31 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(hero.querySelector(".oled-stats")?.textContent).toMatch(/\d+\/11 · \w/);
   });
 
+  it("KEY0 / KEY1 on the mirror press the board's keys (Space works too); the screen follows", async () => {
+    await live("dongle");
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    const screenNow = () => /(\d+)\/11/.exec(container.querySelector(".oled-stats")?.textContent ?? "")?.[1];
+    const key = (k: 0 | 1) => container.querySelector<HTMLButtonElement>(`.dcon-key-${k}`)!;
+    expect(key(0).getAttribute("aria-disabled")).toBe("false");
+    expect(key(0).title).toMatch(/^KEY0: /);
+    const before = Number(screenNow());
+    const press = async (k: 0 | 1) => {
+      act(() => void key(k).dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+      act(() => void key(k).dispatchEvent(new KeyboardEvent("keyup", { key: " ", bubbles: true })));
+      // loop: test — until the mirror shows the new screen
+      for (let i = 0; i < 50 && Number(screenNow()) === before; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
+    };
+    await press(0);
+    expect(Number(screenNow())).toBe((before % 11) + 1);
+    await act(() => new Promise((r) => setTimeout(r, 200)));
+    const after = Number(screenNow());
+    act(() => void key(1).dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+    act(() => void key(1).dispatchEvent(new KeyboardEvent("keyup", { key: " ", bubbles: true })));
+    // loop: test — until the mirror shows the previous screen
+    for (let i = 0; i < 50 && Number(screenNow()) === after; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
+    expect(Number(screenNow())).toBe(before);
+  });
+
   it("a deep link (the rail's board-problem dot, the tray's Diagnostics) scrolls to the Diagnostics block and flashes it", async () => {
     m.block.revealBlock("dongle", "diagnostics"); // before the page mounts: taken when it does
     await live("dongle");

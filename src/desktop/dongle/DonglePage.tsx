@@ -57,17 +57,15 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const d = bridge.draft;
   const v13 = supportsFeature3(bridge.identity, 13, FEATURES3.configTail);
   const installed = bridge.firmwareVersion;
+  // A refused press: the app's error notice says why (useDs5Bridge); the key's outline too.
+  const pressKey = async (key: 0 | 1, long: boolean) => {
+    if (!(await bridge.pressOledKey(key, long))) throw new Error(`The ${hardwareName(bridge.identity)} did not take the KEY${key} press`);
+  };
 
   const main = (
     <div className="live-stage dongle-main">
       <OledHero frame={oled.frame} capable={supportsOledMirror(identity)} redraws={s?.rated && s.oled ? s.oled.fps : null}>
-        <DongleConsole
-          client={bridge.client}
-          identity={identity}
-          controllerOn={controllerOn}
-          frame={oled}
-          keys={{ supported: false, press: null }} // the key-press protocol: next commit
-        />
+        <DongleConsole client={bridge.client} identity={identity} controllerOn={controllerOn} frame={oled} keys={{ supported: bridge.supportsOledKeys, press: bridge.client ? pressKey : null }} />
       </OledHero>
       <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealBlock("dongle", BOARD_PROBLEM_BLOCK)} />
       <MainBlock

@@ -295,8 +295,13 @@ function OledKeys({ supported, press, frame }: OledKeysProps & { frame: OledFram
           title={tip(key)}
           onPointerDown={(e) => {
             if (e.button !== 0) return;
-            e.currentTarget.setPointerCapture(e.pointerId);
             down(key, e.timeStamp);
+            // The release counts even off the key.
+            try {
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+            } catch {
+              // error: NOT-WORTH — a pointer that is already gone: its pointercancel / blur ends the press
+            }
           }}
           onPointerUp={(e) => up(key, e.timeStamp)}
           onPointerCancel={cancel}
