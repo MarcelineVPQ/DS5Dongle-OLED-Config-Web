@@ -1069,7 +1069,9 @@
       },
       "development": "開発版",
       "devHint": "開発ビルド：安定版より新しく、テストは少なめです",
-      "again": "もう一度クリックすると設定を表示／非表示"
+      "again": "もう一度クリックすると設定を表示／非表示",
+      "lock": "レールを細いまま固定（アイコンのみ）",
+      "unlock": "レールの固定を解除（ポインターを合わせると再び開きます）"
     },
     "audioTest": {
       "speakerTitle": "スピーカーテスト",
@@ -1718,7 +1720,14 @@
       "buttonsChanged_one": "{{count}} 個のボタンを変更",
       "buttonsChanged_other": "{{count}} 個のボタンを変更",
       "slotActive": "スロット {{slot}} 使用中",
-      "moreInDiagnostics": "診断で詳しく見る"
+      "moreInDiagnostics": "診断で詳しく見る",
+      "menu": "パネルのオプション",
+      "collapseAll": "すべて折りたたむ",
+      "collapseAllTip": "固定したものも含めてすべてのセクションを折りたたみます（固定は残り、次回また開きます）",
+      "nothingOpen": "すべてのセクションはすでに折りたたまれています",
+      "clearPins": "固定をすべて解除",
+      "clearPinsTip": "このページで固定したセクションをすべて解除します",
+      "noPins": "このページに固定したセクションはありません"
     },
     "sections": {
       "lightbar": "ライトバー",

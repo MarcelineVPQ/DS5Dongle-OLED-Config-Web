@@ -41,6 +41,8 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "next", title: "Lighter game check on Windows", text: "Noticing which game is running costs almost no CPU while the app is in the tray.", areas: ["app", "games"], platform: "windows" },
   { column: "next", title: "Desktop accent color on Windows", text: "The Desktop accent color follows the Windows accent color, also when you change it.", areas: ["app"], platform: "windows" },
+  { column: "next", title: "Collapse all and clear pins", text: "A small menu at the top of every settings panel: fold every section at once, or clear your pinned sections.", areas: ["app"] },
+  { column: "next", title: "Lock the rail collapsed", text: "A small lock in the rail's corner keeps the rail small, icons only, so it no longer opens when you point at it.", areas: ["app"] },
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   {
     column: "next",
@@ -420,7 +422,6 @@ export const ROADMAP: RoadmapItem[] = [
     text: "If the board comes back still waiting for firmware after an update, the app says so and offers to install again.",
     areas: ["dongle"],
   },
-  { column: "planned", title: "Collapse all and clear pins", text: "A small menu at the top of every settings panel: fold every section at once, or clear your pinned sections.", areas: ["app"] },
   {
     column: "ideas",
     title: "Back up and restore your settings",
@@ -441,7 +442,12 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "ideas", title: "Turn off all controllers", text: "Switch every connected controller off at once, from the app or a button combo", areas: ["controller"] },
   { column: "ideas", title: "Moving from DS5-Linux-Bridge", text: "A short guide for people switching from DS5-Linux-Bridge", areas: ["community"] },
   { column: "ideas", title: "Wake the PC from off", text: "Start a PC that's fully off with the PS button, using the board's status pin", areas: ["dongle"] },
-  { column: "ideas", title: "Lock the rail collapsed", text: "A small lock in the rail's corner keeps the rail small, icons only, so it no longer opens when you point at it.", areas: ["app"] },
+  {
+    column: "ideas",
+    title: "Keep the settings panel open",
+    text: "A small lock in the settings panel's header keeps the panel shown on every page, so a click on the rail never hides it.",
+    areas: ["app"],
+  },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
   { column: "ideas", title: "In-game overlay", text: "A small overlay over games: pop-ups like battery low or profile switched, and optionally your button presses.", areas: ["app"] },

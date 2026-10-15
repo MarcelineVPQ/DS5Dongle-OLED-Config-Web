@@ -3077,12 +3077,12 @@ html[data-theme="light"] .live-ctl {
     box-shadow 0.18s ease;
 }
 .rail-slot.pinned .app-rail,
-.app-rail:not(.picked):hover,
-.app-rail:has(:focus-visible) {
+.app-rail:not(.picked):not(.locked):hover,
+.app-rail:not(.locked):has(:focus-visible) {
   width: var(--rail-w-expanded);
 }
-.rail-slot:not(.pinned) .app-rail:not(.picked):hover,
-.rail-slot:not(.pinned) .app-rail:has(:focus-visible) {
+.rail-slot:not(.pinned) .app-rail:not(.picked):not(.locked):hover,
+.rail-slot:not(.pinned) .app-rail:not(.locked):has(:focus-visible) {
   box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
 }
 .rail-nav {
@@ -3178,9 +3178,34 @@ html[data-theme="light"] .live-ctl {
   transition: opacity 0.12s;
 }
 .rail-slot.pinned .rail-label,
-.app-rail:not(.picked):hover .rail-label,
-.app-rail:has(:focus-visible) .rail-label {
+.app-rail:not(.picked):not(.locked):hover .rail-label,
+.app-rail:not(.locked):has(:focus-visible) .rail-label {
   opacity: 1;
+}
+/* The lock in the rail's bottom corner (AppRail.tsx): small, under the icons' column. */
+.rail-lock {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.rail-lock[aria-pressed="true"] {
+  color: var(--text-strong);
+}
+.rail-lock:hover {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+.rail-lock:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: -2px;
 }
 .rail-divider {
   height: 1px;
@@ -3542,13 +3567,13 @@ html[data-theme="light"] .live-ctl {
   .rail-slot.pinned .rail-label {
     opacity: 0;
   }
-  .rail-slot .app-rail:not(.picked):hover,
-  .rail-slot .app-rail:has(:focus-visible) {
+  .rail-slot .app-rail:not(.picked):not(.locked):hover,
+  .rail-slot .app-rail:not(.locked):has(:focus-visible) {
     width: var(--rail-w-expanded);
     box-shadow: -8px 0 24px rgb(0 0 0 / 30%);
   }
-  .rail-slot .app-rail:not(.picked):hover .rail-label,
-  .rail-slot .app-rail:has(:focus-visible) .rail-label {
+  .rail-slot .app-rail:not(.picked):not(.locked):hover .rail-label,
+  .rail-slot .app-rail:not(.locked):has(:focus-visible) .rail-label {
     opacity: 1;
   }
 }
@@ -3787,8 +3812,8 @@ html[data-glass] .dk-bar {
 }
 /* Open over content (text): the regular variant, more frost and a dim. */
 html[data-glass] .rail-slot.pinned .app-rail,
-html[data-glass] .app-rail:not(.picked):hover,
-html[data-glass] .app-rail:has(:focus-visible) {
+html[data-glass] .app-rail:not(.picked):not(.locked):hover,
+html[data-glass] .app-rail:not(.locked):has(:focus-visible) {
   backdrop-filter: var(--glass-regular, blur(18px));
   background: rgb(8 10 16 / 45%); /* theme-exempt: Liquid Glass light/shade layer */
 }
@@ -5473,6 +5498,46 @@ main.dk-body:focus:not(:focus-visible),
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+/* The panel menu (Section.tsx PanelMenu): in the top layer under its ⋮,
+   right edges lined up. No animation (idle cost 0). */
+.dk-menu {
+  display: grid;
+  min-width: 170px;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-1);
+}
+.dk-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: calc(var(--dk-radius) - 2px);
+  background: transparent;
+  color: var(--text-body);
+  font: inherit;
+  font-size: var(--dk-small);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dk-menu button:hover:not(:disabled) {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+.dk-menu button:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: -2px;
+}
+.dk-menu button:disabled {
+  color: var(--text-muted);
+  cursor: default;
 }
 .dk-split-head h2 {
   margin: 0;

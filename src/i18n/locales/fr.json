@@ -1079,7 +1079,9 @@
       },
       "development": "Développement",
       "devHint": "Une version de développement : plus récente que la version stable et moins testée",
-      "again": "cliquez à nouveau pour afficher ou masquer ses réglages"
+      "again": "cliquez à nouveau pour afficher ou masquer ses réglages",
+      "lock": "Verrouiller la barre étroite (icônes seules)",
+      "unlock": "Déverrouiller la barre (elle s'ouvre à nouveau au survol)"
     },
     "audioTest": {
       "speakerTitle": "Test du haut-parleur",
@@ -1730,7 +1732,14 @@
       "buttonsChanged_one": "{{count}} touche modifiée",
       "buttonsChanged_other": "{{count}} touches modifiées",
       "slotActive": "Slot {{slot}} actif",
-      "moreInDiagnostics": "Plus dans Diagnostic"
+      "moreInDiagnostics": "Plus dans Diagnostic",
+      "menu": "Options du panneau",
+      "collapseAll": "Tout replier",
+      "collapseAllTip": "Replie toutes les sections, épinglées comprises (elles restent épinglées et se rouvrent la prochaine fois)",
+      "nothingOpen": "Toutes les sections sont déjà repliées",
+      "clearPins": "Retirer les épingles",
+      "clearPinsTip": "Désépingle toutes les sections épinglées de cette page",
+      "noPins": "Aucune section épinglée sur cette page"
     },
     "sections": {
       "lightbar": "Barre lumineuse",

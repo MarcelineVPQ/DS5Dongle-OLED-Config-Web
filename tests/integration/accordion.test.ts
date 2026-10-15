@@ -103,6 +103,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 const render = async (el: ReactNode) => {
   await act(async () => root.render(el));
@@ -142,6 +143,31 @@ function TestPage({ scope = "app", task = null }: { scope?: string; task?: "grap
     ),
   });
 }
+
+// The same page in a SplitView (the panel's header, with the panel menu).
+function SplitTestPage() {
+  const { SplitView, Section } = m.Section;
+  const acc = m.acc.useAccordion("app", "app");
+  const Icon = (() => null) as never;
+  return createElement(SplitView, {
+    page: "app",
+    title: "Test",
+    main: createElement("p", null, "main"),
+    state: acc,
+    // loop: test fixture
+    children: ["language", "appearance", "graphics"].map((id) => createElement(Section, { key: id, id, icon: Icon, title: id, children: () => createElement("p", { className: "body" }, id) })),
+  });
+}
+// jsdom keeps the contents of a popover="…" element unfocusable (it has no
+// showPopover to show it), so the panel menu stays in the page flow here.
+const noPopover = () => {
+  const set = Element.prototype.setAttribute;
+  vi.spyOn(Element.prototype, "setAttribute").mockImplementation(function (this: Element, name: string, value: string) {
+    if (name !== "popover") set.call(this, name, value);
+  });
+};
+const menuButton = () => container.querySelector<HTMLButtonElement>('.dk-split-head [aria-haspopup="menu"]')!;
+const menuItem = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="menu"] [role="menuitem"]')].find((b) => b.textContent === name)!;
 
 describe("the accordion", () => {
   it("opens one section at a time; closed sections render no body", async () => {
@@ -187,6 +213,67 @@ describe("the accordion", () => {
     expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("false");
     await render(createElement(TestPage, { scope: m.acc.pinScope("controller", "Pico 2 W", 0) }));
     expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("the panel menu: Collapse all folds every section, pinned ones too, and they open again next visit", async () => {
+    noPopover();
+    await render(createElement(SplitTestPage));
+    click(pinOf("language"));
+    click(head("graphics"));
+    expect(openIds()).toEqual(["language", "graphics"]);
+    expect(menuButton().getAttribute("aria-label")).toBe("Panel options");
+    click(menuButton());
+    expect(menuButton().getAttribute("aria-expanded")).toBe("true");
+    // The menu opens with the focus on its first item.
+    expect(document.activeElement).toBe(menuItem("Collapse all"));
+    expect(container.querySelector('[role="menu"]')!.textContent).not.toMatch(/Expand/);
+    click(menuItem("Collapse all"));
+    expect(openIds()).toEqual([]);
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(menuButton());
+    // Still pinned; nothing left to fold, so Collapse all is disabled and says why.
+    expect(pinOf("language").getAttribute("aria-pressed")).toBe("true");
+    click(menuButton());
+    expect(menuItem("Collapse all").disabled).toBe(true);
+    expect(menuItem("Collapse all").title).toBe("Every section is already folded");
+    click(menuButton());
+    // A folded pinned section's header opens it again, still pinned.
+    click(head("language"));
+    expect(openIds()).toEqual(["language"]);
+    expect(pinOf("language").getAttribute("aria-pressed")).toBe("true");
+    click(menuButton());
+    click(menuItem("Collapse all"));
+    // Next visit: the pinned section is open again, the folded one stays folded.
+    act(() => root.unmount());
+    root = createRoot(container);
+    await render(createElement(SplitTestPage));
+    expect(openIds()).toEqual(["language"]);
+  });
+
+  it("the panel menu: Clear pins unpins this page's sections; keyboard and Escape", async () => {
+    noPopover();
+    await render(createElement(SplitTestPage));
+    click(menuButton());
+    expect(menuItem("Clear pins").disabled).toBe(true);
+    expect(menuItem("Clear pins").title).toBe("No pinned sections on this page");
+    click(menuButton());
+    click(pinOf("language"));
+    click(pinOf("graphics"));
+    expect(openIds()).toEqual(["language", "graphics"]);
+    const key = (k: string) => act(() => void document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
+    menuButton().focus();
+    key("ArrowDown");
+    expect(document.activeElement).toBe(menuItem("Collapse all"));
+    key("ArrowDown");
+    expect(document.activeElement).toBe(menuItem("Clear pins"));
+    key("Escape");
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(menuButton());
+    click(menuButton());
+    click(menuItem("Clear pins"));
+    expect(pinOf("language").getAttribute("aria-pressed")).toBe("false");
+    expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("false");
+    expect(m.acc.parsePins(localStorage.getItem(m.acc.PINS_KEY("app")))).toEqual([]);
   });
 
   it("opens the first section with a task on the first visit only", async () => {

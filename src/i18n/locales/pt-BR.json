@@ -1079,7 +1079,9 @@
       },
       "development": "Desenvolvimento",
       "devHint": "Uma versão de desenvolvimento: mais nova que a estável e menos testada",
-      "again": "clique de novo para mostrar ou ocultar as configurações"
+      "again": "clique de novo para mostrar ou ocultar as configurações",
+      "lock": "Travar a barra estreita (só ícones)",
+      "unlock": "Destravar a barra (ela abre de novo ao apontar)"
     },
     "audioTest": {
       "speakerTitle": "Teste do alto-falante",
@@ -1730,7 +1732,14 @@
       "buttonsChanged_one": "{{count}} botão alterado",
       "buttonsChanged_other": "{{count}} botões alterados",
       "slotActive": "Slot {{slot}} ativo",
-      "moreInDiagnostics": "Mais em Diagnóstico"
+      "moreInDiagnostics": "Mais em Diagnóstico",
+      "menu": "Opções do painel",
+      "collapseAll": "Recolher tudo",
+      "collapseAllTip": "Recolhe todas as seções, inclusive as fixadas (continuam fixadas e abrem de novo na próxima vez)",
+      "nothingOpen": "Todas as seções já estão recolhidas",
+      "clearPins": "Desafixar tudo",
+      "clearPinsTip": "Desafixa todas as seções fixadas desta página",
+      "noPins": "Nenhuma seção fixada nesta página"
     },
     "sections": {
       "lightbar": "Barra de luz",

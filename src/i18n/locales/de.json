@@ -1079,7 +1079,9 @@
       },
       "development": "Entwicklung",
       "devHint": "Ein Entwicklungs-Build: neuer als die stabile Version und weniger getestet",
-      "again": "erneut klicken, um die Einstellungen ein- oder auszublenden"
+      "again": "erneut klicken, um die Einstellungen ein- oder auszublenden",
+      "lock": "Leiste schmal sperren (nur Symbole)",
+      "unlock": "Leiste entsperren (sie öffnet sich wieder beim Daraufzeigen)"
     },
     "audioTest": {
       "speakerTitle": "Lautsprechertest",
@@ -1730,7 +1732,14 @@
       "buttonsChanged_one": "{{count}} Taste geändert",
       "buttonsChanged_other": "{{count}} Tasten geändert",
       "slotActive": "Slot {{slot}} aktiv",
-      "moreInDiagnostics": "Mehr in Diagnose"
+      "moreInDiagnostics": "Mehr in Diagnose",
+      "menu": "Feldoptionen",
+      "collapseAll": "Alle einklappen",
+      "collapseAllTip": "Jeden Abschnitt einklappen, auch angeheftete (sie bleiben angeheftet und öffnen beim nächsten Mal wieder)",
+      "nothingOpen": "Alle Abschnitte sind schon eingeklappt",
+      "clearPins": "Anheftungen lösen",
+      "clearPinsTip": "Alle angehefteten Abschnitte dieser Seite lösen",
+      "noPins": "Keine angehefteten Abschnitte auf dieser Seite"
     },
     "sections": {
       "lightbar": "Leuchtleiste",

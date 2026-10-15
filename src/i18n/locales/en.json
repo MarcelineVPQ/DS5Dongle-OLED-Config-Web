@@ -1078,7 +1078,9 @@
       },
       "development": "Development",
       "devHint": "A development build: newer than the stable release and less tested",
-      "again": "click again to show or hide its settings"
+      "again": "click again to show or hide its settings",
+      "lock": "Lock the rail small (icons only)",
+      "unlock": "Unlock the rail (it opens when you point at it again)"
     },
     "audioTest": {
       "speakerTitle": "Speaker test",
@@ -1729,7 +1731,14 @@
       "buttonsChanged_one": "{{count}} button changed",
       "buttonsChanged_other": "{{count}} buttons changed",
       "slotActive": "Slot {{slot}} active",
-      "moreInDiagnostics": "More in Diagnostics"
+      "moreInDiagnostics": "More in Diagnostics",
+      "menu": "Panel options",
+      "collapseAll": "Collapse all",
+      "collapseAllTip": "Fold every section, pinned ones too (they stay pinned and open again next time)",
+      "nothingOpen": "Every section is already folded",
+      "clearPins": "Clear pins",
+      "clearPinsTip": "Unpin every pinned section on this page",
+      "noPins": "No pinned sections on this page"
     },
     "sections": {
       "lightbar": "Light bar",

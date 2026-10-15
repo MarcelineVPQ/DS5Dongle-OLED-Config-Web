@@ -1079,7 +1079,9 @@
       },
       "development": "Desarrollo",
       "devHint": "Una versión de desarrollo: más nueva que la estable y menos probada",
-      "again": "vuelve a hacer clic para mostrar u ocultar sus ajustes"
+      "again": "vuelve a hacer clic para mostrar u ocultar sus ajustes",
+      "lock": "Bloquear la barra estrecha (solo iconos)",
+      "unlock": "Desbloquear la barra (se abre de nuevo al señalarla)"
     },
     "audioTest": {
       "speakerTitle": "Prueba del altavoz",
@@ -1730,7 +1732,14 @@
       "buttonsChanged_one": "{{count}} botón cambiado",
       "buttonsChanged_other": "{{count}} botones cambiados",
       "slotActive": "Slot {{slot}} activo",
-      "moreInDiagnostics": "Más en Diagnóstico"
+      "moreInDiagnostics": "Más en Diagnóstico",
+      "menu": "Opciones del panel",
+      "collapseAll": "Contraer todo",
+      "collapseAllTip": "Contrae todas las secciones, también las fijadas (siguen fijadas y se abren de nuevo la próxima vez)",
+      "nothingOpen": "Todas las secciones ya están contraídas",
+      "clearPins": "Quitar fijados",
+      "clearPinsTip": "Deja de fijar todas las secciones fijadas de esta página",
+      "noPins": "No hay secciones fijadas en esta página"
     },
     "sections": {
       "lightbar": "Barra luminosa",
