@@ -11,10 +11,13 @@ import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, CONFIG_BODY_SIZE_V13, CONFIG_
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
+import { SCREEN_NAMES } from "../oled/screenNames";
 import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
 const RESULT = { ok: 0, pending: 1, invalid: 2, failed: 3, busy: 4 } as const;
+// The firmware's OLED brightness levels (SH1107 contrast, oled.cpp kBrightLevels).
+const OLED_BRIGHT_LEVELS = [0xff, 0x7f, 0x3f, 0x10] as const;
 // Per stage (firmware perf.h order): average ns, worst case µs.
 const SIM_TIMINGS: [number, number][] = [
   [48000, 1900], // main loop
@@ -160,6 +163,12 @@ export class SimulatedDongle implements Ds5Transport {
   gripTests = 0; // grip test (0x0E) commands run (not counting stops)
   lastGripTenths = -1; // its duration in tenths (5 = 0.5 s, all before protocol 1.15)
   gripStops = 0; // 0x0E [side, 0] stops (protocol 1.15)
+  // The OLED as the firmware's handle_buttons() leaves it (protocol 1.18
+  // presses KEY0 / KEY1): the screen the mirror reports (live: Status first,
+  // as at boot; tests: screen 2) and the brightness level (kBrightLevels).
+  oledScreen: number;
+  oledBright = 0;
+  oledKeyPresses: [key: number, long: boolean][] = [];
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
   private get minor() {
@@ -219,18 +228,22 @@ export class SimulatedDongle implements Ds5Transport {
   private pending: { func: number; arg: number; arg2?: number; polls: number } | null = null;
   private core1Loops = 1234;
 
-  constructor(private readonly opts: SimulatedDongleOptions = {}) {}
+  constructor(private readonly opts: SimulatedDongleOptions = {}) {
+    this.oledScreen = opts.live ? 0 : 2;
+  }
 
   // Live mode: the firmware's Status screen, packed like the firmware's
   // (128 x 64, row-major, 16 bytes a row, MSB = leftmost pixel): the text
   // drawn with the browser's canvas, the battery row and the controller glyph
   // with the firmware's own geometry (src/oled/statusPad.ts, from oled_pad.h)
   // and the moving input. Never real dongle data: no Bluetooth address.
+  // Another screen (after a KEY press): its name, so the mirror visibly moves.
   private liveScreen(): Uint8Array | null {
     if (typeof OffscreenCanvas === "undefined") return null;
     const c = new OffscreenCanvas(128, 64);
     const g = c.getContext("2d");
     if (!g) return null;
+    const status = this.oledScreen === 0;
     const input = this.liveInput();
     const pct = Math.min(100, (input[52] & 0x0f) * 10);
     const state = input[52] >> 4;
@@ -240,14 +253,15 @@ export class SimulatedDongle implements Ds5Transport {
     g.fillStyle = "#fff"; // theme-exempt: OLED pixels off/on, not a UI color
     g.font = "8px monospace";
     g.textBaseline = "top";
-    g.fillText(`DS5 B. ${(this.opts.version ?? "").replace("-oled-edition", "")}`.slice(0, 22), 6, 1);
+    g.fillText(status ? `DS5 B. ${(this.opts.version ?? "").replace("-oled-edition", "")}`.slice(0, 22) : (SCREEN_NAMES[this.oledScreen] ?? ""), 6, 1);
     g.fillText("(simulated)", 6, 10);
-    g.fillText(`${String(pct).padStart(3)}%${mark}`, kBattTextX, kBattY);
-    if (state === 1) g.fillText("~--m", kEtaX, kBattY);
+    if (status) g.fillText(`${String(pct).padStart(3)}%${mark}`, kBattTextX, kBattY);
+    if (status && state === 1) g.fillText("~--m", kEtaX, kBattY);
     const px = g.getImageData(0, 0, 128, 64).data;
     const out = new Uint8Array(1024);
     // loop: HOT-PATH-OK — dev/test fake only: 128x64 px per simulated OLED mirror read
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) if (px[(y * 128 + x) * 4] > 127) out[y * 16 + (x >> 3)] |= 0x80 >> (x & 7);
+    if (!status) return out;
     const fb = packedCanvas(out);
     drawBattery(fb, pct);
     drawPad(fb, input, this.edge);
@@ -316,11 +330,11 @@ export class SimulatedDongle implements Ds5Transport {
       case 0xee:
         return new Uint8Array([this.currentSlot, ...this.calibration[this.currentSlot]]).slice(0, length);
       case 0xef: {
-        // OLED mirror: screen on, full contrast. Live: a Status-like screen
+        // OLED mirror: screen on, the KEY-chosen screen and brightness. Live: a Status-like screen
         // drawn here; tests: screen 2 and a stripe pattern.
         const out = new Uint8Array(4 + 1024);
         const live = this.opts.live ? this.liveScreen() : null;
-        out.set([0, live ? 0 : 2, 0xff, this.seq & 0xff]);
+        out.set([0, this.oledScreen, OLED_BRIGHT_LEVELS[this.oledBright], this.seq & 0xff]);
         if (live) out.set(live, 4);
         // loop: HOT-PATH-OK — dev/test fake only: 1024-byte test pattern
         else for (let i = 0; i < 1024; i++) out[4 + i] = i % 2 ? 0xaa : 0x55;
@@ -522,6 +536,13 @@ export class SimulatedDongle implements Ds5Transport {
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
+    } else if (func === 0x18 && this.minor >= 18) {
+      // 1.18 remote KEY0 / KEY1 press: [key 0/1, press 0 short / 1 long] (deferred).
+      if (payload.length < 3 || arg > 1 || payload[2] > 1) this.lastResult = RESULT.invalid;
+      else {
+        this.pending = { func, arg: arg | (payload[2] << 1), polls: this.opts.pendingPolls ?? 1 };
+        this.lastResult = RESULT.pending;
+      }
     } else if (func === 0x0a && arg > 6) {
       this.lastResult = RESULT.invalid;
     } else if (func === 0x17) {
@@ -626,7 +647,19 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func === 0x17) {
       if (this.opts.saveFails) this.lastResult = RESULT.failed;
       else this.powerFlags = arg; // saved on its own, nothing else
-    }
+    } else if (func === 0x18) this.pressKey(arg & 1, (arg & 2) !== 0);
+  }
+
+  // What the firmware's handle_buttons() does with one press (oled_keys.h):
+  // KEY0 (short or long) = next screen; KEY1 short = previous, long = next
+  // brightness level. The firmware plays the press over ~0.06 s / ~1.6 s;
+  // here it lands at once. Screens wrap like kNumScreens.
+  private pressKey(key: number, long: boolean): void {
+    this.oledKeyPresses.push([key, long]);
+    const n = SCREEN_NAMES.length;
+    if (key === 0) this.oledScreen = (this.oledScreen + 1) % n;
+    else if (!long) this.oledScreen = (this.oledScreen - 1 + n) % n;
+    else this.oledBright = (this.oledBright + 1) % OLED_BRIGHT_LEVELS.length;
   }
 
   private identity(): Uint8Array {
@@ -676,6 +709,7 @@ export class SimulatedDongle implements Ds5Transport {
       out[48] = this.pcMicLevel;
     }
     if (minor >= 17) out[46] |= 0x20; // FEATURES3: the mic echo cancellation (1.17)
+    if (minor >= 18) out[46] |= 0x40; // FEATURES3: remote KEY0 / KEY1 presses (1.18)
     return out;
   }
 

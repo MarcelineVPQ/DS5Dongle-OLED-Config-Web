@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- **Press the board's KEY0 / KEY1 from the app (groundwork)**: with firmware protocol 1.18 the app can press either key, short or long, and the board treats it exactly like a finger on the key (KEY0 next screen; KEY1 back, or held for the next brightness level). The buttons themselves come to the Pico 2 W page's live screen next. The simulated board (dev builds) moves through its screens the same way.
+
 ## [0.9.5-dev.12] - 2026-10-14
 
 ### Performance
