@@ -1,7 +1,7 @@
 # The resource budget gate inside the Windows test VM (win11-test), run by
 # tools/check_budgets_vm.sh through the QEMU guest agent (as SYSTEM) from
 # the gate's CD (the volume with ds5-budgets.txt). It installs the
-# installer on that CD when the app isn't installed at that version (per user, as
+# installer on that CD unless that very installer (its SHA-256) is the last one installed (per user, as
 # the signed-in user), starts the installed app in the signed-in user's
 # session (the "DS5 gate launch" scheduled task, interactive token: never
 # around the sign-in; a locked session still runs it) with its own settings
@@ -62,8 +62,15 @@ if (Test-Path $installer) {
   # version ("0.9.5-dev.11"); the app's ProductVersion is numeric only.
   $want = (Get-Item $installer).VersionInfo.ProductVersion
   $have = if (Test-Path $exe) { (Get-Item $exe).VersionInfo.FileVersion } else { "" }
-  if ($want -and $want -eq $have) {
-    Say "installed $have already; not reinstalling"
+  # Builds of the same version differ (every dev build of a branch is
+  # "0.9.5-dev.12"): the installer's hash, kept after each install, says
+  # whether this one is already in. A version match alone measured an older
+  # build on 2026-10-15.
+  $hash = (Get-FileHash $installer -Algorithm SHA256).Hash
+  $marker = "C:\ds5test\installed-installer.sha256"
+  $had = if (Test-Path $marker) { (Get-Content $marker -Raw).Trim() } else { "" }
+  if ($want -and $want -eq $have -and $hash -eq $had) {
+    Say "installed $have already (this installer, $($hash.Substring(0, 12))); not reinstalling"
   } else {
     Stop-App
     Copy-Item $installer "$work\installer.exe"
@@ -78,7 +85,8 @@ if (Test-Path $installer) {
     Unregister-ScheduledTask -TaskName "DS5 gate install" -Confirm:$false
     Remove-Item "$work\installer.exe" -Force -ErrorAction SilentlyContinue
     if ($now -ne $want) { Say "the install didn't finish in 5 min (installed: '$now', wanted: '$want')"; exit 6 }
-    Say "installed $now in $([int]$sw.Elapsed.TotalSeconds) s"
+    Set-Content -Path $marker -Value $hash
+    Say "installed $now ($($hash.Substring(0, 12))) in $([int]$sw.Elapsed.TotalSeconds) s"
   }
 }
 if (-not (Test-Path $exe)) { Say "the app isn't installed for $userName ($exe): pass --installer"; exit 7 }

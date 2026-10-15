@@ -41,7 +41,7 @@ if (!opts.linux && !opts.windows && !opts.mac) {
   console.log(formatTable(rows));
   if (results.hidden) console.log(byType("CPU hidden by process type (% of a core)", results.hidden.cpu));
   if (results.memory?.byType) console.log(byType(`Memory by process type (MB ${results.memory.metric ?? "PSS"})`, results.memory.byType));
-  if (results.memory?.commitByType) console.log(byType("Commit by process type (MB, reported)", results.memory.commitByType));
+  if (results.memory?.also) console.log(byType(`${results.memory.also.metric} by process type (MB, reported)`, results.memory.also.byType));
   const w = warnings(results);
   w.lines.forEach((l) => console.log(l));
   const ok = passed(rows) && w.notReached === 0;
@@ -65,7 +65,7 @@ for (const os of oses) {
   const r = byOs[os];
   const memo = r.memory ? `${os} memory: ${r.memory.metric ?? "PSS"}${r.memory.atS ? ` at ${Math.round(r.memory.atS / 60)} min` : ""}` : `${os}: no memory measured`;
   console.log(`${memo}; mode ${r.mode}${r.display ? `; screen ${r.display.size.width} x ${r.display.size.height}, window ${r.display.window.width} x ${r.display.window.height}` : ""}`);
-  if (r.memory?.commitByType) console.log(byType(`  ${os} commit by process type (MB, reported)`, r.memory.commitByType));
+  if (r.memory?.also) console.log(byType(`  ${os} ${r.memory.also.metric} by process type (MB, reported)`, r.memory.also.byType));
   const w = warnings(r, `  ${os}: `);
   w.lines.forEach((l) => console.log(l));
   if (os !== "macOS") notReached += w.notReached;

@@ -3,15 +3,16 @@
 // CIM query per sample returns the app's processes (by its exe name) with:
 //   - CPU: Win32_Process UserModeTime + KernelModeTime, in 100 ns units
 //     (hz = 10,000,000), the same "CPU time used" /proc's utime + stime is;
-//   - memory: the private working set (Win32_PerfRawData_PerfProc_Process
-//     WorkingSetPrivate, Task Manager's "Memory" column), Windows' closest
-//     match to PSS. Both count the pages only this process uses and that are
-//     in RAM; PSS also adds a share of the shared pages (Electron's DLLs),
-//     which the private working set leaves out, so it reads a little lower.
-//     The commit (Win32_Process PrivatePageCount, Task Manager's "Commit
-//     size": private memory whether in RAM or not) is reported beside it:
-//     it counts V8's and Chromium's reserved-and-committed heaps, so it
-//     reads higher than anything resident.
+//   - memory, judged: the commit (Win32_Process PrivatePageCount, Task
+//     Manager's "Commit size", the private bytes: the memory only this
+//     process uses, whether in RAM or paged out). Reported beside it: the
+//     private working set (Win32_PerfRawData_PerfProc_Process
+//     WorkingSetPrivate, Task Manager's "Memory" column), the part of that
+//     in RAM right now. Windows trims a window's working set when it goes to
+//     the tray (the 2026-10-14 night run read 18.9 MB for the whole app
+//     against ~207 MB of commit), so the working set says how hard Windows
+//     squeezed the app, not what the app uses; the commit is the closer match
+//     to Linux's PSS for the budget (what the app holds).
 // A query from outside the app (not koffi in the app, not app.getAppMetrics)
 // so the app does no extra work because it is measured. The PowerShell and
 // WMI processes it starts are not in the app's tree, so they never count.
@@ -62,7 +63,9 @@ export function windowsReader(execPath) {
     execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", scripts[memory]], { encoding: "utf8", windowsHide: true, maxBuffer: 16 << 20, timeout: 60000 });
   return {
     hz: 1e7,
-    memoryMetric: "private working set",
-    appProcs: (main, { memory = false } = {}) => appTree(main, parseWinProcs(query(memory)), (r) => r.cmd),
+    memoryMetric: "commit",
+    alsoMetric: "private working set",
+    // The commit is judged (memKb), the private working set reported (alsoKb).
+    appProcs: (main, { memory = false } = {}) => appTree(main, parseWinProcs(query(memory)), (r) => r.cmd).map((r) => ({ ...r, memKb: r.commitKb, alsoKb: r.memKb })),
   };
 }

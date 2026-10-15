@@ -9,7 +9,7 @@
 # a CD (an ISO in ~/VMs, swapped into the VM's CD drive and swapped back
 # afterwards), then runs tools/budgets_vm.ps1 in the VM through the QEMU
 # guest agent. That script installs the installer for the signed-in user when
-# the app isn't at that version, stops every copy of the app in the VM,
+# that very installer (its SHA-256) isn't the last one installed, stops every copy of the app in the VM,
 # starts the installed app in the signed-in session (the "DS5 gate launch"
 # scheduled task: never around the sign-in; a locked session is fine) with
 # its own settings folder and DevTools on 9420 (inspector 9421), measures

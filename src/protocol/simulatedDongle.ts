@@ -255,20 +255,43 @@ export class SimulatedDongle implements Ds5Transport {
   // Another screen (after a KEY press): its name, so the mirror visibly moves.
   private liveScreen(): Uint8Array | null {
     if (typeof OffscreenCanvas === "undefined") return null;
-    const c = new OffscreenCanvas(128, 64);
-    const g = c.getContext("2d");
-    if (!g) return null;
     const status = this.oledScreen === 0;
     const input = this.liveInput();
     const pct = Math.min(100, (input[52] & 0x0f) * 10);
     const state = input[52] >> 4;
     const mark = state === 1 ? "+" : state === 2 ? "*" : state >= 0xa ? "!" : " ";
+    const screen = status ? null : this.oledScreens.lines(this.oledScreen, this.simBoard);
+    // The text only changes with the screen, the battery and the version:
+    // drawn once per change, not per mirror read (the mirror reads 10 a
+    // second, and drawing text with the canvas and reading it back cost the
+    // Pico 2 W page ~1 % of a core; the real board costs the app nothing).
+    const key = JSON.stringify([this.oledScreen, screen, status && [pct, mark, state === 1, this.opts.version]]);
+    let text = this.screenText?.key === key ? this.screenText.bits : null;
+    if (!text) {
+      text = this.drawScreenText(status, screen, pct, mark, state);
+      if (!text) return null;
+      this.screenText = { key, bits: text };
+    }
+    const out = text.slice();
+    if (!status) return out;
+    const fb = packedCanvas(out);
+    drawBattery(fb, pct);
+    drawPad(fb, input, this.edge);
+    return out;
+  }
+  // cache: OK — key=the screen, its rows, the battery text and the version; invalidated=any of them changes; bound=1 entry (1 KB)
+  private screenText: { key: string; bits: Uint8Array } | null = null;
+
+  // The screen's text, packed (liveScreen's drawing without the moving parts).
+  private drawScreenText(status: boolean, screen: ReturnType<SimulatedDongle["oledScreens"]["lines"]>, pct: number, mark: string, state: number): Uint8Array | null {
+    const c = new OffscreenCanvas(128, 64);
+    const g = c.getContext("2d");
+    if (!g) return null;
     g.fillStyle = "#000"; // theme-exempt: OLED pixels off/on, not a UI color
     g.fillRect(0, 0, 128, 64);
     g.fillStyle = "#fff"; // theme-exempt: OLED pixels off/on, not a UI color
     g.font = "8px monospace";
     g.textBaseline = "top";
-    const screen = status ? null : this.oledScreens.lines(this.oledScreen, this.simBoard);
     if (screen) {
       // A screen with controller input (1.19): its title, rows and footer at the firmware's places.
       g.fillText(screen.title, 6, 0);
@@ -285,10 +308,6 @@ export class SimulatedDongle implements Ds5Transport {
     const out = new Uint8Array(1024);
     // loop: HOT-PATH-OK — dev/test fake only: 128x64 px per simulated OLED mirror read
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) if (px[(y * 128 + x) * 4] > 127) out[y * 16 + (x >> 3)] |= 0x80 >> (x & 7);
-    if (!status) return out;
-    const fb = packedCanvas(out);
-    drawBattery(fb, pct);
-    drawPad(fb, input, this.edge);
     return out;
   }
 

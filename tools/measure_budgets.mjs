@@ -13,8 +13,8 @@
 // 1. Setup: simulated board with the controller put down (ds5.dev.simRest
 //    "still"), Developer card → Fake games on (a full library with art),
 //    first-run notices off, then a reload. The window is set to 1920 x 1080
-//    (the virtual display on Linux; the VM's screen on Windows), shown and
-//    focused.
+//    (the virtual display on Linux), or to the screen's work area when that
+//    is smaller (the Windows VM's 1024 x 768), shown and focused.
 // 2. Per page (Controller, Pico 2 W, Games Home, a game page, App settings,
 //    About): settle, CPU per process over cpuS (CPU time of the app's
 //    process tree), then a traceS trace counting the frames drawn
@@ -34,7 +34,7 @@ import { performance } from "node:perf_hooks";
 import { setTimeout as sleepFor } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
-import { cpuByType, memorySummary, perSecond } from "./budgets_lib.mjs";
+import { cpuByType, memoryJudged, memorySummary, perSecond } from "./budgets_lib.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -65,7 +65,7 @@ const sample = () => reader.appProcs(MAIN);
 // Memory per process type in MB (PSS on Linux, the private working set on
 // Windows) and the total without DevTools' tracing service, which only runs
 // because we measure.
-const memoryNow = () => memorySummary(reader.appProcs(MAIN, { memory: true }), reader.memoryMetric);
+const memoryNow = () => memorySummary(reader.appProcs(MAIN, { memory: true }), reader.memoryMetric, reader.alsoMetric);
 // CPU per process type over `secs`, timed by the clock (a Windows sample
 // takes a second or two, so the real stretch between them is used).
 async function cpuDuring(secs) {
@@ -78,13 +78,23 @@ async function cpuDuring(secs) {
 
 // --- pages
 const clickOn = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`);
+// A rail button pressed on the page you're already on shows or hides that
+// page's settings panel. The per-page measurement keeps the clicks it has
+// always made; the soak (steady = true) presses a rail button only to change
+// page, so every lap leaves the panels as they were and each memory sample
+// sees the same page state (pressing them each lap flipped two panels a
+// lap, and the renderer's PSS between two levels ~13 MB apart).
+const pressRail = (name, steady) =>
+  ev(
+    `(() => { const el = document.querySelector('[data-rail="${name}"]'); if (!el) return false; if (!${steady} || document.querySelector(".rail-link.active")?.dataset.rail !== "${name}") el.click(); return true; })()`,
+  );
 const NAV = {
-  controller: () => clickOn('[data-rail="controller"]'),
-  dongle: () => clickOn('[data-rail="dongle"]'),
-  gameshome: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await clickOn(".lib-home")),
-  gamepage: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
-  app: () => clickOn('[data-rail="app"]'),
-  about: () => clickOn('[data-rail="about"]'),
+  controller: (steady = false) => pressRail("controller", steady),
+  dongle: (steady = false) => pressRail("dongle", steady),
+  gameshome: async (steady = false) => (await pressRail("games", steady)) && (await pause(1500), await clickOn(".lib-home")),
+  gamepage: async (steady = false) => (await pressRail("games", steady)) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
+  app: (steady = false) => pressRail("app", steady),
+  about: (steady = false) => pressRail("about", steady),
 };
 
 // 1. Setup
@@ -106,8 +116,16 @@ await ev(`(async () => {
 })()`);
 await page.send("Page.reload");
 await pause(10000);
-note("window:", await win(`w.setBounds({ x: 0, y: 0, width: 1920, height: 1080 }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`));
-// The screen it ran on (the Windows VM's may be smaller than 1920 x 1080: the window is then as large as Windows lets it be).
+// 1920 x 1080, or the screen's work area when that is smaller (the Windows
+// VM's screen is 1024 x 768): a window larger than its screen hangs off it
+// and measures a layout nobody sees.
+note(
+  "window:",
+  await win(
+    `const a = require("electron").screen.getPrimaryDisplay().workArea; w.setBounds({ x: a.x, y: a.y, width: Math.min(1920, a.width), height: Math.min(1080, a.height) }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`,
+  ),
+);
+// The screen it ran on, and the window it got.
 const display = await mainEv(
   `(() => { const e = require("electron"); const d = e.screen.getPrimaryDisplay(); return { size: d.size, scaleFactor: d.scaleFactor, window: e.BrowserWindow.getAllWindows()[0].getBounds() }; })()`,
 );
@@ -122,10 +140,12 @@ for (const name of PAGES) {
   const raf0 = await ev("window.__raf");
   const cpu = await cpuDuring(mode.cpuS);
   const raf1 = await ev("window.__raf");
-  const framesPerS = await framesOver(page, mode.traceS);
+  // The judged rate, and the same trace's plain counts beside it (reported).
+  const frameCounts = {};
+  const framesPerS = await framesOver(page, mode.traceS, frameCounts);
   const info = await ev(`({ focus: document.hasFocus(), size: innerWidth + "x" + innerHeight, rail: document.querySelector(".rail-link.active")?.dataset.rail ?? null,
     anims: [...new Set(document.getAnimations().filter((a) => a.playState === "running").map((a) => (a.animationName ?? a.transitionProperty ?? "?") + "@" + String(a.effect?.target?.className?.baseVal ?? a.effect?.target?.className ?? "").split(" ")[0]))] })`);
-  const r = { page: name, reached: !!reached, framesPerS, cpu, rafPerS: perSecond(raf1 - raf0, mode.cpuS), ...info };
+  const r = { page: name, reached: !!reached, framesPerS, frameCounts, cpu, rafPerS: perSecond(raf1 - raf0, mode.cpuS), ...info };
   note(JSON.stringify(r));
   pages.push(r);
 }
@@ -160,14 +180,16 @@ if (mode.soakS > 0) {
   while ((Date.now() - t0) / 1000 < mode.soakWarmupS + mode.soakS) {
     const lap = Date.now();
     for (const name of PAGES) {
-      await NAV[name]();
+      await NAV[name](true);
       await pause(3000);
     }
-    await NAV.controller();
+    await NAV.controller(true);
     await pause(Math.max(1000, mode.sampleS * 1000 - (Date.now() - lap)));
     const t = (Date.now() - t0) / 1000;
-    const { mb } = memoryNow();
-    if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb });
+    const now = memoryNow();
+    const { mb } = now;
+    // Without the GPU process too (reported: SwiftShader's PSS swings ±15 MB between samples).
+    if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb, mbWithoutGpu: memoryJudged(now) });
     note(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
   }
   soak = { windowS: mode.soakS, samples };

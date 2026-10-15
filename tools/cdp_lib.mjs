@@ -5,6 +5,7 @@
 // built-in WebSocket only.
 /* global WebSocket -- Node 22's built-in client */
 import { setTimeout as sleep } from "node:timers/promises";
+import { FRAME_MARKS, frameCounts, framesBetweenMarks } from "./budgets_lib.mjs";
 
 // A CDP session on a target's webSocketDebuggerUrl: send(method, params)
 // answers with the reply; `handlers` get every event.
@@ -52,20 +53,35 @@ export function evaluators(page, main) {
 }
 
 // Frames drawn per second over `secs` (a trace's Display::DrawAndSwap
-// events), to 0.1.
-export async function framesOver(page, secs) {
-  const counts = {};
+// events), to 0.1. Only the frames between two marks the page puts in the
+// trace (console.timeStamp) `secs` apart count, not the whole trace: the
+// trace runs on in the GPU process for a moment after Tracing.end (201
+// frames in "20 s" at exactly 100 ms apart). framesBetweenMarks
+// (budgets_lib.mjs) turns them into a rate. `counts`, when given, gets the
+// same trace's plain counts (frameCounts) for comparison.
+export async function framesOver(page, secs, counts = null) {
+  const events = [];
   let done;
   const finished = new Promise((r) => (done = r));
   const h = (d) => {
-    if (d.method === "Tracing.dataCollected") for (const e of d.params.value) counts[e.name] = (counts[e.name] ?? 0) + 1;
+    if (d.method === "Tracing.dataCollected") for (const e of d.params.value) if (e.name === "Display::DrawAndSwap" || e.name === "TimeStamp") events.push(e);
     if (d.method === "Tracing.tracingComplete") done();
   };
   page.handlers.add(h);
-  await page.send("Tracing.start", { traceConfig: { includedCategories: ["viz", "disabled-by-default-devtools.timeline.frame"], recordMode: "recordContinuously" }, transferMode: "ReportEvents" });
+  await page.send("Tracing.start", {
+    traceConfig: { includedCategories: ["viz", "disabled-by-default-devtools.timeline.frame", "devtools.timeline"], recordMode: "recordContinuously" },
+    transferMode: "ReportEvents",
+  });
+  const mark = (name) => page.send("Runtime.evaluate", { expression: `console.timeStamp(${JSON.stringify(name)})` });
+  await mark(FRAME_MARKS.start);
   await sleep(secs * 1000);
+  await mark(FRAME_MARKS.end);
   await page.send("Tracing.end");
   await finished;
   page.handlers.delete(h);
-  return Math.round(((counts["Display::DrawAndSwap"] ?? 0) / secs) * 10) / 10;
+  if (counts) Object.assign(counts, frameCounts(events, secs));
+  const perS = framesBetweenMarks(events);
+  // No marks in the trace: say so rather than judge a number that wasn't measured.
+  if (perS === null) throw new Error("the frame trace has no start/end marks (console.timeStamp didn't reach it)");
+  return perS;
 }

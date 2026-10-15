@@ -72,12 +72,13 @@ export function appTree(main, rows, cmdOf) {
   return out;
 }
 
-// Memory per process type in MB from [{ type, memKb, commitKb? }] (what the
-// platform reader measured: PSS on Linux, the private working set on
-// Windows), and the total without the processes that exist only because we
-// measure. `metric` names the measure for the report. Windows' commit (its
-// private bytes, resident or not) is kept beside it as commitByType.
-export function memorySummary(procs, metric) {
+// Memory per process type in MB from [{ type, memKb, alsoKb? }] (what the
+// platform reader measured: PSS on Linux, the commit on Windows), and the
+// total without the processes that exist only because we measure. `metric`
+// names the measure for the report. A second measure the reader took
+// (alsoKb: Windows' private working set) is kept beside it as `also`,
+// reported, not judged.
+export function memorySummary(procs, metric, alsoMetric = null) {
   const sum = (key) => {
     const byType = {};
     for (const p of procs) if (p[key] != null) byType[p.type] = (byType[p.type] ?? 0) + p[key] / 1024;
@@ -86,7 +87,7 @@ export function memorySummary(procs, metric) {
   const byType = sum("memKb");
   const total = Object.entries(byType).reduce((s, [type, v]) => (MEASUREMENT_TYPES.includes(type) ? s : s + v), 0);
   const out = { mb: round1(total), byType: roundAll(byType), metric };
-  if (procs.some((p) => p.commitKb != null)) out.commitByType = roundAll(sum("commitKb"));
+  if (alsoMetric && procs.some((p) => p.alsoKb != null)) out.also = { metric: alsoMetric, byType: roundAll(sum("alsoKb")) };
   return out;
 }
 const roundAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, round1(v)]));
@@ -125,6 +126,46 @@ export const MEASUREMENT_TYPES = ["utility:TracingService"];
 export function memoryJudged(memory) {
   if (!memory.byType) return memory.mb;
   return Math.round(Object.entries(memory.byType).reduce((sum, [type, mb]) => (type === GPU_TYPE || MEASUREMENT_TYPES.includes(type) ? sum : sum + mb), 0) * 10) / 10;
+}
+
+// The marks framesOver (cdp_lib.mjs) puts in the trace around the stretch it measures.
+export const FRAME_MARKS = { start: "ds5-frames-start", end: "ds5-frames-end" };
+
+// Frames per second (to 0.1) between the two marks, from a trace's
+// Display::DrawAndSwap and TimeStamp events ({ name, ts (µs), args }); null
+// when a mark is missing. With two frames or more it is the frames' own
+// rate: intervals between the first and the last frame over the time they
+// span. A plain count over the window is off by up to one frame either way
+// depending on where the window starts (a page drawing exactly every 100 ms
+// read 9.9 on one page and 10.1 on the next in one 10 s run); the intervals
+// aren't. Frames that don't span most of the window (a few frames close
+// together on an idle page) are counted over the window instead, so two
+// frames 100 ms apart read 0.2, not 10.
+export function framesBetweenMarks(events) {
+  const markAt = (message) => events.find((e) => e.name === "TimeStamp" && e.args?.data?.message === message)?.ts;
+  const start = markAt(FRAME_MARKS.start);
+  const end = markAt(FRAME_MARKS.end);
+  if (start == null || end == null || end <= start) return null;
+  const at = events
+    .filter((e) => e.name === "Display::DrawAndSwap" && e.ts >= start && e.ts < end)
+    .map((e) => e.ts)
+    .sort((a, b) => a - b);
+  const span = at.length < 2 ? 0 : at[at.length - 1] - at[0];
+  if (span < 0.9 * (end - start)) return round1(at.length / ((end - start) / 1e6));
+  return round1((at.length - 1) / (span / 1e6));
+}
+
+// The same trace by the two plain counts, for comparison (reported, not
+// judged): `wholeTrace`, every DrawAndSwap in the trace over `secs` (the gate's
+// formula until 2026-10-15), and `window`, the frames between the marks over
+// the time between them.
+export function frameCounts(events, secs) {
+  const draws = events.filter((e) => e.name === "Display::DrawAndSwap");
+  const markAt = (message) => events.find((e) => e.name === "TimeStamp" && e.args?.data?.message === message)?.ts;
+  const start = markAt(FRAME_MARKS.start);
+  const end = markAt(FRAME_MARKS.end);
+  const inWindow = start == null || end == null || end <= start ? null : draws.filter((e) => e.ts >= start && e.ts < end).length;
+  return { wholeTrace: round1(draws.length / secs), window: inWindow === null ? null : round1(inWindow / ((end - start) / 1e6)) };
 }
 
 // Events per second from a trace's event counts.
@@ -200,15 +241,36 @@ export function judgeBudgets(config, results) {
   rows.push({ id: "memory", budget: `memory (${metric}) without GPU`, scope: at, measured: mem, limit: `≤ ${b.memory.max}`, unit: "MB", verdict: verdict(mem, b.memory.max) });
   const gpuMem = results.memory?.byType?.[GPU_TYPE] ?? null;
   rows.push({ id: "memoryGpu", budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
-  const growth = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
+  // Growth is judged without the GPU process, like the memory budget (owner's
+  // decision 2026-10-15: the software GPU in the hidden copy swings ±15 MB
+  // between samples). Results without the split (older runs) judge the total.
+  // The total with the GPU process is reported beside it.
+  const total = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
+  const split = !!results.soak?.samples.length && results.soak.samples.every((s) => s.mbWithoutGpu != null);
+  const growth = split
+    ? growthPerWindow(
+        results.soak.samples.map((s) => ({ t: s.t, mb: s.mbWithoutGpu })),
+        1800,
+      )
+    : total;
+  const soakScope = results.soak ? `${Math.round(results.soak.windowS / 60)} min soak, ${results.soak.samples.length} samples` : "--long only";
   rows.push({
     id: "growth",
-    budget: "memory growth",
-    scope: results.soak ? `${Math.round(results.soak.windowS / 60)} min soak, ${results.soak.samples.length} samples` : "--long only",
+    budget: "memory growth without GPU",
+    scope: split || !results.soak ? soakScope : `${soakScope} (no split: total)`,
     measured: growth,
     limit: `< ${b.growth.max}`,
     unit: b.growth.unit,
     verdict: strictVerdict(growth, b.growth.max),
+  });
+  rows.push({
+    id: "growthTotal",
+    budget: "memory growth, all processes",
+    scope: results.soak ? "same soak, GPU process included" : "-",
+    measured: total,
+    limit: "info",
+    unit: b.growth.unit,
+    verdict: total == null ? "SKIP" : "INFO",
   });
   return rows;
 }

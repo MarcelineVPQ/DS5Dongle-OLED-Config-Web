@@ -6,13 +6,13 @@ The app is a little tool for a controller: it should sip resources, not drink th
 
 | Budget | Limit | Measured how |
 | --- | --- | --- |
-| **Idle frames** | ≤ 10 frames/s on every page | Window shown and focused, nothing changing (a resting controller), on Controller, Pico 2 W, Games Home, a game page, App settings and About. Frames drawn = `Display::DrawAndSwap` events in a DevTools trace. |
+| **Idle frames** | ≤ 10 frames/s on every page | Window shown and focused, nothing changing (a resting controller), on Controller, Pico 2 W, Games Home, a game page, App settings and About. Frames drawn = `Display::DrawAndSwap` events in a DevTools trace, counted between two marks the page puts in the trace (`console.timeStamp`) the measured stretch apart: the trace runs on in the GPU process for a moment after it is stopped (counting the whole trace read 10.1 for a page drawing exactly every 100 ms). The rate is the frames' own: intervals between the first and last frame in the window over the time they span (a plain count is off by a frame either way depending on where the window starts: 9.9 and 10.1 in one run for the same 10 Hz); frames that don't span most of the window are counted over the window. |
 | **CPU shown, idle** | < 2 % of a core per page | Main + renderer + utility processes over the same idle stretch (CPU time of the app's process tree: `/proc/<pid>/stat` on Linux, user + kernel time on Windows). |
 | **CPU hidden** | < 0.5 % of a core over 5 min | Every app process together, GPU included, with the window hidden in the tray (`BrowserWindow.hide()`, the page sees `data-window-hidden`). For this stretch Fake games is turned off, so the real running-game check runs: it watches this PC's `/proc` (read-only) against the test home's library (`tools/seed_test_library.mjs`, one game with a profile; `DS5_BUDGET_PROFILES=0` takes it out). The main process's share (where that check runs) is its own INFO row. |
-| **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray (Windows has no PSS: its private working set is judged, see [Windows](#windows-vm-overnight)). The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
-| **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). |
+| **Memory** | ≤ 275 MB | PSS (not RSS: shared pages counted once across processes) of every app process together **except the GPU process**, 10 minutes after start, window in the tray (Windows has no PSS: its commit is judged, see [Windows](#windows-vm-overnight)). The GPU process's PSS is reported, not judged: software rendering on the test display inflates it (owner's decision 2026-10-14: Electron's own size is physics, so the budget covers what the app controls). The macOS smoke test applies the same rule to footprint and RSS. |
+| **Memory growth** | < 5 MB per 30 min | `--long` only: after a 5-minute warm-up, every minute the window visits every page and comes back to Controller, then PSS is sampled; growth = the least-squares slope over the 30 minutes (one noisy sample can't fail it). The lap presses a rail button only to change page: pressing the button of the page it was already on (Controller at the start of each lap, Games for the game page) showed or hid that page's settings panel, so the samples alternated between two page states with the renderer's PSS ~13 MB apart. Growth is judged without the GPU process, decided by the owner 2026-10-15: the software GPU in the hidden copy swings ±15 MB between samples (the same rule as the memory budget). The slope of the total, GPU process included, is reported beside it (INFO). Windows: the commit without the GPU process. |
 
-**Reported, not judged:** the GPU process's CPU while shown, and its memory. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
+**Reported, not judged:** the GPU process's CPU while shown, its memory, and its share of the memory growth. The test display has no graphics card, so WebGL and compositing run on SwiftShader (software): the GPU process uses 60-500 % of a core there for work a real GPU does almost for free, and it moves with the window size. Its number is still in the table, so a jump is visible. DevTools' tracing service, which only runs because we measure, is left out of every total.
 
 ### Why 10 frames a second (and not the swirl's 12.5)
 
@@ -59,14 +59,14 @@ tools/check_budgets_vm.sh --build                          # cross-build a dev i
 tools/check_budgets_vm.sh                                  # the app already installed in the VM
 ```
 
-What it does: it puts the measuring scripts, the test game library (`tools/seed_test_library.mjs`) and the installer on a CD image (`~/VMs/test-budgets.iso`, swapped into the VM's CD drive and the previous disc put back afterwards), then runs `tools/budgets_vm.ps1` in the VM through the QEMU guest agent. That script installs the installer for the signed-in user when the installed version differs (silent, per user, as her), **stops every running copy of the app in the VM** (a second copy would share the 2 vCPUs), and starts the installed app in her signed-in session through the "DS5 gate launch" scheduled task (an interactive token: it never goes around the sign-in; a locked session still runs it) with its own settings folder (`C:\ds5test\budgets\userdata`), DevTools on 9420 and the main-process inspector on 9421. The VM's Node (`C:\ds5test\node`, a portable Node 22) runs the measurement as SYSTEM; the results come back to `tmp/budgets-vm/results.json` (`vm.log`, `measure.log` beside it), the copy is stopped and `C:\ds5test\budgets` removed. The script never starts, shuts down or restarts the VM; when nobody is signed in it stops and says so. The build must be a dev build (X.Y.Z-dev.N or `DS5_DEV_TOOLS=1`): the simulated board and Fake games live on the Developer card. `DS5_BUDGET_PAGES`, `DS5_BUDGET_MODE` and `DS5_BUDGET_KEEP=1` work as on Linux.
+What it does: it puts the measuring scripts, the test game library (`tools/seed_test_library.mjs`) and the installer on a CD image (`~/VMs/test-budgets.iso`, swapped into the VM's CD drive and the previous disc put back afterwards), then runs `tools/budgets_vm.ps1` in the VM through the QEMU guest agent. That script installs the installer for the signed-in user unless that very installer (its SHA-256, kept in `C:\ds5test\installed-installer.sha256`) is the last one installed: every dev build of a branch has the same version, and a version check alone measured an older build on 2026-10-15 (silent, per user, as her), **stops every running copy of the app in the VM** (a second copy would share the 2 vCPUs), and starts the installed app in her signed-in session through the "DS5 gate launch" scheduled task (an interactive token: it never goes around the sign-in; a locked session still runs it) with its own settings folder (`C:\ds5test\budgets\userdata`), DevTools on 9420 and the main-process inspector on 9421. The VM's Node (`C:\ds5test\node`, a portable Node 22) runs the measurement as SYSTEM; the results come back to `tmp/budgets-vm/results.json` (`vm.log`, `measure.log` beside it), the copy is stopped and `C:\ds5test\budgets` removed. The script never starts, shuts down or restarts the VM; when nobody is signed in it stops and says so. The build must be a dev build (X.Y.Z-dev.N or `DS5_DEV_TOOLS=1`): the simulated board and Fake games live on the Developer card. `DS5_BUDGET_PAGES`, `DS5_BUDGET_MODE` and `DS5_BUDGET_KEEP=1` work as on Linux.
 
 **How Windows numbers are read** (one CIM query per sample, from outside the app, so the app does no extra work because it is measured; the PowerShell and WMI processes the query starts aren't in the app's tree):
 
 - **CPU:** `Win32_Process` user + kernel time (100 ns units), per process of the app's tree (main and its children by `--type=`: renderer, GPU, utilities by sub-type), over the measured stretch. The stretch is timed by the clock, since a sample takes about a second.
-- **Memory: the private working set** (`Win32_PerfRawData_PerfProc_Process` `WorkingSetPrivate`, Task Manager's "Memory" column) is judged against the same 275 MB. It is Windows' closest match to PSS: both count the pages only this process uses that are in RAM; PSS also adds a share of the shared pages (Electron's DLLs), which the private working set leaves out, so it reads a little lower for the same app. The **commit** (`PrivatePageCount`, Task Manager's "Commit size": private memory whether in RAM or not, including V8's and Chromium's committed heaps) is reported beside it per process type, not judged.
+- **Memory: the commit** (`Win32_Process` `PrivatePageCount`, Task Manager's "Commit size", the private bytes: memory only this process uses, in RAM or paged out, including V8's and Chromium's committed heaps) is judged against the same 275 MB. The **private working set** (`Win32_PerfRawData_PerfProc_Process` `WorkingSetPrivate`, Task Manager's "Memory" column: the part of it in RAM right now) is reported beside it per process type, not judged. Until 2026-10-14 the working set was judged, but Windows trims a window's working set when it goes to the tray: the night run read 18.9 MB for the whole app against ~207 MB of commit (main 94, renderer 91, utilities ~22), so it measured how hard Windows squeezed the app, not what the app holds. The commit is the closer match to Linux's PSS for this budget; it reads somewhat higher (it has no share of the shared DLL pages but counts committed heap pages that are not resident).
 - **GPU:** the VM has no graphics card either (WARP / SwiftShader), so the GPU process is reported, not judged, as on Linux.
-- **Screen:** the window is set to 1920 x 1080 like on Linux; the results record the VM's screen and the window size Windows allowed (`display`).
+- **Screen:** the window is 1920 x 1080 like on Linux, or the screen's work area when that is smaller (the VM's screen is 1024 x 768: a 1920 x 1080 window hung off it and measured a layout nobody sees). The results record the screen and the window (`display`).
 
 **One table, three OSes:**
 
@@ -83,11 +83,32 @@ Every new visual states its idle cost, in the commit and in a comment where it i
 
 | Visual | Idle cost (shown, focused) | Hidden |
 | --- | --- | --- |
-| Swirl background (default) | 10 frames/s (4 unfocused); none with Reduce motion | none |
-| Art background pan | 10 steps/s (4 unfocused); none while a game runs and the window isn't focused | none |
-| Pico 2 W screen mirror | 10 frames/s: it reads the board's screen every 100 ms and redraws every reading, changed or not (over budget together with the background: see below) | none |
+| Swirl background (default) | 10 frames/s on the shared frame clock (`frameTick.ts`); none unfocused; one with Reduce motion. The pan and zoom are a shader uniform, so a step changes only the canvas (no re-layout of the page) | none |
+| Art background pan | 10 steps/s on the shared frame clock; none unfocused or while a game runs | none |
+| Once-a-second readouts (Pico 2 W live numbers and graphs, link rates, signal) | no frames of their own: their updates wait for the next frame clock tick (≤ 100 ms) and go out with the background's step; at once when nothing draws | none (their polls stop) |
+| Pico 2 W screen mirror | reads the board's screen every 100 ms; redraws only when the picture changed, on the next frame clock tick | none |
 
 ## Last measurement
+
+2026-10-15, `--long` on Linux (the test copy above, a quiet machine: 1-minute load 1.4-2.1 during the page rows) and in the Windows VM (the installed branch build, window 1024 x 720 on its 1024 x 768 screen), branch `budget-fixes` (the shared frame clock, the swirl's pan in its shader, the frame and memory measurement fixes) on master `5e5d377`. Idle frames are the judged interval rate; master `5e5d377` measured the same night with the same tools is beside it (frames / CPU shown).
+
+| Page | Linux master → branch | Windows branch |
+| --- | --- | --- |
+| Controller | 10.5 / 2.10 % → 10.0 / 1.48 % | 10.0 / 0.05 % |
+| Pico 2 W | 11.0 / 2.80 % → 10.0 / 1.77 % | 10.0 / 0.26 % |
+| Games Home | 10.0 / 2.25 % → 10.0 / 1.40 % | 10.0 / 0.10 % |
+| Game page | 10.0 / 1.37 % → 10.0 / 1.10 % | 10.0 / 0.18 % |
+| App settings | 10.5 / 1.91 % → 10.0 / 1.31 % | 10.0 / 0.10 % |
+| About | 10.0 / 1.33 % → 10.0 / 1.15 % | 10.0 / 0.13 % |
+
+| Budget | Linux branch | Windows branch |
+| --- | --- | --- |
+| CPU hidden | 0.36 % | 0.22 % |
+| Memory without GPU | 256.8 MB PSS | 186.9 MB commit |
+| Memory growth without GPU | 3.9 MB / 30 min, PASS | 8.86 MB / 30 min, FAIL (the commit creeps on Windows: an older build crept 222 → 229 MB too; open) |
+| Memory growth, all processes (INFO) | 8.27 | 8.85 |
+
+### Earlier: 2026-10-14
 
 2026-10-14, `--quick` (and `--long` for growth), on the test copy above (Xvfb 1920 x 1080, SwiftShader, Electron 45 beta), master at `d790438` (which has the idle-frame fixes from `gpu-lean-2`) against this branch (swirl at 10 Hz, the cheaper running-game check). Per-page CPU is main + renderer + utility in % of one core over 20 s; ±0.3 between runs is noise.
 

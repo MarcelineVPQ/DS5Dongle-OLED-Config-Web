@@ -10,6 +10,7 @@ import type { InputReport } from "../../oled/inputReport";
 import { liveStats } from "../useLiveInput";
 import { onThemeChange } from "./controllerAccent";
 import { useWindowShown } from "../useWindowShown";
+import { atNextTick } from "../frameTick";
 
 interface Props {
   input: InputReport;
@@ -36,12 +37,17 @@ function useLinkRates(): [string, string] {
   // lifetime: OK — cleanup: clears the 1 s timer (hidden / unmount)
   useEffect(() => {
     if (!shown) return;
-    // lifetime: OK — cleared in the effect cleanup; runs only while shown
+    let pending = () => undefined as unknown;
+    // lifetime: OK — cleared in the effect cleanup (with an update still waiting for its tick); runs only while shown
     const id = setInterval(() => {
       const next = read();
-      setRates((prev) => (prev[0] === next[0] && prev[1] === next[1] ? prev : next));
+      // On the next frame tick (frameTick.ts): with the background's step, not in a frame of its own.
+      pending = atNextTick(() => setRates((prev) => (prev[0] === next[0] && prev[1] === next[1] ? prev : next)));
     }, 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      pending();
+    };
   }, [shown]);
   return rates;
 }

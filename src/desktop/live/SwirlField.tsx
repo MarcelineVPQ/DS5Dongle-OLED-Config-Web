@@ -13,8 +13,10 @@
 // while the window is focused, not at all while it's behind another window
 // or a game (`hold`: the last frame stays), minimized or in the tray, and
 // once (still) with Reduce motion. The
-// slow pan and zoom (backdropPan.ts) steps with those same frames, so it
-// adds none of its own.
+// slow pan and zoom (backdropPan.ts) is drawn into those same frames (a
+// shader uniform, not a CSS transform), so it adds no frames and no layout
+// work of its own. The frames run on the shared clock (frameTick.ts), which
+// the page's once-a-second readouts join: idle, 10 frames a second in all.
 // The colors come from the colorway or the theme tokens, never literals.
 import { useEffect, useRef, useState } from "react";
 import { useWindowShown } from "../useWindowShown";
@@ -22,7 +24,8 @@ import { useReducedMotion } from "../motion";
 import { hsvToRgb, rgbToHsv, type Rgb } from "../theme/desktopPalette";
 import { onThemeChange } from "./controllerAccent";
 import { logged } from "../../errorText";
-import { panClock, panTransform } from "./backdropPan";
+import { NO_PAN, panAt, panClock, panSource, type Pan } from "./backdropPan";
+import { onFrameTick } from "../frameTick";
 
 // The CPU fallback's size (stretched and blurred by CSS).
 export const CPU_W = 128;
@@ -30,9 +33,8 @@ export const CPU_H = 72;
 // The GPU field: this fraction of the canvas's size on screen, capped.
 const GPU_SCALE = 1 / 3;
 const GPU_MAX_W = 960;
-// 10 frames a second, the art pan's rate (backdropPan.ts PAN_MS) and the idle
+// 10 frames a second (frameTick.ts TICK_MS), the art pan's rate and the idle
 // frame budget (docs/BUDGETS.md); 12.5 cost ~20% more GPU time for no visible gain.
-const FRAME_MS = 100;
 
 // Any CSS color the browser understands -> RGB (the canvas normalizes it).
 function toRgb(css: string, ctx: CanvasRenderingContext2D): Rgb | null {
@@ -88,10 +90,11 @@ precision highp float;
 uniform vec2 size;
 uniform float t;
 uniform vec3 palette[4];
+uniform vec3 pan; // backdropPan.ts panSource: scale, x and y shift (fractions of the layer)
 out vec4 color;
 void main() {
-  float x = gl_FragCoord.x / size.x;
-  float y = 1.0 - gl_FragCoord.y / size.y;
+  float x = (gl_FragCoord.x / size.x - 0.5) / pan.x - pan.y + 0.5;
+  float y = (0.5 - gl_FragCoord.y / size.y) / pan.x - pan.z + 0.5;
   float u = x + 0.42 * sin(4.6 * y + t * 0.21) + 0.18 * sin(10.2 * x - t * 0.13);
   float v = y + 0.42 * cos(3.8 * x - t * 0.17) + 0.18 * cos(8.6 * y + t * 0.11);
   u += 0.08 * sin(17.0 * v + t * 0.29);
@@ -110,7 +113,7 @@ in vec2 pos;
 void main() { gl_Position = vec4(pos, 0.0, 1.0); }`;
 
 interface Renderer {
-  draw(t: number, palette: Rgb[]): void;
+  draw(t: number, palette: Rgb[], pan: Pan): void;
   dispose(): void;
 }
 
@@ -143,21 +146,33 @@ function glRenderer(c: HTMLCanvasElement): Renderer | null {
   const uSize = gl.getUniformLocation(prog, "size");
   const uT = gl.getUniformLocation(prog, "t");
   const uPalette = gl.getUniformLocation(prog, "palette");
+  const uPan = gl.getUniformLocation(prog, "pan");
+  // The canvas's layout size (untransformed: the pan's zoom isn't in it).
+  // cache: OK — key=none (the canvas's layout size); invalidated=each resize (ResizeObserver); bound=1 entry
+  const box = { width: c.clientWidth, height: c.clientHeight };
+  // lifetime: OK — disconnected in dispose() (the renderer's canvas goes away or the mode changes)
+  const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(([e]) => ((box.width = e.contentRect.width), (box.height = e.contentRect.height)));
+  ro?.observe(c);
   return {
-    draw(t, palette) {
-      // A third of the size on screen (the stretch keeps it smooth).
-      const r = c.getBoundingClientRect();
-      const w = Math.max(16, Math.min(GPU_MAX_W, Math.round(r.width * GPU_SCALE)));
-      const h = Math.max(9, Math.round((w * Math.max(1, r.height)) / Math.max(1, r.width)));
+    draw(t, palette, pan) {
+      // A third of the canvas's layout size (the stretch keeps it smooth).
+      // The size comes from the ResizeObserver below, never read per frame:
+      // reading the box each frame forced a style and layout pass, and the
+      // transformed box grew and shrank with the pan's zoom, so the canvas
+      // was reallocated at its new size every few frames.
+      const w = Math.max(16, Math.min(GPU_MAX_W, Math.round(box.width * GPU_SCALE)));
+      const h = Math.max(9, Math.round((w * Math.max(1, box.height)) / Math.max(1, box.width)));
       if (c.width !== w) c.width = w;
       if (c.height !== h) c.height = h;
       gl.viewport(0, 0, w, h);
       gl.uniform2f(uSize, w, h);
       gl.uniform1f(uT, t);
       gl.uniform3fv(uPalette, palette.flat());
+      gl.uniform3f(uPan, pan.scale, pan.x / 100, pan.y / 100);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
     dispose() {
+      ro?.disconnect();
       gl.deleteBuffer(buf);
       gl.deleteProgram(prog);
       gl.deleteShader(vs);
@@ -175,13 +190,14 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
   const image = ctx.createImageData(CPU_W, CPU_H);
   const weights = [0, 0, 0, 0];
   return {
-    draw(t, palette) {
+    draw(t, palette, pan) {
       const px = image.data;
       // loop: FIX-HOT-PATH — CPU fallback: 128 x 72 px in JS every 100 ms (no GPU / GPU lost)
       for (let y = 0; y < CPU_H; y++)
         // loop: FIX-HOT-PATH — CPU fallback pixel loop, inner row
         for (let x = 0; x < CPU_W; x++) {
-          swirlPixel(x / CPU_W, y / CPU_H, t, weights);
+          const [u, v] = panSource(x / CPU_W, y / CPU_H, pan);
+          swirlPixel(u, v, t, weights);
           const o = (y * CPU_W + x) * 4;
           // loop: FIX-HOT-PATH — CPU fallback, 3 channels per pixel
           for (let ch = 0; ch < 3; ch++) px[o + ch] = weights[0] * palette[0][ch] + weights[1] * palette[1][ch] + weights[2] * palette[2][ch] + weights[3] * palette[3][ch];
@@ -288,7 +304,7 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
     // next frame picks them up).
     const update = () => {
       readPalette();
-      if (stillRef.current) renderer.current?.draw(0, palette.current);
+      if (stillRef.current) renderer.current?.draw(0, palette.current, NO_PAN);
     };
     update();
     // lifetime: OK — the effect returns its unsubscribe
@@ -300,21 +316,21 @@ export default function SwirlField({ colors, hold = false }: { colors: SwirlColo
   // lifetime: OK — cleanup: clears the frame timer; none while hidden, holding or still
   useEffect(() => {
     const r = renderer.current;
-    const c = ref.current;
-    if (!r || !c) return;
+    if (!r) return;
     // The field's clock carries on where it was across pauses.
     const start = performance.now() - swirlClock.elapsed;
     const now = () => (swirlClock.elapsed = performance.now() - start) / 1000;
     const pan = panClock();
-    const draw = (t: number) => {
-      r.draw(t, palette.current);
-      if (still) c.style.removeProperty("--bd-pan");
-      else c.style.setProperty("--bd-pan", panTransform(pan()));
-    };
+    // The pan and zoom go into the drawing (a uniform), not a CSS transform:
+    // a transform that changed every frame made the page re-layerize every
+    // frame (~0.5 ms each on a page with many tiles, Games Home).
+    const draw = (t: number) => r.draw(t, palette.current, still ? NO_PAN : panAt(pan()));
     draw(still ? 0 : now());
-    // lifetime: OK — cleared in the effect cleanup; off while hidden (lean rule) or holding
-    const timer = still || !shown || hold ? undefined : setInterval(() => draw(now()), FRAME_MS);
-    return () => clearInterval(timer);
+    if (still || !shown || hold) return;
+    // On the shared frame clock (frameTick.ts), so a readout that changes
+    // goes to the screen in the same frame as the field's next step.
+    // lifetime: OK — unsubscribed in the effect cleanup; off while hidden (lean rule), holding or still
+    return onFrameTick(() => draw(now()));
   }, [mode, shown, still, hold]);
   if (!mode) return null;
   return <canvas key={mode} ref={ref} className={`art-bd-layer art-bd-swirl on ${mode}`} aria-hidden="true" />;
