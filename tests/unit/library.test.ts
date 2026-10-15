@@ -11,6 +11,7 @@ import { SetMineSchema, SetProfileSchema } from "../../electron/main/ipc";
 import { decideProfileStep } from "../../src/desktop/library/useGameProfile";
 import { staleness, versionLess } from "../../src/desktop/library/support";
 import { EMPTY_LIBRARY, type LibraryFile } from "../../src/desktop/games/library";
+import { recoveredHere } from "../../src/persisted";
 import { asLinux } from "../support/platform";
 
 // Built on Linux launcher folders: Linux behavior on every test machine.
@@ -358,11 +359,46 @@ describe("library store", () => {
     expect(s.deleteProfile(key).games[key]).toBeUndefined();
   });
 
-  it("sets a corrupt file aside and starts empty instead of failing", () => {
+  it("keeps a copy of a corrupt file, starts empty instead of failing, and says so", () => {
     dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
     writeFileSync(join(dir, "game-library-2.json"), "{ not json");
     expect(new LibraryStore(dir).get().games).toEqual({});
-    expect(readdirSync(dir).some((f) => f.startsWith("game-library-2.json.bad-"))).toBe(true);
+    const copy = readdirSync(dir).find((f) => f.startsWith("game-library-2.json.corrupt-"));
+    expect(copy).toBeDefined();
+    expect(readFileSync(join(dir, copy!), "utf8")).toBe("{ not json");
+    // What loaded is written back, so the next start reads clean.
+    expect(JSON.parse(readFileSync(join(dir, "game-library-2.json"), "utf8"))).toEqual(EMPTY_LIBRARY);
+    expect(recoveredHere()).toContainEqual({ kind: "library", kept: join(dir, copy!), partial: false });
+  });
+
+  it("a damaged library keeps every game, profile setting and layout that still reads", () => {
+    dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
+    const good = "steam-1a2b3c4d:steam:1091500";
+    const partly = "steam-1a2b3c4d:steam:4078430";
+    const file = {
+      version: 1,
+      games: {
+        [good]: { title: "Cyberpunk 2077", profile: { settings: { format: 2, hapticsGain: 3 }, updated: 5 }, mine: { rating: 4 } },
+        // One setting out of range, one rating out of range: the rest of the entry stays.
+        [partly]: { title: "Galactic Racer", profile: { settings: { format: 2, hapticsGain: 99, speakerVolume: 2 }, updated: 6 }, mine: { rating: 9, notes: "kept" } },
+        "../../etc/passwd": { title: "not a game key" },
+      },
+      layouts: { "l-ok": { name: "Racing", table: Array.from({ length: 16 }, (_, i) => i), updated: 1 }, "l-bad": { name: "", table: [1] } },
+      restore: { gameKey: good, settings: { hapticsGain: 77 } },
+    };
+    writeFileSync(join(dir, "game-library-2.json"), JSON.stringify(file));
+    const lib = new LibraryStore(dir).get();
+    expect(lib.games[good]).toEqual(file.games[good]);
+    expect(lib.games[partly].profile?.settings).toEqual({ format: 2, speakerVolume: 2 });
+    expect(lib.games[partly].mine).toEqual({ notes: "kept" });
+    expect(Object.keys(lib.games)).toHaveLength(2);
+    expect(Object.keys(lib.layouts ?? {})).toEqual(["l-ok"]);
+    expect(lib.restore).toBeUndefined();
+    const copy = readdirSync(dir).find((f) => f.startsWith("game-library-2.json.corrupt-"));
+    expect(JSON.parse(readFileSync(join(dir, copy!), "utf8"))).toEqual(file);
+    expect(recoveredHere()).toContainEqual({ kind: "library", kept: join(dir, copy!), partial: true });
+    // The next start reads what was kept, with nothing more to say.
+    expect(new LibraryStore(dir).get()).toEqual(lib);
   });
 });
 
@@ -481,18 +517,21 @@ describe("library file (game-library-2.json) and the older apps' file", () => {
     writeFileSync(join(dir, "game-library-2.json"), "{ not json");
     const s = new LibraryStore(dir);
     expect(s.get().games).toEqual({});
-    expect(files().some((f) => f.startsWith("game-library-2.json.bad-"))).toBe(true);
+    expect(files().some((f) => f.startsWith("game-library-2.json.corrupt-"))).toBe(true);
     s.setMine(other, "Galactic Racer", { rating: 3 });
     expect(read("game-library.json")).toBe(oldFile);
     expect(files().filter((f) => f.startsWith("game-library.json"))).toEqual(["game-library.json"]);
   });
 
-  it("leaves a bad old file where it is and starts empty", () => {
+  it("leaves a bad old file where it is, starts empty and says so once", () => {
     dir = mkdtempSync(join(tmpdir(), "ds5-lib-"));
     writeFileSync(join(dir, "game-library.json"), "{ not json");
     expect(new LibraryStore(dir).get()).toEqual(EMPTY_LIBRARY);
-    expect(files()).toEqual(["game-library.json"]);
+    // The old file is never written, renamed or copied: it is the kept copy.
+    // The new file is written at once, so the next start doesn't read it again.
+    expect(files()).toEqual(["game-library-2.json", "game-library.json"]);
     expect(read("game-library.json")).toBe("{ not json");
+    expect(recoveredHere()).toContainEqual({ kind: "oldLibrary", kept: join(dir, "game-library.json"), partial: false });
   });
 
   it("an older app still finds a valid library after this app saved format-2 profiles", () => {

@@ -79,7 +79,7 @@ async function start(opts: { board?: "dongle" | "bootsel"; version?: string; fau
     const bridge = useDs5Bridge();
     const app = useAppUpdate();
     const fw = useFirmwareUpdate(bridge, app);
-    const updating = fw.state.phase === "running" || fw.state.phase === "verifying";
+    const updating = fw.state.phase === "running" || fw.state.phase === "verifying" || fw.state.phase === "notStarted";
     return createElement(
       "div",
       null,
@@ -177,6 +177,37 @@ describe("a firmware update against the simulated board", () => {
     expect(text()).toContain(`Firmware updated to ${NEW}.`);
   });
 
+  it("an image that won't start (Developer card): says plainly the firmware didn't start, and Install again installs it", async () => {
+    const board = await start({ fault: "noStart" });
+    update();
+    const seen = await watch(/didn't start/, 10_000);
+    // Said within seconds of the restart, never the long wait and the PS button.
+    expect(seen.join("\n")).not.toContain("Flashed. Press the PS button");
+    expect(text()).toContain("The new firmware didn't start: your board came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.");
+    expect(text()).not.toMatch(/dongle/i);
+    expect(board.state).toBe("bootsel");
+    // The banner's Install again is the one offer (the setup screen's stays out of the way).
+    expect(text()).not.toContain("A Pico is ready to set up");
+    // A good image this time (Developer card: no failure): it installs and the board comes back with it.
+    board.fault = "";
+    press(/^Install again$/);
+    await watch(/Firmware updated to/);
+    expect(text()).toContain(`Firmware updated to ${NEW}.`);
+    expect(board.state).toBe("dongle");
+    expect(board.version).toBe(NEW);
+  });
+
+  it("an image that won't start, installed again and still not starting: says so again", async () => {
+    await start({ fault: "noStart" });
+    update();
+    await watch(/didn't start/, 10_000);
+    press(/^Install again$/);
+    await watch(/Waiting for your board/);
+    expect(text()).not.toContain("didn't start");
+    await watch(/didn't start/, 10_000);
+    expect(text()).toContain("The new firmware didn't start");
+  });
+
   it("the wrong file (another chip's UF2): refused in plain words, the board untouched", async () => {
     const board = await start({ file: rp2350Uf2(NEW, { family: "rp2040" }) });
     update();
@@ -186,13 +217,21 @@ describe("a firmware update against the simulated board", () => {
     expect(board.version).toBe("v0.9.4-oled-edition+12.a1b2c3d.dirty+simulated");
   });
 
-  it("an image the boot ROM won't start (no IMAGE_DEF): the board stays in BOOTSEL", async () => {
+  it("an image the boot ROM won't start (no IMAGE_DEF): the board stays in BOOTSEL, and setup says the firmware didn't start", async () => {
     const board = await start({ board: "bootsel", version: "", file: rp2350Uf2(NEW, { imageDef: false }) });
     press(/^Install the firmware$/);
-    const seen = await watch(/A Pico is ready to set up/, 6000);
+    const seen = await watch(/didn't start/, 6000);
     expect(seen.join("\n")).toContain("Firmware 0.9.5 installed");
     expect(board.state).toBe("bootsel");
     expect(text()).toContain("A Pico is ready to set up");
+    expect(text()).toContain("The new firmware didn't start: your board came back in BOOTSEL mode");
+    // Offered again, under its own name.
+    press(/^Install again$/);
+    await watch(/Installing the firmware/, 2000);
+    expect(text()).not.toContain("didn't start");
+    await watch(/didn't start/, 6000);
+    expect(text()).toContain("The new firmware didn't start");
+    expect(board.state).toBe("bootsel");
   });
 });
 

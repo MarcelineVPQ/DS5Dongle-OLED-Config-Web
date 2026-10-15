@@ -280,7 +280,24 @@
       "feedChanged": "Ha aparecido un firmware más reciente. Vuelve a comprobar.",
       "hashMismatch": "El firmware descargado no coincide con el mostrado, así que no se ha instalado nada. Vuelve a comprobar.",
       "wrongFile": "Este archivo no es firmware para {{device}} (es para otro chip, o está dañado), así que no se escribió nada. Vuelve a buscar actualizaciones; si pasa otra vez, reinstala la app.",
-      "noBootsel": "{{device, capitalize}} no apareció en modo BOOTSEL. Desconéctalo, mantén pulsado su botón BOOTSEL mientras lo vuelves a conectar e inténtalo de nuevo."
+      "noBootsel": "{{device, capitalize}} no apareció en modo BOOTSEL. Desconéctalo, mantén pulsado su botón BOOTSEL mientras lo vuelves a conectar e inténtalo de nuevo.",
+      "didntStart": "El firmware nuevo no arrancó: {{device}} volvió en modo BOOTSEL y sigue esperando firmware. Déjalo conectado e instálalo de nuevo.",
+      "installAgain": "Instalar de nuevo"
+    },
+    "recovered": {
+      "partial": "{{what}}: tenía partes dañadas. Esas partes volvieron a sus valores predeterminados y el resto se conservó. La copia dañada se guardó como {{kept}}.",
+      "whole": "{{what}}: no se pudo leer (estaba dañado), así que empieza con los valores predeterminados. La copia dañada se guardó como {{kept}}.",
+      "notKept": "{{what}}: no se pudo leer, así que por ahora se usan los valores predeterminados. Los datos dañados se dejaron donde están.",
+      "what": {
+        "settings": "Tus ajustes de la app",
+        "library": "Tu biblioteca de juegos (perfiles de juego, asignaciones de botones, valoraciones y notas)",
+        "oldLibrary": "La biblioteca de juegos de la versión anterior de la app",
+        "dismissedNotices": "La lista de avisos que descartaste",
+        "pins": "Tus secciones fijadas",
+        "slotControllers": "Lo que la app recuerda del mando de cada ranura de emparejamiento",
+        "customColors": "Los colores de tu mando",
+        "declinedFixes": "Los cambios de Juegos que desmarcaste"
+      }
     },
     "usbAccess": {
       "label": "Regla de acceso USB",
@@ -1263,7 +1280,8 @@
         "write50": "Error de escritura al 50 %",
         "write90": "Error de escritura al 90 %",
         "noBootsel": "No aparece en BOOTSEL",
-        "noReturn": "No vuelve después de la actualización"
+        "noReturn": "No vuelve después de la actualización",
+        "noStart": "Imagen que no arranca"
       },
       "simSpeed": "Velocidad de escritura",
       "simSpeeds": {

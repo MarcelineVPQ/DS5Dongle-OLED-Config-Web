@@ -18,6 +18,7 @@
     "electron",
     "src/desktop/api.ts",
     "src/errorText.ts",
+    "src/persisted.ts",
     "src/desktop/windowsRepairScript.ts",
     "src/desktop/theme",
     "src/desktop/games",

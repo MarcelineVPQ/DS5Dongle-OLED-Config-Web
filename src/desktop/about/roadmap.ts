@@ -46,6 +46,18 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
     high: true,
   },
+  {
+    column: "next",
+    title: "Clear message when new firmware won't start",
+    text: "If the board comes back still waiting for firmware after an update, the app says so within seconds and offers Install again.",
+    areas: ["dongle"],
+  },
+  {
+    column: "next",
+    title: "Damaged settings are kept and named",
+    text: "If a settings or game library file is damaged, the app keeps everything that still reads, saves a copy of the damaged file and tells you where, instead of starting empty.",
+    areas: ["app", "games"],
+  },
   { column: "next", title: "Lighter game check on Windows", text: "Noticing which game is running costs almost no CPU while the app is in the tray.", areas: ["app", "games"], platform: "windows" },
   { column: "next", title: "Desktop accent color on Windows", text: "The Desktop accent color follows the Windows accent color, also when you change it.", areas: ["app"], platform: "windows" },
   { column: "next", title: "Collapse all and clear pins", text: "A small menu at the top of every settings panel: fold every section at once, or clear your pinned sections.", areas: ["app"] },
@@ -423,12 +435,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "What's new", text: "A short summary of what changed after each update, and a link to the community.", areas: ["app", "community"] },
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
   { column: "planned", title: "Game logs for bug reports", text: "Tick a box on a game's page and the next Play records a log, showing what happened with your controller.", areas: ["games"] },
-  {
-    column: "planned",
-    title: "Clear message when new firmware won't start",
-    text: "If the board comes back still waiting for firmware after an update, the app says so and offers to install again.",
-    areas: ["dongle"],
-  },
   {
     column: "ideas",
     title: "Back up and restore your settings",

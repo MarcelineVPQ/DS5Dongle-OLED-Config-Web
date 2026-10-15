@@ -26,6 +26,7 @@ import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
 import { loadSettings, settingsPath, saveSettings } from "./settings";
+import { recoveredHere } from "../../src/persisted";
 import { readDesktopPalette, watchDesktopPalette } from "./desktopTheme";
 import { AppTray } from "./tray";
 import { Updater } from "./updater";
@@ -447,6 +448,7 @@ function start(): void {
     onStatus: (status) => tray?.update(status),
     onTrayIcon: (png) => tray?.setCustomIcon(png),
     getSettings: () => settings,
+    recoveredFiles: () => recoveredHere(),
     setSetting: updateSetting,
     usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
     setupUsbAccess: () => installUsbRule(resourcesDir),

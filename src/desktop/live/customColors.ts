@@ -14,6 +14,8 @@
 // per-controller settings), see docs/BACKLOG.md.
 import { useCallback, useMemo } from "react";
 import { useFlagPref, useRawPref } from "../storage";
+import { readPrefJson } from "../persistedPref";
+import { isObject, type Salvaged } from "../../persisted";
 import { COLORWAYS, drawingColors, legibleOn, type ColorwayColors, type Model } from "./colorways";
 
 export type ColorPart = keyof ColorwayColors;
@@ -31,23 +33,23 @@ export const FALLBACK_BASE = COLORWAYS["00"].colors!;
 
 const HEX = /^#[0-9a-f]{6}$/;
 
-// The stored JSON, keeping only valid #rrggbb parts (anything else is dropped).
+// The stored JSON, keeping only valid #rrggbb parts. Anything else in it
+// is damage: those parts go back to the colorway's, and the notice says so
+// (readPrefJson, batch E1).
 export function parseCustomColors(raw: string | null): CustomColors {
-  let data: unknown;
-  try {
-    data = JSON.parse(raw ?? "{}");
-  } catch {
-    // error: NOT-WORTH — stored colors that don't parse: the colorway's own colors
-    return {};
-  }
-  if (!data || typeof data !== "object") return {};
+  return readPrefJson(CUSTOM_COLORS_KEY, { kind: "customColors", salvage: salvageColors, fallback: () => ({}) }, raw);
+}
+
+function salvageColors(data: unknown): Salvaged<CustomColors> | null {
+  if (!isObject(data)) return null;
   const out: CustomColors = {};
   // loop: NOT-WORTH — N = 6 parts, useMemo on the stored string
   for (const part of COLOR_PARTS) {
-    const v = (data as Record<string, unknown>)[part];
+    const v = data[part];
     if (typeof v === "string" && HEX.test(v.toLowerCase())) out[part] = v.toLowerCase();
   }
-  return out;
+  // loop: NOT-WORTH — N = the stored object's keys (≤ 6 when intact), useMemo on the stored string
+  return { value: out, lost: Object.keys(data).some((k) => !(k in out)) };
 }
 
 // loop: HOT-PATH-OK — N = 6 parts, per render

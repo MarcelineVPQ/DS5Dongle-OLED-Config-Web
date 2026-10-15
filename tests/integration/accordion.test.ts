@@ -273,7 +273,7 @@ describe("the accordion", () => {
     click(menuItem("Clear pins"));
     expect(pinOf("language").getAttribute("aria-pressed")).toBe("false");
     expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("false");
-    expect(m.acc.parsePins(localStorage.getItem(m.acc.PINS_KEY("app")))).toEqual([]);
+    expect(m.acc.readPins("app")).toEqual([]);
   });
 
   it("opens the first section with a task on the first visit only", async () => {

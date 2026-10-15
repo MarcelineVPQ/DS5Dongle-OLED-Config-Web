@@ -70,6 +70,9 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   // The flashed Pico has left BOOTSEL (noted while rendering, React's pattern
   // for state that follows a value from the last render).
   if (restarting && !restarting.left && !pico) setInstall({ ...restarting, left: true });
+  // A Pico back in BOOTSEL after the flashed one left: the new firmware didn't
+  // start (the boot ROM went back to BOOTSEL). Say so, and offer it again.
+  else if (restarting && restarting.left && pico) setInstall({ phase: "failed", detail: t("desktop.firmware.didntStart") });
 
   if (install.phase === "running") {
     const p = install.progress;
@@ -82,9 +85,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     );
   }
 
-  // A Pico back in BOOTSEL after the flashed one left (the user retried, or
-  // a different one) ends the wait: offer to set it up again.
-  if (restarting && (!pico || !restarting.left)) {
+  if (restarting) {
     return (
       <Center>
         <strong>{t("desktop.setup.restarting", { version: restarting.version })}</strong>
@@ -107,7 +108,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
         <span className="dk-hint">{t("desktop.setup.driveNote")}</span>
         {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
         <BusyButton className="dk-btn primary" disabled={!firmware} onClick={start}>
-          {t("desktop.setup.install", "Install the firmware")}
+          {install.phase === "failed" ? t("desktop.firmware.installAgain") : t("desktop.setup.install", "Install the firmware")}
         </BusyButton>
       </Center>
     );

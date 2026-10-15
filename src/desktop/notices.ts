@@ -12,6 +12,8 @@
 // task is done, whether its notice was dismissed or not.
 import { createContext, useCallback, useContext, useMemo } from "react";
 import { readPref, writePref } from "./storage";
+import { readPrefJson } from "./persistedPref";
+import { salvageStrings } from "../persisted";
 import { externalStore } from "./externalStore";
 import type { RailItem } from "./AppRail";
 
@@ -25,16 +27,10 @@ export const noticeIdOf = (key: string): string => {
   return at < 0 ? key : key.slice(0, at);
 };
 
+// The stored list (`raw`: the stored text). A damaged one keeps the keys that
+// still read, and the notice says so (readPrefJson, batch E1).
 export function parseDismissed(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    // loop: NOT-WORTH — N ≤ MAX_DISMISSED keys; on a dismissal or a prune
-    return Array.isArray(value) ? value.filter((k): k is string => typeof k === "string").slice(-MAX_DISMISSED) : [];
-  } catch {
-    // error: NOT-WORTH — a broken list reads as none dismissed: the notices just show again
-    return [];
-  }
+  return readPrefJson(DISMISSED_KEY, { kind: "dismissedNotices", salvage: (data) => salvageStrings(data, MAX_DISMISSED), fallback: () => [] }, raw);
 }
 
 // The stored list as written (local storage, kept in step on every write):

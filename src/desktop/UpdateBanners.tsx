@@ -149,6 +149,22 @@ export default function UpdateBanners({
         <span>{t("desktop.update.fwDone", { version: s.version, defaultValue: "Firmware updated to {{version}}. Press PS to reconnect the controller." })}</span>
       </Notice>
     );
+  else if (s.phase === "notStarted")
+    // The board came back in BOOTSEL: the one place to install it again (DesktopApp keeps the setup screen's own offer out of the way meanwhile).
+    fwNotice = (
+      <Notice
+        error
+        role="alert"
+        onDismiss={fw.dismiss}
+        action={
+          <BusyButton className="dk-btn primary" onClick={fw.reinstall}>
+            {t("desktop.firmware.installAgain")}
+          </BusyButton>
+        }
+      >
+        <span>{t("desktop.firmware.didntStart")}</span>
+      </Notice>
+    );
   else if (s.phase === "failed")
     fwNotice = (
       <Notice error onDismiss={fw.dismiss}>

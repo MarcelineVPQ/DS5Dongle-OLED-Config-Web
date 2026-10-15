@@ -31,6 +31,7 @@ import { revealSection } from "./accordion/useAccordion";
 import { MAIN_BLOCKS, SECTIONS } from "./accordion/sections";
 import { revealBlock } from "./accordion/MainBlock";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
+import RecoveredNotice from "./RecoveredNotice";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { allFixes, loadDeclined } from "./pages/GamesPage";
@@ -385,6 +386,7 @@ export default function DesktopApp() {
                 </Notice>
               )}
               <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
+              <RecoveredNotice />
               {mainNotice && (
                 <Notice pinned role="status" onDismiss={() => setMainNotice(null)}>
                   <span>{mainNotice}</span>
@@ -443,9 +445,10 @@ export default function DesktopApp() {
               {(main === "controller" || main === "app") &&
                 (connected || main === "app" ? (
                   <ControllerView bridge={bridge} fw={fw} view={main === "app" ? "app" : panel} onView={openPanel} />
-                ) : fw.state.phase === "running" || fw.state.phase === "verifying" ? (
+                ) : fw.state.phase === "running" || fw.state.phase === "verifying" || fw.state.phase === "notStarted" ? (
                   // Mid-update the dongle is a bootloader drive: the update banner
                   // shows the progress; Setup must not offer to flash it again.
+                  // After a write that didn't start, the banner's Install again is the offer.
                   <div className="dk-page" />
                 ) : (
                   <SetupScreen supported={bridge.supported} />
