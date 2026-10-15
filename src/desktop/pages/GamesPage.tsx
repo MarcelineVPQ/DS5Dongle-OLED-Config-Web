@@ -63,6 +63,14 @@ export function loadDeclined(): Set<string> {
   return new Set(readPrefJson(DECLINED_KEY, { kind: "declinedFixes", salvage: (data) => salvageStrings(data), fallback: () => [] }));
 }
 
+// The recommended changes still waiting (the rail's Games badge): the
+// declined list is read once, not once per change.
+export function waitingCount(report: GamesReport): number {
+  const declined = loadDeclined();
+  // loop: NOT-WORTH — recommended changes (tens), once per recount
+  return allFixes(report).filter((f) => f.recommended && !declined.has(f.id)).length;
+}
+
 const saveDeclined = (ids: Set<string>) => writePref(DECLINED_KEY, JSON.stringify([...ids]));
 
 // Translate a main-process message (see Msg in games/types.ts); params may be messages too.

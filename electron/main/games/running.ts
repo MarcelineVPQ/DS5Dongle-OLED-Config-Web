@@ -17,6 +17,7 @@ import { join } from "node:path";
 import type { LauncherId } from "../../../src/desktop/games/types";
 import { logged } from "../../../src/errorText";
 import { windowsProcReader } from "./winProcs";
+import { mtimeOf } from "./files";
 
 export interface ProcView {
   pid: number;
@@ -330,10 +331,13 @@ const GENERIC_EXE =
   /^(unitycrashhandler(32|64)?|crashreport(er|client)?|crashpad_handler|uninst(all)?\w*|unins\d+|vc_?redist[\w.-]*|dxsetup|dotnetfx\w*|ue4prereqsetup\w*|easyanticheat\w*|be(service|launcher)\w*|launcher|setup|installer|updater)\.exe$/i;
 
 // A game folder's program files (lower case, without generic helpers), up to
-// three levels deep (bin/x64/game.exe) and a few thousand entries.
-export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 }): Set<string> {
+// three levels deep (bin/x64/game.exe) and a few thousand entries. `folders`,
+// when given, gets the modification time of the game folder and of each
+// folder a program was found in (what RunningGameWatcher checks for changes).
+export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 }, folders?: Map<string, number | null>): Set<string> {
   const out = new Set<string>();
   const walk = (d: string, level: number) => {
+    const mtime = folders ? mtimeOf(d) : null; // before the read: a change during it shows as newer next time
     let entries: import("node:fs").Dirent[];
     try {
       entries = readdirSync(d, { withFileTypes: true });
@@ -341,15 +345,23 @@ export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 })
       // error: NOT-WORTH — an unreadable folder is skipped while listing a game's executables
       return;
     }
+    const before = out.size;
     for (const e of entries) {
-      if (--budget.left < 0) return;
+      if (--budget.left < 0) break;
       if (e.isDirectory() && level < depth) walk(join(d, e.name), level + 1);
       else if (e.isFile() && /\.exe$/i.test(e.name) && !GENERIC_EXE.test(e.name)) out.add(e.name.toLowerCase());
     }
+    if (folders && (level === 0 || out.size > before)) folders.set(d, mtime);
   };
   walk(dir, 0);
   return out;
 }
+
+// How often a game folder's program index is looked at again (Windows): the
+// folders it came from are checked for changes (one stat each) and the folder
+// is read again when one changed (an update renamed the .exe) or when nothing
+// was found (the game was still installing).
+export const EXE_RECHECK_MS = 60_000;
 
 export function detectRunningWindows(procs: ProcView[], games: RunningCandidate[], exes: (dir: string) => Set<string>): string | null {
   // loop: HOT-PATH-OK — Windows process list into a Set, needed for the lookups
@@ -381,8 +393,8 @@ export class RunningGameWatcher {
   // cache: OK — key=none (the candidate running game); invalidated=replaced on every change, cleared on stop(); bound=1 entry
   private pending: { key: string | null; since: number } | null = null;
 
-  // cache: FIX-STALE — key=install folder; invalidated=never (lives as long as the watcher); bound=installed games' folders (docs/CACHE_PASS_2026-10.md)
-  private readonly exeCache = new Map<string, Set<string>>();
+  // cache: OK — key=install folder; invalidated=checked every EXE_RECHECK_MS: read again when the folder or a folder that held a program changed (mtime), or when nothing was found; bound=installed games' folders
+  private readonly exeCache = new Map<string, { exes: Set<string>; folders: Map<string, number | null>; checked: number }>();
   // An asynchronous read (Windows) in flight: the next tick waits for it.
   private reading = false;
   // Bumped by stop(), so a read that finishes afterwards changes nothing.
@@ -397,11 +409,19 @@ export class RunningGameWatcher {
     private readonly platform: NodeJS.Platform = process.platform,
   ) {}
 
-  private exes = (dir: string): Set<string> => {
-    let set = this.exeCache.get(dir);
-    if (!set) this.exeCache.set(dir, (set = gameExecutables(dir)));
-    return set;
-  };
+  private exes(dir: string, now: number): Set<string> {
+    const kept = this.exeCache.get(dir);
+    if (kept && now - kept.checked < EXE_RECHECK_MS) return kept.exes;
+    // loop: NOT-WORTH — the game folder and the few folders its programs are in, once a minute per game
+    if (kept && kept.exes.size > 0 && [...kept.folders].every(([d, mtime]) => mtimeOf(d) === mtime)) {
+      kept.checked = now;
+      return kept.exes;
+    }
+    const folders = new Map<string, number | null>();
+    const exes = gameExecutables(dir, undefined, undefined, folders);
+    this.exeCache.set(dir, { exes, folders, checked: now });
+    return exes;
+  }
 
   get running(): string | null {
     return this.current;
@@ -460,7 +480,7 @@ export class RunningGameWatcher {
   }
 
   private apply(procs: ProcView[], now: number): void {
-    const seen = this.platform === "win32" ? detectRunningWindows(procs, this.candidates(), this.exes) : detectRunning(procs, this.candidates());
+    const seen = this.platform === "win32" ? detectRunningWindows(procs, this.candidates(), (dir) => this.exes(dir, now)) : detectRunning(procs, this.candidates());
     if (seen === this.current) {
       this.pending = null;
       return;

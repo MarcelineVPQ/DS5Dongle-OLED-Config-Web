@@ -70,6 +70,18 @@ export class FeedCache {
   }
 }
 
+// The Proton build's feed for the Games page. A scan (asked = false) asks
+// `lookup`, the firmware lookups' rules under the "Check for updates
+// automatically" switch (firmwareFeed): with it off it never goes online (only
+// the last feed the user fetched, or none), with it on it shares the check's
+// fetch. Install (asked = true, the user pressed it) fetches.
+export function protonFeed(feed: Pick<FeedCache, "get">, lookup: (asked: boolean) => Promise<{ manifest: Manifest | null; channel: UpdateChannel }>): (asked: boolean) => Promise<Manifest | null> {
+  return async (asked) => {
+    const { manifest, channel } = await lookup(false);
+    return asked ? feed.get(channel, 0) : manifest;
+  };
+}
+
 // What's in the newest development build, for the join dialog. With
 // automatic checks off, only once the user presses the dialog's check button.
 export async function devChannelPreview(feed: Pick<FeedCache, "get">, automatic: boolean, asked: boolean): Promise<DevChannelAnswer> {

@@ -40,18 +40,24 @@ const BOLT: ReadonlyArray<[number, number]> = [
   [0.74, 0],
 ];
 
-// cache: FIX-STALE — key=none (the decoded tray art); invalidated=never, also not after a failed decode; bound=1 bitmap (docs/CACHE_PASS_2026-10.md)
+// cache: OK — key=none (the decoded tray art); invalidated=never once decoded, a failed decode is dropped (the next redraw tries again); bound=1 bitmap
 let artPromise: Promise<ImageBitmap> | null = null;
-function art(): Promise<ImageBitmap> {
+export function trayArt(): Promise<ImageBitmap> {
   // An <img> rather than fetch(): the packaged app loads from file://, which
   // fetch() doesn't support.
-  artPromise ??= (async () => {
+  if (artPromise) return artPromise;
+  const decoding = (async () => {
     const img = new Image();
     img.src = controllerUrl;
     await img.decode();
     return createImageBitmap(img);
   })();
-  return artPromise;
+  artPromise = decoding;
+  // error: PASSES-ON — the rejection is returned below to renderTrayIcon's caller (DesktopApp logs it); this only forgets the failed decode
+  decoding.catch(() => {
+    if (artPromise === decoding) artPromise = null;
+  });
+  return decoding;
 }
 
 // Size in device pixels; the main process registers it as the @2x image.
@@ -59,7 +65,7 @@ function art(): Promise<ImageBitmap> {
 // to PNG costs next to nothing on the CPU, while a GPU canvas made the GPU
 // process do a context and a read-back for every redraw.
 export async function renderTrayIcon(spec: TrayIconSpec, size = 44): Promise<string> {
-  const img = await art();
+  const img = await trayArt();
   if (spec.template) return renderTemplate(img, spec, size);
   const canvas = new OffscreenCanvas(size, size);
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;

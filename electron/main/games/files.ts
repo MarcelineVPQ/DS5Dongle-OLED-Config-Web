@@ -1,6 +1,6 @@
 // Read a launcher's config file, or null if it's missing or doesn't parse.
 // Scanning never fails because one file is odd; the launcher just gets no fixes.
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -78,6 +78,9 @@ export async function readAhead(paths: string[], bound = 8): Promise<ScanTexts> 
 
 // JSON config files, read leniently: a missing or broken file reads as null,
 // and obj()/arr() turn anything unexpected into an empty object or list.
+// A file's or folder's modification time, or null when it isn't there.
+export const mtimeOf = (path: string): number | null => statSync(path, { throwIfNoEntry: false })?.mtimeMs ?? null;
+
 export const readJson = (path: string): unknown => readParsed(path, JSON.parse);
 export const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);

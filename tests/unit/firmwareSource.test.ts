@@ -3,11 +3,11 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { choose, firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "../../electron/main/firmwareSource";
+import { choose, firmwareBytes, firmwareFeed, installFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "../../electron/main/firmwareSource";
 import { CorruptDownloadError } from "../../electron/main/download";
-import { FeedCache } from "../../electron/main/updateFeed";
+import { FEED_REUSE_MS, FeedCache } from "../../electron/main/updateFeed";
 import type { UpdateChannel } from "../../src/desktop/api";
-import { Manifest } from "../../src/update/manifest";
+import { Manifest, type Download } from "../../src/update/manifest";
 
 let res: string;
 const uf2 = new Uint8Array([1, 2, 3, 4]);
@@ -186,5 +186,36 @@ describe("the firmware feed under the automatic-checks switch", () => {
     expect(await lookup(true)).toEqual({ manifest: null, problem: "offline", channel: "dev" });
     channel = "stable";
     expect((await lookup(true)).manifest).toEqual(manifest);
+  });
+
+  // Cache pass batch 1: Install downloads from the feed the offer came from.
+  it("Install right after the offer downloads that very feed's entry, without fetching again", async () => {
+    let now = 0;
+    let pub = published("v0.9.0-oled-edition");
+    const net = vi.fn(async (ch: UpdateChannel) => Manifest.parse({ channel: ch, app: { version: "0.8.0", platforms: {} }, firmware: pub }));
+    const feed = new FeedCache(net, () => now);
+    const download = vi.fn(async (_uf2: Download) => fwBytes);
+    const d: FirmwareSourceDeps = {
+      bundled: () => null,
+      manifest: firmwareFeed(
+        feed,
+        () => false,
+        () => "stable",
+      ),
+      freshFeed: installFeed(feed),
+      download,
+    };
+    const offer = await latestFirmware(d, true); // Check now
+    const offered = await net.mock.results[0].value;
+    now = FEED_REUSE_MS - 1;
+    expect(await firmwareBytes(d, offer.latest!)).toMatchObject({ ok: true, version: "v0.9.0-oled-edition" });
+    expect(net).toHaveBeenCalledOnce();
+    expect(download.mock.calls[0][0]).toBe(offered.firmware.uf2); // the same feed object, not a refetch
+    // An older offer is checked against the feed as it is now (never installed from a stale one).
+    now = FEED_REUSE_MS * 3;
+    pub = published("v0.9.1-oled-edition", new Uint8Array([7]));
+    expect(await firmwareBytes(d, offer.latest!)).toEqual({ ok: false, reason: "changed" });
+    expect(net).toHaveBeenCalledTimes(2);
+    expect(net).toHaveBeenLastCalledWith("stable");
   });
 });

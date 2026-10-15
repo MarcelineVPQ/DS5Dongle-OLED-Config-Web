@@ -63,7 +63,8 @@ export interface FirmwareSourceDeps {
   // `asked`: the user pressed a check button. See firmwareFeed().
   // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline under Latest, checkedNone / checkedOffline after Check now)
   manifest: (asked: boolean) => Promise<{ manifest: Manifest | null; problem: FirmwareLookup["problem"]; channel: UpdateChannel }>;
-  // A fresh look at one channel's feed (the user pressed Install).
+  // One channel's feed for Install (installFeed): the feed the offer came
+  // from while it is fresh, else fetched again.
   freshFeed: (channel: UpdateChannel) => Promise<Manifest>;
   // Downloads one published file, verified against its own size + SHA-256.
   download: (uf2: Download) => Promise<Uint8Array>;
@@ -90,6 +91,16 @@ export function firmwareFeed(feed: Pick<FeedCache, "get" | "last">, automatic: (
     }
   };
 }
+
+// The feed Install downloads from: the very feed the offer came from while it
+// is under FEED_REUSE_MS old (Check now, then Install: no second fetch), else
+// that channel's feed fetched again, so an older offer is checked against the
+// feed as it is now. Never another channel's (firmwareBytes asks for the
+// channel the offer names).
+export const installFeed =
+  (feed: Pick<FeedCache, "get">): FirmwareSourceDeps["freshFeed"] =>
+  (channel) =>
+    feed.get(channel, FEED_REUSE_MS);
 
 export async function latestFirmware(deps: FirmwareSourceDeps, asked = false): Promise<FirmwareLookup> {
   const bundled = deps.bundled();

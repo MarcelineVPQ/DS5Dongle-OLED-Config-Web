@@ -5,7 +5,7 @@
 // app follows the connected controller ("controller") and the web tool uses
 // "system" (follow prefers-color-scheme).
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Gamepad2, Monitor, Moon, Palette, Sun } from "lucide-react";
 import { controllerShade, onControllerShade } from "../desktop/live/controllerAccent";
 import { useTranslation } from "react-i18next";
@@ -121,7 +121,8 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useTheme();
   const desktop = window.desktop;
 
-  const setTo = useCallback((next: Theme) => () => setTheme(next), [setTheme]);
+  // A plain function: each button gets its own handler anyway (a useCallback here saved nothing).
+  const setTo = (next: Theme) => () => setTheme(next);
 
   return (
     <div className="theme-toggle" role="group" aria-label={t("themeToggle.groupLabel")}>

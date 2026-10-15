@@ -6,11 +6,12 @@
 // behaviour is unchanged. The renderer runs against the main process's real
 // rules (firmwareSource.ts, updateFeed.ts, officialFirmware.ts) over a fake
 // network.
+import { createHash } from "node:crypto";
 import { act, createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
-import { firmwareBytes, firmwareFeed, latestFirmware, type FirmwareSourceDeps } from "../../electron/main/firmwareSource";
+import { firmwareBytes, firmwareFeed, installFeed, latestFirmware, type FirmwareSourceDeps } from "../../electron/main/firmwareSource";
 import { FeedCache, devChannelPreview } from "../../electron/main/updateFeed";
 import { OfficialFirmwareSource } from "../../electron/main/officialFirmware";
 import type { DesktopApi, UpdateChannel, UpdateState } from "../../src/desktop/api";
@@ -31,7 +32,10 @@ afterEach(() => {
   delete window.desktop;
 });
 
-const SHA = "a".repeat(64);
+// The SHA-256 of the fake download's bytes ([1]).
+const SHA = createHash("sha256")
+  .update(new Uint8Array([1]))
+  .digest("hex");
 const feedFor = (ch: UpdateChannel) =>
   Manifest.parse({
     channel: ch,
@@ -51,7 +55,7 @@ function fakeMain(automatic: boolean) {
       () => automatic,
       () => "stable",
     ),
-    freshFeed: (ch) => feed.get(ch, 0),
+    freshFeed: installFeed(feed),
     download: vi.fn(async () => new Uint8Array([1])),
   };
   const official = new OfficialFirmwareSource(sony, () => automatic);
@@ -71,7 +75,7 @@ function fakeMain(automatic: boolean) {
   window.desktop = desktop as unknown as DesktopApi;
   // The scheduled checks (index.ts): only with the switch on.
   const scheduled = () => automatic && void desktop.checkForUpdates();
-  return { net, sony, scheduled, desktop };
+  return { net, sony, scheduled, desktop, deps };
 }
 
 const bridge = { client: null, firmwareVersion: "v9.0.0-oled-edition" } as unknown as UseDs5BridgeResult;
@@ -148,5 +152,21 @@ describe("Check for updates automatically", () => {
     expect(main.net).toHaveBeenCalledOnce();
     await main.desktop.officialControllerFirmware(false);
     expect(main.sony).toHaveBeenCalledOnce();
+  });
+
+  // Cache pass batch 1: one fetch per check, and Install downloads from the
+  // feed the offer came from (same object, version and channel).
+  it("off: Check now, the offer, then Install: one feed fetch, and Install takes the offer's own entry", async () => {
+    await i18n.changeLanguage("en");
+    const main = fakeMain(false);
+    await startupAndVisits(main);
+    expect(main.net).not.toHaveBeenCalled();
+    const lookup = await act(async () => card.fw!.refreshLatest()); // Check now
+    expect(main.net).toHaveBeenCalledExactlyOnceWith("stable");
+    const offered = await main.net.mock.results[0].value;
+    expect(lookup.latest).toMatchObject({ version: offered.firmware!.version, channel: "stable", sha256: offered.firmware!.uf2.sha256 });
+    expect(await main.desktop.downloadFirmware(lookup.latest!)).toMatchObject({ ok: true, version: offered.firmware!.version });
+    expect(main.net).toHaveBeenCalledOnce();
+    expect(vi.mocked(main.deps.download).mock.calls[0][0]).toBe(offered.firmware!.uf2);
   });
 });

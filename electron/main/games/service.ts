@@ -8,6 +8,7 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { readWindowsStores, type WindowsStores } from "./windowsStores";
 import { dominantColor } from "./artColor";
+import { ArtColorCache } from "./artColorCache";
 import { actionUrl, availableActions, execWords, quietPlay, type QuietPlaySystem } from "./actions";
 import { errorText, KeyedError, keyedText, logged } from "../../../src/errorText";
 import { FeedMissingError, feedProblem } from "../updateFeed";
@@ -47,7 +48,10 @@ const HDR_CACHE_MS = 3000;
 export interface GamesServiceDeps {
   userData: string;
   allowed: () => boolean; // the user's consent
-  fetchManifest: () => Promise<Manifest>;
+  // The update feed, for the Proton build. asked = false: a scan's lookup
+  // (index.ts: under the automatic-checks switch; null = not looked up, never
+  // online with the switch off); true: Install, the user asked.
+  fetchManifest: (asked: boolean) => Promise<Manifest | null>;
   download: (d: Download, path: string, progress: (got: number, total: number) => void) => Promise<void>;
   onProtonProgress: (p: ProtonProgress) => void;
   notDetected: () => Set<string>; // game keys the player marked "controller not detected"
@@ -111,8 +115,9 @@ export class GamesService {
       // lifetime: OK — one-shot 5 s timer, cleared in the finally below once the feed answers (lifetime pass batch 4)
       const timeout = new Promise<never>((_, reject) => (timer = setTimeout(() => reject(new Error("timeout")), MANIFEST_TIMEOUT_MS)));
       try {
-        const manifest = await Promise.race([this.deps.fetchManifest(), timeout]);
-        this.latest = manifest.proton ?? null;
+        const manifest = await Promise.race([this.deps.fetchManifest(false), timeout]);
+        // No feed looked up (automatic checks off, none fetched yet): keep the last known build.
+        if (manifest) this.latest = manifest.proton ?? null;
       } finally {
         clearTimeout(timer);
       }
@@ -177,7 +182,7 @@ export class GamesService {
       this.lastGames = report.games;
       // The details read the same manifests and localconfig: one read each.
       this.lastDetails = withScanTexts(texts, () => gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []));
-      this.colors.clear(); // the art may have arrived or changed since
+      this.colors.prune(this.lastDetails); // changed art is noticed by its mtime on the next ask
       return report;
     });
   }
@@ -256,17 +261,13 @@ export class GamesService {
     return this.lastDetails.get(key)?.artPaths[kind];
   }
 
-  // A game's signature color from its art (cached per game).
-  // cache: ADD-CACHE — key=game key; invalidated=cleared by every scan; bound=games in the library (docs/CACHE_PASS_2026-10.md)
-  private colors = new Map<string, string | null>();
+  // A game's signature color from its art: kept across scans per art file +
+  // mtime (artColorCache.ts), so a scan doesn't decode every cover again.
+  private readonly colors = new ArtColorCache(dominantColor);
   artColor(key: string): string | null {
     this.requireConsent();
-    if (this.colors.has(key)) return this.colors.get(key)!;
     const paths = this.lastDetails.get(key)?.artPaths;
-    const file = paths?.cover ?? paths?.hero ?? paths?.header;
-    const color = file ? dominantColor(file) : null;
-    this.colors.set(key, color);
-    return color;
+    return this.colors.get(key, paths?.cover ?? paths?.hero ?? paths?.header);
   }
 
   runningCandidates(): RunningCandidate[] {
@@ -365,16 +366,16 @@ export class GamesService {
     return this.exclusive(async () => {
       try {
         this.requireConsent();
-        let manifest: Manifest;
+        let manifest: Manifest | null;
         try {
-          manifest = await this.deps.fetchManifest();
+          manifest = await this.deps.fetchManifest(true);
         } catch (cause) {
           // error: SHOWN — desktop.updateFeed.offline / .unsigned / .malformed by problem on the Proton card (the raw text goes to the log)
           if (cause instanceof FeedMissingError) return { ok: false, message: keyedText("desktop.errors.main.protonNotPublished") };
           logged("installing Proton: the update feed")(cause);
           return { ok: false, message: errorText(cause), problem: feedProblem(cause) };
         }
-        const build = manifest.proton;
+        const build = manifest?.proton;
         if (!build) return { ok: false, message: keyedText("desktop.errors.main.protonNotPublished") };
         const steam = findSteamInstalls(this.home);
         const heroic = findHeroicInstalls(this.home);

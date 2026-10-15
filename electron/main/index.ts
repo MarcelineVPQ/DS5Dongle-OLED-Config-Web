@@ -21,8 +21,8 @@ import { VolumeKeeper } from "./games/volumeKeeper";
 import { artRequestTarget } from "./games/artRequest";
 import { ArtThumbs } from "./games/artThumbs";
 import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser } from "./games/schemeHandler";
-import { firmwareBytes, firmwareFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
-import { devChannelPreview } from "./updateFeed";
+import { firmwareBytes, firmwareFeed, installFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
+import { devChannelPreview, protonFeed } from "./updateFeed";
 import { OfficialFirmwareSource } from "./officialFirmware";
 import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
@@ -228,6 +228,14 @@ function start(): void {
   };
   syncVolumeKeeper();
 
+  // The update feed for the firmware lookups and the Games scan's Proton
+  // lookup: online only with automatic checks on or when the user asks.
+  const feedLookup = firmwareFeed(
+    updater.feed,
+    () => settings.checkForUpdates,
+    () => settings.updateChannel,
+  );
+
   // Games library: the player's per-game data (works on every OS).
   const library = new LibraryStore(app.getPath("userData"));
   // Games page (Linux and Windows): the library, per-game profiles and, on
@@ -237,7 +245,8 @@ function start(): void {
       ? new GamesService({
           userData: app.getPath("userData"),
           allowed: () => settings.gamesScanAllowed,
-          fetchManifest: () => updater.fetchManifest(),
+          // A scan's Proton lookup follows the automatic-checks switch (off: never online); Install fetches.
+          fetchManifest: protonFeed(updater.feed, feedLookup),
           download: (d, path, progress) => updater.downloadAsset(d, path, progress),
           onProtonProgress: (p) => mainWindow?.webContents.send(IPC.protonProgress, p),
           // Games the player marked "controller not detected" get the standard-gamepad fix.
@@ -339,12 +348,8 @@ function start(): void {
   // asks; Install downloads exactly the entry shown.
   const firmwareSource: FirmwareSourceDeps = {
     bundled: () => readBundled(resourcesDir),
-    manifest: firmwareFeed(
-      updater.feed,
-      () => settings.checkForUpdates,
-      () => settings.updateChannel,
-    ),
-    freshFeed: (channel) => updater.feed.get(channel, 0),
+    manifest: feedLookup,
+    freshFeed: installFeed(updater.feed),
     download: (uf2) => updater.downloadFirmwareFile(uf2),
   };
 
