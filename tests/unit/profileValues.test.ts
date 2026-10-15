@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, type ConfigBody } from "../../src/protocol/config";
+import { AUDIO_BUFFER_MIN, DEFAULT_CONFIG, normalizeConfig, validateConfig, type ConfigBody } from "../../src/protocol/config";
 import { LibraryFileSchema, PROFILE_FIELDS, ProfileSettingsSchema, type ProfileSettings } from "../../src/desktop/games/library";
 import {
   captureProfile,
@@ -73,6 +73,19 @@ describe("game profile values (format 2: left out = my normal setting)", () => {
     expect(ProfileSettingsSchema.safeParse({ format: 2, audioBufferLength: 8 }).success).toBe(false);
     const file = { version: 1, games: { "steam-1a2b3c4d:steam:1": { title: "X", profile: { settings: V1, updated: 1 } } }, restore: { gameKey: "steam-1a2b3c4d:steam:1", settings: V1 } };
     expect(LibraryFileSchema.safeParse(file).success).toBe(true);
+  });
+
+  it("an audio buffer saved at 16–31 by an older app shows and saves as 32 (upstream #252)", () => {
+    // A game profile: still loads, as 32.
+    expect(ProfileSettingsSchema.parse({ format: 2, audioBufferLength: 16 }).audioBufferLength).toBe(32);
+    expect(ProfileSettingsSchema.parse({ format: 2, audioBufferLength: 31 }).audioBufferLength).toBe(32);
+    expect(ProfileSettingsSchema.parse({ format: 2, audioBufferLength: 32 }).audioBufferLength).toBe(32);
+    expect(ProfileSettingsSchema.parse({ format: 2, audioBufferLength: 96 }).audioBufferLength).toBe(96);
+    // A board's saved config: read as 32, so Save writes 32; the range check refuses less.
+    expect(normalizeConfig({ ...DEFAULT_CONFIG, audioBufferLength: 16 }).audioBufferLength).toBe(AUDIO_BUFFER_MIN);
+    expect(normalizeConfig({ ...DEFAULT_CONFIG, audioBufferLength: 200 }).audioBufferLength).toBe(128);
+    expect(validateConfig({ ...DEFAULT_CONFIG, audioBufferLength: 28 }).some((i) => i.field === "audioBufferLength")).toBe(true);
+    expect(validateConfig({ ...DEFAULT_CONFIG, audioBufferLength: 32 }).some((i) => i.field === "audioBufferLength")).toBe(false);
   });
 
   it("an old profile keeps working as before: every value set, one strength for both grips", () => {

@@ -9,7 +9,7 @@
 //   offset 10  uint8   disable_inactive_disconnect 0 = auto-disconnect on idle, 1 = stay paired forever
 //   offset 11  uint8   disable_pico_led            0 = LED on, 1 = LED off
 //   offset 12  uint8   polling_rate_mode           0 = 250Hz, 1 = 500Hz, 2 = real-time
-//   offset 13  uint8   audio_buffer_length         [16, 128]
+//   offset 13  uint8   audio_buffer_length         [32, 128] (16 before firmware fw-speaker-095; upstream #252: below 28 garbles)
 //   offset 14  uint8   controller_mode             0 = DS5, 1 = DSE, 2 = Auto
 //   offset 15  uint8   current_slot                [0, 3]  (OLED Edition multi-slot pairing)
 //   offset 16  uint8   auto_haptics_enable         0=Off 1=Fallback 2=Mix 3=Replace  (OLED Edition)
@@ -67,6 +67,11 @@ const MIC_LEVEL_AT = CONFIG_BODY_SIZE_V13;
 // The controller's mic level (SetStateData VolumeMic) tops out at 64; 0 =
 // follow the PC's mic level (the firmware's default).
 export const MIC_LEVEL_MAX = 64;
+// The speaker/haptics audio buffer, in samples: below 28 the speaker garbles
+// (upstream awalol #252), so 32 is the least. A board or a game profile saved
+// with 16–31 by an older app shows and saves as 32 (normalizeConfig; library.ts).
+export const AUDIO_BUFFER_MIN = 32;
+export const AUDIO_BUFFER_MAX = 128;
 // Protocol 1.17 appends the controller's echo cancellation (51 in all). Only
 // sent to 1.17+ firmware: a 50-byte write leaves it as it is on the board.
 export const CONFIG_BODY_SIZE_V17 = 51;
@@ -317,8 +322,8 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 2) {
     issues.push({ field: "pollingRateMode", message: "Polling rate mode must be 0, 1, or 2" });
   }
-  if (!Number.isInteger(config.audioBufferLength) || config.audioBufferLength < 16 || config.audioBufferLength > 128) {
-    issues.push({ field: "audioBufferLength", message: "Audio buffer length must be between 16 and 128" });
+  if (!Number.isInteger(config.audioBufferLength) || config.audioBufferLength < AUDIO_BUFFER_MIN || config.audioBufferLength > AUDIO_BUFFER_MAX) {
+    issues.push({ field: "audioBufferLength", message: `Audio buffer length must be between ${AUDIO_BUFFER_MIN} and ${AUDIO_BUFFER_MAX}` });
   }
   if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 2) {
     issues.push({ field: "controllerMode", message: "Controller mode must be 0 (DS5), 1 (DSE), or 2 (Auto)" });
@@ -377,7 +382,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
     disablePicoLed: Boolean(config.disablePicoLed),
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
-    audioBufferLength: clampInteger(config.audioBufferLength, 16, 128),
+    audioBufferLength: clampInteger(config.audioBufferLength, AUDIO_BUFFER_MIN, AUDIO_BUFFER_MAX),
     controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
     currentSlot: clampInteger(config.currentSlot, 0, 3) as SlotIndex,
     autoHapticsEnable: clampInteger(config.autoHapticsEnable, 0, 3) as AutoHapticsMode,
