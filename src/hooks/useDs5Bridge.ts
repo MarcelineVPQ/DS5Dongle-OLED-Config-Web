@@ -9,6 +9,7 @@ import type { Ds5Transport } from "../protocol/transport";
 import { simulatedBoard } from "../desktop/devPreview";
 import { logged } from "../errorText";
 import { isWindowShown } from "../desktop/useWindowShown";
+import type { BoardHolder } from "../desktop/api";
 
 // While the window is hidden, an animated lightbar (rainbow, breathing, a
 // charging pulse) changes the identity on every 1 s poll, and each change
@@ -83,12 +84,34 @@ export interface UseDs5BridgeResult {
   // per-game profiles switching in and out.
   applyBody: (body: ConfigBody) => Promise<boolean>;
   clearError: () => void;
+  // The board is plugged in but another program holds it (WebUSB's "Unable
+  // to claim interface"): what's holding it where the main process can tell
+  // (Linux), else an empty list. The app tries again every BUSY_RETRY_MS by
+  // itself and connects once it's free; retryBusy tries now.
+  // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice), in place of the raw WebUSB error
+  busy: { holders: BoardHolder[] } | null;
+  retryBusy: () => Promise<void>;
 }
+
+// How often the app tries the board again while another program holds it.
+// One claim attempt (no reads), also while hidden: the tray shows when it connects.
+export const BUSY_RETRY_MS = 2000;
 
 // WebUSB's errors from open() / claimInterface() (DOMException NetworkError
 // or NotFoundError: "Unable to claim interface", "The device was disconnected").
 export function isOpenFailure(cause: unknown): boolean {
   return cause instanceof DOMException && (cause.name === "NetworkError" || cause.name === "NotFoundError" || /claimInterface|open/.test(cause.message));
+}
+
+// Another program holds the board: claimInterface's "Unable to claim
+// interface" (every OS). On Windows and macOS opening a device that another
+// program has open already fails ("Access denied.", the OS gives one program
+// at a time); on Linux that error is the missing udev rule instead (Set up USB
+// access), so there only the claim counts.
+export function isBoardBusy(cause: unknown, platform: string | undefined): boolean {
+  if (!(cause instanceof DOMException)) return false;
+  if (cause.name === "NetworkError" && /claim/i.test(cause.message)) return true;
+  return platform !== undefined && platform !== "linux" && isOpenFailure(cause) && cause.name !== "NotFoundError";
 }
 
 export function useDs5Bridge(): UseDs5BridgeResult {
@@ -103,6 +126,12 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [operation, setOperation] = useState<Operation>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ holders: BoardHolder[] } | null>(null);
+  const busyRef = useRef(busy);
+  // lifetime: OK — acquires nothing (mirrors the busy state into a ref)
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
   const clientRef = useRef<Ds5BridgeClient | null>(null);
   // lifetime: OK — acquires nothing (mirrors the client into a ref)
   useEffect(() => {
@@ -134,53 +163,114 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setSaveState("idle");
   }, []);
 
-  const attachTransport = useCallback(async (transport: Ds5Transport) => {
-    setOperation("connecting");
-    try {
-      const next = new Ds5BridgeClient(transport);
-      await next.transport.open();
-      const id = await next.checkCompatible();
-      const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
-      const normalized = normalizeConfig(cfg);
-      setClient(next);
-      setIdentity(id);
-      setFirmwareVersion(version);
-      setConfig(normalized);
-      // Flash holds this only if the dongle says nothing is unsaved (older
-      // firmware can't say: assume it does, as before).
-      setSavedConfig(id.unsaved ? null : normalized);
-      setDraft(normalized);
-      setSaveState("idle");
-      setError(null);
-    } catch (cause) {
-      // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
-      // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
-      // vanished during Repair USB driver). The setup screen explains that
-      // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
-      if (!(window.desktop?.platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
-    } finally {
-      setOperation(null);
-    }
+  // What holds the board (Linux: the main process looks; elsewhere nothing to name).
+  const lookUpHolders = useCallback(() => {
+    const desktop = window.desktop;
+    if (!desktop?.boardHolders) return;
+    desktop
+      .boardHolders()
+      .then((holders) => setBusy((prev) => (prev ? { holders } : prev)))
+      .catch(logged("naming the program that holds the board (the busy notice says it without a name)"));
   }, []);
 
-  const attach = useCallback((device: USBDevice) => attachTransport(new WebUsbTransport(device)), [attachTransport]);
+  // `quiet`: the busy retry, which doesn't flash "Connecting…" every 2 s.
+  const attachTransport = useCallback(
+    async (transport: Ds5Transport, quiet = false) => {
+      if (!quiet) setOperation("connecting");
+      try {
+        const next = new Ds5BridgeClient(transport);
+        await next.transport.open();
+        const id = await next.checkCompatible();
+        const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
+        const normalized = normalizeConfig(cfg);
+        setClient(next);
+        setIdentity(id);
+        setFirmwareVersion(version);
+        setConfig(normalized);
+        // Flash holds this only if the dongle says nothing is unsaved (older
+        // firmware can't say: assume it does, as before).
+        setSavedConfig(id.unsaved ? null : normalized);
+        setDraft(normalized);
+        setSaveState("idle");
+        setError(null);
+        setBusy(null);
+      } catch (cause) {
+        // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice: what holds it where known, Retry, and it connects by itself once free), else the keyed USB/board errors below
+        const platform = window.desktop?.platform;
+        if (isBoardBusy(cause, platform)) {
+          // Let go of the half-open device, so this app doesn't hold it too.
+          await transport.close().catch(logged("closing the board after another program kept it (it's opened again on the next try)"));
+          setError(null);
+          const first = !busyRef.current;
+          setBusy((prev) => prev ?? { holders: [] });
+          if (first) lookUpHolders();
+          return;
+        }
+        // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
+        // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
+        // vanished during Repair USB driver). The setup screen explains that
+        // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
+        if (!(platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
+      } finally {
+        if (!quiet) setOperation(null);
+      }
+    },
+    [lookUpHolders],
+  );
+
+  const attach = useCallback((device: USBDevice, quiet = false) => attachTransport(new WebUsbTransport(device), quiet), [attachTransport]);
 
   // Desktop: the main process has already granted the dongle, so this connects
   // with no prompt. Browser: works once the user has picked the dongle before.
   // Dev builds can use the simulated dongle instead (Developer card).
-  const autoConnect = useCallback(async () => {
-    if (clientRef.current) return;
-    const sim = simulatedBoard();
-    if (sim) {
-      // Only while it runs the firmware (in BOOTSEL it's a bootloader, not a board to configure).
-      const dongle = sim.dongle();
-      if (dongle) await attachTransport(dongle);
-      return;
-    }
-    if (!supported) return;
-    const device = await WebUsbTransport.findPermitted();
-    if (device) await attach(device);
-  }, [attach, attachTransport, supported]);
+  const autoConnect = useCallback(
+    async (quiet = false) => {
+      if (clientRef.current) return;
+      const sim = simulatedBoard();
+      if (sim) {
+        // Only while it runs the firmware (in BOOTSEL it's a bootloader, not a board to configure).
+        const dongle = sim.dongle();
+        if (dongle) await attachTransport(dongle, quiet);
+        return;
+      }
+      if (!supported) return;
+      const device = await WebUsbTransport.findPermitted();
+      if (device) await attach(device, quiet);
+      else setBusy(null); // unplugged meanwhile: nothing holds it any more
+    },
+    [attach, attachTransport, supported],
+  );
+
+  // Retry now (the notice's button): names the holder again too.
+  const retryBusy = useCallback(async () => {
+    await autoConnect(true);
+    if (busyRef.current) lookUpHolders();
+  }, [autoConnect, lookUpHolders]);
+
+  const isBusy = busy !== null;
+  // While another program holds the board, try again every BUSY_RETRY_MS, so
+  // it connects by itself once that program lets go (no USB event says so).
+  // lifetime: OK — cleanup: clears the retry timer (connected, unplugged, unmount)
+  useEffect(() => {
+    if (!isBusy) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      // error: NOT-WORTH — a failed try keeps the busy notice up (attachTransport's catch); this only keeps a bug from being unhandled
+      autoConnect(true)
+        .catch(logged("trying the board again while another program held it"))
+        .finally(() => {
+          // lifetime: OK — self re-arming while busy; cleared in the cleanup
+          if (!stopped && busyRef.current) timer = setTimeout(tick, BUSY_RETRY_MS);
+        });
+    };
+    // lifetime: OK — the first retry; cleared in the cleanup
+    timer = setTimeout(tick, BUSY_RETRY_MS);
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [autoConnect, isBusy]);
 
   const connect = useCallback(async () => {
     try {
@@ -366,6 +456,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     const onDisconnect = (event: USBConnectionEvent) => {
       const current = clientRef.current?.transport;
       if (current instanceof WebUsbTransport && current.device === event.device) detach();
+      if (isDongle(event.device)) setBusy(null);
     };
     const onConnect = (event: USBConnectionEvent) => {
       if (isDongle(event.device)) autoConnect().catch(logged("connecting to a board that was plugged in (it stays on the setup screen)"));
@@ -393,6 +484,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         clientRef.current = null; // gone now: the reconnect below must not wait for the next render
         detach();
       }
+      if (sim.state !== "dongle") setBusy(null); // off USB: nothing holds it any more
       if (sim.state === "dongle") autoConnect().catch(logged("connecting to the simulated board after it restarted (it stays on the setup screen)"));
     });
   }, [autoConnect, detach]);
@@ -430,5 +522,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     revertToSaved,
     applyBody,
     clearError: () => setError(null),
+    busy,
+    retryBusy,
   };
 }

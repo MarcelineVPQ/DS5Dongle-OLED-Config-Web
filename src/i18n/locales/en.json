@@ -1882,6 +1882,18 @@
       "oled": "OLED screen",
       "usb": "USB & status pin",
       "diagnostics": "Diagnostics"
+    },
+    "boardBusy": {
+      "title": "{{device, capitalize}} is in use by another program.",
+      "heldBy": "In use by: {{names}}.",
+      "suspects": "Usually another copy of this app (or its dev copy), a browser tab with a WebUSB page, or another controller tool.",
+      "closeIt": "Close it, and the app connects by itself.",
+      "windowsDriver": "If no other program uses it, Windows may not have set up its driver: Repair USB driver fixes that.",
+      "retry": "Retry",
+      "kind": {
+        "app": "another copy of this app",
+        "browser": "{{name}} (a browser tab)"
+      }
     }
   },
   "ad": {

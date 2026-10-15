@@ -56,6 +56,7 @@ export const NOT_SETTINGS = {
   "src/desktop/UpdateBanners.tsx": "the update notices' actions (Download and install)",
   "src/desktop/SetupScreen.tsx": "the first-run setup flow (flash the board), not a settings page",
   "src/desktop/WindowsUsbRepair.tsx": "a one-time repair flow (the Windows driver), shown in a notice",
+  "src/desktop/BoardBusyNotice.tsx": "the board-busy notice's Retry (another program holds the board), an error notice's action",
   "src/desktop/library/playBar.tsx": "the game page's Play bar and its launcher links (its main view)",
   "src/desktop/library/GameLibrary.tsx": "the game library's toolbar (sort and filter), not settings",
 };

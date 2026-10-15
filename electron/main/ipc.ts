@@ -34,7 +34,7 @@ import type { ApplyResult, GamesReport, LauncherId, RestartList } from "../../sr
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 import { logged } from "../../src/errorText";
-import { BAD_REQUEST, type SaveOledResult } from "../../src/desktop/api";
+import { BAD_REQUEST, type BoardHolder, type SaveOledResult } from "../../src/desktop/api";
 import { OledImageSchema, OledPngSchema, type OledImage } from "./oledShare";
 
 // A request from our own page that doesn't fit its schema is an app bug: the
@@ -127,6 +127,7 @@ export interface IpcHandlers {
   recoveredFiles: () => Recovered[];
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
+  boardHolders: () => Promise<BoardHolder[]>;
   // error: SHOWN — desktop.usbAccess.result.* (keyed text) under Set up USB access (UsbAccessSetup)
   setupUsbAccess: () => Promise<{ ok: boolean; message: string }>;
   // error: SHOWN — desktop.windowsUsb.result.* (keyed text) under the Windows USB repair (WindowsUsbRepair)
@@ -238,6 +239,7 @@ export function registerIpc(h: IpcHandlers): void {
     return h.repairWindowsUsb();
   });
 
+  invoke(IPC.boardHolders, h.boardHolders);
   invoke(IPC.gamesScan, h.gamesScan);
   invoke(IPC.gamesBackups, h.gamesBackups);
   invoke(IPC.gamesRunningLaunchers, h.gamesRunningLaunchers);

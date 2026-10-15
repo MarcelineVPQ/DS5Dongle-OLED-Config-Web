@@ -356,8 +356,13 @@ export class SimulatedDongle implements Ds5Transport {
     });
   }
 
+  // Another program holds the board (a second copy of the app, a browser tab):
+  // open fails the way WebUSB's claimInterface does, until it's let go.
+  heldByOther = false;
+
   async open(): Promise<void> {
     if (this.gone) throw new DeviceGoneError();
+    if (this.heldByOther) throw new DOMException("Failed to execute 'claimInterface' on 'USBDevice': Unable to claim interface.", "NetworkError");
     this.isOpen = true;
   }
 

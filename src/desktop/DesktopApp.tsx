@@ -31,6 +31,7 @@ import { revealSection } from "./accordion/useAccordion";
 import { MAIN_BLOCKS, SECTIONS } from "./accordion/sections";
 import { revealBlock } from "./accordion/MainBlock";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
+import BoardBusyNotice from "./BoardBusyNotice";
 import RecoveredNotice from "./RecoveredNotice";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
@@ -393,6 +394,7 @@ export default function DesktopApp() {
                   <span>{mainNotice}</span>
                 </Notice>
               )}
+              <BoardBusyNotice busy={bridge.busy} onRetry={bridge.retryBusy} />
               <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
               <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
               {main === "games" && (

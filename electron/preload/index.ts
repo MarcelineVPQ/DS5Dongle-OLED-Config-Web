@@ -33,6 +33,7 @@ const api: DesktopApi = {
   recoveredFiles: () => ipcRenderer.invoke(IPC.recoveredFiles),
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
+  boardHolders: () => ipcRenderer.invoke(IPC.boardHolders),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),
   repairWindowsUsb: () => ipcRenderer.invoke(IPC.repairWindowsUsb),
   appVersion: ipcRenderer.sendSync(IPC.appVersion) as string,

@@ -1883,6 +1883,18 @@
       "oled": "Écran OLED",
       "usb": "USB et broche d'état",
       "diagnostics": "Diagnostic"
+    },
+    "boardBusy": {
+      "title": "Un autre programme utilise {{device}}.",
+      "heldBy": "Utilisé par : {{names}}.",
+      "suspects": "En général une autre copie de cette appli (ou sa copie de développement), un onglet de navigateur avec une page WebUSB, ou un autre outil pour manettes.",
+      "closeIt": "Ferme-le, et l'appli se connecte toute seule.",
+      "windowsDriver": "Si aucun autre programme ne l'utilise, Windows n'a peut-être pas installé son pilote : Réparer le pilote USB corrige ça.",
+      "retry": "Réessayer",
+      "kind": {
+        "app": "une autre copie de cette appli",
+        "browser": "{{name}} (un onglet de navigateur)"
+      }
     }
   },
   "ad": {

@@ -37,6 +37,7 @@ import { firstInstalledStart, isInstalledApp } from "./windowsInstall";
 import { isAllowedExternalUrl } from "./urls";
 import { copyOledImage, saveOledImage } from "./oledShare";
 import { writeFileAtomic } from "./games/backup";
+import { boardHolders } from "./boardHolders";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
@@ -463,6 +464,7 @@ function start(): void {
     recoveredFiles: () => recoveredHere(),
     setSetting: updateSetting,
     usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
+    boardHolders: () => boardHolders(),
     setupUsbAccess: () => installUsbRule(resourcesDir),
     repairWindowsUsb,
     appVersion: () => app.getVersion(),

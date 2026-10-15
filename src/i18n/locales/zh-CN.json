@@ -1870,6 +1870,18 @@
       "oled": "OLED 屏幕",
       "usb": "USB 与状态引脚",
       "diagnostics": "诊断"
+    },
+    "boardBusy": {
+      "title": "{{device}} 正被其他程序使用。",
+      "heldBy": "正在使用的程序：{{names}}。",
+      "suspects": "通常是本应用的另一个副本（或其开发副本）、打开了 WebUSB 页面的浏览器标签页，或其他手柄工具。",
+      "closeIt": "关闭它后，应用会自动连接。",
+      "windowsDriver": "如果没有其他程序在使用，可能是 Windows 尚未为它设置驱动：用“修复 USB 驱动”即可解决。",
+      "retry": "重试",
+      "kind": {
+        "app": "本应用的另一个副本",
+        "browser": "{{name}}（浏览器标签页）"
+      }
     }
   },
   "ad": {

@@ -1883,6 +1883,18 @@
       "oled": "OLED-Bildschirm",
       "usb": "USB & Status-Pin",
       "diagnostics": "Diagnose"
+    },
+    "boardBusy": {
+      "title": "{{device, capitalize}} wird von einem anderen Programm benutzt.",
+      "heldBy": "Benutzt von: {{names}}.",
+      "suspects": "Meist eine zweite Kopie dieser App (oder ihre Entwicklerkopie), ein Browser-Tab mit einer WebUSB-Seite oder ein anderes Controller-Tool.",
+      "closeIt": "Schließ es, dann verbindet sich die App von selbst.",
+      "windowsDriver": "Benutzt es kein anderes Programm, hat Windows vielleicht seinen Treiber nicht eingerichtet: USB-Treiber reparieren behebt das.",
+      "retry": "Erneut versuchen",
+      "kind": {
+        "app": "eine andere Kopie dieser App",
+        "browser": "{{name}} (ein Browser-Tab)"
+      }
     }
   },
   "ad": {

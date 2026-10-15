@@ -210,6 +210,9 @@ export interface DesktopApi {
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
+  // The programs that have the board open (Linux, read-only from /proc; other
+  // systems: none can be named, an empty list). Asked when the board is busy.
+  boardHolders(): Promise<BoardHolder[]>;
   // error: SHOWN — desktop.usbAccess.result.* (keyed text, shownText) under Set up USB access
   setupUsbAccess(): Promise<{ ok: boolean; message: string }>;
   // Windows: forget Windows' cached USB setup for the dongle's IDs (one UAC
@@ -286,6 +289,15 @@ export interface DesktopApi {
 // error: SHOWN — desktop.oledShare.saved; a cancel shows nothing; a failed write rejects (desktop.oledShare.errors.save)
 export type SaveOledResult = { saved: true; name: string } | { saved: false };
 
+// A program that has the board open: this app's other copy (the installed app,
+// a dev copy), a browser (a tab with a WebUSB page), or another program by name.
+export type BoardHolderKind = "app" | "browser" | "other";
+export interface BoardHolder {
+  pid: number;
+  name: string;
+  kind: BoardHolderKind;
+}
+
 export const IPC = {
   reportStatus: "desktop:report-status",
   setTrayIcon: "desktop:set-tray-icon",
@@ -296,6 +308,7 @@ export const IPC = {
   recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",
   usbAccessInstalled: "desktop:usb-access-installed",
+  boardHolders: "desktop:board-holders",
   appVersion: "desktop:app-version",
   checkForUpdates: "desktop:check-for-updates",
   getUpdateState: "desktop:get-update-state",

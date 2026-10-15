@@ -8,6 +8,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Heroic no longer crashes when it closes after the app has gone (Linux).** Heroic that the app started (▶ Play) or reopened after a Games change inherited the AppImage's own library folder, and loaded a library from it; once that copy of the app had quit, restarted or updated, the folder was gone and Heroic crashed as it exited. Programs the app starts now get no path into the app's AppImage.
+- **"In use by another program" instead of a raw USB error.** When something else holds your board (another copy of the app, a browser tab with a WebUSB page, another controller tool), the app says so in plain words, names the program on Linux, offers Retry, and connects by itself once the board is free. On Windows it also points to Repair USB driver, which looks the same from the app.
 - **No "press the PS button" once the controller is back.** After a firmware update, the notice asked you to press PS to reconnect even with the controller already connected (it usually reconnects as the board comes back). It now asks only while no controller is connected; once one is, a short "Firmware updated to …" confirmation shows and clears itself. All 7 languages.
 
 ## [0.9.5-dev.13] - 2026-10-15

@@ -1883,6 +1883,18 @@
       "oled": "Tela OLED",
       "usb": "USB e pino de status",
       "diagnostics": "Diagnóstico"
+    },
+    "boardBusy": {
+      "title": "Outro programa está usando {{device}}.",
+      "heldBy": "Em uso por: {{names}}.",
+      "suspects": "Normalmente outra cópia deste app (ou a cópia de desenvolvimento), uma aba do navegador com uma página WebUSB ou outra ferramenta de controle.",
+      "closeIt": "Feche-o e o app se conecta sozinho.",
+      "windowsDriver": "Se nenhum outro programa estiver usando, talvez o Windows não tenha configurado o driver: Reparar driver USB resolve isso.",
+      "retry": "Tentar de novo",
+      "kind": {
+        "app": "outra cópia deste app",
+        "browser": "{{name}} (uma aba do navegador)"
+      }
     }
   },
   "ad": {

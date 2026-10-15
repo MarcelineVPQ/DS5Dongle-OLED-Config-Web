@@ -358,9 +358,9 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "next", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
-    column: "planned",
+    column: "next",
     title: "Launchers close cleanly",
-    text: "When the app closes Heroic or Steam to save a Games change, they close without crashing.",
+    text: "Heroic started or reopened by the app no longer crashes when it closes after the app has quit or updated.",
     areas: ["games"],
     platform: "linux",
     high: true,
@@ -410,7 +410,12 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["app"],
   },
   { column: "planned", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
-  { column: "planned", title: "Clearer message when {{device}} is busy", text: "Say that another app is using {{device}}, instead of a raw USB error.", areas: ["dongle"] },
+  {
+    column: "next",
+    title: "Clearer message when {{device}} is busy",
+    text: "When another program is using {{device}}, the app says so (and which program, on Linux) instead of a raw USB error, and connects by itself once it's free.",
+    areas: ["dongle"],
+  },
 
   { column: "planned", title: "Guide in every language", text: "The Guide translated into all the app's languages.", areas: ["app"] },
   { column: "planned", title: "A new welcome tour", text: "A short tour of the app, rebuilt for the current layout.", areas: ["app"] },

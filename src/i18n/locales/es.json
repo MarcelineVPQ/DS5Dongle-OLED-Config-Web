@@ -1883,6 +1883,18 @@
       "oled": "Pantalla OLED",
       "usb": "USB y pin de estado",
       "diagnostics": "Diagnóstico"
+    },
+    "boardBusy": {
+      "title": "Otro programa está usando {{device}}.",
+      "heldBy": "Lo usa: {{names}}.",
+      "suspects": "Suele ser otra copia de esta app (o su copia de desarrollo), una pestaña del navegador con una página WebUSB u otra herramienta para mandos.",
+      "closeIt": "Ciérralo y la app se conecta sola.",
+      "windowsDriver": "Si ningún otro programa lo usa, puede que Windows no haya configurado su controlador: Reparar controlador USB lo arregla.",
+      "retry": "Reintentar",
+      "kind": {
+        "app": "otra copia de esta app",
+        "browser": "{{name}} (una pestaña del navegador)"
+      }
     }
   },
   "ad": {
