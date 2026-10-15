@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.12] - 2026-10-14
+
 ### Performance
 
 The app is meant to sip resources, not drink them. Measured before and after this release's changes, in a test copy of the app:
