@@ -99,6 +99,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Compact layout": "Compact UI mode",
   "Play stats": "Play stats from the controller",
   "KEY0 and KEY1 in the app": "KEY0 / KEY1 buttons in the Pico console",
+  "Controller buttons for the OLED screens": "Controller buttons for the OLED screens in the Pico console",
   "OLED boot animation": "OLED boot logo animation",
   "Overview at a glance": "Overview health at a glance",
   "Low / Medium / High presets": "Low / Medium / High presets",

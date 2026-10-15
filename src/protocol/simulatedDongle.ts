@@ -6,12 +6,24 @@
 // real hardware) and dev builds' "Simulated dongle" (Developer card), e.g. in
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
-import { IDENTITY_BYTES } from "./bridgeClient";
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_SPLIT, CONFIG_BODY_SIZE_V13, CONFIG_BODY_SIZE_V16, CONFIG_BODY_SIZE_V17, DEFAULT_CONFIG, encodeConfigBody, FEATURE_REPORT_PAYLOAD_SIZE } from "./config";
+import { IDENTITY_BYTES, OLED_PAD_BUTTONS, OLED_PAD_MAX_HOLD_MS, type OledPadButton } from "./bridgeClient";
+import {
+  CONFIG_BODY_SIZE,
+  CONFIG_BODY_SIZE_SPLIT,
+  CONFIG_BODY_SIZE_V13,
+  CONFIG_BODY_SIZE_V16,
+  CONFIG_BODY_SIZE_V17,
+  DEFAULT_CONFIG,
+  decodeConfigBody,
+  encodeConfigBody,
+  FEATURE_REPORT_PAYLOAD_SIZE,
+  type ConfigBody,
+} from "./config";
 import { CURVE_BYTES, DEFAULT_CURVES, encodeCurve, strictCurve } from "./stickCurve";
 import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transport";
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
 import { SCREEN_NAMES } from "../oled/screenNames";
+import { type SimBoard, SimOledScreens } from "../oled/simScreens";
 import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -169,6 +181,9 @@ export class SimulatedDongle implements Ds5Transport {
   oledScreen: number;
   oledBright = 0;
   oledKeyPresses: [key: number, long: boolean][] = [];
+  // Protocol 1.19 (0xF6 0x19): the screens that react to controller buttons
+  // (Settings, Slots, Lightbar, Trigger Test, Diagnostics), as the firmware's.
+  readonly oledScreens = new SimOledScreens();
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
   private get minor() {
@@ -253,8 +268,17 @@ export class SimulatedDongle implements Ds5Transport {
     g.fillStyle = "#fff"; // theme-exempt: OLED pixels off/on, not a UI color
     g.font = "8px monospace";
     g.textBaseline = "top";
-    g.fillText(status ? `DS5 B. ${(this.opts.version ?? "").replace("-oled-edition", "")}`.slice(0, 22) : (SCREEN_NAMES[this.oledScreen] ?? ""), 6, 1);
-    g.fillText("(simulated)", 6, 10);
+    const screen = status ? null : this.oledScreens.lines(this.oledScreen, this.simBoard);
+    if (screen) {
+      // A screen with controller input (1.19): its title, rows and footer at the firmware's places.
+      g.fillText(screen.title, 6, 0);
+      // loop: HOT-PATH-OK — dev/test fake only; N ≤ 5 rows per simulated mirror read
+      screen.rows.forEach((row, i) => g.fillText(row, 6, 9 + i * 9));
+      g.fillText(screen.footer, 6, 56);
+    } else {
+      g.fillText(status ? `DS5 B. ${(this.opts.version ?? "").replace("-oled-edition", "")}`.slice(0, 22) : (SCREEN_NAMES[this.oledScreen] ?? ""), 6, 1);
+      g.fillText("(simulated)", 6, 10);
+    }
     if (status) g.fillText(`${String(pct).padStart(3)}%${mark}`, kBattTextX, kBattY);
     if (status && state === 1) g.fillText("~--m", kEtaX, kBattY);
     const px = g.getImageData(0, 0, 128, 64).data;
@@ -468,6 +492,7 @@ export class SimulatedDongle implements Ds5Transport {
         this.tail.set(payload.subarray(1 + CONFIG_BODY_SIZE_SPLIT, end));
       }
       this.hostGen++;
+      this.oledScreens.hostChanged();
     } else if (func === 0x0d) {
       if (payload[1] !== 0x43 || payload[2] !== 0x4c || payload[3] !== 2 || payload[4] > 3 || payload.length < 23) this.lastResult = RESULT.invalid;
       else this.calibration[payload[4]] = payload.slice(5, 23);
@@ -534,6 +559,14 @@ export class SimulatedDongle implements Ds5Transport {
       else {
         const arg2 = this.minor >= 15 && payload.length >= 3 ? Math.min(payload[2], 50) : 5;
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
+        this.lastResult = RESULT.pending;
+      }
+    } else if (func === 0x19 && this.minor >= 19) {
+      // 1.19 controller button for the OLED screens: [button, hold ms lo, hi] (deferred).
+      const hold = (payload[2] ?? 0) | ((payload[3] ?? 0) << 8);
+      if (payload.length < 2 || arg >= Object.keys(OLED_PAD_BUTTONS).length || hold > OLED_PAD_MAX_HOLD_MS) this.lastResult = RESULT.invalid;
+      else {
+        this.pending = { func, arg, arg2: hold, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
     } else if (func === 0x18 && this.minor >= 18) {
@@ -648,7 +681,57 @@ export class SimulatedDongle implements Ds5Transport {
       if (this.opts.saveFails) this.lastResult = RESULT.failed;
       else this.powerFlags = arg; // saved on its own, nothing else
     } else if (func === 0x18) this.pressKey(arg & 1, (arg & 2) !== 0);
+    else if (func === 0x19) {
+      // loop: NOT-WORTH — dev/test fake only; N = 9 button names, one press
+      const button = (Object.keys(OLED_PAD_BUTTONS) as OledPadButton[]).find((b) => OLED_PAD_BUTTONS[b] === arg)!;
+      this.oledScreens.press(this.oledScreen, button, arg2 ?? 0, this.simBoard);
+    }
   }
+
+  // The whole config body in RAM (config + narrator + right grip + tail).
+  private body(): ConfigBody {
+    const whole = new Uint8Array(CONFIG_BODY_SIZE_V17);
+    whole.set(this.config, 0);
+    whole[CONFIG_BODY_SIZE] = this.narrator;
+    whole.set(this.rightGain, CONFIG_BODY_SIZE + 1);
+    whole.set(this.tail, CONFIG_BODY_SIZE_SPLIT);
+    return decodeConfigBody(whole);
+  }
+
+  // What the OLED screens act on (simScreens.ts), like the firmware's
+  // set_config + config_save, bt_set_slot, bt_forget_slot, bt_wipe_all_slots.
+  private readonly simBoard: SimBoard = {
+    body: () => this.body(),
+    powerFlags: () => this.powerFlags,
+    save: (body, power) => {
+      if (this.opts.saveFails) return false;
+      const e = encodeConfigBody(body, true, true, true, true);
+      this.config = e.slice(0, CONFIG_BODY_SIZE);
+      this.rightGain = e.slice(CONFIG_BODY_SIZE + 1, CONFIG_BODY_SIZE_SPLIT);
+      this.tail = e.slice(CONFIG_BODY_SIZE_SPLIT);
+      this.powerFlags = power;
+      this.flashConfig = this.config.slice();
+      this.flashTail = this.tail.slice();
+      return true;
+    },
+    slots: () => this.slots,
+    currentSlot: () => this.currentSlot,
+    setSlot: (slot) => {
+      this.currentSlot = slot;
+      return true;
+    },
+    forgetSlot: (slot) => {
+      this.slots[slot] = false;
+      return true;
+    },
+    wipeSlots: () => {
+      this.slots = [false, false, false, false];
+      return true;
+    },
+    previewTrigger: (preset) => {
+      this.lastTrigger = preset;
+    },
+  };
 
   // What the firmware's handle_buttons() does with one press (oled_keys.h):
   // KEY0 (short or long) = next screen; KEY1 short = previous, long = next
@@ -710,6 +793,7 @@ export class SimulatedDongle implements Ds5Transport {
     }
     if (minor >= 17) out[46] |= 0x20; // FEATURES3: the mic echo cancellation (1.17)
     if (minor >= 18) out[46] |= 0x40; // FEATURES3: remote KEY0 / KEY1 presses (1.18)
+    if (minor >= 19) out[46] |= 0x80; // FEATURES3: controller buttons for the OLED screens (1.19)
     return out;
   }
 

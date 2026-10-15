@@ -1019,6 +1019,40 @@
         "key0": "KEY0：下一屏（{{screen}}）",
         "key1": "KEY1：上一屏（{{screen}}）。按住 {{s}} 秒：亮度 {{pct}}%",
         "needsFirmware": "更新 {{device}} 的固件后即可使用按键"
+      },
+      "pad": {
+        "title": "用于屏幕的手柄按键",
+        "info": "只有屏幕会收到这些按键，游戏不会。点击即按下，按住即保持。",
+        "needsFirmware": "更新 {{device}} 的固件后即可在这里按手柄按键",
+        "needsController": "连接手柄后才能在{{screen}}上使用",
+        "unused": "{{screen}}上未使用",
+        "noScreen": "正在等待屏幕",
+        "act": {
+          "settings": {
+            "up": "上一项设置",
+            "down": "下一项设置",
+            "left": "减小数值",
+            "right": "增大数值",
+            "triangle": "保存。在“Reset to defaults”或“Wipe all slots”上按住 {{s}} 秒"
+          },
+          "slots": {
+            "up": "上一个槽位",
+            "down": "下一个槽位",
+            "triangle": "使用所选槽位",
+            "square": "按住 {{s}} 秒以忘记所选槽位"
+          },
+          "lightbar": {
+            "r1": "下一个模式",
+            "fav": "将颜色保存为 FAV{{n}}"
+          },
+          "triggers": {
+            "triangle": "下一个效果"
+          },
+          "diag": {
+            "up": "向上滚动",
+            "down": "向下滚动"
+          }
+        }
       }
     },
     "rail": {

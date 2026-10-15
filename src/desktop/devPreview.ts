@@ -137,7 +137,7 @@ export function simulatedBoard(): SimulatedBoard | null {
     version: version === "" ? null : (version ?? undefined),
     fault: pick(SIM_FAULT_KEY, SIM_BOARD_FAULTS),
     speed: pick(SIM_SPEED_KEY, SIM_SPEEDS),
-    dongle: { live: true, protoMinor: 18, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
+    dongle: { live: true, protoMinor: 19, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
   });
   // lifetime: NOT-WORTH — one listener on the one board per page load: keeps its state across restarts
   board.onChange(() => {

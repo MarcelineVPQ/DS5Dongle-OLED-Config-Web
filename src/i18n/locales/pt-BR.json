@@ -1029,6 +1029,40 @@
         "key0": "KEY0: próxima tela ({{screen}})",
         "key1": "KEY1: tela anterior ({{screen}}). Segure {{s}} s: brilho {{pct}}%",
         "needsFirmware": "Atualize o firmware {{device_de}} para usar as teclas"
+      },
+      "pad": {
+        "title": "Botões do controle para a tela",
+        "info": "Só a tela vê esses toques, os jogos não. Clique para apertar, segure para segurar.",
+        "needsFirmware": "Atualize o firmware {{device_de}} para apertar aqui os botões do controle",
+        "needsController": "Conecte um controle para usar isso em {{screen}}",
+        "unused": "Sem uso em {{screen}}",
+        "noScreen": "Aguardando a tela",
+        "act": {
+          "settings": {
+            "up": "ajuste anterior",
+            "down": "próximo ajuste",
+            "left": "diminuir o valor",
+            "right": "aumentar o valor",
+            "triangle": "salvar. Segure {{s}} s em \"Reset to defaults\" ou \"Wipe all slots\""
+          },
+          "slots": {
+            "up": "slot anterior",
+            "down": "próximo slot",
+            "triangle": "usar o slot escolhido",
+            "square": "segure {{s}} s para esquecer o slot escolhido"
+          },
+          "lightbar": {
+            "r1": "próximo modo",
+            "fav": "salvar a cor como FAV{{n}}"
+          },
+          "triggers": {
+            "triangle": "próximo efeito"
+          },
+          "diag": {
+            "up": "rolar para cima",
+            "down": "rolar para baixo"
+          }
+        }
       }
     },
     "rail": {

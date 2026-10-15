@@ -9,7 +9,7 @@
 import { useTranslation } from "react-i18next";
 import { Activity, Download, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { FEATURES3, supportsFeature3, type BridgeIdentity } from "../../protocol/bridgeClient";
+import { FEATURES3, supportsFeature3, type BridgeIdentity, type OledPadButton } from "../../protocol/bridgeClient";
 import { STATUS_GPIO_OFF } from "../../protocol/config";
 import { shortVersion } from "../../update/manifest";
 import { named, onOff } from "../accordion/status";
@@ -61,11 +61,21 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const pressKey = async (key: 0 | 1, long: boolean) => {
     if (!(await bridge.pressOledKey(key, long))) throw new Error(`The ${hardwareName(bridge.identity)} did not take the KEY${key} press`);
   };
+  const pressPad = async (button: OledPadButton, holdMs: number) => {
+    if (!(await bridge.pressOledPad(button, holdMs))) throw new Error(`The ${hardwareName(bridge.identity)} did not take the ${button} press`);
+  };
 
   const main = (
     <div className="live-stage dongle-main">
       <OledHero frame={oled.frame} capable={supportsOledMirror(identity)} redraws={s?.rated && s.oled ? s.oled.fps : null}>
-        <DongleConsole client={bridge.client} identity={identity} controllerOn={controllerOn} frame={oled} keys={{ supported: bridge.supportsOledKeys, press: bridge.client ? pressKey : null }} />
+        <DongleConsole
+          client={bridge.client}
+          identity={identity}
+          controllerOn={controllerOn}
+          frame={oled}
+          keys={{ supported: bridge.supportsOledKeys, press: bridge.client ? pressKey : null }}
+          pad={{ supported: bridge.supportsOledPad, press: bridge.client ? pressPad : null }}
+        />
       </OledHero>
       <PicoGauges bridge={bridge} telemetry={telemetry} onDiagnostics={() => revealBlock("dongle", BOARD_PROBLEM_BLOCK)} />
       <MainBlock

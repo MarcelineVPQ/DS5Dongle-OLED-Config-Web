@@ -1028,6 +1028,40 @@
         "key0": "KEY0: next screen ({{screen}})",
         "key1": "KEY1: previous screen ({{screen}}). Hold {{s}} s: brightness {{pct}}%",
         "needsFirmware": "Update {{device}}'s firmware to use the keys"
+      },
+      "pad": {
+        "title": "Controller buttons for the screen",
+        "info": "Only the screen sees these presses, games don't. Click to press, hold to hold.",
+        "needsFirmware": "Update {{device}}'s firmware to press controller buttons here",
+        "needsController": "Connect a controller to use this on {{screen}}",
+        "unused": "Not used on {{screen}}",
+        "noScreen": "Waiting for the screen",
+        "act": {
+          "settings": {
+            "up": "previous setting",
+            "down": "next setting",
+            "left": "lower the value",
+            "right": "raise the value",
+            "triangle": "save. Hold {{s}} s on \"Reset to defaults\" or \"Wipe all slots\""
+          },
+          "slots": {
+            "up": "previous slot",
+            "down": "next slot",
+            "triangle": "use the selected slot",
+            "square": "hold {{s}} s to forget the selected slot"
+          },
+          "lightbar": {
+            "r1": "next mode",
+            "fav": "save the color as FAV{{n}}"
+          },
+          "triggers": {
+            "triangle": "next effect"
+          },
+          "diag": {
+            "up": "scroll up",
+            "down": "scroll down"
+          }
+        }
       }
     },
     "rail": {
