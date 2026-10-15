@@ -136,6 +136,29 @@ describe("Apply and Undo on the fake", () => {
     expect(fakeReport(s, linux).games.find((g) => g.key === key)!.runner).toBe(OLD_GE);
     expect(fakeBackups(s)).toEqual([]);
   });
+
+  it("the Proton version picker: every launcher's builds, ours recommended, a pick applied and undone", () => {
+    const s = newFakeState();
+    const r = fakeReport(s, linux);
+    // loop: NOT-WORTH — a test over 20 fake games
+    for (const g of r.games) {
+      expect(g.protons![0], g.title).toMatchObject({ name: OUR_PROTON, recommended: true });
+      expect(g.protons!.filter((c) => c.current).length, g.title).toBeLessThanOrEqual(1);
+      expect(FixIdsSchema.safeParse(g.protons!.flatMap((c) => (c.fix ? [c.fix.id] : []))).success, g.title).toBe(true);
+    }
+    expect(allFixes(r).some((f) => f.kind === "set-proton")).toBe(false); // never a recommended change
+    const key = titleKey("Cyberpunk 2077");
+    const pick = r.games.find((g) => g.key === key)!.protons!.find((c) => c.name === "Proton 9.0")!.fix!;
+    const done = fakeApply(s, [pick.id], ["steam"], linux);
+    expect(done.applied).toEqual([{ id: pick.id, ok: true }]);
+    const after = fakeReport(s, linux).games.find((g) => g.key === key)!;
+    expect(after.runner).toBe("proton_9");
+    expect(after.protons!.find((c) => c.current)!.name).toBe("Proton 9.0");
+    expect(fakeUndo(s, done.backupId!, ["steam"])).toMatchObject({ ok: true });
+    expect(fakeReport(s, linux).games.find((g) => g.key === key)!.runner).toBe(OUR_PROTON);
+    // Off Linux: no picker.
+    expect(fakeReport(newFakeState(), { ...linux, linux: false }).games.every((g) => g.protons === undefined)).toBe(true);
+  });
 });
 
 describe("generated art", () => {

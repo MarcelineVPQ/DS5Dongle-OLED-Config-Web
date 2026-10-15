@@ -493,7 +493,9 @@
           "modeSteam": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Les options de lancement deviennent : {{args}}{{proton}}",
           "modeHeroic": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Ses arguments de jeu dans Heroic deviennent : {{args}}{{proton}}",
           "modeLutris": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Ses arguments dans Lutris deviennent : {{args}}{{proton}}",
-          "modeVkd3d": " Sous Proton, DirectX 12 passe par vkd3d-proton : les premiers lancements peuvent être plus longs, le temps de compiler les shaders."
+          "modeVkd3d": " Sous Proton, DirectX 12 passe par vkd3d-proton : les premiers lancements peuvent être plus longs, le temps de compiler les shaders.",
+          "protonPick": "{{game}} tournera avec {{proton}} au lieu de {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} suit pour l'instant le réglage par défaut de Steam : s'il a une version Linux, Steam lancera à la place sa version Windows avec ce Proton."
         },
         "unlock": {
           "rayTracing": "le ray tracing",
@@ -859,6 +861,14 @@
       "anyProton": "Tout Proton récent",
       "usesOurs": "Utilise le build Proton DualSense.",
       "switchTo": "Passer à {{name}}",
+      "protonPick": "Version de Proton",
+      "protonPickInfo": "Tous les builds Proton et Wine avec lesquels le launcher du jeu peut le lancer. Changer modifie le réglage propre au jeu dans le launcher (sauvegardé avant), et Annuler remet l'ancien.",
+      "protonRecommended": "{{name}} (recommandé)",
+      "protonCurrent": "{{name}} (actuel)",
+      "protonBoth": "{{name}} (recommandé, actuel)",
+      "protonGone": "⚠ {{name}} (non installé)",
+      "protonSwitched": "Passé à {{name}}. Le jeu l'utilise dès son prochain lancement.",
+      "protonUndone": "Annulé : le jeu revient à sa version précédente.",
       "tier": {
         "verified": "Vérifié",
         "works": "Fonctionne",

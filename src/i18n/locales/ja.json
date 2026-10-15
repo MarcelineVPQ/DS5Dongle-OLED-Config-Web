@@ -490,7 +490,9 @@
           "modeSteam": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。起動オプションは次のようになります: {{args}}{{proton}}",
           "modeHeroic": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。Heroic でのゲーム引数は次のようになります: {{args}}{{proton}}",
           "modeLutris": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。Lutris での引数は次のようになります: {{args}}{{proton}}",
-          "modeVkd3d": " Proton では DirectX 12 は vkd3d-proton を通して動くため、最初の数回はシェーダーの作成で起動に時間がかかることがあります。"
+          "modeVkd3d": " Proton では DirectX 12 は vkd3d-proton を通して動くため、最初の数回はシェーダーの作成で起動に時間がかかることがあります。",
+          "protonPick": "{{game}} は {{current}} ではなく {{proton}} で実行されます。{{note}}",
+          "protonPickDefault": "{{game}} は現在 Steam の既定に従っています。Linux 版がある場合、Steam は代わりに Windows 版をこの Proton で実行します。"
         },
         "unlock": {
           "rayTracing": "レイトレーシング",
@@ -851,6 +853,14 @@
       "anyProton": "最近の Proton ならどれでも",
       "usesOurs": "DualSense 用 Proton ビルドを使用します。",
       "switchTo": "{{name}} に切り替え",
+      "protonPick": "Proton バージョン",
+      "protonPickInfo": "このゲームのランチャーで使えるすべての Proton / Wine ビルドです。切り替えるとランチャー内のゲーム個別の設定が変わり（先にバックアップします）、「元に戻す」で以前の設定に戻せます。",
+      "protonRecommended": "{{name}}（おすすめ）",
+      "protonCurrent": "{{name}}（現在）",
+      "protonBoth": "{{name}}（おすすめ・現在）",
+      "protonGone": "⚠ {{name}}（未インストール）",
+      "protonSwitched": "{{name}} に切り替えました。次回の起動から使われます。",
+      "protonUndone": "元に戻しました。ゲームは以前のバージョンに戻りました。",
       "tier": {
         "verified": "検証済み",
         "works": "動作",

@@ -492,7 +492,9 @@
           "modeSteam": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. The launch options become: {{args}}{{proton}}",
           "modeHeroic": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its game arguments in Heroic become: {{args}}{{proton}}",
           "modeLutris": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. Its arguments in Lutris become: {{args}}{{proton}}",
-          "modeVkd3d": " Under Proton, DirectX 12 runs through vkd3d-proton, so the first starts can take longer while shaders are built."
+          "modeVkd3d": " Under Proton, DirectX 12 runs through vkd3d-proton, so the first starts can take longer while shaders are built.",
+          "protonPick": "{{game}} will run with {{proton}} instead of {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} follows Steam's default now: if it has a Linux version, Steam runs its Windows version with this Proton instead."
         },
         "unlock": {
           "rayTracing": "Ray Tracing",
@@ -858,6 +860,14 @@
       "anyProton": "Any recent Proton",
       "usesOurs": "Uses the DualSense Proton build.",
       "switchTo": "Switch to {{name}}",
+      "protonPick": "Proton version",
+      "protonPickInfo": "Every Proton and Wine build the game's launcher can run it with. Switching changes the game's own setting in the launcher (backed up first), and Undo puts the old one back.",
+      "protonRecommended": "{{name}} (recommended)",
+      "protonCurrent": "{{name}} (current)",
+      "protonBoth": "{{name}} (recommended, current)",
+      "protonGone": "⚠ {{name}} (not installed)",
+      "protonSwitched": "Switched to {{name}}. The game uses it from its next start.",
+      "protonUndone": "Undone: the game is back on its previous version.",
       "tier": {
         "verified": "Verified",
         "works": "Works",

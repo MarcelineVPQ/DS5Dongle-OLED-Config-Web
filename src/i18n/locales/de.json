@@ -493,7 +493,9 @@
           "modeSteam": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Die Startoptionen werden zu: {{args}}{{proton}}",
           "modeHeroic": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Spielargumente in Heroic werden zu: {{args}}{{proton}}",
           "modeLutris": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Argumente in Lutris werden zu: {{args}}{{proton}}",
-          "modeVkd3d": " Unter Proton läuft DirectX 12 über vkd3d-proton, daher können die ersten Starts länger dauern, während Shader erstellt werden."
+          "modeVkd3d": " Unter Proton läuft DirectX 12 über vkd3d-proton, daher können die ersten Starts länger dauern, während Shader erstellt werden.",
+          "protonPick": "{{game}} läuft dann mit {{proton}} statt mit {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} folgt bisher dem Steam-Standard: Hat es eine Linux-Version, startet Steam stattdessen die Windows-Version mit diesem Proton."
         },
         "unlock": {
           "rayTracing": "Raytracing",
@@ -859,6 +861,14 @@
       "anyProton": "Beliebiges aktuelles Proton",
       "usesOurs": "Nutzt den DualSense-Proton-Build.",
       "switchTo": "Zu {{name}} wechseln",
+      "protonPick": "Proton-Version",
+      "protonPickInfo": "Alle Proton- und Wine-Builds, mit denen der Launcher des Spiels es starten kann. Ein Wechsel ändert die eigene Einstellung des Spiels im Launcher (vorher gesichert), Rückgängig stellt die alte wieder her.",
+      "protonRecommended": "{{name}} (empfohlen)",
+      "protonCurrent": "{{name}} (aktuell)",
+      "protonBoth": "{{name}} (empfohlen, aktuell)",
+      "protonGone": "⚠ {{name}} (nicht installiert)",
+      "protonSwitched": "Zu {{name}} gewechselt. Das Spiel nutzt es ab dem nächsten Start.",
+      "protonUndone": "Rückgängig gemacht: Das Spiel nutzt wieder die vorherige Version.",
       "tier": {
         "verified": "Geprüft",
         "works": "Läuft",

@@ -175,8 +175,20 @@ export function installedTools(install: SteamInstall): string[] {
 
 // Valve's own Proton builds (steamapps/common/<name>/proton) in every library.
 export function valveProtons(install: SteamInstall): string[] {
+  // loop: NOT-WORTH — Valve's Proton folders (≤ ~8)
+  return valveProtonPaths(install).map((p) => p.name);
+}
+
+// The same, with each build's folder.
+export function valveProtonPaths(install: SteamInstall): Array<{ name: string; dir: string }> {
   // loop: NOT-WORTH — library folders, a readdir each
-  return steamLibraries(install).flatMap((lib) => protonBuilds(join(lib, "steamapps/common")).filter((n) => /^Proton\b/.test(n)));
+  return steamLibraries(install).flatMap((lib) => {
+    const common = join(lib, "steamapps/common");
+    // loop: NOT-WORTH — Proton folders of one library
+    return protonBuilds(common)
+      .filter((n) => /^Proton\b/.test(n))
+      .map((name) => ({ name, dir: join(common, name) }));
+  });
 }
 
 // Point CompatToolMapping[key] ("0" = the default for all Windows games, or an
@@ -186,4 +198,52 @@ export function setCompatTool(config: VdfNode, key: string, tool: string): void 
   setKey(entry, "name", tool);
   if (getString(entry, "config") === undefined) setKey(entry, "config", "");
   if (getString(entry, "priority") === undefined) setKey(entry, "priority", key === "0" ? STEAM_TOOL_PRIORITY_DEFAULT : STEAM_TOOL_PRIORITY_GAME);
+}
+
+// ---- The game page's Proton version picker ----
+// A compatibility tool as Steam knows it: `name` goes in CompatToolMapping,
+// `label` is what Steam shows.
+export interface SteamTool {
+  name: string;
+  label: string;
+}
+
+// Valve's own builds are mapped by an internal name, not their folder:
+// "Proton - Experimental" → proton_experimental, "Proton Hotfix" →
+// proton_hotfix, "Proton 9.0" → proton_9 (7.0 and later, and every x.0),
+// "Proton 6.3" → proton_63 (the older point releases). null: a folder whose
+// name we can't map (it isn't offered rather than written wrong).
+export function valveToolName(folder: string): string | null {
+  if (/^Proton - Experimental$/i.test(folder)) return "proton_experimental";
+  if (/^Proton Hotfix$/i.test(folder)) return "proton_hotfix";
+  const m = /^Proton (\d+)\.(\d+)(?: \(Beta\))?$/i.exec(folder);
+  if (!m) return null;
+  const major = Number(m[1]);
+  return major >= 7 || m[2] === "0" ? `proton_${major}` : `proton_${major}${m[2]}`;
+}
+
+// A compatibilitytools.d build's internal name (its compatibilitytool.vdf;
+// GE-Proton and our builds use the folder name, which is the fallback).
+function customTool(toolsDir: string, folder: string): SteamTool {
+  const doc = readVdfFile(join(toolsDir, folder, "compatibilitytool.vdf"));
+  const first = getNode(doc ?? [], "compatibilitytools", "compat_tools")?.[0];
+  const name = first && typeof first[1] !== "string" ? first[0] : folder;
+  const label = first && typeof first[1] !== "string" ? (getString(first[1], "display_name") ?? name) : folder;
+  return { name, label };
+}
+
+// Every build Steam can run a game with: compatibilitytools.d, then Valve's own Protons.
+export function steamTools(install: SteamInstall): SteamTool[] {
+  const out = new Map<string, SteamTool>();
+  // loop: NOT-WORTH — builds in compatibilitytools.d, one small VDF read each; once per scan
+  for (const folder of installedTools(install)) {
+    const tool = customTool(install.toolsDir, folder);
+    if (!out.has(tool.name)) out.set(tool.name, tool);
+  }
+  // loop: NOT-WORTH — Valve's Proton folders (≤ ~8), once per scan
+  for (const folder of valveProtons(install)) {
+    const name = valveToolName(folder);
+    if (name && !out.has(name)) out.set(name, { name, label: folder });
+  }
+  return [...out.values()];
 }

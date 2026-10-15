@@ -490,7 +490,9 @@
           "modeSteam": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。启动选项将变为：{{args}}{{proton}}",
           "modeHeroic": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Heroic 中的游戏参数将变为：{{args}}{{proton}}",
           "modeLutris": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。它在 Lutris 中的参数将变为：{{args}}{{proton}}",
-          "modeVkd3d": " 在 Proton 下，DirectX 12 通过 vkd3d-proton 运行，因此前几次启动在构建着色器时可能更慢。"
+          "modeVkd3d": " 在 Proton 下，DirectX 12 通过 vkd3d-proton 运行，因此前几次启动在构建着色器时可能更慢。",
+          "protonPick": "{{game}} 将使用 {{proton}} 运行，而不是 {{current}}。{{note}}",
+          "protonPickDefault": "{{game}} 目前跟随 Steam 的默认设置：如果它有 Linux 版本，Steam 会改为用此 Proton 运行其 Windows 版本。"
         },
         "unlock": {
           "rayTracing": "光线追踪",
@@ -851,6 +853,14 @@
       "anyProton": "任意较新的 Proton",
       "usesOurs": "使用 DualSense Proton 版本。",
       "switchTo": "切换到 {{name}}",
+      "protonPick": "Proton 版本",
+      "protonPickInfo": "游戏所在启动器可用来运行它的所有 Proton 和 Wine 版本。切换会更改启动器中该游戏自己的设置（先备份），“撤销”可恢复原来的设置。",
+      "protonRecommended": "{{name}}（推荐）",
+      "protonCurrent": "{{name}}（当前）",
+      "protonBoth": "{{name}}（推荐，当前）",
+      "protonGone": "⚠ {{name}}（未安装）",
+      "protonSwitched": "已切换到 {{name}}。游戏下次启动时生效。",
+      "protonUndone": "已撤销：游戏已恢复为之前的版本。",
       "tier": {
         "verified": "已验证",
         "works": "可用",

@@ -19,7 +19,8 @@ export type FixKind =
   | "audio-volume" // Linux: the controller's hardware volume and mic gain (ALSA) to full
   | "standard-gamepad" // XInput-only game: PROTON_PREFER_SDL=1 (and a Proton that honours it)
   | "hdr-on" // HDR game: run it inside gamescope with HDR (and move it to our Proton); also replaces the old PROTON_ENABLE_WAYLAND/HDR variant
-  | "graphics-mode"; // start the game in DirectX 12 / Vulkan with its own game argument (knownGames.ts MODES)
+  | "graphics-mode" // start the game in DirectX 12 / Vulkan with its own game argument (knownGames.ts MODES)
+  | "set-proton"; // the game page's Proton version picker: run this game with the build the player picked
 
 // Graphics modes a game argument can start a game in, and what a mode unlocks.
 export type GraphicsApi = "dx12" | "vulkan";
@@ -119,8 +120,21 @@ export interface GameEntry {
   hdr?: HdrState; // HDR games (Linux) only
   mode?: ModeInfo; // games that need another graphics mode for a feature
   fixes: Fix[];
+  // Linux: every Proton/Wine build this game's launcher can run it with (the
+  // game page's Compatibility picker). Each one but the current carries its
+  // own "set-proton" fix, applied through the same flow as any fix; these
+  // fixes are never recommended changes (allFixes leaves them out).
+  protons?: ProtonChoice[];
   // What the launcher says it is (Steam's own categories); absent = a game.
   kind?: AppKind;
+}
+
+// One build in a game's Proton version picker.
+export interface ProtonChoice {
+  name: string; // as the launcher shows it (Steam's own builds: the folder name, e.g. "Proton 9.0")
+  current: boolean; // what the game runs with now (its own setting, or the launcher's default)
+  recommended: boolean; // our newest DualSense Proton build
+  fix?: Fix; // absent for the current one
 }
 
 export const APP_KINDS = ["game", "demo", "dlc", "music", "tool", "application", "video"] as const;

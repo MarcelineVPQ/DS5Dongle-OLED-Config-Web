@@ -11,7 +11,7 @@
 // launchers' files, and Apply / Undo change only this in-memory state. No file
 // here is ever read or written: the paths in fixes are only shown on the review.
 import { availableActions } from "../actions";
-import { msg, supportMsg } from "../games";
+import { byPick, gameStates, idHash, msg, supportMsg } from "../games";
 import { dualSenseSupport, graphicsMode, knownHdr } from "../../../../src/desktop/games/knownGames";
 import { API_NAME, modeInfo, withArg } from "../../../../src/desktop/games/gameArgs";
 import { NO_HDR_SYSTEM } from "../../../../src/desktop/games/hdrSetup";
@@ -34,6 +34,7 @@ import type {
   LauncherInfo,
   ModeInfo,
   Msg,
+  ProtonChoice,
   RestartList,
   Store,
 } from "../../../../src/desktop/games/types";
@@ -210,6 +211,26 @@ const DEFAULT_FILES: Record<FakeLauncher, string> = {
   lutris: "~/.local/share/lutris/runners/wine.yml",
 };
 const LAUNCHER_LABEL: Record<FakeLauncher, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris" };
+// The builds each launcher offers in the game page's Proton version picker
+// (besides our own): `name` is what the game's setting holds, `label` what the
+// launcher shows (Steam maps Valve's own Protons by an internal name).
+const FAKE_BUILDS: Record<FakeLauncher, Array<{ name: string; label: string }>> = {
+  steam: [
+    { name: OLD_GE, label: OLD_GE },
+    { name: "proton_9", label: "Proton 9.0" },
+    { name: "proton_experimental", label: "Proton - Experimental" },
+  ],
+  heroic: [
+    { name: OLD_GE, label: OLD_GE },
+    { name: "wine-ge-8-26", label: "wine-ge-8-26" },
+  ],
+  lutris: [
+    { name: OLD_GE, label: OLD_GE },
+    { name: "wine-ge-8-26", label: "wine-ge-8-26" },
+    { name: "Proton - Experimental", label: "Proton - Experimental" },
+  ],
+};
+const pickId = (prefix: string, gameId: string, build: string) => `${prefix}:proton:${gameId}:${idHash(build)}`;
 
 export function hdrSystemOf(hdr: FakeHdr): HdrSystem {
   const screen = { name: "DP-1", hdr: hdr !== "hdr-off", width: 3840, height: 2160, refresh: 144 };
@@ -323,6 +344,30 @@ function entryOf(key: string, g: GameState, s: FakeState, linux: boolean, hdrRea
       msg("why.hdrOld", { game: d.title, next: hdrReady ? hdrWhy : msg("why.hdrOldOnly") }),
       files.options,
     );
+  // The Proton version picker: our build and the launcher's others, each but the current with its fix.
+  // loop: NOT-WORTH — ≤ 4 builds per fake game, once per (fake) scan
+  const protons: ProtonChoice[] | undefined = linux
+    ? [{ name: s.ourProton, label: s.ourProton }, ...FAKE_BUILDS[d.launcher].filter((b) => b.name !== s.ourProton)]
+        .map((b) => {
+          const base = { name: b.label, recommended: b.name === s.ourProton };
+          if (!g.runnerMissing && b.name === effective) return { ...base, current: true };
+          // loop: NOT-WORTH — ≤ 3 fake builds of one launcher
+          const current = effective ? (FAKE_BUILDS[d.launcher].find((x) => x.name === effective)?.label ?? effective) : msg(`fallback.${d.launcher === "steam" ? "steamProton" : "none"}`);
+          const note = d.launcher === "steam" && g.runner === null ? msg("why.protonPickDefault", { game: d.title }) : "";
+          const fix: Fix = {
+            id: pickId(prefix, d.id, b.name),
+            kind: "set-proton",
+            launcher: d.launcher,
+            label: msg("label.runner", { game: d.title, proton: b.label }),
+            why: msg("why.protonPick", { game: d.title, proton: b.label, current, note }),
+            files: [files.runner],
+            recommended: false,
+          };
+          return { ...base, current: false, fix };
+        })
+        // loop: NOT-WORTH — ≤ 4 builds per fake game
+        .sort(byPick)
+    : undefined;
   const gm = graphicsMode(d.title, d.store);
   const mode: ModeInfo | undefined = gm ? modeInfo(gm, g.args) : undefined;
   if (gm && mode?.state === "needed") {
@@ -347,9 +392,7 @@ function entryOf(key: string, g: GameState, s: FakeState, linux: boolean, hdrRea
     ...(d.launcher === "steam" ? { steamInput: g.steamInput } : {}),
     envFlags: g.envFlags,
     support,
-    ...(gamepad ? { gamepad } : {}),
-    ...(hdr ? { hdr } : {}),
-    ...(mode ? { mode } : {}),
+    ...gameStates(gamepad, hdr, mode, protons),
     fixes,
     ...(d.kind ? { kind: d.kind } : {}),
   };
@@ -389,8 +432,11 @@ function blocked(s: FakeState, owners: FakeLauncher[], restart: RestartList): La
 
 export function fakeApply(s: FakeState, fixIds: string[], restart: RestartList, opts: ReportOptions): ApplyResult {
   const report = fakeReport(s, opts);
-  // loop: NOT-WORTH — the fixes of one fake report (≤ ~30)
-  const all = new Map([...report.launchers.flatMap((l) => l.fixes), ...report.system.fixes, ...report.games.flatMap((g) => g.fixes)].map((f) => [f.id, f]));
+  // The picker's choices (≤ 4 per game), resolved like any fix; the build each one sets.
+  // loop: NOT-WORTH — the fake games' choices (≤ ~80), once per apply
+  const picks = report.games.flatMap((g) => (g.protons ?? []).flatMap((c) => (c.fix ? [c.fix] : [])));
+  // loop: NOT-WORTH — the fixes of one fake report (≤ ~30) and the picker's (≤ ~80)
+  const all = new Map([...report.launchers.flatMap((l) => l.fixes), ...report.system.fixes, ...report.games.flatMap((g) => g.fixes), ...picks].map((f) => [f.id, f]));
   // loop: NOT-WORTH — the chosen fixes (≤ ~30)
   const known = fixIds.filter((id) => all.has(id));
   // loop: NOT-WORTH — the chosen fixes (≤ ~30)
@@ -427,13 +473,23 @@ function change(s: FakeState, f: Fix): void {
     return;
   }
   const key = f.id.slice(0, f.id.indexOf(":"));
-  const id = f.id.slice(f.id.indexOf(":", key.length + 1) + 1);
+  const rest = f.id.slice(f.id.indexOf(":", key.length + 1) + 1);
+  // A picker's id ends in the build's hash: `<prefix>:proton:<game id>:<hash>`.
+  const id = f.kind === "set-proton" ? rest.slice(0, rest.lastIndexOf(":")) : rest;
   // loop: NOT-WORTH — 20 fake games, once per applied fix
   const g = [...s.games.values()].find((x) => `${x.def.launcher}-${FAKE_HASH[x.def.launcher]}` === key && x.def.id === id);
   if (!g) return;
   if (f.kind === "set-runner" || f.kind === "hdr-on") {
     g.runner = s.ourProton;
     g.runnerMissing = false;
+  }
+  if (f.kind === "set-proton") {
+    // loop: NOT-WORTH — ≤ 4 builds of one launcher
+    const build = [s.ourProton, ...FAKE_BUILDS[g.def.launcher].map((b) => b.name)].find((n) => f.id === pickId(key, g.def.id, n));
+    if (build) {
+      g.runner = build;
+      g.runnerMissing = false;
+    }
   }
   if (f.kind === "steam-input-off") g.steamInput = "off";
   if (f.kind === "remove-env") g.envFlags = g.envFlags.filter((v) => v !== PREFER_SDL);

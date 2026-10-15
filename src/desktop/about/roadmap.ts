@@ -43,6 +43,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "next", title: "Desktop accent color on Windows", text: "The Desktop accent color follows the Windows accent color, also when you change it.", areas: ["app"], platform: "windows" },
   { column: "next", title: "Collapse all and clear pins", text: "A small menu at the top of every settings panel: fold every section at once, or clear your pinned sections.", areas: ["app"] },
   { column: "next", title: "Lock the rail collapsed", text: "A small lock in the rail's corner keeps the rail small, icons only, so it no longer opens when you point at it.", areas: ["app"] },
+  { column: "next", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"], platform: "linux" },
   { column: "next", title: "Lighter on your PC", text: "The app uses almost no CPU while minimized or in the tray, and less while you watch it.", areas: ["app"], high: true },
   {
     column: "next",
@@ -414,7 +415,6 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Thank-you wall", text: "The people who build and test the app, named in About.", areas: ["community"] },
   { column: "planned", title: "What's new", text: "A short summary of what changed after each update, and a link to the community.", areas: ["app", "community"] },
   { column: "planned", title: "More games in the background", text: "The game-art background shows your whole library, not just the last few games you played.", areas: ["games", "app"] },
-  { column: "planned", title: "Pick any Proton version", text: "Choose which installed Proton a game runs with, right on its game page, with Undo.", areas: ["games"] },
   { column: "planned", title: "Game logs for bug reports", text: "Tick a box on a game's page and the next Play records a log, showing what happened with your controller.", areas: ["games"] },
   {
     column: "planned",
