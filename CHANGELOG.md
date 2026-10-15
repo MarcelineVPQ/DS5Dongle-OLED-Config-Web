@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.13] - 2026-10-15
+
 ### Changed
 
 - **A hidden settings panel stays hidden.** Clicking a rail item that has a dot (say, a firmware update for your board) no longer opens the panel you hid: the dot shows on the panel's show button and on the section, and when you show the panel it opens at that section. Clicking the item of the page you're on still shows or hides its panel, the same in the narrow window's drawer.
