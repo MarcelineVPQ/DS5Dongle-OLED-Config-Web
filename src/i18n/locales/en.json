@@ -352,6 +352,7 @@
       "details": "Details",
       "fwDontUnplug": "Updating firmware, don't unplug {{device}}.",
       "fwDone": "Firmware updated to {{version}}. Press the PS button to reconnect the controller.",
+      "fwUpdated": "Firmware updated to {{version}}.",
       "fwStep": {
         "downloading": "Downloading and checking the firmware…",
         "rebooting": "Restarting {{device}} into its bootloader…",

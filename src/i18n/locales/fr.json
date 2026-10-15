@@ -353,6 +353,7 @@
       "details": "Détails",
       "fwDontUnplug": "Mise à jour du firmware, ne débranche pas {{device}}.",
       "fwDone": "Firmware mis à jour en {{version}}. Appuie sur la touche PS pour reconnecter la manette.",
+      "fwUpdated": "Firmware mis à jour en {{version}}.",
       "fwStep": {
         "downloading": "Téléchargement et vérification du firmware…",
         "rebooting": "Redémarrage {{device_de}} dans son bootloader…",

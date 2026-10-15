@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **No "press the PS button" once the controller is back.** After a firmware update, the notice asked you to press PS to reconnect even with the controller already connected (it usually reconnects as the board comes back). It now asks only while no controller is connected; once one is, a short "Firmware updated to …" confirmation shows and clears itself. All 7 languages.
+
 ## [0.9.5-dev.13] - 2026-10-15
 
 ### Changed

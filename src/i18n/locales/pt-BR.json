@@ -353,6 +353,7 @@
       "details": "Detalhes",
       "fwDontUnplug": "Atualizando o firmware, não desconecte {{device}}.",
       "fwDone": "Firmware atualizado para {{version}}. Pressione o botão PS para reconectar o controle.",
+      "fwUpdated": "Firmware atualizado para {{version}}.",
       "fwStep": {
         "downloading": "Baixando e verificando o firmware…",
         "rebooting": "Reiniciando {{device}} no bootloader…",

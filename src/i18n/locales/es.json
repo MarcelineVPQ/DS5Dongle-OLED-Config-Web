@@ -353,6 +353,7 @@
       "details": "Detalles",
       "fwDontUnplug": "Actualizando el firmware, no desconectes {{device}}.",
       "fwDone": "Firmware actualizado a {{version}}. Pulsa el botón PS para reconectar el mando.",
+      "fwUpdated": "Firmware actualizado a {{version}}.",
       "fwStep": {
         "downloading": "Descargando y comprobando el firmware…",
         "rebooting": "Reiniciando {{device}} en su bootloader…",

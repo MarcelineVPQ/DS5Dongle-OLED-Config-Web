@@ -7,6 +7,7 @@ import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, findBootloader, installFirmware, updateFirmware } from "./firmwareUpdate";
 import { logged } from "../errorText";
 import i18n from "../i18n";
+import { announce, showToast } from "./toast";
 
 // App self-update state, mirrored from the main process.
 export function useAppUpdate(): UpdateState {
@@ -193,6 +194,23 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       : { phase: "failed", detail: `${deviceText("{{device, capitalize}}")} came back reporting ${installed}, expected ${state.version}.` };
     setState(shown);
   }
+  // "Press the PS button" only while no controller is connected: once one is
+  // (it connected after the update, or was already there when the board came
+  // back), the notice gives way to a confirmation toast that clears itself.
+  // `said`: the notice was on screen, so the narrator already said her line.
+  const [confirmed, setConfirmed] = useState<{ version: string; said: boolean } | null>(null);
+  if (shown.phase === "done" && bridge.isConnected && bridge.identity?.controllerConnected) {
+    setConfirmed({ version: shown.version, said: state.phase === "done" });
+    shown = { phase: "idle" };
+    setState(shown);
+  }
+  // lifetime: OK — acquires nothing (one toast per confirmed update)
+  useEffect(() => {
+    if (!confirmed) return;
+    const vars = { version: confirmed.version };
+    if (confirmed.said) showToast("desktop.update.fwUpdated", { vars });
+    else announce("desktop.update.fwUpdated", "app_fw_updated", { vars });
+  }, [confirmed]);
   const verifying = state.phase === "verifying";
   // lifetime: OK — acquires nothing (clears the slow-return timer once settled)
   useEffect(() => {

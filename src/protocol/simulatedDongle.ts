@@ -222,6 +222,7 @@ export class SimulatedDongle implements Ds5Transport {
   }
   said: [number, number][] = [];
   playerLeds = 0x04; // player 1
+  controllerConnected = true; // identity [18]; tests turn it off (board on USB, no controller)
   edge = false;
   colorwayCode = "02"; // Cosmic Red
   // Raw controller input report (0xF0); tests set bytes to simulate presses.
@@ -775,7 +776,7 @@ export class SimulatedDongle implements Ds5Transport {
     view.setUint32(12, this.hostGen, true);
     out[16] = 4;
     out[17] = this.currentSlot;
-    out[18] = 1;
+    out[18] = this.controllerConnected ? 1 : 0;
     // loop: HOT-PATH-OK — dev/test fake only; N ≤ 50 config bytes, early exit
     out[19] = (this.config.some((b, i) => b !== this.flashConfig[i]) || this.tail.some((b, i) => b !== this.flashTail[i]) ? 0x01 : 0) | (this.remapTemporary ? 0x02 : 0) | (this.tempCurves ? 0x04 : 0); // unsaved settings, temporary remap (1.8), temporary curves (1.10)
     out[24] = 8; // 80 % battery

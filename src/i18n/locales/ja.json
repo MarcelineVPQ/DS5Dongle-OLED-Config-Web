@@ -353,6 +353,7 @@
       "details": "詳細",
       "fwDontUnplug": "ファームウェアを更新中です。{{device}} を抜かないでください。",
       "fwDone": "ファームウェアを {{version}} に更新しました。PSボタンを押してコントローラーを再接続してください。",
+      "fwUpdated": "ファームウェアを {{version}} に更新しました。",
       "fwStep": {
         "downloading": "ファームウェアをダウンロードして検証中…",
         "rebooting": "{{device}} をブートローダーで再起動中…",

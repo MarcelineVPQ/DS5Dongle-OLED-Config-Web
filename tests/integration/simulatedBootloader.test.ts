@@ -74,6 +74,7 @@ async function start(opts: { board?: "dongle" | "bootsel"; version?: string; fau
   const UpdateBanners = (await import("../../src/desktop/UpdateBanners")).default;
   const FirmwarePage = (await import("../../src/desktop/pages/FirmwarePage")).default;
   const SetupScreen = (await import("../../src/desktop/SetupScreen")).default;
+  const Toasts = (await import("../../src/desktop/Toasts")).default;
   const { simulatedBoard } = await import("../../src/desktop/devPreview");
   function App() {
     const bridge = useDs5Bridge();
@@ -85,6 +86,7 @@ async function start(opts: { board?: "dongle" | "bootsel"; version?: string; fau
       null,
       createElement(UpdateBanners, { app, fw, onShowFirmware: () => undefined, onFirmwareChanges: () => undefined }),
       bridge.isConnected ? createElement(FirmwarePage, { bridge, fw }) : updating ? null : createElement(SetupScreen, { supported: bridge.supported }),
+      createElement(Toasts),
     );
   }
   container = document.createElement("div");
@@ -130,6 +132,10 @@ describe("a firmware update against the simulated board", () => {
     expect(pcts).toEqual([0, 25, 50, 75]);
     expect(said).toContain("Waiting for your board: press the PS button");
     expect(text()).toContain(`Firmware updated to ${NEW}.`);
+    // The board came back with its controller already connected: a plain
+    // confirmation, never "press PS" (not even for a moment).
+    await advance(25);
+    expect([...seen, text()].join("\n")).not.toContain("Press the PS button to reconnect");
     // Back on the card: the new version, nothing more to install.
     expect(text()).toContain(NEW);
     expect(text()).toContain("Up to date");
@@ -175,6 +181,28 @@ describe("a firmware update against the simulated board", () => {
     act(() => board.set("dongle"));
     await watch(/Firmware updated to/);
     expect(text()).toContain(`Firmware updated to ${NEW}.`);
+    expect(text()).not.toContain("Press the PS button to reconnect");
+  });
+
+  it("back on USB before its controller: asks for the PS button until a controller connects, then confirms and clears", async () => {
+    const board = await start({ fault: "noReturn" });
+    update();
+    await watch(/Waiting for your board/);
+    await advance(46_000);
+    // The board is back, its controller not (yet) connected.
+    act(() => {
+      board.set("dongle");
+      board.dongle()!.controllerConnected = false;
+    });
+    await watch(/Press the PS button to reconnect/);
+    expect(text()).toContain(`Firmware updated to ${NEW}. Press the PS button to reconnect the controller.`);
+    // The controller connects: no more "press PS", a confirmation that clears itself.
+    board.dongle()!.controllerConnected = true;
+    await watch(/^(?![\s\S]*Press the PS button to reconnect)/);
+    expect(text()).not.toContain("Press the PS button to reconnect");
+    expect(container.querySelector(".dk-toast")?.textContent).toContain(`Firmware updated to ${NEW}.`);
+    await advance(30_000);
+    expect(text()).not.toContain("Firmware updated to");
   });
 
   it("an image that won't start (Developer card): says plainly the firmware didn't start, and Install again installs it", async () => {

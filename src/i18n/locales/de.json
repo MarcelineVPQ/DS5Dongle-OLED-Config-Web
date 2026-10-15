@@ -353,6 +353,7 @@
       "details": "Details",
       "fwDontUnplug": "Firmware wird aktualisiert, {{device_akk}} nicht abziehen.",
       "fwDone": "Firmware auf {{version}} aktualisiert. Drücke die PS-Taste, um den Controller zu verbinden.",
+      "fwUpdated": "Firmware auf {{version}} aktualisiert.",
       "fwStep": {
         "downloading": "Firmware wird geladen und geprüft…",
         "rebooting": "{{device, capitalize}} startet in den Bootloader…",

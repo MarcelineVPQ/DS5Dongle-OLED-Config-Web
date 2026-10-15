@@ -353,6 +353,7 @@
       "details": "详情",
       "fwDontUnplug": "正在更新固件，请勿拔出 {{device}}。",
       "fwDone": "固件已更新到 {{version}}。按 PS 键 重新连接控制器。",
+      "fwUpdated": "固件已更新到 {{version}}。",
       "fwStep": {
         "downloading": "正在下载并校验固件…",
         "rebooting": "正在将 {{device}} 重启到引导程序…",
