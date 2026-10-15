@@ -475,7 +475,8 @@ function start(): void {
   });
 
   createWindow(!(settings.startMinimized || process.argv.includes(HIDDEN_FLAG)));
-  watchDesktopPalette(
+  // Stopped at quit (lifetime pass batch 4: the stop was dropped).
+  const stopPalette = watchDesktopPalette(
     () =>
       void readDesktopPalette()
         .then((palette) => mainWindow?.webContents.send(IPC.desktopPalette, palette))
@@ -494,6 +495,7 @@ function start(): void {
   // shutting down: an installer cut short would leave a broken app).
   // lifetime: NOT-WORTH — one per app, fires at quit
   app.on("will-quit", () => {
+    stopPalette();
     if (!sessionEnding) updater.installOnQuit();
   });
   // lifetime: NOT-WORTH — one per app, lives until quit

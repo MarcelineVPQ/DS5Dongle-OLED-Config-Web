@@ -19,23 +19,26 @@ type GpuContext = { configure(c: Record<string, unknown>): void; getCurrentTextu
 function GpuSwatch() {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ok, setOk] = useState<boolean | null>(null);
-  // lifetime: LEAK — cleanup only sets live = false; the WebGPU device is never destroyed (dev-only)
+  // lifetime: OK — cleanup: destroys the WebGPU device (lifetime pass batch 4), at once if it arrives after unmount
   useEffect(() => {
     let live = true;
+    let device: { destroy(): void } | null = null;
     (async () => {
       try {
         const canvas = ref.current;
         const gpu = (navigator as Navigator & { gpu?: Gpu }).gpu;
         const adapter = await gpu?.requestAdapter();
-        // lifetime: LEAK — GPUDevice never destroy()ed, held until GC, one per mount (dev-only HDR test)
-        const device = await adapter?.requestDevice();
+        // lifetime: OK — destroyed in the effect cleanup, or here when the swatch is already gone
+        const dev = await adapter?.requestDevice();
+        device = dev ?? null;
+        if (!live) return device?.destroy();
         const ctx = canvas?.getContext("webgpu") as unknown as GpuContext | null;
-        if (!canvas || !device || !ctx || !live) return setOk(false);
-        ctx.configure({ device, format: "rgba16float", toneMapping: { mode: "extended" }, alphaMode: "opaque" });
-        const enc = device.createCommandEncoder();
+        if (!canvas || !dev || !ctx) return setOk(false);
+        ctx.configure({ device: dev, format: "rgba16float", toneMapping: { mode: "extended" }, alphaMode: "opaque" });
+        const enc = dev.createCommandEncoder();
         const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), clearValue: { r: BOOST, g: BOOST, b: BOOST, a: 1 }, loadOp: "clear", storeOp: "store" }] });
         pass.end();
-        device.queue.submit([enc.finish()]);
+        dev.queue.submit([enc.finish()]);
         setOk(true);
       } catch {
         // error: SHOWN — english: the dev HDR test's swatch reads "no" (Developer card only, not translated)
@@ -44,6 +47,7 @@ function GpuSwatch() {
     })().catch(logged("the dev HDR test's WebGPU swatch"));
     return () => {
       live = false;
+      device?.destroy();
     };
   }, []);
   return (

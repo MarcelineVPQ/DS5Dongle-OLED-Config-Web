@@ -132,7 +132,7 @@ export function watchDesktopPalette(onChange: () => void): () => void {
   if (isKde()) {
     // KDE rewrites kdeglobals atomically (new file + rename), so watch the folder.
     try {
-      // lifetime: NOT-WORTH — one watcher per app, closed by the returned stop (index.ts keeps it to quit)
+      // lifetime: OK — closed by the returned stop, which index.ts calls at quit (will-quit)
       watcher = watch(configDir, (_event, file) => {
         if (file === "kdeglobals") fire();
       });
@@ -145,6 +145,7 @@ export function watchDesktopPalette(onChange: () => void): () => void {
   // lifetime: OK — removed by the returned stop; one per app, lives until quit
   if (process.platform === "win32") systemPreferences.on("accent-color-changed", fire);
   return () => {
+    if (timer) clearTimeout(timer);
     watcher?.close();
     nativeTheme.removeListener("updated", fire);
     if (process.platform === "win32") systemPreferences.removeListener("accent-color-changed", fire);
