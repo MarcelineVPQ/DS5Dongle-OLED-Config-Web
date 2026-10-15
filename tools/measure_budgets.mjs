@@ -84,17 +84,17 @@ const clickOn = (sel) => ev(`(() => { const el = document.querySelector(${JSON.s
 // page, so every lap leaves the panels as they were and each memory sample
 // sees the same page state (pressing them each lap flipped two panels a
 // lap, and the renderer's PSS between two levels ~13 MB apart).
-const rail = (name, steady) =>
+const pressRail = (name, steady) =>
   ev(
     `(() => { const el = document.querySelector('[data-rail="${name}"]'); if (!el) return false; if (!${steady} || document.querySelector(".rail-link.active")?.dataset.rail !== "${name}") el.click(); return true; })()`,
   );
 const NAV = {
-  controller: (steady = false) => rail("controller", steady),
-  dongle: (steady = false) => rail("dongle", steady),
-  gameshome: async (steady = false) => (await rail("games", steady)) && (await pause(1500), await clickOn(".lib-home")),
-  gamepage: async (steady = false) => (await rail("games", steady)) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
-  app: (steady = false) => rail("app", steady),
-  about: (steady = false) => rail("about", steady),
+  controller: (steady = false) => pressRail("controller", steady),
+  dongle: (steady = false) => pressRail("dongle", steady),
+  gameshome: async (steady = false) => (await pressRail("games", steady)) && (await pause(1500), await clickOn(".lib-home")),
+  gamepage: async (steady = false) => (await pressRail("games", steady)) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
+  app: (steady = false) => pressRail("app", steady),
+  about: (steady = false) => pressRail("about", steady),
 };
 
 // 1. Setup
