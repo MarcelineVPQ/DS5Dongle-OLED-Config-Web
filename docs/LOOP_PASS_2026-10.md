@@ -1,6 +1,6 @@
 # Loop pass: every loop that waits or sits on a hot path, with a verdict
 
-_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. The owner picks which batches to do. **Batch 1 is done** (dev.10, see below). **Batches 3 and 4 are done** (2026-10-15, branch `passes-095`), except batch 4's swirl CPU fallback, an owner decision. Batch 2 is firmware and waits for a firmware task with hardware tests. The app tables were re-run after master's Games redesign was merged in (507 loops), after batch 1 (508), and after batches 3 and 4 (613; the rows added since are new code)._
+_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. The owner picks which batches to do. **Batch 1 is done** (dev.10, see below). **Batches 3 and 4 are done** (2026-10-15, branch `passes-095`), and batch 4's swirl CPU fallback was decided and done 2026-10-15 (branch `swirl-fallback`: a still frame without a real graphics card). Batch 2 is firmware and waits for a firmware task with hardware tests. The app tables were re-run after master's Games redesign was merged in (507 loops), after batch 1 (508), and after batches 3 and 4 (613; the rows added since are new code)._
 
 ## How the list was made
 
@@ -42,8 +42,8 @@ The trigger column shows which hot root reached the loop: `render`, `effect`, `r
 | PARALLELIZE | 1 | 0 | Independent async work per step. Run it with a bound. (The app's one row is batch 3's read-ahead itself, 8 at a time.) |
 | BATCH | 0 | 0 | One call, read or index instead of N. |
 | SERIAL-REQUIRED | 26 | 3 | Must stay in order, for the reason given: one HID session, PICOBOOT session order, a deadline, launcher order, stream order, or a data dependency. |
-| HOT-PATH-OK | 372 | 55 | Runs per frame, poll or pass, but N is small and bounded (N is stated). |
-| FIX-HOT-PATH | 2 | 1 | Per-frame or per-poll work that shouldn't be there (allocation, sort, O(n²), DOM queries, CPU pixel work, a blocking read on core0's loop). The app's two rows are the swirl's CPU fallback (an owner decision). |
+| HOT-PATH-OK | 374 | 55 | Runs per frame, poll or pass, but N is small and bounded (N is stated). |
+| FIX-HOT-PATH | 0 | 1 | Per-frame or per-poll work that shouldn't be there (allocation, sort, O(n²), DOM queries, CPU pixel work, a blocking read on core0's loop). The app's two rows (the swirl's CPU fallback) were fixed 2026-10-15: a still frame, never on the frame clock. |
 | NOT-WORTH | 212 | 69 | Tiny N, or startup-only / rare. |
 | **Total** | **613** | **128** | |
 
@@ -126,7 +126,7 @@ The scan runs at startup when Games is on, on a rescan, and after each apply. It
 
 ### Batch 4: lists and effects off the frame path
 
-**DONE 2026-10-15** (branch `passes-095`), except the swirl's CPU fallback (an owner decision, unchanged). What changed:
+**DONE 2026-10-15** (branch `passes-095`); the swirl's CPU fallback followed on branch `swirl-fallback` (below). What changed:
 
 - `GameTile` is `memo` with one stable `onOpen(key)` (`setSelected`), so a library render redraws only the tiles whose game changed.
 - The Pico page's log rows are a memo'd `LogRows`; each line's time is formatted once, when it's added.
@@ -141,7 +141,7 @@ The original batch:
 | `src/desktop/library/GameLibrary.tsx:266` | `GameLibrary` | hundreds of tiles / per library render, even when a game page hides the grid | Every tile re-renders on every library render. | `React.memo` `GameTile` with a stable `onOpen`, or don't render the grid while a game page covers it. |
 | `src/desktop/dongle/DongleConsole.tsx:107` | `DongleConsole` | ≤ 200 rows / 10 per s while the log tab is shown | Re-rendered on each OLED mirror frame, with a `toLocaleTimeString` per row. | Format the time when the line is added; memo the list. |
 | `src/desktop/live/HdrGlow.tsx:91` | `buildMask` | ~1M pixels / every rAF during a window drag (HDR only) | The full-size mask is rebuilt on every resize frame. | Rebuild once the resize settles (~150 ms). |
-| `src/desktop/live/SwirlField.tsx:176, 178, 182` | CPU renderer `draw` | 128 × 72 px in JS / 12.5 Hz when there's no GPU (already paused while hidden) | Pixel work on the CPU, against the lean rule. **Owner decision.** | Without a GPU: one still frame (or ≤ 2 fps); animate only on the GPU path. |
+| `src/desktop/live/SwirlField.tsx:176, 178, 182` | CPU renderer `draw` | 128 × 72 px in JS / 12.5 Hz when there's no GPU (already paused while hidden) | Pixel work on the CPU, against the lean rule. | Without a GPU: one still frame (or ≤ 2 fps); animate only on the GPU path. **Decided 2026-10-15 (owner delegated to best judgement; branch `swirl-fallback`): without a real graphics card the swirl is one still frame.** When the shader would run on the CPU (hardware acceleration off, WebGL2 missing or blocklisted, WebGL drawn in software: SwiftShader, llvmpipe/lavapipe/softpipe, Windows' Basic Render Driver, Apple Software Renderer, or the GPU context failed or was lost), the CPU fallback draws the 128 × 72 field once (the same look, no motion; CSS stretches it, so a resize needs no redraw) and again only when the colors or theme change; the GPU path on a real card is unchanged, and Reduce motion (the app's or the system's prefers-reduced-motion) keeps its one still frame. Reason: the lean rule ("sip, not drink"): the motion is decoration, and with no card to draw it every frame is CPU spent for nothing; ≤ 2 fps would still be a continuous cost, and a still frame keeps the look at 0 frames a second. Detection (`src/desktop/live/swirlGpu.ts`, `tests/unit/swirlGpu.test.ts`): a WebGL2 context created with `failIfMajorPerformanceCaveat` (Chromium refuses it when WebGL is drawn in software, on every OS) plus the unmasked renderer string (`WEBGL_debug_renderer_info`) matched against the software renderers' names; either sign means software. The budget gate keeps measuring the animated GPU path on SwiftShader through the dev flag `ds5.dev.swirlGpu` (`tools/measure_budgets.mjs`). |
 
 ## Found along the way
 
@@ -1021,8 +1021,8 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 198 | `draw` | for | nested | **FIX-HOT-PATH** | 128 / per row | CPU fallback pixel loop, inner row | Same fix as the outer pixel loop |
-| 203 | `draw` | for | nested | **FIX-HOT-PATH** | 3 / per pixel | CPU fallback, 3 channels per pixel | Same fix as the outer pixel loop |
+| 198 | `draw` | for | nested | **HOT-PATH-OK** | 128 / per row | CPU fallback pixel loop, inner row; once per colors / theme change | Done 2026-10-15 (`swirl-fallback`): the CPU fallback is a still frame (batch 4) |
+| 203 | `draw` | for | nested | **HOT-PATH-OK** | 3 / per pixel | CPU fallback, 3 channels per pixel; once per colors / theme change | Done 2026-10-15 (`swirl-fallback`): the CPU fallback is a still frame (batch 4) |
 
 #### src/desktop/lookKnobs.ts
 

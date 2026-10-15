@@ -5,14 +5,18 @@
 // controller known: the theme's accent and its two neighbors on the color
 // wheel (analogous colors, never a clashing opposite).
 //
-// With hardware acceleration (App settings) the field is a WebGL2 fragment
-// shader (the same math as swirlPixel below), drawn at a third of the
-// window's size and stretched up smoothly. Without it, or when the GPU
-// context fails or is lost, the CPU fallback draws the field tiny (128 x 72)
-// and CSS stretches it, which blurs it for free. Redrawn 10 times a second
-// while the window is focused, not at all while it's behind another window
-// or a game (`hold`: the last frame stays), minimized or in the tray, and
-// once (still) with Reduce motion. The
+// With hardware acceleration (App settings) on a real graphics card the field
+// is a WebGL2 fragment shader (the same math as swirlPixel below), drawn at a
+// third of the window's size and stretched up smoothly, redrawn 10 times a
+// second while the window is focused, not at all while it's behind another
+// window or a game (`hold`: the last frame stays), minimized or in the tray,
+// and once (still) with Reduce motion (the app's or the system's
+// prefers-reduced-motion). Without a real graphics card (acceleration off,
+// WebGL2 missing or blocklisted, WebGL drawn in software, or the context
+// failed or was lost; swirlGpu.ts) the CPU fallback draws the field tiny
+// (128 x 72) ONCE, still, and CSS stretches it (which blurs it for free, and
+// a resize needs no redraw); it's drawn again only when the colors or the
+// theme change. Idle cost there: 0 frames a second. The
 // slow pan and zoom (backdropPan.ts) is drawn into those same frames (a
 // shader uniform, not a CSS transform), so it adds no frames and no layout
 // work of its own. The frames run on the shared clock (frameTick.ts), which
@@ -26,6 +30,9 @@ import { onThemeChange } from "./controllerAccent";
 import { logged } from "../../errorText";
 import { NO_PAN, panAt, panClock, panSource, type Pan } from "./backdropPan";
 import { onFrameTick } from "../frameTick";
+import { probeGpu, classifyGpu, swirlMode, type GpuKind } from "./swirlGpu";
+import { DEV_TOOLS_BUILT } from "../devPreview";
+import { readPref } from "../storage";
 
 // The CPU fallback's size (stretched and blurred by CSS).
 export const CPU_W = 128;
@@ -181,7 +188,8 @@ function glRenderer(c: HTMLCanvasElement): Renderer | null {
   };
 }
 
-// The CPU fallback: every pixel of a tiny image in JavaScript.
+// The CPU fallback: every pixel of a tiny image in JavaScript, drawn only as
+// a still frame (SwirlField never puts it on the frame clock).
 function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
   const ctx = c.getContext("2d");
   if (!ctx) return null;
@@ -192,14 +200,14 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
   return {
     draw(t, palette, pan) {
       const px = image.data;
-      // loop: FIX-HOT-PATH — CPU fallback: 128 x 72 px in JS every 100 ms (no GPU / GPU lost)
+      // loop: HOT-PATH-OK — N = 128 x 72 px; once per colors / theme change (the CPU fallback is a still frame, never on the frame clock)
       for (let y = 0; y < CPU_H; y++)
-        // loop: FIX-HOT-PATH — CPU fallback pixel loop, inner row
+        // loop: HOT-PATH-OK — N = 128 px per row; inside the once-per-change still frame above
         for (let x = 0; x < CPU_W; x++) {
           const [u, v] = panSource(x / CPU_W, y / CPU_H, pan);
           swirlPixel(u, v, t, weights);
           const o = (y * CPU_W + x) * 4;
-          // loop: FIX-HOT-PATH — CPU fallback, 3 channels per pixel
+          // loop: HOT-PATH-OK — N = 3 channels per pixel; inside the once-per-change still frame above
           for (let ch = 0; ch < 3; ch++) px[o + ch] = weights[0] * palette[0][ch] + weights[1] * palette[1][ch] + weights[2] * palette[2][ch] + weights[3] * palette[3][ch];
           px[o + 3] = 255;
         }
@@ -211,38 +219,48 @@ function cpuRenderer(c: HTMLCanvasElement): Renderer | null {
 
 type Mode = "gpu" | "cpu";
 
-// Does the shader build here? Tried once on a throwaway canvas.
-// cache: OK — key=none (does the shader build); invalidated=never, hardware acceleration changes need a restart; bound=1 entry
-let gpuOk: boolean | null = null;
-function gpuWorks(): boolean {
-  if (gpuOk === null) {
-    const canvas = document.createElement("canvas");
-    const probe = glRenderer(canvas);
-    gpuOk = probe !== null;
-    probe?.dispose();
-    canvas.getContext("webgl2")?.getExtension("WEBGL_lose_context")?.loseContext();
+// Is there a real graphics card, and does the shader build on it? Tried once
+// on throwaway canvases (swirlGpu.ts: software renderers count as no card).
+// cache: OK — key=none (the GPU kind); invalidated=never, hardware acceleration and GPU changes need a restart; bound=1 entry
+let gpuKind: GpuKind | null = null;
+function gpu(): GpuKind {
+  if (gpuKind === null) {
+    gpuKind = classifyGpu(probeGpu());
+    if (gpuKind !== "none") {
+      const canvas = document.createElement("canvas");
+      const probe = glRenderer(canvas);
+      if (!probe) gpuKind = "none";
+      probe?.dispose();
+      canvas.getContext("webgl2")?.getExtension("WEBGL_lose_context")?.loseContext();
+    }
   }
-  return gpuOk;
+  return gpuKind;
 }
+// Dev builds: keep the animated shader on a software renderer (the budget
+// gate measures the GPU path on SwiftShader; tools/measure_budgets.mjs).
+export const SWIRL_GPU_KEY = "ds5.dev.swirlGpu";
 
 // Shared across remounts and pauses, so the swirl doesn't jump back to its start.
 const swirlClock = { elapsed: 0 };
 
 export default function SwirlField({ colors, hold = false }: { colors: SwirlColors | null; hold?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  // GPU with hardware acceleration on; the CPU fallback without it, or once
-  // the GPU context failed or was lost (a new canvas: one can't hold both).
+  // GPU with hardware acceleration on a real graphics card; the CPU fallback
+  // (still) without it, on a software renderer, or once the GPU context
+  // failed or was lost (a new canvas: one can't hold both).
   const [mode, setMode] = useState<Mode | null>(() => (window.desktop ? null : "cpu"));
   // lifetime: OK — acquires nothing (one settings read picks GPU or CPU)
   useEffect(() => {
     window.desktop
       ?.getSettings()
-      .then((s) => setMode((m) => m ?? (s.hardwareAcceleration && gpuWorks() ? "gpu" : "cpu")))
+      .then((s) => setMode((m) => m ?? (s.hardwareAcceleration ? swirlMode({ hardwareAcceleration: true, gpu: gpu(), forceGpu: DEV_TOOLS_BUILT && readPref(SWIRL_GPU_KEY) === "1" }) : "cpu")))
       .catch(logged("reading hardware acceleration for the backdrop (the CPU drawing is used)"))
       .finally(() => setMode((m) => m ?? "cpu"));
   }, []);
   const shown = useWindowShown();
-  const still = useReducedMotion();
+  // Still with Reduce motion, and always on the CPU fallback (no per-frame
+  // CPU work: one frame, redrawn on a color or theme change).
+  const still = useReducedMotion() || mode === "cpu";
   // The renderer lives as long as the canvas (one per mode); colors, the
   // theme, focus and Reduce motion only change what it's handed or how often
   // it draws, never rebuild it.
