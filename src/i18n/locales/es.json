@@ -1818,7 +1818,8 @@
         "noPkexec": "pkexec no está instalado, así que la app no puede pedir la contraseña de administrador.",
         "cancelled": "se canceló la ventana de la contraseña",
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
-      }
+      },
+      "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}"
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",
@@ -1883,6 +1884,16 @@
       "oled": "Pantalla OLED",
       "usb": "USB y pin de estado",
       "diagnostics": "Diagnóstico"
+    },
+    "headset": {
+      "stereo": "Estéreo al conectar unos auriculares",
+      "stereoInfo": "Linux reproduce el sonido del mando en mono con el perfil del altavoz, también con unos auriculares en el conector para auriculares. Con esta opción, la app cambia el sonido del mando a estéreo al conectar unos auriculares y vuelve al altavoz al desconectarlos. Un perfil que elijas tú en tus ajustes de sonido no se toca hasta que desconectes los auriculares. Usa tus propios ajustes de sonido (PipeWire), sin contraseña.",
+      "switched": "Auriculares conectados al mando: su sonido ahora es estéreo. Vuelve al altavoz cuando los desconectes.",
+      "undone": "De vuelta al perfil de sonido del altavoz hasta que desconectes los auriculares.",
+      "nothingToUndo": "Nada que deshacer: los auriculares se desconectaron o el perfil de sonido cambió desde entonces.",
+      "dontSwitch": "No cambiar automáticamente",
+      "windowsStereo": "Auriculares en Windows: pon el mando en Estéreo",
+      "windowsStereoInfo": "Windows configura el mando como un dispositivo de 4 canales (Cuadrafónico). Los juegos con sonido envolvente envían entonces sus sonidos traseros a los canales 3 y 4, que mueven la retroalimentación háptica: los agarres zumban y esos sonidos faltan en tus auriculares. Ponlo en Estéreo una vez: Configuración → Sistema → Sonido → Más configuraciones de sonido → pestaña Reproducción → Altavoces (DualSense Wireless Controller) → Configurar → Canales de audio: Estéreo → Siguiente hasta Finalizar."
     }
   },
   "ad": {

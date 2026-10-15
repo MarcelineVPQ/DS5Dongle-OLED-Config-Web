@@ -26,7 +26,46 @@ export const sdlVarForcing = (key: string, value: string) => SDL_FORCING_VARS.in
 export interface AudioCard {
   name: string;
   activeProfile: string;
-  hifiProfile: string | null; // exact profile name to switch back to
+  // exact profile name to switch back to from pro-audio: jack-aware (the
+  // stereo headphones profile while a headset is plugged in, else the speaker's)
+  hifiProfile: string | null;
+  profiles: string[]; // every profile's name, in pactl's order
+  // The jack, from the ports' availability (the kernel's jack controls,
+  // 6.17+): headphones plugged in, a headset microphone plugged in; null when
+  // the kernel doesn't report it ("availability unknown").
+  headphones: boolean | null;
+  headsetMic: boolean | null;
+}
+
+// A port's availability as pactl prints it: "…, available)", "…, not
+// available)" or "…availability unknown)".
+function portAvailable(ports: string, port: string): boolean | null {
+  const line = new RegExp(`^\\s*\\[(?:In|Out)\\] ${port}: .*$`, "m").exec(ports)?.[0];
+  if (!line || /availability unknown\)\s*$/.test(line)) return null;
+  if (/not available\)\s*$/.test(line)) return false;
+  return /available\)\s*$/.test(line) ? true : null;
+}
+
+// The UCM's HiFi profiles are named after their devices: "HiFi (Mic, Speaker)"
+// (mono, on the speaker's channel), "HiFi (Headphones, Mic)" and
+// "HiFi (Headphones, Headset)" (stereo; with the headset's microphone).
+export const isSpeakerProfile = (profile: string) => /^HiFi\b.*\bSpeaker\b/.test(profile);
+export const isHeadphonesProfile = (profile: string) => /^HiFi\b.*\bHeadphones\b/.test(profile);
+
+/** The stereo profile for a headset in the jack: with its microphone when the
+ * headset has one, else with the controller's own; null when the card has
+ * neither. */
+export function stereoProfile(card: Pick<AudioCard, "profiles" | "headsetMic">): string | null {
+  const headphones = card.profiles.filter(isHeadphonesProfile);
+  const withMic = headphones.find((p) => /\bHeadset\b/.test(p));
+  const builtInMic = headphones.find((p) => /\bMic\b/.test(p));
+  return (card.headsetMic ? (withMic ?? builtInMic) : (builtInMic ?? withMic)) ?? null;
+}
+
+/** The speaker profile with the controller's own microphone (the card's default). */
+export function speakerProfile(card: Pick<AudioCard, "profiles">): string | null {
+  const speaker = card.profiles.filter(isSpeakerProfile);
+  return speaker.find((p) => /\bMic\b/.test(p)) ?? speaker[0] ?? null;
 }
 
 // Parse `pactl list cards` (C locale) for the DualSense card(s).
@@ -36,9 +75,16 @@ export function parseDualSenseCards(text: string): AudioCard[] {
     const name = /^\s*Name: (\S+)/m.exec(block)?.[1];
     if (!name || !DS5_CARD.test(name)) continue;
     const activeProfile = /^\s*Active Profile: (.+)$/m.exec(block)?.[1]?.trim() ?? "";
-    const profiles = /^\s*Profiles:\n([\s\S]*?)^\s*Active Profile:/m.exec(block)?.[1] ?? "";
-    const hifiProfile = /^\s*(HiFi[^:]*):/m.exec(profiles)?.[1]?.trim() ?? null;
-    cards.push({ name, activeProfile, hifiProfile });
+    const profileBlock = /^\s*Profiles:\n([\s\S]*?)^\s*Active Profile:/m.exec(block)?.[1] ?? "";
+    // loop: NOT-WORTH — a card's profiles, about 6; once per check
+    const profiles = [...profileBlock.matchAll(/^\s*([^:\n]+?): /gm)].map((m) => m[1].trim());
+    const ports = /^\s*Ports:\n([\s\S]*)$/m.exec(block)?.[1] ?? "";
+    const headphones = portAvailable(ports, "Headphones");
+    const headsetMic = portAvailable(ports, "Headset");
+    const jack = { profiles, headsetMic };
+    // loop: NOT-WORTH — a card's profiles, about 6; once per check
+    const hifiProfile = (headphones ? stereoProfile(jack) : null) ?? speakerProfile(jack) ?? profiles.find((p) => /^HiFi\b/.test(p)) ?? null;
+    cards.push({ name, activeProfile, hifiProfile, profiles, headphones, headsetMic });
   }
   return cards;
 }
@@ -171,6 +217,41 @@ export async function restartWirePlumber(): Promise<void> {
 export async function setCardProfile(card: string, profile: string): Promise<void> {
   if (!DS5_CARD.test(card)) throw new Error("Not a DualSense audio card.");
   await run("pactl", ["set-card-profile", card, profile], { timeout: 5000 });
+}
+
+// ---- The controller's sound nodes (the stereo headset profile, headsetProfile.ts) ----
+// A profile switch replaces the card's sink and source with new nodes
+// ("alsa_output.<card>.HiFi__Speaker__sink" becomes "…HiFi__Headphones__sink"),
+// so the default output and input, if they were the controller's, move along.
+
+export type NodeKind = "sink" | "source";
+
+/** The card's own nodes' name prefix: "alsa_card.X" → "alsa_output.X." / "alsa_input.X.". */
+export const cardNodePrefix = (card: string, kind: NodeKind) => `${kind === "sink" ? "alsa_output" : "alsa_input"}.${card.replace(/^alsa_card\./, "")}.`;
+
+/** Names from `pactl list short sinks|sources` (monitors left out). */
+export function parseShortNodes(text: string): string[] {
+  // loop: NOT-WORTH — the PC's sinks or sources, a handful; per profile switch
+  return text
+    .split("\n")
+    .map((line) => line.split("\t")[1] ?? "")
+    .filter((name) => name && !name.endsWith(".monitor"));
+}
+
+const pactlC = (args: string[]) => run("pactl", args, { env: { ...process.env, LC_ALL: "C" }, timeout: 5000 });
+
+export async function listNodes(kind: NodeKind): Promise<string[]> {
+  return parseShortNodes((await pactlC(["list", "short", `${kind}s`])).stdout);
+}
+
+export async function defaultNode(kind: NodeKind): Promise<string> {
+  return (await pactlC([`get-default-${kind}`])).stdout.trim();
+}
+
+export async function setDefaultNode(kind: NodeKind, name: string): Promise<void> {
+  // Only ever one of the controller's own nodes.
+  if (!DS5_CARD.test(name.replace(/^alsa_(output|input)\./, "alsa_card."))) throw new Error("Not a DualSense sound node.");
+  await pactlC([`set-default-${kind}`, name]);
 }
 
 // ---- The controller's hardware volume and microphone gain (ALSA) ----

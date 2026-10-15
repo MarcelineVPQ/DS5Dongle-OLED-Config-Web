@@ -25,6 +25,9 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   hdrLighting: false,
   updateChannel: "stable",
   controllerVolumeFull: false,
+  // Linux: stereo while a headset is in the controller's jack (headsetProfile.ts).
+  headsetStereo: true,
+  headsetStereoExplained: false,
   devFakeGames: false,
 };
 
@@ -42,6 +45,8 @@ const SettingsFile = z.object({
   hdrLighting: z.boolean().optional(),
   updateChannel: z.enum(["stable", "dev"]).optional(),
   controllerVolumeFull: z.boolean().optional(),
+  headsetStereo: z.boolean().optional(),
+  headsetStereoExplained: z.boolean().optional(),
   devFakeGames: z.boolean().optional(),
 });
 
@@ -58,6 +63,7 @@ export const SettingUpdate = z.discriminatedUnion("key", [
   z.strictObject({ key: z.literal("hardwareAcceleration"), value: z.boolean() }),
   z.strictObject({ key: z.literal("hdrLighting"), value: z.boolean() }),
   z.strictObject({ key: z.literal("updateChannel"), value: z.enum(["stable", "dev"]) }),
+  z.strictObject({ key: z.literal("headsetStereo"), value: z.boolean() }),
 ]);
 
 export function settingsPath(): string {

@@ -92,6 +92,15 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // The drawing's live input isn't shown on the Pico 2 W page: no polling there.
   const dongleView = view === "dongle";
   const input = useLiveInput(client, on && liveCapable && !dongleView);
+  // Linux, where the kernel doesn't report the controller's jack: the live
+  // input's headset bit stands in for the stereo headset profile (headsetProfile.ts).
+  const headphones = input ? input.headphones : null;
+  // lifetime: OK — acquires nothing (one message per change; "not known" again at unmount)
+  useEffect(() => {
+    if (window.desktop?.platform !== "linux") return;
+    window.desktop.setHeadsetHint(headphones);
+    return () => window.desktop?.setHeadsetHint(null);
+  }, [headphones]);
   const liveLightbar = useLiveLightbar(client, on && liveCapable && !dongleView);
   // The controller's power, decided once for the tile, Controller info and the
   // status line: from the live input (with its cable bit) when polled, else

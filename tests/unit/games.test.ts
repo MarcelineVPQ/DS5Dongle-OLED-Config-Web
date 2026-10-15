@@ -334,7 +334,14 @@ describe("Games safety helpers", () => {
   it("reads the DualSense card's profile and spots pro-audio rules", () => {
     const pactl = `Card #1\n\tName: alsa_card.usb-Generic-00\n\tProfiles:\n\t\tHiFi: Default\n\tActive Profile: HiFi\nCard #2\n\tName: alsa_card.usb-Sony_Interactive_Entertainment_DualSense_Wireless_Controller_ABC-00\n\tProfiles:\n\t\toff: Off\n\t\tHiFi (Mic, Speaker): Default (sinks: 1)\n\t\tpro-audio: Pro Audio\n\tActive Profile: pro-audio\n`;
     expect(parseDualSenseCards(pactl)).toEqual([
-      { name: "alsa_card.usb-Sony_Interactive_Entertainment_DualSense_Wireless_Controller_ABC-00", activeProfile: "pro-audio", hifiProfile: "HiFi (Mic, Speaker)" },
+      {
+        name: "alsa_card.usb-Sony_Interactive_Entertainment_DualSense_Wireless_Controller_ABC-00",
+        activeProfile: "pro-audio",
+        hifiProfile: "HiFi (Mic, Speaker)",
+        profiles: ["off", "HiFi (Mic, Speaker)", "pro-audio"],
+        headphones: null,
+        headsetMic: null,
+      },
     ]);
     expect(forcesProAudio('matches = [{ device.name = "~alsa_card.usb-Sony_Interactive_Entertainment_DualSense.*" }]\nactions = { update-props = { device.profile = "pro-audio" } }')).toBe(true);
     expect(forcesProAudio('# device.profile = "pro-audio" for the DualSense (disabled)\n')).toBe(false);

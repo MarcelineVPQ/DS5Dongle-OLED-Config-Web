@@ -3,6 +3,7 @@
 // Clicking a part of the drawing opens its section (ControllerView); the
 // section bodies are functions, so a folded section renders nothing and its
 // polls (the level meters, the slot list) and tests stop.
+import { HeadsetStereo } from "./HeadsetStereo";
 import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick } from "lucide-react";
 import Calibration from "./Calibration";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
@@ -96,6 +97,7 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
         {() => (
           <>
             <SpeakerSection bridge={bridge} />
+            <HeadsetStereo />
             <LevelMeter bridge={bridge} which="speaker" />
             <SpeakerTest />
           </>

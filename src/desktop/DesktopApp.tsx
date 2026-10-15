@@ -32,6 +32,7 @@ import { MAIN_BLOCKS, SECTIONS } from "./accordion/sections";
 import { revealBlock } from "./accordion/MainBlock";
 import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import RecoveredNotice from "./RecoveredNotice";
+import HeadsetNotice from "./HeadsetNotice";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { waitingCount } from "./pages/GamesPage";
@@ -388,6 +389,7 @@ export default function DesktopApp() {
               )}
               <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
               <RecoveredNotice />
+              <HeadsetNotice />
               {mainNotice && (
                 <Notice pinned role="status" onDismiss={() => setMainNotice(null)}>
                   <span>{mainNotice}</span>

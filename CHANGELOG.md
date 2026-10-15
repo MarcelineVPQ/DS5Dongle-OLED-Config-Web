@@ -6,7 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Stereo when a headset goes in (Linux).** Linux plays the controller's sound on its speaker profile, in mono, even with a headset in the headset jack. Now the app switches the controller's sound to stereo when you plug a headset into the controller (with the headset's microphone when it has one) and back to the speaker when you unplug it; your default output and input follow. It never switches over pro-audio, or over a profile you picked yourself while the headset was in. The first time, a notice says what happened, with **Undo** and **Don't switch automatically**; the switch is in Controller → Speaker (on by default). It uses your own sound settings (PipeWire's `pactl`): no system file, no password. All 7 languages.
+- **Stereo on Windows: how to set it.** Windows sets the controller up as a 4-channel (Quadraphonic) device, so games with surround sound send their rear sounds to the haptic feedback: the grips buzz and your headset misses those sounds. Controller → Speaker on Windows says how to set it to Stereo (behind its ⓘ), and so does the Guide. All 7 languages.
+
 ### Fixed
+
+- **The Games fix that switches the controller back from pro-audio can be undone, and knows about a headset (Linux).** It now writes a restore point like every other change, so Undo in Change history puts the old profile back; and with a headset plugged in it switches to the stereo headset profile instead of the speaker's.
+- **The audio buffer can't be set low enough to garble the speaker.** Its least is now 32 (below 28 the speaker breaks up, upstream #252), matching the coming firmware; a board or a game profile saved with 16–31 by an older version shows and saves as 32.
 
 - **No "press the PS button" once the controller is back.** After a firmware update, the notice asked you to press PS to reconnect even with the controller already connected (it usually reconnects as the board comes back). It now asks only while no controller is connected; once one is, a short "Firmware updated to …" confirmation shows and clears itself. All 7 languages.
 

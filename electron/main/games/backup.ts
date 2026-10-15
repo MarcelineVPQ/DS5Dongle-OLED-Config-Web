@@ -64,6 +64,11 @@ const ManifestSchema = z.object({
     .max(8)
     .optional(),
   mixerSaved: z.boolean().optional(), // those levels were also saved as ALSA's saved state (Undo saves the old ones back)
+  // The controller's sound card profile, switched by the change (pactl): Undo switches it back to `from`.
+  profile: z
+    .array(z.object({ card: z.string().max(300), from: z.string().max(200), to: z.string().max(200) }))
+    .max(8)
+    .optional(),
   files: z.array(
     z.object({
       path: z.string(),
@@ -76,6 +81,7 @@ const ManifestSchema = z.object({
 });
 export type BackupManifest = z.infer<typeof ManifestSchema>;
 export type Mixer = NonNullable<BackupManifest["mixer"]>;
+export type ProfileSwitch = NonNullable<BackupManifest["profile"]>[number];
 
 // What the page lists (api.ts GameBackup), plus whether it was undone.
 export interface BackupSummary extends GameBackup {
@@ -165,7 +171,7 @@ export class Backups {
   constructor(private readonly dir: string) {}
 
   // Snapshot `files`, then run `write`. If writing throws, everything is rolled back.
-  run(changes: Msg[], files: BackupFile[], write: () => void, after: string[] = [], mixer: Mixer = []): string {
+  run(changes: Msg[], files: BackupFile[], write: () => void, after: string[] = [], mixer: Mixer = [], profile: ProfileSwitch[] = []): string {
     const stamp = new Date()
       .toISOString()
       .replace(/[-:]/g, "")
@@ -184,6 +190,7 @@ export class Backups {
         changes,
         after,
         ...(mixer.length ? { mixer } : {}),
+        ...(profile.length ? { profile } : {}),
         files: unique.map(({ path, owner }, i) => {
           if (!existsSync(path)) return { path, owner, backup: null };
           const backup = `${i}.orig`;
