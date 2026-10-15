@@ -192,7 +192,7 @@ html[data-theme="dark"] .dk {
   border-radius: var(--dk-radius);
   border: 1px solid var(--notice-warn-bd);
   background: var(--notice-warn-bg);
-  color: var(--text-warning);
+  color: var(--notice-warn-text);
 }
 .dk-notice.error {
   border-color: var(--notice-error-bd);
@@ -1561,7 +1561,7 @@ html[data-theme="light"] .live-ctl {
   background: var(--cv-good, var(--dk-accent));
 }
 .mic-vu i[data-lit][data-zone="warn"] {
-  background: var(--cv-warn, var(--text-warning));
+  background: var(--status-warn);
 }
 .mic-vu i[data-lit][data-zone="bad"] {
   background: var(--cv-bad, var(--text-error));
@@ -4764,7 +4764,7 @@ main.dk-body:focus:not(:focus-visible),
   margin-right: 6px;
 }
 .dk-sec-status.warn {
-  color: var(--text-warning);
+  color: var(--text-warn);
 }
 .dk-sec-chev {
   flex: none;

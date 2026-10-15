@@ -248,7 +248,15 @@ export function SplitView({
       <button type="button" className="dk-btn dk-icon-btn dk-split-show" onClick={show} title={t("desktop.accordion.showPanel")} aria-label={t("desktop.accordion.showPanel")}>
         <PanelRightOpen size={14} />
       </button>
-      <aside ref={setPanel} className="dk-split-panel" aria-label={typeof title === "string" ? title : undefined} onKeyDown={(e) => e.key === "Escape" && narrow() && hide()}>
+      {/* Hidden: display none (wide) or the closed drawer, still laid out
+          off-screen under visibility hidden (narrow); said hidden in both. */}
+      <aside
+        ref={setPanel}
+        className="dk-split-panel"
+        aria-label={typeof title === "string" ? title : undefined}
+        aria-hidden={hidden || undefined}
+        onKeyDown={(e) => e.key === "Escape" && narrow() && hide()}
+      >
         <header className="dk-split-head">
           <div className="dk-split-titles">
             <h2 tabIndex={-1}>{title}</h2>
