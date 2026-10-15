@@ -135,3 +135,13 @@ export function lutrisWineBuilds(install: LutrisInstall): string[] {
     return [];
   }
 }
+
+// Every Wine/Proton build Lutris can run a game with (the game page's
+// picker), by the name Lutris stores in wine.version: its own runners/wine
+// builds, and for the native Lutris also Steam's (`steamNames`). Proton builds
+// run through umu, so they're offered only when umu is there.
+export function lutrisBuilds(install: LutrisInstall, steamNames: string[]): string[] {
+  // loop: NOT-WORTH — builds in Lutris' runner folder, a stat each; once per scan
+  const own = lutrisWineBuilds(install).filter((d) => install.umu || !existsSync(join(install.wineDir, d, "proton")));
+  return [...new Set([...own, ...(install.flatpak || !install.umu ? [] : steamNames)])];
+}

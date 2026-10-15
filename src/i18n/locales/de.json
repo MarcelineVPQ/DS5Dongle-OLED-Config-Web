@@ -510,7 +510,9 @@
           "modeSteam": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Die Startoptionen werden zu: {{args}}{{proton}}",
           "modeHeroic": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Spielargumente in Heroic werden zu: {{args}}{{proton}}",
           "modeLutris": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Seine Argumente in Lutris werden zu: {{args}}{{proton}}",
-          "modeVkd3d": " Unter Proton läuft DirectX 12 über vkd3d-proton, daher können die ersten Starts länger dauern, während Shader erstellt werden."
+          "modeVkd3d": " Unter Proton läuft DirectX 12 über vkd3d-proton, daher können die ersten Starts länger dauern, während Shader erstellt werden.",
+          "protonPick": "{{game}} läuft dann mit {{proton}} statt mit {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} folgt bisher dem Steam-Standard: Hat es eine Linux-Version, startet Steam stattdessen die Windows-Version mit diesem Proton."
         },
         "unlock": {
           "rayTracing": "Raytracing",
@@ -876,6 +878,14 @@
       "anyProton": "Beliebiges aktuelles Proton",
       "usesOurs": "Nutzt den DualSense-Proton-Build.",
       "switchTo": "Zu {{name}} wechseln",
+      "protonPick": "Proton-Version",
+      "protonPickInfo": "Alle Proton- und Wine-Builds, mit denen der Launcher des Spiels es starten kann. Ein Wechsel ändert die eigene Einstellung des Spiels im Launcher (vorher gesichert), Rückgängig stellt die alte wieder her.",
+      "protonRecommended": "{{name}} (empfohlen)",
+      "protonCurrent": "{{name}} (aktuell)",
+      "protonBoth": "{{name}} (empfohlen, aktuell)",
+      "protonGone": "⚠ {{name}} (nicht installiert)",
+      "protonSwitched": "Zu {{name}} gewechselt. Das Spiel nutzt es ab dem nächsten Start.",
+      "protonUndone": "Rückgängig gemacht: Das Spiel nutzt wieder die vorherige Version.",
       "tier": {
         "verified": "Geprüft",
         "works": "Läuft",
@@ -1096,7 +1106,9 @@
       },
       "development": "Entwicklung",
       "devHint": "Ein Entwicklungs-Build: neuer als die stabile Version und weniger getestet",
-      "again": "erneut klicken, um die Einstellungen ein- oder auszublenden"
+      "again": "erneut klicken, um die Einstellungen ein- oder auszublenden",
+      "lock": "Leiste schmal sperren (nur Symbole)",
+      "unlock": "Leiste entsperren (sie öffnet sich wieder beim Daraufzeigen)"
     },
     "audioTest": {
       "speakerTitle": "Lautsprechertest",
@@ -1748,7 +1760,14 @@
       "buttonsChanged_one": "{{count}} Taste geändert",
       "buttonsChanged_other": "{{count}} Tasten geändert",
       "slotActive": "Slot {{slot}} aktiv",
-      "moreInDiagnostics": "Mehr in Diagnose"
+      "moreInDiagnostics": "Mehr in Diagnose",
+      "menu": "Feldoptionen",
+      "collapseAll": "Alle einklappen",
+      "collapseAllTip": "Jeden Abschnitt einklappen, auch angeheftete (sie bleiben angeheftet und öffnen beim nächsten Mal wieder)",
+      "nothingOpen": "Alle Abschnitte sind schon eingeklappt",
+      "clearPins": "Anheftungen lösen",
+      "clearPinsTip": "Alle angehefteten Abschnitte dieser Seite lösen",
+      "noPins": "Keine angehefteten Abschnitte auf dieser Seite"
     },
     "sections": {
       "lightbar": "Leuchtleiste",

@@ -11,7 +11,7 @@ import i18n from "../../src/i18n";
 import GamePage from "../../src/desktop/library/GamePage";
 import { setupStatus } from "../../src/desktop/library/setupStatus";
 import { hdrGameReqs } from "../../src/desktop/games/hdrSetup";
-import type { GameEntry, HdrSystem } from "../../src/desktop/games/types";
+import type { Fix, GameEntry, HdrSystem } from "../../src/desktop/games/types";
 import { fakeBridge, fakeDesktop, gamesReport, ghostrunner, ghostrunnerNeedsSetup, GHOSTRUNNER_INFO, GHOSTRUNNER_RECORD, HDR_NO_LAYER, HDR_READY, OUR_PROTON } from "../support/gamePage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -331,6 +331,125 @@ describe("rating: how well the DualSense works in this game", () => {
     for (const lng of ["en", "de", "fr", "es", "pt-BR", "zh-CN", "ja"]) {
       expect(i18n.exists("desktop.library.rateTitle", { lng })).toBe(true);
       for (const n of [1, 2, 3, 4, 5]) expect(i18n.exists(`desktop.library.rateLabel.${n}`, { lng })).toBe(true);
+    }
+  });
+});
+
+describe("Compatibility: the Proton version picker (Linux)", () => {
+  const PICK_ID = "steam-0000abcd:proton:1997030:0a0b0c0d";
+  const pickFix: Fix = {
+    id: PICK_ID,
+    kind: "set-proton",
+    launcher: "steam",
+    label: { key: "label.runner", params: { game: "Ghostrunner", proton: "Proton 9.0" } },
+    why: { key: "why.protonPick", params: { game: "Ghostrunner", proton: "Proton 9.0", current: OUR_PROTON, note: "" } },
+    files: ["~/.local/share/Steam/config/config.vdf"],
+    recommended: false,
+  };
+  const withPicker = () =>
+    ghostrunner({
+      protons: [
+        { name: OUR_PROTON, recommended: true, current: true },
+        { name: "Proton 9.0", recommended: false, current: false, fix: pickFix },
+      ],
+    });
+  // Steam runs: the page says it'll close and reopen it before anything is written.
+  function renderPicker(game: GameEntry, calls: string[]) {
+    const base = fakeDesktop("linux");
+    const desktop = new Proxy(base, {
+      get: (t, p: string) =>
+        p === "gamesRunningLaunchers"
+          ? () => Promise.resolve(["steam"])
+          : p === "gamesApply"
+            ? (r: { fixIds: string[]; restart: string[] }) => (
+                calls.push(`apply ${r.fixIds.join(",")} restart=${r.restart.join(",")}`),
+                Promise.resolve({ applied: [{ id: r.fixIds[0], ok: true }], backupId: "b1", blockedBy: [] })
+              )
+            : p === "gamesUndo"
+              ? (r: { backupId: string; restart: string[] }) => (calls.push(`undo ${r.backupId} restart=${r.restart.join(",")}`), Promise.resolve({ ok: true, restored: [] }))
+              : t[p],
+    });
+    vi.stubGlobal("desktop", desktop);
+    act(() =>
+      root!.render(
+        createElement(GamePage, {
+          game,
+          info: GHOSTRUNNER_INFO,
+          record: GHOSTRUNNER_RECORD,
+          running: false,
+          report: gamesReport(game),
+          bridge: fakeBridge(),
+          onLibrary: () => undefined,
+          onRescan: () => undefined,
+        }),
+      ),
+    );
+  }
+  const settle = () => act(async () => undefined);
+  const button = (body: HTMLElement, text: string) => [...body.querySelectorAll("button")].find((b) => b.textContent === text)!;
+
+  it("lists the builds with ours recommended, says the launcher restart first, applies, and undoes in place", async () => {
+    const calls: string[] = [];
+    renderPicker(withPicker(), calls);
+    const compat = open("compatibility");
+    await settle();
+    const select = compat.querySelector<HTMLSelectElement>("select")!;
+    expect(select.getAttribute("aria-label")).toBe(i18n.t("desktop.library.protonPick"));
+    expect([...select.options].map((o) => o.textContent)).toEqual([i18n.t("desktop.library.protonBoth", { name: OUR_PROTON }), "Proton 9.0"]);
+    // On the current build: nothing to apply.
+    expect(button(compat, i18n.t("desktop.library.switchTo", { name: "Proton 9.0" }))).toBeUndefined();
+
+    act(() => {
+      select.value = "Proton 9.0";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await settle();
+    expect(compat.textContent).toContain(`Ghostrunner will run with Proton 9.0 instead of ${OUR_PROTON}.`);
+    expect(compat.textContent).toContain("~/.local/share/Steam/config/config.vdf");
+    // First press: Steam's close and reopen is said; nothing is written yet.
+    await act(async () => button(compat, i18n.t("desktop.library.switchTo", { name: "Proton 9.0" })).click());
+    expect(compat.textContent).toContain(i18n.t("desktop.games.willRestart", { launcher: "Steam" }));
+    expect(calls).toEqual([]);
+    await act(async () => button(compat, i18n.t("desktop.library.switchTo", { name: "Proton 9.0" })).click());
+    expect(calls).toEqual([`apply ${PICK_ID} restart=steam`]);
+    expect(compat.textContent).toContain(i18n.t("desktop.library.protonSwitched", { name: "Proton 9.0" }));
+
+    // Undo: said first too, then undone with the same launcher named.
+    await act(async () => button(compat, i18n.t("desktop.games.undoShort")).click());
+    expect(compat.textContent).toContain(i18n.t("desktop.games.willRestartUndo", { launcher: "Steam" }));
+    expect(calls).toHaveLength(1);
+    await act(async () => button(compat, i18n.t("desktop.games.undoShort")).click());
+    expect(calls[1]).toBe("undo b1 restart=steam");
+    expect(compat.textContent).toContain(i18n.t("desktop.library.protonUndone"));
+    expect(button(compat, i18n.t("desktop.games.undoShort"))).toBeUndefined();
+  });
+
+  it("Cancel puts the picker back on the current build", async () => {
+    renderPicker(withPicker(), []);
+    const compat = open("compatibility");
+    const select = compat.querySelector<HTMLSelectElement>("select")!;
+    act(() => {
+      select.value = "Proton 9.0";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    act(() => button(compat, i18n.t("desktop.library.cancel")).click());
+    expect(select.value).toBe(OUR_PROTON);
+    expect(compat.textContent).not.toContain("instead of");
+  });
+
+  it("no picker without builds to switch to (and none on Windows, where Compatibility isn't shown)", () => {
+    render(ghostrunner());
+    expect(open("compatibility").querySelector("select")).toBeNull();
+    render(withPicker(), HDR_READY, "win32");
+    expect(sectionIds()).not.toContain("compatibility");
+  });
+
+  it("every locale has the picker's words", () => {
+    // loop: NOT-WORTH — 7 languages in a test
+    for (const lng of ["en", "de", "es", "fr", "ja", "pt-BR", "zh-CN"]) {
+      for (const k of ["protonPick", "protonPickInfo", "protonRecommended", "protonCurrent", "protonBoth", "protonGone", "protonSwitched", "protonUndone"])
+        expect(i18n.exists(`desktop.library.${k}`, { lng }), `${lng} ${k}`).toBe(true);
+      for (const k of ["protonPick", "protonPickDefault"]) expect(i18n.exists(`desktop.games.msg.why.${k}`, { lng }), `${lng} ${k}`).toBe(true);
     }
   });
 });

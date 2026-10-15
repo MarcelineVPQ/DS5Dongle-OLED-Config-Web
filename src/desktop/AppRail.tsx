@@ -3,8 +3,13 @@
 // (closing right after a page is picked with the pointer);
 // pinned open it takes its full width. Ctrl+B pins/unpins. The bottom shows
 // the dongle's status (a colored dot plus a symbol, so it never relies on
-// color alone) and the pin.
-import { useEffect, useState, type ReactNode } from "react";
+// color alone), the pin, and in the bottom corner the lock: locked, the rail
+// stays collapsed (icons only; hover and keyboard focus no longer expand it),
+// so its icons are a quick way to show and hide the settings panel without
+// the rail opening and closing all the time. Pin and lock exclude each other
+// (keeping it open unlocks it; locking it unpins it). Both remembered.
+// Idle cost: none (CSS states; no timers or listeners added).
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { appVersionLabel, isDevelopmentBuild } from "./appVersion";
 import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
@@ -13,13 +18,14 @@ import { useFlagPref } from "./storage";
 import { lastBoardName } from "./hardwareName";
 import { useTranslation } from "react-i18next";
 import { protonApplies } from "./games/platform";
-import { Gamepad2, Info, Joystick, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
+import { Gamepad2, Info, Joystick, Lock, LockOpen, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Reminder } from "./notices";
 import { togglePanel } from "./accordion/Section";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
 const PIN_KEY = "ds5.railPinned";
+export const RAIL_LOCK_KEY = "ds5.railLocked";
 
 // Each rail item's name (the board's page is named after the board).
 export const railLabel = (t: TFunction, item: RailItem, device: string): string =>
@@ -59,7 +65,20 @@ interface Props {
 
 export default function AppRail({ active, onSelect, gamesSupported, reminders, connected, connecting, firmware, deviceLabel, device }: Props) {
   const { t } = useTranslation();
-  const [pinned, pin] = useFlagPref(PIN_KEY);
+  const [pinned, setPinned] = useFlagPref(PIN_KEY);
+  const [locked, setLocked] = useFlagPref(RAIL_LOCK_KEY);
+  // Kept open and locked collapsed exclude each other.
+  const pin = useCallback(
+    (on: boolean) => {
+      setPinned(on);
+      if (on) setLocked(false);
+    },
+    [setPinned, setLocked],
+  );
+  const lock = (on: boolean) => {
+    setLocked(on);
+    if (on) setPinned(false);
+  };
   const [glass] = useFlagPref(GLASS_KEY);
   // Clear glass while collapsed; the regular variant while open over content.
   const railRef = useGlass(glass, CLEAR_GLASS_RAIL, REGULAR_GLASS);
@@ -124,10 +143,11 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
         ? t("desktop.status.waiting")
         : t("desktop.status.waitingFirst");
   const pinLabel = pinned ? t("desktop.rail.collapse") : t("desktop.rail.pin");
+  const lockLabel = locked ? t("desktop.rail.unlock") : t("desktop.rail.lock");
 
   return (
     <div className={`rail-slot${pinned ? " pinned" : ""}`}>
-      <nav className={`app-rail${picked ? " picked" : ""}`} ref={railRef} aria-label={t("desktop.rail.label")} onPointerLeave={() => setPicked(false)}>
+      <nav className={`app-rail${picked ? " picked" : ""}${locked ? " locked" : ""}`} ref={railRef} aria-label={t("desktop.rail.label")} onPointerLeave={() => setPicked(false)}>
         <div className="rail-nav">
           {link("controller", <Gamepad2 size={20} />)}
           {link("dongle", <Usb size={20} />)}
@@ -156,6 +176,9 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
               {pinned ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
             </span>
             <span className="rail-label">{pinLabel}</span>
+          </button>
+          <button type="button" className="rail-lock" title={lockLabel} aria-label={lockLabel} aria-pressed={locked} onClick={() => lock(!locked)}>
+            {locked ? <Lock size={13} aria-hidden="true" /> : <LockOpen size={13} aria-hidden="true" />}
           </button>
         </div>
       </nav>

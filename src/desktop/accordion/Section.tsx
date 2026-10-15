@@ -20,13 +20,14 @@
 // Idle cost: none. Opening plays one height transition (CSS, interpolate-size)
 // and a deep link one flash (a CSS animation that ends); nothing repeats, and
 // reduce motion turns both off.
-import { createContext, useCallback, useContext, useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, PanelRightClose, PanelRightOpen, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsDownUp, EllipsisVertical, PanelRightClose, PanelRightOpen, PinOff, type LucideIcon } from "lucide-react";
 import { useFlagPref } from "../storage";
 import { reducedMotionNow } from "../motion";
 import type { Accordion as AccordionState } from "./useAccordion";
 import { InfoTip } from "../controls";
+import { useTopLayer } from "../topLayer";
 
 const AccordionContext = createContext<AccordionState | null>(null);
 
@@ -262,6 +263,7 @@ export function SplitView({
             <h2 tabIndex={-1}>{title}</h2>
             {sub && <span className="dk-split-sub">{sub}</span>}
           </div>
+          <PanelMenu state={state} />
           <button type="button" className="dk-btn dk-icon-btn" onClick={hide} title={t("desktop.accordion.hidePanel")} aria-label={t("desktop.accordion.hidePanel")}>
             <PanelRightClose size={14} />
           </button>
@@ -270,5 +272,109 @@ export function SplitView({
         <Accordion state={state}>{children}</Accordion>
       </aside>
     </div>
+  );
+}
+
+// The panel menu: the small ⋮ in every settings panel's header (SplitView, so
+// every page alike). Collapse all folds every section, pinned ones too (they
+// stay pinned and open again next visit); Clear pins removes this page's pins
+// (the controller page: this board and slot's). No "Expand all": every body
+// open at once would render and poll everything. An item with nothing to do
+// is disabled, its tooltip says why.
+//
+// Keyboard: Enter / Space / ↓ on the button opens it on the first item; ↑ ↓
+// Home End move between items, Escape or Tab closes it (Escape puts the focus
+// back on the button). A click outside closes it.
+// Idle cost: none (its listeners live only while it's open; no animation).
+function PanelMenu({ state }: { state: AccordionState }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  useTopLayer(menu, open, { anchor: button, align: "end", gap: 4 });
+  // lifetime: OK — cleanup: removes the outside-click listener (menu closes / unmount)
+  useEffect(() => {
+    if (!open) return;
+    menu.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+    const onDown = (e: PointerEvent) => {
+      const at = e.target as Node;
+      if (!menu.current?.contains(at) && !button.current?.contains(at)) setOpen(false);
+    };
+    // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+  const close = (focusButton: boolean) => {
+    setOpen(false);
+    if (focusButton) button.current?.focus();
+  };
+  const onMenuKeys = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation(); // not the drawer's Escape too
+      close(true);
+      return;
+    }
+    if (e.key === "Tab") return close(false);
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+    e.preventDefault();
+    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
+    const at = items.indexOf(document.activeElement as HTMLButtonElement);
+    const next = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (at + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+    items[next]?.focus();
+  };
+  const run = (action: () => void) => {
+    action();
+    close(true);
+  };
+  const label = t("desktop.accordion.menu");
+  return (
+    <>
+      <button
+        ref={button}
+        type="button"
+        className="dk-btn dk-icon-btn"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title={label}
+        aria-label={label}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && !open) {
+            e.preventDefault();
+            setOpen(true);
+          } else if (e.key === "Escape" && open) {
+            e.stopPropagation();
+            setOpen(false);
+          }
+        }}
+      >
+        <EllipsisVertical size={14} />
+      </button>
+      {open && (
+        <div ref={menu} className="dk-menu top-layer" role="menu" aria-label={label} onKeyDown={onMenuKeys}>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!state.anyOpen}
+            title={state.anyOpen ? t("desktop.accordion.collapseAllTip") : t("desktop.accordion.nothingOpen")}
+            onClick={() => run(state.collapseAll)}
+          >
+            <ChevronsDownUp size={14} aria-hidden="true" />
+            {t("desktop.accordion.collapseAll")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!state.hasPins}
+            title={state.hasPins ? t("desktop.accordion.clearPinsTip") : t("desktop.accordion.noPins")}
+            onClick={() => run(state.clearPins)}
+          >
+            <PinOff size={14} aria-hidden="true" />
+            {t("desktop.accordion.clearPins")}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
