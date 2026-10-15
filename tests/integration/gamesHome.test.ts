@@ -16,7 +16,7 @@ import { homeStatus } from "../../src/desktop/library/setupStatus";
 import { continueCount } from "../../src/desktop/library/ContinuePlaying";
 import type { GameInfo, GamesReport } from "../../src/desktop/games/types";
 import { fakeBridge, HDR_NO_LAYER, OUR_PROTON } from "../support/gamePage";
-import { homeDesktop, homeDetails, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
+import { HOME_BACKUP, homeDesktop, homeDetails, homeLibrary, homeReport, STEAM_DEFAULT_FIX, type HomeCase } from "../support/gamesHome";
 import { GLASS_KEY } from "../../src/desktop/glass/glassPref";
 import { revealSection } from "../../src/desktop/accordion/useAccordion";
 import { revealBlock } from "../../src/desktop/accordion/MainBlock";
@@ -174,6 +174,14 @@ describe("Games → Home, healthy", () => {
     expect(openIds()).toEqual(["history"]);
     await click($<HTMLButtonElement>('[data-section="history"] .dk-sec-toggle')!);
     expect($$(".dk-sec-body")).toHaveLength(0);
+  });
+
+  it("a backup that can't be read is listed as damaged, with its folder and no Undo (error pass E2)", async () => {
+    const damaged = { id: "20261015T123456Z-abcdef", created: "2026-10-15T12:34:56Z", changes: [], files: [], damaged: "~/.config/app/game-setup-backups/20261015T123456Z-abcdef" };
+    await render("healthy", homeReport("healthy"), { gamesBackups: () => Promise.resolve([HOME_BACKUP, damaged]) });
+    const history = await open("history");
+    expect(history.textContent).toContain(i18n.t("desktop.games.historyDamaged", { folder: damaged.damaged, interpolation: { escapeValue: false } }));
+    expect([...history.querySelectorAll("button")].filter((b) => b.textContent === i18n.t("desktop.games.undoShort"))).toHaveLength(1);
   });
 
   it("Rescan scans again", async () => {

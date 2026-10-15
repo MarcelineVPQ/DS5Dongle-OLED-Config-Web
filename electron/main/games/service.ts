@@ -354,7 +354,7 @@ export class GamesService {
   listBackups(): BackupSummary[] {
     if (!this.deps.allowed()) return [];
     // loop: NOT-WORTH — files of one backup set
-    return this.backups.list().map((b) => ({ ...b, files: b.files.map((f) => this.tilde(f)) }));
+    return this.backups.list().map((b) => ({ ...b, files: b.files.map((f) => this.tilde(f)), ...(b.damaged ? { damaged: this.tilde(b.damaged) } : {}) }));
   }
 
   private tilde(path: string): string {

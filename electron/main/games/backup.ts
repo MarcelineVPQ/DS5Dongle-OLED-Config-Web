@@ -94,6 +94,10 @@ export class UndoConflictError extends Error {
 
 export const BACKUP_ID = /^\d{8}T\d{6}Z-[0-9a-f]{6}$/;
 
+// When a set was made, from its id (20261015T123456Z-…): for a set whose
+// manifest can't be read.
+const createdOf = (id: string): string => id.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z.*$/, "$1-$2-$3T$4:$5:$6Z");
+
 const sha256 = (path: string): string | null => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : null);
 
 // Write the real file behind a symlink (dotfile managers link config files);
@@ -265,8 +269,8 @@ export class Backups {
           // loop: NOT-WORTH — files per backup set, a handful
           return [{ id, created: m.created, changes: m.changes ?? [{ key: "legacy", params: { text: m.description ?? "" } }], files: m.files.map((f) => f.path), restored: !!m.restored }];
         } catch {
-          // error: SWALLOWED — a backup whose manifest can't be read is left out of History, so its Undo silently disappears; list it as damaged instead (batch E2)
-          return [];
+          // error: SHOWN — desktop.games.historyDamaged (batch E2): listed in History as damaged, with its folder, instead of disappearing
+          return [{ id, created: createdOf(id), changes: [], files: [], restored: false, damaged: join(this.dir, id) }];
         }
       });
   }
@@ -296,7 +300,7 @@ export class Backups {
       try {
         m = this.manifest(id);
       } catch {
-        // error: NOT-WORTH — an unreadable backup is left for the user to inspect, not pruned (History: batch E2)
+        // error: NOT-WORTH — an unreadable backup is left for the user to inspect, not pruned (History lists it as damaged, desktop.games.historyDamaged)
         continue; // unreadable: leave it for the user to inspect
       }
       if (m.restored) continue;

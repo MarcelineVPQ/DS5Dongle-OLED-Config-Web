@@ -575,7 +575,8 @@
       "nothingToChange": "Nada que cambiar",
       "historyStatus_one": "{{count}} cambio · último el {{date}}",
       "historyStatus_other": "{{count}} cambios · último el {{date}}",
-      "historyNone": "Aún no hay cambios"
+      "historyNone": "Aún no hay cambios",
+      "historyDamaged": "Este cambio no se puede deshacer aquí: su copia de seguridad no se puede leer. La copia está en {{folder}}."
     },
     "setup": {
       "installing": "Instalando el firmware…",

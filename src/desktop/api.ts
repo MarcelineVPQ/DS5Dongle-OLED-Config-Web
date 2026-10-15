@@ -164,6 +164,7 @@ export interface GameBackup {
   created: string;
   changes: Msg[];
   files: string[];
+  damaged?: string; // its manifest can't be read: the set's folder (no Undo)
 }
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };

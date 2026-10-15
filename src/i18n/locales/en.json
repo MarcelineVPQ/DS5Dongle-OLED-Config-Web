@@ -574,7 +574,8 @@
       "nothingToChange": "Nothing to change",
       "historyStatus_one": "{{count}} change · last {{date}}",
       "historyStatus_other": "{{count}} changes · last {{date}}",
-      "historyNone": "No changes yet"
+      "historyNone": "No changes yet",
+      "historyDamaged": "This change can't be undone here: its backup can't be read. The backup is in {{folder}}."
     },
     "setup": {
       "installing": "Installing the firmware…",

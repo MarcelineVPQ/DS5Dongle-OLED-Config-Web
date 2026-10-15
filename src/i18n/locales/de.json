@@ -575,7 +575,8 @@
       "nothingToChange": "Nichts zu ändern",
       "historyStatus_one": "{{count}} Änderung · zuletzt {{date}}",
       "historyStatus_other": "{{count}} Änderungen · zuletzt {{date}}",
-      "historyNone": "Noch keine Änderungen"
+      "historyNone": "Noch keine Änderungen",
+      "historyDamaged": "Diese Änderung lässt sich hier nicht rückgängig machen: Ihre Sicherung ist nicht lesbar. Die Sicherung liegt in {{folder}}."
     },
     "setup": {
       "installing": "Firmware wird installiert…",

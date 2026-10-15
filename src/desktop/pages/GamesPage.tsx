@@ -676,10 +676,13 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                 {backups.map((b) => (
                   <li key={b.id}>
                     {/* loop: HOT-PATH-OK — a few changes per backup; Home render */}
-                    <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {b.changes.map(m).join("; ")}
-                    <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => setup.undo(b.id, "history")}>
-                      {t("desktop.games.undoShort", "Undo")}
-                    </BusyButton>
+                    <span className="dk-hint">{new Date(b.created).toLocaleString()}</span>{" "}
+                    {b.damaged ? t("desktop.games.historyDamaged", { folder: b.damaged, interpolation: { escapeValue: false } }) : b.changes.map(m).join("; ")}
+                    {!b.damaged && (
+                      <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => setup.undo(b.id, "history")}>
+                        {t("desktop.games.undoShort", "Undo")}
+                      </BusyButton>
+                    )}
                   </li>
                 ))}
               </ul>

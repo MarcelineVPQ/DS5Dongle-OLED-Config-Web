@@ -571,7 +571,8 @@
       "protonNewer": "{{name}} 可用",
       "nothingToChange": "无需更改",
       "historyStatus_other": "{{count}} 项更改 · 最近 {{date}}",
-      "historyNone": "暂无更改"
+      "historyNone": "暂无更改",
+      "historyDamaged": "此更改无法在此撤销：无法读取其备份。备份位于 {{folder}}。"
     },
     "setup": {
       "installing": "正在安装固件…",

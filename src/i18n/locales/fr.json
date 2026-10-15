@@ -575,7 +575,8 @@
       "nothingToChange": "Rien à changer",
       "historyStatus_one": "{{count}} changement · dernier le {{date}}",
       "historyStatus_other": "{{count}} changements · dernier le {{date}}",
-      "historyNone": "Aucun changement pour l'instant"
+      "historyNone": "Aucun changement pour l'instant",
+      "historyDamaged": "Cette modification ne peut pas être annulée ici : sa sauvegarde est illisible. La sauvegarde se trouve dans {{folder}}."
     },
     "setup": {
       "installing": "Installation du firmware…",
