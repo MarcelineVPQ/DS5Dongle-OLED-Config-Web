@@ -17,7 +17,8 @@ import { gamesSupported } from "../games/platform";
 import SwirlField from "./SwirlField";
 import { useWindowFocused, useWindowShown } from "../useWindowShown";
 import { useReducedMotion } from "../motion";
-import { PAN_MS, fadeProgress, panClock, panTransform } from "./backdropPan";
+import { fadeProgress, panClock, panTransform } from "./backdropPan";
+import { atNextTick, onFrameTick } from "../frameTick";
 import { logged } from "../../errorText";
 
 // The background: "default" (the swirl field, what a new install shows),
@@ -186,16 +187,23 @@ export default function ArtBackdrop({ colors }: { colors: ColorwayColors | null 
       if (f !== fade) el.style.setProperty("--bd-fade", (fade = f));
     };
     step();
-    // lifetime: OK — cleared in the effect cleanup; runs only while shown, focused and moving
-    const id = setInterval(step, PAN_MS);
-    return () => clearInterval(id);
+    // On the shared frame clock (frameTick.ts, every PAN_MS), so a readout
+    // that changes goes to the screen in the same frame as the next step.
+    // lifetime: OK — unsubscribed in the effect cleanup; runs only while shown, focused and moving
+    return onFrameTick(step);
   }, [art, still, moving]);
   // lifetime: OK — cleanup: clears the cycle timer; none while hidden, holding or with one game
   useEffect(() => {
     if (keys.length < 2 || !shown || hold) return;
-    // lifetime: OK — cleared in the effect cleanup; runs only while shown and focused with 2+ games
-    const id = setInterval(() => setPos((p) => ({ sig, prev: p.sig === sig ? p.i : -1, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length })), CYCLE_MS);
-    return () => clearInterval(id);
+    let cancel = () => undefined as unknown;
+    // The next game starts on a frame tick, with the pan's step (one frame for both).
+    const next = () => (cancel = atNextTick(() => setPos((p) => ({ sig, prev: p.sig === sig ? p.i : -1, i: ((p.sig === sig ? p.i : 0) + 1) % keys.length }))));
+    // lifetime: OK — cleared in the effect cleanup (with a switch still waiting for its tick); runs only while shown and focused with 2+ games
+    const id = setInterval(next, CYCLE_MS);
+    return () => {
+      clearInterval(id);
+      cancel();
+    };
   }, [sig, keys.length, shown, hold]);
   if (background === "off") return null;
   return (

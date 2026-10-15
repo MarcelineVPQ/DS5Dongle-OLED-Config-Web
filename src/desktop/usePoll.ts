@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { causeText } from "./shownError";
 import { useWindowShown } from "./useWindowShown";
 import { logged } from "../errorText";
+import { atNextTick } from "./frameTick";
 
 // The latest value in a ref (a read function the effects call without re-running).
 function useLatest<F>(fn: F) {
@@ -32,16 +33,20 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
     if (!running) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // A read's result goes to the screen on the next frame tick (frameTick.ts),
+    // in the same frame as the background's step, not in a frame of its own.
+    let pending = () => undefined as unknown;
     const tick = async () => {
       try {
         const next = await readRef.current();
-        if (!stopped) {
-          setValue(next);
-          setError(null);
-        }
+        if (!stopped)
+          pending = atNextTick(() => {
+            setValue(next);
+            setError(null);
+          });
       } catch (cause) {
         // error: SHOWN — english: returned as \`error\`, which the caller shows next to its readout
-        if (!stopped) setError(causeText(cause));
+        if (!stopped) pending = atNextTick(() => setError(causeText(cause)));
       }
       // lifetime: OK — self re-arming; cleared in the cleanup, stops once stopped is set
       if (!stopped) timer = setTimeout(tick, intervalMs);
@@ -50,6 +55,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
+      pending();
     };
   }, [running, intervalMs, readRef]);
 

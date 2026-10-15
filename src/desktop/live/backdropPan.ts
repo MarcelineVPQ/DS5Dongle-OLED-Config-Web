@@ -41,11 +41,33 @@ export function fadeProgress(ms: number): string {
 // A number for the transform, never "-0.000".
 const fixed = (v: number, digits: number) => (Math.abs(v) < 0.5 * 10 ** -digits ? 0 : v).toFixed(digits);
 
-// The transform `seconds` into the motion (alternating legs).
-export function panTransform(seconds: number): string {
+// Where the motion is `seconds` in (alternating legs): the zoom and the
+// shift in % of the layer's size, as CSS "scale(scale) translate(x%, y%)"
+// applies them (about the layer's center).
+export interface Pan {
+  scale: number;
+  x: number;
+  y: number;
+}
+export const NO_PAN: Pan = { scale: 1, x: 0, y: 0 };
+export function panAt(seconds: number): Pan {
   const leg = (Math.max(0, seconds) / PERIOD_S) % 2;
   const e = easeInOut(leg < 1 ? leg : 2 - leg);
-  return `scale(${fixed(1 + 0.12 * e, 4)}) translate(${fixed(-2 + 4 * e, 3)}%, ${fixed(-1 + 2.5 * e, 3)}%)`;
+  return { scale: 1 + 0.12 * e, x: -2 + 4 * e, y: -1 + 2.5 * e };
+}
+
+// The transform `seconds` into the motion, for the art layers' CSS.
+export function panTransform(seconds: number): string {
+  const p = panAt(seconds);
+  return `scale(${fixed(p.scale, 4)}) translate(${fixed(p.x, 3)}%, ${fixed(p.y, 3)}%)`;
+}
+
+// The same motion drawn inside a picture instead of by a CSS transform (the
+// swirl field: its shader takes it as a uniform, so a step changes only the
+// canvas's pixels and the page's layers are never re-laid out for it): the
+// point of the unmoved picture (0..1, y down) shown at (x, y) of the layer.
+export function panSource(x: number, y: number, p: Pan): [number, number] {
+  return [(x - 0.5) / p.scale - p.x / 100 + 0.5, (y - 0.5) / p.scale - p.y / 100 + 0.5];
 }
 
 // One clock for the art and the swirls, kept across remounts and pauses, so

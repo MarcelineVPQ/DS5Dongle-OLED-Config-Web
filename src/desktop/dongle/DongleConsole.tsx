@@ -12,6 +12,7 @@ import { SCREEN_NAMES } from "../../oled/screenNames";
 import { logged } from "../../errorText";
 import { causeText } from "../shownError";
 import OledPad, { type OledPadProps } from "./OledPad";
+import { atNextTick } from "../frameTick";
 
 const FB_W = 128;
 const FB_H = 64;
@@ -143,6 +144,9 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
     // cache: OK — key=none (the frame shown now); invalidated=each changed read; bound=1 entry
     let last: OledFrame | null = null;
     let changes = 0;
+    // A changed picture goes to the screen on the next frame tick
+    // (frameTick.ts), in the same frame as the background's step.
+    let pending = () => undefined as unknown;
     const tick = async () => {
       let wait = FRAME_MS;
       try {
@@ -151,9 +155,13 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
         if (f) {
           if (f !== last) {
             last = f;
-            setShown({ frame: f, changes: ++changes });
-          }
-          setError(false);
+            const next = { frame: f, changes: ++changes };
+            pending();
+            pending = atNextTick(() => {
+              setShown(next);
+              setError(false);
+            });
+          } else setError(false);
         } else {
           setError(true);
           wait = RETRY_MS;
@@ -172,6 +180,7 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
     return () => {
       live = false;
       clearTimeout(timer);
+      pending();
     };
   }, [client, enabled]);
   return { frame: client ? (shown?.frame ?? null) : null, changes: shown?.changes ?? 0, error };
