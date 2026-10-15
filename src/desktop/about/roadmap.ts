@@ -433,6 +433,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "The everyday levels (haptic feedback, speaker, microphone, light bar) as sliders together in one place on the Controller page.",
     areas: ["controller"],
   },
+  { column: "planned", title: "Share your OLED", text: "Save what the OLED shows as a crisp picture or a short animation, ready for Discord or your own posts.", areas: ["dongle"] },
   { column: "ideas", title: "Lock the rail collapsed", text: "A small lock in the rail's corner keeps the rail small, icons only, so it no longer opens when you point at it.", areas: ["app"] },
   { column: "ideas", title: "What the app stands for", text: "A short page in About about how the app is built: light on your PC, private, signed updates, free for everyone.", areas: ["app"] },
   { column: "ideas", title: "Controller plugins", text: "A way for others to add support for their own controllers to the app.", areas: ["controller", "community"] },
