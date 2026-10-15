@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { causeText } from "../desktop/shownError";
 import { useTranslation } from "react-i18next";
-import { type BridgeIdentity, Ds5BridgeClient, sameIdentity } from "../protocol/bridgeClient";
+import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
@@ -65,6 +65,12 @@ export interface UseDs5BridgeResult {
   // Protocol 1.14: the PC sleep options (POWER_FLAGS bits), saved on the
   // dongle right away; identity.powerFlags shows them once it has.
   setPowerFlags: (bits: number) => Promise<boolean>;
+  // Protocol 1.18 (identity [46] bit 6): the board's KEY0 / KEY1 can be pressed from the app.
+  supportsOledKeys: boolean;
+  // Press KEY0 (0) or KEY1 (1), short or long, as a finger on the board would
+  // (KEY0 next screen; KEY1 short back, long next brightness). Resolves false
+  // if the dongle refused (see error); the 0xEF mirror shows the result.
+  pressOledKey: (key: 0 | 1, long: boolean) => Promise<boolean>;
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
   revertToSaved: () => Promise<void>;
@@ -264,6 +270,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     [run],
   );
 
+  const pressOledKey = useCallback((key: 0 | 1, long: boolean) => run("applying", (c) => c.pressOledKey(key, long)), [run]);
+
   const setDraftField = useCallback(<Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setSaveState("dirty");
@@ -408,6 +416,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     saveToFlash,
     reconnectUsb,
     setPowerFlags,
+    supportsOledKeys: supportsFeature3(identity, 18, FEATURES3.oledKeys),
+    pressOledKey,
     resetDraft,
     revertToSaved,
     applyBody,

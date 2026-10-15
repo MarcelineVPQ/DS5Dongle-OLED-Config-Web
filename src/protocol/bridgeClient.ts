@@ -61,6 +61,7 @@ export const FUNC = {
   resetTimings: 0x15, // protocol 1.11: start the 0xFC timing counters over (answered at once)
   controllerTest: 0x16, // protocol 1.12: run a read-only controller test command (answer in 0xEB)
   pcSleep: 0x17, // protocol 1.14: [POWER_FLAGS bits], saved on its own (like the narrator)
+  oledKey: 0x18, // protocol 1.18: [key 0 KEY0 / 1 KEY1, 0 short / 1 long], pressed like the board's own keys
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -97,6 +98,7 @@ export const FEATURES3 = {
   timedGripTest: 0x08, // protocol 1.15: 0xF6 0x0E [side, tenths] holds the grip test steadily (0 stops)
   micLevel: 0x10, // protocol 1.16: the controller's mic level (config body 50 bytes)
   echoCancel: 0x20, // protocol 1.17: the controller's mic echo cancellation (config body 51 bytes)
+  oledKeys: 0x40, // protocol 1.18: 0xF6 0x18 presses KEY0 / KEY1 from the app (short or long)
 } as const;
 // Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
 export const POWER_FLAGS = {
@@ -401,6 +403,12 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= 17) && (p.features3 & FEATURES3.echoCancel) !== 0;
   }
 
+  // Protocol 1.18+: KEY0 / KEY1 can be pressed from the app (0xF6 0x18).
+  get oledKeys(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 18) && (p.features3 & FEATURES3.oledKeys) !== 0;
+  }
+
   // Protocol 1.6+: left and right grip haptics strengths.
   get splitHaptics(): boolean {
     return !!this.protocol && (this.protocol.major > 1 || this.protocol.minor >= 6);
@@ -554,6 +562,17 @@ export class Ds5BridgeClient {
   async gripTest(side: "left" | "right" | "both", seconds?: number): Promise<void> {
     const s = side === "left" ? 0 : side === "right" ? 1 : 2;
     await this.command(FUNC.gripTest, seconds === undefined ? [s] : [s, Math.max(0, Math.min(50, Math.round(seconds * 10)))]);
+  }
+
+  // Protocol 1.18 (FEATURES3.oledKeys): press KEY0 (0) or KEY1 (1) on the
+  // board, short or long. The firmware plays it through the same logic as a
+  // finger on the key (it wakes the screen; KEY0 = next screen, KEY1 short =
+  // back, long = next brightness), OLED wired or not; resolves once the press
+  // is queued (up to four wait; a fifth is "busy"). Watch it in the 0xEF mirror.
+  async pressOledKey(key: 0 | 1, long: boolean): Promise<void> {
+    // error: SHOWN — english: the error notice via useDs5Bridge.pressOledKey; the UI only offers the keys when supportsOledKeys
+    if (!this.oledKeys) throw new Error("This firmware can't press the board's keys from the app. Update the firmware.");
+    await this.command(FUNC.oledKey, [key, long ? 1 : 0]);
   }
 
   async previewTrigger(preset: number): Promise<void> {

@@ -12,7 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 
-- **KEY0 and KEY1 on the screen, like on the module.** Two keys beside the live screen, where they sit on the Waveshare board, level with the `>` and `<` the screen draws: click KEY0 for the next screen and KEY1 for the previous one; hold KEY1 for 1.5 s (a bar fills while you hold) to step the brightness, as on the board. Each key's tooltip says what it does on the screen shown; Space or Enter work the same from the keyboard. Firmware without key presses from the app shows the keys with what to update. All 7 languages.
+- **KEY0 and KEY1 on the screen, like on the module.** Two keys beside the live screen, where they sit on the Waveshare board, level with the `>` and `<` the screen draws: click KEY0 for the next screen and KEY1 for the previous one; hold KEY1 for 1.5 s (a bar fills while you hold) to step the brightness, as on the board. Each key's tooltip says what it does on the screen shown; Space or Enter work the same from the keyboard. The press goes to your board (firmware with protocol 1.18), which treats it exactly like a finger on the key, the OLED wired or not; older firmware shows the keys with what to update. The simulated board (dev builds) moves through its screens the same way. All 7 languages.
 
 ## [0.9.5-dev.12] - 2026-10-14
 
