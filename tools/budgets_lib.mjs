@@ -72,12 +72,13 @@ export function appTree(main, rows, cmdOf) {
   return out;
 }
 
-// Memory per process type in MB from [{ type, memKb, commitKb? }] (what the
-// platform reader measured: PSS on Linux, the private working set on
-// Windows), and the total without the processes that exist only because we
-// measure. `metric` names the measure for the report. Windows' commit (its
-// private bytes, resident or not) is kept beside it as commitByType.
-export function memorySummary(procs, metric) {
+// Memory per process type in MB from [{ type, memKb, alsoKb? }] (what the
+// platform reader measured: PSS on Linux, the commit on Windows), and the
+// total without the processes that exist only because we measure. `metric`
+// names the measure for the report. A second measure the reader took
+// (alsoKb: Windows' private working set) is kept beside it as `also`,
+// reported, not judged.
+export function memorySummary(procs, metric, alsoMetric = null) {
   const sum = (key) => {
     const byType = {};
     for (const p of procs) if (p[key] != null) byType[p.type] = (byType[p.type] ?? 0) + p[key] / 1024;
@@ -86,7 +87,7 @@ export function memorySummary(procs, metric) {
   const byType = sum("memKb");
   const total = Object.entries(byType).reduce((s, [type, v]) => (MEASUREMENT_TYPES.includes(type) ? s : s + v), 0);
   const out = { mb: round1(total), byType: roundAll(byType), metric };
-  if (procs.some((p) => p.commitKb != null)) out.commitByType = roundAll(sum("commitKb"));
+  if (alsoMetric && procs.some((p) => p.alsoKb != null)) out.also = { metric: alsoMetric, byType: roundAll(sum("alsoKb")) };
   return out;
 }
 const roundAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, round1(v)]));
@@ -125,6 +126,21 @@ export const MEASUREMENT_TYPES = ["utility:TracingService"];
 export function memoryJudged(memory) {
   if (!memory.byType) return memory.mb;
   return Math.round(Object.entries(memory.byType).reduce((sum, [type, mb]) => (type === GPU_TYPE || MEASUREMENT_TYPES.includes(type) ? sum : sum + mb), 0) * 10) / 10;
+}
+
+// The marks framesOver (cdp_lib.mjs) puts in the trace around the stretch it measures.
+export const FRAME_MARKS = { start: "ds5-frames-start", end: "ds5-frames-end" };
+
+// Frames per second (to 0.1) between the two marks, from a trace's
+// Display::DrawAndSwap and TimeStamp events ({ name, ts (µs), args }); null
+// when a mark is missing.
+export function framesBetweenMarks(events) {
+  const markAt = (message) => events.find((e) => e.name === "TimeStamp" && e.args?.data?.message === message)?.ts;
+  const start = markAt(FRAME_MARKS.start);
+  const end = markAt(FRAME_MARKS.end);
+  if (start == null || end == null || end <= start) return null;
+  const frames = events.filter((e) => e.name === "Display::DrawAndSwap" && e.ts >= start && e.ts < end).length;
+  return round1(frames / ((end - start) / 1e6));
 }
 
 // Events per second from a trace's event counts.

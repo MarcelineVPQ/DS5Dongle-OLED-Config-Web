@@ -11,6 +11,8 @@ import {
   cpuByType,
   cpuTotal,
   descendants,
+  FRAME_MARKS,
+  framesBetweenMarks,
   judgeBudgets,
   formatCombined,
   formatTable,
@@ -81,15 +83,15 @@ describe("Windows reader (a CIM sample recorded in the win11-test VM, 2026-10-14
     expect(appTree(8352, rows, (r) => r.cmd).map((p) => p.pid)).toEqual([8352]);
   });
 
-  it("sums memory per type as the private working set, commit beside it", () => {
-    const m = memorySummary(
-      appTree(9344, rows, (r) => r.cmd),
-      "private working set",
-    );
-    expect(m.metric).toBe("private working set");
-    expect(m.byType).toEqual({ main: 18.1, "gpu-process": 1, "utility:NetworkService": 1.2, renderer: 3.2 });
-    expect(m.mb).toBe(23.5); // summed before rounding
-    expect(m.commitByType).toEqual({ main: 100.8, "gpu-process": 18.2, "utility:NetworkService": 11.9, renderer: 67.6 });
+  it("sums memory per type as the commit (judged), the private working set beside it", () => {
+    // What windowsReader's appProcs hands memorySummary: the commit as memKb, the working set as alsoKb.
+    const procs = appTree(9344, rows, (r) => r.cmd).map((r) => ({ ...r, memKb: r.commitKb, alsoKb: r.memKb }));
+    const m = memorySummary(procs, "commit", "private working set");
+    expect(m.metric).toBe("commit");
+    expect(m.byType).toEqual({ main: 100.8, "gpu-process": 18.2, "utility:NetworkService": 11.9, renderer: 67.6 });
+    // The tray-trimmed working set (Windows squeezed it to a few MB): reported, never judged.
+    expect(m.also).toEqual({ metric: "private working set", byType: { main: 18.1, "gpu-process": 1, "utility:NetworkService": 1.2, renderer: 3.2 } });
+    expect(memorySummary(procs, "commit").also).toBeUndefined();
     // a CPU-only sample (no perf rows): no memory, not zero
     const cpuOnly = parseWinProcs(JSON.stringify({ ...JSON.parse(raw), perf: [] }));
     expect(cpuOnly.every((r) => r.memKb === null)).toBe(true);
@@ -151,6 +153,19 @@ describe("rates", () => {
   it("counts events per second", () => {
     expect(perSecond(63, 5)).toBe(12.6);
     expect(perSecond(undefined, 5)).toBe(0);
+  });
+
+  it("counts frames between the trace's two marks only", () => {
+    const mark = (message: string, ts: number) => ({ name: "TimeStamp", ts, args: { data: { message } } });
+    // A frame every 100 ms from t = 0.05 s to 20.15 s (the trace ran on past
+    // the end mark: 202 frames in it), marks at 0.07 s and 20.07 s.
+    const frames = Array.from({ length: 202 }, (_, i) => ({ name: "Display::DrawAndSwap", ts: 50_000 + i * 100_000 }));
+    const events = [...frames, mark(FRAME_MARKS.start, 70_000), mark(FRAME_MARKS.end, 20_070_000)];
+    expect(framesBetweenMarks(events)).toBe(10);
+    // Idle: no frames at all.
+    expect(framesBetweenMarks([mark(FRAME_MARKS.start, 0), mark(FRAME_MARKS.end, 10_000_000)])).toBe(0);
+    // A mark missing (the page never ran it): not measured, never a made-up number.
+    expect(framesBetweenMarks(frames)).toBeNull();
   });
 });
 

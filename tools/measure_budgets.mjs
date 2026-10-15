@@ -13,8 +13,8 @@
 // 1. Setup: simulated board with the controller put down (ds5.dev.simRest
 //    "still"), Developer card → Fake games on (a full library with art),
 //    first-run notices off, then a reload. The window is set to 1920 x 1080
-//    (the virtual display on Linux; the VM's screen on Windows), shown and
-//    focused.
+//    (the virtual display on Linux), or to the screen's work area when that
+//    is smaller (the Windows VM's 1024 x 768), shown and focused.
 // 2. Per page (Controller, Pico 2 W, Games Home, a game page, App settings,
 //    About): settle, CPU per process over cpuS (CPU time of the app's
 //    process tree), then a traceS trace counting the frames drawn
@@ -65,7 +65,7 @@ const sample = () => reader.appProcs(MAIN);
 // Memory per process type in MB (PSS on Linux, the private working set on
 // Windows) and the total without DevTools' tracing service, which only runs
 // because we measure.
-const memoryNow = () => memorySummary(reader.appProcs(MAIN, { memory: true }), reader.memoryMetric);
+const memoryNow = () => memorySummary(reader.appProcs(MAIN, { memory: true }), reader.memoryMetric, reader.alsoMetric);
 // CPU per process type over `secs`, timed by the clock (a Windows sample
 // takes a second or two, so the real stretch between them is used).
 async function cpuDuring(secs) {
@@ -106,8 +106,16 @@ await ev(`(async () => {
 })()`);
 await page.send("Page.reload");
 await pause(10000);
-note("window:", await win(`w.setBounds({ x: 0, y: 0, width: 1920, height: 1080 }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`));
-// The screen it ran on (the Windows VM's may be smaller than 1920 x 1080: the window is then as large as Windows lets it be).
+// 1920 x 1080, or the screen's work area when that is smaller (the Windows
+// VM's screen is 1024 x 768): a window larger than its screen hangs off it
+// and measures a layout nobody sees.
+note(
+  "window:",
+  await win(
+    `const a = require("electron").screen.getPrimaryDisplay().workArea; w.setBounds({ x: a.x, y: a.y, width: Math.min(1920, a.width), height: Math.min(1080, a.height) }); w.show(); w.focus(); return JSON.stringify(w.getBounds());`,
+  ),
+);
+// The screen it ran on, and the window it got.
 const display = await mainEv(
   `(() => { const e = require("electron"); const d = e.screen.getPrimaryDisplay(); return { size: d.size, scaleFactor: d.scaleFactor, window: e.BrowserWindow.getAllWindows()[0].getBounds() }; })()`,
 );
