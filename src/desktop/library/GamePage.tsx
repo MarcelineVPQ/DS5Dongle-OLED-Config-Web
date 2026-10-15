@@ -808,6 +808,14 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
           ))}
         </ul>
       )}
+      <ul className="gp-features">
+        {/* loop: HOT-PATH-OK — N = 5 features */}
+        {(["triggers", "haptics", "speaker", "mic", "lightbar"] as const).map((f) => (
+          <li key={f} title={t(`desktop.library.feature.${s.features[f]}`)}>
+            <span aria-hidden="true">{FEATURE_ICON[s.features[f]]}</span> {t(`desktop.library.featureName.${f}`)}
+          </li>
+        ))}
+      </ul>
       <SectionGroup title={t("desktop.library.tierLegend")}>
         <ul className="gp-legend-list">
           {/* loop: HOT-PATH-OK — N = 6 support tiers */}
@@ -822,14 +830,6 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
           ))}
         </ul>
       </SectionGroup>
-      <ul className="gp-features">
-        {/* loop: HOT-PATH-OK — N = 5 features */}
-        {(["triggers", "haptics", "speaker", "mic", "lightbar"] as const).map((f) => (
-          <li key={f} title={t(`desktop.library.feature.${s.features[f]}`)}>
-            <span aria-hidden="true">{FEATURE_ICON[s.features[f]]}</span> {t(`desktop.library.featureName.${f}`)}
-          </li>
-        ))}
-      </ul>
       <RatingPart game={game} info={info} mineState={mineState} />
     </>
   );
