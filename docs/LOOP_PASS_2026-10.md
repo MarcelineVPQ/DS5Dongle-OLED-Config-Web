@@ -1,6 +1,6 @@
 # Loop pass: every loop that waits or sits on a hot path, with a verdict
 
-_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. The owner picks which batches to do. **Batch 1 is done** (dev.10, see below). **Batches 3 and 4 are done** (2026-10-15, branch `passes-095`), and batch 4's swirl CPU fallback was decided and done 2026-10-15 (branch `swirl-fallback`: a still frame without a real graphics card). Batch 2 is firmware and waits for a firmware task with hardware tests. The app tables were re-run after master's Games redesign was merged in (507 loops), after batch 1 (508), and after batches 3 and 4 (613; the rows added since are new code)._
+_2026-10-13. Done per CLAUDE.md "Loop pass" (the AVIEW serial-loop pass, adapted to the app and the firmware). This is the one doc for both repos: the firmware's CLAUDE.md links here. The owner picks which batches to do. **Batch 1 is done** (dev.10, see below). **Batches 3 and 4 are done** (2026-10-15, branch `passes-095`), and batch 4's swirl CPU fallback was decided and done 2026-10-15 (branch `swirl-fallback`: a still frame without a real graphics card). Batch 2 (firmware) is done on firmware branch `fw-bt-idle-mic` (52aebf9, 2026-10-15), not flashed, waiting for the owner's hardware test; the firmware tables were re-listed there (133 loops). Still open: the input functions to RAM (3.4 KB), decided after the 0xFC stage-4 measurement on hardware. The app tables were re-run after master's Games redesign was merged in (507 loops), after batch 1 (508), and after batches 3 and 4 (613; the rows added since are new code)._
 
 ## How the list was made
 
@@ -91,6 +91,8 @@ The original batch:
 | `src/desktop/live/LiveController.tsx:245, 265` | `LiveArt` effect | 2 DOM queries + 1 string parse / ~30 Hz | `querySelectorAll` for the trigger fill stops and a parse of the touchpad `data-box` on every frame. | Look both up once at mount, next to the parts index. |
 
 ### Batch 2: firmware, core0's main loop
+
+**Done on firmware branch `fw-bt-idle-mic` (52aebf9), not flashed, waiting for the owner's hardware test.** `cpu_temp_raw_smoothed` takes 32 ADC samples (~64 µs) into the EMA it already had; the feature-report pollers no longer allocate (lifetime batch 3). Still open: moving the input functions to RAM (3.4 KB), decided after the 0xFC stage-4 measurement on hardware.
 
 | Location | Function | Runs | Why | Change |
 |---|---|---|---|---|
@@ -1347,225 +1349,243 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 
 Runs on: where it runs (see "How the list was made"). Wait: `forever` / `spin` / `drain` / `+timeout` / `+bounded`, and `flash` when the body touches flash. Nest: loops around it in the same function.
 
+
+_Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727bf), not flashed yet, waiting for the owner's hardware test: 133 loops, PARALLELIZE 0, BATCH 0, SERIAL-REQUIRED 3, HOT-PATH-OK 59, FIX-HOT-PATH 0, NOT-WORTH 71 (batch 2 done: `cpu_temp_raw_smoothed` reads 32 ADC samples, ~64 µs, into its EMA). Line numbers are that branch's._
+
 #### src/audio.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 265 | `mic_drain` | core0-loop | - | 0 | **HOT-PATH-OK** | few slices / per main-loop pass while mic on | bounded by free USB mic FIFO space; one 48-frame slice each | - |
-| 278 | `mic_drain` | core0-loop | - | 1 | **HOT-PATH-OK** | 48 / per slice | N = 48 frames per slice, mono to L/R copy | - |
-| 500 | `audio_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ raw buffer frames / per USB audio packet | N = frames of one USB audio read (raw buffer); speaker mono detect | - |
-| 509 | `audio_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ raw buffer frames / per USB audio packet | N = frames of one USB audio read; peaks + split, the audio path itself | - |
-| 634 | `speaker_proc` | core1 | - | 0 | **HOT-PATH-OK** | 1024 / per speaker frame (10 ms) | N = 512 stereo samples into the resampler, core1 RAM code, no flash | - |
-| 751 | `core1_entry` | core1 | forever | 0 | **HOT-PATH-OK** | forever / core1 | core1 service loop: bounded work per item, sleep_us(10) when idle | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 277 | `mic_drain` | core0-loop | - | 0 | **HOT-PATH-OK** | bounded by free USB mic FIFO space; one 48-frame slice each |
+| 301 | `mic_drain` | core0-loop | - | 1 | **HOT-PATH-OK** | N = 48 frames per slice, mono to L/R copy |
+| 524 | `audio_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | N = frames of one USB audio read (raw buffer); speaker mono detect |
+| 533 | `audio_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | N = frames of one USB audio read; peaks + split, the audio path itself |
+| 667 | `speaker_proc` | core1 | - | 0 | **HOT-PATH-OK** | N = 512 stereo samples into the resampler, core1 RAM code, no flash |
+| 804 | `core1_entry` | core1 | forever | 0 | **HOT-PATH-OK** | core1 service loop: bounded work per item, sleep_us(10) when idle |
 
 #### src/audio_levels.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 33 | `AudioPeak::level` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 48 / per audio chunk + VU frame | N ≤ kSteps = 48 decay steps, usually 0-2 | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 33 | `AudioPeak::level` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | N ≤ kSteps = 48 decay steps, usually 0-2 |
 
 #### src/bt.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 183 | `bt_wipe_all_slots` | core0-loop | - | 0 | **NOT-WORTH** | ≤ 16 / rare (wipe all) | link-key snapshot, N ≤ 16; on a user wipe only | - |
-| 188 | `bt_wipe_all_slots` | core0-loop | - | 0 | **NOT-WORTH** | ≤ 16 / rare (wipe all) | drop each snapshotted key, N ≤ 16; on a user wipe only | - |
-| 458 | `hci_packet_handler` | callback | - | 0 | **NOT-WORTH** | 16 / per connection | printf of the 16-byte key, on a link key request only | - |
-| 561 | `hci_packet_handler` | callback | drain | 0 | **NOT-WORTH** | ≤ 10 / per disconnect | drains send_fifo (≤ 10 entries) on disconnect | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 133 | `bt_any_slot_paired` | core0-loop | - | 0 | **NOT-WORTH** | kNumSlots = 4, once per main-loop pass only while no controller is connected and no inquiry runs |
+| 265 | `bt_wipe_all_slots` | core0-loop | - | 0 | **NOT-WORTH** | link-key snapshot, N ≤ 16; on a user wipe only |
+| 270 | `bt_wipe_all_slots` | core0-loop | - | 0 | **NOT-WORTH** | drop each snapshotted key, N ≤ 16; on a user wipe only |
+| 578 | `hci_packet_handler` | callback | - | 0 | **NOT-WORTH** | printf of the 16-byte key, on a link key request only |
+| 693 | `hci_packet_handler` | callback | drain | 0 | **NOT-WORTH** | drains send_fifo (≤ 10 entries) on disconnect |
 
 #### src/calib.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 47 | `build_curves` | callback | - | 0 | **NOT-WORTH** | 2 / boot + host set | 2 sticks, on load or when the host sets curves | - |
-| 56 | `set_linear` | boot | - | 0 | **NOT-WORTH** | 8 / rare | 8 default points, rare (invalid curve) | - |
-| 70 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 2 / rare | 2 sticks, on a reset / invalid load | - |
-| 72 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 2 / rare | 2 triggers, on a reset / invalid load | - |
-| 74 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 3 / rare | 3 gyro axes, on a reset / invalid load | - |
-| 79 | `valid` | callback | - | 0 | **NOT-WORTH** | 2 / boot + host set | 2 sticks, validating a host set or a load | - |
-| 84 | `valid` | callback | - | 0 | **NOT-WORTH** | 2 / boot + host set | 2 triggers, validating a host set or a load | - |
-| 94 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 2 / boot + host set | 2 sticks, after a host set | - |
-| 143 | `calib_load` | boot | - | 0 | **NOT-WORTH** | 4 / boot | boot-only, kNumSlots = 4 | - |
-| 148 | `calib_load` | boot | - | 0 | **NOT-WORTH** | 4 / boot | boot-only, 4 slot bodies | - |
-| 152 | `calib_load` | boot | - | 0 | **NOT-WORTH** | 4 / boot | boot-only, 4 slots | - |
-| 154 | `calib_load` | boot | - | 1 | **NOT-WORTH** | 8 / boot | boot-only, 2 curves per slot | - |
-| 160 | `calib_load` | boot | - | 0 | **NOT-WORTH** | 4 / boot | boot-only, 4 slots | - |
-| 175 | `calib_service` | core0-loop | - | 0 | **NOT-WORTH** | 3 / per connection | 3 gyro words, once per connection when 0x05 lands | - |
-| 182 | `calib_service` | core0-loop | - | 0 | **NOT-WORTH** | 3 / per connection | 3 gyro words, once per connection | - |
-| 197 | `calib_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 2 / per input report | 2 triggers per input report; calib_apply is not CORE0_RAM_FUNC | - |
-| 204 | `calib_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 3 / per input report | 3 gyro axes per input report, only with gyro calibration on | - |
-| 235 | `curves_set` | callback | - | 0 | **NOT-WORTH** | 2 / host set | 2 curves, on a host curves set | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 47 | `build_curves` | callback | - | 0 | **NOT-WORTH** | 2 sticks, on load or when the host sets curves |
+| 56 | `set_linear` | boot | - | 0 | **NOT-WORTH** | 8 default points, rare (invalid curve) |
+| 70 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 2 sticks, on a reset / invalid load |
+| 72 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 2 triggers, on a reset / invalid load |
+| 74 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 3 gyro axes, on a reset / invalid load |
+| 79 | `valid` | callback | - | 0 | **NOT-WORTH** | 2 sticks, validating a host set or a load |
+| 84 | `valid` | callback | - | 0 | **NOT-WORTH** | 2 triggers, validating a host set or a load |
+| 94 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 2 sticks, after a host set |
+| 145 | `calib_load` | boot | - | 0 | **NOT-WORTH** | boot-only, kNumSlots = 4 |
+| 150 | `calib_load` | boot | - | 0 | **NOT-WORTH** | boot-only, 4 slot bodies |
+| 154 | `calib_load` | boot | - | 0 | **NOT-WORTH** | boot-only, 4 slots |
+| 156 | `calib_load` | boot | - | 1 | **NOT-WORTH** | boot-only, 2 curves per slot |
+| 162 | `calib_load` | boot | - | 0 | **NOT-WORTH** | boot-only, 4 slots |
+| 178 | `calib_service` | core0-loop | - | 0 | **NOT-WORTH** | 3 gyro words, once per connection when 0x05 lands |
+| 185 | `calib_service` | core0-loop | - | 0 | **NOT-WORTH** | 3 gyro words, once per connection |
+| 200 | `calib_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 2 triggers per input report; calib_apply is not CORE0_RAM_FUNC |
+| 207 | `calib_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 3 gyro axes per input report, only with gyro calibration on |
+| 242 | `curves_set` | callback | - | 0 | **NOT-WORTH** | 2 curves, on a host curves set |
 
 #### src/cmd.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 58 | `cpu_temp_raw_smoothed` | callback+core0-loop | - | 0 | **FIX-HOT-PATH** | 256 / per CPU-screen frame (10 Hz) + per 0xFC GET | 256 blocking adc_read() calls (~0.5 ms) in one core0 main-loop pass | Take a few samples per pass (or ADC FIFO + round robin) into a running sum; or 16-32 samples + the EMA it already has |
-| 538 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 4 / per host GET (~1 Hz) | 4 slot addresses, per 0xFA host GET | - |
-| 544 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 4 / per host GET (~1 Hz) | 4 occupied flags, per 0xFA host GET | - |
-| 691 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 44 / per diagnostic GET | ≤ 44 bytes zeroed, per 0xFD diagnostic GET | - |
-| 707 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 8 / per diagnostic GET | 8 bytes, per 0xFD diagnostic GET | - |
-| 709 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 8 / per diagnostic GET | 8 bytes, per 0xFD diagnostic GET | - |
-| 725 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | ≤ 63 / per diagnostic GET | ≤ 63 bytes zeroed, per 0xFE diagnostic GET | - |
-| 732 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | ≤ 61 / per diagnostic GET | ≤ 61 bytes, per 0xFE diagnostic GET | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 70 | `cpu_temp_raw_smoothed` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | 32 adc_read() calls (~64 µs) per CPU-screen frame (10 Hz) / per 0xFC GET (loop pass batch 2: was 256, ~0.5 ms) |
+| 584 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 4 slot addresses, per 0xFA host GET |
+| 590 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 4 occupied flags, per 0xFA host GET |
+| 739 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | ≤ 50 bytes zeroed, per 0xFD diagnostic GET |
+| 755 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 8 bytes, per 0xFD diagnostic GET |
+| 757 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | 8 bytes, per 0xFD diagnostic GET |
+| 777 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | ≤ 63 bytes zeroed, per 0xFE diagnostic GET |
+| 784 | `pico_cmd_get` | callback | - | 0 | **NOT-WORTH** | ≤ 61 bytes, per 0xFE diagnostic GET |
 
 #### src/dse.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 115 | `dse_task` | core0-loop | - | 0 | **NOT-WORTH** | 61 / per Edge connection | 61-byte handshake copy, once per DSE unlock | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 117 | `dse_task` | core0-loop | - | 0 | **NOT-WORTH** | 61-byte handshake copy, once per DSE unlock |
 
 #### src/grip_wave.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 66 | `GripWave::fill` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | 64 / per 21 ms, test only | N = SAMPLE_SIZE pairs per test report, only during the haptic test | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 67 | `GripWave::fill` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | N = SAMPLE_SIZE pairs per test report, only during the haptic test |
 
 #### src/main.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 77 | `bt_31_mic_prefix` | core0-loop | - | 0 | **HOT-PATH-OK** | 6 / per diag frame (10 Hz) | 6 bytes, for the OLED diagnostics screen | - |
-| 201 | `on_bt_data` | callback | - | 0 | **HOT-PATH-OK** | 8 / per BT input frame | ≤ 8 bytes per non-0x31 BT frame (debug counters) | - |
-| 212 | `on_bt_data` | callback | - | 0 | **HOT-PATH-OK** | 16 / per BT input frame | ≤ 16 bytes per BT frame (debug counters) | - |
-| 223 | `on_bt_data` | callback | - | 0 | **NOT-WORTH** | 61 / rare (new max length) | ≤ 61 bytes, only when a new longest 0x31 frame appears | - |
-| 554 | `main` | boot | timeout | 0 | **SERIAL-REQUIRED** | ≤ 5 s / boot, serial builds only | debug build: wait for a terminal until a 5 s deadline | - |
-| 579 | `main` | boot | spin+bounded | 0 | **NOT-WORTH** | 6 x 500 ms / boot after a crash | 6 LED blinks after a watchdog reboot, boot-only | - |
-| 617 | `main` | boot | forever | 0 | **SERIAL-REQUIRED** | forever / core0 | core0 main loop: stage order is the design, each stage perf-timed | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 77 | `bt_31_mic_prefix` | core0-loop | - | 0 | **HOT-PATH-OK** | 6 bytes, for the OLED diagnostics screen |
+| 203 | `on_bt_data` | callback | - | 0 | **HOT-PATH-OK** | ≤ 8 bytes per non-0x31 BT frame (debug counters) |
+| 214 | `on_bt_data` | callback | - | 0 | **HOT-PATH-OK** | ≤ 16 bytes per BT frame (debug counters) |
+| 225 | `on_bt_data` | callback | - | 0 | **NOT-WORTH** | ≤ 61 bytes, only when a new longest 0x31 frame appears |
+| 569 | `main` | boot | timeout | 0 | **SERIAL-REQUIRED** | debug build: wait for a terminal until a 5 s deadline |
+| 595 | `main` | boot | spin+bounded | 0 | **NOT-WORTH** | 6 LED blinks after a watchdog reboot, boot-only |
+| 633 | `main` | boot | forever | 0 | **SERIAL-REQUIRED** | core0 main loop: stage order is the design, each stage perf-timed |
+
+#### src/mic_level.h
+
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 87 | `mic_frame_peak` | core0-loop | - | 0 | **HOT-PATH-OK** | N = 480 samples, once per 10 ms frame and only while a drop is armed |
 
 #### src/oled.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 309 | `rect_outline` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 128 / per OLED frame (10 Hz) | w ≤ 128 px, OLED render at 10 Hz (kFrameUs 100 ms) | - |
-| 311 | `rect_outline` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 64 / per OLED frame (10 Hz) | h ≤ 64 px, OLED render at 10 Hz | - |
-| 316 | `rect_filled` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 64 / per OLED frame (10 Hz) | h ≤ 64 rows, OLED render at 10 Hz | - |
-| 318 | `rect_filled` | callback+core0-loop | - | 1 | **HOT-PATH-OK** | small boxes / per OLED frame (10 Hz) | w x h ≤ 8192 px but used for small boxes, OLED render at 10 Hz | - |
-| 325 | `rect_invert` | core0-loop | - | 0 | **HOT-PATH-OK** | small region / per OLED frame (10 Hz) | h rows of a pressed-control region, OLED render at 10 Hz | - |
-| 327 | `rect_invert` | core0-loop | - | 1 | **HOT-PATH-OK** | small region / per OLED frame (10 Hz) | w px of a pressed-control region, OLED render at 10 Hz | - |
-| 338 | `draw_char` | core0-loop | - | 0 | **HOT-PATH-OK** | 5 / per char per frame (10 Hz) | 5 font columns per char, OLED render at 10 Hz | - |
-| 341 | `draw_char` | core0-loop | - | 1 | **HOT-PATH-OK** | 7 / per column per frame (10 Hz) | 7 font rows per column, OLED render at 10 Hz | - |
-| 349 | `draw_text` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 21 / per text line per frame | ≤ ~21 chars per line, OLED render at 10 Hz | - |
-| 358 | `draw_text_clipped` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 32 / per frame (10 Hz) | ≤ title length chars, scrolling title at 10 Hz | - |
-| 365 | `draw_text_clipped` | core0-loop | - | 1 | **HOT-PATH-OK** | 5 / per char per frame | 5 font columns, scrolling title at 10 Hz | - |
-| 369 | `draw_text_clipped` | core0-loop | - | 2 | **HOT-PATH-OK** | 7 / per column per frame | 7 font rows, scrolling title at 10 Hz | - |
-| 415 | `draw_icon` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 16 / per icon per frame | icon rows (≤ 16), OLED render at 10 Hz | - |
-| 417 | `draw_icon` | core0-loop | - | 1 | **HOT-PATH-OK** | ≤ 16 / per icon row per frame | icon columns (≤ 16), OLED render at 10 Hz | - |
-| 486 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 10 / per button press | 10 trigger zones, on a KEY press / leaving the screen | - |
-| 508 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 10 / per button press | 10 trigger zones, on a KEY press | - |
-| 552 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 9 / per button press | 9 effect bytes (left), on a KEY press | - |
-| 555 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 9 / per button press | 9 effect bytes (right), on a KEY press | - |
-| 747 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 5 / per OLED tick while charging | N ≤ kRing = 5 copies, at 10 Hz while charging | - |
-| 749 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 5 / per OLED tick while charging | insertion sort of ≤ 5 items, at 10 Hz while charging | - |
-| 753 | `sample_charge_eta` | core0-loop | - | 1 | **HOT-PATH-OK** | ≤ 4 / per item | inner shift of the ≤ 5-item insertion sort | - |
-| 762 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 10 / per OLED tick while charging | ≤ 10 charge steps summed, at 10 Hz while charging | - |
-| 1020 | `render_screen_diag` | core0-loop | - | 0 | **HOT-PATH-OK** | 5 / per diag frame (10 Hz) | kVisible = 5 diagnostic rows, diag screen at 10 Hz | - |
-| 1180 | `imu_cal_parse` | core0-loop | - | 0 | **NOT-WORTH** | 6 / per connection | 6 IMU axes, once per connection when 0x05 lands | - |
-| 1228 | `render_screen_gyro` | core0-loop | - | 0 | **HOT-PATH-OK** | 38 / per gyro frame (10 Hz) | 38 px crosshair line, gyro screen at 10 Hz | - |
-| 1230 | `render_screen_gyro` | core0-loop | - | 0 | **HOT-PATH-OK** | 38 / per gyro frame (10 Hz) | 38 px crosshair line, gyro screen at 10 Hz | - |
-| 1260 | `render_screen_touchpad` | core0-loop | - | 0 | **HOT-PATH-OK** | 2 / per touchpad frame (10 Hz) | 2 fingers, touchpad screen at 10 Hz | - |
-| 1504 | `lightbar_load_config` | core0-loop | - | 0 | **NOT-WORTH** | 4 / boot + host config change | 4 favorites, at boot and when the host changes config | - |
-| 1516 | `lightbar_save_config` | core0-loop | - | 0 | **NOT-WORTH** | 4 / rare (screen exit) | 4 favorites, leaving the Lightbar screen with changes (one flash save) | - |
-| 1572 | `settings_adjust` | core0-loop | - | 0 | **NOT-WORTH** | 1 / per button press | abs(delta) steps (1), on a D-pad press in Settings | - |
-| 1821 | `render_screen_settings` | core0-loop | - | 0 | **HOT-PATH-OK** | 5 / per settings frame (10 Hz) | kVisible = 5 settings rows, settings screen at 10 Hz | - |
-| 1913 | `render_screen_slots` | core0-loop | - | 0 | **HOT-PATH-OK** | 4 / per slots frame (10 Hz) | kNumSlots = 4 rows, slots screen at 10 Hz | - |
-| 1938 | `boot_splash` | boot | - | 0 | **NOT-WORTH** | ≤ 20 / boot | strlen of 3 splash lines, boot-only | - |
-| 2088 | `oled_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | 10 / per OLED tick (10 Hz) | 10 input bytes hashed for the idle timer, at 10 Hz | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 350 | `rect_clear` | core0-loop | - | 0 | **HOT-PATH-OK** | at most 64 rows, only when a diagnostic band changes |
+| 352 | `rect_clear` | core0-loop | - | 1 | **HOT-PATH-OK** | at most 16 framebuffer bytes per row |
+| 370 | `rect_outline` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | w ≤ 128 px, OLED render at 10 Hz (kFrameUs 100 ms) |
+| 372 | `rect_outline` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | h ≤ 64 px, OLED render at 10 Hz |
+| 377 | `rect_filled` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | h ≤ 64 rows, OLED render at 10 Hz |
+| 379 | `rect_filled` | callback+core0-loop | - | 1 | **HOT-PATH-OK** | w x h ≤ 8192 px but used for small boxes, OLED render at 10 Hz |
+| 386 | `rect_invert` | core0-loop | - | 0 | **HOT-PATH-OK** | h rows of a pressed-control region, OLED render at 10 Hz |
+| 388 | `rect_invert` | core0-loop | - | 1 | **HOT-PATH-OK** | w px of a pressed-control region, OLED render at 10 Hz |
+| 399 | `draw_char` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | 5 font columns per char, OLED render at 10 Hz |
+| 402 | `draw_char` | callback+core0-loop | - | 1 | **HOT-PATH-OK** | 7 font rows per column, OLED render at 10 Hz |
+| 410 | `draw_text` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ ~21 chars per line, OLED render at 10 Hz |
+| 419 | `draw_text_clipped` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ title length chars, scrolling title at 10 Hz |
+| 426 | `draw_text_clipped` | core0-loop | - | 1 | **HOT-PATH-OK** | 5 font columns, scrolling title at 10 Hz |
+| 430 | `draw_text_clipped` | core0-loop | - | 2 | **HOT-PATH-OK** | 7 font rows, scrolling title at 10 Hz |
+| 488 | `draw_icon` | core0-loop | - | 0 | **HOT-PATH-OK** | icon rows (≤ 16), OLED render at 10 Hz |
+| 490 | `draw_icon` | core0-loop | - | 1 | **HOT-PATH-OK** | icon columns (≤ 16), OLED render at 10 Hz |
+| 559 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 10 trigger zones, on a KEY press / leaving the screen |
+| 581 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 10 trigger zones, on a KEY press |
+| 625 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 9 effect bytes (left), on a KEY press |
+| 628 | `send_trigger_effect` | core0-loop | - | 0 | **NOT-WORTH** | 9 effect bytes (right), on a KEY press |
+| 796 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | N ≤ kRing = 5 copies, at 10 Hz while charging |
+| 798 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | insertion sort of ≤ 5 items, at 10 Hz while charging |
+| 802 | `sample_charge_eta` | core0-loop | - | 1 | **HOT-PATH-OK** | inner shift of the ≤ 5-item insertion sort |
+| 811 | `sample_charge_eta` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 10 charge steps summed, at 10 Hz while charging |
+| 1078 | `render_screen_diag` | core0-loop | - | 0 | **HOT-PATH-OK** | five visible rows at 10 Hz, unchanged strings skip drawing |
+| 1243 | `imu_cal_parse` | core0-loop | - | 0 | **NOT-WORTH** | 6 IMU axes, once per connection when 0x05 lands |
+| 1292 | `render_screen_gyro` | core0-loop | - | 0 | **HOT-PATH-OK** | 38 px crosshair line, gyro screen at 10 Hz |
+| 1294 | `render_screen_gyro` | core0-loop | - | 0 | **HOT-PATH-OK** | 38 px crosshair line, gyro screen at 10 Hz |
+| 1324 | `render_screen_touchpad` | core0-loop | - | 0 | **HOT-PATH-OK** | 2 fingers, touchpad screen at 10 Hz |
+| 1572 | `lightbar_load_config` | core0-loop | - | 0 | **NOT-WORTH** | 4 favorites, at boot and when the host changes config |
+| 1584 | `lightbar_save_config` | core0-loop | - | 0 | **NOT-WORTH** | 4 favorites, leaving the Lightbar screen with changes (one flash save) |
+| 1638 | `settings_adjust` | core0-loop | - | 0 | **NOT-WORTH** | abs(delta) steps, one on each D-pad adjustment |
+| 1763 | `render_screen_settings` | core0-loop | - | 0 | **HOT-PATH-OK** | kVisible = 5 settings rows, settings screen at 10 Hz |
+| 1849 | `render_screen_slots` | core0-loop | - | 0 | **HOT-PATH-OK** | kNumSlots = 4 rows, slots screen at 10 Hz |
+| 1878 | `boot_splash` | boot | - | 0 | **NOT-WORTH** | strlen of 3 splash lines, boot-only |
+| 2055 | `oled_loop` | core0-loop | - | 0 | **HOT-PATH-OK** | 10 input bytes hashed for the idle timer, at 10 Hz |
 
 #### src/oled_flush.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 21 | `BitReverseTable::BitReverseTable` | - | - | 0 | **NOT-WORTH** | 256 / compile time | constexpr: the 256-entry bit-reverse table is built at compile time | - |
-| 41 | `stream_frame` | core0-loop | - | 0 | **HOT-PATH-OK** | 64 / per changed OLED frame (≤ 10 Hz) | 64 rows, only when the frame changed (memcmp skip), 129 SPI frames | - |
-| 48 | `stream_frame` | core0-loop | - | 1 | **HOT-PATH-OK** | 16 / per row per changed frame | 16 bytes bit-reversed per row, only when the frame changed | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 21 | `BitReverseTable::BitReverseTable` | - | - | 0 | **NOT-WORTH** | constexpr: the 256-entry bit-reverse table is built at compile time |
+| 41 | `stream_frame` | core0-loop | - | 0 | **HOT-PATH-OK** | 64 rows, only when the frame changed (memcmp skip), 129 SPI frames |
+| 48 | `stream_frame` | core0-loop | - | 1 | **HOT-PATH-OK** | 16 bytes bit-reversed per row, only when the frame changed |
+
+#### src/pair_prompt.h
+
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 58 | `time_text` | core0-loop | - | 0 | **NOT-WORTH** | 6 bytes (" left" + NUL), once per Status frame without a controller |
 
 #### src/perf.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 29 | `perf_serialize` | callback | - | 0 | **HOT-PATH-OK** | ≤ 8 / per 0xFC GET | PERF_NUM_STAGES rows, per 0xFC telemetry GET | - |
-| 37 | `perf_serialize` | callback | - | 1 | **SERIAL-REQUIRED** | usually 1 / per stage per 0xFC GET | seqlock retry against the other core's writer, bounded to 1000 tries | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 29 | `perf_serialize` | callback | - | 0 | **HOT-PATH-OK** | PERF_NUM_STAGES rows, per 0xFC telemetry GET |
+| 37 | `perf_serialize` | callback | - | 1 | **SERIAL-REQUIRED** | seqlock retry against the other core's writer, bounded to 1000 tries |
 
 #### src/ram_mem.c
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 29 | `memcpy` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | n / 4 / per call | word copy of n/4, RAM-resident for core1 libopus and core0 SDK | - |
-| 35 | `memcpy` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | ≤ 3 (or n unaligned) / per call | tail of ≤ 3 bytes (or bytewise when unaligned), RAM-resident | - |
-| 46 | `memset` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | n / 4 / per call | word fill of n/4, RAM-resident for core1 and core0 | - |
-| 51 | `memset` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | ≤ 3 (or n unaligned) / per call | tail of ≤ 3 bytes (or bytewise when unaligned), RAM-resident | - |
-| 64 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | n / 4 / per call | forward word move of n/4, RAM-resident | - |
-| 70 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | ≤ 3 (or n) / per call | forward tail, ≤ 3 bytes when aligned, RAM-resident | - |
-| 75 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | n / per overlapping call | backward bytewise move (overlap), RAM-resident; rare in callers | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 29 | `memcpy` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | word copy of n/4, RAM-resident for core1 libopus and core0 SDK |
+| 35 | `memcpy` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | tail of ≤ 3 bytes (or bytewise when unaligned), RAM-resident |
+| 46 | `memset` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | word fill of n/4, RAM-resident for core1 and core0 |
+| 51 | `memset` | callback+core0-loop+core1 | - | 0 | **HOT-PATH-OK** | tail of ≤ 3 bytes (or bytewise when unaligned), RAM-resident |
+| 64 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | forward word move of n/4, RAM-resident |
+| 70 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | forward tail, ≤ 3 bytes when aligned, RAM-resident |
+| 75 | `memmove` | core0-loop+core1 | - | 0 | **HOT-PATH-OK** | backward bytewise move (overlap), RAM-resident; rare in callers |
 
 #### src/remap.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 59 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 16 / rare | 16 table entries, on a reset / invalid load | - |
-| 65 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 16 / host set | 16 entries, after a host remap set | - |
-| 69 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 4 / host set | 4 extra buttons, after a host remap set | - |
-| 76 | `valid_extra` | callback | - | 0 | **NOT-WORTH** | 4 / host set + boot | 4 extra buttons, validating a host set / load | - |
-| 91 | `valid_table` | callback | - | 0 | **NOT-WORTH** | 16 / host set + boot | 16 entries, validating a host set / load | - |
-| 207 | `remap_set_extra` | callback | - | 0 | **NOT-WORTH** | 16 / host set | 16 entries, a host extra-button set while temporary | - |
-| 252 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 16 / per input report | 16 sources per input report, only with a remap on (fast return) | - |
-| 259 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 16 / per input report | 16 table entries per input report, only with a remap on | - |
-| 272 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 4 / per input report | 4 Edge extra buttons per input report, only with a remap on | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 59 | `set_identity` | callback | - | 0 | **NOT-WORTH** | 16 table entries, on a reset / invalid load |
+| 65 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 16 entries, after a host remap set |
+| 69 | `recompute_active` | callback | - | 0 | **NOT-WORTH** | 4 extra buttons, after a host remap set |
+| 76 | `valid_extra` | callback | - | 0 | **NOT-WORTH** | 4 extra buttons, validating a host set / load |
+| 92 | `valid_table` | callback | - | 0 | **NOT-WORTH** | 16 entries, validating a host set / load |
+| 217 | `remap_set_extra` | callback | - | 0 | **NOT-WORTH** | 16 entries, a host extra-button set while temporary |
+| 266 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 16 sources per input report, only with a remap on (fast return) |
+| 273 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 16 table entries per input report, only with a remap on |
+| 286 | `remap_apply` | core0-loop | - | 0 | **HOT-PATH-OK** | 4 Edge extra buttons per input report, only with a remap on |
 
 #### src/slots.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 60 | `slots_load` | boot | - | 0 | **NOT-WORTH** | 4 / boot | boot-only print of 4 slots | - |
-| 86 | `slot_owner_of` | callback | - | 0 | **NOT-WORTH** | 4 / per inquiry result | 4 slots, per BT inquiry result while pairing | - |
-| 108 | `slots_wipe_all` | core0-loop | - | 0 | **NOT-WORTH** | 4 / rare (wipe all) | 4 slots, on a user wipe (then one flash save) | - |
-| 117 | `slots_any_empty` | callback+core0-loop | - | 0 | **NOT-WORTH** | 4 / per BT event | 4 slots, on pairing / connection events | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 65 | `slots_load` | boot | - | 0 | **NOT-WORTH** | boot-only print of 4 slots |
+| 91 | `slot_owner_of` | callback+core0-loop | - | 0 | **NOT-WORTH** | 4 slots, per BT inquiry result while pairing |
+| 124 | `slots_wipe_all` | core0-loop | - | 0 | **NOT-WORTH** | 4 slots, on a user wipe (then one flash save) |
+| 134 | `slots_any_empty` | callback+core0-loop | - | 0 | **NOT-WORTH** | 4 slots, on pairing / connection events |
 
 #### src/stick_curve.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 75 | `isqrt` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 15 / per input report | ≤ 15 shifts to align, per stick per input report with a curve | - |
-| 77 | `isqrt` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 16 / per input report | ≤ 16 iterations integer sqrt, per stick per input report with a curve | - |
-| 98 | `stick_curve_valid` | callback | - | 0 | **NOT-WORTH** | 3 / host set + boot | 3 custom points, validating a host set / load | - |
-| 112 | `stick_curve_build` | callback | - | 0 | **NOT-WORTH** | 4 / host set + boot | 4 custom points, on a curve build (host set / load) | - |
-| 123 | `stick_curve_build` | callback | - | 0 | **NOT-WORTH** | 33 / host set + boot | kCurveLutSize = 33 preset nodes, on a curve build | - |
-| 134 | `stick_curve_eval` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 32 / per input report | ≤ 32 segments linear scan per stick per input report with a curve | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 75 | `isqrt` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 15 shifts to align, per stick per input report with a curve |
+| 77 | `isqrt` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 16 iterations integer sqrt, per stick per input report with a curve |
+| 98 | `stick_curve_valid` | callback | - | 0 | **NOT-WORTH** | 3 custom points, validating a host set / load |
+| 113 | `stick_curve_build` | callback | - | 0 | **NOT-WORTH** | 4 custom points, on a curve build (host set / load) |
+| 124 | `stick_curve_build` | callback | - | 0 | **NOT-WORTH** | kCurveLutSize = 33 preset nodes, on a curve build |
+| 135 | `stick_curve_eval` | core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 32 segments linear scan per stick per input report with a curve |
 
 #### src/usb_descriptors.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 972 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | ≤ 8 / per enumeration | serial prefix chars, USB enumeration only | - |
-| 983 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | ≤ 32 / per enumeration | string chars, USB enumeration only | - |
-| 1014 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 / per enumeration | 6 MAC bytes, USB enumeration only | - |
-| 1018 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 / per enumeration | 6 MAC bytes, USB enumeration only | - |
-| 1023 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 / per enumeration | 6 MAC bytes to hex, USB enumeration only | - |
-| 1057 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | ≤ 32 / per enumeration | string chars, USB enumeration only | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 972 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | serial prefix chars, USB enumeration only |
+| 984 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | string chars, USB enumeration only |
+| 1015 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 MAC bytes, USB enumeration only |
+| 1019 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 MAC bytes, USB enumeration only |
+| 1024 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | 6 MAC bytes to hex, USB enumeration only |
+| 1059 | `tud_descriptor_string_cb` | callback | - | 0 | **NOT-WORTH** | string chars, USB enumeration only |
 
 #### src/utils.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 98 | `crc32_table_entry` | - | - | 0 | **NOT-WORTH** | 8 / compile time | constexpr: 8 bits per CRC table entry, compile time | - |
-| 107 | `make_crc32_table` | - | - | 0 | **NOT-WORTH** | 256 / compile time | constexpr: the 256-entry CRC table, compile time | - |
-| 121 | `crc32_seeded` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | ≤ 547 / per BT output report | table CRC over one report (≤ 78 bytes out, 547 for 0x39), RAM table | - |
-| 422 | `print_hex` | - | - | 0 | **NOT-WORTH** | n / unused | debug hex dump, not called in the firmware build | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 98 | `crc32_table_entry` | - | - | 0 | **NOT-WORTH** | constexpr: 8 bits per CRC table entry, compile time |
+| 107 | `make_crc32_table` | - | - | 0 | **NOT-WORTH** | constexpr: the 256-entry CRC table, compile time |
+| 121 | `crc32_seeded` | callback+core0-loop | - | 0 | **HOT-PATH-OK** | table CRC over one report (≤ 78 bytes out, 547 for 0x39), RAM table |
+| 422 | `print_hex` | - | - | 0 | **NOT-WORTH** | debug hex dump, not called in the firmware build |
 
 #### src/vendor_itf.cpp
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 85 | `ms_os_string_descriptor` | callback | - | 0 | **NOT-WORTH** | 7 / per enumeration | 7 signature chars, USB enumeration only | - |
-| 115 | `put32` | callback | - | 0 | **NOT-WORTH** | 4 / once | 4 bytes, building MS OS descriptors once | - |
-| 135 | `build_ext_props` | callback | - | 0 | **NOT-WORTH** | 21 / once | property-name chars, built once (static flag) | - |
-| 138 | `build_ext_props` | callback | - | 0 | **NOT-WORTH** | ≤ 40 / once | property-data chars, built once (static flag) | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 86 | `ms_os_string_descriptor` | callback | - | 0 | **NOT-WORTH** | 7 signature chars, USB enumeration only |
+| 116 | `put32` | callback | - | 0 | **NOT-WORTH** | 4 bytes, building MS OS descriptors once |
+| 136 | `build_ext_props` | callback | - | 0 | **NOT-WORTH** | property-name chars, built once (static flag) |
+| 139 | `build_ext_props` | callback | - | 0 | **NOT-WORTH** | property-data chars, built once (static flag) |
 
 #### src/version_label.h
 
-| Line | Function | Runs on | Wait | Nest | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|---|
-| 22 | `make` | - | - | 0 | **NOT-WORTH** | ≤ 32 / compile time | constexpr version label, compile time (and host tests) | - |
-| 24 | `make` | - | - | 0 | **NOT-WORTH** | ≤ 32 / compile time | constexpr version label, compile time (and host tests) | - |
-| 27 | `make` | - | - | 1 | **NOT-WORTH** | 13 / compile time | constexpr suffix match, compile time (and host tests) | - |
+| Line | Function | Runs on | Wait | Nest | Verdict | Reason |
+|---|---|---|---|---|---|---|
+| 22 | `make` | - | - | 0 | **NOT-WORTH** | constexpr version label, compile time (and host tests) |
+| 24 | `make` | - | - | 0 | **NOT-WORTH** | constexpr version label, compile time (and host tests) |
+| 27 | `make` | - | - | 1 | **NOT-WORTH** | constexpr suffix match, compile time (and host tests) |

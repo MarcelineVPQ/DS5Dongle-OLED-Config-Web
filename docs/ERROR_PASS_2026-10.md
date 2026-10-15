@@ -77,9 +77,9 @@ On 2026-10-13: Electron main process 229 rows, renderer 291. How each verdict wa
 
 **As found, before the fixes.** ESLint's `no-floating-promises` (with `void` not exempt) flagged **95 floating promises**, all behind `void`, with no handler. There were **23 silent failures** in user actions. 22 are fixed below, and 1 is left (E1). There were **6 swallowed errors**: BusyButton and Toggle dropped every rejection with "the caller reports its own errors" (several callers didn't), and the main process dropped three malformed IPC sends without a log. 5 are fixed, and 1 is left (E2). There was also **1 raw message**: board results read "Command 0x04 failed".
 
-### Firmware: 253 rows
+### Firmware: 253 rows (2026-10-13), 269 after F1
 
-SHOWN 89, LOGGED-OK 42, SILENT-BUG 3 (batch F1), SWALLOWED 0, NOT-WORTH 119. The per-kind table is below, under Firmware.
+SHOWN 89, LOGGED-OK 42, SILENT-BUG 3 (batch F1), SWALLOWED 0, NOT-WORTH 119. Re-listed 2026-10-15 on firmware branch `fw-bt-idle-mic` (F1 done, not flashed): SHOWN 107, LOGGED-OK 43, SILENT-BUG 0, SWALLOWED 0, NOT-WORTH 119. The per-kind table is below, under Firmware.
 
 ## Fixed in this pass (app)
 
@@ -1300,14 +1300,16 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 
 | Kind | SHOWN | LOGGED-OK | SILENT-BUG | SWALLOWED | NOT-WORTH | Total |
 |---|---|---|---|---|---|---|
-| ignored-call | 0 | 21 | 3 | 0 | 39 | 63 |
-| checked-call | 39 | 11 | 0 | 0 | 18 | 68 |
-| return-fail | 21 | 0 | 0 | 0 | 41 | 62 |
-| result-code | 27 | 0 | 0 | 0 | 0 | 27 |
+| ignored-call | 0 | 21 | 0 | 0 | 31 | 52 |
+| checked-call | 50 | 11 | 0 | 0 | 21 | 82 |
+| return-fail | 26 | 0 | 0 | 0 | 45 | 71 |
+| result-code | 29 | 0 | 0 | 0 | 0 | 29 |
 | validate | 1 | 6 | 0 | 0 | 6 | 13 |
-| counter | 0 | 4 | 0 | 0 | 0 | 4 |
-| guard | 1 | 0 | 0 | 0 | 15 | 16 |
-| **Total** | **89** | **42** | **3** | **0** | **119** | **253** |
+| counter | 0 | 5 | 0 | 0 | 0 | 5 |
+| guard | 1 | 0 | 0 | 0 | 16 | 17 |
+| **Total** | **107** | **43** | **0** | **0** | **119** | **269** |
+
+_Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727bf), not flashed yet, waiting for the owner's hardware test: 269 failure paths, SHOWN 107, LOGGED-OK 43, SILENT-BUG 0, SWALLOWED 0, NOT-WORTH 119 (F1 done: a status line on every OLED screen, `src/oled_toast.h`). Line numbers are that branch's._
 
 How the firmware surfaces an error to the user: the **0xF1 result byte** after an 0xF6 SET (`CMD_RESULT_INVALID` 2, `FAILED` 3, `BUSY` 4, which the app's `bridgeClient` throws as a `CommandError`), an **OLED message** (`"Save FAIL"`, `"Reset FAIL"`, `"Wipe FAIL"`), a **flag the app shows** (`g_c1_flags` 0x02/0x04 → `CORE1_SPEAKER_FAILED` / `CORE1_MIC_FAILED` on the Dongle dashboard, ctrl-test `NO_ANSWER` / `NO_CONTROLLER` in GET 0xEB), or a **counter** (0xF5/0xFB audio drops, `g_fse_fail` on OLED Diagnostics).
 
@@ -1322,7 +1324,7 @@ How the firmware surfaces an error to the user: the **0xF1 result byte** after a
 
 No new result code: `CMD_RESULT_FAILED` is one the app already turns into a `CommandError`, and the app now says it in plain words (`desktop.errors.boardFailed`: your board couldn't finish that, for example saving to its memory, and the change may be lost when it powers off). That covers the Slots page and wherever the extra buttons are saved (app fix 24).
 
-**Left for a batch (proposed, not done):**
+**F1 (below) is done on firmware branch `fw-bt-idle-mic` (52aebf9), not flashed, waiting for the owner's hardware test.** As proposed:
 
 | Batch | Location | Verdict | Change |
 |---|---|---|---|
@@ -1338,86 +1340,85 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 212 | `mic_add_queue` | ignored-call `queue_try_add` | callback | counter (mic FIFO level in 0xF5) | **LOGGED-OK** | oldest mic packet is dropped first, so the add cannot fail; a drop is a glitch, not a user action | - |
-| 276 | `mic_drain` | ignored-call `tud_audio_write` | core0-loop | g_mic_last_wrote / last_want in OLED Diag + 0xF5 | **LOGGED-OK** | a short USB write is an underrun the PC's audio stack conceals | - |
-| 287 | `mic_drain` | checked-call `tud_audio_write` | core0-loop | g_mic_last_wrote / last_want in OLED Diag + 0xF5 | **LOGGED-OK** | a short USB write is an underrun the PC's audio stack conceals | - |
-| 541 | `audio_loop` | counter `g_drop_raw` | core0-loop | counter g_drop_raw (0xFB/0xF5, the app's audio counters) | **LOGGED-OK** | realtime audio drops the oldest block, nothing for the user to do | - |
-| 545 | `audio_loop` | checked-call `queue_try_add` | core0-loop | printf + g_drop_raw | **LOGGED-OK** | the FIFO was just made room for, so this can't fail in practice | - |
-| 602 | `audio_loop` | counter `g_drop_hap` | core0-loop | counter g_drop_hap (0xFB/0xF5) | **LOGGED-OK** | realtime haptics drop the oldest block | - |
-| 606 | `audio_loop` | ignored-call `queue_try_add` | core0-loop | counter g_drop_hap | **LOGGED-OK** | room was made on the line above, so the add can't fail | - |
-| 655 | `speaker_proc` | checked-call `opus_encode_float` | core1 | the block is skipped (a 10 ms gap) | **LOGGED-OK** | an encode error needs a broken encoder, which core1 flags at start (g_c1_flags 0x02, shown in the app's Dongle dashboard) | - |
-| 662 | `speaker_proc` | counter `g_drop_enc` | core1 | counter g_drop_enc (0xF5) | **LOGGED-OK** | realtime speaker drops the oldest packet | - |
-| 665 | `speaker_proc` | ignored-call `queue_try_add` | core1 | counted on the line above | **LOGGED-OK** | room was just made, so the add can't fail | - |
-| 674 | `mic_push_decoded` | ignored-call `queue_try_add` | core1 | counted on the line above | **LOGGED-OK** | room was just made, so the add can't fail | - |
-| 688 | `mic_proc` | checked-call `opus_decode` | core1 | g_mic_last_decoded in OLED Diag | **LOGGED-OK** | a bad packet is one lost 10 ms frame, PLC covers it | - |
-| 700 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
-| 704 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
-| 710 | `mic_proc` | checked-call `opus_decode` | core1 | g_mic_last_decoded in OLED Diag | **LOGGED-OK** | a bad packet is one lost 10 ms frame, PLC covers it | - |
-| 719 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
-| 743 | `core1_entry` | checked-call `opus_encoder_create` | core1 | g_c1_flags 0x02 (CORE1_SPEAKER_FAILED) in 0xF5, the app's Dongle dashboard says the speaker path failed | **SHOWN** | printf with free heap | - |
-| 747 | `core1_entry` | checked-call `opus_encoder_create` | core1 | g_c1_flags 0x02 (CORE1_SPEAKER_FAILED) in 0xF5, the app's Dongle dashboard says the speaker path failed | **SHOWN** | printf with free heap | - |
-| 756 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
-| 758 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
-| 760 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
-| 762 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
-| 775 | `core1_entry` | checked-call `opus_decoder_create` | core1 | g_c1_flags 0x04 (CORE1_MIC_FAILED) in 0xF5, the app's Dongle dashboard says the mic path failed | **SHOWN** | printf | - |
-| 799 | `core1_entry` | checked-call `mic_proc` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
+| 218 | `mic_add_queue` | ignored-call `queue_try_add` | callback | counter (mic FIFO level in 0xF5) | **LOGGED-OK** | oldest mic packet is dropped first, so the add cannot fail; a drop is a glitch, not a user action | - |
+| 296 | `mic_drain` | ignored-call `tud_audio_write` | core0-loop | g_mic_last_wrote / last_want in OLED Diag + 0xF5 | **LOGGED-OK** | a short USB write is an underrun the PC's audio stack conceals | - |
+| 307 | `mic_drain` | checked-call `tud_audio_write` | core0-loop | g_mic_last_wrote / last_want in OLED Diag + 0xF5 | **LOGGED-OK** | a short USB write is an underrun the PC's audio stack conceals | - |
+| 561 | `audio_loop` | counter `g_drop_raw` | core0-loop | counter g_drop_raw (0xFB/0xF5, the app's audio counters) | **LOGGED-OK** | realtime audio drops the oldest block, nothing for the user to do | - |
+| 565 | `audio_loop` | checked-call `queue_try_add` | core0-loop | printf + g_drop_raw | **LOGGED-OK** | the FIFO was just made room for, so this can't fail in practice | - |
+| 622 | `audio_loop` | counter `g_drop_hap` | core0-loop | counter g_drop_hap (0xFB/0xF5) | **LOGGED-OK** | realtime haptics drop the oldest block | - |
+| 626 | `audio_loop` | ignored-call `queue_try_add` | core0-loop | counter g_drop_hap | **LOGGED-OK** | room was made on the line above, so the add can't fail | - |
+| 675 | `speaker_proc` | checked-call `opus_encode_float` | core1 | the block is skipped (a 10 ms gap) | **LOGGED-OK** | an encode error needs a broken encoder, which core1 flags at start (g_c1_flags 0x02, shown in the app's Dongle dashboard) | - |
+| 682 | `speaker_proc` | counter `g_drop_enc` | core1 | counter g_drop_enc (0xF5) | **LOGGED-OK** | realtime speaker drops the oldest packet | - |
+| 685 | `speaker_proc` | ignored-call `queue_try_add` | core1 | counted on the line above | **LOGGED-OK** | room was just made, so the add can't fail | - |
+| 694 | `mic_push_decoded` | ignored-call `queue_try_add` | core1 | counted on the line above | **LOGGED-OK** | room was just made, so the add can't fail | - |
+| 708 | `mic_proc` | checked-call `opus_decode` | core1 | g_mic_last_decoded in OLED Diag | **LOGGED-OK** | a bad packet is one lost 10 ms frame, PLC covers it | - |
+| 720 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
+| 724 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
+| 730 | `mic_proc` | checked-call `opus_decode` | core1 | g_mic_last_decoded in OLED Diag | **LOGGED-OK** | a bad packet is one lost 10 ms frame, PLC covers it | - |
+| 739 | `mic_proc` | return-fail `false` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
+| 763 | `core1_entry` | checked-call `opus_encoder_create` | core1 | g_c1_flags 0x02 (CORE1_SPEAKER_FAILED) in 0xF5, the app's Dongle dashboard says the speaker path failed | **SHOWN** | printf with free heap | - |
+| 767 | `core1_entry` | checked-call `opus_encoder_create` | core1 | g_c1_flags 0x02 (CORE1_SPEAKER_FAILED) in 0xF5, the app's Dongle dashboard says the speaker path failed | **SHOWN** | printf with free heap | - |
+| 776 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
+| 778 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
+| 780 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
+| 782 | `core1_entry` | ignored-call `opus_encoder_ctl` | core1 | nothing | **NOT-WORTH** | constant, valid encoder settings on an encoder that was just created | - |
+| 795 | `core1_entry` | checked-call `opus_decoder_create` | core1 | g_c1_flags 0x04 (CORE1_MIC_FAILED) in 0xF5, the app's Dongle dashboard says the mic path failed | **SHOWN** | printf | - |
+| 819 | `core1_entry` | checked-call `mic_proc` | core1 | nothing | **NOT-WORTH** | false = no mic frame this pass (session idle), not an error | - |
 
 #### src/bt.cpp
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 137 | `bt_set_slot` | return-fail `false` | core0-loop+user | false to the caller | **NOT-WORTH** | every caller checks the slot first (0xF6 0x04/0x05 answer INVALID, the OLED cursor stays in 0..3) | - |
-| 145 | `bt_set_slot` | checked-call `config_save` | core0-loop+user | returned: 0xF6 0x04/0x05/0x06 answer CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" / "Wipe FAIL" (fixed in this pass: was dropped) | **SHOWN** | - | - |
-| 153 | `bt_set_slot` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 156 | `bt_set_slot` | ignored-call `gap_inquiry_stop` | core0-loop+user | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 158 | `bt_set_slot` | ignored-call `gap_inquiry_start` | core0-loop+user | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 169 | `bt_forget_slot` | return-fail `false` | core0-loop+user | false to the caller | **NOT-WORTH** | every caller checks the slot first (0xF6 0x04/0x05 answer INVALID, the OLED cursor stays in 0..3) | - |
-| 176 | `bt_forget_slot` | checked-call `slot_forget` | core0-loop+user | returned: 0xF6 0x04/0x05/0x06 answer CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" / "Wipe FAIL" (fixed in this pass: was dropped) | **SHOWN** | - | - |
-| 180 | `bt_forget_slot` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 188 | `bt_wipe_all_slots` | checked-call `gap_link_key_iterator_init` | core0-loop+user | nothing | **NOT-WORTH** | no stored keys = nothing to drop, the slot table is still wiped | - |
-| 205 | `bt_wipe_all_slots` | checked-call `slots_wipe_all` | core0-loop+user | returned: 0xF6 0x04/0x05/0x06 answer CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" / "Wipe FAIL" (fixed in this pass: was dropped) | **SHOWN** | - | - |
-| 209 | `bt_wipe_all_slots` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 217 | `bt_send_packet` | ignored-call `l2cap_send` | - | unused (no caller) | **NOT-WORTH** | output goes through bt_write's FIFO | - |
-| 224 | `bt_send_control` | ignored-call `l2cap_send` | core0-loop+user | nothing | **NOT-WORTH** | one write on an open control channel (the Edge unlock handshake), fails only if the link just dropped, and everything restarts on reconnect | - |
-| 231 | `bt_disconnect` | return-fail `false` | callback+core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 236 | `bt_disconnect` | ignored-call `hci_send_cmd` | callback+core0-loop+user | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 257 | `bt_connection_watchdog_tick` | ignored-call `bt_disconnect` | core0-loop | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 264 | `bt_connection_watchdog_tick` | ignored-call `gap_inquiry_stop` | core0-loop | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 266 | `bt_connection_watchdog_tick` | ignored-call `gap_inquiry_start` | core0-loop | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 286 | `bt_get_signal_strength` | checked-call `gap_read_rssi` | callback+core0-loop | the RSSI poll retries after 1 s (rssi_poll.h) | **NOT-WORTH** | the OLED shows the last value | - |
-| 296 | `bt_l2cap_init` | ignored-call `l2cap_register_service` | boot | boot: two fixed PSMs registered once on a fresh stack | **NOT-WORTH** | can only fail out of memory, which the build sizes for | - |
-| 299 | `bt_l2cap_init` | ignored-call `l2cap_register_service` | boot | boot: two fixed PSMs registered once on a fresh stack | **NOT-WORTH** | can only fail out of memory, which the build sizes for | - |
-| 331 | `bt_init` | ignored-call `hci_power_control` | boot | boot: power-on of the radio cyw43_arch_init already brought up | **NOT-WORTH** | BTSTACK_EVENT_STATE never reaching WORKING leaves the OLED on its connecting screen | - |
-| 364 | `hci_packet_handler` | ignored-call `gap_inquiry_start` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 409 | `hci_packet_handler` | ignored-call `gap_inquiry_stop` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 422 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 429 | `hci_packet_handler` | ignored-call `gap_inquiry_start` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 445 | `hci_packet_handler` | ignored-call `gap_inquiry_start` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 475 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 482 | `hci_packet_handler` | ignored-call `gap_inquiry_start` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 503 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 507 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 517 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 526 | `hci_packet_handler` | ignored-call `gap_pin_code_response` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 542 | `hci_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 545 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 563 | `hci_packet_handler` | ignored-call `l2cap_create_channel` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 578 | `hci_packet_handler` | ignored-call `gap_inquiry_stop` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 580 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 619 | `hci_packet_handler` | ignored-call `gap_inquiry_start` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
-| 662 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 716 | `l2cap_packet_handler` | ignored-call `slot_assign` | callback | nothing | **SILENT-BUG** | a new controller's pairing works now but a failed slot save loses it at power-off (rare: flash lockout timeout) | show "Pair not saved" on the OLED (batch: an OLED toast on every screen) |
-| 728 | `l2cap_packet_handler` | ignored-call `l2cap_create_channel` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
-| 770 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 796 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
-| 807 | `l2cap_packet_handler` | checked-call `l2cap_send` | callback | printf of the L2CAP status | **LOGGED-OK** | one output report lost, the game's next one (sent every frame) replaces it | - |
-| 814 | `l2cap_packet_handler` | ignored-call `l2cap_request_can_send_now_event` | callback | nothing | **NOT-WORTH** | asking for a CAN_SEND_NOW on an open channel only fails if the channel just closed, and DISCONNECTION clears the FIFO | - |
-| 839 | `bt_write` | guard `hid_interrupt_cid == 0` | callback+core0-loop+user | nothing | **NOT-WORTH** | no controller connected: the PC's output report has nowhere to go (the app and OLED already show no controller) | - |
-| 853 | `bt_write` | checked-call `queue_try_add` | callback+core0-loop+user | printf | **LOGGED-OK** | the output FIFO is full, this report is dropped and the next state write (games send every frame, the app re-sends on change) replaces it | - |
-| 859 | `bt_write` | ignored-call `l2cap_request_can_send_now_event` | callback+core0-loop+user | nothing | **NOT-WORTH** | asking for a CAN_SEND_NOW on an open channel only fails if the channel just closed, and DISCONNECTION clears the FIFO | - |
-| 884 | `get_feature_data` | ignored-call `l2cap_send` | callback+core0-loop+user | nothing here | **LOGGED-OK** | every caller polls for the answer with a deadline: ctrl tests end NO_ANSWER (shown by the app), the colorway read gives up (no color), the 0x09/0x20/0x05 host GETs answer from the cache | - |
-| 911 | `set_feature_data` | ignored-call `l2cap_send` | callback+core0-loop+user | nothing here | **LOGGED-OK** | every caller polls for the answer with a deadline: ctrl tests end NO_ANSWER (shown by the app), the colorway read gives up (no color), the 0x09/0x20/0x05 host GETs answer from the cache | - |
+| 137 | `bt_any_slot_paired` | return-fail `false` | core0-loop | not a failure: false = every slot is empty (the idle back-off may scan) | **NOT-WORTH** | - | - |
+| 143 | `inquiry_start` | guard `g_inquiring \|\| !g_hci_working` | callback+core0-loop+user | not a failure: one inquiry runs already, or BTstack isn't up yet (HCI_STATE_WORKING starts the boot one) | **NOT-WORTH** | - | - |
+| 145 | `inquiry_start` | checked-call `gap_inquiry_start` | callback+core0-loop+user | nothing | **NOT-WORTH** | gap_inquiry_start only fails while an inquiry is still ending (the next pairing action / idle gap starts a new one) or the stack is off | - |
+| 167 | `bt_pair_now` | return-fail `false` | core0-loop+user | not a failure: the Status screen shows the controller (only that screen without one offers this) | **SHOWN** | - | - |
+| 199 | `make_slot_current` | checked-call `config_save` | callback+core0-loop+user | returned to bt_set_slot / bt_forget_slot (0xF6 CMD_RESULT_FAILED, the OLED's "Save FAIL" / "Wipe FAIL") | **SHOWN** | the connect path marks its own call | - |
+| 204 | `bt_set_slot` | return-fail `false` | core0-loop+user | false to the caller | **NOT-WORTH** | every caller checks the slot first (0xF6 0x04/0x05 answer INVALID, the OLED cursor stays in 0..3) | - |
+| 207 | `bt_set_slot` | checked-call `make_slot_current` | core0-loop+user | returned: 0xF6 0x04 answers CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" | **SHOWN** | - | - |
+| 219 | `bt_set_slot` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 230 | `bt_forget_slot` | return-fail `false` | core0-loop+user | false to the caller | **NOT-WORTH** | every caller checks the slot first (0xF6 0x04/0x05 answer INVALID, the OLED cursor stays in 0..3) | - |
+| 235 | `bt_forget_slot` | checked-call `slot_forget` | core0-loop+user | returned: 0xF6 0x04/0x05/0x06 answer CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" / "Wipe FAIL" (fixed in this pass: was dropped) | **SHOWN** | - | - |
+| 246 | `bt_forget_slot` | checked-call `make_slot_current` | core0-loop+user | returned with the forget: 0xF6 0x05 answers CMD_RESULT_FAILED, the OLED shows "Wipe FAIL" | **SHOWN** | - | - |
+| 249 | `bt_forget_slot` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 258 | `bt_wipe_all_slots` | checked-call `gap_link_key_iterator_init` | core0-loop+user | nothing | **NOT-WORTH** | no stored keys = nothing to drop, the slot table is still wiped | - |
+| 275 | `bt_wipe_all_slots` | checked-call `slots_wipe_all` | core0-loop+user | returned: 0xF6 0x04/0x05/0x06 answer CMD_RESULT_FAILED (the app's command error), the OLED shows "Save FAIL" / "Wipe FAIL" (fixed in this pass: was dropped) | **SHOWN** | - | - |
+| 280 | `bt_wipe_all_slots` | ignored-call `bt_disconnect` | core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 288 | `bt_send_packet` | ignored-call `l2cap_send` | - | unused (no caller) | **NOT-WORTH** | output goes through bt_write's FIFO | - |
+| 295 | `bt_send_control` | ignored-call `l2cap_send` | core0-loop+user | nothing | **NOT-WORTH** | one write on an open control channel (the Edge unlock handshake), fails only if the link just dropped, and everything restarts on reconnect | - |
+| 302 | `bt_disconnect` | return-fail `false` | callback+core0-loop+user | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 307 | `bt_disconnect` | ignored-call `hci_send_cmd` | callback+core0-loop+user | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 321 | `bt_connection_watchdog_tick` | checked-call `bt_any_slot_paired` | core0-loop | not a failure: any_slot_paired() false only means nothing is paired | **NOT-WORTH** | - | - |
+| 337 | `bt_connection_watchdog_tick` | ignored-call `bt_disconnect` | core0-loop | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 363 | `bt_get_signal_strength` | checked-call `gap_read_rssi` | callback+core0-loop | the RSSI poll retries after 1 s (rssi_poll.h) | **NOT-WORTH** | the OLED shows the last value | - |
+| 373 | `bt_l2cap_init` | ignored-call `l2cap_register_service` | boot | boot: two fixed PSMs registered once on a fresh stack | **NOT-WORTH** | can only fail out of memory, which the build sizes for | - |
+| 376 | `bt_l2cap_init` | ignored-call `l2cap_register_service` | boot | boot: two fixed PSMs registered once on a fresh stack | **NOT-WORTH** | can only fail out of memory, which the build sizes for | - |
+| 408 | `bt_init` | ignored-call `hci_power_control` | boot | boot: power-on of the radio cyw43_arch_init already brought up | **NOT-WORTH** | BTSTACK_EVENT_STATE never reaching WORKING leaves the OLED on its connecting screen | - |
+| 492 | `hci_packet_handler` | ignored-call `gap_inquiry_stop` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
+| 508 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 559 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 586 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 590 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 600 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 609 | `hci_packet_handler` | ignored-call `gap_pin_code_response` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 628 | `hci_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 631 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 649 | `hci_packet_handler` | ignored-call `l2cap_create_channel` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 664 | `hci_packet_handler` | ignored-call `gap_inquiry_stop` | callback | nothing | **NOT-WORTH** | gap_inquiry_* only fails while an inquiry is already in the wanted state or the stack is off, and INQUIRY_COMPLETE / the watchdog restart it | - |
+| 666 | `hci_packet_handler` | ignored-call `hci_send_cmd` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 750 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 810 | `l2cap_packet_handler` | checked-call `make_slot_current` | callback | OLED status line "Slot: Save FAIL" on whichever screen is up (error pass F1 | **SHOWN** | was SILENT-BUG: a failed save boots it in the old slot) | - |
+| 813 | `l2cap_packet_handler` | checked-call `slot_assign` | callback | OLED status line "Pair: Save FAIL" on whichever screen is up (error pass F1 | **SHOWN** | was SILENT-BUG: the pairing is lost at power-off) | - |
+| 825 | `l2cap_packet_handler` | ignored-call `l2cap_create_channel` | callback | printf of the step + BTstack's own event | **LOGGED-OK** | the connection watchdog (CONNECT_WATCHDOG_TIMEOUT_US) tears a stalled attempt down and inquiry restarts, the OLED shows not connected | - |
+| 868 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 894 | `l2cap_packet_handler` | ignored-call `bt_disconnect` | callback | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+| 905 | `l2cap_packet_handler` | checked-call `l2cap_send` | callback | printf of the L2CAP status | **LOGGED-OK** | one output report lost, the game's next one (sent every frame) replaces it | - |
+| 912 | `l2cap_packet_handler` | ignored-call `l2cap_request_can_send_now_event` | callback | nothing | **NOT-WORTH** | asking for a CAN_SEND_NOW on an open channel only fails if the channel just closed, and DISCONNECTION clears the FIFO | - |
+| 937 | `bt_write` | guard `hid_interrupt_cid == 0` | callback+core0-loop+user | nothing | **NOT-WORTH** | no controller connected: the PC's output report has nowhere to go (the app and OLED already show no controller) | - |
+| 951 | `bt_write` | checked-call `queue_try_add` | callback+core0-loop+user | printf | **LOGGED-OK** | the output FIFO is full, this report is dropped and the next state write (games send every frame, the app re-sends on change) replaces it | - |
+| 957 | `bt_write` | ignored-call `l2cap_request_can_send_now_event` | callback+core0-loop+user | nothing | **NOT-WORTH** | asking for a CAN_SEND_NOW on an open channel only fails if the channel just closed, and DISCONNECTION clears the FIFO | - |
+| 979 | `bt_request_feature` | ignored-call `l2cap_send` | callback+core0-loop+user | nothing here | **LOGGED-OK** | every caller polls for the answer with a deadline: ctrl tests end NO_ANSWER (shown by the app), the colorway read gives up (no color), the 0x09/0x20/0x05 host GETs answer from the cache | - |
+| 1024 | `set_feature_data` | ignored-call `l2cap_send` | callback+core0-loop+user | nothing here | **LOGGED-OK** | every caller polls for the answer with a deadline: ctrl tests end NO_ANSWER (shown by the app), the colorway read gives up (no color), the 0x09/0x20/0x05 host GETs answer from the cache | - |
 
 #### src/calib.cpp
 
@@ -1438,58 +1439,62 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 157 | `controller_info_task` | guard `!connected` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
-| 161 | `controller_info_task` | guard `now < s_color_due_us \|\| !may_start` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
-| 171 | `controller_info_task` | guard `now < s_color_due_us` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
-| 232 | `cmd_task` | guard `!s_pending \|\| time_us_64 () < s_pending_due_us` | core0-loop+user | nothing | **NOT-WORTH** | no deferred command due yet (scheduling) | - |
-| 238 | `cmd_task` | checked-call `config_save` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
-| 243 | `cmd_task` | checked-call `bt_set_slot` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
-| 248 | `cmd_task` | checked-call `bt_forget_slot` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
-| 252 | `cmd_task` | checked-call `bt_wipe_all_slots` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
-| 268 | `cmd_task` | checked-call `config_save` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
-| 275 | `cmd_task` | result-code `CMD_RESULT_FAILED` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
-| 285 | `cmd_task` | result-code `CMD_RESULT_FAILED` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
-| 294 | `cmd_task` | checked-call `config_save_narrator` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
-| 299 | `cmd_task` | checked-call `config_save_power_flags` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
-| 304 | `cmd_task` | result-code `CMD_RESULT_INVALID` | core0-loop+user | CMD_RESULT_INVALID in the 0xF1 result byte: unknown function, the app's command error | **SHOWN** | - | - |
-| 392 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 408 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 420 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 442 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 544 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 559 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 579 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 612 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 641 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
-| 765 | `pico_cmd_get` | return-fail `0` | callback | USB STALL | **NOT-WORTH** | an unknown report id (the app only asks the ids identity lists) | - |
-| 785 | `pico_cmd_set` | result-code `CMD_RESULT_BUSY` | callback+user | CMD_RESULT_BUSY in the 0xF1 result byte: a deferred command is still pending | **SHOWN** | the app waits for 0xF1 first and shows a command error if it ever sees BUSY | - |
-| 834 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 849 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 858 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 867 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 872 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 877 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 879 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
-| 898 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: controller tests not built in (no vendor interface), the app only offers them when identity [46] bit0 says so | **SHOWN** | - | - |
-| 907 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: unknown function, the app's command error | **SHOWN** | - | - |
-| 923 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 927 | `pico_cmd_set` | checked-call `calib_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
-| 930 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
-| 932 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
-| 950 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 956 | `pico_cmd_set` | checked-call `curves_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
-| 959 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
-| 961 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
-| 969 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 973 | `pico_cmd_set` | checked-call `remap_set_extra` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
-| 976 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
-| 980 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved (fixed in this pass: said INVALID, "rejected") | **SHOWN** | - | - |
-| 989 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 998 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 1004 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
-| 1008 | `pico_cmd_set` | checked-call `remap_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
-| 1015 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
-| 1020 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
+| 171 | `controller_info_task` | guard `!connected` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
+| 175 | `controller_info_task` | guard `now < s_color_due_us \|\| !may_start` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
+| 185 | `controller_info_task` | guard `now < s_color_due_us` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the colorway read (not connected / not due / test slot busy); a read that never answers leaves the colorway unknown, the app draws the default | - |
+| 244 | `cmd_task` | guard `!s_pending \|\| time_us_64 () < s_pending_due_us` | core0-loop+user | nothing | **NOT-WORTH** | no deferred command due yet (scheduling) | - |
+| 250 | `cmd_task` | checked-call `config_save` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
+| 255 | `cmd_task` | checked-call `bt_set_slot` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
+| 260 | `cmd_task` | checked-call `bt_forget_slot` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
+| 264 | `cmd_task` | checked-call `bt_wipe_all_slots` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (fixed in this pass: a failed slot save said OK) | **SHOWN** | - | - |
+| 280 | `cmd_task` | checked-call `config_save` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
+| 287 | `cmd_task` | result-code `CMD_RESULT_FAILED` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
+| 297 | `cmd_task` | result-code `CMD_RESULT_FAILED` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
+| 306 | `cmd_task` | checked-call `config_save_narrator` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
+| 311 | `cmd_task` | checked-call `config_save_power_flags` | core0-loop+user | CMD_RESULT_FAILED in the 0xF1 result byte, the app's command error (save failed) | **SHOWN** | - | - |
+| 316 | `cmd_task` | checked-call `oled_key_inject` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte: four presses already waiting | **SHOWN** | the app shows a command error | - |
+| 320 | `cmd_task` | checked-call `oled_pad_inject` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte: four presses already waiting (button and hold were checked at the SET) | **SHOWN** | the app shows a command error | - |
+| 324 | `cmd_task` | result-code `CMD_RESULT_INVALID` | core0-loop+user | CMD_RESULT_INVALID in the 0xF1 result byte: unknown function, the app's command error | **SHOWN** | - | - |
+| 412 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 428 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 440 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 462 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 566 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 581 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 601 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 634 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 657 | `pico_cmd_get` | return-fail `0` | callback | USB STALL to the host | **NOT-WORTH** | a request shorter than the reply (the app always asks the full length, its transport reports a short reply) | - |
+| 790 | `pico_cmd_get` | return-fail `0` | callback | USB STALL | **NOT-WORTH** | an unknown report id (the app only asks the ids identity lists) | - |
+| 810 | `pico_cmd_set` | result-code `CMD_RESULT_BUSY` | callback+user | CMD_RESULT_BUSY in the 0xF1 result byte: a deferred command is still pending | **SHOWN** | the app waits for 0xF1 first and shows a command error if it ever sees BUSY | - |
+| 868 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 883 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 892 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 901 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 906 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 912 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 921 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 926 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 928 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller connected, the app's command error | **SHOWN** | - | - |
+| 947 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: controller tests not built in (no vendor interface), the app only offers them when identity [46] bit0 says so | **SHOWN** | - | - |
+| 956 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: unknown function, the app's command error | **SHOWN** | - | - |
+| 972 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 976 | `pico_cmd_set` | checked-call `calib_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
+| 979 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
+| 981 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
+| 999 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 1005 | `pico_cmd_set` | checked-call `curves_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
+| 1008 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
+| 1010 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
+| 1018 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 1022 | `pico_cmd_set` | checked-call `remap_set_extra` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
+| 1025 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
+| 1029 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved (fixed in this pass: said INVALID, "rejected") | **SHOWN** | - | - |
+| 1038 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 1047 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 1053 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: bad argument or framing, the app's command error | **SHOWN** | - | - |
+| 1057 | `pico_cmd_set` | checked-call `remap_set` | callback+user | mapped to CMD_RESULT_INVALID / FAILED in the 0xF1 result byte on the lines below | **SHOWN** | - | - |
+| 1064 | `pico_cmd_set` | result-code `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: an invalid table/curve/calibration, the app's command error | **SHOWN** | - | - |
+| 1069 | `pico_cmd_set` | result-code `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: applied but not saved, the app's command error | **SHOWN** | - | - |
 
 #### src/config.cpp
 
@@ -1500,11 +1505,11 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 168 | `config_load` | validate `config.magic != CONFIG_MAGIC` | boot | printf in config_valid | **LOGGED-OK** | first boot / erased sector, defaults are the right answer; shown as unsaved settings in the app | - |
 | 172 | `config_load` | validate `legacy.magic == CONFIG_MAGIC, legacy.crc32 == calc_config_crc (legacy` | boot | printf on migration | **LOGGED-OK** | a bad legacy copy is ignored (defaults, shown as unsaved settings) | - |
 | 177 | `config_load` | ignored-call `config_save` | boot | printf | **LOGGED-OK** | boot-time init save of the migrated settings: the RAM copy works now and the next boot retries the save | - |
-| 202 | `write_config` | checked-call `flash_sector_write` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
-| 205 | `write_config` | return-fail `false` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
-| 212 | `write_config` | validate `verify_crc32 == con.crc32` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
-| 218 | `write_config` | return-fail `false` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
-| 222 | `config_save` | checked-call `write_config` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
+| 202 | `write_config` | checked-call `flash_sector_write` | callback+core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
+| 205 | `write_config` | return-fail `false` | callback+core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
+| 212 | `write_config` | validate `verify_crc32 == con.crc32` | callback+core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
+| 218 | `write_config` | return-fail `false` | callback+core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
+| 222 | `config_save` | checked-call `write_config` | callback+core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
 | 230 | `config_save_narrator` | validate `saved->magic == CONFIG_MAGIC` | core0-loop+user | nothing | **NOT-WORTH** | reads which copy to start from (no valid save yet = the RAM copy), not a failure | - |
 | 237 | `config_save_narrator` | checked-call `write_config` | core0-loop+user | passed up | **SHOWN** | the callers report it (0xF1 CMD_RESULT_FAILED to the app, the OLED's "Save FAIL") | - |
 | 249 | `config_save_power_flags` | return-fail `false` | core0-loop+user | CMD_RESULT_FAILED in 0xF1 (0x17 also checks the bits first and answers INVALID) | **SHOWN** | - | - |
@@ -1518,16 +1523,16 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 123 | `ctrl_test_start` | return-fail `CMD_RESULT_INVALID` | callback+user | CMD_RESULT_INVALID in the 0xF1 result byte: a test the dongle doesn't allow, the app's command error | **SHOWN** | - | - |
 | 127 | `ctrl_test_start` | return-fail `CMD_RESULT_FAILED` | callback+user | CMD_RESULT_FAILED in the 0xF1 result byte: no controller, the app's command error | **SHOWN** | - | - |
 | 129 | `ctrl_test_start` | return-fail `CMD_RESULT_BUSY` | callback+user | CMD_RESULT_BUSY in the 0xF1 result byte: a test is running, the app's command error | **SHOWN** | - | - |
-| 173 | `ctrl_test_task` | guard `!may_send` | core0-loop+user | nothing | **NOT-WORTH** | scheduling (test slot busy / reply taken); the request's deadline ends it as NO_ANSWER, which GET 0xEB reports and the app shows | - |
-| 189 | `ctrl_test_task` | guard `take_reply (r)` | core0-loop+user | nothing | **NOT-WORTH** | scheduling (test slot busy / reply taken); the request's deadline ends it as NO_ANSWER, which GET 0xEB reports and the app shows | - |
+| 175 | `ctrl_test_task` | guard `!may_send` | core0-loop+user | nothing | **NOT-WORTH** | scheduling (test slot busy / reply taken); the request's deadline ends it as NO_ANSWER, which GET 0xEB reports and the app shows | - |
+| 191 | `ctrl_test_task` | guard `take_reply (r, rn)` | core0-loop+user | nothing | **NOT-WORTH** | scheduling (test slot busy / reply taken); the request's deadline ends it as NO_ANSWER, which GET 0xEB reports and the app shows | - |
 
 #### src/dse.cpp
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 109 | `dse_task` | guard `!may_use_test_slot` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
-| 132 | `dse_task` | guard `now - s_written_us < kSaveSettleUs \|\| !may_use_test_slot` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
-| 151 | `dse_task` | guard `now - s_last_get_us < kFetchGapUs` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
+| 108 | `dse_task` | guard `!may_use_test_slot` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
+| 131 | `dse_task` | guard `now - s_written_us < kSaveSettleUs \|\| !may_use_test_slot` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
+| 149 | `dse_task` | guard `now - s_last_get_us < kFetchGapUs` | core0-loop+user | nothing | **NOT-WORTH** | scheduling of the Edge profile unlock/fetch (test slot busy, settle and gap timers), retried next pass | - |
 
 #### src/flash_safe.h
 
@@ -1545,28 +1550,55 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 326 | `get_report_impl` | return-fail `0` | callback | USB STALL | **NOT-WORTH** | a zero/short GET from the host OS, which retries with the right length | - |
 | 346 | `get_report_impl` | return-fail `0` | callback | USB STALL | **NOT-WORTH** | a zero/short GET from the host OS, which retries with the right length | - |
 | 364 | `get_report_impl` | return-fail `0` | callback | USB STALL on purpose: the app's controller test owns 0x81 for a few seconds | **NOT-WORTH** | PC tools retry | - |
-| 373 | `get_report_impl` | return-fail `0` | callback | USB STALL on purpose until the Edge profiles are cached (PS Accessories retries) | **NOT-WORTH** | the read is started here | - |
-| 433 | `__wrap_flash_safe_execute` | counter `g_fse_fail` | - | counter g_fse_fail (OLED Diag) | **LOGGED-OK** | the failed write itself is reported by its caller | - |
-| 441 | `host_out02_forward` | return-fail `false` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
-| 446 | `host_out02_forward` | return-fail `false` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
-| 512 | `tud_hid_set_report_cb` | checked-call `host_out02_forward` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
-| 556 | `main` | ignored-call `tusb_init` | boot | boot: TinyUSB init with a fixed, valid config | **NOT-WORTH** | failure would leave no USB device at all (no app to tell), the OLED still runs | - |
-| 561 | `main` | ignored-call `tud_disconnect` | boot | nothing | **NOT-WORTH** | boot: disconnect of a device that was just initialized | - |
-| 577 | `main` | checked-call `cyw43_arch_init` | boot | printf and main() returns: no radio, nothing can run | **LOGGED-OK** | the board shows no OLED/USB activity, a hardware fault | - |
+| 372 | `get_report_impl` | return-fail `0` | callback | USB STALL on purpose until the Edge profiles are cached (PS Accessories retries) | **NOT-WORTH** | the read is started here | - |
+| 432 | `__wrap_flash_safe_execute` | counter `g_fse_fail` | - | counter g_fse_fail (OLED Diag) | **LOGGED-OK** | the failed write itself is reported by its caller | - |
+| 440 | `host_out02_forward` | return-fail `false` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
+| 445 | `host_out02_forward` | return-fail `false` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
+| 511 | `tud_hid_set_report_cb` | checked-call `host_out02_forward` | callback | nothing | **NOT-WORTH** | a malformed/short host report isn't forwarded (counted only when forwarded, g_host_out02_to_bt); games send well-formed ones every frame | - |
+| 555 | `main` | ignored-call `tusb_init` | boot | boot: TinyUSB init with a fixed, valid config | **NOT-WORTH** | failure would leave no USB device at all (no app to tell), the OLED still runs | - |
+| 560 | `main` | ignored-call `tud_disconnect` | boot | nothing | **NOT-WORTH** | boot: disconnect of a device that was just initialized | - |
+| 576 | `main` | checked-call `cyw43_arch_init` | boot | printf and main() returns: no radio, nothing can run | **LOGGED-OK** | the board shows no OLED/USB activity, a hardware fault | - |
+
+#### src/mic_level.h
+
+| Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
+|---|---|---|---|---|---|---|---|
+| 72 | `MicLevel::drop` | return-fail `false` | core0-loop | not a failure: false = keep this frame (no excess) | **NOT-WORTH** | - | - |
+| 74 | `MicLevel::drop` | return-fail `false` | core0-loop | not a failure: false = keep this loud frame, wait for a quiet one | **NOT-WORTH** | - | - |
+| 77 | `MicLevel::drop` | counter `drops` | core0-loop | counter (0xFD [44..47], scripts/mic_diag.sh bt-trace) | **LOGGED-OK** | a drop is the level control working, not an error the user acts on | - |
 
 #### src/oled.cpp
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
 |---|---|---|---|---|---|---|---|
-| 621 | `handle_buttons` | ignored-call `config_save` | core0-loop+user | nothing | **SILENT-BUG** | the long-press screen brightness applies now but a failed save loses it at power-off | show "Save FAIL" on whichever screen is up (batch: an OLED toast on every screen) |
-| 1001 | `diag_handle_input` | guard `!bt_is_connected ()` | core0-loop+user | nothing | **NOT-WORTH** | input comes from the controller, so with none connected there's no button press to handle | - |
-| 1526 | `lightbar_save_config` | ignored-call `config_save` | core0-loop | nothing | **SILENT-BUG** | the Lightbar screen's mode/favorites apply now but a failed save on leaving the screen loses them at power-off | show "Save FAIL" (batch: an OLED toast on every screen) |
-| 1678 | `settings_handle_input` | guard `!bt_is_connected ()` | core0-loop+user | nothing | **NOT-WORTH** | input comes from the controller, so with none connected there's no button press to handle | - |
-| 1707 | `settings_handle_input` | checked-call `config_save` | core0-loop+user | OLED footer "Reset FAIL" / "Save FAIL" | **SHOWN** | - | - |
-| 1718 | `settings_handle_input` | checked-call `bt_wipe_all_slots` | core0-loop+user | OLED footer "Wipe FAIL" (fixed in this pass: always said "Slots wiped!") | **SHOWN** | - | - |
-| 1726 | `settings_handle_input` | checked-call `config_save` | core0-loop+user | OLED footer "Reset FAIL" / "Save FAIL" | **SHOWN** | - | - |
-| 1885 | `slots_handle_input` | checked-call `bt_set_slot` | core0-loop+user | OLED Slots status "Save FAIL" / "Wipe FAIL" (fixed in this pass: always said done) | **SHOWN** | - | - |
-| 1901 | `slots_handle_input` | checked-call `bt_forget_slot` | core0-loop+user | OLED Slots status "Save FAIL" / "Wipe FAIL" (fixed in this pass: always said done) | **SHOWN** | - | - |
+| 647 | `handle_buttons` | guard `ev == 0` | core0-loop+user | nothing | **NOT-WORTH** | no key event this pass (polling, not a failure) | - |
+| 656 | `handle_buttons` | ignored-call `bt_pair_now` | core0-loop+user | false only with a controller connected, which pair_hold already excludes | **NOT-WORTH** | - | - |
+| 676 | `handle_buttons` | checked-call `config_save` | core0-loop+user | OLED status line "Bright: Save FAIL" on whichever screen is up (error pass F1 | **SHOWN** | was SILENT-BUG) | - |
+| 901 | `render_screen` | checked-call `bt_any_slot_paired` | core0-loop | not a failure: false = every slot is empty, the screen says "No DualSense paired" | **NOT-WORTH** | - | - |
+| 1591 | `lightbar_save_config` | checked-call `config_save` | core0-loop | OLED status line "Lightbar: Save FAIL" on the screen it left for (error pass F1 | **SHOWN** | was SILENT-BUG) | - |
+| 1625 | `settings_adjust` | guard `it.kind == SK_ACTION` | core0-loop+user | Reset/Wipe have no editable value | **NOT-WORTH** | Triangle runs the action | - |
+| 1691 | `settings_handle_input` | checked-call `config_save` | core0-loop+user | OLED footer "Reset FAIL" / "Save FAIL" | **SHOWN** | - | - |
+| 1702 | `settings_handle_input` | checked-call `bt_wipe_all_slots` | core0-loop+user | OLED footer "Wipe FAIL" (fixed in this pass: always said "Slots wiped!") | **SHOWN** | - | - |
+| 1710 | `settings_handle_input` | checked-call `config_save` | core0-loop+user | OLED footer "Reset FAIL" / "Save FAIL" | **SHOWN** | - | - |
+| 1814 | `slots_handle_input` | checked-call `bt_set_slot` | core0-loop+user | OLED Slots status "Save FAIL" / "Wipe FAIL" (fixed in this pass: always said done) | **SHOWN** | - | - |
+| 1830 | `slots_handle_input` | checked-call `bt_forget_slot` | core0-loop+user | OLED Slots status "Save FAIL" / "Wipe FAIL" (fixed in this pass: always said done) | **SHOWN** | - | - |
+| 1938 | `oled_key_inject` | checked-call `push` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte (cmd.cpp 0x18): four presses already waiting | **SHOWN** | - | - |
+| 1943 | `oled_pad_inject` | checked-call `push` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte (cmd.cpp 0x19): four presses already waiting | **SHOWN** | - | - |
+
+#### src/oled_keys.h
+
+| Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
+|---|---|---|---|---|---|---|---|
+| 114 | `push` | return-fail `false` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte (cmd.cpp 0x18): four presses already waiting | **SHOWN** | - | - |
+
+#### src/oled_vpad.h
+
+| Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
+|---|---|---|---|---|---|---|---|
+| 53 | `hold_us` | return-fail `false` | core0-loop+user | CMD_RESULT_INVALID in the 0xF1 result byte (cmd.cpp refuses a hold over kMaxHoldMs at the SET) | **SHOWN** | - | - |
+| 73 | `push` | checked-call `hold_us` | core0-loop+user | CMD_RESULT_INVALID in the 0xF1 result byte (cmd.cpp checks the same range first) | **SHOWN** | - | - |
+| 73 | `push` | return-fail `false` | core0-loop+user | CMD_RESULT_INVALID in the 0xF1 result byte (cmd.cpp checks the same range first) | **SHOWN** | - | - |
+| 75 | `push` | return-fail `false` | core0-loop+user | CMD_RESULT_BUSY in the 0xF1 result byte (cmd.cpp 0x19): four presses already waiting | **SHOWN** | - | - |
 
 #### src/remap.cpp
 
@@ -1590,6 +1622,12 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 238 | `remap_set` | checked-call `save_to_flash` | callback+user | NotSaved: CMD_RESULT_FAILED in 0xF1, the app's command error | **SHOWN** | - | - |
 | 238 | `remap_set` | return-fail `save_to_flash () ? RemapSet::Ok : RemapSet::NotSaved` | callback+user | NotSaved: CMD_RESULT_FAILED in 0xF1, the app's command error | **SHOWN** | - | - |
 
+#### src/scan_policy.h
+
+| Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
+|---|---|---|---|---|---|---|---|
+| 79 | `ScanPolicy::again` | return-fail `false` | callback+core0-loop | not a failure: false = the pairing window is over, stop scanning | **NOT-WORTH** | - | - |
+
 #### src/slots.cpp
 
 | Line | Function | Kind | Runs on | Surfaces as | Verdict | Why | Change |
@@ -1599,12 +1637,12 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 51 | `save_slots_to_flash` | return-fail `false` | callback+core0-loop+user | printf + returned to the slot changes, which report it (0xF1 CMD_RESULT_FAILED, the OLED's "Save FAIL"/"Wipe FAIL") | **SHOWN** | - | - |
 | 57 | `slots_load` | validate `g_slots.magic != SLOTS_MAGIC` | boot | printf | **LOGGED-OK** | first boot / erased sector: no paired controllers, which the app and OLED show as empty slots | - |
 | 62 | `slots_load` | ignored-call `save_slots_to_flash` | boot | printf | **LOGGED-OK** | boot-time init save of a blank sector: the RAM copy works now and the next boot retries the save | - |
-| 95 | `slot_owner_of` | return-fail `- 1` | callback | nothing | **NOT-WORTH** | -1 = no slot owns this address (a lookup), not an error | - |
-| 100 | `slot_assign` | return-fail `false` | callback | false for a slot outside 0..3 | **NOT-WORTH** | every caller passes a checked slot | - |
-| 104 | `slot_assign` | checked-call `save_slots_to_flash` | callback | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
-| 109 | `slot_forget` | return-fail `false` | core0-loop+user | false for a slot outside 0..3 | **NOT-WORTH** | every caller passes a checked slot | - |
-| 113 | `slot_forget` | checked-call `save_slots_to_flash` | core0-loop+user | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
-| 123 | `slots_wipe_all` | checked-call `save_slots_to_flash` | core0-loop+user | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
+| 95 | `slot_owner_of` | return-fail `- 1` | callback+core0-loop+user | nothing | **NOT-WORTH** | -1 = no slot owns this address (a lookup), not an error | - |
+| 106 | `slot_assign` | return-fail `false` | callback | false for a slot outside 0..3 | **NOT-WORTH** | every caller passes a checked slot | - |
+| 110 | `slot_assign` | checked-call `save_slots_to_flash` | callback | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
+| 115 | `slot_forget` | return-fail `false` | core0-loop+user | false for a slot outside 0..3 | **NOT-WORTH** | every caller passes a checked slot | - |
+| 119 | `slot_forget` | checked-call `save_slots_to_flash` | core0-loop+user | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
+| 129 | `slots_wipe_all` | checked-call `save_slots_to_flash` | core0-loop+user | returned: the callers report a failed save (fixed in this pass: was dropped) | **SHOWN** | - | - |
 
 #### src/stick_curve.h
 

@@ -105,97 +105,81 @@ What it doesn't cover: work that keeps running while a page is still mounted but
 
 ## The work: proposed changes in 4 batches (biggest effect first)
 
-Batch 1 and batch 2's three WASTE items are done (2026-10-13); the rest is still to do. Each change keeps the current behaviour and needs a test that pins it; the leak test must keep passing.
+All four batches are done: 1 and 2 (2026-10-13 / checked 2026-10-15), 4 on `passes-095`, 3 on firmware branch `fw-bt-idle-mic` (52aebf9, not flashed, waiting for the owner's hardware test). Each change keeps the current behaviour and needs a test that pins it; the leak test must keep passing.
 
 | Batch | What | Rows | Why first |
 |---|---|---|---|
 | 1. The firmware update's USB session (**done**, 2026-10-13) | End the PICOBOOT session when a write fails (`disconnect()` in a `finally`, done); check the dongle handle after a failed attach (`WebUsbTransport.close()` unused) and whether either explains "Unable to claim interface" | `firmwareUpdate.ts:79`; `webUsbTransport.ts:65, 68` | A user-visible failure (a retry that can't claim the board) on the update path |
 | 2. Every frame and every second on screen (**done**: WASTE items 2026-10-13, the other two with earlier work, checked 2026-10-15) | The controller view's panel-toggle effect gets stable deps; the OLED mirror reuses one `ImageData`; the stick-test sampler stops while hidden (done); Auto-update's 1 Hz check stops once answered and while hidden (done); the tour's hold ring runs only while held (done) | `ControllerView.tsx:183`, `DongleConsole.tsx:171`, `StickTestCards.tsx:40`, `AutoUpdateAsk.tsx:15, 19`, `Tour.tsx:330` | Runs whenever the app is open (two of them while hidden) |
-| 3. Firmware: no heap on core0's loop | A non-allocating feature peek for the 0x81 callers; a `bt_request_feature()` without a copy for the fire-and-forget callers | `cmd.cpp:193`, `ctrl_info.cpp:165, 179`; the `get_feature_data` NOT-WORTH rows | Bounded windows per connection, so smaller; heap use on core0 is worth removing anyway |
+| 3. Firmware: no heap on core0's loop (**done** on firmware branch `fw-bt-idle-mic`, 52aebf9: `bt_feature_copy()` and `bt_request_feature()`; a host test counts zero `operator new` over 2 s of polling) | A non-allocating feature peek for the 0x81 callers; a `bt_request_feature()` without a copy for the fire-and-forget callers | `cmd.cpp:193`, `ctrl_info.cpp:165, 179`; the `get_feature_data` NOT-WORTH rows | Bounded windows per connection, so smaller; heap use on core0 is worth removing anyway |
 | 4. Tidy (**done**, 2026-10-15, branch `passes-095`) | The HDR test's GPU device destroyed (dev only); `refreshLatest`'s timeout cleared; the palette watcher's stop kept | `HdrTest.tsx:23, 31`, `service.ts:90`, `index.ts:288` | Dev-only or once per app |
 
 ## Full tables
 
 ### Firmware (`DS5Dongle`, `python3 tools/list_lifetimes.py --md`)
 
+_Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727bf), not flashed yet, waiting for the owner's hardware test: 26 acquisitions, OK 5, LEAK 0, WASTE 0, HOT-ALLOC 0, NOT-WORTH 21 (batch 3 done: `bt_feature_copy()`, a stack buffer, for the 0x81 pollers; `bt_request_feature()` for the fire-and-forget GETs). Line numbers are that branch's._
+
 #### src/audio.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 610 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 613 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 615 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 620 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 622 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 726 | `core1_entry` | core1 | heap | opus_encoder_create | **NOT-WORTH** | once at core1 start; the encoder lives as long as core1 (never restarted) |
-| 729 | `core1_entry` | core1 | heap | opus_encoder_create | **NOT-WORTH** | once at core1 start; the encoder lives as long as core1 (never restarted) |
-| 745 | `core1_entry` | core1 | heap | Prealloc | **OK** | once at core1 start, sized for audio_loop's 512-in/480-out frame, so it never grows |
-| 752 | `core1_entry` | core1 | heap | opus_decoder_create | **NOT-WORTH** | once at core1 start; the decoder lives as long as core1 (never restarted) |
+| 637 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 640 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 642 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 647 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 649 | `audio_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 763 | `core1_entry` | core1 | heap | opus_encoder_create | **NOT-WORTH** | once at core1 start; the encoder lives as long as core1 (never restarted) |
+| 767 | `core1_entry` | core1 | heap | opus_encoder_create | **NOT-WORTH** | once at core1 start; the encoder lives as long as core1 (never restarted) |
+| 787 | `core1_entry` | core1 | heap | Prealloc | **OK** | once at core1 start, sized for audio_loop's 512-in/480-out frame, so it never grows |
+| 795 | `core1_entry` | core1 | heap | opus_decoder_create | **NOT-WORTH** | once at core1 start; the decoder lives as long as core1 (never restarted) |
 
 #### src/bt.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 78 | `<file>` | - | container | static unordered_map feature_data | **OK** | cleared on disconnect (feature_data.clear()); ≤ ~10 report ids × ≤ 64 B meanwhile |
-| 273 | `bt_l2cap_init` | boot | register | l2cap_register_service | **NOT-WORTH** | boot; BTstack keeps the service for the firmware's life |
-| 275 | `bt_l2cap_init` | boot | register | l2cap_register_service | **NOT-WORTH** | boot; BTstack keeps the service for the firmware's life |
-| 282 | `bt_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
-| 304 | `bt_init` | boot | register | hci_add_event_handler | **NOT-WORTH** | boot; one registration for the firmware's life |
-| 625 | `l2cap_packet_handler` | callback | grow | assign | **OK** | reuses the id's buffer (same size each reply); new ids only until disconnect clears |
-| 812 | `get_feature_data` | callback+core0-loop | container | returns vector by value: get_feature_data() | **NOT-WORTH** | a ≤ 64 B copy per request (≤ 25/s, a few s per connect); fire-and-forget callers could skip it |
-| 845 | `bt_peek_feature` | callback+core0-loop | container | returns vector by value: bt_peek_feature() | **NOT-WORTH** | copies on every call; empty (no heap) until the report arrives; hot callers have rows |
-| 867 | `init_feature` | callback | container | temporary from get_feature_data() | **NOT-WORTH** | once per connection |
-| 869 | `init_feature` | callback | container | temporary from get_feature_data() | **NOT-WORTH** | once per connection |
-| 871 | `init_feature` | callback | container | temporary from get_feature_data() | **NOT-WORTH** | once per connection |
-| 876 | `init_feature` | callback | container | temporary from get_feature_data() | **NOT-WORTH** | once per connection |
+| 81 | `<file>` | - | container | static unordered_map feature_data | **OK** | cleared on disconnect (feature_data.clear()); ≤ ~10 report ids × ≤ 64 B meanwhile |
+| 373 | `bt_l2cap_init` | boot | register | l2cap_register_service | **NOT-WORTH** | boot; BTstack keeps the service for the firmware's life |
+| 376 | `bt_l2cap_init` | boot | register | l2cap_register_service | **NOT-WORTH** | boot; BTstack keeps the service for the firmware's life |
+| 383 | `bt_init` | boot | heap | queue_init | **NOT-WORTH** | boot, once per firmware run; the queue lives until reset |
+| 405 | `bt_init` | boot | register | hci_add_event_handler | **NOT-WORTH** | boot; one registration for the firmware's life |
+| 756 | `l2cap_packet_handler` | callback | grow | assign | **OK** | reuses the id's buffer (same size each reply); new ids only until disconnect clears |
+| 988 | `get_feature_data` | callback | container | returns vector by value: get_feature_data() | **NOT-WORTH** | a ≤ 64 B copy per host GET feature report (the PC asks a few times per connect); fire-and-forget callers use bt_request_feature (lifetime pass batch 3) |
+| 992 | `get_feature_data` | callback | container | local vector ret | **NOT-WORTH** | the copy this function returns (see above) |
+| 1011 | `bt_peek_feature` | callback+core0-loop | container | returns vector by value: bt_peek_feature() | **NOT-WORTH** | copies on every call; empty (no heap) until the report arrives; hot callers have rows |
 
 #### src/calib.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 171 | `calib_service` | core0-loop | container | temporary from bt_peek_feature() | **OK** | no heap until 0x05 arrives (empty vector), then one copy per connection (g_bias_known) |
-
-#### src/cmd.cpp
-
-| Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
-|---|---|---|---|---|---|---|
-| 170 | `controller_info_task` | core0-loop | container | local vector r | **NOT-WORTH** | every 40 ms for ≤ 2 s per connection (colorway read) |
-| 187 | `controller_info_task` | core0-loop | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy every 40 ms for ≤ 2 s per connection |
-| 193 | `controller_info_task` | core0-loop | container | local vector r | **HOT-ALLOC** | copies 0x81 every core0 pass for 1 s per connect while a foreign reply sits there |
+| 173 | `calib_service` | core0-loop | container | temporary from bt_peek_feature() | **OK** | no heap until 0x05 arrives (empty vector), then one copy per connection (g_bias_known) |
 
 #### src/ctrl_info.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 165 | `ctrl_test_task` | core0-loop | container | temporary from bt_peek_feature() | **HOT-ALLOC** | copies 0x81 every core0 pass during the scrub window when a reply is cached |
-| 179 | `ctrl_test_task` | core0-loop | container | local vector r | **HOT-ALLOC** | copies 0x81 every core0 pass while a test runs (≤ 3 s) and a reply is cached |
-| 196 | `ctrl_test_task` | core0-loop | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy per re-ask (every 150 ms, ≤ 3 s per test) |
-| 208 | `ctrl_info_get` | callback | container | local vector fw | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
-| 210 | `ctrl_info_get` | callback | container | local vector patch | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
-| 229 | `ctrl_info_get` | callback | container | local vector fw | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
+| 214 | `ctrl_info_get` | callback | container | local vector fw | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
+| 216 | `ctrl_info_get` | callback | container | local vector patch | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
+| 235 | `ctrl_info_get` | callback | container | local vector fw | **NOT-WORTH** | per app GET 0xEB (the Controller info card, a few per second at most) |
 
 #### src/dse.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 49 | `start_fetch` | core0-loop | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy per Edge profile fetch step (a few per connect / save) |
 | 111 | `dse_task` | core0-loop | container | local vector fw | **NOT-WORTH** | once per Edge unlock |
-| 140 | `dse_task` | core0-loop | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy per save status poll (a few per save) |
-| 152 | `dse_task` | core0-loop | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy per Edge profile fetch step (a few per connect / save) |
 
 #### src/main.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 324 | `get_report_impl` | callback | container | local vector real | **NOT-WORTH** | per host GET feature report (the PC asks a few times per connect) |
-| 365 | `get_report_impl` | callback | container | temporary from get_feature_data() | **NOT-WORTH** | a discarded copy per host GET of an Edge profile before they're ready |
-| 370 | `get_report_impl` | callback | container | local vector feature_data | **NOT-WORTH** | per host GET feature report (the PC asks a few times per connect) |
+| 328 | `get_report_impl` | callback | container | local vector real | **NOT-WORTH** | per host GET feature report (the PC asks a few times per connect) |
+| 376 | `get_report_impl` | callback | container | local vector feature_data | **NOT-WORTH** | per host GET feature report (the PC asks a few times per connect) |
 
 #### src/oled.cpp
 
 | Line | Function | Runs on | Kind | What | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|
-| 1196 | `imu_cal_service` | core0-loop | container | temporary from bt_peek_feature() | **OK** | no heap until 0x05 arrives (empty vector), then one copy per connection (g_imu_cal_tried) |
+| 1259 | `imu_cal_service` | core0-loop | container | temporary from bt_peek_feature() | **OK** | no heap until 0x05 arrives (empty vector), then one copy per connection (g_imu_cal_tried) |
 
 ### App (`node tools/list_lifetimes.mjs --md`)
 

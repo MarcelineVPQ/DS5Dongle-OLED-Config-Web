@@ -2,6 +2,8 @@
 
 _2026-10-13. Done per CLAUDE.md "Cache pass" (the AVIEW pass pattern: a script lists every candidate, one verdict per row, nothing sampled by eye). One doc for both repos; the firmware is read-only here (its few rows are at the end). No behaviour has changed: the only code changes are the `// cache:` comments on the 47 kept-state rows and the lister. The owner picks which batches to do (BACKLOG row "Cache pass batches")._
 
+_**Status 2026-10-15:** all app batches are done (1 on `update-trust`, 2/3/4-rest/6 on `cache-pass-095`; 4 mostly by LOOP_PASS batch 3) and the owner's startup rule is in (below). Batch 5 (firmware) is done on firmware branch `fw-bt-idle-mic` (f2727bf), not flashed yet, waiting for the owner's hardware test. The rows below keep their 2026-10-13 line numbers; fixed rows say so in their "Why"._
+
 ## How the list was made
 
 **App**: `tools/list_caches.mjs`, on the TypeScript compiler API with the type checker. It shares the program, the function names and the call resolver (through interfaces, object literals and factories) with `tools/list_loops.mjs`; both import them from `tools/ts_program.mjs`, so there is one copy. It reads `src/` and `electron/` (tests and the vendored `src/flash/picoflash` excluded) and lists a row for each of these kinds:
@@ -40,25 +42,27 @@ Line numbers are as of this commit; if code moves, the function and name find th
 
 ## Counts
 
+_After the batches (2026-10-15; was OK 191, FIX-STALE 3, ADD-CACHE 15, REMOVE 2, NOT-WORTH 114). Fixed reads became NOT-WORTH (read once per scan), fixed caches OK; the removed `useCallback` is counted as OK until the next full re-listing; the firmware rows were re-listed (both `cached_real_khz` rows gone, two new Diagnostics-screen statics)._
+
 | Kind | OK | FIX-STALE | FIX-UNBOUNDED | ADD-CACHE | REMOVE | NOT-WORTH | Total |
 |---|---|---|---|---|---|---|---|
-| module | 12 | 1 | - | - | - | - | 13 |
-| field | 11 | 2 | - | 1 | - | - | 14 |
+| module | 13 | - | - | - | - | - | 13 |
+| field | 14 | - | - | - | - | - | 14 |
 | closure | 3 | - | - | - | - | - | 3 |
 | ref | 15 | - | - | - | - | - | 15 |
 | snapshot | 2 | - | - | - | - | - | 2 |
 | useMemo | 20 | - | - | - | - | - | 20 |
-| useCallback | 54 | - | - | - | 1 | - | 55 |
+| useCallback | 55 | - | - | - | - | - | 55 |
 | memo | 4 | - | - | - | - | - | 4 |
 | storage | 30 | - | - | - | - | 1 | 31 |
 | ttl | 7 | - | - | - | - | - | 7 |
 | poll-io | 1 | - | - | - | - | 11 | 12 |
-| effect-io | 19 | - | - | 1 | - | 20 | 40 |
-| repeat-io | - | - | - | 11 | - | 79 | 90 |
-| dup-read | - | - | - | 2 | - | 3 | 5 |
+| effect-io | 20 | - | - | - | - | 20 | 40 |
+| repeat-io | - | - | - | - | - | 90 | 90 |
+| dup-read | - | - | - | - | - | 5 | 5 |
 | fw-table | 1 | - | - | - | - | - | 1 |
-| fw-static | 12 | - | - | - | 1 | - | 13 |
-| **Total** | **191** | **3** | **0** | **15** | **2** | **114** | **325** |
+| fw-static | 13 | - | - | - | - | - | 13 |
+| **Total** | **198** | **0** | **0** | **0** | **0** | **127** | **325** |
 
 
 No row is FIX-UNBOUNDED: every growing structure is keyed by something finite (games, fixes, processes, parts) or is pruned or windowed. The closest is the `ds5.slotControllers` preference (one entry per controller ever seen in a slot, never pruned), which stays a handful in practice (NOT-WORTH).
@@ -78,9 +82,11 @@ private colors = new Map<string, string | null>();
 
 ## The work: proposed changes in 6 batches (biggest effect first)
 
-Nothing below is done yet. Each change keeps the current behaviour except the stale data it fixes, and needs a test that pins it.
+All six batches are done (2026-10-15; batch 5 on the firmware branch, waiting for the hardware test). Each change keeps the current behaviour except the stale data it fixes, and has a test that fails on the old code: `tests/unit/cachePass.test.ts` (batches 2, 3, 4), `tests/unit/trayArt.test.ts` (batch 3), `tests/unit/firmwareSource.test.ts` + `tests/integration/updateConsent.test.ts` (batch 1: offer and Install share one feed object, one fetch per check) and `tests/unit/gamesFeedConsent.test.ts` (the startup rule). Batch 6 removed a `useCallback` (no behaviour to test).
 
 ### Batch 1: the update feed (stale firmware download, repeated fetches)
+
+**Done.** 2026-10-13 (`update-trust`, dev.10): Install takes the entry shown (version, SHA-256, channel), one `FeedCache` shares the feed (in-flight fetch, 60 s reuse per channel). 2026-10-15 (`cache-pass-095`): Install no longer refetches right after the offer: `installFeed` reuses the very feed the offer came from while it is under 60 s old (Check now → Install = one fetch), and checks an older offer against the feed as it is now; the Games scan's Proton lookup, which fetched the feed on every scan outside the cache, now goes through it too.
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
@@ -89,11 +95,15 @@ Nothing below is done yet. Each change keeps the current behaviour except the st
 
 ### Batch 2: the game art colors (Glass look)
 
+**Done 2026-10-15.** `ArtColorCache` (`electron/main/games/artColorCache.ts`) keeps each game's color with its art file's path + mtime across scans; a scan prunes the games that left.
+
 | Location | Rows | Why | Change |
 |---|---|---|---|
 | `electron/main/games/service.ts:226` `GamesService.colors`, asked by `useArtColor` (`src/desktop/library/gameArt.ts:31`) | ADD-CACHE | With the Glass look, every tile whose art has loaded (and Continue playing, and each game page) asks main for the game's color. `colors` is cleared by every scan, so after each scan (every Games page open, every apply) main decodes every cover again: `dominantColor` is a full `nativeImage` decode + resize per game, synchronous on the main process, so hundreds of them hold up IPC and the tray. The art rarely changes. | Key the color by the art file's path + mtime and keep it across scans (drop entries whose game is gone). Bound = games in the library. |
 
 ### Batch 3: two sticky values
+
+**Done 2026-10-15.** The program index is checked once a minute (`EXE_RECHECK_MS`): one stat of the game folder and of each folder a program was found in; a changed one, or an empty index (still installing), is read again. A failed tray-art decode is dropped (`trayArt()`).
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
@@ -101,6 +111,8 @@ Nothing below is done yet. Each change keeps the current behaviour except the st
 | `src/desktop/tray/trayIcon.ts:38` `artPromise` | FIX-STALE | The tray art's decode promise is kept even when it rejected, so one failed decode leaves the tray icon blank for the session. | Clear `artPromise` on rejection. |
 
 ### Batch 4: the library scan's repeated reads (same work as LOOP_PASS Batch 3)
+
+**Done.** Verified 2026-10-15: LOOP_PASS batch 3 (d02c3bc) fixed the `buildVersion`, Steam manifest and Heroic `nile_*` reads (each file read once per scan through `readParsed`'s scan texts). The one row it didn't cover, `loadDeclined()` per fix, is fixed on `cache-pass-095` (`waitingCount`).
 
 These are the same reads as the loop pass's Batch 3, seen from the cache side. Doing that batch fixes them; they are listed here so the rows have verdicts, not as separate work.
 
@@ -115,11 +127,15 @@ Not repeated here: Steam's `localconfig` linear search per game is CPU work, not
 
 ### Batch 5: firmware, one clock measurement
 
+**Done on firmware branch `fw-bt-idle-mic` (f2727bf), not flashed, waiting for the owner's hardware test.** `measured_clk_khz()` measures clk_sys once; `cached_real_khz` is gone from both files.
+
 | Location | Rows | Why | Change |
 |---|---|---|---|
 | `src/oled.cpp:1051` `cached_real_khz` (firmware) | REMOVE | A second copy of `cmd.cpp:594`'s measured clock. This one re-measures on every CPU-screen entry: `frequency_count_khz` busy-waits a few ms on core0, though clk_sys is fixed at boot. | One lazy `measured_clk_khz()` shared by `cmd.cpp` and `oled.cpp` (measured once). |
 
 ### Batch 6: cleanup
+
+**Done 2026-10-15.** `setTo` is a plain function.
 
 | Location | Rows | Why | Change |
 |---|---|---|---|
@@ -133,7 +149,7 @@ Not repeated here: Steam's `localconfig` linear search per game is CPU work, not
 
 ## Found along the way
 
-- **The firmware feed is fetched with automatic checks off.** `useFirmwareUpdate` asks `latestFirmware` at startup (phase `idle`), and `firmwareSource.manifest` always fetches ("fresh every time"), so the app reaches GitHub's feed at start even when "Check for updates automatically" is off. That may be intended (the firmware card needs an answer). **Owner question**; Batch 1's feed cache doesn't change it.
+- **The firmware feed is fetched with automatic checks off.** **Decided (owner, 2026-10-13 and 2026-10-15): with automatic update checks off the app fetches nothing at startup**, firmware feed included; it goes online only when the user presses a check button (Check now, the setup screen's Check for updates, the Development channel dialog's check, Refresh on Controller info) or Install. Done on `update-trust` (firmware lookups, dev preview, Sony's list) and `cache-pass-095` (the Games scan's Proton lookup, which the rail's background scan ran at startup). Rule in CLAUDE.md "Load-bearing rules"; tests `tests/integration/updateConsent.test.ts`, `tests/unit/gamesFeedConsent.test.ts`. Checked on a hidden copy 2026-10-15 through a logging proxy: no request to the update feed or Sony at startup with the switch off. Chromium's spell-check dictionary (gvt1.com) is fetched once on a fresh profile's first start, by Electron itself (see the BACKLOG row).
 - **`AutoUpdateAsk`'s 1 s interval runs for the whole session.** It keeps doing a `querySelector` and a localStorage read every second after the question is answered, and while the window is hidden. It isn't a cache problem, but it goes against the lean rule. Fix: stop the interval once `due` or `asked` is set, or use the window-shown gate.
 - **The Slots page parses its remembered controllers on every render.** `readMemory()` parses `ds5.slotControllers` on each 1.5 s slot poll and makes a new object, so the effect that depends on it runs every render too (it returns early). `useRawPref` (the existing preference hook) plus a `useMemo` parse would parse it once per change. NOT-WORTH on its own.
 - **Opening the Games page always runs a full scan.** This is by design: the page shows the launchers' files as they are now, and the HDR check is reused for 3 s. Showing the last scan straight away and rescanning behind it would be a UX change (owner decision), not a cache fix. The scan's cost is LOOP_PASS Batch 3.
@@ -180,7 +196,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 89 | `steamArt` | closure | `found` | Map<string, { path: string; mtime: number; }>; written by a nested function (.set), looked up with .get | **OK** | key=art file name; invalidated=per call (one game's art folder); bound=files in one game's librarycache folder |
 | 106 | `steamArt` | repeat-io | `readdirSync` | in forof (line 102); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 115 | `pick` | repeat-io | `existing` | in forof (line 114); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 141 | `heroicDetails` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_library.json")) (lines 141, 141) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4) |
+| 141 | `heroicDetails` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_library.json")) (lines 141, 141) | **NOT-WORTH** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 159 | `heroicDetails` | repeat-io | `heroicPrefix` | in forof (line 146); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 161 | `heroicDetails` | dup-read | `cached` | 2× cached(e.art_cover) (lines 161, 165) | **NOT-WORTH** | two existence checks of the same small file per game, per scan |
 | 161 | `heroicDetails` | repeat-io | `cached` | in forof (line 146); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
@@ -200,19 +216,19 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
 | 307 | `scan` | repeat-io | `scanSteam` | in .forEach (line 307); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 364 | `scanSteam` | repeat-io | `buildHonoursPreferSdl` | in forof (line 341); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
-| 365 | `scanSteam` | repeat-io | `preferSdlBuild` | in forof (line 341); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
+| 364 | `scanSteam` | repeat-io | `buildHonoursPreferSdl` | in forof (line 341); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
+| 365 | `scanSteam` | repeat-io | `preferSdlBuild` | in forof (line 341); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 494 | `scan` | repeat-io | `scanHeroic` | in .forEach (line 494); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 514 | `scanHeroic` | repeat-io | `existsSync` | in forof (line 512); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 518 | `scanHeroic` | repeat-io | `existsSync` | in forof (line 512); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 535 | `scanHeroic` | repeat-io | `buildHonoursPreferSdl` | in forof (line 512); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
-| 536 | `scanHeroic` | repeat-io | `preferSdlBuild` | in forof (line 512); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
+| 535 | `scanHeroic` | repeat-io | `buildHonoursPreferSdl` | in forof (line 512); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
+| 536 | `scanHeroic` | repeat-io | `preferSdlBuild` | in forof (line 512); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 649 | `scan` | repeat-io | `installedTools` | in .flatMap (line 649); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 649 | `scan` | repeat-io | `valveProtons` | in .flatMap (line 649); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 651 | `scan` | repeat-io | `scanLutris` | in .forEach (line 651); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 683 | `scanLutris` | repeat-io | `hasBuild` | in forof (line 681); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 697 | `scanLutris` | repeat-io | `buildHonoursPreferSdl` | in forof (line 681); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
-| 699 | `scanLutris` | repeat-io | `preferSdlBuild` | in forof (line 681); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
+| 697 | `scanLutris` | repeat-io | `buildHonoursPreferSdl` | in forof (line 681); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
+| 699 | `scanLutris` | repeat-io | `preferSdlBuild` | in forof (line 681); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 960 | `writeChosen > run(cb)` | repeat-io | `writeEdits` | in forof (line 960); reaches fs | **NOT-WORTH** | writes, one per changed file |
 
 #### electron/main/games/hdr.ts
@@ -227,7 +243,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
 | 50 | `findHeroicInstalls` | repeat-io | `existsSync` | in forof (line 46); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 92 | `listHeroicGames` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_install_info.json")) (lines 92, 94) | **ADD-CACHE** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4) |
+| 92 | `listHeroicGames` | dup-read | `readJson` | 2× readJson(join(install.root, "store_cache/nile_install_info.json")) (lines 92, 94) | **NOT-WORTH** | the same Amazon store file read and JSON-parsed twice in one expression (object or array form); read once into a local (Batch 4). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 122 | `listHeroicGames` | repeat-io | `readJson` | in .map (line 118); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 
 #### electron/main/games/libraryStore.ts
@@ -262,8 +278,8 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 42 | `walk` | repeat-io | `readlinkSync` | in forof (line 38); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 46 | `walk` | repeat-io | `walk` | in forof (line 38); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 63 | `protonBuilds` | repeat-io | `hasBuild` | in .filter (line 63); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 108 | `buildVersion` | repeat-io | `readFileSync` | in forof (line 106); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
-| 143 | `pickBuild` | repeat-io | `buildVersionKey` | in .flatMap (line 142); reaches fs | **ADD-CACHE** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows) |
+| 108 | `buildVersion` | repeat-io | `readFileSync` | in forof (line 106); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
+| 143 | `pickBuild` | repeat-io | `buildVersionKey` | in .flatMap (line 142); reaches fs | **NOT-WORTH** | same build's `version` file read again per game (x builds for the target pick); memoize `buildVersion` per scan = LOOP_PASS Batch 3 (one fix covers both rows). **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 187 | `installProton` | repeat-io | `cleanStaging` | in forof (line 187); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 191 | `installProton` | repeat-io | `hasBuild` | in forof (line 191); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 224 | `installProton` | repeat-io | `hasBuild` | in forof (line 223); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
@@ -284,7 +300,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 164 | `readProcs` | repeat-io | `readFull` | in forof (line 161); reaches fs | **OK** (2026-10-14) | read once per process and program (`known`; every pass while younger than 30 s), was every pass |
 | 259 | `walk` | repeat-io | `walk` | in forof (line 257); reaches fs | **NOT-WORTH** | a different /proc file per process; must be fresh every pass |
 | 285 | `RunningGameWatcher` | field | `pending` | { key: string \| null; since: number; } \| null; memo by timestamp | **OK** | key=none (the candidate running game); invalidated=replaced on every change, cleared on stop(); bound=1 entry. debounce state, settleMs |
-| 288 | `RunningGameWatcher` | field | `exeCache` | Map<string, Set<string>>; written by .set | **FIX-STALE** | key=install folder; invalidated=never (lives as long as the watcher); bound=installed games' folders. Windows: a folder indexed while the game was still installing, or before an update renamed its .exe, stays wrong until the app restarts, so Playing is never detected; re-index when the candidate list changes (each scan) or on a miss |
+| 288 | `RunningGameWatcher` | field | `exeCache` | Map<string, Set<string>>; written by .set | **OK** | key=install folder; invalidated=checked every EXE_RECHECK_MS (1 min): read again when the folder or a folder that held a program changed (mtime), or when nothing was found; bound=installed games' folders. **Fixed 2026-10-15 (batch 3)**, was FIX-STALE (never re-read) |
 | 316 | `start` | poll-io | `setInterval` | every this.everyMs; reaches fs | **NOT-WORTH** | the read is the freshness check (which game runs now); the first pass is already cheap (stat + status of own processes) |
 | 357 | `apply` | ttl | `now - this.pending.since >= this.settleMs` |  | **OK** | debounce: a change must hold for settleMs |
 
@@ -304,7 +320,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 172 | `GamesService` | field | `lastGames` | GameEntry[]; written by = | **OK** | key=none (the last scan's games); invalidated=replaced by every scan; bound=games in the library |
 | 174 | `GamesService` | field | `lastStores` | WindowsStores \| undefined; memo by name | **OK** | key=none (Windows store listing); invalidated=replaced by every scan; bound=1 entry |
 | 176 | `GamesService` | field | `lastDetails` | Map<string, GameDetails>; written by = | **OK** | key=game key; invalidated=replaced by every scan; bound=games in the library |
-| 226 | `GamesService` | field | `colors` | Map<string, string \| null>; written by .clear .set | **ADD-CACHE** | key=game key; invalidated=cleared by every scan; bound=games in the library. over-invalidated: with the Glass look every tile whose art has loaded asks for its color, so each scan (every Games page open, every apply) decodes every cover again, synchronously on the main process (nativeImage full decode + resize); key it by art file + mtime and keep it across scans |
+| 226 | `GamesService` | field | `colors` | Map<string, string \| null>; written by .clear .set | **OK** | now `ArtColorCache` (`artColorCache.ts`): key=game key, checked against the art file's path + mtime; invalidated=another art file or a newer mtime, the game gone (pruned after each scan); bound=games in the library. **Fixed 2026-10-15 (batch 2)**, was ADD-CACHE (cleared by every scan) |
 | 260 | `undo > exclusive(cb)` | dup-read | `owners` | 2× this.backups.owners(backupId) (lines 260, 262) | **NOT-WORTH** | small manifest read twice on Undo |
 | 268 | `undo > exclusive(cb)` | repeat-io | `cards` | in .some (line 268); reaches fs | **NOT-WORTH** | N ≤ 2 controllers, on Undo only |
 | 277 | `undo > exclusive(cb)` | repeat-io | `restoreDualSenseMixer` | in forof (line 277); reaches fs | **NOT-WORTH** | N ≤ 2 controllers, on Undo only |
@@ -316,8 +332,8 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 70 | `findSteamInstalls` | repeat-io | `realpathSync` | in forof (line 67); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 74 | `findSteamInstalls` | repeat-io | `existsSync` | in forof (line 67); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 | 76 | `findSteamInstalls` | repeat-io | `newestLocalConfig` | in forof (line 67); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
-| 127 | `steamAppManifests` | repeat-io | `readdirSync` | in forof (line 122); reaches fs | **ADD-CACHE** | every app manifest is read and parsed twice per scan (listSteamGames, then gameDetails); share one read per scan = LOOP_PASS Batch 3 |
-| 133 | `steamAppManifests` | repeat-io | `readVdfFile` | in forof (line 132); reaches fs | **ADD-CACHE** | every app manifest is read and parsed twice per scan (listSteamGames, then gameDetails); share one read per scan = LOOP_PASS Batch 3 |
+| 127 | `steamAppManifests` | repeat-io | `readdirSync` | in forof (line 122); reaches fs | **NOT-WORTH** | every app manifest is read and parsed twice per scan (listSteamGames, then gameDetails); share one read per scan = LOOP_PASS Batch 3. **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
+| 133 | `steamAppManifests` | repeat-io | `readVdfFile` | in forof (line 132); reaches fs | **NOT-WORTH** | every app manifest is read and parsed twice per scan (listSteamGames, then gameDetails); share one read per scan = LOOP_PASS Batch 3. **Fixed 2026-10-15 by LOOP_PASS batch 3 (batch 4)**: each file read once per scan (`readParsed`\'s scan texts, `files.ts`) |
 | 176 | `valveProtons` | repeat-io | `protonBuilds` | in .flatMap (line 176); reaches fs | **NOT-WORTH** | a different file per game/install/folder, read once per scan |
 
 #### electron/main/games/system.ts
@@ -358,7 +374,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 77 | `Updater` | field | `manifest` | { app: { version: string; platforms: { linux?: { url: string; size: nu…; memo by io | **FIX-STALE** | key=none (the feed of the channel at check time); invalidated=each update check (6 h; never with automatic checks off); bound=1 entry. downloadFirmware uses it without refetching, though the firmware offer was read from a fresh feed: the board can get an older build than the one shown, or the other channel's after a switch; pass the fresh feed's firmware to the download |
+| 77 | `Updater` | field | `manifest` | { app: { version: string; platforms: { linux?: { url: string; size: nu…; memo by io | **OK** | key=none (the feed the app offer came from); invalidated=each update check; bound=1 entry. Only the app update installs from it. **Fixed 2026-10-13 (`update-trust`, batch 1)**: firmware Install takes the entry shown and the feed it came from (`installFeed`, 2026-10-15) |
 | 80 | `Updater` | field | `installedPath` | string \| null; memo by io | **OK** | key=none (the installed update); invalidated=replaced by the next install; used once on restart; bound=1 entry |
 
 #### src/components/LanguageToggle.tsx
@@ -374,7 +390,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 24 | `readStoredTheme` | storage | `"ds5-bridge-theme"` | 2 site(s): src/components/ThemeToggle.tsx:24 getItem, src/components/ThemeToggle.tsx:69 setItem | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
 | 63 | `<module>` | module | `currentTheme` | Theme \| null; memo by ??= | **OK** | key=none (the stored theme); invalidated=set by setTheme (writes localStorage too); bound=1 entry |
 | 91 | `useApplyTheme` | effect-io | `getDesktopPalette onDesktopPalette` | deps [theme, desktop, shade]; reaches ipc | **OK** | subscribes or reads once per mount; main answers from memory |
-| 118 | `ThemeToggle` | useCallback | `setTo` | deps [setTheme] | **REMOVE** | returns a new closure on every call (`setTo("light")` in JSX), so the memo saves nothing |
+| 118 | `ThemeToggle` | useCallback | `setTo` | deps [setTheme] | **OK** | **Removed 2026-10-15 (batch 6)**: a plain function now (the row leaves the next listing) |
 
 #### src/desktop/AppRail.tsx
 
@@ -421,7 +437,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 439 | `useDarkTaskbar` | effect-io | `getDesktopPalette onDesktopPalette` | deps []; reaches ipc | **OK** | subscribes or reads once per mount; main answers from memory |
 | 465 | `useWhatsNew > useState(cb)` | storage | `"ds5-last-seen-version"` | 3 site(s): src/desktop/DesktopApp.tsx:465 getItem, src/desktop/DesktopApp.tsx:466 setItem, src/desktop/DesktopApp.tsx:474 setItem | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
 | 491 | `useGamesAttention` | ref | `last` | MutableRefObject<GamesReport \| null>; name | **OK** | key=none (the last games report); invalidated=each scan; cleared when Games consent is turned off; bound=1 report |
-| 492 | `useGamesAttention > useCallback(cb)` | repeat-io | `loadDeclined` | in .filter (line 492); reaches storage | **ADD-CACHE** | N = recommended fixes (tens) per recount: the same localStorage key read and JSON-parsed once per fix; read it once before the filter (Batch 4) |
+| 492 | `useGamesAttention > useCallback(cb)` | repeat-io | `loadDeclined` | in .filter (line 492); reaches storage | **NOT-WORTH** | **Fixed 2026-10-15 (batch 4)**: `waitingCount` (GamesPage.tsx) reads the declined list once per count |
 | 492 | `useGamesAttention` | useCallback | `recount` | deps [] | **OK** | returned by a hook: callers put it in deps / effects |
 | 493 | `useGamesAttention` | useCallback | `update` | deps [recount] | **OK** | returned by a hook: callers put it in deps / effects |
 | 500 | `useGamesAttention` | effect-io | `then getSettings gamesScan update` | deps [supported, update]; reaches ipc,storage | **OK** | one scan at startup for the badge, only with consent |
@@ -747,7 +763,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 38 | `<module>` | module | `artPromise` | Promise<ImageBitmap> \| null; memo by name | **FIX-STALE** | key=none (the decoded tray art); invalidated=never, also not after a failed decode; bound=1 bitmap. a rejected decode is kept, so the tray icon stays blank for the session; clear it on rejection |
+| 38 | `<module>` | module | `artPromise` | Promise<ImageBitmap> \| null; memo by name | **OK** | key=none (the decoded tray art); invalidated=never once decoded, a failed decode is dropped (the next redraw tries again); bound=1 bitmap. **Fixed 2026-10-15 (batch 3)**, was FIX-STALE |
 
 #### src/desktop/updatePreview.ts
 
@@ -777,7 +793,7 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 12 | `useAppUpdate` | effect-io | `getUpdateState onUpdateState` | deps []; reaches ipc | **OK** | subscribes or reads once per mount; main answers from memory |
 | 24 | `useFirmwareHold` | effect-io | `getFirmwareHold onFirmwareHold` | deps []; reaches ipc | **OK** | subscribes or reads once per mount; main answers from memory |
 | 68 | `useFirmwareUpdate` | useCallback | `refreshLatest` | deps [] | **OK** | returned by a hook: callers put it in deps / effects |
-| 81 | `useFirmwareUpdate` | effect-io | `latestFirmware` | deps [appUpdate.phase]; reaches ipc | **ADD-CACHE** | fetches the update feed (+ .sig) fresh on every call: useFirmwareUpdate asks on every update phase change (idle, checking, result = 2-3 fetches per check) next to the updater's own fetch of the same feed; reuse a feed fetched under ~60 s ago (Batch 1) |
+| 81 | `useFirmwareUpdate` | effect-io | `latestFirmware` | deps [appUpdate.phase]; reaches ipc | **OK** | main answers from the shared feed (`FeedCache`): with automatic checks off from the last feed the user fetched (no network), on: a feed under 60 s old, so one check is one fetch. **Fixed 2026-10-13 (`update-trust`, batch 1)**, was ADD-CACHE |
 | 99 | `useFirmwareUpdate` | useCallback | `start` | deps [appUpdate.phase, bridge.client, state.phase] | **OK** | returned by a hook: callers put it in deps / effects |
 
 #### src/desktop/WindowsUsbRepair.tsx
@@ -828,37 +844,38 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 
 ### Firmware (`MarcelineVPQ/DS5Dongle-OLED-Edition`, read-only)
 
+_Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (f2727bf): batch 5 is done there. `cached_real_khz` (both copies) is gone; `measured_clk_khz()` in `cmd.cpp` measures clk_sys once and is shared by the 0xFC report and the OLED's CPU screen (its function-local `s_khz` carries `// cache: OK — key=none (clk_sys, set once in main() before the loop); invalidated=never; bound=1 value`; the pattern scan lists file-scope statics only). New since 2026-10-13: the Diagnostics screen's `seen_generation` and `last_markers`._
+
 #### src/audio.cpp
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 77 | `-` | fw-static | `g_mic_last_decoded` | static volatile int32_t g_mic_last_decoded = 0; // opus_decode return value | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 78 | `-` | fw-static | `g_mic_last_want` | static volatile uint16_t g_mic_last_want = 0; // bytes we asked TinyUSB to send | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 79 | `-` | fw-static | `g_mic_last_wrote` | static volatile uint16_t g_mic_last_wrote = 0; // bytes TinyUSB accepted | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 104 | `-` | fw-static | `g_mic_last_real_us` | static volatile uint32_t g_mic_last_real_us = 0; // core1 writes, core0 reads (32-bit: no teari | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 667 | `-` | fw-static | `last_out_us` | static uint32_t last_out_us = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 78 | `-` | fw-static | `g_mic_last_decoded` | static volatile int32_t g_mic_last_decoded = 0; // opus_decode return value | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 79 | `-` | fw-static | `g_mic_last_want` | static volatile uint16_t g_mic_last_want = 0; // bytes we asked TinyUSB to send | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 80 | `-` | fw-static | `g_mic_last_wrote` | static volatile uint16_t g_mic_last_wrote = 0; // bytes TinyUSB accepted | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 105 | `-` | fw-static | `g_mic_last_real_us` | static volatile uint32_t g_mic_last_real_us = 0; // core1 writes, core0 reads (32-bit: no teari | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 703 | `-` | fw-static | `last_out_us` | static uint32_t last_out_us = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
 
 #### src/bt.cpp
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 77 | `-` | fw-table | `feature_data` | unordered_map<uint8_t, vector<uint8_t> > feature_data; | **OK** | key=feature report id; invalidated=cleared on disconnect, bt_drop_feature per id, refreshed by GET; bound=≤ 256 ids (a handful used). The per-call `bt_peek_feature` copy is LOOP_PASS Batch 2 |
+| 81 | `-` | fw-table | `feature_data` | unordered_map<uint8_t, vector<uint8_t> > feature_data; | **OK** | key=feature report id; invalidated=cleared on disconnect, bt_drop_feature per id, refreshed by GET; bound=≤ 256 ids (a handful used). The per-call `bt_peek_feature` copy is LOOP_PASS Batch 2 |
 
 #### src/cmd.cpp
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 103 | `-` | fw-static | `s_last_func` | static uint8_t s_last_func = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 104 | `-` | fw-static | `s_last_result` | static uint8_t s_last_result = CMD_RESULT_OK; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 594 | `-` | fw-static | `cached_real_khz` | static uint32_t cached_real_khz = 0; | **OK** | key=none; invalidated=never (clk_sys is fixed at boot); bound=1. Measured lazily on the first 0xFC GET |
+| 116 | `-` | fw-static | `s_last_func` | static uint8_t s_last_func = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 117 | `-` | fw-static | `s_last_result` | static uint8_t s_last_result = CMD_RESULT_OK; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
 
 #### src/oled.cpp
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 904 | `-` | fw-static | `prev_us_frames` | static uint32_t prev_us_frames = 0, prev_bt_packets = 0, prev_mic_frames = 0, prev_bt31 = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 905 | `-` | fw-static | `prev_sample_us` | static uint32_t prev_sample_us = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 1051 | `-` | fw-static | `cached_real_khz` | static uint32_t cached_real_khz = 0; | **REMOVE** | a second copy of cmd.cpp's measured clock, re-measured (busy-wait of a few ms on core0) on every CPU-screen entry though clk_sys never changes; share one lazy measurement with cmd.cpp |
-| 2052 | `-` | fw-static | `seen_gen` | static uint32_t seen_gen = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-| 2141 | `-` | fw-static | `last_rendered_screen` | static int last_rendered_screen = -1; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
-
+| 956 | `-` | fw-static | `prev_us_frames` | static uint32_t prev_us_frames = 0, prev_bt_packets = 0, prev_mic_frames = 0, prev_bt31 = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 957 | `-` | fw-static | `prev_sample_us` | static uint32_t prev_sample_us = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 1064 | `-` | fw-static | `seen_generation` | static uint32_t seen_generation = ~0u; | **OK** | key=none (the framebuffer generation the Diagnostics screen last drew for); invalidated=a new generation forces a full redraw; bound=1 value |
+| 1066 | `-` | fw-static | `last_markers` | static uint8_t last_markers = 0xff; | **OK** | a last/previous value for a change check (the scroll markers drawn), bound 1, not a cache of anything |
+| 2018 | `-` | fw-static | `seen_gen` | static uint32_t seen_gen = 0; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
+| 2105 | `-` | fw-static | `last_rendered_screen` | static int last_rendered_screen = -1; | **OK** | a last/previous value for a delta or a change check (bound 1), not a cache of anything |
