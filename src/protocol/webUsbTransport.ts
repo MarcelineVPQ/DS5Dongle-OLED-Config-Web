@@ -1,4 +1,5 @@
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, ReportStalledError, maxGetLength, type Ds5Transport } from "./transport";
+import { KeyedError } from "../errorText";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const DONGLE_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
@@ -61,7 +62,7 @@ export class WebUsbTransport implements Ds5Transport {
   async open(): Promise<void> {
     if (this.isOpen) return;
     const itf = configuratorInterface(this.device);
-    if (itf < 0) throw new Error("Your board's firmware has no configurator interface. Update the firmware first.");
+    if (itf < 0) throw new KeyedError("desktop.errors.board.noInterface");
     // lifetime: NOT-WORTH — one dongle handle per connection; close() is unused, freed on disconnect
     if (!this.device.opened) await this.device.open();
     if (this.device.configuration === null) await this.device.selectConfiguration(1);
@@ -116,7 +117,7 @@ export class WebUsbTransport implements Ds5Transport {
         this.interfaceNumber = -1;
         throw new DeviceGoneError();
       }
-      throw cause instanceof Error ? cause : new Error(`Transfer for report 0x${reportId.toString(16)} failed`);
+      throw cause instanceof Error ? cause : new KeyedError("desktop.errors.board.transfer", { report: `0x${reportId.toString(16)}` });
     }
   }
 

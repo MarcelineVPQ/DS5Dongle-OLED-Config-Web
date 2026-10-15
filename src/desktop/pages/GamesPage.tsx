@@ -27,7 +27,7 @@ import { protonApplies } from "../games/platform";
 import { latestOnly } from "../games/scanOrder";
 import { HdrChecklist } from "../library/HdrChecklist";
 import { homeStatus, systemHdrReqs } from "../library/setupStatus";
-import { causeText } from "../shownError";
+import { causeText, shownText } from "../shownError";
 import { writePref } from "../storage";
 import { readPrefJson } from "../persistedPref";
 import { salvageStrings } from "../../persisted";
@@ -70,7 +70,7 @@ export function useMsg(): (m: Msg) => string {
   const { t } = useTranslation();
   return useCallback(
     function render(m: Msg): string {
-      const params = Object.fromEntries(Object.entries(m.params ?? {}).map(([k, v]) => [k, typeof v === "string" ? v : render(v)]));
+      const params = Object.fromEntries(Object.entries(m.params ?? {}).map(([k, v]) => [k, typeof v === "string" ? shownText(v) : render(v)]));
       return t(`desktop.games.msg.${m.key}`, { ...params, interpolation: { escapeValue: false } });
     },
     [t],
@@ -222,7 +222,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
         const r = await latest(desktop.gamesScan());
         if (r.current) await receive(r.value, keepSelection);
       } catch (cause) {
-        // error: SHOWN — english: the scan's error above Home's sections (main-process text, batch E3)
+        // error: SHOWN — desktop.errors.main.gamesNotAllowed and the main process's other keyed errors (causeText), above Home's sections
         setError({ text: causeText(cause), at: "top" });
       }
     },
@@ -233,9 +233,9 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
   // lifetime: OK — acquires nothing; the cleanup drops a late scan result (unmount)
   useEffect(() => {
     let live = true;
-    // error: SHOWN — english: the scan's error above Home's sections (main-process text, batch E3; receive's own failure too)
+    // error: SHOWN — desktop.errors.main.gamesNotAllowed and the main process's other keyed errors (causeText), above Home's sections; receive's own failure too
     latest(desktop.gamesScan()).then(
-      // error: SHOWN — english: receive's failure (the backups list) above Home's sections (batch E3)
+      // error: SHOWN — desktop.errors.main.gamesNotAllowed (causeText): receive's failure (the backups list) above Home's sections
       (r) => live && r.current && void receive(r.value, false).catch((cause: unknown) => setError({ text: causeText(cause), at: "top" })),
       (cause: unknown) => live && setError({ text: causeText(cause), at: "top" }),
     );
@@ -299,7 +299,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
       if (r.applied.length > 0 && r.applied.every((a) => a.ok)) sayInPassing("app_games_ready");
       await rescan();
     } catch (cause) {
-      // error: SHOWN — desktop.errors.badRequest (causeText: a refused request in plain words; main-process text English, batch E3), in Recommended changes. Was SILENT-BUG: the rescan right after cleared the message at once
+      // error: SHOWN — desktop.errors.badRequest (causeText: a refused request in plain words; the main process's keyed errors too), in Recommended changes. Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true); // something may have been written before it failed
       setError({ text: causeText(cause), at: "recommended" });
     } finally {
@@ -319,9 +319,9 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
         // was SILENT-BUG: the audio service's failed restart was dropped
         // The old controller levels are back, but not in ALSA's saved state (the password prompt cancelled or failed).
         const volumeNote = r.volumeNotSaved
-          ? t("desktop.games.undoVolumeNotSaved", { error: r.volumeNotSaved === "cancelled" ? t("desktop.games.msg.result.passwordCancelled") : r.volumeNotSaved })
+          ? t("desktop.games.undoVolumeNotSaved", { error: r.volumeNotSaved === "cancelled" ? t("desktop.games.msg.result.passwordCancelled") : shownText(r.volumeNotSaved) })
           : null;
-        note(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: r.audioRestartFailed }) : (volumeNote ?? restartText(r)));
+        note(r.audioRestartFailed ? t("desktop.games.undoAudioRestart", { error: shownText(r.audioRestartFailed) }) : (volumeNote ?? restartText(r)));
         setResult(null);
         setStep("pick");
       } else if ("blockedBy" in r) {
@@ -336,9 +336,9 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
       }
       await rescan();
       // After the rescan, which clears the error line (was SILENT-BUG: Undo's error vanished at once).
-      if (!r.ok && "error" in r) setError({ text: r.error, at });
+      if (!r.ok && "error" in r) setError({ text: shownText(r.error), at });
     } catch (cause) {
-      // error: SHOWN — desktop.errors.badRequest (causeText; main-process text English, batch E3), in the section Undo was pressed in. Was SILENT-BUG: the rescan right after cleared the message at once
+      // error: SHOWN — desktop.errors.badRequest (causeText; the main process's keyed errors too), in the section Undo was pressed in. Was SILENT-BUG: the rescan right after cleared the message at once
       await rescan(true);
       setError({ text: causeText(cause), at });
     } finally {
@@ -353,11 +353,15 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
     try {
       const r = await desktop.installProton();
       setProtonMessage(
-        r.ok ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." }) : r.problem ? t(feedProblemKey(r.problem, "desktop.updateFeed.offline")) : r.message,
+        r.ok
+          ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." })
+          : r.problem
+            ? t(feedProblemKey(r.problem, "desktop.updateFeed.offline"))
+            : shownText(r.message),
       );
       await rescan();
     } catch (cause) {
-      // error: SHOWN — english: DualSense Proton's message (main-process text, batch E3)
+      // error: SHOWN — desktop.errors.main.protonLinuxOnly and the main process's other keyed errors (causeText), as DualSense Proton's message
       setProtonMessage(causeText(cause));
     } finally {
       setProtonProgress(null);
@@ -479,6 +483,10 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
   const waiting = fixes.filter((f) => f.recommended && !setup.declinedAtScan.has(f.id)).length;
   // loop: NOT-WORTH — N = backups (tens); Home render
   const lastChange = backups.reduce((n, b) => Math.max(n, Date.parse(b.created) || 0), 0);
+  // A change set's line; one whose backup can't be read says so, and where it is (error pass E2).
+  const changeText = (b: GameBackup) =>
+    // loop: HOT-PATH-OK — a few changes per backup; Home render
+    b.damaged ? t("desktop.games.historyDamaged") : b.changes.map(m).join("; ");
 
   // A section's messages, at the top of its body.
   const notices = (at: Place): ReactNode => (
@@ -675,9 +683,8 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                 {/* loop: HOT-PATH-OK — change history entries, tens; Home render */}
                 {backups.map((b) => (
                   <li key={b.id}>
-                    {/* loop: HOT-PATH-OK — a few changes per backup; Home render */}
-                    <span className="dk-hint">{new Date(b.created).toLocaleString()}</span>{" "}
-                    {b.damaged ? t("desktop.games.historyDamaged", { folder: b.damaged, interpolation: { escapeValue: false } }) : b.changes.map(m).join("; ")}
+                    <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {changeText(b)}
+                    {b.damaged && <div className="dk-mono dk-file">{b.damaged}</div>}
                     {!b.damaged && (
                       <BusyButton className="dk-btn dk-inline-btn" disabled={busy !== null} onClick={() => setup.undo(b.id, "history")}>
                         {t("desktop.games.undoShort", "Undo")}

@@ -103,7 +103,7 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       const back = await readCurves(client);
       if (back) loaded(back);
     } catch (cause) {
-      // error: SHOWN — desktop.errors.boardFailed (causeText; other board errors English, batch E3)
+      // error: SHOWN — desktop.errors.boardFailed (causeText, with the other keyed board errors)
       setError(causeText(cause));
     }
   };

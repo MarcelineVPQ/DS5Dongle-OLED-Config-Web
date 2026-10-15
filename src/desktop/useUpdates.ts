@@ -148,7 +148,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     if (!client || !latest || state.phase === "running" || state.phase === "verifying") return;
     // Never flash while the app is replacing itself.
     if (appUpdate.phase === "downloading" || appUpdate.phase === "installing") {
-      setState({ phase: "failed", detail: "Wait for the app update to finish first." });
+      setState({ phase: "failed", detail: i18n.t("desktop.firmware.waitForApp") });
       return;
     }
     try {
@@ -156,7 +156,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
       written.current = latest;
       verify(await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress })));
     } catch (cause) {
-      // error: SHOWN — english: the firmware banner's error notice with Dismiss (flash errors are English, batch E3)
+      // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) in the firmware banner's error notice with Dismiss
       setState({ phase: "failed", detail: causeText(cause) });
       // Show what the feed offers now (the failed install already fetched it,
       // so this doesn't go online again).

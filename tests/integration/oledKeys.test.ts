@@ -59,7 +59,7 @@ describe("remote OLED keys (protocol 1.18)", () => {
     const id = await client.identity();
     expect(supportsFeature3(id, 18, FEATURES3.oledKeys)).toBe(false);
     expect(client.oledKeys).toBe(false);
-    await expect(client.pressOledKey(0, false)).rejects.toThrow(/Update the firmware/);
+    await expect(client.pressOledKey(0, false)).rejects.toThrow(/desktop\.errors\.board\.noOledKeys/);
     expect(dongle.sets.length).toBe(0);
   });
 

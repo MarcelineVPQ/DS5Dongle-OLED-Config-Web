@@ -8,17 +8,18 @@ import { createHash } from "node:crypto";
 import { createWriteStream, rmSync } from "node:fs";
 import { net } from "electron";
 import type { Download } from "../../src/update/manifest";
+import { KeyedError, keyedText } from "../../src/errorText";
 
 // Size or SHA-256 didn't match what the feed said: nothing is kept or used.
 export class CorruptDownloadError extends Error {
   constructor() {
-    super("The download is corrupt (size or checksum mismatch).");
+    super(keyedText("desktop.errors.main.downloadCorrupt"));
   }
 }
 const corrupt = () => new CorruptDownloadError();
 const CONNECT_TIMEOUT_MS = 20_000;
 const STALL_TIMEOUT_MS = 60_000;
-const stalled = () => new Error("The download stopped (no data for a minute). Check the connection and try again.");
+const stalled = () => new KeyedError("desktop.errors.main.downloadStalled");
 
 export function verifyBytes(download: Download, bytes: Uint8Array): void {
   if (bytes.byteLength !== download.size || createHash("sha256").update(bytes).digest("hex") !== download.sha256) throw corrupt();
@@ -27,8 +28,8 @@ export function verifyBytes(download: Download, bytes: Uint8Array): void {
 // Small files (firmware): into memory, verified.
 export async function downloadBytes(download: Download): Promise<Uint8Array> {
   const response = await net.fetch(download.url, { signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS + STALL_TIMEOUT_MS) });
-  if (!response.ok) throw new Error(`Download failed (HTTP ${response.status}).`);
-  if (Number(response.headers.get("content-length") ?? 0) > download.size) throw new Error("The download is larger than the manifest says.");
+  if (!response.ok) throw new KeyedError("desktop.errors.main.downloadHttp", { status: response.status });
+  if (Number(response.headers.get("content-length") ?? 0) > download.size) throw new KeyedError("desktop.errors.main.downloadTooLarge");
   const bytes = new Uint8Array(await response.arrayBuffer());
   verifyBytes(download, bytes);
   return bytes;
@@ -38,9 +39,9 @@ export async function downloadBytes(download: Download): Promise<Uint8Array> {
 export async function downloadVerified(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
   rmSync(path, { force: true });
   const response = await net.fetch(download.url, { signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) }).catch((cause: unknown) => {
-    throw cause instanceof Error && cause.name === "TimeoutError" ? new Error("The download server didn't answer. Check the connection and try again.") : cause;
+    throw cause instanceof Error && cause.name === "TimeoutError" ? new KeyedError("desktop.errors.main.downloadNoAnswer") : cause;
   });
-  if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status}).`);
+  if (!response.ok || !response.body) throw new KeyedError("desktop.errors.main.downloadHttp", { status: response.status });
   const reader = response.body.getReader();
   const hash = createHash("sha256");
   const file = createWriteStream(path);
@@ -67,7 +68,7 @@ export async function downloadVerified(download: Download, path: string, progres
       if (done) break;
       if (writeError) throw writeError;
       got += value.byteLength;
-      if (got > download.size) throw new Error("The download is larger than the manifest says.");
+      if (got > download.size) throw new KeyedError("desktop.errors.main.downloadTooLarge");
       hash.update(value);
       // lifetime: OK — fires once on drain; the stream is destroyed if `failed` wins instead
       if (!file.write(value)) await Promise.race([new Promise<void>((r) => file.once("drain", () => r())), failed]);

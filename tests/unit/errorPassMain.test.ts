@@ -75,7 +75,7 @@ describe("main-process wiring (index.ts)", () => {
   });
 
   it("an app update that fails to install is marked, so the banner says it", () => {
-    expect(source("electron/main/updater.ts")).toContain('Your current version is untouched.`, during: "install" });');
+    expect(source("electron/main/updater.ts")).toContain('${keyedText("desktop.update.untouched")}`, during: "install" });');
   });
 
   it("Undo reports a failed audio service restart instead of dropping it", () => {

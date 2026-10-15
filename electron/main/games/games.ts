@@ -4,7 +4,7 @@
 // re-scans and resolves ids against fresh state: the renderer can never name a
 // file, a value, or a stale plan.
 import { createHash } from "node:crypto";
-import { errorText, logged } from "../../../src/errorText";
+import { errorText, KeyedError, logged } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { filesIn } from "./files";
@@ -1180,13 +1180,13 @@ function writeEdits(file: string, edits: Edit[]): void {
     writeFileAtomic(file, serializeVdf(doc));
   } else if (format === "json") {
     const parsed = text ? (JSON.parse(text) as unknown) : {};
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(`${file} is not a JSON object`);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new KeyedError("desktop.errors.main.notJsonObject", { file });
     const doc = parsed as Record<string, unknown>;
     for (const e of edits) (e as Extract<Edit, { format: "json" }>).mutate(doc);
     writeFileAtomic(file, JSON.stringify(doc, null, 2));
   } else {
     const doc = parseDocument(text);
-    if (doc.errors.length) throw new Error(`${file}: ${doc.errors[0].message}`);
+    if (doc.errors.length) throw new KeyedError("desktop.errors.main.fileUnreadable", { file, detail: doc.errors[0].message });
     for (const e of edits) (e as Extract<Edit, { format: "yaml" }>).mutate(doc);
     writeFileAtomic(file, String(doc));
   }

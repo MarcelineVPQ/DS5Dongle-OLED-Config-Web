@@ -266,7 +266,7 @@ export interface OledKeysProps {
 function OledKeys({ supported, press, frame }: OledKeysProps & { frame: OledFrame | null }) {
   const { t } = useTranslation();
   const [holding, setHolding] = useState<0 | 1 | null>(null);
-  // error: SHOWN — english: the key's tooltip and its red outline until the next press (board errors are English, batch E3)
+  // error: SHOWN — desktop.errors.board.noOledKeys and the other keyed board errors (causeText): the key's tooltip and its red outline until the next press
   const [error, setError] = useState<string | null>(null);
   // cache: OK — key=none (when the held key went down); invalidated=each press; bound=1 entry
   const downAt = useRef<{ key: 0 | 1; at: number } | null>(null);
@@ -297,7 +297,7 @@ function OledKeys({ supported, press, frame }: OledKeysProps & { frame: OledFram
     setHolding(null);
     const long = at - d.at >= OLED_LONG_PRESS_MS;
     setError(null);
-    // error: SHOWN — english: the key's tooltip and its red outline until the next press (board errors are English, batch E3)
+    // error: SHOWN — desktop.errors.board.noOledKeys and the other keyed board errors (causeText): the key's tooltip and its red outline until the next press
     press(key, long).catch((cause: unknown) => setError(causeText(cause)));
   };
   const cancel = () => {

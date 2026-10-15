@@ -4,6 +4,8 @@
 // result. Get 0xEE ([slot in use] + body), set 0xF6 func 0x0D
 // ['C','L',ver, slot, body].
 
+import { KeyedError } from "../errorText";
+
 export const CALIB_PROTO_VER = 2;
 export const CALIB_BODY_SIZE = 18;
 
@@ -78,7 +80,7 @@ export function encodeCalibration(c: Calibration): Uint8Array {
 }
 
 export function decodeCalibration(bytes: Uint8Array): Calibration {
-  if (bytes.length < CALIB_BODY_SIZE) throw new Error("Short calibration report");
+  if (bytes.length < CALIB_BODY_SIZE) throw new KeyedError("desktop.errors.board.short");
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const stick = (i: number): StickCal => ({ cx: v.getInt8(i * 4), cy: v.getInt8(i * 4 + 1), deadzone: v.getUint8(i * 4 + 2), outer: v.getUint8(i * 4 + 3) });
   const trigger = (i: number): TriggerCal => ({ lo: v.getUint8(8 + i * 2), hi: v.getUint8(9 + i * 2) });

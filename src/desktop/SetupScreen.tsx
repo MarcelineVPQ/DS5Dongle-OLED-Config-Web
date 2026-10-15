@@ -58,7 +58,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version, left: false });
     } catch (cause) {
-      // error: SHOWN — english: the install's failure text next to Install (flash errors are English, batch E3)
+      // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) next to Install
       setInstall({ phase: "failed", detail: causeText(cause) });
       // Look again: if the feed changed, the new offer shows (the failed
       // install already fetched it, so this doesn't go online).

@@ -6,6 +6,7 @@ import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesRep
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
 import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYTES } from "./transport";
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
+import { KeyedError } from "../errorText";
 import {
   CTRL_FIRMWARE_BYTES,
   CTRL_HEADER_BYTES,
@@ -207,7 +208,7 @@ function boardNameFrom(raw: Uint8Array): string | null {
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
   if (bytes.length < 20 || bytes[0] !== 0x44 || bytes[1] !== 0x53 || bytes[2] !== 0x35 || bytes[3] !== 0x4f) {
-    throw new Error("Your board did not identify itself (expected DS5O). Update the firmware.");
+    throw new KeyedError("desktop.errors.board.notOurs");
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   return {
@@ -431,7 +432,7 @@ export class Ds5BridgeClient {
   async checkCompatible(): Promise<BridgeIdentity> {
     const id = await this.identity();
     if (id.protoMajor !== SUPPORTED_PROTO_MAJOR) {
-      throw new Error(`Firmware protocol ${id.protoMajor}.${id.protoMinor} is not supported by this app (needs ${SUPPORTED_PROTO_MAJOR}.x). Update the app or the firmware.`);
+      throw new KeyedError("desktop.errors.board.protocol", { have: `${id.protoMajor}.${id.protoMinor}`, need: `${SUPPORTED_PROTO_MAJOR}.x` });
     }
     return id;
   }
@@ -465,10 +466,10 @@ export class Ds5BridgeClient {
         if (cause instanceof DeviceGoneError) return "gone";
         throw cause;
       }
-      if (id.sequence !== expected) throw new Error("Another program sent a command to your board at the same time. Try again.");
+      if (id.sequence !== expected) throw new KeyedError("desktop.errors.board.otherProgram");
       if (id.lastResult === "ok") return "ok";
       if (id.lastResult !== "pending") throw new CommandError(func, id.lastResult);
-      if (Date.now() > deadline) throw new Error("Your board did not finish the command in time.");
+      if (Date.now() > deadline) throw new KeyedError("desktop.errors.board.timeout");
       await sleep(POLL_INTERVAL_MS);
     }
   }
@@ -516,7 +517,7 @@ export class Ds5BridgeClient {
 
   // Saved (temporary = false) or for now only (a game's layout).
   async applyRemapExtra(extra: number[], temporary: boolean): Promise<void> {
-    if (!isValidExtra(extra)) throw new Error("Invalid extra-button remap");
+    if (!isValidExtra(extra)) throw new KeyedError("desktop.errors.badRequest"); // the app's own table (an app bug)
     await this.command(FUNC.remapExtra, [0x52, 0x58, 1, ...extra, temporary ? 1 : 0]);
   }
 
@@ -535,7 +536,7 @@ export class Ds5BridgeClient {
   // game's curves), or for now only (a game's profile; RAM, ended by
   // revertRemap(), a reboot or a saved set).
   async applyStickCurves(slot: number, left: StickCurve, right: StickCurve, temporary: boolean): Promise<void> {
-    if (!isValidCurve(left) || !isValidCurve(right)) throw new Error("Invalid stick curve");
+    if (!isValidCurve(left) || !isValidCurve(right)) throw new KeyedError("desktop.errors.badRequest"); // the app's own curve (an app bug)
     await this.command(FUNC.stickCurves, [0x43, 0x56, CURVE_PROTO_VER, slot, ...encodeCurve(left), ...encodeCurve(right), temporary ? 1 : 0]);
   }
 
@@ -583,8 +584,8 @@ export class Ds5BridgeClient {
   // back, long = next brightness), OLED wired or not; resolves once the press
   // is queued (up to four wait; a fifth is "busy"). Watch it in the 0xEF mirror.
   async pressOledKey(key: 0 | 1, long: boolean): Promise<void> {
-    // error: SHOWN — english: the error notice via useDs5Bridge.pressOledKey; the UI only offers the keys when supportsOledKeys
-    if (!this.oledKeys) throw new Error("This firmware can't press the board's keys from the app. Update the firmware.");
+    // error: SHOWN — desktop.errors.board.noOledKeys in the error notice via useDs5Bridge.pressOledKey; the UI only offers the keys when supportsOledKeys
+    if (!this.oledKeys) throw new KeyedError("desktop.errors.board.noOledKeys");
     await this.command(FUNC.oledKey, [key, long ? 1 : 0]);
   }
 
@@ -595,8 +596,8 @@ export class Ds5BridgeClient {
   // controller's report, so games don't see it; it wakes the screen first.
   // Resolves once queued (up to four wait; a fifth is "busy").
   async pressOledPad(button: OledPadButton, holdMs = 0): Promise<void> {
-    // error: SHOWN — english: the error notice via useDs5Bridge.pressOledPad; the UI only offers the pad when supportsOledPad
-    if (!this.oledPad) throw new Error("This firmware can't press controller buttons on the board's screen from the app. Update the firmware.");
+    // error: SHOWN — desktop.errors.board.noOledPad in the error notice via useDs5Bridge.pressOledPad; the UI only offers the pad when supportsOledPad
+    if (!this.oledPad) throw new KeyedError("desktop.errors.board.noOledPad");
     const ms = Math.max(0, Math.min(OLED_PAD_MAX_HOLD_MS, Math.round(holdMs)));
     await this.command(FUNC.oledPad, [OLED_PAD_BUTTONS[button], ms & 0xff, ms >> 8]);
   }
@@ -653,7 +654,7 @@ export class Ds5BridgeClient {
 
   async readSlots(): Promise<SlotsInfo> {
     const data = await this.transport.getReport(REPORT.slots, 28);
-    if (data.length < 28) throw new Error("Short slots report");
+    if (data.length < 28) throw new KeyedError("desktop.errors.board.short");
     // loop: HOT-PATH-OK — N = 4 slots
     const addrs = [0, 1, 2, 3].map((i) => data.slice(i * 6, i * 6 + 6));
     // loop: HOT-PATH-OK — N = 4 slots
@@ -724,27 +725,27 @@ export class Ds5BridgeClient {
   // Bluetooth from its main loop; this polls until it's done.
   async runControllerTest(dev: number, action: number, pages: number): Promise<Uint8Array | null> {
     const before = await this.readControllerHeader();
-    if (!before) throw new Error("Your board sent no controller info.");
+    if (!before) throw new KeyedError("desktop.errors.board.noControllerInfo");
     await this.command(FUNC.controllerTest, [dev, action, pages]);
     const expected = (before.request + 1) & 0xff;
     const deadline = Date.now() + CONTROLLER_TEST_TIMEOUT_MS;
     // loop: SERIAL-REQUIRED — one HID session: polls the controller header until done or deadline
     for (;;) {
       const h = await this.readControllerHeader();
-      if (!h || h.request !== expected) throw new Error("Another program asked the controller at the same time. Try again.");
+      if (!h || h.request !== expected) throw new KeyedError("desktop.errors.board.otherProgram");
       if (h.state === "done") {
         const out = new Uint8Array(pages * CTRL_PAGE_BYTES);
         // loop: SERIAL-REQUIRED — one HID session: page reads must not interleave; 63-byte report cap
         for (let p = 0; p < Math.min(h.pages, pages, CTRL_MAX_PAGES); p++) {
           const r = await this.transport.getReport(ctrlInfoReport(CTRL_SEL.page0 + p), CTRL_PAGE_REPLY_BYTES);
-          if (r.length < CTRL_PAGE_REPLY_BYTES || r[0] !== p || r[2] !== expected) throw new Error("Short controller answer");
+          if (r.length < CTRL_PAGE_REPLY_BYTES || r[0] !== p || r[2] !== expected) throw new KeyedError("desktop.errors.board.short");
           out.set(r.subarray(3, CTRL_PAGE_REPLY_BYTES), p * CTRL_PAGE_BYTES);
         }
         return out;
       }
       if (h.state === "noAnswer") return null;
-      if (h.state !== "running") throw new Error("The controller disconnected.");
-      if (Date.now() > deadline) throw new Error("The controller did not answer in time.");
+      if (h.state !== "running") throw new KeyedError("desktop.errors.board.controllerGone");
+      if (Date.now() > deadline) throw new KeyedError("desktop.errors.board.controllerTimeout");
       await sleep(CONTROLLER_TEST_POLL_MS);
     }
   }
@@ -773,7 +774,7 @@ export function decodeAudioCounters(bytes: Uint8Array): AudioCounters {
 }
 
 function toView(bytes: Uint8Array, need: number): DataView {
-  if (bytes.length < need) throw new Error(`Short report (${bytes.length} < ${need} bytes)`);
+  if (bytes.length < need) throw new KeyedError("desktop.errors.board.short");
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }
 

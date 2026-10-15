@@ -282,7 +282,8 @@
       "wrongFile": "Ce fichier n’est pas un firmware pour {{device}} (il est pour une autre puce, ou abîmé) : rien n’a été écrit. Recherche à nouveau les mises à jour ; si ça se reproduit, réinstalle l’app.",
       "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie.",
       "didntStart": "Le nouveau firmware n’a pas démarré : {{device}} est revenu en mode BOOTSEL et attend toujours un firmware. Laisse-le branché et réinstalle-le.",
-      "installAgain": "Réinstaller"
+      "installAgain": "Réinstaller",
+      "waitForApp": "Attends d'abord la fin de la mise à jour de l'appli."
     },
     "recovered": {
       "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
@@ -303,7 +304,16 @@
       "label": "Règle d'accès USB",
       "installed": "Installée",
       "missing": "Non installée (les règles de Steam couvrent peut-être déjà {{device}})",
-      "button": "Configurer l'accès USB"
+      "button": "Configurer l'accès USB",
+      "result": {
+        "notNeeded": "Pas nécessaire sur ce système.",
+        "done": "L'accès USB est configuré. Débranche {{device}} puis rebranche-le.",
+        "doneSandbox": "L'accès USB est configuré et le bac à sable de l'appli est autorisé. Débranche {{device}} puis rebranche-le ; le bac à sable sera actif au prochain démarrage de l'appli.",
+        "noPkexec": "pkexec n'est pas installé. Copie la règle à la main (voir le README).",
+        "noUdevadm": "udevadm n'est pas installé : la règle ne peut pas être chargée. Copie-la à la main (voir le README).",
+        "cancelled": "Annulé. Rien n'a été modifié.",
+        "failed": "La configuration a échoué : {{detail}}"
+      }
     },
     "windowsUsb": {
       "hint": "Branché, manette allumée, et toujours aucune connexion ? Windows garde peut-être un ancien réglage USB pour lui.",
@@ -319,7 +329,12 @@
       },
       "showScript": "Afficher le script exact",
       "run": "Lancer la réparation",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "result": {
+        "onlyWindows": "Nécessaire seulement sous Windows.",
+        "cancelled": "Annulé. Rien n'a été modifié.",
+        "failed": "La réparation a échoué : {{detail}}"
+      }
     },
     "update": {
       "appAvailable": "La mise à jour {{version}} de l'app est disponible ({{size}}).",
@@ -352,7 +367,8 @@
       "askYes": "Mettre à jour automatiquement",
       "askNo": "Me demander à chaque fois",
       "fwUpdate": "Mettre à jour",
-      "appFailed": "La mise à jour de l'appli ne s'est pas installée : {{detail}}"
+      "appFailed": "La mise à jour de l'appli ne s'est pas installée : {{detail}}",
+      "untouched": "Ta version actuelle n'a pas été touchée."
     },
     "controller": {
       "battery": "Batterie",
@@ -576,7 +592,7 @@
       "historyStatus_one": "{{count}} changement · dernier le {{date}}",
       "historyStatus_other": "{{count}} changements · dernier le {{date}}",
       "historyNone": "Aucun changement pour l'instant",
-      "historyDamaged": "Cette modification ne peut pas être annulée ici : sa sauvegarde est illisible. La sauvegarde se trouve dans {{folder}}."
+      "historyDamaged": "Cette modification ne peut pas être annulée ici : sa sauvegarde est illisible. Dossier de la sauvegarde :"
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -1747,7 +1763,58 @@
       "layoutDelete": "Impossible de supprimer la disposition des boutons, elle est toujours là. Réessaie ; si ça échoue encore, redémarre l'appli.",
       "boardFailed": "{{device, capitalize}} n'a pas pu terminer (par exemple l'enregistrement dans sa mémoire). Ta modification risque d'être perdue à l'extinction. Réessaie ; si ça échoue encore, débranche {{device}} puis rebranche-le.",
       "boardBusy": "{{device, capitalize}} est occupé par autre chose. Réessaie dans un instant.",
-      "boardRejected": "{{device, capitalize}} n'a pas accepté ça. Son firmware est peut-être plus ancien que cette appli : mets le firmware à jour, puis réessaie."
+      "boardRejected": "{{device, capitalize}} n'a pas accepté ça. Son firmware est peut-être plus ancien que cette appli : mets le firmware à jour, puis réessaie.",
+      "board": {
+        "notOurs": "{{device, capitalize}} n'a pas répondu comme cette appli l'attend : elle ne connaît pas son firmware. Mets le firmware à jour.",
+        "protocol": "{{device, capitalize}} a un firmware au protocole {{have}}, mais cette appli a besoin de {{need}}. Mets à jour l'appli ou le firmware.",
+        "otherProgram": "Un autre programme a parlé à {{device}} en même temps. Réessaie.",
+        "timeout": "{{device, capitalize}} n'a pas terminé à temps. Réessaie ; si ça se reproduit, débranche {{device}} puis rebranche-le.",
+        "noOledKeys": "Ce firmware ne permet pas d'appuyer sur les touches de la carte depuis l'appli. Mets le firmware à jour.",
+        "noOledPad": "Ce firmware ne permet pas d'appuyer sur les boutons de la manette pour l'écran de la carte depuis l'appli. Mets le firmware à jour.",
+        "noControllerInfo": "{{device, capitalize}} n'a envoyé aucune info sur la manette. Vérifie que la manette est connectée.",
+        "controllerGone": "La manette s'est déconnectée. Reconnecte-la et réessaie.",
+        "controllerTimeout": "La manette n'a pas répondu à temps. Réessaie.",
+        "short": "{{device, capitalize}} a envoyé une réponse incomplète. Réessaie ; si ça se reproduit, débranche {{device}} puis rebranche-le.",
+        "noInterface": "Le firmware {{device_de}} n'a pas d'interface de réglages pour cette appli. Mets d'abord le firmware à jour.",
+        "transfer": "La communication avec {{device}} a échoué (rapport {{report}}). Débranche-le puis rebranche-le.",
+        "badConfig": "{{device, capitalize}} a envoyé des réglages que cette appli ne sait pas lire. Mets à jour le firmware ou l'appli."
+      },
+      "usb": {
+        "network": "L'appli n'a pas pu communiquer avec {{device}} : un autre programme l'utilise peut-être, ou la connexion USB a été coupée. Ferme les autres fenêtres de configuration, puis débranche {{device}} et rebranche-le.",
+        "security": "L'appli n'a pas le droit d'ouvrir {{device}}. Sous Linux, appuie sur « Configurer l'accès USB », puis débranche-le et rebranche-le.",
+        "gone": "{{device, capitalize}} a été débranché. Rebranche-le.",
+        "state": "{{device, capitalize}} n'est pas prêt. Débranche-le, rebranche-le et réessaie."
+      },
+      "main": {
+        "gamesNotAllowed": "La configuration des jeux n'a pas encore le droit de lire les réglages de tes lanceurs. Autorise-la d'abord sur la page Jeux.",
+        "gamesUnavailable": "La page Jeux n'est pas encore disponible sur ce système.",
+        "protonLinuxOnly": "Proton ne sert que sous Linux.",
+        "protonNotPublished": "Aucun build Proton DualSense n'est encore publié.",
+        "protonName": "Le build Proton publié porte un nom que l'appli n'accepte pas : rien n'a été installé. Signale-le, s'il te plaît.",
+        "noLauncher": "Aucune installation de Steam, Heroic ou Lutris n'a été trouvée.",
+        "alreadyUndone": "Cette modification a déjà été annulée.",
+        "diskSpace": "Pas assez d'espace disque dans {{dir}} : il faut environ {{gb}} Go.",
+        "archiveEmpty": "L'archive Proton téléchargée est vide : rien n'a été installé. Réessaie plus tard.",
+        "archiveUnsafe": "L'archive Proton téléchargée contient un chemin dangereux ({{entry}}) : rien n'a été installé. Signale-le, s'il te plaît.",
+        "archiveOutside": "L'archive Proton téléchargée contient un fichier hors de {{name}}/ ({{entry}}) : rien n'a été installé. Signale-le, s'il te plaît.",
+        "archiveNoBuild": "L'archive téléchargée ne contient pas de build Proton : rien n'a été installé. Signale-le, s'il te plaît.",
+        "archiveTop": "Le dossier principal de l'archive Proton téléchargée n'est pas un dossier : rien n'a été installé. Signale-le, s'il te plaît.",
+        "archiveLink": "Le build Proton téléchargé contient un lien qui pointe en dehors de lui ({{path}} → {{to}}) : rien n'a été installé. Signale-le, s'il te plaît.",
+        "downloadCorrupt": "Le téléchargement est endommagé (taille ou somme de contrôle différente) : il n'a pas été utilisé. Réessaie.",
+        "downloadStalled": "Le téléchargement s'est arrêté (aucune donnée pendant une minute). Vérifie la connexion et réessaie.",
+        "downloadHttp": "Le téléchargement a échoué (le serveur a répondu {{status}}). Réessaie plus tard.",
+        "downloadTooLarge": "Le téléchargement est plus gros que ce qu'indique la liste des mises à jour : il a été arrêté. Signale-le, s'il te plaît.",
+        "downloadNoAnswer": "Le serveur de téléchargement n'a pas répondu. Vérifie la connexion et réessaie.",
+        "downloadElsewhere": "Le téléchargement pointe ailleurs que sur GitHub : l'appli l'a refusé. Signale-le, s'il te plaît.",
+        "unexpectedFile": "La liste des mises à jour indique un fichier inattendu ({{name}}) : l'appli l'a refusé. Signale-le, s'il te plaît.",
+        "controllerGone": "La manette n'est pas connectée. Connecte-la et réessaie.",
+        "notJsonObject": "{{file}} n'a pas la forme attendue par l'appli : le fichier n'a pas été modifié.",
+        "fileUnreadable": "{{file}} contient une erreur que l'appli ne peut pas contourner : le fichier n'a pas été modifié.",
+        "bundledDamaged": "Le firmware fourni avec l'appli est endommagé. Réinstalle l'appli.",
+        "noPkexec": "pkexec n'est pas installé : l'appli ne peut pas demander le mot de passe administrateur.",
+        "cancelled": "la demande de mot de passe a été annulée",
+        "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
+      }
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",

@@ -53,7 +53,7 @@ const vcoreVolts = (code: number) => (code <= 15 ? (550 + 50 * code) / 1000 : nu
 // `frame`: the OLED mirror's latest frame (the page's own poll), for what the OLED shows now.
 // `error`: the last read's failure (null once a read succeeds).
 // `history`: the last minute; `longHistory`: up to TREND_MAX_SAMPLES (the Timing card's width-sized trends).
-// error: SHOWN — english: at the Diagnostics heading (DonglePage, MainBlock actions; board errors are English, batch E3)
+// error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): at the Diagnostics heading (DonglePage, MainBlock actions)
 export type Telemetry = { sample: Sample | null; history: Sample[]; longHistory: Sample[]; error: string | null; frame: OledFrame | null };
 
 // The page's live reads: every second while shown (usePoll).
@@ -250,7 +250,7 @@ function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5Br
       await client.resetTimings();
       setResetAt(performance.now());
     } catch (cause) {
-      // error: SHOWN — english: the error next to Reset (board errors are English, batch E3)
+      // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): the error next to Reset
       setError(causeText(cause));
     }
   };

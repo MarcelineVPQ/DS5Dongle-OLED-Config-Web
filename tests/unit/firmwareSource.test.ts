@@ -59,7 +59,7 @@ describe("firmware source", () => {
 
   it("refuses a damaged bundled file", async () => {
     bundle("v0.8.0-oled-edition", "f".repeat(64));
-    await expect(firmwareBytes(deps(null), { version: "v0.8.0-oled-edition", source: "bundled" })).rejects.toThrow(/damaged/);
+    await expect(firmwareBytes(deps(null), { version: "v0.8.0-oled-edition", source: "bundled" })).rejects.toThrow(/desktop\.errors\.main\.bundledDamaged/);
   });
 
   it("ignores a malformed bundle description", () => {

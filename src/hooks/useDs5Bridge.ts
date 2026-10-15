@@ -50,7 +50,7 @@ export interface UseDs5BridgeResult {
   issues: ConfigValidationIssue[];
   saveState: SaveState;
   operation: Operation;
-  // error: SHOWN — english: DesktopApp's ErrorNotice with Dismiss (USB and protocol errors are English, batch E3)
+  // error: SHOWN — desktop.errors.usb.network, the keyed board errors and the rest (causeText): DesktopApp's ErrorNotice with Dismiss
   error: string | null;
   statusText: string;
   isConnected: boolean;
@@ -153,7 +153,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("idle");
       setError(null);
     } catch (cause) {
-      // error: SHOWN — english: the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
+      // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
       // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
       // vanished during Repair USB driver). The setup screen explains that
       // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
@@ -186,7 +186,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await attach(await WebUsbTransport.request());
     } catch (cause) {
-      // error: SHOWN — english: the error notice (bridge.error); NotFoundError is the user closing the device picker, not an error
+      // error: SHOWN — desktop.errors.usb.security and the other keyed USB/board errors (causeText) in the error notice (bridge.error); NotFoundError is the user closing the device picker, not an error
       if (!(cause instanceof DOMException && cause.name === "NotFoundError")) setError(causeText(cause));
     }
   }, [attach]);
@@ -200,7 +200,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setError(null);
       return true;
     } catch (cause) {
-      // error: SHOWN — english: the error notice (bridge.error), and the caller gets false
+      // error: SHOWN — desktop.errors.board.timeout and the other keyed USB/board errors (causeText) in the error notice (bridge.error), and the caller gets false
       setError(causeText(cause));
       return false;
     } finally {

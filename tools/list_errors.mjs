@@ -355,8 +355,14 @@ if (args.includes("--check")) {
     if (!r.verdict) bad.push(`${at}: no verdict. Add "// error: VERDICT — reason" (CLAUDE.md "Error pass")`);
     else if (r.verdict === "SHOWN" && r.source !== "via" && !/^via /.test(r.source)) {
       const key = /^([\w-]+(?:\.[\w-]+)+)/.exec(r.reason)?.[1];
-      // An en.json key, or "english:" / "main-english:" for text not translated yet (batch E4).
-      if (!/^(main-)?english:/.test(r.reason) && (!key || !hasKey(key))) bad.push(`${at}: SHOWN must start its reason with an en.json key that exists, or "english:" (got "${r.reason}")`);
+      // An en.json key. Since batch E3 nothing the user sees is English: the
+      // main process and the protocol code send keyed text (src/errorText.ts).
+      // "english:" stays only for the Developer card (dev builds, not translated).
+      const devOnly = /^english:.*Developer card/.test(r.reason);
+      if (!devOnly && (!key || !hasKey(key)))
+        bad.push(
+          `${at}: SHOWN must start its reason with an en.json key that exists (English only on the Developer card: "english: … Developer card …"; elsewhere send keyed text, src/errorText.ts) (got "${r.reason}")`,
+        );
     } else if (NEEDS_BATCH.has(r.verdict) && !/\(batch E\d+\)/.test(r.reason)) bad.push(`${at}: ${r.verdict} must name its batch "(batch E<n>)" in docs/ERROR_PASS_2026-10.md`);
   }
   if (bad.length) {

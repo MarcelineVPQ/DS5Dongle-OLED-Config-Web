@@ -12,6 +12,7 @@
 import { execFile } from "node:child_process";
 import { join } from "node:path";
 import { REPAIR_SCRIPT } from "../../src/desktop/windowsRepairScript";
+import { keyedText } from "../../src/errorText";
 
 // The script itself is shared with the page, which shows it before it runs.
 export { REPAIR_SCRIPT };
@@ -33,18 +34,18 @@ export function launcherScript(powershell: string, script: string): string {
   ].join("\n");
 }
 
-// error: SHOWN — main-english: the message under the Windows USB repair (batch E3)
+// error: SHOWN — desktop.windowsUsb.result.* (keyed text, the page's shownText) under the Windows USB repair
 export function repairWindowsUsb(): Promise<{ ok: boolean; message: string }> {
-  if (process.platform !== "win32") return Promise.resolve({ ok: false, message: "Only needed on Windows." });
+  if (process.platform !== "win32") return Promise.resolve({ ok: false, message: keyedText("desktop.windowsUsb.result.onlyWindows") });
   // Full path, never PATH lookup.
   const powershell = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   return new Promise((resolve) => {
     // lifetime: OK — exits when the UAC prompt is answered and the repair ends; no timeout (a person answers)
-    // error: SHOWN — main-english: Repaired / Cancelled / "Repair failed: …" under the Windows USB repair (batch E3)
+    // error: SHOWN — desktop.windowsUsb.done / desktop.windowsUsb.result.cancelled / .failed under the Windows USB repair
     execFile(powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodeCommand(launcherScript(powershell, REPAIR_SCRIPT))], { windowsHide: true }, (error) => {
-      if (!error) resolve({ ok: true, message: "Repaired. Now unplug your board and plug it back in." });
-      else if (error.code === CANCELLED) resolve({ ok: false, message: "Cancelled." });
-      else resolve({ ok: false, message: `Repair failed: ${error.message}` });
+      if (!error) resolve({ ok: true, message: keyedText("desktop.windowsUsb.done") });
+      else if (error.code === CANCELLED) resolve({ ok: false, message: keyedText("desktop.windowsUsb.result.cancelled") });
+      else resolve({ ok: false, message: keyedText("desktop.windowsUsb.result.failed", { detail: error.message }) });
     });
   });
 }

@@ -282,7 +282,8 @@
       "wrongFile": "Este arquivo não é firmware para {{device}} (é para outro chip, ou está danificado), então nada foi gravado. Procure atualizações de novo; se acontecer outra vez, reinstale o app.",
       "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez.",
       "didntStart": "O firmware novo não iniciou: {{device}} voltou no modo BOOTSEL, ainda esperando firmware. Deixe conectado e instale de novo.",
-      "installAgain": "Instalar de novo"
+      "installAgain": "Instalar de novo",
+      "waitForApp": "Espere primeiro a atualização do app terminar."
     },
     "recovered": {
       "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
@@ -303,7 +304,16 @@
       "label": "Regra de acesso USB",
       "installed": "Instalada",
       "missing": "Não instalada (as regras do Steam talvez já cubram {{device}})",
-      "button": "Configurar acesso USB"
+      "button": "Configurar acesso USB",
+      "result": {
+        "notNeeded": "Não é necessário neste sistema.",
+        "done": "O acesso USB está configurado. Desconecte {{device}} e conecte de novo.",
+        "doneSandbox": "O acesso USB está configurado e o sandbox do app está permitido. Desconecte {{device}} e conecte de novo; o sandbox fica ativo a partir da próxima vez que o app abrir.",
+        "noPkexec": "O pkexec não está instalado. Copie a regra manualmente (veja o README).",
+        "noUdevadm": "O udevadm não está instalado, então a regra não pode ser carregada. Copie-a manualmente (veja o README).",
+        "cancelled": "Cancelado. Nada foi alterado.",
+        "failed": "A configuração falhou: {{detail}}"
+      }
     },
     "windowsUsb": {
       "hint": "Conectado, controle ligado, e mesmo assim nunca conecta? O Windows pode estar guardando uma configuração USB antiga para ele.",
@@ -319,7 +329,12 @@
       },
       "showScript": "Mostrar o script exato",
       "run": "Fazer o reparo",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "result": {
+        "onlyWindows": "Só é necessário no Windows.",
+        "cancelled": "Cancelado. Nada foi alterado.",
+        "failed": "O reparo falhou: {{detail}}"
+      }
     },
     "update": {
       "appAvailable": "A atualização {{version}} do app está disponível ({{size}}).",
@@ -352,7 +367,8 @@
       "askYes": "Atualizar automaticamente",
       "askNo": "Perguntar sempre",
       "fwUpdate": "Atualizar",
-      "appFailed": "A atualização do app não foi instalada: {{detail}}"
+      "appFailed": "A atualização do app não foi instalada: {{detail}}",
+      "untouched": "Sua versão atual não foi alterada."
     },
     "controller": {
       "battery": "Bateria",
@@ -576,7 +592,7 @@
       "historyStatus_one": "{{count}} mudança · última em {{date}}",
       "historyStatus_other": "{{count}} mudanças · última em {{date}}",
       "historyNone": "Nenhuma mudança ainda",
-      "historyDamaged": "Esta mudança não pode ser desfeita aqui: o backup dela não pode ser lido. O backup está em {{folder}}."
+      "historyDamaged": "Esta mudança não pode ser desfeita aqui: o backup dela não pode ser lido. Pasta do backup:"
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -1747,7 +1763,58 @@
       "layoutDelete": "Não foi possível excluir o layout de botões, então ele continua aí. Tente de novo; se continuar falhando, reinicie o app.",
       "boardFailed": "{{device, capitalize}} não conseguiu concluir isso (por exemplo, salvar na memória). O que você mudou pode se perder ao desligar. Tente de novo; se continuar falhando, desconecte {{device}} e conecte de novo.",
       "boardBusy": "{{device, capitalize}} está ocupado com outra coisa. Tente de novo daqui a pouco.",
-      "boardRejected": "{{device, capitalize}} não aceitou isso. O firmware pode ser mais antigo que este app: atualize o firmware e tente de novo."
+      "boardRejected": "{{device, capitalize}} não aceitou isso. O firmware pode ser mais antigo que este app: atualize o firmware e tente de novo.",
+      "board": {
+        "notOurs": "{{device, capitalize}} não respondeu como este app espera: o app não reconhece o firmware. Atualize o firmware.",
+        "protocol": "{{device, capitalize}} tem um firmware com o protocolo {{have}}, mas este app precisa de {{need}}. Atualize o app ou o firmware.",
+        "otherProgram": "Outro programa falou com {{device}} ao mesmo tempo. Tente de novo.",
+        "timeout": "{{device, capitalize}} não terminou a tempo. Tente de novo; se continuar acontecendo, desconecte {{device}} e conecte de novo.",
+        "noOledKeys": "Este firmware não consegue apertar as teclas da placa pelo app. Atualize o firmware.",
+        "noOledPad": "Este firmware não consegue apertar botões do controle na tela da placa pelo app. Atualize o firmware.",
+        "noControllerInfo": "{{device, capitalize}} não enviou informações do controle. Verifique se o controle está conectado.",
+        "controllerGone": "O controle se desconectou. Conecte-o e tente de novo.",
+        "controllerTimeout": "O controle não respondeu a tempo. Tente de novo.",
+        "short": "{{device, capitalize}} enviou uma resposta incompleta. Tente de novo; se continuar acontecendo, desconecte {{device}} e conecte de novo.",
+        "noInterface": "O firmware {{device_de}} não tem interface de configurações para este app. Atualize o firmware primeiro.",
+        "transfer": "A comunicação com {{device}} falhou (relatório {{report}}). Desconecte e conecte de novo.",
+        "badConfig": "{{device, capitalize}} enviou configurações que este app não consegue ler. Atualize o firmware ou o app."
+      },
+      "usb": {
+        "network": "O app não conseguiu falar com {{device}}: talvez outro programa esteja usando, ou a conexão USB caiu. Feche outras janelas do configurador, depois desconecte {{device}} e conecte de novo.",
+        "security": "O app não tem permissão para abrir {{device}}. No Linux, aperte “Configurar acesso USB”, depois desconecte e conecte de novo.",
+        "gone": "{{device, capitalize}} foi desconectado. Conecte de novo.",
+        "state": "{{device, capitalize}} não está pronto. Desconecte, conecte de novo e tente outra vez."
+      },
+      "main": {
+        "gamesNotAllowed": "A configuração de jogos ainda não tem permissão para ler as configurações dos seus launchers. Permita primeiro na página Jogos.",
+        "gamesUnavailable": "A página Jogos ainda não está disponível neste sistema.",
+        "protonLinuxOnly": "O Proton só é usado no Linux.",
+        "protonNotPublished": "Ainda não há nenhum build do Proton para DualSense publicado.",
+        "protonName": "O build do Proton publicado tem um nome que o app não aceita, então nada foi instalado. Avise a gente, por favor.",
+        "noLauncher": "Nenhuma instalação do Steam, Heroic ou Lutris foi encontrada.",
+        "alreadyUndone": "Esta mudança já foi desfeita.",
+        "diskSpace": "Não há espaço suficiente em {{dir}}: são necessários cerca de {{gb}} GB.",
+        "archiveEmpty": "O arquivo do Proton baixado está vazio, então nada foi instalado. Tente de novo mais tarde.",
+        "archiveUnsafe": "O arquivo do Proton baixado tem um caminho inseguro ({{entry}}), então nada foi instalado. Avise a gente, por favor.",
+        "archiveOutside": "O arquivo do Proton baixado tem um arquivo fora de {{name}}/ ({{entry}}), então nada foi instalado. Avise a gente, por favor.",
+        "archiveNoBuild": "O arquivo baixado não contém um build do Proton, então nada foi instalado. Avise a gente, por favor.",
+        "archiveTop": "A pasta principal do arquivo do Proton baixado não é uma pasta, então nada foi instalado. Avise a gente, por favor.",
+        "archiveLink": "O build do Proton baixado tem um link que aponta para fora dele ({{path}} → {{to}}), então nada foi instalado. Avise a gente, por favor.",
+        "downloadCorrupt": "O download está danificado (o tamanho ou a soma de verificação não confere), então não foi usado. Tente de novo.",
+        "downloadStalled": "O download parou (sem dados por um minuto). Verifique a conexão e tente de novo.",
+        "downloadHttp": "O download falhou (o servidor respondeu {{status}}). Tente de novo mais tarde.",
+        "downloadTooLarge": "O download é maior do que a lista de atualizações diz, então foi interrompido. Avise a gente, por favor.",
+        "downloadNoAnswer": "O servidor de download não respondeu. Verifique a conexão e tente de novo.",
+        "downloadElsewhere": "O download aponta para outro lugar que não o GitHub, então o app recusou. Avise a gente, por favor.",
+        "unexpectedFile": "A lista de atualizações indica um arquivo inesperado ({{name}}), então o app recusou. Avise a gente, por favor.",
+        "controllerGone": "O controle não está conectado. Conecte-o e tente de novo.",
+        "notJsonObject": "{{file}} não está no formato que o app espera, então não foi alterado.",
+        "fileUnreadable": "{{file}} tem um erro que o app não consegue contornar, então não foi alterado.",
+        "bundledDamaged": "O firmware que vem com o app está danificado. Reinstale o app.",
+        "noPkexec": "O pkexec não está instalado, então o app não consegue pedir a senha de administrador.",
+        "cancelled": "a janela da senha foi cancelada",
+        "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
+      }
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",

@@ -56,7 +56,7 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
   it("is refused by firmware without the bit, without sending anything", async () => {
     const { dongle, client } = await setup(18);
     expect(client.oledPad).toBe(false);
-    await expect(client.pressOledPad("up")).rejects.toThrow(/Update the firmware/);
+    await expect(client.pressOledPad("up")).rejects.toThrow(/desktop\.errors\.board\.noOledPad/);
     expect(dongle.sets.length).toBe(0);
   });
 

@@ -19,7 +19,7 @@ function useLatest<F>(fn: F) {
 // overlapping two reads. Returns the latest value and the latest error (null
 // once a read succeeds). For UI-only readouts: what the tray, game profiles
 // or saved-state sync need polls on its own (useDs5Bridge).
-// error: SHOWN — english: each caller shows \`error\` next to its readout (board errors are English, batch E3)
+// error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): each caller shows \`error\` next to its readout
 export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: boolean): { value: T | null; error: string | null } {
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function usePoll<T>(read: () => Promise<T>, intervalMs: number, enabled: 
             setError(null);
           });
       } catch (cause) {
-        // error: SHOWN — english: returned as \`error\`, which the caller shows next to its readout
+        // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): returned as \`error\`, which the caller shows next to its readout
         if (!stopped) pending = atNextTick(() => setError(causeText(cause)));
       }
       // lifetime: OK — self re-arming; cleared in the cleanup, stops once stopped is set

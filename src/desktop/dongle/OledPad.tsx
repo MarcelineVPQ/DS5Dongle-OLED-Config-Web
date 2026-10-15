@@ -91,7 +91,7 @@ const FACE: [OledPadButton, string][] = [
 export default function OledPad({ supported, press, controllerOn, frame }: OledPadProps & { frame: OledFrame | null }) {
   const { t } = useTranslation();
   const [held, setHeld] = useState<OledPadButton | null>(null);
-  // error: SHOWN — english: the pad's tooltip and red outline until the next press (board errors are English, batch E3)
+  // error: SHOWN — desktop.errors.board.noOledPad and the other keyed board errors (causeText): the pad's tooltip and red outline until the next press
   const [error, setError] = useState<string | null>(null);
   // cache: OK — key=none (the button held now and since when); invalidated=each release / cancel; bound=1 entry
   const downAt = useRef<{ button: OledPadButton; at: number } | null>(null);
@@ -123,7 +123,7 @@ export default function OledPad({ supported, press, controllerOn, frame }: OledP
     // A quick click is a tap (0); a longer press is held as long on the board.
     const ms = at - d.at < 250 ? 0 : Math.min(OLED_PAD_MAX_HOLD_MS, Math.round(at - d.at));
     setError(null);
-    // error: SHOWN — english: the pad's tooltip and red outline until the next press (board errors are English, batch E3)
+    // error: SHOWN — desktop.errors.board.noOledPad and the other keyed board errors (causeText): the pad's tooltip and red outline until the next press
     press(button, ms).catch((cause: unknown) => setError(causeText(cause)));
   };
   const cancel = () => {

@@ -49,7 +49,7 @@ export function useSlotSettings<T>(bridge: UseDs5BridgeResult, supported: boolea
         loaded(r);
         setError(null);
       })
-      // error: SHOWN — english: SlotReadError with Retry (board errors are English, batch E3)
+      // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): SlotReadError with Retry
       .catch((cause) => live && setError(causeText(cause)))
       .finally(settle);
     return () => {
@@ -66,7 +66,7 @@ export function useSlotSettings<T>(bridge: UseDs5BridgeResult, supported: boolea
 }
 
 // The error line, with Retry while nothing could be read yet.
-// error: SHOWN — english: the read error itself, with Retry
+// error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): the read error itself, with Retry
 export function SlotReadError({ error, retry }: { error: string | null; retry: (() => Promise<void>) | null }) {
   const { t } = useTranslation();
   if (!error) return null;

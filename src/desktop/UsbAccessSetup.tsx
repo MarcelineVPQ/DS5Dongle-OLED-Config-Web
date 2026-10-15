@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "./controls";
 import { logged } from "../errorText";
+import { shownText } from "./shownError";
 
 // Linux only: installs the app's udev rule (via the main process and pkexec)
 // so the logged-in user can open the dongle and the RP2350 boot device.
@@ -21,7 +22,7 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
 
   const run = async () => {
     const result = await desktop.setupUsbAccess();
-    setMessage(result.message);
+    setMessage(shownText(result.message));
     if (result.ok) setInstalled(true);
   };
 

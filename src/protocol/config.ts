@@ -48,6 +48,7 @@
 // lightbar panel (the web tool doesn't show them), and MUST always be encoded:
 // the firmware copies sizeof(Config_body) bytes, so a short body would zero them.
 import { toUint8Array } from "./bytes";
+import { KeyedError } from "../errorText";
 
 export const CONFIG_BODY_SIZE = 37;
 // Protocol 1.6 adds the right grip's haptics strength after the narrator byte
@@ -236,9 +237,10 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
     const issues = validateConfig(parsed[0])
       .map((i) => i.message)
       .join("; ");
-    throw new Error(`Device returned invalid config: ${issues}`);
+    console.warn("the board's settings don't check out:", issues);
+    throw new KeyedError("desktop.errors.board.badConfig");
   }
-  throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_MIN_SIZE}`);
+  throw new KeyedError("desktop.errors.board.short");
 }
 
 // split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split);
@@ -247,7 +249,8 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
   const issues = validateConfig(config);
   if (issues.length > 0) {
     // loop: NOT-WORTH — error path only (invalid draft)
-    throw new Error(issues.map((i) => i.message).join("; "));
+    console.warn("not sending settings that don't check out:", issues.map((i) => i.message).join("; "));
+    throw new KeyedError("desktop.errors.badRequest"); // the page blocks an invalid draft first (an app bug if it gets here)
   }
   micLevel ||= echoCancel;
   tail ||= micLevel;

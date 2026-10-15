@@ -12,12 +12,15 @@
     "noEmit": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
   "include": [
     "electron",
     "src/desktop/api.ts",
     "src/errorText.ts",
+    "src/i18n/deviceForms.ts",
+    "src/i18n/locales/*.json",
     "src/persisted.ts",
     "src/desktop/windowsRepairScript.ts",
     "src/desktop/theme",

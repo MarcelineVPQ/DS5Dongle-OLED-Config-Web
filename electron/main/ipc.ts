@@ -127,9 +127,9 @@ export interface IpcHandlers {
   recoveredFiles: () => Recovered[];
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
-  // error: SHOWN — main-english: the message under Set up USB access (UsbAccessSetup) (batch E3)
+  // error: SHOWN — desktop.usbAccess.result.* (keyed text) under Set up USB access (UsbAccessSetup)
   setupUsbAccess: () => Promise<{ ok: boolean; message: string }>;
-  // error: SHOWN — main-english: the message under the Windows USB repair (WindowsUsbRepair) (batch E3)
+  // error: SHOWN — desktop.windowsUsb.result.* (keyed text) under the Windows USB repair (WindowsUsbRepair)
   repairWindowsUsb: () => Promise<{ ok: boolean; message: string }>;
   appVersion: () => string;
   checkForUpdates: () => Promise<UpdateState>;

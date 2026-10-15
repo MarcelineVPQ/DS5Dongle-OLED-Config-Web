@@ -282,7 +282,8 @@
       "wrongFile": "Diese Datei ist keine Firmware für {{device_akk}} (sie ist für einen anderen Chip oder beschädigt), darum wurde nichts geschrieben. Such noch einmal nach Updates; passiert es wieder, installiere die App neu.",
       "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal.",
       "didntStart": "Die neue Firmware ist nicht gestartet: {{device}} ist wieder im BOOTSEL-Modus und wartet noch auf Firmware. Nicht abziehen und die Firmware erneut installieren.",
-      "installAgain": "Erneut installieren"
+      "installAgain": "Erneut installieren",
+      "waitForApp": "Warte zuerst, bis das App-Update fertig ist."
     },
     "recovered": {
       "partial": "{{what}}: Einige Teile waren beschädigt. Sie wurden auf die Standardwerte zurückgesetzt, alles andere blieb erhalten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
@@ -303,7 +304,16 @@
       "label": "USB-Zugriffsregel",
       "installed": "Installiert",
       "missing": "Nicht installiert (Steams Regeln decken {{device_akk}} eventuell schon ab)",
-      "button": "USB-Zugriff einrichten"
+      "button": "USB-Zugriff einrichten",
+      "result": {
+        "notNeeded": "Auf diesem System nicht nötig.",
+        "done": "Der USB-Zugriff ist eingerichtet. Zieh {{device_akk}} ab und steck es wieder ein.",
+        "doneSandbox": "Der USB-Zugriff ist eingerichtet und die Sandbox der App erlaubt. Zieh {{device_akk}} ab und steck es wieder ein; die Sandbox ist ab dem nächsten Start der App aktiv.",
+        "noPkexec": "pkexec ist nicht installiert. Kopiere die Regel von Hand (siehe README).",
+        "noUdevadm": "udevadm ist nicht installiert, darum kann die Regel nicht geladen werden. Kopiere sie von Hand (siehe README).",
+        "cancelled": "Abgebrochen. Es wurde nichts geändert.",
+        "failed": "Einrichtung fehlgeschlagen: {{detail}}"
+      }
     },
     "windowsUsb": {
       "hint": "Eingesteckt, Controller an, und trotzdem keine Verbindung? Windows hat dafür vielleicht noch eine alte USB-Einstellung gespeichert.",
@@ -319,7 +329,12 @@
       },
       "showScript": "Genaues Skript anzeigen",
       "run": "Reparatur starten",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "result": {
+        "onlyWindows": "Nur unter Windows nötig.",
+        "cancelled": "Abgebrochen. Es wurde nichts geändert.",
+        "failed": "Die Reparatur ist fehlgeschlagen: {{detail}}"
+      }
     },
     "update": {
       "appAvailable": "App-Update {{version}} ist verfügbar ({{size}}).",
@@ -352,7 +367,8 @@
       "askYes": "Automatisch aktualisieren",
       "askNo": "Jedes Mal fragen",
       "fwUpdate": "Aktualisieren",
-      "appFailed": "Das App-Update wurde nicht installiert: {{detail}}"
+      "appFailed": "Das App-Update wurde nicht installiert: {{detail}}",
+      "untouched": "Deine aktuelle Version ist unverändert."
     },
     "controller": {
       "battery": "Akku",
@@ -576,7 +592,7 @@
       "historyStatus_one": "{{count}} Änderung · zuletzt {{date}}",
       "historyStatus_other": "{{count}} Änderungen · zuletzt {{date}}",
       "historyNone": "Noch keine Änderungen",
-      "historyDamaged": "Diese Änderung lässt sich hier nicht rückgängig machen: Ihre Sicherung ist nicht lesbar. Die Sicherung liegt in {{folder}}."
+      "historyDamaged": "Diese Änderung lässt sich hier nicht rückgängig machen: Ihre Sicherung ist nicht lesbar. Ordner der Sicherung:"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -1747,7 +1763,58 @@
       "layoutDelete": "Die Tastenbelegung konnte nicht gelöscht werden und ist noch da. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
       "boardFailed": "{{device, capitalize}} konnte das nicht abschließen (zum Beispiel das Speichern). Deine Änderung geht beim Ausschalten vielleicht verloren. Versuch es noch einmal; wenn es weiter fehlschlägt, zieh {{device_akk}} ab und steck es wieder ein.",
       "boardBusy": "{{device, capitalize}} ist gerade mit etwas anderem beschäftigt. Versuch es gleich noch einmal.",
-      "boardRejected": "{{device, capitalize}} hat das nicht angenommen. Die Firmware ist vielleicht älter als diese App: Aktualisiere die Firmware und versuch es dann noch einmal."
+      "boardRejected": "{{device, capitalize}} hat das nicht angenommen. Die Firmware ist vielleicht älter als diese App: Aktualisiere die Firmware und versuch es dann noch einmal.",
+      "board": {
+        "notOurs": "{{device, capitalize}} hat nicht so geantwortet, wie diese App es erwartet: Die Firmware kennt die App nicht. Aktualisiere die Firmware.",
+        "protocol": "{{device, capitalize}} hat Firmware mit Protokoll {{have}}, diese App braucht aber {{need}}. Aktualisiere die App oder die Firmware.",
+        "otherProgram": "Ein anderes Programm hat gleichzeitig mit {{device_dat}} gesprochen. Versuch es noch einmal.",
+        "timeout": "{{device, capitalize}} ist nicht rechtzeitig fertig geworden. Versuch es noch einmal; wenn es wieder passiert, zieh {{device_akk}} ab und steck es wieder ein.",
+        "noOledKeys": "Diese Firmware kann die Tasten des Boards nicht aus der App drücken. Aktualisiere die Firmware.",
+        "noOledPad": "Diese Firmware kann Controller-Tasten für den Bildschirm des Boards nicht aus der App drücken. Aktualisiere die Firmware.",
+        "noControllerInfo": "{{device, capitalize}} hat keine Controller-Infos gesendet. Prüfe, ob der Controller verbunden ist.",
+        "controllerGone": "Der Controller wurde getrennt. Verbinde ihn und versuch es noch einmal.",
+        "controllerTimeout": "Der Controller hat nicht rechtzeitig geantwortet. Versuch es noch einmal.",
+        "short": "{{device, capitalize}} hat eine unvollständige Antwort gesendet. Versuch es noch einmal; wenn es wieder passiert, zieh {{device_akk}} ab und steck es wieder ein.",
+        "noInterface": "Die Firmware auf {{device_dat}} hat keine Einstellungs-Schnittstelle für diese App. Aktualisiere zuerst die Firmware.",
+        "transfer": "Die Verbindung mit {{device_dat}} ist fehlgeschlagen (Report {{report}}). Zieh {{device_akk}} ab und steck es wieder ein.",
+        "badConfig": "{{device, capitalize}} hat Einstellungen gesendet, die diese App nicht lesen kann. Aktualisiere die Firmware oder die App."
+      },
+      "usb": {
+        "network": "Die App konnte nicht mit {{device_dat}} sprechen: Vielleicht benutzt es ein anderes Programm, oder die USB-Verbindung ist abgebrochen. Schließ andere Konfigurator-Fenster, zieh dann {{device_akk}} ab und steck es wieder ein.",
+        "security": "Die App darf {{device_akk}} nicht öffnen. Drück unter Linux auf „USB-Zugriff einrichten“, zieh es dann ab und steck es wieder ein.",
+        "gone": "{{device, capitalize}} wurde abgezogen. Steck es wieder ein.",
+        "state": "{{device, capitalize}} ist nicht bereit. Zieh es ab, steck es wieder ein und versuch es noch einmal."
+      },
+      "main": {
+        "gamesNotAllowed": "Spiele einrichten darf die Einstellungen deiner Launcher noch nicht lesen. Erlaube es zuerst auf der Spiele-Seite.",
+        "gamesUnavailable": "Die Spiele-Seite gibt es auf diesem System noch nicht.",
+        "protonLinuxOnly": "Proton wird nur unter Linux verwendet.",
+        "protonNotPublished": "Es ist noch kein DualSense-Proton-Build veröffentlicht.",
+        "protonName": "Der veröffentlichte Proton-Build hat einen Namen, den die App nicht annimmt, darum wurde nichts installiert. Melde es bitte.",
+        "noLauncher": "Es wurde keine Installation von Steam, Heroic oder Lutris gefunden.",
+        "alreadyUndone": "Diese Änderung wurde schon rückgängig gemacht.",
+        "diskSpace": "Nicht genug Speicherplatz in {{dir}}: Es werden etwa {{gb}} GB gebraucht.",
+        "archiveEmpty": "Das heruntergeladene Proton-Archiv ist leer, darum wurde nichts installiert. Versuch es später noch einmal.",
+        "archiveUnsafe": "Das heruntergeladene Proton-Archiv enthält einen unsicheren Pfad ({{entry}}), darum wurde nichts installiert. Melde es bitte.",
+        "archiveOutside": "Das heruntergeladene Proton-Archiv enthält eine Datei außerhalb von {{name}}/ ({{entry}}), darum wurde nichts installiert. Melde es bitte.",
+        "archiveNoBuild": "Das heruntergeladene Archiv enthält keinen Proton-Build, darum wurde nichts installiert. Melde es bitte.",
+        "archiveTop": "Der oberste Ordner des heruntergeladenen Proton-Archivs ist kein Ordner, darum wurde nichts installiert. Melde es bitte.",
+        "archiveLink": "Der heruntergeladene Proton-Build enthält einen Link, der nach außen zeigt ({{path}} → {{to}}), darum wurde nichts installiert. Melde es bitte.",
+        "downloadCorrupt": "Der Download ist beschädigt (Größe oder Prüfsumme passt nicht), darum wurde er nicht verwendet. Versuch es noch einmal.",
+        "downloadStalled": "Der Download ist stehen geblieben (eine Minute lang keine Daten). Prüfe die Verbindung und versuch es noch einmal.",
+        "downloadHttp": "Der Download ist fehlgeschlagen (der Server hat mit {{status}} geantwortet). Versuch es später noch einmal.",
+        "downloadTooLarge": "Der Download ist größer, als die Update-Liste angibt, darum wurde er abgebrochen. Melde es bitte.",
+        "downloadNoAnswer": "Der Download-Server hat nicht geantwortet. Prüfe die Verbindung und versuch es noch einmal.",
+        "downloadElsewhere": "Der Download zeigt woandershin als zu GitHub, darum hat die App ihn abgelehnt. Melde es bitte.",
+        "unexpectedFile": "Die Update-Liste nennt eine unerwartete Datei ({{name}}), darum hat die App sie abgelehnt. Melde es bitte.",
+        "controllerGone": "Der Controller ist nicht verbunden. Verbinde ihn und versuch es noch einmal.",
+        "notJsonObject": "{{file}} hat nicht die Form, die die App erwartet, darum wurde die Datei nicht geändert.",
+        "fileUnreadable": "{{file}} enthält einen Fehler, über den die App nicht hinweglesen kann, darum wurde die Datei nicht geändert.",
+        "bundledDamaged": "Die mit der App gelieferte Firmware ist beschädigt. Installiere die App neu.",
+        "noPkexec": "pkexec ist nicht installiert, darum kann die App nicht nach dem Administrator-Passwort fragen.",
+        "cancelled": "die Passwortabfrage wurde abgebrochen",
+        "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
+      }
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",

@@ -128,7 +128,7 @@ export default function Calibration({ bridge, input }: { bridge: UseDs5BridgeRes
       await client.setCalibration(slot, c);
       loaded(await readCal(client));
     } catch (cause) {
-      // error: SHOWN — desktop.errors.boardFailed (causeText: board results in plain words; other board errors English, batch E3)
+      // error: SHOWN — desktop.errors.boardFailed (causeText: board results in plain words, and the other keyed board errors)
       setError(causeText(cause));
     }
   };

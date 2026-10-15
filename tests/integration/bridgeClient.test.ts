@@ -38,7 +38,7 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
 
   it("refuses a dongle that speaks another protocol major", async () => {
     const { client } = setup({ protoMajor: 2 });
-    await expect(client.checkCompatible()).rejects.toThrow(/not supported/);
+    await expect(client.checkCompatible()).rejects.toThrow(/desktop\.errors\.board\.protocol/);
   });
 
   it("applies config to RAM without touching flash", async () => {
@@ -95,7 +95,7 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
       await original(id, payload);
       dongle.bumpSequenceExternally();
     };
-    await expect(client.saveToFlash()).rejects.toThrow(/same time/);
+    await expect(client.saveToFlash()).rejects.toThrow(/desktop\.errors\.board\.otherProgram/);
   });
 
   it("writes a remap table and reads it back with a new revision", async () => {

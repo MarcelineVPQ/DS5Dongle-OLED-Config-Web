@@ -12,6 +12,7 @@ import { promisify } from "node:util";
 import type { ProtonProgress } from "../../../src/desktop/api";
 import { compareProtonNames, PROTON_NAME, type Download } from "../../../src/update/manifest";
 import { readParsed } from "./files";
+import { KeyedError, keyedText } from "../../../src/errorText";
 
 const run = promisify(execFile);
 
@@ -22,11 +23,11 @@ export interface ProtonBuild {
 
 // Every entry must live under `<name>/`, with no absolute paths or `..`.
 export function checkArchiveEntries(entries: string[], name: string): string | null {
-  if (entries.length === 0) return "The archive is empty.";
+  if (entries.length === 0) return keyedText("desktop.errors.main.archiveEmpty");
   for (const raw of entries) {
     const e = raw.replace(/^\.\//, "");
-    if (e.startsWith("/") || e.split("/").includes("..")) return `Unsafe path in archive: ${raw}`;
-    if (e !== `${name}/` && e !== name && !e.startsWith(`${name}/`)) return `Unexpected entry outside ${name}/: ${raw}`;
+    if (e.startsWith("/") || e.split("/").includes("..")) return keyedText("desktop.errors.main.archiveUnsafe", { entry: raw });
+    if (e !== `${name}/` && e !== name && !e.startsWith(`${name}/`)) return keyedText("desktop.errors.main.archiveOutside", { entry: raw, name });
   }
   return null;
 }
@@ -34,7 +35,7 @@ export function checkArchiveEntries(entries: string[], name: string): string | n
 // After unpacking: the build folder is a real folder and every symlink in it
 // resolves inside it (absolute or escaping targets are refused).
 export function checkUnpackedTree(root: string): string | null {
-  if (!lstatSync(root).isDirectory()) return "The archive's top folder is not a folder.";
+  if (!lstatSync(root).isDirectory()) return keyedText("desktop.errors.main.archiveTop");
   const walk = (dir: string): string | null => {
     for (const entry of readdirSync(dir)) {
       const path = join(dir, entry);
@@ -42,7 +43,7 @@ export function checkUnpackedTree(root: string): string | null {
       if (st.isSymbolicLink()) {
         const to = readlinkSync(path);
         const rel = relative(root, resolve(dirname(path), to));
-        if (isAbsolute(to) || rel.startsWith("..") || isAbsolute(rel)) return `Link points outside the build: ${relative(root, path)} -> ${to}`;
+        if (isAbsolute(to) || rel.startsWith("..") || isAbsolute(rel)) return keyedText("desktop.errors.main.archiveLink", { path: relative(root, path), to });
       } else if (st.isDirectory()) {
         const problem = walk(path);
         if (problem) return problem;
@@ -184,7 +185,7 @@ export interface ExtraTarget {
 // Install into `primary` (unpacked from the tarball), then make it visible in
 // each extra launcher directory.
 export async function installProton(build: ProtonBuild, primary: string, copies: ExtraTarget[], deps: InstallDeps, progress: (p: ProtonProgress) => void): Promise<string[]> {
-  if (!PROTON_NAME.test(build.name)) throw new Error("Invalid Proton build name.");
+  if (!PROTON_NAME.test(build.name)) throw new KeyedError("desktop.errors.main.protonName");
   mkdirSync(primary, { recursive: true });
   for (const dir of [primary, ...copies.map((c) => c.dir)]) cleanStaging(dir);
   // Tarball + unpacked (~3x) in the primary folder, plus a full copy per Flatpak launcher.
@@ -193,7 +194,7 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
   for (const c of copies) if (!c.link && !hasBuild(c.dir, build.name)) needs.set(c.dir, (needs.get(c.dir) ?? 0) + unpacked);
   for (const [dir, needed] of needs) {
     mkdirSync(dir, { recursive: true });
-    if (freeBytes(dir) < needed) throw new Error(`Not enough disk space in ${dir}: about ${Math.ceil(needed / 1e9)} GB is needed.`);
+    if (freeBytes(dir) < needed) throw new KeyedError("desktop.errors.main.diskSpace", { dir, gb: Math.ceil(needed / 1e9) });
   }
 
   const installed: string[] = [];
@@ -206,14 +207,14 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
       progress({ phase: "verifying" });
       const { stdout } = await run("tar", ["-tzf", archive], { maxBuffer: 256 * 1024 * 1024 });
       const problem = checkArchiveEntries(stdout.split("\n").filter(Boolean), build.name);
-      if (problem) throw new Error(problem);
+      if (problem) throw new Error(problem); // keyed text (checkArchiveEntries)
       progress({ phase: "unpacking" });
       const out = join(staging, "out");
       mkdirSync(out);
       await run("tar", ["-xzf", archive, "-C", out, "--no-same-owner"], { maxBuffer: 16 * 1024 * 1024 });
-      if (!hasBuild(out, build.name)) throw new Error("The archive does not contain a Proton build.");
+      if (!hasBuild(out, build.name)) throw new KeyedError("desktop.errors.main.archiveNoBuild");
       const unsafe = checkUnpackedTree(join(out, build.name));
-      if (unsafe) throw new Error(unsafe);
+      if (unsafe) throw new Error(unsafe); // keyed text (checkUnpackedTree)
       renameSync(join(out, build.name), join(primary, build.name));
     } finally {
       rmSync(staging, { recursive: true, force: true });

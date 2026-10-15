@@ -323,7 +323,7 @@ describe("identity report (0xF1)", () => {
   it("rejects a report without the DS5O magic", () => {
     const b = sample();
     b[3] = 0;
-    expect(() => decodeIdentity(b)).toThrow(/DS5O/);
+    expect(() => decodeIdentity(b)).toThrow(/desktop\.errors\.board\.notOurs/);
   });
 
   it("maps an unknown result code to failed rather than ok", () => {
@@ -396,7 +396,7 @@ describe("CPU report (0xFC) and its timings (protocol 1.11)", () => {
   });
 
   it("refuses a reply shorter than 11 bytes", () => {
-    expect(() => decodeCpu(cpuBytes(11).subarray(0, 10))).toThrow(/Short report/);
+    expect(() => decodeCpu(cpuBytes(11).subarray(0, 10))).toThrow(/desktop\.errors\.board\.short/);
   });
 
   it("reads all eight stages of the full 63-byte reply", () => {
@@ -496,6 +496,6 @@ describe("0xF5 audio counters and core1 health", () => {
   });
 
   it("refuses a reply shorter than the counters", () => {
-    expect(() => decodeAudioCounters(counters(59))).toThrow(/Short report/);
+    expect(() => decodeAudioCounters(counters(59))).toThrow(/desktop\.errors\.board\.short/);
   });
 });

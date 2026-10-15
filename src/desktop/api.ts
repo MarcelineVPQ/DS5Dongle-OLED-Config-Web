@@ -169,7 +169,7 @@ export interface GameBackup {
 
 export type ProtonProgress = { phase: "downloading"; got: number; total: number } | { phase: "verifying" } | { phase: "unpacking" } | { phase: "copying"; target: string };
 // problem: the update feed itself failed (the page shows its own words for it; message is English, for the log).
-// error: SHOWN — english: the Proton card's message (main-process text, batch E3); a feed problem shows desktop.updateFeed.offline / .unsigned / .malformed
+// error: SHOWN — desktop.errors.main.protonNotPublished and the other keyed errors (shownText) on the Proton card; a feed problem shows desktop.updateFeed.offline / .unsigned / .malformed
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string; problem?: FeedProblem };
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 // blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
@@ -184,7 +184,7 @@ export type UndoResult =
   | { ok: false; conflict: string[] }
   // error: SHOWN — desktop.games.undoNoController
   | { ok: false; noController: true }
-  // error: SHOWN — english: the Games page's error notice (main-process text, batch E3)
+  // error: SHOWN — desktop.errors.main.alreadyUndone and the other keyed errors (shownText) in the Games page's error notice
   | { ok: false; error: string };
 
 // Firmware being written to the board, and what waits for it to finish
@@ -210,11 +210,11 @@ export interface DesktopApi {
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
-  // error: SHOWN — english: the message under Set up USB access (batch E3)
+  // error: SHOWN — desktop.usbAccess.result.* (keyed text, shownText) under Set up USB access
   setupUsbAccess(): Promise<{ ok: boolean; message: string }>;
   // Windows: forget Windows' cached USB setup for the dongle's IDs (one UAC
   // prompt), so it sets up the WinUSB driver again on the next plug-in.
-  // error: SHOWN — english: the message under the Windows USB repair (batch E3)
+  // error: SHOWN — desktop.windowsUsb.result.* (keyed text, shownText) under the Windows USB repair
   repairWindowsUsb(): Promise<{ ok: boolean; message: string }>;
   appVersion: string;
   // App updates.

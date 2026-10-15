@@ -9,7 +9,7 @@ import { homedir } from "node:os";
 import { readWindowsStores, type WindowsStores } from "./windowsStores";
 import { dominantColor } from "./artColor";
 import { actionUrl, availableActions, execWords, quietPlay, type QuietPlaySystem } from "./actions";
-import { errorText, logged } from "../../../src/errorText";
+import { errorText, KeyedError, keyedText, logged } from "../../../src/errorText";
 import { FeedMissingError, feedProblem } from "../updateFeed";
 import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
@@ -97,7 +97,7 @@ export class GamesService {
   }
 
   private requireConsent(): void {
-    if (!this.deps.allowed()) throw new Error("Game setup hasn't been allowed to read launcher settings.");
+    if (!this.deps.allowed()) throw new KeyedError("desktop.errors.main.gamesNotAllowed");
   }
 
   private localBuilds(): string[] {
@@ -342,7 +342,7 @@ export class GamesService {
           ...(volumeNotSaved ? { volumeNotSaved } : {}),
         };
       } catch (cause) {
-        // error: SHOWN — main-english: the error text in GamesPage's error notice after Undo (batch E3)
+        // error: SHOWN — desktop.errors.main.alreadyUndone and the other keyed errors (shownText in GamesPage's error notice after Undo); an OS error's own text as it is
         if (cause instanceof UndoConflictError) return { ok: false, conflict: cause.changed.map((f) => this.tilde(f)) };
         return { ok: false, error: errorText(cause) };
       }
@@ -370,12 +370,12 @@ export class GamesService {
           manifest = await this.deps.fetchManifest();
         } catch (cause) {
           // error: SHOWN — desktop.updateFeed.offline / .unsigned / .malformed by problem on the Proton card (the raw text goes to the log)
-          if (cause instanceof FeedMissingError) return { ok: false, message: "No Proton build is published yet." };
+          if (cause instanceof FeedMissingError) return { ok: false, message: keyedText("desktop.errors.main.protonNotPublished") };
           logged("installing Proton: the update feed")(cause);
           return { ok: false, message: errorText(cause), problem: feedProblem(cause) };
         }
         const build = manifest.proton;
-        if (!build) return { ok: false, message: "No Proton build is published yet." };
+        if (!build) return { ok: false, message: keyedText("desktop.errors.main.protonNotPublished") };
         const steam = findSteamInstalls(this.home);
         const heroic = findHeroicInstalls(this.home);
         const lutris = findLutrisInstalls(this.home);
@@ -385,7 +385,7 @@ export class GamesService {
           ...lutris.filter((l) => !l.flatpak).map((l) => l.wineDir),
         ];
         const primary = native[0] ?? steam[0]?.toolsDir ?? heroic[0]?.toolsDir ?? lutris[0]?.wineDir;
-        if (!primary) return { ok: false, message: "No Steam, Heroic or Lutris installation was found." };
+        if (!primary) return { ok: false, message: keyedText("desktop.errors.main.noLauncher") };
         const extras: ExtraTarget[] = [
           ...steam.filter((s) => s.toolsDir !== primary).map((s) => ({ dir: s.toolsDir, link: !s.flatpak })),
           ...heroic.filter((h) => h.toolsDir !== primary).map((h) => ({ dir: h.toolsDir, link: !h.flatpak })),
@@ -396,7 +396,7 @@ export class GamesService {
         const installed = await installProton({ name: build.name, tarball: build.tarball }, primary, extras, { download: this.deps.download }, this.deps.onProtonProgress);
         return { ok: true, name: build.name, installed: installed.map((p) => this.tilde(p)) };
       } catch (cause) {
-        // error: SHOWN — main-english: the message on the Proton card (protonMessage) after Install (batch E3)
+        // error: SHOWN — desktop.errors.main.diskSpace and the other keyed install/download errors (shownText on the Proton card); an OS error's own text as it is
         return { ok: false, message: errorText(cause) };
       }
     });

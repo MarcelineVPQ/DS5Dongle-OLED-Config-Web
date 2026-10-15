@@ -15,7 +15,7 @@ export interface Remap {
   draft: number[];
   dirty: boolean;
   busy: boolean;
-  // error: SHOWN — english: the remap card's error notice (remap.verifyFailed, desktop.errors.board*, other board errors English, batch E3)
+  // error: SHOWN — desktop.errors.boardFailed, remap.verifyFailed and the other keyed board errors (causeText): the remap card's error notice
   error: string | null;
   clearError: () => void; // the notice's ×
   setTarget: (source: number, target: number) => void;
@@ -59,7 +59,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       },
       () => live && setExtraDevice(null),
     );
-    // error: SHOWN — english: the remap card's error notice (board errors are English, batch E3)
+    // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): the remap card's error notice
     client.readRemap().then(
       (s) => {
         if (!live) return;

@@ -120,7 +120,7 @@ export function DeviceSection({ bridge }: { bridge: UseDs5BridgeResult }) {
       await task();
       setMessage(done);
     } catch (cause) {
-      // error: SHOWN — desktop.errors.boardFailed (causeText; other board errors English, batch E3)
+      // error: SHOWN — desktop.errors.boardFailed (causeText, with the other keyed board errors)
       setMessage(causeText(cause));
     } finally {
       setBusy(false);

@@ -235,7 +235,7 @@ describe("Games apply / undo", () => {
     expect(readFileSync(yml, "utf8")).toContain("Lutris saved something");
     writeFileSync(yml, ours);
     expect(backups.restore(backupId!).files).toEqual([yml]);
-    expect(() => backups.restore(backupId!)).toThrow(/already undone/);
+    expect(() => backups.restore(backupId!)).toThrow(/desktop\.errors\.main\.alreadyUndone/);
     expect(backups.list()[0].restored).toBe(true);
     expect(backups.owners(backupId!)).toEqual(["lutris"]);
   });
@@ -277,10 +277,10 @@ describe("Games safety helpers", () => {
 
   it("refuses archives that would write outside their one folder", () => {
     expect(checkArchiveEntries([`${OURS}/`, `${OURS}/proton`, `./${OURS}/files/bin/wine`], OURS)).toBeNull();
-    expect(checkArchiveEntries([`${OURS}/../evil`], OURS)).toMatch(/Unsafe/);
-    expect(checkArchiveEntries(["/etc/passwd"], OURS)).toMatch(/Unsafe/);
-    expect(checkArchiveEntries(["other/proton"], OURS)).toMatch(/outside/);
-    expect(checkArchiveEntries([], OURS)).toMatch(/empty/);
+    expect(checkArchiveEntries([`${OURS}/../evil`], OURS)).toMatch(/archiveUnsafe/);
+    expect(checkArchiveEntries(["/etc/passwd"], OURS)).toMatch(/archiveUnsafe/);
+    expect(checkArchiveEntries(["other/proton"], OURS)).toMatch(/archiveOutside/);
+    expect(checkArchiveEntries([], OURS)).toMatch(/archiveEmpty/);
   });
 
   it("refuses unpacked builds with links pointing outside the build", () => {
@@ -290,10 +290,10 @@ describe("Games safety helpers", () => {
     symlinkSync("../../proton", join(root, "files/lib/up"));
     expect(checkUnpackedTree(root)).toBeNull();
     symlinkSync("/etc/passwd", join(root, "files/abs"));
-    expect(checkUnpackedTree(root)).toMatch(/outside/);
+    expect(checkUnpackedTree(root)).toMatch(/archiveLink/);
     rmSync(join(root, "files/abs"));
     symlinkSync("../../../escape", join(root, "files/lib/esc"));
-    expect(checkUnpackedTree(root)).toMatch(/outside/);
+    expect(checkUnpackedTree(root)).toMatch(/archiveLink/);
   });
 
   it("writes through a symlinked config file instead of replacing the link", () => {

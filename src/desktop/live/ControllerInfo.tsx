@@ -105,7 +105,7 @@ export function useControllerInfo(bridge: UseDs5BridgeResult, onFirmware?: (firm
         return loadControllerInfo(client);
       })
       .then((next) => live && setInfo(next))
-      // error: SHOWN — english: the read error in the card, with Refresh (board errors are English, batch E3)
+      // error: SHOWN — desktop.errors.board.controllerTimeout and the other keyed board errors (causeText): the read error in the card, with Refresh
       .catch((cause) => live && setError(causeText(cause)))
       .finally(() => {
         if (live) setLoading(false);

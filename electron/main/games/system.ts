@@ -8,6 +8,7 @@
 import { execFile } from "node:child_process";
 import { accessSync, constants, existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { runPkexec, type PkexecResult, type PkexecRunner } from "../linuxSetup";
+import { KeyedError } from "../../../src/errorText";
 import { basename, join } from "node:path";
 import { promisify } from "node:util";
 
@@ -371,7 +372,7 @@ export async function dualSenseMixers(layer: MixerLayer = amixerLayer): Promise<
 /** Set controls on the card plugged in at `key` (re-found now: card numbers change). */
 export async function setDualSenseMixer(key: string, changes: MixerChange[], layer: MixerLayer = amixerLayer): Promise<void> {
   const card = layer.cards().find((c) => c.key === key)?.card;
-  if (card === undefined) throw new Error("The controller isn't connected.");
+  if (card === undefined) throw new KeyedError("desktop.errors.main.controllerGone");
   // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per apply
   for (const c of changes) await layer.set(card, c.name, c.to);
 }
@@ -380,7 +381,7 @@ export async function setDualSenseMixer(key: string, changes: MixerChange[], lay
  * (one changed since is the user's choice and stays). */
 export async function restoreDualSenseMixer(key: string, changes: MixerChange[], layer: MixerLayer = amixerLayer): Promise<void> {
   const card = layer.cards().find((c) => c.key === key)?.card;
-  if (card === undefined) throw new Error("The controller isn't connected.");
+  if (card === undefined) throw new KeyedError("desktop.errors.main.controllerGone");
   const now = parseAmixerContents(await layer.contents(card));
   // loop: SERIAL-REQUIRED — one ALSA card: amixer writes in order, N ≤ 4 controls; per Undo
   for (const c of changes) if (now.find((x) => x.name === c.name)?.value === c.to) await layer.set(card, c.name, c.from);
@@ -389,7 +390,7 @@ export async function restoreDualSenseMixer(key: string, changes: MixerChange[],
 /** Keep the levels: save the card at `key` as ALSA's saved state (pkexec). */
 export async function saveDualSenseMixer(key: string, layer: MixerLayer = amixerLayer): Promise<SaveResult> {
   const card = layer.cards().find((c) => c.key === key)?.card;
-  if (card === undefined) throw new Error("The controller isn't connected.");
+  if (card === undefined) throw new KeyedError("desktop.errors.main.controllerGone");
   return layer.save(card);
 }
 

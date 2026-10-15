@@ -4,6 +4,7 @@ import { WebUsbTransport } from "../protocol/webUsbTransport";
 import { usePoll } from "./usePoll";
 import { BusyButton } from "./controls";
 import { REPAIR_SCRIPT } from "./windowsRepairScript";
+import { shownText } from "./shownError";
 
 const POLL_MS = 2000;
 const STEPS = ["admin", "forget", "entries", "replug"] as const;
@@ -20,7 +21,7 @@ export default function WindowsUsbRepair() {
   const windows = desktop?.platform === "win32";
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  // error: SHOWN — english: the repair's message below the button (batch E3)
+  // error: SHOWN — desktop.windowsUsb.result.* (keyed text from the main process, shownText) below the button
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   // Plugged in but not connected: the case this repairs (polled only while
@@ -81,7 +82,7 @@ export default function WindowsUsbRepair() {
           {t("desktop.windowsUsb.button")}
         </button>
       )}
-      {result && <span className={result.ok ? "dk-good" : "dk-bad"}>{result.ok ? t("desktop.windowsUsb.done") : result.message}</span>}
+      {result && <span className={result.ok ? "dk-good" : "dk-bad"}>{result.ok ? t("desktop.windowsUsb.done") : shownText(result.message)}</span>}
     </div>
   );
 }

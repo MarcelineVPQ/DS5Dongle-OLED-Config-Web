@@ -282,7 +282,8 @@
       "wrongFile": "此文件不是{{device}}的固件（用于其他芯片，或已损坏），因此没有写入任何内容。请再次检查更新；如果再次发生，请重新安装应用。",
       "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。",
       "didntStart": "新固件没有启动：{{device}}回到了 BOOTSEL 模式，仍在等待固件。请保持连接，然后重新安装。",
-      "installAgain": "重新安装"
+      "installAgain": "重新安装",
+      "waitForApp": "请先等待应用更新完成。"
     },
     "recovered": {
       "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
@@ -303,7 +304,16 @@
       "label": "USB 访问规则",
       "installed": "已安装",
       "missing": "未安装（Steam 的规则可能已覆盖 {{device}}）",
-      "button": "设置 USB 访问"
+      "button": "设置 USB 访问",
+      "result": {
+        "notNeeded": "此系统上不需要。",
+        "done": "USB 访问已设置。请拔下 {{device}} 再插上。",
+        "doneSandbox": "USB 访问已设置，并已允许应用的沙盒。请拔下 {{device}} 再插上；沙盒从下次启动应用起生效。",
+        "noPkexec": "未安装 pkexec。请手动复制该规则（见 README）。",
+        "noUdevadm": "未安装 udevadm，因此无法加载该规则。请手动复制（见 README）。",
+        "cancelled": "已取消。未做任何更改。",
+        "failed": "设置失败：{{detail}}"
+      }
     },
     "windowsUsb": {
       "hint": "已插好、控制器也已开机，却始终连不上？Windows 可能保留了它的旧 USB 设置。",
@@ -319,7 +329,12 @@
       },
       "showScript": "显示完整脚本",
       "run": "开始修复",
-      "cancel": "取消"
+      "cancel": "取消",
+      "result": {
+        "onlyWindows": "仅在 Windows 上需要。",
+        "cancelled": "已取消。未做任何更改。",
+        "failed": "修复失败：{{detail}}"
+      }
     },
     "update": {
       "appAvailable": "应用更新 {{version}} 可用（{{size}}）。",
@@ -352,7 +367,8 @@
       "askYes": "自动更新",
       "askNo": "每次都问我",
       "fwUpdate": "更新",
-      "appFailed": "应用更新未能安装：{{detail}}"
+      "appFailed": "应用更新未能安装：{{detail}}",
+      "untouched": "你当前的版本未受影响。"
     },
     "controller": {
       "battery": "电量",
@@ -572,7 +588,7 @@
       "nothingToChange": "无需更改",
       "historyStatus_other": "{{count}} 项更改 · 最近 {{date}}",
       "historyNone": "暂无更改",
-      "historyDamaged": "此更改无法在此撤销：无法读取其备份。备份位于 {{folder}}。"
+      "historyDamaged": "此更改无法在此撤销：无法读取其备份。备份所在文件夹："
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -1737,7 +1753,58 @@
       "layoutDelete": "无法删除按键布局，它仍然存在。请重试；如果仍然失败，请重启应用。",
       "boardFailed": "{{device}} 未能完成该操作（例如保存到其存储器）。你的更改可能会在断电后丢失。请重试；如果仍然失败，请拔下 {{device}} 再插上。",
       "boardBusy": "{{device}} 正在忙于其他操作。请稍后重试。",
-      "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。"
+      "boardRejected": "{{device}} 未接受该操作。它的固件可能比此应用旧：请更新固件后重试。",
+      "board": {
+        "notOurs": "{{device}} 的应答不符合此应用的预期：此应用不认识它的固件。请更新固件。",
+        "protocol": "{{device}} 的固件使用协议 {{have}}，但此应用需要 {{need}}。请更新应用或固件。",
+        "otherProgram": "另一个程序同时与 {{device}} 通信。请重试。",
+        "timeout": "{{device}} 未能及时完成。请重试；如果仍然发生，请拔下 {{device}} 再插上。",
+        "noOledKeys": "此固件无法从应用按下开发板上的按键。请更新固件。",
+        "noOledPad": "此固件无法从应用为开发板屏幕按下控制器按钮。请更新固件。",
+        "noControllerInfo": "{{device}} 没有发送控制器信息。请检查控制器是否已连接。",
+        "controllerGone": "控制器已断开连接。请连接后重试。",
+        "controllerTimeout": "控制器未能及时响应。请重试。",
+        "short": "{{device}} 发送的应答不完整。请重试；如果仍然发生，请拔下 {{device}} 再插上。",
+        "noInterface": "{{device}} 的固件没有供此应用使用的设置接口。请先更新固件。",
+        "transfer": "与 {{device}} 通信失败（报告 {{report}}）。请拔下后重新插上。",
+        "badConfig": "{{device}} 发送了此应用无法读取的设置。请更新固件或应用。"
+      },
+      "usb": {
+        "network": "应用无法与 {{device}} 通信：可能有其他程序正在使用它，或 USB 连接已断开。请关闭其他配置工具窗口，然后拔下 {{device}} 再插上。",
+        "security": "应用无权打开 {{device}}。在 Linux 上，请点击“设置 USB 访问”，然后拔下再插上。",
+        "gone": "{{device}} 已被拔出。请重新插上。",
+        "state": "{{device}} 尚未就绪。请拔下再插上，然后重试。"
+      },
+      "main": {
+        "gamesNotAllowed": "游戏设置尚未获准读取你的启动器设置。请先在“游戏”页面中允许。",
+        "gamesUnavailable": "“游戏”页面在此系统上暂不可用。",
+        "protonLinuxOnly": "Proton 仅在 Linux 上使用。",
+        "protonNotPublished": "尚未发布 DualSense Proton 版本。",
+        "protonName": "已发布的 Proton 版本名称不被应用接受，因此没有安装任何内容。请反馈此问题。",
+        "noLauncher": "未找到 Steam、Heroic 或 Lutris 的安装。",
+        "alreadyUndone": "此更改已撤销过。",
+        "diskSpace": "{{dir}} 中的磁盘空间不足：大约需要 {{gb}} GB。",
+        "archiveEmpty": "下载的 Proton 压缩包是空的，因此没有安装任何内容。请稍后重试。",
+        "archiveUnsafe": "下载的 Proton 压缩包含有不安全的路径（{{entry}}），因此没有安装任何内容。请反馈此问题。",
+        "archiveOutside": "下载的 Proton 压缩包中有位于 {{name}}/ 之外的文件（{{entry}}），因此没有安装任何内容。请反馈此问题。",
+        "archiveNoBuild": "下载的压缩包中没有 Proton 版本，因此没有安装任何内容。请反馈此问题。",
+        "archiveTop": "下载的 Proton 压缩包的顶层不是文件夹，因此没有安装任何内容。请反馈此问题。",
+        "archiveLink": "下载的 Proton 版本中有指向其外部的链接（{{path}} → {{to}}），因此没有安装任何内容。请反馈此问题。",
+        "downloadCorrupt": "下载内容已损坏（大小或校验和不匹配），因此未被使用。请重试。",
+        "downloadStalled": "下载已停止（一分钟内没有数据）。请检查网络连接后重试。",
+        "downloadHttp": "下载失败（服务器返回 {{status}}）。请稍后重试。",
+        "downloadTooLarge": "下载内容比更新列表所写的更大，因此已停止。请反馈此问题。",
+        "downloadNoAnswer": "下载服务器没有响应。请检查网络连接后重试。",
+        "downloadElsewhere": "下载地址指向 GitHub 以外的地方，因此应用已拒绝。请反馈此问题。",
+        "unexpectedFile": "更新列表中有意外的文件（{{name}}），因此应用已拒绝。请反馈此问题。",
+        "controllerGone": "控制器未连接。请连接后重试。",
+        "notJsonObject": "{{file}} 的格式不是应用所预期的，因此未修改。",
+        "fileUnreadable": "{{file}} 中有应用无法读取的错误，因此未修改。",
+        "bundledDamaged": "应用自带的固件已损坏。请重新安装应用。",
+        "noPkexec": "未安装 pkexec，因此应用无法请求管理员密码。",
+        "cancelled": "密码窗口已取消",
+        "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。"
+      }
     },
     "notices": {
       "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。",

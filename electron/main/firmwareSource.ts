@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { FirmwareDownload, FirmwareLookup, LatestFirmware, UpdateChannel } from "../../src/desktop/api";
 import { isNewer, type Download, type Manifest } from "../../src/update/manifest";
 import { CorruptDownloadError } from "./download";
+import { KeyedError } from "../../src/errorText";
 import { FEED_REUSE_MS, FeedMissingError, feedProblem, type FeedCache } from "./updateFeed";
 
 export const FIRMWARE_MAX_BYTES = 8 * 1024 * 1024;
@@ -41,7 +42,7 @@ export function readBundled(resourcesDir: string): Bundled | null {
 export function loadBundled(b: Bundled): Uint8Array {
   const bytes = new Uint8Array(readFileSync(b.path));
   if (bytes.byteLength > FIRMWARE_MAX_BYTES || createHash("sha256").update(bytes).digest("hex") !== b.sha256) {
-    throw new Error("The firmware bundled with the app is damaged. Reinstall the app.");
+    throw new KeyedError("desktop.errors.main.bundledDamaged");
   }
   return bytes;
 }

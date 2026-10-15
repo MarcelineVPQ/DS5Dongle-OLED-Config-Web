@@ -180,7 +180,8 @@ describe("Games → Home, healthy", () => {
     const damaged = { id: "20261015T123456Z-abcdef", created: "2026-10-15T12:34:56Z", changes: [], files: [], damaged: "~/.config/app/game-setup-backups/20261015T123456Z-abcdef" };
     await render("healthy", homeReport("healthy"), { gamesBackups: () => Promise.resolve([HOME_BACKUP, damaged]) });
     const history = await open("history");
-    expect(history.textContent).toContain(i18n.t("desktop.games.historyDamaged", { folder: damaged.damaged, interpolation: { escapeValue: false } }));
+    expect(history.textContent).toContain(i18n.t("desktop.games.historyDamaged"));
+    expect(history.querySelector(".dk-file")!.textContent).toBe(damaged.damaged);
     expect([...history.querySelectorAll("button")].filter((b) => b.textContent === i18n.t("desktop.games.undoShort"))).toHaveLength(1);
   });
 

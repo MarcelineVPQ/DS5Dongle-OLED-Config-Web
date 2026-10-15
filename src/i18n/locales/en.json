@@ -281,7 +281,8 @@
       "wrongFile": "This file isn't firmware for {{device}} (it's for another chip, or damaged), so nothing was written. Check for updates again; if it happens again, reinstall the app.",
       "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again.",
       "didntStart": "The new firmware didn't start: {{device}} came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.",
-      "installAgain": "Install again"
+      "installAgain": "Install again",
+      "waitForApp": "Wait for the app update to finish first."
     },
     "recovered": {
       "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
@@ -302,7 +303,16 @@
       "label": "USB access rule",
       "installed": "Installed",
       "missing": "Not installed (Steam's rules may already cover {{device}})",
-      "button": "Set up USB access"
+      "button": "Set up USB access",
+      "result": {
+        "notNeeded": "Not needed on this system.",
+        "done": "USB access is set up. Unplug {{device}} and plug it back in.",
+        "doneSandbox": "USB access is set up, and the app's sandbox is allowed. Unplug {{device}} and plug it back in; the sandbox is on from the app's next start.",
+        "noPkexec": "pkexec isn't installed. Copy the rule by hand (see the README).",
+        "noUdevadm": "udevadm isn't installed, so the rule can't be loaded. Copy it by hand (see the README).",
+        "cancelled": "Cancelled. Nothing was changed.",
+        "failed": "Setup failed: {{detail}}"
+      }
     },
     "windowsUsb": {
       "hint": "Plugged in, the controller is on, and it still never connects? Windows may be holding an old USB setting for it.",
@@ -318,7 +328,12 @@
       },
       "showScript": "Show the exact script",
       "run": "Run the repair",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "result": {
+        "onlyWindows": "Only needed on Windows.",
+        "cancelled": "Cancelled. Nothing was changed.",
+        "failed": "The repair failed: {{detail}}"
+      }
     },
     "update": {
       "appAvailable": "App update {{version}} is available ({{size}}).",
@@ -351,7 +366,8 @@
       "askYes": "Update automatically",
       "askNo": "Ask me each time",
       "fwUpdate": "Update",
-      "appFailed": "The app update didn't install: {{detail}}"
+      "appFailed": "The app update didn't install: {{detail}}",
+      "untouched": "Your current version is untouched."
     },
     "controller": {
       "battery": "Battery",
@@ -575,7 +591,7 @@
       "historyStatus_one": "{{count}} change · last {{date}}",
       "historyStatus_other": "{{count}} changes · last {{date}}",
       "historyNone": "No changes yet",
-      "historyDamaged": "This change can't be undone here: its backup can't be read. The backup is in {{folder}}."
+      "historyDamaged": "This change can't be undone here: its backup can't be read. The backup's folder:"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -1746,7 +1762,58 @@
       "layoutDelete": "Couldn't delete the button layout, so it's still there. Try again; if it keeps failing, restart the app.",
       "boardFailed": "{{device, capitalize}} couldn't finish that (for example, saving to its memory). What you changed may be lost when it powers off. Try again; if it keeps failing, unplug {{device}} and plug it back in.",
       "boardBusy": "{{device, capitalize}} is busy with something else. Try again in a moment.",
-      "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again."
+      "boardRejected": "{{device, capitalize}} didn't accept that. Its firmware may be older than this app: update the firmware, then try again.",
+      "board": {
+        "notOurs": "{{device, capitalize}} didn't answer the way this app expects: its firmware isn't one this app knows. Update the firmware.",
+        "protocol": "{{device, capitalize}} runs firmware with protocol {{have}}, but this app needs {{need}}. Update the app or the firmware.",
+        "otherProgram": "Another program talked to {{device}} at the same time. Try again.",
+        "timeout": "{{device, capitalize}} didn't finish in time. Try again; if it keeps happening, unplug it and plug it back in.",
+        "noOledKeys": "This firmware can't press the board's keys from the app. Update the firmware.",
+        "noOledPad": "This firmware can't press controller buttons on the board's screen from the app. Update the firmware.",
+        "noControllerInfo": "{{device, capitalize}} sent no controller info. Check that the controller is connected.",
+        "controllerGone": "The controller disconnected. Connect it and try again.",
+        "controllerTimeout": "The controller didn't answer in time. Try again.",
+        "short": "{{device, capitalize}} sent an incomplete answer. Try again; if it keeps happening, unplug it and plug it back in.",
+        "noInterface": "The firmware on {{device}} has no settings interface for this app. Update the firmware first.",
+        "transfer": "Talking to {{device}} failed (report {{report}}). Unplug it and plug it back in.",
+        "badConfig": "{{device, capitalize}} sent settings this app can't read. Update the firmware or the app."
+      },
+      "usb": {
+        "network": "The app couldn't talk to {{device}}: another program may be using it, or the USB connection dropped. Close other configurator windows, then unplug {{device}} and plug it back in.",
+        "security": "The app isn't allowed to open {{device}}. On Linux, press Set up USB access, then unplug it and plug it back in.",
+        "gone": "{{device, capitalize}} was unplugged. Plug it back in.",
+        "state": "{{device, capitalize}} isn't ready. Unplug it, plug it back in and try again."
+      },
+      "main": {
+        "gamesNotAllowed": "Game setup isn't allowed to read your launchers' settings yet. Allow it on the Games page first.",
+        "gamesUnavailable": "The Games page isn't available on this system yet.",
+        "protonLinuxOnly": "Proton is only used on Linux.",
+        "protonNotPublished": "No DualSense Proton build is published yet.",
+        "protonName": "The published Proton build has a name the app doesn't accept, so nothing was installed. Please report it.",
+        "noLauncher": "No Steam, Heroic or Lutris installation was found.",
+        "alreadyUndone": "This change was already undone.",
+        "diskSpace": "Not enough disk space in {{dir}}: about {{gb}} GB is needed.",
+        "archiveEmpty": "The downloaded Proton archive is empty, so nothing was installed. Try again later.",
+        "archiveUnsafe": "The downloaded Proton archive has an unsafe path ({{entry}}), so nothing was installed. Please report it.",
+        "archiveOutside": "The downloaded Proton archive has a file outside {{name}}/ ({{entry}}), so nothing was installed. Please report it.",
+        "archiveNoBuild": "The downloaded archive doesn't contain a Proton build, so nothing was installed. Please report it.",
+        "archiveTop": "The downloaded Proton archive's top folder isn't a folder, so nothing was installed. Please report it.",
+        "archiveLink": "The downloaded Proton build has a link pointing outside it ({{path}} → {{to}}), so nothing was installed. Please report it.",
+        "downloadCorrupt": "The download is damaged (its size or checksum doesn't match), so it wasn't used. Try again.",
+        "downloadStalled": "The download stopped (no data for a minute). Check the connection and try again.",
+        "downloadHttp": "The download failed (the server answered {{status}}). Try again later.",
+        "downloadTooLarge": "The download is larger than the update list says, so it was stopped. Please report it.",
+        "downloadNoAnswer": "The download server didn't answer. Check the connection and try again.",
+        "downloadElsewhere": "The download points somewhere other than GitHub, so the app refused it. Please report it.",
+        "unexpectedFile": "The update list names an unexpected file ({{name}}), so the app refused it. Please report it.",
+        "controllerGone": "The controller isn't connected. Connect it and try again.",
+        "notJsonObject": "{{file}} isn't in the form the app expects, so it wasn't changed.",
+        "fileUnreadable": "{{file}} has an error the app can't read past, so it wasn't changed.",
+        "bundledDamaged": "The firmware bundled with the app is damaged. Reinstall the app.",
+        "noPkexec": "pkexec isn't installed, so the app can't ask for the administrator password.",
+        "cancelled": "the password prompt was cancelled",
+        "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
+      }
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",

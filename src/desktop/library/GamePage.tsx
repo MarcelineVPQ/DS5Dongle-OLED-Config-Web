@@ -23,7 +23,7 @@ import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
 import { onThemeChange, scopedAccent } from "../live/controllerAccent";
-import { causeText, shown } from "../shownError";
+import { causeText, shown, shownText } from "../shownError";
 import { captureProfile, clearGroup, gameGroups, pruneProfile, settingsFrom, shownValues, upgradeProfile, type ProfileGroup } from "./profileValues";
 import { X } from "lucide-react";
 import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
@@ -507,7 +507,7 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
       setNote(restartText(r) ?? (r.applied.length > 0 && r.applied.every((a) => a.ok) ? t("desktop.library.setupDone") : t("desktop.library.setupFailed")));
       setConfirm(false);
     } catch (cause) {
-      // error: SHOWN — english: the note under Set up (main-process text, or desktop.errors.badRequest)
+      // error: SHOWN — desktop.errors.badRequest, or the main process's keyed error (causeText), as the note under Set up
       setNote(causeText(cause));
       setConfirm(false);
     }
@@ -677,7 +677,7 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
       setNote(restartText(r) ?? (failed ? (failed.message ? m(failed.message) : t("desktop.library.setupFailed")) : ok ? t("desktop.library.protonSwitched", { name: to.name }) : null));
       if (ok && r.backupId) setDone({ backupId: r.backupId, fix: to.fix, back: current?.name ?? "" });
     } catch (cause) {
-      // error: SHOWN — english: the note under the Proton version picker (main-process text, or desktop.errors.badRequest)
+      // error: SHOWN — desktop.errors.badRequest, or the main process's keyed error (causeText), as the note under the Proton version picker
       setNote(causeText(cause));
     }
     setConfirm(again ? "switch" : null);
@@ -697,9 +697,9 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
         again = !r.problem; // a launcher started since: named, then asked again
       } else if ("conflict" in r) setNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
       else if ("noController" in r) setNote(t("desktop.games.undoNoController"));
-      else setNote(r.error);
+      else setNote(shownText(r.error));
     } catch (cause) {
-      // error: SHOWN — english: the note under the Proton version picker (main-process text, or desktop.errors.badRequest)
+      // error: SHOWN — desktop.errors.badRequest, or the main process's keyed error (causeText), as the note under the Proton version picker
       setNote(causeText(cause));
     }
     setConfirm(again ? "undo" : null);

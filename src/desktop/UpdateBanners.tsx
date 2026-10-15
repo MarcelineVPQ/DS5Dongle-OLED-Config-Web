@@ -6,6 +6,7 @@ import Notice from "./Notice";
 import { appUpdateKey, firmwareUpdateKey } from "./openTasks";
 import { type FirmwareUpdate, useFirmwareHold } from "./useUpdates";
 import { formatMb } from "./format";
+import { shownText } from "./shownError";
 
 const Action = ({ primary, onClick, disabled, title, children }: { primary?: boolean; onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode }) => (
   <button type="button" className={`dk-btn${primary ? " primary" : ""}`} onClick={onClick} disabled={disabled} title={title}>
@@ -79,7 +80,7 @@ export default function UpdateBanners({
     // was SILENT-BUG: when Download and install failed, the banner just went away
     appNotice = (
       <Notice error onDismiss={() => setDismissedFailure(app.detail)}>
-        <span>{t("desktop.update.appFailed", { detail: app.detail })}</span>
+        <span>{t("desktop.update.appFailed", { detail: shownText(app.detail) })}</span>
       </Notice>
     );
   else if (app.phase === "installing") appNotice = <Notice closable>{t("desktop.update.installing", "Installing the update…")}</Notice>;

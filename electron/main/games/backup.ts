@@ -31,6 +31,7 @@ import { dirname, join } from "node:path";
 import { z } from "zod";
 import type { LauncherId, Msg } from "../../../src/desktop/games/types";
 import type { GameBackup } from "../../../src/desktop/api";
+import { KeyedError } from "../../../src/errorText";
 import { MIXER_TARGETS } from "./system";
 
 const KEEP = 10;
@@ -222,7 +223,7 @@ export class Backups {
   // and the mixer values to put back (the caller sets them).
   restore(id: string): { files: string[]; after: string[]; mixer: Mixer; mixerSaved: boolean } {
     const manifest = this.manifest(id);
-    if (manifest.restored) throw new Error("This change set was already undone.");
+    if (manifest.restored) throw new KeyedError("desktop.errors.main.alreadyUndone");
     const changed = manifest.files.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
     if (changed.length) throw new UndoConflictError(changed);
     const setDir = join(this.dir, id);
@@ -276,7 +277,7 @@ export class Backups {
   }
 
   manifest(id: string): BackupManifest {
-    if (!BACKUP_ID.test(id)) throw new Error("Invalid backup id");
+    if (!BACKUP_ID.test(id)) throw new KeyedError("desktop.errors.badRequest"); // the page sent an id that isn't one (an app bug)
     return ManifestSchema.parse(JSON.parse(readFileSync(join(this.dir, id, "manifest.json"), "utf8")));
   }
 

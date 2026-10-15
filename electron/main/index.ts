@@ -4,7 +4,8 @@ import { existsSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { app, BrowserWindow, clipboard, ClipboardItem, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
-import { errorText, logged } from "../../src/errorText";
+import { errorText, KeyedError, keyedText, logged } from "../../src/errorText";
+import { mainText } from "./mainText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
 import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
@@ -109,9 +110,14 @@ if (!app.requestSingleInstanceLock()) {
   app
     .whenReady()
     .then(start)
-    // error: SHOWN — main-english: "The app couldn't start" dialog; no window exists to show it in (batch E3: main-process text in English)
-    .catch((cause: unknown) => {
-      dialog.showErrorBox("DS5 Dongle Configurator", `The app couldn't start: ${errorText(cause)}\n\nTry starting it again. If this keeps happening, reinstall the app.`);
+    // error: SHOWN — desktop.errors.main.startFailed in a dialog, in the system's language (mainText); no window exists to show it in
+    .catch(async (cause: unknown) => {
+      // error: LOGGED-OK — the locale file couldn't be loaded: the dialog still says it, in English
+      const text = await mainText(keyedText("desktop.errors.main.startFailed", { detail: errorText(cause) }), app.getLocale()).catch((why: unknown) => {
+        logged("translating the start-failure dialog (shown in English)")(why);
+        return `The app couldn't start: ${errorText(cause)}`;
+      });
+      dialog.showErrorBox("DS5 Dongle Configurator", text);
       app.quit();
     });
 }
@@ -254,7 +260,7 @@ function start(): void {
         })
       : null;
   const withGames = <T>(run: (g: GamesService) => T): T => {
-    if (!games) throw new Error("The Games page isn't available on this system yet.");
+    if (!games) throw new KeyedError("desktop.errors.main.gamesUnavailable");
     return run(games);
   };
 
@@ -378,7 +384,8 @@ function start(): void {
         },
         png,
       ),
-    installProton: () => fakeGames()?.installLatestProton() ?? withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
+    installProton: () =>
+      fakeGames()?.installLatestProton() ?? withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new KeyedError("desktop.errors.main.protonLinuxOnly")))),
     gamesDetails: () => fakeGames()?.details() ?? withGames((g) => g.details()),
     gamesRunning: () => {
       const f = fakeGames();

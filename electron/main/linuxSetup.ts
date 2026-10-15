@@ -7,7 +7,7 @@
 // with no user input; the rule file is copied from the app's own resources
 // (through a temporary copy root can read).
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { errorText } from "../../src/errorText";
+import { errorText, keyedText } from "../../src/errorText";
 import { tmpdir } from "node:os";
 import { execFile } from "node:child_process";
 import { join } from "node:path";
@@ -41,7 +41,7 @@ function sameFile(dest: string, source: string): boolean {
 }
 
 export interface SetupResult {
-  // error: SHOWN — main-english: the message under Set up USB access (batch E3)
+  // error: SHOWN — desktop.usbAccess.result.* (keyed text, the page's shownText) under Set up USB access
   ok: boolean;
   message: string;
 }
@@ -55,7 +55,7 @@ export function usbRuleInstalled(resourcesDir: string): boolean {
 }
 
 export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
-  if (process.platform !== "linux") return Promise.resolve({ ok: true, message: "Not needed on this OS." });
+  if (process.platform !== "linux") return Promise.resolve({ ok: true, message: keyedText("desktop.usbAccess.result.notNeeded") });
   // Root can't read inside the AppImage's FUSE mount (it's private to this
   // user), so the rule goes through a temporary copy.
   let dir: string;
@@ -72,8 +72,8 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     }
     chmodSync(dir, 0o755);
   } catch (cause) {
-    // error: SHOWN — main-english: "Setup failed: …" under Set up USB access (batch E3)
-    return Promise.resolve({ ok: false, message: `Setup failed: ${errorText(cause)}` });
+    // error: SHOWN — desktop.usbAccess.result.failed under Set up USB access
+    return Promise.resolve({ ok: false, message: keyedText("desktop.usbAccess.result.failed", { detail: errorText(cause) }) });
   }
   // Positional args ($1/$2 = rule source/dest, $3/$4 = profile source/dest,
   // empty when not needed) instead of string interpolation. Exit 3 = no
@@ -86,14 +86,12 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
     if (result.ok)
       return {
         ok: true,
-        message: withProfile
-          ? "USB access set up, and the app's sandbox allowed. Unplug and replug your board; the sandbox is on from the next start."
-          : "USB access set up. Unplug and replug your board.",
+        message: keyedText(withProfile ? "desktop.usbAccess.result.doneSandbox" : "desktop.usbAccess.result.done"),
       };
-    if (result.reason === "missing") return { ok: false, message: "pkexec isn't installed. Copy the rule manually (see the README)." };
-    if (result.code === 3) return { ok: false, message: "udevadm isn't installed, so the rule can't be loaded. Copy it manually (see the README)." };
-    if (result.reason === "cancelled") return { ok: false, message: "Cancelled." };
-    return { ok: false, message: `Setup failed: ${result.message}` };
+    if (result.reason === "missing") return { ok: false, message: keyedText("desktop.usbAccess.result.noPkexec") };
+    if (result.code === 3) return { ok: false, message: keyedText("desktop.usbAccess.result.noUdevadm") };
+    if (result.reason === "cancelled") return { ok: false, message: keyedText("desktop.usbAccess.result.cancelled") };
+    return { ok: false, message: keyedText("desktop.usbAccess.result.failed", { detail: result.message }) };
   });
 }
 
@@ -113,8 +111,8 @@ export const runPkexec: PkexecRunner = (argv) =>
     execFile("pkexec", argv, (error) => {
       if (!error) resolve({ ok: true });
       // 126/127 are pkexec's "dismissed" / "not authorized".
-      else if ((error as NodeJS.ErrnoException).code === "ENOENT") resolve({ ok: false, reason: "missing", code: null, message: "pkexec isn't installed" });
-      else if (error.code === 126 || error.code === 127) resolve({ ok: false, reason: "cancelled", code: Number(error.code), message: "Cancelled" });
+      else if ((error as NodeJS.ErrnoException).code === "ENOENT") resolve({ ok: false, reason: "missing", code: null, message: keyedText("desktop.errors.main.noPkexec") });
+      else if (error.code === 126 || error.code === 127) resolve({ ok: false, reason: "cancelled", code: Number(error.code), message: keyedText("desktop.errors.main.cancelled") });
       else resolve({ ok: false, reason: "failed", code: typeof error.code === "number" ? error.code : null, message: error.message });
     });
   });

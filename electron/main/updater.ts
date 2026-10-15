@@ -8,7 +8,7 @@
 // matching checksum, nothing downgrades, and every failure is reported to the
 // user verbatim.
 import { TRUSTED_KEYS, feedSignedBy } from "./feedSignature";
-import { errorText } from "../../src/errorText";
+import { errorText, KeyedError, keyedText } from "../../src/errorText";
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
@@ -190,7 +190,7 @@ export class Updater {
   // Verified download of any manifest asset (the app update, the Proton build).
   // Only GitHub release URLs (or the loopback test feed) are fetched.
   async downloadAsset(download: Download, path: string, progress: (got: number, total: number) => void): Promise<void> {
-    if (!downloadAllowed(download.url)) throw new Error("The download points somewhere other than GitHub; refusing.");
+    if (!downloadAllowed(download.url)) throw new KeyedError("desktop.errors.main.downloadElsewhere");
     await downloadVerified(download, path, progress);
   }
 
@@ -243,7 +243,7 @@ export class Updater {
       return this.set({ phase: "ready", version });
     } catch (cause) {
       // error: SHOWN — desktop.update.appFailed (was SILENT-BUG: the banner just disappeared when Download and install failed)
-      return this.set({ phase: "failed", detail: `${errorText(cause)} Your current version is untouched.`, during: "install" });
+      return this.set({ phase: "failed", detail: `${errorText(cause)} ${keyedText("desktop.update.untouched")}`, during: "install" });
     } finally {
       this.busy = false;
     }
@@ -253,8 +253,8 @@ export class Updater {
   // verified (size + SHA-256 of `uf2`) here, since the renderer's CSP can't
   // reach the network. Which entry to download is firmwareSource.ts's call.
   async downloadFirmwareFile(uf2: Download): Promise<Uint8Array> {
-    if (uf2.size > FIRMWARE_MAX_BYTES) throw new Error("The published firmware is implausibly large.");
-    if (!downloadAllowed(uf2.url)) throw new Error("The firmware points somewhere other than GitHub; refusing.");
+    if (uf2.size > FIRMWARE_MAX_BYTES) throw new KeyedError("desktop.errors.main.downloadTooLarge");
+    if (!downloadAllowed(uf2.url)) throw new KeyedError("desktop.errors.main.downloadElsewhere");
     return downloadBytes(uf2);
   }
 
@@ -265,11 +265,11 @@ export class Updater {
     if (process.platform === "linux") {
       const dir = dirname(realpathSync(process.env.APPIMAGE!));
       const name = basename(new URL(download.url).pathname);
-      if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+(?:-dev\.\d+)?-linux-x86_64\.AppImage$/.test(name)) throw new Error("Unexpected AppImage file name in the manifest.");
+      if (!/^DS5Dongle-OLED-Edition-Configurator-\d+\.\d+\.\d+(?:-dev\.\d+)?-linux-x86_64\.AppImage$/.test(name)) throw new KeyedError("desktop.errors.main.unexpectedFile", { name });
       return join(dir, name);
     }
     const name = basename(new URL(download.url).pathname);
-    if (!WINDOWS_SETUP_NAME.test(name)) throw new Error("Unexpected Windows installer file name in the manifest.");
+    if (!WINDOWS_SETUP_NAME.test(name)) throw new KeyedError("desktop.errors.main.unexpectedFile", { name });
     const dir = windowsUpdateDir();
     rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
