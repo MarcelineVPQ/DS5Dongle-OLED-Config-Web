@@ -53,6 +53,27 @@ export function parseWinProcs(json) {
   }));
 }
 
+// The budget probe's native hints per process (tools/budget_probe.mjs,
+// DS5_BUDGET_PROBE=1 only): handles, threads, GDI and USER objects
+// (user32 GetGuiResources, compiled by Add-Type: a few seconds, so never in
+// a judged sample), private bytes, virtual size and kernel pool usage, as
+// JSON [{ pid, handles, threads, gdi, user, privateKb, virtualKb, pagedPoolKb, nonpagedPoolKb }].
+export function winProbeScript(exeName) {
+  const name = win32.parse(exeName).name.replace(/'/g, "''");
+  return [
+    "$ProgressPreference = 'SilentlyContinue'",
+    `Add-Type -Namespace DS5Probe -Name Gui -MemberDefinition '[DllImport("user32.dll")] public static extern uint GetGuiResources(IntPtr h, uint flags);'`,
+    `$rows = @(Get-Process -Name '${name}' -ErrorAction SilentlyContinue | ForEach-Object { $gdi = $null; $usr = $null; try { $h = $_.Handle; $gdi = [DS5Probe.Gui]::GetGuiResources($h, 0); $usr = [DS5Probe.Gui]::GetGuiResources($h, 1) } catch { }; [pscustomobject]@{ pid = $_.Id; handles = $_.HandleCount; threads = $_.Threads.Count; gdi = $gdi; user = $usr; privateKb = [int64]($_.PrivateMemorySize64 / 1024); virtualKb = [int64]($_.VirtualMemorySize64 / 1024); pagedPoolKb = [int64]($_.PagedSystemMemorySize64 / 1024); nonpagedPoolKb = [int64]($_.NonpagedSystemMemorySize64 / 1024) } })`,
+    "ConvertTo-Json -Compress -Depth 2 @{ rows = $rows }",
+  ].join("\n");
+}
+
+// The probe's JSON as rows (PowerShell 5.1 writes a one-item list as a bare object).
+export function parseWinProbe(json) {
+  const rows = JSON.parse(json).rows;
+  return rows == null ? [] : Array.isArray(rows) ? rows : [rows];
+}
+
 // The reader for the app running from `execPath` (the main process's
 // process.execPath): appProcs(main, { memory }) = [{ pid, type, ticks,
 // commitKb, memKb (with memory) }].
@@ -67,5 +88,14 @@ export function windowsReader(execPath) {
     alsoMetric: "private working set",
     // The commit is judged (memKb), the private working set reported (alsoKb).
     appProcs: (main, { memory = false } = {}) => appTree(main, parseWinProcs(query(memory)), (r) => r.cmd).map((r) => ({ ...r, memKb: r.commitKb, alsoKb: r.memKb })),
+    // The probe's native hints for the app's processes, with their type.
+    probe(main) {
+      const types = new Map(appTree(main, parseWinProcs(query(false)), (r) => r.cmd).map((r) => [r.pid, r.type]));
+      const script = Buffer.from(winProbeScript(win32.basename(execPath)), "utf16le").toString("base64");
+      const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", script], { encoding: "utf8", windowsHide: true, maxBuffer: 16 << 20, timeout: 60000 });
+      return parseWinProbe(out)
+        .filter((r) => types.has(r.pid))
+        .map((r) => ({ type: types.get(r.pid), ...r }));
+    },
   };
 }

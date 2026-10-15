@@ -13,7 +13,9 @@ param(
   [int]$Port = 9420,
   [string]$Pages = "",
   [string]$ModeJson = "",
-  [switch]$Keep
+  [switch]$Keep,
+  # The memory probe (tools/budget_probe.mjs): heap snapshots kept in C:\ds5test\probe.
+  [switch]$Probe
 )
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -109,6 +111,12 @@ Say ("DevTools up after {0:N1} s" -f $sw.Elapsed.TotalSeconds)
 # 5. Measure
 if ($Pages) { $env:DS5_BUDGET_PAGES = $Pages }
 if ($ModeJson) { $env:DS5_BUDGET_MODE = $ModeJson }
+if ($Probe) {
+  $env:DS5_BUDGET_PROBE = "1"
+  $env:DS5_BUDGET_PROBE_DIR = "C:\ds5test\probe"
+  if (Test-Path $env:DS5_BUDGET_PROBE_DIR) { Remove-Item $env:DS5_BUDGET_PROBE_DIR -Recurse -Force }
+  Say "probe on: heap snapshots in $env:DS5_BUDGET_PROBE_DIR"
+}
 $run = Start-Process -FilePath $node.FullName -ArgumentList "$work\tools\measure_budgets.mjs", "--port", $Port, "--mode", $Mode, "--out", "$work\results.json" `
   -RedirectStandardError "$work\measure.log" -RedirectStandardOutput "$work\measure.out" -NoNewWindow -Wait -PassThru
 $status = $run.ExitCode

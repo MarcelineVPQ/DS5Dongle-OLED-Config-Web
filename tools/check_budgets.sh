@@ -24,6 +24,7 @@
 #   DS5_BUDGET_PAGES=controller,about tools/check_budgets.sh   only those pages
 #   DS5_BUDGET_KEEP=1 tools/check_budgets.sh                   leave the copy running
 #   DS5_BUDGET_PROFILES=0 tools/check_budgets.sh               no game profiles in the test library
+#   DS5_BUDGET_PROBE=1 tools/check_budgets.sh --long           with the memory probe (tools/budget_probe.mjs; snapshots in tmp/budgets/probe), not a judged run
 #
 # The hidden stretch runs with Fake games off: the real running-game check
 # watches this PC's /proc (read-only, your own processes) against the test
@@ -100,6 +101,7 @@ fi
 [ "${DS5_BUDGET_KEEP:-}" = 1 ] || trap stop EXIT
 
 status=0
+export DS5_BUDGET_PROBE_DIR="${DS5_BUDGET_PROBE_DIR:-$STATE/probe}"
 nice -n 19 node tools/measure_budgets.mjs --port "$PORT" --mode "$MODE" --out "$STATE/results.json" || status=$?
 if [ "$status" != 0 ]; then
   echo "Measuring failed (exit $status); see $STATE/app.log" >&2

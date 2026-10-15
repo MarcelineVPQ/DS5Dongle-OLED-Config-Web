@@ -42,5 +42,18 @@ export function linuxReader() {
         }
       });
     },
+    // The budget probe's native hints (tools/budget_probe.mjs): threads, open
+    // files, RssAnon and VmData per process.
+    probe(main) {
+      return this.appProcs(main).map((p) => {
+        try {
+          const status = readFileSync(`/proc/${p.pid}/status`, "utf8");
+          const kb = (key) => Number(new RegExp(`^${key}:\\s+(\\d+)`, "m").exec(status)?.[1] ?? NaN);
+          return { type: p.type, pid: p.pid, threads: kb("Threads"), fds: readdirSync(`/proc/${p.pid}/fd`).length, rssAnonKb: kb("RssAnon"), vmDataKb: kb("VmData") };
+        } catch {
+          return { type: p.type, pid: p.pid, gone: true };
+        }
+      });
+    },
   };
 }

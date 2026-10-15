@@ -28,7 +28,8 @@ import {
   procType,
   type Results,
 } from "../../tools/budgets_lib.mjs";
-import { parseWinProcs, winQueryScript } from "../../tools/procs_windows.mjs";
+import { parseWinProbe, parseWinProcs, winProbeScript, winQueryScript } from "../../tools/procs_windows.mjs";
+import { diffSummaries, summarizeSnapshotData } from "../../tools/heap_summary.mjs";
 import { parsePsTable } from "../../tools/procs_mac.mjs";
 
 const config = JSON.parse(readFileSync(new URL("../../tools/budgets.json", import.meta.url), "utf8"));
@@ -355,5 +356,62 @@ describe("three-OS table", () => {
   it("leaves out an OS with no results", () => {
     const rows = combineResults(config, { Linux: linux, Windows: undefined });
     expect(Object.keys(rows[0].cells)).toEqual(["Linux"]);
+  });
+});
+
+describe("memory probe (DS5_BUDGET_PROBE=1)", () => {
+  it("asks Windows for handles, GDI and USER objects of the app's exe by name", () => {
+    const script = winProbeScript("DS5 Dongle OLED Edition Configurator.exe");
+    expect(script).toContain("Get-Process -Name 'DS5 Dongle OLED Edition Configurator'");
+    expect(script).toContain("GetGuiResources");
+    expect(winProbeScript("it's.exe")).toContain("-Name 'it''s'");
+  });
+
+  it("takes PowerShell 5.1's bare object for one process", () => {
+    const one = { pid: 5, handles: 300, threads: 20, gdi: 12, user: 30, privateKb: 1, virtualKb: 2, pagedPoolKb: 3, nonpagedPoolKb: 4 };
+    expect(parseWinProbe(JSON.stringify({ rows: one }))).toEqual([one]);
+    expect(parseWinProbe(JSON.stringify({ rows: [one, one] }))).toHaveLength(2);
+    expect(parseWinProbe(JSON.stringify({ rows: null }))).toEqual([]);
+  });
+
+  // A tiny heap snapshot in V8's format: nodes are flat [type, name, id, self_size, edge_count, trace_node_id, detachedness].
+  const snapshot = (nodes: number[][]) => ({
+    snapshot: {
+      meta: { node_fields: ["type", "name", "id", "self_size", "edge_count", "trace_node_id", "detachedness"], node_types: [["hidden", "array", "string", "object", "code", "closure", "native"]] },
+    },
+    nodes: nodes.flat(),
+    strings: ["", "Map", "some text", "HTMLDivElement", "onClick"],
+  });
+
+  it("sums a heap snapshot by constructor, strings by type, and counts detached nodes", () => {
+    const s = summarizeSnapshotData(
+      snapshot([
+        [3, 1, 1, 100, 0, 0, 0], // object Map
+        [3, 1, 2, 50, 0, 0, 0], // object Map
+        [2, 2, 3, 40, 0, 0, 0], // a string
+        [6, 3, 4, 200, 0, 0, 2], // a detached div
+        [5, 4, 5, 32, 0, 0, 0], // closure onClick
+      ]),
+    );
+    expect(s.nodes).toBe(5);
+    expect(s.detached).toBe(1);
+    expect(s.byName["object:Map"]).toEqual({ count: 2, size: 150 });
+    expect(s.byName["(string)"]).toEqual({ count: 1, size: 40 });
+    expect(Object.keys(s.byName)[0]).toBe("native:HTMLDivElement");
+  });
+
+  it("diffs two summaries, biggest change first", () => {
+    const a = summarizeSnapshotData(snapshot([[3, 1, 1, 100, 0, 0, 0]]));
+    const b = summarizeSnapshotData(
+      snapshot([
+        [3, 1, 1, 100, 0, 0, 0],
+        [3, 1, 2, 100, 0, 0, 0],
+        [5, 4, 3, 32, 0, 0, 0],
+      ]),
+    );
+    expect(diffSummaries(a, b)).toEqual([
+      { key: "object:Map", count: 1, size: 100 },
+      { key: "closure:onClick", count: 1, size: 32 },
+    ]);
   });
 });

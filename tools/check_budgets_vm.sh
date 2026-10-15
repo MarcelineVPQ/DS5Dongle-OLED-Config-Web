@@ -21,6 +21,8 @@
 #   tools/check_budgets_vm.sh --long --installer <exe>                ~60 min, with the soak
 #   tools/check_budgets_vm.sh --build                                 cross-build a dev installer from this tree first (~5 min, into tmp/budgets-vm-build), then measure it
 #   tools/check_budgets_vm.sh                                         measure the app already installed in the VM
+#   tools/check_budgets_vm.sh --long --probe ...                      with the memory probe (tools/budget_probe.mjs): per-sample V8/DOM/handle/GDI numbers and
+#                                                                     heap snapshots (kept in the VM's C:\ds5test\probe); for hunting growth, never a judged run
 #   DS5_BUDGET_PAGES / DS5_BUDGET_MODE work as for tools/check_budgets.sh; DS5_BUDGET_KEEP=1 leaves the copy running
 #
 # The build must be a dev build (X.Y.Z-dev.N or DS5_DEV_TOOLS=1): the
@@ -35,13 +37,15 @@ ISO="$HOME/VMs/test-budgets.iso"
 MODE=quick
 INSTALLER=""
 BUILD=0
-usage() { echo "usage: tools/check_budgets_vm.sh [--quick|--long] [--installer <setup.exe> | --build]" >&2; exit 2; }
+PROBE=0
+usage() { echo "usage: tools/check_budgets_vm.sh [--quick|--long] [--probe] [--installer <setup.exe> | --build]" >&2; exit 2; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --quick) MODE=quick ;;
     --long) MODE=long ;;
     --installer) [ $# -ge 2 ] || usage; INSTALLER="$(realpath "$2")"; shift ;;
     --build) BUILD=1 ;;
+    --probe) PROBE=1 ;;
     *) usage ;;
   esac
   shift
@@ -86,7 +90,7 @@ fi
 echo "== Preparing the CD"
 node tools/seed_test_library.mjs "$STATE/seed" > /dev/null
 cp "$STATE/seed/userdata/game-library-2.json" "$STATE/cd/"
-cp tools/measure_budgets.mjs tools/budgets_lib.mjs tools/budgets.json tools/cdp_lib.mjs tools/procs_windows.mjs tools/budgets_vm.ps1 "$STATE/cd/tools/"
+cp tools/measure_budgets.mjs tools/budgets_lib.mjs tools/budgets.json tools/cdp_lib.mjs tools/procs_windows.mjs tools/budget_probe.mjs tools/heap_summary.mjs tools/budgets_vm.ps1 "$STATE/cd/tools/"
 echo "DS5 resource budget gate CD ($(date -Iseconds))" > "$STATE/cd/ds5-budgets.txt"
 if [ -n "$INSTALLER" ]; then
   cp "$INSTALLER" "$STATE/cd/installer.exe"
@@ -115,6 +119,7 @@ args="-Mode $MODE -Port $PORT"
 [ -n "${DS5_BUDGET_PAGES:-}" ] && args="$args -Pages '${DS5_BUDGET_PAGES}'"
 [ -n "${DS5_BUDGET_MODE:-}" ] && args="$args -ModeJson '${DS5_BUDGET_MODE//\'/\'\'}'"
 [ "${DS5_BUDGET_KEEP:-}" = 1 ] && args="$args -Keep"
+[ "$PROBE" = 1 ] && args="$args -Probe"
 boot="\$ProgressPreference='SilentlyContinue'
 \$cd = \$null; foreach (\$i in 1..30) { \$cd = Get-Volume | ? { \$_.DriveLetter -and (Test-Path \"\$(\$_.DriveLetter):\\ds5-budgets.txt\") } | select -First 1; if (\$cd) { break }; Start-Sleep 1 }
 if (-not \$cd) { 'the gate CD never appeared'; exit 3 }

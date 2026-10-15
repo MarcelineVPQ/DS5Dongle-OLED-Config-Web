@@ -28,13 +28,19 @@
 //    working set on Windows) at memoryAtS after the start (0: now).
 // 5. Soak (--long): the window shown again, every sampleS it visits every
 //    page and comes back to Controller, then memory is sampled; samples from
-//    the warm-up are dropped.
+//    the warm-up are dropped. Each sample keeps the memory by process type.
+//
+// DS5_BUDGET_PROBE=1 adds the memory probe to every soak sample and heap
+// snapshots at the start and end of the soak window (tools/budget_probe.mjs):
+// for hunting growth only, never a judged run (the snapshots' garbage
+// collections and the probe's questions change what is measured).
 import { readFileSync, writeFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { setTimeout as sleepFor } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
 import { cpuByType, memoryJudged, memorySummary, perSecond } from "./budgets_lib.mjs";
+import { probeEnabled, probeNow, snapshotBoth, summarizeSnapshots } from "./budget_probe.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -176,6 +182,17 @@ note("memory:", JSON.stringify(mem));
 
 // 5. Soak
 let soak = null;
+const PROBE = probeEnabled();
+const probe = () => probeNow({ page, mainEv, ev, reader, mainPid: MAIN });
+const snapshots = [];
+// Heap snapshots (probe only), then the memory after their full garbage collection.
+async function snapshotAt(label, t) {
+  const files = await snapshotBoth({ page, main }, label);
+  await pause(2000);
+  const now = memoryNow();
+  snapshots.push({ ...files, t, afterGc: { mb: now.mb, mbWithoutGpu: memoryJudged(now), byType: now.byType }, probeAfterGc: await probe() });
+  note(`probe: heap snapshots "${label}" at ${t} s, after GC ${memoryJudged(now)} MB without GPU`);
+}
 if (mode.soakS > 0) {
   await win("w.show(); w.focus(); return true;");
   const t0 = Date.now();
@@ -192,13 +209,22 @@ if (mode.soakS > 0) {
     const now = memoryNow();
     const { mb } = now;
     // Without the GPU process too (reported: SwiftShader's PSS swings ±15 MB between samples).
-    if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb, mbWithoutGpu: memoryJudged(now) });
-    note(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
+    if (t >= mode.soakWarmupS) {
+      const s = { t: Math.round(t - mode.soakWarmupS), mb, mbWithoutGpu: memoryJudged(now), byType: now.byType };
+      if (PROBE) s.probe = await probe();
+      samples.push(s);
+      if (PROBE && snapshots.length === 0) await snapshotAt("start", s.t);
+    }
+    note(`soak ${Math.round(t)} s: ${mb} MB (${memoryJudged(now)} without GPU; ${JSON.stringify(now.byType)})${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
   }
+  if (PROBE) await snapshotAt("end", samples.at(-1)?.t ?? 0);
   soak = { windowS: mode.soakS, samples };
 }
 
-const results = { mode: opts.mode, platform: process.platform, display, pages, hidden, memory: mem, soak };
+// The snapshots summarized by constructor, after the soak (parsing them is slow).
+const probeResults =
+  PROBE && snapshots.length ? { snapshots: snapshots.map((s) => ({ label: s.label, t: s.t, afterGc: s.afterGc, probeAfterGc: s.probeAfterGc })), summaries: summarizeSnapshots(snapshots) } : undefined;
+const results = { mode: opts.mode, platform: process.platform, display, pages, hidden, memory: mem, soak, probe: probeResults };
 if (opts.out) writeFileSync(opts.out, JSON.stringify(results, null, 2));
 else console.log(JSON.stringify(results, null, 2));
 page.close();
