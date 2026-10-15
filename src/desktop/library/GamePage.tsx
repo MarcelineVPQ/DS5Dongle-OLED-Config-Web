@@ -32,8 +32,8 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { BusyButton, Row } from "../controls";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { OverwrittenNotice, RestartNotice, useMsg, useRestartText } from "../pages/GamesPage";
-import { overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
-import type { GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
+import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
+import type { Fix, GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/types";
 import { API_NAME } from "../games/gameArgs";
 import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
@@ -136,7 +136,9 @@ export default function GamePage({ game, info, record, running, report, bridge, 
     : t("desktop.library.hdrUnknown");
   const support = supportOf(game);
   const tier = `${TIER_ICON[support.tier]} ${t(`desktop.library.tier.${support.tier}`)}`;
-  const runner = `${game.runnerMissing ? "⚠ " : ""}${game.runner ?? t("desktop.library.launcherDefault")}`;
+  // As the launcher shows it (Steam's own Protons have an internal name, e.g. proton_9 = "Proton 9.0").
+  // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20)
+  const runner = `${game.runnerMissing ? "⚠ " : ""}${game.protons?.find((c) => c.current)?.name ?? game.runner ?? t("desktop.library.launcherDefault")}`;
   const store = t(`desktop.library.storeName.${game.store}`);
 
   // The game at a glance: a tile per section that says the most, each opening it (flashed; the drawer when narrow).
@@ -187,7 +189,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         )}
         {protonApplies() && (
           <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={runner}>
-            {() => <CompatBody game={game} report={report} onRescan={onRescan} />}
+            {() => <CompatBody key={game.key} game={game} report={report} onRescan={onRescan} />}
           </Section>
         )}
         <Section id="support" icon={BadgeCheck} title={t("desktop.library.section.support")} status={mine.rating ? `${tier} · ${"★".repeat(mine.rating)}${"☆".repeat(5 - mine.rating)}` : tier}>
@@ -629,66 +631,150 @@ function ModeNote({ game, mode }: { game: GameEntry; mode: ModeInfo }) {
 
 // ---- Compatibility (Proton) ----
 // Which Proton runs the game; the recommended one and why only while it's
-// another (the store is in Details).
+// another (the store is in Details). The Proton version picker lists every
+// build the game's launcher can run it with, ours marked recommended (it
+// starts on ours while a fix recommends it). A switch is a fix like any
+// other: backed up, a running launcher's close and reopen said first, and
+// Undo right here.
 function CompatBody({ game, report, onRescan }: { game: GameEntry; report: GamesReport; onRescan: () => void }) {
   const { t } = useTranslation();
+  const m = useMsg();
   const restartText = useRestartText();
   const ours = report.ourProton.name;
   // loop: HOT-PATH-OK — N = one game's fixes (≤ ~5)
   const runnerFix = game.fixes.find((f) => f.kind === "set-runner");
-  // A running launcher is closed and reopened for the switch: said first, then
-  // confirmed. Which ones run is checked when the page opens and after each scan.
-  const fresh = useFreshRunning(runnerFix ? report.scannedAt : null);
-  const restart = runnerFix ? restartFor(report, [runnerFix], fresh) : [];
-  const [confirm, setConfirm] = useState(false);
+  const choices = game.protons ?? [];
+  // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20); three finds per render
+  const [recommended, current] = [choices.find((c) => c.recommended), choices.find((c) => c.current)];
+  const [picked, setPicked] = useState(() => (runnerFix && recommended ? recommended.name : (current?.name ?? "")));
+  // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20)
+  const choice = choices.find((c) => c.name === picked);
+  // What a switch applies: for our build the set-runner fix when there is one (the change Setup lists), else the picked build's own.
+  const target: { fix: Fix; name: string } | null = choice?.fix
+    ? { fix: choice.recommended && runnerFix ? runnerFix : choice.fix, name: choice.name }
+    : !choices.length && runnerFix
+      ? { fix: runnerFix, name: ours ?? "" }
+      : null;
+  const [done, setDone] = useState<{ backupId: string; fix: Fix; back: string } | null>(null);
+  // A running launcher is closed and reopened for the switch (and its Undo):
+  // said first, then confirmed. Which ones run is checked when there's
+  // something to apply and after each scan.
+  const fresh = useFreshRunning(target || done ? `${report.scannedAt}|${target?.fix.id ?? ""}` : null);
+  const restart = target ? restartFor(report, [target.fix], fresh) : [];
+  const undoRestart = done ? restartFor(report, [done.fix], fresh) : [];
+  const [confirm, setConfirm] = useState<"switch" | "undo" | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const switchRunner = async () => {
+    const to = target!;
     let again = false;
     try {
-      const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: [runnerFix!.id], restart }), onRescan);
+      const r = await thenRescan(() => window.desktop!.gamesApply({ fixIds: [to.fix.id], restart }), onRescan);
       rememberApplied(r.applied.filter((a) => a.ok).map((a) => a.id));
-      setNote(restartText(r));
       again = startedSinceCheck(r); // nothing written: the notice names it, the button asks again
+      // loop: HOT-PATH-OK — N = 1 applied change
+      const failed = r.applied.find((a) => !a.ok);
+      const ok = r.applied.length > 0 && !failed;
+      setNote(restartText(r) ?? (failed ? (failed.message ? m(failed.message) : t("desktop.library.setupFailed")) : ok ? t("desktop.library.protonSwitched", { name: to.name }) : null));
+      if (ok && r.backupId) setDone({ backupId: r.backupId, fix: to.fix, back: current?.name ?? "" });
     } catch (cause) {
-      // error: SHOWN — english: the note under the runner switch (main-process text, or desktop.errors.badRequest)
+      // error: SHOWN — english: the note under the Proton version picker (main-process text, or desktop.errors.badRequest)
       setNote(causeText(cause));
     }
-    setConfirm(again);
+    setConfirm(again ? "switch" : null);
+  };
+  const undo = async () => {
+    const was = done!;
+    let again = false;
+    try {
+      const r = await thenRescan(() => window.desktop!.gamesUndo({ backupId: was.backupId, restart: undoRestart }), onRescan);
+      if (r.ok) {
+        forgetApplied();
+        setDone(null);
+        setPicked(was.back);
+        setNote(restartText(r) ?? t("desktop.library.protonUndone"));
+      } else if ("blockedBy" in r) {
+        setNote(restartText(r));
+        again = !r.problem; // a launcher started since: named, then asked again
+      } else if ("conflict" in r) setNote(t("desktop.games.undoConflict", { files: r.conflict.join(", ") }));
+      else if ("noController" in r) setNote(t("desktop.games.undoNoController"));
+      else setNote(r.error);
+    } catch (cause) {
+      // error: SHOWN — english: the note under the Proton version picker (main-process text, or desktop.errors.badRequest)
+      setNote(causeText(cause));
+    }
+    setConfirm(again ? "undo" : null);
+  };
+  const pick = (name: string) => {
+    setPicked(name);
+    setConfirm(null);
+    setNote(null);
   };
   const native = game.support === "triggers" || game.support === "haptics";
+  const option = (name: string, rec: boolean, cur: boolean) =>
+    rec && cur ? t("desktop.library.protonBoth", { name }) : rec ? t("desktop.library.protonRecommended", { name }) : cur ? t("desktop.library.protonCurrent", { name }) : name;
+  // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20)
+  const canPick = choices.some((c) => !c.current);
   return (
     <>
       <Row label={t("desktop.library.runsWith")} invalid={game.runnerMissing} stack>
         <span className="dk-mono" title={game.runner ?? undefined}>
           {game.runnerMissing ? "⚠ " : ""}
-          {game.runner ?? t("desktop.library.launcherDefault")}
+          {current?.name ?? game.runner ?? t("desktop.library.launcherDefault")}
         </span>
       </Row>
       {!game.usesOurProton && (
-        <>
-          <Row label={t("desktop.library.recommended")} info={native ? t("desktop.library.compatHint") : undefined} stack>
-            <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
-          </Row>
-        </>
+        <Row label={t("desktop.library.recommended")} info={native ? t("desktop.library.compatHint") : undefined} stack>
+          <span className="dk-mono">{native ? (ours ?? t("desktop.library.protonNotInstalled")) : t("desktop.library.anyProton")}</span>
+        </Row>
       )}
-      {game.usesOurProton ? (
-        <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>
-      ) : runnerFix ? (
+      {game.usesOurProton && <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>}
+      {canPick && (
+        <Row label={t("desktop.library.protonPick")} info={t("desktop.library.protonPickInfo")} stack>
+          <select className="dk-select" aria-label={t("desktop.library.protonPick")} value={picked} onChange={(e) => pick(e.target.value)}>
+            {!current && <option value="">{game.runnerMissing ? t("desktop.library.protonGone", { name: game.runner ?? "" }) : option(t("desktop.library.launcherDefault"), false, true)}</option>}
+            {/* loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20) */}
+            {choices.map((c) => (
+              <option key={c.name} value={c.name}>
+                {option(c.name, c.recommended, c.current)}
+              </option>
+            ))}
+          </select>
+        </Row>
+      )}
+      {target && (
         <>
-          {confirm && <RestartNotice launchers={restart} />}
+          {target.fix.kind === "set-proton" && (
+            <ul className="dk-review">
+              <li>
+                <span className="dk-hint">{m(target.fix.why)}</span>
+                <span className="dk-hint dk-mono"> · {target.fix.files.join(", ")}</span>
+              </li>
+            </ul>
+          )}
+          {confirm === "switch" && <RestartNotice launchers={restart} />}
           <div className="dk-row-btns">
-            {confirm && (
-              <button type="button" className="dk-btn" onClick={() => setConfirm(false)}>
+            {(confirm === "switch" || target.fix.kind === "set-proton") && (
+              <button type="button" className="dk-btn" onClick={() => (confirm === "switch" ? setConfirm(null) : pick(current?.name ?? ""))}>
                 {t("desktop.library.cancel")}
               </button>
             )}
-            <BusyButton className="dk-btn primary" onClick={() => (restart.length && !confirm ? Promise.resolve(setConfirm(true)) : switchRunner())}>
-              {t("desktop.library.switchTo", { name: ours })}
+            <BusyButton className="dk-btn primary" onClick={() => (restart.length && confirm !== "switch" ? Promise.resolve(setConfirm("switch")) : switchRunner())}>
+              {t("desktop.library.switchTo", { name: target.name })}
             </BusyButton>
           </div>
         </>
-      ) : null}
+      )}
       {note && <p className="dk-hint">{note}</p>}
+      {done && (
+        <>
+          {confirm === "undo" && <RestartNotice launchers={undoRestart} undo />}
+          <div className="dk-row-btns">
+            <BusyButton className="dk-btn" onClick={() => (undoRestart.length && confirm !== "undo" ? Promise.resolve(setConfirm("undo")) : undo())}>
+              {t("desktop.games.undoShort")}
+            </BusyButton>
+          </div>
+        </>
+      )}
     </>
   );
 }

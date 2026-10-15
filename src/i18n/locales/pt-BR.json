@@ -493,7 +493,9 @@
           "modeSteam": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. As opções de inicialização ficam: {{args}}{{proton}}",
           "modeHeroic": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos de jogo dele no Heroic ficam: {{args}}{{proton}}",
           "modeLutris": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. Os argumentos dele no Lutris ficam: {{args}}{{proton}}",
-          "modeVkd3d": " No Proton, o DirectX 12 roda pelo vkd3d-proton, então as primeiras inicializações podem demorar mais enquanto os shaders são criados."
+          "modeVkd3d": " No Proton, o DirectX 12 roda pelo vkd3d-proton, então as primeiras inicializações podem demorar mais enquanto os shaders são criados.",
+          "protonPick": "{{game}} vai rodar com {{proton}} em vez de {{current}}.{{note}}",
+          "protonPickDefault": " {{game}} segue agora o padrão do Steam: se tiver versão para Linux, o Steam passa a rodar a versão de Windows com este Proton."
         },
         "unlock": {
           "rayTracing": "o Ray Tracing",
@@ -859,6 +861,14 @@
       "anyProton": "Qualquer Proton recente",
       "usesOurs": "Usa o build do Proton para DualSense.",
       "switchTo": "Trocar para {{name}}",
+      "protonPick": "Versão do Proton",
+      "protonPickInfo": "Todos os builds de Proton e Wine com que o launcher do jogo consegue rodá-lo. Trocar muda a configuração própria do jogo no launcher (com backup antes), e Desfazer volta a anterior.",
+      "protonRecommended": "{{name}} (recomendado)",
+      "protonCurrent": "{{name}} (atual)",
+      "protonBoth": "{{name}} (recomendado, atual)",
+      "protonGone": "⚠ {{name}} (não instalado)",
+      "protonSwitched": "Trocado para {{name}}. O jogo usa a partir da próxima vez que abrir.",
+      "protonUndone": "Desfeito: o jogo voltou para a versão anterior.",
       "tier": {
         "verified": "Verificado",
         "works": "Funciona",

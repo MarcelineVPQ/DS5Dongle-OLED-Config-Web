@@ -1,6 +1,6 @@
 // Heroic Games Launcher (Epic via legendary, GOG, Amazon via nile, sideloaded):
 // installs, games and their Wine/Proton settings. Read side only.
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { arr, obj, readJson } from "./files";
 import { join } from "node:path";
 import type { Store } from "../../../src/desktop/games/types";
@@ -142,4 +142,30 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
 
 export function heroicTools(install: HeroicInstall): string[] {
   return protonBuilds(install.toolsDir);
+}
+
+// Every Wine/Proton build Heroic can run a game with (the game page's picker),
+// as Heroic stores it in wineVersion: its own Proton builds (tools/proton),
+// its own Wine builds (tools/wine), and for the native Heroic also Steam's
+// (`steam`: compatibilitytools.d and Valve's Protons; the Flatpak can't see
+// them). The first build of a name wins.
+export function heroicBuilds(install: HeroicInstall, steam: WineVersion[]): WineVersion[] {
+  // cache: NOT-WORTH — key=build name; invalidated=built anew on every call (one scan); bound=one launcher's builds (≤ ~30)
+  const out = new Map<string, WineVersion>();
+  const add = (w: WineVersion) => !out.has(w.name) && out.set(w.name, w);
+  const wineDir = join(install.root, "tools/wine");
+  // loop: NOT-WORTH — builds in Heroic's Proton folder, once per scan
+  for (const name of heroicTools(install)) add({ bin: join(install.toolsDir, name, "proton"), name, type: "proton" });
+  let wines: string[] = [];
+  try {
+    // loop: NOT-WORTH — folders in Heroic's Wine folder, a stat each; once per scan
+    wines = readdirSync(wineDir).filter((d) => existsSync(join(wineDir, d, "bin/wine")));
+  } catch {
+    // error: NOT-WORTH — no tools/wine folder: no Wine builds from Heroic
+  }
+  // loop: NOT-WORTH — Wine builds, once per scan
+  for (const name of wines) add({ bin: join(wineDir, name, "bin/wine"), name, type: "wine" });
+  // loop: NOT-WORTH — Steam's builds (≤ ~20), once per scan
+  if (!install.flatpak) for (const w of steam) add(w);
+  return [...out.values()];
 }
