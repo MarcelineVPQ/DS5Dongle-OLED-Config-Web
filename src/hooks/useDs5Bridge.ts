@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { causeText } from "../desktop/shownError";
 import { useTranslation } from "react-i18next";
-import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
+import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, type OledPadButton, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
@@ -71,6 +71,11 @@ export interface UseDs5BridgeResult {
   // (KEY0 next screen; KEY1 short back, long next brightness). Resolves false
   // if the dongle refused (see error); the 0xEF mirror shows the result.
   pressOledKey: (key: 0 | 1, long: boolean) => Promise<boolean>;
+  // Protocol 1.19 (identity [46] bit 7): controller buttons for the OLED screens.
+  supportsOledPad: boolean;
+  // Press a controller button for the board's screens only (never the
+  // games), held holdMs (0 = a tap). Resolves false if refused (see error).
+  pressOledPad: (button: OledPadButton, holdMs?: number) => Promise<boolean>;
   resetDraft: () => void;
   // Put the dongle back to savedConfig (RAM only; flash already holds it).
   revertToSaved: () => Promise<void>;
@@ -271,6 +276,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   );
 
   const pressOledKey = useCallback((key: 0 | 1, long: boolean) => run("applying", (c) => c.pressOledKey(key, long)), [run]);
+  const pressOledPad = useCallback((button: OledPadButton, holdMs?: number) => run("applying", (c) => c.pressOledPad(button, holdMs)), [run]);
 
   const setDraftField = useCallback(<Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -418,6 +424,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setPowerFlags,
     supportsOledKeys: supportsFeature3(identity, 18, FEATURES3.oledKeys),
     pressOledKey,
+    supportsOledPad: supportsFeature3(identity, 19, FEATURES3.oledPad),
+    pressOledPad,
     resetDraft,
     revertToSaved,
     applyBody,

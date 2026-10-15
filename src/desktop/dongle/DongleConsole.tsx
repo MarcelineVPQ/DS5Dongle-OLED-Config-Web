@@ -5,11 +5,13 @@
 // firmware draws the same frames whether or not a panel is fitted.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import HoldButton from "./HoldButton";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
 import { identityChargeState } from "../../protocol/controllerInfo";
 import { SCREEN_NAMES } from "../../oled/screenNames";
 import { logged } from "../../errorText";
 import { causeText } from "../shownError";
+import OledPad, { type OledPadProps } from "./OledPad";
 
 const FB_W = 128;
 const FB_H = 64;
@@ -37,12 +39,14 @@ export default function DongleConsole({
   controllerOn,
   frame,
   keys,
+  pad,
 }: {
   client: Ds5BridgeClient | null;
   identity: BridgeIdentity | null;
   controllerOn: boolean;
   frame: OledFrameState;
   keys: OledKeysProps;
+  pad: Omit<OledPadProps, "controllerOn">;
 }) {
   const { t } = useTranslation();
   const [pane, setPane] = useState<Pane>("screen");
@@ -100,7 +104,7 @@ export default function DongleConsole({
       </header>
       {pane === "screen" ? (
         <div className="dcon-pane dcon-screen">
-          <OledCanvas frame={capable ? frame.frame : null} keys={keys} />
+          <OledCanvas frame={capable ? frame.frame : null} keys={keys} pad={{ ...pad, controllerOn }} />
           <p className="dcon-hint">{t("desktop.dongleConsole.hint")}</p>
         </div>
       ) : (
@@ -173,7 +177,7 @@ export function useOledFrame(client: Ds5BridgeClient | null, enabled: boolean): 
   return { frame: client ? (shown?.frame ?? null) : null, changes: shown?.changes ?? 0, error };
 }
 
-function OledCanvas({ frame, keys }: { frame: OledFrame | null; keys: OledKeysProps }) {
+function OledCanvas({ frame, keys, pad }: { frame: OledFrame | null; keys: OledKeysProps; pad: OledPadProps }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // cache: OK — key=none (the canvas's one 128x64 ImageData, 32 KB); invalidated=never (rewritten per changed frame); bound=1 entry
   const imgRef = useRef<ImageData | null>(null);
@@ -210,8 +214,8 @@ function OledCanvas({ frame, keys }: { frame: OledFrame | null; keys: OledKeysPr
   useEffect(() => {
     const el = box.current;
     if (!el) return;
-    // The key strip at the panel's left takes KEYS_W of the width.
-    const fit = () => setScale(Math.max(1, Math.min(6, Math.floor((el.clientWidth - KEYS_W) / FB_W))));
+    // The key strip at the panel's left takes KEYS_W of the width, the controller buttons PAD_W.
+    const fit = () => setScale(Math.max(1, Math.min(6, Math.floor((el.clientWidth - KEYS_W - PAD_W) / FB_W))));
     fit();
     // lifetime: OK — disconnected in the effect cleanup
     const ro = new ResizeObserver(fit);
@@ -224,6 +228,7 @@ function OledCanvas({ frame, keys }: { frame: OledFrame | null; keys: OledKeysPr
         <OledKeys {...keys} frame={frame} />
         <canvas ref={ref} className="dcon-oled" width={FB_W} height={FB_H} style={{ width: FB_W * scale, height: FB_H * scale }} role="img" aria-label="OLED" />
       </div>
+      <OledPad {...pad} frame={frame} />
     </div>
   );
 }
@@ -234,6 +239,7 @@ function OledCanvas({ frame, keys }: { frame: OledFrame | null; keys: OledKeysPr
 // held for the firmware's long-press time it is a long press (a bar fills
 // while held). Space / Enter work the same way. Older firmware: shown, with
 // a tooltip that says to update it.
+const PAD_W = 112; // px beside the module: the controller buttons (desktop.css: .dpad)
 const KEYS_W = 66; // px beside the canvas: the key strip and the module's edge (desktop.css: .dcon-module, .dcon-keys)
 export const OLED_LONG_PRESS_MS = 1500; // the firmware's kLongPressUs (src/oled.cpp)
 const BRIGHT_LEVELS = [255, 127, 63, 16]; // the firmware's kBrightLevels, KEY1 long press cycles them
@@ -286,42 +292,19 @@ function OledKeys({ supported, press, frame }: OledKeysProps & { frame: OledFram
     <div className="dcon-keys" style={{ "--long-ms": `${OLED_LONG_PRESS_MS}ms` } as React.CSSProperties}>
       {/* loop: HOT-PATH-OK — N = 2 keys */}
       {([0, 1] as const).map((key) => (
-        <button
+        <HoldButton
           key={key}
-          type="button"
           className={`dcon-key dcon-key-${key}${holding === key ? " held" : ""}${error ? " bad" : ""}`}
           aria-disabled={!usable}
           aria-label={`KEY${key}`}
           title={tip(key)}
-          onPointerDown={(e) => {
-            if (e.button !== 0) return;
-            down(key, e.timeStamp);
-            // The release counts even off the key.
-            try {
-              e.currentTarget.setPointerCapture?.(e.pointerId);
-            } catch {
-              // error: NOT-WORTH — a pointer that is already gone: its pointercancel / blur ends the press
-            }
-          }}
-          onPointerUp={(e) => up(key, e.timeStamp)}
-          onPointerCancel={cancel}
-          onKeyDown={(e) => {
-            if ((e.key === " " || e.key === "Enter") && !e.repeat) {
-              e.preventDefault();
-              down(key, e.timeStamp);
-            }
-          }}
-          onKeyUp={(e) => {
-            if (e.key === " " || e.key === "Enter") {
-              e.preventDefault();
-              up(key, e.timeStamp);
-            }
-          }}
-          onBlur={cancel}
+          onDown={(at) => down(key, at)}
+          onUp={(at) => up(key, at)}
+          onCancel={cancel}
         >
           <span className="dcon-key-cap" aria-hidden="true" />
           <span className="dcon-key-name">KEY{key}</span>
-        </button>
+        </HoldButton>
       ))}
     </div>
   );

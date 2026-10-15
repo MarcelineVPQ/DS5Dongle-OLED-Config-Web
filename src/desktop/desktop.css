@@ -2695,6 +2695,8 @@ html[data-theme="light"] .live-ctl {
 .dcon-oled-box {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 10px;
   width: 100%;
 }
 .dcon-oled {
@@ -2827,6 +2829,120 @@ html[data-theme="light"] .live-ctl {
 }
 .dcon-key[aria-disabled="true"] .dcon-key-cap {
   background: var(--dcon-key-cap);
+}
+
+/* The controller buttons the OLED screens react to (OledPad.tsx), beside the
+   module: R1, the directional buttons and the face buttons, Zacksly's glyphs
+   as masks in the console's text color. Part of the console, so dark in
+   every theme like it. Held: a bar fills over the hold that matters there. */
+.dpad {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100px;
+}
+.dpad-row {
+  display: flex;
+  justify-content: center;
+}
+.dpad-cluster {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  grid-template-rows: repeat(3, 30px);
+  grid-template-areas:
+    ". n ."
+    "w . e"
+    ". s .";
+}
+.dpad-n {
+  grid-area: n;
+}
+.dpad-s {
+  grid-area: s;
+}
+.dpad-w {
+  grid-area: w;
+}
+.dpad-e {
+  grid-area: e;
+}
+.dpad-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--dcon-key-edge);
+  border-radius: 50%;
+  background: var(--dcon-key);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.7); /* theme-exempt: console: dark in every theme */
+  color: var(--dcon-text);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 60ms ease-out;
+}
+.dpad-r1 {
+  width: 44px;
+  height: 22px;
+  border-radius: 6px 6px 3px 3px;
+}
+.dpad-glyph {
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+.dpad-dirs .dpad-glyph {
+  width: 28px;
+  height: 28px;
+}
+.dpad-r1 .dpad-glyph {
+  width: 30px;
+  height: 30px;
+}
+.dpad-btn:hover:not([aria-disabled="true"]) {
+  border-color: var(--dk-accent);
+}
+.dpad-btn.held,
+.dpad-btn:active:not([aria-disabled="true"]) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+/* Held where the hold matters: the button fills from the bottom over the
+   hold time; full = the hold counts. */
+.dpad-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--dk-accent);
+  opacity: 0.55;
+}
+.dpad-btn.holdable.held::after {
+  animation: dpad-fill var(--hold-ms, 2000ms) linear forwards;
+}
+@keyframes dpad-fill {
+  to {
+    height: 100%;
+  }
+}
+.dpad-btn:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 2px;
+}
+.dpad-btn.bad {
+  border-color: var(--status-bad);
+}
+.dpad-btn[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* ---- The Pico 2 W page's centerpiece (OledHero.tsx): the OLED Edition's

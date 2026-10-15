@@ -1029,6 +1029,40 @@
         "key0": "KEY0: nächste Seite ({{screen}})",
         "key1": "KEY1: vorherige Seite ({{screen}}). {{s}} s halten: Helligkeit {{pct}} %",
         "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um die Tasten zu nutzen"
+      },
+      "pad": {
+        "title": "Controller-Tasten für das Display",
+        "info": "Nur das Display sieht diese Tastendrücke, Spiele nicht. Klicken zum Drücken, gedrückt halten zum Halten.",
+        "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um hier Controller-Tasten zu drücken",
+        "needsController": "Verbinde einen Controller, um das auf {{screen}} zu nutzen",
+        "unused": "Auf {{screen}} nicht belegt",
+        "noScreen": "Warte auf das Display",
+        "act": {
+          "settings": {
+            "up": "vorherige Einstellung",
+            "down": "nächste Einstellung",
+            "left": "Wert verringern",
+            "right": "Wert erhöhen",
+            "triangle": "speichern. {{s}} s halten auf „Reset to defaults“ oder „Wipe all slots“"
+          },
+          "slots": {
+            "up": "vorheriger Slot",
+            "down": "nächster Slot",
+            "triangle": "gewählten Slot nutzen",
+            "square": "{{s}} s halten, um den gewählten Slot zu vergessen"
+          },
+          "lightbar": {
+            "r1": "nächster Modus",
+            "fav": "Farbe als FAV{{n}} speichern"
+          },
+          "triggers": {
+            "triangle": "nächster Effekt"
+          },
+          "diag": {
+            "up": "nach oben blättern",
+            "down": "nach unten blättern"
+          }
+        }
       }
     },
     "rail": {

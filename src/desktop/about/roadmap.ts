@@ -442,6 +442,12 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "ideas", title: "Simpler layout and wording", text: "Shorter labels, fewer clicks to common things, and pairing slots that are easy to find.", areas: ["app"] },
   { column: "progress", title: "Settings that unfold in place", text: "The settings panel's sections open and close in place, with small icons, instead of switching pages.", areas: ["app"] },
   { column: "progress", title: "KEY0 and KEY1 in the app", text: "Press {{device}}'s OLED keys from the live screen on its page.", areas: ["dongle"] },
+  {
+    column: "progress",
+    title: "Controller buttons for the OLED screens",
+    text: "Press △, the directional buttons and the others the screens use, from beside {{device}}'s live screen.",
+    areas: ["dongle"],
+  },
   { column: "ideas", title: "Compact layout", text: "A Compact choice in Appearance: tighter spacing so more fits on small screens.", areas: ["app"] },
   { column: "ideas", title: "Overview at a glance", text: "One screen with the connection and audio status, quick tests and quick sliders.", areas: ["app"] },
   { column: "ideas", title: "Low / Medium / High presets", text: "Quick preset buttons under strength sliders.", areas: ["app"] },

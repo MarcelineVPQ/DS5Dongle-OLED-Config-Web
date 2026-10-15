@@ -580,6 +580,63 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(Number(screenNow())).toBe(before);
   });
 
+  it("the controller buttons beside the mirror press the board's screen: a tap moves Settings, △ held fills its bar and is sent as a hold", async () => {
+    await live("dongle");
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    const board = m.devPreview.simulatedBoard()!.dongle()!;
+    const pad = (b: string) => container.querySelector<HTMLButtonElement>(`.dpad-btn[data-button="${b}"]`)!;
+    // Beside the module, in the hero: R1, the directional buttons, △ ○ ✕ □.
+    expect([...container.querySelectorAll(".oled-hero .dpad .dpad-btn")].map((b) => b.getAttribute("data-button"))).toEqual([
+      "r1",
+      "up",
+      "left",
+      "right",
+      "down",
+      "triangle",
+      "square",
+      "circle",
+      "cross",
+    ]);
+    // Status ignores them all: disabled, and the tooltip says so.
+    expect(pad("up").getAttribute("aria-disabled")).toBe("true");
+    expect(pad("up").title).toContain("Status");
+    // KEY1 back from Status = Settings (the last screen).
+    const key1 = container.querySelector<HTMLButtonElement>(".dcon-key-1")!;
+    act(() => void key1.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+    act(() => void key1.dispatchEvent(new KeyboardEvent("keyup", { key: " ", bubbles: true })));
+    // loop: test — until the mirror shows Settings
+    for (let i = 0; i < 50 && pad("up").getAttribute("aria-disabled") !== "false"; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
+    expect(board.oledScreen).toBe(10);
+    expect(pad("down").getAttribute("aria-disabled")).toBe("false");
+    expect(pad("circle").getAttribute("aria-disabled")).toBe("true"); // Settings doesn't use ○
+    expect(pad("down").title).toMatch(/Settings: next setting/);
+    expect(pad("triangle").title).toMatch(/Hold 2 s/);
+    // A tap (Space): one step down.
+    const tap = async (b: string) => {
+      const n = board.oledScreens.presses.length;
+      act(() => void pad(b).dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+      act(() => void pad(b).dispatchEvent(new KeyboardEvent("keyup", { key: " ", bubbles: true })));
+      // loop: test — until the board took the press
+      for (let i = 0; i < 50 && board.oledScreens.presses.length === n; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
+    };
+    await tap("down");
+    expect(board.oledScreens.sel).toBe(1);
+    expect(board.oledScreens.presses.at(-1)).toEqual(["down", 0]);
+    // △ held: the bar fills over 2 s (CSS, --hold-ms), and the release sends the held time.
+    const tri = pad("triangle");
+    act(() => void tri.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+    expect(tri.classList.contains("held")).toBe(true);
+    expect(tri.classList.contains("holdable")).toBe(true);
+    expect(tri.style.getPropertyValue("--hold-ms")).toBe("2000ms");
+    await act(() => new Promise((r) => setTimeout(r, 400)));
+    act(() => void tri.dispatchEvent(new KeyboardEvent("keyup", { key: " ", bubbles: true })));
+    // loop: test — until the board took the press
+    for (let i = 0; i < 50 && board.oledScreens.presses.at(-1)?.[0] !== "triangle"; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
+    const [, held] = board.oledScreens.presses.at(-1)!;
+    expect(held).toBeGreaterThanOrEqual(350);
+    expect(tri.classList.contains("held")).toBe(false);
+  });
+
   it("a deep link (the rail's board-problem dot, the tray's Diagnostics) scrolls to the Diagnostics block and flashes it", async () => {
     m.block.revealBlock("dongle", "diagnostics"); // before the page mounts: taken when it does
     await live("dongle");

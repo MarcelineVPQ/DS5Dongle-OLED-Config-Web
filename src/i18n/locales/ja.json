@@ -1019,6 +1019,40 @@
         "key0": "KEY0：次の画面（{{screen}}）",
         "key1": "KEY1：前の画面（{{screen}}）。{{s}} 秒長押し：明るさ {{pct}}%",
         "needsFirmware": "キーを使うには {{device}} のファームウェアを更新してください"
+      },
+      "pad": {
+        "title": "画面用のコントローラーボタン",
+        "info": "この押下は画面だけが受け取り、ゲームには届きません。クリックで押す、押したままで長押し。",
+        "needsFirmware": "ここでコントローラーのボタンを押すには {{device}} のファームウェアを更新してください",
+        "needsController": "{{screen}}で使うにはコントローラーを接続してください",
+        "unused": "{{screen}}では使いません",
+        "noScreen": "画面を待っています",
+        "act": {
+          "settings": {
+            "up": "前の設定",
+            "down": "次の設定",
+            "left": "値を下げる",
+            "right": "値を上げる",
+            "triangle": "保存。「Reset to defaults」または「Wipe all slots」で {{s}} 秒長押し"
+          },
+          "slots": {
+            "up": "前のスロット",
+            "down": "次のスロット",
+            "triangle": "選んだスロットを使う",
+            "square": "{{s}} 秒長押しで選んだスロットを削除"
+          },
+          "lightbar": {
+            "r1": "次のモード",
+            "fav": "色を FAV{{n}} に保存"
+          },
+          "triggers": {
+            "triangle": "次のエフェクト"
+          },
+          "diag": {
+            "up": "上へスクロール",
+            "down": "下へスクロール"
+          }
+        }
       }
     },
     "rail": {

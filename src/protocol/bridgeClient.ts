@@ -62,6 +62,7 @@ export const FUNC = {
   controllerTest: 0x16, // protocol 1.12: run a read-only controller test command (answer in 0xEB)
   pcSleep: 0x17, // protocol 1.14: [POWER_FLAGS bits], saved on its own (like the narrator)
   oledKey: 0x18, // protocol 1.18: [key 0 KEY0 / 1 KEY1, 0 short / 1 long], pressed like the board's own keys
+  oledPad: 0x19, // protocol 1.19: [button, hold ms lo, hi], a controller button for the OLED screens only (games never see it)
 } as const;
 
 // The protocol major this app speaks. A dongle reporting another major is
@@ -99,7 +100,13 @@ export const FEATURES3 = {
   micLevel: 0x10, // protocol 1.16: the controller's mic level (config body 50 bytes)
   echoCancel: 0x20, // protocol 1.17: the controller's mic echo cancellation (config body 51 bytes)
   oledKeys: 0x40, // protocol 1.18: 0xF6 0x18 presses KEY0 / KEY1 from the app (short or long)
+  oledPad: 0x80, // protocol 1.19: 0xF6 0x19 presses controller buttons for the OLED screens
 } as const;
+// Protocol 1.19: the controller buttons the OLED screens react to, by their
+// wire id (firmware src/oled_vpad.h). Only the OLED sees them, never the PC.
+export const OLED_PAD_BUTTONS = { up: 0, down: 1, left: 2, right: 3, triangle: 4, circle: 5, cross: 6, square: 7, r1: 8 } as const;
+export type OledPadButton = keyof typeof OLED_PAD_BUTTONS;
+export const OLED_PAD_MAX_HOLD_MS = 5000; // firmware kMaxHoldMs
 // Identity [47] (protocol 1.14, FEATURES3.pcSleep): the PC sleep options.
 export const POWER_FLAGS = {
   sleepControllerOff: 0x01, // turn the controller off once the PC has slept 3 s (default on)
@@ -409,6 +416,12 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= 18) && (p.features3 & FEATURES3.oledKeys) !== 0;
   }
 
+  // Protocol 1.19+: controller buttons for the OLED screens (0xF6 0x19).
+  get oledPad(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 19) && (p.features3 & FEATURES3.oledPad) !== 0;
+  }
+
   // Protocol 1.6+: left and right grip haptics strengths.
   get splitHaptics(): boolean {
     return !!this.protocol && (this.protocol.major > 1 || this.protocol.minor >= 6);
@@ -573,6 +586,19 @@ export class Ds5BridgeClient {
     // error: SHOWN — english: the error notice via useDs5Bridge.pressOledKey; the UI only offers the keys when supportsOledKeys
     if (!this.oledKeys) throw new Error("This firmware can't press the board's keys from the app. Update the firmware.");
     await this.command(FUNC.oledKey, [key, long ? 1 : 0]);
+  }
+
+  // Protocol 1.19 (FEATURES3.oledPad): press a controller button for the
+  // OLED screens only, held holdMs (0 = a tap, up to 5 s; Settings' Reset /
+  // Wipe need triangle held 2 s). The firmware merges it with the
+  // controller's own buttons for the screens and never puts it in the
+  // controller's report, so games don't see it; it wakes the screen first.
+  // Resolves once queued (up to four wait; a fifth is "busy").
+  async pressOledPad(button: OledPadButton, holdMs = 0): Promise<void> {
+    // error: SHOWN — english: the error notice via useDs5Bridge.pressOledPad; the UI only offers the pad when supportsOledPad
+    if (!this.oledPad) throw new Error("This firmware can't press controller buttons on the board's screen from the app. Update the firmware.");
+    const ms = Math.max(0, Math.min(OLED_PAD_MAX_HOLD_MS, Math.round(holdMs)));
+    await this.command(FUNC.oledPad, [OLED_PAD_BUTTONS[button], ms & 0xff, ms >> 8]);
   }
 
   async previewTrigger(preset: number): Promise<void> {

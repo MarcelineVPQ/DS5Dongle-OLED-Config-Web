@@ -1029,6 +1029,40 @@
         "key0": "KEY0 : écran suivant ({{screen}})",
         "key1": "KEY1 : écran précédent ({{screen}}). Maintenir {{s}} s : luminosité {{pct}} %",
         "needsFirmware": "Mets à jour le firmware {{device_de}} pour utiliser les touches"
+      },
+      "pad": {
+        "title": "Touches de la manette pour l'écran",
+        "info": "Seul l'écran voit ces appuis, pas les jeux. Clique pour appuyer, maintiens pour maintenir.",
+        "needsFirmware": "Mets à jour le firmware {{device_de}} pour appuyer ici sur les touches de la manette",
+        "needsController": "Connecte une manette pour l'utiliser sur {{screen}}",
+        "unused": "Inutilisée sur {{screen}}",
+        "noScreen": "En attente de l'écran",
+        "act": {
+          "settings": {
+            "up": "réglage précédent",
+            "down": "réglage suivant",
+            "left": "baisser la valeur",
+            "right": "augmenter la valeur",
+            "triangle": "enregistrer. Maintenir {{s}} s sur « Reset to defaults » ou « Wipe all slots »"
+          },
+          "slots": {
+            "up": "emplacement précédent",
+            "down": "emplacement suivant",
+            "triangle": "utiliser l'emplacement choisi",
+            "square": "maintenir {{s}} s pour oublier l'emplacement choisi"
+          },
+          "lightbar": {
+            "r1": "mode suivant",
+            "fav": "enregistrer la couleur en FAV{{n}}"
+          },
+          "triggers": {
+            "triangle": "effet suivant"
+          },
+          "diag": {
+            "up": "défiler vers le haut",
+            "down": "défiler vers le bas"
+          }
+        }
       }
     },
     "rail": {

@@ -1029,6 +1029,40 @@
         "key0": "KEY0: pantalla siguiente ({{screen}})",
         "key1": "KEY1: pantalla anterior ({{screen}}). Mantén {{s}} s: brillo {{pct}} %",
         "needsFirmware": "Actualiza el firmware {{device_de}} para usar las teclas"
+      },
+      "pad": {
+        "title": "Botones del mando para la pantalla",
+        "info": "Solo la pantalla ve estas pulsaciones, los juegos no. Haz clic para pulsar, mantén para mantener.",
+        "needsFirmware": "Actualiza el firmware {{device_de}} para pulsar aquí los botones del mando",
+        "needsController": "Conecta un mando para usarlo en {{screen}}",
+        "unused": "Sin uso en {{screen}}",
+        "noScreen": "Esperando la pantalla",
+        "act": {
+          "settings": {
+            "up": "ajuste anterior",
+            "down": "ajuste siguiente",
+            "left": "bajar el valor",
+            "right": "subir el valor",
+            "triangle": "guardar. Mantén {{s}} s en «Reset to defaults» o «Wipe all slots»"
+          },
+          "slots": {
+            "up": "ranura anterior",
+            "down": "ranura siguiente",
+            "triangle": "usar la ranura elegida",
+            "square": "mantén {{s}} s para olvidar la ranura elegida"
+          },
+          "lightbar": {
+            "r1": "modo siguiente",
+            "fav": "guardar el color como FAV{{n}}"
+          },
+          "triggers": {
+            "triangle": "efecto siguiente"
+          },
+          "diag": {
+            "up": "desplazar arriba",
+            "down": "desplazar abajo"
+          }
+        }
       }
     },
     "rail": {
