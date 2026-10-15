@@ -53,11 +53,11 @@ export function evaluators(page, main) {
 }
 
 // Frames drawn per second over `secs` (a trace's Display::DrawAndSwap
-// events), to 0.1. Counted between two marks the page puts in the trace
-// (console.timeStamp) `secs` apart, not over the whole trace: the trace runs
-// on in the GPU process for a moment after Tracing.end, so the whole trace
-// held one frame too many at 10 a second (201 frames in "20 s" at exactly
-// 100 ms apart). framesBetweenMarks (budgets_lib.mjs) does the counting.
+// events), to 0.1. Only the frames between two marks the page puts in the
+// trace (console.timeStamp) `secs` apart count, not the whole trace: the
+// trace runs on in the GPU process for a moment after Tracing.end (201
+// frames in "20 s" at exactly 100 ms apart). framesBetweenMarks
+// (budgets_lib.mjs) turns them into a rate.
 export async function framesOver(page, secs) {
   const events = [];
   let done;

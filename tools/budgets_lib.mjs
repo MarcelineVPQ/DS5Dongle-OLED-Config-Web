@@ -133,14 +133,26 @@ export const FRAME_MARKS = { start: "ds5-frames-start", end: "ds5-frames-end" };
 
 // Frames per second (to 0.1) between the two marks, from a trace's
 // Display::DrawAndSwap and TimeStamp events ({ name, ts (µs), args }); null
-// when a mark is missing.
+// when a mark is missing. With two frames or more it is the frames' own
+// rate: intervals between the first and the last frame over the time they
+// span. A plain count over the window is off by up to one frame either way
+// depending on where the window starts (a page drawing exactly every 100 ms
+// read 9.9 on one page and 10.1 on the next in one 10 s run); the intervals
+// aren't. Frames that don't span most of the window (a few frames close
+// together on an idle page) are counted over the window instead, so two
+// frames 100 ms apart read 0.2, not 10.
 export function framesBetweenMarks(events) {
   const markAt = (message) => events.find((e) => e.name === "TimeStamp" && e.args?.data?.message === message)?.ts;
   const start = markAt(FRAME_MARKS.start);
   const end = markAt(FRAME_MARKS.end);
   if (start == null || end == null || end <= start) return null;
-  const frames = events.filter((e) => e.name === "Display::DrawAndSwap" && e.ts >= start && e.ts < end).length;
-  return round1(frames / ((end - start) / 1e6));
+  const at = events
+    .filter((e) => e.name === "Display::DrawAndSwap" && e.ts >= start && e.ts < end)
+    .map((e) => e.ts)
+    .sort((a, b) => a - b);
+  const span = at.length < 2 ? 0 : at[at.length - 1] - at[0];
+  if (span < 0.9 * (end - start)) return round1(at.length / ((end - start) / 1e6));
+  return round1((at.length - 1) / (span / 1e6));
 }
 
 // Events per second from a trace's event counts.

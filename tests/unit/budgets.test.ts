@@ -162,7 +162,15 @@ describe("rates", () => {
     const frames = Array.from({ length: 202 }, (_, i) => ({ name: "Display::DrawAndSwap", ts: 50_000 + i * 100_000 }));
     const events = [...frames, mark(FRAME_MARKS.start, 70_000), mark(FRAME_MARKS.end, 20_070_000)];
     expect(framesBetweenMarks(events)).toBe(10);
-    // Idle: no frames at all.
+    // Wherever the window starts (here 101 frames fall inside it), the rate is the frames' own.
+    expect(framesBetweenMarks([...frames, mark(FRAME_MARKS.start, 49_000), mark(FRAME_MARKS.end, 10_051_000)])).toBe(10);
+    // One extra frame in 10 s on top of the 10 Hz steps still shows (and fails ≤ 10).
+    const extra = { name: "Display::DrawAndSwap", ts: 5_120_000 };
+    expect(framesBetweenMarks([...frames, extra, mark(FRAME_MARKS.start, 70_000), mark(FRAME_MARKS.end, 10_070_000)])).toBe(10.1);
+    // A few frames close together on an idle page: counted over the window.
+    expect(framesBetweenMarks([frames[3], frames[4], mark(FRAME_MARKS.start, 0), mark(FRAME_MARKS.end, 10_000_000)])).toBe(0.2);
+    // Idle: no frames at all; a single frame: the count over the window.
+    expect(framesBetweenMarks([frames[3], mark(FRAME_MARKS.start, 0), mark(FRAME_MARKS.end, 10_000_000)])).toBe(0.1);
     expect(framesBetweenMarks([mark(FRAME_MARKS.start, 0), mark(FRAME_MARKS.end, 10_000_000)])).toBe(0);
     // A mark missing (the page never ran it): not measured, never a made-up number.
     expect(framesBetweenMarks(frames)).toBeNull();
