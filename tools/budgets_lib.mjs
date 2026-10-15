@@ -155,6 +155,19 @@ export function framesBetweenMarks(events) {
   return round1((at.length - 1) / (span / 1e6));
 }
 
+// The same trace by the two plain counts, for comparison (reported, not
+// judged): `wholeTrace`, every DrawAndSwap in the trace over `secs` (the gate's
+// formula until 2026-10-15), and `window`, the frames between the marks over
+// the time between them.
+export function frameCounts(events, secs) {
+  const draws = events.filter((e) => e.name === "Display::DrawAndSwap");
+  const markAt = (message) => events.find((e) => e.name === "TimeStamp" && e.args?.data?.message === message)?.ts;
+  const start = markAt(FRAME_MARKS.start);
+  const end = markAt(FRAME_MARKS.end);
+  const inWindow = start == null || end == null || end <= start ? null : draws.filter((e) => e.ts >= start && e.ts < end).length;
+  return { wholeTrace: round1(draws.length / secs), window: inWindow === null ? null : round1(inWindow / ((end - start) / 1e6)) };
+}
+
 // Events per second from a trace's event counts.
 export const perSecond = (count, secs) => round1((count ?? 0) / secs);
 

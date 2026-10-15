@@ -5,7 +5,7 @@
 // built-in WebSocket only.
 /* global WebSocket -- Node 22's built-in client */
 import { setTimeout as sleep } from "node:timers/promises";
-import { FRAME_MARKS, framesBetweenMarks } from "./budgets_lib.mjs";
+import { FRAME_MARKS, frameCounts, framesBetweenMarks } from "./budgets_lib.mjs";
 
 // A CDP session on a target's webSocketDebuggerUrl: send(method, params)
 // answers with the reply; `handlers` get every event.
@@ -57,8 +57,9 @@ export function evaluators(page, main) {
 // trace (console.timeStamp) `secs` apart count, not the whole trace: the
 // trace runs on in the GPU process for a moment after Tracing.end (201
 // frames in "20 s" at exactly 100 ms apart). framesBetweenMarks
-// (budgets_lib.mjs) turns them into a rate.
-export async function framesOver(page, secs) {
+// (budgets_lib.mjs) turns them into a rate. `counts`, when given, gets the
+// same trace's plain counts (frameCounts) for comparison.
+export async function framesOver(page, secs, counts = null) {
   const events = [];
   let done;
   const finished = new Promise((r) => (done = r));
@@ -78,6 +79,7 @@ export async function framesOver(page, secs) {
   await page.send("Tracing.end");
   await finished;
   page.handlers.delete(h);
+  if (counts) Object.assign(counts, frameCounts(events, secs));
   const perS = framesBetweenMarks(events);
   // No marks in the trace: say so rather than judge a number that wasn't measured.
   if (perS === null) throw new Error("the frame trace has no start/end marks (console.timeStamp didn't reach it)");

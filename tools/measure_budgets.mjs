@@ -130,10 +130,12 @@ for (const name of PAGES) {
   const raf0 = await ev("window.__raf");
   const cpu = await cpuDuring(mode.cpuS);
   const raf1 = await ev("window.__raf");
-  const framesPerS = await framesOver(page, mode.traceS);
+  // The judged rate, and the same trace's plain counts beside it (reported).
+  const frameCounts = {};
+  const framesPerS = await framesOver(page, mode.traceS, frameCounts);
   const info = await ev(`({ focus: document.hasFocus(), size: innerWidth + "x" + innerHeight, rail: document.querySelector(".rail-link.active")?.dataset.rail ?? null,
     anims: [...new Set(document.getAnimations().filter((a) => a.playState === "running").map((a) => (a.animationName ?? a.transitionProperty ?? "?") + "@" + String(a.effect?.target?.className?.baseVal ?? a.effect?.target?.className ?? "").split(" ")[0]))] })`);
-  const r = { page: name, reached: !!reached, framesPerS, cpu, rafPerS: perSecond(raf1 - raf0, mode.cpuS), ...info };
+  const r = { page: name, reached: !!reached, framesPerS, frameCounts, cpu, rafPerS: perSecond(raf1 - raf0, mode.cpuS), ...info };
   note(JSON.stringify(r));
   pages.push(r);
 }

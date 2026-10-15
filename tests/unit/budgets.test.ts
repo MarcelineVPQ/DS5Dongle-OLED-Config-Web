@@ -12,6 +12,7 @@ import {
   cpuTotal,
   descendants,
   FRAME_MARKS,
+  frameCounts,
   framesBetweenMarks,
   judgeBudgets,
   formatCombined,
@@ -167,6 +168,10 @@ describe("rates", () => {
     // One extra frame in 10 s on top of the 10 Hz steps still shows (and fails ≤ 10).
     const extra = { name: "Display::DrawAndSwap", ts: 5_120_000 };
     expect(framesBetweenMarks([...frames, extra, mark(FRAME_MARKS.start, 70_000), mark(FRAME_MARKS.end, 10_070_000)])).toBe(10.1);
+    // The plain counts of the same trace, reported beside it: the whole trace
+    // (202 frames over the 20 s asked for) and the window (200 in 20 s).
+    expect(frameCounts(events, 20)).toEqual({ wholeTrace: 10.1, window: 10 });
+    expect(frameCounts(frames, 20)).toEqual({ wholeTrace: 10.1, window: null });
     // A few frames close together on an idle page: counted over the window.
     expect(framesBetweenMarks([frames[3], frames[4], mark(FRAME_MARKS.start, 0), mark(FRAME_MARKS.end, 10_000_000)])).toBe(0.2);
     // Idle: no frames at all; a single frame: the count over the window.

@@ -63,3 +63,4 @@ export function combineResults(config: BudgetConfig, byOs: Record<string, Result
 export function formatCombined(rows: CombinedRow[], oses: string[]): string;
 export const FRAME_MARKS: { start: string; end: string };
 export function framesBetweenMarks(events: Array<{ name: string; ts: number; args?: { data?: { message?: string } } }>): number | null;
+export function frameCounts(events: Array<{ name: string; ts: number; args?: { data?: { message?: string } } }>, secs: number): { wholeTrace: number; window: number | null };
