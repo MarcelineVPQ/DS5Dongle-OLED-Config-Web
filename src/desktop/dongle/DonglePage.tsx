@@ -27,6 +27,7 @@ import { DisplaySection, PcSleepSection, PowerSection, StatusPinSection, UsbSect
 import type { FirmwareUpdate } from "../useUpdates";
 import DongleConsole, { supportsOledMirror, type OledFrameState } from "./DongleConsole";
 import OledHero from "./OledHero";
+import OledShare from "./OledShare";
 import { DiagnosticsBody, PicoGauges, useDongleTelemetry } from "./DongleDashboard";
 
 const minutesOrNever = (t: (k: string, o?: Record<string, unknown>) => string, n: number) => (n ? t("desktop.dash.minutes", { n }) : t("desktop.dash.never"));
@@ -67,7 +68,12 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
 
   const main = (
     <div className="live-stage dongle-main">
-      <OledHero frame={oled.frame} capable={supportsOledMirror(identity)} redraws={s?.rated && s.oled ? s.oled.fps : null}>
+      <OledHero
+        frame={oled.frame}
+        capable={supportsOledMirror(identity)}
+        redraws={s?.rated && s.oled ? s.oled.fps : null}
+        actions={<OledShare frame={supportsOledMirror(identity) ? oled.frame : null} />}
+      >
         <DongleConsole
           client={bridge.client}
           identity={identity}

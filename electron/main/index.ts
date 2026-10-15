@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { app, BrowserWindow, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
+import { app, BrowserWindow, clipboard, ClipboardItem, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, logged } from "../../src/errorText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
@@ -33,6 +33,8 @@ import { FirmwareHold } from "./firmwareHold";
 import { pruneUnpackLeftovers } from "./portableTemp";
 import { firstInstalledStart, isInstalledApp } from "./windowsInstall";
 import { isAllowedExternalUrl } from "./urls";
+import { copyOledImage, saveOledImage } from "./oledShare";
+import { writeFileAtomic } from "./games/backup";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
@@ -346,6 +348,35 @@ function start(): void {
     gamesUndo: (r) => fakeGames()?.undo(r.backupId, r.restart) ?? withGames((g) => g.undo(r.backupId, r.restart)),
     gamesBackups: () => fakeGames()?.listBackups() ?? withGames((g) => g.listBackups()),
     gamesRunningLaunchers: () => fakeGames()?.runningLaunchers() ?? withGames((g) => g.runningLaunchers()),
+    // Share your OLED: the system save dialog picks the path (modal on the asking window).
+    saveOledImage: (image, sender) =>
+      saveOledImage(
+        {
+          ask: async (options) => {
+            const win = BrowserWindow.fromWebContents(sender);
+            const r = await (win ? dialog.showSaveDialog(win, options) : dialog.showSaveDialog(options));
+            return r.canceled || !r.filePath ? null : r.filePath;
+          },
+          write: writeFileAtomic,
+          pictures: () => {
+            try {
+              return app.getPath("pictures");
+            } catch {
+              // error: NOT-WORTH — no Pictures folder on this system: the dialog starts in the home folder
+              return app.getPath("home");
+            }
+          },
+        },
+        image,
+      ),
+    copyOledImage: (png) =>
+      copyOledImage(
+        {
+          decodes: (buf) => !nativeImage.createFromBuffer(buf).isEmpty(),
+          write: (buf) => clipboard.write([new ClipboardItem({ "image/png": new Blob([new Uint8Array(buf)], { type: "image/png" }) })]),
+        },
+        png,
+      ),
     installProton: () => fakeGames()?.installLatestProton() ?? withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new Error("Proton is only used on Linux.")))),
     gamesDetails: () => fakeGames()?.details() ?? withGames((g) => g.details()),
     gamesRunning: () => {

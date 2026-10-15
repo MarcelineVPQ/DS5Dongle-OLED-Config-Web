@@ -2984,6 +2984,61 @@ html[data-theme="light"] .live-ctl {
   font-family: var(--font-mono);
   font-size: var(--dk-small);
 }
+/* Share your OLED (OledShare.tsx): the button at the header's right, its bar
+   on a line of its own under the name. No animation: the recording dot is
+   still (nothing draws while idle). */
+.oled-share-btn {
+  margin-left: auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.oled-share-btn.on {
+  border-color: var(--dk-accent);
+}
+.oled-share {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+.oled-share-frame {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-body);
+  font-size: var(--dk-small);
+}
+.oled-share-rec {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-strong);
+  font-size: var(--dk-small);
+  font-variant-numeric: tabular-nums;
+}
+.oled-share-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--status-bad);
+}
+.oled-share-status {
+  flex-basis: 100%;
+  min-height: 1.3em;
+  font-size: var(--dk-small);
+  text-align: right;
+}
+.oled-share-note {
+  color: var(--text-muted);
+}
 .oled-hero-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

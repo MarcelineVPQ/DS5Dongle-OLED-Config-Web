@@ -1055,6 +1055,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "分享",
+      "title": "保存或复制 OLED 上显示的画面（PNG 或 GIF 动图）",
+      "bar": "分享 OLED",
+      "size": "尺寸",
+      "sizeTitle": "{{w}} × {{h}} 像素",
+      "frame": "板子边框",
+      "savePng": "保存 PNG…",
+      "copy": "复制",
+      "copyTitle": "复制图片（PNG），可直接粘贴到 Discord",
+      "record": "录制 GIF",
+      "recordTitle": "最多录制 {{s}} 秒，画面每次变化时记录一帧，然后询问保存位置",
+      "recording": "正在录制 {{s}} / {{max}} 秒 · {{n}} 帧",
+      "stop": "停止并保存",
+      "cancel": "取消",
+      "working": "正在生成文件…",
+      "saved": "已保存 {{name}}",
+      "copied": "已复制。可粘贴到 Discord 或其他地方。",
+      "noPicture": "暂无可分享的内容：正在等待屏幕。",
+      "errors": {
+        "encode": "无法生成图片：{{reason}}。请重试。",
+        "tooBig": "文件太大，无法分享（超过 {{mb}} MB）。请选择更小的尺寸或更短的录制，然后重试。",
+        "save": "无法保存文件：{{reason}}。请选择其他文件夹后重试。",
+        "copy": "无法复制图片：{{reason}}。请改用“保存 PNG”。"
+      }
+    },
     "rail": {
       "label": "导航",
       "pin": "保持展开",

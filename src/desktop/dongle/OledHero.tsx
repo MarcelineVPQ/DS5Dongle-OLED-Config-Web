@@ -3,7 +3,8 @@
 // live mirror with its KEY0 / KEY1 (the console, passed in as children), and
 // beside it (below it in a narrow window) what the screen is doing now and
 // the module's specs. Readouts only: the screen's settings are the
-// accordion's "OLED screen" section.
+// accordion's "OLED screen" section. Share (a PNG or GIF of the screen) sits
+// in the header, beside the module's name (`actions`, OledShare.tsx).
 // Live: the mirror's own poll (useOledFrame) and the page's 1 s sample (the
 // redraw rate); nothing of its own.
 import type { ReactNode } from "react";
@@ -20,9 +21,10 @@ interface Props {
   capable: boolean; // the firmware mirrors its screen (protocol 1.4)
   redraws: number | null; // changed pictures per second (the 1 s sample), null until two reads
   children: ReactNode; // the console (mirror + log)
+  actions?: ReactNode; // beside the module's name: Share (OledShare.tsx)
 }
 
-export default function OledHero({ frame, capable, redraws, children }: Props) {
+export default function OledHero({ frame, capable, redraws, children, actions }: Props) {
   const { t } = useTranslation();
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.${k}`, o);
   const f = capable ? frame : null;
@@ -35,6 +37,7 @@ export default function OledHero({ frame, capable, redraws, children }: Props) {
         <span className="oled-hero-sub">
           {OLED_MODULE.size} · {OLED_MODULE.resolution} · {OLED_MODULE.controller}
         </span>
+        {actions}
       </header>
       <div className="oled-hero-body">
         <div className="oled-hero-screen">{children}</div>
