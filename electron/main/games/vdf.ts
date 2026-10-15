@@ -107,8 +107,17 @@ export function serializeVdf(node: VdfNode, depth = 0): string {
 
 export function getKey(node: VdfNode, key: string): VdfValue | undefined {
   const k = key.toLowerCase();
-  // loop: BATCH — linear key search; scanSteam calls it per game on localconfig's apps
+  // loop: NOT-WORTH — one lookup in one node; the scan's per-game lookups in localconfig's thousands of apps use keyIndex (loop pass batch 3)
   return node.find(([name]) => name.toLowerCase() === k)?.[1];
+}
+
+// A node's keys (lowercased; the first of a repeated key wins, as in getKey)
+// in a Map, for many lookups in one big node.
+export function keyIndex(node: VdfNode | undefined): Map<string, VdfValue> {
+  const index = new Map<string, VdfValue>();
+  // loop: NOT-WORTH — one pass over one node, once per scan
+  for (const [name, value] of node ?? []) if (!index.has(name.toLowerCase())) index.set(name.toLowerCase(), value);
+  return index;
 }
 
 export function getNode(node: VdfNode | undefined, ...path: string[]): VdfNode | undefined {

@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- **A big game library scans without holding up the app (Linux).** The Games scan reads each game's Steam manifest, Heroic settings file and Lutris file in parallel before it looks at them, instead of one after another on the app's main thread; a Proton build's version file is read once however many games use it; Steam's per-game settings are looked up through one index instead of a search through thousands of entries per game; and the game details reuse the scan's reads. Same results, less waiting (and the tray and window stay responsive while it runs).
 - **The OLED is the centerpiece of the Pico 2 W page again.** The page opens on the DS5 Dongle OLED Edition's screen, named as what it is (Waveshare Pico-OLED-1.3 · 1.3″ · 128 × 64 · SH1107), mirrored live and large, with what it's doing now beside it (brightness, on / dimmed / off, which of the 11 screens, redraws per second, frame) and the module's specs. They had ended up at the bottom of Diagnostics; they're in one place now, the OLED's, and the mirror's line under the picture is gone (it said the same). Below it in a narrow window. The dials and Diagnostics follow. All 7 languages.
 
 ### Added

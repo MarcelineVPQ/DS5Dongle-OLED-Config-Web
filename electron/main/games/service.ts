@@ -19,7 +19,8 @@ import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../s
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, startedSince, type Scan } from "./games";
+import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, scanFiles, startedSince, type Scan } from "./games";
+import { readAhead, withScanTexts, type ScanTexts } from "./files";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
 import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClosed, type LauncherControl, type ReopenPlan } from "./processes";
@@ -126,33 +127,38 @@ export class GamesService {
     return this.hdrCache.value;
   }
 
-  private async fresh(): Promise<Scan> {
+  private async fresh(): Promise<{ scan: Scan; texts: ScanTexts }> {
     this.requireConsent();
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
     const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrSystem() };
     const mixer = this.mixerLayer();
-    const [audioCards, hdr, mixers] = await Promise.all([
+    const [audioCards, hdr, mixers, , texts] = await Promise.all([
       linux ? probes.audioCards() : Promise.resolve([]),
       linux ? this.hdrCheck(probes.hdr) : Promise.resolve(undefined),
       linux && mixer ? dualSenseMixers(mixer) : Promise.resolve([]),
       linux ? this.refreshLatest() : Promise.resolve(),
+      readAhead(scanFiles(this.home)),
     ]);
-    return scan({
-      home: this.home,
-      // Proton is how Steam runs Windows games on Linux: nothing to offer on Windows.
-      ourProton: process.platform === "win32" ? null : newestLocalBuild(this.localBuilds()),
-      latestProton: this.latest?.name ?? null,
-      latestSize: this.latest?.tarball.size ?? null,
-      running: await this.launchers.running(),
-      audioCards,
-      mixers,
-      volumeKept: this.deps.volumeKept?.() ?? false,
-      windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
-      notDetected: this.deps.notDetected(),
-      hdrMarked: this.deps.hdrMarked(),
-      hdr,
-    });
+    const running = await this.launchers.running();
+    const result = withScanTexts(texts, () =>
+      scan({
+        home: this.home,
+        // Proton is how Steam runs Windows games on Linux: nothing to offer on Windows.
+        ourProton: process.platform === "win32" ? null : newestLocalBuild(this.localBuilds()),
+        latestProton: this.latest?.name ?? null,
+        latestSize: this.latest?.tarball.size ?? null,
+        running,
+        audioCards,
+        mixers,
+        volumeKept: this.deps.volumeKept?.() ?? false,
+        windowsStores: (this.lastStores = process.platform === "win32" ? readWindowsStores() : undefined),
+        notDetected: this.deps.notDetected(),
+        hdrMarked: this.deps.hdrMarked(),
+        hdr,
+      }),
+    );
+    return { scan: result, texts };
   }
 
   // In line with apply, undo and install: a scan asked for while a change is
@@ -160,9 +166,11 @@ export class GamesService {
   // never a mix, and scans finish in the order they were asked for.
   scan(): Promise<GamesReport> {
     return this.exclusive(async () => {
-      const report = this.shown((await this.fresh()).report);
+      const { scan: result, texts } = await this.fresh();
+      const report = this.shown(result.report);
       this.lastGames = report.games;
-      this.lastDetails = gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []);
+      // The details read the same manifests and localconfig: one read each.
+      this.lastDetails = withScanTexts(texts, () => gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []));
       this.colors.clear(); // the art may have arrived or changed since
       return report;
     });
@@ -271,7 +279,15 @@ export class GamesService {
     const setMixer = mixer ? (key: string, changes: Parameters<typeof setDualSenseMixer>[1]) => setDualSenseMixer(key, changes, mixer) : undefined;
     const saveMixer = mixer ? (key: string) => saveDualSenseMixer(key, mixer) : undefined;
     return this.exclusive(async () =>
-      applyFixes(await this.fresh(), fixIds, restart, { backups: this.backups, launchers: this.launchers, restartWirePlumber, setCardProfile, setMixer, saveMixer, keepVolume: this.deps.keepVolume }),
+      applyFixes((await this.fresh()).scan, fixIds, restart, {
+        backups: this.backups,
+        launchers: this.launchers,
+        restartWirePlumber,
+        setCardProfile,
+        setMixer,
+        saveMixer,
+        keepVolume: this.deps.keepVolume,
+      }),
     );
   }
 

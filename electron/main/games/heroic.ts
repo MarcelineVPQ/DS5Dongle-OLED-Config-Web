@@ -114,7 +114,7 @@ export function listHeroicGames(install: HeroicInstall): HeroicGame[] {
       found.push({ appName: e.app_name, title: String(e.title ?? e.app_name), store: "sideload" });
   }
 
-  // loop: PARALLELIZE — one sync GamesConfig JSON read per game blocks the main process
+  // loop: HOT-PATH-OK — one JSON parse per game from the scan's read-ahead texts (GamesConfig read in parallel first, loop pass batch 3)
   return found
     .filter(({ appName }) => /^[\w.-]+$/.test(appName)) // used as a file name below
     .map(({ appName, title, store }) => {

@@ -2,10 +2,10 @@
 // Read side only; edits are planned in games.ts and written through backup.ts.
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { readParsed } from "./files";
+import { filesIn, readParsed } from "./files";
 import { join } from "node:path";
 import { protonBuilds } from "./proton";
-import { ensureNode, getNode, getString, parseVdf, setKey, type VdfNode } from "./vdf";
+import { ensureNode, getNode, getString, keyIndex, parseVdf, setKey, type VdfNode, type VdfValue } from "./vdf";
 
 export interface SteamInstall {
   root: string; // realpath
@@ -116,26 +116,25 @@ export function steamLibraries(install: SteamInstall): string[] {
   return [...libraries];
 }
 
-// Every installed app's manifest (appmanifest_<id>.acf) in every library,
-// with the library's steamapps folder. Shared by the game list and details.
+// Every installed app's manifest file (appmanifest_<id>.acf) in every library,
+// with the library's steamapps folder.
+export function steamManifestFiles(install: SteamInstall): Array<{ steamapps: string; path: string }> {
+  // loop: NOT-WORTH — Steam library folders, a readdir each
+  return steamLibraries(install).flatMap((lib) => {
+    const steamapps = join(lib, "steamapps");
+    // loop: NOT-WORTH — manifest files of one library, once per scan
+    return filesIn(steamapps, /^appmanifest_\d+\.acf$/).map((path) => ({ steamapps, path }));
+  });
+}
+
+// Every installed app's manifest, parsed. Shared by the game list and details;
+// during a scan the files were read ahead in parallel (loop pass batch 3).
 export function steamAppManifests(install: SteamInstall): Array<{ steamapps: string; acf: VdfNode }> {
   const out: Array<{ steamapps: string; acf: VdfNode }> = [];
-  // loop: NOT-WORTH — Steam library folders, a readdir each
-  for (const lib of steamLibraries(install)) {
-    const steamapps = join(lib, "steamapps");
-    let files: string[];
-    try {
-      // loop: HOT-PATH-OK — names in one steamapps folder, one regex test each
-      files = readdirSync(steamapps).filter((f) => /^appmanifest_\d+\.acf$/.test(f));
-    } catch {
-      // error: NOT-WORTH — a library folder without steamapps: no games there
-      continue;
-    }
-    // loop: PARALLELIZE — one sync read + VDF parse per appmanifest blocks the main process
-    for (const f of files) {
-      const acf = readVdfFile(join(steamapps, f));
-      if (acf) out.push({ steamapps, acf });
-    }
+  // loop: HOT-PATH-OK — one VDF parse per appmanifest from the scan's read-ahead texts (no file read in the loop)
+  for (const { steamapps, path } of steamManifestFiles(install)) {
+    const acf = readVdfFile(path);
+    if (acf) out.push({ steamapps, acf });
   }
   return out;
 }
@@ -159,13 +158,29 @@ export function compatMapping(config: VdfNode | null): VdfNode | undefined {
 
 // Per-game Steam Input: localconfig.vdf top-level apps.<appid>.UseSteamControllerConfig
 // (0 = forced off, 1 or absent = follow the global setting, 2 = forced on).
-export function steamInputState(localConfig: VdfNode | null, appid: string): "off" | "global" | "on" {
-  const v = getString(localConfig ?? [], "UserLocalConfigStore", "apps", appid, "UseSteamControllerConfig");
-  return v === "0" ? "off" : v === "2" ? "on" : "global";
-}
+type SteamInputState = "off" | "global" | "on";
+const inputState = (v: string | undefined): SteamInputState => (v === "0" ? "off" : v === "2" ? "on" : "global");
+const INPUT_APPS = ["UserLocalConfigStore", "apps"];
+const LAUNCH_APPS = ["UserLocalConfigStore", "Software", "Valve", "Steam", "apps"];
 
-export function launchOptions(localConfig: VdfNode | null, appid: string): string {
-  return getString(localConfig ?? [], "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", appid, "LaunchOptions") ?? "";
+// The scan's per-game lookups (loop pass batch 3): config.vdf's
+// CompatToolMapping and localconfig's two per-app nodes (thousands of apps)
+// indexed once, instead of a linear search per game. Same answers as
+// a getString lookup by path (appid's "name", UseSteamControllerConfig,
+// LaunchOptions) in each.
+export function steamAppIndex(config: VdfNode | null, localConfig: VdfNode | null) {
+  const compat = keyIndex(compatMapping(config));
+  const input = keyIndex(getNode(localConfig ?? [], ...INPUT_APPS));
+  const launch = keyIndex(getNode(localConfig ?? [], ...LAUNCH_APPS));
+  const app = (index: Map<string, VdfValue>, appid: string): VdfNode | undefined => {
+    const v = index.get(appid.toLowerCase());
+    return v && typeof v !== "string" ? v : undefined;
+  };
+  return {
+    compatTool: (appid: string): string | null => getString(app(compat, appid), "name") ?? null,
+    steamInput: (appid: string): SteamInputState => inputState(getString(app(input, appid), "UseSteamControllerConfig")),
+    launchOptions: (appid: string): string => getString(app(launch, appid), "LaunchOptions") ?? "",
+  };
 }
 
 // Compatibility tools in compatibilitytools.d.

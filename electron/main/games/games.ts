@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { errorText, logged } from "../../../src/errorText";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { filesIn } from "./files";
 import { parseDocument } from "yaml";
 import { dualSenseSupport, graphicsMode, knownHdr, type GraphicsMode } from "../../../src/desktop/games/knownGames";
 import { API_NAME, modeInfo, withArg } from "../../../src/desktop/games/gameArgs";
@@ -53,11 +54,11 @@ import {
   compatMapping,
   findSteamInstalls,
   installedTools,
-  launchOptions,
   listSteamGames,
   readVdfFile,
   setCompatTool,
-  steamInputState,
+  steamAppIndex,
+  steamManifestFiles,
   steamTools,
   valveProtonPaths,
   valveProtons,
@@ -317,6 +318,21 @@ export const byPick = (a: ProtonChoice, b: ProtonChoice) => {
   return Number(b.recommended) - Number(a.recommended) || (fa < fb ? -1 : fa > fb ? 1 : 0) || b.name.localeCompare(a.name, undefined, { numeric: true });
 };
 
+// The files a scan reads per game (and Steam's two big config files), read
+// ahead in parallel before the synchronous scan (loop pass batch 3). A folder
+// may hold files of games no longer installed; reading those too costs less
+// than listing the games twice.
+export function scanFiles(home: string): string[] {
+  return [
+    // loop: NOT-WORTH — Steam installs (1-2), once per scan
+    ...findSteamInstalls(home).flatMap((s) => [s.configPath, ...(s.localConfigPath ? [s.localConfigPath] : []), ...steamManifestFiles(s).map((m) => m.path)]),
+    // loop: NOT-WORTH — Heroic installs (1-2), once per scan
+    ...findHeroicInstalls(home).flatMap((h) => [h.configPath, ...filesIn(join(h.root, "GamesConfig"), /\.json$/)]),
+    // loop: NOT-WORTH — Lutris installs (1-2), once per scan
+    ...findLutrisInstalls(home).flatMap((l) => filesIn(join(l.configDir, "games"), /\.yml$/)),
+  ];
+}
+
 export function scan(deps: ScanDeps): Scan {
   const plan = new Map<string, Planned>();
   const choices = new Map<string, Planned>();
@@ -425,17 +441,18 @@ export function scan(deps: ScanDeps): Scan {
       // loop: HOT-PATH-OK — app ids for the appinfo lookup, one array
       steamGames.map((g) => g.appid),
     );
-    // loop: BATCH — per game 3 linear getString lookups in localconfig apps (1000s of keys)
+    const byApp = steamAppIndex(config, local);
+    // loop: HOT-PATH-OK — per game 3 Map lookups (steamAppIndex, loop pass batch 3); its files were read ahead
     for (const g of steamGames) {
       const kind = kinds.get(g.appid);
       // Soundtracks, videos and software don't run as games: no controller
       // support to show and no game fixes to suggest.
       const playable = !kind || kind === "game" || kind === "demo";
       const support = playable ? dualSenseSupport(g.name) : "unknown";
-      const override = mapping ? (getString(mapping, g.appid, "name") ?? null) : null;
+      const override = byApp.compatTool(g.appid);
       const effective = override ?? defaultRunner;
-      const input = steamInputState(local, g.appid);
-      const opts = launchOptions(local, g.appid);
+      const input = byApp.steamInput(g.appid);
+      const opts = byApp.launchOptions(g.appid);
       const envFlags = sdlVarsIn(opts);
       const key = `${prefix}:steam:${g.appid}`;
       const gfixes: Fix[] = [];
@@ -627,7 +644,7 @@ export function scan(deps: ScanDeps): Scan {
     }
     launchers.push({ id: "heroic", found: true, flatpak: install.flatpak, running: deps.running.has("heroic"), protonInstalled, defaultRunner: def?.name ?? null, defaultIsOurs, fixes: lfixes });
 
-    // loop: BATCH — per game reads the runner's version file again (buildHonoursPreferSdl)
+    // loop: HOT-PATH-OK — per game; the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
     for (const g of listHeroicGames(install)) {
       const support = dualSenseSupport(g.title);
       const runnerMissing = !!g.wineVersion && !existsSync(g.wineVersion.bin);
@@ -803,7 +820,7 @@ export function scan(deps: ScanDeps): Scan {
       fixes: lfixes,
     });
 
-    // loop: BATCH — per game reads the runner's version file again (buildHonoursPreferSdl)
+    // loop: HOT-PATH-OK — per game; the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
     for (const g of listLutrisGames(install)) {
       const support = dualSenseSupport(g.name);
       const runnerMissing = !!g.runner && !visible.has(g.runner) && !hasBuild(install.wineDir, g.runner);

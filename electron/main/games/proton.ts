@@ -6,11 +6,12 @@
 // launcher's directory (rename). Existing builds are never replaced or removed:
 // a new version has a new folder name.
 import { execFile } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, statfsSync, symlinkSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, renameSync, rmSync, statfsSync, symlinkSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import type { ProtonProgress } from "../../../src/desktop/api";
 import { compareProtonNames, PROTON_NAME, type Download } from "../../../src/update/manifest";
+import { readParsed } from "./files";
 
 const run = promisify(execFile);
 
@@ -102,14 +103,13 @@ export function honoursPreferSdl(name: string, versionText?: string | null): boo
 
 // A build's `version` file ("<timestamp> <name>"), from the first of these
 // build folders that has one; null when none does.
+// During a library scan each file is read once (readParsed's scan texts), so
+// the games sharing a build don't read its `version` again.
 export function buildVersion(folders: string[]): string | null {
-  // loop: BATCH — first folder with a version file; called again per game for the same build
+  // loop: NOT-WORTH — 1-3 build folders; each version file read once per scan (readParsed's scan texts, loop pass batch 3)
   for (const folder of folders) {
-    try {
-      return readFileSync(join(folder, "version"), "utf8").slice(0, 200).trim();
-    } catch {
-      // error: NOT-WORTH — not in this folder
-    }
+    const text = readParsed(join(folder, "version"), (t) => t.slice(0, 200).trim());
+    if (text !== null) return text;
   }
   return null;
 }
