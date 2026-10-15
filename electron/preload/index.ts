@@ -102,6 +102,8 @@ const api: DesktopApi = {
   gameArtColor: (gameKey) => ipcRenderer.invoke(IPC.gameArtColor, gameKey),
   // Dev builds only: a release registers no handler for it (electron/main/devTools.ts).
   devFakeGames: (change) => ipcRenderer.invoke(IPC.devFakeGames, change),
+  saveOledImage: (image) => ipcRenderer.invoke(IPC.saveOledImage, image),
+  copyOledImage: (png) => ipcRenderer.invoke(IPC.copyOledImage, png),
 };
 
 contextBridge.exposeInMainWorld("desktop", api);

@@ -271,7 +271,15 @@ export interface DesktopApi {
   gameArtColor(gameKey: string): Promise<string | null>;
   // Dev builds only: Developer card → Fake games (a release has no handler, so it rejects).
   devFakeGames?(change: DevFakeGamesChange): Promise<DevFakeGamesState>;
+  // Share your OLED: the PNG or GIF the page made, saved where the user picks
+  // in the system save dialog (the page never names a path), or a PNG put on
+  // the clipboard. The main process checks the format and size (oledShare.ts).
+  saveOledImage(image: { kind: "png" | "gif"; bytes: Uint8Array }): Promise<SaveOledResult>;
+  copyOledImage(png: Uint8Array): Promise<void>;
 }
+
+// error: SHOWN — desktop.oledShare.saved; a cancel shows nothing; a failed write rejects (desktop.oledShare.errors.save)
+export type SaveOledResult = { saved: true; name: string } | { saved: false };
 
 export const IPC = {
   reportStatus: "desktop:report-status",
@@ -321,6 +329,8 @@ export const IPC = {
   gameAction: "desktop:game-action",
   gameArtColor: "desktop:game-art-color",
   devFakeGames: "desktop:dev-fake-games",
+  saveOledImage: "desktop:save-oled-image",
+  copyOledImage: "desktop:copy-oled-image",
 } as const;
 
 declare global {

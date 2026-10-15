@@ -1075,6 +1075,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Teilen",
+      "title": "Genau das speichern oder kopieren, was das OLED zeigt (PNG oder animiertes GIF)",
+      "bar": "OLED teilen",
+      "size": "Größe",
+      "sizeTitle": "{{w}} × {{h}} Pixel",
+      "frame": "Platinenrahmen",
+      "savePng": "PNG speichern…",
+      "copy": "Kopieren",
+      "copyTitle": "Bild kopieren (PNG), bereit zum Einfügen in Discord",
+      "record": "GIF aufnehmen",
+      "recordTitle": "Nimmt bis zu {{s}} s auf, ein Bild bei jeder Änderung, und fragt dann, wo es gespeichert werden soll",
+      "recording": "Aufnahme {{s}} s von {{max}} s · {{n}} Bilder",
+      "stop": "Stoppen und speichern",
+      "cancel": "Abbrechen",
+      "working": "Datei wird erstellt…",
+      "saved": "{{name}} gespeichert",
+      "copied": "Kopiert. In Discord oder anderswo einfügen.",
+      "noPicture": "Noch nichts zu teilen: Warte auf den Bildschirm.",
+      "errors": {
+        "encode": "Das Bild konnte nicht erstellt werden: {{reason}}. Versuche es erneut.",
+        "tooBig": "Die Datei ist zu groß zum Teilen (über {{mb}} MB). Wähle eine kleinere Größe oder eine kürzere Aufnahme und versuche es erneut.",
+        "save": "Die Datei konnte nicht gespeichert werden: {{reason}}. Wähle einen anderen Ordner und versuche es erneut.",
+        "copy": "Das Bild konnte nicht kopiert werden: {{reason}}. Nutze stattdessen „PNG speichern“."
+      }
+    },
     "rail": {
       "label": "Navigation",
       "pin": "Offen halten",

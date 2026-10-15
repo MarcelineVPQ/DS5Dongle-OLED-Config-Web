@@ -9,17 +9,18 @@ import HoldButton from "./HoldButton";
 import { FEATURES2, type BridgeIdentity, type Ds5BridgeClient, type OledFrame, supportsFeature2 } from "../../protocol/bridgeClient";
 import { identityChargeState } from "../../protocol/controllerInfo";
 import { SCREEN_NAMES } from "../../oled/screenNames";
+import { OLED_H, OLED_OFF, OLED_ON, OLED_W } from "../../oled/oledPixels";
 import { logged } from "../../errorText";
 import { causeText } from "../shownError";
 import OledPad, { type OledPadProps } from "./OledPad";
 
-const FB_W = 128;
-const FB_H = 64;
+const FB_W = OLED_W;
+const FB_H = OLED_H;
 const FRAME_MS = 100; // the firmware redraws every 100 ms
 const RETRY_MS = 2000;
-// Waveshare's whitish pixels on near-black, as on the panel.
-const ON: [number, number, number] = [220, 230, 255];
-const OFF: [number, number, number] = [6, 8, 14];
+// Waveshare's whitish pixels on near-black, as on the panel (oledPixels.ts, shared with Share).
+const ON = OLED_ON;
+const OFF = OLED_OFF;
 
 export const supportsOledMirror = (identity: BridgeIdentity | null) => supportsFeature2(identity, 4, FEATURES2.oledMirror);
 

@@ -33,7 +33,8 @@ import type { ApplyResult, GamesReport, LauncherId, RestartList } from "../../sr
 import { BACKUP_ID } from "./games/backup";
 import { SettingUpdate } from "./settings";
 import { logged } from "../../src/errorText";
-import { BAD_REQUEST } from "../../src/desktop/api";
+import { BAD_REQUEST, type SaveOledResult } from "../../src/desktop/api";
+import { OledImageSchema, OledPngSchema, type OledImage } from "./oledShare";
 
 // A request from our own page that doesn't fit its schema is an app bug: the
 // details are logged, and the page gets BAD_REQUEST, which it shows in plain
@@ -147,6 +148,9 @@ export interface IpcHandlers {
   gamesBackups: () => GameBackup[];
   gamesRunningLaunchers: () => LauncherId[] | Promise<LauncherId[]>;
   installProton: () => Promise<ProtonInstallResult>;
+  // Share your OLED (oledShare.ts): `sender` is the asking page, for a modal save dialog.
+  saveOledImage: (image: OledImage, sender: WebContents) => Promise<SaveOledResult>;
+  copyOledImage: (png: Uint8Array) => Promise<void>;
 }
 
 export function registerIpc(h: IpcHandlers): void {
@@ -259,6 +263,14 @@ export function registerIpc(h: IpcHandlers): void {
   invokeWith(IPC.devChannelPreview, z.boolean(), h.devChannelPreview);
   invokeWith(IPC.latestFirmware, z.boolean(), h.latestFirmware);
   invokeWith(IPC.downloadFirmware, ShownFirmwareSchema, h.downloadFirmware);
+  invokeWith(IPC.copyOledImage, OledPngSchema, h.copyOledImage);
+
+  // Share your OLED: the kind and the bytes only (format and size checked), never a path.
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  ipcMain.handle(IPC.saveOledImage, (event, raw: unknown) => {
+    if (!trusted(event)) throw new Error("untrusted sender");
+    return h.saveOledImage(parseRequest(IPC.saveOledImage, OledImageSchema, raw), event.sender);
+  });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
   ipcMain.handle(IPC.setSetting, (event, raw: unknown) => {

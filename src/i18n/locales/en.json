@@ -1074,6 +1074,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Share",
+      "title": "Save or copy exactly what the OLED shows (PNG or animated GIF)",
+      "bar": "Share the OLED",
+      "size": "Size",
+      "sizeTitle": "{{w}} × {{h}} pixels",
+      "frame": "Board frame",
+      "savePng": "Save PNG…",
+      "copy": "Copy",
+      "copyTitle": "Copy the picture (PNG), ready to paste into Discord",
+      "record": "Record GIF",
+      "recordTitle": "Records up to {{s}} s, a frame each time the picture changes, then asks where to save it",
+      "recording": "Recording {{s}} s of {{max}} s · {{n}} frames",
+      "stop": "Stop and save",
+      "cancel": "Cancel",
+      "working": "Making the file…",
+      "saved": "Saved {{name}}",
+      "copied": "Copied. Paste it into Discord or anywhere else.",
+      "noPicture": "Nothing to share yet: waiting for the screen.",
+      "errors": {
+        "encode": "Couldn't make the picture: {{reason}}. Try again.",
+        "tooBig": "The file came out too big to share (over {{mb}} MB). Pick a smaller size or a shorter recording, then try again.",
+        "save": "Couldn't save the file: {{reason}}. Pick another folder and try again.",
+        "copy": "Couldn't copy the picture: {{reason}}. Use Save PNG instead."
+      }
+    },
     "rail": {
       "label": "Navigation",
       "pin": "Keep open",

@@ -1075,6 +1075,32 @@
         }
       }
     },
+    "oledShare": {
+      "share": "Partager",
+      "title": "Enregistrer ou copier exactement ce qu'affiche l'OLED (PNG ou GIF animé)",
+      "bar": "Partager l'OLED",
+      "size": "Taille",
+      "sizeTitle": "{{w}} × {{h}} pixels",
+      "frame": "Cadre de la carte",
+      "savePng": "Enregistrer en PNG…",
+      "copy": "Copier",
+      "copyTitle": "Copier l'image (PNG), prête à coller dans Discord",
+      "record": "Enregistrer un GIF",
+      "recordTitle": "Enregistre jusqu'à {{s}} s, une image à chaque changement, puis demande où l'enregistrer",
+      "recording": "Enregistrement {{s}} s sur {{max}} s · {{n}} images",
+      "stop": "Arrêter et enregistrer",
+      "cancel": "Annuler",
+      "working": "Création du fichier…",
+      "saved": "{{name}} enregistré",
+      "copied": "Copié. Collez-le dans Discord ou ailleurs.",
+      "noPicture": "Rien à partager pour l'instant : en attente de l'écran.",
+      "errors": {
+        "encode": "Impossible de créer l'image : {{reason}}. Réessayez.",
+        "tooBig": "Le fichier est trop lourd pour être partagé (plus de {{mb}} Mo). Choisissez une taille plus petite ou un enregistrement plus court, puis réessayez.",
+        "save": "Impossible d'enregistrer le fichier : {{reason}}. Choisissez un autre dossier et réessayez.",
+        "copy": "Impossible de copier l'image : {{reason}}. Utilisez plutôt Enregistrer en PNG."
+      }
+    },
     "rail": {
       "label": "Navigation",
       "pin": "Garder ouvert",
