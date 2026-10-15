@@ -1,10 +1,11 @@
 // App settings (not dongle settings): stored as JSON in the user data folder.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { app } from "electron";
 import { z } from "zod";
 import type { DesktopSettings } from "../../src/desktop/api";
 import { writeFileAtomic } from "./games/backup";
+import { prettyJson, readPersistedFile } from "./persistedFile";
+import { salvageObject } from "../../src/persisted";
 
 export const DEFAULT_SETTINGS: DesktopSettings = {
   // The tray keeps track of the dongle, so closing the window hides it.
@@ -63,15 +64,20 @@ export function settingsPath(): string {
   return join(app.getPath("userData"), "settings.json");
 }
 
+// No file yet (first start): the defaults. A damaged one (batch E1): every
+// setting that still reads is kept, the rest are the defaults, the damaged
+// file is copied aside and the page says so (readPersistedFile). A setting
+// this version doesn't know (a newer app's) is not damage: it's left out.
 export function loadSettings(): DesktopSettings {
-  try {
-    // error: NOT-WORTH — a settings file that doesn't fit: the defaults, written back on the next save
-    const parsed = SettingsFile.safeParse(JSON.parse(readFileSync(settingsPath(), "utf8")));
-    return { ...DEFAULT_SETTINGS, ...(parsed.success ? parsed.data : {}) };
-  } catch {
-    // error: NOT-WORTH — no file yet (first start) or a broken one: the defaults, which the next save writes back
-    return { ...DEFAULT_SETTINGS };
-  }
+  return readPersistedFile(settingsPath(), {
+    kind: "settings",
+    salvage: (data) => {
+      const read = salvageObject(SettingsFile, data, false);
+      return read && { value: { ...DEFAULT_SETTINGS, ...read.value }, lost: read.lost };
+    },
+    fallback: () => ({ ...DEFAULT_SETTINGS }),
+    serialize: prettyJson,
+  });
 }
 
 // Throws when the file can't be written: the caller (updateSetting) puts the
@@ -79,5 +85,5 @@ export function loadSettings(): DesktopSettings {
 export function saveSettings(settings: DesktopSettings): void {
   // Atomic (temp file, fsync, rename): a crash mid-save can't leave a
   // half-written file, which would reset every setting (and autostart).
-  writeFileAtomic(settingsPath(), JSON.stringify(settings, null, 2) + "\n");
+  writeFileAtomic(settingsPath(), prettyJson(settings));
 }

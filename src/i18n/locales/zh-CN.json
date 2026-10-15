@@ -280,7 +280,24 @@
       "feedChanged": "出现了更新的固件。请重新检查。",
       "hashMismatch": "下载的固件与显示的不一致，因此没有安装任何内容。请重新检查。",
       "wrongFile": "此文件不是{{device}}的固件（用于其他芯片，或已损坏），因此没有写入任何内容。请再次检查更新；如果再次发生，请重新安装应用。",
-      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。"
+      "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。",
+      "didntStart": "新固件没有启动：{{device}}回到了 BOOTSEL 模式，仍在等待固件。请保持连接，然后重新安装。",
+      "installAgain": "重新安装"
+    },
+    "recovered": {
+      "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
+      "whole": "{{what}}无法读取（已损坏），因此从默认值开始。损坏的副本已保存为 {{kept}}。",
+      "notKept": "{{what}}无法读取，因此暂时使用默认值。损坏的数据保留在原处。",
+      "what": {
+        "settings": "你的应用设置",
+        "library": "你的游戏库（游戏配置文件、按键布局、评分和备注）",
+        "oldLibrary": "旧版应用的游戏库",
+        "dismissedNotices": "你已关闭的通知列表",
+        "pins": "你固定的部分",
+        "slotControllers": "应用记住的每个配对槽位中的手柄",
+        "customColors": "你的手柄颜色",
+        "declinedFixes": "你在“游戏”中取消勾选的更改"
+      }
     },
     "usbAccess": {
       "label": "USB 访问规则",
@@ -1215,7 +1232,8 @@
         "write50": "50 % 时写入出错",
         "write90": "90 % 时写入出错",
         "noBootsel": "不以 BOOTSEL 出现",
-        "noReturn": "更新后不再出现"
+        "noReturn": "更新后不再出现",
+        "noStart": "无法启动的镜像"
       },
       "simSpeed": "写入速度",
       "simSpeeds": {

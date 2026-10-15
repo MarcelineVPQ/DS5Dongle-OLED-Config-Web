@@ -207,6 +207,11 @@ html[data-theme="dark"] .dk {
 .dk-notice .dk-spacer {
   flex: 1;
 }
+/* A notice with a file path in it (RecoveredNotice): long paths wrap. */
+.dk-notice-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 /* Notice.tsx: the × in the corner (the notice's own colors). */
 .dk-notice.has-x {
   padding-right: 32px;

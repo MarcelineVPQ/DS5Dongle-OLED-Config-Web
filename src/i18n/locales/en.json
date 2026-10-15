@@ -279,7 +279,24 @@
       "feedChanged": "A newer firmware appeared. Check again.",
       "hashMismatch": "The downloaded firmware doesn't match the one shown, so nothing was installed. Check again.",
       "wrongFile": "This file isn't firmware for {{device}} (it's for another chip, or damaged), so nothing was written. Check for updates again; if it happens again, reinstall the app.",
-      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again."
+      "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again.",
+      "didntStart": "The new firmware didn't start: {{device}} came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.",
+      "installAgain": "Install again"
+    },
+    "recovered": {
+      "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
+      "whole": "{{what}} couldn't be read (it was damaged), so it starts from the defaults. The damaged copy is saved as {{kept}}.",
+      "notKept": "{{what}} couldn't be read, so the defaults are used for now. The damaged data was left where it is.",
+      "what": {
+        "settings": "Your app settings",
+        "library": "Your game library (game profiles, button layouts, ratings and notes)",
+        "oldLibrary": "The game library from the earlier app version",
+        "dismissedNotices": "The list of notices you dismissed",
+        "pins": "Your pinned sections",
+        "slotControllers": "The app's memory of which controller is in each pairing slot",
+        "customColors": "Your controller's colors",
+        "declinedFixes": "The Games changes you unticked"
+      }
     },
     "usbAccess": {
       "label": "USB access rule",
@@ -1224,7 +1241,8 @@
         "write50": "Write error at 50 %",
         "write90": "Write error at 90 %",
         "noBootsel": "Doesn't show up in BOOTSEL",
-        "noReturn": "Doesn't come back after the update"
+        "noReturn": "Doesn't come back after the update",
+        "noStart": "Image that won't start"
       },
       "simSpeed": "Writing speed",
       "simSpeeds": {

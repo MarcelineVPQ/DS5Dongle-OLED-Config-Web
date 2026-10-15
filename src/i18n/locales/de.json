@@ -280,7 +280,24 @@
       "feedChanged": "Eine neuere Firmware ist erschienen. Prüfe erneut.",
       "hashMismatch": "Die heruntergeladene Firmware passt nicht zur angezeigten, daher wurde nichts installiert. Prüfe erneut.",
       "wrongFile": "Diese Datei ist keine Firmware für {{device_akk}} (sie ist für einen anderen Chip oder beschädigt), darum wurde nichts geschrieben. Such noch einmal nach Updates; passiert es wieder, installiere die App neu.",
-      "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal."
+      "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal.",
+      "didntStart": "Die neue Firmware ist nicht gestartet: {{device}} ist wieder im BOOTSEL-Modus und wartet noch auf Firmware. Nicht abziehen und die Firmware erneut installieren.",
+      "installAgain": "Erneut installieren"
+    },
+    "recovered": {
+      "partial": "{{what}}: Einige Teile waren beschädigt. Sie wurden auf die Standardwerte zurückgesetzt, alles andere blieb erhalten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
+      "whole": "{{what}}: konnte nicht gelesen werden (beschädigt), darum beginnt es mit den Standardwerten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
+      "notKept": "{{what}}: konnte nicht gelesen werden, darum gelten vorerst die Standardwerte. Die beschädigten Daten blieben, wo sie sind.",
+      "what": {
+        "settings": "Deine App-Einstellungen",
+        "library": "Deine Spielebibliothek (Spielprofile, Tastenbelegungen, Bewertungen und Notizen)",
+        "oldLibrary": "Die Spielebibliothek der früheren App-Version",
+        "dismissedNotices": "Die Liste der ausgeblendeten Hinweise",
+        "pins": "Deine angehefteten Abschnitte",
+        "slotControllers": "Was die App über den Controller in jedem Kopplungsplatz weiß",
+        "customColors": "Die Farben deines Controllers",
+        "declinedFixes": "Die Änderungen unter Spiele, die du abgewählt hast"
+      }
     },
     "usbAccess": {
       "label": "USB-Zugriffsregel",
@@ -1225,7 +1242,8 @@
         "write50": "Schreibfehler bei 50 %",
         "write90": "Schreibfehler bei 90 %",
         "noBootsel": "Erscheint nicht im BOOTSEL-Modus",
-        "noReturn": "Kommt nach dem Update nicht zurück"
+        "noReturn": "Kommt nach dem Update nicht zurück",
+        "noStart": "Image, das nicht startet"
       },
       "simSpeed": "Schreibgeschwindigkeit",
       "simSpeeds": {

@@ -1,5 +1,6 @@
 // IPC from the renderer. Every message is checked against its sender (our own
 // window, on our own page) and its payload schema before anything acts on it.
+import type { Recovered } from "../../src/persisted";
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, type WebContents } from "electron";
 import {
   ButtonLayoutSchema,
@@ -120,6 +121,7 @@ export interface IpcHandlers {
   onStatus: (status: DeviceStatus) => void;
   onTrayIcon: (pngDataUrl: string) => void;
   getSettings: () => DesktopSettings;
+  recoveredFiles: () => Recovered[];
   setSetting: <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => DesktopSettings;
   usbAccessInstalled: () => boolean;
   // error: SHOWN — main-english: the message under Set up USB access (UsbAccessSetup) (batch E3)
@@ -193,6 +195,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.installUpdate, h.installUpdate);
   invoke(IPC.backToStable, h.backToStable);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
+  invoke(IPC.recoveredFiles, h.recoveredFiles);
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit

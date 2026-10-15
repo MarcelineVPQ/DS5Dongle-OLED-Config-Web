@@ -67,6 +67,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Back up and restore your settings": "Back up and restore all settings (JSON export/import)",
   "Collapse all and clear pins": "Accordion panel menu: Collapse all, Clear pins",
   "Clear message when new firmware won't start": "Firmware update: say when the board came back still in BOOTSEL",
+  "Damaged settings are kept and named": "Error pass E1: a damaged settings or library file is kept and said",
   "What the app stands for": "About: the app's philosophy",
   "Rate how your DualSense works": "Game page: rating says what it rates, inside DualSense support",
   "Game logs for bug reports": 'Game page: "Record a log when I press Play"',

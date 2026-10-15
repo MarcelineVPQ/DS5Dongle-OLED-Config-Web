@@ -1,3 +1,4 @@
+import type { Recovered } from "../persisted";
 import type { ApplyResult, CloseProblem, GamesReport, LauncherId, Msg, RestartList } from "./games/types";
 import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
@@ -202,6 +203,9 @@ export interface DesktopApi {
   onShowError(listener: (key: MainErrorKey) => void): () => void;
   onShowNotice(listener: (key: MainNoticeKey) => void): () => void;
   getSettings(): Promise<DesktopSettings>;
+  // The main process's files that were damaged at start (settings, game
+  // library): what was kept and where the damaged copy is (RecoveredNotice).
+  recoveredFiles(): Promise<Recovered[]>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
@@ -280,6 +284,7 @@ export const IPC = {
   showError: "desktop:show-error",
   showNotice: "desktop:show-notice",
   getSettings: "desktop:get-settings",
+  recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",
   usbAccessInstalled: "desktop:usb-access-installed",
   appVersion: "desktop:app-version",

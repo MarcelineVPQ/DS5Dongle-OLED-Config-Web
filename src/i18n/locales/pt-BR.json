@@ -280,7 +280,24 @@
       "feedChanged": "Apareceu um firmware mais novo. Verifique de novo.",
       "hashMismatch": "O firmware baixado não corresponde ao mostrado, então nada foi instalado. Verifique de novo.",
       "wrongFile": "Este arquivo não é firmware para {{device}} (é para outro chip, ou está danificado), então nada foi gravado. Procure atualizações de novo; se acontecer outra vez, reinstale o app.",
-      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez."
+      "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez.",
+      "didntStart": "O firmware novo não iniciou: {{device}} voltou no modo BOOTSEL, ainda esperando firmware. Deixe conectado e instale de novo.",
+      "installAgain": "Instalar de novo"
+    },
+    "recovered": {
+      "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
+      "whole": "{{what}}: não deu para ler (estava danificado), então começa do padrão. A cópia danificada foi salva como {{kept}}.",
+      "notKept": "{{what}}: não deu para ler, então o padrão é usado por enquanto. Os dados danificados ficaram onde estavam.",
+      "what": {
+        "settings": "Suas configurações do app",
+        "library": "Sua biblioteca de jogos (perfis de jogo, mapeamentos de botões, avaliações e notas)",
+        "oldLibrary": "A biblioteca de jogos da versão anterior do app",
+        "dismissedNotices": "A lista de avisos que você dispensou",
+        "pins": "Suas seções fixadas",
+        "slotControllers": "O que o app lembra do controle em cada slot de pareamento",
+        "customColors": "As cores do seu controle",
+        "declinedFixes": "As mudanças de Jogos que você desmarcou"
+      }
     },
     "usbAccess": {
       "label": "Regra de acesso USB",
@@ -1225,7 +1242,8 @@
         "write50": "Erro de gravação em 50 %",
         "write90": "Erro de gravação em 90 %",
         "noBootsel": "Não aparece no BOOTSEL",
-        "noReturn": "Não volta depois da atualização"
+        "noReturn": "Não volta depois da atualização",
+        "noStart": "Imagem que não inicia"
       },
       "simSpeed": "Velocidade de gravação",
       "simSpeeds": {

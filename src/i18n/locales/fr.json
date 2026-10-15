@@ -280,7 +280,24 @@
       "feedChanged": "Un firmware plus récent est apparu. Vérifie à nouveau.",
       "hashMismatch": "Le firmware téléchargé ne correspond pas à celui affiché, rien n’a donc été installé. Vérifie à nouveau.",
       "wrongFile": "Ce fichier n’est pas un firmware pour {{device}} (il est pour une autre puce, ou abîmé) : rien n’a été écrit. Recherche à nouveau les mises à jour ; si ça se reproduit, réinstalle l’app.",
-      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie."
+      "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie.",
+      "didntStart": "Le nouveau firmware n’a pas démarré : {{device}} est revenu en mode BOOTSEL et attend toujours un firmware. Laisse-le branché et réinstalle-le.",
+      "installAgain": "Réinstaller"
+    },
+    "recovered": {
+      "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
+      "whole": "{{what}} : lecture impossible (c’était endommagé), on repart donc des valeurs par défaut. La copie endommagée est enregistrée sous {{kept}}.",
+      "notKept": "{{what}} : lecture impossible, les valeurs par défaut sont donc utilisées pour l’instant. Les données endommagées sont restées à leur place.",
+      "what": {
+        "settings": "Tes réglages de l’app",
+        "library": "Ta bibliothèque de jeux (profils de jeu, configurations de boutons, notes et commentaires)",
+        "oldLibrary": "La bibliothèque de jeux de la version précédente de l’app",
+        "dismissedNotices": "La liste des avis que tu as masqués",
+        "pins": "Tes sections épinglées",
+        "slotControllers": "Ce que l’app retient de la manette de chaque emplacement d’appairage",
+        "customColors": "Les couleurs de ta manette",
+        "declinedFixes": "Les changements de Jeux que tu as décochés"
+      }
     },
     "usbAccess": {
       "label": "Règle d'accès USB",
@@ -1225,7 +1242,8 @@
         "write50": "Erreur d’écriture à 50 %",
         "write90": "Erreur d’écriture à 90 %",
         "noBootsel": "N’apparaît pas en BOOTSEL",
-        "noReturn": "Ne revient pas après la mise à jour"
+        "noReturn": "Ne revient pas après la mise à jour",
+        "noStart": "Image qui ne démarre pas"
       },
       "simSpeed": "Vitesse d’écriture",
       "simSpeeds": {

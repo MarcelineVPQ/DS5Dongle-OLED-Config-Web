@@ -20,6 +20,8 @@
 import { useEffect, useState } from "react";
 import { externalStore } from "../externalStore";
 import { readPref, writePref } from "../storage";
+import { readPrefJson } from "../persistedPref";
+import { salvageStrings } from "../../persisted";
 import type { SectionId, AccordionPage } from "./sections";
 
 export const OPEN_KEY = (page: AccordionPage) => `ds5.accordion.open.${page}`;
@@ -35,16 +37,10 @@ export function pinScope(page: AccordionPage, board?: string | null, slot?: numb
   return page;
 }
 
-export function parsePins(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    // loop: NOT-WORTH — N ≤ a page's sections (≤ 12); at mount
-    return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-  } catch {
-    // error: NOT-WORTH — a broken pin list reads as no pins: the sections just fold
-    return [];
-  }
+// A scope's stored pins. A damaged list keeps the pins that still read, and
+// the notice says so (readPrefJson, batch E1).
+export function readPins(scope: string): string[] {
+  return readPrefJson(PINS_KEY(scope), { kind: "pins", salvage: (data) => salvageStrings(data), fallback: () => [] });
 }
 
 export interface Reveal {
@@ -86,12 +82,12 @@ export function useAccordion<P extends AccordionPage>(page: P, scope: string, fi
     if (stored === null) return firstTask; // first visit
     return stored === NONE ? null : stored;
   });
-  const [pins, setPins] = useState<string[]>(() => parsePins(readPref(PINS_KEY(scope))));
+  const [pins, setPins] = useState<string[]>(() => readPins(scope));
   // Another board or slot on the controller page: its own pins.
   const [shownScope, setShownScope] = useState(scope);
   if (shownScope !== scope) {
     setShownScope(scope);
-    setPins(parsePins(readPref(PINS_KEY(scope))));
+    setPins(readPins(scope));
   }
 
   // Deep links: one made before this page mounted, then each new one.

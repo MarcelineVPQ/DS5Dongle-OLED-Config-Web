@@ -30,6 +30,7 @@ const api: DesktopApi = {
     return () => ipcRenderer.removeListener(IPC.showNotice, handler);
   },
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
+  recoveredFiles: () => ipcRenderer.invoke(IPC.recoveredFiles),
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),

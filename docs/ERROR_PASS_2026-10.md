@@ -124,11 +124,11 @@ Shared pieces, one of each: `logged()` in `src/errorText.ts` (app and main proce
   So every catch block either shows, rethrows, or says why not. Every `.catch` handler too.
 - **Firmware**: `python3 tools/list_errors.py --check` in `build.yml` and `release.yml`.
 
-## Batches (not done; the owner picks)
+## Batches (the owner picks; E1 done 2026-10-14)
 
 | Batch | Rows | Verdict | Change |
 |---|---|---|---|
-| **E1**: a damaged game library says so | `electron/main/games/libraryStore.ts` `readLibrary`/`load` | SILENT-BUG | A library file that fails to parse is moved aside (`library.json.bad-<time>`) and the app starts empty: every profile and layout seems gone, with no word. Return a "recovered" flag with `libraryGet`, and show it once in the notice, with where the old file is. |
+| **E1**: a damaged game library says so | `electron/main/games/libraryStore.ts` `readLibrary`/`load` | SILENT-BUG → **SHOWN (done 2026-10-14, branch `trust-fixes`)** | Was: a library file that fails to parse is moved aside (`library.json.bad-<time>`) and the app starts empty with no word. Done for every JSON the app keeps, through one helper (`readPersisted`, `src/persisted.ts`): settings.json, game-library-2.json, the older apps' game-library.json, and the page's JSON preferences (dismissed notices, pins, slot controllers, controller colors, unticked Games changes). What still reads is kept, the damaged copy is kept as `<file>.corrupt-<date>` (or a `<key>.corrupt-<date>` preference), what loaded is written back, and `RecoveredNotice` says it once (`desktop.recovered.*`, all 7 languages; main files over `desktop:recovered-files`). Tests: `tests/integration/persistedData.test.ts`. |
 | **E2**: History lists a damaged backup | `electron/main/games/backup.ts` `list` | SWALLOWED | A backup whose manifest can't be read is left out of History, so its Undo disappears. List it as damaged (with its folder) instead. |
 | **E3**: translate the English text that reaches the user | 43 rows whose verdict says `english:` / `main-english:` | SHOWN (English) | Main-process messages (USB setup, Windows repair, Proton install, Undo errors, scan errors, the start-failure dialog) and board/flash errors from the protocol code (`bridgeClient`, `firmwareUpdate`) are plain English. Give them keys with parameters, as `games.msg.*` already does. |
 | **F1** (firmware): a status line on every OLED screen | `oled.cpp` long-press brightness save, `lightbar_save_config`, `bt.cpp` `slot_assign` after pairing | SILENT-BUG ×3 | See Firmware. |
@@ -250,7 +250,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 |---|---|---|---|---|---|
 | 27 | `readLibrary` | json-parse | `readFileSync(path, "utf8")` | **PASSES-ON** | a file that doesn't fit reads as null like a broken one; the catch below has the verdict |
 | 27 | `readLibrary` | schema | `LibraryFileSchema.safeParse` | **PASSES-ON** | a file that doesn't fit reads as null like a broken one; the catch below has the verdict |
-| 29 | `readLibrary` | catch | `fallback: zod.safeParse, JSON.parse, readFileSync` | **SILENT-BUG** | a damaged library file is moved aside (.bad-<time>) and the app starts with an empty library: every game profile and layout seems gone with no word why (batch E1) |
+| 29 | `readLibrary` | catch | `fallback: zod.safeParse, JSON.parse, readFileSync` | **SILENT-BUG** → fixed (E1, 2026-10-14) | a damaged library file is moved aside (.bad-<time>) and the app starts with an empty library: every game profile and layout seems gone with no word why. Now `readPersistedFile` (salvage, `.corrupt-<date>` copy, RecoveredNotice) |
 | 53 | `load` | catch | `empty: renameSync` | **NOT-WORTH** | can't move it; it gets overwritten on the next save |
 | 64 | `load` | catch | `empty` | **NOT-WORTH** | can't write it now; the next save tries again |
 
