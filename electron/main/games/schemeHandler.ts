@@ -39,19 +39,36 @@ export function pathWithoutAppImageMounts(path: string | undefined, keep?: strin
     .join(":");
 }
 
+/** A colon-separated list variable (LD_LIBRARY_PATH, XDG_DATA_DIRS,
+ * GSETTINGS_SCHEMA_DIR, PATH, …) without entries inside an AppImage mount;
+ * undefined when nothing is left. Values without a mount entry are kept as
+ * they are (not every variable is a list). */
+export function withoutAppImageMounts(value: string): string | undefined {
+  // loop: NOT-WORTH — one variable's few entries, per launcher start
+  if (!value.split(":").some((entry) => APPIMAGE_MOUNT.test(entry))) return value;
+  return pathWithoutAppImageMounts(value) || undefined;
+}
+
 /** The environment a launcher gets: the app's, with HOME = the real (passwd)
  * home, XDG base folders inside an overridden HOME removed (so they default
- * under the real one), and app-only variables dropped. */
+ * under the real one), app-only variables dropped, and no entry pointing
+ * into this copy's AppImage mount. The AppImage's AppRun puts the mount
+ * first in LD_LIBRARY_PATH (its bundled libnotify, libXss, libXtst, …),
+ * XDG_DATA_DIRS and GSETTINGS_SCHEMA_DIR; a launcher that inherits them
+ * loads those libraries from the mount, and once this copy exits (quit, an
+ * update's relaunch, a dev copy restart) the mount is gone and the launcher
+ * crashes when it exits: Heroic's SIGBUS in _dl_fini inside the app's
+ * libnotify.so.4 (core dumps of 2026-10-13). */
 export function launcherEnv(env: NodeJS.ProcessEnv, realHome: string): NodeJS.ProcessEnv {
   const fakeHome = env.HOME && env.HOME !== realHome ? env.HOME : null;
   const out: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(env)) {
     if (value === undefined || APP_ONLY.test(key)) continue;
     if (fakeHome && XDG_HOME_DIRS.has(key) && inside(value, fakeHome)) continue;
-    out[key] = value;
+    const kept = withoutAppImageMounts(value);
+    if (kept !== undefined) out[key] = kept;
   }
   out.HOME = realHome;
-  if (out.PATH !== undefined) out.PATH = pathWithoutAppImageMounts(out.PATH);
   return out;
 }
 

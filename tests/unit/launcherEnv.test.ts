@@ -64,6 +64,30 @@ describe("launcherEnv", () => {
     expect(env).toEqual({ HOME: "/home/me", LANG: "en_US.UTF-8" });
   });
 
+  it("drops this copy's AppImage mount from every variable (AppRun's LD_LIBRARY_PATH, XDG_DATA_DIRS, GSETTINGS_SCHEMA_DIR)", () => {
+    // Heroic loaded the app's libnotify.so.4 from the mount and crashed at exit once it was gone (2026-10-13).
+    const m = "/tmp/.mount_DS5DonBDx0o9";
+    const env = launcherEnv(
+      {
+        HOME: "/home/me",
+        LD_LIBRARY_PATH: `${m}/usr/lib`,
+        XDG_DATA_DIRS: `${m}/usr/share/:/usr/share/gnome:/usr/local/share/:/usr/share/`,
+        GSETTINGS_SCHEMA_DIR: `${m}/usr/share/glib-2.0/schemas:/opt/schemas`,
+        QT_PLUGIN_PATH: `${m}/usr/plugins`,
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus",
+        LS_COLORS: "rs=0:di=01;34",
+      },
+      "/home/me",
+    );
+    expect(env).toEqual({
+      HOME: "/home/me",
+      XDG_DATA_DIRS: "/usr/share/gnome:/usr/local/share/:/usr/share/",
+      GSETTINGS_SCHEMA_DIR: "/opt/schemas",
+      DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus",
+      LS_COLORS: "rs=0:di=01;34",
+    });
+  });
+
   it("sets HOME even when none was set", () => {
     expect(launcherEnv({}, "/home/me")).toEqual({ HOME: "/home/me" });
   });
