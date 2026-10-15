@@ -34,7 +34,7 @@ import { performance } from "node:perf_hooks";
 import { setTimeout as sleepFor } from "node:timers/promises";
 import { parseArgs } from "node:util";
 import { connect, evaluators, framesOver } from "./cdp_lib.mjs";
-import { cpuByType, memorySummary, perSecond } from "./budgets_lib.mjs";
+import { cpuByType, memoryJudged, memorySummary, perSecond } from "./budgets_lib.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -78,13 +78,23 @@ async function cpuDuring(secs) {
 
 // --- pages
 const clickOn = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`);
+// A rail button pressed on the page you're already on shows or hides that
+// page's settings panel. The per-page measurement keeps the clicks it has
+// always made; the soak (steady = true) presses a rail button only to change
+// page, so every lap leaves the panels as they were and each memory sample
+// sees the same page state (pressing them each lap flipped two panels a
+// lap, and the renderer's PSS between two levels ~13 MB apart).
+const rail = (name, steady) =>
+  ev(
+    `(() => { const el = document.querySelector('[data-rail="${name}"]'); if (!el) return false; if (!${steady} || document.querySelector(".rail-link.active")?.dataset.rail !== "${name}") el.click(); return true; })()`,
+  );
 const NAV = {
-  controller: () => clickOn('[data-rail="controller"]'),
-  dongle: () => clickOn('[data-rail="dongle"]'),
-  gameshome: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await clickOn(".lib-home")),
-  gamepage: async () => (await clickOn('[data-rail="games"]')) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
-  app: () => clickOn('[data-rail="app"]'),
-  about: () => clickOn('[data-rail="about"]'),
+  controller: (steady = false) => rail("controller", steady),
+  dongle: (steady = false) => rail("dongle", steady),
+  gameshome: async (steady = false) => (await rail("games", steady)) && (await pause(1500), await clickOn(".lib-home")),
+  gamepage: async (steady = false) => (await rail("games", steady)) && (await pause(1500), await ev(`(() => { const r = document.querySelectorAll(".lib-row")[1]; r?.click(); return !!r; })()`)),
+  app: (steady = false) => rail("app", steady),
+  about: (steady = false) => rail("about", steady),
 };
 
 // 1. Setup
@@ -170,14 +180,16 @@ if (mode.soakS > 0) {
   while ((Date.now() - t0) / 1000 < mode.soakWarmupS + mode.soakS) {
     const lap = Date.now();
     for (const name of PAGES) {
-      await NAV[name]();
+      await NAV[name](true);
       await pause(3000);
     }
-    await NAV.controller();
+    await NAV.controller(true);
     await pause(Math.max(1000, mode.sampleS * 1000 - (Date.now() - lap)));
     const t = (Date.now() - t0) / 1000;
-    const { mb } = memoryNow();
-    if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb });
+    const now = memoryNow();
+    const { mb } = now;
+    // Without the GPU process too (reported: SwiftShader's PSS swings ±15 MB between samples).
+    if (t >= mode.soakWarmupS) samples.push({ t: Math.round(t - mode.soakWarmupS), mb, mbWithoutGpu: memoryJudged(now) });
     note(`soak ${Math.round(t)} s: ${mb} MB${t < mode.soakWarmupS ? " (warm-up)" : ""}`);
   }
   soak = { windowS: mode.soakS, samples };

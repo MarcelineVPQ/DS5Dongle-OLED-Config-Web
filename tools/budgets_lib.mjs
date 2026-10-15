@@ -242,6 +242,13 @@ export function judgeBudgets(config, results) {
   const gpuMem = results.memory?.byType?.[GPU_TYPE] ?? null;
   rows.push({ id: "memoryGpu", budget: "memory, GPU process", scope: at, measured: gpuMem, limit: "info", unit: "MB", verdict: gpuMem == null ? "SKIP" : "INFO" });
   const growth = results.soak ? growthPerWindow(results.soak.samples, 1800) : null;
+  // The same trend without the GPU process (reported, not judged): software rendering's PSS swings ±15 MB between samples.
+  const noGpu = results.soak?.samples.every((s) => s.mbWithoutGpu != null)
+    ? growthPerWindow(
+        results.soak.samples.map((s) => ({ t: s.t, mb: s.mbWithoutGpu })),
+        1800,
+      )
+    : null;
   rows.push({
     id: "growth",
     budget: "memory growth",
@@ -250,6 +257,15 @@ export function judgeBudgets(config, results) {
     limit: `< ${b.growth.max}`,
     unit: b.growth.unit,
     verdict: strictVerdict(growth, b.growth.max),
+  });
+  rows.push({
+    id: "growthNoGpu",
+    budget: "memory growth without GPU",
+    scope: noGpu == null ? "-" : "same soak",
+    measured: noGpu,
+    limit: "info",
+    unit: b.growth.unit,
+    verdict: noGpu == null ? "SKIP" : "INFO",
   });
   return rows;
 }

@@ -275,6 +275,17 @@ describe("judgeBudgets", () => {
     expect(rows.find((r) => r.budget === "memory growth")?.verdict).toBe("PASS");
   });
 
+  it("reports the trend without the GPU process beside the judged one, never judging it", () => {
+    // The GPU process's PSS swings between samples; the app's own processes are flat.
+    const samples = Array.from({ length: 31 }, (_, i) => ({ t: i * 60, mb: 560 + (i % 2 ? 15 : 0) + i * 0.5, mbWithoutGpu: 260 }));
+    const rows = judgeBudgets(config, results({ soak: { windowS: 1800, samples } }));
+    expect(rows.find((r) => r.id === "growth")?.verdict).toBe("FAIL");
+    expect(rows.find((r) => r.id === "growthNoGpu")).toMatchObject({ measured: 0, verdict: "INFO" });
+    // Older results without the split: skipped, not zero.
+    const old = judgeBudgets(config, results({ soak: { windowS: 1800, samples: samples.map(({ t, mb }) => ({ t, mb })) } }));
+    expect(old.find((r) => r.id === "growthNoGpu")?.verdict).toBe("SKIP");
+  });
+
   it("names the memory measure the OS used", () => {
     const rows = judgeBudgets(config, results({ memory: { atS: 600, mb: 200, byType: { main: 200 }, metric: "private working set" } }));
     expect(rows.find((r) => r.id === "memory")).toMatchObject({ budget: "memory (private working set) without GPU", measured: 200, verdict: "PASS" });

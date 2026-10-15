@@ -15,7 +15,7 @@ export interface Results {
   pages: PageResult[];
   hidden: { secs: number; cpu: Record<string, number>; pageSawHide?: boolean } | null;
   memory: { atS: number; mb: number; byType?: Record<string, number>; metric?: string; also?: { metric: string; byType: Record<string, number> } } | null;
-  soak: { windowS: number; samples: Array<{ t: number; mb: number }> } | null;
+  soak: { windowS: number; samples: Array<{ t: number; mb: number; mbWithoutGpu?: number }> } | null;
 }
 export interface Row {
   id: string;
