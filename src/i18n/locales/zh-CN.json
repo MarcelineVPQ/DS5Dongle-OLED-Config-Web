@@ -327,7 +327,7 @@
         "entries": "删除 Windows 为这两个 ID 保存的设备条目，Windows 会自动重新创建。",
         "replug": "拔下 {{device}} 再重新插入。Windows 会重新安装驱动，应用随即连接。"
       },
-      "showScript": "显示完整脚本",
+      "scriptTitle": "将运行的完整脚本：",
       "run": "开始修复",
       "cancel": "取消",
       "result": {

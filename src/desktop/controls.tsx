@@ -120,7 +120,7 @@ export function InfoTip({ text }: { text: string }) {
         onFocus={show}
         onBlur={hide}
         onClick={(e) => {
-          e.preventDefault(); // inside a <label> or <summary>: not its own click
+          e.preventDefault(); // inside a label or a menu's summary: not its own click
           e.stopPropagation();
           setOpen((o) => !o);
         }}

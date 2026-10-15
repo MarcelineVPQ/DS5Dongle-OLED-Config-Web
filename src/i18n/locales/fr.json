@@ -327,7 +327,7 @@
         "entries": "Les entrées de périphérique enregistrées pour ces deux identifiants sont supprimées. Windows les recrée tout seul.",
         "replug": "Tu débranches {{device}} et rebranches le câble USB. Windows réinstalle le pilote et l’app se connecte."
       },
-      "showScript": "Afficher le script exact",
+      "scriptTitle": "Le script exact qu'elle exécute :",
       "run": "Lancer la réparation",
       "cancel": "Annuler",
       "result": {

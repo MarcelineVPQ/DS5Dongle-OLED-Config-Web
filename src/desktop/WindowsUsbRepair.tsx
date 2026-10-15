@@ -56,10 +56,9 @@ export default function WindowsUsbRepair() {
               <li key={step}>{t(`desktop.windowsUsb.step.${step}`)}</li>
             ))}
           </ol>
-          <details>
-            <summary>{t("desktop.windowsUsb.showScript")}</summary>
-            <pre className="dk-mono">{REPAIR_SCRIPT}</pre>
-          </details>
+          {/* The exact script, shown (no fold): compact, scrolls on its own when long. */}
+          <span className="dk-hint">{t("desktop.windowsUsb.scriptTitle")}</span>
+          <pre className="dk-mono">{REPAIR_SCRIPT}</pre>
           <div className="dk-setup-steps-actions">
             <button type="button" className="dk-btn" disabled={busy} onClick={() => setConfirming(false)}>
               {t("desktop.windowsUsb.cancel")}

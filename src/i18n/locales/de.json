@@ -327,7 +327,7 @@
         "entries": "Die gespeicherten Geräteeinträge für diese zwei IDs werden entfernt. Windows legt sie von selbst neu an.",
         "replug": "Du ziehst {{device_akk}} ab und steckst das USB-Kabel wieder ein. Windows richtet den Treiber neu ein, und die App verbindet sich."
       },
-      "showScript": "Genaues Skript anzeigen",
+      "scriptTitle": "Das genaue Skript, das ausgeführt wird:",
       "run": "Reparatur starten",
       "cancel": "Abbrechen",
       "result": {

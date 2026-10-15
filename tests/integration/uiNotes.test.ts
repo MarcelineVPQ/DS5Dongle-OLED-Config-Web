@@ -16,6 +16,8 @@ import { InfoTip, Row, SELECT_PX } from "../../src/desktop/controls";
 import { PANEL_HIDDEN_KEY, Section, SplitView } from "../../src/desktop/accordion/Section";
 import { revealSection, useAccordion } from "../../src/desktop/accordion/useAccordion";
 import { railPress, type RailItem } from "../../src/desktop/AppRail";
+import WindowsUsbRepair from "../../src/desktop/WindowsUsbRepair";
+import { REPAIR_SCRIPT } from "../../src/desktop/windowsRepairScript";
 import de from "../../src/i18n/locales/de.json";
 import en from "../../src/i18n/locales/en.json";
 import es from "../../src/i18n/locales/es.json";
@@ -290,5 +292,23 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
   it("each item's tooltip says what a second press does on the page you're on", () => {
     // loop: test — 7 locales
     for (const l of [de, en, es, fr, ja, ptBR, zhCN]) expect(l.desktop.rail).not.toHaveProperty("controllerAgain");
+  });
+});
+
+// No folds on the gate screens either (2026-10-15): the Windows USB repair's
+// step-by-step shows the exact script it runs, compact (it scrolls on its own).
+describe("Windows USB repair: the exact script is shown, no fold", () => {
+  it("lists the steps and the script under its label", () => {
+    vi.stubGlobal("desktop", { platform: "win32" });
+    try {
+      act(() => root.render(createElement(WindowsUsbRepair)));
+      act(() => container.querySelector<HTMLButtonElement>('[data-testid="windows-usb-repair"] > button')!.click());
+      const steps = container.querySelector(".dk-setup-steps")!;
+      expect(steps.querySelector("details, summary")).toBeNull();
+      expect(steps.textContent).toContain(i18n.t("desktop.windowsUsb.scriptTitle"));
+      expect(steps.querySelector("pre")!.textContent).toBe(REPAIR_SCRIPT);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

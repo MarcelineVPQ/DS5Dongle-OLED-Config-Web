@@ -326,7 +326,7 @@
         "entries": "It removes Windows' saved device entries for those two IDs. Windows creates them again by itself.",
         "replug": "You unplug {{device}} and plug it back in. Windows sets up its driver from scratch, and the app connects."
       },
-      "showScript": "Show the exact script",
+      "scriptTitle": "The exact script it runs:",
       "run": "Run the repair",
       "cancel": "Cancel",
       "result": {

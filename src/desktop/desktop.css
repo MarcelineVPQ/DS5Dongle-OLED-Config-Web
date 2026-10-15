@@ -1234,7 +1234,9 @@ html[data-theme="dark"] .dk {
   margin-top: 4px;
 }
 .dk-setup-steps pre {
-  margin: 6px 0 0;
+  max-height: 140px;
+  overflow-y: auto;
+  margin: 0;
   padding: 8px;
   overflow-x: auto;
   font-size: 11px;
@@ -3620,9 +3622,6 @@ html[data-theme="light"] .live-ctl {
     opacity: 1;
   }
 }
-.gp-legend {
-  margin: 0 0 8px;
-}
 /* Setup's passed checks and DualSense support's tier legend: always shown, compact. */
 .gp-checks-head {
   font-weight: 600;
@@ -3635,11 +3634,6 @@ html[data-theme="light"] .live-ctl {
 }
 .gp-legend-list li {
   margin: 2px 0;
-}
-.gp-legend summary {
-  color: var(--text-muted);
-  font-size: var(--dk-small);
-  cursor: pointer;
 }
 .gp-actions {
   display: flex;
@@ -5087,6 +5081,14 @@ main.dk-body:focus:not(:focus-visible),
 }
 .hdr-no {
   color: var(--cv-bad, var(--text-error));
+}
+/* "Set it up yourself": a compact numbered list in the HDR section. */
+.hdr-manual {
+  margin: 2px 0;
+  font-size: var(--dk-small);
+}
+.hdr-manual li {
+  margin: 3px 0;
 }
 .hdr-line {
   display: flex;

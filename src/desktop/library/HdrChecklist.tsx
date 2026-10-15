@@ -5,6 +5,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { showToast } from "../toast";
+import { SectionGroup } from "../accordion/Section";
 import { HEROIC_GAMESCOPE_OPTIONS, LUTRIS_GAMESCOPE_FLAGS, lineScreen, WSI_ENV, manualSteamLine, type HdrReq } from "../games/hdrSetup";
 import type { GameEntry, HdrSystem } from "../games/types";
 
@@ -48,7 +49,9 @@ function CopyLine({ text }: { text: string }) {
   );
 }
 
-// What Turn on HDR does, by hand, for one game (Steam: with its current launch options left to the player).
+// What Turn on HDR does, by hand, for one game (Steam: with its current launch
+// options left to the player): shown in the HDR section as a compact numbered
+// list (no fold); the intro and the Guide pointer behind the ⓘ.
 export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrSystem; ourProton: string | null }) {
   const { t } = useTranslation();
   const screen = lineScreen(sys);
@@ -62,13 +65,10 @@ export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrS
   };
   const launcher = game.launcher === "heroic" || game.launcher === "lutris" ? game.launcher : "steam";
   return (
-    <details className="gp-legend hdr-manual">
-      <summary>{t("desktop.hdrManual.title")}</summary>
-      {/* hint: MUST-SHOW — the manual's own text (opened on purpose to read it) */}
-      <p className="dk-hint">{t("desktop.hdrManual.intro")}</p>
+    <SectionGroup title={t("desktop.hdrManual.title")} info={`${t("desktop.hdrManual.intro")} ${t("desktop.hdrManual.guide")}`}>
       {/* hint: MUST-SHOW — a warning: the resolution in the commands is a guess, put yours in */}
       {!screen && <p className="dk-hint">{t("desktop.hdrManual.noMode")}</p>}
-      <ol className="dk-review">
+      <ol className="dk-review hdr-manual">
         <li>{t(`desktop.hdrManual.${launcher}.proton`, p)}</li>
         {launcher === "steam" && (
           <li>
@@ -96,8 +96,6 @@ export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrS
         )}
         <li>{t("desktop.hdrManual.inGame")}</li>
       </ol>
-      {/* hint: MUST-SHOW — the manual's own text (opened on purpose to read it) */}
-      <p className="dk-hint">{t("desktop.hdrManual.guide")}</p>
-    </details>
+    </SectionGroup>
   );
 }

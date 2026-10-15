@@ -327,7 +327,7 @@
         "entries": "As entradas de dispositivo salvas para esses dois IDs são removidas. O Windows as recria sozinho.",
         "replug": "Você desconecta {{device}} e conecta o cabo USB de novo. O Windows configura o driver do zero e o app se conecta."
       },
-      "showScript": "Mostrar o script exato",
+      "scriptTitle": "O script exato que ele executa:",
       "run": "Fazer o reparo",
       "cancel": "Cancelar",
       "result": {

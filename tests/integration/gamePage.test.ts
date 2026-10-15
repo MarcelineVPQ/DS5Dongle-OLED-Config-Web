@@ -151,8 +151,14 @@ describe("game page", () => {
     expect(hasDot("hdr")).toBe(true);
     const hdr = open("hdr");
     expect(hdr.querySelector(".hdr-check")!.textContent).toContain("✗");
-    // Set it up yourself stays one click away.
-    expect(hdr.querySelector(".hdr-manual summary")!.textContent).toBe(i18n.t("desktop.hdrManual.title"));
+    // Set it up yourself: shown (no fold), a compact numbered list; the intro behind the ⓘ.
+    expect(hdr.querySelector("details, summary")).toBeNull();
+    const manual = hdr.querySelector("ol.hdr-manual")!.closest(".dk-sec-group")!;
+    expect(manual.querySelector(".dk-subhead")!.firstChild!.textContent).toBe(i18n.t("desktop.hdrManual.title"));
+    expect(manual.querySelectorAll("ol.hdr-manual > li").length).toBeGreaterThanOrEqual(3);
+    expect(manual.querySelector(".dk-subhead button")!.getAttribute("aria-label")).toBe("More information");
+    // loop: test — a few paragraphs
+    expect([...manual.querySelectorAll("p")].some((p) => p.textContent!.includes(i18n.t("desktop.hdrManual.intro")))).toBe(false);
   });
 
   it("each fact once: no placeholders, no tier or Proton in the stats, the store in Details", () => {

@@ -327,7 +327,7 @@
         "entries": "Se eliminan las entradas de dispositivo guardadas para esos dos ID. Windows las vuelve a crear solo.",
         "replug": "Desconectas {{device}} y vuelves a conectar el cable USB. Windows instala el controlador desde cero y la app se conecta."
       },
-      "showScript": "Ver el script exacto",
+      "scriptTitle": "El script exacto que ejecuta:",
       "run": "Hacer la reparación",
       "cancel": "Cancelar",
       "result": {
