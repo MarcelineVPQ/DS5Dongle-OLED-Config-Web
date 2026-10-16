@@ -521,7 +521,7 @@
           "hdrRunner": " Ele também passa para {{proton}}, nosso Proton DualSense, para que os gatilhos adaptáveis e a resposta tátil do controle funcionem com HDR.",
           "hdrHeroic": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR: as configurações de Gamescope do Heroic para o jogo são preenchidas, e as chaves Enable Wine-Wayland e Enable HDR são desligadas. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava.{{runner}}",
           "hdrLutris": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR: as opções de Gamescope do Lutris para o jogo são ligadas, HDR incluído. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava.{{runner}}",
-          "hdrNoProton": " Instale nosso Proton DualSense no cartão Proton para ter também os gatilhos adaptáveis e a resposta tátil com HDR.",
+          "hdrNoProton": " Instale nosso Proton DualSense em Jogos → Build do Proton para DualSense para ter também os gatilhos adaptáveis e a resposta tátil com HDR.",
           "hdrOld": "{{game}} ainda tem a configuração HDR antiga (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), que pode deixar o jogo com a tela preta. Ela é removida. {{next}}",
           "hdrOldOnly": "O HDR pelo gamescope é oferecido assim que a lista na página do jogo estiver toda com ✓.",
           "modeSteam": "{{game}} inicia por padrão em outro modo gráfico e só oferece {{feature}} em {{api}}. O argumento de jogo {{flag}} o inicia em {{api}}; Desfazer o tira de novo. As opções de inicialização ficam: {{args}}{{proton}}",
@@ -1245,7 +1245,7 @@
     },
     "dev": {
       "title": "Desenvolvedor",
-      "hint": "Visualize outro modelo e cor de controle para conferir as cores do app. Só muda o que é exibido; nada é enviado {{device_a}}. Ctrl+Shift+D oculta este cartão. Aparece no canal de desenvolvimento.",
+      "hint": "Visualize outro modelo e cor de controle para conferir as cores do app. Só muda o que é exibido; nada é enviado {{device_a}}. Ctrl+Shift+D oculta esta seção. Aparece no canal de desenvolvimento.",
       "model": "Modelo",
       "colorway": "Cor",
       "real": "O real",
@@ -1286,7 +1286,7 @@
       "simCore1Runs": "Funciona normalmente",
       "simCore1Stage": "Para na etapa {{stage}}: {{step}}",
       "simBoard": "Placa simulada",
-      "simBoardHint": "O que a simulação está fazendo agora. Atualizar no cartão de firmware e Instalar na tela de configuração rodam com ela do começo ao fim.",
+      "simBoardHint": "O que a simulação está fazendo agora. Atualizar na seção Firmware e Instalar na tela de configuração rodam com ela do começo ao fim.",
       "simBoardState": {
         "dongle": "Rodando o firmware {{version}}",
         "bootsel": "No modo BOOTSEL",
@@ -1710,7 +1710,7 @@
       },
       "proton": {
         "ok": "Nosso Proton DualSense instalado ({{proton}})",
-        "no": "Nosso Proton DualSense não está instalado: instale no cartão Proton para ter os gatilhos adaptáveis e a resposta tátil com HDR."
+        "no": "Nosso Proton DualSense não está instalado: instale em Jogos → Build do Proton para DualSense para ter os gatilhos adaptáveis e a resposta tátil com HDR."
       },
       "game": {
         "ok": "O jogo é compatível com HDR"
@@ -1730,7 +1730,7 @@
       "title": "Configurar por conta própria",
       "intro": "O que Ativar HDR faz, à mão. Outras versões do Proton podem funcionar com o gamescope também; nosso Proton DualSense é o que testamos (HDR mais os gatilhos adaptáveis e a resposta tátil do controle).",
       "noMode": "Nenhuma tela foi lida, então a linha usa 3840×2160: coloque a resolução da sua tela depois de -W e -H.",
-      "noProton": "nosso Proton DualSense (instale no cartão Proton)",
+      "noProton": "nosso Proton DualSense (instale em Jogos → Build do Proton para DualSense)",
       "yourScreen": "sua tela",
       "lineLabel": "Linha para copiar",
       "copy": "Copiar",

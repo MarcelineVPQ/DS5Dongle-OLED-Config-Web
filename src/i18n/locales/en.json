@@ -520,7 +520,7 @@
           "hdrRunner": " It also moves to {{proton}}, our DualSense Proton, so the controller's adaptive triggers and haptic feedback work with HDR.",
           "hdrHeroic": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR: Heroic's own Gamescope settings for the game are filled in, and its Enable Wine-Wayland and Enable HDR switches are turned off. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back.{{runner}}",
           "hdrLutris": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR: Lutris's own Gamescope options for the game are turned on, HDR included. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back.{{runner}}",
-          "hdrNoProton": " Install our DualSense Proton on the Proton card to get the controller's adaptive triggers and haptic feedback with HDR too.",
+          "hdrNoProton": " Install our DualSense Proton in Games → DualSense Proton build to get the controller's adaptive triggers and haptic feedback with HDR too.",
           "hdrOld": "{{game}} still has the old HDR setting (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), which can leave the game on a black screen. It's removed. {{next}}",
           "hdrOldOnly": "HDR through gamescope is offered once the checklist on the game's page is all ✓.",
           "modeSteam": "{{game}} starts in another graphics mode by default and only offers {{feature}} in {{api}}. The game argument {{flag}} starts it in {{api}}; Undo takes it out again. The launch options become: {{args}}{{proton}}",
@@ -1244,7 +1244,7 @@
     },
     "dev": {
       "title": "Developer",
-      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to {{device}}. Ctrl+Shift+D hides this card. Shown on the Development channel.",
+      "hint": "Preview another controller model and colorway to check the app's colors. Only changes what the app shows; nothing is sent to {{device}}. Ctrl+Shift+D hides this section. Shown on the Development channel.",
       "model": "Model",
       "colorway": "Colorway",
       "real": "The real one",
@@ -1285,7 +1285,7 @@
       "simCore1Runs": "Runs normally",
       "simCore1Stage": "Stops at step {{stage}}: {{step}}",
       "simBoard": "Simulated board",
-      "simBoardHint": "What the simulation is doing now. Update on the firmware card and Install on the setup screen run against it, start to finish.",
+      "simBoardHint": "What the simulation is doing now. Update in the Firmware section and Install on the setup screen run against it, start to finish.",
       "simBoardState": {
         "dongle": "Running firmware {{version}}",
         "bootsel": "In BOOTSEL mode",
@@ -1709,7 +1709,7 @@
       },
       "proton": {
         "ok": "Our DualSense Proton installed ({{proton}})",
-        "no": "Our DualSense Proton isn't installed: install it on the Proton card for the controller's adaptive triggers and haptic feedback with HDR."
+        "no": "Our DualSense Proton isn't installed: install it in Games → DualSense Proton build for the controller's adaptive triggers and haptic feedback with HDR."
       },
       "game": {
         "ok": "The game supports HDR"
@@ -1729,7 +1729,7 @@
       "title": "Set it up yourself",
       "intro": "What Turn on HDR does, by hand. Other Proton builds may work with gamescope too; our DualSense Proton is the one we test (HDR plus the controller's adaptive triggers and haptic feedback).",
       "noMode": "No screen was read, so this uses 3840×2160: put your screen's resolution after -W and -H.",
-      "noProton": "our DualSense Proton (install it on the Proton card)",
+      "noProton": "our DualSense Proton (install it in Games → DualSense Proton build)",
       "yourScreen": "your screen",
       "lineLabel": "Line to copy",
       "copy": "Copy",

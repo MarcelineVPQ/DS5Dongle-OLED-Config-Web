@@ -518,7 +518,7 @@
           "hdrRunner": " 它还会改用我们的 DualSense Proton {{proton}}，让手柄的自适应扳机和触觉反馈在 HDR 下也能工作。",
           "hdrHeroic": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会填写 Heroic 中该游戏的 Gamescope 设置，并关闭 Enable Wine-Wayland 和 Enable HDR 开关。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrLutris": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会开启 Lutris 中该游戏的 Gamescope 选项（包括 HDR）。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
-          "hdrNoProton": " 在 Proton 卡片中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
+          "hdrNoProton": " 在“游戏 → DualSense Proton 版本”中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
           "hdrOld": "{{game}} 仍有旧的 HDR 设置（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR），可能导致游戏黑屏。该设置会被移除。{{next}}",
           "hdrOldOnly": "当游戏页面上的检查清单全部为 ✓ 时，就会提供通过 gamescope 的 HDR。",
           "modeSteam": "{{game}} 默认以其他图形模式启动，只有在 {{api}} 下才提供{{feature}}。游戏参数 {{flag}} 让它以 {{api}} 启动；“撤销”会再把它去掉。启动选项将变为：{{args}}{{proton}}",
@@ -1234,7 +1234,7 @@
     },
     "dev": {
       "title": "开发者",
-      "hint": "预览其他控制器型号和配色，检查应用的颜色。只改变显示，不会向 {{device}} 发送任何内容。按 Ctrl+Shift+D 隐藏此卡片。在开发通道中显示。",
+      "hint": "预览其他控制器型号和配色，检查应用的颜色。只改变显示，不会向 {{device}} 发送任何内容。按 Ctrl+Shift+D 隐藏此部分。在开发通道中显示。",
       "model": "型号",
       "colorway": "配色",
       "real": "真实控制器",
@@ -1275,7 +1275,7 @@
       "simCore1Runs": "正常运行",
       "simCore1Stage": "停在步骤 {{stage}}：{{step}}",
       "simBoard": "模拟的开发板",
-      "simBoardHint": "模拟当前的状态。固件卡片上的“更新”和设置界面上的“安装”会从头到尾针对它运行。",
+      "simBoardHint": "模拟当前的状态。“固件”部分中的“更新”和设置界面上的“安装”会从头到尾针对它运行。",
       "simBoardState": {
         "dongle": "正在运行固件 {{version}}",
         "bootsel": "BOOTSEL 模式",
@@ -1699,7 +1699,7 @@
       },
       "proton": {
         "ok": "已安装我们的 DualSense Proton（{{proton}}）",
-        "no": "未安装我们的 DualSense Proton：请在 Proton 卡片中安装，以便在 HDR 下使用自适应扳机和触觉反馈。"
+        "no": "未安装我们的 DualSense Proton：请在“游戏 → DualSense Proton 版本”中安装，以便在 HDR 下使用自适应扳机和触觉反馈。"
       },
       "game": {
         "ok": "游戏支持 HDR"
@@ -1719,7 +1719,7 @@
       "title": "自己设置",
       "intro": "手动完成“开启 HDR”所做的事。其他 Proton 版本配合 gamescope 也可能可用；我们测试的是我们的 DualSense Proton（HDR 加上手柄的自适应扳机和触觉反馈）。",
       "noMode": "未读取到屏幕，因此这里使用 3840×2160：请把 -W 和 -H 后面改成你屏幕的分辨率。",
-      "noProton": "我们的 DualSense Proton（在 Proton 卡片中安装）",
+      "noProton": "我们的 DualSense Proton（在“游戏 → DualSense Proton 版本”中安装）",
       "yourScreen": "你的屏幕",
       "lineLabel": "要复制的行",
       "copy": "复制",

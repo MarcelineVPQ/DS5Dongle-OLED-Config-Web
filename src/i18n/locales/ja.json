@@ -518,7 +518,7 @@
           "hdrRunner": " また、HDR でもコントローラーのアダプティブトリガーとハプティックフィードバックが使えるよう、当アプリの DualSense Proton である {{proton}} に切り替えます。",
           "hdrHeroic": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Heroic の Gamescope 設定を入力し、Enable Wine-Wayland と Enable HDR はオフにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
           "hdrLutris": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Lutris の Gamescope オプションを HDR も含めてオンにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
-          "hdrNoProton": " HDR と一緒にアダプティブトリガーとハプティックフィードバックも使うには、Proton カードから当アプリの DualSense Proton をインストールしてください。",
+          "hdrNoProton": " HDR と一緒にアダプティブトリガーとハプティックフィードバックも使うには、「ゲーム → DualSense 用 Proton ビルド」から当アプリの DualSense Proton をインストールしてください。",
           "hdrOld": "{{game}} には古い HDR 設定（PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR）が残っており、画面が真っ暗になることがあります。これを削除します。{{next}}",
           "hdrOldOnly": "ゲームのページのチェックリストがすべて ✓ になると、gamescope による HDR が提案されます。",
           "modeSteam": "{{game}} は標準では別のグラフィックモードで起動し、{{feature}}は {{api}} でしか使えません。ゲーム引数 {{flag}} で {{api}} で起動します。「元に戻す」で外せます。起動オプションは次のようになります: {{args}}{{proton}}",
@@ -1234,7 +1234,7 @@
     },
     "dev": {
       "title": "開発者",
-      "hint": "別のコントローラーのモデルとカラーをプレビューして、アプリの配色を確認します。表示だけが変わり、{{device}} には何も送信されません。Ctrl+Shift+D でこのカードを隠します。開発チャンネルで表示されます。",
+      "hint": "別のコントローラーのモデルとカラーをプレビューして、アプリの配色を確認します。表示だけが変わり、{{device}} には何も送信されません。Ctrl+Shift+D でこのセクションを隠します。開発チャンネルで表示されます。",
       "model": "モデル",
       "colorway": "カラー",
       "real": "実機",
@@ -1275,7 +1275,7 @@
       "simCore1Runs": "通常どおり動作",
       "simCore1Stage": "ステップ {{stage}} で停止: {{step}}",
       "simBoard": "シミュレートしたボード",
-      "simBoardHint": "シミュレーションの現在の状態です。ファームウェアカードの「更新」とセットアップ画面の「インストール」は、最初から最後までこれを相手に動作します。",
+      "simBoardHint": "シミュレーションの現在の状態です。「ファームウェア」セクションの「更新」とセットアップ画面の「インストール」は、最初から最後までこれを相手に動作します。",
       "simBoardState": {
         "dongle": "ファームウェア {{version}} を実行中",
         "bootsel": "BOOTSEL モード",
@@ -1699,7 +1699,7 @@
       },
       "proton": {
         "ok": "当アプリの DualSense Proton インストール済み（{{proton}}）",
-        "no": "当アプリの DualSense Proton がインストールされていません: HDR でアダプティブトリガーとハプティックフィードバックを使うには、Proton カードからインストールしてください。"
+        "no": "当アプリの DualSense Proton がインストールされていません: HDR でアダプティブトリガーとハプティックフィードバックを使うには、「ゲーム → DualSense 用 Proton ビルド」からインストールしてください。"
       },
       "game": {
         "ok": "ゲームは HDR に対応"
@@ -1719,7 +1719,7 @@
       "title": "自分で設定する",
       "intro": "「HDR をオンにする」が行う内容を手動で。ほかの Proton でも gamescope で動くことがありますが、テストしているのは当アプリの DualSense Proton です（HDR に加えてコントローラーのアダプティブトリガーとハプティックフィードバック）。",
       "noMode": "画面を読み取れなかったため 3840×2160 を使っています: -W と -H の後をお使いの画面の解像度にしてください。",
-      "noProton": "当アプリの DualSense Proton（Proton カードからインストール）",
+      "noProton": "当アプリの DualSense Proton（「ゲーム → DualSense 用 Proton ビルド」からインストール）",
       "yourScreen": "お使いの画面",
       "lineLabel": "コピーする行",
       "copy": "コピー",

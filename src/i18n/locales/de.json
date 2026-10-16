@@ -521,7 +521,7 @@
           "hdrRunner": " Außerdem wechselt es zu {{proton}}, unserem DualSense-Proton, damit Adaptive Trigger und Haptisches Feedback des Controllers mit HDR funktionieren.",
           "hdrHeroic": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Heroics eigene Gamescope-Einstellungen für das Spiel werden ausgefüllt, und die Schalter „Enable Wine-Wayland“ und „Enable HDR“ werden ausgeschaltet. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
           "hdrLutris": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Lutris’ eigene Gamescope-Optionen für das Spiel werden eingeschaltet, HDR inklusive. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
-          "hdrNoProton": " Installiere unser DualSense-Proton auf der Proton-Karte, um auch Adaptive Trigger und Haptisches Feedback mit HDR zu bekommen.",
+          "hdrNoProton": " Installiere unser DualSense-Proton unter Spiele → DualSense-Proton-Build, um auch Adaptive Trigger und Haptisches Feedback mit HDR zu bekommen.",
           "hdrOld": "{{game}} hat noch die alte HDR-Einstellung (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), die das Spiel bei schwarzem Bild hängen lassen kann. Sie wird entfernt. {{next}}",
           "hdrOldOnly": "HDR über gamescope wird angeboten, sobald die Checkliste auf der Seite des Spiels überall ✓ zeigt.",
           "modeSteam": "{{game}} startet standardmäßig in einem anderen Grafikmodus und bietet {{feature}} nur in {{api}} an. Das Spielargument {{flag}} startet es in {{api}}; Rückgängig nimmt es wieder heraus. Die Startoptionen werden zu: {{args}}{{proton}}",
@@ -1245,7 +1245,7 @@
     },
     "dev": {
       "title": "Entwickler",
-      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an {{device_akk}} gesendet. Strg+Umschalt+D blendet diese Karte aus. Erscheint im Entwicklungskanal.",
+      "hint": "Zeige ein anderes Controller-Modell und eine andere Farbe an, um die Farben der App zu prüfen. Ändert nur die Anzeige; nichts wird an {{device_akk}} gesendet. Strg+Umschalt+D blendet diesen Abschnitt aus. Erscheint im Entwicklungskanal.",
       "model": "Modell",
       "colorway": "Farbvariante",
       "real": "Der echte",
@@ -1286,7 +1286,7 @@
       "simCore1Runs": "Läuft normal",
       "simCore1Stage": "Hält bei Schritt {{stage}}: {{step}}",
       "simBoard": "Simuliertes Board",
-      "simBoardHint": "Was die Simulation gerade tut. Aktualisieren auf der Firmware-Karte und Installieren auf dem Einrichtungsbildschirm laufen damit von Anfang bis Ende.",
+      "simBoardHint": "Was die Simulation gerade tut. Aktualisieren im Abschnitt Firmware und Installieren auf dem Einrichtungsbildschirm laufen damit von Anfang bis Ende.",
       "simBoardState": {
         "dongle": "Firmware {{version}} läuft",
         "bootsel": "Im BOOTSEL-Modus",
@@ -1710,7 +1710,7 @@
       },
       "proton": {
         "ok": "Unser DualSense-Proton installiert ({{proton}})",
-        "no": "Unser DualSense-Proton ist nicht installiert: Installiere es auf der Proton-Karte, für Adaptive Trigger und Haptisches Feedback mit HDR."
+        "no": "Unser DualSense-Proton ist nicht installiert: Installiere es unter Spiele → DualSense-Proton-Build, für Adaptive Trigger und Haptisches Feedback mit HDR."
       },
       "game": {
         "ok": "Das Spiel unterstützt HDR"
@@ -1730,7 +1730,7 @@
       "title": "Selbst einrichten",
       "intro": "Was „HDR einschalten“ macht, von Hand. Andere Proton-Versionen funktionieren mit gamescope vielleicht auch; unser DualSense-Proton ist das, das wir testen (HDR plus Adaptive Trigger und Haptisches Feedback des Controllers).",
       "noMode": "Es wurde kein Bildschirm gelesen, deshalb steht hier 3840×2160: Trage hinter -W und -H die Auflösung deines Bildschirms ein.",
-      "noProton": "unser DualSense-Proton (installiere es auf der Proton-Karte)",
+      "noProton": "unser DualSense-Proton (installiere es unter Spiele → DualSense-Proton-Build)",
       "yourScreen": "deinen Bildschirm",
       "lineLabel": "Zeile zum Kopieren",
       "copy": "Kopieren",

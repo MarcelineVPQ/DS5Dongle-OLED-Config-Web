@@ -521,7 +521,7 @@
           "hdrRunner": " Il passe aussi à {{proton}}, notre Proton DualSense, pour que les gâchettes adaptatives et le retour haptique de la manette fonctionnent avec le HDR.",
           "hdrHeroic": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR : les réglages Gamescope de Heroic pour ce jeu sont remplis, et ses interrupteurs Enable Wine-Wayland et Enable HDR désactivés. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant.{{runner}}",
           "hdrLutris": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR : les options Gamescope de Lutris pour ce jeu sont activées, HDR compris. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant.{{runner}}",
-          "hdrNoProton": " Installez notre Proton DualSense depuis la carte Proton pour avoir aussi les gâchettes adaptatives et le retour haptique avec le HDR.",
+          "hdrNoProton": " Installez notre Proton DualSense dans Jeux → Build Proton DualSense pour avoir aussi les gâchettes adaptatives et le retour haptique avec le HDR.",
           "hdrOld": "{{game}} a encore l'ancien réglage HDR (PROTON_ENABLE_WAYLAND / PROTON_ENABLE_HDR), qui peut laisser le jeu sur un écran noir. Il est retiré. {{next}}",
           "hdrOldOnly": "Le HDR via gamescope sera proposé dès que la liste de la page du jeu sera entièrement ✓.",
           "modeSteam": "{{game}} démarre par défaut dans un autre mode graphique et ne propose {{feature}} qu'en {{api}}. L'argument de jeu {{flag}} le lance en {{api}} ; Annuler le retire. Les options de lancement deviennent : {{args}}{{proton}}",
@@ -1245,7 +1245,7 @@
     },
     "dev": {
       "title": "Développeur",
-      "hint": "Prévisualise un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé {{device_a}}. Ctrl+Maj+D masque cette carte. Affichée sur le canal de développement.",
+      "hint": "Prévisualise un autre modèle et coloris de manette pour vérifier les couleurs de l'app. Ne change que l'affichage ; rien n'est envoyé {{device_a}}. Ctrl+Maj+D masque cette section. Affichée sur le canal de développement.",
       "model": "Modèle",
       "colorway": "Coloris",
       "real": "La vraie",
@@ -1286,7 +1286,7 @@
       "simCore1Runs": "Fonctionne normalement",
       "simCore1Stage": "S'arrête à l'étape {{stage}} : {{step}}",
       "simBoard": "Carte simulée",
-      "simBoardHint": "Ce que fait la simulation en ce moment. Mettre à jour sur la carte Firmware et Installer sur l’écran de configuration s’y déroulent du début à la fin.",
+      "simBoardHint": "Ce que fait la simulation en ce moment. Mettre à jour dans la section Firmware et Installer sur l’écran de configuration s’y déroulent du début à la fin.",
       "simBoardState": {
         "dongle": "Firmware {{version}} en marche",
         "bootsel": "En mode BOOTSEL",
@@ -1710,7 +1710,7 @@
       },
       "proton": {
         "ok": "Notre Proton DualSense installé ({{proton}})",
-        "no": "Notre Proton DualSense n'est pas installé : installez-le depuis la carte Proton pour les gâchettes adaptatives et le retour haptique avec le HDR."
+        "no": "Notre Proton DualSense n'est pas installé : installez-le dans Jeux → Build Proton DualSense pour les gâchettes adaptatives et le retour haptique avec le HDR."
       },
       "game": {
         "ok": "Le jeu prend en charge le HDR"
@@ -1730,7 +1730,7 @@
       "title": "Le configurer vous-même",
       "intro": "Ce que fait Activer le HDR, à la main. D'autres versions de Proton peuvent aussi marcher avec gamescope ; notre Proton DualSense est celle que nous testons (le HDR plus les gâchettes adaptatives et le retour haptique de la manette).",
       "noMode": "Aucun écran n'a été lu, la ligne utilise donc 3840×2160 : mettez la résolution de votre écran après -W et -H.",
-      "noProton": "notre Proton DualSense (installez-le depuis la carte Proton)",
+      "noProton": "notre Proton DualSense (installez-le dans Jeux → Build Proton DualSense)",
       "yourScreen": "votre écran",
       "lineLabel": "Ligne à copier",
       "copy": "Copier",
