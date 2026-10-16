@@ -645,6 +645,15 @@ describe("the Controller page on the accordion", () => {
     expect(steps.querySelector(".dk-fw-steps")!.textContent).toContain(m.i18n.t("desktop.ctrlInfo.howToPs5"));
   });
 
+  it("says what a click on the drawing does right under it, and keeps the line (hidden) while a part is picked", async () => {
+    await live("overview");
+    const hint = () => [...container.querySelectorAll<HTMLElement>(".live-hint")].find((p) => p.textContent === m.i18n.t("desktop.live.pickHint"))!;
+    expect(container.querySelector(".dk-split-main .live-hero")!.nextElementSibling).toBe(hint());
+    act(() => void container.querySelector(`.live-ctl [data-part="lightbar"]`)!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(hint().classList.contains("live-hint-idle")).toBe(true);
+    expect(hint().getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
     await live("overview");
     const part = (p: string) => container.querySelector(`.live-ctl [data-part="${p}"]`)!;

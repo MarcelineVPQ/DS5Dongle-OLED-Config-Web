@@ -260,6 +260,17 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
         />
         {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
       </div>
+      {/* The drawing's own hints, right under it (IA audit C3): how to connect, why it doesn't move, what a click does. */}
+      {/* hint: MUST-SHOW — the empty state: how to connect the controller now */}
+      {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
+      {/* hint: MUST-SHOW — why the drawing doesn't move: what to update */}
+      {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
+      {/* Kept in place (only hidden) while a part is picked, so what's below doesn't jump. */}
+      {on && liveCapable && view === "overview" && (
+        <p className={`dk-hint live-hint${selected ? " live-hint-idle" : ""}`} aria-hidden={selected ? true : undefined}>
+          {t("desktop.live.pickHint")}
+        </p>
+      )}
       {on && id?.model && (
         <div className="live-specs">
           {look && (
@@ -317,11 +328,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           </span>
         </div>
       )}
-      {/* hint: MUST-SHOW — the empty state: how to connect the controller now */}
-      {!on && id && <p className="dk-hint live-hint">{t("desktop.controller.pairHint")}</p>}
-      {/* hint: MUST-SHOW — why the drawing doesn't move: what to update */}
-      {on && !liveCapable && <p className="dk-hint live-hint">{t("desktop.live.needsFirmware", "Update {{device}}'s firmware to see the controller move live.")}</p>}
-      {on && liveCapable && !selected && view === "overview" && <p className="dk-hint live-hint">{t("desktop.live.pickHint")}</p>}
       {view === "overview" && client && (
         <MainBlock state={infoBlock} icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
           <ControllerInfo data={info} batteryPct={batteryPct} power={input ? power : null} />

@@ -1514,6 +1514,10 @@ html[data-theme="light"] .live-ctl {
   font-size: 12px;
   color: var(--text-muted);
 }
+/* "Click any part…" while a part is picked: its line kept, so the specs and tiles under it don't move. */
+.live-hint.live-hint-idle {
+  visibility: hidden;
+}
 .live-meter {
   position: relative;
   flex: 1;
