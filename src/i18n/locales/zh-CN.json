@@ -832,9 +832,9 @@
         "setup": "设置",
         "compat": "兼容性",
         "support": "DualSense 支持",
-        "feedback": "反馈",
         "notes": "笔记",
-        "details": "详情"
+        "details": "详情",
+        "report": "你的反馈"
       },
       "activeNow": "当前生效",
       "profileNone": "此游戏使用你的常规设置。配置只会为这款游戏更改任何控制器设置（触觉反馈、扬声器、光条、麦克风、按键、操作杆），游戏关闭后自动切回。",
@@ -1031,7 +1031,23 @@
       "profileChanges_other": "{{count}} 项更改",
       "hdrUnknown": "未知是否支持 HDR",
       "notesEmpty": "空",
-      "glanceOpen": "打开{{section}}"
+      "glanceOpen": "打开{{section}}",
+      "notRated": "未评分",
+      "glance": {
+        "ready": "就绪",
+        "fixes_other": "{{count}} 项修复待应用"
+      },
+      "profileStatus": {
+        "none": "可从当前设置创建",
+        "normal": "你的常规设置"
+      },
+      "compatStatus": {
+        "ours": "✓ DualSense Proton 版本",
+        "recommended": "推荐 {{name}}",
+        "notInstalled": "推荐使用 DualSense Proton 版本",
+        "any": "任意较新的 Proton 均可",
+        "missing": "⚠ 它的 Proton 版本未安装"
+      }
     },
     "dongleConsole": {
       "title": "OLED 屏幕",

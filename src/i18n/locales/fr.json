@@ -838,9 +838,9 @@
         "setup": "Réglages",
         "compat": "Compatibilité",
         "support": "Support DualSense",
-        "feedback": "Retours",
         "notes": "Notes",
-        "details": "Détails"
+        "details": "Détails",
+        "report": "Ton avis"
       },
       "activeNow": "Actif",
       "profileNone": "Ce jeu utilise tes réglages habituels. Un profil change n'importe quel réglage de la manette (retour haptique, haut-parleur, barre lumineuse, micro, touches, joysticks) pour ce jeu uniquement, puis rétablit tout à sa fermeture.",
@@ -1042,7 +1042,24 @@
       "profileChanges_other": "{{count}} changements",
       "hdrUnknown": "Prise en charge du HDR inconnue",
       "notesEmpty": "Vide",
-      "glanceOpen": "Ouvrir {{section}}"
+      "glanceOpen": "Ouvrir {{section}}",
+      "notRated": "Pas noté",
+      "glance": {
+        "ready": "Prêt",
+        "fixes_one": "{{count}} correctif à appliquer",
+        "fixes_other": "{{count}} correctifs à appliquer"
+      },
+      "profileStatus": {
+        "none": "À créer depuis tes réglages actuels",
+        "normal": "Tes réglages habituels"
+      },
+      "compatStatus": {
+        "ours": "✓ Le build Proton DualSense",
+        "recommended": "{{name}} recommandé",
+        "notInstalled": "Le build Proton DualSense est recommandé",
+        "any": "Tout Proton récent convient",
+        "missing": "⚠ Son build Proton n'est pas installé"
+      }
     },
     "dongleConsole": {
       "title": "Écran OLED",

@@ -2552,11 +2552,9 @@ html[data-theme="light"] .live-ctl {
   gap: 6px;
   cursor: pointer;
 }
-/* The rating, inside DualSense support under the feature list. */
+/* The rating, first in Your report (the feedback tags follow as their own group). */
 .gp-rating {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
 }
 .gp-rating h3 {
   margin: 0 0 4px;

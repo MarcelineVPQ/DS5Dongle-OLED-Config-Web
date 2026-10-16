@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-// A game's page, like every page: the main view is the art, the Play bar and
-// the game at a glance (tiles that open their section); the accordion at the
-// right holds Controller profile, Setup, HDR, Compatibility, DualSense
-// support, Feedback and Notes; Details is a main-view block. Nothing inside a
+// A game's page, like every page: the main view is the art, the Play bar, the
+// game at a glance (tiles named and ordered as the panel's sections, each
+// opening its section, never repeating its status) and two main-view blocks,
+// DualSense support and Details; the accordion at the right holds Controller
+// profile, Setup, Compatibility, HDR, Your report (rating + feedback) and Notes. Nothing inside a
 // section folds on its own (passed checks, marks, the tier legend: shown, compact). What needs the player carries a yellow dot (and
 // opens on a first visit); what's fine is one line. Each fact has one place.
 import { act, createElement } from "react";
@@ -100,26 +101,33 @@ describe("game page", () => {
     expect($(".dk-split-main .gp-hero")).not.toBeNull();
     expect($(".dk-split-main .gp-bar .gp-play")).not.toBeNull();
     expect($(".dk-split-head h2")!.textContent).toBe("Ghostrunner");
-    expect(sectionIds()).toEqual(["profile", "setup", "hdr", "compatibility", "support", "feedback", "notes"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "compatibility", "hdr", "report", "notes"]);
     expect(container!.querySelectorAll(".dk-card")).toHaveLength(0); // no cards left
     // Nothing needs the player: nothing opens by itself, and a folded section renders nothing.
     expect(openIds()).toEqual([]);
     expect(container!.querySelectorAll(".dk-sec-body")).toHaveLength(0);
     // Every section says its state.
     for (const id of sectionIds()) expect(status(id!), id).toBeTruthy();
-    expect(status("support")).toMatch(/ · ★★★★☆$/); // the tier and the player's rating
+    expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 2 picked`); // your words for the rating, and what you noticed
+    // DualSense support is a readout: a main-view block with the tier as its status.
+    expect($('.dk-split-main [data-block="support"] .dk-sec-status')!.textContent).toBe(`✓✓ ${i18n.t("desktop.library.tier.verified")}`);
+    expect($('.dk-split-panel [data-section="support"]')).toBeNull();
   });
 
-  it("each tile opens its section (and flashes it)", () => {
+  it("each tile opens its section (and flashes it): the panel's names, in the panel's order", () => {
     render(ghostrunner());
     const tiles = [...container!.querySelectorAll<HTMLButtonElement>(".gp-glance .gp-tile")];
     expect(tiles.map((t) => t.querySelector(".gp-tile-label")!.textContent)).toEqual([
-      i18n.t("desktop.library.section.support"),
-      i18n.t("desktop.library.runsWith"),
       i18n.t("desktop.library.section.profile"),
       i18n.t("desktop.library.section.setup"),
+      i18n.t("desktop.library.section.compat"),
+      i18n.t("desktop.library.section.report"),
     ]);
-    const targets = ["support", "compatibility", "profile", "setup"];
+    const targets = ["profile", "setup", "compatibility", "report"];
+    // In the panel's order: the tiles' sections come in the same order there.
+    expect(targets.map((id) => sectionIds().indexOf(id))).toEqual([...targets.map((id) => sectionIds().indexOf(id))].sort((a, b) => a - b));
+    // Each tile's label is its section's title.
+    tiles.forEach((tile, i) => expect(tile.querySelector(".gp-tile-label")!.textContent).toBe(sec(targets[i])!.querySelector(".dk-sec-title")!.textContent));
     tiles.forEach((tile, i) => {
       act(() => tile.click());
       expect(openIds()).toEqual([targets[i]]);
@@ -176,7 +184,9 @@ describe("game page", () => {
 
   it("Controller profile: what it changes, Edit in controller view, the layout and curves; no copy of the controller view's settings", () => {
     render(ghostrunner());
-    expect(status("profile")).toBe("2 changes");
+    // The tile counts the changes, the section's status names them.
+    expect($('.gp-tile[data-tile="profile"] .gp-tile-value')!.textContent).toBe("2 changes");
+    expect(status("profile")).toBe(`${i18n.t("desktop.library.haptics")}, ${i18n.t("desktop.library.speaker")}`);
     const profile = open("profile");
     expect([...profile.querySelectorAll(".dk-chip")].map((c) => c.textContent)).toHaveLength(2);
     const buttons = [...profile.querySelectorAll("button")].map((b) => b.textContent);
@@ -201,31 +211,49 @@ describe("game page", () => {
     expect(body("setup")!.querySelector("details")).toBeNull();
     const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
     expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
-    expect(open("feedback").textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(open("report").textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
     // A game on our XInput list: no mark, so the feedback keeps it.
     render(ghostrunner());
-    expect(open("feedback").textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
+    expect(open("report").textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
   });
 
-  it("the tier legend is shown in DualSense support (compact, no fold)", () => {
+  it("DualSense support is a main-view block: the tier's meaning, the feature checklist and the tier legend (compact, no fold)", () => {
     render(ghostrunner());
-    const support = open("support");
+    const support = $('.dk-split-main [data-block="support"] .dk-block-body')!;
     expect(support.querySelector("details")).toBeNull();
-    const legend = support.querySelector(".gp-legend-list")!;
-    expect(legend.closest(".dk-sec-group")!.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.tierLegend"));
-    expect(legend.querySelectorAll("li")).toHaveLength(6);
+    expect(support.querySelector(".gp-tier")!.textContent).toBe(i18n.t("desktop.library.tierHint.verified"));
+    expect(support.querySelectorAll(".gp-features li")).toHaveLength(5);
+    expect(support.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.tierLegend"));
+    expect(support.querySelectorAll(".gp-legend-list li")).toHaveLength(6);
+    // Before Details.
+    expect(support.compareDocumentPosition(openDetails()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("feedback is a setting: its own section in the panel (icon, the number ticked as its status), saved with the rating", () => {
+  it("a tile never repeats its section's status (IA audit Q7)", () => {
+    for (const game of [ghostrunner(), ghostrunnerNeedsSetup(), ghostrunner({ support: "unknown", usesOurProton: false })]) {
+      render(game);
+      for (const tile of [...container!.querySelectorAll<HTMLElement>(".gp-tile")]) {
+        const said = status(tile.dataset.tile!)!;
+        for (const part of [tile.querySelector(".gp-tile-value"), tile.querySelector(".gp-tile-hint")]) {
+          if (!part) continue;
+          expect(said, `${tile.dataset.tile}: "${part.textContent}"`).not.toContain(part.textContent!);
+          expect(part.textContent, tile.dataset.tile).not.toContain(said);
+        }
+      }
+    }
+  });
+
+  it("feedback is a setting: in Your report with the rating (the number ticked in its status), saved with the rating", () => {
     vi.useFakeTimers();
     try {
       render(ghostrunner());
-      expect(sectionIds().indexOf("feedback")).toBe(sectionIds().indexOf("support") + 1);
-      expect(sec("feedback")!.querySelector(".dk-sec-ic svg")).not.toBeNull();
-      expect(status("feedback")).toBe("2 picked");
-      // Not in DualSense support any more (one place).
-      expect(open("support").querySelector(".gp-tags")).toBeNull();
-      const box = open("feedback").querySelector(".gp-tags")!;
+      expect(sec("report")!.querySelector(".dk-sec-ic svg")).not.toBeNull();
+      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 2 picked`);
+      // Not in DualSense support (a readout now).
+      expect($('[data-block="support"] .gp-tags')).toBeNull();
+      const box = open("report").querySelector(".gp-tags")!;
+      // After the rating.
+      expect(body("report")!.querySelector("#gp-rating")!.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(box.getAttribute("aria-label")).toBe(i18n.t("desktop.library.feedbackHint"));
       const boxes = [...box.querySelectorAll<HTMLInputElement>("input[type=checkbox]")];
       expect(boxes.filter((b) => b.checked)).toHaveLength(2);
@@ -233,14 +261,14 @@ describe("game page", () => {
       vi.stubGlobal("desktop", fakeDesktop("linux", calls));
       const disconnects = boxes.find((b) => b.parentElement!.textContent!.includes(i18n.t("desktop.library.tag.disconnects")))!;
       act(() => disconnects.click());
-      expect(status("feedback")).toBe("3 picked");
+      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 3 picked`);
       act(() => void vi.advanceTimersByTime(1000));
       const saved = calls.find((c) => c.startsWith("librarySetMine"))!;
       expect(saved).toContain('"disconnects"');
       expect(saved).toContain('"ratedOn"'); // a feedback change re-stamps what it was given on
       // Nothing ticked: the question is the status.
-      for (const b of [...open("feedback").querySelectorAll<HTMLInputElement>("input:checked")]) act(() => b.click());
-      expect(status("feedback")).toBe(i18n.t("desktop.library.feedbackHint"));
+      for (const b of [...open("report").querySelectorAll<HTMLInputElement>(".gp-tags input:checked")]) act(() => b.click());
+      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · ${i18n.t("desktop.library.feedbackHint")}`);
     } finally {
       vi.useRealTimers();
     }
@@ -266,7 +294,7 @@ describe("game page", () => {
 
   it("Windows: no Proton or HDR sections, the store and launcher in Details", () => {
     render(ghostrunner({ hdr: undefined, gamepad: undefined, runner: null, usesOurProton: false, envFlags: [] }), HDR_READY, "win32");
-    expect(sectionIds()).toEqual(["profile", "setup", "support", "feedback", "notes"]);
+    expect(sectionIds()).toEqual(["profile", "setup", "report", "notes"]);
     expect([...container!.querySelectorAll(".gp-tile")]).toHaveLength(3);
     expect(open("setup").textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
     expect(checksHead()).toBe("✓ All set (1 check)");
@@ -275,23 +303,23 @@ describe("game page", () => {
 });
 
 // The rating rates the controller in this game, not the game: it sits in
-// DualSense support under the feature list, asks so, and every star names
-// what it means (owner: "five stars under a game banner read as rating the game").
+// Your report, asks so, and every star names what it means (owner: "five
+// stars under a game banner read as rating the game").
 describe("rating: how well the DualSense works in this game", () => {
   const stars = () => [...container!.querySelectorAll<HTMLButtonElement>("#gp-rating [role=radio]")];
-  // The rating is in DualSense support: rendered while it's open.
+  // The rating is in Your report: rendered while it's open.
   const show = (game: GameEntry = ghostrunner()) => {
     render(game);
-    open("support");
+    open("report");
   };
   const label = () => $("#gp-rating .gp-rate-label");
   const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
 
-  it("lives in DualSense support under the per-feature list, with its question and the saved-on-this-PC line (feedback is its own section)", () => {
+  it("lives in Your report, first, with its question and the saved-on-this-PC line", () => {
     show();
-    const rating = $('[data-section="support"] #gp-rating')!;
+    const rating = $('[data-section="report"] #gp-rating')!;
     expect(rating).not.toBeNull();
-    expect($('[data-section="support"] .gp-features')!.compareDocumentPosition(rating) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(body("report")!.firstElementChild).toBe(rating);
     expect(rating.querySelector("h3")!.textContent).toBe("How well does your DualSense work in this game?");
     expect(rating.querySelector("[role=radiogroup]")!.getAttribute("aria-labelledby")).toBe(rating.querySelector("h3")!.id);
     expect(rating.querySelector(".gp-tags")).toBeNull();
@@ -337,7 +365,7 @@ describe("rating: how well the DualSense works in this game", () => {
         }),
       ),
     );
-    open("support");
+    open("report");
     expect(label()).toBeNull();
     expect(stars().map((b) => b.tabIndex)).toEqual([0, -1, -1, -1, -1]);
   });

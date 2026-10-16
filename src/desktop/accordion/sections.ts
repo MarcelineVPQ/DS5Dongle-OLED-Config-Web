@@ -10,7 +10,7 @@ export const SECTIONS = {
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots"],
   dongle: ["firmware", "device", "power", "oled", "usb"],
   games: ["launchers", "proton", "recommended", "history"],
-  game: ["profile", "setup", "hdr", "compatibility", "support", "feedback", "notes"],
+  game: ["profile", "setup", "compatibility", "hdr", "report", "notes"],
 } as const;
 
 // The readouts in each page's main view (MainBlock.tsx): deep links to them
@@ -19,7 +19,7 @@ export const MAIN_BLOCKS = {
   controller: ["info"],
   dongle: ["diagnostics"],
   games: ["computer"],
-  game: ["details"],
+  game: ["support", "details"],
 } as const;
 
 export type AccordionPage = keyof typeof SECTIONS;

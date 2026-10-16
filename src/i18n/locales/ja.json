@@ -832,9 +832,9 @@
         "setup": "セットアップ",
         "compat": "互換性",
         "support": "DualSense 対応",
-        "feedback": "フィードバック",
         "notes": "メモ",
-        "details": "詳細"
+        "details": "詳細",
+        "report": "あなたのレポート"
       },
       "activeNow": "適用中",
       "profileNone": "このゲームは通常の設定を使います。プロファイルを使うと、このゲームの間だけコントローラーの設定（ハプティックフィードバック、スピーカー、ライトバー、マイク、ボタン、スティック）を変えられ、終了すると元に戻ります。",
@@ -1031,7 +1031,23 @@
       "profileChanges_other": "{{count}} 件の変更",
       "hdrUnknown": "HDR 対応は不明",
       "notesEmpty": "なし",
-      "glanceOpen": "{{section}} を開く"
+      "glanceOpen": "{{section}} を開く",
+      "notRated": "未評価",
+      "glance": {
+        "ready": "準備完了",
+        "fixes_other": "適用する修正 {{count}} 件"
+      },
+      "profileStatus": {
+        "none": "現在の設定から作成できます",
+        "normal": "通常の設定"
+      },
+      "compatStatus": {
+        "ours": "✓ DualSense 用 Proton ビルド",
+        "recommended": "{{name}} がおすすめ",
+        "notInstalled": "DualSense 用 Proton ビルドがおすすめです",
+        "any": "最近の Proton ならどれでも動きます",
+        "missing": "⚠ 設定された Proton ビルドがインストールされていません"
+      }
     },
     "dongleConsole": {
       "title": "OLED画面",

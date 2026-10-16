@@ -1,12 +1,14 @@
 // One game's page in the Games library, like every page: the main view is the
 // artwork (hero + logo), one bar with Play, the quick links and the play
-// stats, the game "at a glance" (tiles that each open their section) and
-// Details (a main-view block: readouts don't go in the accordion); the
-// accordion at the right holds the rest: Controller profile, Setup, HDR,
-// Compatibility (Proton games on Linux), DualSense support (with the
-// player's rating) and Notes. Each fact has one place: the tier in
-// DualSense support, the Proton in Compatibility, store and launcher in
-// Details. The page keeps the game's own accent (scopedAccent), panel
+// stats, the game "at a glance" (tiles named and ordered as the panel's
+// sections, each opening its section, never saying what the section's status
+// says) and two readouts as main-view blocks: DualSense support (the tier,
+// the feature checklist, what the tiers mean) and Details. The accordion at
+// the right holds what you set or do: Controller profile, Setup,
+// Compatibility (Proton games on Linux), HDR (Proton games), Your report
+// (your rating and what you noticed) and Notes. Each fact has one place: the
+// tier in DualSense support, the Proton in Compatibility, store and launcher
+// in Details. The page keeps the game's own accent (scopedAccent), panel
 // included; the pins are shared by every game's page.
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { BadgeCheck, Info, Layers, MessageSquareText, NotebookPen, SlidersHorizontal, Sun, Wrench } from "lucide-react";
@@ -28,6 +30,7 @@ import { captureProfile, clearGroup, gameGroups, pruneProfile, settingsFrom, sho
 import { X } from "lucide-react";
 import { CURVE_PRESETS, DEFAULT_CUSTOM_POINTS } from "../../protocol/stickCurve";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { BusyButton, Row } from "../controls";
 import { LIGHTBAR_MODES } from "../pages/LightbarPage";
@@ -117,21 +120,35 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   // The first visit opens what needs the player; the pins are every game page's.
   const hdrTask = isHdr && !status.hdrOk;
   const acc = useAccordion("game", pinScope("game"), status.attention ? "setup" : hdrTask ? "hdr" : null);
+  const supportBlock = useMainBlock("game", "support");
   const details = useMainBlock("game", "details");
 
-  // Each section's status line (and the tiles that open them).
+  // Each section's status line, and the glance tiles that open them. A tile
+  // and its section never say the same words (page rule 2, IA audit Q7): the
+  // tile is the short value (how many changes, what runs it, the stars), the
+  // section's status the detail (which changes, the recommendation, your words).
   const normal = library.restore?.settings ?? (bridge.config ? settingsFrom(bridge.config) : null);
   const profile = record?.profile?.settings ?? null;
-  const changes = useProfileChips(profile, normal, !!bridge.client?.splitHaptics).length;
+  const chips = useProfileChips(profile, normal, !!bridge.client?.splitHaptics);
+  const profileTile = profile ? t("desktop.library.profileChanges", { count: chips.length }) : t("desktop.library.profileNoneShort");
   const profileStatus = profile
-    ? // loop: NOT-WORTH — N = 2 parts of one status line
-      [running && t("desktop.library.activeNow"), t("desktop.library.profileChanges", { count: changes })].filter(Boolean).join(" · ")
-    : t("desktop.library.profileNoneShort");
+    ? // loop: NOT-WORTH — N ≤ 15 chips; one status line
+      [...new Set(chips.map((c) => c.label))].join(", ") || t("desktop.library.profileStatus.normal")
+    : t("desktop.library.profileStatus.none");
   const setupLine = status.passed > 0 ? `✓ ${t("desktop.library.setupAllSet", { count: status.passed })}` : `✓ ${t("desktop.library.setupNone")}`;
   const setupTask = status.attention && t("desktop.library.needsAttention");
+  const setupTile = status.attention
+    ? game.fixes.length
+      ? t("desktop.library.glance.fixes", { count: game.fixes.length })
+      : t("desktop.library.needsAttention")
+    : `✓ ${t("desktop.library.glance.ready")}`;
   // loop: HOT-PATH-OK — N = feedback tags (under 10); game page render
   const feedbackCount = feedbackTags(game).filter((tag) => mine.tags?.includes(tag)).length;
-  const feedbackStatus = feedbackCount ? t("desktop.library.feedbackPicked", { count: feedbackCount }) : t("desktop.library.feedbackHint");
+  // loop: NOT-WORTH — N = 2 parts of one status line
+  const reportStatus = [mine.rating && t(`desktop.library.rateLabel.${mine.rating}`), feedbackCount ? t("desktop.library.feedbackPicked", { count: feedbackCount }) : t("desktop.library.feedbackHint")]
+    .filter(Boolean)
+    .join(" · ");
+  const reportTile = mine.rating ? `${"★".repeat(mine.rating)}${"☆".repeat(5 - mine.rating)}` : t("desktop.library.notRated");
   // loop: HOT-PATH-OK — N = screens, 1-3; game page render
   const hdrScreens = report.system.hdr.screens.filter((x) => x.hdr).map((x) => x.name);
   const hdrLine = isHdr
@@ -142,11 +159,13 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   // As the launcher shows it (Steam's own Protons have an internal name, e.g. proton_9 = "Proton 9.0").
   // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20)
   const runner = `${game.runnerMissing ? "⚠ " : ""}${game.protons?.find((c) => c.current)?.name ?? game.runner ?? t("desktop.library.launcherDefault")}`;
+  const compatStatus = compatLine(t, game, report.ourProton.name);
   const store = t(`desktop.library.storeName.${game.store}`);
 
-  // The game at a glance: a tile per section that says the most, each opening it (flashed; the drawer when narrow).
+  // The game at a glance: a tile per section, in the panel's order and with
+  // its name, each opening it (flashed; the drawer when narrow).
   const tile = (id: SectionId<"game">, label: string, value: string, hint?: string | false) => (
-    <button key={id} type="button" className="gp-tile" title={t("desktop.library.glanceOpen", { section: label })} onClick={() => acc.reveal(id)}>
+    <button key={id} type="button" className="gp-tile" data-tile={id} title={t("desktop.library.glanceOpen", { section: label })} onClick={() => acc.reveal(id)}>
       <span className="gp-tile-label">{label}</span>
       <span className="gp-tile-value">{value}</span>
       {hint && <span className="gp-tile-hint">{hint}</span>}
@@ -162,12 +181,16 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <PlayStats info={info} running={running} />
       </div>
       <div className="gp-glance">
-        {tile("support", t("desktop.library.section.support"), tier, t(`desktop.library.tierHint.${support.tier}`))}
-        {protonApplies() && tile("compatibility", t("desktop.library.runsWith"), runner, game.usesOurProton && t("desktop.library.usesOurs"))}
-        {tile("profile", t("desktop.library.section.profile"), profileStatus)}
-        {tile("setup", t("desktop.library.section.setup"), setupTask || setupLine)}
+        {tile("profile", t("desktop.library.section.profile"), profileTile, !!profile && running && t("desktop.library.activeNow"))}
+        {tile("setup", t("desktop.library.section.setup"), setupTile)}
+        {protonApplies() && tile("compatibility", t("desktop.library.section.compat"), runner)}
+        {tile("report", t("desktop.library.section.report"), reportTile)}
       </div>
       <div className="gp-blocks">
+        {/* DualSense support: a readout (the tier, the feature checklist, the legend), so a main-view block (IA audit R3). */}
+        <MainBlock state={supportBlock} icon={BadgeCheck} title={t("desktop.library.section.support")} status={tier}>
+          <SupportBody game={game} />
+        </MainBlock>
         {/* loop: NOT-WORTH — N = 2 parts of one status line */}
         <MainBlock state={details} icon={Info} title={t("desktop.library.section.details")} status={[store, info?.sizeBytes && `${(info.sizeBytes / 1e9).toFixed(1)} GB`].filter(Boolean).join(" · ")}>
           <DetailsBody game={game} info={info} />
@@ -185,21 +208,23 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <Section id="setup" icon={Wrench} title={t("desktop.library.section.setup")} status={setupLine} task={setupTask}>
           {() => <SetupBody game={game} report={report} mineState={mineState} onRescan={onRescan} status={status} />}
         </Section>
+        {protonApplies() && (
+          <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={compatStatus}>
+            {() => <CompatBody key={game.key} game={game} report={report} onRescan={onRescan} />}
+          </Section>
+        )}
         {proton && (
           <Section id="hdr" icon={Sun} title={t("desktop.library.hdrTitle")} status={hdrLine} task={hdrTask && t("desktop.library.needsAttention")}>
             {() => <HdrBody game={game} report={report} mineState={mineState} hdrReqs={hdrReqs} isHdr={isHdr} />}
           </Section>
         )}
-        {protonApplies() && (
-          <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={runner}>
-            {() => <CompatBody key={game.key} game={game} report={report} onRescan={onRescan} />}
-          </Section>
-        )}
-        <Section id="support" icon={BadgeCheck} title={t("desktop.library.section.support")} status={mine.rating ? `${tier} · ${"★".repeat(mine.rating)}${"☆".repeat(5 - mine.rating)}` : tier}>
-          {() => <SupportBody game={game} info={info} mineState={mineState} />}
-        </Section>
-        <Section id="feedback" icon={MessageSquareText} title={t("desktop.library.section.feedback")} status={feedbackStatus}>
-          {() => <FeedbackBody game={game} mineState={mineState} />}
+        <Section id="report" icon={MessageSquareText} title={t("desktop.library.section.report")} status={reportStatus}>
+          {() => (
+            <>
+              <RatingPart game={game} info={info} mineState={mineState} />
+              <FeedbackBody game={game} mineState={mineState} />
+            </>
+          )}
         </Section>
         <Section id="notes" icon={NotebookPen} title={t("desktop.library.section.notes")} status={mine.notes?.trim().split("\n")[0] || t("desktop.library.notesEmpty")}>
           {() => (
@@ -217,6 +242,15 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       </SplitView>
     </div>
   );
+}
+
+// Compatibility's status: what the recommendation says about the build it
+// runs with (the tile shows the build's name; IA audit Q7).
+function compatLine(t: TFunction, game: GameEntry, ours: string | null): string {
+  if (game.runnerMissing) return t("desktop.library.compatStatus.missing");
+  if (game.usesOurProton) return t("desktop.library.compatStatus.ours");
+  if (game.support !== "triggers" && game.support !== "haptics") return t("desktop.library.compatStatus.any");
+  return ours ? t("desktop.library.compatStatus.recommended", { name: ours }) : t("desktop.library.compatStatus.notInstalled");
 }
 
 // A game Proton runs (Linux, a launcher with per-game Proton settings).
@@ -308,7 +342,7 @@ function ProfileBody({
 // differs from the normal settings); each one's button goes back to the
 // normal setting. Everything not listed uses the normal settings. The
 // section's status counts them.
-type Chip = { key: string; text: string; clear: () => ProfileSettings };
+type Chip = { key: string; label: string; text: string; clear: () => ProfileSettings };
 function useProfileChips(draft: ProfileSettings | null, normal: ProfileSettings | null, split: boolean): Chip[] {
   const { t } = useTranslation();
   const { library } = useLibrary();
@@ -354,18 +388,25 @@ function useProfileChips(draft: ProfileSettings | null, normal: ProfileSettings 
   // loop: HOT-PATH-OK — N ≤ 12 profile groups
   const chips: Chip[] = gameGroups(draft, normal).map((g) => ({
     key: g,
+    label: label[g],
     text: `${label[g]}: ${value[g]()}`,
     clear: () => clearGroup(draft, g),
   }));
   const layout = draft.buttonLayout ? library.layouts?.[draft.buttonLayout] : undefined;
   if (draft.buttonLayout)
-    chips.push({ key: "layout", text: `${t("desktop.layouts.profileLabel")}: ${layout?.name ?? t("desktop.layouts.normal")}`, clear: () => ({ ...draft, buttonLayout: undefined }) });
+    chips.push({
+      key: "layout",
+      label: t("desktop.layouts.profileLabel"),
+      text: `${t("desktop.layouts.profileLabel")}: ${layout?.name ?? t("desktop.layouts.normal")}`,
+      clear: () => ({ ...draft, buttonLayout: undefined }),
+    });
   // loop: HOT-PATH-OK — N = 2 sticks
   for (const side of ["left", "right"] as const) {
     const curve = draft.stickCurves?.[side];
     if (!curve) continue;
     chips.push({
       key: `curve-${side}`,
+      label: t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight"),
       text: `${t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")}: ${t(`desktop.curves.type.${curve.type}`)}`,
       clear: () => {
         const rest = { ...draft.stickCurves };
@@ -784,20 +825,16 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
   );
 }
 
-// ---- DualSense support ----
-function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameInfo; mineState: MineState }) {
+// ---- DualSense support (a main-view block: a readout) ----
+// The tier's meaning (the tier itself is the block's status), the fixes in
+// this app for the game, the per-feature checklist and what the tiers mean.
+function SupportBody({ game }: { game: GameEntry }) {
   const { t } = useTranslation();
   const s = supportOf(game);
   return (
     <>
-      <p className={`gp-tier ${s.tier}`}>
-        <b>
-          {TIER_ICON[s.tier]} {t(`desktop.library.tier.${s.tier}`)}
-        </b>
-        <br />
-        {/* hint: MUST-SHOW — what this game's rating means, beside the rating */}
-        <span className="dk-hint">{t(`desktop.library.tierHint.${s.tier}`)}</span>
-      </p>
+      {/* hint: MUST-SHOW — what this game's tier means, under the tier */}
+      <p className={`gp-tier ${s.tier} dk-hint`}>{t(`desktop.library.tierHint.${s.tier}`)}</p>
       {fixesFor(game.title).length > 0 && (
         <ul className="dk-review">
           {/* loop: HOT-PATH-OK — N = known game fixes (GAME_FIXES, empty now) */}
@@ -816,21 +853,19 @@ function SupportBody({ game, info, mineState }: { game: GameEntry; info?: GameIn
           </li>
         ))}
       </ul>
-      <SectionGroup title={t("desktop.library.tierLegend")}>
-        <ul className="gp-legend-list">
-          {/* loop: HOT-PATH-OK — N = 6 support tiers */}
-          {(["verified", "works", "needs-setup", "partial", "broken", "unknown"] as const).map((tier) => (
-            <li key={tier}>
-              <b>
-                {TIER_ICON[tier]} {t(`desktop.library.tier.${tier}`)}
-              </b>{" "}
-              {/* hint: MUST-SHOW — the legend: what each rating means */}
-              <span className="dk-hint">{t(`desktop.library.tierHint.${tier}`)}</span>
-            </li>
-          ))}
-        </ul>
-      </SectionGroup>
-      <RatingPart game={game} info={info} mineState={mineState} />
+      <h4 className="dk-subhead">{t("desktop.library.tierLegend")}</h4>
+      <ul className="gp-legend-list">
+        {/* loop: HOT-PATH-OK — N = 6 support tiers */}
+        {(["verified", "works", "needs-setup", "partial", "broken", "unknown"] as const).map((tier) => (
+          <li key={tier}>
+            <b>
+              {TIER_ICON[tier]} {t(`desktop.library.tier.${tier}`)}
+            </b>{" "}
+            {/* hint: MUST-SHOW — the legend: what each rating means */}
+            <span className="dk-hint">{t(`desktop.library.tierHint.${tier}`)}</span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
@@ -955,19 +990,22 @@ function FeedbackBody({ game, mineState }: { game: GameEntry; mineState: MineSta
   const { t } = useTranslation();
   const [mine, update] = mineState;
   return (
-    <ul className="gp-tags" aria-label={t("desktop.library.feedbackHint")}>
-      {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
-      {feedbackTags(game).map((tag) => {
-        const on = mine.tags?.includes(tag) ?? false;
-        return (
-          <li key={tag}>
-            <label>
-              <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} /> {t(`desktop.library.tag.${tag}`)}
-            </label>
-          </li>
-        );
-      })}
-    </ul>
+    <SectionGroup title={t("desktop.library.feedbackHint")}>
+      <ul className="gp-tags" aria-label={t("desktop.library.feedbackHint")}>
+        {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
+        {feedbackTags(game).map((tag) => {
+          const on = mine.tags?.includes(tag) ?? false;
+          return (
+            <li key={tag}>
+              <label>
+                <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} />{" "}
+                {t(`desktop.library.tag.${tag}`)}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+    </SectionGroup>
   );
 }
 

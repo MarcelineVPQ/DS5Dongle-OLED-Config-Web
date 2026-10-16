@@ -838,9 +838,9 @@
         "setup": "Configuração",
         "compat": "Compatibilidade",
         "support": "Suporte DualSense",
-        "feedback": "Feedback",
         "notes": "Notas",
-        "details": "Detalhes"
+        "details": "Detalhes",
+        "report": "Seu relato"
       },
       "activeNow": "Ativo agora",
       "profileNone": "Este jogo usa suas configurações normais. Um perfil muda qualquer configuração do controle (resposta tátil, alto-falante, barra de luz, microfone, botões, analógicos) só para este jogo e volta ao normal quando ele fecha.",
@@ -1042,7 +1042,24 @@
       "profileChanges_other": "{{count}} mudanças",
       "hdrUnknown": "Não se sabe se suporta HDR",
       "notesEmpty": "Vazio",
-      "glanceOpen": "Abrir {{section}}"
+      "glanceOpen": "Abrir {{section}}",
+      "notRated": "Sem avaliação",
+      "glance": {
+        "ready": "Pronto",
+        "fixes_one": "{{count}} ajuste a aplicar",
+        "fixes_other": "{{count}} ajustes a aplicar"
+      },
+      "profileStatus": {
+        "none": "Crie a partir dos seus ajustes atuais",
+        "normal": "Seus ajustes normais"
+      },
+      "compatStatus": {
+        "ours": "✓ O build do Proton para DualSense",
+        "recommended": "{{name}} recomendado",
+        "notInstalled": "O build do Proton para DualSense é recomendado",
+        "any": "Qualquer Proton recente serve",
+        "missing": "⚠ O build do Proton dele não está instalado"
+      }
     },
     "dongleConsole": {
       "title": "Tela OLED",

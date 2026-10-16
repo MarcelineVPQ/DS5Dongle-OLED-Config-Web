@@ -848,10 +848,9 @@ const GAMES_INVENTORY: Record<string, string[]> = {
 const GAME_INVENTORY: Record<string, string[]> = {
   profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.profileLabel", "desktop.curves.profileLeft"],
   setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
-  hdr: ["desktop.hdrManual.title"],
   compatibility: ["desktop.library.runsWith"],
-  support: ["desktop.library.tierLegend", "desktop.library.rateTitle"],
-  feedback: ["desktop.library.tag.weak-vibration"],
+  hdr: ["desktop.hdrManual.title"],
+  report: ["desktop.library.rateTitle", "desktop.library.tag.weak-vibration"],
   notes: [],
 };
 // Each section opened in turn: everything listed is in it (by text; some
@@ -918,7 +917,9 @@ describe("a game's page on the accordion", () => {
     );
     expect(container.querySelector(".dk-split-main .gp-hero")).not.toBeNull();
     expect(container.querySelectorAll(".dk-split-main .gp-tile")).toHaveLength(4);
-    // Details: a block in the main view under the tiles, always shown.
+    // DualSense support and Details: blocks in the main view under the tiles, always shown.
+    expect(blockHead("support").textContent).toContain(m.i18n.t("desktop.library.section.support"));
+    expect(blockBody("support")?.textContent).toContain(m.i18n.t("desktop.library.tierLegend"));
     expect(blockHead("details").textContent).toContain(m.i18n.t("desktop.library.section.details"));
     // loop: test
     for (const key of ["desktop.library.launcher", "desktop.library.id"]) expect(blockBody("details")?.textContent, key).toContain(m.i18n.t(key));

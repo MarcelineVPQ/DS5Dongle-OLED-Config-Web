@@ -838,9 +838,9 @@
         "setup": "Einrichtung",
         "compat": "Kompatibilität",
         "support": "DualSense-Support",
-        "feedback": "Feedback",
         "notes": "Notizen",
-        "details": "Details"
+        "details": "Details",
+        "report": "Dein Bericht"
       },
       "activeNow": "Jetzt aktiv",
       "profileNone": "Dieses Spiel nutzt deine normalen Einstellungen. Ein Profil ändert jede Controller-Einstellung (haptisches Feedback, Lautsprecher, Leuchtleiste, Mikrofon, Tasten, Sticks) nur für dieses Spiel und schaltet beim Beenden zurück.",
@@ -1042,7 +1042,24 @@
       "profileChanges_other": "{{count}} Änderungen",
       "hdrUnknown": "HDR-Unterstützung nicht bekannt",
       "notesEmpty": "Leer",
-      "glanceOpen": "{{section}} öffnen"
+      "glanceOpen": "{{section}} öffnen",
+      "notRated": "Nicht bewertet",
+      "glance": {
+        "ready": "Bereit",
+        "fixes_one": "{{count}} Korrektur offen",
+        "fixes_other": "{{count}} Korrekturen offen"
+      },
+      "profileStatus": {
+        "none": "Aus deinen aktuellen Einstellungen anlegen",
+        "normal": "Deine normalen Einstellungen"
+      },
+      "compatStatus": {
+        "ours": "✓ Der DualSense-Proton-Build",
+        "recommended": "{{name}} empfohlen",
+        "notInstalled": "Der DualSense-Proton-Build wird empfohlen",
+        "any": "Jedes aktuelle Proton geht",
+        "missing": "⚠ Sein Proton-Build ist nicht installiert"
+      }
     },
     "dongleConsole": {
       "title": "OLED-Bildschirm",

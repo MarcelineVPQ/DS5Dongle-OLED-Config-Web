@@ -837,9 +837,9 @@
         "setup": "Setup",
         "compat": "Compatibility",
         "support": "DualSense support",
-        "feedback": "Feedback",
         "notes": "Notes",
-        "details": "Details"
+        "details": "Details",
+        "report": "Your report"
       },
       "activeNow": "Active now",
       "profileNone": "This game uses your normal settings. A profile changes any controller setting (haptic feedback, speaker, light bar, microphone, buttons, sticks) for this game only, and switches back when it closes.",
@@ -1041,7 +1041,24 @@
       "profileChanges_other": "{{count}} changes",
       "hdrUnknown": "Not known to support HDR",
       "notesEmpty": "Empty",
-      "glanceOpen": "Open {{section}}"
+      "glanceOpen": "Open {{section}}",
+      "notRated": "Not rated",
+      "glance": {
+        "ready": "Ready",
+        "fixes_one": "{{count}} fix to apply",
+        "fixes_other": "{{count}} fixes to apply"
+      },
+      "profileStatus": {
+        "none": "Start one from your current settings",
+        "normal": "Your normal settings"
+      },
+      "compatStatus": {
+        "ours": "✓ The DualSense Proton build",
+        "recommended": "{{name}} recommended",
+        "notInstalled": "The DualSense Proton build is recommended",
+        "any": "Any recent Proton works",
+        "missing": "⚠ Its Proton build isn't installed"
+      }
     },
     "dongleConsole": {
       "title": "OLED screen",
