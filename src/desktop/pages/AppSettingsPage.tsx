@@ -83,7 +83,7 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
     : null;
 
   return (
-    <SplitView page="app" main={main} title={t("desktop.live.app")} sub={t("desktop.settings2.sub")} state={acc} panelRef={panelRef}>
+    <SplitView page="app" main={main} title={t("desktop.live.app")} sub={t("desktop.panelSub.app")} state={acc} panelRef={panelRef}>
       <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
         {() => (
           <Row label={t("desktop.settings2.language")} wide>

@@ -384,7 +384,6 @@
       "proton": "Mudanças no Proton",
       "guide": "Guia",
       "credits": "Créditos",
-      "version": "Você está usando a versão {{version}}.",
       "loading": "Carregando…",
       "updated": "Atualizado para {{version}}.",
       "seeWhatsNew": "Ver novidades",
@@ -1254,8 +1253,7 @@
       "updates": "Atualizações",
       "graphics": "Gráficos",
       "reduceMotion": "Reduzir movimento",
-      "reduceMotionSub": "Sem fundo em movimento, pulsação ou animações (também ativo se o sistema pedir)",
-      "sub": "Só este PC · salvo ao mudar"
+      "reduceMotionSub": "Sem fundo em movimento, pulsação ou animações (também ativo se o sistema pedir)"
     },
     "dev": {
       "title": "Desenvolvedor",
@@ -1920,7 +1918,11 @@
       "windowsStereoInfo": "O Windows configura o controle como um dispositivo de 4 canais (Quadrafônico). Jogos com som surround tocam então os sons traseiros nos canais 3 e 4, que acionam a resposta tátil: as empunhaduras zumbem e esses sons faltam no seu headset. Coloque em Estéreo uma vez: Configurações → Sistema → Som → Mais configurações de som → guia Reprodução → Alto-falantes (DualSense Wireless Controller) → Configurar → Canais de áudio: Estéreo → Avançar até Concluir."
     },
     "panelSub": {
-      "games": "Seus launchers neste PC · nada muda até você aplicar"
+      "games": "Seus launchers neste PC · nada muda até você aplicar",
+      "app": "Só este PC · salvo ao mudar",
+      "controller": "{{device_em, capitalize}} · slot de emparelhamento {{slot}}",
+      "game": "Fica neste PC · um ajuste só muda arquivos quando você aplica",
+      "about": "Guia, mudanças e créditos"
     }
   },
   "ad": {

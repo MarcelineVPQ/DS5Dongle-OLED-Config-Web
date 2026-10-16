@@ -383,7 +383,6 @@
       "proton": "Proton changes",
       "guide": "Guide",
       "credits": "Credits",
-      "version": "You're running version {{version}}.",
       "loading": "Loading…",
       "updated": "Updated to {{version}}.",
       "seeWhatsNew": "See what's new",
@@ -1253,8 +1252,7 @@
       "updates": "Updates",
       "graphics": "Graphics",
       "reduceMotion": "Reduce motion",
-      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)",
-      "sub": "This PC only · saved as you change them"
+      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)"
     },
     "dev": {
       "title": "Developer",
@@ -1919,7 +1917,11 @@
       "windowsStereoInfo": "Windows sets the controller up as a 4-channel (Quadraphonic) device. Games with surround sound then play their rear sounds on channels 3 and 4, which drive the haptic feedback: the grips buzz, and those sounds are missing from your headset. Set it to Stereo once: Settings → System → Sound → More sound settings → Playback tab → Speakers (DualSense Wireless Controller) → Configure → Audio channels: Stereo → Next until Finish."
     },
     "panelSub": {
-      "games": "Your launchers on this PC · nothing changes until you apply"
+      "games": "Your launchers on this PC · nothing changes until you apply",
+      "app": "This PC only · saved as you change them",
+      "controller": "On {{device}} · pairing slot {{slot}}",
+      "game": "Kept on this PC · a fix changes files only when you apply it",
+      "about": "Guide, changes and credits"
     }
   },
   "ad": {

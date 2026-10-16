@@ -384,7 +384,6 @@
       "proton": "Changements de Proton",
       "guide": "Guide",
       "credits": "Crédits",
-      "version": "Tu utilises la version {{version}}.",
       "loading": "Chargement…",
       "updated": "Mis à jour en {{version}}.",
       "seeWhatsNew": "Voir les nouveautés",
@@ -1254,8 +1253,7 @@
       "updates": "Mises à jour",
       "graphics": "Graphismes",
       "reduceMotion": "Réduire les animations",
-      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)",
-      "sub": "Ce PC uniquement · enregistré à chaque changement"
+      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)"
     },
     "dev": {
       "title": "Développeur",
@@ -1920,7 +1918,11 @@
       "windowsStereoInfo": "Windows configure la manette comme un appareil à 4 canaux (Quadriphonie). Les jeux en son surround envoient alors leurs sons arrière sur les canaux 3 et 4, qui pilotent le retour haptique : les poignées vibrent et ces sons manquent dans votre casque. Réglez-la une fois sur Stéréo : Paramètres → Système → Son → Plus de paramètres audio → onglet Lecture → Haut-parleurs (DualSense Wireless Controller) → Configurer → Canaux audio : Stéréo → Suivant jusqu'à Terminer."
     },
     "panelSub": {
-      "games": "Tes lanceurs sur ce PC · rien ne change avant que tu appliques"
+      "games": "Tes lanceurs sur ce PC · rien ne change avant que tu appliques",
+      "app": "Ce PC uniquement · enregistré à chaque changement",
+      "controller": "Sur {{device}} · slot d'association {{slot}}",
+      "game": "Gardé sur ce PC · un correctif ne change des fichiers qu'une fois appliqué",
+      "about": "Guide, nouveautés et crédits"
     }
   },
   "ad": {

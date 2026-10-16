@@ -880,6 +880,40 @@ async function textInventory(page: "games" | "game", table: Record<string, strin
   expect([...rows].filter(([, ids]) => ids.size > 1)).toEqual([]);
 }
 
+// Page rule 3: the panel's sub-line says where its settings are kept and how
+// they save: one string per page, no version, no status.
+describe("the panel sub-lines", () => {
+  const sub = () => container.querySelector(".dk-split-sub")?.textContent ?? null;
+  const VERSION = /\d+\.\d+(\.\d+)?/;
+  it("the Controller page: on the board, which pairing slot", async () => {
+    await live("overview");
+    expect(sub()).toBe(m.i18n.t("desktop.panelSub.controller", { slot: 0 }));
+  });
+  it("App settings, About and a game's page: their own line, no version", async () => {
+    await render(appSettings());
+    expect(sub()).toBe(m.i18n.t("desktop.panelSub.app"));
+    await render(createElement(m.AboutPage));
+    expect(sub()).toBe(m.i18n.t("desktop.panelSub.about"));
+    expect(sub()).not.toMatch(VERSION);
+    expect(container.querySelector(".dk-about-text")!.textContent).not.toContain(window.desktop!.appVersion);
+    vi.stubGlobal("desktop", fakeDesktop("linux"));
+    const game = ghostrunnerNeedsSetup();
+    await render(
+      createElement(m.GamePage, {
+        game,
+        info: GHOSTRUNNER_INFO,
+        record: GHOSTRUNNER_RECORD,
+        running: false,
+        report: gamesReport(game, HDR_NO_LAYER),
+        bridge: fakeBridge(),
+        onLibrary: () => undefined,
+        onRescan: () => undefined,
+      }),
+    );
+    expect(sub()).toBe(m.i18n.t("desktop.panelSub.game"));
+  });
+});
+
 describe("Games → Home on the accordion", () => {
   it("has every section of the plan, each thing in exactly one; the library is the main view", async () => {
     const report = homeReport("attention");

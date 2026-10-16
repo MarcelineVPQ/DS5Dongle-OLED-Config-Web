@@ -343,7 +343,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
         page="controller"
         main={main}
         title={on && id?.model ? (look ? `${look.name} ${modelName}` : modelName) : t("desktop.live.overview")}
-        sub={slot !== undefined ? `${t("desktop.overview.slot")} ${slot}` : undefined}
+        sub={slot !== undefined ? t("desktop.panelSub.controller", { slot }) : undefined}
         top={
           target && (
             <Notice role="status" closable>

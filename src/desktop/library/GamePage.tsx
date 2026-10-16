@@ -201,7 +201,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
 
   return (
     <div className="gp" ref={page} style={accent ?? undefined}>
-      <SplitView page="game" main={main} title={game.title} sub={t(`desktop.library.launcherName.${game.launcher}`)} state={acc}>
+      <SplitView page="game" main={main} title={game.title} sub={t("desktop.panelSub.game")} state={acc}>
         <Section id="profile" icon={SlidersHorizontal} title={t("desktop.library.section.profile")} status={profileStatus}>
           {() => <ProfileBody game={game} record={record} bridge={bridge} normal={normal} onLibrary={onLibrary} />}
         </Section>

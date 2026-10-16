@@ -172,7 +172,6 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   const main = (
     <article className="dk-about-text">
       <span className="dk-subhead">{t(TEXTS[doc].title)}</span>
-      {window.desktop && <p className="dk-hint">{t("desktop.about.version", { version: appVersionLabel(), defaultValue: "You're running version {{version}}." })}</p>}
       {doc === "credits" && <StudioCard />}
       {doc === "roadmap" ? (
         <ComingSoon />
@@ -194,7 +193,7 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   );
 
   return (
-    <SplitView page="about" main={main} mainKey={doc} title={t("desktop.nav.about", "About")} sub={`DS5 Dongle OLED Edition${window.desktop ? ` · ${appVersionLabel()}` : ""}`} state={acc}>
+    <SplitView page="about" main={main} mainKey={doc} title={t("desktop.nav.about", "About")} sub={t("desktop.panelSub.about")} state={acc}>
       {/* loop: NOT-WORTH — N = 6 sections; About's render */}
       {ids.map((id) => (
         <Section key={id} id={id} icon={TEXTS[id].icon} title={t(TEXTS[id].title)} status={statuses[id]} task={id === "changes" && whatsNew ? t("desktop.about.updated", { version: whatsNew }) : null}>

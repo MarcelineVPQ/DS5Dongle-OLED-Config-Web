@@ -384,7 +384,6 @@
       "proton": "Proton-Änderungen",
       "guide": "Anleitung",
       "credits": "Mitwirkende",
-      "version": "Du nutzt Version {{version}}.",
       "loading": "Lädt…",
       "updated": "Auf {{version}} aktualisiert.",
       "seeWhatsNew": "Neuigkeiten ansehen",
@@ -1254,8 +1253,7 @@
       "updates": "Updates",
       "graphics": "Grafik",
       "reduceMotion": "Bewegung reduzieren",
-      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)",
-      "sub": "Nur dieser PC · wird beim Ändern gespeichert"
+      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)"
     },
     "dev": {
       "title": "Entwickler",
@@ -1920,7 +1918,11 @@
       "windowsStereoInfo": "Windows richtet den Controller als 4-Kanal-Gerät (Quadrofonie) ein. Spiele mit Surround-Ton geben ihre hinteren Kanäle dann auf den Kanälen 3 und 4 aus, die das haptische Feedback steuern: Die Griffe brummen, und diese Töne fehlen im Headset. Einmal auf Stereo stellen: Einstellungen → System → Sound → Weitere Soundeinstellungen → Registerkarte Wiedergabe → Lautsprecher (DualSense Wireless Controller) → Konfigurieren → Audiokanäle: Stereo → Weiter bis Fertig stellen."
     },
     "panelSub": {
-      "games": "Deine Launcher auf diesem PC · nichts ändert sich, bevor du übernimmst"
+      "games": "Deine Launcher auf diesem PC · nichts ändert sich, bevor du übernimmst",
+      "app": "Nur dieser PC · wird beim Ändern gespeichert",
+      "controller": "Auf {{device_dat}} · Kopplungs-Slot {{slot}}",
+      "game": "Auf diesem PC · eine Korrektur ändert Dateien erst beim Übernehmen",
+      "about": "Handbuch, Änderungen und Credits"
     }
   },
   "ad": {

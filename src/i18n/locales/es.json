@@ -384,7 +384,6 @@
       "proton": "Cambios de Proton",
       "guide": "Guía",
       "credits": "Créditos",
-      "version": "Usas la versión {{version}}.",
       "loading": "Cargando…",
       "updated": "Actualizado a {{version}}.",
       "seeWhatsNew": "Ver novedades",
@@ -1254,8 +1253,7 @@
       "updates": "Actualizaciones",
       "graphics": "Gráficos",
       "reduceMotion": "Reducir movimiento",
-      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)",
-      "sub": "Solo este PC · se guarda al cambiarlo"
+      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)"
     },
     "dev": {
       "title": "Desarrollador",
@@ -1920,7 +1918,11 @@
       "windowsStereoInfo": "Windows configura el mando como un dispositivo de 4 canales (Cuadrafónico). Los juegos con sonido envolvente envían entonces sus sonidos traseros a los canales 3 y 4, que mueven la retroalimentación háptica: los agarres zumban y esos sonidos faltan en tus auriculares. Ponlo en Estéreo una vez: Configuración → Sistema → Sonido → Más configuraciones de sonido → pestaña Reproducción → Altavoces (DualSense Wireless Controller) → Configurar → Canales de audio: Estéreo → Siguiente hasta Finalizar."
     },
     "panelSub": {
-      "games": "Tus lanzadores en este PC · nada cambia hasta que apliques"
+      "games": "Tus lanzadores en este PC · nada cambia hasta que apliques",
+      "app": "Solo este PC · se guarda al cambiarlo",
+      "controller": "En {{device}} · slot de emparejamiento {{slot}}",
+      "game": "Se guarda en este PC · un ajuste solo cambia archivos al aplicarlo",
+      "about": "Guía, cambios y créditos"
     }
   },
   "ad": {
