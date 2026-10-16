@@ -7,15 +7,15 @@
 // hover and on keyboard focus, closes with Esc and gives it to screen
 // readers; the rail's item of the page you're on shows / hides that page's
 // settings panel, every page alike, remembered per page.
-import { act, createElement, useEffect } from "react";
+import { act, createElement, Fragment, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import { usePoll } from "../../src/desktop/usePoll";
 import { InfoTip, Row, SELECT_PX } from "../../src/desktop/controls";
-import { PANEL_HIDDEN_KEY, Section, SplitView } from "../../src/desktop/accordion/Section";
+import { PANEL_HIDDEN_KEY, panelTasks, Section, SplitView } from "../../src/desktop/accordion/Section";
 import { revealSection, useAccordion } from "../../src/desktop/accordion/useAccordion";
-import { railPress, type RailItem } from "../../src/desktop/AppRail";
+import AppRail, { railPress, type RailItem } from "../../src/desktop/AppRail";
 import WindowsUsbRepair from "../../src/desktop/WindowsUsbRepair";
 import { REPAIR_SCRIPT } from "../../src/desktop/windowsRepairScript";
 import de from "../../src/i18n/locales/de.json";
@@ -268,9 +268,25 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
       });
     }
     localStorage.setItem(PANEL_HIDDEN_KEY(page), "1");
-    act(() => root.render(createElement(Drawer)));
+    const rail = createElement(AppRail, {
+      active: "games",
+      onSelect: vi.fn(),
+      gamesSupported: true,
+      reminders: {},
+      connected: true,
+      connecting: false,
+      firmware: null,
+      deviceLabel: "Pico 2 W",
+      device: "Pico 2 W",
+    });
+    act(() => root.render(createElement(Fragment, null, createElement(Drawer), rail)));
     expect(split().classList.contains("drawer-open"), "remembered closed").toBe(false);
-    expect(container.querySelector(".dk-split-show .dk-sec-task"), "the task's dot on the drawer's button").not.toBeNull();
+    // The task's dot: on the page's rail item (no show button on the page since 2026-10-16).
+    expect(container.querySelector(".dk-split-show")).toBeNull();
+    expect(panelTasks.get().get(page), "the task, for the rail item's dot").toBe("waiting");
+    const games = container.querySelector<HTMLElement>('[data-rail="games"]')!;
+    expect(games.querySelector(".rail-badge.dot"), "the dot on the Games rail item").not.toBeNull();
+    expect(games.title).toContain("waiting");
     // The rail's task dot: the drawer stays closed, the section opens.
     act(() => revealSection(page, ids[1] as never, undefined, { keepHidden: true }));
     expect(split().classList.contains("drawer-open")).toBe(false);
@@ -279,6 +295,7 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
     act(() => railPress("games", "games", vi.fn()));
     expect(split().classList.contains("drawer-open")).toBe(true);
     expect(localStorage.getItem(PANEL_HIDDEN_KEY(page))).toBe("0");
+    expect(games.querySelector(".rail-badge"), "open: the section carries the dot").toBeNull();
     // The ⋮ menu in the drawer's header: Collapse all folds the open section.
     const menu = container.querySelector<HTMLButtonElement>('.dk-split-panel .dk-split-head [aria-haspopup="menu"]')!;
     act(() => menu.click());

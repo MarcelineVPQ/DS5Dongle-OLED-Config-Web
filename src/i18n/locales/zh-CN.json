@@ -1829,8 +1829,6 @@
       "keepOpen": "保持{{section}}展开",
       "pin": "固定：保持展开",
       "pinned": "已固定：保持展开",
-      "showPanel": "显示面板",
-      "showPanelTask": "显示面板：{{task}}",
       "hidePanel": "隐藏面板",
       "on": "{{name}} 开",
       "off": "{{name}} 关",

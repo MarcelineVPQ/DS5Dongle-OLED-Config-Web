@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { railTip } from "../../src/desktop/AppRail";
+import { railDot, railTip } from "../../src/desktop/AppRail";
 import de from "../../src/i18n/locales/de.json";
 import en from "../../src/i18n/locales/en.json";
 import es from "../../src/i18n/locales/es.json";
@@ -30,5 +30,18 @@ describe("the Games rail tooltip", () => {
       expect(tip.gamesWindows).toBeTruthy();
       expect(tip.gamesWindows).not.toContain("Proton");
     }
+  });
+});
+
+// A hidden panel's task (no show button on the page since 2026-10-16): the
+// page's rail item carries its dot, added to the item's own tasks once.
+describe("the rail's dot", () => {
+  it("adds a hidden panel's task to the item's dot, once", () => {
+    expect(railDot(undefined, null)).toBeUndefined();
+    expect(railDot(undefined, "Updated to 1.2.3.")).toEqual({ count: null, tip: "Updated to 1.2.3." });
+    const fw = { count: null, tip: "Firmware update" };
+    expect(railDot(fw, null)).toBe(fw);
+    expect(railDot(fw, "Firmware update")).toBe(fw); // the same task: not said twice
+    expect(railDot({ count: 3, tip: "3 games" }, "Proton not installed")).toEqual({ count: 3, tip: "3 games\nProton not installed" });
   });
 });

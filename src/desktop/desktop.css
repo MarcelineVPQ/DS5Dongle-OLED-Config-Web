@@ -5504,16 +5504,6 @@ main.dk-body:focus:not(:focus-visible),
   scrollbar-gutter: stable;
   padding: var(--dk-pad);
 }
-.dk-split-show {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  z-index: 3;
-  display: none;
-}
-.dk-split.panel-hidden .dk-split-show {
-  display: inline-flex;
-}
 .dk-split-panel {
   position: relative;
   min-height: 0;
@@ -5617,12 +5607,6 @@ main.dk-body:focus:not(:focus-visible),
   .dk-split.drawer-open .dk-split-panel {
     transform: none;
     visibility: visible;
-  }
-  .dk-split .dk-split-show {
-    display: inline-flex;
-  }
-  .dk-split.drawer-open .dk-split-show {
-    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

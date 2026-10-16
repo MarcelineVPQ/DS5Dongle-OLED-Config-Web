@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- **No more panel button on the page.** The small button at the top right of a page that showed its hidden settings panel is gone, on every page: click the page's item in the rail again (or press Enter on it) to show or hide the panel, wide or in a small window. While the panel is hidden, a yellow dot on that rail item says a section in it is waiting, and its tooltip says what.
 - **The Pico console's simulated OLED has Hap Left and Hap Right** (developer previews and tests): its Settings list now matches the firmware's, with the left and right grip set apart instead of one linked Hap Gain.
 
 ### Fixed

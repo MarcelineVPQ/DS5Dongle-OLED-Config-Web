@@ -21,7 +21,7 @@ import { protonApplies } from "./games/platform";
 import { Gamepad2, Info, Joystick, Lock, LockOpen, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Reminder } from "./notices";
-import { togglePanel } from "./accordion/Section";
+import { panelTasks, togglePanel } from "./accordion/Section";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
 const PIN_KEY = "ds5.railPinned";
@@ -48,6 +48,18 @@ export function railPress(item: RailItem, active: RailItem, go: (item: RailItem)
   else go(item);
 }
 
+// The pages (SplitView's `page`) behind each rail item; the first one mounted
+// is the one on screen (a game page over Games → Home).
+const RAIL_PAGES: Record<RailItem, readonly string[]> = { controller: ["controller"], dongle: ["dongle"], games: ["game", "games"], app: ["app"], about: ["about"] };
+
+// An item's dot: its open tasks (notices.ts), plus, on the page you're on, a
+// task in its hidden panel (`panelTask`, SplitView's panelTasks), the
+// panel's only cue while hidden (once shown, the section carries the dot).
+export function railDot(reminder: Reminder | undefined, panelTask: string | null): Reminder | undefined {
+  if (!panelTask || reminder?.tip.split("\n").includes(panelTask)) return reminder;
+  return reminder ? { count: reminder.count, tip: `${reminder.tip}\n${panelTask}` } : { count: null, tip: panelTask };
+}
+
 export const railTip = (item: RailItem): string => (item === "games" && !protonApplies() ? "desktop.rail.tip.gamesWindows" : `desktop.rail.tip.${item}`);
 
 interface Props {
@@ -65,6 +77,7 @@ interface Props {
 
 export default function AppRail({ active, onSelect, gamesSupported, reminders, connected, connecting, firmware, deviceLabel, device }: Props) {
   const { t } = useTranslation();
+  const hiddenTasks = panelTasks.use();
   const [pinned, setPinned] = useFlagPref(PIN_KEY);
   const [locked, setLocked] = useFlagPref(RAIL_LOCK_KEY);
   // Kept open and locked collapsed exclude each other.
@@ -101,7 +114,9 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
 
   const link = (item: RailItem, icon: ReactNode) => {
     const label = railLabel(t, item, device);
-    const reminder = reminders[item];
+    // loop: NOT-WORTH — N ≤ 2 pages per item; per render of the rail
+    const page = active === item ? RAIL_PAGES[item].find((p) => hiddenTasks.has(p)) : undefined;
+    const reminder = railDot(reminders[item], (page && hiddenTasks.get(page)) || null);
     const tip = `${label} · ${t(active === item ? "desktop.rail.again" : railTip(item))}`;
     return (
       <button
@@ -110,9 +125,10 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
         data-rail={item}
         aria-current={active === item ? "page" : undefined}
         // What's there, in one line; on the page you're on, what a second
-        // click does (show / hide its settings panel); then what's waiting there.
+        // click (or Enter / Space) does: show / hide its settings panel, the
+        // one way to (no button on the page); then what's waiting there.
         title={reminder ? `${tip}\n${reminder.tip}` : tip}
-        aria-description={reminder?.tip}
+        aria-description={active === item ? (reminder ? `${t("desktop.rail.again")}\n${reminder.tip}` : t("desktop.rail.again")) : reminder?.tip}
         onClick={(e) => {
           onSelect(item);
           // A pointer click (detail > 0), not Enter/Space: close the rail now.

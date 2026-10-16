@@ -1840,8 +1840,6 @@
       "keepOpen": "Garder {{section}} ouvert",
       "pin": "Épingler : reste ouvert",
       "pinned": "Épinglé : reste ouvert",
-      "showPanel": "Afficher le panneau",
-      "showPanelTask": "Afficher le panneau : {{task}}",
       "hidePanel": "Masquer le panneau",
       "on": "{{name}} activé",
       "off": "{{name}} désactivé",

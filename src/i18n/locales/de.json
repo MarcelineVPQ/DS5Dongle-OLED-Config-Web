@@ -1840,8 +1840,6 @@
       "keepOpen": "{{section}} offen lassen",
       "pin": "Anheften: bleibt offen",
       "pinned": "Angeheftet: bleibt offen",
-      "showPanel": "Feld einblenden",
-      "showPanelTask": "Feld einblenden: {{task}}",
       "hidePanel": "Feld ausblenden",
       "on": "{{name}} an",
       "off": "{{name}} aus",

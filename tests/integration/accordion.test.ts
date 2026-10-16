@@ -408,7 +408,7 @@ describe("App settings on the accordion", () => {
   // Arriving through a rail item's task dot (DesktopApp's goTo(item, section,
   // keepHidden)) opens and marks the section; it's scrolled to and flashed
   // when the panel is shown, once.
-  it("the rail's task dot leaves a hidden panel hidden: the dot on the show button, the section opened, shown when the panel is", async () => {
+  it("the rail's task dot leaves a hidden panel hidden: the dot on the rail item, the section opened, shown when the panel is", async () => {
     const app = { phase: "available" as const, version: "1.2.3", size: 1_000_000 };
     const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 0 });
     const task = tasks.find((x) => x.place === "app")!;
@@ -422,21 +422,24 @@ describe("App settings on the accordion", () => {
     expect(openIds()).toEqual(["updates"]); // opened and marked, ready
     expect(sec.querySelector(".dk-sec-task")).not.toBeNull();
     expect(sec.classList.contains("dk-flash"), "not flashed while hidden").toBe(false);
-    // The dot on the panel's show button, the task in its name.
-    const show = container.querySelector<HTMLButtonElement>(".dk-split-show")!;
-    expect(show.querySelector(".dk-sec-task")).not.toBeNull();
-    expect(show.getAttribute("aria-label")).toBe(m.i18n.t("desktop.accordion.showPanelTask", { task: task.text }));
-    // Shown: the section is scrolled to, focused and flashed.
+    // No show button on the page (2026-10-16): the task goes to the page's rail item (AppRail's railDot).
+    expect(container.querySelector(".dk-split-show")).toBeNull();
+    expect(m.Section.panelTasks.get().get("app")).toBe(task.text);
+    // Shown through the rail item (togglePanel): the section is scrolled to, focused and flashed.
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList); // jsdom lays nothing out
+    const show = () => act(() => m.Section.togglePanel());
     const scrolled = vi.spyOn(Element.prototype, "scrollIntoView");
-    click(show);
+    show();
     expect(split.classList.contains("panel-hidden")).toBe(false);
     expect(scrolled).toHaveBeenCalled();
     expect(sec.classList.contains("dk-flash")).toBe(true);
     expect(document.activeElement).toBe(head("updates"));
+    expect(m.Section.panelTasks.get().get("app"), "shown: the section carries the dot").toBeNull();
     // Hidden and shown again: no second flash for the same link.
     sec.classList.remove("dk-flash");
     click(container.querySelector<HTMLButtonElement>(`.dk-split-head button[aria-label="${m.i18n.t("desktop.accordion.hidePanel")}"]`)!);
-    click(show);
+    expect(m.Section.panelTasks.get().get("app")).toBe(task.text);
+    show();
     expect(sec.classList.contains("dk-flash")).toBe(false);
   });
 
@@ -444,7 +447,7 @@ describe("App settings on the accordion", () => {
     localStorage.setItem(m.Section.PANEL_HIDDEN_KEY("app"), "1");
     await render(appSettings());
     expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(true);
-    expect(container.querySelector(".dk-split-show .dk-sec-task")).toBeNull(); // no task: no dot
+    expect(m.Section.panelTasks.get().get("app")).toBeNull(); // no task: no dot
     await act(async () => m.acc.revealSection("app", "graphics"));
     expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(false);
     expect(openIds()).toEqual(["graphics"]);

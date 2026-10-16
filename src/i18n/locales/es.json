@@ -1840,8 +1840,6 @@
       "keepOpen": "Mantener {{section}} abierto",
       "pin": "Fijar: queda abierto",
       "pinned": "Fijado: queda abierto",
-      "showPanel": "Mostrar el panel",
-      "showPanelTask": "Mostrar el panel: {{task}}",
       "hidePanel": "Ocultar el panel",
       "on": "{{name}} activado",
       "off": "{{name}} desactivado",

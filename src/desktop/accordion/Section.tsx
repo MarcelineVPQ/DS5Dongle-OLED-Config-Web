@@ -22,16 +22,17 @@
 // reduce motion turns both off.
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronsDownUp, EllipsisVertical, PanelRightClose, PanelRightOpen, PinOff, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsDownUp, EllipsisVertical, PanelRightClose, PinOff, type LucideIcon } from "lucide-react";
 import { useFlagPref } from "../storage";
 import { reducedMotionNow } from "../motion";
 import type { Accordion as AccordionState } from "./useAccordion";
 import { InfoTip } from "../controls";
 import { MenuButton } from "../MenuButton";
+import { externalStore } from "../externalStore";
 
 const AccordionContext = createContext<AccordionState | null>(null);
 // The panel around the sections (SplitView): whether it's shown, and where a
-// section reports its open task (the dot on the panel's show button). Outside
+// section reports its open task (the rail's dot while the panel is hidden). Outside
 // a SplitView: shown, no report.
 interface PanelInfo {
   shown: boolean;
@@ -81,7 +82,7 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
   const ref = useRef<HTMLElement>(null);
   const revealed = acc.revealed?.id === id ? acc.revealed : null;
   const { shown, reportTask } = useContext(PanelContext);
-  // The open task, for the dot on the panel's show button (SplitView).
+  // The open task, for the rail's dot while the panel is hidden (SplitView).
   // lifetime: OK — cleanup: takes the task back (unmount / the task changes)
   useEffect(() => {
     if (!task) return;
@@ -198,14 +199,22 @@ export function SectionGroup({ title, info, children }: { title?: ReactNode; inf
 export const PANEL_HIDDEN_KEY = (page: string) => `ds5.accordion.hidden.${page}`;
 
 // The rail's item of the page you're on, clicked again (or Enter / Space on
-// it): the shown page's SplitView shows or hides its panel. Every page alike.
+// it): the shown page's SplitView shows or hides its panel. Every page alike,
+// wide and narrow (the drawer); the rail is the one way to show a hidden panel.
 const PANEL_TOGGLE_EVENT = "ds5:toggle-panel";
 export const togglePanel = () => window.dispatchEvent(new Event(PANEL_TOGGLE_EVENT));
 
+// Each mounted page's (SplitView `page`) open task while its panel is hidden
+// (null: shown, or nothing waiting): the rail's item for the page shows it
+// as its dot (AppRail), since the hidden panel's sections can't.
+// cache: OK — key=SplitView page; invalidated=the panel shown or hidden, the task changes, the page unmounts; bound=one entry per mounted SplitView (≤ 2: a game page over Games → Home)
+export const panelTasks = externalStore<ReadonlyMap<string, string | null>>(new Map());
+
 // A page with its main view on the left and the accordion panel on the
 // right. Below ~760 px (the page's width, a container query) the panel is a
-// drawer over the main view, opened with the button at the main view's top
-// right. Wide, the same buttons hide and show the panel (remembered per page).
+// drawer over the main view. The rail's item for the page shows and hides
+// it (togglePanel), the panel's own button hides it, Escape closes the
+// drawer; remembered per page.
 // `mainKey`: a new value starts the main view at its top (another text).
 // `top`: above the sections (a page-wide note, like the profile being edited).
 // `panelRef`: the panel element (the Glass style's lensing on the live pages).
@@ -243,7 +252,6 @@ export function SplitView({
   );
   // Narrow (the drawer) is a layout the stylesheet picks; asked at the key press.
   const narrow = () => !!panel.current && getComputedStyle(panel.current).position === "absolute";
-  const show = () => setHidden(false);
   const hide = () => setHidden(true);
   // The rail's toggle: only the page on screen answers (a hidden pane, like
   // Games → Home behind a game page, stays as it is).
@@ -263,24 +271,28 @@ export function SplitView({
   useEffect(() => {
     if (state.revealed && !state.revealed.keepHidden) setHidden(false);
   }, [state.revealed, setHidden]);
-  // The sections' open tasks: a dot on the show button while the panel is hidden.
+  // The sections' open tasks: the rail's dot while the panel is hidden.
   const [tasks, setTasks] = useState<ReadonlyArray<readonly [string, string]>>([]);
   const reportTask = useCallback((id: string, task: string | null) => {
     // loop: NOT-WORTH — N ≤ a page's sections; when a section's task changes
     setTasks((now) => [...now.filter(([at]) => at !== id), ...(task ? [[id, task] as const] : [])]);
   }, []);
   const panelInfo = useMemo(() => ({ shown: !hidden, reportTask }), [hidden, reportTask]);
-  const task = tasks[0]?.[1];
-  const showLabel = task ? t("desktop.accordion.showPanelTask", { task }) : t("desktop.accordion.showPanel");
+  const task = tasks[0]?.[1] ?? null;
+  // lifetime: OK — cleanup: takes this page out of panelTasks (unmount / the page, the panel's state or the task changes)
+  useEffect(() => {
+    panelTasks.set(new Map(panelTasks.get()).set(page, hidden ? task : null));
+    return () => {
+      const next = new Map(panelTasks.get());
+      next.delete(page);
+      panelTasks.set(next);
+    };
+  }, [page, hidden, task]);
   return (
     <div className={`dk-split${hidden ? " panel-hidden" : " drawer-open"}`}>
       <div className="dk-split-main" key={mainKey}>
         {main}
       </div>
-      <button type="button" className="dk-btn dk-icon-btn dk-split-show" onClick={show} title={showLabel} aria-label={showLabel}>
-        <PanelRightOpen size={14} />
-        {task && <i className="dk-sec-task" aria-hidden="true" />}
-      </button>
       {/* Hidden: display none (wide) or the closed drawer, still laid out
           off-screen under visibility hidden (narrow); said hidden in both. */}
       <aside
