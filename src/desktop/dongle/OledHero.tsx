@@ -1,8 +1,10 @@
-// The Pico 2 W page's centerpiece: the OLED Edition's screen. A heading that
-// names the module (Waveshare Pico-OLED-1.3 · 1.3″ · 128 × 64 · SH1107), the
-// live mirror with its KEY0 / KEY1 (the console, passed in as children), and
-// beside it (below it in a narrow window) what the screen is doing now and
-// the module's specs. Readouts only: the screen's settings are the
+// The Pico 2 W page's centerpiece: the OLED Edition's screen, the first of the
+// page's hardware zones (each: its name and one spec line in the title, then
+// its live data). The title names the module with its spec line (Waveshare
+// Pico-OLED-1.3 · 1.3″ · 128 × 64 · SH1107 · SPI; the keys and "not detected"
+// behind its ⓘ), then the live mirror with its KEY0 / KEY1 (the console,
+// passed in as children) and beside it (below it in a narrow window) what the
+// screen is doing now. Readouts only: the screen's settings are the
 // accordion's "OLED screen" section. Share (a PNG or GIF of the screen) sits
 // in the header, beside the module's name (`actions`, OledShare.tsx).
 // Live: the mirror's own poll (useOledFrame) and the page's 1 s sample (the
@@ -11,6 +13,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { OledFrame } from "../../protocol/bridgeClient";
 import { SCREEN_NAMES } from "../../oled/screenNames";
+import { InfoTip } from "../controls";
 import { OLED_MODULE } from "./boardSpecs";
 
 // The product's name: a name, never translated (and the one place "Dongle" is shown).
@@ -31,11 +34,13 @@ export default function OledHero({ frame, capable, redraws, children, actions }:
   const pct = f ? Math.round((f.contrast / 255) * 100) : null;
   return (
     <section className="oled-hero" aria-labelledby="oled-hero-h">
-      <header className="oled-hero-head">
+      <header className="zone-head">
         <span className="oled-hero-edition">{EDITION}</span>
         <h3 id="oled-hero-h">{OLED_MODULE.name}</h3>
-        <span className="oled-hero-sub">
-          {OLED_MODULE.size} · {OLED_MODULE.resolution} · {OLED_MODULE.controller}
+        <span className="zone-sub">
+          {OLED_MODULE.size} · {OLED_MODULE.resolution} · {OLED_MODULE.controller} · {OLED_MODULE.interface}
+          {/* The firmware drives the pins blind: it can't tell whether the module is fitted. */}
+          <InfoTip text={`${td("specs.keys")}: ${OLED_MODULE.keys}\n${td("specs.notDetected")}`} />
         </span>
         {actions}
       </header>
@@ -66,25 +71,6 @@ export default function OledHero({ frame, capable, redraws, children, actions }:
               <span>{td("oledFrame")}</span>
               <b>{f ? String(f.seq) : "—"}</b>
             </div>
-          </div>
-          <div className="dash-card oled-specs">
-            <h4>{td("specs.title")}</h4>
-            <dl className="dk-kv">
-              <dt>{td("specs.model")}</dt>
-              <dd>{OLED_MODULE.name}</dd>
-              <dt>{td("specs.size")}</dt>
-              <dd>{OLED_MODULE.size}</dd>
-              <dt>{td("specs.resolution")}</dt>
-              <dd>{OLED_MODULE.resolution}</dd>
-              <dt>{td("specs.controller")}</dt>
-              <dd>{OLED_MODULE.controller}</dd>
-              <dt>{td("specs.interface")}</dt>
-              <dd>{OLED_MODULE.interface}</dd>
-              <dt>{td("specs.keys")}</dt>
-              <dd>{OLED_MODULE.keys}</dd>
-            </dl>
-            {/* The firmware drives the pins blind: it can't tell whether the module is fitted. */}
-            <p className="dk-hint">{td("specs.notDetected")}</p>
           </div>
         </aside>
       </div>

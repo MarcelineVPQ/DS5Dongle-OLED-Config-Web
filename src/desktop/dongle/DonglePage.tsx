@@ -1,11 +1,13 @@
-// The Pico 2 W page: the OLED Edition's screen as its centerpiece (OledHero:
-// the module named, the mirror with KEY0 / KEY1, what the screen is doing and
-// its specs; the console's Log tab beside the mirror), then dials and
-// Diagnostics (a main-view block: readouts don't go in the accordion) as the
-// main view, its accordion at the right: Firmware, Restart & reset, Power &
-// sleep, OLED screen, USB & status pin. The dials and Diagnostics read the
-// board live, once a second, while the page is shown and the window is on
-// screen (DongleDashboard.tsx); a folded section renders nothing.
+// The Pico 2 W page. Its main view has one zone per piece of hardware, each
+// titled with its name and one spec line, then its live data: the OLED as
+// the centerpiece (OledHero: the module named, the mirror with KEY0 / KEY1
+// and the console's Log tab, what the screen is doing), then the board
+// (PicoGauges: dials and facts), then Diagnostics (a main-view block:
+// readouts don't go in the accordion). Its accordion at the right: Firmware,
+// Restart & reset, Power & sleep, OLED screen, USB & status pin. The dials
+// and Diagnostics read the board live, once a second, while the page is
+// shown and the window is on screen (DongleDashboard.tsx); a folded section
+// renders nothing.
 import { useTranslation } from "react-i18next";
 import { Activity, Download, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";

@@ -1,10 +1,11 @@
-// The Pico 2 W page's readouts. In its main view, under the console: the
-// chip temperature, clock and core voltage as dials, and the board's facts
-// (PicoGauges). In its Diagnostics block below them (a main-view MainBlock:
-// readouts stay out of the accordion): USB, Bluetooth, signal and mic as
-// graphs, the audio pipeline's counters (anything that went wrong lit), the
-// per-stage timings with Reset, what the OLED is doing, and the board's and
-// OLED module's specs (DiagnosticsBody).
+// The Pico 2 W page's readouts. In its main view, under the OLED's zone, the
+// board's zone (PicoGauges): its name and one spec line (chip, cores, clock,
+// SRAM, flash, wireless; the full specs behind the ⓘ) as the title, then the
+// chip temperature, clock and core voltage as dials and the board's facts.
+// In its Diagnostics block below them (a main-view MainBlock: readouts stay
+// out of the accordion), in the order the data flows: USB, Bluetooth, signal
+// and mic as graphs, the audio pipeline's counters (anything that went wrong
+// lit), the per-stage timings with Reset (DiagnosticsBody).
 // Live reads (useDongleTelemetry): one poll a second while the page is shown
 // and the window is on screen (usePoll pauses while hidden; leaving the page
 // unmounts it) reads 0xFB diag, 0xFC CPU with the timings and the 0xF5 audio
@@ -16,7 +17,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
 import { boardSpecs } from "./boardSpecs";
 import { causeText } from "../shownError";
-import { BusyButton } from "../controls";
+import { BusyButton, InfoTip } from "../controls";
 import { boardProblems } from "./core1Status";
 import Notice from "../Notice";
 import { SectionGroup } from "../accordion/Section";
@@ -121,7 +122,7 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
 const CLOCK_MAX_MHZ: Record<string, number> = { "Pico 2 W": 320, "Pico W": 200 };
 export const clockMaxMhz = (board: string | null): number => (board && CLOCK_MAX_MHZ[board]) || 320;
 
-// The main view's readouts: the chip's dials and the board's facts.
+// The board's zone: its name and spec line, the chip's dials and the board's facts.
 export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs5BridgeResult; telemetry: Telemetry; onDiagnostics: () => void }) {
   const { t } = useTranslation();
   const { sample: s, history } = telemetry;
@@ -129,14 +130,34 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
   if (!bridge.client) return null;
   // loop: HOT-PATH-OK — N = 60 samples per trend, one trend per render
   const series = (pick: (x: Sample) => number) => history.map(pick);
+  const specs = boardSpecs(bridge.identity?.boardName);
+  // The clock as measured, once read (as the dial shows it).
+  const mhz = s ? Math.round(s.realMhz) : null;
+  const core = specs && `${specs.coreMaker} ${specs.core}`;
   return (
-    <div className="dash">
+    <section className="dash pico-zone" aria-labelledby="pico-zone-h">
+      <header className="zone-head">
+        <h3 id="pico-zone-h">{hardwareName(bridge.identity)}</h3>
+        {specs && core && (
+          <span className="zone-sub">
+            {/* loop: NOT-WORTH — N = 6 parts of one title line */}
+            {[specs.chip, `2× ${specs.core}`, mhz !== null ? `${mhz} MHz` : null, `${specs.sramKb} KB`, `${specs.flashMb} MB`, specs.wireless].filter(Boolean).join(" · ")}
+            <InfoTip
+              text={[
+                `${td("specs.chip")}: ${mhz !== null ? td("specs.chipClock", { chip: specs.chip, core, mhz }) : td("specs.chipValue", { chip: specs.chip, core })}`,
+                `${td("specs.sram")}: ${specs.sramKb} KB`,
+                `${td("specs.flash")}: ${specs.flashMb} MB`,
+                `${td("specs.wireless")}: ${td("specs.wirelessValue", { chip: `${specs.wirelessMaker} ${specs.wireless}`, bt: specs.bluetooth })}`,
+              ].join("\n")}
+            />
+          </span>
+        )}
+      </header>
       <div className="dash-row">
         <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} trend={series((x) => x.tempC)} />
         <Gauge label={td("clock")} value={s?.realMhz} min={0} max={clockMaxMhz(bridge.identity?.boardName ?? null)} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
         <Gauge label={td("vcore")} value={s?.vcore ?? undefined} min={0.85} max={1.3} unit="V" digits={2} warn={1.2} bad={1.26} />
         <div className="dash-card dash-facts">
-          <h4>{td("pico", { deviceName: hardwareName(bridge.identity) })}</h4>
           <Fact label={td("uptime")} value={s ? formatUptime(s.uptime) : "—"} />
           <Fact label={td("protocol")} value={bridge.identity ? `${bridge.identity.protoMajor}.${bridge.identity.protoMinor}` : "—"} />
           {/* Every build is the OLED Edition: the short form fits the card; the tooltip has it all. */}
@@ -147,7 +168,7 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -162,7 +183,6 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   const series = (pick: (x: Sample) => number) => history.filter((x) => x.rated).map(pick);
   const rated = s?.rated ? s : null;
   const micLoss = micLossClimbing(history);
-  const specs = boardSpecs(bridge.identity?.boardName);
   const counters = s?.counters ?? null;
   const problems = s && counters ? boardProblems(t, counters, s.core1Alive) : [];
 
@@ -195,22 +215,6 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
       </SectionGroup>
 
       {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={longHistory} />}
-
-      {specs && (
-        <SectionGroup title={td("specs.title")}>
-          <h4 className="dk-subhead">{hardwareName(bridge.identity)}</h4>
-          <dl className="dk-kv">
-            <dt>{td("specs.chip")}</dt>
-            <dd>{s ? td("specs.chipClock", { chip: specs.chip, core: specs.core, mhz: Math.round(s.realMhz) }) : td("specs.chipValue", { chip: specs.chip, core: specs.core })}</dd>
-            <dt>{td("specs.sram")}</dt>
-            <dd>{specs.sramKb} KB</dd>
-            <dt>{td("specs.flash")}</dt>
-            <dd>{specs.flashMb} MB</dd>
-            <dt>{td("specs.wireless")}</dt>
-            <dd>{td("specs.wirelessValue", { chip: specs.wireless, bt: specs.bluetooth })}</dd>
-          </dl>
-        </SectionGroup>
-      )}
     </div>
   );
 }
