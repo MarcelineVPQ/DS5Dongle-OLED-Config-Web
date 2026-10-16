@@ -1,7 +1,8 @@
 // The controller's power where the app shows it: the battery tile (a bolt
-// while charging, a plug on a cable that isn't charging) and Controller info's
-// Charging row, both fed by chargeState(). The owner's case: a USB cable in,
-// 80%, the controller reporting state 2 ("full").
+// while charging, a plug on a cable that isn't charging, its label saying
+// which), fed by chargeState(); Controller info's Power says only a charge
+// fault (each fact once on the page). The owner's case: a USB cable in, 80%,
+// the controller reporting state 2 ("full").
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -35,24 +36,36 @@ describe("battery tile", () => {
     }
   });
 
-  it("labels the tile Charging / Plugged in / Battery", () => {
+  it("labels the tile Charging / Plugged in / Fully charged / Battery (state 2 at 80% is plugged in, at 100% full)", () => {
     expect(tile(chargeState(1, 80, true))).toContain(">Charging<");
     expect(tile(chargeState(2, 80, true))).toContain(">Plugged in<");
     expect(tile(chargeState(2, 80, true))).toContain('class="plug"');
+    expect(tile(chargeState(2, 100, true))).toContain(">Fully charged<");
     expect(tile(chargeState(0, 80, false))).toContain(">Battery<");
+  });
+
+  it("the Signal tile carries the dB; the Player tile names the player indicator, not the pairing slot", () => {
+    const strip = (rssi: number | null) =>
+      renderToStaticMarkup(createElement(LiveStrip, { id: identity, power: null, playerWiring: "individual", rssi, lightbarMode: null, lightbar: null, onLightbar: () => undefined }));
+    expect(strip(-5)).toContain("Signal · -5 dB");
+    expect(strip(0)).toContain(`Signal · ${i18n.t("desktop.liveData.inRange")}`);
+    expect(strip(-5)).toContain(">Player indicator<");
+    expect(strip(-5)).not.toContain(i18n.t("desktop.overview.slot"));
   });
 });
 
-describe("Controller info's Charging row", () => {
+describe("Controller info's Power", () => {
   const bridge = { client: {}, identity } as unknown as UseDs5BridgeResult;
-  // The section's body with the page's read (nothing read yet in a static render).
-  function Info({ level }: { level: number }) {
-    return createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: level, power: chargeState(2, level, true) });
+  // The block's body with the page's read (nothing read yet in a static render).
+  function Info({ power }: { power: ReturnType<typeof chargeState> }) {
+    return createElement(ControllerInfo, { data: useControllerInfo(bridge), power });
   }
-  const card = (level: number) => renderToStaticMarkup(createElement(Info, { level }));
-  it("state 2 at 80% is plugged in, not charging; at 100% fully charged", () => {
-    expect(card(80)).toContain("Plugged in, not charging");
-    expect(card(80)).not.toContain("Fully charged");
-    expect(card(100)).toContain("Fully charged");
+  const card = (power: ReturnType<typeof chargeState>) => renderToStaticMarkup(createElement(Info, { power }));
+  it("leaves the level and charging to the tile; says a charge fault", () => {
+    expect(card(chargeState(2, 80, true))).toContain(i18n.t("desktop.ctrlInfo.power"));
+    expect(card(chargeState(2, 80, true))).not.toContain("Plugged in");
+    expect(card(chargeState(1, 80, true))).not.toContain(">Charging<");
+    expect(card("voltageError")).toContain(i18n.t("desktop.ctrlInfo.chargeState.voltageError"));
+    expect(card(chargeState(2, 80, true))).not.toContain("80%");
   });
 });

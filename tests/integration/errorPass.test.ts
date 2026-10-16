@@ -246,7 +246,7 @@ describe("Controller info", () => {
     vi.stubGlobal("desktop", { platform: "linux", officialControllerFirmware: () => Promise.reject(new Error("offline")) });
     const bridge = { client, identity } as never;
     // The Controller page keeps the read (useControllerInfo); the section shows it.
-    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: 80, power: null });
+    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), power: null });
     act(() => root.render(createElement(Info)));
     for (let i = 0; i < 100 && !container.textContent?.includes(i18n.t("desktop.ctrlInfo.built")); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
     expect(container.textContent).not.toContain(i18n.t("desktop.ctrlInfo.officialUnavailable")); // an automatic check stays quiet

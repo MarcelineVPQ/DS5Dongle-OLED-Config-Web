@@ -702,7 +702,9 @@
       "colorLabel": "Cor:",
       "statusLabel": "Status:",
       "effectOther": "outro efeito ({{n}})",
-      "checkForUpdatesSub": "Desligado: o app só fica online para buscar atualizações quando você toca em Procurar atualizações."
+      "checkForUpdatesSub": "Desligado: o app só fica online para buscar atualizações quando você toca em Procurar atualizações.",
+      "playerIndicator": "Indicador de jogador",
+      "headsetMicIn": "Headset com microfone conectado"
     },
     "tour": {
       "stepOf": "Passo {{n}} de {{total}}",
@@ -775,13 +777,7 @@
       "finger": "Dedo {{n}}",
       "rate": "Atualizações",
       "roundTrip": "Ida e volta",
-      "signal": "Sinal",
-      "headset": "Conector de headset",
-      "mic": "Entrada de mic",
       "muted": "Mic mudo",
-      "usb": "Energia USB",
-      "yes": "sim",
-      "no": "não",
       "inRange": "faixa ideal",
       "on": "ligado",
       "off": "desligado",
@@ -1470,7 +1466,9 @@
       "howToPs5": "Ou em um PS5: conecte-o com um cabo USB e vá em Configurações → Acessórios → Controle (Geral) → Software de dispositivo do controle sem fio DualSense.",
       "howToCable": "A atualização não passa {{device_por}}. Depois, emparelhe o controle com {{device}} de novo se ele não reconectar.",
       "windowsOnly": "O aplicativo PlayStation Accessories da Sony só funciona no Windows: no Linux e no macOS, use um PC com Windows ou um PS5.",
-      "officialUnavailable": "Não foi possível falar com a Sony para comparar as versões. Verifique a conexão com a internet e pressione Atualizar."
+      "officialUnavailable": "Não foi possível falar com a Sony para comparar as versões. Verifique a conexão com a internet e pressione Atualizar.",
+      "power": "Energia",
+      "voltage": "Tensão da bateria"
     },
     "stickTest": {
       "circleTitle": "Teste de circularidade",

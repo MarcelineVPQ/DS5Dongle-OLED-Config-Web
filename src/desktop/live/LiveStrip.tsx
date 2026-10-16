@@ -1,6 +1,8 @@
 // The controller's status under the drawing, in two pairs: power and link
-// (battery, signal), then the lights on the controller (lightbar, player
-// LEDs and pairing slot). Sticks and triggers aren't repeated here: the
+// (battery with its charge or cable, signal with its dB), then the lights on
+// the controller (lightbar, player indicator). Each fact once on the page:
+// the voltage and charge history are Controller info's, the pairing slot is
+// the panel's sub-line. Sticks and triggers aren't repeated here: the
 // drawing moves with them and the data below has their numbers.
 import { useTranslation } from "react-i18next";
 import type { BridgeIdentity } from "../../protocol/bridgeClient";
@@ -36,7 +38,15 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
       <div className="live-tile">
         <BatteryIcon level={id.battery} power={power} />
         <span className="live-tile-value">{id.battery !== null ? `${id.battery}%` : "—"}</span>
-        <span className="live-tile-label">{power === "charging" ? t("desktop.controller.charging") : power === "pluggedIn" ? t("desktop.controller.pluggedIn") : t("desktop.controller.battery")}</span>
+        <span className="live-tile-label">
+          {power === "charging"
+            ? t("desktop.controller.charging")
+            : power === "pluggedIn"
+              ? t("desktop.controller.pluggedIn")
+              : power === "full"
+                ? t("desktop.ctrlInfo.chargeState.full")
+                : t("desktop.controller.battery")}
+        </span>
       </div>
       <div className="live-tile">
         <span className="live-bars" aria-hidden="true">
@@ -46,7 +56,11 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
           ))}
         </span>
         <span className="live-tile-value">{quality ? t(`desktop.overview.signalQ.${quality}`, quality) : "—"}</span>
-        <span className="live-tile-label">{t("desktop.overview.signal", "Signal")}</span>
+        {/* The dB as its small line (the one place the page shows it; Bluetooth's RSSI is relative to the ideal range: 0 = in it). */}
+        <span className="live-tile-label">
+          {t("desktop.overview.signal", "Signal")}
+          {rssi !== null && ` · ${rssi === 0 ? t("desktop.liveData.inRange") : `${rssi} dB`}`}
+        </span>
       </div>
       <button type="button" className="live-tile live-tile-button" onClick={onLightbar} title={t("desktop.live.part.lightbar", "Light bar")}>
         <span className="live-swatch" aria-hidden="true" style={swatch ? { background: swatch, color: swatch } : undefined} />
@@ -61,9 +75,8 @@ export default function LiveStrip({ id, playerWiring, power, rssi, lightbarMode,
           ))}
         </span>
         <span className="live-tile-value">{player ? `${t("desktop.live.player", "Player")} ${player}` : "—"}</span>
-        <span className="live-tile-label">
-          {t("desktop.overview.slot", "Pairing slot")} {id.currentSlot}
-        </span>
+        {/* The pairing slot is the panel's sub-line, not repeated here (IA audit C1). */}
+        <span className="live-tile-label">{t("desktop.live.playerIndicator")}</span>
       </div>
     </div>
   );

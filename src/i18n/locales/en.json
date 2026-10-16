@@ -701,7 +701,9 @@
       "colorLabel": "Color:",
       "statusLabel": "Status:",
       "effectOther": "other effect ({{n}})",
-      "checkForUpdatesSub": "Off: the app goes online for updates only when you press Check for updates."
+      "checkForUpdatesSub": "Off: the app goes online for updates only when you press Check for updates.",
+      "playerIndicator": "Player indicator",
+      "headsetMicIn": "Headset with mic in"
     },
     "tour": {
       "stepOf": "Step {{n}} of {{total}}",
@@ -774,13 +776,7 @@
       "finger": "Finger {{n}}",
       "rate": "Updates",
       "roundTrip": "Round trip",
-      "signal": "Signal",
-      "headset": "Headset jack",
-      "mic": "Mic jack",
       "muted": "Mic muted",
-      "usb": "USB power",
-      "yes": "yes",
-      "no": "no",
       "inRange": "ideal range",
       "on": "on",
       "off": "off",
@@ -1469,7 +1465,9 @@
       "howToPs5": "Or on a PS5: connect it with a USB cable, then Settings → Accessories → Controller (General) → DualSense Wireless Controller Device Software.",
       "howToCable": "The update can't go through {{device}}. Afterwards, pair the controller with {{device}} again if it doesn't reconnect.",
       "windowsOnly": "Sony's PlayStation Accessories app runs on Windows only: on Linux and macOS, use a Windows PC or a PS5.",
-      "officialUnavailable": "Couldn't reach Sony to compare versions. Check the internet connection and press Refresh."
+      "officialUnavailable": "Couldn't reach Sony to compare versions. Check the internet connection and press Refresh.",
+      "power": "Power",
+      "voltage": "Battery voltage"
     },
     "stickTest": {
       "circleTitle": "Circularity test",

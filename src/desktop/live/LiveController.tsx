@@ -332,10 +332,11 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
             {t("desktop.liveData.muted")}
           </span>
         )}
-        {input?.headphones && (
+        {/* The headset jack's state, with its mic when it has one: shown here only (not in the data cards). */}
+        {(input?.headphones || input?.micPlugged) && (
           <span className="live-mark live-title-label">
             <Headphones size={12} aria-hidden="true" />
-            {t("desktop.live.headsetIn")}
+            {t(input.micPlugged ? "desktop.live.headsetMicIn" : "desktop.live.headsetIn")}
           </span>
         )}
       </div>

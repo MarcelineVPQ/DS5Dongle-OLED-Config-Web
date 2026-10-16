@@ -140,7 +140,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
   // Controller info: a readout, so a block in the main view under the drawing (not the accordion).
   const infoBlock = useMainBlock("controller", "info");
-  const infoStatus = controllerInfoStatus(t, info, batteryPct);
+  const infoStatus = controllerInfoStatus(t, info);
   // The Buttons list's focused button (from the drawing or a row) and the
   // row under the pointer: both light up on the drawing.
   const [buttonFocus, setButtonFocus] = useState<number | null>(null);
@@ -304,7 +304,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
               onLightbar={() => pickPart("lightbar")}
             />
           )}
-          {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
+          {on && liveCapable && input && <LiveData input={input} edge={id?.model === "edge"} />}
         </div>
       )}
       {view !== "app" && !(on && id && liveCapable) && (
@@ -335,7 +335,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
       )}
       {view === "overview" && client && (
         <MainBlock state={infoBlock} icon={Info} title={t("desktop.ctrlInfo.title")} status={infoStatus.status} task={infoStatus.task}>
-          <ControllerInfo data={info} batteryPct={batteryPct} power={input ? power : null} />
+          <ControllerInfo data={info} power={input ? power : null} />
         </MainBlock>
       )}
     </div>

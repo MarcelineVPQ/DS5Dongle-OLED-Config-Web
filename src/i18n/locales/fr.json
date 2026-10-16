@@ -702,7 +702,9 @@
       "colorLabel": "Couleur :",
       "statusLabel": "État :",
       "effectOther": "autre effet ({{n}})",
-      "checkForUpdatesSub": "Désactivé : l’app ne va en ligne pour les mises à jour que quand tu appuies sur Rechercher des mises à jour."
+      "checkForUpdatesSub": "Désactivé : l’app ne va en ligne pour les mises à jour que quand tu appuies sur Rechercher des mises à jour.",
+      "playerIndicator": "Indicateur de joueur",
+      "headsetMicIn": "Casque micro branché"
     },
     "tour": {
       "stepOf": "Étape {{n}} sur {{total}}",
@@ -775,13 +777,7 @@
       "finger": "Doigt {{n}}",
       "rate": "Mises à jour",
       "roundTrip": "Aller-retour",
-      "signal": "Signal",
-      "headset": "Sortie casque",
-      "mic": "Prise micro",
       "muted": "Micro coupé",
-      "usb": "Alimentation USB",
-      "yes": "oui",
-      "no": "non",
       "inRange": "plage idéale",
       "on": "activé",
       "off": "désactivé",
@@ -1470,7 +1466,9 @@
       "howToPs5": "Ou sur une PS5 : branchez-la avec un câble USB, puis Paramètres → Accessoires → Manette (général) → Logiciel de la manette sans fil DualSense.",
       "howToCable": "La mise à jour ne peut pas passer par {{device}}. Ensuite, associe de nouveau la manette {{device_a}} si elle ne se reconnecte pas.",
       "windowsOnly": "L'application PlayStation Accessories de Sony ne fonctionne que sous Windows : sous Linux et macOS, utilisez un PC Windows ou une PS5.",
-      "officialUnavailable": "Impossible de joindre Sony pour comparer les versions. Vérifie la connexion internet et appuie sur Actualiser."
+      "officialUnavailable": "Impossible de joindre Sony pour comparer les versions. Vérifie la connexion internet et appuie sur Actualiser.",
+      "power": "Alimentation",
+      "voltage": "Tension de la batterie"
     },
     "stickTest": {
       "circleTitle": "Test de circularité",

@@ -1,8 +1,9 @@
 // Everything the controller reports, in four equal cards (one row, or 2 x 2
 // when narrow), grouped by kind: inputs (sticks, buttons, triggers,
-// touchpad), the two motion sensors, and the connection (link and what's
-// plugged in). Settings live in the panel, not here, and nothing repeats
-// what the drawing or the status strip shows.
+// touchpad), the two motion sensors, and the Bluetooth link (updates and
+// round trip). Settings live in the panel, not here, and nothing repeats
+// what the drawing (its headset and mute chips) or the tiles (battery and
+// cable, signal) show.
 import { useEffect, useRef, useState } from "react";
 import { AXIS_DASH, PALETTES } from "../colorVision";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,6 @@ import { atNextTick } from "../frameTick";
 
 interface Props {
   input: InputReport;
-  rssi: number | null;
   edge?: boolean; // DualSense Edge: Fn buttons and paddles rows
 }
 
@@ -52,11 +52,10 @@ function useLinkRates(): [string, string] {
   return rates;
 }
 
-export default function LiveData({ input, rssi, edge = false }: Props) {
+export default function LiveData({ input, edge = false }: Props) {
   const { t } = useTranslation();
   const [rate, roundTrip] = useLinkRates();
   const tl = (key: string) => t(`desktop.liveData.${key}`);
-  const yn = (v: boolean) => (v ? tl("yes") : tl("no"));
   const centered = (v: number) => v - 128;
   const { accelX: ax, accelY: ay, accelZ: az } = input;
   const roll = (Math.atan2(ay, az) * 180) / Math.PI;
@@ -108,17 +107,13 @@ export default function LiveData({ input, rssi, edge = false }: Props) {
         <Spark values={[ax, ay, az]} range={10000} />
         <Rows rows={[[tl("tilt"), `${fmt(Math.round(pitch), 4)}° ${fmt(Math.round(roll), 4)}°`]]} />
       </Card>
+      {/* The Bluetooth link only (IA audit C1/C2): the signal is the Signal tile's (with its
+          dB), the cable the Battery tile's, the jacks and mute the drawing's chips. */}
       <Card title={tl("connection")}>
         <Rows
           rows={[
             [tl("rate"), rate],
             [tl("roundTrip"), roundTrip],
-            // Bluetooth reports RSSI relative to the ideal ("golden") range: 0 = in it.
-            [tl("signal"), rssi === null ? "—" : rssi === 0 ? tl("inRange") : `${rssi} dB`],
-            [tl("usb"), yn(input.usbPower)],
-            [tl("headset"), yn(input.headphones)],
-            [tl("mic"), yn(input.micPlugged)],
-            [tl("muted"), yn(input.micMuted)],
           ]}
         />
       </Card>

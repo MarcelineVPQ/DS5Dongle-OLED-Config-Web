@@ -635,7 +635,7 @@ describe("the Controller page on the accordion", () => {
     const latest = { "0004": 0x0990, "000B": 0x0990, "000E": 0x0990 };
     vi.stubGlobal("desktop", { platform: "linux", officialControllerFirmware: () => Promise.resolve({ latest, problem: null }) });
     const bridge = { client, identity } as never;
-    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), batteryPct: 80, power: null });
+    const Info = () => createElement(ControllerInfo, { data: useControllerInfo(bridge), power: null });
     act(() => root.render(createElement(Info)));
     // loop: test — waits for the reads (≤ 1 s)
     for (let i = 0; i < 100 && !container.querySelector(".dk-fw-steps"); i++) await act(() => new Promise((r) => setTimeout(r, 10)));

@@ -246,12 +246,12 @@ describe("the Connection numbers", () => {
     liveStats.hz = 30;
     liveStats.ms = 2;
     const text = () => container.textContent ?? "";
-    act(() => root.render(createElement(LiveData, { input: emptyInputReport(), rssi: 0 })));
+    act(() => root.render(createElement(LiveData, { input: emptyInputReport() })));
     expect(text()).toContain("30.0 /s");
     liveStats.hz = 29.5;
     liveStats.ms = 3.3;
     // A new input frame: the numbers stay.
-    act(() => root.render(createElement(LiveData, { input: { ...emptyInputReport(), cross: true }, rssi: 0 })));
+    act(() => root.render(createElement(LiveData, { input: { ...emptyInputReport(), cross: true } })));
     expect(text()).toContain("30.0 /s");
     await advance(1000);
     expect(text()).toContain("29.5 /s");

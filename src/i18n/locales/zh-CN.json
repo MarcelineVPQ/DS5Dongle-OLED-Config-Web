@@ -698,7 +698,9 @@
       "colorLabel": "配色：",
       "statusLabel": "状态：",
       "effectOther": "其他效果（{{n}}）",
-      "checkForUpdatesSub": "关闭时：只有你按“检查更新”时，应用才会联网检查更新。"
+      "checkForUpdatesSub": "关闭时：只有你按“检查更新”时，应用才会联网检查更新。",
+      "playerIndicator": "玩家指示灯",
+      "headsetMicIn": "已插带麦克风的耳机"
     },
     "tour": {
       "stepOf": "第 {{n}} 步，共 {{total}} 步",
@@ -771,13 +773,7 @@
       "finger": "手指 {{n}}",
       "rate": "更新频率",
       "roundTrip": "往返时间",
-      "signal": "信号",
-      "headset": "耳机组插口",
-      "mic": "麦克风插孔",
       "muted": "麦克风静音",
-      "usb": "USB 供电",
-      "yes": "是",
-      "no": "否",
       "inRange": "理想范围",
       "on": "开",
       "off": "关",
@@ -1458,7 +1454,9 @@
       "howToPs5": "或在 PS5 上：用 USB 数据线连接，然后进入 设定 → 周边设备 → 控制器（常规）→ DualSense无线控制器设备软件。",
       "howToCable": "更新无法通过 {{device}} 进行。更新后如控制器未重新连接，请再次将其与 {{device}} 配对。",
       "windowsOnly": "Sony 的 PlayStation Accessories 应用仅支持 Windows：在 Linux 和 macOS 上，请使用 Windows 电脑或 PS5。",
-      "officialUnavailable": "无法连接 Sony 来比较版本。请检查网络连接，然后点击刷新。"
+      "officialUnavailable": "无法连接 Sony 来比较版本。请检查网络连接，然后点击刷新。",
+      "power": "电源",
+      "voltage": "电池电压"
     },
     "stickTest": {
       "circleTitle": "圆度测试",

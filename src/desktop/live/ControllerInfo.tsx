@@ -1,8 +1,9 @@
 // The Controller page's "Controller info" block (protocol 1.12; in the main
 // view under the drawing, MainBlock.tsx: readouts stay out of the accordion): the
-// connected controller's own firmware, its battery (level and charge state
-// from the live input, the voltage from a test command) and its lifetime
-// counters. Read once when a controller connects and on Refresh
+// connected controller's own firmware and hardware, then its power (the
+// voltage from a test command, a charge fault, the charge history) and its
+// lifetime counters, then the button presses. The battery level and whether
+// it's charging are the Battery tile's (each fact once on the page). Read once when a controller connects and on Refresh
 // (useControllerInfo, kept by the page so the block's status and its
 // "newer firmware" task dot are known while it's closed); nothing here polls.
 // Serial numbers never reach the app (the dongle blanks them), so nothing
@@ -130,13 +131,12 @@ export function useControllerInfo(bridge: UseDs5BridgeResult, onFirmware?: (firm
 
 interface Props {
   data: ControllerInfoState;
-  // From the live input (0xF0): level in %, and the shown power (chargeState()).
-  batteryPct: number | null;
+  // From the live input (0xF0): the shown power (chargeState()); only a charge fault shows here.
   power: ChargeState | null;
 }
 
 // The block's body.
-export default function ControllerInfo({ data, batteryPct, power }: Props) {
+export default function ControllerInfo({ data, power }: Props) {
   const { t, i18n } = useTranslation();
   const { client, supported, connected, info, error, setError, loading, official, officialStatus, loadTry, refresh } = data;
   if (!client) return null;
@@ -193,19 +193,11 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
         <div className="ctrl-info-cols">
           <div>
             <dl className="dk-kv">
-              <dt>{t("desktop.controller.battery")}</dt>
-              {/* loop: HOT-PATH-OK — N = 2 parts of one label */}
-              <dd>{[batteryPct !== null ? `${batteryPct}%` : null, info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : null].filter(Boolean).join(" · ") || "—"}</dd>
-              <dt>{t("desktop.ctrlInfo.charge")}</dt>
-              <dd className={chargeBad ? "dk-bad" : undefined}>{power ? t(`desktop.ctrlInfo.chargeState.${power}`) : "—"}</dd>
               <dt>{t("desktop.overview.firmware")}</dt>
               <dd>
                 <span className="dk-mono">{fw ? `${formatUpdateVersion(fw.updateVersion)} (${formatThreePart(fw.mainFw)})` : loading ? "…" : "—"}</span>
-                {officialStatus && (
-                  <span className={officialStatus.status === "current" ? "dk-good dk-fw-note" : "dk-fw-note"}>
-                    {officialStatus.status === "current" ? t("desktop.firmware.upToDate") : t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(officialStatus.version) })}
-                  </span>
-                )}
+                {/* A newer official firmware is the block's status (its task); only "up to date" is said here (IA audit C4). */}
+                {officialStatus?.status === "current" && <span className="dk-good dk-fw-note">{t("desktop.firmware.upToDate")}</span>}
                 {/* Refresh asked Sony and got no answer: said, not left blank. */}
                 {loadTry > 0 && fw && official?.problem === "unavailable" && <span className="dk-fw-note">{t("desktop.ctrlInfo.officialUnavailable")}</span>}
               </dd>
@@ -237,20 +229,21 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
             </dl>
           </div>
           <div>
-            <h4 className="dk-subhead">{t("desktop.ctrlInfo.lifetime")}</h4>
-            {tm ? (
-              <>
-                <dl className="dk-kv">
-                  <dt>{t("desktop.ctrlInfo.played")}</dt>
-                  <dd>{hours(tm.activeTime)}</dd>
+            {/* Power: what the Battery tile doesn't show (its level and charging are there). */}
+            <h4 className="dk-subhead">{t("desktop.ctrlInfo.power")}</h4>
+            <dl className="dk-kv">
+              <dt>{t("desktop.ctrlInfo.voltage")}</dt>
+              <dd>{info?.millivolts ? `${(info.millivolts / 1000).toFixed(2)} V` : loading ? "…" : "—"}</dd>
+              {chargeBad && (
+                <>
+                  <dt>{t("desktop.ctrlInfo.charge")}</dt>
+                  <dd className="dk-bad">{t(`desktop.ctrlInfo.chargeState.${power}`)}</dd>
+                </>
+              )}
+              {tm && (
+                <>
                   <dt>{t("desktop.ctrlInfo.charging")}</dt>
                   <dd>{hours(tm.chargeTime)}</dd>
-                  <dt>{t("desktop.ctrlInfo.haptics")}</dt>
-                  <dd>{hours(tm.hapticsTime)}</dd>
-                  <dt>{t("desktop.ctrlInfo.triggers")}</dt>
-                  <dd>
-                    {hours(tm.triggerTime[0])} · {hours(tm.triggerTime[1])}
-                  </dd>
                   <dt>{t("desktop.ctrlInfo.chargeCycles")}</dt>
                   <dd>{t("desktop.ctrlInfo.chargeCyclesValue", { cycles: num(tm.chargeCycles), full: num(tm.fullCharges) })}</dd>
                   <dt>{t("desktop.ctrlInfo.chargeErrors")}</dt>
@@ -259,10 +252,23 @@ export default function ControllerInfo({ data, batteryPct, power }: Props) {
                       ? t("desktop.ctrlInfo.chargeErrorsValue", { voltage: num(tm.chargeErrors.voltage), temperature: num(tm.chargeErrors.temperature), pmic: num(tm.chargeErrors.pmic) })
                       : t("desktop.ctrlInfo.none")}
                   </dd>
-                  <dt>{t("desktop.ctrlInfo.connections")}</dt>
-                  <dd>{t("desktop.ctrlInfo.connectionsValue", { bt: num(tm.bluetoothConnects), usb: num(tm.usbConnects), timeouts: num(tm.bluetoothTimeouts) })}</dd>
-                </dl>
-              </>
+                </>
+              )}
+            </dl>
+            <h4 className="dk-subhead">{t("desktop.ctrlInfo.lifetime")}</h4>
+            {tm ? (
+              <dl className="dk-kv">
+                <dt>{t("desktop.ctrlInfo.played")}</dt>
+                <dd>{hours(tm.activeTime)}</dd>
+                <dt>{t("desktop.ctrlInfo.haptics")}</dt>
+                <dd>{hours(tm.hapticsTime)}</dd>
+                <dt>{t("desktop.ctrlInfo.triggers")}</dt>
+                <dd>
+                  {hours(tm.triggerTime[0])} · {hours(tm.triggerTime[1])}
+                </dd>
+                <dt>{t("desktop.ctrlInfo.connections")}</dt>
+                <dd>{t("desktop.ctrlInfo.connectionsValue", { bt: num(tm.bluetoothConnects), usb: num(tm.usbConnects), timeouts: num(tm.bluetoothTimeouts) })}</dd>
+              </dl>
             ) : null}
           </div>
         </div>
@@ -338,12 +344,11 @@ function Pair({ label, value }: { label: string; value: string }) {
   );
 }
 
-// The block's status: the task (a newer official firmware), else the firmware and battery.
-export function controllerInfoStatus(t: (k: string, o?: Record<string, unknown>) => string, data: ControllerInfoState, batteryPct: number | null): { status: string | null; task: string | null } {
+// The block's status: the task (a newer official firmware), else the firmware (the battery is its tile's).
+export function controllerInfoStatus(t: (k: string, o?: Record<string, unknown>) => string, data: ControllerInfoState): { status: string | null; task: string | null } {
   const s = data.officialStatus;
   const task = s?.status === "newer" ? t("desktop.ctrlInfo.officialNewer", { version: formatUpdateVersion(s.version) }) : null;
   const fw = data.info?.firmware;
-  // loop: NOT-WORTH — N = 2 parts of one status line
-  const status = [fw ? `${t("desktop.overview.firmware")} ${formatUpdateVersion(fw.updateVersion)}` : null, batteryPct !== null ? `${batteryPct}%` : null].filter(Boolean).join(" · ") || null;
+  const status = fw ? `${t("desktop.overview.firmware")} ${formatUpdateVersion(fw.updateVersion)}` : null;
   return { status, task };
 }

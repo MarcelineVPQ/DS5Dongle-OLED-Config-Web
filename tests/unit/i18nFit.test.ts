@@ -37,6 +37,8 @@ const BUDGETS: Array<[string, number]> = [
   ["desktop.overview.signal", 16],
   ["desktop.overview.slot", 16],
   ["desktop.live.part.lightbar", 16],
+  ["desktop.live.playerIndicator", 16],
+  ["desktop.ctrlInfo.chargeState.full", 16],
 ];
 
 describe("tile words fit in every language", () => {

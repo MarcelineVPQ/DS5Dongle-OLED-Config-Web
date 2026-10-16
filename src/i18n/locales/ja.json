@@ -698,7 +698,9 @@
       "colorLabel": "カラー：",
       "statusLabel": "状態：",
       "effectOther": "その他の効果（{{n}}）",
-      "checkForUpdatesSub": "オフ：「アップデートを確認」を押したときだけ、アプリはアップデートのためにオンラインになります。"
+      "checkForUpdatesSub": "オフ：「アップデートを確認」を押したときだけ、アプリはアップデートのためにオンラインになります。",
+      "playerIndicator": "プレーヤーランプ",
+      "headsetMicIn": "マイク付きヘッドセット接続"
     },
     "tour": {
       "stepOf": "ステップ {{n}} / {{total}}",
@@ -771,13 +773,7 @@
       "finger": "指 {{n}}",
       "rate": "更新",
       "roundTrip": "往復時間",
-      "signal": "信号",
-      "headset": "ヘッドセット端子",
-      "mic": "マイク端子",
       "muted": "マイクミュート",
-      "usb": "USB 給電",
-      "yes": "はい",
-      "no": "いいえ",
       "inRange": "理想範囲",
       "on": "オン",
       "off": "オフ",
@@ -1458,7 +1454,9 @@
       "howToPs5": "または PS5 で：USB ケーブルで接続し、［設定］＞［周辺機器］＞［コントローラー（全般）］＞「DualSenseワイヤレスコントローラーのデバイスソフトウェア」。",
       "howToCable": "{{device}} 経由ではアップデートできません。アップデート後、再接続しない場合はコントローラーを {{device}} にもう一度ペアリングしてください。",
       "windowsOnly": "Sony の「PlayStation Accessories」アプリは Windows 専用です。Linux と macOS では Windows PC か PS5 を使ってください。",
-      "officialUnavailable": "バージョンを比較するために Sony に接続できませんでした。インターネット接続を確認して「更新」を押してください。"
+      "officialUnavailable": "バージョンを比較するために Sony に接続できませんでした。インターネット接続を確認して「更新」を押してください。",
+      "power": "電源",
+      "voltage": "バッテリー電圧"
     },
     "stickTest": {
       "circleTitle": "真円度テスト",
