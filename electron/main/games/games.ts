@@ -90,7 +90,7 @@ type Edit =
   | { file: string; format: "yaml"; mutate: (doc: ReturnType<typeof parseDocument>) => void }
   | { file: string; format: "disable"; mutate?: undefined }; // rename to <file>.disabled
 
-type PostAction = { kind: "restart-wireplumber" } | { kind: "set-profile"; card: string; profile: string } | { kind: "set-mixer"; key: string; changes: MixerChange[] };
+type PostAction = { kind: "restart-wireplumber" } | { kind: "set-profile"; card: string; profile: string; from: string } | { kind: "set-mixer"; key: string; changes: MixerChange[] };
 
 interface Planned {
   fix: Fix;
@@ -985,6 +985,7 @@ export function scan(deps: ScanDeps): Scan {
             kind: "set-profile",
             card: card.name,
             profile: card.hifiProfile,
+            from: card.activeProfile, // the restore point: Undo puts it back
           },
         ),
       );
@@ -1112,10 +1113,12 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
   const restartsAudio = [...posts.values()].some((p) => p.kind === "restart-wireplumber");
   // The old mixer values go into the change set, so Undo can put them back.
   const mixer = [...posts.values()].flatMap((p) => (p.kind === "set-mixer" ? [{ key: p.key, changes: p.changes }] : []));
+  // The card's profile before a switch, likewise (a restore point: no file changes).
+  const profiles = [...posts.values()].flatMap((p) => (p.kind === "set-profile" ? [{ card: p.card, from: p.from, to: p.profile }] : []));
 
   const applied: ApplyResult["applied"] = unknown.map((id) => ({ id, ok: false, message: msg("result.stale") }));
   let backupId: string | null = null;
-  if (byFile.size || mixer.length) {
+  if (byFile.size || mixer.length || profiles.length) {
     backupId = deps.backups.run(
       chosen.map((p) => p.fix.label),
       files,
@@ -1124,6 +1127,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
       },
       restartsAudio ? ["restart-wireplumber"] : [],
       mixer,
+      profiles,
     );
   }
   const postErrors = new Map<string, Msg>();

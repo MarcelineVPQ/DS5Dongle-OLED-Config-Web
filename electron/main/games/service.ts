@@ -63,7 +63,7 @@ export interface GamesServiceDeps {
   // app sets the levels to full again whenever the controller's card reappears.
   volumeKept?: () => boolean;
   keepVolume?: (on: boolean) => void;
-  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem>; mixer?: MixerLayer }; // tests: no pactl / kscreen-doctor / gdbus / gamescope / amixer (no mixer: no controls)
+  probes?: { audioCards: () => Promise<AudioCard[]>; hdr: () => Promise<HdrSystem>; mixer?: MixerLayer; setProfile?: (card: string, profile: string) => Promise<void> }; // tests: no pactl / kscreen-doctor / gdbus / gamescope / amixer (no mixer: no controls; no setProfile: profile switches fail)
 }
 
 // Where ▶ Play finds the launchers' programs on this system.
@@ -281,6 +281,12 @@ export class GamesService {
     return this.deps.probes ? this.deps.probes.mixer : amixerLayer;
   }
 
+  // The card profile switch (pactl), or the tests' fake.
+  private profileSwitch(): (card: string, profile: string) => Promise<void> {
+    if (!this.deps.probes) return setCardProfile;
+    return this.deps.probes.setProfile ?? (() => Promise.reject(new Error("No sound server in this test.")));
+  }
+
   apply(fixIds: string[], restart: RestartList): Promise<ApplyResult> {
     const mixer = this.mixerLayer();
     const setMixer = mixer ? (key: string, changes: Parameters<typeof setDualSenseMixer>[1]) => setDualSenseMixer(key, changes, mixer) : undefined;
@@ -290,7 +296,7 @@ export class GamesService {
         backups: this.backups,
         launchers: this.launchers,
         restartWirePlumber,
-        setCardProfile,
+        setCardProfile: this.profileSwitch(),
         setMixer,
         saveMixer,
         keepVolume: this.deps.keepVolume,
@@ -313,6 +319,18 @@ export class GamesService {
         const mixerSets = this.backups.manifest(backupId).mixer ?? [];
         // loop: NOT-WORTH — mixer changes x cards, a few each; once per Undo
         if (mixerSets.length && (!mixer || mixerSets.some((m) => !mixer.cards().some((c) => c.key === m.key)))) return { ok: false, noController: true };
+        // A profile switch is put back first, also with the controller connected
+        // (a failure leaves the set undoable: nothing is marked undone yet).
+        const manifest = this.backups.manifest(backupId);
+        const profiles = manifest.restored ? [] : (manifest.profile ?? []);
+        if (profiles.length) {
+          const cards = await (this.deps.probes ?? { audioCards: dualSenseCards }).audioCards();
+          // loop: NOT-WORTH — profile switches x cards, 1-2 each; once per Undo
+          if (profiles.some((p) => !cards.some((c) => c.name === p.card))) return { ok: false, noController: true };
+          const switchProfile = this.profileSwitch();
+          // loop: SERIAL-REQUIRED — process order: one card's profile switch after another, ≤ 2 cards; per Undo
+          for (const p of profiles) await switchProfile(p.card, p.from);
+        }
         const run = await withLaunchersClosed(restart, this.launchers, async () => {
           const late = await startedSince(owners, this.launchers);
           return late.length ? { late } : this.backups.restore(backupId);

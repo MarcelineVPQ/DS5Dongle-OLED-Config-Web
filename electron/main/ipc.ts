@@ -139,6 +139,9 @@ export interface IpcHandlers {
   backToStable: () => Promise<UpdateState>;
   devChannelPreview: (asked: boolean) => Promise<DevChannelAnswer>;
   restartToUpdate: () => void;
+  // Linux (headsetProfile.ts): Undo of the first stereo switch, and the live input's headset bit.
+  headsetUndo: () => Promise<boolean>;
+  headsetHint: (headphones: boolean | null) => void;
   latestFirmware: (asked: boolean) => Promise<FirmwareLookup>;
   officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;
   downloadFirmware: (shown: LatestFirmware) => Promise<FirmwareDownload>;
@@ -203,6 +206,7 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.backToStable, h.backToStable);
   invoke(IPC.getDesktopPalette, h.getDesktopPalette);
   invoke(IPC.recoveredFiles, h.recoveredFiles);
+  invoke(IPC.headsetUndo, h.headsetUndo);
 
   invoke(IPC.getFirmwareHold, h.getFirmwareHold);
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
@@ -213,6 +217,16 @@ export function registerIpc(h: IpcHandlers): void {
     const writing = z.boolean().safeParse(raw);
     if (writing.success) h.setFirmwareWriting(writing.data);
     else logged("setFirmwareWriting: not a boolean")(z.prettifyError(writing.error));
+  });
+
+  // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit
+  // error: LOGGED-OK — a value that doesn't fit is logged (an app bug); the jack is then taken as unknown, as before
+  ipcMain.on(IPC.headsetHint, (event, raw: unknown) => {
+    if (!trusted(event)) return;
+    // error: LOGGED-OK — only our own page sends it, always a boolean or null; a misfit is an app bug, logged
+    const headphones = z.boolean().nullable().safeParse(raw);
+    if (headphones.success) h.headsetHint(headphones.data);
+    else logged("headsetHint: not a boolean or null")(z.prettifyError(headphones.error));
   });
 
   // lifetime: NOT-WORTH — registered once by registerIpc(), lives until quit

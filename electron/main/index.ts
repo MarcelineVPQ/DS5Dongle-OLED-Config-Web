@@ -18,6 +18,7 @@ import { dominantColor } from "./games/artColor";
 import { LibraryStore } from "./games/libraryStore";
 import { RunningGameWatcher, runningInterval } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
+import { HeadsetProfile } from "./games/headsetProfile";
 import { artRequestTarget } from "./games/artRequest";
 import { ArtThumbs } from "./games/artThumbs";
 import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser } from "./games/schemeHandler";
@@ -69,6 +70,11 @@ let retimeRunningWatcher: () => void = () => undefined;
 // Linux: keeps the controller's volume at full while the app runs, once the
 // player applied that Games fix (the controllerVolumeFull setting).
 let syncVolumeKeeper: () => void = () => undefined;
+// Linux: the controller's sound profile follows its headset jack while the
+// headsetStereo setting is on (set in start()).
+// lifetime: NOT-WORTH — one per app; its pactl watcher runs only while the setting is on (stop() when it's turned off)
+let headsetProfile: HeadsetProfile | null = null;
+let syncHeadsetProfile: () => void = () => undefined;
 
 applyLinuxWorkarounds();
 
@@ -228,6 +234,25 @@ function start(): void {
     else volumeKeeper?.stop();
   };
   syncVolumeKeeper();
+
+  // The first switch to stereo is explained on the page (with Undo); later ones are quiet.
+  headsetProfile =
+    process.platform === "linux"
+      ? new HeadsetProfile((done) => {
+          if (!done.plugged || settings.headsetStereoExplained || !mainWindow) return;
+          mainWindow.webContents.send(IPC.headsetSwitched);
+          try {
+            updateSetting("headsetStereoExplained", true);
+          } catch {
+            // error: LOGGED-OK — updateSetting logged the cause; the explanation only shows again on the next switch
+          }
+        })
+      : null;
+  syncHeadsetProfile = () => {
+    if (settings.headsetStereo) headsetProfile?.start();
+    else headsetProfile?.stop();
+  };
+  syncHeadsetProfile();
 
   // The update feed for the firmware lookups and the Games scan's Proton
   // lookup: online only with automatic checks on or when the user asks.
@@ -462,6 +487,8 @@ function start(): void {
     onTrayIcon: (png) => tray?.setCustomIcon(png),
     getSettings: () => settings,
     recoveredFiles: () => recoveredHere(),
+    headsetUndo: () => headsetProfile?.undo() ?? Promise.resolve(false),
+    headsetHint: (headphones) => headsetProfile?.setHint(headphones),
     setSetting: updateSetting,
     usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
     boardHolders: () => boardHolders(),
@@ -510,6 +537,7 @@ function start(): void {
   // lifetime: NOT-WORTH — one per app, fires at quit
   app.on("will-quit", () => {
     stopPalette();
+    headsetProfile?.stop(); // its pactl child ends with the app
     if (!sessionEnding) updater.installOnQuit();
   });
   // lifetime: NOT-WORTH — one per app, lives until quit
@@ -570,6 +598,7 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   // The scaled art copies are made from the library: they go with consent.
   if (key === "gamesScanAllowed" && value === false) artThumbs?.forget();
   if (key === "controllerVolumeFull") syncVolumeKeeper();
+  if (key === "headsetStereo") syncHeadsetProfile();
   // A different feed: look again (a development build may now be offered),
   // only with automatic checks on (off: the next "Check for updates" does).
   if (key === "updateChannel" && recheck && settings.checkForUpdates && updater.getState().phase !== "ready")

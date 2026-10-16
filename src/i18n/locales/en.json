@@ -1817,7 +1817,8 @@
         "noPkexec": "pkexec isn't installed, so the app can't ask for the administrator password.",
         "cancelled": "the password prompt was cancelled",
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
-      }
+      },
+      "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}"
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
@@ -1894,6 +1895,16 @@
         "app": "another copy of this app",
         "browser": "{{name}} (a browser tab)"
       }
+    },
+    "headset": {
+      "stereo": "Stereo when a headset is plugged in",
+      "stereoInfo": "Linux plays the controller's sound in mono on its speaker profile, also with a headset in the headset jack. With this on, the app switches the controller's sound to stereo when a headset is plugged in, and back to the speaker when it's unplugged. A profile you pick yourself in your sound settings is left alone until you unplug the headset. It uses your own sound settings (PipeWire), no password.",
+      "switched": "Headset plugged into the controller: its sound is now in stereo. It goes back to the speaker when you unplug it.",
+      "undone": "Back on the speaker's sound profile until you unplug the headset.",
+      "nothingToUndo": "Nothing to undo: the headset was unplugged, or the sound profile changed since.",
+      "dontSwitch": "Don't switch automatically",
+      "windowsStereo": "Headset on Windows: set the controller to Stereo",
+      "windowsStereoInfo": "Windows sets the controller up as a 4-channel (Quadraphonic) device. Games with surround sound then play their rear sounds on channels 3 and 4, which drive the haptic feedback: the grips buzz, and those sounds are missing from your headset. Set it to Stereo once: Settings → System → Sound → More sound settings → Playback tab → Speakers (DualSense Wireless Controller) → Configure → Audio channels: Stereo → Next until Finish."
     }
   },
   "ad": {

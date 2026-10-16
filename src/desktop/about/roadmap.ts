@@ -356,7 +356,7 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
   },
   { column: "next", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
-  { column: "planned", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
+  { column: "progress", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
     column: "next",
     title: "Launchers close cleanly",
@@ -381,7 +381,7 @@ export const ROADMAP: RoadmapItem[] = [
     high: true,
   },
   {
-    column: "planned",
+    column: "next",
     title: "Stereo when headphones go in",
     text: "Plug headphones into the controller and its sound switches to stereo; unplug them and the speaker comes back. Undo and your own choice always win.",
     areas: ["audio", "app"],
@@ -392,11 +392,11 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Clearer highs on speaker and headset", text: "Cleaner treble on the speaker and headset, from a better sample-rate step in {{device}}.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Steady mic delay", text: "Your voice reaches the PC with the same short delay all session, even after a Bluetooth hiccup.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Less headset delay", text: "Game sound reaches a headset on the controller about 10 ms sooner.", areas: ["audio", "dongle"] },
-  { column: "planned", title: "Speaker plays both channels", text: "The controller's speaker plays the left and right channels, not only the right.", areas: ["audio", "dongle"] },
+  { column: "progress", title: "Speaker plays both channels", text: "The controller's speaker plays the left and right channels, not only the right.", areas: ["audio", "dongle"] },
   {
-    column: "planned",
+    column: "next",
     title: "Stereo setup on Windows",
-    text: "The guide shows how to set the controller to Stereo on Windows, so surround games don't buzz the grips.",
+    text: "The Speaker section and the guide show how to set the controller to Stereo on Windows, so surround games don't buzz the grips.",
     areas: ["audio"],
     platform: "windows",
   },

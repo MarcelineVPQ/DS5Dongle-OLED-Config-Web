@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { FEATURES2, FEATURES3, POWER_FLAGS, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
+  AUDIO_BUFFER_MAX,
+  AUDIO_BUFFER_MIN,
   MIC_LEVEL_MAX,
   STATUS_GPIO_OFF,
   STATUS_GPIO_PINS,
@@ -155,8 +157,8 @@ export function HapticsSection(props: SectionProps) {
         label={t("haptics.audioBufferLabel")}
         sub={sub("audioBufferLength", t("haptics.audioBufferSub"))}
         value={d.audioBufferLength}
-        min={16}
-        max={128}
+        min={AUDIO_BUFFER_MIN}
+        max={AUDIO_BUFFER_MAX}
         step={4}
         invalid={issue("audioBufferLength")}
         onChange={(v) => set("audioBufferLength", v)}

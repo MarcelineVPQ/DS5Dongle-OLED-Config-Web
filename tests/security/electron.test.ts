@@ -254,6 +254,31 @@ describe("Share your OLED: the page never names a path", async () => {
   });
 });
 
+describe("stereo headset profile (Linux): the page names no card, profile or node", async () => {
+  const ipcSource = readFileSync(new URL("../../electron/main/ipc.ts", import.meta.url), "utf8");
+  const { SettingUpdate } = await import("../../electron/main/settings");
+  const { setDefaultNode, setCardProfile } = await import("../../electron/main/games/system");
+
+  it("the hint is a boolean or null from our own page; Undo takes no payload", () => {
+    expect(ipcSource).toMatch(
+      /ipcMain\.on\(IPC\.headsetHint, \(event, raw: unknown\) => \{\n\s*if \(!trusted\(event\)\) return;\n\s*.*\n\s*const headphones = z\.boolean\(\)\.nullable\(\)\.safeParse\(raw\);/,
+    );
+    expect(ipcSource).toMatch(/invoke\(IPC\.headsetUndo, h\.headsetUndo\)/);
+  });
+
+  it("the page can turn the setting on or off, but not mark it explained", () => {
+    expect(SettingUpdate.safeParse({ key: "headsetStereo", value: false }).success).toBe(true);
+    expect(SettingUpdate.safeParse({ key: "headsetStereo", value: "off" }).success).toBe(false);
+    expect(SettingUpdate.safeParse({ key: "headsetStereoExplained", value: true }).success).toBe(false);
+  });
+
+  it("pactl is only ever asked to change the DualSense's own card and nodes", async () => {
+    await expect(setDefaultNode("sink", "alsa_output.pci-0000_00_1f.3.analog-stereo")).rejects.toThrow(/Not a DualSense/);
+    await expect(setDefaultNode("source", "-h")).rejects.toThrow(/Not a DualSense/);
+    await expect(setCardProfile("alsa_card.pci-0000_00_1f.3", "off")).rejects.toThrow(/Not a DualSense/);
+  });
+});
+
 describe("trusted page", () => {
   const mainSource = readFileSync(new URL("../../electron/main/index.ts", import.meta.url), "utf8");
 

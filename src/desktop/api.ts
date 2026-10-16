@@ -90,6 +90,13 @@ export interface DesktopSettings {
   // again whenever the controller's sound card reappears. Set by Apply, cleared
   // by Undo (main process only, not a page setting).
   controllerVolumeFull: boolean;
+  // Linux: the controller's sound profile follows its headset jack (stereo
+  // with a headset in, the speaker's profile back when it's unplugged;
+  // electron/main/games/headsetProfile.ts). On by default.
+  headsetStereo: boolean;
+  // The first switch was explained (the notice with Undo); later ones are quiet
+  // (main process only, not a page setting).
+  headsetStereoExplained: boolean;
   // Dev builds only (Developer card → Fake games): Games shows a made-up
   // library instead of scanning. A stable release ignores it (electron/main/devTools.ts).
   devFakeGames: boolean;
@@ -203,6 +210,15 @@ export interface DesktopApi {
   onTrayCommand(listener: (command: TrayCommand) => void): () => void;
   onShowError(listener: (key: MainErrorKey) => void): () => void;
   onShowNotice(listener: (key: MainNoticeKey) => void): () => void;
+  // Linux: the app switched the controller to its stereo headset profile for
+  // the first time (headsetProfile.ts); the page explains it, with Undo.
+  onHeadsetSwitched(listener: () => void): () => void;
+  // Undo that switch: false when there's nothing to undo any more (the
+  // headset was unplugged, or the profile changed since).
+  headsetUndo(): Promise<boolean>;
+  // The live input's headset bit (null: no live input), used where the
+  // kernel doesn't report the controller's jack.
+  setHeadsetHint(headphones: boolean | null): void;
   getSettings(): Promise<DesktopSettings>;
   // The main process's files that were damaged at start (settings, game
   // library): what was kept and where the damaged copy is (RecoveredNotice).
@@ -304,6 +320,9 @@ export const IPC = {
   trayCommand: "desktop:tray-command",
   showError: "desktop:show-error",
   showNotice: "desktop:show-notice",
+  headsetSwitched: "desktop:headset-switched",
+  headsetUndo: "desktop:headset-undo",
+  headsetHint: "desktop:headset-hint",
   getSettings: "desktop:get-settings",
   recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",

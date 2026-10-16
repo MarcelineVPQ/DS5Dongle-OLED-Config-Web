@@ -1818,7 +1818,8 @@
         "noPkexec": "pkexec n'est pas installé : l'appli ne peut pas demander le mot de passe administrateur.",
         "cancelled": "la demande de mot de passe a été annulée",
         "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
-      }
+      },
+      "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}"
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",
@@ -1895,6 +1896,16 @@
         "app": "une autre copie de cette appli",
         "browser": "{{name}} (un onglet de navigateur)"
       }
+    },
+    "headset": {
+      "stereo": "Stéréo quand un casque est branché",
+      "stereoInfo": "Linux diffuse le son de la manette en mono avec le profil du haut-parleur, même avec un casque sur la sortie casque. Avec cette option, l'app passe le son de la manette en stéréo quand un casque est branché, et revient au haut-parleur quand il est débranché. Un profil que vous choisissez vous-même dans vos paramètres de son reste tel quel jusqu'à ce que vous débranchiez le casque. Elle utilise vos propres paramètres de son (PipeWire), sans mot de passe.",
+      "switched": "Casque branché sur la manette : son son est maintenant en stéréo. Il revient au haut-parleur quand vous le débranchez.",
+      "undone": "Retour au profil de son du haut-parleur jusqu'à ce que vous débranchiez le casque.",
+      "nothingToUndo": "Rien à annuler : le casque a été débranché, ou le profil de son a changé depuis.",
+      "dontSwitch": "Ne pas basculer automatiquement",
+      "windowsStereo": "Casque sous Windows : réglez la manette sur Stéréo",
+      "windowsStereoInfo": "Windows configure la manette comme un appareil à 4 canaux (Quadriphonie). Les jeux en son surround envoient alors leurs sons arrière sur les canaux 3 et 4, qui pilotent le retour haptique : les poignées vibrent et ces sons manquent dans votre casque. Réglez-la une fois sur Stéréo : Paramètres → Système → Son → Plus de paramètres audio → onglet Lecture → Haut-parleurs (DualSense Wireless Controller) → Configurer → Canaux audio : Stéréo → Suivant jusqu'à Terminer."
     }
   },
   "ad": {

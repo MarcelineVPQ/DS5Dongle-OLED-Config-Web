@@ -31,7 +31,7 @@ export const SETTINGS_ITEMS: readonly Item[] = [
   { label: "InactDC", bool: "disableInactiveDisconnect", names: DISABLED },
   { label: "Pico LED", bool: "disablePicoLed", names: DISABLED },
   { label: "Poll", num: "pollingRateMode", lo: 0, hi: 2, step: 1, wrap: true, names: ["250Hz", "500Hz", "RT"] },
-  { label: "AudBuf", num: "audioBufferLength", lo: 16, hi: 128, step: 4 },
+  { label: "AudBuf", num: "audioBufferLength", lo: 32, hi: 128, step: 4 },
   { label: "Ctrl", num: "controllerMode", lo: 0, hi: 2, step: 1, wrap: true, names: ["DS5", "DSE", "Auto"] },
   { label: "AutoHap", num: "autoHapticsEnable", lo: 0, hi: 3, step: 1, wrap: true, names: ["Off", "Fallback", "Mix", "Replace"] },
   { label: "AH Gain", num: "autoHapticsGain", lo: 0, hi: 200, step: 10, unit: "%" },

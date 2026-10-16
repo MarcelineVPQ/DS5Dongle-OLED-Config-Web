@@ -1818,7 +1818,8 @@
         "noPkexec": "O pkexec não está instalado, então o app não consegue pedir a senha de administrador.",
         "cancelled": "a janela da senha foi cancelada",
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
-      }
+      },
+      "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}"
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",
@@ -1895,6 +1896,16 @@
         "app": "outra cópia deste app",
         "browser": "{{name}} (uma aba do navegador)"
       }
+    },
+    "headset": {
+      "stereo": "Estéreo quando um headset é conectado",
+      "stereoInfo": "O Linux toca o som do controle em mono no perfil do alto-falante, mesmo com um headset no conector de headset. Com isto ligado, o app muda o som do controle para estéreo quando um headset é conectado e volta para o alto-falante quando ele é desconectado. Um perfil que você mesmo escolher nas suas configurações de som fica como está até você desconectar o headset. Usa as suas próprias configurações de som (PipeWire), sem senha.",
+      "switched": "Headset conectado ao controle: o som dele agora é estéreo. Ele volta para o alto-falante quando você desconectar.",
+      "undone": "De volta ao perfil de som do alto-falante até você desconectar o headset.",
+      "nothingToUndo": "Nada para desfazer: o headset foi desconectado ou o perfil de som mudou desde então.",
+      "dontSwitch": "Não mudar automaticamente",
+      "windowsStereo": "Headset no Windows: coloque o controle em Estéreo",
+      "windowsStereoInfo": "O Windows configura o controle como um dispositivo de 4 canais (Quadrafônico). Jogos com som surround tocam então os sons traseiros nos canais 3 e 4, que acionam a resposta tátil: as empunhaduras zumbem e esses sons faltam no seu headset. Coloque em Estéreo uma vez: Configurações → Sistema → Som → Mais configurações de som → guia Reprodução → Alto-falantes (DualSense Wireless Controller) → Configurar → Canais de áudio: Estéreo → Avançar até Concluir."
     }
   },
   "ad": {

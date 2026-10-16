@@ -1818,7 +1818,8 @@
         "noPkexec": "pkexec ist nicht installiert, darum kann die App nicht nach dem Administrator-Passwort fragen.",
         "cancelled": "die Passwortabfrage wurde abgebrochen",
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
-      }
+      },
+      "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}"
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",
@@ -1895,6 +1896,16 @@
         "app": "eine andere Kopie dieser App",
         "browser": "{{name}} (ein Browser-Tab)"
       }
+    },
+    "headset": {
+      "stereo": "Stereo, wenn ein Headset angeschlossen ist",
+      "stereoInfo": "Linux gibt den Ton des Controllers im Lautsprecher-Profil in Mono aus, auch mit einem Headset am Headset-Anschluss. Ist dies an, schaltet die App den Ton des Controllers auf Stereo, sobald ein Headset angeschlossen wird, und zurück auf den Lautsprecher, wenn es abgezogen wird. Ein Profil, das du selbst in deinen Soundeinstellungen wählst, bleibt unangetastet, bis du das Headset abziehst. Es nutzt deine eigenen Soundeinstellungen (PipeWire), ohne Passwort.",
+      "switched": "Headset am Controller angeschlossen: Sein Ton ist jetzt in Stereo. Wenn du es abziehst, geht er zurück auf den Lautsprecher.",
+      "undone": "Zurück auf dem Klangprofil des Lautsprechers, bis du das Headset abziehst.",
+      "nothingToUndo": "Nichts rückgängig zu machen: Das Headset wurde abgezogen, oder das Klangprofil hat sich seitdem geändert.",
+      "dontSwitch": "Nicht automatisch umschalten",
+      "windowsStereo": "Headset unter Windows: Controller auf Stereo stellen",
+      "windowsStereoInfo": "Windows richtet den Controller als 4-Kanal-Gerät (Quadrofonie) ein. Spiele mit Surround-Ton geben ihre hinteren Kanäle dann auf den Kanälen 3 und 4 aus, die das haptische Feedback steuern: Die Griffe brummen, und diese Töne fehlen im Headset. Einmal auf Stereo stellen: Einstellungen → System → Sound → Weitere Soundeinstellungen → Registerkarte Wiedergabe → Lautsprecher (DualSense Wireless Controller) → Konfigurieren → Audiokanäle: Stereo → Weiter bis Fertig stellen."
     }
   },
   "ad": {

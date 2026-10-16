@@ -55,7 +55,16 @@ export const ProfileSettingsSchema = z.strictObject({
   lbFavB: z.array(z.number().int().min(0).max(255)).length(4).optional(),
   btMicEnable: z.boolean().optional(),
   // The haptics/speaker audio buffer (Haptics panel), samples.
-  audioBufferLength: z.number().int().min(16).max(128).optional(),
+  // 32..128 (AUDIO_BUFFER_MIN in protocol/config.ts; not in the main process
+  // build): one saved with 16..31 by an older app reads as 32 (below 28 the
+  // speaker garbles, upstream #252), so it still loads.
+  audioBufferLength: z
+    .number()
+    .int()
+    .min(16)
+    .max(128)
+    .transform((v) => Math.max(32, v))
+    .optional(),
   // Protocol 1.13: weaker adaptive triggers (0 = the game's own), the speaker
   // amp's pre-gain (0 = the game's own), games kept from changing the volume.
   triggerReduce: z.number().int().min(0).max(10).optional(),
