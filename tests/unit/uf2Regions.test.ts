@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { UF2_FAMILY_ABSOLUTE, Uf2FileError, parseUf2Regions } from "../../src/flash";
+import { UF2_FAMILY_ABSOLUTE, Uf2FileError, parseUf2Regions, type PicoflashHandle } from "../../src/flash";
+import { flash } from "../../src/desktop/firmwareUpdate";
 
 const RP2350_ARM_S = 0xe48bff59;
 const RP2040 = 0xe48bff56;
@@ -67,5 +68,58 @@ describe("parseUf2Regions", () => {
     badMagic[0] ^= 0xff;
     expect(() => parseUf2Regions(badMagic.buffer)).toThrow(/magic/);
     expect(parseUf2Regions(whole.buffer)).toHaveLength(1);
+  });
+});
+
+// A firmware update keeps the board's saved state (settings, pairing slots,
+// button assignments, calibration, BTstack's link keys): the firmware keeps it
+// in the sectors at the top of flash, from RESERVED_FLASH_OFFSET
+// (firmware src/flash_layout.h), and its CI checks that no UF2 block reaches
+// them (tools/check_flash_reserved.py). This side: the app writes only the
+// sectors the UF2's own blocks cover, never a whole-chip or wider erase.
+describe("a firmware write touches only the UF2's own sectors", () => {
+  const SECTOR = 0x1000;
+  const sectorsOf = (start: number, len: number) => {
+    const out: number[] = [];
+    for (let s = Math.floor(start / SECTOR) * SECTOR; s < start + len; s += SECTOR) out.push(s);
+    return out;
+  };
+
+  it("writes exactly the sectors the blocks cover, with only erase-and-write calls", async () => {
+    // Two runs (one ending mid-sector, one starting mid-sector) and the
+    // absolute block, all below where saved state starts on a 4 MB flash.
+    const addrs = [0x10000000, 0x10000100, 0x10000200, 0x10001000, 0x10006300, 0x10006400];
+    const file = uf2(block(0x10ffff00, UF2_FAMILY_ABSOLUTE, 0xaa), ...addrs.map((a, i) => block(a, RP2350_ARM_S, i + 1)));
+    const covered = new Set(addrs.flatMap((a) => sectorsOf(a, 256)));
+
+    const calls: string[] = [];
+    const written: number[] = [];
+    const base = {
+      connect: async () => void calls.push("connect"),
+      flashEraseAndWrite: async (addr: number, data: Uint8Array) => {
+        calls.push("flashEraseAndWrite");
+        written.push(...sectorsOf(addr, data.byteLength));
+        expect(addr % SECTOR).toBe(0);
+        expect(data.byteLength % SECTOR).toBe(0);
+      },
+      rebootRp2350: async () => void calls.push("rebootRp2350"),
+      disconnect: async () => void calls.push("disconnect"),
+    };
+    // Any other method (a chip erase, a plain erase, a raw write) fails the
+    // test; expectBytes is the simulated board's progress hook (dev builds).
+    const device = new Proxy(base, {
+      get: (target, key) => {
+        if (key === "expectBytes") return undefined;
+        if (typeof key === "string" && !(key in target)) throw new Error(`flash called ${key}`);
+        return target[key as keyof typeof target];
+      },
+    }) as unknown as PicoflashHandle;
+
+    await flash(device, parseUf2Regions(file), () => undefined);
+
+    expect(new Set(calls)).toEqual(new Set(["connect", "flashEraseAndWrite", "rebootRp2350", "disconnect"]));
+    expect(new Set(written)).toEqual(covered);
+    expect(written).toHaveLength(covered.size); // each sector once
+    expect(Math.max(...written)).toBeLessThan(0x10006400 + SECTOR);
   });
 });

@@ -85,6 +85,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^(src|electron)/.*\.(ts|tsx|js)$|^src/i18n/locales/en\.json$|^tools/(list_errors|ts_program)\.mjs$
+      - id: lifetime-verdicts
+        name: Every acquisition names its release point
+        entry: node tools/list_lifetimes.mjs --check
+        language: system
+        pass_filenames: false
+        files: ^(src|electron)/.*\.(ts|tsx|js)$|^tools/(list_lifetimes|ts_program)\.mjs$
       - id: settings-gate
         name: Every setting is a Row inside a Section
         entry: node tools/list_settings.mjs --check
