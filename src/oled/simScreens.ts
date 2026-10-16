@@ -25,7 +25,8 @@ type Item =
   | { label: string; action: "reset" | "wipe"; hint: string };
 const DISABLED = ["on", "off"] as const;
 export const SETTINGS_ITEMS: readonly Item[] = [
-  { label: "Hap Gain", num: "hapticsGain", lo: 1, hi: 6, step: 0.5, fmt: "gain" },
+  { label: "Hap Left", num: "hapticsGain", lo: 1, hi: 6, step: 0.5, fmt: "gain" },
+  { label: "Hap Right", num: "hapticsGainRight", lo: 1, hi: 6, step: 0.5, fmt: "gain" },
   { label: "Spk Vol", num: "speakerVolume", lo: -100, hi: 12, step: 5, unit: "dB", fmt: "db" },
   { label: "Inact", num: "inactiveTime", lo: 10, hi: 60, step: 5, unit: "min" },
   { label: "InactDC", bool: "disableInactiveDisconnect", names: DISABLED },
@@ -162,7 +163,6 @@ export class SimOledScreens {
       return Math.round(x * 10) / 10;
     };
     local[it.num] = step(local[it.num]) as never;
-    if (it.fmt === "gain") local.hapticsGainRight = step(local.hapticsGainRight);
   }
 
   private slotsPress(button: OledPadButton, holdMs: number, board: SimBoard): void {
@@ -183,11 +183,8 @@ export class SimOledScreens {
     else if ("bool" in it) value = (it.names ?? ["off", "on"])[local[it.bool] ? 1 : 0];
     else {
       const v = local[it.num];
-      if (it.fmt === "gain") {
-        const r = local.hapticsGainRight;
-        if (r !== v) return `${cur} Hap L${v.toFixed(1)} R${r.toFixed(1)}`;
-        value = `${v.toFixed(1)}x`;
-      } else if (it.fmt === "db") value = `${v >= 0 ? "+" : ""}${Math.trunc(v)}dB`;
+      if (it.fmt === "gain") value = `${v.toFixed(1)}x`;
+      else if (it.fmt === "db") value = `${v >= 0 ? "+" : ""}${Math.trunc(v)}dB`;
       else if (it.names) value = it.names[v % (it.hi + 1)];
       else if (v === 0 && it.fmt && it.fmt !== "reduce") value = it.fmt === "off0" ? "off" : it.fmt === "pc0" ? "PC" : "game";
       else value = `${it.fmt === "reduce" ? "-" : ""}${v}${it.unit ?? ""}`;

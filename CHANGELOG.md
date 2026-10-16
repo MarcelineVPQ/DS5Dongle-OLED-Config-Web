@@ -11,6 +11,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Stereo when a headset goes in (Linux).** Linux plays the controller's sound on its speaker profile, in mono, even with a headset in the headset jack. Now the app switches the controller's sound to stereo when you plug a headset into the controller (with the headset's microphone when it has one) and back to the speaker when you unplug it; your default output and input follow. It never switches over pro-audio, or over a profile you picked yourself while the headset was in. The first time, a notice says what happened, with **Undo** and **Don't switch automatically**; the switch is in Controller → Speaker (on by default). It uses your own sound settings (PipeWire's `pactl`): no system file, no password. All 7 languages.
 - **Stereo on Windows: how to set it.** Windows sets the controller up as a 4-channel (Quadraphonic) device, so games with surround sound send their rear sounds to the haptic feedback: the grips buzz and your headset misses those sounds. Controller → Speaker on Windows says how to set it to Stereo (behind its ⓘ), and so does the Guide. All 7 languages.
 
+### Changed
+
+- **The Pico console's simulated OLED has Hap Left and Hap Right** (developer previews and tests): its Settings list now matches the firmware's, with the left and right grip set apart instead of one linked Hap Gain.
+
 ### Fixed
 
 - **Heroic no longer crashes when it closes after the app has gone (Linux).** Heroic that the app started (▶ Play) or reopened after a Games change inherited the AppImage's own library folder, and loaded a library from it; once that copy of the app had quit, restarted or updated, the folder was gone and Heroic crashed as it exited. Programs the app starts now get no path into the app's AppImage.

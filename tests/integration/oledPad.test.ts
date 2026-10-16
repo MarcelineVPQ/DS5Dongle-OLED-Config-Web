@@ -11,7 +11,7 @@ import { CommandError, Ds5BridgeClient, FEATURES3, FUNC, supportsFeature3 } from
 import { decodeConfigBody } from "../../src/protocol/config";
 import { SimulatedDongle } from "../../src/protocol/simulatedDongle";
 import { SCREEN } from "../../src/oled/screenNames";
-import { SETTINGS_ITEMS } from "../../src/oled/simScreens";
+import { SETTINGS_ITEMS, type SimBoard } from "../../src/oled/simScreens";
 import { padAction } from "../../src/desktop/dongle/OledPad";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 
@@ -98,6 +98,24 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
     await client.pressOledPad("down");
     await client.pressOledPad("triangle", 2100);
     expect(dongle.slots).toEqual([false, false, false, false]);
+  });
+
+  it("Settings: Hap Left and Hap Right adjust each grip on its own (firmware PR #22)", async () => {
+    const { dongle, client } = await setup();
+    await goTo(client, dongle, SCREEN.settings);
+    expect(SETTINGS_ITEMS.slice(0, 2).map((it) => it.label)).toEqual(["Hap Left", "Hap Right"]);
+    const before = savedBody(dongle);
+    await client.pressOledPad("down"); // Hap Right
+    await client.pressOledPad("right");
+    await client.pressOledPad("triangle");
+    const after = savedBody(dongle);
+    expect(after.hapticsGainRight).toBe(Math.min(6, before.hapticsGainRight + 0.5));
+    expect(after.hapticsGain).toBe(before.hapticsGain);
+    // The screen's rows come from the screens' own copy after the save (the board is not read again).
+    const board = { body: () => after, powerFlags: () => 0 } as unknown as SimBoard;
+    const rows = dongle.oledScreens.lines(SCREEN.settings, board)!.rows;
+    expect(rows[0]).toBe(`  Hap Left ${before.hapticsGain.toFixed(1)}x`);
+    expect(rows[1]).toBe(`> Hap Right ${after.hapticsGainRight.toFixed(1)}x`);
   });
 
   it("Slots, Lightbar, Trigger Test and Diagnostics react to their buttons", async () => {
