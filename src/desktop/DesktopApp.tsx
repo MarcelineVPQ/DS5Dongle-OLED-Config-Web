@@ -51,11 +51,11 @@ import { firmwareNarratorValue, sayInPassing, useNarrator } from "./narrator";
 import { IDENTITY_FEATURES } from "../protocol/bridgeClient";
 import { identityChargeState } from "../protocol/controllerInfo";
 import { logged } from "../errorText";
+import { showsSaveBar, type MainView } from "./saveBar";
 
 // One screen: the live controller with its settings panel. Games, App
 // settings and About replace it while open (with a way back); the dongle's
 // settings open in the panel.
-type MainView = "controller" | "games" | "app" | "about";
 
 const APPLY_DEBOUNCE_MS = 150;
 
@@ -177,8 +177,8 @@ export default function DesktopApp() {
     profiles.stopEditing();
     setMain("games");
   };
-  // Games and About have no board settings: no save bar there.
-  const standalone = main === "games" || main === "about";
+  // The save bar only where its Save applies (the Controller and Pico 2 W pages).
+  const saveBar = showsSaveBar(main);
 
   // Keep the tray icon/menu in step with the device, even while the window is
   // hidden (the window keeps running in the background for exactly this):
@@ -461,7 +461,7 @@ export default function DesktopApp() {
             </main>
             <Toasts />
 
-            {connected && !standalone && (
+            {connected && saveBar && (
               <footer className="dk-bar" ref={barRef}>
                 {profiles.active ? (
                   <>
