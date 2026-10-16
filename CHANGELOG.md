@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.14] - 2026-10-16
+
 ### Added
 
 - **Stereo when a headset goes in (Linux).** Linux plays the controller's sound on its speaker profile, in mono, even with a headset in the headset jack. Now the app switches the controller's sound to stereo when you plug a headset into the controller (with the headset's microphone when it has one) and back to the speaker when you unplug it; your default output and input follow. It never switches over pro-audio, or over a profile you picked yourself while the headset was in. The first time, a notice says what happened, with **Undo** and **Don't switch automatically**; the switch is in Controller → Speaker (on by default). It uses your own sound settings (PipeWire's `pactl`): no system file, no password. All 7 languages.
