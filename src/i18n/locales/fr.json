@@ -818,7 +818,7 @@
         "all": "Tous",
         "profile": "Avec profil",
         "dualsense": "DualSense",
-        "attention": "À régler"
+        "attention": "Jeux à configurer"
       },
       "groupPlaying": "En cours",
       "groupProfile": "Avec profil",
@@ -1904,6 +1904,9 @@
       "dontSwitch": "Ne pas basculer automatiquement",
       "windowsStereo": "Casque sous Windows : réglez la manette sur Stéréo",
       "windowsStereoInfo": "Windows configure la manette comme un appareil à 4 canaux (Quadriphonie). Les jeux en son surround envoient alors leurs sons arrière sur les canaux 3 et 4, qui pilotent le retour haptique : les poignées vibrent et ces sons manquent dans votre casque. Réglez-la une fois sur Stéréo : Paramètres → Système → Son → Plus de paramètres audio → onglet Lecture → Haut-parleurs (DualSense Wireless Controller) → Configurer → Canaux audio : Stéréo → Suivant jusqu'à Terminer."
+    },
+    "panelSub": {
+      "games": "Tes lanceurs sur ce PC · rien ne change avant que tu appliques"
     }
   },
   "ad": {

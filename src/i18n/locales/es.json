@@ -818,7 +818,7 @@
         "all": "Todos",
         "profile": "Con perfil",
         "dualsense": "DualSense",
-        "attention": "Por revisar"
+        "attention": "Juegos por configurar"
       },
       "groupPlaying": "Jugando",
       "groupProfile": "Con perfil",
@@ -1904,6 +1904,9 @@
       "dontSwitch": "No cambiar automáticamente",
       "windowsStereo": "Auriculares en Windows: pon el mando en Estéreo",
       "windowsStereoInfo": "Windows configura el mando como un dispositivo de 4 canales (Cuadrafónico). Los juegos con sonido envolvente envían entonces sus sonidos traseros a los canales 3 y 4, que mueven la retroalimentación háptica: los agarres zumban y esos sonidos faltan en tus auriculares. Ponlo en Estéreo una vez: Configuración → Sistema → Sonido → Más configuraciones de sonido → pestaña Reproducción → Altavoces (DualSense Wireless Controller) → Configurar → Canales de audio: Estéreo → Siguiente hasta Finalizar."
+    },
+    "panelSub": {
+      "games": "Tus lanzadores en este PC · nada cambia hasta que apliques"
     }
   },
   "ad": {

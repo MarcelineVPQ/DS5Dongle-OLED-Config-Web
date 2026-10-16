@@ -818,7 +818,7 @@
         "all": "Alle",
         "profile": "Mit Profil",
         "dualsense": "DualSense",
-        "attention": "Zu erledigen"
+        "attention": "Spiele mit Einrichtungsbedarf"
       },
       "groupPlaying": "Läuft gerade",
       "groupProfile": "Mit Profil",
@@ -1904,6 +1904,9 @@
       "dontSwitch": "Nicht automatisch umschalten",
       "windowsStereo": "Headset unter Windows: Controller auf Stereo stellen",
       "windowsStereoInfo": "Windows richtet den Controller als 4-Kanal-Gerät (Quadrofonie) ein. Spiele mit Surround-Ton geben ihre hinteren Kanäle dann auf den Kanälen 3 und 4 aus, die das haptische Feedback steuern: Die Griffe brummen, und diese Töne fehlen im Headset. Einmal auf Stereo stellen: Einstellungen → System → Sound → Weitere Soundeinstellungen → Registerkarte Wiedergabe → Lautsprecher (DualSense Wireless Controller) → Konfigurieren → Audiokanäle: Stereo → Weiter bis Fertig stellen."
+    },
+    "panelSub": {
+      "games": "Deine Launcher auf diesem PC · nichts ändert sich, bevor du übernimmst"
     }
   },
   "ad": {

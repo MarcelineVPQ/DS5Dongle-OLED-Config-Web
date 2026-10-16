@@ -814,7 +814,7 @@
         "all": "全部",
         "profile": "有配置",
         "dualsense": "DualSense",
-        "attention": "待设置"
+        "attention": "需要设置的游戏"
       },
       "groupPlaying": "正在玩",
       "groupProfile": "有配置",
@@ -1891,6 +1891,9 @@
       "dontSwitch": "不要自动切换",
       "windowsStereo": "Windows 上使用耳机：将控制器设为立体声",
       "windowsStereoInfo": "Windows 将控制器设置为 4 声道（四声道）设备。带环绕声的游戏会把后置声音放到第 3、4 声道，而这两个声道驱动触觉反馈：握把会嗡嗡作响，耳机里也听不到这些声音。设置一次立体声即可：设置 → 系统 → 声音 → 更多声音设置 → 播放选项卡 → 扬声器 (DualSense Wireless Controller) → 配置 → 音频声道：立体声 → 一直点“下一页”直到“完成”。"
+    },
+    "panelSub": {
+      "games": "此电脑上的启动器 · 应用之前不会更改任何内容"
     }
   },
   "ad": {

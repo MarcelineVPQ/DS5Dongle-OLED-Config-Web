@@ -817,7 +817,7 @@
         "all": "All",
         "profile": "With profile",
         "dualsense": "DualSense",
-        "attention": "Needs attention"
+        "attention": "Games that need setup"
       },
       "groupPlaying": "Playing",
       "groupProfile": "With profile",
@@ -1903,6 +1903,9 @@
       "dontSwitch": "Don't switch automatically",
       "windowsStereo": "Headset on Windows: set the controller to Stereo",
       "windowsStereoInfo": "Windows sets the controller up as a 4-channel (Quadraphonic) device. Games with surround sound then play their rear sounds on channels 3 and 4, which drive the haptic feedback: the grips buzz, and those sounds are missing from your headset. Set it to Stereo once: Settings → System → Sound → More sound settings → Playback tab → Speakers (DualSense Wireless Controller) → Configure → Audio channels: Stereo → Next until Finish."
+    },
+    "panelSub": {
+      "games": "Your launchers on this PC · nothing changes until you apply"
     }
   },
   "ad": {

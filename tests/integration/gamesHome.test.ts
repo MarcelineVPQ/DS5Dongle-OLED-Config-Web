@@ -136,8 +136,9 @@ describe("Games → Home, healthy", () => {
     await render("healthy");
     expect($(".dk-split-main .lib-grid")).not.toBeNull();
     expect($(".dk-split-main .lib-continue")).not.toBeNull();
-    expect($(".dk-split-head h2")!.textContent).toBe(i18n.t("desktop.games.title"));
-    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.allGood"));
+    // Page rule 3: the title is the rail's name, the sub-line where the settings are kept and how they change (no status).
+    expect($(".dk-split-head h2")!.textContent).toBe(i18n.t("desktop.nav.games"));
+    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.panelSub.games"));
     expect(sectionIds()).toEqual(["launchers", "proton", "recommended", "history"]);
     // This computer is a readout: a block at the top of the main view, always shown (no fold).
     expect($(".dk-split-main .lib-home-pane > [data-block='computer']")).not.toBeNull();
@@ -231,7 +232,7 @@ describe("Games → Home, healthy", () => {
     await render("healthy");
     expect($(".lib-summary")).toBeNull();
     const chips = $$<HTMLButtonElement>(".lib-toolbar .lib-filters .dk-chip").map((c) => c.textContent);
-    expect(chips).toEqual(["All30", "With profile5", "DualSense14", "Needs attention0"]);
+    expect(chips).toEqual(["All30", "With profile5", "DualSense14", "Games that need setup0"]);
     expect($$(".lib-grid > li").length).toBe(30);
     expect($(".lib-side .lib-filters")).toBeNull(); // the rail is the index: search and the list
     await click($$<HTMLButtonElement>(".lib-toolbar .lib-filters .dk-chip")[1]);
@@ -260,7 +261,7 @@ describe("Games → Home, healthy", () => {
 describe("Games → Home, needs attention", () => {
   it("Recommended changes carries the rail's count as its dot, This computer its HDR ✗", async () => {
     await render("attention");
-    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.games.needsAttention"));
+    expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.panelSub.games")); // the dots say what waits, not the sub-line
     expect(hasDot("recommended")).toBe(true);
     expect(status("recommended")).toBe(i18n.t("desktop.games.attention", { count: 1 }));
     expect(hasDot("computer")).toBe(true);

@@ -886,7 +886,7 @@ describe("Games → Home on the accordion", () => {
     );
     await act(() => new Promise((r) => setTimeout(r, 0)));
     expect(container.querySelector(".dk-split-main .lib-grid")).not.toBeNull();
-    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe(m.i18n.t("desktop.games.title"));
+    expect(container.querySelector(".dk-split-head h2")?.textContent).toBe(m.i18n.t("desktop.nav.games"));
     await textInventory("games", GAMES_INVENTORY);
   });
 });

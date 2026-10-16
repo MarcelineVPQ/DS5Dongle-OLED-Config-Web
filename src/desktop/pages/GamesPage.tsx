@@ -422,11 +422,6 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
   // What needs the player, as of the last scan (unticking a change doesn't
   // move it away while the player is looking at it).
   const status = report ? homeStatus(report, setup.declinedAtScan) : null;
-  const sub = !status
-    ? t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")
-    : status.attention
-      ? t("desktop.games.needsAttention")
-      : t("desktop.games.allGood", "Everything is set up. Nothing to change.");
   return (
     <GameLibrary
       report={report}
@@ -438,8 +433,11 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
       onRescan={setup.rescanAfterChange}
       home={{
         acc,
-        title: t("desktop.games.title", "Game setup"),
-        sub,
+        // Page rule 3: the title names what the settings apply to (the rail's
+        // name), the sub-line where they're kept and how they change; what needs
+        // the player is the sections' dots, not the sub-line.
+        title: t("desktop.nav.games"),
+        sub: t("desktop.panelSub.games"),
         top: error?.at === "top" && (
           <Notice error onDismiss={setup.clearError}>
             {error.text}
