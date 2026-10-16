@@ -1,10 +1,12 @@
 // The Games tab as a library (like Steam's): on the left an index of the
-// games by title (grouped Playing, With profile, All games) with search; then
-// Home or one game's page, each with its accordion at the right like every
-// page. Home's main view: Continue playing (the games played last, with Play)
-// and the Library (the filters with their counts, sort and Show, over the
-// cover grid); its sections are game setup (GamesPage.tsx). The list and the
-// grid follow the same search, filter and sort.
+// games, a plain A–Z list (◆ a profile) with search; then Home or one game's
+// page, each with its accordion at the right like every page. Home's main
+// view: Continue playing (the games played last, with Play), the Library (the
+// filters with their counts, sort and Show, over the cover grid) and, after
+// it, This computer; its sections are game setup (GamesPage.tsx). The list
+// and the grid follow the same search, filter and Show; the list stays A–Z,
+// the grid takes the sort. Narrow (the panel a drawer), the list is the
+// library: the grid and its sort aren't shown (IA audit Q6).
 // Home stays mounted while a game is open, so switching back doesn't rescan;
 // a deep link into Home's sections (the rail's Games count) shows Home again.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
@@ -144,18 +146,17 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     f === "profile" ? !!library.games[g.key]?.profile : f === "dualsense" ? g.support === "triggers" || g.support === "haptics" : f === "attention" ? g.fixes.length > 0 || g.runnerMissing : true;
   // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const visible = searched.filter((g) => matches(filter, g));
-  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
-  const playing = visible.filter((g) => g.key === running);
-  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
-  const withProfile = visible.filter((g) => g.key !== running && library.games[g.key]?.profile);
-  // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
-  const rest = visible.filter((g) => g.key !== running && !library.games[g.key]?.profile);
+  // The sidebar: a plain A–Z list of what the search, filter and Show leave
+  // (IA audit Q6: the filter chips do the grouping; ◆ marks a profile, the
+  // running game says so). The grid keeps the chosen sort.
+  // loop: HOT-PATH-OK — sort of the visible games (hundreds); per library render (interaction), like the filters above
+  const side = [...visible].sort((a, b) => a.title.localeCompare(b.title));
   // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
   const game = games.find((g) => g.key === selected) ?? null;
 
   // ↑/↓ through the list (in the order shown), Home/End to the ends.
   // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
-  const order = [...playing, ...withProfile, ...rest].map((g) => g.key);
+  const order = side.map((g) => g.key);
   const onListKey = (e: KeyboardEvent<HTMLUListElement>) => {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) || order.length === 0) return;
     e.preventDefault();
@@ -199,16 +200,6 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
       </li>
     );
   };
-  const group = (label: string, list: GameEntry[]) =>
-    list.length > 0 && (
-      <>
-        <li className="lib-group">
-          {label} ({list.length})
-        </li>
-        {/* loop: HOT-PATH-OK — one sidebar row per visible game (hundreds); per library render */}
-        {list.map(row)}
-      </>
-    );
 
   return (
     <div className="lib">
@@ -233,9 +224,8 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           </p>
         )}
         <ul className="lib-list" ref={listRef} onKeyDown={onListKey}>
-          {group(t("desktop.library.groupPlaying"), playing)}
-          {group(t("desktop.library.groupProfile"), withProfile)}
-          {group(t("desktop.library.groupAll"), rest)}
+          {/* loop: HOT-PATH-OK — one sidebar row per visible game (hundreds); per library render */}
+          {side.map(row)}
           {report && visible.length === 0 && <li className="dk-hint lib-empty">{t("desktop.library.noMatch")}</li>}
         </ul>
       </aside>
@@ -250,7 +240,6 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
             main={
               <div className="lib-home-pane">
                 {!report && <p className="dk-hint">{t(protonApplies() ? "desktop.games.scanning" : "desktop.games.scanningWindows")}</p>}
-                {home.blocks}
                 {report && <ContinuePlaying games={recent} details={details} running={running} hasProfile={(g) => !!library.games[g.key]?.profile} onOpen={setSelected} glass={glass} />}
                 {report && (
                   <section className="lib-section">
@@ -330,6 +319,8 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                     )}
                   </section>
                 )}
+                {/* This computer (a readout) after the library: browsing games is the page's task (IA audit G3). */}
+                {home.blocks}
               </div>
             }
           >

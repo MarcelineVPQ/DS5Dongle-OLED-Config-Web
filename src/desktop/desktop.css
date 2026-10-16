@@ -2303,14 +2303,6 @@ html[data-theme="light"] .live-ctl {
   overflow: auto;
   list-style: none;
 }
-.lib-group {
-  margin: 8px 6px 2px;
-  color: var(--text-muted);
-  font-size: var(--dk-small);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
 .lib-row img,
 .lib-glyph {
   flex: none;
@@ -2361,7 +2353,16 @@ html[data-theme="light"] .live-ctl {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  container-type: inline-size;
+  container: lib-main / inline-size;
+}
+/* Narrow (the panel is a drawer): the A–Z list beside the page is the
+   library, so the cover grid and its sort (which only orders the grid) go
+   (IA audit Q6). The filters and Show still narrow the list. */
+@container lib-main (max-width: 760px) {
+  .lib-grid,
+  .lib-sort {
+    display: none;
+  }
 }
 .lib-pane {
   flex: 1;
@@ -2375,9 +2376,9 @@ html[data-theme="light"] .live-ctl {
 .lib-home-pane {
   container-type: inline-size; /* Continue playing sizes by the pane, not the window */
 }
-/* This computer (MainBlock) at the top of Home, above Continue playing. */
+/* This computer (MainBlock) on Home, after the Library. */
 .lib-home-pane > .dk-block {
-  margin-bottom: 14px;
+  margin-top: 14px;
 }
 
 /* ---- Game page ---- */

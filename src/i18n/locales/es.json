@@ -820,9 +820,6 @@
         "dualsense": "DualSense",
         "attention": "Juegos por configurar"
       },
-      "groupPlaying": "Jugando",
-      "groupProfile": "Con perfil",
-      "groupAll": "Todos los juegos",
       "noMatch": "Ningún juego coincide.",
       "running": "En marcha",
       "hasProfile": "Tiene un perfil de mando",

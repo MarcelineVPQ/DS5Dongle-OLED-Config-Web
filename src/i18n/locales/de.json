@@ -820,9 +820,6 @@
         "dualsense": "DualSense",
         "attention": "Spiele mit Einrichtungsbedarf"
       },
-      "groupPlaying": "Läuft gerade",
-      "groupProfile": "Mit Profil",
-      "groupAll": "Alle Spiele",
       "noMatch": "Keine passenden Spiele.",
       "running": "Läuft",
       "hasProfile": "Hat ein Controller-Profil",

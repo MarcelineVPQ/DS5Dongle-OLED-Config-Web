@@ -816,9 +816,6 @@
         "dualsense": "DualSense",
         "attention": "需要设置的游戏"
       },
-      "groupPlaying": "正在玩",
-      "groupProfile": "有配置",
-      "groupAll": "所有游戏",
       "noMatch": "没有匹配的游戏。",
       "running": "运行中",
       "hasProfile": "已有控制器配置",

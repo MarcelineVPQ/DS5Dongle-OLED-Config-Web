@@ -244,6 +244,26 @@ describe("Games → Home, healthy", () => {
     expect($(".lib-toolbar select.dk-select")).toBeTruthy();
   });
 
+  it("the list is a plain A–Z index (◆ a profile), whatever the grid's sort; This computer comes after the Library (IA audit Q6, G3)", async () => {
+    await render("healthy");
+    const titles = $$(".lib-list .lib-row .lib-title").map((x) => x.textContent!);
+    expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
+    expect(titles).toHaveLength(30);
+    expect($(".lib-list .lib-group")).toBeNull();
+    expect($$(".lib-list .lib-row").filter((r) => r.textContent!.includes("◆"))).toHaveLength(5);
+    // The grid takes the sort (played most recently first), the list stays A–Z.
+    const sort = $<HTMLSelectElement>(".lib-sort select")!;
+    act(() => {
+      sort.value = "recent";
+      sort.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await settle();
+    expect($$(".lib-grid .lib-tile-title").map((x) => x.textContent)[0]).toBe("Cyberpunk 2077");
+    expect($$(".lib-list .lib-row .lib-title").map((x) => x.textContent)).toEqual(titles);
+    const library = $(".lib-home-pane > .lib-section")!;
+    expect(library.compareDocumentPosition($("[data-block='computer']")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("search narrows the counts, the grid and the list together", async () => {
     await render("healthy");
     const search = $<HTMLInputElement>(".lib-search")!;

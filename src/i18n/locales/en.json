@@ -819,9 +819,6 @@
         "dualsense": "DualSense",
         "attention": "Games that need setup"
       },
-      "groupPlaying": "Playing",
-      "groupProfile": "With profile",
-      "groupAll": "All games",
       "noMatch": "No games match.",
       "running": "Running",
       "hasProfile": "Has a controller profile",

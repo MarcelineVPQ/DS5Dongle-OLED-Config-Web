@@ -816,9 +816,6 @@
         "dualsense": "DualSense",
         "attention": "設定が必要なゲーム"
       },
-      "groupPlaying": "プレイ中",
-      "groupProfile": "プロファイルあり",
-      "groupAll": "すべてのゲーム",
       "noMatch": "一致するゲームはありません。",
       "running": "実行中",
       "hasProfile": "コントローラープロファイルあり",
