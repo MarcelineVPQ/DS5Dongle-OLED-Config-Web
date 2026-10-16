@@ -880,6 +880,18 @@ async function textInventory(page: "games" | "game", table: Record<string, strin
   expect([...rows].filter(([, ids]) => ids.size > 1)).toEqual([]);
 }
 
+describe("App settings' main view", () => {
+  it("is the drawing and its color / status line only: no tiles or data cards (none react to an app setting)", async () => {
+    await live("app");
+    expect(container.querySelector(".dk-split-main .live-ctl")).not.toBeNull();
+    expect(container.querySelector(".dk-split-main .live-specs")).not.toBeNull();
+    expect(container.querySelectorAll(".dk-split-main :is(.live-tile, .live-data-card, .live-status, .dk-block)")).toHaveLength(0);
+    // The Controller page keeps them.
+    await live("overview");
+    expect(container.querySelectorAll(".dk-split-main .live-tile").length).toBeGreaterThan(0);
+  });
+});
+
 // Page rule 3: the panel's sub-line says where its settings are kept and how
 // they save: one string per page, no version, no status.
 describe("the panel sub-lines", () => {

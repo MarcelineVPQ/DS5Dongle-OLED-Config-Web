@@ -288,21 +288,26 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           </span>
         </div>
       )}
-      <div className="live-readouts">
-        {on && id && liveCapable && (
-          <LiveStrip
-            id={id}
-            power={power}
-            playerWiring={playerWiring}
-            rssi={status?.rssi ?? null}
-            lightbarMode={bridge.config?.lightbarMode ?? null}
-            lightbar={liveLightbar ?? id.lightbar}
-            onLightbar={() => pickPart("lightbar")}
-          />
-        )}
-        {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
-      </div>
-      {!(on && id && liveCapable) && (
+      {/* App settings shows the drawing and its color / status line only: the preview of
+          a theme or color change. None of the tiles or data cards react to an app setting
+          (IA audit A1). */}
+      {view !== "app" && (
+        <div className="live-readouts">
+          {on && id && liveCapable && (
+            <LiveStrip
+              id={id}
+              power={power}
+              playerWiring={playerWiring}
+              rssi={status?.rssi ?? null}
+              lightbarMode={bridge.config?.lightbarMode ?? null}
+              lightbar={liveLightbar ?? id.lightbar}
+              onLightbar={() => pickPart("lightbar")}
+            />
+          )}
+          {on && liveCapable && input && <LiveData input={input} rssi={status?.rssi ?? null} edge={id?.model === "edge"} />}
+        </div>
+      )}
+      {view !== "app" && !(on && id && liveCapable) && (
         <div className="live-status">
           <span className={on ? "dk-good" : ""}>
             <strong>{id ? (on ? t("desktop.overview.connected", "Connected") : t("desktop.overview.notConnected", "Not connected (press the PS button)")) : "—"}</strong>
