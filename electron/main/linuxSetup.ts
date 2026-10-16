@@ -1,5 +1,8 @@
-// One-time Linux setup: install a udev rule that gives the logged-in user
-// access to the dongle and the RP2350 boot device (resources/linux/), and, on
+// One-time Linux setup ("Set up USB access", the one name in the app): install
+// the udev rule that gives the logged-in user access to the dongle and the
+// RP2350 boot device (the app's WebUSB) and to the controller's hidraw node
+// (games' direct path: adaptive triggers, haptic feedback) in one file
+// (resources/linux/), and, on
 // systems that restrict user namespaces (Ubuntu 23.10+), the AppArmor profile
 // that lets Chromium's sandbox run (without it the AppImage starts with
 // --no-sandbox; docs/SECURITY_AUDIT.md O1). Needs root once, via pkexec
@@ -79,7 +82,7 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
   // empty when not needed) instead of string interpolation. Exit 3 = no
   // udevadm.
   const script =
-    'command -v udevadm >/dev/null || exit 3; install -m 0644 "$1" "$2" && udevadm control --reload-rules && udevadm trigger --subsystem-match=usb' +
+    'command -v udevadm >/dev/null || exit 3; install -m 0644 "$1" "$2" && udevadm control --reload-rules && udevadm trigger --subsystem-match=usb --subsystem-match=hidraw' +
     ' && { [ -z "$3" ] || { install -m 0644 "$3" "$4" && apparmor_parser -r "$4"; }; }';
   return runPkexec(["/bin/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile ? PROFILE_DEST : ""]).then((result) => {
     rmSync(dir, { recursive: true, force: true });

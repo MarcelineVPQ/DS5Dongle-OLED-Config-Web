@@ -4,9 +4,15 @@ import { BusyButton } from "./controls";
 import { logged } from "../errorText";
 import { shownText } from "./shownError";
 
-// Linux only: installs the app's udev rule (via the main process and pkexec)
-// so the logged-in user can open the dongle and the RP2350 boot device.
-export default function UsbAccessSetup({ compact = false }: { compact?: boolean }) {
+// Linux only: "Set up USB access", the one name for the one rule (via the main
+// process and pkexec, linuxSetup.ts): the logged-in user can open the board
+// and the RP2350 boot device (this app's WebUSB) and the controller's hidraw
+// node (games' direct path: adaptive triggers, haptic feedback). Shown where
+// the problem shows (page rule 7): the Pico 2 W page's Connection to the PC
+// (a row), the setup screen (compact) and Games → This computer's Controller
+// access (inline, after its "games can't reach the controller"); `onDone`
+// lets that page read the access again.
+export default function UsbAccessSetup({ variant = "row", onDone }: { variant?: "row" | "compact" | "inline"; onDone?: () => void }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const [installed, setInstalled] = useState<boolean | null>(null);
@@ -23,22 +29,38 @@ export default function UsbAccessSetup({ compact = false }: { compact?: boolean 
   const run = async () => {
     const result = await desktop.setupUsbAccess();
     setMessage(shownText(result.message));
-    if (result.ok) setInstalled(true);
+    if (result.ok) {
+      setInstalled(true);
+      onDone?.();
+    }
   };
+  const button = (
+    <BusyButton className="dk-btn" disabled={installed === true} onClick={run}>
+      {t("desktop.usbAccess.button", "Set up USB access")}
+    </BusyButton>
+  );
 
-  return (
-    <div className={compact ? "" : "dk-row"} style={compact ? { marginTop: 10 } : undefined}>
-      {!compact && (
-        <span className="dk-label">
-          {t("desktop.usbAccess.label", "USB access rule")}
-          <span className="dk-sub">{installed ? t("desktop.usbAccess.installed", "Installed") : t("desktop.usbAccess.missing", "Not installed (Steam's rules may already cover {{device}})")}</span>
-        </span>
-      )}
-      <div className="dk-ctl" style={compact ? { justifyContent: "center" } : undefined}>
-        <BusyButton className="dk-btn" disabled={installed === true} onClick={run}>
-          {t("desktop.usbAccess.button", "Set up USB access")}
-        </BusyButton>
+  if (variant === "inline")
+    return (
+      <span className="dk-usb-inline">
+        {button}
+        {message && <span className="dk-hint">{message}</span>}
+      </span>
+    );
+  if (variant === "compact")
+    return (
+      <div className="dk-usb-compact">
+        <div className="dk-ctl">{button}</div>
+        {message && <p className="dk-hint">{message}</p>}
       </div>
+    );
+  return (
+    <div className="dk-row">
+      <span className="dk-label">
+        {t("desktop.usbAccess.label", "USB access")}
+        <span className="dk-sub">{installed ? t("desktop.usbAccess.installed", "Installed") : t("desktop.usbAccess.missing")}</span>
+      </span>
+      <div className="dk-ctl">{button}</div>
       {message && <p className="dk-hint">{message}</p>}
     </div>
   );

@@ -301,13 +301,13 @@
       }
     },
     "usbAccess": {
-      "label": "Regla de acceso USB",
+      "label": "Acceso USB",
       "installed": "Instalada",
-      "missing": "No instalada (las reglas de Steam quizá ya cubren {{device}})",
+      "missing": "Sin configurar: permite a la app y a tus juegos llegar a {{device}}",
       "button": "Configurar acceso USB",
       "result": {
         "notNeeded": "No hace falta en este sistema.",
-        "done": "El acceso USB está configurado. Desconecta {{device}} y vuelve a conectarlo.",
+        "done": "El acceso USB está configurado para la app y tus juegos. Si la app aún no llega a {{device}}, desconéctalo y vuelve a conectarlo.",
         "doneSandbox": "El acceso USB está configurado y el sandbox de la app está permitido. Desconecta {{device}} y vuelve a conectarlo; el sandbox se activa la próxima vez que abras la app.",
         "noPkexec": "pkexec no está instalado. Copia la regla a mano (consulta el README).",
         "noUdevadm": "udevadm no está instalado, así que la regla no se puede cargar. Cópiala a mano (consulta el README).",
@@ -447,7 +447,7 @@
       "env": "Entorno",
       "noController": "mando no conectado",
       "hidrawOk": "los juegos pueden hablar directamente con el mando",
-      "hidrawNo": "los juegos no llegan al mando (falta la regla udev)",
+      "hidrawNo": "los juegos no llegan al mando",
       "envOk": "nada fuerza el modo Xbox (SDL)",
       "envHint": "Estas variables están definidas fuera de los lanzadores, así que la app no las cambia. Quítalas del archivo indicado y vuelve a iniciar sesión.",
       "hdr": "HDR",

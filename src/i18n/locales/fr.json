@@ -301,13 +301,13 @@
       }
     },
     "usbAccess": {
-      "label": "Règle d'accès USB",
+      "label": "Accès USB",
       "installed": "Installée",
-      "missing": "Non installée (les règles de Steam couvrent peut-être déjà {{device}})",
+      "missing": "Non configuré : permet à l'appli et à tes jeux d'atteindre {{device}}",
       "button": "Configurer l'accès USB",
       "result": {
         "notNeeded": "Pas nécessaire sur ce système.",
-        "done": "L'accès USB est configuré. Débranche {{device}} puis rebranche-le.",
+        "done": "L'accès USB est configuré pour l'appli et tes jeux. Si l'appli n'atteint toujours pas {{device}}, débranche-le puis rebranche-le.",
         "doneSandbox": "L'accès USB est configuré et le bac à sable de l'appli est autorisé. Débranche {{device}} puis rebranche-le ; le bac à sable sera actif au prochain démarrage de l'appli.",
         "noPkexec": "pkexec n'est pas installé. Copie la règle à la main (voir le README).",
         "noUdevadm": "udevadm n'est pas installé : la règle ne peut pas être chargée. Copie-la à la main (voir le README).",
@@ -447,7 +447,7 @@
       "env": "Environnement",
       "noController": "manette non connectée",
       "hidrawOk": "les jeux peuvent parler directement à la manette",
-      "hidrawNo": "les jeux n'atteignent pas la manette (règle udev manquante)",
+      "hidrawNo": "les jeux n'atteignent pas la manette",
       "envOk": "rien n'impose le mode Xbox (SDL)",
       "envHint": "Ces variables sont définies en dehors des lanceurs, donc l'app ne les modifie pas. Retire-les du fichier indiqué, puis déconnecte-toi et reconnecte-toi.",
       "hdr": "HDR",

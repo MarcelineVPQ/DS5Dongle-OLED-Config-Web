@@ -13,6 +13,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Changed
 
+- **The save bar shows only where it saves.** App settings keeps your choices as you change them, so the board's Revert / Save bar is gone from it; it stays on the Controller and Pico 2 W pages, whose settings it saves.
+- **One Set up USB access, for the app and for games (Linux).** The same button now installs one rule that lets the app reach your board and lets games reach the controller directly (adaptive triggers and haptic feedback through Proton), so Games → This computer no longer says "missing udev rule" with no way to fix it: when games can't reach the controller, Set up USB access is right there, and the line is read again once it's done. All 7 languages.
 - **No more panel button on the page.** The small button at the top right of a page that showed its hidden settings panel is gone, on every page: click the page's item in the rail again (or press Enter on it) to show or hide the panel, wide or in a small window. While the panel is hidden, a yellow dot on that rail item says a section in it is waiting, and its tooltip says what.
 - **The Development channel describes its testing as it is.** Its hint, the join dialog and the rail's tooltip said development builds are "less tested". They pass the same automated tests as stable on every change; stable releases also get the full release checks on real hardware and Windows, plus time in everyday use. The Stable hint no longer says only stable releases are tested. All 7 languages.
 - **The Pico console's simulated OLED has Hap Left and Hap Right** (developer previews and tests): its Settings list now matches the firmware's, with the left and right grip set apart instead of one linked Hap Gain.

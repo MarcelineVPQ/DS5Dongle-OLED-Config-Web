@@ -300,13 +300,13 @@
       }
     },
     "usbAccess": {
-      "label": "USB access rule",
+      "label": "USB access",
       "installed": "Installed",
-      "missing": "Not installed (Steam's rules may already cover {{device}})",
+      "missing": "Not set up: lets this app and your games reach {{device}}",
       "button": "Set up USB access",
       "result": {
         "notNeeded": "Not needed on this system.",
-        "done": "USB access is set up. Unplug {{device}} and plug it back in.",
+        "done": "USB access is set up for this app and your games. If the app still can't reach {{device}}, unplug it and plug it back in.",
         "doneSandbox": "USB access is set up, and the app's sandbox is allowed. Unplug {{device}} and plug it back in; the sandbox is on from the app's next start.",
         "noPkexec": "pkexec isn't installed. Copy the rule by hand (see the README).",
         "noUdevadm": "udevadm isn't installed, so the rule can't be loaded. Copy it by hand (see the README).",
@@ -446,7 +446,7 @@
       "env": "Environment",
       "noController": "controller not connected",
       "hidrawOk": "games can talk to the controller directly",
-      "hidrawNo": "games can't reach the controller (missing udev rule)",
+      "hidrawNo": "games can't reach the controller",
       "envOk": "nothing forcing the Xbox (SDL) path",
       "envHint": "These variables are set outside any launcher, so this app doesn't change them. Remove them from the file named above, then log out and back in.",
       "hdr": "HDR",

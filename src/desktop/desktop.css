@@ -492,6 +492,21 @@ html[data-theme="dark"] .dk {
   justify-content: flex-end;
   min-width: 0;
 }
+/* Set up USB access (UsbAccessSetup.tsx): on the setup screen, centred under
+   its text; after Games' "games can't reach the controller", on its own line. */
+.dk-usb-compact {
+  margin-top: 10px;
+}
+.dk-usb-compact > .dk-ctl {
+  justify-content: center;
+}
+.dk-usb-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
 
 .dk input[type="range"] {
   flex: 1;

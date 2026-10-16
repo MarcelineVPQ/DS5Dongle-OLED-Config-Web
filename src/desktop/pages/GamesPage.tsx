@@ -36,6 +36,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { GameProfileState } from "../library/useGameProfile";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
+import UsbAccessSetup from "../UsbAccessSetup";
 import { sayInPassing } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
@@ -445,7 +446,7 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
           </Notice>
         ),
         sections: report && status && <HomeSections setup={setup} report={report} status={status} />,
-        blocks: report && status && protonApplies() && <ComputerBlock state={computer} report={report} status={status} />,
+        blocks: report && status && protonApplies() && <ComputerBlock state={computer} report={report} status={status} onRescan={setup.rescanAfterChange} />,
         blockLink: computer.revealed,
       }}
     />
@@ -455,7 +456,7 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
 // This computer (Linux), at the top of Home's main view: what the scan found
 // about the controller's audio and access, the environment and HDR, with a
 // yellow dot on its header while something there needs the player.
-function ComputerBlock({ state, report, status }: { state: MainBlockState; report: GamesReport; status: ReturnType<typeof homeStatus> }) {
+function ComputerBlock({ state, report, status, onRescan }: { state: MainBlockState; report: GamesReport; status: ReturnType<typeof homeStatus>; onRescan: () => void }) {
   const { t } = useTranslation();
   const s = report.system;
   // loop: HOT-PATH-OK — N = screens, 1-3; Home render
@@ -470,7 +471,7 @@ function ComputerBlock({ state, report, status }: { state: MainBlockState; repor
       status={[s.hidrawAccess !== null && `${t("desktop.games.hidraw")} ${s.hidrawAccess ? "✓" : "✗"}`, hdrLine].filter(Boolean).join(" · ")}
       task={(status.system || status.hdr) && t("desktop.games.needsAttention")}
     >
-      <SystemPart report={report} hdrBad={status.hdr} />
+      <SystemPart report={report} hdrBad={status.hdr} onRescan={onRescan} />
     </MainBlock>
   );
 }
@@ -765,7 +766,7 @@ function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string
 // This computer's body (Linux): the controller's audio and access, the
 // environment and HDR (its checklist always shown: compact when every item
 // passes, a ✗ that matters highlighted).
-function SystemPart({ report, hdrBad }: { report: GamesReport; hdrBad: boolean }) {
+function SystemPart({ report, hdrBad, onRescan }: { report: GamesReport; hdrBad: boolean; onRescan: () => void }) {
   const { t } = useTranslation();
   const s = report.system;
   const proAudio = s.proAudio;
@@ -778,12 +779,16 @@ function SystemPart({ report, hdrBad }: { report: GamesReport; hdrBad: boolean }
         <dt>{t("desktop.games.audio", "Controller audio")}</dt>
         <dd className={proAudio ? "dk-bad" : ""}>{s.audioProfile ?? t("desktop.games.noController", "controller not connected")}</dd>
         <dt>{t("desktop.games.hidraw", "Controller access")}</dt>
-        <dd className={s.hidrawAccess === false ? "dk-bad" : ""}>
-          {s.hidrawAccess === null
-            ? t("desktop.games.noController", "controller not connected")
-            : s.hidrawAccess
-              ? t("desktop.games.hidrawOk", "games can talk to the controller directly")
-              : t("desktop.games.hidrawNo", "games can't reach the controller (missing udev rule)")}
+        <dd>
+          <span className={s.hidrawAccess === false ? "dk-bad" : undefined}>
+            {s.hidrawAccess === null
+              ? t("desktop.games.noController", "controller not connected")
+              : s.hidrawAccess
+                ? t("desktop.games.hidrawOk", "games can talk to the controller directly")
+                : t("desktop.games.hidrawNo")}
+          </span>
+          {/* The fix where the problem shows (page rule 7): the same Set up USB access as the Pico 2 W page's. */}
+          {s.hidrawAccess === false && <UsbAccessSetup variant="inline" onDone={onRescan} />}
         </dd>
         <dt>{t("desktop.games.env", "Environment")}</dt>
         <dd className={s.envWarnings.length ? "dk-bad" : ""}>

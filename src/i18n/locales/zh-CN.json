@@ -301,13 +301,13 @@
       }
     },
     "usbAccess": {
-      "label": "USB 访问规则",
+      "label": "USB 访问",
       "installed": "已安装",
-      "missing": "未安装（Steam 的规则可能已覆盖 {{device}}）",
+      "missing": "未设置：让本应用和你的游戏访问 {{device}}",
       "button": "设置 USB 访问",
       "result": {
         "notNeeded": "此系统上不需要。",
-        "done": "USB 访问已设置。请拔下 {{device}} 再插上。",
+        "done": "已为本应用和你的游戏设置 USB 访问。如果应用仍无法访问 {{device}}，请拔下再插上。",
         "doneSandbox": "USB 访问已设置，并已允许应用的沙盒。请拔下 {{device}} 再插上；沙盒从下次启动应用起生效。",
         "noPkexec": "未安装 pkexec。请手动复制该规则（见 README）。",
         "noUdevadm": "未安装 udevadm，因此无法加载该规则。请手动复制（见 README）。",
@@ -447,7 +447,7 @@
       "env": "环境变量",
       "noController": "控制器未连接",
       "hidrawOk": "游戏可以直接与控制器通信",
-      "hidrawNo": "游戏无法访问控制器（缺少 udev 规则）",
+      "hidrawNo": "游戏无法访问控制器",
       "envOk": "没有强制使用 Xbox (SDL) 模式",
       "envHint": "这些变量设置在启动器之外，本应用不会修改它们。请从上面列出的文件中删除，然后注销并重新登录。",
       "hdr": "HDR",

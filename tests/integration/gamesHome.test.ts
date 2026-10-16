@@ -187,6 +187,22 @@ describe("Games → Home, healthy", () => {
     expect([...history.querySelectorAll("button")].filter((b) => b.textContent === i18n.t("desktop.games.undoShort"))).toHaveLength(1);
   });
 
+  it("games can't reach the controller: This computer carries the fix, Set up USB access (the same one the Pico 2 W page has), and reads again", async () => {
+    const report = homeReport("healthy");
+    report.system.hidrawAccess = false;
+    await render("healthy", report, {
+      usbAccessInstalled: () => Promise.resolve(false),
+      setupUsbAccess: () => (calls.push("setupUsbAccess"), Promise.resolve({ ok: true, message: "desktop.usbAccess.result.done" })),
+    });
+    const computer = await open("computer");
+    expect(computer.textContent).toContain(i18n.t("desktop.games.hidrawNo"));
+    expect(computer.textContent).not.toContain("udev");
+    const before = calls.filter((c) => c === "gamesScan").length;
+    await click(button(i18n.t("desktop.usbAccess.button"), computer));
+    expect(calls).toContain("setupUsbAccess");
+    expect(calls.filter((c) => c === "gamesScan").length).toBe(before + 1);
+  });
+
   it("Rescan scans again", async () => {
     await render("healthy");
     const before = calls.filter((c) => c === "gamesScan").length;

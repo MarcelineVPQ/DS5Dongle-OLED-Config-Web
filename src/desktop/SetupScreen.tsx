@@ -125,7 +125,7 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
       <span>{t("desktop.setup.newPico")}</span>
       {!supported && <span className="dk-bad">{t("statusText.webusbUnavailable")}</span>}
       {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
-      <UsbAccessSetup compact />
+      <UsbAccessSetup variant="compact" />
       <WindowsUsbRepair />
       <UpdatesWithoutDongle />
     </Center>

@@ -301,13 +301,13 @@
       }
     },
     "usbAccess": {
-      "label": "USB-Zugriffsregel",
+      "label": "USB-Zugriff",
       "installed": "Installiert",
-      "missing": "Nicht installiert (Steams Regeln decken {{device_akk}} eventuell schon ab)",
+      "missing": "Nicht eingerichtet: damit die App und deine Spiele {{device_akk}} erreichen",
       "button": "USB-Zugriff einrichten",
       "result": {
         "notNeeded": "Auf diesem System nicht nötig.",
-        "done": "Der USB-Zugriff ist eingerichtet. Zieh {{device_akk}} ab und steck es wieder ein.",
+        "done": "Der USB-Zugriff ist für die App und deine Spiele eingerichtet. Erreicht die App {{device_akk}} noch nicht, zieh es ab und steck es wieder ein.",
         "doneSandbox": "Der USB-Zugriff ist eingerichtet und die Sandbox der App erlaubt. Zieh {{device_akk}} ab und steck es wieder ein; die Sandbox ist ab dem nächsten Start der App aktiv.",
         "noPkexec": "pkexec ist nicht installiert. Kopiere die Regel von Hand (siehe README).",
         "noUdevadm": "udevadm ist nicht installiert, darum kann die Regel nicht geladen werden. Kopiere sie von Hand (siehe README).",
@@ -447,7 +447,7 @@
       "env": "Umgebung",
       "noController": "Controller nicht verbunden",
       "hidrawOk": "Spiele können direkt mit dem Controller sprechen",
-      "hidrawNo": "Spiele erreichen den Controller nicht (udev-Regel fehlt)",
+      "hidrawNo": "Spiele erreichen den Controller nicht",
       "envOk": "nichts erzwingt den Xbox-(SDL-)Weg",
       "envHint": "Diese Variablen sind außerhalb aller Launcher gesetzt, deshalb ändert die App sie nicht. Entferne sie aus der genannten Datei und melde dich ab und wieder an.",
       "hdr": "HDR",
