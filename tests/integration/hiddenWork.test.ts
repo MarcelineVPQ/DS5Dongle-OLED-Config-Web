@@ -6,7 +6,7 @@
 //     window is hidden.
 //   - Stick tests: the circularity sampler (33 ms) pauses while hidden.
 //   - Tour: the hold ring's frame loop runs only while ✕ / ○ is held.
-import { act, createElement } from "react";
+import { act, createElement, Profiler } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
@@ -157,5 +157,50 @@ describe("the tour's hold ring", () => {
     frames = 0;
     await advance(1_000);
     expect(frames).toBe(0);
+  });
+});
+
+// The spotlight follows its target with a 200 ms check; it renders only when
+// the target moved or resized, not 5 times a second (bug hunt D7, 0.9.5).
+describe("the tour's spotlight check", () => {
+  it("renders nothing while its target stays put, and follows it when it moves", async () => {
+    vi.resetModules();
+    const T = (await import("../../src/desktop/tour/Tour")).default;
+    const { setNarrator } = await import("../../src/desktop/narrator");
+    setNarrator("off");
+    // The first controller step's target, with a box that only moves when the test says so.
+    const target = document.createElement("div");
+    target.className = "live-ctl";
+    target.append(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+    document.body.append(target);
+    let box = { left: 10, top: 20, width: 300, height: 200 };
+    target.querySelector("svg")!.getBoundingClientRect = () => ({ ...box, right: box.left + box.width, bottom: box.top + box.height, x: box.left, y: box.top, toJSON: () => box }) as DOMRect;
+    let commits = 0;
+    let input: InputReport = emptyInputReport();
+    const render = () =>
+      act(() =>
+        root.render(createElement(Profiler, { id: "tour", onRender: () => void commits++ }, createElement(T, { client: null, input, view: "overview", onView: () => undefined, ready: true }))),
+      );
+    try {
+      render();
+      act(() => window.dispatchEvent(new Event(TOUR_EVENT)));
+      await advance(100);
+      input = { ...emptyInputReport(), cross: true };
+      render();
+      await advance(50);
+      input = emptyInputReport();
+      render();
+      await advance(2_000);
+      expect(document.querySelector(".tour-card")?.textContent).toMatch(/^Step 2 of/);
+      commits = 0;
+      // loop: test — one act per check, so each would be its own commit
+      for (let i = 0; i < 10; i++) await advance(200);
+      expect(commits, "10 checks, target unchanged: no render").toBe(0);
+      box = { ...box, left: 40 };
+      await advance(250);
+      expect(commits, "it moved: one render").toBe(1);
+    } finally {
+      target.remove();
+    }
   });
 });
