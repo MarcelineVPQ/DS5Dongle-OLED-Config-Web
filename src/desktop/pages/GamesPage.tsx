@@ -548,6 +548,8 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
           icon={Layers}
           title={t("desktop.games.protonTitle", "DualSense Proton build")}
           status={ours ?? t("desktop.games.protonNotInstalled")}
+          // Installed and current: nothing to do (page rule 6), the status says which.
+          idle={!!ours && !report.ourProton.updateAvailable && !setup.protonConfirm && busy !== "proton" && !setup.protonMessage}
           task={status.proton && (ours && report.ourProton.latest ? t("desktop.games.protonNewer", { name: report.ourProton.latest }) : t("desktop.games.protonNotInstalled"))}
         >
           {() => (
@@ -594,6 +596,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
         status={fixes.length ? t("desktop.games.attention", { count: fixes.length }) : t("desktop.games.nothingToChange")}
         task={waiting > 0 && t("desktop.games.attention", { count: waiting })}
         notice={notices("recommended")}
+        idle={step === "pick" && fixes.length === 0 && !setup.undoAsk && closeNote?.at !== "recommended" && error?.at !== "recommended"}
       >
         {() => (
           <>
@@ -680,6 +683,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
         title={t("desktop.games.history", "Change history")}
         status={backups.length ? t("desktop.games.historyStatus", { count: backups.length, date: new Date(lastChange).toLocaleDateString() }) : t("desktop.games.historyNone")}
         notice={notices("history")}
+        idle={backups.length === 0 && closeNote?.at !== "history" && error?.at !== "history"}
       >
         {() => (
           <>

@@ -1042,7 +1042,8 @@
         "notInstalled": "推荐使用 DualSense Proton 版本",
         "any": "任意较新的 Proton 均可",
         "missing": "⚠ 它的 Proton 版本未安装"
-      }
+      },
+      "installOurs": "安装 DualSense Proton 版本"
     },
     "dongleConsole": {
       "title": "OLED 屏幕",

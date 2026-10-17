@@ -1054,7 +1054,8 @@
         "notInstalled": "O build do Proton para DualSense é recomendado",
         "any": "Qualquer Proton recente serve",
         "missing": "⚠ O build do Proton dele não está instalado"
-      }
+      },
+      "installOurs": "Instalar o build do Proton para DualSense"
     },
     "dongleConsole": {
       "title": "Tela OLED",

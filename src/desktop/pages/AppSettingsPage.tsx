@@ -235,7 +235,13 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           {() => <GameLaunchersSetting allowed={launchers} />}
         </Section>
       )}
-      <Section id="dismissed" icon={BellOff} title={t("desktop.notices.dismissedTitle")} status={dismissed ? t("desktop.accordion.hidden", { count: dismissed }) : t("desktop.notices.none")}>
+      <Section
+        id="dismissed"
+        icon={BellOff}
+        title={t("desktop.notices.dismissedTitle")}
+        status={dismissed ? t("desktop.accordion.hidden", { count: dismissed }) : t("desktop.notices.none")}
+        idle={dismissed === 0}
+      >
         {() => <DismissedNotices device={hardwareName(bridge.identity)} />}
       </Section>
       {devTools && (

@@ -1042,7 +1042,8 @@
         "notInstalled": "DualSense 用 Proton ビルドがおすすめです",
         "any": "最近の Proton ならどれでも動きます",
         "missing": "⚠ 設定された Proton ビルドがインストールされていません"
-      }
+      },
+      "installOurs": "DualSense 用 Proton ビルドをインストール"
     },
     "dongleConsole": {
       "title": "OLED画面",

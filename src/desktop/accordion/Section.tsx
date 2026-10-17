@@ -13,6 +13,11 @@
 // and nothing else (no polls, no images, no listeners). A notice for the
 // section sits at the top of its body (`notice`).
 //
+// A section with nothing to do in its current state (`idle`: Setup with no
+// fix, history with no change) shows its header and status only, no body: the
+// header is plain text, not a button, and has no pin (page rule 6, IA audit
+// Q9). A deep link to it still scrolls to it and flashes it.
+//
 // Keyboard: Tab goes header → its pin → the open body's controls → the next
 // header; Enter/Space opens or folds (focus stays on the header); ↑ ↓ Home
 // End move between headers (the WAI-ARIA accordion pattern).
@@ -44,7 +49,7 @@ const PanelContext = createContext<PanelInfo>({ shown: true, reportTask: () => u
 function onHeaderKeys(e: KeyboardEvent<HTMLDivElement>) {
   if (!(e.target instanceof HTMLElement) || !e.target.classList.contains("dk-sec-toggle")) return;
   if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
-  const heads = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .dk-sec > .dk-sec-head > .dk-sec-toggle")];
+  const heads = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .dk-sec > .dk-sec-head > button.dk-sec-toggle")];
   const at = heads.indexOf(e.target as HTMLButtonElement);
   const next = e.key === "Home" ? 0 : e.key === "End" ? heads.length - 1 : (at + (e.key === "ArrowDown" ? 1 : -1) + heads.length) % heads.length;
   e.preventDefault();
@@ -69,15 +74,16 @@ interface SectionProps {
   status?: string | null;
   task?: string | null | false; // an open task: the yellow dot, said as the status
   notice?: ReactNode;
+  idle?: boolean; // nothing to do now: the status only, no body (page rule 6)
   children: () => ReactNode; // called only while open
 }
 
-export function Section({ id, icon: Icon, title, status, task, notice, children }: SectionProps) {
+export function Section({ id, icon: Icon, title, status, task, notice, idle = false, children }: SectionProps) {
   const { t } = useTranslation();
   const acc = useContext(AccordionContext);
   if (!acc) throw new Error("Section outside an Accordion");
-  const open = acc.isOpen(id);
-  const pinned = acc.isPinned(id);
+  const open = !idle && acc.isOpen(id);
+  const pinned = !idle && acc.isPinned(id);
   const uid = useId();
   const ref = useRef<HTMLElement>(null);
   const revealed = acc.revealed?.id === id ? acc.revealed : null;
@@ -103,6 +109,16 @@ export function Section({ id, icon: Icon, title, status, task, notice, children 
     return showLinked(el, row ?? el, row ? el.querySelector<HTMLElement>(".dk-sec-body") : null, el.querySelector<HTMLElement>(".dk-sec-toggle"), "nearest");
   }, [revealed, shown]);
   const keepOpen = t("desktop.accordion.keepOpen", { section: title });
+  if (idle)
+    return (
+      <section ref={ref} className="dk-sec idle" data-section={id}>
+        <div className="dk-sec-head">
+          <div className="dk-sec-toggle dk-sec-static">
+            <HeadContent icon={Icon} title={title} status={status} task={task} chevron={false} />
+          </div>
+        </div>
+      </section>
+    );
   return (
     <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}`} data-section={id}>
       <div className="dk-sec-head">

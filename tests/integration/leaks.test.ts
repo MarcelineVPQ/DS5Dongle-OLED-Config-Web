@@ -118,8 +118,8 @@ const controllerAt = (section: "sticks" | "speaker" | "mic") => () => {
 // opens an ⓘ tooltip (its scroll and resize listeners), so both unmount with
 // the page while they run.
 const everySection = async () => {
-  const heads = () => [...container.querySelectorAll<HTMLButtonElement>(".dk-sec-toggle")];
-  expect(heads().length).toBeGreaterThan(3);
+  const heads = () => [...container.querySelectorAll<HTMLButtonElement>("button.dk-sec-toggle")];
+  expect(heads().length).toBeGreaterThanOrEqual(2); // sections with nothing to do have no body to open (page rule 6)
   // loop: test — every section header once
   for (let i = 0; i < heads().length; i++) {
     act(() => heads()[i].click());

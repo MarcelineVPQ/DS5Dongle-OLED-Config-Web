@@ -144,7 +144,9 @@ describe("the start-failure dialog (main process, no page)", () => {
 
   it("falls back to English for a language the app doesn't have, and fills the board's name", async () => {
     expect(await mainText(keyedText("desktop.errors.main.startFailed", { detail: "EACCES" }), "ko")).toBe(i18n.t("desktop.errors.main.startFailed", { lng: "en", detail: "EACCES" }));
-    expect(await mainText(keyedText("desktop.usbAccess.result.done"), "en-US")).toBe("USB access is set up. Unplug your board and plug it back in.");
+    expect(await mainText(keyedText("desktop.usbAccess.result.done"), "en-US")).toBe(
+      "USB access is set up for this app and your games. If the app still can't reach your board, unplug it and plug it back in.",
+    );
     expect(await mainText(keyedText("desktop.errors.board.short"), "fr")).toMatch(/^Ta carte a envoyé/);
   });
 });

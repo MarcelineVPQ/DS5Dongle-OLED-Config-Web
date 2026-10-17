@@ -5130,6 +5130,12 @@ main.dk-body:focus:not(:focus-visible),
   text-align: left;
   cursor: pointer;
 }
+/* A section with nothing to do (Section's `idle`): its header as plain text,
+   no chevron, no pin, nothing to open. */
+.dk-sec-toggle.dk-sec-static {
+  padding-right: 10px;
+  cursor: default;
+}
 .dk-sec-ic {
   position: relative;
   flex: none;

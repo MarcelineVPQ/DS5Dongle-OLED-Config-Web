@@ -163,13 +163,17 @@ describe("Games → Home, healthy", () => {
     expect(launchers.textContent).toContain(i18n.t("desktop.games.intro"));
     expect(launchers.textContent).toContain("Steam · closed · our Proton is the default");
     expect(button(i18n.t("desktop.games.rescan"), launchers)).toBeTruthy();
-    expect((await open("proton")).textContent).toContain(`${OUR_PROTON} ${i18n.t("desktop.games.protonFound")}`);
+    // Installed and current: nothing to do, the status names it (page rule 6).
+    expect($('[data-section="proton"].idle')).not.toBeNull();
+    expect(status("proton")).toBe(OUR_PROTON);
     const computer = await open("computer");
     // The HDR checklist is always shown (no fold): every item passing, one compact line.
     expect(computer.querySelector("details")).toBeNull();
     expect(computer.querySelector(".hdr-row .hdr-check.compact")).toBeTruthy();
     expect(computer.querySelector(".hdr-fail")).toBeNull();
-    expect((await open("recommended")).textContent).toContain(i18n.t("desktop.games.allGood"));
+    // Nothing to change: its status says so, no body (page rule 6).
+    expect($('[data-section="recommended"].idle')).not.toBeNull();
+    expect(status("recommended")).toBe(i18n.t("desktop.games.nothingToChange"));
     const history = await open("history");
     await click(button(i18n.t("desktop.games.undoShort"), history));
     expect(calls).toContain("gamesUndo b1");
@@ -202,6 +206,20 @@ describe("Games → Home, healthy", () => {
     await click(button(i18n.t("desktop.usbAccess.button"), computer));
     expect(calls).toContain("setupUsbAccess");
     expect(calls.filter((c) => c === "gamesScan").length).toBe(before + 1);
+  });
+
+  it("a game's Compatibility Install link shows Home at DualSense Proton build (the fix where the problem shows, IA audit R5)", async () => {
+    const report = homeReport("healthy");
+    report.ourProton = { name: null, latest: OUR_PROTON, latestSize: 1_000_000, updateAvailable: true };
+    report.games[0] = { ...report.games[0], usesOurProton: false, runner: "Proton 9.0" }; // Astro Bot: adaptive triggers
+    await render("healthy", report);
+    await click($$<HTMLButtonElement>(".lib-row").find((r) => r.textContent!.includes("Astro Bot"))!);
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(true);
+    await click($<HTMLButtonElement>('.gp [data-section="compatibility"] .dk-sec-toggle')!);
+    await click(button(i18n.t("desktop.library.installOurs")));
+    expect($<HTMLElement>(".lib-pane")!.hidden).toBe(false);
+    expect(openIds()).toContain("proton");
+    expect(button(i18n.t("desktop.games.protonInstall", { name: OUR_PROTON }), $('[data-section="proton"]')!)).toBeTruthy();
   });
 
   it("Rescan scans again", async () => {

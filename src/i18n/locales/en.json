@@ -1053,7 +1053,8 @@
         "notInstalled": "The DualSense Proton build is recommended",
         "any": "Any recent Proton works",
         "missing": "⚠ Its Proton build isn't installed"
-      }
+      },
+      "installOurs": "Install the DualSense Proton build"
     },
     "dongleConsole": {
       "title": "OLED screen",

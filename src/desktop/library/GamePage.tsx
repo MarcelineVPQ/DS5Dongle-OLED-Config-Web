@@ -45,7 +45,7 @@ import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { GameActions, PlayStats } from "./playBar";
 import Notice from "../Notice";
 import { Section, SectionGroup, SplitView } from "../accordion/Section";
-import { pinScope, useAccordion } from "../accordion/useAccordion";
+import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion";
 import { MainBlock, useMainBlock } from "../accordion/MainBlock";
 import type { SectionId } from "../accordion/sections";
 
@@ -160,6 +160,10 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20)
   const runner = `${game.runnerMissing ? "⚠ " : ""}${game.protons?.find((c) => c.current)?.name ?? game.runner ?? t("desktop.library.launcherDefault")}`;
   const compatStatus = compatLine(t, game, report.ourProton.name);
+  // Sections with nothing to do now show their status only, no body (page rule 6, IA audit Q9).
+  const setupIdle = !status.attention && game.fixes.length === 0 && !canMarkNotDetected(game);
+  const hdrIdle = knownHdr(game.title) && (!isHdr || status.hdrOk);
+  const compatIdle = !compatHasAction(game, report.ourProton.name);
   const store = t(`desktop.library.storeName.${game.store}`);
 
   // The game at a glance: a tile per section, in the panel's order and with
@@ -205,16 +209,16 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <Section id="profile" icon={SlidersHorizontal} title={t("desktop.library.section.profile")} status={profileStatus}>
           {() => <ProfileBody game={game} record={record} bridge={bridge} normal={normal} onLibrary={onLibrary} />}
         </Section>
-        <Section id="setup" icon={Wrench} title={t("desktop.library.section.setup")} status={setupLine} task={setupTask}>
+        <Section id="setup" icon={Wrench} title={t("desktop.library.section.setup")} status={setupLine} task={setupTask} idle={setupIdle}>
           {() => <SetupBody game={game} report={report} mineState={mineState} onRescan={onRescan} status={status} />}
         </Section>
         {protonApplies() && (
-          <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={compatStatus}>
+          <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={compatStatus} idle={compatIdle}>
             {() => <CompatBody key={game.key} game={game} report={report} onRescan={onRescan} />}
           </Section>
         )}
         {proton && (
-          <Section id="hdr" icon={Sun} title={t("desktop.library.hdrTitle")} status={hdrLine} task={hdrTask && t("desktop.library.needsAttention")}>
+          <Section id="hdr" icon={Sun} title={t("desktop.library.hdrTitle")} status={hdrLine} task={hdrTask && t("desktop.library.needsAttention")} idle={hdrIdle}>
             {() => <HdrBody game={game} report={report} mineState={mineState} hdrReqs={hdrReqs} isHdr={isHdr} />}
           </Section>
         )}
@@ -252,6 +256,15 @@ function compatLine(t: TFunction, game: GameEntry, ours: string | null): string 
   if (game.support !== "triggers" && game.support !== "haptics") return t("desktop.library.compatStatus.any");
   return ours ? t("desktop.library.compatStatus.recommended", { name: ours }) : t("desktop.library.compatStatus.notInstalled");
 }
+
+// Whether Compatibility has something to do: another build to pick, a
+// switch it recommends, or our build missing for a game that needs it (its
+// Install link, IA audit R5).
+function compatHasAction(game: GameEntry, ours: string | null): boolean {
+  // loop: HOT-PATH-OK — N = one launcher's builds (≤ ~20) and one game's fixes (≤ ~5)
+  return (game.protons ?? []).some((c) => !c.current) || game.fixes.some((f) => f.kind === "set-runner") || needsOurProton(game, ours);
+}
+const needsOurProton = (game: GameEntry, ours: string | null) => !ours && !game.usesOurProton && (game.support === "triggers" || game.support === "haptics");
 
 // A game Proton runs (Linux, a launcher with per-game Proton settings).
 const isProtonGame = (game: GameEntry) => protonApplies() && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
@@ -772,6 +785,14 @@ function CompatBody({ game, report, onRescan }: { game: GameEntry; report: Games
         </Row>
       )}
       {game.usesOurProton && <p className="dk-good">✓ {t("desktop.library.usesOurs")}</p>}
+      {/* The fix where the problem shows (page rule 7): our build is installed from Games → DualSense Proton build. */}
+      {needsOurProton(game, ours) && (
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn primary" onClick={() => revealSection("games", "proton")}>
+            {t("desktop.library.installOurs")}
+          </button>
+        </div>
+      )}
       {canPick && (
         <Row label={t("desktop.library.protonPick")} info={t("desktop.library.protonPickInfo")} stack>
           <select className="dk-select" aria-label={t("desktop.library.protonPick")} value={picked} onChange={(e) => pick(e.target.value)}>

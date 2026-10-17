@@ -339,8 +339,26 @@ const APP_INVENTORY: Record<string, string[]> = {
   graphics: ["desktop.live.hardwareAcceleration", "desktop.hdr.label", "desktop.knobs.hdrNits"],
   updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.channel.backToStable"],
   privacy: ["desktop.games.readLaunchers"],
-  dismissed: ["desktop.notices.none"],
+  dismissed: [], // none dismissed: nothing to do, its status says so (page rule 6)
   developer: ["desktop.dev.model", "desktop.dev.colorway", "desktop.dev.simulated", "desktop.dev.fakeSlots", "desktop.dev.updates", "desktop.dev.hdrTitle"],
+};
+
+// Page rule 6 (IA audit Q9): a section with nothing to do shows its header
+// and status only (no toggle, no pin, no body); every section that opens has
+// something to set or do in it (a control that isn't a notice's ×).
+const isIdle = (id: string) => !!container.querySelector(`[data-section="${id}"].idle`);
+function expectIdle(id: string) {
+  const sec = container.querySelector(`[data-section="${id}"]`)!;
+  expect(sec.querySelector("button.dk-sec-toggle, .dk-sec-pin, .dk-sec-body"), `${id}: idle, nothing to open`).toBeNull();
+  expect(sec.querySelector(".dk-sec-status")?.textContent, `${id}: idle, its status says why`).toBeTruthy();
+}
+function expectSomethingToDo(id: string) {
+  const body = container.querySelector(`[data-section="${id}"] .dk-sec-body`)!;
+  const controls = [...body.querySelectorAll("button, input, select, textarea, a[href]")].filter((c) => !c.closest(".dk-notice"));
+  expect(controls.length, `${id}: an open section has something to set or do (page rule 6)`).toBeGreaterThan(0);
+}
+const closeOpen = () => {
+  for (const sec of container.querySelectorAll<HTMLElement>(".dk-sec.open:not(.pinned)")) click(sec.querySelector<HTMLButtonElement>("button.dk-sec-toggle")!);
 };
 
 // What an open section shows: its rows' labels, its buttons and its texts.
@@ -377,9 +395,15 @@ describe("App settings on the accordion", () => {
     await render(appSettings());
     const seen = new Map<string, string[]>();
     for (const id of m.sections.SECTIONS.app) {
+      if (isIdle(id)) {
+        expectIdle(id);
+        expect(APP_INVENTORY[id], id).toEqual([]);
+        continue;
+      }
       click(head(id));
       await act(async () => undefined);
       expect(openIds()).toEqual([id]);
+      expectSomethingToDo(id);
       // loop: test
       for (const label of labelsIn(id)) seen.set(label, [...(seen.get(label) ?? []), id]);
     }
@@ -589,6 +613,7 @@ async function inventory(page: "controller" | "dongle", table: Record<string, st
     click(head(id));
     await act(() => new Promise((r) => setTimeout(r, 30)));
     expect(openIds()).toEqual([id]);
+    expectSomethingToDo(id);
     const seen = labelsIn(id);
     // loop: test
     for (const key of table[id]) expect(seen, `${key} in ${id}`).toContain(m.i18n.t(key));
@@ -601,7 +626,7 @@ async function inventory(page: "controller" | "dongle", table: Record<string, st
       rows.set(l, new Set([...(rows.get(l) ?? []), id]));
     }
   }
-  click(head(m.sections.SECTIONS[page].at(-1)!));
+  closeOpen();
   expect(openIds()).toEqual([]);
   expect(container.querySelectorAll(".dk-sec-body")).toHaveLength(0); // folded: nothing rendered
   expect([...rows].filter(([, ids]) => ids.size > 1)).toEqual([]);
@@ -882,16 +907,18 @@ describe("App settings beside the live controller", () => {
 
 // The plan's table (MAPPING.md, "Games Home" and "Game page"), by what each
 // section's body says (its texts, buttons and row labels).
+// [] = nothing to do in this state: the section shows its status only (page rule 6).
 const GAMES_INVENTORY: Record<string, string[]> = {
   launchers: ["desktop.games.intro", "desktop.games.rescan"],
-  proton: ["desktop.games.protonFound"],
+  proton: [], // ours installed and current
   recommended: ["desktop.games.changesHint", "desktop.games.review"],
   history: ["desktop.games.undoShort"],
 };
 const GAME_INVENTORY: Record<string, string[]> = {
   profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.profileLabel", "desktop.curves.profileLeft"],
   setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
-  compatibility: ["desktop.library.runsWith"],
+  compatibility: [], // no other build to pick, nothing recommended, ours not needed
+
   hdr: ["desktop.hdrManual.title"],
   report: ["desktop.library.rateTitle", "desktop.library.tag.weak-vibration"],
   notes: [],
@@ -904,10 +931,16 @@ async function textInventory(page: "games" | "game", table: Record<string, strin
   expect(container.querySelectorAll(".dk-card")).toHaveLength(0); // no settings cards left
   const rows = new Map<string, Set<string>>();
   for (const id of m.sections.SECTIONS[page]) {
+    if (isIdle(id)) {
+      expectIdle(id);
+      expect(table[id], id).toEqual([]);
+      continue;
+    }
     const toggle = head(id);
     if (toggle.getAttribute("aria-expanded") !== "true") click(toggle);
     await act(async () => undefined);
     expect(openIds(), id).toEqual([id]);
+    expectSomethingToDo(id);
     const body = container.querySelector(`[data-section="${id}"] .dk-sec-body`)!;
     // loop: test
     for (const key of table[id]) expect(body.textContent, `${key} in ${id}`).toContain(m.i18n.t(key, { count: 1, name: "", launcher: "" }).replace(/ +$/, ""));

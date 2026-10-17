@@ -1054,7 +1054,8 @@
         "notInstalled": "Der DualSense-Proton-Build wird empfohlen",
         "any": "Jedes aktuelle Proton geht",
         "missing": "⚠ Sein Proton-Build ist nicht installiert"
-      }
+      },
+      "installOurs": "DualSense-Proton-Build installieren"
     },
     "dongleConsole": {
       "title": "OLED-Bildschirm",

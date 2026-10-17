@@ -128,24 +128,32 @@ describe("game page", () => {
     expect(targets.map((id) => sectionIds().indexOf(id))).toEqual([...targets.map((id) => sectionIds().indexOf(id))].sort((a, b) => a - b));
     // Each tile's label is its section's title.
     tiles.forEach((tile, i) => expect(tile.querySelector(".gp-tile-label")!.textContent).toBe(sec(targets[i])!.querySelector(".dk-sec-title")!.textContent));
+    // A section with nothing to do (page rule 6) has nothing to open: the tile still takes you there (the flash).
     tiles.forEach((tile, i) => {
       act(() => tile.click());
-      expect(openIds()).toEqual([targets[i]]);
+      expect(openIds()).toEqual(sec(targets[i])!.classList.contains("idle") ? [] : [targets[i]]);
       expect(sec(targets[i])!.classList.contains("dk-flash")).toBe(true);
     });
   });
 
-  it("all set: Setup's passed checks are shown (no fold), HDR its own section with the checklist", () => {
+  it("all set: Setup has nothing to do, so it shows its status only, no body (page rule 6, IA audit Q9)", () => {
     render(ghostrunner());
     expect(status("setup")).toBe("✓ All set (2 checks)");
     expect(hasDot("setup")).toBe(false);
-    open("setup");
-    expect(checksHead()).toBe("✓ All set (2 checks)");
-    expect(checks()!.textContent).toContain(i18n.t("desktop.library.gamepadSet"));
-    expect(container!.querySelector(".dk-sec-body details")).toBeNull();
     expect(status("hdr")).toBe(`${i18n.t("desktop.library.supportsHdr")} · on for DP-1`);
     expect(hasDot("hdr")).toBe(false);
-    expect(open("hdr").querySelector(".hdr-check")!.textContent).not.toContain("✗");
+    expect(sec("setup")!.classList.contains("idle")).toBe(true);
+    expect(sec("setup")!.querySelector("button.dk-sec-toggle, .dk-sec-pin, .dk-sec-body")).toBeNull();
+    // HDR still has something to do for a game we don't know (Supports HDR), so it opens: the checklist all ✓.
+    const hdr = open("hdr");
+    expect(hdr.querySelector(".hdr-check")!.textContent).not.toContain("✗");
+    expect(hdr.textContent).toContain(i18n.t("desktop.library.supportsHdr"));
+  });
+
+  it("a game that can still be marked keeps Setup open-able: the mark is something to do", () => {
+    render(ghostrunner({ support: "unknown", gamepad: undefined }));
+    expect(sec("setup")!.classList.contains("idle")).toBe(false);
+    expect(open("setup").querySelector(".gp-marks input")).not.toBeNull();
   });
 
   it("needs attention: Setup and HDR carry their dots; a first visit opens Setup with Review", () => {
@@ -175,10 +183,11 @@ describe("game page", () => {
     expect(text).not.toContain("Player ratings");
     expect(text).not.toContain("Shared configs");
     expect([...container!.querySelectorAll(".gp-stat-label")].map((l) => l.textContent)).toEqual([i18n.t("desktop.library.lastPlayed"), i18n.t("desktop.library.playTime")]);
-    const compat = open("compatibility");
-    expect(compat.textContent!.split(i18n.t("desktop.library.runsWith")).length - 1).toBe(1);
-    expect(compat.textContent).not.toContain(i18n.t("desktop.library.recommended")); // already on ours
-    expect(compat.textContent).not.toContain(i18n.t("desktop.library.store"));
+    // Already on ours, no other build: Compatibility has nothing to do, its status says so; the build's name is the tile's.
+    expect(sec("compatibility")!.classList.contains("idle")).toBe(true);
+    expect(status("compatibility")).toBe(i18n.t("desktop.library.compatStatus.ours"));
+    expect($('.gp-tile[data-tile="compatibility"] .gp-tile-value')!.textContent).toBe(OUR_PROTON);
+    expect(status("compatibility")).not.toContain(i18n.t("desktop.library.store"));
     expect(openDetails().textContent).toContain(i18n.t("desktop.library.storeName.gog"));
   });
 
@@ -296,8 +305,9 @@ describe("game page", () => {
     render(ghostrunner({ hdr: undefined, gamepad: undefined, runner: null, usesOurProton: false, envFlags: [] }), HDR_READY, "win32");
     expect(sectionIds()).toEqual(["profile", "setup", "report", "notes"]);
     expect([...container!.querySelectorAll(".gp-tile")]).toHaveLength(3);
-    expect(open("setup").textContent).not.toContain(i18n.t("desktop.library.marksTitle"));
-    expect(checksHead()).toBe("✓ All set (1 check)");
+    // Nothing to set up and no mark on Windows: its status only.
+    expect(sec("setup")!.classList.contains("idle")).toBe(true);
+    expect(status("setup")).toBe("✓ All set (1 check)");
     expect(openDetails().textContent).toContain(i18n.t("desktop.library.launcher"));
   });
 });
@@ -506,9 +516,25 @@ describe("Compatibility: the Proton version picker (Linux)", () => {
     expect(compat.textContent).not.toContain("instead of");
   });
 
+  it("our build missing for a game that needs it: Compatibility carries Install, which goes to Games → DualSense Proton build (IA audit R5)", () => {
+    const game = ghostrunner({ support: "triggers", usesOurProton: false, runner: "Proton 9.0" });
+    const report = gamesReport(game);
+    report.ourProton = { ...report.ourProton, name: null };
+    vi.stubGlobal("desktop", fakeDesktop("linux"));
+    act(() =>
+      root!.render(
+        createElement(GamePage, { game, info: GHOSTRUNNER_INFO, record: GHOSTRUNNER_RECORD, running: false, report, bridge: fakeBridge(), onLibrary: () => undefined, onRescan: () => undefined }),
+      ),
+    );
+    expect(status("compatibility")).toBe(i18n.t("desktop.library.compatStatus.notInstalled"));
+    const install = [...open("compatibility").querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === i18n.t("desktop.library.installOurs"))!;
+    expect(install).toBeTruthy(); // where it leads: gamesHome.test.ts
+  });
+
   it("no picker without builds to switch to (and none on Windows, where Compatibility isn't shown)", () => {
     render(ghostrunner());
-    expect(open("compatibility").querySelector("select")).toBeNull();
+    expect(sec("compatibility")!.classList.contains("idle")).toBe(true);
+    expect(sec("compatibility")!.querySelector("select")).toBeNull();
     render(withPicker(), HDR_READY, "win32");
     expect(sectionIds()).not.toContain("compatibility");
   });
