@@ -519,11 +519,21 @@ describe("helper programs", () => {
 
   it("updater relaunch: the installed file, an environment allowlist, the path never in a shell string", () => {
     const source = read("updater.ts");
-    expect(source).toContain('execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, ...setenv, "--", target]');
+    expect(source).toContain('execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, lifetime, ...setenv, "--", target]');
+    expect(source).toContain('for (const lifetime of ["--property=ExitType=cgroup", "--property=KillMode=process"]) {');
     expect(source).toContain(`spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env })`);
     expect(source).toContain('spawn(target, [], { detached: true, stdio: "ignore" })');
     expect(source).toContain("const target = this.installedPath;");
     expect(source).not.toMatch(noShell);
+  });
+
+  it("AppImage quit guard: /bin/sh with a fixed script, only process ids as arguments, a fixed PATH", async () => {
+    const source = read("appImageQuit.ts");
+    expect(source).toContain('spawn("/bin/sh", mountGuardArgs(pids), { detached: true, stdio: "ignore", env: { PATH: "/usr/bin:/bin" } }).unref();');
+    expect(source).not.toMatch(noShell);
+    const { mountGuardArgs, WAIT_SCRIPT } = await import("../../electron/main/appImageQuit");
+    expect(mountGuardArgs([12, 34])).toEqual(["-c", WAIT_SCRIPT, "sh", "12", "34"]);
+    expect(WAIT_SCRIPT).not.toMatch(/\$\{|`/);
   });
 
   it("menu refresh and the desktop accent: fixed programs and arguments", () => {

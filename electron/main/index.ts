@@ -39,6 +39,7 @@ import { isAllowedExternalUrl } from "./urls";
 import { copyOledImage, saveOledImage } from "./oledShare";
 import { writeFileAtomic } from "./games/backup";
 import { boardHolders } from "./boardHolders";
+import { holdAppImageMountUntilExit } from "./appImageQuit";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
@@ -539,6 +540,8 @@ function start(): void {
     stopPalette();
     headsetProfile?.stop(); // its pactl child ends with the app
     if (!sessionEnding) updater.installOnQuit();
+    // Linux AppImage: the mount stays until Chromium's processes are gone (no SIGBUS on the way out).
+    holdAppImageMountUntilExit();
   });
   // lifetime: NOT-WORTH — one per app, lives until quit
   app.on("window-all-closed", () => {

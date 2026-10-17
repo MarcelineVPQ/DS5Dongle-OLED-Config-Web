@@ -315,17 +315,33 @@ export class Updater {
       for (const v of vars) if (process.env[v]) env[v] = process.env[v]!;
       // This copy's AppImage mount dies when it exits: the new copy adds its own.
       if (env.PATH) env.PATH = pathWithoutAppImageMounts(env.PATH)!;
+      // The unit lasts until its last process is gone (ExitType=cgroup, as
+      // KDE's launcher sets it; systemd < 250 refuses it: KillMode=process),
+      // never killing the new copy's AppImage runtime and zygote together
+      // the moment its main process quits (a SIGBUS and a stale mount).
       let started = false;
-      try {
-        const setenv = Object.entries(env).map(([k, v]) => `--setenv=${k}=${v}`);
-        execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, ...setenv, "--", target], { stdio: "ignore" });
-        started = true;
-      } catch {
-        // error: NOT-WORTH — systemd-run unavailable
+      const setenv = Object.entries(env).map(([k, v]) => `--setenv=${k}=${v}`);
+      // loop: SERIAL-REQUIRED — retry/backoff: the second form only when systemd refused the first (2 tries)
+      for (const lifetime of ["--property=ExitType=cgroup", "--property=KillMode=process"]) {
+        try {
+          execFileSync("systemd-run", ["--user", "--collect", `--unit=ds5-configurator-relaunch-${Date.now()}`, lifetime, ...setenv, "--", target], { stdio: "ignore" });
+          started = true;
+          break;
+        } catch {
+          // error: NOT-WORTH — systemd-run unavailable or too old for the property: the next form, then the shell below
+        }
       }
-      // lifetime: OK — detached and unref'd: the relaunch outlives this app on purpose (app.exit next)
+      // lifetime: OK — detached and unref'd: the relaunch outlives this app on purpose (app.quit next)
       // error: NOT-WORTH — relaunching the just-verified new version; the app exits either way (a failed start leaves the user to open it again)
       if (!started) spawn("/bin/sh", ["-c", 'sleep 0.5; exec "$0"', target], { detached: true, stdio: "ignore", env }).unref();
+      // A normal quit, not app.exit: will-quit stops the app's own children
+      // (the headset watcher's pactl) and holds the AppImage mount until
+      // Chromium's processes are gone. app.exit skipped both: the old copy's
+      // pactl kept its AppImage runtime serving the mount for hours.
+      app.quit();
+      // lifetime: OK — fires once; the process is gone before it unless the quit was held up
+      setTimeout(() => app.exit(0), 10_000);
+      return;
     } else if (process.platform === "win32") {
       // The installer closes this copy if it is still running, installs over
       // it and starts the new version (--force-run).

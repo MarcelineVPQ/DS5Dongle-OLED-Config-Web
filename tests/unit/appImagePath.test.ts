@@ -12,12 +12,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const execFileSyncMock = vi.hoisted(() => vi.fn());
 vi.mock("node:child_process", async (orig) => ({ ...(await orig<typeof import("node:child_process")>()), execFileSync: execFileSyncMock }));
 vi.mock("electron", () => ({
-  app: { isPackaged: true, releaseSingleInstanceLock: vi.fn(), exit: vi.fn(), getVersion: () => "0.9.5", getPath: () => tmpdir() },
+  app: { isPackaged: true, releaseSingleInstanceLock: vi.fn(), exit: vi.fn(), quit: vi.fn(), getVersion: () => "0.9.5", getPath: () => tmpdir() },
   net: { fetch: vi.fn() },
 }));
 
 import { launcherEnv, pathWithoutAppImageMounts } from "../../electron/main/games/schemeHandler";
 import { Updater } from "../../electron/main/updater";
+import { app } from "electron";
 
 describe("pathWithoutAppImageMounts", () => {
   it("drops every AppImage mount and its subfolders", () => {
@@ -79,5 +80,36 @@ describe.runIf(process.platform === "linux")("the relaunch after an in-app updat
     expect(args[0]).toBe("--user");
     expect(args).toContain("--setenv=PATH=/usr/local/bin:/usr/bin");
     expect(args.join(" ")).not.toContain(".mount_");
+  });
+
+  // 0.9.5-dev.17: the relaunch unit (ExitType=main) killed the new copy's
+  // AppImage runtime with its zygote when it quit (SIGBUS, a stale mount), and
+  // app.exit skipped will-quit, so the old copy's pactl kept its runtime alive.
+  it("lasts until its last process is gone, and quits normally (will-quit runs)", () => {
+    vi.useFakeTimers();
+    const updater = new Updater(() => undefined);
+    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: "/opt/DS5.AppImage" });
+    updater.restart();
+    expect(execFileSyncMock.mock.calls[0][1]).toContain("--property=ExitType=cgroup");
+    expect(app.quit).toHaveBeenCalledOnce();
+    expect(app.exit).not.toHaveBeenCalled();
+    // A quit that never finishes still ends this copy.
+    vi.advanceTimersByTime(10_000);
+    expect(app.exit).toHaveBeenCalledWith(0);
+    vi.useRealTimers();
+    vi.mocked(app.quit).mockClear();
+    vi.mocked(app.exit).mockClear();
+  });
+
+  it("systemd < 250 refuses ExitType: the relaunch uses KillMode=process instead", () => {
+    execFileSyncMock.mockImplementationOnce(() => {
+      throw new Error("Unknown assignment: ExitType=cgroup");
+    });
+    const updater = new Updater(() => undefined);
+    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: "/opt/DS5.AppImage" });
+    updater.restart();
+    expect(execFileSyncMock).toHaveBeenCalledTimes(2);
+    expect(execFileSyncMock.mock.calls[1][1]).toContain("--property=KillMode=process");
+    expect(execFileSyncMock.mock.calls[1][1]).not.toContain("--property=ExitType=cgroup");
   });
 });
