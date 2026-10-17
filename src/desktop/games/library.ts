@@ -4,6 +4,7 @@
 // own rating, review, DualSense feature checks and notes (shared later, by
 // the player's choice, through the community repo).
 import { z } from "zod";
+import { ReportSheetSchema } from "./report";
 
 // Saved button layouts: named remap tables kept in one library ("Southpaw",
 // "Racing"), so a layout is made once and used by any game's profile (by its
@@ -107,9 +108,12 @@ export const PROFILE_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof ProfileSettings>;
 export type ProfileField = (typeof PROFILE_FIELDS)[number];
 
-// Player feedback is structured, never free text: fixed statements a player
-// ticks, so shared feedback (later) is counts per statement, with nothing to
-// moderate. Notes are free text but private: they never leave this PC.
+// Player feedback is structured, never free text, so a shared report is
+// machine IDs with nothing to moderate. Notes are free text but private: they
+// never leave this PC. Since 0.9.5-dev.18 the feedback is a test sheet
+// (Mine.report, report.ts); FEEDBACK_TAGS are the ticked statements of the
+// older checklist, still read (and migrated, report.ts migrateTags) until the
+// player's next change rewrites them as a sheet.
 export const FEEDBACK_TAGS = [
   "triggers-work",
   "haptics-work",
@@ -127,16 +131,37 @@ export const FEEDBACK_TAGS = [
 export type FeedbackTag = (typeof FEEDBACK_TAGS)[number];
 export const MineSchema = z.strictObject({
   rating: z.number().int().min(1).max(5).optional(),
+  // The older checklist (read only; see above).
   tags: z.array(z.enum(FEEDBACK_TAGS)).max(FEEDBACK_TAGS.length).optional(),
-  // What the rating and feedback were given on: the app (which also pins
+  // The test sheet: Pass / Fail / Not tested per feature, and the setup flags.
+  report: ReportSheetSchema.optional(),
+  // What the rating and the sheet were given on: the app (which also pins
   // the firmware) and the game's build, so feedback from before a game
-  // update or one of our fixes can be told apart (and flagged as stale).
+  // update or one of our fixes can be told apart (and flagged as stale);
+  // since dev.18 also the board firmware, the controller (model, colorway),
+  // the OS and CPU family and the Proton build, for a shared report
+  // (sharedReport.ts). Never a serial, a host or a user name.
   ratedOn: z
     .strictObject({
-      app: z.string().regex(/^\d+\.\d+\.\d+$/),
+      app: z.string().regex(/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]{1,40})?$/),
       build: z.string().max(40).optional(),
       gameUpdated: z.number().optional(),
       at: z.number(),
+      firmware: z
+        .string()
+        .regex(/^[\x20-\x7e]{1,80}$/)
+        .optional(),
+      controller: z.enum(["dualsense", "dualsense-edge"]).optional(),
+      colorway: z
+        .string()
+        .regex(/^[0-9A-Za-z]{2}$/)
+        .optional(),
+      os: z.enum(["linux", "windows", "macos"]).optional(),
+      arch: z.enum(["x64", "arm64"]).optional(),
+      runner: z
+        .string()
+        .regex(/^[\x20-\x7e]{1,80}$/)
+        .optional(),
     })
     .optional(),
   notes: z.string().max(5000).optional(),

@@ -968,7 +968,7 @@ const GAME_INVENTORY: Record<string, string[]> = {
   compatibility: [], // no other build to pick, nothing recommended, ours not needed
 
   hdr: ["desktop.hdrManual.title"],
-  report: ["desktop.library.rateTitle", "desktop.library.tag.weak-vibration"],
+  report: ["desktop.library.rateTitle", "desktop.library.sheetTitle", "desktop.library.reportFeature.adaptive-triggers", "desktop.library.flag.steam-input-off"],
   notes: [],
 };
 // Each section opened in turn: everything listed is in it (by text; some

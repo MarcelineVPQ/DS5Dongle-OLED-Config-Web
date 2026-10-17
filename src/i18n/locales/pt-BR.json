@@ -932,22 +932,38 @@
         "4": "Funciona bem",
         "5": "Funciona perfeitamente"
       },
-      "feedbackHint": "O que você notou?",
-      "feedbackPicked_one": "{{count}} marcada",
-      "feedbackPicked_other": "{{count}} marcadas",
-      "tag": {
-        "triggers-work": "Gatilhos adaptáveis OK",
-        "haptics-work": "Resposta tátil OK",
-        "speaker-works": "Alto-falante OK",
-        "mic-works": "Microfone OK",
-        "lightbar-works": "Barra de luz OK",
-        "weak-vibration": "Vibração fraca",
-        "no-triggers": "Gatilhos não funcionam",
+      "suggested": "Seus resultados sugerem: {{label}}",
+      "sheetTitle": "Resultados dos testes",
+      "sheetInfo": "Teste cada recurso neste jogo e marque: Passou (funciona como deveria), Falhou (não funciona, ou só em parte) ou Não testado. Uma falha pode dar mais detalhes. As estrelas continuam sendo sua impressão geral.",
+      "result": {
+        "pass": "Passou",
+        "fail": "Falhou",
+        "not-tested": "Não testado"
+      },
+      "reportFeature": {
+        "controller-detected": "Controle detectado",
+        "adaptive-triggers": "Gatilhos adaptáveis",
+        "haptic-feedback": "Resposta tátil",
+        "speaker": "Alto-falante",
+        "microphone": "Microfone",
+        "light-bar": "Barra de luz",
+        "stays-connected": "Continua conectado"
+      },
+      "detail": {
+        "weak": "Parece fraca",
         "rumble-only": "Só vibração simples",
-        "speaker-problems": "Problemas no alto-falante",
-        "not-detected": "Controle não detectado",
-        "needs-steam-input-off": "Precisa Steam Input off",
-        "disconnects": "Desconecta"
+        "problems": "Problemas de som"
+      },
+      "failDetails": "{{feature}}: o que falhou",
+      "sheetConflict": "Sua lista antiga dizia as duas coisas: confira de novo",
+      "setupFlags": "O que foi preciso",
+      "flag": {
+        "steam-input-off": "Precisa Steam Input off"
+      },
+      "resultCounts": "{{pass}} passou · {{fail}} falhou",
+      "notTestedYet": "Ainda não testado",
+      "tag": {
+        "not-detected": "Controle não detectado"
       },
       "shareSoon": "Salvo neste PC. O compartilhamento com outros jogadores está chegando.",
       "notesPlaceholder": "Notas privadas, só neste PC",

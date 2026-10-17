@@ -204,6 +204,8 @@ export interface FirmwareHoldState {
 
 export interface DesktopApi {
   platform: string;
+  // The CPU family (process.arch: "x64", "arm64", …): a game report says what it was tested on.
+  arch?: string;
   reportStatus(status: DeviceStatus): void;
   // A PNG data URL drawn by the renderer (src/desktop/tray/trayIcon.ts).
   setTrayIcon(pngDataUrl: string): void;

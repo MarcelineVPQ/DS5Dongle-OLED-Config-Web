@@ -274,24 +274,30 @@ export function Toggle({ label, sub, info, value, disabled, onChange }: TogglePr
   );
 }
 
-interface SegmentedProps<T extends number> {
+interface SegmentedProps<T extends string | number> {
   label: string;
   sub?: string;
   info?: string;
   value: T;
-  options: ReadonlyArray<{ value: T; label: string; title?: string }>;
+  // An icon goes before the label (aria-hidden: the label names the choice).
+  options: ReadonlyArray<{ value: T; label: string; title?: string; icon?: ReactNode }>;
   disabled?: boolean;
   onChange: (value: T) => void;
 }
 
 // The choices go under the label when they don't fit beside it (Row measures).
-export function Segmented<T extends number>({ label, sub, info, value, options, disabled, onChange }: SegmentedProps<T>) {
+export function Segmented<T extends string | number>({ label, sub, info, value, options, disabled, onChange }: SegmentedProps<T>) {
   return (
     <Row label={label} sub={sub} info={info}>
       <div className="dk-seg" role="group" aria-label={label}>
         {/* loop: HOT-PATH-OK — N ≤ 6 segment options */}
         {options.map((o) => (
           <button type="button" key={o.value} title={o.title} className={o.value === value ? "on" : ""} aria-pressed={o.value === value} disabled={disabled} onClick={() => onChange(o.value)}>
+            {o.icon && (
+              <span className="dk-seg-icon" aria-hidden="true">
+                {o.icon}
+              </span>
+            )}
             {o.label}
           </button>
         ))}

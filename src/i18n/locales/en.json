@@ -931,22 +931,38 @@
         "4": "Works well",
         "5": "Works perfectly"
       },
-      "feedbackHint": "What did you notice?",
-      "feedbackPicked_one": "{{count}} picked",
-      "feedbackPicked_other": "{{count}} picked",
-      "tag": {
-        "triggers-work": "Adaptive triggers work",
-        "haptics-work": "Haptic feedback works",
-        "speaker-works": "Speaker works",
-        "mic-works": "Mic works",
-        "lightbar-works": "Light bar works",
-        "weak-vibration": "Vibration feels weak",
-        "no-triggers": "Triggers don't work",
+      "suggested": "Your results suggest: {{label}}",
+      "sheetTitle": "Test results",
+      "sheetInfo": "Test each feature in this game and mark it: Pass (it works as it should), Fail (it doesn't, or only partly) or Not tested. A Fail can say more. The stars stay your overall feel.",
+      "result": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "not-tested": "Not tested"
+      },
+      "reportFeature": {
+        "controller-detected": "Controller detected",
+        "adaptive-triggers": "Adaptive triggers",
+        "haptic-feedback": "Haptic feedback",
+        "speaker": "Speaker",
+        "microphone": "Microphone",
+        "light-bar": "Light bar",
+        "stays-connected": "Stays connected"
+      },
+      "detail": {
+        "weak": "Feels weak",
         "rumble-only": "Plain vibration only",
-        "speaker-problems": "Speaker problems",
-        "not-detected": "Controller not detected",
-        "needs-steam-input-off": "Needs Steam Input off",
-        "disconnects": "Disconnects"
+        "problems": "Sound problems"
+      },
+      "failDetails": "{{feature}}: what failed",
+      "sheetConflict": "Your old checklist said both: check it again",
+      "setupFlags": "What it needed",
+      "flag": {
+        "steam-input-off": "Needs Steam Input off"
+      },
+      "resultCounts": "{{pass}} pass · {{fail}} fail",
+      "notTestedYet": "Not tested yet",
+      "tag": {
+        "not-detected": "Controller not detected"
       },
       "shareSoon": "Saved on this PC. Sharing with other players is coming.",
       "notesPlaceholder": "Private notes, only on this PC",

@@ -923,21 +923,38 @@
         "4": "运行良好",
         "5": "完美运行"
       },
-      "feedbackHint": "你注意到了什么?",
-      "feedbackPicked_other": "已选 {{count}} 项",
-      "tag": {
-        "triggers-work": "自适应扳机正常",
-        "haptics-work": "触觉反馈正常",
-        "speaker-works": "扬声器正常",
-        "mic-works": "麦克风正常",
-        "lightbar-works": "光条正常",
-        "weak-vibration": "振动偏弱",
-        "no-triggers": "扳机无效",
+      "suggested": "根据你的结果建议：{{label}}",
+      "sheetTitle": "测试结果",
+      "sheetInfo": "在这个游戏中逐项测试各功能并标记：通过（正常工作）、失败（不工作或只部分工作）或未测试。失败时可以补充细节。星级仍是你的总体感受。",
+      "result": {
+        "pass": "通过",
+        "fail": "失败",
+        "not-tested": "未测试"
+      },
+      "reportFeature": {
+        "controller-detected": "检测到控制器",
+        "adaptive-triggers": "自适应扳机",
+        "haptic-feedback": "触觉反馈",
+        "speaker": "扬声器",
+        "microphone": "麦克风",
+        "light-bar": "光条",
+        "stays-connected": "保持连接"
+      },
+      "detail": {
+        "weak": "感觉偏弱",
         "rumble-only": "仅普通振动",
-        "speaker-problems": "扬声器有问题",
-        "not-detected": "未检测到控制器",
-        "needs-steam-input-off": "需关闭 Steam Input",
-        "disconnects": "会断连"
+        "problems": "声音有问题"
+      },
+      "failDetails": "{{feature}}：失败的情况",
+      "sheetConflict": "旧清单两种都勾选了：请重新确认",
+      "setupFlags": "需要的设置",
+      "flag": {
+        "steam-input-off": "需关闭 Steam Input"
+      },
+      "resultCounts": "通过 {{pass}} · 失败 {{fail}}",
+      "notTestedYet": "尚未测试",
+      "tag": {
+        "not-detected": "未检测到控制器"
       },
       "shareSoon": "已保存在此电脑。与其他玩家分享功能即将推出。",
       "notesPlaceholder": "私人笔记,仅保存在此电脑",

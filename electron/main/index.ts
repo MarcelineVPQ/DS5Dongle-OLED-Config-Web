@@ -16,6 +16,7 @@ import { DEV_TOOLS_BUILT } from "./devTools";
 import { FakeGamesService } from "./games/fake/service";
 import { dominantColor } from "./games/artColor";
 import { LibraryStore } from "./games/libraryStore";
+import { isNotDetected } from "../../src/desktop/games/report";
 import { RunningGameWatcher, runningInterval } from "./games/running";
 import { VolumeKeeper } from "./games/volumeKeeper";
 import { HeadsetProfile } from "./games/headsetProfile";
@@ -278,7 +279,7 @@ function start(): void {
           // Games the player marked "controller not detected" get the standard-gamepad fix.
           // Windows: no launcher is closed while the library sees a game running.
           gameRunning: (): boolean => watcher?.running != null,
-          notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.tags?.includes("not-detected") ? [key] : []))),
+          notDetected: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (isNotDetected(r.mine) ? [key] : []))),
           // Games the player marked "Supports HDR" get the Turn on HDR fix (with an HDR screen).
           hdrMarked: () => new Set(Object.entries(library.get().games).flatMap(([key, r]) => (r.mine?.hdr ? [key] : []))),
           // The volume fix applied (on) or undone (off): remembered, and the card watcher follows.

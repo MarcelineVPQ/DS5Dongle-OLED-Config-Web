@@ -932,22 +932,38 @@
         "4": "Funktioniert gut",
         "5": "Funktioniert perfekt"
       },
-      "feedbackHint": "Was ist dir aufgefallen?",
-      "feedbackPicked_one": "{{count}} ausgewählt",
-      "feedbackPicked_other": "{{count}} ausgewählt",
-      "tag": {
-        "triggers-work": "Adaptive Trigger gehen",
-        "haptics-work": "Haptisches Feedback geht",
-        "speaker-works": "Lautsprecher geht",
-        "mic-works": "Mikrofon geht",
-        "lightbar-works": "Leuchtleiste geht",
-        "weak-vibration": "Vibration schwach",
-        "no-triggers": "Trigger gehen nicht",
+      "suggested": "Deine Ergebnisse legen nahe: {{label}}",
+      "sheetTitle": "Testergebnisse",
+      "sheetInfo": "Teste jede Funktion in diesem Spiel und markiere sie: Bestanden (funktioniert, wie es soll), Fehler (funktioniert nicht oder nur teilweise) oder Ungetestet. Bei einem Fehler kannst du mehr angeben. Die Sterne bleiben dein Gesamteindruck.",
+      "result": {
+        "pass": "Bestanden",
+        "fail": "Fehler",
+        "not-tested": "Ungetestet"
+      },
+      "reportFeature": {
+        "controller-detected": "Controller erkannt",
+        "adaptive-triggers": "Adaptive Trigger",
+        "haptic-feedback": "Haptisches Feedback",
+        "speaker": "Lautsprecher",
+        "microphone": "Mikrofon",
+        "light-bar": "Leuchtleiste",
+        "stays-connected": "Bleibt verbunden"
+      },
+      "detail": {
+        "weak": "Fühlt sich schwach an",
         "rumble-only": "Nur einfache Vibration",
-        "speaker-problems": "Lautsprecher-Probleme",
-        "not-detected": "Controller nicht erkannt",
-        "needs-steam-input-off": "Steam Input aus nötig",
-        "disconnects": "Verbindungsabbrüche"
+        "problems": "Tonprobleme"
+      },
+      "failDetails": "{{feature}}: was nicht ging",
+      "sheetConflict": "Deine alte Liste sagte beides: bitte neu prüfen",
+      "setupFlags": "Was es brauchte",
+      "flag": {
+        "steam-input-off": "Steam Input aus nötig"
+      },
+      "resultCounts": "{{pass}} bestanden · {{fail}} Fehler",
+      "notTestedYet": "Noch nicht getestet",
+      "tag": {
+        "not-detected": "Controller nicht erkannt"
       },
       "shareSoon": "Auf diesem PC gespeichert. Teilen mit anderen Spielern kommt bald.",
       "notesPlaceholder": "Private Notizen, nur auf diesem PC",

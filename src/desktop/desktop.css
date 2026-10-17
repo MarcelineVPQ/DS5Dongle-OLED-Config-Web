@@ -679,6 +679,11 @@ html[data-theme="dark"] .dk {
   font-size: 12px;
   cursor: pointer;
 }
+.dk-seg-icon {
+  display: inline-flex;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
 .dk-seg button:first-child {
   border-left: 0;
 }
@@ -2292,7 +2297,8 @@ html[data-theme="light"] .live-ctl {
   flex-wrap: wrap;
   gap: 4px;
 }
-.lib-filters .dk-chip {
+.lib-filters .dk-chip,
+.gp-details .dk-chip {
   cursor: pointer;
   font: inherit;
   font-size: var(--dk-small);
@@ -2536,25 +2542,32 @@ html[data-theme="light"] .live-ctl {
 .gp-tier {
   margin: 0 0 8px;
 }
-.gp-features,
-.gp-tags {
+.gp-features {
   display: grid;
   gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.gp-tags {
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  margin-bottom: 6px;
+/* Your report's test sheet: a row per feature (Pass / Fail / Not tested, the
+   app's segmented control), a Fail's detail chips and a re-check note under it. */
+.gp-sheet-row + .gp-sheet-row {
+  margin-top: 2px;
 }
-.gp-tags label {
+.gp-details {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0 4px;
 }
-/* The rating, first in Your report (the feedback tags follow as their own group). */
+.gp-conflict {
+  margin: 0 0 4px;
+  color: var(--text-warn);
+}
+.gp-suggested {
+  margin: 0 0 4px;
+}
+/* The rating, first in Your report (the test sheet follows as its own group). */
 .gp-rating {
   margin-bottom: 6px;
 }
