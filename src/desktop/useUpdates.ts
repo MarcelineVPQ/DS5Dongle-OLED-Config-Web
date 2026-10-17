@@ -67,7 +67,8 @@ export function firmwareOffer(latest: string | null | undefined, installed: stri
 // The message for a failed update check: the refused feed's own words, or
 // `offlineKey` when the server couldn't be reached (never "offline?" when the
 // network worked).
-export function feedProblemKey(problem: FeedProblem | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+export function feedProblemKey(problem: FeedProblem | "noBuild" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+  if (problem === "noBuild") return "desktop.updateFeed.noBuild";
   if (problem === "unsigned") return "desktop.updateFeed.unsigned";
   if (problem === "malformed") return "desktop.updateFeed.malformed";
   return offlineKey;

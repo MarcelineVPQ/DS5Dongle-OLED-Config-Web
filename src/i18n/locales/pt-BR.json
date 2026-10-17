@@ -621,7 +621,8 @@
     "updateFeed": {
       "offline": "Não foi possível acessar o servidor de atualizações. Verifique a conexão com a internet e tente de novo.",
       "unsigned": "O feed de atualizações não passou na verificação de segurança, então nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde.",
-      "malformed": "Não foi possível ler o feed de atualizações, então nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde."
+      "malformed": "Não foi possível ler o feed de atualizações, então nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde.",
+      "noBuild": "Há uma versão nova, mas ainda não existe uma build dela para este sistema. Tente de novo mais tarde."
     },
     "live": {
       "part": {

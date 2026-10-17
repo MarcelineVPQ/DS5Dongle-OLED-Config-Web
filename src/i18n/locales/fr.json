@@ -621,7 +621,8 @@
     "updateFeed": {
       "offline": "Impossible de joindre le serveur de mises à jour. Vérifie la connexion Internet et réessaie.",
       "unsigned": "Le flux de mises à jour n’a pas passé son contrôle de sécurité, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
-      "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard."
+      "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
+      "noBuild": "Une nouvelle version est sortie, mais il n'y en a pas encore de build pour ce système. Réessaie plus tard."
     },
     "live": {
       "part": {

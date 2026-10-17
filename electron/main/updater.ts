@@ -193,7 +193,8 @@ export class Updater {
       if (!offer) return this.set({ phase: "up-to-date", version: app.getVersion() });
       const key = this.platformKey();
       const download = key ? manifest.app.platforms[key] : undefined;
-      if (!download) return this.set({ phase: "failed", detail: `No ${process.platform} build is published for ${remote}.` });
+      // error: SHOWN — desktop.updateFeed.noBuild (CheckNow, SetupScreen; was "Are you online?" with an English detail)
+      if (!download) return this.set({ phase: "failed", detail: keyedText("desktop.updateFeed.noBuild"), problem: "noBuild" });
       const blocker = this.selfInstallBlocker();
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
       const dropsDevTools = updateDropsDevTools(DEV_TOOLS_BUILT, remote) || undefined;

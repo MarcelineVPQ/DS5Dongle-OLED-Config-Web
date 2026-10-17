@@ -620,7 +620,8 @@
     "updateFeed": {
       "offline": "Couldn't reach the update server. Check the internet connection and try again.",
       "unsigned": "The update feed didn't pass its security check, so nothing was installed. This is on our side, not your connection: try again later.",
-      "malformed": "The update feed couldn't be read, so nothing was installed. This is on our side, not your connection: try again later."
+      "malformed": "The update feed couldn't be read, so nothing was installed. This is on our side, not your connection: try again later.",
+      "noBuild": "A new version is out, but there's no build of it for this system yet. Try again later."
     },
     "live": {
       "part": {

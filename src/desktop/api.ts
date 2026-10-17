@@ -131,9 +131,9 @@ export type UpdateState =
   | { phase: "installing"; version: string }
   | { phase: "ready"; version: string }
   // during "install": the user's Download and install (or an automatic one) failed, which the banner shows.
-  // problem: why a check failed (the feed's own problem, see FeedProblem).
-  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed by problem (CheckNow, SetupScreen)
-  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem };
+  // problem: why a check failed (the feed's own problem, see FeedProblem; "noBuild": the new version has no build for this system yet).
+  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed / .noBuild by problem (CheckNow, SetupScreen)
+  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem | "noBuild" };
 
 export interface LatestFirmware {
   version: string;
