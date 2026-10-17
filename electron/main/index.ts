@@ -612,6 +612,8 @@ function updateSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSe
   if (key === "updateChannel" && recheck && settings.checkForUpdates && updater.getState().phase !== "ready")
     updater.check().catch(logged("updater.check() doesn't reject: a failed check is the 'failed' banner"));
   tray?.updateSettings(settings);
+  // App settings shows the change wherever it was made (the tray, a GPU crash).
+  mainWindow?.webContents.send(IPC.settingsChanged, settings);
   return settings;
 }
 

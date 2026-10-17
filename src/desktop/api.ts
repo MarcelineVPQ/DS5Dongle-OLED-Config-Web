@@ -228,6 +228,8 @@ export interface DesktopApi {
   // library): what was kept and where the damaged copy is (RecoveredNotice).
   recoveredFiles(): Promise<Recovered[]>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
+  // A setting changed (the tray's switches, the app on its own after a GPU crash, or the page): the new settings.
+  onSettingsChanged(listener: (settings: DesktopSettings) => void): () => void;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
   // The programs that have the board open (Linux, read-only from /proc; other
@@ -330,6 +332,7 @@ export const IPC = {
   getSettings: "desktop:get-settings",
   recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",
+  settingsChanged: "desktop:settings-changed",
   usbAccessInstalled: "desktop:usb-access-installed",
   boardHolders: "desktop:board-holders",
   appVersion: "desktop:app-version",

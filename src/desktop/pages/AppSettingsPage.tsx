@@ -51,9 +51,16 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
   const [settings, setSettings] = useState<DesktopSettings | null>(null);
   const [gpuChanged, setGpuChanged] = useState(false);
   const [hdrChanged, setHdrChanged] = useState(false);
-  // lifetime: OK — acquires nothing (one settings read)
+  // lifetime: OK — the effect returns the preload's unsubscribe (unmount)
   useEffect(() => {
-    window.desktop?.getSettings().then(setSettings).catch(shown("desktop.errors.settingsRead"));
+    // A change that arrived first is newer than the read.
+    window.desktop
+      ?.getSettings()
+      .then((s) => setSettings((now) => now ?? s))
+      .catch(shown("desktop.errors.settingsRead"));
+    // Changed elsewhere (the tray's switches, a GPU crash): the switches follow.
+    // lifetime: OK — the effect returns the preload's unsubscribe (unmount)
+    return window.desktop?.onSettingsChanged(setSettings);
   }, []);
   // error: SHOWN — desktop.errors.settingNotSaved (was SILENT-BUG: a toggle that didn't save showed nothing)
   const set = <K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]) => {
