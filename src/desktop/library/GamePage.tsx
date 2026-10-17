@@ -20,7 +20,7 @@ import { protonApplies } from "../games/platform";
 import { knownHdr } from "../games/knownGames";
 import { HdrChecklist, HdrManual } from "./HdrChecklist";
 import { hdrGameReqs, type HdrReq } from "../games/hdrSetup";
-import { canMarkNotDetected, setupStatus, type SetupStatus } from "./setupStatus";
+import { setupStatus, type SetupStatus } from "./setupStatus";
 import { thenRescan } from "../games/scanOrder";
 import { useDebouncedSave } from "./useDebouncedSave";
 import { setBackdropGame } from "../live/ArtBackdrop";
@@ -41,12 +41,12 @@ import { API_NAME } from "../games/gameArgs";
 import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
 import type { GameRecord, LibraryFile, Mine, ProfileSettings } from "../games/library";
-import { countResults, isNotDetected, setResult, sheetOf, suggestedRating, testedOn, type TestedOn } from "../games/report";
+import { countResults, isNotDetected, sheetOf, suggestedRating, testedOn, type TestedOn } from "../games/report";
 import { ReportSheet } from "./ReportSheet";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { GameActions, PlayStats } from "./playBar";
 import Notice from "../Notice";
-import { Section, SectionGroup, SplitView } from "../accordion/Section";
+import { Section, SplitView } from "../accordion/Section";
 import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion";
 import { MainBlock, useMainBlock } from "../accordion/MainBlock";
 import type { SectionId } from "../accordion/sections";
@@ -173,7 +173,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const runner = `${game.runnerMissing ? "⚠ " : ""}${game.protons?.find((c) => c.current)?.name ?? game.runner ?? t("desktop.library.launcherDefault")}`;
   const compatStatus = compatLine(t, game, report.ourProton.name);
   // Sections with nothing to do now show their status only, no body (page rule 6, IA audit Q9).
-  const setupIdle = !status.attention && game.fixes.length === 0 && !canMarkNotDetected(game);
+  const setupIdle = !status.attention && game.fixes.length === 0;
   const hdrIdle = knownHdr(game.title) && (!isHdr || status.hdrOk);
   const compatIdle = !compatHasAction(game, report.ourProton.name);
 
@@ -221,7 +221,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
           {() => <ProfileBody game={game} record={record} bridge={bridge} normal={normal} onLibrary={onLibrary} />}
         </Section>
         <Section id="setup" icon={Wrench} title={t("desktop.library.section.setup")} status={setupLine} task={setupTask} idle={setupIdle}>
-          {() => <SetupBody game={game} report={report} mineState={mineState} onRescan={onRescan} status={status} />}
+          {() => <SetupBody game={game} report={report} onRescan={onRescan} status={status} />}
         </Section>
         {protonApplies() && (
           <Section id="compatibility" icon={Layers} title={t("desktop.library.section.compat")} status={compatStatus} idle={compatIdle}>
@@ -568,16 +568,15 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
 
 // ---- Setup (this game's recommended fixes) ----
 // The fixes with Review / Apply, a standard gamepad that can't be set, the
-// player's own graphics mode; what passed folds into one line ("All set"),
-// and the player's mark for games we don't know folds under "Not working as
-// expected?". HDR has its own section.
-function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEntry; report: GamesReport; mineState: MineState; onRescan: () => void; status: SetupStatus }) {
+// player's own graphics mode; what passed folds into one line ("All set").
+// HDR has its own section. "Controller not detected" is Your report's
+// Controller detected row (Fail), not a mark here: one place to say it.
+function SetupBody({ game, report, onRescan, status }: { game: GameEntry; report: GamesReport; onRescan: () => void; status: SetupStatus }) {
   const { t } = useTranslation();
   const m = useMsg();
   const restartText = useRestartText();
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [mine, update] = mineState;
   // The review checks the running launchers again when it opens (and after each scan).
   const [reviews, setReviews] = useState(0);
   const fresh = useFreshRunning(confirm ? `${reviews}|${report.scannedAt}` : null);
@@ -598,12 +597,6 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
       setConfirm(false);
     }
   };
-  // XInput-only games on our list get the standard-gamepad fix by themselves;
-  // for any other Proton game the player can say the controller isn't detected.
-  const canMark = canMarkNotDetected(game);
-  // The same fact as Your report's "Controller detected: Fail" (one field, report.ts).
-  const marked = isNotDetected(mine);
-  const toggleMark = () => update({ report: setResult(sheetOf(mine), "controller-detected", marked ? "not-tested" : "fail") });
   return (
     <>
       {note && <Notice onDismiss={() => setNote(null)}>{note}</Notice>}
@@ -660,17 +653,6 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
           {/* hint: MUST-SHOW — a status: why the standard gamepad option isn't needed */}
           {game.gamepad === "steam-input" && <p className="dk-hint">{t("desktop.library.gamepadSteamInput")}</p>}
         </>
-      )}
-      {canMark && (
-        <SectionGroup title={t("desktop.library.marksTitle")}>
-          <label className="dk-fix gp-marks">
-            <input type="checkbox" checked={marked} onChange={toggleMark} />
-            <span>
-              <span className="dk-fix-label">{t("desktop.library.tag.not-detected")}</span>
-              <span className="dk-fix-why">{t("desktop.library.notDetectedHint")}</span>
-            </span>
-          </label>
-        </SectionGroup>
       )}
     </>
   );

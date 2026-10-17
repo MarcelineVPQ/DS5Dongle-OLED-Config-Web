@@ -1,8 +1,9 @@
 // Your report's test sheet: one row per controller feature, each a
 // Pass / Fail / Not tested choice (the app's one segmented control: one
 // button per result, its icon and its word, so the result never rests on
-// color), a Fail's details as chips under its row, a row the old checklist
-// said both ways marked for a re-check, and what the game needed as a switch.
+// color), a Fail's details as chips under its row (picked ones in the warning
+// color, never a pass's green), a row the old checklist said both ways marked
+// for a re-check, and what the game needed as a switch.
 // The data is report.ts's sheet (machine IDs only); the words come from the
 // locale (Sony's feature names, docs/GLOSSARY.md).
 import { useTranslation } from "react-i18next";
@@ -41,7 +42,7 @@ export function ReportSheet({ sheet, onChange }: { sheet: Sheet; onChange: (next
                     {details.map((d) => {
                       const on = picked.includes(d);
                       return (
-                        <button key={d} type="button" className={`dk-chip${on ? " ok" : ""}`} aria-pressed={on} onClick={() => onChange(toggleDetail(sheet, feature, d))}>
+                        <button key={d} type="button" className="dk-chip warn" aria-pressed={on} onClick={() => onChange(toggleDetail(sheet, feature, d))}>
                           {on && <Check size={12} strokeWidth={3} aria-hidden="true" />}
                           {t(`desktop.library.detail.${d}`)}
                         </button>

@@ -962,9 +962,6 @@
       },
       "resultCounts": "{{pass}} correctas · {{fail}} fallas",
       "notTestedYet": "Sin probar aún",
-      "tag": {
-        "not-detected": "Mando no detectado"
-      },
       "shareSoon": "Guardado en este PC. Compartir con otros jugadores llegará pronto.",
       "notesPlaceholder": "Notas privadas, solo en este PC",
       "id": "ID",
@@ -1036,10 +1033,8 @@
       "gamepadNoBuild": "Este juego necesita la opción de mando estándar (PROTON_PREFER_SDL), pero {{runner}} la ignora y no hay instalado ningún Proton que la respete. Instala nuestro Proton DualSense más reciente (GE-Proton11-7.2-DualSense o posterior) o un GE-Proton normal.",
       "modeSet": "Se inicia en {{api}} ({{flag}}), así que {{feature}} está disponible.",
       "modeOwn": "Tus propios argumentos inician {{game}} con {{own}}, así que se quedan como están. Para {{feature}}, cambia {{own}} por {{flag}}.",
-      "notDetectedHint": "Marca esto si el juego no reacciona al mando: la aplicación ofrecerá pasárselo al juego como mando estándar (XInput).",
       "supportsHdr": "Compatible con HDR",
       "supportsHdrHint": "Márcalo si el juego tiene un ajuste HDR en PC: la app muestra lo que necesita el HDR y ofrece Activar HDR cuando todo esté listo.",
-      "marksTitle": "¿No funciona como esperabas?",
       "hdrTitle": "HDR",
       "continue": "Seguir jugando",
       "libraryTitle": "Biblioteca",

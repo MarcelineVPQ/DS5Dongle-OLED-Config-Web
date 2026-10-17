@@ -39,7 +39,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function render(game: GameEntry, hdr: HdrSystem = HDR_READY, platform: "linux" | "win32" = "linux", record: GameRecord | undefined = GHOSTRUNNER_RECORD, calls?: string[]) {
+function render(
+  game: GameEntry,
+  hdr: HdrSystem = HDR_READY,
+  platform: "linux" | "win32" = "linux",
+  record: GameRecord | undefined = GHOSTRUNNER_RECORD,
+  calls?: string[],
+  onRescan: () => void = () => undefined,
+) {
   vi.stubGlobal("desktop", fakeDesktop(platform, calls));
   act(() =>
     root!.render(
@@ -51,7 +58,7 @@ function render(game: GameEntry, hdr: HdrSystem = HDR_READY, platform: "linux" |
         report: gamesReport(game, hdr),
         bridge: fakeBridge(),
         onLibrary: () => undefined,
-        onRescan: () => undefined,
+        onRescan,
       }),
     ),
   );
@@ -152,10 +159,10 @@ describe("game page", () => {
     expect(hdr.textContent).toContain(i18n.t("desktop.library.supportsHdr"));
   });
 
-  it("a game that can still be marked keeps Setup open-able: the mark is something to do", () => {
+  it("a game we don't know has nothing to set up: Setup shows its status only (Controller not detected is Your report's row, not a mark here)", () => {
     render(ghostrunner({ support: "unknown", gamepad: undefined }));
-    expect(sec("setup")!.classList.contains("idle")).toBe(false);
-    expect(open("setup").querySelector(".gp-marks input")).not.toBeNull();
+    expect(sec("setup")!.classList.contains("idle")).toBe(true);
+    expect(sec("setup")!.querySelector(".dk-sec-body, .gp-marks, input")).toBeNull();
   });
 
   it("needs attention: Setup and HDR carry their dots; a first visit opens Setup with Review", () => {
@@ -212,35 +219,44 @@ describe("game page", () => {
     expect(profile.querySelectorAll('input[type="range"]')).toHaveLength(0);
   });
 
-  it("the player's marks: Controller not detected in Setup (the same field as the sheet's Controller detected), Supports HDR in HDR", () => {
+  it("Controller not detected is said once, in Your report: an earlier Setup mark or old checklist tick shows as Controller detected: Fail and still decides the standard-gamepad fix", async () => {
+    const unknown = ghostrunner({ support: "unknown", gamepad: undefined });
+    const row = () => open("report").querySelector('[data-feature="controller-detected"]')!;
+    // Up to 0.9.5-dev.18 Setup's mark wrote the sheet's row (Mine.report), and before the sheet it was the tag "not-detected" (Mine.tags).
+    const markedInSetup = { ...GHOSTRUNNER_RECORD, mine: { rating: 1, report: { schemaVersion: 1, results: { "controller-detected": { result: "fail" } } } } } as GameRecord;
+    const tickedInChecklist = { ...GHOSTRUNNER_RECORD, mine: { rating: 1, tags: ["not-detected"] } } as GameRecord;
+    // A fresh page for each record (the page keeps the record it opened with).
+    const remount = () => {
+      act(() => root!.unmount());
+      root = createRoot(container!);
+    };
+    // loop: test — two records
+    for (const record of [markedInSetup, tickedInChecklist]) {
+      remount();
+      render(unknown, HDR_READY, "linux", record);
+      expect(row().getAttribute("data-result")).toBe("fail");
+      expect(container!.querySelector(".gp-marks")).toBeNull();
+      expect(container!.textContent).not.toContain("Not working as expected?");
+    }
+    // The supports-HDR mark stays in HDR.
+    const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
+    expect(hdrMark.querySelector("input")!.checked).toBe(false);
+    // Taking the Fail back from the sheet saves and rescans (the scan offers the standard-gamepad fix by it).
     vi.useFakeTimers();
     try {
       const calls: string[] = [];
-      render(ghostrunner({ support: "unknown", gamepad: undefined }), HDR_READY, "linux", GHOSTRUNNER_RECORD, calls);
-      // Shown under its question, no fold.
-      const marks = open("setup").querySelector(".gp-marks")!.closest(".dk-sec-group")!;
-      expect(marks.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
-      expect(marks.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
-      expect(marks.textContent).not.toContain(i18n.t("desktop.library.supportsHdr"));
-      expect(body("setup")!.querySelector("details")).toBeNull();
-      const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
-      expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
-      // The sheet always has the row; ticking the mark sets it to Fail, and back to Not tested.
-      const row = () => open("report").querySelector('[data-feature="controller-detected"]')!;
-      expect(row().getAttribute("data-result")).toBe("not-tested");
-      const mark = open("setup").querySelector<HTMLInputElement>(".gp-marks input")!;
-      act(() => mark.click());
-      expect(row().getAttribute("data-result")).toBe("fail");
-      expect(open("setup").querySelector<HTMLInputElement>(".gp-marks input")!.checked).toBe(true);
-      act(() => void vi.advanceTimersByTime(1000));
-      const saved = JSON.parse(calls.find((c) => c.startsWith("librarySetMine"))!.slice("librarySetMine ".length)) as { mine: Record<string, unknown> };
-      expect(saved.mine.report).toMatchObject({ results: { "controller-detected": { result: "fail" } } });
-      expect(saved.mine.tags).toBeUndefined();
-      // Not tested from the sheet clears the mark.
+      let rescans = 0;
+      remount();
+      render(unknown, HDR_READY, "linux", markedInSetup, calls, () => rescans++);
+      await act(async () => void (await vi.advanceTimersByTimeAsync(1000)));
+      const before = rescans;
       const notTested = row().querySelector<HTMLButtonElement>(`button[aria-pressed="false"]:last-child`)!;
       act(() => notTested.click());
       expect(row().getAttribute("data-result")).toBe("not-tested");
-      expect(open("setup").querySelector<HTMLInputElement>(".gp-marks input")!.checked).toBe(false);
+      await act(async () => void (await vi.advanceTimersByTimeAsync(1000)));
+      const saved = JSON.parse(calls.find((c) => c.startsWith("librarySetMine"))!.slice("librarySetMine ".length)) as { mine: Record<string, unknown> };
+      expect(saved.mine.report).toMatchObject({ results: {} });
+      expect(rescans - before).toBe(1);
     } finally {
       vi.useRealTimers();
     }
@@ -308,6 +324,8 @@ describe("game page", () => {
         [i18n.t("desktop.library.detail.weak"), "true"],
         [i18n.t("desktop.library.detail.rumble-only"), "false"],
       ]);
+      // A Fail's details are problems: picked ones take the warning color, never a pass's green.
+      for (const c of chips()) expect([c.classList.contains("warn"), c.classList.contains("ok")]).toEqual([true, false]);
       expect(row("haptic-feedback").querySelector(".gp-details")!.getAttribute("aria-label")).toBe(i18n.t("desktop.library.failDetails", { feature: "Haptic feedback" }));
       expect(row("haptic-feedback").querySelector(".gp-conflict")!.textContent).toContain(i18n.t("desktop.library.sheetConflict"));
       // A row without details has no chips, even on Fail.

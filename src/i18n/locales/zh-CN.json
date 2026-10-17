@@ -953,9 +953,6 @@
       },
       "resultCounts": "通过 {{pass}} · 失败 {{fail}}",
       "notTestedYet": "尚未测试",
-      "tag": {
-        "not-detected": "未检测到控制器"
-      },
       "shareSoon": "已保存在此电脑。与其他玩家分享功能即将推出。",
       "notesPlaceholder": "私人笔记,仅保存在此电脑",
       "id": "ID",
@@ -1027,10 +1024,8 @@
       "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（GE-Proton11-7.2-DualSense 或更高）或普通的 GE-Proton。",
       "modeSet": "以 {{api}}（{{flag}}）启动，因此可以使用{{feature}}。",
       "modeOwn": "你自己的参数以 {{own}} 启动 {{game}}，因此保持不变。如需{{feature}}，请把 {{own}} 换成 {{flag}}。",
-      "notDetectedHint": "如果游戏对控制器没有反应，请勾选此项：应用随后会提供以标准手柄（XInput）形式把控制器提供给游戏。",
       "supportsHdr": "支持 HDR",
       "supportsHdrHint": "如果该游戏在 PC 上有 HDR 设置，请勾选：应用会显示 HDR 需要的条件，并在一切就绪时提供“开启 HDR”。",
-      "marksTitle": "没有按预期工作?",
       "hdrTitle": "HDR",
       "continue": "继续游戏",
       "libraryTitle": "游戏库",

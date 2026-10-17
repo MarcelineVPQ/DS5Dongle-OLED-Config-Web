@@ -962,9 +962,6 @@
       },
       "resultCounts": "{{pass}} réussi · {{fail}} échec",
       "notTestedYet": "Pas encore testé",
-      "tag": {
-        "not-detected": "Manette non détectée"
-      },
       "shareSoon": "Enregistré sur ce PC. Le partage avec les autres joueurs arrive bientôt.",
       "notesPlaceholder": "Notes privées, uniquement sur ce PC",
       "id": "ID",
@@ -1036,10 +1033,8 @@
       "gamepadNoBuild": "Ce jeu a besoin de l'option manette standard (PROTON_PREFER_SDL), mais {{runner}} l'ignore et aucun Proton qui la respecte n'est installé. Installe notre Proton DualSense plus récent (GE-Proton11-7.2-DualSense ou plus) ou un GE-Proton standard.",
       "modeSet": "Démarre en {{api}} ({{flag}}) : {{feature}} est disponible.",
       "modeOwn": "Vos propres arguments lancent {{game}} avec {{own}}, ils restent donc tels quels. Pour {{feature}}, remplacez {{own}} par {{flag}}.",
-      "notDetectedHint": "Coche ceci si le jeu ne réagit pas à la manette : l'application proposera alors de la transmettre au jeu comme manette standard (XInput).",
       "supportsHdr": "Prend en charge le HDR",
       "supportsHdrHint": "Cochez si le jeu a un réglage HDR sur PC : l'app montre alors ce qu'il faut pour le HDR et propose Activer le HDR dès que tout est prêt.",
-      "marksTitle": "Ça ne fonctionne pas comme prévu ?",
       "hdrTitle": "HDR",
       "continue": "Reprendre",
       "libraryTitle": "Bibliothèque",

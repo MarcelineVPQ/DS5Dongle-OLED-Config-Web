@@ -26,6 +26,7 @@ import GamePage from "./GamePage";
 import { GameTile } from "./GameTile";
 import { ContinuePlaying, continueCount } from "./ContinuePlaying";
 import { supportOf } from "./support";
+import { sharedTitleKeys } from "./sharedTitles";
 import { logged } from "../../errorText";
 
 const FILTERS = ["all", "profile", "dualsense", "attention"] as const;
@@ -128,6 +129,8 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     // loop: HOT-PATH-OK — sort of the games (hundreds); memoized on report, sort and details
     return [...(report?.games ?? [])].sort((a, b) => by(b) - by(a) || a.title.localeCompare(b.title));
   }, [report, sort, details]);
+  // Rows whose name another row also has (one game in two launchers) say their launcher.
+  const shared = useMemo(() => sharedTitleKeys(report?.games ?? []), [report]);
   // Continue playing: the games played last (with artwork).
   const recent = useMemo(() => {
     // loop: HOT-PATH-OK — games (hundreds) filtered+sorted to 8; memoized on report and details
@@ -184,7 +187,20 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           <span className="lib-title" title={g.title}>
             {g.title}
           </span>
-          {g.kind && <span className="lib-kind">{t(`desktop.library.kind.${g.kind}`)}</span>}
+          {(g.kind || shared.has(g.key)) && (
+            <span className="lib-chips">
+              {g.kind && (
+                <span className="lib-kind" title={t(`desktop.library.kind.${g.kind}`)}>
+                  {t(`desktop.library.kind.${g.kind}`)}
+                </span>
+              )}
+              {shared.has(g.key) && (
+                <span className="lib-kind" data-launcher={g.launcher} title={t(`desktop.library.launcherName.${g.launcher}`)}>
+                  {t(`desktop.library.launcherName.${g.launcher}`)}
+                </span>
+              )}
+            </span>
+          )}
           {g.key === running && <span className="lib-playing">{t("desktop.library.running")}</span>}
           {library.games[g.key]?.profile && (
             <span className="lib-mark" title={t("desktop.library.hasProfile")}>

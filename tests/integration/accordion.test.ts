@@ -1016,7 +1016,7 @@ const GAMES_INVENTORY: Record<string, string[]> = {
 const GAME_INVENTORY: Record<string, string[]> = {
   // No saved layouts yet: the hint says where they're made instead of a greyed-out picker.
   profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.noneForGame", "desktop.curves.profileLeft"],
-  setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
+  setup: ["desktop.library.setupReview"],
   compatibility: [], // no other build to pick, nothing recommended, ours not needed
 
   hdr: ["desktop.hdrManual.title"],

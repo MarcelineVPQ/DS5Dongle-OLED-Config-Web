@@ -953,9 +953,6 @@
       },
       "resultCounts": "合格 {{pass}} · 不合格 {{fail}}",
       "notTestedYet": "まだテストしていません",
-      "tag": {
-        "not-detected": "コントローラー未検出"
-      },
       "shareSoon": "このPCに保存しました。他のプレイヤーとの共有は近日対応予定です。",
       "notesPlaceholder": "非公開メモ(このPCのみ)",
       "id": "ID",
@@ -1027,10 +1024,8 @@
       "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
       "modeSet": "{{api}}（{{flag}}）で起動するので、{{feature}}が使えます。",
       "modeOwn": "独自の引数で {{game}} を {{own}} で起動しているため、そのままにしています。{{feature}}を使うには {{own}} を {{flag}} に置き換えてください。",
-      "notDetectedHint": "ゲームがコントローラーに反応しない場合はチェックしてください。アプリがコントローラーを標準ゲームパッド（XInput）としてゲームに渡すことを提案します。",
       "supportsHdr": "HDR 対応",
       "supportsHdrHint": "PC 版に HDR 設定があるゲームならチェックしてください: HDR に必要なものが表示され、準備ができると「HDR をオンにする」が提案されます。",
-      "marksTitle": "思いどおりに動かない?",
       "hdrTitle": "HDR",
       "continue": "続けてプレイ",
       "libraryTitle": "ライブラリ",
