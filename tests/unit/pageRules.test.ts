@@ -5,11 +5,14 @@
 // rendered pages: gamePage.test.ts' tiles, saveBar.test.ts / oneSaveBar.test.ts,
 // accordion.test.ts' section anatomy and "something to do" checks.)
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { SECTIONS } from "../../src/desktop/accordion/sections";
 
-const ROOT = new URL("../../", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("../../", import.meta.url));
+// A path from the repo root with "/" on every OS (Windows gives backslashes).
+const rel = (f: string) => relative(ROOT, f).split(sep).join("/");
 const LOCALES = ["en", "de", "fr", "es", "pt-BR", "zh-CN", "ja"];
 const panelSub = (lng: string) => (JSON.parse(readFileSync(join(ROOT, `src/i18n/locales/${lng}.json`), "utf8")) as { desktop: { panelSub: Record<string, string> } }).desktop.panelSub;
 
@@ -37,7 +40,7 @@ describe("page rule 3: the panel sub-line", () => {
     const uses = files(join(ROOT, "src/desktop")).flatMap((f) => {
       const text = readFileSync(f, "utf8");
       // loop: test — each <SplitView …> element's props
-      return [...text.matchAll(/<SplitView\b([\s\S]*?)>/g)].map((m) => ({ file: relative(ROOT, f), props: m[1] }));
+      return [...text.matchAll(/<SplitView\b([\s\S]*?)>/g)].map((m) => ({ file: rel(f), props: m[1] }));
     });
     expect(uses.length).toBeGreaterThanOrEqual(5);
     for (const { file, props } of uses) {
