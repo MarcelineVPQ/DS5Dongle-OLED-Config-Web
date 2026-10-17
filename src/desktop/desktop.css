@@ -1299,6 +1299,9 @@ html[data-theme="dark"] .dk {
   --ctl-line: var(--text-muted);
   --ctl-line-dark: var(--ctl-line);
   --ctl-on: var(--cv-press, var(--dk-accent));
+  /* The part rings' colors (below): the strongest text color in the page color. */
+  --ctl-ring: var(--text-strong);
+  --ctl-ring-halo: var(--bg-page);
   display: flex;
   justify-content: center;
   min-height: 0;
@@ -1431,6 +1434,49 @@ html[data-theme="light"] .live-ctl {
 .live-ctl [data-part="stick-l"],
 .live-ctl [data-part="stick-r"] {
   transition: transform 40ms linear;
+}
+/* Part rings (LiveController addRings), both drawings: focus, hover and
+   selection draw a ring around the part's own shape: a gap in the page
+   color, the ring in the strongest text color, a halo in the page color.
+   The ring has the other tone on both sides (WCAG technique C40), so it
+   stands out on every colorway, white and black shells included. Copies of
+   each shape sit just under it (only their outer half shows); widths are in
+   screen pixels whatever the art's scale. Keyboard focus is the thickest;
+   hover and the selected part a thinner ring. Not drawn at all otherwise
+   (no idle cost). */
+.live-ctl .rings {
+  display: none;
+  fill: none;
+  pointer-events: none;
+  /* Hover and selected: 1 px gap, 1.25 px ring, 1.25 px halo. */
+  --ring-gap-w: 2px;
+  --ring-w: 4.5px;
+  --ring-halo-w: 7px;
+}
+.live-ctl .rings > * {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke: var(--ctl-ring-halo);
+  stroke-width: var(--ring-halo-w);
+}
+.live-ctl .rings > .ring-gap {
+  stroke-width: var(--ring-gap-w);
+}
+.live-ctl .rings > .ring {
+  stroke: var(--ctl-ring);
+  stroke-width: var(--ring-w);
+}
+/* Inside a part, or just before a part that is one shape. */
+.live-ctl :is([data-part]:is(:hover, :focus-visible), .sel) .rings,
+.live-ctl .rings:has(+ :is([data-part]:is(:hover, :focus-visible), .sel)) {
+  display: inline;
+}
+/* Keyboard focus: 1.5 px gap, 2 px ring, 1.5 px halo. */
+.live-ctl [data-part]:focus-visible .rings,
+.live-ctl .rings:has(+ :focus-visible) {
+  --ring-gap-w: 3px;
+  --ring-w: 7px;
+  --ring-halo-w: 10px;
 }
 /* The DualSense Edge drawing (tools/prepare_edge_art.py): outlines stroked
    around filled parts (triggers, bumpers, sticks, Fn, PS), the glossy black
@@ -1714,15 +1760,6 @@ html[data-theme="light"] .live-ctl {
 }
 .dk-md td .dk-md-img {
   margin: 0;
-}
-
-/* The body opens haptics: show it's clickable like the buttons are. */
-.live-ctl [data-part="body"] {
-  transition: filter 120ms;
-}
-.live-ctl [data-part="body"]:hover,
-.live-ctl [data-part="body"]:focus-visible {
-  filter: brightness(1.12) drop-shadow(0 0 3px var(--ctl-on));
 }
 
 /* First-run tour (tour/Tour.tsx). The dim layer is the spotlight's shadow, so

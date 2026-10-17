@@ -29,7 +29,7 @@ beforeEach(() => {
   vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
   vi.stubGlobal("desktop", {
     platform: "linux",
-    getSettings: () => Promise.resolve({ hardwareAcceleration: false }),
+    getSettings: () => Promise.resolve({ hardwareAcceleration: false, gamesScanAllowed: true }),
     onWindowVisible: () => () => undefined,
     // Two recently played games with art: the art background cycles.
     gamesDetails: () =>

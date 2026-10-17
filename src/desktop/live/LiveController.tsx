@@ -78,6 +78,40 @@ function pressed(input: InputReport): Set<PartId> {
   return on;
 }
 
+// Focus, hover and selection show as a ring around the part's own shape, the
+// same on both drawings (desktop.css, "Part rings"): each shape gets a group
+// of three outline copies drawn just under it, so only their outer half
+// shows: a gap in the page color, the ring in the strongest text color, a
+// halo in the page color again. The ring always has the other tone on both
+// sides (WCAG technique C40), so it stands out on every colorway, white and
+// black shells included, whatever the part's and its surroundings' colors.
+// Hidden (not drawn) unless the part is focused, hovered or selected.
+// The part's filled shapes; a part that is one shape (the PS button, the
+// speaker grille, the touchpad) is its own; one drawn only in outlines (the
+// Edge's speaker holes) uses those; a plain group (the Edge's shell) its paths.
+const RING_SHAPES = ".cap, .dk, .stk, .hit, .led, .bd";
+const RING_LAYERS = ["ring-halo", "ring", "ring-gap"]; // bottom to top
+function addRings(part: SVGGraphicsElement): void {
+  const pick = (selector: string) => [...part.querySelectorAll<SVGElement>(selector)];
+  const shapes = part.tagName !== "g" ? [part] : ([RING_SHAPES, ".ln", "path, ellipse, circle, rect, polygon"].map(pick).find((found) => found.length > 0) ?? []);
+  // loop: NOT-WORTH — once per mount, 1-9 shapes per part
+  for (const shape of shapes) {
+    const rings = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    rings.setAttribute("class", "rings");
+    // loop: NOT-WORTH — N = 3 copies per shape, once per mount
+    for (const layer of RING_LAYERS) {
+      const copy = shape.cloneNode(false) as SVGElement;
+      // Only the geometry (its transform and clip stay): the art's inline
+      // styles would beat the ring's.
+      // loop: NOT-WORTH — once per mount, a handful of attributes per copy
+      for (const name of ["id", "style", "data-part", "data-box", "tabindex", "role", "aria-label", "aria-pressed"]) copy.removeAttribute(name);
+      copy.setAttribute("class", layer);
+      rings.append(copy);
+    }
+    shape.before(rings);
+  }
+}
+
 // One drawing per model; another model mounts its drawing afresh (the parts
 // are indexed once per drawing).
 export default function LiveController(props: Props) {
@@ -117,12 +151,14 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       body.setAttribute("tabindex", "0");
       body.setAttribute("role", "button");
     }
+    if (body) addRings(body);
     // loop: NOT-WORTH — once per mount, N ≈ 30 parts
     for (const id of PART_IDS) {
       const el = root.querySelector<SVGGraphicsElement>(`[data-part="${id}"]`);
       if (!el) continue;
       el.setAttribute("tabindex", "0");
       el.setAttribute("role", "button");
+      addRings(el);
       parts.current.set(id, el);
       baseTransform.current.set(id, el.getAttribute("transform") ?? "");
     }

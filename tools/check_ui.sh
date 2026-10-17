@@ -88,5 +88,7 @@ status=0
 node tools/check_layout.mjs --port "$PORT" "$@" || status=$?
 # HDR lighting's mask follows each model's own drawing (stubbed WebGPU).
 node tools/check_hdr_mask.mjs --port "$PORT" || status=$?
+# Keyboard focus shows on every part of both drawings, in every colorway.
+node tools/check_focus_ring.mjs --port "$PORT" $(printf "%s\n" "$@" | grep -qx -- "full" && echo --plan full) || status=$?
 [ "${DS5_CHECK_KEEP:-}" = 1 ] || stop
 exit "$status"
