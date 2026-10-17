@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "games": {
+    "steam-1a2b3c4d:steam:1091500": {
+      "title": "Cyberpunk 2077",
+      "profile": { "settings": { "format": 2, "hapticsGain": 4 }, "updated": 1760000000000 },
+      "mine": {
+        "rating": 4,
+        "tags": ["triggers-work", "haptics-work", "weak-vibration"],
+        "ratedOn": { "app": "0.9.4", "build": "19000001", "at": 1760000000 },
+        "notes": "Fixture notes: triggers feel right on the bow."
+      }
+    },
+    "steam-1a2b3c4d:steam:1888930": {
+      "title": "The Last of Us Part I",
+      "mine": {
+        "rating": 2,
+        "tags": ["no-triggers", "rumble-only", "speaker-problems", "disconnects", "needs-steam-input-off"],
+        "ratedOn": { "app": "0.9.4", "at": 1760000000 },
+        "notes": "Fixture notes: no profile."
+      }
+    },
+    "heroic-0badf00d:gog:1423049311": {
+      "title": "The Witcher 3",
+      "mine": {
+        "tags": ["speaker-works", "mic-works", "lightbar-works", "not-detected"],
+        "ratedOn": { "app": "0.9.5", "gameUpdated": 1759000000, "at": 1760100000 }
+      }
+    },
+    "lutris-00000001:lutris:battlenet-1": {
+      "title": "Every statement at once",
+      "mine": {
+        "rating": 3,
+        "tags": [
+          "triggers-work",
+          "haptics-work",
+          "speaker-works",
+          "mic-works",
+          "lightbar-works",
+          "weak-vibration",
+          "no-triggers",
+          "rumble-only",
+          "speaker-problems",
+          "not-detected",
+          "needs-steam-input-off",
+          "disconnects"
+        ],
+        "ratedOn": { "app": "0.9.5", "at": 1760200000 },
+        "notes": "Fixture notes: everything ticked.",
+        "hdr": true
+      }
+    },
+    "steam-1a2b3c4d:steam:620": {
+      "title": "Portal 2",
+      "mine": { "rating": 5, "ratedOn": { "app": "0.9.4", "at": 1760000000 } }
+    }
+  }
+}

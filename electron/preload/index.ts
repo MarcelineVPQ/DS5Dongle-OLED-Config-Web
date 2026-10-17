@@ -9,6 +9,7 @@ import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
   platform: process.platform,
+  arch: process.arch,
   reportStatus: (status) => ipcRenderer.send(IPC.reportStatus, status),
   setTrayIcon: (pngDataUrl) => ipcRenderer.send(IPC.setTrayIcon, pngDataUrl),
   onTrayCommand: (listener) => {

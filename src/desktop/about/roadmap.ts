@@ -34,6 +34,12 @@ export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
   {
     column: "next",
+    title: "Your report as a test sheet",
+    text: "A game's report marks each controller feature Pass, Fail or Not tested (with what failed), and what the game needed, so a report can't say a feature both works and doesn't; your earlier checklist carries over.",
+    areas: ["games"],
+  },
+  {
+    column: "next",
     title: "Quicker second start on Windows",
     text: "The app installs for your Windows user (no admin rights), opens in about a second, shows its window right away when started again, and leaves no copies in Temp.",
     areas: ["app"],

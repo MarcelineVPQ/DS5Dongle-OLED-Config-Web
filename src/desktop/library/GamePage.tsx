@@ -6,7 +6,7 @@
 // the feature checklist, what the tiers mean) and Details. The accordion at
 // the right holds what you set or do: Controller profile, Setup,
 // Compatibility (Proton games on Linux), HDR (Proton games), Your report
-// (your rating and what you noticed) and Notes. Each fact has one place: the
+// (your rating and the test sheet: Pass / Fail / Not tested per feature) and Notes. Each fact has one place: the
 // tier in DualSense support, the Proton in Compatibility, store and launcher
 // in Details. The page keeps the game's own accent (scopedAccent), panel
 // included; the pins are shared by every game's page.
@@ -40,7 +40,9 @@ import type { Fix, GameEntry, GameInfo, GamesReport, ModeInfo } from "../games/t
 import { API_NAME } from "../games/gameArgs";
 import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
-import { FEEDBACK_TAGS, type GameRecord, type LibraryFile, type Mine, type ProfileSettings } from "../games/library";
+import type { GameRecord, LibraryFile, Mine, ProfileSettings } from "../games/library";
+import { countResults, isNotDetected, setResult, sheetOf, suggestedRating, testedOn, type TestedOn } from "../games/report";
+import { ReportSheet } from "./ReportSheet";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { GameActions, PlayStats } from "./playBar";
 import Notice from "../Notice";
@@ -63,7 +65,18 @@ interface Props {
 export default function GamePage({ game, info, record, running, report, bridge, onLibrary, onRescan }: Props) {
   const { t } = useTranslation();
   const page = useRef<HTMLDivElement>(null);
-  const mineState = useMine(game, info, record, onLibrary, onRescan);
+  // What a report is tested on (the board, the controller, this OS, the game's Proton), read when it changes.
+  const tested = (): TestedOn =>
+    testedOn({
+      platform: window.desktop?.platform,
+      arch: window.desktop?.arch,
+      firmware: bridge.firmwareVersion,
+      model: bridge.identity?.model,
+      colorway: bridge.identity?.colorwayCode,
+      // loop: NOT-WORTH — N = one launcher's builds (≤ ~20), once per report change
+      runner: protonApplies() ? (game.protons?.find((c) => c.current)?.name ?? game.runner) : null,
+    });
+  const mineState = useMine(game, info, record, onLibrary, onRescan, tested);
   const [mine] = mineState;
   const { library } = useLibrary();
   const has = (k: string) => info?.art.includes(k as never) ?? false;
@@ -142,10 +155,9 @@ export default function GamePage({ game, info, record, running, report, bridge, 
       ? t("desktop.library.glance.fixes", { count: game.fixes.length })
       : t("desktop.library.needsAttention")
     : `✓ ${t("desktop.library.glance.ready")}`;
-  // loop: HOT-PATH-OK — N = feedback tags (under 10); game page render
-  const feedbackCount = feedbackTags(game).filter((tag) => mine.tags?.includes(tag)).length;
+  const counts = countResults(sheetOf(mine));
   // loop: NOT-WORTH — N = 2 parts of one status line
-  const reportStatus = [mine.rating && t(`desktop.library.rateLabel.${mine.rating}`), feedbackCount ? t("desktop.library.feedbackPicked", { count: feedbackCount }) : t("desktop.library.feedbackHint")]
+  const reportStatus = [mine.rating && t(`desktop.library.rateLabel.${mine.rating}`), counts.pass + counts.fail ? t("desktop.library.resultCounts", counts) : t("desktop.library.notTestedYet")]
     .filter(Boolean)
     .join(" · ");
   const reportTile = mine.rating ? `${"★".repeat(mine.rating)}${"☆".repeat(5 - mine.rating)}` : t("desktop.library.notRated");
@@ -225,7 +237,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
           {() => (
             <>
               <RatingPart game={game} info={info} mineState={mineState} />
-              <FeedbackBody game={game} mineState={mineState} />
+              <ReportSheet sheet={sheetOf(mine)} onChange={(report) => mineState[1]({ report })} />
             </>
           )}
         </Section>
@@ -589,8 +601,9 @@ function SetupBody({ game, report, mineState, onRescan, status }: { game: GameEn
   // XInput-only games on our list get the standard-gamepad fix by themselves;
   // for any other Proton game the player can say the controller isn't detected.
   const canMark = canMarkNotDetected(game);
-  const marked = !!mine.tags?.includes("not-detected");
-  const toggleMark = () => update({ tags: marked ? (mine.tags ?? []).filter((x) => x !== "not-detected") : [...(mine.tags ?? []), "not-detected"] });
+  // The same fact as Your report's "Controller detected: Fail" (one field, report.ts).
+  const marked = isNotDetected(mine);
+  const toggleMark = () => update({ report: setResult(sheetOf(mine), "controller-detected", marked ? "not-tested" : "fail") });
   return (
     <>
       {note && <Notice onDismiss={() => setNote(null)}>{note}</Notice>}
@@ -909,9 +922,9 @@ function SupportBody({ game }: { game: GameEntry }) {
 // One copy per page, shared by the rating (in DualSense support) and Notes: the library
 // stores the whole record, so two copies would overwrite each other's fields.
 type MineState = readonly [Mine, (patch: Partial<Mine>) => void];
-function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void, onRescan: () => void): MineState {
+function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord | undefined, onLibrary: (f: LibraryFile) => void, onRescan: () => void, tested: () => TestedOn): MineState {
   const app = window.desktop!.appVersion;
-  const notDetected = (m?: Mine) => !!m?.tags?.includes("not-detected");
+  const notDetected = (m?: Mine) => isNotDetected(m);
   const { value: mine, set } = useDebouncedSave<Mine>(
     record?.mine ?? {},
     (next) =>
@@ -924,9 +937,11 @@ function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord
     500,
   );
   const update = (patch: Partial<Mine>) => {
-    // A rating or feedback change re-stamps what it was given on.
-    const stamp = ("rating" in patch || "tags" in patch) && app ? { ratedOn: { app, build: info?.buildId, gameUpdated: info?.lastUpdated, at: Math.floor(Date.now() / 1000) } } : {};
-    set({ ...mine, ...patch, ...stamp });
+    // A rating or test sheet change re-stamps what it was given on.
+    const stamp = ("rating" in patch || "report" in patch) && app ? { ratedOn: { app, build: info?.buildId, gameUpdated: info?.lastUpdated, at: Math.floor(Date.now() / 1000), ...tested() } } : {};
+    // A sheet written replaces the older checklist it was migrated from (report.ts migrateTags).
+    const legacy = "report" in patch ? { tags: undefined } : {};
+    set({ ...mine, ...patch, ...legacy, ...stamp });
   };
   return [mine, update] as const;
 }
@@ -944,6 +959,8 @@ function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInf
   const stale = staleness(mine.ratedOn, info ?? {}, fixesFor(game.title));
   const rating = mine.rating;
   const lit = preview ?? rating;
+  // What the sheet's results suggest; shown, never written into the stars.
+  const suggested = suggestedRating(sheetOf(mine));
   // One tab stop for the group (the chosen star, else the first); arrows pick.
   const tabStop = rating ?? 1;
   const pick = (n: number) => {
@@ -1002,45 +1019,23 @@ function RatingPart({ game, info, mineState }: { game: GameEntry; info?: GameInf
               : stale.at
                 ? t("desktop.library.staleUpdateOn", { date: new Date(stale.at * 1000).toLocaleDateString() })
                 : t("desktop.library.staleUpdate")}{" "}
-            <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ tags: mine.tags ?? [] })}>
+            <button type="button" className="dk-btn dk-inline-btn" onClick={() => update({ report: sheetOf(mine) })}>
               {t("desktop.library.stillAccurate")}
             </button>
           </span>
         </Notice>
       )}
+      {suggested !== null && (
+        <p className="dk-hint gp-suggested">
+          {t("desktop.library.suggested", { label: t(`desktop.library.rateLabel.${suggested}`) })}{" "}
+          <span aria-hidden="true">
+            {"★".repeat(suggested)}
+            {"☆".repeat(5 - suggested)}
+          </span>
+        </p>
+      )}
       <p className="dk-hint">{t("desktop.library.shareSoon")}</p>
     </div>
-  );
-}
-
-// ---- Feedback ----
-// What the player noticed (their input, so a section of its own): tick what
-// applies. Saved with the rating (useMine: a change re-stamps what it was
-// given on). "Controller not detected" lives in Setup where it's a mark that acts.
-const feedbackTags = (game: GameEntry) =>
-  // loop: HOT-PATH-OK — N = feedback tags (under 10)
-  FEEDBACK_TAGS.filter((tag) => tag !== "not-detected" || !canMarkNotDetected(game));
-
-function FeedbackBody({ game, mineState }: { game: GameEntry; mineState: MineState }) {
-  const { t } = useTranslation();
-  const [mine, update] = mineState;
-  return (
-    <SectionGroup title={t("desktop.library.feedbackHint")}>
-      <ul className="gp-tags" aria-label={t("desktop.library.feedbackHint")}>
-        {/* loop: HOT-PATH-OK — N = feedback tags (under 10) */}
-        {feedbackTags(game).map((tag) => {
-          const on = mine.tags?.includes(tag) ?? false;
-          return (
-            <li key={tag}>
-              <label>
-                <input type="checkbox" checked={on} onChange={() => update({ tags: on ? (mine.tags ?? []).filter((x) => x !== tag) : [...(mine.tags ?? []), tag] })} />{" "}
-                {t(`desktop.library.tag.${tag}`)}
-              </label>
-            </li>
-          );
-        })}
-      </ul>
-    </SectionGroup>
   );
 }
 

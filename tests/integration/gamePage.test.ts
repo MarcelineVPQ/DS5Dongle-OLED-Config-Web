@@ -3,7 +3,7 @@
 // game at a glance (tiles named and ordered as the panel's sections, each
 // opening its section, never repeating its status) and two main-view blocks,
 // DualSense support and Details; the accordion at the right holds Controller
-// profile, Setup, Compatibility, HDR, Your report (rating + feedback) and Notes. Nothing inside a
+// profile, Setup, Compatibility, HDR, Your report (rating + test sheet) and Notes. Nothing inside a
 // section folds on its own (passed checks, marks, the tier legend: shown, compact). What needs the player carries a yellow dot (and
 // opens on a first visit); what's fine is one line. Each fact has one place.
 import { act, createElement } from "react";
@@ -14,6 +14,7 @@ import GamePage from "../../src/desktop/library/GamePage";
 import { setupStatus } from "../../src/desktop/library/setupStatus";
 import { hdrGameReqs } from "../../src/desktop/games/hdrSetup";
 import type { Fix, GameEntry, HdrSystem } from "../../src/desktop/games/types";
+import type { GameRecord } from "../../src/desktop/games/library";
 import { fakeBridge, fakeDesktop, gamesReport, ghostrunner, ghostrunnerNeedsSetup, GHOSTRUNNER_INFO, GHOSTRUNNER_RECORD, HDR_NO_LAYER, HDR_READY, OUR_PROTON } from "../support/gamePage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -38,14 +39,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function render(game: GameEntry, hdr: HdrSystem = HDR_READY, platform: "linux" | "win32" = "linux") {
-  vi.stubGlobal("desktop", fakeDesktop(platform));
+function render(game: GameEntry, hdr: HdrSystem = HDR_READY, platform: "linux" | "win32" = "linux", record: GameRecord | undefined = GHOSTRUNNER_RECORD, calls?: string[]) {
+  vi.stubGlobal("desktop", fakeDesktop(platform, calls));
   act(() =>
     root!.render(
       createElement(GamePage, {
         game,
         info: GHOSTRUNNER_INFO,
-        record: GHOSTRUNNER_RECORD,
+        record,
         running: false,
         report: gamesReport(game, hdr),
         bridge: fakeBridge(),
@@ -108,7 +109,8 @@ describe("game page", () => {
     expect(container!.querySelectorAll(".dk-sec-body")).toHaveLength(0);
     // Every section says its state.
     for (const id of sectionIds()) expect(status(id!), id).toBeTruthy();
-    expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 2 picked`); // your words for the rating, and what you noticed
+    // Your words for the rating, and the sheet's counts (the record's old checklist, migrated: haptic feedback works + feels weak = 1 Fail).
+    expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · ${i18n.t("desktop.library.resultCounts", { pass: 0, fail: 1 })}`);
     // DualSense support is a readout: a main-view block with the tier as its status.
     expect($('.dk-split-main [data-block="support"] .dk-sec-status')!.textContent).toBe(`✓✓ ${i18n.t("desktop.library.tier.verified")}`);
     expect($('.dk-split-panel [data-section="support"]')).toBeNull();
@@ -210,20 +212,38 @@ describe("game page", () => {
     expect(profile.querySelectorAll('input[type="range"]')).toHaveLength(0);
   });
 
-  it("the player's marks: Controller not detected in Setup (or in the feedback, not both), Supports HDR in HDR", () => {
-    render(ghostrunner({ support: "unknown", gamepad: undefined }));
-    // Shown under its question, no fold.
-    const marks = open("setup").querySelector(".gp-marks")!.closest(".dk-sec-group")!;
-    expect(marks.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
-    expect(marks.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
-    expect(marks.textContent).not.toContain(i18n.t("desktop.library.supportsHdr"));
-    expect(body("setup")!.querySelector("details")).toBeNull();
-    const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
-    expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
-    expect(open("report").textContent).not.toContain(i18n.t("desktop.library.tag.not-detected"));
-    // A game on our XInput list: no mark, so the feedback keeps it.
-    render(ghostrunner());
-    expect(open("report").textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
+  it("the player's marks: Controller not detected in Setup (the same field as the sheet's Controller detected), Supports HDR in HDR", () => {
+    vi.useFakeTimers();
+    try {
+      const calls: string[] = [];
+      render(ghostrunner({ support: "unknown", gamepad: undefined }), HDR_READY, "linux", GHOSTRUNNER_RECORD, calls);
+      // Shown under its question, no fold.
+      const marks = open("setup").querySelector(".gp-marks")!.closest(".dk-sec-group")!;
+      expect(marks.querySelector(".dk-subhead")!.textContent).toBe(i18n.t("desktop.library.marksTitle"));
+      expect(marks.textContent).toContain(i18n.t("desktop.library.tag.not-detected"));
+      expect(marks.textContent).not.toContain(i18n.t("desktop.library.supportsHdr"));
+      expect(body("setup")!.querySelector("details")).toBeNull();
+      const hdrMark = [...open("hdr").querySelectorAll<HTMLLabelElement>(".dk-fix")].find((l) => l.textContent!.includes(i18n.t("desktop.library.supportsHdr")))!;
+      expect(hdrMark.querySelector("input")!.checked).toBe(true); // the record says so
+      // The sheet always has the row; ticking the mark sets it to Fail, and back to Not tested.
+      const row = () => open("report").querySelector('[data-feature="controller-detected"]')!;
+      expect(row().getAttribute("data-result")).toBe("not-tested");
+      const mark = open("setup").querySelector<HTMLInputElement>(".gp-marks input")!;
+      act(() => mark.click());
+      expect(row().getAttribute("data-result")).toBe("fail");
+      expect(open("setup").querySelector<HTMLInputElement>(".gp-marks input")!.checked).toBe(true);
+      act(() => void vi.advanceTimersByTime(1000));
+      const saved = JSON.parse(calls.find((c) => c.startsWith("librarySetMine"))!.slice("librarySetMine ".length)) as { mine: Record<string, unknown> };
+      expect(saved.mine.report).toMatchObject({ results: { "controller-detected": { result: "fail" } } });
+      expect(saved.mine.tags).toBeUndefined();
+      // Not tested from the sheet clears the mark.
+      const notTested = row().querySelector<HTMLButtonElement>(`button[aria-pressed="false"]:last-child`)!;
+      act(() => notTested.click());
+      expect(row().getAttribute("data-result")).toBe("not-tested");
+      expect(open("setup").querySelector<HTMLInputElement>(".gp-marks input")!.checked).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("DualSense support is a main-view block: the tier's meaning, the feature checklist and the tier legend (compact, no fold)", () => {
@@ -252,35 +272,101 @@ describe("game page", () => {
     }
   });
 
-  it("feedback is a setting: in Your report with the rating (the number ticked in its status), saved with the rating", () => {
+  it("Your report is a test sheet: a Pass / Fail / Not tested row per feature (Sony's names), Fail details, the setup flag, saved with a new stamp", () => {
     vi.useFakeTimers();
     try {
-      render(ghostrunner());
-      expect(sec("report")!.querySelector(".dk-sec-ic svg")).not.toBeNull();
-      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 2 picked`);
-      // Not in DualSense support (a readout now).
-      expect($('[data-block="support"] .gp-tags')).toBeNull();
-      const box = open("report").querySelector(".gp-tags")!;
-      // After the rating.
-      expect(body("report")!.querySelector("#gp-rating")!.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(box.getAttribute("aria-label")).toBe(i18n.t("desktop.library.feedbackHint"));
-      const boxes = [...box.querySelectorAll<HTMLInputElement>("input[type=checkbox]")];
-      expect(boxes.filter((b) => b.checked)).toHaveLength(2);
       const calls: string[] = [];
-      vi.stubGlobal("desktop", fakeDesktop("linux", calls));
-      const disconnects = boxes.find((b) => b.parentElement!.textContent!.includes(i18n.t("desktop.library.tag.disconnects")))!;
-      act(() => disconnects.click());
-      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · 3 picked`);
+      render(ghostrunner(), HDR_READY, "linux", GHOSTRUNNER_RECORD, calls);
+      expect(sec("report")!.querySelector(".dk-sec-ic svg")).not.toBeNull();
+      const report = open("report");
+      // After the rating; no checkboxes left.
+      const sheet = report.querySelector(".gp-sheet")!;
+      expect(report.querySelector("#gp-rating")!.compareDocumentPosition(sheet) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(report.querySelectorAll("input[type=checkbox]")).toHaveLength(0);
+      expect($('[data-block="support"] .gp-sheet')).toBeNull();
+      // Seven rows in order, each one group named by Sony's term, three buttons: icon + word (never color alone).
+      const rows = [...sheet.querySelectorAll<HTMLElement>(".gp-sheet-row")];
+      expect(rows.map((r) => r.dataset.feature)).toEqual(["controller-detected", "adaptive-triggers", "haptic-feedback", "speaker", "microphone", "light-bar", "stays-connected"]);
+      expect(rows.map((r) => r.querySelector("[role=group]")!.getAttribute("aria-label"))).toEqual(
+        ["Controller detected", "Adaptive triggers", "Haptic feedback", "Speaker", "Microphone", "Light bar", "Stays connected"].map((x) => x),
+      );
+      for (const r of rows) {
+        const buttons = [...r.querySelectorAll<HTMLButtonElement>(".dk-seg button")];
+        expect(buttons.map((b) => b.textContent)).toEqual([i18n.t("desktop.library.result.pass"), i18n.t("desktop.library.result.fail"), i18n.t("desktop.library.result.not-tested")]);
+        for (const b of buttons) {
+          expect(b.querySelector(".dk-seg-icon svg")).not.toBeNull();
+          expect(b.tabIndex).toBe(0); // keyboard reachable
+        }
+        expect(buttons.filter((b) => b.getAttribute("aria-pressed") === "true")).toHaveLength(1);
+      }
+      // The record's old checklist, migrated: haptic feedback Fail + Feels weak, marked for a re-check; the rest Not tested.
+      const row = (f: string) => sheet.querySelector<HTMLElement>(`[data-feature="${f}"]`)!;
+      const press = (f: string, label: string) => act(() => [...row(f).querySelectorAll<HTMLButtonElement>(".dk-seg button")].find((b) => b.textContent === label)!.click());
+      expect(rows.map((r) => r.dataset.result)).toEqual(["not-tested", "not-tested", "fail", "not-tested", "not-tested", "not-tested", "not-tested"]);
+      const chips = () => [...row("haptic-feedback").querySelectorAll<HTMLButtonElement>(".gp-details .dk-chip")];
+      expect(chips().map((c) => [c.textContent, c.getAttribute("aria-pressed")])).toEqual([
+        [i18n.t("desktop.library.detail.weak"), "true"],
+        [i18n.t("desktop.library.detail.rumble-only"), "false"],
+      ]);
+      expect(row("haptic-feedback").querySelector(".gp-details")!.getAttribute("aria-label")).toBe(i18n.t("desktop.library.failDetails", { feature: "Haptic feedback" }));
+      expect(row("haptic-feedback").querySelector(".gp-conflict")!.textContent).toContain(i18n.t("desktop.library.sheetConflict"));
+      // A row without details has no chips, even on Fail.
+      press("stays-connected", "Fail");
+      expect(row("stays-connected").querySelector(".gp-details")).toBeNull();
+      // Picking a result confirms the conflicting row; Speaker's Fail offers its detail.
+      press("haptic-feedback", "Fail");
+      expect(row("haptic-feedback").querySelector(".gp-conflict")).toBeNull();
+      press("adaptive-triggers", "Pass");
+      press("speaker", "Fail");
+      act(() => row("speaker").querySelector<HTMLButtonElement>(".gp-details .dk-chip")!.click());
+      expect(row("speaker").querySelector(".gp-details .dk-chip")!.getAttribute("aria-pressed")).toBe("true");
+      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · ${i18n.t("desktop.library.resultCounts", { pass: 1, fail: 3 })}`);
+      // The suggestion sits by the stars and never moves them.
+      expect(report.querySelector(".gp-suggested")!.textContent).toContain(i18n.t("desktop.library.suggested", { label: i18n.t("desktop.library.rateLabel.2") }));
+      expect(report.querySelectorAll(".gp-stars button.on")).toHaveLength(4);
+      // The setup flag: a switch, off until set.
+      const flag = report.querySelector<HTMLButtonElement>('button[role="switch"]')!;
+      expect(flag.getAttribute("aria-label")).toBe(i18n.t("desktop.library.flag.steam-input-off"));
+      expect(flag.getAttribute("aria-checked")).toBe("false");
+      act(() => flag.click());
       act(() => void vi.advanceTimersByTime(1000));
-      const saved = calls.find((c) => c.startsWith("librarySetMine"))!;
-      expect(saved).toContain('"disconnects"');
-      expect(saved).toContain('"ratedOn"'); // a feedback change re-stamps what it was given on
-      // Nothing ticked: the question is the status.
-      for (const b of [...open("report").querySelectorAll<HTMLInputElement>(".gp-tags input:checked")]) act(() => b.click());
-      expect(status("report")).toBe(`${i18n.t("desktop.library.rateLabel.4")} · ${i18n.t("desktop.library.feedbackHint")}`);
+      const last = calls.filter((c) => c.startsWith("librarySetMine")).at(-1)!;
+      const saved = JSON.parse(last.slice("librarySetMine ".length)) as { mine: Record<string, unknown> };
+      expect(saved.mine).toMatchObject({
+        rating: 4,
+        notes: "Ray Tracing needs -dx12.",
+        hdr: true,
+        report: {
+          schemaVersion: 1,
+          results: {
+            "adaptive-triggers": { result: "pass" },
+            "haptic-feedback": { result: "fail", details: ["weak"] },
+            speaker: { result: "fail", details: ["problems"] },
+            "stays-connected": { result: "fail" },
+          },
+          setup: { "steam-input-off": true },
+        },
+        ratedOn: { app: "1.0.0", build: "1000", os: "linux" },
+      });
+      expect(saved.mine.tags).toBeUndefined(); // the old checklist is replaced, not kept beside
+      expect((saved.mine.report as Record<string, unknown>).conflicts).toBeUndefined();
+      expect(last).not.toMatch(/Pass|Fail|Feels weak/); // IDs, never the words
+      // Back to Not tested: the row's details go with it.
+      press("speaker", "Not tested");
+      expect(row("speaker").dataset.result).toBe("not-tested");
+      expect(row("speaker").querySelector(".gp-details")).toBeNull();
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("a game with no report: every row Not tested, no suggestion, the status says so", () => {
+    render(ghostrunner(), HDR_READY, "linux", { title: "Ghostrunner" });
+    expect(status("report")).toBe(i18n.t("desktop.library.notTestedYet"));
+    const report = open("report");
+    expect([...report.querySelectorAll<HTMLElement>(".gp-sheet-row")].map((r) => r.dataset.result)).toEqual(Array(7).fill("not-tested"));
+    expect(report.querySelector(".gp-suggested")).toBeNull();
+    expect(report.querySelector(".gp-conflict")).toBeNull();
   });
 
   it("Notes: the first line is the status; a folded section keeps what was typed", () => {

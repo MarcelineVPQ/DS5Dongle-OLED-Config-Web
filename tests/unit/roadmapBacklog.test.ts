@@ -16,6 +16,7 @@ import { ROADMAP, type RoadmapColumn } from "../../src/desktop/about/roadmap";
 
 /** Roadmap title → the start of its BACKLOG row's Item cell. */
 const BACKLOG_ROW: Record<string, string> = {
+  "Your report as a test sheet": "Game page: Your report as a test sheet",
   "Lighter on your PC": "App runs lean when hidden",
   "Full pairing slots say so": "Pairing slots says when all slots are taken",
   "Our own color picker": "Our own color picker",

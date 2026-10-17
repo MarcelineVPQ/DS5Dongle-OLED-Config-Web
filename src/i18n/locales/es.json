@@ -932,22 +932,38 @@
         "4": "Funciona bien",
         "5": "Funciona perfectamente"
       },
-      "feedbackHint": "¿Qué has notado?",
-      "feedbackPicked_one": "{{count}} marcada",
-      "feedbackPicked_other": "{{count}} marcadas",
-      "tag": {
-        "triggers-work": "Gatillos adaptativos OK",
-        "haptics-work": "Retroalimentación háptica OK",
-        "speaker-works": "Altavoz OK",
-        "mic-works": "Micrófono OK",
-        "lightbar-works": "Barra luminosa OK",
-        "weak-vibration": "Vibración débil",
-        "no-triggers": "Gatillos sin efecto",
+      "suggested": "Tus resultados sugieren: {{label}}",
+      "sheetTitle": "Resultados de las pruebas",
+      "sheetInfo": "Prueba cada función en este juego y márcala: Correcto (funciona como debe), Falla (no funciona o solo en parte) o Sin probar. Una falla puede dar más detalle. Las estrellas siguen siendo tu impresión general.",
+      "result": {
+        "pass": "Correcto",
+        "fail": "Falla",
+        "not-tested": "Sin probar"
+      },
+      "reportFeature": {
+        "controller-detected": "Mando detectado",
+        "adaptive-triggers": "Gatillos adaptativos",
+        "haptic-feedback": "Retroalimentación háptica",
+        "speaker": "Altavoz",
+        "microphone": "Micrófono",
+        "light-bar": "Barra luminosa",
+        "stays-connected": "Se mantiene conectado"
+      },
+      "detail": {
+        "weak": "Se siente débil",
         "rumble-only": "Solo vibración simple",
-        "speaker-problems": "Problemas de altavoz",
-        "not-detected": "Mando no detectado",
-        "needs-steam-input-off": "Requiere Steam Input off",
-        "disconnects": "Se desconecta"
+        "problems": "Problemas de sonido"
+      },
+      "failDetails": "{{feature}}: qué falló",
+      "sheetConflict": "Tu lista anterior decía ambas cosas: compruébalo de nuevo",
+      "setupFlags": "Qué necesitó",
+      "flag": {
+        "steam-input-off": "Requiere Steam Input off"
+      },
+      "resultCounts": "{{pass}} correctas · {{fail}} fallas",
+      "notTestedYet": "Sin probar aún",
+      "tag": {
+        "not-detected": "Mando no detectado"
       },
       "shareSoon": "Guardado en este PC. Compartir con otros jugadores llegará pronto.",
       "notesPlaceholder": "Notas privadas, solo en este PC",

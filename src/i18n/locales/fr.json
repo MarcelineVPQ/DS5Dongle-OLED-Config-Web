@@ -932,22 +932,38 @@
         "4": "Fonctionne bien",
         "5": "Fonctionne parfaitement"
       },
-      "feedbackHint": "Qu'as-tu remarqué ?",
-      "feedbackPicked_one": "{{count}} cochée",
-      "feedbackPicked_other": "{{count}} cochées",
-      "tag": {
-        "triggers-work": "Gâchettes adaptatives OK",
-        "haptics-work": "Retour haptique OK",
-        "speaker-works": "Haut-parleur OK",
-        "mic-works": "Micro OK",
-        "lightbar-works": "Barre lumineuse OK",
-        "weak-vibration": "Vibrations faibles",
-        "no-triggers": "Gâchettes inactives",
+      "suggested": "Tes résultats suggèrent : {{label}}",
+      "sheetTitle": "Résultats des tests",
+      "sheetInfo": "Teste chaque fonction dans ce jeu et note-la : Réussi (elle fonctionne comme prévu), Échec (elle ne fonctionne pas, ou en partie) ou Non testé. Un échec peut préciser. Les étoiles restent ton impression générale.",
+      "result": {
+        "pass": "Réussi",
+        "fail": "Échec",
+        "not-tested": "Non testé"
+      },
+      "reportFeature": {
+        "controller-detected": "Manette détectée",
+        "adaptive-triggers": "Gâchettes adaptatives",
+        "haptic-feedback": "Retour haptique",
+        "speaker": "Haut-parleur",
+        "microphone": "Microphone",
+        "light-bar": "Barre lumineuse",
+        "stays-connected": "Reste connectée"
+      },
+      "detail": {
+        "weak": "Trop faible",
         "rumble-only": "Vibration simple seule",
-        "speaker-problems": "Problèmes de haut-parleur",
-        "not-detected": "Manette non détectée",
-        "needs-steam-input-off": "Steam Input à couper",
-        "disconnects": "Déconnexions"
+        "problems": "Problèmes de son"
+      },
+      "failDetails": "{{feature}} : ce qui a échoué",
+      "sheetConflict": "Ton ancienne liste disait les deux : vérifie à nouveau",
+      "setupFlags": "Ce qu'il a fallu",
+      "flag": {
+        "steam-input-off": "Steam Input à couper"
+      },
+      "resultCounts": "{{pass}} réussi · {{fail}} échec",
+      "notTestedYet": "Pas encore testé",
+      "tag": {
+        "not-detected": "Manette non détectée"
       },
       "shareSoon": "Enregistré sur ce PC. Le partage avec les autres joueurs arrive bientôt.",
       "notesPlaceholder": "Notes privées, uniquement sur ce PC",

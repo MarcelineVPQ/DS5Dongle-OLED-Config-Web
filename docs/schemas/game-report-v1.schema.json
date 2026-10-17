@@ -1,0 +1,495 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web/blob/master/docs/schemas/game-report-v1.schema.json",
+  "title": "DS5 Dongle game report, version 1",
+  "description": "How well a DualSense works in one game, as one player tested it: a Pass / Fail / Not tested result per controller feature (machine IDs, never translated words), the setup it needed, the overall rating and what it was tested on. No notes, paths, serials, host or user names. Built by src/desktop/games/sharedReport.ts; see docs/schemas/README.md.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "kind": {
+      "type": "string",
+      "const": "ds5-game-report"
+    },
+    "game": {
+      "type": "object",
+      "properties": {
+        "store": {
+          "type": "string",
+          "enum": ["steam", "epic", "gog", "amazon", "sideload", "lutris"]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[\\w.-]{1,200}$"
+        },
+        "launcher": {
+          "type": "string",
+          "enum": ["steam", "heroic", "lutris", "gog", "epic"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      },
+      "required": ["store", "id", "launcher", "title"],
+      "additionalProperties": false
+    },
+    "rating": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "results": {
+      "type": "object",
+      "properties": {
+        "controller-detected": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 0,
+                  "type": "array",
+                  "items": {
+                    "not": {}
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "adaptive-triggers": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 0,
+                  "type": "array",
+                  "items": {
+                    "not": {}
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "haptic-feedback": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 2,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["weak", "rumble-only"]
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "speaker": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["problems"]
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "microphone": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 0,
+                  "type": "array",
+                  "items": {
+                    "not": {}
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "light-bar": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 0,
+                  "type": "array",
+                  "items": {
+                    "not": {}
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "stays-connected": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "pass"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "not-tested"
+                }
+              },
+              "required": ["result"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string",
+                  "const": "fail"
+                },
+                "details": {
+                  "maxItems": 0,
+                  "type": "array",
+                  "items": {
+                    "not": {}
+                  }
+                }
+              },
+              "required": ["result", "details"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["controller-detected", "adaptive-triggers", "haptic-feedback", "speaker", "microphone", "light-bar", "stays-connected"],
+      "additionalProperties": false
+    },
+    "setup": {
+      "type": "object",
+      "properties": {
+        "steam-input-off": {
+          "type": "boolean"
+        }
+      },
+      "required": ["steam-input-off"],
+      "additionalProperties": false
+    },
+    "conflicts": {
+      "maxItems": 7,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["controller-detected", "adaptive-triggers", "haptic-feedback", "speaker", "microphone", "light-bar", "stays-connected"]
+      }
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "app": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]{1,40})?$"
+        },
+        "firmware": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[\\x20-\\x7e]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "controller": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["dualsense", "dualsense-edge"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "colorway": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9A-Za-z]{2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "os": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["linux", "windows", "macos"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "arch": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["x64", "arm64"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runner": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[\\x20-\\x7e]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gameBuild": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[\\x20-\\x7e]{1,40}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gameUpdated": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["app", "firmware", "controller", "colorway", "os", "arch", "runner", "gameBuild", "gameUpdated"],
+      "additionalProperties": false
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+  },
+  "required": ["schemaVersion", "kind", "game", "rating", "results", "setup", "conflicts", "context", "updatedAt"],
+  "additionalProperties": false
+}

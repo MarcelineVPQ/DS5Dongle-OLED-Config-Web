@@ -923,21 +923,38 @@
         "4": "問題なく動作する",
         "5": "完璧に動作する"
       },
-      "feedbackHint": "気づいたことは?",
-      "feedbackPicked_other": "{{count}} 件選択",
-      "tag": {
-        "triggers-work": "アダプティブトリガー動作",
-        "haptics-work": "ハプティックフィードバック動作",
-        "speaker-works": "スピーカー動作",
-        "mic-works": "マイク動作",
-        "lightbar-works": "ライトバー動作",
-        "weak-vibration": "振動が弱い",
-        "no-triggers": "トリガーが効かない",
+      "suggested": "結果からの提案：{{label}}",
+      "sheetTitle": "テスト結果",
+      "sheetInfo": "このゲームで各機能をテストして記録します：合格（正しく動作）、不合格（動作しない、または一部のみ）、未テスト。不合格には詳細を追加できます。星は全体的な評価のままです。",
+      "result": {
+        "pass": "合格",
+        "fail": "不合格",
+        "not-tested": "未テスト"
+      },
+      "reportFeature": {
+        "controller-detected": "コントローラー検出",
+        "adaptive-triggers": "アダプティブトリガー",
+        "haptic-feedback": "ハプティックフィードバック",
+        "speaker": "スピーカー",
+        "microphone": "マイク",
+        "light-bar": "ライトバー",
+        "stays-connected": "接続が維持される"
+      },
+      "detail": {
+        "weak": "弱く感じる",
         "rumble-only": "通常の振動のみ",
-        "speaker-problems": "スピーカーの不具合",
-        "not-detected": "コントローラー未検出",
-        "needs-steam-input-off": "Steam Input オフが必要",
-        "disconnects": "接続が切れる"
+        "problems": "音の不具合"
+      },
+      "failDetails": "{{feature}}：不合格の内容",
+      "sheetConflict": "以前のリストでは両方にチェック：再確認してください",
+      "setupFlags": "必要だった設定",
+      "flag": {
+        "steam-input-off": "Steam Input オフが必要"
+      },
+      "resultCounts": "合格 {{pass}} · 不合格 {{fail}}",
+      "notTestedYet": "まだテストしていません",
+      "tag": {
+        "not-detected": "コントローラー未検出"
       },
       "shareSoon": "このPCに保存しました。他のプレイヤーとの共有は近日対応予定です。",
       "notesPlaceholder": "非公開メモ(このPCのみ)",
