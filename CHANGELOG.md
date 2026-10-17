@@ -6,8 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.18] - 2026-10-17
+
 ### Changed
 
+- Bundles firmware 0.9.5-dev.18: no firmware changes since 0.9.5-dev.17 (the same firmware under the new version).
 - **Your report on a game is a test sheet.** The "What did you notice?" checklist could say a feature both works and doesn't. Each controller feature now has its own row, **Controller detected**, **Adaptive triggers**, **Haptic feedback**, **Speaker**, **Microphone**, **Light bar** and **Stays connected**, marked **Pass**, **Fail** or **Not tested** (the default). A Fail can say more where it matters (haptic feedback that feels weak or is plain vibration only, sound problems from the speaker), and **Needs Steam Input off** is a switch of its own. Your stars stay your overall feel; a line beside them says what your results suggest, without changing them. Your earlier ticks carry over: a feature you'd ticked both ways becomes Fail and asks you to check it again; your stars and notes stay as they were. Reports are still kept on this PC only, now in a form that can be shared with other players once sharing comes. All 7 languages.
 
 ### Fixed
