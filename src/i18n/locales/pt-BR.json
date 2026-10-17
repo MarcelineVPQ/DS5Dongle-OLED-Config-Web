@@ -1832,7 +1832,8 @@
         "bundledDamaged": "O firmware que vem com o app está danificado. Reinstale o app.",
         "noPkexec": "O pkexec não está instalado, então o app não consegue pedir a senha de administrador.",
         "cancelled": "a janela da senha foi cancelada",
-        "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
+        "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app.",
+        "updateMissing": "A atualização baixada não está mais neste PC (foi apagada da pasta temporária). Procure atualizações para baixá-la de novo."
       },
       "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
       "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo."

@@ -1821,7 +1821,8 @@
         "bundledDamaged": "应用自带的固件已损坏。请重新安装应用。",
         "noPkexec": "未安装 pkexec，因此应用无法请求管理员密码。",
         "cancelled": "密码窗口已取消",
-        "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。"
+        "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。",
+        "updateMissing": "下载的更新已不在这台电脑上（已从临时文件夹中删除）。请检查更新以重新下载。"
       },
       "headsetUndo": "无法切回控制器的声音：{{reason}}",
       "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。"

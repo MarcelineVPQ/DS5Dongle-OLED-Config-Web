@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **The tray speaks your language.** Its menu and tooltip were English only and said "DS5 Dongle OLED Edition". They now follow your system's language (all 7) and name your board, for example "Pico 2 W 0.9.5 · Controller connected · Slot 0 · Battery 80%".
 - **App settings shows what you changed in the tray.** Unticking Close to tray, Start at login, Start minimized or Check for updates automatically in the tray menu left App settings showing the old switch until you opened the page again. It now follows at once, as it does when the app turns a setting off by itself.
 - **One graphics crash no longer turns hardware acceleration off for good.** A single crash of the graphics process (after a driver update, say) switched it off without a word. Now it takes a second crash in the same run, and the app tells you, with **Turn back on**.
+- **An update downloaded right after start-up installs (Windows).** If an update downloaded in the app's first 20 seconds, the app's start-up tidy-up could delete it again, and **Restart now** then closed the app without installing anything. The tidy-up now leaves a download alone, and if the file is gone anyway, **Restart now** says so and the app stays open.
 
 ## [0.9.5-dev.18] - 2026-10-17
 

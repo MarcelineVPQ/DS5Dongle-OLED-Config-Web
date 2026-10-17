@@ -1832,7 +1832,8 @@
         "bundledDamaged": "El firmware incluido con la app está dañado. Reinstala la app.",
         "noPkexec": "pkexec no está instalado, así que la app no puede pedir la contraseña de administrador.",
         "cancelled": "se canceló la ventana de la contraseña",
-        "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
+        "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app.",
+        "updateMissing": "La actualización descargada ya no está en este PC (se borró de la carpeta temporal). Busca actualizaciones para descargarla de nuevo."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
       "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar."

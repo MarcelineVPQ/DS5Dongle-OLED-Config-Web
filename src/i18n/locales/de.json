@@ -1832,7 +1832,8 @@
         "bundledDamaged": "Die mit der App gelieferte Firmware ist beschädigt. Installiere die App neu.",
         "noPkexec": "pkexec ist nicht installiert, darum kann die App nicht nach dem Administrator-Passwort fragen.",
         "cancelled": "die Passwortabfrage wurde abgebrochen",
-        "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
+        "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu.",
+        "updateMissing": "Das heruntergeladene Update ist nicht mehr auf diesem PC (aus dem temporären Ordner gelöscht). Suche nach Updates, um es erneut herunterzuladen."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
       "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal."

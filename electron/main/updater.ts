@@ -105,6 +105,9 @@ export class Updater {
   private returningToStable = false;
   // Restart now started the installer (Windows): quitting doesn't run it again.
   private restarting = false;
+  // A download started in this run: the start-up tidy-up (Windows, 20 s in)
+  // leaves the update folder alone, or it could delete the new installer.
+  private downloadStarted = false;
 
   constructor(
     private readonly emit: (state: UpdateState) => void,
@@ -151,7 +154,7 @@ export class Updater {
           const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
-      } else if (process.platform === "win32") {
+      } else if (process.platform === "win32" && !this.downloadStarted) {
         rmSync(windowsUpdateDir(), { recursive: true, force: true });
       }
     } catch {
@@ -249,6 +252,7 @@ export class Updater {
     const download = key ? this.manifest.app.platforms[key] : undefined;
     if (!download) return this.state;
     this.busy = true;
+    this.downloadStarted = true;
     const version = this.manifest.app.version;
     try {
       const target = this.installTarget(download);
@@ -312,7 +316,7 @@ export class Updater {
   // not pressed): the installer runs silently as the app exits, so the next
   // start is the new version (as on Linux). Called once, from will-quit.
   installOnQuit(): void {
-    if (process.platform !== "win32" || this.state.phase !== "ready" || !this.installedPath || this.restarting) return;
+    if (process.platform !== "win32" || this.state.phase !== "ready" || !this.installedPath || this.restarting || !existsSync(this.installedPath)) return;
     runInstaller(this.installedPath, false);
   }
 
@@ -320,6 +324,14 @@ export class Updater {
   restart(): void {
     if (this.state.phase !== "ready" || !this.installedPath) return;
     const target = this.installedPath;
+    // The downloaded installer (or AppImage) is gone (deleted from Temp): say
+    // so and keep running, instead of quitting into nothing.
+    if (!existsSync(target)) {
+      this.installedPath = null;
+      // error: SHOWN — desktop.update.appFailed with desktop.errors.main.updateMissing (the banner; Check for updates downloads it again)
+      this.set({ phase: "failed", detail: `${keyedText("desktop.errors.main.updateMissing")} ${keyedText("desktop.update.untouched")}`, during: "install" });
+      return;
+    }
     // Before the new instance starts, or it could find the lock still held
     // and quit, leaving no app running.
     app.releaseSingleInstanceLock();

@@ -1832,7 +1832,8 @@
         "bundledDamaged": "Le firmware fourni avec l'appli est endommagé. Réinstalle l'appli.",
         "noPkexec": "pkexec n'est pas installé : l'appli ne peut pas demander le mot de passe administrateur.",
         "cancelled": "la demande de mot de passe a été annulée",
-        "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
+        "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli.",
+        "updateMissing": "La mise à jour téléchargée n'est plus sur ce PC (supprimée du dossier temporaire). Recherche les mises à jour pour la télécharger à nouveau."
       },
       "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
       "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer."
