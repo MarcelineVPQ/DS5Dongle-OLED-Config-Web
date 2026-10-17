@@ -304,6 +304,7 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
     act(() => void container.querySelector(".dk-split-panel")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(split().classList.contains("drawer-open")).toBe(false);
     expect(localStorage.getItem(PANEL_HIDDEN_KEY(page))).toBe("1");
+    expect(document.activeElement, "the focus goes to the page's rail item, not the body (bug hunt D5)").toBe(games);
   });
 
   it("each item's tooltip says what a second press does on the page you're on", () => {

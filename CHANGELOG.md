@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Fixed
 
 - **The language menu works like every other menu.** In App settings → Language, the arrow keys, Home and End now move through the languages, and Escape closes the menu without closing the settings panel too; the focus goes back to the language button.
+- **Escape on the settings drawer puts the focus back on the rail.** In a narrow window, closing the settings drawer with Escape left the keyboard focus nowhere; it now goes to the page's item on the rail, the one that opens the drawer again.
 
 ## [0.9.5-dev.18] - 2026-10-17
 
