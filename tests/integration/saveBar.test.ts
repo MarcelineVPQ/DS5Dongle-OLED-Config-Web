@@ -31,6 +31,7 @@ let m: {
   storage: typeof import("../../src/desktop/storage");
   devPreview: typeof import("../../src/desktop/devPreview");
   acc: typeof import("../../src/desktop/accordion/useAccordion");
+  shownError: typeof import("../../src/desktop/shownError");
 };
 
 beforeAll(async () => {
@@ -45,6 +46,7 @@ beforeAll(async () => {
     storage: await import("../../src/desktop/storage"),
     devPreview: await import("../../src/desktop/devPreview"),
     acc: await import("../../src/desktop/accordion/useAccordion"),
+    shownError: await import("../../src/desktop/shownError"),
   };
   await m.i18n.changeLanguage("en");
 });
@@ -80,20 +82,24 @@ const FW = {
 } as never;
 const NO_PROFILE = { active: null, editing: null, profileDirty: false, revertToProfile: async () => undefined, saveToProfile: async () => true };
 let drafts: import("../../src/desktop/live/boardDrafts").BoardDrafts | null = null;
+let notice: string | null = null;
 function Probe() {
   drafts = m.drafts.useBoardDrafts();
+  notice = m.shownError.useShownError();
   return null;
 }
 // The Controller page as DesktopApp shows it: the board's drafts, the page and the bar.
+let bridgeNow: ReturnType<typeof m.useDs5Bridge> | null = null;
 function Page({ profiles = NO_PROFILE }: { profiles?: typeof NO_PROFILE }) {
   const bridge = m.useDs5Bridge();
-  if (!bridge.isConnected) return null;
+  bridgeNow = bridge;
+  // The drafts outlive the connection, as in DesktopApp (a reconnect keeps them there).
   return createElement(
     m.drafts.BoardDraftsProvider,
     { bridge },
-    createElement(m.ControllerView, { bridge, fw: FW, view: "overview", onView: () => undefined }),
     createElement(Probe),
-    createElement(Bar, { bridge, profiles }),
+    bridge.isConnected && createElement(m.ControllerView, { bridge, fw: FW, view: "overview", onView: () => undefined }),
+    bridge.isConnected && createElement(Bar, { bridge, profiles }),
   );
 }
 function Bar({ bridge, profiles }: { bridge: ReturnType<typeof m.useDs5Bridge>; profiles: typeof NO_PROFILE }): ReactNode {
@@ -185,6 +191,139 @@ describe("the save bar", () => {
     expect(drafts!.remap.draft[13]).toBe(dongle().remap[13]); // what the board has (the previous test saved Circle there)
     expect(dongle().remap[13]).not.toBe(15);
     expect(note()).toBe(m.i18n.t("desktop.bar.saved"));
+  });
+
+  it("a save the board drops off during is not 'All changes saved': the bar stays unsaved and says the board went away", async () => {
+    await live();
+    await act(async () => void (await bridgeNow!.applyBody({ ...bridgeNow!.config!, inactiveTime: 45 })));
+    await wait(1200); // the identity poll reads the unsaved flag
+    expect(note()).toBe(t("desktop.bar.unsaved"));
+    const board = dongle();
+    const original = board.setReport.bind(board);
+    board.setReport = async (id, payload) => {
+      await original(id, payload);
+      if (payload[0] === 0x02) board.gone = true; // the save's SET landed, then the board left the bus
+    };
+    try {
+      await act(async () => barButton(t("desktop.bar.save")).click());
+      await wait();
+      expect(note()).toBe(t("desktop.bar.unsaved"));
+      expect(bridgeNow!.error).toBe(t("desktop.errors.usb.gone"));
+    } finally {
+      board.setReport = original;
+      board.gone = false;
+    }
+  });
+
+  it("says unsaved the moment a change is applied and saved the moment Save is done, without waiting for the board's poll", async () => {
+    await live();
+    await wait(1100); // just after a poll: the next one is a second away
+    expect(note()).toBe(t("desktop.bar.saved"));
+    await act(async () => void (await bridgeNow!.applyBody({ ...bridgeNow!.config!, inactiveTime: 50 })));
+    expect(note()).toBe(t("desktop.bar.unsaved"));
+    await act(async () => barButton(t("desktop.bar.save")).click());
+    // loop: test — the save's few PENDING polls, far less than the 1 s identity poll
+    for (let i = 0; i < 30 && bridgeNow!.operation; i++) await wait(10);
+    expect(note()).toBe(t("desktop.bar.saved"));
+    expect(dongle().flashConfig).toEqual(dongle().config);
+  });
+
+  describe("staged changes across a reconnect, another board, a slot switch and a game's layout", () => {
+    // The board leaves USB and comes back (a new connection); `other` makes it another board.
+    const replug = async (other = false) => {
+      const sim = m.devPreview.simulatedBoard()!;
+      const serial = sim.dongle()!.serial;
+      act(() => sim.set("away"));
+      await wait(50);
+      expect(bridgeNow!.isConnected).toBe(false);
+      act(() => sim.set("dongle"));
+      sim.dongle()!.serial = other ? `${serial}-2` : serial;
+      // loop: test — until the new connection's drafts are read
+      for (let i = 0; i < 200 && !(bridgeNow!.isConnected && drafts!.calibration.saved && drafts!.remap.supported && container.querySelector(".dk-bar")); i++) await wait(10);
+      await wait(100);
+    };
+    // A button pick and a deadzone the board doesn't have yet.
+    const stage = async (button: number, deadzone: number) => {
+      const buttons = await open("buttons");
+      change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, String(button));
+      const sticks = await open("sticks");
+      change(sticks.querySelector<HTMLInputElement>('input[type="range"]')!, String(deadzone));
+      expect(drafts!.remap.dirty && drafts!.calibration.dirty).toBe(true);
+    };
+    beforeEach(() => act(() => m.shownError.clearShownError()));
+
+    it("the same board back: the staged changes are kept, and Save writes them to it", async () => {
+      await live();
+      await stage(15, 22);
+      await replug();
+      expect(drafts!.remap.draft[13]).toBe(15);
+      expect(drafts!.calibration.dirty).toBe(true);
+      expect(drafts!.staged).toBe(true);
+      expect(notice).toBeNull();
+      expect(note()).toBe(t("desktop.bar.staged"));
+      await act(async () => barButton(t("desktop.bar.save")).click());
+      await wait(150);
+      expect(dongle().remap[13]).toBe(15);
+      expect(dongle().calibration[dongle().currentSlot][2]).toBe(22);
+    });
+
+    it("another board: they're dropped and the notice says so; nothing is written to it", async () => {
+      await live();
+      await stage(11, 27);
+      await replug(true);
+      expect(drafts!.staged).toBe(false);
+      expect(drafts!.remap.draft[13]).toBe(dongle().remap[13]);
+      expect(notice).toBe(t("desktop.errors.draftsDropped"));
+      expect(dongle().remap[13]).not.toBe(11);
+      expect(dongle().calibration[dongle().currentSlot][2]).not.toBe(27);
+      expect(note()).toBe(t("desktop.bar.saved"));
+    });
+
+    it("a slot switch: a staged calibration for the old slot is dropped, never written to the new one", async () => {
+      await live();
+      const sticks = await open("sticks");
+      change(sticks.querySelector<HTMLInputElement>('input[type="range"]')!, "33");
+      expect(drafts!.calibration.dirty).toBe(true);
+      const from = dongle().currentSlot;
+      dongle().slots[1] = true;
+      await act(async () => void (await bridgeNow!.client!.switchSlot(from === 1 ? 0 : 1)));
+      await wait(1200); // the identity poll sees the new slot, the calibration is read for it
+      expect(drafts!.calibration.slot).toBe(dongle().currentSlot);
+      expect(drafts!.calibration.dirty).toBe(false);
+      expect(notice).toBe(t("desktop.errors.draftsDropped"));
+      expect(dongle().calibration.map((c) => c[2])).not.toContain(33);
+    });
+
+    it("the PC sleep options: kept for the same board, dropped for another", async () => {
+      await live();
+      const flip = () => act(() => drafts!.power.set((bridgeNow!.identity!.powerFlags ?? 0) ^ 0x02));
+      flip();
+      expect(drafts!.power.dirty).toBe(true);
+      await replug();
+      expect(drafts!.power.dirty).toBe(true);
+      expect(notice).toBeNull();
+      await replug(true);
+      expect(drafts!.power.dirty).toBe(false);
+      expect(notice).toBe(t("desktop.errors.draftsDropped"));
+    });
+
+    it("a game's layout on and off: the staged button changes are set aside, then come back", async () => {
+      await live();
+      const buttons = await open("buttons");
+      change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, "12");
+      expect(drafts!.remap.dirty).toBe(true);
+      const game = Array.from({ length: 16 }, (_, i) => (i === 0 ? 1 : i === 1 ? 0 : i));
+      await act(async () => void (await bridgeNow!.client!.applyRemapTemporary(game)));
+      await wait(1300);
+      expect(drafts!.remap.temporary).toBe(true);
+      expect(drafts!.remap.draft).toEqual(game); // the editor shows the game's buttons
+      await act(async () => void (await bridgeNow!.client!.revertRemap()));
+      await wait(1300);
+      expect(drafts!.remap.temporary).toBe(false);
+      expect(drafts!.remap.draft[13]).toBe(12);
+      expect(drafts!.remap.dirty).toBe(true);
+      expect(notice).toBeNull();
+    });
   });
 
   it("a game's profile on: the bar saves to the profile, nothing staged for the board is written", async () => {

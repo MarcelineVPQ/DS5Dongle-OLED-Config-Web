@@ -7,7 +7,7 @@ import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTr
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import type { Ds5Transport } from "../protocol/transport";
 import { simulatedBoard } from "../desktop/devPreview";
-import { logged } from "../errorText";
+import { KeyedError, logged } from "../errorText";
 import { isWindowShown } from "../desktop/useWindowShown";
 import type { BoardHolder } from "../desktop/api";
 
@@ -114,6 +114,14 @@ export function isBoardBusy(cause: unknown, platform: string | undefined): boole
   return platform !== undefined && platform !== "linux" && isOpenFailure(cause) && cause.name !== "NotFoundError";
 }
 
+// A connect that failed for a passing reason (the board was slow to answer,
+// a transfer hiccup) is tried once more, quietly, after CONNECT_RETRY_MS. A
+// protocol mismatch, firmware this app can't read, an unplugged or busy board
+// are not: trying again changes nothing (busy and replugging retry on their own).
+export const CONNECT_RETRY_MS = 300;
+const PASSING_CONNECT_ERRORS = new Set(["desktop.errors.board.timeout", "desktop.errors.board.short", "desktop.errors.board.transfer", "desktop.errors.board.otherProgram"]);
+export const isPassingConnectError = (cause: unknown): boolean => cause instanceof KeyedError && PASSING_CONNECT_ERRORS.has(cause.key);
+
 export function useDs5Bridge(): UseDs5BridgeResult {
   const { t } = useTranslation();
   const supported = webUsbAvailable();
@@ -178,39 +186,55 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     async (transport: Ds5Transport, quiet = false) => {
       if (!quiet) setOperation("connecting");
       try {
-        const next = new Ds5BridgeClient(transport);
-        await next.transport.open();
-        const id = await next.checkCompatible();
-        const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
-        const normalized = normalizeConfig(cfg);
-        setClient(next);
-        setIdentity(id);
-        setFirmwareVersion(version);
-        setConfig(normalized);
-        // Flash holds this only if the dongle says nothing is unsaved (older
-        // firmware can't say: assume it does, as before).
-        setSavedConfig(id.unsaved ? null : normalized);
-        setDraft(normalized);
-        setSaveState("idle");
-        setError(null);
-        setBusy(null);
-      } catch (cause) {
-        // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice: what holds it where known, Retry, and it connects by itself once free), else the keyed USB/board errors below
-        const platform = window.desktop?.platform;
-        if (isBoardBusy(cause, platform)) {
-          // Let go of the half-open device, so this app doesn't hold it too.
-          await transport.close().catch(logged("closing the board after another program kept it (it's opened again on the next try)"));
-          setError(null);
-          const first = !busyRef.current;
-          setBusy((prev) => prev ?? { holders: [] });
-          if (first) lookUpHolders();
-          return;
+        // loop: SERIAL-REQUIRED — retry/backoff: one quiet second try after a passing error (isPassingConnectError), never more
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const next = new Ds5BridgeClient(transport);
+            // lifetime: OK — closed below on any failure; on success the connection's (freed on disconnect, as WebUsbTransport.open says)
+            await next.transport.open();
+            const id = await next.checkCompatible();
+            const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
+            const normalized = normalizeConfig(cfg);
+            setClient(next);
+            setIdentity(id);
+            setFirmwareVersion(version);
+            setConfig(normalized);
+            // Flash holds this only if the dongle says nothing is unsaved (older
+            // firmware can't say: assume it does, as before).
+            setSavedConfig(id.unsaved ? null : normalized);
+            setDraft(normalized);
+            setSaveState("idle");
+            setError(null);
+            setBusy(null);
+            return;
+          } catch (cause) {
+            // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice: what holds it where known, Retry, and it connects by itself once free), else the keyed USB/board errors below
+            // Let go of the half-open device whatever went wrong, so this app
+            // doesn't keep it claimed (another program, or the next try, can open it).
+            await transport.close().catch(logged("closing the board after a failed connect (it's opened again on the next try)"));
+            if (attempt === 0 && isPassingConnectError(cause)) {
+              await new Promise<void>((resolve) => {
+                // lifetime: OK — fires once (the pause before the one retry)
+                setTimeout(resolve, CONNECT_RETRY_MS);
+              });
+              continue;
+            }
+            const platform = window.desktop?.platform;
+            if (isBoardBusy(cause, platform)) {
+              setError(null);
+              const first = !busyRef.current;
+              setBusy((prev) => prev ?? { holders: [] });
+              if (first) lookUpHolders();
+              return;
+            }
+            // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
+            // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
+            // vanished during Repair USB driver). The setup screen explains that
+            // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
+            if (!(platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
+            return;
+          }
         }
-        // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
-        // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
-        // vanished during Repair USB driver). The setup screen explains that
-        // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
-        if (!(platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
       } finally {
         if (!quiet) setOperation(null);
       }
@@ -281,6 +305,16 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [attach]);
 
+  // What a successful apply, revert or save did to the board's unsaved flag
+  // (identity [19]: RAM differs from flash), set here at once: the 1 s poll
+  // alone left the save bar a second behind. Firmware without the flag: nothing.
+  // A poll read that was on its way meanwhile is dropped (unsavedSetRef).
+  const unsavedSetRef = useRef(0);
+  const setUnsaved = useCallback((unsaved: boolean) => {
+    unsavedSetRef.current++;
+    setIdentity((prev) => (prev && prev.unsaved !== null && prev.unsaved !== unsaved ? { ...prev, unsaved } : prev));
+  }, []);
+
   const run = useCallback(async (op: Exclude<Operation, null>, task: (c: Ds5BridgeClient) => Promise<void>): Promise<boolean> => {
     const c = clientRef.current;
     if (!c) return false;
@@ -316,30 +350,33 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       const normalized = normalizeConfig(sent);
       await c.applyConfig(normalized);
       setConfig(normalized);
+      setUnsaved(!savedConfig || !configsEqual(normalized, savedConfig));
       // Edits made while this was on its way stay (and get applied next).
       setDraft((current) => (current === sent ? normalized : current));
       setSaveState("applied");
     });
-  }, [draft, issues.length, run]);
+  }, [draft, issues.length, run, savedConfig, setUnsaved]);
 
   const saveToFlash = useCallback(async (): Promise<boolean> => {
     if (isDirty) return false;
     return run("saving", async (c) => {
       await c.saveToFlash();
       setSavedConfig(config);
+      setUnsaved(false);
       setSaveState("saved");
     });
-  }, [config, isDirty, run]);
+  }, [config, isDirty, run, setUnsaved]);
 
   const revertToSaved = useCallback(async () => {
     if (!savedConfig) return;
     await run("applying", async (c) => {
       await c.applyConfig(savedConfig);
       setConfig(savedConfig);
+      setUnsaved(false);
       setDraft(savedConfig);
       setSaveState("idle");
     });
-  }, [run, savedConfig]);
+  }, [run, savedConfig, setUnsaved]);
 
   const applyBody = useCallback(
     (body: ConfigBody) =>
@@ -347,10 +384,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         const normalized = normalizeConfig(body);
         await c.applyConfig(normalized);
         setConfig(normalized);
+        setUnsaved(!savedConfig || !configsEqual(normalized, savedConfig));
         setDraft(normalized);
         setSaveState("applied");
       }),
-    [run],
+    [run, savedConfig, setUnsaved],
   );
 
   const reconnectUsb = useCallback(() => run("reconnecting", (c) => c.reconnectUsb()), [run]);
@@ -411,12 +449,14 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     const poll = async () => {
       try {
         if (!operationRef.current) {
+          const unsavedSet = unsavedSetRef.current;
           const id = await client.identity();
           const now = Date.now();
           const lightbar = String(id.lightbar);
           const steady = lightbar === lastLightbar;
           lastLightbar = lightbar;
-          if (!stopped)
+          // An apply or save that finished meanwhile set the unsaved flag itself; this read may predate it.
+          if (!stopped && unsavedSet === unsavedSetRef.current)
             setIdentity((prev) => {
               if (!takeIdentity(prev, id, isWindowShown(), steady, takenAt, now)) return prev;
               takenAt = now;

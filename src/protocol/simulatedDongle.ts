@@ -69,6 +69,8 @@ export interface SimulatedDongleOptions {
   // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
   audioCountersLegacy?: "none" | "cut";
   version?: string;
+  // The board's USB serial number (default: the one simulated board's).
+  serial?: string;
   // BOOTSEL (0xF6 0x08) hands the board to its bootloader: the simulated
   // board (simulatedBoard.ts) then shows up as an RP2350 in BOOTSEL. Without
   // it the device just vanishes (the tests' fake).
@@ -157,6 +159,8 @@ export class SimulatedDongle implements Ds5Transport {
   private readonly started = Date.now();
   isOpen = false;
   gone = false;
+  // Tests set another to plug in a different board.
+  serial: string;
   config: Uint8Array = encodeConfigBody(DEFAULT_CONFIG);
   flashConfig: Uint8Array = this.config.slice();
   remap = Array.from({ length: 16 }, (_, i) => i);
@@ -249,6 +253,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   constructor(private readonly opts: SimulatedDongleOptions = {}) {
     this.oledScreen = opts.live ? 0 : 2;
+    this.serial = opts.serial ?? "E6614103E7A1B2C3";
   }
 
   // Live mode: the firmware's Status screen, packed like the firmware's

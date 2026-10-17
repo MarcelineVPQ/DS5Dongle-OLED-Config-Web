@@ -17,6 +17,7 @@ HTMLCanvasElement.prototype.getContext = (() => null) as never;
 const NEW = "v0.9.5-oled-edition+0.abc1234";
 let root: Root | null = null;
 let container: HTMLDivElement;
+let i18nNow: typeof import("../../src/i18n").default;
 
 beforeAll(() => {
   vi.useFakeTimers();
@@ -69,6 +70,7 @@ async function start(opts: { board?: "dongle" | "bootsel"; version?: string; fau
   vi.resetModules();
   const i18n = (await import("../../src/i18n")).default;
   await i18n.changeLanguage("en");
+  i18nNow = i18n;
   const { useDs5Bridge } = await import("../../src/hooks/useDs5Bridge");
   const { useAppUpdate, useFirmwareUpdate } = await import("../../src/desktop/useUpdates");
   const UpdateBanners = (await import("../../src/desktop/UpdateBanners")).default;
@@ -162,6 +164,16 @@ describe("a firmware update against the simulated board", () => {
     expect(text()).toContain("Firmware 0.9.5 installed. Now pair your controller");
     await watch(new RegExp(NEW.replace(/[.+]/g, "\\$&")));
     expect(board.version).toBe(NEW);
+  });
+
+  it("a board that comes back with another version says so in the user's language", async () => {
+    await start({ file: rp2350Uf2("v0.9.3-oled-edition+0.def5678") });
+    update();
+    await act(() => i18nNow.changeLanguage("de"));
+    await watch(/Nach dem Neustart/);
+    expect(text()).toContain(i18nNow.t("desktop.firmware.wrongVersion", { installed: "v0.9.3-oled-edition+0.def5678", expected: "0.9.5" }));
+    expect(text()).not.toContain("came back reporting");
+    await act(() => i18nNow.changeLanguage("en"));
   });
 
   it("a board that never shows up in BOOTSEL: the plain-words error after the wait", async () => {

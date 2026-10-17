@@ -13,7 +13,7 @@ import { EMPTY_LIBRARY, type LibraryFile, type ProfileSettings } from "../games/
 import { profileTarget } from "./libraryContext";
 import { applyGameProfile, gamePartsOf, ProfileNotApplied, profileCaps, putGameParts, restoreNormal } from "./profileDongle";
 import { captureProfile, layoutForButtons, profileConfig, profileCurves, profileToSave, profileUnsaved, sameGameCurves, settingsFrom, withSettings, type GameCurves } from "./profileValues";
-import { logged } from "../../errorText";
+import { KeyedError, logged } from "../../errorText";
 
 export { nonConfigParts, settingsFrom } from "./profileValues";
 
@@ -350,7 +350,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
           const normalNow = profileInRam.current;
           if (normalNow) {
             const now = normalizeConfig(await client.readConfig());
-            if (!(await applyBody(withSettings(now, normalNow)))) throw new Error("Normal settings not restored before the slot switch");
+            if (!(await applyBody(withSettings(now, normalNow)))) throw new KeyedError("desktop.errors.board.normalNotRestored");
             profileInRam.current = null; // the profile follows again after
           }
           await client.switchSlot(slot);

@@ -14,7 +14,7 @@
 // to profile, useGameProfile.ts); calibration and the PC sleep options belong
 // to the board and wait for the bar once the profile ends (said in their
 // sections), like the board-wide config settings.
-import { createContext, createElement, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
@@ -22,7 +22,7 @@ import { DEFAULT_CALIBRATION, normalizeCalibration, type Calibration } from "../
 import { DEFAULT_CURVES, curvesEqual, type StickCurvePair } from "../../protocol/stickCurve";
 import { causeText } from "../shownError";
 import { useRemap, type Remap } from "./useRemap";
-import { useSlotSettings, type SlotRead } from "./slotSettings";
+import { sameBoard, showDraftsDropped, useSlotSettings, type SlotRead } from "./slotSettings";
 
 export const supportsCalibration = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 5, FEATURES2.calibration);
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
@@ -56,24 +56,27 @@ function useSlotDraft<T>(
   same: (a: T, b: T) => boolean,
   unreadable = "",
 ): SlotDraft<T> {
-  const s = useSlotSettings(bridge, supported, initial, read, unreadable);
+  const s = useSlotSettings(bridge, supported, initial, read, same, unreadable);
   const { client } = bridge;
-  const { slot, saved, draft, setDraft, error, setError, loaded, retry } = s;
-  const dirty = saved !== null && !same(draft, saved);
+  const { slot, saved, draft, setDraft, readFor, error, setError, loaded, retry } = s;
+  // Only against what this connection read: after a reconnect the old values
+  // wait for the new read (useSlotSettings keeps or drops the draft then).
+  const current = !!client && readFor === client;
+  const dirty = current && saved !== null && !same(draft, saved);
   const save = useCallback(async () => {
-    if (!client || saved === null) return false;
+    if (!client || readFor !== client || saved === null) return false;
     setError(null);
     try {
       await write(client, slot, draft);
       const back = await read(client);
-      if (back) loaded(back);
+      if (back) loaded(back, client);
       return true;
     } catch (cause) {
       // error: SHOWN — desktop.errors.boardFailed (causeText, with the other keyed board errors): the section's error line, and the save bar's notice (SaveBar)
       setError(causeText(cause));
       return false;
     }
-  }, [client, saved, setError, write, slot, draft, read, loaded]);
+  }, [client, readFor, saved, setError, write, slot, draft, read, loaded]);
   const revert = useCallback(() => {
     if (saved !== null) setDraft(saved);
   }, [saved, setDraft]);
@@ -98,18 +101,41 @@ export interface PowerDraft {
 
 function usePowerDraft(bridge: UseDs5BridgeResult): PowerDraft {
   const board = bridge.identity?.powerFlags ?? null;
-  const [staged, setStaged] = useState<number | null>(null);
+  const { client, setPowerFlags } = bridge;
+  // The staged bits and the connection they were staged on.
+  const [stagedOn, setStagedOn] = useState<{ bits: number; client: Ds5BridgeClient } | null>(null);
+  const [dropped, setDropped] = useState(0);
+  // A new connection: the staged bits stay for the same board and go for
+  // another (adjusted while rendering, React's pattern for state that follows a value).
+  if (stagedOn && client && stagedOn.client !== client) {
+    if (sameBoard(stagedOn.client, client)) setStagedOn({ ...stagedOn, client });
+    else {
+      setStagedOn(null);
+      setDropped((n) => n + 1);
+    }
+  }
+  // lifetime: OK — acquires nothing (the notice for staged options another board dropped)
+  useEffect(() => {
+    if (dropped) showDraftsDropped();
+  }, [dropped]);
+  const staged = stagedOn && stagedOn.client === client ? stagedOn.bits : null;
   const dirty = staged !== null && board !== null && staged !== board;
-  const { setPowerFlags } = bridge;
   const save = useCallback(async () => {
     if (!dirty || staged === null) return true;
     const ok = await setPowerFlags(staged);
-    if (ok) setStaged(null);
+    if (ok) setStagedOn(null);
     return ok;
   }, [dirty, staged, setPowerFlags]);
   return useMemo(
-    () => ({ supported: board !== null, value: dirty ? staged : board, set: (bits: number) => setStaged(bits === board ? null : bits), dirty, save, revert: () => setStaged(null) }),
-    [board, dirty, staged, save],
+    () => ({
+      supported: board !== null,
+      value: dirty ? staged : board,
+      set: (bits: number) => setStagedOn(bits === board || !client ? null : { bits, client }),
+      dirty,
+      save,
+      revert: () => setStagedOn(null),
+    }),
+    [board, client, dirty, staged, save],
   );
 }
 

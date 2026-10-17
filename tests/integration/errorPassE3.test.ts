@@ -16,6 +16,7 @@ import { errorText, KeyedError, keyedText, translateKeyed } from "../../src/erro
 import UsbAccessSetup from "../../src/desktop/UsbAccessSetup";
 import GamesPage from "../../src/desktop/pages/GamesPage";
 import { mainText } from "../../electron/main/mainText";
+import { DeviceGoneError, ReportStalledError } from "../../src/protocol/transport";
 import { fakeBridge } from "../support/gamePage";
 import { homeDesktop, homeLibrary, homeReport } from "../support/gamesHome";
 
@@ -64,6 +65,14 @@ describe("keyed text", () => {
   it("a board error from the protocol code is said in the user's language", () => {
     expect(causeText(new KeyedError("desktop.errors.board.noOledKeys"))).toBe(de("desktop.errors.board.noOledKeys"));
     expect(causeText(new KeyedError("desktop.errors.board.protocol", { have: "2.0", need: "1.x" }))).toContain("2.0");
+  });
+
+  it("the transport's own errors (the board gone, a refused report) are said in the user's language", () => {
+    expect(causeText(new DeviceGoneError())).toBe(de("desktop.errors.usb.gone"));
+    expect(causeText(new ReportStalledError(0xf6))).toBe(de("desktop.errors.board.stalled", { report: "0xF6" }));
+    expect(causeText(new KeyedError("desktop.errors.board.normalNotRestored"))).toBe(de("desktop.errors.board.normalNotRestored"));
+    // loop: test — 2 errors
+    for (const e of [new DeviceGoneError(), new ReportStalledError(0xf6)]) expect(causeText(e)).not.toMatch(/Your board|refused report/);
   });
 
   it("WebUSB's English errors are said by kind", () => {

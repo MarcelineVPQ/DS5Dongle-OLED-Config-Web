@@ -280,7 +280,8 @@
       "noBootsel": "{{device, capitalize}} didn't show up in BOOTSEL mode. Unplug it, hold its BOOTSEL button while plugging it back in, and try again.",
       "didntStart": "The new firmware didn't start: {{device}} came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.",
       "installAgain": "Install again",
-      "waitForApp": "Wait for the app update to finish first."
+      "waitForApp": "Wait for the app update to finish first.",
+      "wrongVersion": "After restarting, {{device}} reports firmware {{installed}} instead of {{expected}}. Install the update again."
     },
     "recovered": {
       "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
@@ -1790,7 +1791,9 @@
         "short": "{{device, capitalize}} sent an incomplete answer. Try again; if it keeps happening, unplug it and plug it back in.",
         "noInterface": "The firmware on {{device}} has no settings interface for this app. Update the firmware first.",
         "transfer": "Talking to {{device}} failed (report {{report}}). Unplug it and plug it back in.",
-        "badConfig": "{{device, capitalize}} sent settings this app can't read. Update the firmware or the app."
+        "badConfig": "{{device, capitalize}} sent settings this app can't read. Update the firmware or the app.",
+        "stalled": "{{device, capitalize}} refused the request (report {{report}}): its firmware doesn't know it. Update the firmware.",
+        "normalNotRestored": "Your normal settings couldn't be put back first (a game's profile was on), so the slot wasn't switched. Try again."
       },
       "usb": {
         "network": "The app couldn't talk to {{device}}: another program may be using it, or the USB connection dropped. Close other configurator windows, then unplug {{device}} and plug it back in.",
@@ -1829,7 +1832,8 @@
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
       },
       "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
-      "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again."
+      "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again.",
+      "draftsDropped": "Unsaved changes weren't kept: another board or pairing slot is in use now. Make them again if you still want them."
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",

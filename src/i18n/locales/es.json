@@ -281,7 +281,8 @@
       "noBootsel": "{{device, capitalize}} no apareció en modo BOOTSEL. Desconéctalo, mantén pulsado su botón BOOTSEL mientras lo vuelves a conectar e inténtalo de nuevo.",
       "didntStart": "El firmware nuevo no arrancó: {{device}} volvió en modo BOOTSEL y sigue esperando firmware. Déjalo conectado e instálalo de nuevo.",
       "installAgain": "Instalar de nuevo",
-      "waitForApp": "Espera primero a que termine la actualización de la app."
+      "waitForApp": "Espera primero a que termine la actualización de la app.",
+      "wrongVersion": "Tras reiniciar, {{device}} indica el firmware {{installed}} en lugar de {{expected}}. Vuelve a instalar la actualización."
     },
     "recovered": {
       "partial": "{{what}}: tenía partes dañadas. Esas partes volvieron a sus valores predeterminados y el resto se conservó. La copia dañada se guardó como {{kept}}.",
@@ -1791,7 +1792,9 @@
         "short": "{{device, capitalize}} envió una respuesta incompleta. Inténtalo otra vez; si vuelve a pasar, desconecta {{device}} y vuelve a conectarlo.",
         "noInterface": "El firmware {{device_de}} no tiene interfaz de ajustes para esta app. Actualiza primero el firmware.",
         "transfer": "Falló la comunicación con {{device}} (informe {{report}}). Desconéctalo y vuelve a conectarlo.",
-        "badConfig": "{{device, capitalize}} envió ajustes que esta app no puede leer. Actualiza el firmware o la app."
+        "badConfig": "{{device, capitalize}} envió ajustes que esta app no puede leer. Actualiza el firmware o la app.",
+        "stalled": "{{device, capitalize}} rechazó la solicitud (informe {{report}}): su firmware no la conoce. Actualiza el firmware.",
+        "normalNotRestored": "No se pudieron restaurar antes tus ajustes normales (había un perfil de juego activo), así que la ranura no cambió. Inténtalo otra vez."
       },
       "usb": {
         "network": "La app no pudo comunicarse con {{device}}: puede que otro programa lo esté usando o que se haya cortado la conexión USB. Cierra otras ventanas del configurador y luego desconecta {{device}} y vuelve a conectarlo.",
@@ -1830,7 +1833,8 @@
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
-      "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar."
+      "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar.",
+      "draftsDropped": "Los cambios sin guardar no se conservaron: ahora se usa otra placa u otro slot de emparejamiento. Vuelve a hacerlos si todavía los quieres."
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",

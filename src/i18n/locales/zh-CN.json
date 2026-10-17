@@ -281,7 +281,8 @@
       "noBootsel": "{{device}}没有以 BOOTSEL 模式出现。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。",
       "didntStart": "新固件没有启动：{{device}}回到了 BOOTSEL 模式，仍在等待固件。请保持连接，然后重新安装。",
       "installAgain": "重新安装",
-      "waitForApp": "请先等待应用更新完成。"
+      "waitForApp": "请先等待应用更新完成。",
+      "wrongVersion": "重启后，{{device}} 报告的固件是 {{installed}}，而不是 {{expected}}。请重新安装更新。"
     },
     "recovered": {
       "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
@@ -1780,7 +1781,9 @@
         "short": "{{device}} 发送的应答不完整。请重试；如果仍然发生，请拔下 {{device}} 再插上。",
         "noInterface": "{{device}} 的固件没有供此应用使用的设置接口。请先更新固件。",
         "transfer": "与 {{device}} 通信失败（报告 {{report}}）。请拔下后重新插上。",
-        "badConfig": "{{device}} 发送了此应用无法读取的设置。请更新固件或应用。"
+        "badConfig": "{{device}} 发送了此应用无法读取的设置。请更新固件或应用。",
+        "stalled": "{{device}} 拒绝了该请求（报告 {{report}}）：它的固件不支持。请更新固件。",
+        "normalNotRestored": "未能先恢复你的常规设置（游戏配置文件正在使用），因此没有切换槽位。请重试。"
       },
       "usb": {
         "network": "应用无法与 {{device}} 通信：可能有其他程序正在使用它，或 USB 连接已断开。请关闭其他配置工具窗口，然后拔下 {{device}} 再插上。",
@@ -1819,7 +1822,8 @@
         "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。"
       },
       "headsetUndo": "无法切回控制器的声音：{{reason}}",
-      "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。"
+      "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。",
+      "draftsDropped": "未保存的更改没有保留：现在使用的是另一块开发板或另一个配对槽位。如果仍需要，请重新更改。"
     },
     "notices": {
       "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。",

@@ -281,7 +281,8 @@
       "noBootsel": "{{device, capitalize}} ist nicht im BOOTSEL-Modus erschienen. Zieh {{device_akk}} ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal.",
       "didntStart": "Die neue Firmware ist nicht gestartet: {{device}} ist wieder im BOOTSEL-Modus und wartet noch auf Firmware. Nicht abziehen und die Firmware erneut installieren.",
       "installAgain": "Erneut installieren",
-      "waitForApp": "Warte zuerst, bis das App-Update fertig ist."
+      "waitForApp": "Warte zuerst, bis das App-Update fertig ist.",
+      "wrongVersion": "Nach dem Neustart meldet {{device}} die Firmware {{installed}} statt {{expected}}. Installiere das Update noch einmal."
     },
     "recovered": {
       "partial": "{{what}}: Einige Teile waren beschädigt. Sie wurden auf die Standardwerte zurückgesetzt, alles andere blieb erhalten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
@@ -1791,7 +1792,9 @@
         "short": "{{device, capitalize}} hat eine unvollständige Antwort gesendet. Versuch es noch einmal; wenn es wieder passiert, zieh {{device_akk}} ab und steck es wieder ein.",
         "noInterface": "Die Firmware auf {{device_dat}} hat keine Einstellungs-Schnittstelle für diese App. Aktualisiere zuerst die Firmware.",
         "transfer": "Die Verbindung mit {{device_dat}} ist fehlgeschlagen (Report {{report}}). Zieh {{device_akk}} ab und steck es wieder ein.",
-        "badConfig": "{{device, capitalize}} hat Einstellungen gesendet, die diese App nicht lesen kann. Aktualisiere die Firmware oder die App."
+        "badConfig": "{{device, capitalize}} hat Einstellungen gesendet, die diese App nicht lesen kann. Aktualisiere die Firmware oder die App.",
+        "stalled": "{{device, capitalize}} hat die Anfrage abgelehnt (Report {{report}}): Die Firmware kennt sie nicht. Aktualisiere die Firmware.",
+        "normalNotRestored": "Deine normalen Einstellungen konnten vorher nicht wiederhergestellt werden (ein Spielprofil war aktiv), daher wurde der Slot nicht gewechselt. Versuch es noch einmal."
       },
       "usb": {
         "network": "Die App konnte nicht mit {{device_dat}} sprechen: Vielleicht benutzt es ein anderes Programm, oder die USB-Verbindung ist abgebrochen. Schließ andere Konfigurator-Fenster, zieh dann {{device_akk}} ab und steck es wieder ein.",
@@ -1830,7 +1833,8 @@
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
-      "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal."
+      "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal.",
+      "draftsDropped": "Nicht gespeicherte Änderungen wurden verworfen: Jetzt ist ein anderes Board oder ein anderer Kopplungs-Slot aktiv. Nimm sie noch einmal vor, wenn du sie noch willst."
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",

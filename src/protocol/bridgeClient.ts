@@ -69,6 +69,10 @@ export const FUNC = {
   oledPad: 0x19, // protocol 1.19: [button, hold ms lo, hi], a controller button for the OLED screens only (games never see it)
 } as const;
 
+// The commands that take the board off USB on purpose: losing it after one of
+// these is their success. For anything else it means the outcome is unknown.
+const LEAVES_THE_BUS: ReadonlySet<number> = new Set([FUNC.reconnectUsb, FUNC.reboot, FUNC.bootsel]);
+
 // The protocol major this app speaks. A dongle reporting another major is
 // refused (layouts may have changed); a newer minor only adds features.
 export const SUPPORTED_PROTO_MAJOR = 1;
@@ -445,7 +449,9 @@ export class Ds5BridgeClient {
   private commandQueue: Promise<unknown> = Promise.resolve();
 
   // Send an 0xF6 function and wait until the dongle reports its outcome.
-  // Reboot / BOOTSEL resolve "gone" once the device leaves the bus.
+  // Reboot / BOOTSEL / USB reconnect resolve "gone" once the device leaves the
+  // bus; any other command that loses the board on the way throws (its outcome,
+  // a save to flash among them, is unknown).
   command(func: number, args: number[] = []): Promise<"ok" | "gone"> {
     const run = this.commandQueue.then(() => this.runCommand(func, args));
     // error: NOT-WORTH — the queue's own copy; the caller gets \`run\` with the error
@@ -466,7 +472,10 @@ export class Ds5BridgeClient {
       try {
         id = await this.identity();
       } catch (cause) {
-        if (cause instanceof DeviceGoneError) return "gone";
+        if (cause instanceof DeviceGoneError) {
+          if (LEAVES_THE_BUS.has(func)) return "gone";
+          throw new KeyedError("desktop.errors.usb.gone", undefined, { cause });
+        }
         throw cause;
       }
       if (id.sequence !== expected) throw new KeyedError("desktop.errors.board.otherProgram");

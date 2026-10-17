@@ -281,7 +281,8 @@
       "noBootsel": "{{device, capitalize}} n’est pas apparu en mode BOOTSEL. Débranche-le, maintiens son bouton BOOTSEL en le rebranchant, puis réessaie.",
       "didntStart": "Le nouveau firmware n’a pas démarré : {{device}} est revenu en mode BOOTSEL et attend toujours un firmware. Laisse-le branché et réinstalle-le.",
       "installAgain": "Réinstaller",
-      "waitForApp": "Attends d'abord la fin de la mise à jour de l'appli."
+      "waitForApp": "Attends d'abord la fin de la mise à jour de l'appli.",
+      "wrongVersion": "Après le redémarrage, {{device}} indique le firmware {{installed}} au lieu de {{expected}}. Réinstalle la mise à jour."
     },
     "recovered": {
       "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
@@ -1791,7 +1792,9 @@
         "short": "{{device, capitalize}} a envoyé une réponse incomplète. Réessaie ; si ça se reproduit, débranche {{device}} puis rebranche-le.",
         "noInterface": "Le firmware {{device_de}} n'a pas d'interface de réglages pour cette appli. Mets d'abord le firmware à jour.",
         "transfer": "La communication avec {{device}} a échoué (rapport {{report}}). Débranche-le puis rebranche-le.",
-        "badConfig": "{{device, capitalize}} a envoyé des réglages que cette appli ne sait pas lire. Mets à jour le firmware ou l'appli."
+        "badConfig": "{{device, capitalize}} a envoyé des réglages que cette appli ne sait pas lire. Mets à jour le firmware ou l'appli.",
+        "stalled": "{{device, capitalize}} a refusé la requête (rapport {{report}}) : son firmware ne la connaît pas. Mets le firmware à jour.",
+        "normalNotRestored": "Tes réglages habituels n'ont pas pu être remis d'abord (un profil de jeu était actif), donc l'emplacement n'a pas changé. Réessaie."
       },
       "usb": {
         "network": "L'appli n'a pas pu communiquer avec {{device}} : un autre programme l'utilise peut-être, ou la connexion USB a été coupée. Ferme les autres fenêtres de configuration, puis débranche {{device}} et rebranche-le.",
@@ -1830,7 +1833,8 @@
         "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
       },
       "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
-      "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer."
+      "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer.",
+      "draftsDropped": "Les modifications non enregistrées n'ont pas été gardées : une autre carte ou un autre slot d'association est utilisé maintenant. Refais-les si tu les veux toujours."
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",

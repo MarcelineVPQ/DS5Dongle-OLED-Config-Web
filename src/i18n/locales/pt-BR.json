@@ -281,7 +281,8 @@
       "noBootsel": "{{device, capitalize}} não apareceu no modo BOOTSEL. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez.",
       "didntStart": "O firmware novo não iniciou: {{device}} voltou no modo BOOTSEL, ainda esperando firmware. Deixe conectado e instale de novo.",
       "installAgain": "Instalar de novo",
-      "waitForApp": "Espere primeiro a atualização do app terminar."
+      "waitForApp": "Espere primeiro a atualização do app terminar.",
+      "wrongVersion": "Depois de reiniciar, {{device}} informa o firmware {{installed}} em vez de {{expected}}. Instale a atualização de novo."
     },
     "recovered": {
       "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
@@ -1791,7 +1792,9 @@
         "short": "{{device, capitalize}} enviou uma resposta incompleta. Tente de novo; se continuar acontecendo, desconecte {{device}} e conecte de novo.",
         "noInterface": "O firmware {{device_de}} não tem interface de configurações para este app. Atualize o firmware primeiro.",
         "transfer": "A comunicação com {{device}} falhou (relatório {{report}}). Desconecte e conecte de novo.",
-        "badConfig": "{{device, capitalize}} enviou configurações que este app não consegue ler. Atualize o firmware ou o app."
+        "badConfig": "{{device, capitalize}} enviou configurações que este app não consegue ler. Atualize o firmware ou o app.",
+        "stalled": "{{device, capitalize}} recusou o pedido (relatório {{report}}): o firmware não o conhece. Atualize o firmware.",
+        "normalNotRestored": "Não foi possível restaurar antes suas configurações normais (um perfil de jogo estava ativo), então o slot não mudou. Tente de novo."
       },
       "usb": {
         "network": "O app não conseguiu falar com {{device}}: talvez outro programa esteja usando, ou a conexão USB caiu. Feche outras janelas do configurador, depois desconecte {{device}} e conecte de novo.",
@@ -1830,7 +1833,8 @@
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
       },
       "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
-      "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo."
+      "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo.",
+      "draftsDropped": "As alterações não salvas não foram mantidas: agora outra placa ou outro slot de emparelhamento está em uso. Faça-as de novo se ainda quiser."
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",
