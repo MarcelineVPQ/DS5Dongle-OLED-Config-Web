@@ -1653,7 +1653,6 @@
       "changes": "Was dieses Spiel ändert (alles andere nutzt deine normalen Einstellungen):",
       "allNormal": "Für dieses Spiel ist noch nichts geändert: Es nutzt deine normalen Einstellungen. Mit „Auf der Controller-Seite bearbeiten“ änderst du sie nur für dieses Spiel.",
       "useNormal": "{{name}}. Meine normale Einstellung verwenden",
-      "normalSub": "Deine normale Einstellung",
       "on": "An",
       "off": "Aus",
       "copyHint": "Dieses Spiel bekommt die Einstellungen, die jetzt auf {{device_dat}} sind",

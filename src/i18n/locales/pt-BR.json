@@ -1653,7 +1653,6 @@
       "changes": "O que este jogo muda (todo o resto usa suas configurações normais):",
       "allNormal": "Nada mudou para este jogo ainda: ele usa suas configurações normais. \"Editar na página Controle\" muda qualquer uma só para este jogo.",
       "useNormal": "{{name}}. Usar minha configuração normal",
-      "normalSub": "Sua configuração normal",
       "on": "Ligado",
       "off": "Desligado",
       "copyHint": "Este jogo recebe as configurações que estão {{device_em}} agora",

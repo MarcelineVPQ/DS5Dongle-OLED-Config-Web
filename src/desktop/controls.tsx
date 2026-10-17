@@ -393,26 +393,11 @@ export function BusyButton({ onClick, children, className = "dk-btn", disabled, 
 
 // Haptics strength for the two grips: Left and Right, with Link (on while
 // they're equal) moving both together. Firmware before protocol 1.6 has one
-// strength for both: then a single slider. Used by the Haptics panel and game
-// profiles, so both behave the same.
-export function GripHaptics({
-  left,
-  right,
-  split,
-  sub,
-  invalid,
-  onChange,
-}: {
-  left: number;
-  right: number;
-  split: boolean;
-  sub?: string;
-  invalid?: boolean;
-  onChange: (left: number, right: number) => void;
-}) {
+// strength for both: then a single slider. Used by the Haptic feedback section.
+export function GripHaptics({ left, right, split, invalid, onChange }: { left: number; right: number; split: boolean; invalid?: boolean; onChange: (left: number, right: number) => void }) {
   const { t } = useTranslation();
   const [linked, setLinked] = useState(() => Math.abs(left - right) < 0.001);
-  if (!split) return <Slider label={t("haptics.gainLabel")} sub={sub} value={left} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(v, v)} />;
+  if (!split) return <Slider label={t("haptics.gainLabel")} value={left} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(v, v)} />;
   return (
     <>
       <Toggle
@@ -424,8 +409,8 @@ export function GripHaptics({
           if (on && left !== right) onChange(left, left); // linking evens them out at the left value
         }}
       />
-      <Slider label={t("desktop.grips.left")} sub={sub} value={left} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(v, linked ? v : right)} />
-      <Slider label={t("desktop.grips.right")} sub={sub} value={right} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(linked ? v : left, v)} />
+      <Slider label={t("desktop.grips.left")} value={left} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(v, linked ? v : right)} />
+      <Slider label={t("desktop.grips.right")} value={right} min={1} max={6} step={0.1} digits={1} unit="×" invalid={invalid} onChange={(v) => onChange(linked ? v : left, v)} />
     </>
   );
 }

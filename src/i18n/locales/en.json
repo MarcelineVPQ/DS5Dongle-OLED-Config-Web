@@ -1652,7 +1652,6 @@
       "changes": "What this game changes (everything else uses your normal settings):",
       "allNormal": "Nothing changed for this game yet: it uses your normal settings. Edit on the Controller page to change any of them for this game.",
       "useNormal": "{{name}}. Use my normal setting",
-      "normalSub": "Your normal setting",
       "on": "On",
       "off": "Off",
       "copyHint": "This game gets the settings on {{device}} now",
