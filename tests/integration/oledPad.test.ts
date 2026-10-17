@@ -11,7 +11,7 @@ import { CommandError, Ds5BridgeClient, FEATURES3, FUNC, supportsFeature3 } from
 import { decodeConfigBody } from "../../src/protocol/config";
 import { SimulatedDongle } from "../../src/protocol/simulatedDongle";
 import { SCREEN } from "../../src/oled/screenNames";
-import { SETTINGS_ITEMS, type SimBoard } from "../../src/oled/simScreens";
+import { SETTINGS_GROUPS, SETTINGS_ITEMS, type SimBoard } from "../../src/oled/simScreens";
 import { padAction } from "../../src/desktop/dongle/OledPad";
 import { useDs5Bridge, type UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 
@@ -68,27 +68,48 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
     expect(dongle.oledScreens.presses).toEqual([]);
   });
 
-  it("Settings: the directional buttons move and adjust, △ saves; Reset only after a 2 s hold", async () => {
+  it("Settings: a category menu (✕ or → opens a group, ○ back); the directional buttons move and adjust, △ saves; Reset only after a 2 s hold", async () => {
     const { dongle, client } = await setup();
     await goTo(client, dongle, SCREEN.settings);
-    const inact = SETTINGS_ITEMS.findIndex((it) => it.label === "Inact");
-    // loop: test — down to "Inact"
-    for (let i = 0; i < inact; i++) await client.pressOledPad("down");
-    expect(dongle.oledScreens.sel).toBe(inact);
+    const board = { body: () => savedBody(dongle), powerFlags: () => 0 } as unknown as SimBoard;
+    const screen = () => dongle.oledScreens.lines(SCREEN.settings, board)!;
+    // The menu: the six groups with their sizes, as firmware 0.9.5-dev.19 draws them.
+    expect(screen().title).toBe("Settings");
+    expect(screen().rows).toEqual(["> Haptics/trigger 6", "  Audio 9", "  Connection 4", "  Screen & lights 4", "  PC sleep 2"]);
+    expect(screen().footer).toBe("X=open  Tri=save");
+    expect(SETTINGS_GROUPS.reduce((n, g) => (g.first === n ? n + g.count : NaN), 0)).toBe(SETTINGS_ITEMS.length); // the groups tile the items, in order
+    // Connection → Idle time.
+    await client.pressOledPad("down");
+    await client.pressOledPad("down");
+    await client.pressOledPad("cross");
+    expect(screen().title).toBe("Connection");
+    expect(screen().footer).toBe("O=back  Tri=save");
+    const idle = SETTINGS_ITEMS.findIndex((it) => it.label === "Idle time");
+    // loop: test — down to "Idle time"
+    while (dongle.oledScreens.sel !== idle) await client.pressOledPad("down");
     const before = savedBody(dongle).inactiveTime;
     await client.pressOledPad("right");
     await client.pressOledPad("right");
     await client.pressOledPad("left");
     expect(dongle.oledScreens.dirty).toBe(true);
+    expect(screen().title).toBe("Connection (*)");
     expect(savedBody(dongle).inactiveTime).toBe(before); // not saved yet
     await client.pressOledPad("triangle");
     expect(savedBody(dongle).inactiveTime).toBe(before + 5);
     expect(dongle.oledScreens.status).toBe("Saved!");
     expect(dongle.oledScreens.dirty).toBe(false);
     await client.pressOledPad("up");
-    expect(dongle.oledScreens.sel).toBe(inact - 1);
-    // loop: test — up to "Reset to defaults"
-    while (SETTINGS_ITEMS[dongle.oledScreens.sel].label !== "Reset to defaults") await client.pressOledPad("up");
+    expect(dongle.oledScreens.sel).toBe(idle - 1);
+    // ○ back to the menu (its cursor kept), then → opens Reset.
+    await client.pressOledPad("circle");
+    expect(dongle.oledScreens.inGroup).toBe(false);
+    expect(dongle.oledScreens.group).toBe(2);
+    // loop: test — down to "Reset"
+    while (SETTINGS_GROUPS[dongle.oledScreens.group].name !== "Reset") await client.pressOledPad("down");
+    await client.pressOledPad("right");
+    expect(SETTINGS_ITEMS[dongle.oledScreens.sel].label).toBe("Reset to defaults");
+    dongle.oledScreens.status = ""; // the firmware's "Saved!" shows for a moment, then the row's hint
+    expect(screen().footer).toBe("Hold Tri 2s = RESET");
     await client.pressOledPad("triangle", 500); // let go too soon: nothing
     expect(savedBody(dongle).inactiveTime).toBe(before + 5);
     await client.pressOledPad("triangle", 2000);
@@ -100,12 +121,13 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
     expect(dongle.slots).toEqual([false, false, false, false]);
   });
 
-  it("Settings: Hap Left and Hap Right adjust each grip on its own (firmware PR #22)", async () => {
+  it("Settings: Vibration L and Vibration R adjust each grip on its own (firmware PR #22)", async () => {
     const { dongle, client } = await setup();
     await goTo(client, dongle, SCREEN.settings);
-    expect(SETTINGS_ITEMS.slice(0, 2).map((it) => it.label)).toEqual(["Hap Left", "Hap Right"]);
+    expect(SETTINGS_ITEMS.slice(0, 2).map((it) => it.label)).toEqual(["Vibration L", "Vibration R"]);
     const before = savedBody(dongle);
-    await client.pressOledPad("down"); // Hap Right
+    await client.pressOledPad("cross"); // Haptics/trigger
+    await client.pressOledPad("down"); // Vibration R
     await client.pressOledPad("right");
     await client.pressOledPad("triangle");
     const after = savedBody(dongle);
@@ -114,8 +136,8 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
     // The screen's rows come from the screens' own copy after the save (the board is not read again).
     const board = { body: () => after, powerFlags: () => 0 } as unknown as SimBoard;
     const rows = dongle.oledScreens.lines(SCREEN.settings, board)!.rows;
-    expect(rows[0]).toBe(`  Hap Left ${before.hapticsGain.toFixed(1)}x`);
-    expect(rows[1]).toBe(`> Hap Right ${after.hapticsGainRight.toFixed(1)}x`);
+    expect(rows[0]).toBe(`  Vibration L ${before.hapticsGain.toFixed(1)}x`);
+    expect(rows[1]).toBe(`> Vibration R ${after.hapticsGainRight.toFixed(1)}x`);
   });
 
   it("Slots, Lightbar, Trigger Test and Diagnostics react to their buttons", async () => {
