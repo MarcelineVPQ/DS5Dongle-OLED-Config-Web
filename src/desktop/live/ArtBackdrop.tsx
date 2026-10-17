@@ -20,6 +20,7 @@ import { useReducedMotion } from "../motion";
 import { fadeProgress, panClock, panTransform } from "./backdropPan";
 import { atNextTick, onFrameTick } from "../frameTick";
 import { logged } from "../../errorText";
+import { onGamesAllowed } from "../games/consent";
 
 // The background: "default" (the swirl field, what a new install shows),
 // "art" (game artwork when there is some, else the swirls) or "off".
@@ -53,6 +54,8 @@ const subscribePage = (l: () => void) => {
 // named by launcher and id ("steam:4078430"), so every shot matches.
 const PIN_KEY = "ds5.dev.backdropGame";
 
+const NO_KEYS: string[] = [];
+
 // The open game page's art, else the running game's, else the most recently
 // played games in turn.
 function useBackdropKeys(): string[] {
@@ -61,15 +64,38 @@ function useBackdropKeys(): string[] {
   const desktop = window.desktop;
   const [keys, setKeys] = useState<string[]>([]);
   const [running, setRunning] = useState<string | null>(null);
-  // lifetime: OK — cleanup: stops the retry timer, drops late reads, unsubscribes the running game
+  // Games consent (the gamesScanAllowed setting): without it there's no art to
+  // ask for, colors only (asking was refused in the main process and logged an
+  // error at every page load). Given or taken back mid-session (Games' consent
+  // card, App settings → Privacy), the art follows without a reload.
+  const [allowed, setAllowed] = useState(false);
+  // lifetime: OK — cleanup: drops a late settings read, onGamesAllowed's remover (removeEventListener)
   useEffect(() => {
     // No Games where it isn't supported (macOS): no art to ask for, colors only
     // (asking threw in the main process at every start: macOS smoke test).
     if (!desktop || !gamesSupported()) return;
     let live = true;
+    desktop
+      .getSettings()
+      .then((s) => live && setAllowed(s.gamesScanAllowed))
+      .catch(logged("reading the Games consent for the backdrop (the colors-only backdrop stays)"));
+    // lifetime: OK — the remover runs in the effect cleanup (unmount)
+    const off = onGamesAllowed((value) => {
+      live = false; // a consent change beats a settings read still on its way
+      setAllowed(value);
+    });
+    return () => {
+      live = false;
+      off();
+    };
+  }, [desktop]);
+  // lifetime: OK — cleanup: stops the retry timer, drops late reads, unsubscribes the running game
+  useEffect(() => {
+    if (!desktop || !allowed) return;
+    let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     // The first scan runs in the background at start: until it's done the
-    // details are empty, so ask again for a minute (no consent: colors only).
+    // details are empty, so ask again for a minute.
     const load = (tries: number): void =>
       void desktop
         .gamesDetails()
@@ -94,14 +120,16 @@ function useBackdropKeys(): string[] {
       clearTimeout(timer);
       off();
     };
-  }, [desktop]);
+  }, [desktop, allowed]);
+  // Consent taken back: no art (the main process forgot it too), colors only.
+  const games = allowed ? keys : NO_KEYS;
   if (pin) {
     // loop: HOT-PATH-OK — N ≤ 8 recent games with art, on render
-    const pinned = keys.find((k) => k.endsWith(`:${pin}`));
+    const pinned = games.find((k) => k.endsWith(`:${pin}`));
     if (pinned) return [pinned];
   }
   if (page) return [page];
-  return running && keys.includes(running) ? [running] : keys;
+  return running && games.includes(running) ? [running] : games;
 }
 
 // One image, drawn small (= blurred) into a canvas.

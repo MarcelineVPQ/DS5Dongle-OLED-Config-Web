@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **No more error in the log at every start with Games off.** With Games not allowed, the Controller page's background still asked for game art, was refused and logged an error each time the page loaded. It now asks only once you allow Games, and the art shows as soon as you do, without a restart.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed
