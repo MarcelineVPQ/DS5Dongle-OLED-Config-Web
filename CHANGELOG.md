@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **A click on the controller drawing takes you to that setting.** With the settings panel hidden, or with Button assignments already open, a click on a button of the drawing did nothing you could see. Now every click on a part shows the panel, opens its section, scrolls to the row and highlights it once. The player lights, which have no setting, no longer look clickable.
 - **Ratings save on Development builds.** A rating or a report change on a 0.9.5-dev build was refused because of the version's "-dev" part, so it didn't stick.
 - **Quitting no longer leaves a crash report behind (Linux AppImage).** Closing the app could end with a "ds5-dongle-configurator crashed" notice: Chromium's helper processes finish exiting a moment after the app, and the AppImage's files could go away first. The app now keeps its files available until all of its processes have exited. After **Restart now** for an update, the new copy no longer has its files pulled out from under it when it quits, and the old copy no longer stays behind in the background (holding the old version's file) once the new one starts.
 
