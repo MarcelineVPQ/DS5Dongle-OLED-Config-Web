@@ -221,6 +221,11 @@ const powershellExe = (): string => join(process.env.SystemRoot ?? "C:\\Windows"
 
 export const shellStartArgs = (cmd: string, args: string[]): string[] => ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(shellStartScript(cmd, args), "utf16le").toString("base64")];
 
+/** How long PowerShell may take to start the program before shellStart
+ * gives up (it may still start: never risk a second copy). Its cold start is
+ * most of the time a Windows start takes, and grows with CPU load. */
+export const SHELL_START_TIMEOUT_MS = 15_000;
+
 export function shellStart(cmd: string, args: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
   return new Promise((resolve) => {
     // Not detached: a PowerShell without a console (DETACHED_PROCESS) exits
@@ -234,7 +239,7 @@ export function shellStart(cmd: string, args: string[], env: NodeJS.ProcessEnv):
     const timer = setTimeout(() => {
       child.kill();
       resolve(false); // it may still start: never risk a second copy
-    }, 15_000);
+    }, SHELL_START_TIMEOUT_MS);
     const done = (ok: boolean) => {
       clearTimeout(timer);
       resolve(ok);
