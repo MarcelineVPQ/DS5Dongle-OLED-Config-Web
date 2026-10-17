@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.15] - 2026-10-16
+
 ### Changed
 
 - **The save bar shows only where it saves.** App settings keeps your choices as you change them, so the board's Revert / Save bar is gone from it; it stays on the Controller and Pico 2 W pages, whose settings it saves.
