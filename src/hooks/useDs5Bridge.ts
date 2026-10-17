@@ -305,6 +305,16 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [attach]);
 
+  // What a successful apply, revert or save did to the board's unsaved flag
+  // (identity [19]: RAM differs from flash), set here at once: the 1 s poll
+  // alone left the save bar a second behind. Firmware without the flag: nothing.
+  // A poll read that was on its way meanwhile is dropped (unsavedSetRef).
+  const unsavedSetRef = useRef(0);
+  const setUnsaved = useCallback((unsaved: boolean) => {
+    unsavedSetRef.current++;
+    setIdentity((prev) => (prev && prev.unsaved !== null && prev.unsaved !== unsaved ? { ...prev, unsaved } : prev));
+  }, []);
+
   const run = useCallback(async (op: Exclude<Operation, null>, task: (c: Ds5BridgeClient) => Promise<void>): Promise<boolean> => {
     const c = clientRef.current;
     if (!c) return false;
@@ -340,30 +350,33 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       const normalized = normalizeConfig(sent);
       await c.applyConfig(normalized);
       setConfig(normalized);
+      setUnsaved(!savedConfig || !configsEqual(normalized, savedConfig));
       // Edits made while this was on its way stay (and get applied next).
       setDraft((current) => (current === sent ? normalized : current));
       setSaveState("applied");
     });
-  }, [draft, issues.length, run]);
+  }, [draft, issues.length, run, savedConfig, setUnsaved]);
 
   const saveToFlash = useCallback(async (): Promise<boolean> => {
     if (isDirty) return false;
     return run("saving", async (c) => {
       await c.saveToFlash();
       setSavedConfig(config);
+      setUnsaved(false);
       setSaveState("saved");
     });
-  }, [config, isDirty, run]);
+  }, [config, isDirty, run, setUnsaved]);
 
   const revertToSaved = useCallback(async () => {
     if (!savedConfig) return;
     await run("applying", async (c) => {
       await c.applyConfig(savedConfig);
       setConfig(savedConfig);
+      setUnsaved(false);
       setDraft(savedConfig);
       setSaveState("idle");
     });
-  }, [run, savedConfig]);
+  }, [run, savedConfig, setUnsaved]);
 
   const applyBody = useCallback(
     (body: ConfigBody) =>
@@ -371,10 +384,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         const normalized = normalizeConfig(body);
         await c.applyConfig(normalized);
         setConfig(normalized);
+        setUnsaved(!savedConfig || !configsEqual(normalized, savedConfig));
         setDraft(normalized);
         setSaveState("applied");
       }),
-    [run],
+    [run, savedConfig, setUnsaved],
   );
 
   const reconnectUsb = useCallback(() => run("reconnecting", (c) => c.reconnectUsb()), [run]);
@@ -435,12 +449,14 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     const poll = async () => {
       try {
         if (!operationRef.current) {
+          const unsavedSet = unsavedSetRef.current;
           const id = await client.identity();
           const now = Date.now();
           const lightbar = String(id.lightbar);
           const steady = lightbar === lastLightbar;
           lastLightbar = lightbar;
-          if (!stopped)
+          // An apply or save that finished meanwhile set the unsaved flag itself; this read may predate it.
+          if (!stopped && unsavedSet === unsavedSetRef.current)
             setIdentity((prev) => {
               if (!takeIdentity(prev, id, isWindowShown(), steady, takenAt, now)) return prev;
               takenAt = now;

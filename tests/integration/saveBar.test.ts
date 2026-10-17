@@ -211,6 +211,19 @@ describe("the save bar", () => {
     }
   });
 
+  it("says unsaved the moment a change is applied and saved the moment Save is done, without waiting for the board's poll", async () => {
+    await live();
+    await wait(1100); // just after a poll: the next one is a second away
+    expect(note()).toBe(t("desktop.bar.saved"));
+    await act(async () => void (await bridgeNow!.applyBody({ ...bridgeNow!.config!, inactiveTime: 50 })));
+    expect(note()).toBe(t("desktop.bar.unsaved"));
+    await act(async () => barButton(t("desktop.bar.save")).click());
+    // loop: test — the save's few PENDING polls, far less than the 1 s identity poll
+    for (let i = 0; i < 30 && bridgeNow!.operation; i++) await wait(10);
+    expect(note()).toBe(t("desktop.bar.saved"));
+    expect(dongle().flashConfig).toEqual(dongle().config);
+  });
+
   it("a game's profile on: the bar saves to the profile, nothing staged for the board is written", async () => {
     const saveToProfile = vi.fn(async () => true);
     await live({ active: { gameKey: "g", title: "Ghostrunner" }, editing: null, profileDirty: true, revertToProfile: async () => undefined, saveToProfile } as never);
