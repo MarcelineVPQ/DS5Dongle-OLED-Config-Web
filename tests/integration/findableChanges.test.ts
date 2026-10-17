@@ -215,4 +215,31 @@ describe("Library's counts", () => {
     await settle();
     expect($$("[data-fix-group] h3").map((h) => h.textContent)).toEqual([r.games[0].title, r.games[3].title, i18n.t("desktop.games.systemTitle")]);
   });
+
+  it("fix-games' Steam Input off (inside gamescope, or the report's Controller detected: Fail) counts as the game's: chip, badge, tooltip and its group", async () => {
+    const r = homeReport("healthy");
+    // As electron/main/games/games.ts builds them: per game, recommended, the why by its reason.
+    const inputOff = (i: number, why: "why.steamInputGamescope" | "why.steamInputNotDetected"): Fix => ({
+      id: `steam-1:input:${i}`,
+      kind: "steam-input-off",
+      launcher: "steam",
+      label: { key: "label.steamInput", params: { game: r.games[i].title } },
+      why: { key: why, params: { game: r.games[i].title } },
+      files: [],
+      recommended: true,
+    });
+    r.games[1] = { ...r.games[1], fixes: [inputOff(1, "why.steamInputGamescope")] };
+    r.games[2] = { ...r.games[2], fixes: [inputOff(2, "why.steamInputNotDetected")] };
+    await show(r, "games");
+    const filters = $$<HTMLButtonElement>(".lib-toolbar .lib-filters .dk-chip").map((c) => c.textContent);
+    expect(filters).toContain(`${i18n.t("desktop.library.filters.attention")}2`);
+    expect($(".lib-toolbar .lib-pc")).toBeNull(); // nothing for this computer
+    const badge = games().querySelector(".rail-badge")!;
+    expect(badge.textContent).toBe("2");
+    expect(badge.getAttribute("title")).toBe(`Recommended: Turn Steam Input off for ${r.games[1].title}; Turn Steam Input off for ${r.games[2].title}`);
+    act(() => games().click());
+    await settle();
+    expect(recommended().classList.contains("open")).toBe(true);
+    expect($$("[data-fix-group] h3").map((h) => h.textContent)).toEqual([r.games[1].title, r.games[2].title]);
+  });
 });
