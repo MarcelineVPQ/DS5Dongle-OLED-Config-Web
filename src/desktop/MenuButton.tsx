@@ -1,7 +1,8 @@
 // The one popup menu: a button that opens a menu (role menu) in the top
 // layer under it (useTopLayer). Every menu of the app is built on it: the
-// settings panel's ⋮ (Section.tsx PanelMenu) and Games' Show menu
-// (GameLibrary.tsx). An item is a button with role menuitem (runs, then the
+// settings panel's ⋮ (Section.tsx PanelMenu), Games' Show menu
+// (GameLibrary.tsx) and App settings → Language (LanguageToggle.tsx). An item
+// is a button with role menuitem or menuitemradio (runs or picks, then the
 // menu closes and the focus goes back to the button) or menuitemcheckbox
 // (toggles, the menu stays open).
 //
@@ -90,8 +91,8 @@ export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", ali
           role="menu"
           aria-label={label}
           onKeyDown={onMenuKeys}
-          // A menuitem ran (its own click first, this bubbles after): the menu closes.
-          onClick={(e) => (e.target as HTMLElement).closest('[role="menuitem"]') && close(true)}
+          // A menuitem ran or a radio item was picked (its own click first, this bubbles after): the menu closes.
+          onClick={(e) => (e.target as HTMLElement).closest('[role="menuitem"], [role="menuitemradio"]') && close(true)}
         >
           {children}
         </div>

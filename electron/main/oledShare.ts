@@ -2,8 +2,10 @@
 // (src/oled/oledShare.ts) where the user picks in the system save dialog, or
 // put the PNG on the clipboard. The page sends only the kind and the bytes,
 // never a path or a name: the path comes from the dialog alone, its extension
-// is forced to the kind's, and the bytes must start with that format's
-// signature and fit its size cap. Nothing is uploaded anywhere.
+// is forced to the kind's (when that names a file that is already there, the
+// dialog opens again on that name, so the system asks before replacing it),
+// and the bytes must start with that format's signature and fit its size cap.
+// Nothing is uploaded anywhere.
 import { basename, extname, join } from "node:path";
 import { z } from "zod";
 import { GIF_MAX_BYTES, PNG_MAX_BYTES, hasMagic } from "../../src/oled/oledShare";
@@ -29,6 +31,7 @@ export interface SaveDeps {
   // The system save dialog (modal on the app's window); null: cancelled.
   ask: (options: { defaultPath: string; filters: Array<{ name: string; extensions: string[] }> }) => Promise<string | null>;
   write: (path: string, data: Buffer) => void;
+  exists: (path: string) => boolean;
   pictures: () => string; // the user's Pictures folder (or home)
   now?: () => Date;
 }
@@ -46,12 +49,20 @@ export function withExtension(path: string, kind: "png" | "gif"): string {
 
 export async function saveOledImage(deps: SaveDeps, image: OledImage): Promise<SaveOledResult> {
   const now = deps.now?.() ?? new Date();
-  const chosen = await deps.ask({
-    defaultPath: join(deps.pictures(), defaultName(image.kind, now)),
-    filters: [{ name: image.kind === "png" ? "PNG" : "GIF", extensions: [image.kind] }],
-  });
-  if (!chosen) return { saved: false };
-  const path = withExtension(chosen, image.kind);
+  const filters = [{ name: image.kind === "png" ? "PNG" : "GIF", extensions: [image.kind] }];
+  let defaultPath = join(deps.pictures(), defaultName(image.kind, now));
+  let path: string;
+  // The dialog approved the name it was given. With the extension added it
+  // can name another file, one that's already there: ask again on that name
+  // (the system's dialog then asks whether to replace it), never overwrite unasked.
+  // loop: SERIAL-REQUIRED — data dependency: each round waits for the user's answer in the save dialog
+  for (;;) {
+    const chosen = await deps.ask({ defaultPath, filters });
+    if (!chosen) return { saved: false };
+    path = withExtension(chosen, image.kind);
+    if (path === chosen || !deps.exists(path)) break;
+    defaultPath = path;
+  }
   // error: PASSES-ON — a write failure rejects the IPC call; the page shows desktop.oledShare.errors.save with the reason
   deps.write(path, Buffer.from(image.bytes));
   return { saved: true, name: basename(path) };

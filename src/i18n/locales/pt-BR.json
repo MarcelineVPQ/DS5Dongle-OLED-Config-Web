@@ -105,7 +105,8 @@
     "common": {
       "cancel": "Cancelar",
       "stop": "Parar",
-      "moreInfo": "Mais informações"
+      "moreInfo": "Mais informações",
+      "sliderValue": "{{label}}: valor"
     },
     "overview": {
       "firmware": "Firmware",
@@ -1362,7 +1363,7 @@
       "rightStick": "Analógico direito",
       "raw": "Bruto",
       "corrected": "O que os jogos veem",
-      "deadzone": "Zona morta",
+      "deadzone": "Zona inativa",
       "deadzoneSub": "Movimento perto do centro que é ignorado (evita drift)",
       "outer": "Inclinação máxima em",
       "outerSub": "Quanto o analógico precisa ir para contar como totalmente empurrado",
@@ -1559,8 +1560,8 @@
       },
       "specs": {
         "chip": "Chip",
-        "chipValue": "{{chip}}, dual-core {{core}}",
-        "chipClock": "{{chip}}, dual-core {{core}} a {{mhz}} MHz",
+        "chipValue": "{{chip}}, núcleo duplo {{core}}",
+        "chipClock": "{{chip}}, núcleo duplo {{core}} a {{mhz}} MHz",
         "sram": "SRAM",
         "flash": "Flash",
         "wireless": "Sem fio",

@@ -25,6 +25,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **One graphics crash no longer turns hardware acceleration off for good.** A single crash of the graphics process (after a driver update, say) switched it off without a word. Now it takes a second crash in the same run, and the app tells you, with **Turn back on**.
 - **An update downloaded right after start-up installs (Windows).** If an update downloaded in the app's first 20 seconds, the app's start-up tidy-up could delete it again, and **Restart now** then closed the app without installing anything. The tidy-up now leaves a download alone, and if the file is gone anyway, **Restart now** says so and the app stays open.
 - **"No build for this system yet" instead of "Are you online?".** When a new version is out but its build for your system isn't published yet (macOS, usually), Check for updates asked whether you were online. It now says what's really going on, in all 7 languages.
+- **The language menu works like every other menu.** In App settings → Language, the arrow keys, Home and End now move through the languages, and Escape closes the menu without closing the settings panel too; the focus goes back to the language button.
+- **Share your OLED never replaces a picture without asking.** If you typed a name without ".png" or ".gif", the app added it after the save window had already said yes, and a picture with that name was replaced without a word. Now the save window opens again on the full name, so it asks first.
+- **The rail's Keep open says ⌘B on a Mac.** Its tooltip said Ctrl+B on every system; on macOS it now shows ⌘B, the shortcut that works there.
+- **The board's chip line is in Portuguese.** The Pico 2 W page said "dual-core" in English; it now says "núcleo duplo".
+- **Sony's words in French, Portuguese and Chinese.** Deadzone is now **Zone inerte** (French) and **Zona inativa** (Portuguese), the DualSense Edge's back buttons are **Touches arrière** and Controller mode is **Mode manette** (French), and Chinese calls the controller **控制器** everywhere, as Sony does.
+- **Screen readers name a slider's number box in your language.** The box beside each slider was read as "… value" in English in every language.
+- **The Development channel window keeps the keyboard.** Escape now closes only that window, not the settings drawer behind it; Tab stays inside the window; and when it closes, the focus is back on **Development**.
+- **Escape on the settings drawer puts the focus back on the rail.** In a narrow window, closing the settings drawer with Escape left the keyboard focus nowhere; it now goes to the page's item on the rail, the one that opens the drawer again.
 
 ## [0.9.5-dev.18] - 2026-10-17
 

@@ -12,7 +12,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import { usePoll } from "../../src/desktop/usePoll";
-import { InfoTip, Row, SELECT_PX } from "../../src/desktop/controls";
+import { InfoTip, Row, SELECT_PX, Slider } from "../../src/desktop/controls";
 import { PANEL_HIDDEN_KEY, panelTasks, Section, SplitView } from "../../src/desktop/accordion/Section";
 import { revealSection, useAccordion } from "../../src/desktop/accordion/useAccordion";
 import AppRail, { railPress, type RailItem } from "../../src/desktop/AppRail";
@@ -304,6 +304,7 @@ describe("the rail: the page you're on, again, shows / hides its panel (every pa
     act(() => void container.querySelector(".dk-split-panel")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(split().classList.contains("drawer-open")).toBe(false);
     expect(localStorage.getItem(PANEL_HIDDEN_KEY(page))).toBe("1");
+    expect(document.activeElement, "the focus goes to the page's rail item, not the body (bug hunt D5)").toBe(games);
   });
 
   it("each item's tooltip says what a second press does on the page you're on", () => {
@@ -327,5 +328,24 @@ describe("Windows USB repair: the exact script is shown, no fold", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+// A slider's number box is named in the app's language, like the slider
+// itself (bug hunt D3, 0.9.5: it said "<label> value" in English everywhere).
+describe("the slider's number box: a name in every language", () => {
+  it.each([
+    ["en", "Deadzone value"],
+    ["de", "Deadzone: Wert"],
+    ["fr", "Deadzone : valeur"],
+    ["ja", "Deadzoneの値"],
+  ])("%s", async (lang, name) => {
+    await i18n.changeLanguage(lang);
+    act(() => root.render(createElement(Slider, { label: "Deadzone", value: 5, min: 0, max: 30, step: 1, onChange: () => undefined })));
+    expect(container.querySelector('input[type="number"]')!.getAttribute("aria-label")).toBe(name);
+  });
+  it("the key is in all 7 locales and keeps the label", () => {
+    // loop: test — 7 locales
+    for (const l of [de, en, es, fr, ja, ptBR, zhCN]) expect(l.desktop.common.sliderValue).toContain("{{label}}");
   });
 });

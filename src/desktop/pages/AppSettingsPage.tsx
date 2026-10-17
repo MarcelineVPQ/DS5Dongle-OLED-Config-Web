@@ -4,7 +4,7 @@
 // so a theme, accent, glass or color vision change shows on it right away.
 // Nothing in the sections talks to the board: each section's status comes
 // from state the app already holds.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { useTopLayer } from "../topLayer";
 import { useTranslation } from "react-i18next";
 import { Accessibility, AppWindow, BellOff, Code, Globe, Palette, RefreshCw, Shield } from "lucide-react";
@@ -499,16 +499,37 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
   // Over everything (the top layer), wherever the page puts it (inside a section).
   const backdrop = useRef<HTMLDivElement>(null);
   useTopLayer(backdrop, true);
-  // lifetime: OK — cleanup: removes the Escape listener (dialog closed / onCancel change)
+  // A modal dialog: Escape closes it (and only it, not the drawer it sits in),
+  // Tab stays inside it, and on close the focus goes back to what opened it
+  // (the Development choice), like MenuButton and ColorPicker.
+  const opener = useRef(document.activeElement as HTMLElement | null);
+  // lifetime: OK — acquires nothing; the cleanup puts the focus back on the opener (dialog closed)
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
-    // lifetime: OK — removed in the effect cleanup
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+    const back = opener.current;
+    return () => {
+      if (back?.isConnected) back.focus();
+    };
+  }, []);
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation(); // not the drawer's Escape too
+      onCancel();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const focusable = [...e.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), a[href]")];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const at = document.activeElement;
+    if (e.shiftKey ? at === first || at === e.currentTarget : at === last) {
+      e.preventDefault();
+      (e.shiftKey ? last : first)?.focus();
+    }
+  };
   return (
     <div ref={backdrop} className="dk-dialog-backdrop top-layer" onClick={onCancel}>
-      <section className="dk-card dk-dialog" role="dialog" aria-modal="true" aria-labelledby="dev-join-title" onClick={(e) => e.stopPropagation()}>
+      <section className="dk-card dk-dialog" role="dialog" aria-modal="true" aria-labelledby="dev-join-title" tabIndex={-1} onKeyDown={onKeyDown} onClick={(e) => e.stopPropagation()}>
         <h2 id="dev-join-title">{t("desktop.channel.joinTitle")}</h2>
         <ul className="dk-review">
           <li>{t("desktop.channel.joinNewer")}</li>

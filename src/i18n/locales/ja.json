@@ -105,7 +105,8 @@
     "common": {
       "cancel": "キャンセル",
       "stop": "停止",
-      "moreInfo": "詳細情報"
+      "moreInfo": "詳細情報",
+      "sliderValue": "{{label}}の値"
     },
     "overview": {
       "firmware": "ファームウェア",

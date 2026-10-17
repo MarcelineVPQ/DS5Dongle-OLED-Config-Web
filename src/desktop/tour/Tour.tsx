@@ -106,6 +106,9 @@ interface Props {
   ready: boolean;
 }
 
+// Two measurements of the tour's target are the same box (or both absent).
+const sameRect = (a: DOMRect | null, b: DOMRect | null): boolean => a === b || (!!a && !!b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height);
+
 export default function Tour({ client, input, view, onView, ready }: Props) {
   const { t } = useTranslation();
   // null = not started by hand; the first run starts it by itself once a
@@ -113,6 +116,8 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [closed, setClosed] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // cache: OK — key=the spotlight's target box; invalidated=replaced by the 200 ms check when the box changes; bound=one rect
+  const shownRect = useRef<DOMRect | null>(null);
   // The step whose hands-on task has been done (latched: letting go of the
   // button doesn't un-tick it).
   const [tickedStep, setTickedStep] = useState<number | null>(null);
@@ -255,7 +260,11 @@ export default function Tour({ client, input, view, onView, ready }: Props) {
     if (!step?.target || !shown) return;
     const measure = () => {
       const el = document.querySelector(step.target!);
-      setRect(el ? el.getBoundingClientRect() : null);
+      const next = el ? el.getBoundingClientRect() : null;
+      // A new rect only when the target moved or resized: the 200 ms check renders nothing while it stays put.
+      if (sameRect(shownRect.current, next)) return;
+      shownRect.current = next;
+      setRect(next);
     };
     // lifetime: OK — one-shot, cancelled in the layout effect cleanup
     const first = requestAnimationFrame(measure);

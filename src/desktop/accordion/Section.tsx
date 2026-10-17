@@ -321,7 +321,12 @@ export function SplitView({
         className="dk-split-panel"
         aria-label={typeof title === "string" ? title : undefined}
         aria-hidden={hidden || undefined}
-        onKeyDown={(e) => e.key === "Escape" && narrow() && hide()}
+        onKeyDown={(e) => {
+          if (e.key !== "Escape" || !narrow()) return;
+          hide();
+          // The focus goes to the toggle that brings the drawer back (the page's rail item), not to the page's body.
+          document.querySelector<HTMLElement>('.rail-link[aria-current="page"]')?.focus();
+        }}
       >
         <header className="dk-split-head">
           <div className="dk-split-titles">
