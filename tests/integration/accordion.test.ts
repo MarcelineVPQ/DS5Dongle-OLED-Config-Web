@@ -41,6 +41,7 @@ let m: {
   notices: typeof import("../../src/desktop/notices");
   openTasks: typeof import("../../src/desktop/openTasks");
   ControllerView: typeof import("../../src/desktop/live/ControllerView");
+  boardDrafts: typeof import("../../src/desktop/live/boardDrafts");
   useDs5Bridge: typeof import("../../src/hooks/useDs5Bridge").useDs5Bridge;
   storage: typeof import("../../src/desktop/storage");
   devPreview: typeof import("../../src/desktop/devPreview");
@@ -63,6 +64,7 @@ beforeAll(async () => {
     notices: await import("../../src/desktop/notices"),
     openTasks: await import("../../src/desktop/openTasks"),
     ControllerView: await import("../../src/desktop/live/ControllerView"),
+    boardDrafts: await import("../../src/desktop/live/boardDrafts"),
     useDs5Bridge: (await import("../../src/hooks/useDs5Bridge")).useDs5Bridge,
     storage: await import("../../src/desktop/storage"),
     devPreview: await import("../../src/desktop/devPreview"),
@@ -583,7 +585,8 @@ const FW = {
 // simulated board, its update state, and the view around the live controller.
 function Live({ view }: { view: "overview" | "dongle" | "app" }) {
   const bridge = m.useDs5Bridge();
-  return bridge.isConnected ? createElement(m.ControllerView.default, { bridge, fw: FW, view, onView: () => undefined }) : null;
+  // The board's staged drafts, as DesktopApp provides them.
+  return bridge.isConnected ? createElement(m.boardDrafts.BoardDraftsProvider, { bridge }, createElement(m.ControllerView.default, { bridge, fw: FW, view, onView: () => undefined })) : null;
 }
 const live = async (view: "overview" | "dongle" | "app") => {
   m.storage.writePref(m.devPreview.SIMULATED_KEY, "1");
@@ -599,7 +602,7 @@ const live = async (view: "overview" | "dongle" | "app") => {
 // what each section shows: its rows' labels, headings and buttons.
 const CONTROLLER_INVENTORY: Record<string, string[]> = {
   lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
-  triggers: ["desktop.live.pull", "desktop.settings.triggerReduce", "desktop.triggers.title", "desktop.triggers.presets.weapon"],
+  triggers: ["desktop.live.pull", "desktop.settings.triggerReduce", "desktop.calib.triggersTitle", "desktop.triggers.title", "desktop.triggers.presets.weapon"],
   haptics: ["haptics.audioBufferLabel", "desktop.live.hapticLevel", "autoHaptics.sectionTitle", "autoHaptics.modeLabel"],
   speaker: [
     "desktop.settings.speakerLevel",
@@ -610,8 +613,9 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
     "desktop.audioTest.speakerTitle",
   ],
   mic: ["haptics.btMicLabel", "desktop.settings.micInput", "desktop.settings.micLevel", "desktop.settings.echoCancel", "desktop.audioTest.micTitle"],
-  buttons: ["desktop.live.remapApply", "desktop.layouts.title", "desktop.layouts.saveAs"],
-  sticks: ["desktop.calib.title", "desktop.calib.leftStick", "desktop.curves.title", "desktop.calib.triggers"],
+  buttons: ["desktop.live.remapReset", "desktop.layouts.title", "desktop.layouts.saveAs"],
+  sticks: ["desktop.calib.sticksTitle", "desktop.calib.start", "desktop.calib.leftStick", "desktop.curves.title"],
+  gyro: ["desktop.calib.gyroTitle", "desktop.calib.start"],
   slots: ["desktop.slots.wipe"],
 };
 // The Pico 2 W page's panel (IA audit Q10): the OLED first, the danger zone last.

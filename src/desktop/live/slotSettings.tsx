@@ -1,7 +1,7 @@
-// A card's settings that the dongle keeps per pairing slot (calibration,
-// stick curves): read when the card opens, again when the slot in use changes
-// and on Retry, with a draft to edit. One read effect and one error line for
-// both cards.
+// Settings the dongle keeps per pairing slot (calibration, stick curves):
+// read when the board connects (boardDrafts.tsx), again when the slot in use
+// changes and on Retry, with a draft to edit. One read effect and one error
+// line for both.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { causeText } from "../shownError";

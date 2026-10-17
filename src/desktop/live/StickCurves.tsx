@@ -1,46 +1,31 @@
-// Stick response curves (protocol 1.10) in the Calibration view: a preset or
-// a custom curve per stick, saved in the dongle per pairing slot and applied
-// after calibration to what every game receives. The graph shows the curve
+// Stick response curves (protocol 1.10) in Sticks & calibration: a preset or
+// a custom curve per stick, saved in the dongle per pairing slot (by the save
+// bar: the draft is the app's one, boardDrafts.tsx) and applied after
+// calibration to what every game receives. The graph shows the curve
 // against a dashed straight line, the custom points (drag them, or select one
 // and use the arrow keys) and a live dot where the stick is now: its tilt in
 // (after the calibration above) and what the dongle sends out.
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { causeText } from "../shownError";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
-import { FEATURES2, supportsFeature2, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { correctStick, type StickCal } from "../../protocol/calibration";
 import { SectionGroup } from "../accordion/Section";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
-import { profileCurves, sameGameCurves, type GameCurves } from "../library/profileValues";
-import {
-  CURVE_PRESETS,
-  CURVE_TYPES,
-  DEFAULT_CURVES,
-  LINEAR_CURVE,
-  applyCurve,
-  curveAt,
-  curvesEqual,
-  movePoint,
-  tiltOf,
-  type CurveType,
-  type StickCurve,
-  type StickCurvePair,
-} from "../../protocol/stickCurve";
-import { BusyButton, InfoTip, Segmented } from "../controls";
-import { SlotReadError, useSlotSettings, type SlotRead } from "./slotSettings";
+import { profileCurves, type GameCurves } from "../library/profileValues";
+import { CURVE_PRESETS, CURVE_TYPES, LINEAR_CURVE, applyCurve, curveAt, movePoint, tiltOf, type CurveType, type StickCurve, type StickCurvePair } from "../../protocol/stickCurve";
+import { Segmented } from "../controls";
+import { SlotReadError } from "./slotSettings";
+import { useBoardDrafts } from "./boardDrafts";
 import Notice from "../Notice";
 
-export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
+export { supportsStickCurves } from "./boardDrafts";
 
 const SIDES = ["left", "right"] as const;
 const SIZE = 160; // graph size in SVG units (0..1 mapped onto it)
 const PAD = 8;
 const px = (v: number) => PAD + v * SIZE;
 const py = (v: number) => PAD + (1 - v) * SIZE;
-
-const readCurves = (client: Ds5BridgeClient): Promise<SlotRead<StickCurvePair> | null> => client.readStickCurves().then((r) => r && { slot: r.slot, value: r.saved });
 
 // The stick now, after the calibration, and what the curve makes of it: the
 // tilt in and out (0..1), or null with no controller input.
@@ -55,14 +40,13 @@ function stickTilt(input: InputReport | null, side: 0 | 1, cal: StickCal, curve:
 export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5BridgeResult; input: InputReport | null; sticks: readonly [StickCal, StickCal] }) {
   const { t } = useTranslation();
   const client = bridge.client;
-  const supported = supportsStickCurves(bridge.identity);
-  const { slot, saved, draft, setDraft, error, setError, loaded, retry } = useSlotSettings(bridge, supported, DEFAULT_CURVES, readCurves, t("desktop.curves.readFailed"));
+  const { supported, saved, draft, setDraft, error, retry } = useBoardDrafts().curves;
   const [side, setSide] = useState<0 | 1>(0);
   // A game's profile on (edited, or its game running): the curves picked here
   // go into that profile (undefined = that stick keeps the normal curve) and
   // the profile hook puts them on the dongle for now (RAM only). The draft is
-  // the profile's (kept when this panel closes), saved with "Save to profile".
-  const { library, curvesDraft, setCurvesDraft, saveToProfile } = useLibrary();
+  // the profile's (kept when this panel closes), saved with the bar's "Save to profile".
+  const { library, curvesDraft, setCurvesDraft } = useLibrary();
   const target = useProfileTarget();
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
   const stored = profileCurves(profile?.settings);
@@ -77,36 +61,10 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
   }
 
   if (profile && target)
-    return (
-      <GameStickCurves
-        title={target.title}
-        saved={saved}
-        draft={curvesDraft ?? stored}
-        onDraft={setCurvesDraft}
-        side={side}
-        onSide={setSide}
-        input={input}
-        sticks={sticks}
-        stored={stored}
-        onSave={saveToProfile}
-      />
-    );
+    return <GameStickCurves title={target.title} saved={saved} draft={curvesDraft ?? stored} onDraft={setCurvesDraft} side={side} onSide={setSide} input={input} sticks={sticks} />;
 
   const curve = draft[side];
   const setCurve = (c: StickCurve) => setDraft((d) => (side === 0 ? [c, d[1]] : [d[0], c]));
-  // loop: HOT-PATH-OK — N = 2 sticks per render
-  const changed = saved !== null && !draft.every((c, i) => curvesEqual(c, saved[i]));
-  const save = async (pair: StickCurvePair) => {
-    setError(null);
-    try {
-      await client.applyStickCurves(slot, pair[0], pair[1], false);
-      const back = await readCurves(client);
-      if (back) loaded(back);
-    } catch (cause) {
-      // error: SHOWN — desktop.errors.boardFailed (causeText, with the other keyed board errors)
-      setError(causeText(cause));
-    }
-  };
 
   const tilt = stickTilt(input, side, sticks[side], curve);
 
@@ -135,26 +93,21 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       {/* hint: MUST-SHOW — a warning: saving ends a game's curves */}
       {bridge.identity?.curvesTemporary && <p className="dk-hint">{t("desktop.curves.gameOn")}</p>}
       <div className="dk-row-btns">
-        <BusyButton className="dk-btn primary" disabled={!changed} onClick={() => save(draft)}>
-          {t("desktop.calib.save")}
-        </BusyButton>
-        <button type="button" className="dk-btn" disabled={!changed} onClick={() => saved && setDraft(saved)}>
-          {t("desktop.calib.revert")}
-        </button>
-        <BusyButton
+        {/* Both sticks back to Linear: a change like any other, kept by the save bar. */}
+        <button
+          type="button"
           className="dk-btn"
           /* loop: HOT-PATH-OK — N = 2 sticks per render */
-          disabled={saved === null || saved.every((c) => c.type === "linear")}
+          disabled={draft.every((c) => c.type === "linear")}
           onClick={() =>
-            save([
+            setDraft([
               { ...LINEAR_CURVE, points: draft[0].points },
               { ...LINEAR_CURVE, points: draft[1].points },
             ])
           }
         >
           {t("desktop.curves.resetLinear")}
-        </BusyButton>
-        <InfoTip text={t("desktop.curves.saveHint", { slot })} />
+        </button>
       </div>
       <SlotReadError error={error} retry={saved === null ? retry : null} />
     </SectionGroup>
@@ -289,8 +242,9 @@ function CurveGraph({ curve, live, onPoints }: { curve: StickCurve; live: [numbe
 }
 
 // The curves panel while a game's profile is on: per stick, the normal
-// (saved) curve or a preset for this game, saved into the profile and felt
-// right away. Custom points per game aren't edited here (a later step).
+// (saved) curve or a preset for this game, saved into the profile by the
+// bar's Save to profile and felt from then on. Custom points per game aren't
+// edited here (a later step).
 function GameStickCurves({
   title,
   saved,
@@ -300,8 +254,6 @@ function GameStickCurves({
   onSide,
   input,
   sticks,
-  stored,
-  onSave,
 }: {
   title: string;
   saved: StickCurvePair | null;
@@ -311,8 +263,6 @@ function GameStickCurves({
   onSide: (s: 0 | 1) => void;
   input: InputReport | null;
   sticks: readonly [StickCal, StickCal];
-  stored: GameCurves;
-  onSave: () => Promise<unknown>;
 }) {
   const { t } = useTranslation();
   const own = draft[side];
@@ -323,7 +273,6 @@ function GameStickCurves({
     const next: StickCurve | undefined = choice === "normal" ? undefined : { type: choice, points: (own ?? saved?.[side] ?? LINEAR_CURVE).points };
     onDraft(side === 0 ? [next, draft[1]] : [draft[0], next]);
   };
-  const changed = !sameGameCurves(draft, stored);
   const tilt = stickTilt(input, side, sticks[side], curve);
   return (
     <SectionGroup title={t("desktop.curves.title")}>
@@ -350,14 +299,6 @@ function GameStickCurves({
       <p className="dk-hint">{own ? t(`desktop.curves.typeHint.${own.type}`) : t("desktop.editing.curvesNormal")}</p>
       <CurveGraph curve={curve} live={tilt} />
       <p className="dk-mono curve-now">{tilt ? t("desktop.curves.now", { in: Math.round(tilt[0] * 100), out: Math.round(tilt[1] * 100) }) : t("desktop.calib.needsController")}</p>
-      <div className="dk-row-btns">
-        <BusyButton className="dk-btn primary" disabled={!changed} onClick={onSave}>
-          {t("desktop.bar.saveProfile")}
-        </BusyButton>
-        <button type="button" className="dk-btn" disabled={!changed} onClick={() => onDraft(stored)}>
-          {t("desktop.calib.revert")}
-        </button>
-      </div>
     </SectionGroup>
   );
 }

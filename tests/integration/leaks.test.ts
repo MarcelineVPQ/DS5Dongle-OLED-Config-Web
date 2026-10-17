@@ -31,6 +31,7 @@ let container: HTMLDivElement;
 // Loaded after the dev-build flag is set: the simulated dongle is a dev-build feature.
 let mods: {
   ControllerView: typeof import("../../src/desktop/live/ControllerView").default;
+  BoardDraftsProvider: typeof import("../../src/desktop/live/boardDrafts").BoardDraftsProvider;
   useDs5Bridge: typeof import("../../src/hooks/useDs5Bridge").useDs5Bridge;
   useAppUpdate: typeof import("../../src/desktop/useUpdates").useAppUpdate;
   useFirmwareUpdate: typeof import("../../src/desktop/useUpdates").useFirmwareUpdate;
@@ -60,6 +61,7 @@ beforeAll(async () => {
   const updates = await import("../../src/desktop/useUpdates");
   mods = {
     ControllerView: (await import("../../src/desktop/live/ControllerView")).default,
+    BoardDraftsProvider: (await import("../../src/desktop/live/boardDrafts")).BoardDraftsProvider,
     useDs5Bridge: (await import("../../src/hooks/useDs5Bridge")).useDs5Bridge,
     useAppUpdate: updates.useAppUpdate,
     useFirmwareUpdate: updates.useFirmwareUpdate,
@@ -96,7 +98,8 @@ function Controller({ view }: { view: View }) {
   const bridge = mods.useDs5Bridge();
   const app = mods.useAppUpdate();
   const fw = mods.useFirmwareUpdate(bridge, app);
-  return bridge.isConnected ? createElement(mods.ControllerView, { bridge, fw, view, onView: () => undefined }) : null;
+  // The board's staged drafts, as DesktopApp provides them.
+  return bridge.isConnected ? createElement(mods.BoardDraftsProvider, { bridge }, createElement(mods.ControllerView, { bridge, fw, view, onView: () => undefined })) : null;
 }
 
 // App settings without a board (no drawing beside it to poll).

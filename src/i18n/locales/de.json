@@ -93,13 +93,13 @@
     },
     "bar": {
       "unsaved": "Auf {{device_akk}} angewendet, noch nicht gespeichert: Änderungen gehen beim Ausschalten verloren.",
+      "staged": "Noch nicht gespeichert: Speichern legt deine Änderungen auf {{device_akk}}.",
       "saved": "Alle Änderungen auf {{device_dat}} gespeichert.",
       "revert": "Verwerfen",
       "save": "Auf {{device_dat}} speichern",
       "profileActive": "Profil „{{title}}“ aktiv",
       "profileSaved": "Änderungen gehen ins Profil; beim Beenden des Spiels kommen deine normalen Einstellungen zurück.",
       "profileUnsaved": "Hier geändert, noch nicht im Profil gespeichert.",
-      "saveProfile": "Im Profil speichern",
       "saveProfileTo": "Im Profil „{{title}}“ speichern"
     },
     "common": {
@@ -156,7 +156,6 @@
       "sleepControllerOffSub": "Sobald der PC 3 Sekunden im Ruhezustand ist",
       "psWakesPc": "PC mit der PS-Taste aufwecken",
       "psWakesPcSub": "Der PC muss USB im Ruhezustand mit Strom versorgen und der Tastatur das Aufwecken erlauben. Ohne verbundenen Controller erscheint {{device}} als „DS5 Dongle Wake Keyboard“.",
-      "pcSleepHint": "Wird sofort auf {{device_dat}} gespeichert.",
       "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um diese Einstellungen zu nutzen.",
       "asGame": "Wie im Spiel",
       "asPc": "Wie am PC",
@@ -660,7 +659,6 @@
       "close": "Schließen",
       "remap": "Tastenzuweisung",
       "remapDefault": "Standard",
-      "remapApply": "Zuweisung übernehmen",
       "remapReset": "Alle Tasten zurücksetzen",
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
@@ -1334,7 +1332,6 @@
       "hdrNitsSub": "Die Spitzenhelligkeit deines Displays"
     },
     "calib": {
-      "title": "Kalibrierung",
       "intro": "Korrigiert Stick-Drift, Deadzones, Triggerweg und den Nullpunkt des Gyroskops {{device_im}}, für jedes Spiel. Am Controller wird nichts gespeichert; Zurücksetzen macht es rückgängig.",
       "needsFirmware": "Aktualisiere die Firmware {{device_gen}}, um zu kalibrieren.",
       "needsController": "Verbinde einen Controller, um zu kalibrieren.",
@@ -1357,18 +1354,18 @@
       "outer": "Voller Ausschlag bei",
       "outerSub": "Wie weit der Stick gehen muss, um als ganz gedrückt zu zählen",
       "center": "Mittelpunkt-Versatz: X {{x}}, Y {{y}}",
-      "triggers": "Trigger",
       "now": "jetzt {{raw}} → {{out}}",
       "gyro": "Gyroskop",
       "gyroZero": "Nullpunkt-Versatz:",
-      "save": "Auf {{device_dat}} speichern",
-      "revert": "Verwerfen",
       "reset": "Auf unkalibriert zurücksetzen",
-      "saveHint": "Im eigenen Speicher {{device_gen}} gesichert; gilt sofort für jedes Spiel.",
-      "forSlot": "Für den Controller in Kopplungsplatz {{slot}}; jeder Platz hat seine eigene.",
       "getReady": "Mach dich bereit…",
       "missed": "Nicht gemessen, daher wurden die alten Werte behalten: {{parts}}. Bewege sie ganz bis zum Anschlag und miss erneut.",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "calibrated": "Kalibriert",
+      "uncalibrated": "Nicht kalibriert",
+      "sticksTitle": "Stick-Kalibrierung",
+      "triggersTitle": "Trigger-Kalibrierung",
+      "gyroTitle": "Gyroskop-Kalibrierung"
     },
     "curves": {
       "title": "Empfindlichkeitskurve",
@@ -1403,7 +1400,6 @@
       "needsFirmware": "Aktualisiere die Firmware {{device_gen}} für Empfindlichkeitskurven.",
       "readFailed": "{{device, capitalize}} hat die Kurven nicht geliefert.",
       "resetLinear": "Zurück zu Linear",
-      "saveHint": "{{device_im, capitalize}} gespeichert für den Controller in Kopplungsplatz {{slot}}; gilt sofort in jedem Spiel.",
       "profileLeft": "Kurve linker Stick",
       "profileRight": "Kurve rechter Stick",
       "profileSaved": "Meine gespeicherte Kurve",
@@ -1625,7 +1621,6 @@
       "allHint_one": "{{count}} Taste weicht von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "allHint_other": "{{count}} Tasten weichen von der Controller-Belegung ab. Wähle aus der Liste oder klicke eine Taste in der Zeichnung; beides ändert dasselbe.",
       "changed": "geändert",
-      "notApplied": "noch nicht angewendet",
       "notSaved": "noch nicht gespeichert",
       "off": "Aus",
       "noChanges": "Keine Änderungen (die Controller-Belegung)",
@@ -1650,7 +1645,7 @@
       "openHint": "Dieses Profil auf den Controller legen und mit allen Bereichen bearbeiten, jede Änderung sofort spürbar",
       "buttonsNote": "Profil von {{title}} ist aktiv: Tasten kommen mit Im Profil speichern in die Belegung dieses Spiels, nicht in deine normale.",
       "dongleNote": "Nicht Teil des Profils von {{title}}: Diese Einstellungen auf {{device_dat}} bleiben deine normalen. Änderungen hier bleiben nach dem Profil erhalten; speichere sie dann auf {{device_dat}}.",
-      "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Speichern ändert sie {{device_im}} für jedes Spiel.",
+      "calibrationNote": "Die Kalibrierung gehört zum Controller, nicht zum Profil von {{title}}: Sie bleibt deine normale, und Speichern legt sie auf {{device_akk}}, sobald das Profil endet.",
       "curvesNote": "Profil von {{title}} ist aktiv: Kurven kommen mit Im Profil speichern ins Profil dieses Spiels und sind ab dann spürbar; danach kommen deine normalen Kurven zurück.",
       "curvesNormal": "Dieser Stick nutzt in diesem Spiel deine normale Kurve."
     },
@@ -1824,7 +1819,8 @@
         "cancelled": "die Passwortabfrage wurde abgebrochen",
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
       },
-      "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}"
+      "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
+      "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal."
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",
@@ -1880,6 +1876,7 @@
       "mic": "Mikrofon",
       "buttons": "Tastenzuweisung",
       "sticks": "Sticks & Kalibrierung",
+      "gyro": "Gyroskop",
       "slots": "Kopplungsplätze",
       "firmware": "Firmware",
       "device": "Neustart & Zurücksetzen",

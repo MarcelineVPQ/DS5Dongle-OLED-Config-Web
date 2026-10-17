@@ -52,7 +52,8 @@ const FRAMEWORK = new Set(["src/desktop/controls.tsx", "src/desktop/accordion/Se
 
 // Not settings pages: their buttons and choices aren't settings rows.
 export const NOT_SETTINGS = {
-  "src/desktop/DesktopApp.tsx": "the app shell: the save bar and the profile-editing bar (they stay as they are)",
+  "src/desktop/DesktopApp.tsx": "the app shell: the profile-editing bar (Done, Save and close)",
+  "src/desktop/SaveBar.tsx": "the one save bar (Revert / Save, or Save to profile): where every board setting is saved (IA audit Q1)",
   "src/desktop/UpdateBanners.tsx": "the update notices' actions (Download and install)",
   "src/desktop/SetupScreen.tsx": "the first-run setup flow (flash the board), not a settings page",
   "src/desktop/WindowsUsbRepair.tsx": "a one-time repair flow (the Windows driver), shown in a notice",

@@ -20,6 +20,7 @@ import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../cont
 import { useFields, type SectionProps } from "./sectionFields";
 import Notice from "../Notice";
 import { SectionGroup } from "../accordion/Section";
+import { useBoardDrafts } from "../live/boardDrafts";
 
 // The settings rows of the Controller and Pico 2 W pages' sections (their
 // accordion: live/PartPanel.tsx, dongle/DonglePage.tsx). Each function is a
@@ -386,14 +387,17 @@ export function PicoLedToggle(props: SectionProps) {
 }
 
 // What the dongle does when the PC sleeps (protocol 1.14). Not part of the
-// config body or a game's profile: each switch is saved on the dongle at once
-// (0xF6 0x17), and shows the dongle's own bits (identity [47]), so a change
-// on the OLED shows here too.
+// config body or a game's profile: the switches show the dongle's own bits
+// (identity [47], so a change on the OLED shows here too) or a staged change,
+// which the save bar writes with Save (0xF6 0x17, saved on the board in one
+// go: boardDrafts.tsx, IA audit Q1).
 export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
-  const bits = bridge.identity?.powerFlags ?? null;
-  const flip = (bit: number, on: boolean) => (bits === null ? undefined : bridge.setPowerFlags(on ? bits | bit : bits & ~bit));
-  // One write at a time: the next one is worked out from the bits this one leaves.
+  const { power } = useBoardDrafts();
+  const bits = power.value;
+  const flip = (bit: number, on: boolean) => {
+    if (bits !== null) power.set(on ? bits | bit : bits & ~bit);
+  };
   const off = bits === null || !bridge.client || bridge.operation !== null;
   return (
     <>
@@ -413,7 +417,6 @@ export function PcSleepSection({ bridge }: { bridge: UseDs5BridgeResult }) {
             disabled={off}
             onChange={(v) => flip(POWER_FLAGS.psWakesPc, v)}
           />
-          <p className="dk-hint">{t("desktop.settings.pcSleepHint")}</p>
         </>
       ) : (
         <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>

@@ -4,8 +4,11 @@
 // section bodies are functions, so a folded section renders nothing and its
 // polls (the level meters, the slot list) and tests stop.
 import { HeadsetStereo } from "./HeadsetStereo";
-import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick } from "lucide-react";
-import Calibration from "./Calibration";
+import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick, Rotate3d } from "lucide-react";
+import { GyroCalibration, StickCalibration, TriggerCalibration, gyroCalibrated, sticksCalibrated } from "./Calibration";
+import StickCurves from "./StickCurves";
+import StickTests from "./StickTestCards";
+import { useBoardDrafts } from "./boardDrafts";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
@@ -57,6 +60,16 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   const { library } = useLibrary();
   const loaded = remap.loaded ? (library.layouts?.[remap.loaded.id]?.name ?? remap.loaded.name) : null;
   const slot = bridge.identity?.currentSlot;
+  const { calibration: cal, curves } = useBoardDrafts();
+  // loop: HOT-PATH-OK — N = 2 sticks' curves per render of the panel
+  const curveNames = curves.draft.map((c) => t(`desktop.curves.type.${c.type}`)).join(" / ");
+  // loop: NOT-WORTH — N = 2 parts of one status line
+  const sticksStatus = [
+    cal.supported ? t(sticksCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated") : null,
+    curves.supported ? named(t, t("desktop.curves.title"), curveNames) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
   return (
     <>
@@ -68,6 +81,8 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           <>
             {/* Settings → live meter → test, the test last (page rule 5). */}
             <TriggerIntensitySection bridge={bridge} />
+            {/* Trigger calibration with the triggers (IA audit C9): a setting, so before the meter and the test. */}
+            <TriggerCalibration bridge={bridge} input={input} />
             <TriggerLive input={input} side={trigger} />
             <TriggersPage bridge={bridge} />
           </>
@@ -139,9 +154,22 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           </>
         )}
       </Section>
-      <Section id="sticks" icon={Joystick} title={t("desktop.sections.sticks")} status={slot !== undefined ? named(t, t("desktop.overview.slot"), slot) : null}>
-        {() => <Calibration bridge={bridge} input={input} />}
+      {/* How the sticks are set: calibrated or not, each stick's curve (IA audit C10). */}
+      <Section id="sticks" icon={Joystick} title={t("desktop.sections.sticks")} status={sticksStatus}>
+        {() => (
+          <>
+            <StickCalibration bridge={bridge} input={input} />
+            <StickCurves bridge={bridge} input={input} sticks={cal.draft.sticks} />
+            <StickTests input={input} sticks={cal.draft.sticks} />
+          </>
+        )}
       </Section>
+      {/* The gyroscope's own section: its calibration, next to the Gyroscope card's subject (IA audit Q3). */}
+      {cal.supported && (
+        <Section id="gyro" icon={Rotate3d} title={t("desktop.sections.gyro")} status={t(gyroCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated")}>
+          {() => <GyroCalibration bridge={bridge} input={input} />}
+        </Section>
+      )}
       <Section id="slots" icon={Bluetooth} title={t("desktop.sections.slots")} status={slot !== undefined ? t("desktop.accordion.slotActive", { slot }) : null}>
         {() => <SlotsPage bridge={bridge} />}
       </Section>
@@ -149,10 +177,10 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   );
 }
 
-// The remap actions under the button pickers: Save to profile while a
-// game's profile is on (the buttons go into its layout), else Apply remap;
-// a failed apply's error above them.
-function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<unknown>) | null }) {
+// Under the button pickers: Reset all (a draft change like any pick) and a
+// failed save's error. Saving is the save bar's (Save to the board, or Save to
+// profile while a game's profile is on; IA audit Q1).
+function RemapActions({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
   return (
     <>
@@ -162,18 +190,6 @@ function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<
         </Notice>
       )}
       <div className="dk-row-btns">
-        {onSave ? (
-          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={onSave}>
-            {t("desktop.bar.saveProfile")}
-          </BusyButton>
-        ) : (
-          <BusyButton className="dk-btn primary" disabled={!remap.dirty || remap.busy} onClick={remap.apply}>
-            {t("desktop.live.remapApply", "Apply assignments")}
-          </BusyButton>
-        )}
-        <button type="button" className="dk-btn" disabled={!remap.dirty || remap.busy} onClick={remap.revert}>
-          {t("desktop.bar.revert", "Revert")}
-        </button>
         <button type="button" className="dk-btn" disabled={remap.busy} onClick={remap.resetAll} title={t("desktop.live.remapResetHint", "Every button back to itself")}>
           {t("desktop.live.remapReset", "Reset all")}
         </button>
@@ -183,14 +199,15 @@ function RemapActions({ remap, onSave }: { remap: Remap; onSave: (() => Promise<
 }
 
 // Buttons edited while a game's profile is on go into that game's own layout
-// (a new one named after the game if it has none) with "Save to profile",
-// together with everything else changed for it; the profile hook then puts it
-// on the dongle (temporary remap, RAM only). ControllerView hands the draft over.
-function useGameLayoutSave() {
-  const { library, saveToProfile } = useLibrary();
+// (a new one named after the game if it has none) with the bar's "Save to
+// profile", together with everything else changed for it; the profile hook
+// then puts it on the dongle (temporary remap, RAM only). ControllerView hands
+// the draft over.
+function useGameLayoutTarget() {
+  const { library } = useLibrary();
   const target = useProfileTarget();
   const profile = target ? library.games[target.gameKey]?.profile : undefined;
-  return { target: profile ? target : null, saveToProfile };
+  return profile ? target : null;
 }
 
 // Every button in one list (the same draft as clicking them on the drawing),
@@ -218,10 +235,10 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
   // A game's profile on (edited, or its game running): the buttons go into
   // that game's layout (switched in while it plays), never into the normal
   // buttons on the dongle.
-  const { target, saveToProfile } = useGameLayoutSave();
+  const target = useGameLayoutTarget();
   const { active } = useLibrary();
-  // Not saved yet: in a profile, into its layout; else onto the dongle.
-  const pendingLabel = target ? t("desktop.layouts.notSaved") : t("desktop.layouts.notApplied");
+  // Not saved yet (into the profile's layout, or onto the board): the save bar keeps it.
+  const pendingLabel = t("desktop.layouts.notSaved");
   // hint: MUST-SHOW — why there's nothing to assign: what to update
   if (remap.supported === false) return <p className="dk-hint">{t("remap.unsupported")}</p>;
   return (
@@ -296,7 +313,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
             );
           })}
       </div>
-      <RemapActions remap={remap} onSave={target ? saveToProfile : null} />
+      <RemapActions remap={remap} />
     </>
   );
 }

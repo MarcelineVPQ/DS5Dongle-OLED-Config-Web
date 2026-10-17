@@ -93,13 +93,13 @@
     },
     "bar": {
       "unsaved": "已应用到 {{device}}，尚未保存：断电后更改将丢失。",
+      "staged": "尚未保存：点击保存会将更改写入 {{device}}。",
       "saved": "所有更改已保存到 {{device}}。",
       "revert": "还原",
       "save": "保存到 {{device}}",
       "profileActive": "{{title}} 配置文件已启用",
       "profileSaved": "更改会保存到配置文件；游戏关闭后恢复你的常规设置。",
       "profileUnsaved": "已在此更改，尚未保存到配置文件。",
-      "saveProfile": "保存到配置文件",
       "saveProfileTo": "保存到 {{title}} 配置文件"
     },
     "common": {
@@ -156,7 +156,6 @@
       "sleepControllerOffSub": "电脑睡眠 3 秒后",
       "psWakesPc": "用 PS 键唤醒电脑",
       "psWakesPcSub": "电脑睡眠时必须保持 USB 供电，并允许键盘唤醒电脑。未连接控制器时，{{device}} 显示为“DS5 Dongle Wake Keyboard”。",
-      "pcSleepHint": "立即保存到 {{device}}。",
       "needsFirmware": "更新 {{device}} 的固件后才能使用这些设置。",
       "asGame": "按游戏",
       "asPc": "按电脑",
@@ -656,7 +655,6 @@
       "close": "关闭",
       "remap": "按键配置",
       "remapDefault": "默认",
-      "remapApply": "应用按键配置",
       "remapReset": "重置所有按键",
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
@@ -1322,7 +1320,6 @@
       "hdrNitsSub": "你的显示器的峰值亮度"
     },
     "calib": {
-      "title": "校准",
       "intro": "在 {{device}} 内校正操作杆漂移、盲区、扳机行程和陀螺仪零点，对所有游戏生效。不会写入控制器；重置即可撤销。",
       "needsFirmware": "更新 {{device}} 的固件后才能校准。",
       "needsController": "连接控制器后才能校准。",
@@ -1345,18 +1342,18 @@
       "outer": "满量程位置",
       "outerSub": "操作杆需要推多远才算推到底",
       "center": "中心偏移：X {{x}}，Y {{y}}",
-      "triggers": "扳机",
       "now": "当前 {{raw}} → {{out}}",
       "gyro": "陀螺仪",
       "gyroZero": "零点偏移：",
-      "save": "保存到 {{device}}",
-      "revert": "撤销",
       "reset": "恢复为未校准",
-      "saveHint": "保存在 {{device}} 自身的存储中，立即对所有游戏生效。",
-      "forSlot": "适用于配对槽位 {{slot}} 中的控制器；每个槽位各自保存。",
       "getReady": "准备…",
       "missed": "未测量，已保留旧值：{{parts}}。请推到底后重新测量。",
-      "retry": "重试"
+      "retry": "重试",
+      "calibrated": "已校准",
+      "uncalibrated": "未校准",
+      "sticksTitle": "操作杆校准",
+      "triggersTitle": "扳机校准",
+      "gyroTitle": "陀螺仪校准"
     },
     "curves": {
       "title": "灵敏度曲线",
@@ -1391,7 +1388,6 @@
       "needsFirmware": "请更新 {{device}} 的固件以使用灵敏度曲线。",
       "readFailed": "{{device}} 没有返回曲线数据。",
       "resetLinear": "恢复为线性",
-      "saveHint": "已为配对槽位 {{slot}} 中的控制器保存在 {{device}} 中；立即对所有游戏生效。",
       "profileLeft": "左操作杆曲线",
       "profileRight": "右操作杆曲线",
       "profileSaved": "我保存的曲线",
@@ -1613,7 +1609,6 @@
       "allHint_one": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
       "allHint_other": "有 {{count}} 个按键与控制器原始设置不同。可在此列表中选择，或点击图中的按键；两者修改的是同一设置。",
       "changed": "已更改",
-      "notApplied": "尚未应用",
       "notSaved": "尚未保存",
       "off": "关闭",
       "noChanges": "无更改（控制器原始按键）",
@@ -1638,7 +1633,7 @@
       "openHint": "将此配置应用到控制器，并用所有面板编辑，每项改动立即可感受",
       "buttonsNote": "{{title}} 的配置已启用：按键会通过“保存到配置文件”存入此游戏的布局，而不是你的常用按键。",
       "dongleNote": "不属于 {{title}} 的配置：{{device}} 上的设置仍是你的常规设置。在这里的更改会在配置结束后保留，届时再保存到 {{device}}。",
-      "calibrationNote": "校准属于控制器，不属于 {{title}} 的配置：保存后会在 {{device}} 中对所有游戏生效。",
+      "calibrationNote": "校准属于控制器，而不属于 {{title}} 的配置：它仍是你的常规校准，配置结束后用保存将其保存到 {{device}}。",
       "curvesNote": "{{title}} 的配置已启用：曲线会通过“保存到配置文件”存入此游戏的配置并从此生效；之后会恢复你的常规曲线。",
       "curvesNormal": "此操作杆在这款游戏中使用你的常规曲线。"
     },
@@ -1812,7 +1807,8 @@
         "cancelled": "密码窗口已取消",
         "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。"
       },
-      "headsetUndo": "无法切回控制器的声音：{{reason}}"
+      "headsetUndo": "无法切回控制器的声音：{{reason}}",
+      "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。"
     },
     "notices": {
       "volumeRestored": "控制器音量已恢复为最大：控制器重新连接后音量又变低了。",
@@ -1866,6 +1862,7 @@
       "mic": "麦克风",
       "buttons": "按键配置",
       "sticks": "操作杆与校准",
+      "gyro": "陀螺仪",
       "slots": "配对槽位",
       "firmware": "固件",
       "device": "重启与重置",

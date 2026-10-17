@@ -41,7 +41,7 @@ import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion
 import { SECTIONS, type SectionId } from "../accordion/sections";
 import AppSettingsPage from "../pages/AppSettingsPage";
 import Notice from "../Notice";
-import { useRemap } from "./useRemap";
+import { useBoardDrafts } from "./boardDrafts";
 import { useLibrary, useProfileTarget } from "../library/libraryContext";
 import { logged } from "../../errorText";
 
@@ -116,8 +116,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (!on) resetConnectedDot();
   }, [on]);
   const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
-  const { appliedStamp, library, setButtonsDraft } = useLibrary();
-  const remap = useRemap(client, bridge.identity?.remapTemporary ?? null, appliedStamp);
+  const { library, setButtonsDraft } = useLibrary();
+  // The button assignments: the app's one draft (boardDrafts.tsx), saved by the save bar.
+  const { remap } = useBoardDrafts();
   // A game's profile on: button changes are part of what "Save to profile" saves.
   const profileKey = useProfileTarget()?.gameKey;
   const inProfile = !!(profileKey && library.games[profileKey]?.profile);

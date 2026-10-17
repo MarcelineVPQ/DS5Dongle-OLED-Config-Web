@@ -92,13 +92,13 @@
     },
     "bar": {
       "unsaved": "Applied to {{device}}, not saved yet: changes are lost when it powers off.",
+      "staged": "Not saved yet: Save puts your changes on {{device}}.",
       "saved": "All changes saved on {{device}}.",
       "revert": "Revert",
       "save": "Save to {{device}}",
       "profileActive": "{{title}} profile is active",
       "profileSaved": "Changes go to the profile; normal settings come back when the game closes.",
       "profileUnsaved": "Changed here, not saved to the profile yet.",
-      "saveProfile": "Save to profile",
       "saveProfileTo": "Save to {{title}} profile"
     },
     "common": {
@@ -155,7 +155,6 @@
       "sleepControllerOffSub": "Once the PC has slept for 3 seconds",
       "psWakesPc": "Wake the PC with the PS button",
       "psWakesPcSub": "The PC must keep USB powered while it sleeps and allow the keyboard to wake it. With no controller connected, {{device}} appears as \"DS5 Dongle Wake Keyboard\".",
-      "pcSleepHint": "Saved on {{device}} right away.",
       "needsFirmware": "Update {{device}}'s firmware to use these settings.",
       "asGame": "As the game",
       "asPc": "As on the PC",
@@ -659,7 +658,6 @@
       "close": "Close",
       "remap": "Button assignments",
       "remapDefault": "default",
-      "remapApply": "Apply assignments",
       "remapReset": "Reset all buttons",
       "remapResetHint": "Every button back to itself",
       "pull": "Pull",
@@ -1333,7 +1331,6 @@
       "hdrNitsSub": "Your display's peak brightness"
     },
     "calib": {
-      "title": "Calibration",
       "intro": "Corrects stick drift, deadzones, trigger travel and the gyroscope's zero inside {{device}}, for every game. Nothing is written to the controller; Reset undoes it.",
       "needsFirmware": "Update {{device}}'s firmware to calibrate.",
       "needsController": "Connect a controller to calibrate.",
@@ -1356,18 +1353,18 @@
       "outer": "Full tilt at",
       "outerSub": "How far the stick must go to count as fully pushed",
       "center": "Center offset: X {{x}}, Y {{y}}",
-      "triggers": "Triggers",
       "now": "now {{raw}} → {{out}}",
       "gyro": "Gyroscope",
       "gyroZero": "Zero offset:",
-      "save": "Save to {{device}}",
-      "revert": "Revert",
       "reset": "Reset to uncalibrated",
-      "saveHint": "Saved in {{device}}'s own memory; it applies to every game right away.",
-      "forSlot": "For the controller in pairing slot {{slot}}; each slot keeps its own.",
       "getReady": "Get ready…",
       "missed": "Not measured, so the old values were kept: {{parts}}. Go all the way on those and measure again.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "calibrated": "Calibrated",
+      "uncalibrated": "Not calibrated",
+      "sticksTitle": "Stick calibration",
+      "triggersTitle": "Trigger calibration",
+      "gyroTitle": "Gyroscope calibration"
     },
     "curves": {
       "title": "Sensitivity curve",
@@ -1402,7 +1399,6 @@
       "needsFirmware": "Update {{device}}'s firmware for sensitivity curves.",
       "readFailed": "{{device, capitalize}} didn't answer with its curves.",
       "resetLinear": "Back to Linear",
-      "saveHint": "Saved in {{device}} for the controller in pairing slot {{slot}}; applies to every game right away.",
       "profileLeft": "Left stick curve",
       "profileRight": "Right stick curve",
       "profileSaved": "My saved curve",
@@ -1624,7 +1620,6 @@
       "allHint_one": "{{count}} button changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "allHint_other": "{{count}} buttons changed from the controller's own. Pick from this list or click a button on the drawing; both change the same thing.",
       "changed": "changed",
-      "notApplied": "not applied yet",
       "notSaved": "not saved yet",
       "off": "Off",
       "noChanges": "No changes (the controller's own buttons)",
@@ -1649,7 +1644,7 @@
       "openHint": "Put this profile on the controller and edit it with every panel, feeling each change live",
       "buttonsNote": "{{title}}'s profile is on: buttons go into this game's layout with Save to profile, not into your normal buttons.",
       "dongleNote": "Not part of {{title}}'s profile: these settings on {{device}} stay your normal ones. Changes here are kept after the profile ends; save them to {{device}} then.",
-      "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: saving it changes it in {{device}} for every game.",
+      "calibrationNote": "Calibration belongs to the controller, not to {{title}}'s profile: it stays your normal one, and Save keeps it on {{device}} once the profile ends.",
       "curvesNote": "{{title}}'s profile is on: curves go into this game's profile with Save to profile and are felt from then on; your normal curves come back after.",
       "curvesNormal": "This stick uses your normal curve in this game."
     },
@@ -1823,7 +1818,8 @@
         "cancelled": "the password prompt was cancelled",
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
       },
-      "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}"
+      "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
+      "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again."
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
@@ -1879,6 +1875,7 @@
       "mic": "Microphone",
       "buttons": "Button assignments",
       "sticks": "Sticks & calibration",
+      "gyro": "Gyroscope",
       "slots": "Pairing slots",
       "firmware": "Firmware",
       "device": "Restart & reset",

@@ -93,13 +93,13 @@
     },
     "bar": {
       "unsaved": "Appliqué {{device_a}}, pas encore enregistré : les changements seront perdus à l'extinction.",
+      "staged": "Pas encore enregistré : Enregistrer met tes changements sur {{device}}.",
       "saved": "Tous les changements sont enregistrés sur {{device}}.",
       "revert": "Annuler",
       "save": "Enregistrer sur {{device}}",
       "profileActive": "Profil {{title}} actif",
       "profileSaved": "Les modifications vont dans le profil ; vos réglages habituels reviennent à la fermeture du jeu.",
       "profileUnsaved": "Modifié ici, pas encore enregistré dans le profil.",
-      "saveProfile": "Enregistrer dans le profil",
       "saveProfileTo": "Enregistrer dans le profil {{title}}"
     },
     "common": {
@@ -156,7 +156,6 @@
       "sleepControllerOffSub": "Après 3 secondes de veille du PC",
       "psWakesPc": "Réveiller le PC avec la touche PS",
       "psWakesPcSub": "Le PC doit garder l'USB alimenté pendant la veille et autoriser le clavier à le réveiller. Sans manette connectée, {{device}} apparaît comme « DS5 Dongle Wake Keyboard ».",
-      "pcSleepHint": "Enregistré tout de suite sur {{device}}.",
       "needsFirmware": "Mets à jour le firmware {{device_de}} pour utiliser ces réglages.",
       "asGame": "Selon le jeu",
       "asPc": "Comme sur le PC",
@@ -660,7 +659,6 @@
       "close": "Fermer",
       "remap": "Attribution des touches",
       "remapDefault": "par défaut",
-      "remapApply": "Appliquer l'attribution",
       "remapReset": "Réinitialiser tous les boutons",
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
@@ -1334,7 +1332,6 @@
       "hdrNitsSub": "La luminosité maximale de votre écran"
     },
     "calib": {
-      "title": "Calibrage",
       "intro": "Corrige la dérive des joysticks, les zones inertes, la course des gâchettes et le zéro du gyroscope dans {{device}}, pour tous les jeux. Rien n'est écrit dans la manette ; Réinitialiser annule tout.",
       "needsFirmware": "Mets à jour le firmware {{device_de}} pour calibrer.",
       "needsController": "Connectez une manette pour calibrer.",
@@ -1357,18 +1354,18 @@
       "outer": "Inclinaison max à",
       "outerSub": "Jusqu'où le joystick doit aller pour compter comme poussé à fond",
       "center": "Décalage du centre : X {{x}}, Y {{y}}",
-      "triggers": "Gâchettes",
       "now": "maintenant {{raw}} → {{out}}",
       "gyro": "Gyroscope",
       "gyroZero": "Décalage du zéro :",
-      "save": "Enregistrer sur {{device}}",
-      "revert": "Annuler",
       "reset": "Revenir au non calibré",
-      "saveHint": "Enregistré dans la mémoire {{device_de}} ; s'applique tout de suite à tous les jeux.",
-      "forSlot": "Pour la manette de l'emplacement {{slot}} ; chaque emplacement garde le sien.",
       "getReady": "Préparez-vous…",
       "missed": "Non mesuré, les anciennes valeurs sont conservées : {{parts}}. Allez jusqu'au bout et mesurez à nouveau.",
-      "retry": "Réessayer"
+      "retry": "Réessayer",
+      "calibrated": "Calibré",
+      "uncalibrated": "Non calibré",
+      "sticksTitle": "Calibrage des joysticks",
+      "triggersTitle": "Calibrage des gâchettes",
+      "gyroTitle": "Calibrage du gyroscope"
     },
     "curves": {
       "title": "Courbe de sensibilité",
@@ -1403,7 +1400,6 @@
       "needsFirmware": "Mets à jour le firmware {{device_de}} pour les courbes de sensibilité.",
       "readFailed": "{{device, capitalize}} n'a pas renvoyé ses courbes.",
       "resetLinear": "Revenir à Linéaire",
-      "saveHint": "Enregistrée dans {{device}} pour la manette de l'emplacement {{slot}} ; s'applique tout de suite à tous les jeux.",
       "profileLeft": "Courbe du joystick gauche",
       "profileRight": "Courbe du joystick droit",
       "profileSaved": "Ma courbe enregistrée",
@@ -1625,7 +1621,6 @@
       "allHint_one": "{{count}} bouton modifié par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "allHint_other": "{{count}} boutons modifiés par rapport à la manette. Choisis dans cette liste ou clique un bouton sur le dessin ; les deux modifient la même chose.",
       "changed": "modifié",
-      "notApplied": "pas encore appliqué",
       "notSaved": "pas encore enregistré",
       "off": "Désactivé",
       "noChanges": "Aucune modification (les boutons de la manette)",
@@ -1650,7 +1645,7 @@
       "openHint": "Mettre ce profil sur la manette et le modifier avec tous les panneaux, en ressentant chaque changement",
       "buttonsNote": "Profil de {{title}} actif : les boutons vont dans la disposition de ce jeu avec Enregistrer dans le profil, pas dans tes boutons habituels.",
       "dongleNote": "Hors du profil de {{title}} : ces réglages {{device_de}} restent tes réglages habituels. Ce que tu changes ici reste après la fin du profil ; enregistre-le alors sur {{device}}.",
-      "calibrationNote": "La calibration appartient à la manette, pas au profil de {{title}} : l'enregistrer la change dans {{device}} pour tous les jeux.",
+      "calibrationNote": "Le calibrage appartient à la manette, pas au profil de {{title}} : il reste ton calibrage habituel, et Enregistrer le garde sur {{device}} une fois le profil terminé.",
       "curvesNote": "Profil de {{title}} actif : les courbes vont dans le profil de ce jeu avec Enregistrer dans le profil et se ressentent dès lors ; tes courbes habituelles reviennent ensuite.",
       "curvesNormal": "Ce joystick utilise ta courbe habituelle dans ce jeu."
     },
@@ -1824,7 +1819,8 @@
         "cancelled": "la demande de mot de passe a été annulée",
         "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
       },
-      "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}"
+      "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
+      "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer."
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",
@@ -1880,6 +1876,7 @@
       "mic": "Micro",
       "buttons": "Attribution des touches",
       "sticks": "Joysticks et calibrage",
+      "gyro": "Gyroscope",
       "slots": "Emplacements d'association",
       "firmware": "Firmware",
       "device": "Redémarrage et réinitialisation",

@@ -93,13 +93,13 @@
     },
     "bar": {
       "unsaved": "Aplicado {{device_a}}, ainda não salvo: as alterações se perdem ao desligar.",
+      "staged": "Ainda não salvo: Salvar coloca suas mudanças {{device_em}}.",
       "saved": "Todas as alterações salvas {{device_em}}.",
       "revert": "Reverter",
       "save": "Salvar {{device_em}}",
       "profileActive": "Perfil de {{title}} ativo",
       "profileSaved": "As alterações vão para o perfil; suas configurações normais voltam quando o jogo fechar.",
       "profileUnsaved": "Alterado aqui, ainda não salvo no perfil.",
-      "saveProfile": "Salvar no perfil",
       "saveProfileTo": "Salvar no perfil de {{title}}"
     },
     "common": {
@@ -156,7 +156,6 @@
       "sleepControllerOffSub": "Depois de 3 segundos de suspensão do PC",
       "psWakesPc": "Despertar o PC com o botão PS",
       "psWakesPcSub": "O PC precisa manter a USB alimentada durante a suspensão e permitir que o teclado o desperte. Sem um controle conectado, {{device}} aparece como “DS5 Dongle Wake Keyboard”.",
-      "pcSleepHint": "Salvo {{device_em}} na hora.",
       "needsFirmware": "Atualize o firmware {{device_de}} para usar estas configurações.",
       "asGame": "Conforme o jogo",
       "asPc": "Como no PC",
@@ -660,7 +659,6 @@
       "close": "Fechar",
       "remap": "Atribuições de botões",
       "remapDefault": "padrão",
-      "remapApply": "Aplicar atribuições",
       "remapReset": "Redefinir todos os botões",
       "remapResetHint": "Cada botão volta a ser ele mesmo",
       "pull": "Pressão",
@@ -1334,7 +1332,6 @@
       "hdrNitsSub": "O brilho máximo da sua tela"
     },
     "calib": {
-      "title": "Calibração",
       "intro": "Corrige o drift dos analógicos, as zonas inativas, o curso dos gatilhos e o zero do giroscópio {{device_em}}, para todos os jogos. Nada é gravado no controle; Redefinir desfaz.",
       "needsFirmware": "Atualize o firmware {{device_de}} para calibrar.",
       "needsController": "Conecte um controle para calibrar.",
@@ -1357,18 +1354,18 @@
       "outer": "Inclinação máxima em",
       "outerSub": "Quanto o analógico precisa ir para contar como totalmente empurrado",
       "center": "Deslocamento do centro: X {{x}}, Y {{y}}",
-      "triggers": "Gatilhos",
       "now": "agora {{raw}} → {{out}}",
       "gyro": "Giroscópio",
       "gyroZero": "Deslocamento do zero:",
-      "save": "Salvar {{device_em}}",
-      "revert": "Desfazer",
       "reset": "Voltar ao sem calibração",
-      "saveHint": "Salvo na memória {{device_de}}; vale na hora para todos os jogos.",
-      "forSlot": "Para o controle no slot de emparelhamento {{slot}}; cada slot guarda a sua.",
       "getReady": "Prepare-se…",
       "missed": "Não medido, os valores antigos foram mantidos: {{parts}}. Vá até o fim e meça de novo.",
-      "retry": "Tentar de novo"
+      "retry": "Tentar de novo",
+      "calibrated": "Calibrado",
+      "uncalibrated": "Não calibrado",
+      "sticksTitle": "Calibração dos analógicos",
+      "triggersTitle": "Calibração dos gatilhos",
+      "gyroTitle": "Calibração do giroscópio"
     },
     "curves": {
       "title": "Curva de sensibilidade",
@@ -1403,7 +1400,6 @@
       "needsFirmware": "Atualize o firmware {{device_de}} para usar curvas de sensibilidade.",
       "readFailed": "{{device, capitalize}} não respondeu com as curvas.",
       "resetLinear": "Voltar para Linear",
-      "saveHint": "Salva {{device_em}} para o controle no slot de emparelhamento {{slot}}; vale na hora em todos os jogos.",
       "profileLeft": "Curva do analógico esquerdo",
       "profileRight": "Curva do analógico direito",
       "profileSaved": "Minha curva salva",
@@ -1625,7 +1621,6 @@
       "allHint_one": "{{count}} botão alterado em relação ao controle. Escolha nesta lista ou clique num botão do desenho; os dois mudam a mesma coisa.",
       "allHint_other": "{{count}} botões alterados em relação ao controle. Escolha nesta lista ou clique num botão do desenho; os dois mudam a mesma coisa.",
       "changed": "alterado",
-      "notApplied": "ainda não aplicado",
       "notSaved": "ainda não salvo",
       "off": "Desligado",
       "noChanges": "Sem alterações (os botões do controle)",
@@ -1650,7 +1645,7 @@
       "openHint": "Colocar este perfil no controle e editá-lo com todos os painéis, sentindo cada mudança na hora",
       "buttonsNote": "Perfil de {{title}} ativo: os botões vão para o layout deste jogo com Salvar no perfil, não para os seus botões normais.",
       "dongleNote": "Fora do perfil de {{title}}: estas configurações {{device_de}} continuam as normais. O que você mudar aqui fica depois que o perfil termina; salve {{device_em}} então.",
-      "calibrationNote": "A calibração pertence ao controle, não ao perfil de {{title}}: salvá-la muda {{device_em}} para todos os jogos.",
+      "calibrationNote": "A calibração é do controle, não do perfil de {{title}}: continua a normal, e Salvar a guarda {{device_em}} quando o perfil terminar.",
       "curvesNote": "Perfil de {{title}} ativo: as curvas vão para o perfil deste jogo com Salvar no perfil e são sentidas a partir daí; suas curvas normais voltam depois.",
       "curvesNormal": "Este analógico usa sua curva normal neste jogo."
     },
@@ -1824,7 +1819,8 @@
         "cancelled": "a janela da senha foi cancelada",
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
       },
-      "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}"
+      "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
+      "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo."
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",
@@ -1880,6 +1876,7 @@
       "mic": "Microfone",
       "buttons": "Atribuições de botões",
       "sticks": "Analógicos e calibração",
+      "gyro": "Giroscópio",
       "slots": "Slots de emparelhamento",
       "firmware": "Firmware",
       "device": "Reinício e redefinição",

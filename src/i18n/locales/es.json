@@ -93,13 +93,13 @@
     },
     "bar": {
       "unsaved": "Aplicado {{device_a}}, aún sin guardar: los cambios se pierden al apagarse.",
+      "staged": "Aún sin guardar: Guardar pone tus cambios en {{device}}.",
       "saved": "Todos los cambios guardados en {{device}}.",
       "revert": "Revertir",
       "save": "Guardar en {{device}}",
       "profileActive": "Perfil de {{title}} activo",
       "profileSaved": "Los cambios van al perfil; tus ajustes normales vuelven al cerrar el juego.",
       "profileUnsaved": "Cambiado aquí, aún no guardado en el perfil.",
-      "saveProfile": "Guardar en el perfil",
       "saveProfileTo": "Guardar en el perfil de {{title}}"
     },
     "common": {
@@ -156,7 +156,6 @@
       "sleepControllerOffSub": "Tras 3 segundos de suspensión del PC",
       "psWakesPc": "Reactivar el PC con el botón PS",
       "psWakesPcSub": "El PC debe mantener la alimentación USB durante la suspensión y permitir que el teclado lo reactive. Sin un mando conectado, {{device}} aparece como «DS5 Dongle Wake Keyboard».",
-      "pcSleepHint": "Se guarda en {{device}} al instante.",
       "needsFirmware": "Actualiza el firmware {{device_de}} para usar estos ajustes.",
       "asGame": "Según el juego",
       "asPc": "Como en el PC",
@@ -660,7 +659,6 @@
       "close": "Cerrar",
       "remap": "Asignaciones de botones",
       "remapDefault": "predeterminado",
-      "remapApply": "Aplicar asignaciones",
       "remapReset": "Restablecer todos los botones",
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
@@ -1334,7 +1332,6 @@
       "hdrNitsSub": "El brillo máximo de tu pantalla"
     },
     "calib": {
-      "title": "Calibración",
       "intro": "Corrige la deriva de los joysticks, las zonas muertas, el recorrido de los gatillos y el cero del giroscopio en {{device}}, para todos los juegos. No se escribe nada en el mando; Restablecer lo deshace.",
       "needsFirmware": "Actualiza el firmware {{device_de}} para calibrar.",
       "needsController": "Conecta un mando para calibrar.",
@@ -1357,18 +1354,18 @@
       "outer": "Inclinación máxima en",
       "outerSub": "Cuánto debe moverse el joystick para contar como pulsado a fondo",
       "center": "Desplazamiento del centro: X {{x}}, Y {{y}}",
-      "triggers": "Gatillos",
       "now": "ahora {{raw}} → {{out}}",
       "gyro": "Giroscopio",
       "gyroZero": "Desplazamiento del cero:",
-      "save": "Guardar en {{device}}",
-      "revert": "Deshacer",
       "reset": "Volver a sin calibrar",
-      "saveHint": "Se guarda en la memoria {{device_de}}; se aplica al instante en todos los juegos.",
-      "forSlot": "Para el mando del espacio de emparejamiento {{slot}}; cada espacio guarda la suya.",
       "getReady": "Prepárate…",
       "missed": "No medido, se mantienen los valores anteriores: {{parts}}. Llega hasta el tope y vuelve a medir.",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "calibrated": "Calibrado",
+      "uncalibrated": "Sin calibrar",
+      "sticksTitle": "Calibración de los joysticks",
+      "triggersTitle": "Calibración de los gatillos",
+      "gyroTitle": "Calibración del giroscopio"
     },
     "curves": {
       "title": "Curva de sensibilidad",
@@ -1403,7 +1400,6 @@
       "needsFirmware": "Actualiza el firmware {{device_de}} para usar curvas de sensibilidad.",
       "readFailed": "{{device, capitalize}} no devolvió sus curvas.",
       "resetLinear": "Volver a Lineal",
-      "saveHint": "Guardada en {{device}} para el mando del espacio de emparejamiento {{slot}}; se aplica al instante en todos los juegos.",
       "profileLeft": "Curva del joystick izquierdo",
       "profileRight": "Curva del joystick derecho",
       "profileSaved": "Mi curva guardada",
@@ -1625,7 +1621,6 @@
       "allHint_one": "{{count}} botón cambiado respecto al mando. Elige en esta lista o haz clic en un botón del dibujo; ambos cambian lo mismo.",
       "allHint_other": "{{count}} botones cambiados respecto al mando. Elige en esta lista o haz clic en un botón del dibujo; ambos cambian lo mismo.",
       "changed": "cambiado",
-      "notApplied": "sin aplicar",
       "notSaved": "sin guardar",
       "off": "Desactivado",
       "noChanges": "Sin cambios (los botones del mando)",
@@ -1650,7 +1645,7 @@
       "openHint": "Poner este perfil en el mando y editarlo con todos los paneles, notando cada cambio al momento",
       "buttonsNote": "Perfil de {{title}} activo: los botones van a la distribución de este juego con Guardar en el perfil, no a tus botones normales.",
       "dongleNote": "No forma parte del perfil de {{title}}: estos ajustes {{device_de}} siguen siendo los normales. Lo que cambies aquí se mantiene al terminar el perfil; guárdalo entonces en {{device}}.",
-      "calibrationNote": "La calibración pertenece al mando, no al perfil de {{title}}: al guardarla cambia en {{device}} para todos los juegos.",
+      "calibrationNote": "La calibración es del mando, no del perfil de {{title}}: sigue siendo la normal, y Guardar la guarda en {{device}} cuando el perfil termina.",
       "curvesNote": "Perfil de {{title}} activo: las curvas van al perfil de este juego con Guardar en el perfil y se notan desde entonces; luego vuelven tus curvas normales.",
       "curvesNormal": "Este joystick usa tu curva normal en este juego."
     },
@@ -1824,7 +1819,8 @@
         "cancelled": "se canceló la ventana de la contraseña",
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
       },
-      "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}"
+      "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
+      "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar."
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",
@@ -1880,6 +1876,7 @@
       "mic": "Micrófono",
       "buttons": "Asignaciones de botones",
       "sticks": "Joysticks y calibración",
+      "gyro": "Giroscopio",
       "slots": "Ranuras de emparejamiento",
       "firmware": "Firmware",
       "device": "Reinicio y restablecimiento",

@@ -1,7 +1,7 @@
-// The dongle's button-remap table for the live view: read once per connection,
-// edited one button at a time from the side panel, and applied explicitly
-// (the firmware writes remaps straight to flash, so there is no "save" step;
-// Apply is the commit, verified by re-reading the table and its revision).
+// The dongle's button-remap table: read once per connection, edited one
+// button at a time from the side panel, and written by the save bar's Save
+// (boardDrafts.tsx: the firmware writes remaps straight to flash, so the
+// write is the save, verified by re-reading the table and its revision).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { causeText } from "../shownError";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,7 @@ export interface Remap {
   error: string | null;
   clearError: () => void; // the notice's ×
   setTarget: (source: number, target: number) => void;
-  apply: () => Promise<void>;
+  apply: () => Promise<boolean>; // the save bar's write; false = the error says why
   revert: () => void;
   resetAll: () => void;
   load: (table: number[], layout?: { id: string; name: string }, extra?: number[]) => void; // a saved layout into the editor
@@ -79,8 +79,8 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   // Stable between renders (the live view re-renders ~30 times a second).
   const device = useMemo(() => state?.table ?? identityTable(), [state]);
 
-  const apply = useCallback(async () => {
-    if (!client) return;
+  const apply = useCallback(async (): Promise<boolean> => {
+    if (!client) return false;
     setBusy(true);
     setError(null);
     try {
@@ -96,6 +96,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
         setExtraDraft(afterExtra.slice());
       }
       sayInPassing("app_remapped");
+      return true;
     } catch (cause) {
       // error: SHOWN — remap.verifyFailed (or the board's failure, via causeText)
       setError(causeText(cause));
@@ -106,6 +107,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
         (now) => now && setState(now),
         () => undefined,
       );
+      return false;
     } finally {
       setBusy(false);
     }
