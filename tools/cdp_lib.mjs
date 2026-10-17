@@ -18,6 +18,15 @@ export async function connect(url) {
   let id = 0;
   const wait = new Map();
   const handlers = new Set();
+  // A closed socket (the app quit, or Chromium dropped it, as on a
+  // suspend) answers every waiting and later request with an error instead
+  // of leaving it waiting forever.
+  let closed = false;
+  ws.addEventListener("close", () => {
+    closed = true;
+    wait.forEach((r) => r({ error: { message: "socket closed" } }));
+    wait.clear();
+  });
   ws.addEventListener("message", (m) => {
     const d = JSON.parse(m.data);
     if (d.id && wait.has(d.id)) {
@@ -27,11 +36,12 @@ export async function connect(url) {
   });
   const send = (method, params = {}) =>
     new Promise((r) => {
+      if (closed) return r({ error: { message: "socket closed" } });
       const i = ++id;
       wait.set(i, r);
       ws.send(JSON.stringify({ id: i, method, params }));
     });
-  return { send, handlers, close: () => ws.close() };
+  return { send, handlers, close: () => ws.close(), isClosed: () => closed };
 }
 
 // Evaluation helpers over a page session and a main-process session:
