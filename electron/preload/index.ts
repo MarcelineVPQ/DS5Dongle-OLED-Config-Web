@@ -4,7 +4,17 @@
 // here: the page uses WebUSB, which the main process limits to the dongle and
 // the RP2350 boot device.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
-import { IPC, type DesktopApi, type FirmwareHoldState, type MainErrorKey, type MainNoticeKey, type ProtonProgress, type TrayCommand, type UpdateState } from "../../src/desktop/api";
+import {
+  IPC,
+  type DesktopApi,
+  type DesktopSettings,
+  type FirmwareHoldState,
+  type MainErrorKey,
+  type MainNoticeKey,
+  type ProtonProgress,
+  type TrayCommand,
+  type UpdateState,
+} from "../../src/desktop/api";
 import type { DesktopPalette } from "../../src/desktop/theme/desktopPalette";
 
 const api: DesktopApi = {
@@ -36,11 +46,23 @@ const api: DesktopApi = {
     ipcRenderer.on(IPC.headsetSwitched, handler);
     return () => ipcRenderer.removeListener(IPC.headsetSwitched, handler);
   },
+  onGpuTurnedOff: (listener) => {
+    const handler = () => listener();
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
+    ipcRenderer.on(IPC.gpuTurnedOff, handler);
+    return () => ipcRenderer.removeListener(IPC.gpuTurnedOff, handler);
+  },
   headsetUndo: () => ipcRenderer.invoke(IPC.headsetUndo),
   setHeadsetHint: (headphones) => ipcRenderer.send(IPC.headsetHint, headphones),
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),
   recoveredFiles: () => ipcRenderer.invoke(IPC.recoveredFiles),
   setSetting: (key, value) => ipcRenderer.invoke(IPC.setSetting, { key, value }),
+  onSettingsChanged: (listener) => {
+    const handler = (_event: IpcRendererEvent, settings: DesktopSettings) => listener(settings);
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
+    ipcRenderer.on(IPC.settingsChanged, handler);
+    return () => ipcRenderer.removeListener(IPC.settingsChanged, handler);
+  },
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
   boardHolders: () => ipcRenderer.invoke(IPC.boardHolders),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),

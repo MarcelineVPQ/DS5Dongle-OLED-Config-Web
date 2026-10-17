@@ -21,6 +21,8 @@ export interface DeviceStatus {
   // charging, plugged in but not charging, or fully charged; null on battery.
   power: "charging" | "pluggedIn" | "full" | null;
   battery: number | null; // 0-100 in 10% steps, null when unknown
+  // The board's name for the tray's text ({{deviceName}}): the connected one, else the last one, else null ("your board").
+  board: string | null;
 }
 
 // Actions picked from the tray menu that need the USB connection.
@@ -77,7 +79,7 @@ export interface DesktopSettings {
   // the short confirmations as text only).
   narratorCaptions: boolean;
   // Draw with the graphics card (needed for blur, glass and smooth effects).
-  // Turned off automatically if the GPU process crashes; applies at restart.
+  // Turned off automatically if the GPU process crashes twice in one run; applies at restart.
   hardwareAcceleration: boolean;
   // Experimental: the lightbar glow brighter than paper white on HDR displays
   // (starts the app with the scRGB color profile; applies at restart).
@@ -129,9 +131,9 @@ export type UpdateState =
   | { phase: "installing"; version: string }
   | { phase: "ready"; version: string }
   // during "install": the user's Download and install (or an automatic one) failed, which the banner shows.
-  // problem: why a check failed (the feed's own problem, see FeedProblem).
-  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed by problem (CheckNow, SetupScreen)
-  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem };
+  // problem: why a check failed (the feed's own problem, see FeedProblem; "noBuild": the new version has no build for this system yet).
+  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed / .noBuild by problem (CheckNow, SetupScreen)
+  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem | "noBuild" };
 
 export interface LatestFirmware {
   version: string;
@@ -215,6 +217,8 @@ export interface DesktopApi {
   // Linux: the app switched the controller to its stereo headset profile for
   // the first time (headsetProfile.ts); the page explains it, with Undo.
   onHeadsetSwitched(listener: () => void): () => void;
+  // Hardware acceleration was turned off after GPU crashes (electron/main/gpuCrash.ts); the page says so, with Turn back on.
+  onGpuTurnedOff(listener: () => void): () => void;
   // Undo that switch: false when there's nothing to undo any more (the
   // headset was unplugged, or the profile changed since).
   headsetUndo(): Promise<boolean>;
@@ -226,6 +230,8 @@ export interface DesktopApi {
   // library): what was kept and where the damaged copy is (RecoveredNotice).
   recoveredFiles(): Promise<Recovered[]>;
   setSetting<K extends keyof DesktopSettings>(key: K, value: DesktopSettings[K]): Promise<DesktopSettings>;
+  // A setting changed (the tray's switches, the app on its own after a GPU crash, or the page): the new settings.
+  onSettingsChanged(listener: (settings: DesktopSettings) => void): () => void;
   // Linux: whether the app's udev rule is installed, and installing it (pkexec).
   usbAccessInstalled(): Promise<boolean>;
   // The programs that have the board open (Linux, read-only from /proc; other
@@ -323,11 +329,13 @@ export const IPC = {
   showError: "desktop:show-error",
   showNotice: "desktop:show-notice",
   headsetSwitched: "desktop:headset-switched",
+  gpuTurnedOff: "desktop:gpu-turned-off",
   headsetUndo: "desktop:headset-undo",
   headsetHint: "desktop:headset-hint",
   getSettings: "desktop:get-settings",
   recoveredFiles: "desktop:recovered-files",
   setSetting: "desktop:set-setting",
+  settingsChanged: "desktop:settings-changed",
   usbAccessInstalled: "desktop:usb-access-installed",
   boardHolders: "desktop:board-holders",
   appVersion: "desktop:app-version",

@@ -618,7 +618,8 @@
     "updateFeed": {
       "offline": "无法连接更新服务器。请检查网络连接后重试。",
       "unsigned": "更新源未通过安全检查，因此没有安装任何内容。这是我们这边的问题，与你的网络无关：请稍后再试。",
-      "malformed": "无法读取更新源，因此没有安装任何内容。这是我们这边的问题，与你的网络无关：请稍后再试。"
+      "malformed": "无法读取更新源，因此没有安装任何内容。这是我们这边的问题，与你的网络无关：请稍后再试。",
+      "noBuild": "新版本已发布，但还没有适用于此系统的版本。请稍后再试。"
     },
     "live": {
       "part": {
@@ -1819,7 +1820,8 @@
         "bundledDamaged": "应用自带的固件已损坏。请重新安装应用。",
         "noPkexec": "未安装 pkexec，因此应用无法请求管理员密码。",
         "cancelled": "密码窗口已取消",
-        "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。"
+        "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。",
+        "updateMissing": "下载的更新已不在这台电脑上（已从临时文件夹中删除）。请检查更新以重新下载。"
       },
       "headsetUndo": "无法切回控制器的声音：{{reason}}",
       "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。",
@@ -1832,7 +1834,10 @@
       "none": "没有已关闭的通知。",
       "showAgain": "再次显示",
       "showAllAgain": "全部再次显示",
-      "goTo": "前往{{place}}"
+      "goTo": "前往{{place}}",
+      "gpuOff": "图形崩溃后，硬件加速已关闭。从下次启动起，应用将不使用显卡绘制。",
+      "gpuTurnBackOn": "重新打开",
+      "gpuBackOn": "从下次启动起，硬件加速将重新打开。"
     },
     "toast": {
       "region": "通知",
@@ -1915,6 +1920,18 @@
       "game": "保存在此电脑上 · 修复只有在应用时才会更改文件",
       "about": "指南、更新内容和致谢",
       "dongle": "保存在 {{device}} 上 · 适用于所有配对槽位"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "未连接",
+      "noController": "没有控制器(请按 PS 键)",
+      "controller": "控制器已连接",
+      "slot": "槽位 {{slot}}",
+      "battery": "电量 {{percent}}%",
+      "showHide": "显示 / 隐藏",
+      "restartToUpdate": "重启以更新到 {{version}}",
+      "createShortcut": "创建桌面快捷方式",
+      "quit": "退出"
     }
   },
   "ad": {

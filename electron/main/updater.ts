@@ -89,6 +89,11 @@ export class Updater {
   private state: UpdateState = { phase: "idle" };
   // cache: OK — key=none (the feed the app offer on screen came from); invalidated=each update check; bound=1 entry. Only the app update installs from it; firmware downloads use the entry the user was shown (firmwareSource.ts)
   private manifest: Manifest | null = null;
+  // The channel `manifest` came from: an offer is installed only on that channel.
+  private manifestChannel: UpdateChannel | null = null;
+  // Each check's number: only the newest check's answer is used (two checks on
+  // different channels could otherwise answer out of order, the last one winning).
+  private checkSeq = 0;
   // The feed, shared by the update check and the firmware lookups (one fetch per check).
   readonly feed = new FeedCache((channel) => this.fetchManifest(channel));
   private busy = false;
@@ -100,6 +105,9 @@ export class Updater {
   private returningToStable = false;
   // Restart now started the installer (Windows): quitting doesn't run it again.
   private restarting = false;
+  // A download started in this run: the start-up tidy-up (Windows, 20 s in)
+  // leaves the update folder alone, or it could delete the new installer.
+  private downloadStarted = false;
 
   constructor(
     private readonly emit: (state: UpdateState) => void,
@@ -113,7 +121,7 @@ export class Updater {
   // An update waits that automatic updates may install: never one that would
   // replace this developer build with a regular one (updateDropsDevTools).
   autoInstallable(): boolean {
-    return this.state.phase === "available" && !this.state.dropsDevTools;
+    return this.state.phase === "available" && !this.state.dropsDevTools && this.manifestChannel === this.channel();
   }
 
   // Why this copy can't replace itself, or null if it can.
@@ -146,7 +154,7 @@ export class Updater {
           const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
-      } else if (process.platform === "win32") {
+      } else if (process.platform === "win32" && !this.downloadStarted) {
         rmSync(windowsUpdateDir(), { recursive: true, force: true });
       }
     } catch {
@@ -167,22 +175,33 @@ export class Updater {
     // Once an update is installed, only a restart moves on (a fresh check would
     // see the old running version and offer the same update again).
     if (this.busy || this.state.phase === "ready") return this.state;
+    const seq = ++this.checkSeq;
+    const channel = this.channel();
+    // A newer check started, or the channel changed while this one waited:
+    // its answer is dropped (a dev build is never offered on stable).
+    const stale = () => seq !== this.checkSeq || channel !== this.channel();
+    // The newest check, on a channel that changed since: nothing is on offer until the next check.
+    const dropped = () => (seq === this.checkSeq ? this.set({ phase: "idle" }) : this.state);
     this.set({ phase: "checking" });
     try {
-      const manifest = await this.feed.get(this.channel(), 0);
+      const manifest = await this.feed.get(channel, 0);
+      if (stale()) return dropped();
       this.manifest = manifest;
+      this.manifestChannel = channel;
       const remote = manifest.app.version;
       const offer = allowOlder ? !sameVersion(remote, app.getVersion()) : isNewer(remote, app.getVersion());
       if (!offer) return this.set({ phase: "up-to-date", version: app.getVersion() });
       const key = this.platformKey();
       const download = key ? manifest.app.platforms[key] : undefined;
-      if (!download) return this.set({ phase: "failed", detail: `No ${process.platform} build is published for ${remote}.` });
+      // error: SHOWN — desktop.updateFeed.noBuild (CheckNow, SetupScreen; was "Are you online?" with an English detail)
+      if (!download) return this.set({ phase: "failed", detail: keyedText("desktop.updateFeed.noBuild"), problem: "noBuild" });
       const blocker = this.selfInstallBlocker();
       if (blocker) return this.set({ phase: "manual", version: remote, notesUrl: manifest.app.notes_url, detail: blocker });
       const dropsDevTools = updateDropsDevTools(DEV_TOOLS_BUILT, remote) || undefined;
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url, dropsDevTools });
     } catch (cause) {
-      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
+      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install"); a stale check's failure is dropped (the newest check answers)
+      if (stale()) return dropped();
       return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}`, problem: feedProblem(cause) });
     }
   }
@@ -228,10 +247,13 @@ export class Updater {
 
   async downloadAndInstall(): Promise<UpdateState> {
     if (this.busy || this.state.phase !== "available" || !this.manifest) return this.state;
+    // The offer came from another channel than the one now chosen: look again on this one (the user pressed Install, so going online is asked).
+    if (this.manifestChannel !== this.channel()) return this.check();
     const key = this.platformKey();
     const download = key ? this.manifest.app.platforms[key] : undefined;
     if (!download) return this.state;
     this.busy = true;
+    this.downloadStarted = true;
     const version = this.manifest.app.version;
     try {
       const target = this.installTarget(download);
@@ -295,7 +317,7 @@ export class Updater {
   // not pressed): the installer runs silently as the app exits, so the next
   // start is the new version (as on Linux). Called once, from will-quit.
   installOnQuit(): void {
-    if (process.platform !== "win32" || this.state.phase !== "ready" || !this.installedPath || this.restarting) return;
+    if (process.platform !== "win32" || this.state.phase !== "ready" || !this.installedPath || this.restarting || !existsSync(this.installedPath)) return;
     runInstaller(this.installedPath, false);
   }
 
@@ -303,6 +325,14 @@ export class Updater {
   restart(): void {
     if (this.state.phase !== "ready" || !this.installedPath) return;
     const target = this.installedPath;
+    // The downloaded installer (or AppImage) is gone (deleted from Temp): say
+    // so and keep running, instead of quitting into nothing.
+    if (!existsSync(target)) {
+      this.installedPath = null;
+      // error: SHOWN — desktop.update.appFailed with desktop.errors.main.updateMissing (the banner; Check for updates downloads it again)
+      this.set({ phase: "failed", detail: `${keyedText("desktop.errors.main.updateMissing")} ${keyedText("desktop.update.untouched")}`, during: "install" });
+      return;
+    }
     // Before the new instance starts, or it could find the lock still held
     // and quit, leaving no app running.
     app.releaseSingleInstanceLock();

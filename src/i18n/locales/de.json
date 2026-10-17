@@ -622,7 +622,8 @@
     "updateFeed": {
       "offline": "Der Update-Server ist nicht erreichbar. Prüf die Internetverbindung und versuch es noch einmal.",
       "unsigned": "Der Update-Feed hat die Sicherheitsprüfung nicht bestanden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal.",
-      "malformed": "Der Update-Feed konnte nicht gelesen werden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal."
+      "malformed": "Der Update-Feed konnte nicht gelesen werden, deshalb wurde nichts installiert. Das liegt an uns, nicht an deiner Verbindung: Versuch es später noch einmal.",
+      "noBuild": "Eine neue Version ist da, aber für dieses System gibt es noch keinen Build davon. Versuche es später noch einmal."
     },
     "live": {
       "part": {
@@ -1830,7 +1831,8 @@
         "bundledDamaged": "Die mit der App gelieferte Firmware ist beschädigt. Installiere die App neu.",
         "noPkexec": "pkexec ist nicht installiert, darum kann die App nicht nach dem Administrator-Passwort fragen.",
         "cancelled": "die Passwortabfrage wurde abgebrochen",
-        "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
+        "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu.",
+        "updateMissing": "Das heruntergeladene Update ist nicht mehr auf diesem PC (aus dem temporären Ordner gelöscht). Suche nach Updates, um es erneut herunterzuladen."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
       "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal.",
@@ -1843,7 +1845,10 @@
       "none": "Keine geschlossenen Hinweise.",
       "showAgain": "Wieder anzeigen",
       "showAllAgain": "Alle wieder anzeigen",
-      "goTo": "Zu {{place}}"
+      "goTo": "Zu {{place}}",
+      "gpuOff": "Die Hardwarebeschleunigung wurde nach einem Grafikabsturz ausgeschaltet. Ab dem nächsten Start zeichnet die App ohne die Grafikkarte.",
+      "gpuTurnBackOn": "Wieder einschalten",
+      "gpuBackOn": "Die Hardwarebeschleunigung ist ab dem nächsten Start wieder an."
     },
     "toast": {
       "region": "Benachrichtigungen",
@@ -1928,6 +1933,18 @@
       "game": "Auf diesem PC · eine Korrektur ändert Dateien erst beim Übernehmen",
       "about": "Handbuch, Änderungen und Credits",
       "dongle": "Auf {{device_dat}} · für jeden Kopplungs-Slot"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Nicht verbunden",
+      "noController": "Kein Controller (PS-Taste drücken)",
+      "controller": "Controller verbunden",
+      "slot": "Slot {{slot}}",
+      "battery": "Akku {{percent}} %",
+      "showHide": "Anzeigen / Ausblenden",
+      "restartToUpdate": "Neu starten für das Update auf {{version}}",
+      "createShortcut": "Desktop-Verknüpfung erstellen",
+      "quit": "Beenden"
     }
   },
   "ad": {

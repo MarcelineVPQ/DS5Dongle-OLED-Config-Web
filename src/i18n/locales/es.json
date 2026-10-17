@@ -622,7 +622,8 @@
     "updateFeed": {
       "offline": "No se pudo conectar con el servidor de actualizaciones. Comprueba la conexión a internet y vuelve a intentarlo.",
       "unsigned": "El canal de actualizaciones no superó su comprobación de seguridad, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
-      "malformed": "No se pudo leer el canal de actualizaciones, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde."
+      "malformed": "No se pudo leer el canal de actualizaciones, así que no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
+      "noBuild": "Hay una versión nueva, pero todavía no hay una compilación para este sistema. Inténtalo más tarde."
     },
     "live": {
       "part": {
@@ -1830,7 +1831,8 @@
         "bundledDamaged": "El firmware incluido con la app está dañado. Reinstala la app.",
         "noPkexec": "pkexec no está instalado, así que la app no puede pedir la contraseña de administrador.",
         "cancelled": "se canceló la ventana de la contraseña",
-        "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
+        "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app.",
+        "updateMissing": "La actualización descargada ya no está en este PC (se borró de la carpeta temporal). Busca actualizaciones para descargarla de nuevo."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
       "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar.",
@@ -1843,7 +1845,10 @@
       "none": "No hay avisos cerrados.",
       "showAgain": "Volver a mostrar",
       "showAllAgain": "Volver a mostrar todos",
-      "goTo": "Ir a {{place}}"
+      "goTo": "Ir a {{place}}",
+      "gpuOff": "La aceleración por hardware se desactivó tras un fallo gráfico. Desde el próximo inicio, la app dibuja sin la tarjeta gráfica.",
+      "gpuTurnBackOn": "Volver a activar",
+      "gpuBackOn": "La aceleración por hardware vuelve a estar activada desde el próximo inicio."
     },
     "toast": {
       "region": "Notificaciones",
@@ -1928,6 +1933,18 @@
       "game": "Se guarda en este PC · un ajuste solo cambia archivos al aplicarlo",
       "about": "Guía, cambios y créditos",
       "dongle": "En {{device}} · para cada slot de emparejamiento"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Sin conexión",
+      "noController": "Sin mando (pulsa el botón PS)",
+      "controller": "Mando conectado",
+      "slot": "Slot {{slot}}",
+      "battery": "Batería {{percent}} %",
+      "showHide": "Mostrar / Ocultar",
+      "restartToUpdate": "Reiniciar para actualizar a {{version}}",
+      "createShortcut": "Crear acceso directo en el escritorio",
+      "quit": "Salir"
     }
   },
   "ad": {

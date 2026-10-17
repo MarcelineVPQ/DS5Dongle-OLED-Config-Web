@@ -14,6 +14,7 @@ import type { DesktopApi, FeedProblem, FirmwareLookup, UpdateState } from "../..
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import type { FirmwareUpdate } from "../../src/desktop/useUpdates";
 import { FeedCache, FeedError, devChannelPreview } from "../../electron/main/updateFeed";
+import { keyedText } from "../../src/errorText";
 import { firmwareFeed, latestFirmware } from "../../electron/main/firmwareSource";
 import SetupScreen from "../../src/desktop/SetupScreen";
 import FirmwarePage from "../../src/desktop/pages/FirmwarePage";
@@ -230,5 +231,25 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
     notOffline(text());
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+// Bug hunt A9 (0.9.5): a newer version with no build for this system (macOS
+// before its build is published) read as "Are you online?", with an English detail.
+describe("a newer version with no build for this system", () => {
+  const NEWER = JSON.stringify({ app: { version: "0.0.2", platforms: {} } });
+
+  it("the check says so (keyed), and App settings and the setup screen show it, not 'online'", async () => {
+    serve(NEWER, signed(NEWER));
+    const state = await new Updater(() => undefined).check();
+    expect(state).toEqual({ phase: "failed", detail: keyedText("desktop.updateFeed.noBuild"), problem: "noBuild" });
+    window.desktop = { checkForUpdates: async () => state, latestFirmware: async () => ({ latest: null, problem: null }), usbAccessInstalled: async () => true } as unknown as DesktopApi;
+    await act(async () => root.render(createElement(CheckNow, { firmwareInstalled: null, refreshFirmware: async () => ({ latest: null, problem: null }) })));
+    await act(async () => button("Check for updates").click());
+    expect(text()).toContain("no build of it for this system yet");
+    expect(text()).not.toMatch(/online/i);
+    await act(async () => root.render(createElement(SetupScreen, { supported: false })));
+    await act(async () => button("Check for updates").click());
+    expect(text()).toContain("no build of it for this system yet");
   });
 });

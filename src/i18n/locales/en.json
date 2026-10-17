@@ -621,7 +621,8 @@
     "updateFeed": {
       "offline": "Couldn't reach the update server. Check the internet connection and try again.",
       "unsigned": "The update feed didn't pass its security check, so nothing was installed. This is on our side, not your connection: try again later.",
-      "malformed": "The update feed couldn't be read, so nothing was installed. This is on our side, not your connection: try again later."
+      "malformed": "The update feed couldn't be read, so nothing was installed. This is on our side, not your connection: try again later.",
+      "noBuild": "A new version is out, but there's no build of it for this system yet. Try again later."
     },
     "live": {
       "part": {
@@ -1829,7 +1830,8 @@
         "bundledDamaged": "The firmware bundled with the app is damaged. Reinstall the app.",
         "noPkexec": "pkexec isn't installed, so the app can't ask for the administrator password.",
         "cancelled": "the password prompt was cancelled",
-        "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
+        "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app.",
+        "updateMissing": "The downloaded update is gone from this PC (deleted from the temporary folder). Check for updates to download it again."
       },
       "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
       "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again.",
@@ -1842,7 +1844,10 @@
       "none": "No dismissed notices.",
       "showAgain": "Show again",
       "showAllAgain": "Show all again",
-      "goTo": "Go to {{place}}"
+      "goTo": "Go to {{place}}",
+      "gpuOff": "Hardware acceleration was turned off after a graphics crash. The app draws without the graphics card from the next start.",
+      "gpuTurnBackOn": "Turn back on",
+      "gpuBackOn": "Hardware acceleration is back on from the next start."
     },
     "toast": {
       "region": "Notifications",
@@ -1927,6 +1932,18 @@
       "game": "Kept on this PC · a fix changes files only when you apply it",
       "about": "Guide, changes and credits",
       "dongle": "On {{device}} · every pairing slot"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Not connected",
+      "noController": "No controller (press the PS button)",
+      "controller": "Controller connected",
+      "slot": "Slot {{slot}}",
+      "battery": "Battery {{percent}}%",
+      "showHide": "Show / Hide",
+      "restartToUpdate": "Restart to update to {{version}}",
+      "createShortcut": "Create desktop shortcut",
+      "quit": "Quit"
     }
   },
   "ad": {

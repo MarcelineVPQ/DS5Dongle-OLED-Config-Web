@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
 // A dead AppImage mount first in PATH (the old copy's, after an in-app update)
 // made every program lookup by name fail: execvp stops at the first error that
@@ -63,6 +63,11 @@ describe.runIf(process.platform === "linux")("a dead folder first in PATH (the r
 
 describe.runIf(process.platform === "linux")("the relaunch after an in-app update", () => {
   const saved = { PATH: process.env.PATH, APPIMAGE: process.env.APPIMAGE };
+  // The installed update: a real file (Restart now checks it's there).
+  const installedDir = mkdtempSync(join(tmpdir(), "relaunch-"));
+  const INSTALLED = join(installedDir, "DS5.AppImage");
+  writeFileSync(INSTALLED, "");
+  afterAll(() => rmSync(installedDir, { recursive: true, force: true }));
   afterEach(() => {
     process.env.PATH = saved.PATH;
     process.env.APPIMAGE = saved.APPIMAGE;
@@ -73,7 +78,7 @@ describe.runIf(process.platform === "linux")("the relaunch after an in-app updat
     process.env.PATH = "/tmp/.mount_DS5DonOLD:/tmp/.mount_DS5DonOLD/usr/sbin:/usr/local/bin:/usr/bin";
     const updater = new Updater(() => undefined);
     // An installed update, ready to restart into.
-    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: "/opt/DS5.AppImage" });
+    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: INSTALLED });
     updater.restart();
     expect(execFileSyncMock).toHaveBeenCalledTimes(1);
     const args = execFileSyncMock.mock.calls[0][1] as string[];
@@ -88,7 +93,7 @@ describe.runIf(process.platform === "linux")("the relaunch after an in-app updat
   it("lasts until its last process is gone, and quits normally (will-quit runs)", () => {
     vi.useFakeTimers();
     const updater = new Updater(() => undefined);
-    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: "/opt/DS5.AppImage" });
+    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: INSTALLED });
     updater.restart();
     expect(execFileSyncMock.mock.calls[0][1]).toContain("--property=ExitType=cgroup");
     expect(app.quit).toHaveBeenCalledOnce();
@@ -106,7 +111,7 @@ describe.runIf(process.platform === "linux")("the relaunch after an in-app updat
       throw new Error("Unknown assignment: ExitType=cgroup");
     });
     const updater = new Updater(() => undefined);
-    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: "/opt/DS5.AppImage" });
+    Object.assign(updater as unknown as { state: unknown; installedPath: string }, { state: { phase: "ready" }, installedPath: INSTALLED });
     updater.restart();
     expect(execFileSyncMock).toHaveBeenCalledTimes(2);
     expect(execFileSyncMock.mock.calls[1][1]).toContain("--property=KillMode=process");

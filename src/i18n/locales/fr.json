@@ -622,7 +622,8 @@
     "updateFeed": {
       "offline": "Impossible de joindre le serveur de mises à jour. Vérifie la connexion Internet et réessaie.",
       "unsigned": "Le flux de mises à jour n’a pas passé son contrôle de sécurité, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
-      "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard."
+      "malformed": "Le flux de mises à jour n’a pas pu être lu, donc rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
+      "noBuild": "Une nouvelle version est sortie, mais il n'y en a pas encore de build pour ce système. Réessaie plus tard."
     },
     "live": {
       "part": {
@@ -1830,7 +1831,8 @@
         "bundledDamaged": "Le firmware fourni avec l'appli est endommagé. Réinstalle l'appli.",
         "noPkexec": "pkexec n'est pas installé : l'appli ne peut pas demander le mot de passe administrateur.",
         "cancelled": "la demande de mot de passe a été annulée",
-        "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
+        "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli.",
+        "updateMissing": "La mise à jour téléchargée n'est plus sur ce PC (supprimée du dossier temporaire). Recherche les mises à jour pour la télécharger à nouveau."
       },
       "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
       "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer.",
@@ -1843,7 +1845,10 @@
       "none": "Aucune notification fermée.",
       "showAgain": "Afficher à nouveau",
       "showAllAgain": "Tout afficher à nouveau",
-      "goTo": "Aller à {{place}}"
+      "goTo": "Aller à {{place}}",
+      "gpuOff": "L'accélération matérielle a été désactivée après un plantage graphique. Dès le prochain démarrage, l'app dessine sans la carte graphique.",
+      "gpuTurnBackOn": "Réactiver",
+      "gpuBackOn": "L'accélération matérielle est réactivée dès le prochain démarrage."
     },
     "toast": {
       "region": "Notifications",
@@ -1928,6 +1933,18 @@
       "game": "Gardé sur ce PC · un correctif ne change des fichiers qu'une fois appliqué",
       "about": "Guide, nouveautés et crédits",
       "dongle": "Sur {{device}} · pour chaque slot d'association"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Aucune connexion",
+      "noController": "Pas de manette (appuie sur la touche PS)",
+      "controller": "Manette connectée",
+      "slot": "Slot {{slot}}",
+      "battery": "Batterie {{percent}} %",
+      "showHide": "Afficher / Masquer",
+      "restartToUpdate": "Redémarrer pour passer à {{version}}",
+      "createShortcut": "Créer un raccourci sur le bureau",
+      "quit": "Quitter"
     }
   },
   "ad": {
