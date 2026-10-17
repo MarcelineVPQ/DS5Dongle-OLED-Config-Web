@@ -1829,7 +1829,6 @@
       "keepOpen": "{{section}}を開いたままにする",
       "pin": "固定：開いたまま",
       "pinned": "固定中：開いたまま",
-      "hidePanel": "パネルを隠す",
       "on": "{{name}} オン",
       "off": "{{name}} オフ",
       "value": "{{name}}：{{value}}",

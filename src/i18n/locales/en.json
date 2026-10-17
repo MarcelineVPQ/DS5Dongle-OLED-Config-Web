@@ -1840,7 +1840,6 @@
       "keepOpen": "Keep {{section}} open",
       "pin": "Pin: keep open",
       "pinned": "Pinned: stays open",
-      "hidePanel": "Hide the panel",
       "on": "{{name}} on",
       "off": "{{name}} off",
       "value": "{{name}}: {{value}}",

@@ -1841,7 +1841,6 @@
       "keepOpen": "Manter {{section}} aberto",
       "pin": "Fixar: fica aberto",
       "pinned": "Fixado: fica aberto",
-      "hidePanel": "Ocultar o painel",
       "on": "{{name}} ativado",
       "off": "{{name}} desativado",
       "value": "{{name}}: {{value}}",

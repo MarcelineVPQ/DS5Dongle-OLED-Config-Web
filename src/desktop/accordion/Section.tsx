@@ -27,7 +27,7 @@
 // reduce motion turns both off.
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronsDownUp, EllipsisVertical, PanelRightClose, PinOff, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsDownUp, EllipsisVertical, PinOff, type LucideIcon } from "lucide-react";
 import { useFlagPref } from "../storage";
 import { reducedMotionNow } from "../motion";
 import type { Accordion as AccordionState } from "./useAccordion";
@@ -209,7 +209,7 @@ export function SectionGroup({ title, info, children }: { title?: ReactNode; inf
   );
 }
 
-// Whether a page's panel is hidden (its hide button, or the rail's item clicked again).
+// Whether a page's panel is hidden (the rail's item of the page clicked again; narrow, Escape closes the drawer too).
 // Remembered per page (storage.ts, saved at once); a page not visited yet shows it.
 // Narrow (the drawer), the same state: shown = the drawer open.
 export const PANEL_HIDDEN_KEY = (page: string) => `ds5.accordion.hidden.${page}`;
@@ -229,7 +229,7 @@ export const panelTasks = externalStore<ReadonlyMap<string, string | null>>(new 
 // A page with its main view on the left and the accordion panel on the
 // right. Below ~760 px (the page's width, a container query) the panel is a
 // drawer over the main view. The rail's item for the page shows and hides
-// it (togglePanel), the panel's own button hides it, Escape closes the
+// it (togglePanel), the one way on every page; Escape also closes the
 // drawer; remembered per page.
 // `mainKey`: a new value starts the main view at its top (another text).
 // `top`: above the sections (a page-wide note, like the profile being edited).
@@ -255,7 +255,6 @@ export function SplitView({
   panelRef?: (el: HTMLElement | null) => void;
   children: ReactNode;
 }) {
-  const { t } = useTranslation();
   const [hidden, setHidden] = useFlagPref(PANEL_HIDDEN_KEY(page));
   const panel = useRef<HTMLElement | null>(null);
   // Stable, so the panel's ref isn't handed over again on every render.
@@ -323,10 +322,8 @@ export function SplitView({
             <h2 tabIndex={-1}>{title}</h2>
             {sub && <span className="dk-split-sub">{sub}</span>}
           </div>
+          {/* No hide button here: the rail item of the page you're on shows and hides the panel, on every page (owner, dev.15). */}
           <PanelMenu state={state} />
-          <button type="button" className="dk-btn dk-icon-btn" onClick={hide} title={t("desktop.accordion.hidePanel")} aria-label={t("desktop.accordion.hidePanel")}>
-            <PanelRightClose size={14} />
-          </button>
         </header>
         {top}
         <PanelContext.Provider value={panelInfo}>

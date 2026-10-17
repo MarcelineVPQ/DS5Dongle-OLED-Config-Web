@@ -490,7 +490,7 @@ describe("App settings on the accordion", () => {
     expect(m.Section.panelTasks.get().get("app"), "shown: the section carries the dot").toBeNull();
     // Hidden and shown again: no second flash for the same link.
     sec.classList.remove("dk-flash");
-    click(container.querySelector<HTMLButtonElement>(`.dk-split-head button[aria-label="${m.i18n.t("desktop.accordion.hidePanel")}"]`)!);
+    act(() => m.Section.togglePanel()); // the rail item hides it again
     expect(m.Section.panelTasks.get().get("app")).toBe(task.text);
     show();
     expect(sec.classList.contains("dk-flash")).toBe(false);
@@ -1014,6 +1014,8 @@ describe("the panel sub-lines", () => {
   it("App settings, About and a game's page: their own line, no version", async () => {
     await render(appSettings());
     expect(sub()).toBe(m.i18n.t("desktop.panelSub.app"));
+    // The header has the ⋮ menu only: no hide button (the rail item shows and hides the panel, owner dev.15).
+    expect(container.querySelectorAll(".dk-split-head button")).toHaveLength(1);
     await render(createElement(m.AboutPage));
     expect(sub()).toBe(m.i18n.t("desktop.panelSub.about"));
     expect(sub()).not.toMatch(VERSION);
