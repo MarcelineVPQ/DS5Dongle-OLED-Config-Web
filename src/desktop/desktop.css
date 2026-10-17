@@ -2346,7 +2346,8 @@ html[data-theme="light"] .live-ctl {
 }
 .lib-title {
   flex: 1;
-  min-width: 0;
+  /* A few letters always show, however many labels follow (they shorten instead). */
+  min-width: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4821,9 +4822,23 @@ html[data-cards-translucent] .dash-card {
   margin-right: 4px;
 }
 
-/* Steam's categories: a label on non-game items, and the Show menu. */
+/* A list row's labels after its name: Steam's category on non-game items,
+   and the launcher when another row has the same name. The name gives way
+   first (it only gets the space left); the labels shrink (shortened, with
+   a tooltip) only once the name is down to a few letters; the ◆ / ✓ marks
+   never do. */
+.lib-chips {
+  display: flex;
+  flex: 0 1 auto;
+  gap: 3px;
+  min-width: 0;
+}
 .lib-kind {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 0 5px;
   border: 1px solid var(--border-default);
   border-radius: 4px;

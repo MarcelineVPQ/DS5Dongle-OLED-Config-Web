@@ -8,6 +8,8 @@
 //   The Last of Us Part I (Steam) a 2-star rating and notes, no profile
 //   Portal 2 (Steam)              nothing of the player's
 //   The Witcher 3 (GOG, Heroic)   nothing of the player's
+//   The Witcher 3 (Steam)         the same name in a second launcher: both
+//                                 list rows carry their launcher's label
 // None has artwork, so every game page shows the art fallback.
 // Your desktop color scheme (kdeglobals) is copied in, so Match desktop
 // still shows yours.
@@ -49,6 +51,7 @@ const STEAM = [
   ["1091500", "Cyberpunk 2077"],
   ["1888930", "The Last of Us Part I"],
   ["620", "Portal 2"],
+  ["292030", "The Witcher 3: Wild Hunt"],
 ];
 for (const [appid, name] of STEAM)
   write(

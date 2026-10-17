@@ -282,6 +282,21 @@ describe("Games → Home, healthy", () => {
     expect(library.compareDocumentPosition($("[data-block='computer']")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("one game in two launchers: both rows say their launcher, after the name and before the marks; other rows don't", async () => {
+    const r = homeReport("healthy");
+    const ghost = r.games.find((g) => g.title === "Ghostrunner")!;
+    await render("healthy", { ...r, games: [...r.games, { ...ghost, key: "heroic-0000abcd:gog:9999", launcher: "heroic", store: "gog" }] });
+    const rows = $$(".lib-list .lib-row").filter((x) => x.querySelector(".lib-title")!.textContent === "Ghostrunner");
+    expect(rows.map((x) => x.querySelector("[data-launcher]")?.textContent).sort()).toEqual([i18n.t("desktop.library.launcherName.heroic"), i18n.t("desktop.library.launcherName.steam")]);
+    for (const row of rows) {
+      const parts = [...row.children].map((c) => c.className);
+      expect(parts.indexOf("lib-chips")).toBe(parts.indexOf("lib-title") + 1);
+      // loop: test — a row's few parts
+      expect(parts.slice(parts.indexOf("lib-chips")).every((c) => c === "lib-chips" || c === "lib-mark" || c === "lib-playing")).toBe(true);
+    }
+    expect($$(".lib-list [data-launcher]")).toHaveLength(2);
+  });
+
   it("search narrows the counts, the grid and the list together", async () => {
     await render("healthy");
     const search = $<HTMLInputElement>(".lib-search")!;
