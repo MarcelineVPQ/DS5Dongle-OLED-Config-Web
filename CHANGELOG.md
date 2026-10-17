@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Back to stable stays on stable.** An update check on the Development channel that answered late, after you went back to stable, could still offer a development build, and automatic updates could install it. Now only the newest check counts, and only for the channel you chose.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed

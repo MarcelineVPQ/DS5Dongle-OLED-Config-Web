@@ -89,6 +89,11 @@ export class Updater {
   private state: UpdateState = { phase: "idle" };
   // cache: OK — key=none (the feed the app offer on screen came from); invalidated=each update check; bound=1 entry. Only the app update installs from it; firmware downloads use the entry the user was shown (firmwareSource.ts)
   private manifest: Manifest | null = null;
+  // The channel `manifest` came from: an offer is installed only on that channel.
+  private manifestChannel: UpdateChannel | null = null;
+  // Each check's number: only the newest check's answer is used (two checks on
+  // different channels could otherwise answer out of order, the last one winning).
+  private checkSeq = 0;
   // The feed, shared by the update check and the firmware lookups (one fetch per check).
   readonly feed = new FeedCache((channel) => this.fetchManifest(channel));
   private busy = false;
@@ -113,7 +118,7 @@ export class Updater {
   // An update waits that automatic updates may install: never one that would
   // replace this developer build with a regular one (updateDropsDevTools).
   autoInstallable(): boolean {
-    return this.state.phase === "available" && !this.state.dropsDevTools;
+    return this.state.phase === "available" && !this.state.dropsDevTools && this.manifestChannel === this.channel();
   }
 
   // Why this copy can't replace itself, or null if it can.
@@ -167,10 +172,19 @@ export class Updater {
     // Once an update is installed, only a restart moves on (a fresh check would
     // see the old running version and offer the same update again).
     if (this.busy || this.state.phase === "ready") return this.state;
+    const seq = ++this.checkSeq;
+    const channel = this.channel();
+    // A newer check started, or the channel changed while this one waited:
+    // its answer is dropped (a dev build is never offered on stable).
+    const stale = () => seq !== this.checkSeq || channel !== this.channel();
+    // The newest check, on a channel that changed since: nothing is on offer until the next check.
+    const dropped = () => (seq === this.checkSeq ? this.set({ phase: "idle" }) : this.state);
     this.set({ phase: "checking" });
     try {
-      const manifest = await this.feed.get(this.channel(), 0);
+      const manifest = await this.feed.get(channel, 0);
+      if (stale()) return dropped();
       this.manifest = manifest;
+      this.manifestChannel = channel;
       const remote = manifest.app.version;
       const offer = allowOlder ? !sameVersion(remote, app.getVersion()) : isNewer(remote, app.getVersion());
       if (!offer) return this.set({ phase: "up-to-date", version: app.getVersion() });
@@ -182,7 +196,8 @@ export class Updater {
       const dropsDevTools = updateDropsDevTools(DEV_TOOLS_BUILT, remote) || undefined;
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url, dropsDevTools });
     } catch (cause) {
-      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install")
+      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install"); a stale check's failure is dropped (the newest check answers)
+      if (stale()) return dropped();
       return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}`, problem: feedProblem(cause) });
     }
   }
@@ -228,6 +243,8 @@ export class Updater {
 
   async downloadAndInstall(): Promise<UpdateState> {
     if (this.busy || this.state.phase !== "available" || !this.manifest) return this.state;
+    // The offer came from another channel than the one now chosen: look again on this one (the user pressed Install, so going online is asked).
+    if (this.manifestChannel !== this.channel()) return this.check();
     const key = this.platformKey();
     const download = key ? this.manifest.app.platforms[key] : undefined;
     if (!download) return this.state;
