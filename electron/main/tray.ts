@@ -1,9 +1,11 @@
-// System tray: an icon that shows dongle/controller state, a status tooltip,
-// and a menu for the things you'd reach for without opening the window.
+// System tray: an icon that shows board/controller state, a status tooltip,
+// and a menu for the things you'd reach for without opening the window, in
+// the system's language (mainTranslator; the page's words by the same keys).
 // Pattern from Sonata (apple-music-for-linux/main.js "tray" section).
 import { join } from "node:path";
 import { Menu, Tray, nativeImage, type MenuItemConstructorOptions } from "electron";
 import type { DesktopSettings, DeviceStatus, TrayCommand, UpdateState } from "../../src/desktop/api";
+import type { MainTranslate } from "./mainText";
 
 type TrayState = "ok" | "away" | "none";
 
@@ -12,13 +14,23 @@ export function trayState(status: DeviceStatus): TrayState {
   return status.controller ? "ok" : "away";
 }
 
-const POWER_TEXT: Record<NonNullable<DeviceStatus["power"]>, string> = { charging: "charging", pluggedIn: "plugged in, not charging", full: "fully charged" };
+const POWER_KEY: Record<NonNullable<DeviceStatus["power"]>, string> = {
+  charging: "desktop.ctrlInfo.chargeState.charging",
+  pluggedIn: "desktop.ctrlInfo.chargeState.pluggedIn",
+  full: "desktop.ctrlInfo.chargeState.full",
+};
 
-export function trayTooltip(status: DeviceStatus): string {
-  if (!status.dongle) return "DS5 Dongle OLED Edition: not connected";
-  const battery = status.battery === null ? "" : `, battery ${status.battery}%${status.power ? ` ${POWER_TEXT[status.power]}` : ""}`;
-  const controller = status.controller ? `controller connected (slot ${status.slot}${battery})` : "no controller (press PS)";
-  return `DS5 Dongle OLED Edition${status.firmware ? ` ${status.firmware}` : ""}: ${controller}`;
+// The status line (tooltip and the menu's first line), in the system's
+// language: the board by name ({{deviceName}}), its firmware, the controller.
+export function trayTooltip(status: DeviceStatus, t: MainTranslate): string {
+  const board = t("desktop.tray.board", {}, status.board);
+  if (!status.dongle) return [board, t("desktop.tray.notConnected")].join(" · ");
+  const parts = [status.firmware ? `${board} ${status.firmware}` : board];
+  if (!status.controller) return [...parts, t("desktop.tray.noController")].join(" · ");
+  parts.push(t("desktop.tray.controller"), t("desktop.tray.slot", { slot: status.slot }));
+  if (status.battery !== null) parts.push(t("desktop.tray.battery", { percent: status.battery }));
+  if (status.power) parts.push(t(POWER_KEY[status.power]));
+  return parts.join(" · ");
 }
 
 export interface TrayHandlers {
@@ -34,12 +46,14 @@ export interface TrayHandlers {
 
 export class AppTray {
   private readonly tray: Tray;
-  private status: DeviceStatus = { dongle: false, controller: false, slot: -1, firmware: null, power: null, battery: null };
+  private status: DeviceStatus = { dongle: false, controller: false, slot: -1, firmware: null, power: null, battery: null, board: null };
   private state: TrayState | null = null;
   // Set once the renderer starts drawing the live icon; until then (and if a
   // drawn image fails to decode) the static per-state icons are used.
   private custom = false;
   private updateState: UpdateState = { phase: "idle" };
+  // The system language's text (mainTranslator); until it's loaded the tray shows its icon only.
+  private t: MainTranslate | null = null;
 
   constructor(
     private readonly resourcesDir: string,
@@ -58,6 +72,11 @@ export class AppTray {
 
   updateSettings(settings: DesktopSettings): void {
     this.settings = settings;
+    this.refresh();
+  }
+
+  setText(t: MainTranslate): void {
+    this.t = t;
     this.refresh();
   }
 
@@ -99,37 +118,41 @@ export class AppTray {
       this.state = state;
       if (!this.custom) this.tray.setImage(this.icon(state));
     }
-    this.tray.setToolTip(trayTooltip(this.status));
+    const t = this.t;
+    if (!t) return;
+    this.tray.setToolTip(trayTooltip(this.status, t));
     // lifetime: OK — replaces the previous menu, which is then collected; rebuilt only when status/settings change
-    this.tray.setContextMenu(Menu.buildFromTemplate(this.menu()));
+    this.tray.setContextMenu(Menu.buildFromTemplate(this.menu(t)));
   }
 
-  private menu(): MenuItemConstructorOptions[] {
+  private menu(t: MainTranslate): MenuItemConstructorOptions[] {
     const s = this.status;
     const h = this.handlers;
     const slots: MenuItemConstructorOptions[] = [0, 1, 2, 3].map((slot) => ({
-      label: `Slot ${slot}`,
+      label: t("desktop.tray.slot", { slot }),
       type: "radio",
       checked: s.slot === slot,
       enabled: s.dongle,
       click: () => h.command({ type: "switchSlot", slot }),
     }));
     return [
-      { label: "Show / Hide", click: h.toggleWindow },
+      { label: t("desktop.tray.showHide"), click: h.toggleWindow },
       { type: "separator" },
-      { label: trayTooltip(s), enabled: false },
-      { label: "Pairing slot", submenu: slots, enabled: s.dongle },
-      { label: "Diagnostics", click: () => h.command({ type: "openPage", page: "diagnostics" }) },
+      { label: trayTooltip(s, t), enabled: false },
+      { label: t("desktop.overview.slot"), submenu: slots, enabled: s.dongle },
+      { label: t("desktop.sections.diagnostics"), click: () => h.command({ type: "openPage", page: "diagnostics" }) },
       { type: "separator" },
-      this.updateState.phase === "ready" ? { label: `Restart to update to ${this.updateState.version}`, click: h.restartToUpdate } : { label: "Check for updates", click: h.checkForUpdates },
+      this.updateState.phase === "ready"
+        ? { label: t("desktop.tray.restartToUpdate", { version: this.updateState.version }), click: h.restartToUpdate }
+        : { label: t("desktop.setup.checkUpdates"), click: h.checkForUpdates },
       { type: "separator" },
-      { label: "Close to tray", type: "checkbox", checked: this.settings.closeToTray, click: (item) => h.setSetting("closeToTray", item.checked) },
-      { label: "Launch at login", type: "checkbox", checked: this.settings.launchAtLogin, click: (item) => h.setSetting("launchAtLogin", item.checked) },
-      { label: "Start minimized", type: "checkbox", checked: this.settings.startMinimized, click: (item) => h.setSetting("startMinimized", item.checked) },
-      { label: "Check for updates automatically", type: "checkbox", checked: this.settings.checkForUpdates, click: (item) => h.setSetting("checkForUpdates", item.checked) },
-      ...(h.createDesktopShortcut ? [{ label: "Create desktop shortcut", click: h.createDesktopShortcut }] : []),
+      { label: t("desktop.live.closeToTray"), type: "checkbox", checked: this.settings.closeToTray, click: (item) => h.setSetting("closeToTray", item.checked) },
+      { label: t("desktop.live.launchAtLogin"), type: "checkbox", checked: this.settings.launchAtLogin, click: (item) => h.setSetting("launchAtLogin", item.checked) },
+      { label: t("desktop.live.startMinimized"), type: "checkbox", checked: this.settings.startMinimized, click: (item) => h.setSetting("startMinimized", item.checked) },
+      { label: t("desktop.live.checkForUpdates"), type: "checkbox", checked: this.settings.checkForUpdates, click: (item) => h.setSetting("checkForUpdates", item.checked) },
+      ...(h.createDesktopShortcut ? [{ label: t("desktop.tray.createShortcut"), click: h.createDesktopShortcut }] : []),
       { type: "separator" },
-      { label: "Quit", click: h.quit },
+      { label: t("desktop.tray.quit"), click: h.quit },
     ];
   }
 }

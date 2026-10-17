@@ -1928,6 +1928,18 @@
       "game": "Kept on this PC · a fix changes files only when you apply it",
       "about": "Guide, changes and credits",
       "dongle": "On {{device}} · every pairing slot"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Not connected",
+      "noController": "No controller (press the PS button)",
+      "controller": "Controller connected",
+      "slot": "Slot {{slot}}",
+      "battery": "Battery {{percent}}%",
+      "showHide": "Show / Hide",
+      "restartToUpdate": "Restart to update to {{version}}",
+      "createShortcut": "Create desktop shortcut",
+      "quit": "Quit"
     }
   },
   "ad": {

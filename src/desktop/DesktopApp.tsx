@@ -34,7 +34,7 @@ import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import BoardBusyNotice from "./BoardBusyNotice";
 import RecoveredNotice from "./RecoveredNotice";
 import HeadsetNotice from "./HeadsetNotice";
-import { hardwareName, trackBoard } from "./hardwareName";
+import { boardName, hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { waitingCount } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
@@ -254,6 +254,7 @@ export default function DesktopApp() {
   const lightbar = controllerOn ? (liveIdentity?.lightbar ?? null) : null;
   const lightbarKey = lightbar ? lightbar.join(",") : "";
   const slot = connected && liveIdentity ? liveIdentity.currentSlot : -1;
+  const board = boardName(bridge.identity);
   // Only when what the tray shows changes (not on every identity change: the
   // main process rebuilds the tray menu for each report).
   // lifetime: OK — acquires nothing (sends the status to the tray over IPC)
@@ -265,8 +266,9 @@ export default function DesktopApp() {
       firmware: connected ? firmware : null,
       power,
       battery,
+      board,
     });
-  }, [connected, controllerOn, slot, firmware, power, battery]);
+  }, [connected, controllerOn, slot, firmware, power, battery, board]);
 
   // The dongle has her too (connected, slot, battery low; firmware 1.3):
   // keep it in step with the app's narrator setting and language. Written

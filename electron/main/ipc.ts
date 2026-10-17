@@ -58,6 +58,7 @@ export const DeviceStatusSchema = z.strictObject({
   firmware: z.string().max(64).nullable(),
   power: z.enum(["charging", "pluggedIn", "full"]).nullable(),
   battery: z.number().int().min(0).max(100).nullable(),
+  board: z.string().max(64).nullable(),
 });
 
 // A small PNG only: data URL, base64 alphabet, size-capped.

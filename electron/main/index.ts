@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { app, BrowserWindow, clipboard, ClipboardItem, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, KeyedError, keyedText, logged } from "../../src/errorText";
-import { mainText } from "./mainText";
+import { mainText, mainTranslator } from "./mainText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
 import { isAllowedUsbDevice } from "./devices";
 import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
@@ -228,6 +228,10 @@ function start(): void {
     },
     settings,
   );
+  // The tray's menu and tooltip in the system's language (the locale file is bundled; it loads in a moment).
+  void mainTranslator(app.getLocale())
+    .then((t) => tray?.setText(t))
+    .catch(logged("loading the tray's text (a bundled locale file; without it the tray shows its icon and no menu)"));
 
   // lifetime: NOT-WORTH — one per app; its card watcher runs only while the setting is on (stop() when it's turned off)
   const volumeKeeper = process.platform === "linux" ? new VolumeKeeper(() => showMainNotice("desktop.notices.volumeRestored")) : null;

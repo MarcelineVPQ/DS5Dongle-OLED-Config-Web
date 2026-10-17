@@ -1916,6 +1916,18 @@
       "game": "保存在此电脑上 · 修复只有在应用时才会更改文件",
       "about": "指南、更新内容和致谢",
       "dongle": "保存在 {{device}} 上 · 适用于所有配对槽位"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "未连接",
+      "noController": "没有控制器(请按 PS 键)",
+      "controller": "控制器已连接",
+      "slot": "槽位 {{slot}}",
+      "battery": "电量 {{percent}}%",
+      "showHide": "显示 / 隐藏",
+      "restartToUpdate": "重启以更新到 {{version}}",
+      "createShortcut": "创建桌面快捷方式",
+      "quit": "退出"
     }
   },
   "ad": {

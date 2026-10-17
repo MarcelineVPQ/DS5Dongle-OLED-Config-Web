@@ -21,6 +21,8 @@ export interface DeviceStatus {
   // charging, plugged in but not charging, or fully charged; null on battery.
   power: "charging" | "pluggedIn" | "full" | null;
   battery: number | null; // 0-100 in 10% steps, null when unknown
+  // The board's name for the tray's text ({{deviceName}}): the connected one, else the last one, else null ("your board").
+  board: string | null;
 }
 
 // Actions picked from the tray menu that need the USB connection.

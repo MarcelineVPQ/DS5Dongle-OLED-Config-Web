@@ -1916,6 +1916,18 @@
       "game": "この PC に保存 · 修正は適用したときだけファイルを変更します",
       "about": "ガイド、変更履歴、クレジット",
       "dongle": "{{device}} に保存 · すべてのペアリングスロット共通"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "未接続",
+      "noController": "コントローラーなし (PSボタンを押してください)",
+      "controller": "コントローラー接続中",
+      "slot": "スロット {{slot}}",
+      "battery": "バッテリー {{percent}}%",
+      "showHide": "表示 / 非表示",
+      "restartToUpdate": "再起動して {{version}} にアップデート",
+      "createShortcut": "デスクトップにショートカットを作成",
+      "quit": "終了"
     }
   },
   "ad": {

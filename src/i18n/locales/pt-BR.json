@@ -1929,6 +1929,18 @@
       "game": "Fica neste PC · um ajuste só muda arquivos quando você aplica",
       "about": "Guia, mudanças e créditos",
       "dongle": "{{device_em, capitalize}} · para cada slot de emparelhamento"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Sem conexão",
+      "noController": "Sem controle (pressione o botão PS)",
+      "controller": "Controle conectado",
+      "slot": "Slot {{slot}}",
+      "battery": "Bateria {{percent}}%",
+      "showHide": "Mostrar / Ocultar",
+      "restartToUpdate": "Reiniciar para atualizar para {{version}}",
+      "createShortcut": "Criar atalho na área de trabalho",
+      "quit": "Sair"
     }
   },
   "ad": {

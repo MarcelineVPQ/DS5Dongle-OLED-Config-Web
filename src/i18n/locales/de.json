@@ -1929,6 +1929,18 @@
       "game": "Auf diesem PC · eine Korrektur ändert Dateien erst beim Übernehmen",
       "about": "Handbuch, Änderungen und Credits",
       "dongle": "Auf {{device_dat}} · für jeden Kopplungs-Slot"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Nicht verbunden",
+      "noController": "Kein Controller (PS-Taste drücken)",
+      "controller": "Controller verbunden",
+      "slot": "Slot {{slot}}",
+      "battery": "Akku {{percent}} %",
+      "showHide": "Anzeigen / Ausblenden",
+      "restartToUpdate": "Neu starten für das Update auf {{version}}",
+      "createShortcut": "Desktop-Verknüpfung erstellen",
+      "quit": "Beenden"
     }
   },
   "ad": {

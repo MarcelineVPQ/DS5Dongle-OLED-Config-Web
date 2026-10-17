@@ -1929,6 +1929,18 @@
       "game": "Se guarda en este PC · un ajuste solo cambia archivos al aplicarlo",
       "about": "Guía, cambios y créditos",
       "dongle": "En {{device}} · para cada slot de emparejamiento"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Sin conexión",
+      "noController": "Sin mando (pulsa el botón PS)",
+      "controller": "Mando conectado",
+      "slot": "Slot {{slot}}",
+      "battery": "Batería {{percent}} %",
+      "showHide": "Mostrar / Ocultar",
+      "restartToUpdate": "Reiniciar para actualizar a {{version}}",
+      "createShortcut": "Crear acceso directo en el escritorio",
+      "quit": "Salir"
     }
   },
   "ad": {

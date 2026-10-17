@@ -29,10 +29,19 @@ const fill = (template: string, params: TextParams): string =>
     return cap ? capitalize(String(v)) : String(v);
   });
 
+// Text by key in the system's language, for what the main process shows on
+// its own (the tray's menu and tooltip): `board` is the board's name for the
+// {{device…}} variables (null: "your board").
+export type MainTranslate = (key: string, params?: TextParams, board?: string | null) => string;
+
 // `locale`: Electron's app.getLocale() ("de", "pt-BR", "zh-CN", …).
-export async function mainText(text: string, locale: string): Promise<string> {
+export async function mainTranslator(locale: string): Promise<MainTranslate> {
   const lang = locale.split("-")[0].toLowerCase();
   const [own, en] = await Promise.all([(LOCALES[lang] ?? LOCALES.en)(), LOCALES.en()]);
-  const device = deviceVariables(lang, null);
-  return translateKeyed(text, (key, params) => fill(lookup(own.default, key) ?? lookup(en.default, key) ?? key, { ...device, ...params }));
+  return (key, params = {}, board = null) => fill(lookup(own.default, key) ?? lookup(en.default, key) ?? key, { ...deviceVariables(lang, board), ...params });
+}
+
+export async function mainText(text: string, locale: string): Promise<string> {
+  const t = await mainTranslator(locale);
+  return translateKeyed(text, (key, params) => t(key, params));
 }

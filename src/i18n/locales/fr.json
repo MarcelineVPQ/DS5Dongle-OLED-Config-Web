@@ -1929,6 +1929,18 @@
       "game": "Gardé sur ce PC · un correctif ne change des fichiers qu'une fois appliqué",
       "about": "Guide, nouveautés et crédits",
       "dongle": "Sur {{device}} · pour chaque slot d'association"
+    },
+    "tray": {
+      "board": "{{deviceName}}",
+      "notConnected": "Aucune connexion",
+      "noController": "Pas de manette (appuie sur la touche PS)",
+      "controller": "Manette connectée",
+      "slot": "Slot {{slot}}",
+      "battery": "Batterie {{percent}} %",
+      "showHide": "Afficher / Masquer",
+      "restartToUpdate": "Redémarrer pour passer à {{version}}",
+      "createShortcut": "Créer un raccourci sur le bureau",
+      "quit": "Quitter"
     }
   },
   "ad": {
