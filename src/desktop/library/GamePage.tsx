@@ -164,7 +164,6 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const setupIdle = !status.attention && game.fixes.length === 0 && !canMarkNotDetected(game);
   const hdrIdle = knownHdr(game.title) && (!isHdr || status.hdrOk);
   const compatIdle = !compatHasAction(game, report.ourProton.name);
-  const store = t(`desktop.library.storeName.${game.store}`);
 
   // The game at a glance: a tile per section, in the panel's order and with
   // its name, each opening it (flashed; the drawer when narrow).
@@ -195,8 +194,8 @@ export default function GamePage({ game, info, record, running, report, bridge, 
         <MainBlock state={supportBlock} icon={BadgeCheck} title={t("desktop.library.section.support")} status={tier}>
           <SupportBody game={game} />
         </MainBlock>
-        {/* loop: NOT-WORTH — N = 2 parts of one status line */}
-        <MainBlock state={details} icon={Info} title={t("desktop.library.section.details")} status={[store, info?.sizeBytes && `${(info.sizeBytes / 1e9).toFixed(1)} GB`].filter(Boolean).join(" · ")}>
+        {/* No status: its rows say the store and the size (IA audit R6). */}
+        <MainBlock state={details} icon={Info} title={t("desktop.library.section.details")}>
           <DetailsBody game={game} info={info} />
         </MainBlock>
       </div>
@@ -433,7 +432,9 @@ function useProfileChips(draft: ProfileSettings | null, normal: ProfileSettings 
 
 function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSettings; normal: ProfileSettings | null; split: boolean; onChange: (s: ProfileSettings) => void }) {
   const { t } = useTranslation();
-  const chips = useProfileChips(draft, normal, split);
+  // The button layout and the curves are edited right below (their own rows): not repeated as chips (IA audit R7).
+  // loop: HOT-PATH-OK — N ≤ 15 chips
+  const chips = useProfileChips(draft, normal, split).filter((c) => c.key !== "layout" && !c.key.startsWith("curve-"));
   return (
     <>
       {/* hint: MUST-SHOW — a status: nothing changed for this game yet */}

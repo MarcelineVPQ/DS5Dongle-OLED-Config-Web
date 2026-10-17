@@ -5,7 +5,7 @@
 // settings and actions only; readouts and info are main-view blocks
 // (MAIN_BLOCKS, MainBlock.tsx), gated by tools/list_settings.mjs.
 export const SECTIONS = {
-  app: ["language", "appearance", "accessibility", "startup", "graphics", "updates", "privacy", "dismissed", "developer"],
+  app: ["appearance", "accessibility", "language", "startup", "updates", "privacy", "dismissed", "developer"],
   about: ["guide", "changes", "firmware", "proton", "roadmap", "credits"],
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots"],
   dongle: ["oled", "power", "usb", "lights", "firmware", "device"],

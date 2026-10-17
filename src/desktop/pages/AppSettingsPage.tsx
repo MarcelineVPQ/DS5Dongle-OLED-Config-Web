@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTopLayer } from "../topLayer";
 import { useTranslation } from "react-i18next";
-import { Accessibility, AppWindow, BellOff, Code, Globe, Palette, RefreshCw, Shield, Zap } from "lucide-react";
+import { Accessibility, AppWindow, BellOff, Code, Globe, Palette, RefreshCw, Shield } from "lucide-react";
 import Markdown from "../Markdown";
 import type { DesktopSettings, DevChannelAnswer, FirmwareLookup } from "../api";
 import { hardwareName } from "../hardwareName";
@@ -41,6 +41,9 @@ import { named, onOff } from "../accordion/status";
 import { Section, SectionSub, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
 
+// Background dim and blur only do something over game art (the Game art background).
+const ART_ONLY_KNOBS = new Set(["backdropDim", "backdropBlur"]);
+
 export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate; main?: ReactNode; panelRef?: (el: HTMLElement | null) => void }) {
   const { t, i18n } = useTranslation();
   // Joining the Development channel asks first (what it means, what's in it).
@@ -73,30 +76,27 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
   const acc = useAccordion("app", pinScope("app"), updateTask ? "updates" : null);
 
   const startup = settings
-    ? // loop: NOT-WORTH — N = 3 switches; App settings' render
-      [settings.closeToTray && t("desktop.live.closeToTray"), settings.launchAtLogin && t("desktop.live.launchAtLogin"), settings.startMinimized && t("desktop.live.startMinimized")]
+    ? // loop: NOT-WORTH — N = 4 switches; App settings' render
+      [
+        settings.closeToTray && t("desktop.live.closeToTray"),
+        settings.launchAtLogin && t("desktop.live.launchAtLogin"),
+        settings.startMinimized && t("desktop.live.startMinimized"),
+        !settings.hardwareAcceleration && onOff(t, t("desktop.live.hardwareAcceleration"), false),
+      ]
         .filter(Boolean)
         .join(" · ") || t("desktop.accordion.allOff")
     : null;
+  // loop: NOT-WORTH — N = 4 parts of one status line
+  const appearance = [t(`themeToggle.${theme}`), t(glass ? "desktop.glass.glass" : "desktop.glass.standard"), t(`desktop.backdrop.${background}`), settings?.hdrLighting && t("desktop.hdr.short")]
+    .filter(Boolean)
+    .join(" · ");
   const updates = settings
     ? `${t(settings.updateChannel === "dev" ? "desktop.channel.dev" : "desktop.channel.stable")} · ${t(!settings.checkForUpdates ? "desktop.accordion.updatesOff" : settings.autoInstallUpdates ? "desktop.accordion.updatesAuto" : "desktop.accordion.updatesAsk")}`
     : null;
 
   return (
     <SplitView page="app" main={main} title={t("desktop.live.app")} sub={t("desktop.panelSub.app")} state={acc} panelRef={panelRef}>
-      <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
-        {() => (
-          <Row label={t("desktop.settings2.language")} wide>
-            <LanguageToggle />
-          </Row>
-        )}
-      </Section>
-      <Section
-        id="appearance"
-        icon={Palette}
-        title={t("desktop.settings2.appearance")}
-        status={[t(`themeToggle.${theme}`), t(glass ? "desktop.glass.glass" : "desktop.glass.standard"), t(`desktop.backdrop.${background}`)].join(" · ")}
-      >
+      <Section id="appearance" icon={Palette} title={t("desktop.settings2.appearance")} status={appearance}>
         {() => (
           <>
             <div className="dk-sec-cols">
@@ -106,11 +106,29 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
               <GlassSetting />
               <AccentSetting />
               <BackdropSetting />
+              {/* Background dim and blur act on game art only (IA audit A7). */}
               {/* loop: HOT-PATH-OK — N ≈ 10 look knobs; only while Appearance is open */}
-              {KNOBS.filter((k) => !k.hidden).map((k) => (
+              {KNOBS.filter((k) => !k.hidden && (background === "art" || !ART_ONLY_KNOBS.has(k.key))).map((k) => (
                 <KnobSlider key={k.key} k={k} />
               ))}
             </div>
+            {/* HDR lighting is an effect on the drawing: an appearance (IA audit A6). */}
+            {settings && (
+              <>
+                <Toggle
+                  label={t("desktop.hdr.label")}
+                  sub={hdrChanged ? t("desktop.live.restartToApply") : undefined}
+                  info={t("desktop.hdr.sub")}
+                  value={settings.hdrLighting}
+                  disabled={!settings.hardwareAcceleration}
+                  onChange={(v) => {
+                    setHdrChanged(true);
+                    set("hdrLighting", v);
+                  }}
+                />
+                {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
+              </>
+            )}
             <CustomColorsSetting />
           </>
         )}
@@ -133,6 +151,10 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           </>
         )}
       </Section>
+      {/* The title says what it is and the status which language: the body is the choice alone (IA audit A5). */}
+      <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
+        {() => <LanguageToggle />}
+      </Section>
       {settings && (
         <>
           <Section id="startup" icon={AppWindow} title={t("desktop.settings2.startup")} status={startup}>
@@ -141,17 +163,7 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
                 <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
                 <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
                 <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
-              </>
-            )}
-          </Section>
-          <Section
-            id="graphics"
-            icon={Zap}
-            title={t("desktop.settings2.graphics")}
-            status={[onOff(t, t("desktop.live.hardwareAcceleration"), settings.hardwareAcceleration), onOff(t, t("desktop.hdr.short"), settings.hdrLighting)].join(" · ")}
-          >
-            {() => (
-              <>
+                {/* A system switch that needs a restart, like the others here (IA audit A6). */}
                 <Toggle
                   label={t("desktop.live.hardwareAcceleration")}
                   sub={gpuChanged ? t("desktop.live.restartToApply") : undefined}
@@ -162,18 +174,6 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
                     set("hardwareAcceleration", v);
                   }}
                 />
-                <Toggle
-                  label={t("desktop.hdr.label")}
-                  sub={hdrChanged ? t("desktop.live.restartToApply") : undefined}
-                  info={t("desktop.hdr.sub")}
-                  value={settings.hdrLighting}
-                  disabled={!settings.hardwareAcceleration}
-                  onChange={(v) => {
-                    setHdrChanged(true);
-                    set("hdrLighting", v);
-                  }}
-                />
-                {settings.hdrLighting && <KnobSlider k={knob("hdrNits")} />}
               </>
             )}
           </Section>

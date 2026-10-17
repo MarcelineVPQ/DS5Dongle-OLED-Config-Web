@@ -189,6 +189,8 @@ describe("game page", () => {
     expect($('.gp-tile[data-tile="compatibility"] .gp-tile-value')!.textContent).toBe(OUR_PROTON);
     expect(status("compatibility")).not.toContain(i18n.t("desktop.library.store"));
     expect(openDetails().textContent).toContain(i18n.t("desktop.library.storeName.gog"));
+    // Details has no status line: its rows say the store and the size (IA audit R6).
+    expect($('.dk-split-main [data-block="details"] .dk-sec-status')).toBeNull();
   });
 
   it("Controller profile: what it changes, Edit in controller view, the layout and curves; no copy of the controller view's settings", () => {

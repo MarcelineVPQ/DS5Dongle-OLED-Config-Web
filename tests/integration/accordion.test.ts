@@ -127,14 +127,14 @@ const lineText = (zone: HTMLElement) =>
 
 // A small page on the accordion: the body counts how often it renders.
 let bodyRenders = 0;
-function TestPage({ scope = "app", task = null }: { scope?: string; task?: "graphics" | null }) {
+function TestPage({ scope = "app", task = null }: { scope?: string; task?: "startup" | null }) {
   const { Accordion, Section } = m.Section;
   const acc = m.acc.useAccordion("app", scope, task);
   const Icon = (() => null) as never;
   return createElement(Accordion, {
     state: acc,
     // loop: test fixture
-    children: ["language", "appearance", "graphics"].map((id) =>
+    children: ["language", "appearance", "startup"].map((id) =>
       createElement(Section, {
         key: id,
         id,
@@ -162,7 +162,7 @@ function SplitTestPage() {
     main: createElement("p", null, "main"),
     state: acc,
     // loop: test fixture
-    children: ["language", "appearance", "graphics"].map((id) => createElement(Section, { key: id, id, icon: Icon, title: id, children: () => createElement("p", { className: "body" }, id) })),
+    children: ["language", "appearance", "startup"].map((id) => createElement(Section, { key: id, id, icon: Icon, title: id, children: () => createElement("p", { className: "body" }, id) })),
   });
 }
 // jsdom keeps the contents of a popover="…" element unfocusable (it has no
@@ -199,15 +199,15 @@ describe("the accordion", () => {
     expect(pinOf("language").getAttribute("aria-pressed")).toBe("true");
     expect(pinOf("language").getAttribute("aria-label")).toBe("Keep language open");
     click(head("appearance"));
-    click(head("graphics"));
-    expect(openIds()).toEqual(["language", "graphics"]);
+    click(head("startup"));
+    expect(openIds()).toEqual(["language", "startup"]);
     act(() => root.unmount());
     root = createRoot(container);
     await render(createElement(TestPage));
-    expect(openIds()).toEqual(["language", "graphics"]);
+    expect(openIds()).toEqual(["language", "startup"]);
     // The header of a pinned section folds it and takes the pin off.
     click(head("language"));
-    expect(openIds()).toEqual(["graphics"]);
+    expect(openIds()).toEqual(["startup"]);
     expect(pinOf("language").getAttribute("aria-pressed")).toBe("false");
   });
 
@@ -215,19 +215,19 @@ describe("the accordion", () => {
     expect(m.acc.pinScope("controller", "Pico 2 W", 1)).toBe("controller:Pico 2 W:1");
     expect(m.acc.pinScope("game")).toBe("game");
     await render(createElement(TestPage, { scope: m.acc.pinScope("controller", "Pico 2 W", 0) }));
-    click(pinOf("graphics"));
+    click(pinOf("startup"));
     await render(createElement(TestPage, { scope: m.acc.pinScope("controller", "Pico 2 W", 1) }));
-    expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("false");
+    expect(pinOf("startup").getAttribute("aria-pressed")).toBe("false");
     await render(createElement(TestPage, { scope: m.acc.pinScope("controller", "Pico 2 W", 0) }));
-    expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("true");
+    expect(pinOf("startup").getAttribute("aria-pressed")).toBe("true");
   });
 
   it("the panel menu: Collapse all folds every section, pinned ones too, and they open again next visit", async () => {
     noPopover();
     await render(createElement(SplitTestPage));
     click(pinOf("language"));
-    click(head("graphics"));
-    expect(openIds()).toEqual(["language", "graphics"]);
+    click(head("startup"));
+    expect(openIds()).toEqual(["language", "startup"]);
     expect(menuButton().getAttribute("aria-label")).toBe("Panel options");
     click(menuButton());
     expect(menuButton().getAttribute("aria-expanded")).toBe("true");
@@ -265,8 +265,8 @@ describe("the accordion", () => {
     expect(menuItem("Clear pins").title).toBe("No pinned sections on this page");
     click(menuButton());
     click(pinOf("language"));
-    click(pinOf("graphics"));
-    expect(openIds()).toEqual(["language", "graphics"]);
+    click(pinOf("startup"));
+    expect(openIds()).toEqual(["language", "startup"]);
     const key = (k: string) => act(() => void document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
     menuButton().focus();
     key("ArrowDown");
@@ -279,19 +279,19 @@ describe("the accordion", () => {
     click(menuButton());
     click(menuItem("Clear pins"));
     expect(pinOf("language").getAttribute("aria-pressed")).toBe("false");
-    expect(pinOf("graphics").getAttribute("aria-pressed")).toBe("false");
+    expect(pinOf("startup").getAttribute("aria-pressed")).toBe("false");
     expect(m.acc.readPins("app")).toEqual([]);
   });
 
   it("opens the first section with a task on the first visit only", async () => {
-    await render(createElement(TestPage, { task: "graphics" }));
-    expect(openIds()).toEqual(["graphics"]);
-    expect(container.querySelector('[data-section="graphics"] .dk-sec-task')).not.toBeNull();
-    expect(container.querySelector('[data-section="graphics"] .dk-sec-status')!.textContent).toBe("to do");
-    click(head("graphics"));
+    await render(createElement(TestPage, { task: "startup" }));
+    expect(openIds()).toEqual(["startup"]);
+    expect(container.querySelector('[data-section="startup"] .dk-sec-task')).not.toBeNull();
+    expect(container.querySelector('[data-section="startup"] .dk-sec-status')!.textContent).toBe("to do");
+    click(head("startup"));
     act(() => root.unmount());
     root = createRoot(container);
-    await render(createElement(TestPage, { task: "graphics" }));
+    await render(createElement(TestPage, { task: "startup" }));
     expect(openIds()).toEqual([]);
   });
 
@@ -315,11 +315,11 @@ describe("the accordion", () => {
   });
 
   it("opens a deep link's section, focuses its header and flashes it; also one made before the page mounted", async () => {
-    m.acc.revealSection("app", "graphics");
+    m.acc.revealSection("app", "startup");
     await render(createElement(TestPage));
-    expect(openIds()).toEqual(["graphics"]);
-    expect(document.activeElement).toBe(head("graphics"));
-    expect(container.querySelector('[data-section="graphics"]')!.classList.contains("dk-flash")).toBe(true);
+    expect(openIds()).toEqual(["startup"]);
+    expect(document.activeElement).toBe(head("startup"));
+    expect(container.querySelector('[data-section="startup"]')!.classList.contains("dk-flash")).toBe(true);
     act(() => m.acc.revealSection("app", "language"));
     expect(openIds()).toEqual(["language"]);
     // A link for another page waits for that page.
@@ -330,13 +330,23 @@ describe("the accordion", () => {
 
 // The plan's table (MAPPING.md, "App settings" and "About"): each section and
 // what it holds, by the label each row or button shows.
-const KNOBS = ["cardOpacity", "backdropDim", "backdropBlur", "depth"].map((k) => `desktop.knobs.${k}`);
+// Background dim and blur show with the Game art background only (IA audit A7; the test's background is the default).
+const KNOBS = ["cardOpacity", "depth"].map((k) => `desktop.knobs.${k}`);
+// In use order (IA audit, App settings): Appearance first (with HDR lighting, A6), Language set once, lower.
 const APP_INVENTORY: Record<string, string[]> = {
-  language: ["desktop.settings2.language"],
-  appearance: ["desktop.settings2.theme", "desktop.glass.label", "desktop.accent.label", "desktop.backdrop.label", ...KNOBS, "desktop.customColors.toggle"],
+  appearance: [
+    "desktop.settings2.theme",
+    "desktop.glass.label",
+    "desktop.accent.label",
+    "desktop.backdrop.label",
+    ...KNOBS,
+    "desktop.hdr.label",
+    "desktop.knobs.hdrNits",
+    "desktop.customColors.toggle",
+  ],
   accessibility: ["desktop.colorVision.label", "desktop.settings2.reduceMotion", "desktop.narrator.voice", "desktop.narrator.captions", "desktop.narrator.test"],
-  startup: ["desktop.live.closeToTray", "desktop.live.launchAtLogin", "desktop.live.startMinimized"],
-  graphics: ["desktop.live.hardwareAcceleration", "desktop.hdr.label", "desktop.knobs.hdrNits"],
+  language: [], // the choice alone: its title and status say the rest (IA audit A5)
+  startup: ["desktop.live.closeToTray", "desktop.live.launchAtLogin", "desktop.live.startMinimized", "desktop.live.hardwareAcceleration"],
   updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.settings2.firmwareLink", "desktop.channel.backToStable"],
   privacy: ["desktop.settings2.launchersLink"],
   dismissed: [], // none dismissed: nothing to do, its status says so (page rule 6)
@@ -412,12 +422,22 @@ describe("App settings on the accordion", () => {
     expect(dupes).toEqual([]);
   });
 
+  it("Background dim and blur show only with the Game art background (they do nothing over the swirls or a plain one)", async () => {
+    const knob = (k: string) => labelsIn("appearance").includes(m.i18n.t(`desktop.knobs.${k}`));
+    await render(appSettings());
+    click(head("appearance"));
+    expect(knob("backdropDim") || knob("backdropBlur")).toBe(false);
+    m.storage.writePref("ds5.background", "art");
+    await render(appSettings());
+    expect(knob("backdropDim") && knob("backdropBlur")).toBe(true);
+  });
+
   it("says each section's state in its header, from the settings it holds", async () => {
     await render(appSettings());
     const status = (id: string) => container.querySelector(`[data-section="${id}"] .dk-sec-status`)?.textContent;
     expect(status("language")).toBe("English");
     expect(status("startup")).toBe("Close to tray");
-    expect(status("graphics")).toBe("Hardware acceleration on · HDR lighting on");
+    expect(status("appearance")).toContain("HDR lighting");
     expect(status("updates")).toBe("Development · asks before installing");
     expect(status("privacy")).toBe("Games may read your launchers");
     expect(status("dismissed")).toBe("No dismissed notices.");
@@ -479,9 +499,9 @@ describe("App settings on the accordion", () => {
     await render(appSettings());
     expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(true);
     expect(m.Section.panelTasks.get().get("app")).toBeNull(); // no task: no dot
-    await act(async () => m.acc.revealSection("app", "graphics"));
+    await act(async () => m.acc.revealSection("app", "startup"));
     expect(container.querySelector(".dk-split")!.classList.contains("panel-hidden")).toBe(false);
-    expect(openIds()).toEqual(["graphics"]);
+    expect(openIds()).toEqual(["startup"]);
   });
 
   it("Privacy says whether the launchers are read and links to the switch in Games → Launchers (IA audit Q5)", async () => {

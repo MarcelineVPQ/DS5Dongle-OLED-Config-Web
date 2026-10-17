@@ -106,7 +106,12 @@ const NEWEST: Partial<Record<AboutTab, { text: string; chapters: number } | null
 };
 
 // The newest version a changelog lists ("0.9.5-dev.11" from "[0.9.5-dev.11] - date").
-const newest = (headings: string[]) => headings.find((h) => !/^unreleased$/i.test(h))?.split(" ")[0] ?? null; // loop: NOT-WORTH — stops at the first released heading
+// The firmware's versions drop "-oled-edition" (as the app shows them everywhere).
+function newest(headings: string[]): string | null {
+  // loop: NOT-WORTH — stops at the first released heading
+  const released = headings.find((h) => !/^unreleased$/i.test(h));
+  return released ? released.split(" ")[0].replace(/-oled-edition$/, "") : null;
+}
 
 export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: string | null; onSeen?: () => void }) {
   const { t } = useTranslation();
@@ -151,7 +156,8 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
     proton: newest(headings.proton),
     // loop: NOT-WORTH — N = 4 columns; About's render
     roadmap: ROADMAP_COLUMNS.map((c) => t(`desktop.about.roadmap.column.${c}`)).join(" · "),
-    credits: t("desktop.about.production"),
+    // Its chapters: the production line is the card's own (IA audit A-5).
+    credits: headings.credits.join(" · "),
   };
   // Chapters: the text's headings, or Coming soon's columns.
   // loop: NOT-WORTH — N = 4 columns; only while Coming soon is open
@@ -171,7 +177,6 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
   const cut = older ? null : NEWEST[doc];
   const main = (
     <article className="dk-about-text">
-      <span className="dk-subhead">{t(TEXTS[doc].title)}</span>
       {doc === "credits" && <StudioCard />}
       {doc === "roadmap" ? (
         <ComingSoon />

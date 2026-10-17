@@ -50,7 +50,8 @@ export default function LightbarPage(props: SectionProps) {
         {/* loop: HOT-PATH-OK — N = 4 favorite slots; only while Light bar is open */}
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>
-            <span className="dk-mono">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>
+            {/* The swatch is the value; its hex code is the small print (IA audit C12). */}
+            <span className="dk-mono dk-hint">{rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]]).toUpperCase()}</span>
             <ColorPicker label={`FAV${i}`} value={rgbToHex([d.lbFavR[i], d.lbFavG[i], d.lbFavB[i]])} onChange={(hex) => setFav(i, hex)} />
           </Row>
         ))}
