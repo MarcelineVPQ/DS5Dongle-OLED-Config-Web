@@ -50,7 +50,7 @@ describe("every popup joins the top layer", () => {
   it("the language menu (App settings → Language)", () => {
     act(() => root.render(createElement(LanguageToggle)));
     act(() => container.querySelector<HTMLButtonElement>(".language-toggle-button")!.click());
-    onTop(container.querySelector(".language-toggle-menu"));
+    onTop(container.querySelector('.dk-menu[role="menu"]'));
   });
 
   it("the color picker", () => {
@@ -70,6 +70,61 @@ describe("every popup joins the top layer", () => {
     act(() => root.render(createElement(DevChannelDialog, { automatic: false, onJoin: () => undefined, onCancel: () => undefined })));
     onTop(container.querySelector(".dk-dialog-backdrop"));
     vi.unstubAllGlobals();
+  });
+});
+
+// The language menu is the one popup menu (MenuButton), not a popup of its own
+// (bug hunt D2, 0.9.5): arrows / Home / End move, Escape closes it without
+// reaching the drawer and puts the focus back on its button, a pick does too.
+describe("the language menu is a MenuButton", () => {
+  const button = () => container.querySelector<HTMLButtonElement>(".language-toggle-button")!;
+  const items = () => [...document.querySelectorAll<HTMLButtonElement>('[role="menu"] [role="menuitemradio"]')];
+  const key = (k: string) => act(() => void document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })));
+  // jsdom can't focus inside a popover="manual" element: leave the attribute off here (focus is what's tested).
+  beforeEach(() => {
+    const set = Element.prototype.setAttribute;
+    vi.spyOn(Element.prototype, "setAttribute").mockImplementation(function (this: Element, name: string, value: string) {
+      if (name !== "popover") set.call(this, name, value);
+    });
+  });
+  it("keyboard: ↓ opens, arrows / Home / End move, Escape closes, stays in the drawer and returns the focus", () => {
+    const drawerKeys = vi.fn();
+    act(() => root.render(createElement("div", { onKeyDown: (e: { key: string }) => drawerKeys(e.key) }, createElement(LanguageToggle))));
+    expect(container.querySelector(".language-toggle-menu"), "no popup of its own").toBeNull();
+    button().focus();
+    key("ArrowDown");
+    expect(button().getAttribute("aria-expanded")).toBe("true");
+    expect(items()).toHaveLength(7);
+    expect(
+      items()
+        .filter((b) => b.getAttribute("aria-checked") === "true")
+        .map((b) => b.lang),
+    ).toEqual(["en"]);
+    expect(document.activeElement).toBe(items()[0]);
+    key("ArrowDown");
+    expect(document.activeElement).toBe(items()[1]);
+    key("End");
+    expect(document.activeElement).toBe(items()[6]);
+    key("Home");
+    expect(document.activeElement).toBe(items()[0]);
+    drawerKeys.mockClear();
+    key("Escape");
+    expect(drawerKeys, "the drawer's Escape doesn't see it").not.toHaveBeenCalledWith("Escape");
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(button());
+  });
+  it("a pick switches the language, closes the menu and returns the focus", async () => {
+    act(() => root.render(createElement(LanguageToggle)));
+    act(() => button().click());
+    act(() =>
+      items()
+        .find((b) => b.lang === "de")!
+        .click(),
+    );
+    expect(i18n.language).toBe("de");
+    expect(container.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(button());
+    await i18n.changeLanguage("en");
   });
 });
 
@@ -113,7 +168,7 @@ describe("the CSS: one mechanism, nothing clipped when settled", () => {
   it("the top layer's reset is there, and no popup has a z-index of its own", () => {
     expect(rule("[popover].top-layer")).toMatch(/position: fixed;[\s\S]*inset: auto;/);
     // loop: test — the popups' classes
-    for (const sel of [".language-toggle-menu", ".cp-pop", ".dk-info-tip", ".dk-menu", ".dk-dialog-backdrop"]) expect(rule(sel), sel).not.toMatch(/z-index/);
+    for (const sel of [".cp-pop", ".dk-info-tip", ".dk-menu", ".dk-dialog-backdrop"]) expect(rule(sel), sel).not.toMatch(/z-index/);
     expect(css, "the old card-stacking hack is gone").not.toMatch(/:has\(\.language-toggle-menu\)/);
   });
 });

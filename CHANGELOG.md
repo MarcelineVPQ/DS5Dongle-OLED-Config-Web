@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **The language menu works like every other menu.** In App settings → Language, the arrow keys, Home and End now move through the languages, and Escape closes the menu without closing the settings panel too; the focus goes back to the language button.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed

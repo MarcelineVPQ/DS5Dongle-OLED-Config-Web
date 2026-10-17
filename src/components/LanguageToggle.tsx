@@ -1,12 +1,11 @@
-// Header dropdown to override the auto-detected i18next language.
+// The language picker: overrides the auto-detected i18next language.
 // Persists to localStorage via i18next-browser-languagedetector's caches.
 
 import { Check, Globe } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
 import { logged } from "../errorText";
-import { useTopLayer } from "../desktop/topLayer";
+import { MenuButton } from "../desktop/MenuButton";
 
 // The current language as one of ours (or English): also App settings →
 // Language's status.
@@ -30,83 +29,55 @@ export function languageWords(language: string | undefined): { own: string; othe
   return { own, others };
 }
 
+// App settings → Language's picker: the app's one popup menu (MenuButton),
+// each language a radio item in its own name (never a flag: languages aren't
+// countries). Picking one switches, closes the menu and puts the focus back
+// on the button; Escape closes it without leaving the drawer.
 export default function LanguageToggle() {
   const { i18n, t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const button = useRef<HTMLButtonElement | null>(null);
-  const menu = useRef<HTMLUListElement | null>(null);
-  // The menu in the top layer (over every card, section and panel), under the button, right edges lined up.
-  useTopLayer(menu, open, { anchor: button, align: "end" });
-
   const current = currentLanguage(i18n.language);
-
-  // Click-outside-to-close
-  // lifetime: OK — cleanup: removes the mousedown listener (menu closes / unmount)
-  useEffect(() => {
-    if (!open) return;
-    const onClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
-
-  // Close on Escape
-  // lifetime: OK — cleanup: removes the keydown listener (menu closes / unmount)
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
-
   return (
-    <div className="language-toggle" ref={ref}>
-      <button ref={button} type="button" className="language-toggle-button" onClick={() => setOpen((v) => !v)} aria-expanded={open} title={t("languageToggle.currentTitle", { name: current.label })}>
-        <Globe size={15} />
-        {/* The language's own name ("Español"), never a flag: languages aren't countries. */}
-        <span className="language-toggle-current">{current.label}</span>
-      </button>
-      {open && (
-        // A disclosure: a plain list of buttons (a listbox role would promise
-        // arrow-key handling this menu doesn't have).
-        <ul ref={menu} className="language-toggle-menu top-layer" aria-label={t("languageToggle.groupLabel")}>
-          {/* loop: HOT-PATH-OK — N = 7 languages in the menu */}
-          {SUPPORTED_LANGUAGES.map((lang) => {
-            const active = lang.code === current.code;
-            return (
-              <li key={lang.code}>
-                <button
-                  type="button"
-                  aria-pressed={active}
-                  className={active ? "active" : ""}
-                  onClick={() => {
-                    void i18n.changeLanguage(lang.code).catch(logged("switching the language (resources are bundled, so nothing to load can fail)"));
-                    try {
-                      window.localStorage.setItem(LANGUAGE_KEY, lang.code); // remember an explicit choice
-                    } catch {
-                      // error: NOT-WORTH — storage unavailable: the choice lasts for this session
-                    }
-                    setOpen(false);
-                  }}
-                  title={t("languageToggle.switchTo", { name: lang.label })}
-                >
-                  <span className="language-toggle-label">{lang.label}</span>
-                  <span className="language-toggle-short">{lang.shortLabel}</span>
-                  {active && <Check size={14} aria-hidden="true" />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
+    <MenuButton
+      label={t("languageToggle.groupLabel")}
+      title={t("languageToggle.currentTitle", { name: current.label })}
+      className="language-toggle-button"
+      align="end"
+      iconOnly={false}
+      content={
+        <>
+          <Globe size={15} aria-hidden="true" />
+          <span className="language-toggle-current">{current.label}</span>
+        </>
+      }
+    >
+      {
+        // loop: HOT-PATH-OK — N = 7 languages in the menu
+        SUPPORTED_LANGUAGES.map((lang) => {
+          const active = lang.code === current.code;
+          return (
+            <button
+              key={lang.code}
+              type="button"
+              role="menuitemradio"
+              aria-checked={active}
+              lang={lang.code}
+              onClick={() => {
+                void i18n.changeLanguage(lang.code).catch(logged("switching the language (resources are bundled, so nothing to load can fail)"));
+                try {
+                  window.localStorage.setItem(LANGUAGE_KEY, lang.code); // remember an explicit choice
+                } catch {
+                  // error: NOT-WORTH — storage unavailable: the choice lasts for this session
+                }
+              }}
+              title={t("languageToggle.switchTo", { name: lang.label })}
+            >
+              <Check size={14} aria-hidden="true" className={active ? undefined : "dk-menu-off"} />
+              <span className="language-toggle-label">{lang.label}</span>
+              <span className="language-toggle-short">{lang.shortLabel}</span>
+            </button>
+          );
+        })
+      }
+    </MenuButton>
   );
 }
