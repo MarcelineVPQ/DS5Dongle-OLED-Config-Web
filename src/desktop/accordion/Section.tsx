@@ -285,8 +285,8 @@ export function SplitView({
     window.addEventListener(PANEL_TOGGLE_EVENT, onToggle);
     return () => window.removeEventListener(PANEL_TOGGLE_EVENT, onToggle);
   }, [hidden, setHidden]);
-  // A deep link shows the panel (the drawer, narrow) to show its place;
-  // arriving through the rail's task dot (keepHidden) leaves a hidden panel
+  // A deep link shows the panel (the drawer, narrow) to show its place (the
+  // rail's task dot too); one made with keepHidden leaves a hidden panel
   // hidden: the section is opened and marked, and shown when the panel is.
   // lifetime: OK — acquires nothing (writes the remembered state once per link)
   useEffect(() => {

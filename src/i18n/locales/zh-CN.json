@@ -474,6 +474,13 @@
       "ok": "确定",
       "history": "更改记录",
       "attention_other": "{{count}} 项建议更改",
+      "waiting": {
+        "task": "建议：{{list}}",
+        "separator": "；",
+        "more_other": "另有 {{count}} 项",
+        "game_other": "{{game}}：{{count}} 项更改",
+        "games_other": "{{count}} 个游戏"
+      },
       "msg": {
         "label": {
           "defaultSteam": "将 {{proton}} 设为 Steam 运行 Windows 游戏的默认版本",
@@ -808,6 +815,8 @@
         "dualsense": "DualSense",
         "attention": "需要设置的游戏"
       },
+      "pcChanges_other": "这台电脑：{{count}} 项更改",
+      "pcChangesHint": "这些更改针对这台电脑，而不是某个游戏。在“建议的更改”中打开。",
       "noMatch": "没有匹配的游戏。",
       "running": "运行中",
       "hasProfile": "已有控制器配置",

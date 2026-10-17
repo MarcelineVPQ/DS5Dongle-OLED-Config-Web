@@ -477,6 +477,16 @@
       "history": "Historial de cambios",
       "attention_one": "{{count}} cambio recomendado",
       "attention_other": "{{count}} cambios recomendados",
+      "waiting": {
+        "task": "Recomendado: {{list}}",
+        "separator": "; ",
+        "more_one": "+{{count}} más",
+        "more_other": "+{{count}} más",
+        "game_one": "{{game}}: {{count}} cambio",
+        "game_other": "{{game}}: {{count}} cambios",
+        "games_one": "{{count}} juego",
+        "games_other": "{{count}} juegos"
+      },
       "msg": {
         "label": {
           "defaultSteam": "Hacer de {{proton}} el predeterminado de Steam para juegos de Windows",
@@ -812,6 +822,9 @@
         "dualsense": "DualSense",
         "attention": "Juegos por configurar"
       },
+      "pcChanges_one": "Este equipo: {{count}} cambio",
+      "pcChanges_other": "Este equipo: {{count}} cambios",
+      "pcChangesHint": "Cambios para este equipo, no para un juego. Los abre en Cambios recomendados.",
       "noMatch": "Ningún juego coincide.",
       "running": "En marcha",
       "hasProfile": "Tiene un perfil de mando",

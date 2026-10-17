@@ -477,6 +477,16 @@
       "history": "Änderungsverlauf",
       "attention_one": "{{count}} empfohlene Änderung",
       "attention_other": "{{count}} empfohlene Änderungen",
+      "waiting": {
+        "task": "Empfohlen: {{list}}",
+        "separator": "; ",
+        "more_one": "+{{count}} weitere",
+        "more_other": "+{{count}} weitere",
+        "game_one": "{{game}}: {{count}} Änderung",
+        "game_other": "{{game}}: {{count}} Änderungen",
+        "games_one": "{{count}} Spiel",
+        "games_other": "{{count}} Spiele"
+      },
       "msg": {
         "label": {
           "defaultSteam": "{{proton}} zu Steams Standard für Windows-Spiele machen",
@@ -812,6 +822,9 @@
         "dualsense": "DualSense",
         "attention": "Spiele mit Einrichtungsbedarf"
       },
+      "pcChanges_one": "Dieser Computer: {{count}} Änderung",
+      "pcChanges_other": "Dieser Computer: {{count}} Änderungen",
+      "pcChangesHint": "Änderungen für diesen Computer, nicht für ein Spiel. Öffnet sie unter Empfohlene Änderungen.",
       "noMatch": "Keine passenden Spiele.",
       "running": "Läuft",
       "hasProfile": "Hat ein Controller-Profil",

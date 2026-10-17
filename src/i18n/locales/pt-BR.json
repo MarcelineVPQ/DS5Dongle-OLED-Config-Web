@@ -477,6 +477,16 @@
       "history": "Histórico de mudanças",
       "attention_one": "{{count}} mudança recomendada",
       "attention_other": "{{count}} mudanças recomendadas",
+      "waiting": {
+        "task": "Recomendado: {{list}}",
+        "separator": "; ",
+        "more_one": "+{{count}} outra",
+        "more_other": "+{{count}} outras",
+        "game_one": "{{game}}: {{count}} mudança",
+        "game_other": "{{game}}: {{count}} mudanças",
+        "games_one": "{{count}} jogo",
+        "games_other": "{{count}} jogos"
+      },
       "msg": {
         "label": {
           "defaultSteam": "Tornar {{proton}} o padrão do Steam para jogos de Windows",
@@ -812,6 +822,9 @@
         "dualsense": "DualSense",
         "attention": "Jogos a configurar"
       },
+      "pcChanges_one": "Este computador: {{count}} mudança",
+      "pcChanges_other": "Este computador: {{count}} mudanças",
+      "pcChangesHint": "Mudanças para este computador, não para um jogo. Abre-as em Mudanças recomendadas.",
       "noMatch": "Nenhum jogo encontrado.",
       "running": "Em execução",
       "hasProfile": "Tem um perfil de controle",

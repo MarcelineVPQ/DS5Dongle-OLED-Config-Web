@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Games badge tells you what's waiting and takes you there.** The number on the Games rail item said only "1 recommended change", while the library's **Games that need setup** said 0, so there was no way to tell which game to open. Often it isn't a game at all: keeping the controller's volume at full, or a launcher's default Proton, is a change for this computer. Now the badge's tooltip names what's waiting (for example "Recommended: Keep the controller's volume and microphone level at full when it reconnects"; up to three, then "+2 more"). A click on Games opens the settings panel at **Recommended changes**, even when the panel was hidden or you're already on Games. The library counts the two kinds apart: **Games that need setup** counts games, and a new **This computer: 1 change** chip counts the rest and opens them. The two always add up to the badge, and Recommended changes says the same counts in its header (for example "8 games · This computer: 2 changes"). In Recommended changes, each game's changes are listed under its name, then **This computer**. All 7 languages.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed

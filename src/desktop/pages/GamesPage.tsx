@@ -42,6 +42,7 @@ import { sayInPassing } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
 import { allFixes } from "../games/types";
+import { msgText, NO_WAITING, waitingChanges, waitingSplit, waitingTotal, type Waiting } from "../library/waiting";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import { logged } from "../../errorText";
 import { feedProblemKey } from "../useUpdates";
@@ -65,26 +66,16 @@ export function loadDeclined(): Set<string> {
   return new Set(readPrefJson(DECLINED_KEY, { kind: "declinedFixes", salvage: (data) => salvageStrings(data), fallback: () => [] }));
 }
 
-// The recommended changes still waiting (the rail's Games badge): the
-// declined list is read once, not once per change.
-export function waitingCount(report: GamesReport): number {
-  const declined = loadDeclined();
-  // loop: NOT-WORTH — recommended changes (tens), once per recount
-  return allFixes(report).filter((f) => f.recommended && !declined.has(f.id)).length;
-}
+// The recommended changes still waiting, per game and for this computer (the
+// rail's Games badge and tooltip): the declined list is read once, not once per change.
+export const waitingNow = (report: GamesReport): Waiting => waitingChanges(report, loadDeclined());
 
 const saveDeclined = (ids: Set<string>) => writePref(DECLINED_KEY, JSON.stringify([...ids]));
 
 // Translate a main-process message (see Msg in games/types.ts); params may be messages too.
 export function useMsg(): (m: Msg) => string {
   const { t } = useTranslation();
-  return useCallback(
-    function render(m: Msg): string {
-      const params = Object.fromEntries(Object.entries(m.params ?? {}).map(([k, v]) => [k, typeof v === "string" ? shownText(v) : render(v)]));
-      return t(`desktop.games.msg.${m.key}`, { ...params, interpolation: { escapeValue: false } });
-    },
-    [t],
-  );
+  return useCallback((m: Msg) => msgText(t, m), [t]);
 }
 
 // Said before applying (or undoing): which launchers will be closed and reopened.
@@ -199,6 +190,8 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const declined = useRef<Set<string>>(loadDeclined());
   const [declinedAtScan, setDeclinedAtScan] = useState<ReadonlySet<string>>(loadDeclined);
+  // The declined list as it is now (Library's counts follow an untick at once, like the rail's badge).
+  const [declinedNow, setDeclinedNow] = useState<ReadonlySet<string>>(loadDeclined);
   const [step, setStep] = useState<Step>("pick");
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<(ApplyResult & { labels: Map<string, Msg> }) | null>(null);
@@ -279,6 +272,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
     }
     setChosen(next);
     saveDeclined(declined.current);
+    setDeclinedNow(new Set(declined.current));
     onDeclinedChange?.();
   };
 
@@ -386,6 +380,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
     closeNote,
     clearCloseNote: () => setCloseNote(null),
     declinedAtScan,
+    declinedNow,
     fixes,
     chosen,
     selected,
@@ -423,6 +418,8 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
   // What needs the player, as of the last scan (unticking a change doesn't
   // move it away while the player is looking at it).
   const status = report ? homeStatus(report, setup.declinedAtScan) : null;
+  // What's waiting, per game and for this computer: Library's two chips (they add up to the rail's badge).
+  const waiting = useMemo(() => (report ? waitingChanges(report, setup.declinedNow) : NO_WAITING), [report, setup.declinedNow]);
   return (
     <GameLibrary
       report={report}
@@ -447,6 +444,7 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
         sections: report && status && <HomeSections setup={setup} report={report} status={status} />,
         blocks: report && status && protonApplies() && <ComputerBlock state={computer} report={report} status={status} onRescan={setup.rescanAfterChange} />,
         blockLink: computer.revealed,
+        waiting,
       }}
     />
   );
@@ -486,9 +484,9 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
   // loop: HOT-PATH-OK — N ≤ 4 launchers; Home render
   const found = report.launchers.filter((l) => l.found);
   const tookBack = overwrittenBy(fixes);
-  // The rail's count, as of the last scan: recommended changes the player hasn't declined.
-  // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render
-  const waiting = fixes.filter((f) => f.recommended && !setup.declinedAtScan.has(f.id)).length;
+  // What waits, as of the last scan (unticking doesn't move the dot while the player is looking),
+  // said like Library's chips and the rail's badge: games, then this computer's changes.
+  const waiting = useMemo(() => waitingChanges(report, setup.declinedAtScan), [report, setup.declinedAtScan]);
   // loop: NOT-WORTH — N = backups (tens); Home render
   const lastChange = backups.reduce((n, b) => Math.max(n, Date.parse(b.created) || 0), 0);
   // A change set's line; one whose backup can't be read says so, and where it is (error pass E2).
@@ -597,7 +595,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
         icon={ListChecks}
         title={t("desktop.games.changesTitle", "Recommended changes")}
         status={fixes.length ? t("desktop.games.attention", { count: fixes.length }) : t("desktop.games.nothingToChange")}
-        task={waiting > 0 && t("desktop.games.attention", { count: waiting })}
+        task={waitingTotal(waiting) > 0 && waitingSplit(t, waiting)}
         notice={notices("recommended")}
         idle={step === "pick" && fixes.length === 0 && !setup.undoAsk && closeNote?.at !== "recommended" && error?.at !== "recommended"}
       >
@@ -609,7 +607,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                   <OverwrittenNotice launchers={tookBack} />
                   {/* hint: MUST-SHOW — the instruction for the list below it, before Apply */}
                   <p className="dk-hint">{t("desktop.games.changesHint", "Recommended changes are ticked. Untick anything you'd rather keep as it is.")}</p>
-                  <FixList fixes={fixes} chosen={setup.chosen} onToggle={setup.toggle} />
+                  <FixList report={report} chosen={setup.chosen} onToggle={setup.toggle} />
                   <div className="dk-row-btns">
                     <button type="button" className="dk-btn primary" disabled={selected.length === 0} onClick={setup.review}>
                       {t("desktop.games.review", { count: selected.length })}
@@ -738,32 +736,45 @@ function UndoConfirm({ setup, at }: { setup: GamesSetup; at: Place }) {
 
 export { allFixes };
 
-function FixList({ fixes, chosen, onToggle }: { fixes: Fix[]; chosen: Set<string>; onToggle: (id: string) => void }) {
+// Grouped by game (its launcher's icon and its name), then This computer
+// (a launcher's default, the controller's audio: changes without a game),
+// so a change that isn't a game's never reads as one.
+function FixList({ report, chosen, onToggle }: { report: GamesReport; chosen: Set<string>; onToggle: (id: string) => void }) {
   const { t } = useTranslation();
   const m = useMsg();
-  // loop: HOT-PATH-OK — 4 launcher groups x tens of fixes; Home render on interaction
-  const groups = (["system", "steam", "heroic", "lutris"] as const).map((g) => ({ g, items: fixes.filter((f) => f.launcher === g) })).filter((x) => x.items.length);
+  // loop: HOT-PATH-OK — N = games (hundreds), most with no fixes; Home render on interaction
+  const games = report.games.filter((g) => g.fixes.length > 0);
+  // loop: NOT-WORTH — N ≤ 3 launchers; Home render on interaction
+  const pc = [...report.launchers.flatMap((l) => l.fixes), ...report.system.fixes];
+  const rows = (fixes: Fix[]) =>
+    // loop: HOT-PATH-OK — fixes in one group, a few at most
+    fixes.map((f) => (
+      <label key={f.id} className="dk-fix">
+        <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />
+        <span>
+          <span className="dk-fix-label">{m(f.label)}</span>
+          <span className="dk-fix-why">{m(f.why)}</span>
+        </span>
+      </label>
+    ));
   return (
     <div className="dk-fixes">
-      {/* loop: HOT-PATH-OK — N ≤ 4 launcher groups */}
-      {groups.map(({ g, items }) => (
-        <div key={g}>
+      {/* loop: HOT-PATH-OK — games with a change, tens at most */}
+      {games.map((g) => (
+        <div key={g.key} data-fix-group={g.key}>
           <h3 className="launcher-name">
-            {g !== "system" && <LauncherIcon id={g} />}
-            {g === "system" ? t("desktop.games.systemTitle", "This computer") : LAUNCHER_NAME[g]}
+            <LauncherIcon id={g.launcher} />
+            {g.title}
           </h3>
-          {/* loop: HOT-PATH-OK — fixes in one group, tens at most */}
-          {items.map((f) => (
-            <label key={f.id} className="dk-fix">
-              <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />
-              <span>
-                <span className="dk-fix-label">{m(f.label)}</span>
-                <span className="dk-fix-why">{m(f.why)}</span>
-              </span>
-            </label>
-          ))}
+          {rows(g.fixes)}
         </div>
       ))}
+      {pc.length > 0 && (
+        <div data-fix-group="pc">
+          <h3 className="launcher-name">{t("desktop.games.systemTitle", "This computer")}</h3>
+          {rows(pc)}
+        </div>
+      )}
     </div>
   );
 }

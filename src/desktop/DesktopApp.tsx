@@ -1,6 +1,7 @@
-import AppRail, { railPress, type RailItem } from "./AppRail";
+import AppRail, { railSelect, type RailItem } from "./AppRail";
 import Notice from "./Notice";
 import { NoticeTasksContext, pruneStored, railReminders } from "./notices";
+import type { Waiting } from "./library/waiting";
 import { openTasks } from "./openTasks";
 import { useBoardProblems } from "./dongle/useBoardProblems";
 import { useLookKnobs } from "./lookKnobs";
@@ -36,7 +37,7 @@ import RecoveredNotice from "./RecoveredNotice";
 import HeadsetNotice from "./HeadsetNotice";
 import { hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
-import GamesPage, { waitingCount } from "./pages/GamesPage";
+import GamesPage, { waitingNow } from "./pages/GamesPage";
 import type { GamesReport } from "./games/types";
 import ControllerView from "./live/ControllerView";
 import type { PanelView } from "./live/ControllerView";
@@ -106,21 +107,21 @@ export default function DesktopApp() {
   // App settings → Dismissed notices' Go to): the accordion opens it.
   // The rail's item for the page shown (the Pico 2 W page is the controller view's dongle panel).
   const railActive: RailItem = main === "controller" ? (panel === "dongle" ? "dongle" : "controller") : main;
-  // `keepHidden`: arriving through the rail (its task dot): a hidden panel stays hidden (useAccordion).
-  const goTo = (item: RailItem, section?: string, keepHidden = false) => {
+  // A section's link shows a hidden panel (the rail's task dot too: the place it names is shown, 2026-10-17).
+  const goTo = (item: RailItem, section?: string) => {
     if (item === "games" || item === "about" || item === "app") setMain(item);
     else if (item === "controller") openPanel("overview");
     else openPanel(item);
     if (!section) return;
-    if ((SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never, undefined, { keepHidden });
+    if ((SECTIONS[item] as readonly string[]).includes(section)) revealSection(item, section as never);
     else if (item in MAIN_BLOCKS && (MAIN_BLOCKS[item as keyof typeof MAIN_BLOCKS] as readonly string[]).includes(section)) revealBlock(item as keyof typeof MAIN_BLOCKS, section as never);
   };
 
   // Open tasks: the rail's dots, and which dismissed notices still apply.
   const boardProblems = useBoardProblems(bridge);
   const { tasks, settled } = useMemo(
-    () => openTasks(t, { app: appUpdate, fw, connected: bridge.isConnected, board: boardProblems, gamesCount: games.count }),
-    [t, appUpdate, fw, bridge.isConnected, boardProblems, games.count],
+    () => openTasks(t, { app: appUpdate, fw, connected: bridge.isConnected, board: boardProblems, games: games.waiting ?? undefined }),
+    [t, appUpdate, fw, bridge.isConnected, boardProblems, games.waiting],
   );
   const reminders = useMemo(() => railReminders(tasks), [tasks]);
   // loop: NOT-WORTH — N ≤ 3 notice ids; when what applies changes
@@ -472,8 +473,9 @@ export default function DesktopApp() {
             <AppRail
               active={railActive}
               onSelect={(pressed) =>
-                // The page you're on, again: show / hide its settings panel (every page alike: SplitView keeps it per page, remembered).
-                railPress(pressed, railActive, (item) => {
+                // The page you're on, again: show / hide its settings panel (every page alike: SplitView keeps it per page,
+                // remembered). A dot on the item: the press opens what it's about (its section, the panel shown).
+                railSelect(pressed, railActive, tasks, (item, section) => {
                   // After the page or panel renders, focus moves into it (the page
                   // in the middle; App settings / Pico open in the side panel), so
                   // the keyboard and screen readers continue there, not in the rail.
@@ -484,14 +486,10 @@ export default function DesktopApp() {
                     // A deep link already moved the focus to its section.
                     if (!document.activeElement?.closest(".dk-sec")) target?.focus({ preventScroll: true });
                   });
-                  // A dot on the item: its first task with a section there opens (a hidden panel stays hidden: shown later, it scrolls there).
-                  // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
-                  const section = tasks.find((task) => task.place === item && task.section)?.section;
-                  if (item === "games" || item === "about" || item === "app") goTo(item, section, true);
-                  else if (item === "controller") {
+                  if (item === "controller") {
                     setMain("controller");
                     setPanel("overview");
-                  } else goTo(item, section, true);
+                  } else goTo(item, section);
                 })
               }
               gamesSupported={games.supported}
@@ -577,15 +575,15 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
 }
 
 // Linux Games page: whether the user allowed it to read launcher settings, and
-// how many recommended changes are waiting (the sidebar badge). The startup
+// which recommended changes are waiting (the sidebar badge and its tooltip). The startup
 // check only runs once the user has allowed it.
 function useGamesAttention() {
   const supported = gamesSupported();
   const [allowed, setAllowedState] = useState(false);
-  const [count, setCount] = useState(0);
+  const [waiting, setWaiting] = useState<Waiting | null>(null);
   // cache: OK — key=none (the last games report); invalidated=each scan, cleared when Games consent is turned off; bound=1 report
   const last = useRef<GamesReport | null>(null);
-  const recount = useCallback(() => setCount(last.current ? waitingCount(last.current) : 0), []);
+  const recount = useCallback(() => setWaiting(last.current ? waitingNow(last.current) : null), []);
   const update = useCallback(
     (report: GamesReport) => {
       last.current = report;
@@ -625,5 +623,5 @@ function useGamesAttention() {
     [recount],
   );
   const setAllowed = useCallback((value: boolean) => void setGamesAllowed(value).catch(shown("desktop.errors.settingNotSaved")), []);
-  return { supported, allowed, setAllowed, count, update, recount };
+  return { supported, allowed, setAllowed, waiting, update, recount };
 }
