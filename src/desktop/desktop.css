@@ -42,6 +42,10 @@
   --text-soft: #1e293b;
   --dk-chip-ok-bg: #15803d;
   --dk-chip-ok-text: #ffffff;
+  /* A selected warning chip (a Fail's details): the status amber filled, its
+     badge ink on it (both follow Color vision). */
+  --dk-chip-warn-bg: var(--status-warn);
+  --dk-chip-warn-text: var(--on-status);
 
   position: fixed;
   inset: 0;
@@ -69,6 +73,8 @@ html[data-theme="dark"] .dk {
   --text-soft: #cbd5e1;
   --dk-chip-ok-bg: #052e1f;
   --dk-chip-ok-text: #86efac;
+  --dk-chip-warn-bg: var(--notice-warn-bg);
+  --dk-chip-warn-text: var(--notice-warn-text);
 }
 @media (prefers-color-scheme: dark) {
   html[data-theme="system"] .dk,
@@ -88,6 +94,8 @@ html[data-theme="dark"] .dk {
     --text-soft: #cbd5e1;
     --dk-chip-ok-bg: #052e1f;
     --dk-chip-ok-text: #86efac;
+    --dk-chip-warn-bg: var(--notice-warn-bg);
+    --dk-chip-warn-text: var(--notice-warn-text);
   }
 }
 
@@ -178,6 +186,14 @@ html[data-theme="dark"] .dk {
 }
 .dk-chip.ok .dot {
   background: currentColor;
+}
+/* Selected, and what it says is a problem (a Fail's details): warning, not
+   the green of a pass. */
+.dk-chip.warn[aria-pressed="true"] {
+  border-color: var(--status-warn);
+  color: var(--dk-chip-warn-text);
+  background: var(--dk-chip-warn-bg);
+  font-weight: 600;
 }
 .dk-chip.warn .dot {
   background: var(--status-warn);

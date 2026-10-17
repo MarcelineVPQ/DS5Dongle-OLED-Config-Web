@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **A Fail's picked details show in the warning color.** On a game's test sheet, the details you pick under a Fail (Feels weak, Plain vibration only, Sound problems) were green like a pass; they're problems, so they now take the warning color, in every theme and with Color vision.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed

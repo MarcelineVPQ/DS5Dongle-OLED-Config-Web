@@ -308,6 +308,8 @@ describe("game page", () => {
         [i18n.t("desktop.library.detail.weak"), "true"],
         [i18n.t("desktop.library.detail.rumble-only"), "false"],
       ]);
+      // A Fail's details are problems: picked ones take the warning color, never a pass's green.
+      for (const c of chips()) expect([c.classList.contains("warn"), c.classList.contains("ok")]).toEqual([true, false]);
       expect(row("haptic-feedback").querySelector(".gp-details")!.getAttribute("aria-label")).toBe(i18n.t("desktop.library.failDetails", { feature: "Haptic feedback" }));
       expect(row("haptic-feedback").querySelector(".gp-conflict")!.textContent).toContain(i18n.t("desktop.library.sheetConflict"));
       // A row without details has no chips, even on Fail.
