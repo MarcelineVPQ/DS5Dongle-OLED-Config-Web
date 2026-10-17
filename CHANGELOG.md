@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Quitting no longer leaves a crash report behind (Linux AppImage).** Closing the app could end with a "ds5-dongle-configurator crashed" notice: Chromium's helper processes finish exiting a moment after the app, and the AppImage's files could go away first. The app now keeps its files available until all of its processes have exited. After **Restart now** for an update, the new copy no longer has its files pulled out from under it when it quits, and the old copy no longer stays behind in the background (holding the old version's file) once the new one starts.
+
 ## [0.9.5-dev.17] - 2026-10-16
 
 ### Changed
