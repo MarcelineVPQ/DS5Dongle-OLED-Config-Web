@@ -90,9 +90,13 @@ export class AppTray {
     this.tray.setImage(image);
   }
 
+  // Every update state (a download reports progress every 150 ms): the menu
+  // is rebuilt only when what it shows changes, an update ready or its version.
   updateUpdateState(state: UpdateState): void {
+    const shown = (s: UpdateState) => (s.phase === "ready" ? s.version : null);
+    const changed = shown(state) !== shown(this.updateState);
     this.updateState = state;
-    this.refresh();
+    if (changed) this.refresh();
   }
 
   destroy(): void {

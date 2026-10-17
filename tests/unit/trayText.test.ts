@@ -70,3 +70,20 @@ describe("the tray speaks the system's language", () => {
     expect(shown.tooltip).not.toMatch(/dongle|Charging|Battery/i);
   });
 });
+
+// Bug hunt A6 (0.9.5): a download's progress (every 150 ms) rebuilt the tray menu each time.
+it("a download's progress doesn't rebuild the menu; an update ready does", async () => {
+  const tray = new AppTray("/nonexistent", handlers, SETTINGS);
+  tray.setText(await mainTranslator("en"));
+  const before = shown.menus;
+  tray.updateUpdateState({ phase: "checking" });
+  tray.updateUpdateState({ phase: "available", version: "0.9.6", size: 100 });
+  for (let got = 0; got <= 100; got += 10) tray.updateUpdateState({ phase: "downloading", version: "0.9.6", got, total: 100 });
+  tray.updateUpdateState({ phase: "installing", version: "0.9.6" });
+  expect(shown.menus).toBe(before);
+  tray.updateUpdateState({ phase: "ready", version: "0.9.6" });
+  expect(shown.menus).toBe(before + 1);
+  expect(labels(shown.menu)).toContain("Restart to update to 0.9.6");
+  tray.updateUpdateState({ phase: "ready", version: "0.9.6" });
+  expect(shown.menus).toBe(before + 1);
+});
