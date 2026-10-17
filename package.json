@@ -1,7 +1,7 @@
 {
   "name": "ds5-dongle-configurator",
   "private": true,
-  "version": "0.9.5-dev.18",
+  "version": "0.9.5-dev.19",
   "type": "module",
   "scripts": {
     "dev:desktop": "electron-vite dev -- --no-sandbox",

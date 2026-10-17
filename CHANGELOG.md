@@ -6,12 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.19] - 2026-10-17
+
+The release candidate for 0.9.5: bug fixes, several boards on one PC, and the board's Settings screen in groups.
+
 ### Added
 
 - **Several boards on one PC.** With two or more boards plugged in (any number), the side bar's status line becomes a stack: one row per board with its name, firmware, controller and slot, the one in use marked. Click another row to switch to it; the board then flashes **THIS ONE** on its screen (and blinks its light), so you can see which one you're on. It also flashes when the app connects while several boards are there and before a firmware update. With many boards, three rows show and **N more…** opens a list you can search. The app opens the board you used last. Boards are told apart by their own id (firmware 0.9.5-dev.19), not by the USB serial, which is the paired controller's and can be the same on two boards.
 
 ### Changed
 
+- Bundles firmware 0.9.5-dev.19: each board has its own id and an Identify screen (THIS ONE), so the app tells several boards apart; the board's OLED Settings screen opens on a short menu of groups (Haptics/trigger, Audio, Connection, Screen & lights, PC sleep, Reset) with clearer names; settings are checked when the board starts (a damaged save loads the defaults, settings from every earlier release carry over); the controller stays paired when a link drops mid-connect; a cleaner mic start; and fixes for the OLED Diagnostics and Settings screens.
 - **A Fail's picked details show in the warning color.** On a game's test sheet, the details you pick under a Fail (Feels weak, Plain vibration only, Sound problems) were green like a pass; they're problems, so they now take the warning color, in every theme and with Color vision.
 - **Controller not detected is said once, in Your report.** A game's Setup had its own **Controller not detected** checkbox beside the test sheet's **Controller detected** row, both the same answer. The checkbox is gone: mark **Controller detected** as **Fail** in Your report, and the app still offers to pass the controller to the game as a standard gamepad. A mark you set before shows there as Fail.
 
