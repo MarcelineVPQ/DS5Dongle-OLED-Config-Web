@@ -1843,7 +1843,10 @@
       "none": "No dismissed notices.",
       "showAgain": "Show again",
       "showAllAgain": "Show all again",
-      "goTo": "Go to {{place}}"
+      "goTo": "Go to {{place}}",
+      "gpuOff": "Hardware acceleration was turned off after a graphics crash. The app draws without the graphics card from the next start.",
+      "gpuTurnBackOn": "Turn back on",
+      "gpuBackOn": "Hardware acceleration is back on from the next start."
     },
     "toast": {
       "region": "Notifications",

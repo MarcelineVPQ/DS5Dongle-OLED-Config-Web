@@ -79,7 +79,7 @@ export interface DesktopSettings {
   // the short confirmations as text only).
   narratorCaptions: boolean;
   // Draw with the graphics card (needed for blur, glass and smooth effects).
-  // Turned off automatically if the GPU process crashes; applies at restart.
+  // Turned off automatically if the GPU process crashes twice in one run; applies at restart.
   hardwareAcceleration: boolean;
   // Experimental: the lightbar glow brighter than paper white on HDR displays
   // (starts the app with the scRGB color profile; applies at restart).
@@ -217,6 +217,8 @@ export interface DesktopApi {
   // Linux: the app switched the controller to its stereo headset profile for
   // the first time (headsetProfile.ts); the page explains it, with Undo.
   onHeadsetSwitched(listener: () => void): () => void;
+  // Hardware acceleration was turned off after GPU crashes (electron/main/gpuCrash.ts); the page says so, with Turn back on.
+  onGpuTurnedOff(listener: () => void): () => void;
   // Undo that switch: false when there's nothing to undo any more (the
   // headset was unplugged, or the profile changed since).
   headsetUndo(): Promise<boolean>;
@@ -327,6 +329,7 @@ export const IPC = {
   showError: "desktop:show-error",
   showNotice: "desktop:show-notice",
   headsetSwitched: "desktop:headset-switched",
+  gpuTurnedOff: "desktop:gpu-turned-off",
   headsetUndo: "desktop:headset-undo",
   headsetHint: "desktop:headset-hint",
   getSettings: "desktop:get-settings",

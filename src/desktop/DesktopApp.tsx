@@ -34,6 +34,7 @@ import SetupScreen, { HAD_DONGLE_KEY } from "./SetupScreen";
 import BoardBusyNotice from "./BoardBusyNotice";
 import RecoveredNotice from "./RecoveredNotice";
 import HeadsetNotice from "./HeadsetNotice";
+import GpuNotice from "./GpuNotice";
 import { boardName, hardwareName, trackBoard } from "./hardwareName";
 import { previewUpdates, useUpdatePreview } from "./updatePreview";
 import GamesPage, { waitingCount } from "./pages/GamesPage";
@@ -399,6 +400,7 @@ export default function DesktopApp() {
                 <ErrorNotice message={shownError} onDismiss={clearShownError} pinned />
                 <RecoveredNotice />
                 <HeadsetNotice />
+                <GpuNotice />
                 {mainNotice && (
                   <Notice pinned role="status" onDismiss={() => setMainNotice(null)}>
                     <span>{mainNotice}</span>

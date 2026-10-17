@@ -1844,7 +1844,10 @@
       "none": "Keine geschlossenen Hinweise.",
       "showAgain": "Wieder anzeigen",
       "showAllAgain": "Alle wieder anzeigen",
-      "goTo": "Zu {{place}}"
+      "goTo": "Zu {{place}}",
+      "gpuOff": "Die Hardwarebeschleunigung wurde nach einem Grafikabsturz ausgeschaltet. Ab dem nächsten Start zeichnet die App ohne die Grafikkarte.",
+      "gpuTurnBackOn": "Wieder einschalten",
+      "gpuBackOn": "Die Hardwarebeschleunigung ist ab dem nächsten Start wieder an."
     },
     "toast": {
       "region": "Benachrichtigungen",

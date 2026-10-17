@@ -41,6 +41,7 @@ import { copyOledImage, saveOledImage } from "./oledShare";
 import { writeFileAtomic } from "./games/backup";
 import { boardHolders } from "./boardHolders";
 import { holdAppImageMountUntilExit } from "./appImageQuit";
+import { gpuCrashWatcher } from "./gpuCrash";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
@@ -131,22 +132,24 @@ if (!app.requestSingleInstanceLock()) {
     });
 }
 
-// A crashed GPU process means hardware rendering isn't safe on this PC:
-// Chromium falls back to software for the rest of this run, and the setting
-// goes off so the next start doesn't try again (the user can turn it back on).
+// A GPU process that crashes twice in one run means hardware rendering isn't
+// safe on this PC (gpuCrash.ts): the setting goes off so the next start
+// doesn't try again, and the page says so, with Turn back on.
 function recordGpuCrash(): void {
+  const crashed = gpuCrashWatcher(
+    () => !!settings?.hardwareAcceleration,
+    () => {
+      try {
+        updateSetting("hardwareAcceleration", false);
+        mainWindow?.webContents.send(IPC.gpuTurnedOff);
+      } catch (cause) {
+        // error: LOGGED-OK — not a user action: Chromium falls back to software rendering itself; the next crash tries again
+        logged("turning hardware acceleration off after a GPU crash")(cause);
+      }
+    },
+  );
   // lifetime: NOT-WORTH — registered once in start(), lives until quit
-  app.on("child-process-gone", (_event, details) => {
-    if (details.type !== "GPU" || details.reason === "clean-exit" || details.reason === "killed") return;
-    if (!settings?.hardwareAcceleration) return;
-    console.warn(`[gpu] GPU process gone (${details.reason}); software rendering from the next start`);
-    try {
-      updateSetting("hardwareAcceleration", false);
-    } catch (cause) {
-      // error: LOGGED-OK — not a user action: this run already falls back to software rendering; the next crash tries again
-      logged("turning hardware acceleration off after a GPU crash")(cause);
-    }
-  });
+  app.on("child-process-gone", (_event, details) => crashed(details));
 }
 
 function start(): void {

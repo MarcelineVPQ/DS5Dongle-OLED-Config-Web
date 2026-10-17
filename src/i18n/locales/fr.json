@@ -1844,7 +1844,10 @@
       "none": "Aucune notification fermée.",
       "showAgain": "Afficher à nouveau",
       "showAllAgain": "Tout afficher à nouveau",
-      "goTo": "Aller à {{place}}"
+      "goTo": "Aller à {{place}}",
+      "gpuOff": "L'accélération matérielle a été désactivée après un plantage graphique. Dès le prochain démarrage, l'app dessine sans la carte graphique.",
+      "gpuTurnBackOn": "Réactiver",
+      "gpuBackOn": "L'accélération matérielle est réactivée dès le prochain démarrage."
     },
     "toast": {
       "region": "Notifications",

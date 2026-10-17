@@ -1833,7 +1833,10 @@
       "none": "没有已关闭的通知。",
       "showAgain": "再次显示",
       "showAllAgain": "全部再次显示",
-      "goTo": "前往{{place}}"
+      "goTo": "前往{{place}}",
+      "gpuOff": "图形崩溃后，硬件加速已关闭。从下次启动起，应用将不使用显卡绘制。",
+      "gpuTurnBackOn": "重新打开",
+      "gpuBackOn": "从下次启动起，硬件加速将重新打开。"
     },
     "toast": {
       "region": "通知",

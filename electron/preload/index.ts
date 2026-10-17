@@ -46,6 +46,12 @@ const api: DesktopApi = {
     ipcRenderer.on(IPC.headsetSwitched, handler);
     return () => ipcRenderer.removeListener(IPC.headsetSwitched, handler);
   },
+  onGpuTurnedOff: (listener) => {
+    const handler = () => listener();
+    // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)
+    ipcRenderer.on(IPC.gpuTurnedOff, handler);
+    return () => ipcRenderer.removeListener(IPC.gpuTurnedOff, handler);
+  },
   headsetUndo: () => ipcRenderer.invoke(IPC.headsetUndo),
   setHeadsetHint: (headphones) => ipcRenderer.send(IPC.headsetHint, headphones),
   getSettings: () => ipcRenderer.invoke(IPC.getSettings),

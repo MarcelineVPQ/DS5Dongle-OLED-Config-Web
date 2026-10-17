@@ -1844,7 +1844,10 @@
       "none": "No hay avisos cerrados.",
       "showAgain": "Volver a mostrar",
       "showAllAgain": "Volver a mostrar todos",
-      "goTo": "Ir a {{place}}"
+      "goTo": "Ir a {{place}}",
+      "gpuOff": "La aceleración por hardware se desactivó tras un fallo gráfico. Desde el próximo inicio, la app dibuja sin la tarjeta gráfica.",
+      "gpuTurnBackOn": "Volver a activar",
+      "gpuBackOn": "La aceleración por hardware vuelve a estar activada desde el próximo inicio."
     },
     "toast": {
       "region": "Notificaciones",

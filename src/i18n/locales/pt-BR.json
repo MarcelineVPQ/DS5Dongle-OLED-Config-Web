@@ -1844,7 +1844,10 @@
       "none": "Nenhum aviso fechado.",
       "showAgain": "Mostrar de novo",
       "showAllAgain": "Mostrar todos de novo",
-      "goTo": "Ir para {{place}}"
+      "goTo": "Ir para {{place}}",
+      "gpuOff": "A aceleração por hardware foi desligada após uma falha gráfica. A partir da próxima abertura, o app desenha sem a placa de vídeo.",
+      "gpuTurnBackOn": "Ligar de novo",
+      "gpuBackOn": "A aceleração por hardware volta a ficar ligada a partir da próxima abertura."
     },
     "toast": {
       "region": "Notificações",

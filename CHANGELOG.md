@@ -11,6 +11,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Back to stable stays on stable.** An update check on the Development channel that answered late, after you went back to stable, could still offer a development build, and automatic updates could install it. Now only the newest check counts, and only for the channel you chose.
 - **The tray speaks your language.** Its menu and tooltip were English only and said "DS5 Dongle OLED Edition". They now follow your system's language (all 7) and name your board, for example "Pico 2 W 0.9.5 · Controller connected · Slot 0 · Battery 80%".
 - **App settings shows what you changed in the tray.** Unticking Close to tray, Start at login, Start minimized or Check for updates automatically in the tray menu left App settings showing the old switch until you opened the page again. It now follows at once, as it does when the app turns a setting off by itself.
+- **One graphics crash no longer turns hardware acceleration off for good.** A single crash of the graphics process (after a driver update, say) switched it off without a word. Now it takes a second crash in the same run, and the app tells you, with **Turn back on**.
 
 ## [0.9.5-dev.18] - 2026-10-17
 
