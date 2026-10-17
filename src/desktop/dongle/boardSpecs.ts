@@ -7,14 +7,15 @@
 // Infineon CYW43439, Bluetooth 5.2, 802.11n 2.4 GHz; Pico W: RP2040, dual-core
 // Cortex-M0+, 264 kB SRAM, 2 MB flash, same CYW43439). Checked 2026-10-13.
 
-export type BoardSpecs = { chip: string; core: string; sramKb: number; flashMb: number; wireless: string; bluetooth: string };
+// The zone's title line uses the short names (2× Cortex-M33 · CYW43439); its ⓘ the makers' too.
+export type BoardSpecs = { chip: string; core: string; coreMaker: string; sramKb: number; flashMb: number; wireless: string; wirelessMaker: string; bluetooth: string };
 
 const BOARD_SPECS: Record<string, BoardSpecs> = {
-  "Pico 2 W": { chip: "RP2350", core: "Arm Cortex-M33", sramKb: 520, flashMb: 4, wireless: "Infineon CYW43439", bluetooth: "5.2" },
-  "Pico W": { chip: "RP2040", core: "Arm Cortex-M0+", sramKb: 264, flashMb: 2, wireless: "Infineon CYW43439", bluetooth: "5.2" },
+  "Pico 2 W": { chip: "RP2350", core: "Cortex-M33", coreMaker: "Arm", sramKb: 520, flashMb: 4, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" },
+  "Pico W": { chip: "RP2040", core: "Cortex-M0+", coreMaker: "Arm", sramKb: 264, flashMb: 2, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" },
 };
 
-/** The board's specs, or null for a board we have no table row for (the block hides). */
+/** The board's specs, or null for a board we have no table row for (its zone's title has no spec line). */
 export const boardSpecs = (board: string | null | undefined): BoardSpecs | null => (board && BOARD_SPECS[board]) || null;
 
 // The display add-on the firmware supports. The firmware can't tell whether it's

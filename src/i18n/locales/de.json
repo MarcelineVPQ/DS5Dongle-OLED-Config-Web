@@ -1499,7 +1499,6 @@
       "keyY": "Y (gestrichelt)"
     },
     "dash": {
-      "pico": "{{deviceName}}",
       "temperature": "Chiptemperatur",
       "clock": "CPU-Takt",
       "clockSet": "eingestellt: {{mhz}} MHz",
@@ -1549,7 +1548,6 @@
         }
       },
       "specs": {
-        "title": "Technische Daten",
         "chip": "Chip",
         "chipValue": "{{chip}}, Dual-Core {{core}}",
         "chipClock": "{{chip}}, Dual-Core {{core}} mit {{mhz}} MHz",
@@ -1557,11 +1555,6 @@
         "flash": "Flash",
         "wireless": "Funk",
         "wirelessValue": "{{chip}}: Bluetooth {{bt}} (Classic in Betrieb), WLAN 4",
-        "model": "Modell",
-        "size": "Größe",
-        "resolution": "Auflösung",
-        "controller": "Controller",
-        "interface": "Schnittstelle",
         "keys": "Tasten",
         "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist."
       }

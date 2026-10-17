@@ -1487,7 +1487,6 @@
       "keyY": "Y（破線）"
     },
     "dash": {
-      "pico": "{{deviceName}}",
       "temperature": "チップ温度",
       "clock": "CPU クロック",
       "clockSet": "設定 {{mhz}} MHz",
@@ -1537,7 +1536,6 @@
         }
       },
       "specs": {
-        "title": "仕様",
         "chip": "チップ",
         "chipValue": "{{chip}}、デュアルコア {{core}}",
         "chipClock": "{{chip}}、デュアルコア {{core}}（{{mhz}} MHz）",
@@ -1545,11 +1543,6 @@
         "flash": "フラッシュ",
         "wireless": "ワイヤレス",
         "wirelessValue": "{{chip}}：Bluetooth {{bt}}（Classic を使用）、Wi-Fi 4",
-        "model": "モデル",
-        "size": "サイズ",
-        "resolution": "解像度",
-        "controller": "コントローラー IC",
-        "interface": "インターフェース",
         "keys": "キー",
         "notDetected": "検出はできません。取り付けられていれば {{device}} が常に駆動します。"
       }

@@ -438,12 +438,14 @@ html[data-theme="dark"] .dk {
   border-radius: var(--dk-radius);
   background: var(--bg-panel);
   color: var(--text-body);
+  font-family: var(--font-body);
   font-size: var(--dk-small);
   font-weight: 400;
   letter-spacing: normal;
   line-height: 1.4;
   text-transform: none;
-  white-space: normal;
+  /* a line break in the text starts a new line (a zone title's specs, one per line) */
+  white-space: pre-line;
   overflow-wrap: anywhere;
   box-shadow: 0 4px 14px color-mix(in srgb, var(--text-strong) 20%, transparent);
   pointer-events: none;
@@ -2954,8 +2956,8 @@ html[data-theme="light"] .live-ctl {
 }
 
 /* ---- The Pico 2 W page's centerpiece (OledHero.tsx): the OLED Edition's
-   screen named, the mirror with the module's live readings and specs beside
-   it (below it in a narrow window). ---- */
+   screen named, the mirror with the module's live readings beside it (below
+   it in a narrow window). ---- */
 .oled-hero {
   display: flex;
   flex-direction: column;
@@ -2965,13 +2967,15 @@ html[data-theme="light"] .live-ctl {
   flex: none;
   container-type: inline-size;
 }
-.oled-hero-head {
+/* A hardware zone's title (the OLED's, the board's: OledHero.tsx,
+   PicoGauges): its name, then one spec line with the full specs behind the ⓘ. */
+.zone-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 12px;
 }
-.oled-hero-head h3 {
+.zone-head h3 {
   margin: 0;
   color: var(--text-strong);
   font-family: var(--font-display);
@@ -2987,7 +2991,7 @@ html[data-theme="light"] .live-ctl {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.oled-hero-sub {
+.zone-sub {
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--dk-small);
@@ -3058,27 +3062,28 @@ html[data-theme="light"] .live-ctl {
 }
 .oled-hero-side {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 10px;
+}
+/* Under the screen (a narrow window) the readings sit side by side, the
+   heading over them; beside it, one under another. */
+.oled-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  align-content: start;
+  gap: 8px 14px;
+}
+.oled-stats > h4 {
+  grid-column: 1 / -1;
 }
 @container (min-width: 820px) {
   .oled-hero-body {
     grid-template-columns: minmax(0, 1fr) 250px;
   }
-  .oled-hero-side {
+  .oled-stats {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-@container (max-width: 460px) {
-  .oled-hero-side {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-.oled-stats {
-  display: grid;
-  align-content: start;
-  gap: 8px;
 }
 .oled-stat {
   display: grid;
@@ -3105,9 +3110,6 @@ html[data-theme="light"] .live-ctl {
   height: 4px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--dk-accent) calc(var(--level, 0) * 100%), var(--border-default) 0);
-}
-.oled-specs .dk-hint {
-  margin: 8px 0 0;
 }
 
 /* ---- Navigation rail (AppRail.tsx): AVIEW's sidebar, on the right ----

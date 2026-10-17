@@ -117,6 +117,13 @@ const click = (b: HTMLElement) => act(() => b.click());
 // A main-view block (MainBlock): its heading, and its body.
 const blockHead = (id: string) => container.querySelector<HTMLElement>(`.dk-split-main [data-block="${id}"] .dk-block-head`)!;
 const blockBody = (id: string) => container.querySelector<HTMLElement>(`.dk-split-main [data-block="${id}"] .dk-block-body`);
+// A hardware zone's spec line as shown (its own text, not the ⓘ's hidden tooltip).
+// loop: test
+const lineText = (zone: HTMLElement) =>
+  [...(zone.querySelector(".zone-sub")?.childNodes ?? [])]
+    .filter((n) => n.nodeType === Node.TEXT_NODE)
+    .map((n) => n.textContent)
+    .join("");
 
 // A small page on the accordion: the body counts how often it renders.
 let bodyRenders = 0;
@@ -708,9 +715,18 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(cpu.mock.calls.length, "0xFC read live").toBeGreaterThanOrEqual(first + 2);
     expect(counters.mock.calls.length, "0xF5 read live").toBeGreaterThanOrEqual(first + 2);
     expect(container.querySelector('[data-block="diagnostics"] button.dash-watch')).toBeNull();
-    // Graphs, audio counters, the timings, the board's specs: all in the block, shown (the OLED's are in the hero).
+    // Graphs, audio counters, the timings: all in the block, shown, in the data's order (link → audio → timing).
+    const diagText = blockBody("diagnostics")?.textContent ?? "";
     // loop: test
-    for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.specs.title"]) expect(blockBody("diagnostics")?.textContent, key).toContain(m.i18n.t(key));
+    for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.timing.title"]) expect(diagText, key).toContain(m.i18n.t(key));
+    expect(diagText.indexOf(m.i18n.t("desktop.dash.usb"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.audio")));
+    expect(diagText.indexOf(m.i18n.t("desktop.dash.audio"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.timing.title")));
+    // The board's specs: its zone's title line (name, then chip · cores · clock · SRAM · flash · wireless), not in Diagnostics.
+    const zone = container.querySelector<HTMLElement>(".dk-split-main .pico-zone")!;
+    expect(zone.querySelector("h3")?.textContent).toBe("Pico 2 W");
+    expect(lineText(zone)).toMatch(/^RP2350 · 2× Cortex-M33 · \d+ MHz · 520 KB · 4 MB · CYW43439$/);
+    expect(zone.querySelectorAll(".dash-gauge")).toHaveLength(3);
+    expect(diagText).not.toContain("RP2350");
     counters.mockRestore();
     cpu.mockRestore();
     await inventory("dongle", DONGLE_INVENTORY);
@@ -728,13 +744,16 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(container.querySelector(".dk-split-main .dongle-main")?.firstElementChild).toBe(hero);
     expect(hero.querySelector("h3")?.textContent).toBe("Waveshare Pico-OLED-1.3");
     expect(hero.textContent).toContain("DS5 Dongle OLED Edition");
-    expect(hero.textContent).toContain("128 × 64 · SH1107");
+    // One spec line in the title, the keys and "not detected" behind its ⓘ: no Specs card.
+    expect(lineText(hero)).toBe("1.3″ · 128 × 64 · SH1107 · SPI");
+    expect(hero.querySelector(".zone-sub [role=tooltip]")?.textContent).toContain("KEY0 / KEY1");
+    expect(hero.querySelectorAll(".dash-card")).toHaveLength(1);
     expect(hero.querySelector(".dcon canvas.dcon-oled")).not.toBeNull();
     // The keys sit on the module, KEY0 above KEY1.
     expect([...hero.querySelectorAll(".dcon-module .dcon-key")].map((k) => k.getAttribute("aria-label"))).toEqual(["KEY0", "KEY1"]);
-    // Its readings and specs: in the hero, once.
+    // Its readings: in the hero, once.
     // loop: test
-    for (const key of ["desktop.dash.oledState", "desktop.dash.oledScreen", "desktop.dash.oledFps", "desktop.dash.oledFrame", "desktop.dash.specs.controller", "desktop.dash.specs.keys"]) {
+    for (const key of ["desktop.dash.oledState", "desktop.dash.oledScreen", "desktop.dash.oledFps", "desktop.dash.oledFrame"]) {
       expect(hero.textContent, key).toContain(m.i18n.t(key));
       expect(blockBody("diagnostics")?.textContent ?? "", key).not.toContain(m.i18n.t(key));
     }

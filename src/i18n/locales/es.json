@@ -1499,7 +1499,6 @@
       "keyY": "Y (discontinuo)"
     },
     "dash": {
-      "pico": "{{deviceName}}",
       "temperature": "Temperatura del chip",
       "clock": "Frecuencia de la CPU",
       "clockSet": "configurada a {{mhz}} MHz",
@@ -1549,7 +1548,6 @@
         }
       },
       "specs": {
-        "title": "Especificaciones",
         "chip": "Chip",
         "chipValue": "{{chip}}, doble núcleo {{core}}",
         "chipClock": "{{chip}}, doble núcleo {{core}} a {{mhz}} MHz",
@@ -1557,11 +1555,6 @@
         "flash": "Flash",
         "wireless": "Inalámbrico",
         "wirelessValue": "{{chip}}: Bluetooth {{bt}} (se usa Classic), Wi-Fi 4",
-        "model": "Modelo",
-        "size": "Tamaño",
-        "resolution": "Resolución",
-        "controller": "Controlador",
-        "interface": "Interfaz",
         "keys": "Teclas",
         "notDetected": "No se detecta: {{device}} la controla siempre que esté conectada."
       }

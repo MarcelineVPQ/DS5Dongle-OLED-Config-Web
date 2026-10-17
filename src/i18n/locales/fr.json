@@ -1499,7 +1499,6 @@
       "keyY": "Y (pointillés)"
     },
     "dash": {
-      "pico": "{{deviceName}}",
       "temperature": "Température de la puce",
       "clock": "Fréquence du CPU",
       "clockSet": "réglée à {{mhz}} MHz",
@@ -1549,7 +1548,6 @@
         }
       },
       "specs": {
-        "title": "Caractéristiques",
         "chip": "Puce",
         "chipValue": "{{chip}}, double cœur {{core}}",
         "chipClock": "{{chip}}, double cœur {{core}} à {{mhz}} MHz",
@@ -1557,11 +1555,6 @@
         "flash": "Flash",
         "wireless": "Sans fil",
         "wirelessValue": "{{chip}} : Bluetooth {{bt}} (Classic utilisé), Wi-Fi 4",
-        "model": "Modèle",
-        "size": "Taille",
-        "resolution": "Résolution",
-        "controller": "Contrôleur",
-        "interface": "Interface",
         "keys": "Touches",
         "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché."
       }
