@@ -34,6 +34,9 @@ export interface RunningCandidate {
   installDir?: string;
 }
 
+// gamescope and the processes it starts (Xwayland, its reaper, the Wayland
+// variant), seen on Assetto Corsa Rally inside gamescope, 2026-10-17.
+const GAMESCOPE_HELPERS = /^(gamescope|gamescope-wl|gamescopereaper|Xwayland)$/;
 const ENV_KEYS = ["SteamAppId", "SteamGameId", "HEROIC_APP_NAME", "HEROIC_APP_SOURCE"];
 const WINE_COMMS = /^(wine|wine64|wine-preloader|wine64-preloader|wineserver|proton|reaper|pressure-vessel|srt-bwrap)$|\.exe$/i;
 
@@ -266,6 +269,9 @@ const unixPath = (arg: string) => (/^[A-Za-z]:\\/.test(arg) ? arg.slice(2).repla
 export function detectRunning(procs: ProcView[], games: RunningCandidate[]): string | null {
   // loop: HOT-PATH-OK — game-candidate processes only (readProcs filters), returns on a hit
   for (const p of procs) {
+    // gamescope's own processes carry the game's variables but aren't the game:
+    // its Xwayland is reparented to the user's systemd and can outlive it.
+    if (GAMESCOPE_HELPERS.test(p.comm)) continue;
     const appid = p.env.SteamGameId || p.env.SteamAppId;
     // loop: HOT-PATH-OK — args of one reaper process
     const reaper = p.comm === "reaper" ? p.args.find((a) => a.startsWith("AppId="))?.slice(6) : undefined;

@@ -504,6 +504,8 @@
           "runner": "{{support}} It currently runs with {{current}}, which doesn't pass the controller's native features through.",
           "runnerMissing": "{{game}} is set to {{current}}, which is no longer installed, so the game can't start.",
           "steamInput": "{{support}} Steam Input is switched on for this game, so Steam translates the controller into a generic gamepad and the game never sees the DualSense. This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
+          "steamInputGamescope": "{{game}} runs inside gamescope (its launch options start it there), and there Steam can't hand its controller to the game, so the game sees no controller at all. With Steam Input off, Proton passes the DualSense straight to the game instead. This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
+          "steamInputNotDetected": "Your report says Controller detected: Fail for {{game}}, and Steam Input is on for it. With Steam Input off, Proton passes the DualSense straight to the game instead (inside gamescope, Steam can't hand its controller to a game). This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
           "envSteam": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers. The launch options become: {{options}}",
           "preferSdlWindows": "{{vars}} only works with Proton on Linux. On Windows it does nothing, so the option an earlier version added is taken out again. The launch options become: {{options}}",
           "envHeroic": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers.",
@@ -515,8 +517,9 @@
           "gamepad": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble.{{runner}}",
           "gamepadSteam": "{{game}} only works with Xbox-style (XInput) controllers, and our Proton passes the DualSense through as itself, so the game sees no controller. PROTON_PREFER_SDL=1 makes Proton hand it to this game as a standard gamepad, with rumble. The launch options become: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignores this option, so the game also switches to {{proton}}.",
-          "hdrSteam": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back. The launch options become: {{options}}{{runner}}",
+          "hdrSteam": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back. The launch options become: {{options}}{{runner}}{{input}}",
           "hdrRunner": " It also moves to {{proton}}, our DualSense Proton, so the controller's adaptive triggers and haptic feedback work with HDR.",
+          "hdrInputOff": " Steam Input is turned off for it too: inside gamescope Steam can't hand its controller to the game, so Proton passes the DualSense straight to the game instead.",
           "hdrHeroic": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR: Heroic's own Gamescope settings for the game are filled in, and its Enable Wine-Wayland and Enable HDR switches are turned off. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back.{{runner}}",
           "hdrLutris": "{{game}} supports HDR. It will run inside gamescope (Valve's compositor), full screen on {{screen}} ({{mode}}), which gives it HDR: Lutris's own Gamescope options for the game are turned on, HDR included. Turn on HDR in the game's own settings. If the game misbehaves, Undo puts it back.{{runner}}",
           "hdrNoProton": " Install our DualSense Proton in Games → DualSense Proton build to get the controller's adaptive triggers and haptic feedback with HDR too.",
@@ -958,6 +961,7 @@
       },
       "failDetails": "{{feature}}: what failed",
       "sheetConflict": "Your old checklist said both: check it again",
+      "sheetDetectedFix": "Setup has a fix for this: {{fix}}.",
       "setupFlags": "What it needed",
       "flag": {
         "steam-input-off": "Needs Steam Input off"
@@ -1031,7 +1035,7 @@
       "micLevel": "Microphone level",
       "echoCancel": "Echo cancellation",
       "gamepadSet": "The controller reaches this game as a standard gamepad (XInput).",
-      "gamepadSteamInput": "Steam Input isn't turned off for this game, so Steam already gives it an Xbox controller: the standard gamepad option isn't needed.",
+      "gamepadSteamInput": "Steam Input is on for this game, so Steam gives it an Xbox controller: the standard gamepad option isn't needed. If the game doesn't see the controller, mark Controller detected as Fail in Your report.",
       "gamepadNoBuild": "This game needs the standard gamepad option (PROTON_PREFER_SDL), but {{runner}} ignores it and no Proton that honours it is installed. Install our newer DualSense Proton (GE-Proton11-7.2-DualSense or later) or a stock GE-Proton.",
       "modeSet": "Starts in {{api}} ({{flag}}), so {{feature}} is available.",
       "modeOwn": "Your own arguments start {{game}} with {{own}}, so they're left as they are. For {{feature}}, replace {{own}} with {{flag}}.",
@@ -1749,7 +1753,8 @@
       "copied": "Copied",
       "steam": {
         "proton": "In Steam, the game's Properties → Compatibility: tick Force the use of a specific Steam Play compatibility tool and pick {{proton}}.",
-        "line": "Properties → General → Launch Options: paste this line (made for {{screen}} at {{mode}}; keep anything you already had there):"
+        "line": "Properties → General → Launch Options: paste this line (made for {{screen}} at {{mode}}; keep anything you already had there):",
+        "input": "Properties → Controller: pick Disable Steam Input. Inside gamescope Steam can't hand its controller to the game; with Steam Input off, Proton passes the DualSense straight to the game."
       },
       "heroic": {
         "proton": "In Heroic, the game's Settings → Wine Version: pick {{proton}}.",
@@ -1768,6 +1773,7 @@
       "settingNotSaved": "Couldn't save that setting, so it's back to how it was. Check that your home folder isn't full or read-only, then try again.",
       "settingsRead": "Couldn't read the app's settings, so App settings can't show them. Restart the app; if this keeps happening, please report it.",
       "linkNotOpened": "Couldn't open that link: no browser answered. Open your browser and try again.",
+      "shortcutNotCreated": "Couldn't create the desktop shortcut: Windows refused it. Check that your Desktop folder isn't read-only or full, then try again.",
       "badRequest": "Nothing was changed: the app sent this in a form it doesn't accept. That's a bug in the app. Restart it and try again, and please report it if it happens again.",
       "actionFailed": "That didn't work: {{reason}}. Try again; if it keeps failing, restart the app.",
       "slotSwitch": "Couldn't switch to slot {{slot}}: {{reason}}",

@@ -1,6 +1,6 @@
 // Steam: installs, games, compatibility-tool mapping and per-game Steam Input.
 // Read side only; edits are planned in games.ts and written through backup.ts.
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { filesIn, readParsed } from "./files";
 import { join } from "node:path";
@@ -13,6 +13,10 @@ export interface SteamInstall {
   configPath: string; // config/config.vdf
   localConfigPath: string | null; // newest userdata/<id>/config/localconfig.vdf
   toolsDir: string; // compatibilitytools.d
+  // Windows: the same folder as 0.9.5-dev.18 and older spelled it (the
+  // registry's lowercase SteamPath beside Program Files): the library keys
+  // saved under these move to this root's (games.ts steamKeyMoves).
+  oldRoots?: string[];
 }
 
 export interface SteamGame {
@@ -28,55 +32,99 @@ const TOOL_NAME = /^(Proton\b|Steam Linux Runtime|Steamworks Common|SteamVR)/i;
 const STEAM_TOOL_PRIORITY_DEFAULT = "75";
 const STEAM_TOOL_PRIORITY_GAME = "250";
 
-// Windows: where Steam is installed. The registry's SteamPath (the Steam
-// client writes it on every start), then the default install folders.
+// `reg query HKCU\Software\Valve\Steam /v SteamPath`: where the Steam client
+// says it is installed (it writes it on every start), with backslashes.
+export const steamPathIn = (regOutput: string): string | null => {
+  const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(regOutput);
+  return m ? m[1].trim().replace(/\//g, "\\") : null;
+};
+
+function querySteamPath(): Promise<string | null> {
+  return new Promise((resolve) =>
+    // lifetime: OK — reg.exe exits on its own; the 3 s timeout kills a hung one
+    // error: NOT-WORTH — no Steam in the registry (or no answer): the default install folders are still looked at
+    execFile(
+      join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe"),
+      ["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"],
+      { encoding: "utf8", windowsHide: true, timeout: 3000 },
+      (error, stdout) => resolve(error ? null : steamPathIn(stdout)),
+    ),
+  );
+}
+
+// The registry's SteamPath, read in the background (reg.exe takes 50-100 ms;
+// it used to run blocking on the main thread several times per scan, Play and
+// Steam restart). Read once at app start and at the start of each scan and Undo;
+// everything in between (the scan's three looks, Play, a Steam restart) reuses it.
+// cache: OK — key=none (HKCU SteamPath); invalidated=read again at app start and at the start of every scan and Undo (refreshWindowsSteamPath); bound=1 string
+let registrySteamPath: string | null = null;
+export async function refreshWindowsSteamPath(query: () => Promise<string | null> = querySteamPath): Promise<void> {
+  registrySteamPath = await query();
+}
+
+// Windows: where Steam is installed. The registry's SteamPath (as last read
+// by refreshWindowsSteamPath), then the default install folders.
 export function windowsSteamRoots(): string[] {
-  const roots: string[] = [];
-  try {
-    const out = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"], {
-      encoding: "utf8",
-      windowsHide: true,
-      timeout: 3000,
-    });
-    const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(out);
-    if (m) roots.push(m[1].trim().replace(/\//g, "\\"));
-  } catch {
-    // error: NOT-WORTH — no Steam in the registry
-  }
+  const roots: string[] = registrySteamPath ? [registrySteamPath] : [];
   // loop: NOT-WORTH — N = 2 Program Files folders, Windows only, once per scan
   for (const pf of [process.env["ProgramFiles(x86)"], process.env.ProgramFiles]) if (pf) roots.push(join(pf, "Steam"));
   return roots;
 }
 
-export function findSteamInstalls(home: string, platform: NodeJS.Platform = process.platform, winRoots: () => string[] = windowsSteamRoots): SteamInstall[] {
-  const candidates: Array<[string, boolean]> =
-    platform === "win32"
-      ? // loop: NOT-WORTH — Steam roots on Windows
-        winRoots().map((r) => [r, false])
-      : [
-          [join(home, ".local/share/Steam"), false],
-          [join(home, ".steam/root"), false],
-          [join(home, ".steam/steam"), false],
-          [join(home, ".steam/debian-installation"), false],
-          [join(home, ".var/app/com.valvesoftware.Steam/.local/share/Steam"), true],
-          [join(home, "snap/steam/common/.steam/root"), false],
-        ];
-  const seen = new Set<string>();
+// Windows paths ignore case, and the registry's SteamPath is lowercase
+// (`c:/program files (x86)/steam`) beside Program Files' `C:\Program Files
+// (x86)\Steam`: realpath.native gives the folder's own spelling, and the
+// lowercase form is the duplicate check, so one Steam is one install (one
+// key per game). `asBefore` is the realpath older apps used, for oldRoots.
+type RealPaths = { real: (path: string) => string; asBefore: (path: string) => string };
+const WIN_PATHS: RealPaths = { real: (p) => realpathSync.native(p), asBefore: (p) => realpathSync(p) };
+
+export function findSteamInstalls(home: string, platform: NodeJS.Platform = process.platform, winRoots: () => string[] = windowsSteamRoots, winPaths: RealPaths = WIN_PATHS): SteamInstall[] {
+  const win = platform === "win32";
+  const candidates: Array<[string, boolean]> = win
+    ? // loop: NOT-WORTH — Steam roots on Windows
+      winRoots().map((r) => [r, false])
+    : [
+        [join(home, ".local/share/Steam"), false],
+        [join(home, ".steam/root"), false],
+        [join(home, ".steam/steam"), false],
+        [join(home, ".steam/debian-installation"), false],
+        [join(home, ".var/app/com.valvesoftware.Steam/.local/share/Steam"), true],
+        [join(home, "snap/steam/common/.steam/root"), false],
+      ];
+  const seen = new Map<string, SteamInstall>();
   const out: SteamInstall[] = [];
   // loop: NOT-WORTH — six possible Steam folders, a realpath each
   for (const [path, flatpak] of candidates) {
     let root: string;
     try {
-      root = realpathSync(path);
+      root = win ? winPaths.real(path) : realpathSync(path);
     } catch {
       // error: NOT-WORTH — a candidate Steam folder that isn't there
       continue;
     }
-    if (seen.has(root) || !existsSync(join(root, "config/config.vdf"))) continue;
-    seen.add(root);
-    out.push({ root, flatpak, configPath: join(root, "config/config.vdf"), localConfigPath: newestLocalConfig(root), toolsDir: join(root, "compatibilitytools.d") });
+    const key = win ? root.toLowerCase() : root;
+    let install = seen.get(key);
+    if (!install) {
+      if (!existsSync(join(root, "config/config.vdf"))) continue;
+      install = { root, flatpak, configPath: join(root, "config/config.vdf"), localConfigPath: newestLocalConfig(root), toolsDir: join(root, "compatibilitytools.d") };
+      seen.set(key, install);
+      out.push(install);
+    }
+    if (win) addOldRoot(install, path, winPaths.asBefore);
   }
   return out;
+}
+
+function addOldRoot(install: SteamInstall, path: string, asBefore: (path: string) => string): void {
+  let old: string;
+  try {
+    old = asBefore(path);
+  } catch {
+    // error: NOT-WORTH — the folder resolved a moment ago; no older spelling to carry over
+    return;
+  }
+  if (old !== install.root && !install.oldRoots?.includes(old)) (install.oldRoots ??= []).push(old);
 }
 
 function newestLocalConfig(root: string): string | null {

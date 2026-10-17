@@ -138,6 +138,38 @@ describe.skipIf(process.platform === "win32")("reading /proc for the running gam
     for (const only of [true, false]) expect(detectRunning(readProcs(only, root), heroic)).toBe("h");
   });
 
+  // Assetto Corsa Rally inside gamescope (2026-10-17), the real tree: Steam →
+  // sh → gamescope-wl → gamescopereaper → reaper → srt-bwrap → pv-adverb →
+  // Wine (the game's main thread shows as GameThread); gamescope's Xwayland is
+  // reparented to the user's systemd. All carry SteamAppId.
+  it("inside gamescope: Running while the game runs, not once only gamescope's Xwayland is left", () => {
+    const env = ["SteamAppId=3917090", "SteamGameId=3917090"];
+    const acr = [{ key: "steam-x:steam:3917090", launcher: "steam" as const, id: "3917090" }];
+    const helpers = [
+      { pid: 10, name: "systemd", ppid: 1, args: ["/usr/lib/systemd/systemd", "--user"] },
+      { pid: 20, name: "steam", ppid: 10 },
+      { pid: 33, name: "Xwayland", ppid: 10, env, args: ["Xwayland", ":1", "-rootless", "-terminate"] },
+    ];
+    const live = fakeProc([
+      ...helpers,
+      { pid: 30, name: "sh", ppid: 20, env },
+      { pid: 31, name: "gamescope-wl", ppid: 30, env, args: ["gamescope", "--backend", "wayland", "--hdr-enabled", "--", "reaper"] },
+      { pid: 32, name: "gamescopereaper", ppid: 31, env },
+      { pid: 40, name: "reaper", ppid: 32, env, args: ["reaper", "SteamLaunch", "AppId=3917090", "--"] },
+      { pid: 41, name: "srt-bwrap", ppid: 40, env },
+      { pid: 42, name: "pv-adverb", ppid: 41, env },
+      { pid: 50, name: "wineserver", ppid: 42, env },
+      { pid: 51, name: "GameThread", ppid: 42, env, args: ["Z:\\acr\\Binaries\\Win64\\acr.exe"], exe: "/opt/proton/files/bin/wine64-preloader" },
+    ]);
+    expect(detectRunning(readProcs(true, live), acr)).toBe("steam-x:steam:3917090");
+    // The game and Proton are gone; Xwayland (and Steam) stay: not Running.
+    const after = fakeProc(helpers);
+    expect(detectRunning(readProcs(true, after), acr)).toBeNull();
+    // gamescope itself left behind with no game under it: not Running either.
+    const lone = fakeProc([...helpers, { pid: 31, name: "gamescope-wl", ppid: 20, env }]);
+    expect(detectRunning(readProcs(true, lone), acr)).toBeNull();
+  });
+
   it("checks a process's owner once, yet still sees it start a launcher (stat read every pass)", () => {
     const tmp = fakeProc([
       { pid: 10, name: "systemd", ppid: 0 },

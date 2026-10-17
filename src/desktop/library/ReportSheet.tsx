@@ -18,7 +18,10 @@ const RESULT_ICON: Record<ReportResult, JSX.Element> = {
   "not-tested": <Minus size={12} strokeWidth={3} />,
 };
 
-export function ReportSheet({ sheet, onChange }: { sheet: Sheet; onChange: (next: Sheet) => void }) {
+// `detectedFix`: the name of the fix Setup offers for a game that doesn't see
+// the controller (Turn off Steam Input, the standard gamepad), shown under a
+// Controller detected: Fail so the way out is visible here too.
+export function ReportSheet({ sheet, onChange, detectedFix }: { sheet: Sheet; onChange: (next: Sheet) => void; detectedFix?: string }) {
   const { t } = useTranslation();
   // loop: HOT-PATH-OK — N = 3 results; Your report's render
   const options = REPORT_RESULTS.map((r) => ({ value: r, label: t(`desktop.library.result.${r}`), icon: RESULT_ICON[r] }));
@@ -51,6 +54,8 @@ export function ReportSheet({ sheet, onChange }: { sheet: Sheet; onChange: (next
                   </div>
                 )}
                 {sheet.conflicts?.includes(feature) && <p className="dk-hint gp-conflict">⚠ {t("desktop.library.sheetConflict")}</p>}
+                {/* hint: MUST-SHOW — a status: Setup has a fix for the Fail just marked */}
+                {feature === "controller-detected" && result === "fail" && detectedFix && <p className="dk-hint">{t("desktop.library.sheetDetectedFix", { fix: detectedFix })}</p>}
               </div>
             );
           })}

@@ -20,14 +20,15 @@ import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../s
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, scanFiles, startedSince, type Scan } from "./games";
+import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, scanFiles, startedSince, steamKeyMoves, type Scan } from "./games";
+import type { LibraryStore } from "./libraryStore";
 import { readAhead, withScanTexts, type ScanTexts } from "./files";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
 import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClosed, type LauncherControl, type ReopenPlan } from "./processes";
 import { schemeHandlerExec } from "./schemeHandler";
 import { installProton, type ExtraTarget } from "./proton";
-import { findSteamInstalls, installedTools, windowsSteamRoots } from "./steam";
+import { findSteamInstalls, installedTools, refreshWindowsSteamPath, windowsSteamRoots } from "./steam";
 import {
   amixerLayer,
   dualSenseCards,
@@ -77,6 +78,15 @@ const realQuietPlaySystem = (): Omit<QuietPlaySystem, "running" | "flatpak"> => 
   steamExe: () => steamExeIn(windowsSteamRoots(), existsSync),
   heroicExe: () => heroicExeIn(process.env, existsSync),
 });
+
+// Windows, at app start (with Games consent, before the page reads the
+// library): entries saved under another spelling of Steam's folder (0.9.5-dev.18
+// and older listed every Steam game twice, bug hunt B1) move to the key the
+// scan uses now, merged where both exist. A no-op once they've moved.
+export async function moveOldSteamKeys(library: Pick<LibraryStore, "moveKeys">, home: string = homedir()): Promise<boolean> {
+  await refreshWindowsSteamPath();
+  return library.moveKeys(steamKeyMoves(findSteamInstalls(home, "win32")));
+}
 
 export class GamesService {
   private readonly home = homedir();
@@ -142,6 +152,8 @@ export class GamesService {
     this.requireConsent();
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
+    // Windows: Steam's folder from the registry, read once, in the background, for the whole scan.
+    if (process.platform === "win32") await refreshWindowsSteamPath();
     const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrSystem() };
     const mixer = this.mixerLayer();
     const [audioCards, hdr, mixers, , texts] = await Promise.all([
@@ -307,6 +319,8 @@ export class GamesService {
   undo(backupId: string, allowed: RestartList): Promise<UndoResult> {
     return this.exclusive(async () => {
       this.requireConsent();
+      // Windows: Steam's folder for reopening it (read in the background).
+      if (process.platform === "win32") await refreshWindowsSteamPath();
       try {
         // Same rule as writing: a running launcher would overwrite the restored
         // files, so it's closed and reopened, only if the page said so.

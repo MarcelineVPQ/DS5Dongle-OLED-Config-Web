@@ -505,6 +505,8 @@
           "runner": "{{support}} Il tourne actuellement avec {{current}}, qui ne transmet pas les fonctions natives de la manette.",
           "runnerMissing": "{{game}} est réglé sur {{current}}, qui n'est plus installé : le jeu ne peut pas démarrer.",
           "steamInput": "{{support}} Steam Input est activé pour ce jeu : Steam traduit la manette en manette générique et le jeu ne voit jamais la DualSense. C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
+          "steamInputGamescope": "{{game}} tourne dans gamescope (ses options de lancement l'y démarrent), et là Steam ne peut pas transmettre sa manette au jeu : le jeu ne voit aucune manette. Avec Steam Input désactivé, Proton transmet directement la DualSense au jeu. C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
+          "steamInputNotDetected": "Votre rapport indique Manette détectée : Échec pour {{game}}, et Steam Input est activé pour ce jeu. Avec Steam Input désactivé, Proton transmet directement la DualSense au jeu (dans gamescope, Steam ne peut pas transmettre sa manette à un jeu). C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
           "envSteam": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives. Les options de lancement deviennent : {{options}}",
           "preferSdlWindows": "{{vars}} ne fonctionne qu'avec Proton sous Linux. Sous Windows il n'a aucun effet : l'option ajoutée par une version précédente est donc retirée. Les options de lancement deviennent : {{options}}",
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
@@ -516,8 +518,9 @@
           "gamepad": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations.{{runner}}",
           "gamepadSteam": "{{game}} ne fonctionne qu'avec des manettes de type Xbox (XInput), et notre Proton transmet la DualSense telle quelle : le jeu ne voit donc aucune manette. PROTON_PREFER_SDL=1 fait transmettre la manette à ce jeu par Proton comme manette standard, avec vibrations. Les options de lancement deviennent : {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignore cette option, donc le jeu passe aussi à {{proton}}.",
-          "hdrSteam": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant. Les options de lancement deviennent : {{options}}{{runner}}",
+          "hdrSteam": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant. Les options de lancement deviennent : {{options}}{{runner}}{{input}}",
           "hdrRunner": " Il passe aussi à {{proton}}, notre Proton DualSense, pour que les gâchettes adaptatives et le retour haptique de la manette fonctionnent avec le HDR.",
+          "hdrInputOff": " Steam Input est aussi désactivé pour ce jeu : dans gamescope, Steam ne peut pas transmettre sa manette au jeu, donc Proton transmet directement la DualSense au jeu.",
           "hdrHeroic": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR : les réglages Gamescope de Heroic pour ce jeu sont remplis, et ses interrupteurs Enable Wine-Wayland et Enable HDR désactivés. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant.{{runner}}",
           "hdrLutris": "{{game}} prend en charge le HDR. Il tournera dans gamescope (le compositeur de Valve), en plein écran sur {{screen}} ({{mode}}), ce qui lui donne le HDR : les options Gamescope de Lutris pour ce jeu sont activées, HDR compris. Activez le HDR dans les réglages du jeu. Si le jeu se comporte mal, Annuler remet tout comme avant.{{runner}}",
           "hdrNoProton": " Installez notre Proton DualSense dans Jeux → Build Proton DualSense pour avoir aussi les gâchettes adaptatives et le retour haptique avec le HDR.",
@@ -959,6 +962,7 @@
       },
       "failDetails": "{{feature}} : ce qui a échoué",
       "sheetConflict": "Ton ancienne liste disait les deux : vérifie à nouveau",
+      "sheetDetectedFix": "Réglages propose une correction : {{fix}}.",
       "setupFlags": "Ce qu'il a fallu",
       "flag": {
         "steam-input-off": "Steam Input à couper"
@@ -1032,7 +1036,7 @@
       "micLevel": "Niveau du microphone",
       "echoCancel": "Annulation de l'écho",
       "gamepadSet": "La manette arrive dans ce jeu comme manette standard (XInput).",
-      "gamepadSteamInput": "Steam Input n'est pas désactivé pour ce jeu, donc Steam lui fournit déjà une manette Xbox : l'option manette standard n'est pas nécessaire.",
+      "gamepadSteamInput": "Steam Input est activé pour ce jeu, donc Steam lui fournit une manette Xbox : l'option manette standard n'est pas nécessaire. Si le jeu ne voit pas la manette, mettez Manette détectée sur Échec dans votre rapport.",
       "gamepadNoBuild": "Ce jeu a besoin de l'option manette standard (PROTON_PREFER_SDL), mais {{runner}} l'ignore et aucun Proton qui la respecte n'est installé. Installe notre Proton DualSense plus récent (GE-Proton11-7.2-DualSense ou plus) ou un GE-Proton standard.",
       "modeSet": "Démarre en {{api}} ({{flag}}) : {{feature}} est disponible.",
       "modeOwn": "Vos propres arguments lancent {{game}} avec {{own}}, ils restent donc tels quels. Pour {{feature}}, remplacez {{own}} par {{flag}}.",
@@ -1750,7 +1754,8 @@
       "copied": "Copié",
       "steam": {
         "proton": "Dans Steam, Propriétés du jeu → Compatibilité : cochez Forcer l'utilisation d'un outil de compatibilité Steam Play spécifique et choisissez {{proton}}.",
-        "line": "Propriétés → Général → Options de lancement : collez cette ligne (faite pour {{screen}} en {{mode}} ; gardez ce qui s'y trouvait déjà) :"
+        "line": "Propriétés → Général → Options de lancement : collez cette ligne (faite pour {{screen}} en {{mode}} ; gardez ce qui s'y trouvait déjà) :",
+        "input": "Propriétés → Manette : choisissez Désactiver Steam Input. Dans gamescope, Steam ne peut pas transmettre sa manette au jeu ; avec Steam Input désactivé, Proton transmet directement la DualSense au jeu."
       },
       "heroic": {
         "proton": "Dans Heroic, Paramètres du jeu → Version de Wine : choisissez {{proton}}.",
@@ -1769,6 +1774,7 @@
       "settingNotSaved": "Impossible d'enregistrer ce réglage, il est revenu comme avant. Vérifie que ton dossier personnel n'est pas plein ou en lecture seule, puis réessaie.",
       "settingsRead": "Impossible de lire les réglages de l'appli, Réglages de l'appli ne peut donc pas les afficher. Redémarre l'appli ; si ça se reproduit, signale-le.",
       "linkNotOpened": "Impossible d'ouvrir ce lien : aucun navigateur n'a répondu. Ouvre ton navigateur et réessaie.",
+      "shortcutNotCreated": "Impossible de créer le raccourci sur le Bureau : Windows l'a refusé. Vérifiez que votre dossier Bureau n'est pas en lecture seule ou plein, puis réessayez.",
       "badRequest": "Rien n'a été modifié : l'appli a envoyé ça sous une forme qu'elle n'accepte pas. C'est un bug de l'appli. Redémarre-la et réessaie, et signale-le si ça se reproduit.",
       "actionFailed": "Ça n'a pas marché : {{reason}}. Réessaie ; si ça échoue encore, redémarre l'appli.",
       "slotSwitch": "Impossible de passer à l'emplacement {{slot}} : {{reason}}",

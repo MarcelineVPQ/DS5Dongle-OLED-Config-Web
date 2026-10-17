@@ -112,8 +112,9 @@ export type ProfileField = (typeof PROFILE_FIELDS)[number];
 // machine IDs with nothing to moderate. Notes are free text but private: they
 // never leave this PC. Since 0.9.5-dev.18 the feedback is a test sheet
 // (Mine.report, report.ts); FEEDBACK_TAGS are the ticked statements of the
-// older checklist, still read (and migrated, report.ts migrateTags) until the
-// player's next change rewrites them as a sheet.
+// older checklist, still read (and migrated, report.ts migrateTags); until 0.9.5
+// is stable they're also written beside the sheet (report.ts legacyTags), so
+// 0.9.5-dev.17, which drops `report`, keeps them.
 export const FEEDBACK_TAGS = [
   "triggers-work",
   "haptics-work",

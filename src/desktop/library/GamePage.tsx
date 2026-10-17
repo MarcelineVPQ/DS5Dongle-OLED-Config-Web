@@ -41,7 +41,7 @@ import { API_NAME } from "../games/gameArgs";
 import { ART_SHOWN, artUrl } from "../games/types";
 import { headerArt, useArtColor } from "./gameArt";
 import type { GameRecord, LibraryFile, Mine, ProfileSettings } from "../games/library";
-import { countResults, isNotDetected, sheetOf, suggestedRating, testedOn, type TestedOn } from "../games/report";
+import { countResults, isNotDetected, legacyTags, sheetOf, suggestedRating, testedOn, type TestedOn } from "../games/report";
 import { ReportSheet } from "./ReportSheet";
 import { fixesFor, staleness, supportOf, type FeatureState } from "./support";
 import { GameActions, PlayStats } from "./playBar";
@@ -64,6 +64,10 @@ interface Props {
 
 export default function GamePage({ game, info, record, running, report, bridge, onLibrary, onRescan }: Props) {
   const { t } = useTranslation();
+  const m = useMsg();
+  // Setup's fix for a game that doesn't see the controller, named under the sheet's Controller detected: Fail.
+  // loop: HOT-PATH-OK — one game's fixes (a handful); the page's render
+  const detectedFix = game.fixes.find((f) => f.kind === "steam-input-off" || f.kind === "standard-gamepad");
   const page = useRef<HTMLDivElement>(null);
   // What a report is tested on (the board, the controller, this OS, the game's Proton), read when it changes.
   const tested = (): TestedOn =>
@@ -237,7 +241,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
           {() => (
             <>
               <RatingPart game={game} info={info} mineState={mineState} />
-              <ReportSheet sheet={sheetOf(mine)} onChange={(report) => mineState[1]({ report })} />
+              <ReportSheet sheet={sheetOf(mine)} onChange={(report) => mineState[1]({ report })} detectedFix={detectedFix && m(detectedFix.label)} />
             </>
           )}
         </Section>
@@ -921,8 +925,10 @@ function useMine(game: GameEntry, info: GameInfo | undefined, record: GameRecord
   const update = (patch: Partial<Mine>) => {
     // A rating or test sheet change re-stamps what it was given on.
     const stamp = ("rating" in patch || "report" in patch) && app ? { ratedOn: { app, build: info?.buildId, gameUpdated: info?.lastUpdated, at: Math.floor(Date.now() / 1000), ...tested() } } : {};
-    // A sheet written replaces the older checklist it was migrated from (report.ts migrateTags).
-    const legacy = "report" in patch ? { tags: undefined } : {};
+    // A sheet written also rewrites the older checklist from it, so an older app
+    // (0.9.5-dev.17, which drops the sheet) still has the ticks (report.ts legacyTags).
+    const tags = patch.report ? legacyTags(patch.report) : [];
+    const legacy = "report" in patch ? { tags: tags.length ? tags : undefined } : {};
     set({ ...mine, ...patch, ...legacy, ...stamp });
   };
   return [mine, update] as const;

@@ -37,7 +37,7 @@ export const BAD_REQUEST = "DS5_BAD_REQUEST";
 // Errors the main process asks the page to show (CLAUDE.md "Error pass"):
 // failures of something the user did outside the page (a tray toggle, a link
 // opened from the page). Fixed keys only; the page shows them with shown().
-export const MAIN_ERROR_KEYS = ["desktop.errors.settingNotSaved", "desktop.errors.linkNotOpened"] as const;
+export const MAIN_ERROR_KEYS = ["desktop.errors.settingNotSaved", "desktop.errors.linkNotOpened", "desktop.errors.shortcutNotCreated"] as const;
 export type MainErrorKey = (typeof MAIN_ERROR_KEYS)[number];
 
 // News from the main process the page shows as a notice (not an error):

@@ -502,6 +502,8 @@
           "runner": "{{support}}它目前使用 {{current}} 运行，无法传递控制器的原生功能。",
           "runnerMissing": "{{game}} 被设置为 {{current}}，但它已不再安装，所以游戏无法启动。",
           "steamInput": "{{support}}此游戏开启了 Steam Input，Steam 会把控制器转换为通用控制器，游戏永远看不到 DualSense。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
+          "steamInputGamescope": "{{game}} 在 gamescope 中运行（由它的启动选项启动），在 gamescope 中 Steam 无法把它的控制器交给游戏，所以游戏完全看不到控制器。关闭 Steam Input 后，改由 Proton 把 DualSense 直接交给游戏。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
+          "steamInputNotDetected": "你的报告中 {{game}} 的“检测到控制器”为“失败”，而此游戏开启了 Steam Input。关闭 Steam Input 后，改由 Proton 把 DualSense 直接交给游戏（在 gamescope 中，Steam 无法把它的控制器交给游戏）。相当于在 Steam 中选择 属性 → 控制器 → “禁用 Steam 输入”。",
           "envSteam": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。启动选项将变为：{{options}}",
           "preferSdlWindows": "{{vars}} 仅适用于 Linux 上的 Proton。在 Windows 上它不起作用，因此会删除旧版本添加的这个选项。启动选项将变为：{{options}}",
           "envHeroic": "{{vars}} 会让 Proton 把控制器呈现为 Xbox 控制器，从而关闭自适应扳机。",
@@ -513,8 +515,9 @@
           "gamepad": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。{{runner}}",
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
           "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
-          "hdrSteam": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。启动选项将变为：{{options}}{{runner}}",
+          "hdrSteam": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。启动选项将变为：{{options}}{{runner}}{{input}}",
           "hdrRunner": " 它还会改用我们的 DualSense Proton {{proton}}，让控制器的自适应扳机和触觉反馈在 HDR 下也能工作。",
+          "hdrInputOff": " 同时也会为它关闭 Steam Input：在 gamescope 中 Steam 无法把它的控制器交给游戏，所以改由 Proton 把 DualSense 直接交给游戏。",
           "hdrHeroic": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会填写 Heroic 中该游戏的 Gamescope 设置，并关闭 Enable Wine-Wayland 和 Enable HDR 开关。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrLutris": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会开启 Lutris 中该游戏的 Gamescope 选项（包括 HDR）。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrNoProton": " 在“游戏 → DualSense Proton 版本”中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
@@ -950,6 +953,7 @@
       },
       "failDetails": "{{feature}}：失败的情况",
       "sheetConflict": "旧清单两种都勾选了：请重新确认",
+      "sheetDetectedFix": "“设置”中有解决办法：{{fix}}。",
       "setupFlags": "需要的设置",
       "flag": {
         "steam-input-off": "需关闭 Steam Input"
@@ -1023,7 +1027,7 @@
       "micLevel": "麦克风音量",
       "echoCancel": "回声消除",
       "gamepadSet": "控制器以标准手柄（XInput）形式提供给此游戏。",
-      "gamepadSteamInput": "此游戏未关闭 Steam Input，Steam 已经为它提供 Xbox 控制器，因此不需要标准手柄选项。",
+      "gamepadSteamInput": "此游戏开启了 Steam Input，Steam 会为它提供 Xbox 控制器，因此不需要标准手柄选项。如果游戏看不到控制器，请在你的报告中把“检测到控制器”标为“失败”。",
       "gamepadNoBuild": "此游戏需要标准手柄选项（PROTON_PREFER_SDL），但 {{runner}} 会忽略它，且未安装支持它的 Proton。请安装我们更新的 DualSense Proton（GE-Proton11-7.2-DualSense 或更高）或普通的 GE-Proton。",
       "modeSet": "以 {{api}}（{{flag}}）启动，因此可以使用{{feature}}。",
       "modeOwn": "你自己的参数以 {{own}} 启动 {{game}}，因此保持不变。如需{{feature}}，请把 {{own}} 换成 {{flag}}。",
@@ -1739,7 +1743,8 @@
       "copied": "已复制",
       "steam": {
         "proton": "在 Steam 中，游戏的 属性 → 兼容性：勾选“强制使用特定 Steam Play 兼容性工具”，并选择 {{proton}}。",
-        "line": "属性 → 通用 → 启动选项：粘贴这一行（为 {{screen}}、{{mode}} 生成；原有内容请保留）："
+        "line": "属性 → 通用 → 启动选项：粘贴这一行（为 {{screen}}、{{mode}} 生成；原有内容请保留）：",
+        "input": "属性 → 控制器：选择“禁用 Steam 输入”。在 gamescope 中 Steam 无法把它的控制器交给游戏；关闭 Steam Input 后，Proton 会把 DualSense 直接交给游戏。"
       },
       "heroic": {
         "proton": "在 Heroic 中，游戏的 设置 → Wine 版本：选择 {{proton}}。",
@@ -1758,6 +1763,7 @@
       "settingNotSaved": "无法保存该设置，已恢复为原来的值。请检查你的主文件夹是否已满或只读，然后重试。",
       "settingsRead": "无法读取应用设置，因此“应用设置”无法显示它们。请重启应用；如果反复出现，请反馈此问题。",
       "linkNotOpened": "无法打开该链接：没有浏览器响应。请先打开浏览器，然后重试。",
+      "shortcutNotCreated": "无法创建桌面快捷方式：Windows 拒绝了。请检查你的桌面文件夹是否为只读或已满，然后重试。",
       "badRequest": "未做任何更改：应用以它不接受的格式发送了此请求。这是应用的错误。请重启应用后重试；如果再次出现，请反馈此问题。",
       "actionFailed": "操作未成功：{{reason}}。请重试；如果仍然失败，请重启应用。",
       "slotSwitch": "无法切换到槽位 {{slot}}：{{reason}}",

@@ -1,6 +1,6 @@
 // Developer card → Fake games: a made-up library for working on the Games UI
 // without launchers, a board or a controller (dev builds only; fake/service.ts
-// serves it instead of the real scan). Twenty games across Steam, Heroic (GOG,
+// serves it instead of the real scan). Twenty-one games across Steam, Heroic (GOG,
 // Epic, Amazon, sideloaded) and Lutris, chosen so every part of the Games
 // pages has something to show: each DualSense support tier the app assigns,
 // setup that is all set or needs attention (with fixes worded exactly like the
@@ -14,7 +14,7 @@ import { availableActions } from "../actions";
 import { byPick, gameStates, idHash, msg, supportMsg } from "../games";
 import { dualSenseSupport, graphicsMode, knownHdr } from "../../../../src/desktop/games/knownGames";
 import { API_NAME, modeInfo, withArg } from "../../../../src/desktop/games/gameArgs";
-import { NO_HDR_SYSTEM } from "../../../../src/desktop/games/hdrSetup";
+import { NO_HDR_SYSTEM, runsGamescope } from "../../../../src/desktop/games/hdrSetup";
 import { PROTON_NAME } from "../../../../src/update/manifest";
 import type { FakeGamesHdr, GameBackup, UndoResult } from "../../../../src/desktop/api";
 import type {
@@ -129,6 +129,14 @@ export const FAKE_GAMES: readonly FakeGameDef[] = /* @__PURE__ */ (() => [
   ST("Portal 2", "620", { runner: null, steamInput: "global", art: "none", playHours: 14, lastPlayedHours: 2000, sizeGb: 12 }),
   ST("Death Stranding", "1190460", { envFlags: [PREFER_SDL], hdr: "needed", playHours: 55, lastPlayedHours: 300, sizeGb: 64 }),
   ST("Neon Debris Demo", "3100420", { runner: null, kind: "demo", playHours: 1, sizeGb: 2 }),
+  // Marcy's real case (2026-10-17): her own gamescope line, Steam Input on Steam's default: the game saw no controller.
+  ST("Assetto Corsa Rally", "3917090", {
+    steamInput: "global",
+    args: "ENABLE_GAMESCOPE_WSI=1 gamescope --backend wayland --hdr-enabled -f -W 3840 -H 2160 --force-grab-cursor -- %command%",
+    playHours: 4,
+    lastPlayedHours: 1,
+    sizeGb: 45,
+  }),
   // Heroic: GOG, Epic, Amazon, sideloaded
   HE("The Witcher 3: Wild Hunt", "gog", "1207664663", { playHours: 80, lastPlayedHours: 210, sizeGb: 50 }),
   HE("Ghost of Tsushima", "epic", "Cowbell", { hdr: "set", playHours: 37, lastPlayedHours: 170, sizeGb: 75 }),
@@ -316,6 +324,9 @@ function entryOf(key: string, g: GameState, s: FakeState, linux: boolean, hdrRea
     );
   if (d.launcher === "steam" && native(support) && g.steamInput === "on")
     fix(`input:${d.id}`, "steam-input-off", msg("label.steamInput", { game: d.title }), msg("why.steamInput", { support: supportMsg(support) }), files.options);
+  // Inside gamescope Steam can't hand its controller to the game (games.ts offerInputOff).
+  else if (linux && d.launcher === "steam" && !native(support) && g.steamInput !== "off" && runsGamescope(g.args))
+    fix(`input:${d.id}`, "steam-input-off", msg("label.steamInput", { game: d.title }), msg("why.steamInputGamescope", { game: d.title }), files.options);
   if (native(support) && g.envFlags.includes(PREFER_SDL))
     fix(
       `env:${d.id}`,

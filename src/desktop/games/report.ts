@@ -123,6 +123,42 @@ export function migrateTags(tags: readonly FeedbackTag[]): ReportSheet {
   return sheet;
 }
 
+// The sheet as the old checklist, written beside it until 0.9.5 is stable
+// (bug hunt B2): 0.9.5-dev.17 and older don't know `report` and drop it, so
+// going back to one keeps the player's ticks. The inverse of migrateTags for
+// everything the checklist could say: a Pass, a Fail with its details (a
+// speaker Fail is its one statement), a conflict as both, the setup flag.
+// What it had no statement for (Controller detected: Pass, a Microphone or
+// Light bar Fail, Haptic feedback: Fail with no detail) is left out.
+export function legacyTags(sheet: ReportSheet): FeedbackTag[] {
+  const tags: FeedbackTag[] = [];
+  // loop: NOT-WORTH — N = 7 features x 12 statements, once per sheet change
+  for (const feature of REPORT_FEATURES) {
+    const r = sheet.results[feature];
+    if (!r) continue;
+    let pass: FeedbackTag | undefined;
+    const fails: Array<{ tag: FeedbackTag; detail?: FailDetail }> = [];
+    // loop: NOT-WORTH — N = 12 old statements (nested in the 7 features)
+    for (const [tag, to] of Object.entries(TAG_MIGRATION) as Array<[FeedbackTag, (typeof TAG_MIGRATION)[FeedbackTag]]>) {
+      if (!("feature" in to) || to.feature !== feature) continue;
+      if (to.result === "pass") pass = tag;
+      else fails.push({ tag, detail: to.detail });
+    }
+    if (r.result === "pass") {
+      if (pass) tags.push(pass);
+      continue;
+    }
+    const before = tags.length;
+    // loop: NOT-WORTH — N ≤ 2 Fail statements per feature
+    for (const f of fails) if (!f.detail || r.details?.includes(f.detail)) tags.push(f.tag);
+    if (tags.length === before && fails.length === 1) tags.push(fails[0].tag);
+    if (pass && sheet.conflicts?.includes(feature)) tags.push(pass);
+  }
+  // loop: NOT-WORTH — N = 12 old statements
+  for (const [tag, to] of Object.entries(TAG_MIGRATION)) if ("setup" in to && sheet.setup?.[to.setup]) tags.push(tag as FeedbackTag);
+  return tags;
+}
+
 // The player's sheet: the stored one, else the old checklist migrated.
 export function sheetOf(mine: Pick<Mine, "report" | "tags"> | undefined): ReportSheet {
   if (mine?.report) return mine.report as ReportSheet;

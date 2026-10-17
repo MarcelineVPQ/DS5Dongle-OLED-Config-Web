@@ -76,6 +76,8 @@ export function HdrManual({ game, sys, ourProton }: { game: GameEntry; sys: HdrS
             <CopyLine text={manualSteamLine(size)} />
           </li>
         )}
+        {/* Inside gamescope Steam can't hand its controller to the game (Assetto Corsa Rally, 2026-10-17). */}
+        {launcher === "steam" && <li>{t("desktop.hdrManual.steam.input")}</li>}
         {launcher === "heroic" && (
           <>
             <li>

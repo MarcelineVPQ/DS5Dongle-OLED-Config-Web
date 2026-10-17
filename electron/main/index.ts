@@ -11,7 +11,7 @@ import { isAllowedUsbDevice } from "./devices";
 import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
-import { GamesService } from "./games/service";
+import { GamesService, moveOldSteamKeys } from "./games/service";
 import { DEV_TOOLS_BUILT } from "./devTools";
 import { FakeGamesService } from "./games/fake/service";
 import { dominantColor } from "./games/artColor";
@@ -220,7 +220,15 @@ function start(): void {
           showMainError("desktop.errors.settingNotSaved");
         }
       },
-      createDesktopShortcut: process.platform === "win32" ? () => void createDesktopShortcut() : undefined,
+      createDesktopShortcut:
+        process.platform === "win32"
+          ? () => {
+              // error: SHOWN — desktop.errors.shortcutNotCreated (Windows refused the shortcut; was SILENT-BUG, bug hunt A7)
+              if (createDesktopShortcut()) return;
+              showWindow();
+              showMainError("desktop.errors.shortcutNotCreated");
+            }
+          : undefined,
       checkForUpdates: () => {
         showWindow();
         updater.check().catch(logged("updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown"));
@@ -273,6 +281,13 @@ function start(): void {
 
   // Games library: the player's per-game data (works on every OS).
   const library = new LibraryStore(app.getPath("userData"));
+  // Windows: a profile or rating saved on the second copy of a Steam game
+  // (bug hunt B1) moves to the one copy shown now; the page reads the library after.
+  const libraryReady: Promise<unknown> =
+    process.platform === "win32" && settings.gamesScanAllowed
+      ? // error: LOGGED-OK — the entries stay where they were (as before this fix) and are moved at the next start
+        moveOldSteamKeys(library).catch(logged("moving library entries from an older Steam folder spelling"))
+      : Promise.resolve();
   // Games page (Linux and Windows): the library, per-game profiles and, on
   // Linux, launcher / Proton setup for native DualSense features.
   const games =
@@ -432,7 +447,10 @@ function start(): void {
       const f = fakeGames();
       return f ? f.running : (watcher?.running ?? null);
     },
-    libraryGet: () => lib().get(),
+    libraryGet: async () => {
+      await libraryReady;
+      return lib().get();
+    },
     librarySetProfile: (u) => {
       const file = lib().setProfile(u.gameKey, u.title, u.settings);
       retimeRunningWatcher(); // a first profile: the watcher looks every 2 s again

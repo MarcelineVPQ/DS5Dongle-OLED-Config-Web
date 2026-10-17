@@ -505,6 +505,8 @@
           "runner": "{{support}} Es läuft derzeit mit {{current}}, das die nativen Funktionen des Controllers nicht durchreicht.",
           "runnerMissing": "{{game}} ist auf {{current}} eingestellt, das nicht mehr installiert ist, deshalb startet das Spiel nicht.",
           "steamInput": "{{support}} Steam Input ist für dieses Spiel eingeschaltet. Steam übersetzt den Controller dann in ein generisches Gamepad, und das Spiel sieht den DualSense nie. Entspricht in Steam Eigenschaften → Controller → „Steam Input deaktivieren“.",
+          "steamInputGamescope": "{{game}} läuft in gamescope (seine Startoptionen starten es dort), und dort kann Steam seinen Controller nicht an das Spiel weitergeben: Das Spiel sieht gar keinen Controller. Mit ausgeschaltetem Steam Input gibt Proton den DualSense stattdessen direkt an das Spiel weiter. Entspricht in Steam Eigenschaften → Controller → „Steam Input deaktivieren“.",
+          "steamInputNotDetected": "Dein Bericht sagt für {{game}} „Controller erkannt: Fehler“, und Steam Input ist für das Spiel eingeschaltet. Mit ausgeschaltetem Steam Input gibt Proton den DualSense stattdessen direkt an das Spiel weiter (in gamescope kann Steam seinen Controller nicht an ein Spiel weitergeben). Entspricht in Steam Eigenschaften → Controller → „Steam Input deaktivieren“.",
           "envSteam": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind. Die Startoptionen werden zu: {{options}}",
           "preferSdlWindows": "{{vars}} wirkt nur mit Proton unter Linux. Unter Windows bewirkt es nichts, darum wird die Option, die eine frühere Version hinzugefügt hat, wieder entfernt. Die Startoptionen werden zu: {{options}}",
           "envHeroic": "{{vars}} lässt Proton den Controller als Xbox-Pad ausgeben, wodurch adaptive Trigger aus sind.",
@@ -516,8 +518,9 @@
           "gamepad": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration.{{runner}}",
           "gamepadSteam": "{{game}} funktioniert nur mit Controllern im Xbox-Stil (XInput), und unser Proton reicht den DualSense als DualSense durch, deshalb sieht das Spiel keinen Controller. PROTON_PREFER_SDL=1 lässt Proton ihn diesem Spiel als Standard-Gamepad übergeben, mit Vibration. Die Startoptionen werden zu: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignoriert diese Option, deshalb wechselt das Spiel auch zu {{proton}}.",
-          "hdrSteam": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her. Die Startoptionen werden zu: {{options}}{{runner}}",
+          "hdrSteam": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her. Die Startoptionen werden zu: {{options}}{{runner}}{{input}}",
           "hdrRunner": " Außerdem wechselt es zu {{proton}}, unserem DualSense-Proton, damit Adaptive Trigger und Haptisches Feedback des Controllers mit HDR funktionieren.",
+          "hdrInputOff": " Steam Input wird dafür auch ausgeschaltet: In gamescope kann Steam seinen Controller nicht an das Spiel weitergeben, deshalb gibt Proton den DualSense stattdessen direkt an das Spiel weiter.",
           "hdrHeroic": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Heroics eigene Gamescope-Einstellungen für das Spiel werden ausgefüllt, und die Schalter „Enable Wine-Wayland“ und „Enable HDR“ werden ausgeschaltet. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
           "hdrLutris": "{{game}} unterstützt HDR. Es läuft dann in gamescope (Valves Compositor), im Vollbild auf {{screen}} ({{mode}}), so bekommt es HDR: Lutris’ eigene Gamescope-Optionen für das Spiel werden eingeschaltet, HDR inklusive. Schalte HDR in den Einstellungen des Spiels ein. Wenn sich das Spiel danach falsch verhält, stellt Rückgängig alles wieder her.{{runner}}",
           "hdrNoProton": " Installiere unser DualSense-Proton unter Spiele → DualSense-Proton-Build, um auch Adaptive Trigger und Haptisches Feedback mit HDR zu bekommen.",
@@ -959,6 +962,7 @@
       },
       "failDetails": "{{feature}}: was nicht ging",
       "sheetConflict": "Deine alte Liste sagte beides: bitte neu prüfen",
+      "sheetDetectedFix": "Unter Einrichtung gibt es dafür eine Lösung: {{fix}}.",
       "setupFlags": "Was es brauchte",
       "flag": {
         "steam-input-off": "Steam Input aus nötig"
@@ -1032,7 +1036,7 @@
       "micLevel": "Mikrofonpegel",
       "echoCancel": "Echounterdrückung",
       "gamepadSet": "Der Controller kommt in diesem Spiel als Standard-Gamepad (XInput) an.",
-      "gamepadSteamInput": "Steam Input ist für dieses Spiel nicht ausgeschaltet, deshalb gibt Steam ihm schon einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht.",
+      "gamepadSteamInput": "Steam Input ist für dieses Spiel eingeschaltet, deshalb gibt Steam ihm einen Xbox-Controller: Die Standard-Gamepad-Option wird nicht gebraucht. Sieht das Spiel den Controller nicht, setze in deinem Bericht „Controller erkannt“ auf „Fehler“.",
       "gamepadNoBuild": "Dieses Spiel braucht die Standard-Gamepad-Option (PROTON_PREFER_SDL), aber {{runner}} ignoriert sie, und kein Proton, das sie beachtet, ist installiert. Installiere unser neueres DualSense-Proton (GE-Proton11-7.2-DualSense oder neuer) oder ein normales GE-Proton.",
       "modeSet": "Startet in {{api}} ({{flag}}), damit ist {{feature}} verfügbar.",
       "modeOwn": "Deine eigenen Argumente starten {{game}} mit {{own}}, daher bleiben sie, wie sie sind. Für {{feature}} ersetze {{own}} durch {{flag}}.",
@@ -1750,7 +1754,8 @@
       "copied": "Kopiert",
       "steam": {
         "proton": "In Steam, Eigenschaften des Spiels → Kompatibilität: „Die Verwendung eines bestimmten Steam Play-Kompatibilitätstools erzwingen“ anhaken und {{proton}} wählen.",
-        "line": "Eigenschaften → Allgemein → Startoptionen: Füge diese Zeile ein (gemacht für {{screen}} mit {{mode}}; was schon dort steht, bleibt):"
+        "line": "Eigenschaften → Allgemein → Startoptionen: Füge diese Zeile ein (gemacht für {{screen}} mit {{mode}}; was schon dort steht, bleibt):",
+        "input": "Eigenschaften → Controller: Wähle „Steam Input deaktivieren“. In gamescope kann Steam seinen Controller nicht an das Spiel weitergeben; mit ausgeschaltetem Steam Input gibt Proton den DualSense direkt an das Spiel weiter."
       },
       "heroic": {
         "proton": "In Heroic, Einstellungen des Spiels → Wine-Version: {{proton}} wählen.",
@@ -1769,6 +1774,7 @@
       "settingNotSaved": "Die Einstellung konnte nicht gespeichert werden und ist wieder wie vorher. Prüfe, ob dein Home-Ordner voll oder schreibgeschützt ist, und versuch es noch einmal.",
       "settingsRead": "Die App-Einstellungen konnten nicht gelesen werden, daher kann App-Einstellungen sie nicht anzeigen. Starte die App neu; wenn das wieder passiert, melde es bitte.",
       "linkNotOpened": "Der Link konnte nicht geöffnet werden: Kein Browser hat reagiert. Öffne deinen Browser und versuch es noch einmal.",
+      "shortcutNotCreated": "Die Desktop-Verknüpfung konnte nicht erstellt werden: Windows hat sie abgelehnt. Prüfe, ob dein Desktop-Ordner schreibgeschützt oder voll ist, und versuch es noch einmal.",
       "badRequest": "Nichts wurde geändert: Die App hat das in einer Form gesendet, die sie nicht annimmt. Das ist ein Fehler in der App. Starte sie neu und versuch es noch einmal; wenn es wieder passiert, melde es bitte.",
       "actionFailed": "Das hat nicht geklappt: {{reason}}. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
       "slotSwitch": "Konnte nicht zu Slot {{slot}} wechseln: {{reason}}",
