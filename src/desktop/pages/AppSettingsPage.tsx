@@ -337,11 +337,14 @@ function NarratorSettings() {
     <>
       <Toggle label={t("desktop.narrator.voice")} info={t("desktop.narrator.voiceSub")} value={voice === "on"} onChange={(v) => setNarrator(v ? "on" : "off")} />
       <Toggle label={t("desktop.narrator.captions")} info={t("desktop.narrator.captionsSub")} value={captions} onChange={setCaptions} />
-      <div className="dk-row-btns">
-        <BusyButton className="dk-btn" disabled={voice !== "on"} onClick={() => say("app_controller", { cut: true })}>
-          {t("desktop.narrator.test", "Test the voice")}
-        </BusyButton>
-      </div>
+      {/* Only with the voice on (the switch above): no greyed-out test. */}
+      {voice === "on" && (
+        <div className="dk-row-btns">
+          <BusyButton className="dk-btn" onClick={() => say("app_controller", { cut: true })}>
+            {t("desktop.narrator.test", "Test the voice")}
+          </BusyButton>
+        </div>
+      )}
     </>
   );
 }
@@ -404,14 +407,21 @@ function CustomColorsSetting() {
           ))}
           {/* hint: MUST-SHOW — a status: what the app just did to the outline the player picked */}
           {lineAdjusted && <p className="dk-hint">{t("desktop.customColors.lineAdjusted")}</p>}
-          <div className="dk-row-btns">
-            <button type="button" className="dk-btn" disabled={!detected} onClick={() => detected && setColors({ ...detected })}>
-              {t("desktop.customColors.fromColorway")}
-            </button>
-            <button type="button" className="dk-btn" disabled={!hasCustomColors(colors)} onClick={() => setColors({})}>
-              {t("desktop.customColors.reset")}
-            </button>
-          </div>
+          {/* Each only when it does something: a colorway to start from, colors to reset. */}
+          {(detected || hasCustomColors(colors)) && (
+            <div className="dk-row-btns">
+              {detected && (
+                <button type="button" className="dk-btn" onClick={() => setColors({ ...detected })}>
+                  {t("desktop.customColors.fromColorway")}
+                </button>
+              )}
+              {hasCustomColors(colors) && (
+                <button type="button" className="dk-btn" onClick={() => setColors({})}>
+                  {t("desktop.customColors.reset")}
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
     </>
@@ -619,19 +629,20 @@ export function DeveloperSettings() {
           ))}
         </select>
       </Row>
-      <div className="dk-row-btns">
-        <button
-          type="button"
-          className="dk-btn"
-          disabled={!dev.active}
-          onClick={() => {
-            dev.setModel("");
-            dev.setColorway("");
-          }}
-        >
-          {t("desktop.dev.reset")}
-        </button>
-      </div>
+      {dev.active && (
+        <div className="dk-row-btns">
+          <button
+            type="button"
+            className="dk-btn"
+            onClick={() => {
+              dev.setModel("");
+              dev.setColorway("");
+            }}
+          >
+            {t("desktop.dev.reset")}
+          </button>
+        </div>
+      )}
       <SectionSub>{t("desktop.dev.hdrTitle")}</SectionSub>
       <HdrTest />
     </>

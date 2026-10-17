@@ -92,23 +92,24 @@ export default function StickCurves({ bridge, input, sticks }: { bridge: UseDs5B
       <p className="dk-mono curve-now">{tilt ? t("desktop.curves.now", { in: Math.round(tilt[0] * 100), out: Math.round(tilt[1] * 100) }) : t("desktop.calib.needsController")}</p>
       {/* hint: MUST-SHOW — a warning: saving ends a game's curves */}
       {bridge.identity?.curvesTemporary && <p className="dk-hint">{t("desktop.curves.gameOn")}</p>}
-      <div className="dk-row-btns">
-        {/* Both sticks back to Linear: a change like any other, kept by the save bar. */}
-        <button
-          type="button"
-          className="dk-btn"
-          /* loop: HOT-PATH-OK — N = 2 sticks per render */
-          disabled={draft.every((c) => c.type === "linear")}
-          onClick={() =>
-            setDraft([
-              { ...LINEAR_CURVE, points: draft[0].points },
-              { ...LINEAR_CURVE, points: draft[1].points },
-            ])
-          }
-        >
-          {t("desktop.curves.resetLinear")}
-        </button>
-      </div>
+      {/* Both sticks back to Linear (a change like any other, kept by the save bar), only when one isn't. */}
+      {/* loop: HOT-PATH-OK — N = 2 sticks per render */}
+      {draft.some((c) => c.type !== "linear") && (
+        <div className="dk-row-btns">
+          <button
+            type="button"
+            className="dk-btn"
+            onClick={() =>
+              setDraft([
+                { ...LINEAR_CURVE, points: draft[0].points },
+                { ...LINEAR_CURVE, points: draft[1].points },
+              ])
+            }
+          >
+            {t("desktop.curves.resetLinear")}
+          </button>
+        </div>
+      )}
       <SlotReadError error={error} retry={saved === null ? retry : null} />
     </SectionGroup>
   );

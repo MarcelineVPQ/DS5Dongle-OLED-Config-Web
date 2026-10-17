@@ -155,9 +155,12 @@ function CalibrationGroup({
         </div>
       ) : (
         <div className="dk-row-btns">
-          <button type="button" className="dk-btn primary" disabled={!input} onClick={run.begin}>
-            {step === "done" ? t("desktop.calib.again") : t("desktop.calib.start")}
-          </button>
+          {/* With a controller only; without one, the hint below says so. */}
+          {input && (
+            <button type="button" className="dk-btn primary" onClick={run.begin}>
+              {step === "done" ? t("desktop.calib.again") : t("desktop.calib.start")}
+            </button>
+          )}
           {/* Back to the controller's own values: a change like any other, kept by the save bar. Only when there's something to reset. */}
           {reset && (
             <button type="button" className="dk-btn danger" onClick={reset}>

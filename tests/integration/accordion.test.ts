@@ -346,7 +346,8 @@ const APP_INVENTORY: Record<string, string[]> = {
     "desktop.knobs.hdrNits",
     "desktop.customColors.toggle",
   ],
-  accessibility: ["desktop.colorVision.label", "desktop.settings2.reduceMotion", "desktop.narrator.voice", "desktop.narrator.captions", "desktop.narrator.test"],
+  // Test the voice shows only with the voice on (no greyed-out test; the voice is off here).
+  accessibility: ["desktop.colorVision.label", "desktop.settings2.reduceMotion", "desktop.narrator.voice", "desktop.narrator.captions"],
   language: [], // the choice alone: its title and status say the rest (IA audit A5)
   startup: ["desktop.live.closeToTray", "desktop.live.launchAtLogin", "desktop.live.startMinimized", "desktop.live.hardwareAcceleration"],
   updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.settings2.firmwareLink", "desktop.channel.backToStable"],
@@ -940,7 +941,8 @@ const GAMES_INVENTORY: Record<string, string[]> = {
   history: ["desktop.games.undoShort"],
 };
 const GAME_INVENTORY: Record<string, string[]> = {
-  profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.profileLabel", "desktop.curves.profileLeft"],
+  // No saved layouts yet: the hint says where they're made instead of a greyed-out picker.
+  profile: ["desktop.library.profileCopyCurrent", "desktop.editing.open", "desktop.library.profileDelete", "desktop.layouts.noneForGame", "desktop.curves.profileLeft"],
   setup: ["desktop.library.setupReview", "desktop.library.marksTitle"],
   compatibility: [], // no other build to pick, nothing recommended, ours not needed
 

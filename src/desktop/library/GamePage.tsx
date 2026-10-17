@@ -321,12 +321,16 @@ function ProfileBody({
       <>
         {/* hint: MUST-SHOW — the empty state: what a profile is, next to the button that makes one */}
         <p className="dk-hint">{t("desktop.library.profileNone")}</p>
-        <div className="dk-row-btns">
-          <button type="button" className="dk-btn primary" disabled={!config} onClick={() => config && create(captureProfile(config, normal, undefined))}>
-            {t("desktop.library.profileFromCurrent")}
-          </button>
-        </div>
-        {!config && <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>}
+        {/* Only with a board to read the settings from; without one, the hint says so (no greyed-out button). */}
+        {config ? (
+          <div className="dk-row-btns">
+            <button type="button" className="dk-btn primary" onClick={() => create(captureProfile(config, normal, undefined))}>
+              {t("desktop.library.profileFromCurrent")}
+            </button>
+          </div>
+        ) : (
+          <p className="dk-hint">{t("desktop.library.profileNeedsDongle")}</p>
+        )}
       </>
     );
   const edit = (patch: Partial<ProfileSettings>) => set({ ...upgradeProfile(draft), ...patch });
@@ -336,12 +340,17 @@ function ProfileBody({
       <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
       <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
       <div className="dk-row-btns">
-        <button type="button" className="dk-btn primary" disabled={!bridge.isConnected} title={t("desktop.editing.openHint")} onClick={() => editProfile(game.key, game.title)}>
-          {t("desktop.editing.open")}
-        </button>
-        <button type="button" className="dk-btn" disabled={!config} title={t("desktop.profile.copyHint")} onClick={() => config && create(captureProfile(config, normal, draft))}>
-          {t("desktop.library.profileCopyCurrent")}
-        </button>
+        {/* These need the board: shown only while it's connected. */}
+        {bridge.isConnected && (
+          <button type="button" className="dk-btn primary" title={t("desktop.editing.openHint")} onClick={() => editProfile(game.key, game.title)}>
+            {t("desktop.editing.open")}
+          </button>
+        )}
+        {config && (
+          <button type="button" className="dk-btn" title={t("desktop.profile.copyHint")} onClick={() => create(captureProfile(config, normal, draft))}>
+            {t("desktop.library.profileCopyCurrent")}
+          </button>
+        )}
         <button type="button" className="dk-btn danger" onClick={remove}>
           {t("desktop.library.profileDelete")}
         </button>
@@ -470,17 +479,20 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
   const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 8, FEATURES2.temporaryRemap);
   return (
     <>
-      <Row label={t("desktop.layouts.profileLabel")}>
-        <select className="dk-select" value={value ?? ""} disabled={oldFirmware || (layouts.length === 0 && !value)} onChange={(e) => onChange(e.target.value || undefined)}>
-          <option value="">{t("desktop.layouts.normal")}</option>
-          {/* loop: HOT-PATH-OK — N = saved button layouts (a few) */}
-          {layouts.map(([id, l]) => (
-            <option key={id} value={id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-      </Row>
+      {/* A picker only when there's something to pick: old firmware or no layouts yet, the hint below says why. */}
+      {!oldFirmware && (layouts.length > 0 || value) && (
+        <Row label={t("desktop.layouts.profileLabel")}>
+          <select className="dk-select" value={value ?? ""} onChange={(e) => onChange(e.target.value || undefined)}>
+            <option value="">{t("desktop.layouts.normal")}</option>
+            {/* loop: HOT-PATH-OK — N = saved button layouts (a few) */}
+            {layouts.map(([id, l]) => (
+              <option key={id} value={id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </Row>
+      )}
       {oldFirmware ? (
         // hint: MUST-SHOW — why the layouts are off: what to update
         <p className="dk-hint">{t("desktop.layouts.needsFirmware")}</p>
@@ -521,21 +533,22 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
   };
   return (
     <>
-      {/* loop: HOT-PATH-OK — N = 2 sticks */}
-      {(["left", "right"] as const).map((side) => (
-        <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")} info={t("desktop.curves.profileHint")}>
-          <select className="dk-select" value={value?.[side]?.type ?? ""} disabled={oldFirmware} onChange={(e) => pick(side, e.target.value)}>
-            <option value="">{t("desktop.curves.profileSaved")}</option>
-            {/* loop: HOT-PATH-OK — N = 2 sticks x ≤ 5 curve presets */}
-            {CURVE_PRESETS.map((type) => (
-              <option key={type} value={type}>
-                {t(`desktop.curves.type.${type}`)}
-              </option>
-            ))}
-            {value?.[side]?.type === "custom" && <option value="custom">{t("desktop.curves.type.custom")}</option>}
-          </select>
-        </Row>
-      ))}
+      {!oldFirmware &&
+        // loop: HOT-PATH-OK — N = 2 sticks
+        (["left", "right"] as const).map((side) => (
+          <Row key={side} label={t(side === "left" ? "desktop.curves.profileLeft" : "desktop.curves.profileRight")} info={t("desktop.curves.profileHint")}>
+            <select className="dk-select" value={value?.[side]?.type ?? ""} onChange={(e) => pick(side, e.target.value)}>
+              <option value="">{t("desktop.curves.profileSaved")}</option>
+              {/* loop: HOT-PATH-OK — N = 2 sticks x ≤ 5 curve presets */}
+              {CURVE_PRESETS.map((type) => (
+                <option key={type} value={type}>
+                  {t(`desktop.curves.type.${type}`)}
+                </option>
+              ))}
+              {value?.[side]?.type === "custom" && <option value="custom">{t("desktop.curves.type.custom")}</option>}
+            </select>
+          </Row>
+        ))}
       {oldFirmware && <p className="dk-hint">{t("desktop.curves.needsFirmware")}</p>}
     </>
   );

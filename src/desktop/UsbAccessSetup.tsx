@@ -34,8 +34,10 @@ export default function UsbAccessSetup({ variant = "row", onDone }: { variant?: 
       onDone?.();
     }
   };
-  const button = (
-    <BusyButton className="dk-btn" disabled={installed === true} onClick={run}>
+  // Only while there's something to install or repair: once it's in place the
+  // status says so, never a greyed-out button (no controls that do nothing).
+  const button = installed !== true && (
+    <BusyButton className="dk-btn" onClick={run}>
       {t("desktop.usbAccess.button", "Set up USB access")}
     </BusyButton>
   );
@@ -58,9 +60,9 @@ export default function UsbAccessSetup({ variant = "row", onDone }: { variant?: 
     <div className="dk-row">
       <span className="dk-label">
         {t("desktop.usbAccess.label", "USB access")}
-        <span className="dk-sub">{installed ? t("desktop.usbAccess.installed", "Installed") : t("desktop.usbAccess.missing")}</span>
+        {!installed && <span className="dk-sub">{t("desktop.usbAccess.missing")}</span>}
       </span>
-      <div className="dk-ctl">{button}</div>
+      <div className="dk-ctl">{button || <span className="dk-good">✓ {t("desktop.usbAccess.installed", "Installed")}</span>}</div>
       {message && <p className="dk-hint">{message}</p>}
     </div>
   );

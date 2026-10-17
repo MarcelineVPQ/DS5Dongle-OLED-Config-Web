@@ -204,11 +204,9 @@ describe("game page", () => {
     expect(buttons).toContain(i18n.t("desktop.editing.open"));
     expect(buttons).toContain(i18n.t("desktop.library.profileCopyCurrent"));
     expect(buttons).toContain(i18n.t("desktop.library.profileDelete"));
-    expect([...profile.querySelectorAll(".dk-row > .dk-label")].map((l) => l.firstChild?.textContent)).toEqual([
-      i18n.t("desktop.layouts.profileLabel"),
-      i18n.t("desktop.curves.profileLeft"),
-      i18n.t("desktop.curves.profileRight"),
-    ]);
+    // No saved layouts: no layout picker (nothing to pick), the hint says where layouts are made.
+    expect(profile.textContent).toContain(i18n.t("desktop.layouts.noneForGame"));
+    expect([...profile.querySelectorAll(".dk-row > .dk-label")].map((l) => l.firstChild?.textContent)).toEqual([i18n.t("desktop.curves.profileLeft"), i18n.t("desktop.curves.profileRight")]);
     expect(profile.querySelectorAll('input[type="range"]')).toHaveLength(0);
   });
 
