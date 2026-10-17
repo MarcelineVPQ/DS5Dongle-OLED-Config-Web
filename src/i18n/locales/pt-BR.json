@@ -1366,7 +1366,7 @@
       "rightStick": "Analógico direito",
       "raw": "Bruto",
       "corrected": "O que os jogos veem",
-      "deadzone": "Zona morta",
+      "deadzone": "Zona inativa",
       "deadzoneSub": "Movimento perto do centro que é ignorado (evita drift)",
       "outer": "Inclinação máxima em",
       "outerSub": "Quanto o analógico precisa ir para contar como totalmente empurrado",

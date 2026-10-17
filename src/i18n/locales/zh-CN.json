@@ -294,8 +294,8 @@
         "oldLibrary": "旧版应用的游戏库",
         "dismissedNotices": "你已关闭的通知列表",
         "pins": "你固定的部分",
-        "slotControllers": "应用记住的每个配对槽位中的手柄",
-        "customColors": "你的手柄颜色",
+        "slotControllers": "应用记住的每个配对槽位中的控制器",
+        "customColors": "你的控制器颜色",
         "declinedFixes": "你在“游戏”中取消勾选的更改"
       }
     },
@@ -513,7 +513,7 @@
           "gamepadSteam": "{{game}} 只支持 Xbox 类（XInput）控制器，而我们的 Proton 会把 DualSense 原样传递，所以游戏看不到控制器。PROTON_PREFER_SDL=1 让 Proton 把它作为标准手柄提供给此游戏，振动可用。启动选项将变为：{{options}}{{runner}}",
           "gamepadRunner": "{{current}} 会忽略此选项，因此游戏也会改用 {{proton}}。",
           "hdrSteam": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。启动选项将变为：{{options}}{{runner}}",
-          "hdrRunner": " 它还会改用我们的 DualSense Proton {{proton}}，让手柄的自适应扳机和触觉反馈在 HDR 下也能工作。",
+          "hdrRunner": " 它还会改用我们的 DualSense Proton {{proton}}，让控制器的自适应扳机和触觉反馈在 HDR 下也能工作。",
           "hdrHeroic": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会填写 Heroic 中该游戏的 Gamescope 设置，并关闭 Enable Wine-Wayland 和 Enable HDR 开关。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrLutris": "{{game}} 支持 HDR。它将在 gamescope（Valve 的合成器）中以全屏在 {{screen}}（{{mode}}）上运行，从而获得 HDR：会开启 Lutris 中该游戏的 Gamescope 选项（包括 HDR）。请在游戏自己的设置中开启 HDR。如果游戏出现问题，“撤销”可以恢复原样。{{runner}}",
           "hdrNoProton": " 在“游戏 → DualSense Proton 版本”中安装我们的 DualSense Proton，即可在 HDR 下同时使用自适应扳机和触觉反馈。",
@@ -557,11 +557,11 @@
       "consentAudio": "控制器的音频配置和控制器访问权限",
       "consentProton": "本项目在 GitHub 上的更新源中最新的 DualSense Proton 版本",
       "consentPromise": "检查不会改动任何东西，也不会发送任何关于你的游戏或设置的信息。只有在你查看更改并点击“应用”之后才会修改。",
-      "consentLibrary": "允许后，你的游戏库和每个游戏的手柄配置文件会显示在这里。如果你之前关闭过，也没有删除任何内容：它们会原样回来。",
+      "consentLibrary": "允许后，你的游戏库和每个游戏的控制器配置文件会显示在这里。如果你之前关闭过，也没有删除任何内容：它们会原样回来。",
       "consentAllow": "检查我的启动器",
       "readLaunchers": "读取我的游戏启动器",
       "readLaunchersSub": "仅在这台电脑上读取{{what}}。",
-      "readLaunchersOff": "关闭后，你的游戏库和每个游戏的手柄配置文件会被隐藏，直到你重新打开。不会删除任何内容。",
+      "readLaunchersOff": "关闭后，你的游戏库和每个游戏的控制器配置文件会被隐藏，直到你重新打开。不会删除任何内容。",
       "readLaunchersTurnOff": "关闭",
       "undoConflict": "未撤销：{{files}} 在应用后已被修改（启动器保存了自己的设置）。撤销会丢弃这些更改。",
       "undoNoController": "未撤销：控制器未连接。请连接后再次点击撤销。",
@@ -1092,10 +1092,10 @@
         "needsFirmware": "更新 {{device}} 的固件后即可使用按键"
       },
       "pad": {
-        "title": "用于屏幕的手柄按键",
+        "title": "用于屏幕的控制器按键",
         "info": "只有屏幕会收到这些按键，游戏不会。点击即按下，按住即保持。",
-        "needsFirmware": "更新 {{device}} 的固件后即可在这里按手柄按键",
-        "needsController": "连接手柄后才能在{{screen}}上使用",
+        "needsFirmware": "更新 {{device}} 的固件后即可在这里按控制器按键",
+        "needsController": "连接控制器后才能在{{screen}}上使用",
         "unused": "{{screen}}上未使用",
         "noScreen": "正在等待屏幕",
         "act": {
@@ -1304,7 +1304,7 @@
         "dongle": "正在运行固件 {{version}}",
         "bootsel": "BOOTSEL 模式",
         "blank": "空白的 Pico，处于 BOOTSEL（首次设置）",
-        "away": "不在 USB 上（等待手柄）"
+        "away": "不在 USB 上（等待控制器）"
       },
       "simFault": "固件更新失败",
       "simFaultHint": "让下一次更新失败，查看应用的提示。",
@@ -1733,7 +1733,7 @@
     },
     "hdrManual": {
       "title": "自己设置",
-      "intro": "手动完成“开启 HDR”所做的事。其他 Proton 版本配合 gamescope 也可能可用；我们测试的是我们的 DualSense Proton（HDR 加上手柄的自适应扳机和触觉反馈）。",
+      "intro": "手动完成“开启 HDR”所做的事。其他 Proton 版本配合 gamescope 也可能可用；我们测试的是我们的 DualSense Proton（HDR 加上控制器的自适应扳机和触觉反馈）。",
       "noMode": "未读取到屏幕，因此这里使用 3840×2160：请把 -W 和 -H 后面改成你屏幕的分辨率。",
       "noProton": "我们的 DualSense Proton（在“游戏 → DualSense Proton 版本”中安装）",
       "yourScreen": "你的屏幕",

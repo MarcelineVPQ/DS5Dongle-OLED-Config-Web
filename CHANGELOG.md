@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Fixed
 
 - **The language menu works like every other menu.** In App settings → Language, the arrow keys, Home and End now move through the languages, and Escape closes the menu without closing the settings panel too; the focus goes back to the language button.
+- **Sony's words in French, Portuguese and Chinese.** Deadzone is now **Zone inerte** (French) and **Zona inativa** (Portuguese), the DualSense Edge's back buttons are **Touches arrière** and Controller mode is **Mode manette** (French), and Chinese calls the controller **控制器** everywhere, as Sony does.
 - **Screen readers name a slider's number box in your language.** The box beside each slider was read as "… value" in English in every language.
 - **The Development channel window keeps the keyboard.** Escape now closes only that window, not the settings drawer behind it; Tab stays inside the window; and when it closes, the focus is back on **Development**.
 - **Escape on the settings drawer puts the focus back on the rail.** In a narrow window, closing the settings drawer with Escape left the keyboard focus nowhere; it now goes to the page's item on the rail, the one that opens the drawer again.

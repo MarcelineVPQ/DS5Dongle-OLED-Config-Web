@@ -70,7 +70,7 @@
     "screenDimTimeoutLabel": "Délai avant atténuation",
     "screenOffTimeoutLabel": "Délai avant extinction",
     "pollingRateLabel": "Taux de polling",
-    "controllerModeLabel": "Mode contrôleur"
+    "controllerModeLabel": "Mode manette"
   },
   "remap": {
     "unsupported": "Le firmware connecté ne prend pas en charge l'attribution des touches. Mettez à jour vers le dernier firmware OLED Edition dans l'onglet Flasher.",
@@ -786,7 +786,7 @@
       "rightStick": "Droite X / Y",
       "connection": "Connexion",
       "inputs": "Commandes",
-      "paddles": "Boutons arrière LB / RB"
+      "paddles": "Touches arrière LB / RB"
     },
     "narrator": {
       "voice": "Voix de la narratrice",
@@ -1366,7 +1366,7 @@
       "rightStick": "Joystick droit",
       "raw": "Brut",
       "corrected": "Ce que voient les jeux",
-      "deadzone": "Zone morte",
+      "deadzone": "Zone inerte",
       "deadzoneSub": "Mouvement près du centre ignoré (évite la dérive)",
       "outer": "Inclinaison max à",
       "outerSub": "Jusqu'où le joystick doit aller pour compter comme poussé à fond",
