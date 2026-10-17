@@ -104,13 +104,14 @@ describe("Windows' running-game program index (batch 3)", () => {
 
 describe("the Games badge's count (batch 4)", () => {
   it("reads the declined list once per count, not once per change", async () => {
-    const { waitingCount, DECLINED_KEY } = await import("../../src/desktop/pages/GamesPage");
+    const { waitingNow, DECLINED_KEY } = await import("../../src/desktop/pages/GamesPage");
+    const { waitingTotal } = await import("../../src/desktop/library/waiting");
     localStorage.setItem(DECLINED_KEY, JSON.stringify(["b"]));
     const getItem = vi.spyOn(Storage.prototype, "getItem");
     try {
       const fix = (id: string) => ({ id, recommended: true, files: [] });
       const report = { launchers: [{ fixes: [fix("a"), fix("b")] }], system: { fixes: [fix("c")] }, games: [{ fixes: [fix("d")] }] } as never;
-      expect(waitingCount(report)).toBe(3);
+      expect(waitingTotal(waitingNow(report))).toBe(3);
       expect(getItem.mock.calls.filter(([k]) => k === DECLINED_KEY)).toHaveLength(1);
     } finally {
       getItem.mockRestore();

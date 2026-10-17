@@ -2304,6 +2304,7 @@ html[data-theme="light"] .live-ctl {
   gap: 4px;
 }
 .lib-filters .dk-chip,
+.lib-pc,
 .gp-details .dk-chip {
   cursor: pointer;
   font: inherit;

@@ -316,7 +316,8 @@ describe("Games → Home, needs attention", () => {
     await render("attention");
     expect($(".dk-split-sub")!.textContent).toBe(i18n.t("desktop.panelSub.games")); // the dots say what waits, not the sub-line
     expect(hasDot("recommended")).toBe(true);
-    expect(status("recommended")).toBe(i18n.t("desktop.games.attention", { count: 1 }));
+    // Said like Library's chips: the one change is this computer's (Steam's default), not a game's.
+    expect(status("recommended")).toBe(i18n.t("desktop.library.pcChanges", { count: 1 }));
     expect(hasDot("computer")).toBe(true);
     expect(hasDot("launchers")).toBe(false);
     expect(hasDot("proton")).toBe(false);

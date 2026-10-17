@@ -13,7 +13,8 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNod
 import { MenuButton } from "../MenuButton";
 import { Check } from "lucide-react";
 import { SplitView } from "../accordion/Section";
-import type { Accordion } from "../accordion/useAccordion";
+import { revealSection, type Accordion } from "../accordion/useAccordion";
+import type { Waiting } from "./waiting";
 import { protonApplies } from "../games/platform";
 import { LauncherIcon, hasLauncherIcon } from "./LauncherIcon";
 import { readPref, useFlagPref, usePref, writePref } from "../storage";
@@ -66,6 +67,9 @@ export interface HomePanel {
   sections: ReactNode;
   blocks?: ReactNode;
   blockLink?: unknown;
+  // The recommended changes waiting (library/waiting.ts): "Games that need
+  // setup" counts the games, This computer's chip its own changes.
+  waiting: Waiting;
 }
 
 interface Props {
@@ -145,8 +149,11 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
     // loop: HOT-PATH-OK — N = games (hundreds); memoized, reruns per search keystroke or filter
     return games.filter((g) => (!q || g.title.toLowerCase().includes(q)) && !hiddenKinds.has(kindOfGame(g)));
   }, [games, query, hiddenKinds]);
+  // loop: NOT-WORTH — N = games with a change waiting (tens); memoized on what's waiting
+  const waitingGames = useMemo(() => new Set(home.waiting.games.map((w) => w.key)), [home.waiting]);
+  const pcChanges = home.waiting.pc.length;
   const matches = (f: Filter, g: GameEntry) =>
-    f === "profile" ? !!library.games[g.key]?.profile : f === "dualsense" ? g.support === "triggers" || g.support === "haptics" : f === "attention" ? g.fixes.length > 0 || g.runnerMissing : true;
+    f === "profile" ? !!library.games[g.key]?.profile : f === "dualsense" ? g.support === "triggers" || g.support === "haptics" : f === "attention" ? waitingGames.has(g.key) : true;
   // loop: HOT-PATH-OK — N = visible games (hundreds); per library render (interaction)
   const visible = searched.filter((g) => matches(filter, g));
   // The sidebar: a plain A–Z list of what the search, filter and Show leave
@@ -278,6 +285,14 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                           </button>
                         ))}
                       </div>
+                      {pcChanges > 0 && (
+                        // Changes that aren't a game's (a launcher's default, the controller's audio): counted apart, so
+                        // "Games that need setup" plus this add up to the rail's badge. Opens them in Recommended changes.
+                        <button type="button" className="dk-chip warn lib-pc" title={t("desktop.library.pcChangesHint")} onClick={() => revealSection("games", "recommended")}>
+                          <span className="dot" />
+                          {t("desktop.library.pcChanges", { count: pcChanges })}
+                        </button>
+                      )}
                       <span className="dk-spacer" />
                       <label className="lib-sort">
                         <span>{t("desktop.library.sort")}</span>

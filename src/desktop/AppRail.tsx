@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { protonApplies } from "./games/platform";
 import { Gamepad2, Info, Joystick, Lock, LockOpen, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 import type { TFunction } from "i18next";
-import type { Reminder } from "./notices";
+import type { NoticeTask, Reminder } from "./notices";
 import { panelTasks, togglePanel } from "./accordion/Section";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
@@ -42,10 +42,33 @@ export const railLabel = (t: TFunction, item: RailItem, device: string): string 
 // The tooltip's key: Games mentions Proton only where Proton applies (Linux).
 // A rail item pressed (click, Enter or Space): the page you're on toggles
 // its settings panel (every page alike, SplitView's togglePanel: shown or
-// hidden, remembered per page); another page is navigated to (`go`).
-export function railPress(item: RailItem, active: RailItem, go: (item: RailItem) => void): void {
-  if (item === active) togglePanel();
+// hidden, remembered per page); another page is navigated to (`go`). With a
+// task waiting whose place isn't on screen (`placeShown` false: the panel
+// hidden, its section folded, Games → Home behind a game page), the page
+// you're on goes there too (`go` opens it), so the press always leads to
+// what the dot is about.
+export function railPress(item: RailItem, active: RailItem, go: (item: RailItem) => void, placeShown = true): void {
+  if (item === active && placeShown) togglePanel();
   else go(item);
+}
+
+// A rail item pressed, with the app's open tasks: a dot on the item leads to
+// its first task with a place there (a section, or a main-view block), the
+// panel shown, from any page and from the page itself; otherwise railPress.
+// `go` opens the page, and that place when there is one.
+export function railSelect(pressed: RailItem, active: RailItem, tasks: readonly NoticeTask[], go: (item: RailItem, section?: string) => void): void {
+  // loop: NOT-WORTH — N ≤ ~6 open tasks; on a click
+  const section = tasks.find((task) => task.place === pressed && task.section)?.section;
+  railPress(pressed, active, (item) => go(item, section), !section || taskPlaceShown(section));
+}
+
+// Whether a task's place (a section id, or a main-view block's) is on
+// screen now: an open section in a shown panel, or a main-view block (always
+// shown) on the page on screen.
+export function taskPlaceShown(place: string): boolean {
+  const id = CSS.escape(place);
+  const el = document.querySelector(`.dk-split:not(.panel-hidden) .dk-split-panel .dk-sec.open[data-section="${id}"], .dk-split-main [data-block="${id}"]`);
+  return !!el && el.getClientRects().length > 0;
 }
 
 // The pages (SplitView's `page`) behind each rail item; the first one mounted

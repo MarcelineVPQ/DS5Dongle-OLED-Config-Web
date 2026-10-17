@@ -469,7 +469,7 @@ describe("App settings on the accordion", () => {
 
   it("an app update: the rail's task opens Updates, with its yellow dot and the task as its status", async () => {
     const app = { phase: "available" as const, version: "1.2.3", size: 1_000_000 };
-    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 0 });
+    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [] });
     const task = tasks.find((x) => x.place === "app")!;
     expect(task.section).toBe("updates");
     m.acc.revealSection("app", task.section as "updates");
@@ -485,7 +485,7 @@ describe("App settings on the accordion", () => {
   // when the panel is shown, once.
   it("the rail's task dot leaves a hidden panel hidden: the dot on the rail item, the section opened, shown when the panel is", async () => {
     const app = { phase: "available" as const, version: "1.2.3", size: 1_000_000 };
-    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 0 });
+    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: false, latest: null, state: { phase: "idle" } as never }, connected: true, board: [] });
     const task = tasks.find((x) => x.place === "app")!;
     localStorage.setItem(m.Section.PANEL_HIDDEN_KEY("app"), "1");
     m.acc.revealSection("app", "updates", undefined, { keepHidden: true });
@@ -990,7 +990,6 @@ describe("the Pico 2 W page on the accordion", () => {
       fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never },
       connected: true,
       board: [{ reason: "mic-decoder", text: "mic" }],
-      gamesCount: 0,
     });
     expect(tasks.filter((x) => x.place === "dongle").map((x) => x.section)).toEqual(["firmware", "diagnostics"]);
   });
@@ -1167,7 +1166,13 @@ describe("a game's page on the accordion", () => {
 describe("deep links", () => {
   it("every task with a place targets a section or main-view block its page has (the rail's Games count: Recommended changes)", () => {
     const app = { phase: "ready" as const, version: "1.2.3" };
-    const { tasks } = m.openTasks.openTasks(t, { app: app as never, fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never }, connected: true, board: [], gamesCount: 1 });
+    const { tasks } = m.openTasks.openTasks(t, {
+      app: app as never,
+      fw: { available: true, latest: { version: "v2" }, state: { phase: "idle" } as never },
+      connected: true,
+      board: [],
+      games: { games: [], pc: [{ key: "label.audioVolumeSaved" }] },
+    });
     expect(tasks.find((x) => x.place === "games")?.section).toBe("recommended");
     // loop: test
     for (const task of tasks.filter((x) => x.section)) {
@@ -1182,7 +1187,6 @@ describe("deep links", () => {
       fw: { available: false, latest: null, state: { phase: "idle" } as never },
       connected: true,
       board: [{ reason: "mic-decoder", text: "mic" }] as never,
-      gamesCount: 0,
     });
     expect(board.tasks[0]?.section).toBe("diagnostics");
     expect(m.sections.MAIN_BLOCKS.dongle as readonly string[]).toContain("diagnostics");

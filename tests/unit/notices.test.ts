@@ -17,7 +17,6 @@ const input = (over: Partial<TaskInput>): TaskInput => ({
   fw: { available: false, latest: { version: "v0.9.5-dev.11" }, state: idle },
   connected: true,
   board: [],
-  gamesCount: 0,
   ...over,
 });
 
@@ -115,7 +114,13 @@ describe("open tasks", () => {
         app: { phase: "available", version: "1.0.0", size: 2 * 1048576 },
         fw: { available: true, latest: { version: "v0.9.5-dev.12" }, state: idle },
         board: [{ reason: "speaker-encoder", text: "speaker" }],
-        gamesCount: 3,
+        games: {
+          games: [
+            { key: "a", title: "Astro Bot", labels: [{ key: "label.steamInput", params: { game: "Astro Bot" } }] },
+            { key: "b", title: "Returnal", labels: [{ key: "label.hdr", params: { game: "Returnal" } }] },
+          ],
+          pc: [{ key: "label.audioVolumeSaved" }],
+        },
       }),
     );
     expect(tasks.map((x) => [x.place, x.key ?? null])).toEqual([
@@ -125,7 +130,9 @@ describe("open tasks", () => {
       ["games", null],
     ]);
     expect(tasks[1].text).toBe(t("desktop.update.fwAvailable", { version: "v0.9.5-dev.12" }));
-    expect(tasks[3]).toMatchObject({ count: 3, text: t("desktop.games.attention", { count: 3 }) });
+    // The count: each game with a change waiting plus each of this computer's; the text names them.
+    expect(tasks[3]).toMatchObject({ count: 3, section: "recommended" });
+    expect(tasks[3].text).toBe("Recommended: Turn Steam Input off for Astro Bot; Turn on HDR for Returnal; Keep the controller's volume and microphone level at full when it reconnects");
   });
 
   it("keeps dismissals while a state isn't known (checking, no board, a firmware write)", () => {

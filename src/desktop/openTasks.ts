@@ -9,6 +9,7 @@ import { BOARD_PROBLEM_ID, type BoardProblem } from "./dongle/core1Status";
 import { noticeKey, type NoticeTask, type Settled } from "./notices";
 import { formatMb } from "./format";
 import type { BlockId, SectionId } from "./accordion/sections";
+import { waitingText, waitingTotal, type Waiting } from "./library/waiting";
 
 export const APP_UPDATE_ID = "app-update";
 export const FIRMWARE_UPDATE_ID = "firmware-update";
@@ -36,7 +37,7 @@ export interface TaskInput {
   fw: { available: boolean; latest: { version: string } | null; state: FirmwareUpdateState };
   connected: boolean;
   board: BoardProblem[] | null; // null: not known
-  gamesCount: number;
+  games?: Waiting; // the recommended changes waiting (none: Games not allowed, or not scanned yet)
 }
 
 export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]; settled: Settled } {
@@ -77,8 +78,11 @@ export function openTasks(t: TFunction, input: TaskInput): { tasks: NoticeTask[]
     settled.set(BOARD_PROBLEM_ID, keys);
   }
 
-  // No notice of its own: Games → Home's Recommended changes is the place (the count it always had).
-  if (input.gamesCount > 0) tasks.push({ id: GAMES_SETUP_ID, place: "games", section: GAMES_SETUP_SECTION, text: t("desktop.games.attention", { count: input.gamesCount }), count: input.gamesCount });
+  // No notice of its own: Games → Home's Recommended changes is the place. The count is each
+  // game with a change waiting plus each of this computer's changes (Library's two chips); the
+  // text names them, so the tooltip says what to look for.
+  const games = input.games ? waitingTotal(input.games) : 0;
+  if (input.games && games > 0) tasks.push({ id: GAMES_SETUP_ID, place: "games", section: GAMES_SETUP_SECTION, text: waitingText(t, input.games), count: games });
 
   return { tasks, settled };
 }

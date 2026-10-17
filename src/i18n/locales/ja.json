@@ -476,6 +476,13 @@
       "ok": "OK",
       "history": "変更履歴",
       "attention_other": "おすすめの変更 {{count}} 件",
+      "waiting": {
+        "task": "おすすめ: {{list}}",
+        "separator": "、",
+        "more_other": "ほか {{count}} 件",
+        "game_other": "{{game}}: {{count}} 件の変更",
+        "games_other": "ゲーム {{count}} 本"
+      },
       "msg": {
         "label": {
           "defaultSteam": "{{proton}} を Steam の Windows ゲーム用の既定にする",
@@ -814,6 +821,8 @@
         "dualsense": "DualSense",
         "attention": "設定が必要なゲーム"
       },
+      "pcChanges_other": "このコンピューター: {{count}} 件の変更",
+      "pcChangesHint": "ゲームではなく、このコンピューターの変更です。「おすすめの変更」で開きます。",
       "noMatch": "一致するゲームはありません。",
       "running": "実行中",
       "hasProfile": "コントローラープロファイルあり",

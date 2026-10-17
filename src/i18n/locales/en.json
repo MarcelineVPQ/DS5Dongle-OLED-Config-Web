@@ -478,6 +478,16 @@
       "history": "Change history",
       "attention_one": "{{count}} recommended change",
       "attention_other": "{{count}} recommended changes",
+      "waiting": {
+        "task": "Recommended: {{list}}",
+        "separator": "; ",
+        "more_one": "+{{count}} more",
+        "more_other": "+{{count}} more",
+        "game_one": "{{game}}: {{count}} change",
+        "game_other": "{{game}}: {{count}} changes",
+        "games_one": "{{count}} game",
+        "games_other": "{{count}} games"
+      },
       "msg": {
         "label": {
           "defaultSteam": "Make {{proton}} Steam's default for Windows games",
@@ -817,6 +827,9 @@
         "dualsense": "DualSense",
         "attention": "Games that need setup"
       },
+      "pcChanges_one": "This computer: {{count}} change",
+      "pcChanges_other": "This computer: {{count}} changes",
+      "pcChangesHint": "Changes for this computer, not for one game. Opens them in Recommended changes.",
       "noMatch": "No games match.",
       "running": "Running",
       "hasProfile": "Has a controller profile",

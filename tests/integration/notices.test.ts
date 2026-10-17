@@ -145,7 +145,7 @@ describe("the rail's dots", () => {
     fw: { available, latest: { version: "v0.9.5-dev.12" }, state: { phase: "idle" } },
     connected: true,
     board: [],
-    gamesCount: 2,
+    games: { games: [{ key: "a", title: "Astro Bot", labels: [{ key: "label.steamInput", params: { game: "Astro Bot" } }] }], pc: [{ key: "label.audioVolumeSaved" }] },
   });
 
   it("follow the task, not the dismissal: dismissed, the dot stays; done, it goes by itself", () => {
