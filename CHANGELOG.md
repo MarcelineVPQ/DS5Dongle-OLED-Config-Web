@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.17] - 2026-10-16
+
+### Changed
+
+- Bundles firmware 0.9.5-dev.17: the controller's speaker plays both channels; audio buffer minimum 32.
+
 ## [0.9.5-dev.16] - 2026-10-16
 
 ### Fixed
