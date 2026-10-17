@@ -39,7 +39,7 @@ interface Sample {
   btPps: number;
   micFps: number; // mic audio frames decoded per second
   rated: boolean; // the rates above are known (a previous read to compare with)
-  rssi: number;
+  rssi: number | null; // dB from the ideal range; null = no reading
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
   counters: AudioCounters | null; // null: older firmware
@@ -78,8 +78,8 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
       if (!client) return null;
       // loop: NOT-WORTH — not a loop: one batch of up to 3 reads per 1 s poll (the board serializes them)
       const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters()]);
-      const { frame, changes, rssi: rssiRead } = latest.current;
-      const rssi = rssiRead ?? 0;
+      // null = no reading (or none read yet): shown as "—", a gap in the graph, never as 0 (ideal).
+      const { frame, changes, rssi } = latest.current;
       const at = performance.now();
       const p = prev.current;
       const dt = p ? (at - p.at) / 1000 : 0;
@@ -183,6 +183,9 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   const series = (pick: (x: Sample) => number) => history.filter((x) => x.rated).map(pick);
   const rated = s?.rated ? s : null;
   const micLoss = micLossClimbing(history);
+  // dB from the ideal range, null = no reading (a gap in the graph).
+  // loop: HOT-PATH-OK — N = 60 samples; the 1 s sample's render
+  const signal = history.map((x) => x.rssi);
   const counters = s?.counters ?? null;
   const problems = s && counters ? boardProblems(t, counters, s.core1Alive) : [];
 
@@ -191,8 +194,7 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
       <div className="dash-row">
         <Graph label={td("usb")} unit="/s" values={series((x) => x.usbFps)} now={rated?.usbFps} />
         <Graph label={td("bt")} unit="/s" values={series((x) => x.btPps)} now={rated?.btPps} />
-        {/* loop: HOT-PATH-OK — N = 60 samples; the 1 s sample's render */}
-        <Graph label={td("signal")} unit="dB" values={history.map((x) => x.rssi)} now={s?.rssi} note={s ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
+        <Graph label={td("signal")} unit="dB" values={signal} now={s?.rssi ?? undefined} note={s && s.rssi !== null ? t(`desktop.overview.signalQ.${signalQuality(s.rssi)}`) : undefined} />
         <Graph label={td("mic")} unit="/s" values={series((x) => x.micFps)} now={counters ? rated?.micFps : undefined} />
       </div>
       <SectionGroup title={td("audio")}>
@@ -397,13 +399,22 @@ function Trend({ values, capacity = HISTORY }: { values: number[]; capacity?: nu
 }
 
 // The last minute of one value as a line with its current value.
-function Graph({ label, values, now, unit, digits = 0, note }: { label: string; values: number[]; now?: number; unit: string; digits?: number; note?: string }) {
+// A null value is a gap (no reading then): the line breaks there.
+function Graph({ label, values, now, unit, digits = 0, note }: { label: string; values: (number | null)[]; now?: number; unit: string; digits?: number; note?: string }) {
   const w = 120;
   const h = 34;
-  const lo = Math.min(...values, 0);
-  const hi = Math.max(...values, lo + 1);
   // loop: HOT-PATH-OK — N = 60 points per graph
-  const pts = values.map((v, i) => `${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`).join(" ");
+  const known = values.filter((v): v is number => v !== null);
+  const lo = Math.min(...known, 0);
+  const hi = Math.max(...known, lo + 1);
+  // Runs of consecutive readings, one polyline each.
+  const runs: string[][] = [];
+  // loop: HOT-PATH-OK — N = 60 points per graph
+  values.forEach((v, i) => {
+    if (v === null || runs.length === 0) runs.push([]);
+    if (v === null) return;
+    runs[runs.length - 1].push(`${((i / (HISTORY - 1)) * w).toFixed(1)},${(h - 2 - ((v - lo) / (hi - lo)) * (h - 4)).toFixed(1)}`);
+  });
   return (
     <div className="dash-card dash-graph">
       <h4>{label}</h4>
@@ -413,7 +424,8 @@ function Graph({ label, values, now, unit, digits = 0, note }: { label: string; 
         {note && <em>{note}</em>}
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-        {values.length > 1 && <polyline points={pts} />}
+        {/* loop: HOT-PATH-OK — N ≤ 30 runs of 60 points */}
+        {runs.map((r, i) => r.length > 1 && <polyline key={i} points={r.join(" ")} />)}
       </svg>
     </div>
   );

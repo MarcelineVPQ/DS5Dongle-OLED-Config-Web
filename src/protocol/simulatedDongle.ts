@@ -79,6 +79,9 @@ export interface SimulatedDongleOptions {
   // and whether it answers test commands.
   controllerUpdateVersion?: number;
   controllerAnswers?: boolean;
+  // 0xF9: the link's RSSI in dB from the ideal range (default -5); null = no
+  // reading, which the board answers as -128 (firmware 0.9.5-dev.16+).
+  rssi?: number | null;
 }
 
 // A plausible, made-up controller (no real controller's data): report 0x20
@@ -416,7 +419,7 @@ export class SimulatedDongle implements Ds5Transport {
       case 0xf8:
         return new TextEncoder().encode(this.opts.version ?? "0.8.0-test");
       case 0xf9:
-        return new Uint8Array([0xfb]); // -5
+        return new Uint8Array([(this.opts.rssi === undefined ? -5 : (this.opts.rssi ?? -128)) & 0xff]); // int8
       case 0xfb: {
         if (!this.opts.live) throw new ReportStalledError(reportId);
         // Diagnostics: uptime, USB audio frames, Bluetooth packets, levels, no errors.

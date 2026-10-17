@@ -125,6 +125,18 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
     expect(slots.occupied).toEqual([true, false, false, false]);
     expect((await client.readAudioCounters()).core1Loops).toBe(1234);
   });
+
+  // 0xF9 is dB from the ideal range, 0 = ideal; no reading must not read as 0.
+  it("reads RSSI 0 as a reading and -128 or a short reply as no reading", async () => {
+    expect(await setup({ rssi: 0 }).client.readRssi()).toBe(0);
+    expect(await setup({ rssi: 5 }).client.readRssi()).toBe(5);
+    expect(await setup({ rssi: -28 }).client.readRssi()).toBe(-28);
+    expect(await setup({ rssi: null }).client.readRssi()).toBeNull();
+    const { dongle, client } = setup();
+    const getReport = dongle.getReport.bind(dongle);
+    dongle.getReport = async (id: number, length: number) => (id === 0xf9 ? new Uint8Array(0) : getReport(id, length));
+    expect(await client.readRssi()).toBeNull();
+  });
 });
 
 describe("live input (0xF0, protocol 1.2)", () => {

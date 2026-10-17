@@ -39,6 +39,9 @@ export const REPORT = {
   controllerInfo: 0xeb, // protocol 1.12+, feature bit FEATURES3.controllerInfo; selector in wValue's high byte
 } as const;
 
+// 0xF9's "no reading" byte (firmware src/rssi_poll.h kRssiNoReading).
+export const RSSI_NO_READING = -128;
+
 export const FUNC = {
   applyConfig: 0x01,
   save: 0x02,
@@ -646,10 +649,15 @@ export class Ds5BridgeClient {
     return bytes.some((b) => b !== 0) ? decodeInputReport(bytes) : null;
   }
 
-  async readRssi(): Promise<number> {
+  // The link's RSSI: dB from the Bluetooth receiver's ideal (golden) range,
+  // not dBm (0 = ideal, negative = weaker). null = no reading: no link, none
+  // yet, or the last read failed (the board answers -128, firmware 0.9.5-dev.16
+  // and later), or a short reply. Older firmware sent 0 for no reading.
+  async readRssi(): Promise<number | null> {
     const bytes = await this.transport.getReport(REPORT.rssi, 1);
-    if (bytes.length < 1) return 0;
-    return bytes[0] >= 128 ? bytes[0] - 256 : bytes[0];
+    if (bytes.length < 1) return null;
+    const value = bytes[0] >= 128 ? bytes[0] - 256 : bytes[0];
+    return value === RSSI_NO_READING ? null : value;
   }
 
   async readSlots(): Promise<SlotsInfo> {
