@@ -7,7 +7,6 @@
 // section folds on its own (passed checks, marks, the tier legend: shown, compact). What needs the player carries a yellow dot (and
 // opens on a first visit); what's fine is one line. Each fact has one place.
 import { act, createElement } from "react";
-import { legacyTags, type ReportSheet } from "../../src/desktop/games/report";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
@@ -257,7 +256,7 @@ describe("game page", () => {
       await act(async () => void (await vi.advanceTimersByTimeAsync(1000)));
       const saved = JSON.parse(calls.find((c) => c.startsWith("librarySetMine"))!.slice("librarySetMine ".length)) as { mine: Record<string, unknown> };
       expect(saved.mine.report).toMatchObject({ results: {} });
-      expect(saved.mine.tags).toEqual(legacyTags(saved.mine.report as ReportSheet)); // also as the old ticks, for an older app (B2)
+      expect(saved.mine.tags).toBeUndefined(); // the old not-detected tick goes with it, for an older app (B2)
       expect(rescans - before).toBe(1);
     } finally {
       vi.useRealTimers();
