@@ -109,7 +109,7 @@ export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: Button
 export interface IpcHandlers {
   gamesDetails: () => Record<string, GameInfo>;
   gamesRunning: () => string | null;
-  libraryGet: () => LibraryFile;
+  libraryGet: () => LibraryFile | Promise<LibraryFile>;
   librarySetProfile: (u: { gameKey: string; title: string; settings: ProfileSettings }) => LibraryFile;
   libraryDeleteProfile: (gameKey: string) => LibraryFile;
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;

@@ -74,6 +74,31 @@ function salvageLibrary(data: unknown): Salvaged<LibraryFile> | null {
   return { value, lost: true };
 }
 
+// One game saved under two keys (bug hunt B1: Windows listed every Steam game
+// twice, so a profile or rating could be on either tile): merged, nothing
+// dropped. The newer profile wins; for the player's own data, the rating, the
+// test sheet (and the old checklist) and their stamp come together from the
+// newer stamp (ratedOn.at; a tie keeps `kept`'s), any field only one of them
+// has is kept, two different notes are both kept (one after the other, within
+// the 5000 characters notes hold), and Supports HDR stays on if either said so.
+export function mergeRecords(kept: GameRecord, other: GameRecord): GameRecord {
+  const out: GameRecord = { ...kept };
+  if (other.profile && (!kept.profile || other.profile.updated > kept.profile.updated)) out.profile = other.profile;
+  if (other.mine) out.mine = kept.mine ? mergeMine(kept.mine, other.mine) : other.mine;
+  return out;
+}
+
+const RATED_FIELDS = ["rating", "tags", "report", "ratedOn"] as const satisfies ReadonlyArray<keyof Mine>;
+function mergeMine(kept: Mine, other: Mine): Mine {
+  const otherNewer = (other.ratedOn?.at ?? 0) > (kept.ratedOn?.at ?? 0);
+  const out: Mine = { ...other, ...kept };
+  // loop: NOT-WORTH — N = 4 fields, once per merged game (once ever)
+  for (const f of RATED_FIELDS) if (otherNewer && other[f] !== undefined) Object.assign(out, { [f]: other[f] });
+  if (kept.notes && other.notes && kept.notes !== other.notes) out.notes = `${kept.notes}\n\n${other.notes}`.slice(0, 5000);
+  if (kept.hdr || other.hdr) out.hdr = true;
+  return out;
+}
+
 const librarySpec = (kind: PersistedKind): PersistedSpec<LibraryFile> => ({
   kind,
   salvage: salvageLibrary,
@@ -162,6 +187,32 @@ export class LibraryStore {
     if (this.data.layouts) delete this.data.layouts[id];
     for (const r of Object.values(this.data.games)) if (r.profile?.settings.buttonLayout === id) delete r.profile.settings.buttonLayout;
     return this.save();
+  }
+
+  // Entries saved under an older key prefix (`steam-<old hash>`) move to the
+  // new one, merged with an entry already there (mergeRecords); the restore
+  // point follows. Saved once when anything moved; false when nothing did.
+  moveKeys(moves: Array<{ from: string; to: string }>): boolean {
+    let moved = false;
+    // loop: NOT-WORTH — older key prefixes (≤ 3) x library games, once at app start
+    for (const { from, to } of moves) {
+      if (from === to) continue;
+      // loop: NOT-WORTH — the library's games, once per older prefix
+      for (const key of Object.keys(this.data.games)) {
+        if (!key.startsWith(`${from}:`)) continue;
+        const next = to + key.slice(from.length);
+        const there = this.data.games[next];
+        this.data.games[next] = there ? mergeRecords(there, this.data.games[key]) : this.data.games[key];
+        delete this.data.games[key];
+        moved = true;
+      }
+      if (this.data.restore?.gameKey.startsWith(`${from}:`)) {
+        this.data.restore = { ...this.data.restore, gameKey: to + this.data.restore.gameKey.slice(from.length) };
+        moved = true;
+      }
+    }
+    if (moved) this.save();
+    return moved;
   }
 
   setRestore(restore: LibraryFile["restore"]): LibraryFile {

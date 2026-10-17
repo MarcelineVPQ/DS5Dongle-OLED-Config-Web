@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Each Steam game shows once (Windows).** Windows names Steam's folder in two spellings (`c:/program files (x86)/steam` and `C:\Program Files (x86)\Steam`), and the app took them for two Steam installs, so every Steam game was listed twice, and a profile or rating made on the second tile might never apply. Now it's one Steam, one tile per game. A profile, rating, test sheet or notes you saved on either tile move to the one tile; where both tiles had something, the newer one is kept and nothing is thrown away.
 - **No more short freezes while Games looks for Steam (Windows).** The app asked Windows where Steam is installed several times per scan, ▶ Play and Steam restart, and each time the window stopped answering for a moment. It now asks once per scan, in the background.
 
 ## [0.9.5-dev.18] - 2026-10-17

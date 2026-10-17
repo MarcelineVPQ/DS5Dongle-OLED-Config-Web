@@ -265,6 +265,13 @@ export const gameStates = (gamepad: GamepadState | undefined, hdr: HdrState | un
 // the same target in the fresh scan that apply() runs.
 export const idHash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 8);
 
+// Windows: library keys saved under an older spelling of a Steam folder
+// (steam.ts oldRoots) and the key prefix they move to (LibraryStore.moveKeys).
+// loop: NOT-WORTH — Steam installs x older spellings (≤ 3), once at app start
+export const steamKeyMoves = (installs: SteamInstall[]): Array<{ from: string; to: string }> =>
+  // loop: NOT-WORTH — one install's older spellings (≤ 2)
+  installs.flatMap((i) => (i.oldRoots ?? []).map((old) => ({ from: `steam-${idHash(old)}`, to: `steam-${idHash(i.root)}` })));
+
 // Message helpers (texts live in the locale files under desktop.games.msg).
 export const msg = (key: string, params?: Msg["params"]): Msg => (params ? { key, params } : { key });
 export const supportMsg = (support: DualSenseSupport): Msg => msg(support === "triggers" ? "support.triggers" : "support.haptics");

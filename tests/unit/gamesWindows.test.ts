@@ -7,7 +7,8 @@ import { detectRunningWindows, gameExecutables, parseTasklist, type ProcView } f
 import { findSteamInstalls, listSteamGames, refreshWindowsSteamPath, steamPathIn, windowsSteamRoots } from "../../electron/main/games/steam";
 import { parseEpicManifest, parseGogRegistry, readEpicGames, readGogGames, storeKey } from "../../electron/main/games/windowsStores";
 import { actionUrl } from "../../electron/main/games/actions";
-import { applyFixes, idHash, scan, withoutOurPreferSdl } from "../../electron/main/games/games";
+import { applyFixes, idHash, scan, steamKeyMoves, withoutOurPreferSdl } from "../../electron/main/games/games";
+import { LibraryStore, LIBRARY_FILE } from "../../electron/main/games/libraryStore";
 import {
   heroicExeIn,
   launcherControl,
@@ -36,6 +37,71 @@ describe("Games on Windows", () => {
     expect(listSteamGames(installs[0]).map((g) => g.name)).toEqual(["Marvel's Spider-Man Remastered"]);
     // Linux paths are never looked at on Windows.
     expect(findSteamInstalls(root, "win32", () => [])).toEqual([]);
+  });
+
+  // B1 (0.9.5 bug hunt): the registry's SteamPath is lowercase and Program
+  // Files' isn't; realpathSync kept the case, so every game was listed twice
+  // under two keys, and a profile or rating on the second tile might never apply.
+  it("finds one Steam for two spellings of its folder, keyed by the folder's own spelling", () => {
+    const root = mkdtempSync(join(tmpdir(), "steam-case-"));
+    mkdirSync(join(root, "config"), { recursive: true });
+    writeFileSync(join(root, "config", "config.vdf"), '"InstallConfigStore" { }');
+    const upper = root.toUpperCase();
+    // Windows: both spellings are the same folder; realpath.native answers with its own spelling.
+    const winPaths = {
+      real: (p: string) => {
+        if (p.toLowerCase() !== root.toLowerCase()) throw new Error("ENOENT");
+        return root;
+      },
+      asBefore: (p: string) => p, // the realpath older apps used keeps the spelling it's given
+    };
+    for (const order of [
+      [upper, root],
+      [root, upper],
+    ]) {
+      const installs = findSteamInstalls("C:/Users/x", "win32", () => order, winPaths);
+      expect(installs).toHaveLength(1);
+      expect(installs[0].root).toBe(root);
+      expect(installs[0].oldRoots).toEqual([upper]);
+      expect(steamKeyMoves(installs)).toEqual([{ from: `steam-${idHash(upper)}`, to: `steam-${idHash(root)}` }]);
+    }
+    // Linux: unchanged (no older spellings).
+    expect(findSteamInstalls("/nowhere", "linux")).toEqual([]);
+  });
+
+  it("moves library entries from the second copy's key, merged, once", () => {
+    const dir = mkdtempSync(join(tmpdir(), "lib-move-"));
+    const from = `steam-${idHash("C:\\PROGRAM FILES (X86)\\STEAM")}`;
+    const to = `steam-${idHash("C:\\Program Files (x86)\\Steam")}`;
+    const settings = (hapticsGain: number) => ({ format: 2 as const, hapticsGain });
+    const store = new LibraryStore(dir);
+    // Only on the second copy: moves as it is.
+    store.setProfile(`${from}:steam:10`, "Only Old", settings(2));
+    // On both: the newer profile, the newer stamp's rating and sheet, both notes, HDR on.
+    store.setMine(`${from}:steam:20`, "Both", { rating: 2, ratedOn: { app: "0.9.5-dev.18", at: 200 }, notes: "old tile", hdr: true });
+    store.setMine(`${to}:steam:20`, "Both", { rating: 4, ratedOn: { app: "0.9.5-dev.18", at: 100 }, notes: "kept tile", report: { schemaVersion: 1, results: { speaker: { result: "pass" } } } });
+    store.setProfile(`${to}:steam:20`, "Both", settings(3));
+    store.setRestore({ gameKey: `${from}:steam:20`, settings: settings(1) });
+    // Not a Steam key of this folder: untouched.
+    store.setMine(`steam-0badc0de:steam:30`, "Other", { rating: 5 });
+
+    expect(store.moveKeys([{ from, to }])).toBe(true);
+    const lib = JSON.parse(readFileSync(join(dir, LIBRARY_FILE), "utf8"));
+    expect(Object.keys(lib.games).sort()).toEqual(["steam-0badc0de:steam:30", `${to}:steam:10`, `${to}:steam:20`].sort());
+    expect(lib.games[`${to}:steam:10`].profile.settings).toEqual(settings(2));
+    const both = lib.games[`${to}:steam:20`];
+    expect(both.profile.settings).toEqual(settings(3));
+    expect(both.mine).toEqual({
+      rating: 2,
+      ratedOn: { app: "0.9.5-dev.18", at: 200 },
+      report: { schemaVersion: 1, results: { speaker: { result: "pass" } } },
+      notes: "kept tile\n\nold tile",
+      hdr: true,
+    });
+    expect(lib.restore.gameKey).toBe(`${to}:steam:20`);
+    // Once: a second start finds nothing left to move and writes nothing.
+    expect(store.moveKeys([{ from, to }])).toBe(false);
+    expect(new LibraryStore(dir).get()).toEqual(lib);
   });
 
   // B3 (0.9.5 bug hunt): reg.exe ran blocking on the main thread several

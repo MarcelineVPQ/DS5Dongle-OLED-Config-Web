@@ -20,7 +20,8 @@ import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../s
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
-import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, scanFiles, startedSince, type Scan } from "./games";
+import { applyFixes, idHash, launchersToRestart, newestLocalBuild, scan, scanFiles, startedSince, steamKeyMoves, type Scan } from "./games";
+import type { LibraryStore } from "./libraryStore";
 import { readAhead, withScanTexts, type ScanTexts } from "./files";
 import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
@@ -77,6 +78,15 @@ const realQuietPlaySystem = (): Omit<QuietPlaySystem, "running" | "flatpak"> => 
   steamExe: () => steamExeIn(windowsSteamRoots(), existsSync),
   heroicExe: () => heroicExeIn(process.env, existsSync),
 });
+
+// Windows, at app start (with Games consent, before the page reads the
+// library): entries saved under another spelling of Steam's folder (0.9.5-dev.18
+// and older listed every Steam game twice, bug hunt B1) move to the key the
+// scan uses now, merged where both exist. A no-op once they've moved.
+export async function moveOldSteamKeys(library: Pick<LibraryStore, "moveKeys">, home: string = homedir()): Promise<boolean> {
+  await refreshWindowsSteamPath();
+  return library.moveKeys(steamKeyMoves(findSteamInstalls(home, "win32")));
+}
 
 export class GamesService {
   private readonly home = homedir();
