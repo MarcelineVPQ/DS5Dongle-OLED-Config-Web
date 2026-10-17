@@ -1,7 +1,7 @@
 // The app's navigation rail, on the right edge (AVIEW's sidebar, mirrored):
 // icons only by default, expanding over the page on hover or keyboard focus
 // (closing right after a page is picked with the pointer);
-// pinned open it takes its full width. Ctrl+B pins/unpins. The bottom shows
+// pinned open it takes its full width. Ctrl+B (⌘B on macOS) pins/unpins. The bottom shows
 // the dongle's status (a colored dot plus a symbol, so it never relies on
 // color alone), the pin, and in the bottom corner the lock: locked, the rail
 // stays collapsed (icons only; hover and keyboard focus no longer expand it),
@@ -159,6 +159,8 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
         ? t("desktop.status.waiting")
         : t("desktop.status.waitingFirst");
   const pinLabel = pinned ? t("desktop.rail.collapse") : t("desktop.rail.pin");
+  // The pin's shortcut as this platform writes it (the handler above takes Ctrl or ⌘).
+  const mac = window.desktop?.platform === "darwin";
   const lockLabel = locked ? t("desktop.rail.unlock") : t("desktop.rail.lock");
 
   return (
@@ -187,7 +189,14 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
               {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
             </span>
           </div>
-          <button type="button" className="rail-link rail-pin" title={`${pinLabel} (Ctrl+B)`} aria-pressed={pinned} onClick={() => pin(!pinned)}>
+          <button
+            type="button"
+            className="rail-link rail-pin"
+            title={`${pinLabel} (${mac ? "⌘B" : "Ctrl+B"})`}
+            aria-keyshortcuts={mac ? "Meta+B" : "Control+B"}
+            aria-pressed={pinned}
+            onClick={() => pin(!pinned)}
+          >
             <span className="rail-ic" aria-hidden="true">
               {pinned ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
             </span>

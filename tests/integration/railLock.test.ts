@@ -106,3 +106,18 @@ describe("the rail's lock", () => {
     for (const l of expanding) expect(l, l).toMatch(/\.locked/);
   });
 });
+
+// The pin's tooltip names the shortcut as the platform writes it (bug hunt D6,
+// 0.9.5: macOS said Ctrl+B, though ⌘B is the one that works there).
+describe("the pin's shortcut", () => {
+  it.each([
+    ["linux", "Ctrl+B", "Control+B"],
+    ["win32", "Ctrl+B", "Control+B"],
+    ["darwin", "⌘B", "Meta+B"],
+  ])("%s: %s", (platform, shown, aria) => {
+    vi.stubGlobal("desktop", { platform });
+    rail();
+    expect(keepOpen().title).toBe(`${i18n.t("desktop.rail.pin")} (${shown})`);
+    expect(keepOpen().getAttribute("aria-keyshortcuts")).toBe(aria);
+  });
+});
