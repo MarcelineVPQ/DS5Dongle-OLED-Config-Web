@@ -68,3 +68,4 @@ On the release firmware with a paired DualSense:
 14. **Narrator:** connect, slot switch and a line over game audio play cleanly on the controller speaker.
 15. **Updater** (packaged builds, loopback feed with a test key): refuses older versions, bad checksums and unsigned feeds; installs, restarts into the new version (task #29's procedure).
 16. **Games:** spot-check a few with adaptive triggers and haptics.
+17. **Sleep/wake** ([test-plans/sleep-wake.md](test-plans/sleep-wake.md)): suspend and resume the PC twice or more with sound and haptics running (and once with the controller idled off); speaker, mic, HD haptics and the app's connection come back without replugging. **Windows VM:** `node tools/sleep_wake_vm.mjs` (the VM running and signed in, the installed dev build, the simulated board): 3 cycles of the power broadcast + a frozen VM + the board's sleep/wake sequence, PASS per cycle.
