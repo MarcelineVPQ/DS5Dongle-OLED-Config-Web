@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Changed
 
 - **A Fail's picked details show in the warning color.** On a game's test sheet, the details you pick under a Fail (Feels weak, Plain vibration only, Sound problems) were green like a pass; they're problems, so they now take the warning color, in every theme and with Color vision.
+- **Controller not detected is said once, in Your report.** A game's Setup had its own **Controller not detected** checkbox beside the test sheet's **Controller detected** row, both the same answer. The checkbox is gone: mark **Controller detected** as **Fail** in Your report, and the app still offers to pass the controller to the game as a standard gamepad. A mark you set before shows there as Fail.
 
 ## [0.9.5-dev.18] - 2026-10-17
 

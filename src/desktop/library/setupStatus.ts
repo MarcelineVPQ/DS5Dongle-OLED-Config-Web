@@ -21,14 +21,6 @@ export function setupStatus(game: Pick<GameEntry, "fixes" | "gamepad" | "mode">,
   return { attention, hdrOk, passed };
 }
 
-// "Controller not detected" as a mark in Setup (it decides whether the
-// standard-gamepad fix is offered): Proton games we don't already know. It
-// writes the same field as Your report's "Controller detected" row (Fail).
-export function canMarkNotDetected(game: Pick<GameEntry, "support" | "launcher">): boolean {
-  const native = game.support === "triggers" || game.support === "haptics";
-  return protonApplies() && !native && game.support !== "xinput" && (game.launcher === "steam" || game.launcher === "heroic" || game.launcher === "lutris");
-}
-
 // This computer's HDR checklist (Home). gamescope from the Flatpak extension
 // only when every launcher found that runs Proton is a Flatpak.
 export function systemHdrReqs(report: GamesReport): HdrReq[] {

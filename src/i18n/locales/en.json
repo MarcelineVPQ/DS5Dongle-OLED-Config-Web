@@ -961,9 +961,6 @@
       },
       "resultCounts": "{{pass}} pass · {{fail}} fail",
       "notTestedYet": "Not tested yet",
-      "tag": {
-        "not-detected": "Controller not detected"
-      },
       "shareSoon": "Saved on this PC. Sharing with other players is coming.",
       "notesPlaceholder": "Private notes, only on this PC",
       "id": "ID",
@@ -1035,10 +1032,8 @@
       "gamepadNoBuild": "This game needs the standard gamepad option (PROTON_PREFER_SDL), but {{runner}} ignores it and no Proton that honours it is installed. Install our newer DualSense Proton (GE-Proton11-7.2-DualSense or later) or a stock GE-Proton.",
       "modeSet": "Starts in {{api}} ({{flag}}), so {{feature}} is available.",
       "modeOwn": "Your own arguments start {{game}} with {{own}}, so they're left as they are. For {{feature}}, replace {{own}} with {{flag}}.",
-      "notDetectedHint": "Tick this if the game doesn't react to the controller: the app then offers to pass it to the game as a standard gamepad (XInput).",
       "supportsHdr": "Supports HDR",
       "supportsHdrHint": "Tick this if the game has an HDR setting on PC: the app then shows what HDR needs and offers Turn on HDR once everything is ready.",
-      "marksTitle": "Not working as expected?",
       "hdrTitle": "HDR",
       "continue": "Continue playing",
       "libraryTitle": "Library",
