@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.16] - 2026-10-16
+
 ### Fixed
 
 - **The signal shows "—" when there is no reading, not Excellent.** Bluetooth's signal reading is dB from the ideal range, where 0 is ideal, and the Pico 2 W page's Signal graph showed a missing reading as 0, so right after connecting (or when a reading failed) it said 0 dB, Excellent. It now says "—" with no rating and leaves a gap in the graph. With firmware 0.9.5-dev.16 the board also tells the app when it has no reading; the OLED's BT Signal screen now uses the same dB scale and the same words as the app (Excellent / Good / Fair / Weak).
