@@ -1110,10 +1110,12 @@
         "noScreen": "正在等待屏幕",
         "act": {
           "settings": {
-            "up": "上一项设置",
-            "down": "下一项设置",
+            "up": "上一组或上一项设置",
+            "down": "下一组或下一项设置",
             "left": "减小数值",
-            "right": "增大数值",
+            "right": "打开该组，或增大数值",
+            "cross": "打开该组",
+            "circle": "返回分组列表",
             "triangle": "保存。在“Reset to defaults”或“Wipe all slots”上按住 {{s}} 秒"
           },
           "slots": {

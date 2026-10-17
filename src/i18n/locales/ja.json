@@ -1110,10 +1110,12 @@
         "noScreen": "画面を待っています",
         "act": {
           "settings": {
-            "up": "前の設定",
-            "down": "次の設定",
+            "up": "前のグループまたは設定",
+            "down": "次のグループまたは設定",
             "left": "値を下げる",
-            "right": "値を上げる",
+            "right": "グループを開く、または値を上げる",
+            "cross": "グループを開く",
+            "circle": "グループ一覧に戻る",
             "triangle": "保存。「Reset to defaults」または「Wipe all slots」で {{s}} 秒長押し"
           },
           "slots": {

@@ -1124,10 +1124,12 @@
         "noScreen": "Waiting for the screen",
         "act": {
           "settings": {
-            "up": "previous setting",
-            "down": "next setting",
+            "up": "previous group or setting",
+            "down": "next group or setting",
             "left": "lower the value",
-            "right": "raise the value",
+            "right": "open the group, or raise the value",
+            "cross": "open the group",
+            "circle": "back to the groups",
             "triangle": "save. Hold {{s}} s on \"Reset to defaults\" or \"Wipe all slots\""
           },
           "slots": {

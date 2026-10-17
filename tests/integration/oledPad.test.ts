@@ -168,7 +168,9 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
 
   it("names what each button does per screen, and nothing where a screen ignores it", () => {
     expect(padAction(SCREEN.settings, "triangle")).toEqual({ key: "settings.triangle", holdMs: 2000 });
-    expect(padAction(SCREEN.settings, "circle")).toBeNull();
+    expect(padAction(SCREEN.settings, "circle")).toEqual({ key: "settings.circle" }); // back to the groups (firmware dev.19)
+    expect(padAction(SCREEN.settings, "cross")).toEqual({ key: "settings.cross" }); // open the group
+    expect(padAction(SCREEN.settings, "square")).toBeNull();
     expect(padAction(SCREEN.slots, "square")?.holdMs).toBe(1500);
     expect(padAction(SCREEN.lightbar, "square")).toEqual({ key: "lightbar.fav", n: 3, needsController: true });
     expect(padAction(SCREEN.status, "up")).toBeNull();

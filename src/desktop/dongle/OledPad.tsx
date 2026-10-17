@@ -55,13 +55,14 @@ const PART: Record<OledPadButton, string> = {
 };
 const FAV: Partial<Record<OledPadButton, number>> = { triangle: 0, circle: 1, cross: 2, square: 3 };
 
-// What a button does on a screen (firmware oled.cpp *_handle_input): the
+// What a button does on a screen (firmware oled.cpp *_handle_input, settings_menu.h): the
 // action's text key and its hold time, or null when the screen ignores it.
 type Action = { key: string; n?: number; holdMs?: number; needsController?: boolean };
 export function padAction(screen: number, button: OledPadButton): Action | null {
   if (screen === SCREEN.settings) {
     if (button === "triangle") return { key: "settings.triangle", holdMs: SETTINGS_HOLD_MS };
-    if (button === "up" || button === "down" || button === "left" || button === "right") return { key: `settings.${button}` };
+    // The category menu and a group's page (firmware src/settings_menu.h): ✕ / → open a group, ○ goes back.
+    if (button === "up" || button === "down" || button === "left" || button === "right" || button === "cross" || button === "circle") return { key: `settings.${button}` };
   } else if (screen === SCREEN.slots) {
     if (button === "up" || button === "down" || button === "triangle") return { key: `slots.${button}` };
     if (button === "square") return { key: "slots.square", holdMs: SLOTS_WIPE_HOLD_MS };

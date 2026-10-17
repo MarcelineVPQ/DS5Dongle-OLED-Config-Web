@@ -1125,10 +1125,12 @@
         "noScreen": "Warte auf das Display",
         "act": {
           "settings": {
-            "up": "vorherige Einstellung",
-            "down": "nächste Einstellung",
+            "up": "vorherige Gruppe oder Einstellung",
+            "down": "nächste Gruppe oder Einstellung",
             "left": "Wert verringern",
-            "right": "Wert erhöhen",
+            "right": "Gruppe öffnen oder Wert erhöhen",
+            "cross": "Gruppe öffnen",
+            "circle": "zurück zu den Gruppen",
             "triangle": "speichern. {{s}} s halten auf „Reset to defaults“ oder „Wipe all slots“"
           },
           "slots": {

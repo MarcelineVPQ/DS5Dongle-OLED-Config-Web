@@ -941,8 +941,9 @@ describe("the Pico 2 W page on the accordion", () => {
     for (let i = 0; i < 50 && pad("up").getAttribute("aria-disabled") !== "false"; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
     expect(board.oledScreen).toBe(10);
     expect(pad("down").getAttribute("aria-disabled")).toBe("false");
-    expect(pad("circle").getAttribute("aria-disabled")).toBe("true"); // Settings doesn't use ○
-    expect(pad("down").title).toMatch(/Settings: next setting/);
+    expect(pad("circle").getAttribute("aria-disabled")).toBe("false"); // ○ back to the groups (firmware dev.19's menu)
+    expect(pad("square").getAttribute("aria-disabled")).toBe("true"); // Settings doesn't use □
+    expect(pad("down").title).toMatch(/Settings: next group or setting/);
     expect(pad("triangle").title).toMatch(/Hold 2 s/);
     // A tap (Space): one step down.
     const tap = async (b: string) => {
@@ -953,7 +954,7 @@ describe("the Pico 2 W page on the accordion", () => {
       for (let i = 0; i < 50 && board.oledScreens.presses.length === n; i++) await act(() => new Promise((r) => setTimeout(r, 20)));
     };
     await tap("down");
-    expect(board.oledScreens.sel).toBe(1);
+    expect(board.oledScreens.group).toBe(1); // the menu's next group
     expect(board.oledScreens.presses.at(-1)).toEqual(["down", 0]);
     // △ held: the bar fills over 2 s (CSS, --hold-ms), and the release sends the held time.
     const tri = pad("triangle");
