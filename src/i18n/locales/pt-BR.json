@@ -283,7 +283,8 @@
       "didntStart": "O firmware novo não iniciou: {{device}} voltou no modo BOOTSEL, ainda esperando firmware. Deixe conectado e instale de novo.",
       "installAgain": "Instalar de novo",
       "waitForApp": "Espere primeiro a atualização do app terminar.",
-      "wrongVersion": "Depois de reiniciar, {{device}} informa o firmware {{installed}} em vez de {{expected}}. Instale a atualização de novo."
+      "wrongVersion": "Depois de reiniciar, {{device}} informa o firmware {{installed}} em vez de {{expected}}. Instale a atualização de novo.",
+      "severalBootsel": "{{count}} placas estão no modo de atualização, então o app não sabe qual atualizar. Desconecte as que você não quer atualizar e tente de novo."
     },
     "recovered": {
       "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
@@ -1320,7 +1321,7 @@
         "no-gamescope": "O gamescope não está instalado"
       },
       "simulated": "Simular {{device}} (sem hardware)",
-      "simulatedHint": "O app simula {{device}} em vez de usar USB: todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo).",
+      "simulatedHint": "O app adiciona uma placa simulada à pilha de placas da barra, ao lado das reais (troque para ela ali): todas as páginas funcionam e a entrada se move sozinha. Para testar sem hardware (ex.: a VM do Windows). Hápticos, áudio e emparelhamento não são simulados; atualizações de firmware e a primeira instalação são (abaixo).",
       "simCore1": "Core1 simulado",
       "simCore1Hint": "Faz o Core1 da simulação parar em uma etapa de inicialização, para ver o aviso em {{deviceName}}.",
       "simCore1Runs": "Funciona normalmente",
@@ -1350,7 +1351,9 @@
         "normal": "Alguns segundos",
         "real": "Como uma placa real (cerca de 12 s)"
       },
-      "restartsPage": "Recarrega a página."
+      "restartsPage": "Recarrega a página.",
+      "simExtra": "Mais placas simuladas",
+      "simExtraHint": "Adiciona placas simuladas à pilha de placas da barra, para vê-la com muitas placas: cada uma tem seu próprio ID, e uma a cada duas o número de série USB da primeira (como placas pareadas ao mesmo DualSense). Elas só rodam o firmware (sem atualizações). Vale quando a página recarrega."
     },
     "knobs": {
       "cardOpacity": "Opacidade dos cartões",
@@ -1817,7 +1820,8 @@
         "transfer": "A comunicação com {{device}} falhou (relatório {{report}}). Desconecte e conecte de novo.",
         "badConfig": "{{device, capitalize}} enviou configurações que este app não consegue ler. Atualize o firmware ou o app.",
         "stalled": "{{device, capitalize}} recusou o pedido (relatório {{report}}): o firmware não o conhece. Atualize o firmware.",
-        "normalNotRestored": "Não foi possível restaurar antes suas configurações normais (um perfil de jogo estava ativo), então o slot não mudou. Tente de novo."
+        "normalNotRestored": "Não foi possível restaurar antes suas configurações normais (um perfil de jogo estava ativo), então o slot não mudou. Tente de novo.",
+        "noIdentify": "{{device, capitalize}} não consegue piscar THIS ONE na tela com este firmware. Atualize o firmware para usar isso."
       },
       "usb": {
         "network": "O app não conseguiu falar com {{device}}: talvez outro programa esteja usando, ou a conexão USB caiu. Feche outras janelas do configurador, depois desconecte {{device}} e conecte de novo.",
@@ -1967,6 +1971,23 @@
       "restartToUpdate": "Reiniciar para atualizar para {{version}}",
       "createShortcut": "Criar atalho na área de trabalho",
       "quit": "Sair"
+    },
+    "boards": {
+      "label": "Placas",
+      "count_one": "{{count}} placa conectada",
+      "count_other": "{{count}} placas conectadas",
+      "current": "em uso",
+      "simulated": "Placa simulada",
+      "slot": "Slot {{slot}}",
+      "noController": "Sem controle",
+      "busy": "Em uso por outro programa",
+      "unreadable": "Não dá para ler",
+      "more_one": "Mais {{count}}…",
+      "more_other": "Mais {{count}}…",
+      "all": "Todas as placas",
+      "find": "Buscar uma placa",
+      "identifyTip": "Em uso. Clique para piscar THIS ONE na tela dela",
+      "switchTip": "Clique para mostrar esta placa (ela pisca THIS ONE na tela)"
     }
   },
   "ad": {

@@ -6,7 +6,8 @@
 // the setup screen's first install run against it (protocol/simulatedBoard.ts).
 import { useTranslation } from "react-i18next";
 import { Row } from "../controls";
-import { useSimulatedBoard, type SimBoardShown } from "../devPreview";
+import { SIM_EXTRA_COUNTS, SIM_EXTRA_KEY, useSimulatedBoard, type SimBoardShown } from "../devPreview";
+import { usePref, writePref } from "../storage";
 import { SIM_BOARD_FAULTS, SIM_FLASH_SPEEDS, type SimBoardFault, type SimFlashSpeed } from "../../protocol/simulatedBoard";
 
 const STATES: SimBoardShown[] = ["dongle", "bootsel", "blank", "away"];
@@ -14,6 +15,7 @@ const STATES: SimBoardShown[] = ["dongle", "bootsel", "blank", "away"];
 export default function SimulatedBoard() {
   const { t } = useTranslation();
   const sim = useSimulatedBoard();
+  const [extra] = usePref<string>(SIM_EXTRA_KEY, "0", SIM_EXTRA_COUNTS);
   if (!sim.board) return null;
   return (
     <>
@@ -23,6 +25,24 @@ export default function SimulatedBoard() {
           {STATES.map((s) => (
             <option key={s} value={s}>
               {t(`desktop.dev.simBoardState.${s}`, { version: sim.version ?? "" })}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label={t("desktop.dev.simExtra")} sub={t("desktop.dev.restartsPage")} info={t("desktop.dev.simExtraHint")}>
+        <select
+          className="dk-select"
+          aria-label={t("desktop.dev.simExtra")}
+          value={extra}
+          onChange={(e) => {
+            writePref(SIM_EXTRA_KEY, e.target.value);
+            location.reload(); // the board stack lists them from the next start
+          }}
+        >
+          {/* loop: HOT-PATH-OK — N = 20 counts, Developer card only */}
+          {SIM_EXTRA_COUNTS.map((n) => (
+            <option key={n} value={n}>
+              {n}
             </option>
           ))}
         </select>

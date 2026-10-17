@@ -229,15 +229,19 @@ describe("the save bar", () => {
   });
 
   describe("staged changes across a reconnect, another board, a slot switch and a game's layout", () => {
-    // The board leaves USB and comes back (a new connection); `other` makes it another board.
+    // The board leaves USB and comes back (a new connection); `other` makes it
+    // another board: another board id (protocol 1.20) with the SAME USB serial,
+    // as two boards paired to one DualSense present (the serial is its MAC).
     const replug = async (other = false) => {
       const sim = m.devPreview.simulatedBoard()!;
       const serial = sim.dongle()!.serial;
+      const boardId = sim.dongle()!.boardId;
       act(() => sim.set("away"));
       await wait(50);
       expect(bridgeNow!.isConnected).toBe(false);
+      sim.boardId = other ? (boardId === "0123456789ABCDEF" ? "FEDCBA9876543210" : "0123456789ABCDEF") : boardId;
       act(() => sim.set("dongle"));
-      sim.dongle()!.serial = other ? `${serial}-2` : serial;
+      sim.dongle()!.serial = serial;
       // loop: test — until the new connection's drafts are read
       for (let i = 0; i < 200 && !(bridgeNow!.isConnected && drafts!.calibration.saved && drafts!.remap.supported && container.querySelector(".dk-bar")); i++) await wait(10);
       await wait(100);

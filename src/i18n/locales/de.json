@@ -283,7 +283,8 @@
       "didntStart": "Die neue Firmware ist nicht gestartet: {{device}} ist wieder im BOOTSEL-Modus und wartet noch auf Firmware. Nicht abziehen und die Firmware erneut installieren.",
       "installAgain": "Erneut installieren",
       "waitForApp": "Warte zuerst, bis das App-Update fertig ist.",
-      "wrongVersion": "Nach dem Neustart meldet {{device}} die Firmware {{installed}} statt {{expected}}. Installiere das Update noch einmal."
+      "wrongVersion": "Nach dem Neustart meldet {{device}} die Firmware {{installed}} statt {{expected}}. Installiere das Update noch einmal.",
+      "severalBootsel": "{{count}} Boards sind im Update-Modus, daher weiß die App nicht, welches sie aktualisieren soll. Zieh die ab, die du nicht aktualisieren willst, und versuch es noch einmal."
     },
     "recovered": {
       "partial": "{{what}}: Einige Teile waren beschädigt. Sie wurden auf die Standardwerte zurückgesetzt, alles andere blieb erhalten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
@@ -1320,7 +1321,7 @@
         "no-gamescope": "gamescope ist nicht installiert"
       },
       "simulated": "{{device_akk, capitalize}} simulieren (ohne Hardware)",
-      "simulatedHint": "Die App simuliert {{device_akk}}, statt USB zu nutzen: Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten).",
+      "simulatedHint": "Die App fügt dem Board-Stapel in der Leiste ein simuliertes Board hinzu, neben echten Boards (dort umschalten): Alle Seiten funktionieren, die Eingaben bewegen sich von selbst. Zum Testen ohne Hardware (z. B. in der Windows-VM). Haptik, Audio und Kopplung werden nicht simuliert; Firmware-Updates und die Ersteinrichtung schon (unten).",
       "simCore1": "Simulierter Core1",
       "simCore1Hint": "Lässt Core1 in der Simulation bei einem Startschritt anhalten, um die Warnung unter {{deviceName}} zu sehen.",
       "simCore1Runs": "Läuft normal",
@@ -1350,7 +1351,9 @@
         "normal": "Ein paar Sekunden",
         "real": "Wie ein echtes Board (etwa 12 s)"
       },
-      "restartsPage": "Lädt die Seite neu."
+      "restartsPage": "Lädt die Seite neu.",
+      "simExtra": "Weitere simulierte Boards",
+      "simExtraHint": "Fügt dem Board-Stapel in der Leiste simulierte Boards hinzu, um ihn mit vielen Boards zu sehen: jedes hat seine eigene Board-ID, jedes zweite die USB-Seriennummer des ersten (wie Boards, die mit demselben DualSense gekoppelt sind). Sie führen nur die Firmware aus (keine Updates). Gilt nach dem Neuladen der Seite."
     },
     "knobs": {
       "cardOpacity": "Kartendeckkraft",
@@ -1817,7 +1820,8 @@
         "transfer": "Die Verbindung mit {{device_dat}} ist fehlgeschlagen (Report {{report}}). Zieh {{device_akk}} ab und steck es wieder ein.",
         "badConfig": "{{device, capitalize}} hat Einstellungen gesendet, die diese App nicht lesen kann. Aktualisiere die Firmware oder die App.",
         "stalled": "{{device, capitalize}} hat die Anfrage abgelehnt (Report {{report}}): Die Firmware kennt sie nicht. Aktualisiere die Firmware.",
-        "normalNotRestored": "Deine normalen Einstellungen konnten vorher nicht wiederhergestellt werden (ein Spielprofil war aktiv), daher wurde der Slot nicht gewechselt. Versuch es noch einmal."
+        "normalNotRestored": "Deine normalen Einstellungen konnten vorher nicht wiederhergestellt werden (ein Spielprofil war aktiv), daher wurde der Slot nicht gewechselt. Versuch es noch einmal.",
+        "noIdentify": "{{device, capitalize}} kann mit dieser Firmware nicht THIS ONE auf dem Bildschirm blinken lassen. Aktualisiere die Firmware, um das zu nutzen."
       },
       "usb": {
         "network": "Die App konnte nicht mit {{device_dat}} sprechen: Vielleicht benutzt es ein anderes Programm, oder die USB-Verbindung ist abgebrochen. Schließ andere Konfigurator-Fenster, zieh dann {{device_akk}} ab und steck es wieder ein.",
@@ -1967,6 +1971,23 @@
       "restartToUpdate": "Neu starten für das Update auf {{version}}",
       "createShortcut": "Desktop-Verknüpfung erstellen",
       "quit": "Beenden"
+    },
+    "boards": {
+      "label": "Boards",
+      "count_one": "{{count}} Board verbunden",
+      "count_other": "{{count}} Boards verbunden",
+      "current": "in Benutzung",
+      "simulated": "Simuliertes Board",
+      "slot": "Slot {{slot}}",
+      "noController": "Kein Controller",
+      "busy": "Von einem anderen Programm belegt",
+      "unreadable": "Nicht lesbar",
+      "more_one": "{{count}} weiteres…",
+      "more_other": "{{count}} weitere…",
+      "all": "Alle Boards",
+      "find": "Board suchen",
+      "identifyTip": "In Benutzung. Klicken: THIS ONE blinkt auf seinem Bildschirm",
+      "switchTip": "Klicken, um dieses Board anzuzeigen (THIS ONE blinkt auf seinem Bildschirm)"
     }
   },
   "ad": {

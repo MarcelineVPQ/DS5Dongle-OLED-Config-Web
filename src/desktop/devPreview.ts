@@ -4,7 +4,8 @@
 // owning them. Only changes what the app shows; nothing is sent to the dongle.
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import type { BridgeIdentity } from "../protocol/bridgeClient";
-import { SIM_BOARD_FAULTS, SIM_FLASH_SPEEDS, SimulatedBoard, type SimBoardFault, type SimBoardState, type SimFlashSpeed } from "../protocol/simulatedBoard";
+import { DEFAULT_SIM_BOARD_ID, SIM_BOARD_FAULTS, SIM_FLASH_SPEEDS, SimulatedBoard, type SimBoardFault, type SimBoardState, type SimFlashSpeed } from "../protocol/simulatedBoard";
+import { SimulatedDongle } from "../protocol/simulatedDongle";
 import { COLORWAYS } from "./live/colorways";
 import { readPref, useFlagPref, usePref, writePref } from "./storage";
 
@@ -137,7 +138,7 @@ export function simulatedBoard(): SimulatedBoard | null {
     version: version === "" ? null : (version ?? undefined),
     fault: pick(SIM_FAULT_KEY, SIM_BOARD_FAULTS),
     speed: pick(SIM_SPEED_KEY, SIM_SPEEDS),
-    dongle: { live: true, protoMinor: 19, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
+    dongle: { live: true, protoMinor: 20, boardId: DEFAULT_SIM_BOARD_ID, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
   });
   // lifetime: NOT-WORTH — one listener on the one board per page load: keeps its state across restarts
   board.onChange(() => {
@@ -146,6 +147,28 @@ export function simulatedBoard(): SimulatedBoard | null {
   });
   simBoard = board;
   return board;
+}
+
+// More simulated boards beside it (Developer card, 0..19), to see the rail's
+// board stack with many boards. Each has its own board id; every other one
+// has the first board's USB serial, as boards paired to the same DualSense
+// do (the serial is the controller's MAC). They run the firmware only (no
+// BOOTSEL / update), and show up after the next page load.
+export const SIM_EXTRA_KEY = "ds5.dev.simExtraBoards";
+export const SIM_EXTRA_COUNTS = Array.from({ length: 20 }, (_, i) => String(i));
+export const simBoardId = (n: number): string => `E66141030000${n.toString(16).padStart(4, "0")}`.toUpperCase();
+// cache: OK — key=none (the extra simulated boards per page load); invalidated=never (the count applies at the next load); bound=19 boards
+let simExtras: SimulatedDongle[] | null = null;
+export function extraSimulatedBoards(): readonly SimulatedDongle[] {
+  if (!simulatedDongleOn()) return [];
+  if (simExtras) return simExtras;
+  const n = Number(pick(SIM_EXTRA_KEY, SIM_EXTRA_COUNTS) ?? "0");
+  simExtras = Array.from(
+    { length: n },
+    (_, i) =>
+      new SimulatedDongle({ live: true, protoMinor: 20, boardId: simBoardId(i + 1), serial: i % 2 === 0 ? DEFAULT_SIM_BOARD_ID : simBoardId(i + 1), version: "v0.9.5-dev.19-oled-edition+simulated" }),
+  );
+  return simExtras;
 }
 
 // The Developer card's view of the simulated board.

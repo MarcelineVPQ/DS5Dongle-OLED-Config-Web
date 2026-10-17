@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **Several boards on one PC.** With two or more boards plugged in (any number), the side bar's status line becomes a stack: one row per board with its name, firmware, controller and slot, the one in use marked. Click another row to switch to it; the board then flashes **THIS ONE** on its screen (and blinks its light), so you can see which one you're on. It also flashes when the app connects while several boards are there and before a firmware update. With many boards, three rows show and **N more…** opens a list you can search. The app opens the board you used last. Boards are told apart by their own id (firmware 0.9.5-dev.19), not by the USB serial, which is the paired controller's and can be the same on two boards.
+
 ### Changed
 
 - **A Fail's picked details show in the warning color.** On a game's test sheet, the details you pick under a Fail (Feels weak, Plain vibration only, Sound problems) were green like a pass; they're problems, so they now take the warning color, in every theme and with Color vision.
@@ -42,6 +46,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **The Games badge tells you what's waiting and takes you there.** The number on the Games rail item said only "1 recommended change", while the library's **Games that need setup** said 0, so there was no way to tell which game to open. Often it isn't a game at all: keeping the controller's volume at full, or a launcher's default Proton, is a change for this computer. Now the badge's tooltip names what's waiting (for example "Recommended: Keep the controller's volume and microphone level at full when it reconnects"; up to three, then "+2 more"). A click on Games opens the settings panel at **Recommended changes**, even when the panel was hidden or you're already on Games. The library counts the two kinds apart: **Games that need setup** counts games, and a new **This computer: 1 change** chip counts the rest and opens them. The two always add up to the badge, and Recommended changes says the same counts in its header (for example "8 games · This computer: 2 changes"). In Recommended changes, each game's changes are listed under its name, then **This computer**. All 7 languages.
 - **No more error in the log at every start with Games off.** With Games not allowed, the Controller page's background still asked for game art, was refused and logged an error each time the page loaded. It now asks only once you allow Games, and the art shows as soon as you do, without a restart.
 - **You can see which part of the controller drawing has the keyboard focus.** On the standard DualSense, focus, hover and the selected part barely showed on most parts and not at all on Haptic feedback, Speaker, PS, Touch pad and Light bar. Every part of both drawings now gets a clear ring around its own shape, in every colorway and theme, white and black controllers included.
+- **A firmware update never writes the wrong board.** With several boards, the update used the first board in update mode it found. It now writes only the board it restarted (by its id, or the one that newly appeared); when it can't tell, it stops and says to unplug the boards you don't want to update. Install on the setup screen and Install again follow the same rule, and the app waits for the updated board to come back instead of switching to another one.
+- **Staged changes stay with their own board.** Changes waiting for Save (buttons, calibration, stick curves, PC sleep options) were kept when "the same board" came back, judged by the USB serial; two boards paired to the same controller have the same one. They're now kept only for the same board by its id.
 
 ## [0.9.5-dev.18] - 2026-10-17
 

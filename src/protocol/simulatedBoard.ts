@@ -26,6 +26,8 @@ export const SIM_FLASH_SPEEDS = { fast: 5, normal: 250, real: 900 } as const;
 export type SimFlashSpeed = keyof typeof SIM_FLASH_SPEEDS;
 
 export const FLASH_BASE = 0x10000000;
+// The simulated board's own id (and its USB serial while no controller is paired).
+export const DEFAULT_SIM_BOARD_ID = "E6614103E7A1B2C3";
 export const FLASH_BYTES = 4 * 1024 * 1024; // the Pico 2 W's flash
 const SECTOR = 0x1000;
 // What the simulated board runs until it's updated (dev builds).
@@ -56,6 +58,10 @@ export class SimulatedBoard {
   private readonly restartMs: number;
   private readonly dongleOpts: SimulatedDongleOptions;
   private readonly listeners = new Set<() => void>();
+  // Its own id (protocol 1.20): what the firmware reports in identity and
+  // what its boot ROM names itself by in BOOTSEL (the USB serial there).
+  // Tests set another before it comes back to plug in a different board.
+  boardId: string;
   // The device on USB in this state (a new one each time it enumerates).
   // cache: OK — key=none (the running firmware's device); invalidated=dropped on every state change (go); bound=1
   private running: SimulatedDongle | null = null;
@@ -79,6 +85,7 @@ export class SimulatedBoard {
     this.bootselMs = opts.bootselMs ?? 800;
     this.restartMs = opts.restartMs ?? 1500;
     this.dongleOpts = opts.dongle ?? {};
+    this.boardId = (this.dongleOpts.boardId ?? DEFAULT_SIM_BOARD_ID).toUpperCase();
   }
 
   // The Developer card's failure and speed, for the next update.
@@ -96,7 +103,7 @@ export class SimulatedBoard {
   // The firmware's configurator device while it runs, else null (not on USB).
   dongle(): SimulatedDongle | null {
     if (this.state !== "dongle") return null;
-    this.running ??= new SimulatedDongle({ ...this.dongleOpts, version: this.version ?? UNKNOWN_VERSION, onBootsel: () => this.enterBootsel() });
+    this.running ??= new SimulatedDongle({ ...this.dongleOpts, boardId: this.boardId, version: this.version ?? UNKNOWN_VERSION, onBootsel: () => this.enterBootsel() });
     return this.running;
   }
 
@@ -198,7 +205,7 @@ export class SimulatedBootloader implements PicoflashHandle {
     return { toString: () => "RP2350" };
   }
   getUsbDeviceInfo(): PicoflashUsbInfo {
-    return { vendorId: 0x2e8a, productId: 0x000f, serialNumber: "SIMULATED", productName: "RP2350 Boot", manufacturerName: "Raspberry Pi" };
+    return { vendorId: 0x2e8a, productId: 0x000f, serialNumber: this.board.boardId, productName: "RP2350 Boot", manufacturerName: "Raspberry Pi" };
   }
   isConnected(): boolean {
     return this.board.claimed === this;

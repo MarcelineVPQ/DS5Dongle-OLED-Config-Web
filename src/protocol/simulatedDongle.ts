@@ -70,7 +70,12 @@ export interface SimulatedDongleOptions {
   audioCountersLegacy?: "none" | "cut";
   version?: string;
   // The board's USB serial number (default: the one simulated board's).
+  // The firmware makes it the paired controller's MAC, so two boards paired
+  // to one DualSense have the same serial: tests give them the same one.
   serial?: string;
+  // Protocol 1.20: the board's own id (identity [50..57], 16 hex digits),
+  // the same whatever controller is paired (default: the default serial).
+  boardId?: string;
   // BOOTSEL (0xF6 0x08) hands the board to its bootloader: the simulated
   // board (simulatedBoard.ts) then shows up as an RP2350 in BOOTSEL. Without
   // it the device just vanishes (the tests' fake).
@@ -193,6 +198,10 @@ export class SimulatedDongle implements Ds5Transport {
   readonly oledScreens = new SimOledScreens();
   // The narrator byte after the config body (protocol 1.3): 0xFF off, 1..7.
   narrator = 0xff;
+  // Protocol 1.20: the board's own id, and the identify screen (0xF6 0x1A)
+  // asks: the tenths of each (0 = stop), newest last.
+  boardId: string;
+  identifies: number[] = [];
   private get minor() {
     return this.opts.protoMinor ?? 6;
   }
@@ -254,6 +263,7 @@ export class SimulatedDongle implements Ds5Transport {
   constructor(private readonly opts: SimulatedDongleOptions = {}) {
     this.oledScreen = opts.live ? 0 : 2;
     this.serial = opts.serial ?? "E6614103E7A1B2C3";
+    this.boardId = (opts.boardId ?? "E6614103E7A1B2C3").toUpperCase();
   }
 
   // Live mode: the firmware's Status screen, packed like the firmware's
@@ -594,6 +604,9 @@ export class SimulatedDongle implements Ds5Transport {
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
+    } else if (func === 0x1a && this.minor >= 20) {
+      // 1.20 identify: [tenths] (no byte = 3 s, 0 stops, max 10 s), answered at once.
+      this.identifies.push(payload.length >= 2 ? Math.min(arg, 100) : 30);
     } else if (func === 0x19 && this.minor >= 19) {
       // 1.19 controller button for the OLED screens: [button, hold ms lo, hi] (deferred).
       const hold = (payload[2] ?? 0) | ((payload[3] ?? 0) << 8);
@@ -780,7 +793,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   private identity(): Uint8Array {
     const minor = this.minor;
-    const out = new Uint8Array(minor >= 16 ? IDENTITY_BYTES : minor >= 14 ? 48 : minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
+    const out = new Uint8Array(minor >= 20 ? IDENTITY_BYTES : minor >= 16 ? 49 : minor >= 14 ? 48 : minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
     out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.bodySize, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
@@ -827,6 +840,11 @@ export class SimulatedDongle implements Ds5Transport {
     if (minor >= 17) out[46] |= 0x20; // FEATURES3: the mic echo cancellation (1.17)
     if (minor >= 18) out[46] |= 0x40; // FEATURES3: remote KEY0 / KEY1 presses (1.18)
     if (minor >= 19) out[46] |= 0x80; // FEATURES3: controller buttons for the OLED screens (1.19)
+    if (minor >= 20) {
+      out[49] = 0x01 | 0x02; // FEATURES4: board id, identify (1.20)
+      // loop: HOT-PATH-OK — dev/test fake only; N = 8 id bytes
+      for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
+    }
     return out;
   }
 

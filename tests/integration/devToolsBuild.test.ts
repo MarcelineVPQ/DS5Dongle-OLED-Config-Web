@@ -154,7 +154,8 @@ describe("the simulated board", () => {
     const { devPreview, firmwareUpdate, getDevices } = await withSimulation(true);
     expect(devPreview.simulatedBoard()).not.toBeNull();
     expect((await firmwareUpdate.findBootloader())?.getTarget().toString()).toBe("RP2350");
-    expect(getDevices).not.toHaveBeenCalled();
+    // Real boards in BOOTSEL are listed beside it (the board stack shows both); the simulated one comes first.
+    expect(getDevices).toHaveBeenCalledOnce();
   });
   it("never in a release build: no simulated board, only real USB", async () => {
     const { devPreview, firmwareUpdate, getDevices } = await withSimulation(false);

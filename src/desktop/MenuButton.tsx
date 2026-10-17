@@ -21,22 +21,37 @@ interface Props {
   content: ReactNode; // what the button shows
   iconOnly?: boolean; // the button shows only an icon: the label is its name (else its visible text is)
   children: ReactNode; // the items
+  // Above the items, not an item (the board list's search field): focused
+  // when the menu opens if it holds [data-autofocus]; ↓ from it goes to the items.
+  header?: ReactNode;
+  // Called when the menu closes (the board list clears its search).
+  onClose?: () => void;
 }
 
 const ITEMS = '[role^="menuitem"]:not(:disabled)';
 
-export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", align, content, iconOnly = true, children }: Props) {
+export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", align, content, iconOnly = true, children, header, onClose }: Props) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   useTopLayer(menu, open, { anchor: button, align, gap: 4 });
+  // The latest onClose, for the outside-click listener (which lives while the menu is open).
+  // cache: OK — key=none (mirrors the onClose prop); invalidated=every render; bound=1 function
+  const onCloseRef = useRef(onClose);
+  // lifetime: OK — acquires nothing (mirrors the prop into a ref)
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
   // lifetime: OK — cleanup: removes the outside-click listener (menu closes / unmount)
   useEffect(() => {
     if (!open) return;
-    menu.current?.querySelector<HTMLElement>(ITEMS)?.focus();
+    (menu.current?.querySelector<HTMLElement>("[data-autofocus]") ?? menu.current?.querySelector<HTMLElement>(ITEMS))?.focus();
     const onDown = (e: PointerEvent) => {
       const at = e.target as Node;
-      if (!menu.current?.contains(at) && !button.current?.contains(at)) setOpen(false);
+      if (!menu.current?.contains(at) && !button.current?.contains(at)) {
+        setOpen(false);
+        onCloseRef.current?.();
+      }
     };
     // lifetime: OK — removed in the effect cleanup (menu closes / unmount)
     document.addEventListener("pointerdown", onDown);
@@ -44,6 +59,7 @@ export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", ali
   }, [open]);
   const close = (focusButton: boolean) => {
     setOpen(false);
+    onClose?.();
     if (focusButton) button.current?.focus();
   };
   const onMenuKeys = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -55,6 +71,8 @@ export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", ali
     }
     if (e.key === "Tab") return close(false);
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+    // Home / End inside the search field move its caret.
+    if ((e.key === "Home" || e.key === "End") && (e.target as HTMLElement).tagName === "INPUT") return;
     e.preventDefault();
     const items = [...e.currentTarget.querySelectorAll<HTMLElement>(ITEMS)];
     const at = items.indexOf(document.activeElement as HTMLElement);
@@ -94,6 +112,7 @@ export function MenuButton({ label, title, className = "dk-btn dk-icon-btn", ali
           // A menuitem ran or a radio item was picked (its own click first, this bubbles after): the menu closes.
           onClick={(e) => (e.target as HTMLElement).closest('[role="menuitem"], [role="menuitemradio"]') && close(true)}
         >
+          {header}
           {children}
         </div>
       )}

@@ -6,7 +6,16 @@
 //   4. the app reconnects on its own and the caller confirms the version.
 // A new (or non-dongle) Pico plugged in with BOOTSEL held skips step 2:
 // installFirmware() flashes it directly (first-run setup).
-import type { Ds5BridgeClient } from "../protocol/bridgeClient";
+//
+// Several boards (any number): the board being updated flashes its "THIS
+// ONE" screen first (protocol 1.20), and only a bootloader known to be it is
+// written: the one whose USB serial is its board id, else the one BOOTSEL
+// device that appeared after it rebooted. Several new ones, or several and
+// none identifiable: nothing is written, and the message says to unplug the
+// boards that shouldn't be updated (chooseBootTarget, hooks/boards.ts).
+import { type Ds5BridgeClient, sleep } from "../protocol/bridgeClient";
+import { chooseBootTarget } from "../hooks/boards";
+import { KeyedError, logged } from "../errorText";
 import { PicoflashAPI, parseUf2Regions, Uf2FileError, type PicoflashHandle } from "../flash";
 import i18n from "../i18n";
 import { simulatedBoard } from "./devPreview";
@@ -20,6 +29,11 @@ export interface FirmwareProgress {
 }
 
 const BOOTLOADER_TIMEOUT_MS = 20_000;
+// The board's identify screen shows at least this long before it reboots.
+const IDENTIFY_BEFORE_UPDATE_MS = 2000;
+// A bootloader that looks like the target is checked again after this, so a
+// second board entering BOOTSEL at the same moment can't be mistaken for it.
+const BOOTLOADER_SETTLE_MS = 500;
 const REBOOT_DELAY_MS = 500;
 
 // Every firmware write goes through here: from the reboot into BOOTSEL until
@@ -47,18 +61,27 @@ export async function updateFirmware(client: Ds5BridgeClient, shown: LatestFirmw
   const desktop = window.desktop;
   if (!desktop) throw new Error("Firmware updates need the desktop app.");
 
+  // Which board this is, and which bootloaders are on USB already: only one
+  // that is this board, or that appears after it reboots, is written.
+  const boardId = client.boardId;
+  const before = new Set((await findBootloaders()).map(serialOf));
+  // The board being updated shows itself (with several boards on the desk).
+  const shownAt = Date.now();
+  if (client.identifies) await client.identify().catch(logged("flashing the identify screen before an update (the update itself goes on)"));
+
   onProgress({ step: "downloading" });
   const { version, bytes } = await shownFirmware(desktop, shown);
   // Parse before touching the device: a malformed file must fail here, while
   // the dongle is still running its current firmware.
   const regions = firmwareRegions(bytes);
+  if (client.identifies) await sleep(Math.max(0, shownAt + IDENTIFY_BEFORE_UPDATE_MS - Date.now()));
 
   return whileWriting(async () => {
     onProgress({ step: "rebooting" });
     await client.enterBootsel();
 
     onProgress({ step: "waiting-bootloader" });
-    const device = await waitForBootloader();
+    const device = await waitForBootloader(boardId, before);
 
     await flash(device, regions, onProgress);
     return version;
@@ -88,12 +111,32 @@ function firmwareRegions(bytes: Uint8Array): ReturnType<typeof parseUf2Regions> 
   }
 }
 
-// A Pico in BOOTSEL mode (PICOBOOT), if one is plugged in. Dev builds with
-// the simulated board: its RP2350 bootloader while it is in BOOTSEL.
+// Every Pico in BOOTSEL mode (PICOBOOT) on USB. Dev builds with the
+// simulated board: its RP2350 bootloader too while it is in BOOTSEL.
+export async function findBootloaders(): Promise<PicoflashHandle[]> {
+  const sim = simulatedBoard()?.bootloader();
+  const real = await PicoflashAPI.getDevices();
+  return sim ? [sim, ...real] : real;
+}
+
+// A Pico in BOOTSEL mode, if one is plugged in (the setup screen's look).
 export async function findBootloader(): Promise<PicoflashHandle | null> {
-  const sim = simulatedBoard();
-  if (sim) return sim.bootloader();
-  return (await PicoflashAPI.getDevices())[0] ?? null;
+  return (await findBootloaders())[0] ?? null;
+}
+
+const serialOf = (d: PicoflashHandle): string => d.getUsbDeviceInfo().serialNumber ?? "";
+
+// The bootloader to write now when nothing rebooted into it first (the
+// setup screen's Install, Install again): the board with this id if known,
+// else the only one. Several and none identifiable: the keyed "unplug the
+// others" message; none: noBootsel.
+export async function onlyBootloader(boardId: string | null = null): Promise<PicoflashHandle> {
+  const devices = await findBootloaders();
+  if (devices.length === 0) throw new Error(i18n.t("desktop.firmware.noBootsel"));
+  const choice = chooseBootTarget(devices.map(serialOf), boardId, new Set());
+  // error: SHOWN — desktop.firmware.severalBootsel: the firmware banner / setup screen says to unplug the boards that shouldn't be updated
+  if (typeof choice === "string") throw new KeyedError("desktop.firmware.severalBootsel", { count: devices.length });
+  return devices[choice.pick];
 }
 
 const FLASH_CHUNK = 0x10000; // 64 KB: 16 flash sectors
@@ -139,14 +182,29 @@ export async function flash(device: PicoflashHandle, regions: ReturnType<typeof 
   }
 }
 
-async function waitForBootloader(): Promise<PicoflashHandle> {
-  const deadline = Date.now() + BOOTLOADER_TIMEOUT_MS;
+// The rebooted board's bootloader (chooseBootTarget): never a guess.
+export async function waitForBootloader(boardId: string | null, before: ReadonlySet<string>, timeoutMs = BOOTLOADER_TIMEOUT_MS): Promise<PicoflashHandle> {
+  const deadline = Date.now() + timeoutMs;
   // loop: SERIAL-REQUIRED — polls until a deadline (300 ms apart) for the board in BOOTSEL
   while (Date.now() < deadline) {
-    const device = await findBootloader();
-    if (device) return device;
-    // lifetime: OK — fires once (300 ms between bootloader looks, bounded by the deadline)
-    await new Promise((r) => setTimeout(r, 300));
+    const devices = await findBootloaders();
+    // loop: NOT-WORTH — N = BOOTSEL devices on USB (a few); one look every 300 ms during an update
+    const choice = chooseBootTarget(devices.map(serialOf), boardId, before);
+    // error: SHOWN — desktop.firmware.severalBootsel: the firmware banner says to unplug the boards that shouldn't be updated; nothing was written
+    if (choice === "ambiguous") throw new KeyedError("desktop.firmware.severalBootsel", { count: devices.length });
+    if (choice !== "wait") {
+      // Look again a moment later: still the one (and only one new one)?
+      const picked = serialOf(devices[choice.pick]);
+      await sleep(BOOTLOADER_SETTLE_MS);
+      const again = await findBootloaders();
+      // loop: NOT-WORTH — N = BOOTSEL devices on USB (a few); once per candidate
+      const second = chooseBootTarget(again.map(serialOf), boardId, before);
+      // error: SHOWN — desktop.firmware.severalBootsel: a second board entered BOOTSEL at the same moment; nothing was written
+      if (second === "ambiguous") throw new KeyedError("desktop.firmware.severalBootsel", { count: again.length });
+      if (second !== "wait" && serialOf(again[second.pick]) === picked) return again[second.pick];
+      continue;
+    }
+    await sleep(300);
   }
   throw new Error(i18n.t("desktop.firmware.noBootsel"));
 }

@@ -3392,6 +3392,104 @@ html[data-theme="light"] .live-ctl {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 10.5px;
 }
+/* The board stack (AppRail.tsx BoardStack): one row per board, the board
+   in use marked like the active page (the accent bar). Collapsed, only the
+   board in use (with the number of boards on its icon) and the list button
+   show; open, up to BOARD_ROWS rows and "N more…" (hidden with few boards).
+   Idle cost: none (CSS states only). */
+.rail-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rail-boards-head {
+  display: none; /* collapsed; shown with the labels, below */
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.rail-board {
+  min-height: 40px;
+  cursor: pointer;
+}
+.rail-board:hover {
+  background: var(--bg-segment);
+}
+.rail-board:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: -2px;
+}
+.rail-board.current {
+  background: var(--dk-sel-bg);
+  box-shadow: inset 3px 0 0 var(--dk-sel-border);
+}
+.rail-board.current .rail-label {
+  color: var(--text-strong);
+}
+.rail-board-detail {
+  font-family: inherit;
+}
+.rail-dot.idle,
+.rail-board.idle .rail-dot,
+.rail-dot.sim,
+.rail-board.sim .rail-dot {
+  background: var(--bg-segment);
+  color: var(--text-soft);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+}
+.rail-dot.ok,
+.rail-board.ok .rail-dot {
+  background: var(--status-good);
+}
+.rail-dot.warn,
+.rail-board.warn .rail-dot {
+  background: var(--status-warn);
+}
+/* The number of boards, on the icon of the board in use: seen collapsed only. */
+.rail-board-count {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+}
+.rail-slot.pinned .rail-board-count,
+.app-rail:not(.picked):not(.locked):hover .rail-board-count,
+.app-rail:not(.locked):has(:focus-visible) .rail-board-count {
+  display: none;
+}
+/* Collapsed: the other boards' rows and the heading wait for the open rail
+   (shown in the same states as the labels). */
+.rail-board:not(.current) {
+  display: none;
+}
+.rail-slot.pinned .rail-board,
+.app-rail:not(.picked):not(.locked):hover .rail-board,
+.app-rail:not(.locked):has(:focus-visible) .rail-board {
+  display: flex;
+}
+.rail-slot.pinned .rail-boards-head,
+.app-rail:not(.picked):not(.locked):hover .rail-boards-head,
+.app-rail:not(.locked):has(:focus-visible) .rail-boards-head {
+  display: block;
+}
+/* Open with few boards, every row shows: no "more" button. */
+.rail-slot.pinned .rail-boards.few .rail-boards-more:not([aria-expanded="true"]),
+.app-rail:not(.picked):not(.locked):hover .rail-boards.few .rail-boards-more:not([aria-expanded="true"]),
+.app-rail:not(.locked):has(:focus-visible) .rail-boards.few .rail-boards-more:not([aria-expanded="true"]) {
+  display: none;
+}
+.rail-boards-search {
+  margin: 2px 2px 4px;
+}
+.dk-menu .rail-boards-item {
+  min-height: 34px;
+  max-width: 320px;
+}
+/* With many boards the list scrolls inside the window. */
+.dk-menu:has(.rail-boards-item) {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
 
 /* ---- Games → Home's main view: Continue playing, then the Library
    (filters with counts, sort, Show) over the cover grid. The art is the

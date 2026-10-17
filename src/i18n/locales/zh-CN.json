@@ -283,7 +283,8 @@
       "didntStart": "新固件没有启动：{{device}}回到了 BOOTSEL 模式，仍在等待固件。请保持连接，然后重新安装。",
       "installAgain": "重新安装",
       "waitForApp": "请先等待应用更新完成。",
-      "wrongVersion": "重启后，{{device}} 报告的固件是 {{installed}}，而不是 {{expected}}。请重新安装更新。"
+      "wrongVersion": "重启后，{{device}} 报告的固件是 {{installed}}，而不是 {{expected}}。请重新安装更新。",
+      "severalBootsel": "有 {{count}} 块开发板处于更新模式，应用无法判断要更新哪一块。请拔下不想更新的开发板，然后重试。"
     },
     "recovered": {
       "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
@@ -1305,7 +1306,7 @@
         "no-gamescope": "未安装 gamescope"
       },
       "simulated": "模拟{{device}}（无需硬件）",
-      "simulatedHint": "应用改为模拟{{device}}，而不使用 USB：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。",
+      "simulatedHint": "应用会在侧栏的开发板列表中添加一块模拟开发板，与真实开发板并列（在那里切换）：所有页面都可用，输入会自动变化。用于无硬件测试（例如 Windows 虚拟机）。不模拟触觉、音频和配对；固件更新和首次设置会模拟（见下方）。",
       "simCore1": "模拟 Core1",
       "simCore1Hint": "让模拟中的 Core1 停在某个启动步骤，以查看 {{deviceName}} 页面的警告。",
       "simCore1Runs": "正常运行",
@@ -1335,7 +1336,9 @@
         "normal": "几秒",
         "real": "与真实开发板相同（约 12 秒）"
       },
-      "restartsPage": "会重新加载页面。"
+      "restartsPage": "会重新加载页面。",
+      "simExtra": "更多模拟开发板",
+      "simExtraHint": "向侧栏的开发板列表添加模拟开发板，以查看有很多开发板时的样子：每块都有自己的开发板 ID，每隔一块使用与第一块相同的 USB 序列号（与配对同一个 DualSense 的开发板一样）。它们只运行固件（不能更新）。重新加载页面后生效。"
     },
     "knobs": {
       "cardOpacity": "卡片不透明度",
@@ -1802,7 +1805,8 @@
         "transfer": "与 {{device}} 通信失败（报告 {{report}}）。请拔下后重新插上。",
         "badConfig": "{{device}} 发送了此应用无法读取的设置。请更新固件或应用。",
         "stalled": "{{device}} 拒绝了该请求（报告 {{report}}）：它的固件不支持。请更新固件。",
-        "normalNotRestored": "未能先恢复你的常规设置（游戏配置文件正在使用），因此没有切换槽位。请重试。"
+        "normalNotRestored": "未能先恢复你的常规设置（游戏配置文件正在使用），因此没有切换槽位。请重试。",
+        "noIdentify": "使用此固件时，{{device}}无法在屏幕上闪烁 THIS ONE。请更新固件后使用。"
       },
       "usb": {
         "network": "应用无法与 {{device}} 通信：可能有其他程序正在使用它，或 USB 连接已断开。请关闭其他配置工具窗口，然后拔下 {{device}} 再插上。",
@@ -1950,6 +1954,23 @@
       "restartToUpdate": "重启以更新到 {{version}}",
       "createShortcut": "创建桌面快捷方式",
       "quit": "退出"
+    },
+    "boards": {
+      "label": "开发板",
+      "count_one": "已连接 {{count}} 块开发板",
+      "count_other": "已连接 {{count}} 块开发板",
+      "current": "使用中",
+      "simulated": "模拟开发板",
+      "slot": "槽位 {{slot}}",
+      "noController": "无控制器",
+      "busy": "被其他程序占用",
+      "unreadable": "无法读取",
+      "more_one": "还有 {{count}} 块…",
+      "more_other": "还有 {{count}} 块…",
+      "all": "所有开发板",
+      "find": "查找开发板",
+      "identifyTip": "使用中。点击后其屏幕会闪烁 THIS ONE",
+      "switchTip": "点击以显示这块开发板（其屏幕会闪烁 THIS ONE）"
     }
   },
   "ad": {

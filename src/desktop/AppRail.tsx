@@ -8,8 +8,20 @@
 // so its icons are a quick way to show and hide the settings panel without
 // the rail opening and closing all the time. Pin and lock exclude each other
 // (keeping it open unlocks it; locking it unpins it). Both remembered.
-// Idle cost: none (CSS states; no timers or listeners added).
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+//
+// Several boards (any number, protocol 1.20 tells them apart): the status
+// becomes a stack, one row per board (its name, connection, firmware,
+// controller and slot), the board in use marked. A row shows that board and
+// flashes "THIS ONE" on its OLED; the board in use's row just flashes it.
+// At most BOARD_ROWS rows show; the rest are in the "N more…" list, which
+// can be searched. Collapsed (icons only), the board in use shows with the
+// number of boards on its icon, and the list button. A simulated board
+// (Developer card) is a row too, marked as simulated, never a green check.
+// Idle cost: none (CSS states; no timers or listeners added; the other
+// boards' reads live in useDs5Bridge, every 15 s while shown).
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { BoardSummary } from "../hooks/boards";
+import { MenuButton } from "./MenuButton";
 import { appVersionLabel, isDevelopmentBuild } from "./appVersion";
 import { CLEAR_GLASS_RAIL, REGULAR_GLASS } from "./glass/variants";
 import { useGlass } from "./glass/useGlass";
@@ -18,12 +30,14 @@ import { useFlagPref } from "./storage";
 import { lastBoardName } from "./hardwareName";
 import { useTranslation } from "react-i18next";
 import { protonApplies } from "./games/platform";
-import { Gamepad2, Info, Joystick, Lock, LockOpen, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
+import { ChevronsUpDown, FlaskConical, Gamepad2, Info, Joystick, Lock, LockOpen, PanelRightClose, PanelRightOpen, Settings, Usb } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { NoticeTask, Reminder } from "./notices";
 import { panelTasks, togglePanel } from "./accordion/Section";
 
 export type RailItem = "controller" | "dongle" | "games" | "app" | "about";
+// How many board rows the stack shows before "N more…".
+export const BOARD_ROWS = 3;
 const PIN_KEY = "ds5.railPinned";
 export const RAIL_LOCK_KEY = "ds5.railLocked";
 
@@ -96,9 +110,149 @@ interface Props {
   firmware: string | null;
   deviceLabel: string;
   device: string; // hardwareName()
+  // Every board on USB (useDs5Bridge.boards) and the one in use.
+  boards?: readonly BoardSummary[];
+  currentBoard?: string | null;
+  onBoard?: (key: string) => void;
 }
 
-export default function AppRail({ active, onSelect, gamesSupported, reminders, connected, connecting, firmware, deviceLabel, device }: Props) {
+// A board's lines in the stack: its name (or "Simulated board"), its
+// firmware, and its controller and slot (or why it can't be read).
+export function boardLines(t: TFunction, b: BoardSummary, device: string): { name: string; version: string; detail: string } {
+  const name = b.kind === "simulated" ? t("desktop.boards.simulated") : (b.name ?? device);
+  const controller = b.model === "edge" ? "DualSense Edge" : "DualSense";
+  const detail =
+    b.reach === "busy"
+      ? t("desktop.boards.busy")
+      : b.reach === "unreadable"
+        ? t("desktop.boards.unreadable")
+        : `${b.controllerConnected ? controller : t("desktop.boards.noController")} · ${t("desktop.boards.slot", { slot: b.slot ?? 0 })}`;
+  return { name, version: b.version ?? "", detail };
+}
+
+// The rows on show: the first BOARD_ROWS, with the board in use always among them.
+export function shownBoards<T extends { key: string }>(boards: readonly T[], current: string | null): T[] {
+  const first = boards.slice(0, BOARD_ROWS);
+  // loop: NOT-WORTH — N ≤ boards on USB (a few, up to ~20); per rail render
+  if (!current || first.some((b) => b.key === current)) return first;
+  // loop: NOT-WORTH — N ≤ boards on USB; per rail render
+  const cur = boards.find((b) => b.key === current);
+  return cur ? [...first.slice(0, BOARD_ROWS - 1), cur] : first;
+}
+
+// The search in the board list: any of its lines, or its id.
+export function boardMatches(lines: { name: string; version: string; detail: string }, b: BoardSummary, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [lines.name, lines.version, lines.detail, b.boardId ?? "", b.serial ?? ""].join(" ").toLowerCase().includes(q);
+}
+
+function BoardStack({ boards, current, onBoard, device }: { boards: readonly BoardSummary[]; current: string | null; onBoard: (key: string) => void; device: string }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
+  // loop: NOT-WORTH — N = boards on USB (up to ~20); per rail render (a board change)
+  const lines = useMemo(() => new Map(boards.map((b) => [b.key, boardLines(t, b, device)])), [boards, t, device]);
+  const rows = shownBoards(boards, current);
+  const more = boards.length - rows.length;
+  const tipFor = (b: BoardSummary) => {
+    const l = lines.get(b.key)!;
+    // loop: HOT-PATH-OK — N = 3 lines per row tooltip, per rail render
+    const what = [l.name, l.version, l.detail].filter(Boolean).join("\n");
+    return `${what}\n${t(b.key === current ? "desktop.boards.identifyTip" : "desktop.boards.switchTip")}`;
+  };
+  // A board's icon: a check only for a real board in use; the simulated one
+  // its flask; "!" when it can't be read; else a plain dot.
+  const icon = (b: BoardSummary) => (b.kind === "simulated" ? <FlaskConical size={11} /> : b.reach !== "ok" ? "!" : b.key === current ? "✓" : "•");
+  const tone = (b: BoardSummary) => (b.kind === "simulated" ? "sim" : b.reach !== "ok" ? "warn" : b.key === current ? "ok" : "idle");
+  return (
+    <div className={`rail-boards${more > 0 ? "" : " few"}`} role="group" aria-label={t("desktop.boards.label")}>
+      <div className="rail-boards-head rail-label" role="status">
+        {t("desktop.boards.count", { count: boards.length })}
+      </div>
+      {/* loop: NOT-WORTH — N ≤ BOARD_ROWS rows; per rail render */}
+      {rows.map((b) => {
+        const l = lines.get(b.key)!;
+        const isCurrent = b.key === current;
+        return (
+          <button
+            key={b.key}
+            type="button"
+            className={`rail-status rail-board ${tone(b)}${isCurrent ? " current" : ""}`}
+            aria-current={isCurrent ? "true" : undefined}
+            title={tipFor(b)}
+            aria-label={`${l.name}, ${l.detail}${l.version ? `, ${l.version}` : ""}${isCurrent ? `, ${t("desktop.boards.current")}` : ""}`}
+            aria-description={t(isCurrent ? "desktop.boards.identifyTip" : "desktop.boards.switchTip")}
+            onClick={() => onBoard(b.key)}
+          >
+            <span className="rail-ic" aria-hidden="true">
+              <span className="rail-dot">{icon(b)}</span>
+              {isCurrent && <span className="rail-badge rail-board-count">{boards.length}</span>}
+            </span>
+            <span className="rail-label rail-status-text">
+              <span>{l.name}</span>
+              {l.version && <span className="rail-status-sub">{l.version}</span>}
+              <span className="rail-status-sub rail-board-detail">{l.detail}</span>
+            </span>
+          </button>
+        );
+      })}
+      <MenuButton
+        label={t("desktop.boards.all")}
+        title={t("desktop.boards.all")}
+        className="rail-link rail-boards-more"
+        iconOnly={false}
+        align="end"
+        onClose={() => setQuery("")}
+        content={
+          <>
+            <span className="rail-ic" aria-hidden="true">
+              <ChevronsUpDown size={18} />
+            </span>
+            <span className="rail-label">{more > 0 ? t("desktop.boards.more", { count: more }) : t("desktop.boards.all")}</span>
+          </>
+        }
+        header={
+          <input
+            className="dk-input rail-boards-search"
+            type="search"
+            data-autofocus
+            aria-label={t("desktop.boards.find")}
+            placeholder={t("desktop.boards.find")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                e.currentTarget.parentElement?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+              }
+            }}
+          />
+        }
+      >
+        {/* loop: NOT-WORTH — N = boards on USB (up to ~20); only while the list is open */}
+        {boards
+          .filter((b) => boardMatches(lines.get(b.key)!, b, query))
+          .map((b) => {
+            const l = lines.get(b.key)!;
+            return (
+              <button key={b.key} type="button" role="menuitemradio" aria-checked={b.key === current} className="dk-menu-item rail-boards-item" title={tipFor(b)} onClick={() => onBoard(b.key)}>
+                <span className={`rail-dot ${tone(b)}`} aria-hidden="true">
+                  {icon(b)}
+                </span>
+                <span className="rail-status-text">
+                  <span>{l.name}</span>
+                  {/* loop: HOT-PATH-OK — N = 2 lines per list item, only while the list is open */}
+                  <span className="rail-status-sub">{[l.detail, l.version].filter(Boolean).join(" · ")}</span>
+                </span>
+              </button>
+            );
+          })}
+      </MenuButton>
+    </div>
+  );
+}
+
+export default function AppRail({ active, onSelect, gamesSupported, reminders, connected, connecting, firmware, deviceLabel, device, boards = [], currentBoard = null, onBoard }: Props) {
   const { t } = useTranslation();
   const hiddenTasks = panelTasks.use();
   const [pinned, setPinned] = useFlagPref(PIN_KEY);
@@ -203,15 +357,20 @@ export default function AppRail({ active, onSelect, gamesSupported, reminders, c
           )}
         </div>
         <div className="rail-footer">
-          <div className={`rail-status ${connected ? "ok" : "warn"}`} title={connected ? `${status} (${deviceLabel})` : status} role="status">
-            <span className="rail-ic" aria-hidden="true">
-              <span className="rail-dot">{connected ? "✓" : "…"}</span>
-            </span>
-            <span className="rail-label rail-status-text">
-              <span>{connected ? t("desktop.status.connected") : status}</span>
-              {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
-            </span>
-          </div>
+          {/* With several boards, or a simulated one: the stack; else the one status line. */}
+          {onBoard && (boards.length > 1 || boards[0]?.kind === "simulated") ? (
+            <BoardStack boards={boards} current={currentBoard} onBoard={onBoard} device={device} />
+          ) : (
+            <div className={`rail-status ${connected ? "ok" : "warn"}`} title={connected ? `${status} (${deviceLabel})` : status} role="status">
+              <span className="rail-ic" aria-hidden="true">
+                <span className="rail-dot">{connected ? "✓" : "…"}</span>
+              </span>
+              <span className="rail-label rail-status-text">
+                <span>{connected ? t("desktop.status.connected") : status}</span>
+                {connected && firmware && <span className="rail-status-sub">{firmware}</span>}
+              </span>
+            </div>
+          )}
           <button
             type="button"
             className="rail-link rail-pin"

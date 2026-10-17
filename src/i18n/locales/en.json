@@ -282,7 +282,8 @@
       "didntStart": "The new firmware didn't start: {{device}} came back in BOOTSEL mode, still waiting for firmware. Keep it plugged in and install it again.",
       "installAgain": "Install again",
       "waitForApp": "Wait for the app update to finish first.",
-      "wrongVersion": "After restarting, {{device}} reports firmware {{installed}} instead of {{expected}}. Install the update again."
+      "wrongVersion": "After restarting, {{device}} reports firmware {{installed}} instead of {{expected}}. Install the update again.",
+      "severalBootsel": "{{count}} boards are in update mode, so the app can't tell which one to update. Unplug the ones you don't want to update, then try again."
     },
     "recovered": {
       "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
@@ -1319,7 +1320,7 @@
         "no-gamescope": "gamescope isn't installed"
       },
       "simulated": "Simulate {{device}} (no hardware)",
-      "simulatedHint": "The app simulates {{device}} instead of using USB: every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below).",
+      "simulatedHint": "The app adds a simulated {{device}} to the rail's board stack, beside any real boards (switch to it there): every page works, input moves on its own. For testing without hardware (e.g. the Windows VM). Haptics, audio and pairing aren't simulated; firmware updates and the first-time setup are (below).",
       "simCore1": "Simulated core1",
       "simCore1Hint": "Make core1 stop at a start-up step in the simulation, to see the warning under {{deviceName}}.",
       "simCore1Runs": "Runs normally",
@@ -1349,7 +1350,9 @@
         "normal": "A few seconds",
         "real": "Like a real board (about 12 s)"
       },
-      "restartsPage": "Restarts the page."
+      "restartsPage": "Restarts the page.",
+      "simExtra": "More simulated boards",
+      "simExtraHint": "Adds simulated boards to the rail's board stack, to see it with many boards: each has its own board id, and every other one the first one's USB serial (as boards paired to one DualSense have). They run the firmware only (no updates). Applies when the page restarts."
     },
     "knobs": {
       "cardOpacity": "Card opacity",
@@ -1816,7 +1819,8 @@
         "transfer": "Talking to {{device}} failed (report {{report}}). Unplug it and plug it back in.",
         "badConfig": "{{device, capitalize}} sent settings this app can't read. Update the firmware or the app.",
         "stalled": "{{device, capitalize}} refused the request (report {{report}}): its firmware doesn't know it. Update the firmware.",
-        "normalNotRestored": "Your normal settings couldn't be put back first (a game's profile was on), so the slot wasn't switched. Try again."
+        "normalNotRestored": "Your normal settings couldn't be put back first (a game's profile was on), so the slot wasn't switched. Try again.",
+        "noIdentify": "{{device, capitalize}} can't flash THIS ONE on its screen with this firmware. Update its firmware to use it."
       },
       "usb": {
         "network": "The app couldn't talk to {{device}}: another program may be using it, or the USB connection dropped. Close other configurator windows, then unplug {{device}} and plug it back in.",
@@ -1966,6 +1970,23 @@
       "restartToUpdate": "Restart to update to {{version}}",
       "createShortcut": "Create desktop shortcut",
       "quit": "Quit"
+    },
+    "boards": {
+      "label": "Boards",
+      "count_one": "{{count}} board connected",
+      "count_other": "{{count}} boards connected",
+      "current": "in use",
+      "simulated": "Simulated board",
+      "slot": "Slot {{slot}}",
+      "noController": "No controller",
+      "busy": "Used by another program",
+      "unreadable": "Can't be read",
+      "more_one": "{{count}} more…",
+      "more_other": "{{count}} more…",
+      "all": "All boards",
+      "find": "Find a board",
+      "identifyTip": "In use. Click to flash THIS ONE on its screen",
+      "switchTip": "Click to show this board (it flashes THIS ONE on its screen)"
     }
   },
   "ad": {

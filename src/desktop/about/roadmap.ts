@@ -418,6 +418,18 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
   {
     column: "next",
+    title: "Several boards on one PC",
+    text: "Every board shows in the side bar with its controller, slot and firmware; a click switches and flashes THIS ONE on its screen, and a firmware update only ever writes the board you chose.",
+    areas: ["dongle", "app"],
+  },
+  {
+    column: "planned",
+    title: "Every board at once",
+    text: "Name each board, update them all one after another, and game profiles that follow the board your game's controller is on.",
+    areas: ["dongle", "games"],
+  },
+  {
+    column: "next",
     title: "Clearer message when {{device}} is busy",
     text: "When another program is using {{device}}, the app says so (and which program, on Linux) instead of a raw USB error, and connects by itself once it's free.",
     areas: ["dongle"],

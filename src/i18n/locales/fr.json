@@ -283,7 +283,8 @@
       "didntStart": "Le nouveau firmware n’a pas démarré : {{device}} est revenu en mode BOOTSEL et attend toujours un firmware. Laisse-le branché et réinstalle-le.",
       "installAgain": "Réinstaller",
       "waitForApp": "Attends d'abord la fin de la mise à jour de l'appli.",
-      "wrongVersion": "Après le redémarrage, {{device}} indique le firmware {{installed}} au lieu de {{expected}}. Réinstalle la mise à jour."
+      "wrongVersion": "Après le redémarrage, {{device}} indique le firmware {{installed}} au lieu de {{expected}}. Réinstalle la mise à jour.",
+      "severalBootsel": "{{count}} cartes sont en mode mise à jour : l’app ne sait pas laquelle mettre à jour. Débranche celles que tu ne veux pas mettre à jour, puis réessaie."
     },
     "recovered": {
       "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
@@ -1320,7 +1321,7 @@
         "no-gamescope": "gamescope n'est pas installé"
       },
       "simulated": "Simuler {{device}} (sans matériel)",
-      "simulatedHint": "L’app simule {{device}} au lieu d’utiliser l’USB : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous).",
+      "simulatedHint": "L’app ajoute une carte simulée à la pile de cartes de la barre, à côté des vraies (bascule dessus là) : toutes les pages fonctionnent, les entrées bougent toutes seules. Pour tester sans matériel (p. ex. la VM Windows). Retours haptiques, audio et association ne sont pas simulés ; les mises à jour du firmware et la première installation le sont (ci-dessous).",
       "simCore1": "Core1 simulé",
       "simCore1Hint": "Arrête le Core1 de la simulation à une étape de démarrage, pour voir l'avertissement sous {{deviceName}}.",
       "simCore1Runs": "Fonctionne normalement",
@@ -1350,7 +1351,9 @@
         "normal": "Quelques secondes",
         "real": "Comme une vraie carte (environ 12 s)"
       },
-      "restartsPage": "Recharge la page."
+      "restartsPage": "Recharge la page.",
+      "simExtra": "Plus de cartes simulées",
+      "simExtraHint": "Ajoute des cartes simulées à la pile de cartes de la barre, pour la voir avec beaucoup de cartes : chacune a son propre identifiant, et une sur deux le numéro de série USB de la première (comme des cartes appairées à la même DualSense). Elles n’exécutent que le firmware (pas de mises à jour). S’applique au rechargement de la page."
     },
     "knobs": {
       "cardOpacity": "Opacité des cartes",
@@ -1817,7 +1820,8 @@
         "transfer": "La communication avec {{device}} a échoué (rapport {{report}}). Débranche-le puis rebranche-le.",
         "badConfig": "{{device, capitalize}} a envoyé des réglages que cette appli ne sait pas lire. Mets à jour le firmware ou l'appli.",
         "stalled": "{{device, capitalize}} a refusé la requête (rapport {{report}}) : son firmware ne la connaît pas. Mets le firmware à jour.",
-        "normalNotRestored": "Tes réglages habituels n'ont pas pu être remis d'abord (un profil de jeu était actif), donc l'emplacement n'a pas changé. Réessaie."
+        "normalNotRestored": "Tes réglages habituels n'ont pas pu être remis d'abord (un profil de jeu était actif), donc l'emplacement n'a pas changé. Réessaie.",
+        "noIdentify": "{{device, capitalize}} ne peut pas faire clignoter THIS ONE sur son écran avec ce firmware. Mets son firmware à jour pour l’utiliser."
       },
       "usb": {
         "network": "L'appli n'a pas pu communiquer avec {{device}} : un autre programme l'utilise peut-être, ou la connexion USB a été coupée. Ferme les autres fenêtres de configuration, puis débranche {{device}} et rebranche-le.",
@@ -1967,6 +1971,23 @@
       "restartToUpdate": "Redémarrer pour passer à {{version}}",
       "createShortcut": "Créer un raccourci sur le bureau",
       "quit": "Quitter"
+    },
+    "boards": {
+      "label": "Cartes",
+      "count_one": "{{count}} carte connectée",
+      "count_other": "{{count}} cartes connectées",
+      "current": "utilisée",
+      "simulated": "Carte simulée",
+      "slot": "Emplacement {{slot}}",
+      "noController": "Aucune manette",
+      "busy": "Utilisée par un autre programme",
+      "unreadable": "Illisible",
+      "more_one": "{{count}} de plus…",
+      "more_other": "{{count}} de plus…",
+      "all": "Toutes les cartes",
+      "find": "Chercher une carte",
+      "identifyTip": "Utilisée. Clique pour faire clignoter THIS ONE sur son écran",
+      "switchTip": "Clique pour afficher cette carte (THIS ONE clignote sur son écran)"
     }
   },
   "ad": {

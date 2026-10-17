@@ -3,7 +3,7 @@ import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FeedProblem, FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
-import { type FirmwareProgress, findBootloader, installFirmware, updateFirmware } from "./firmwareUpdate";
+import { type FirmwareProgress, findBootloader, installFirmware, onlyBootloader, updateFirmware } from "./firmwareUpdate";
 import { logged } from "../errorText";
 import i18n from "../i18n";
 import { announce, showToast } from "./toast";
@@ -94,6 +94,9 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The firmware entry the last write installed (Install again writes exactly it).
   const written = useRef<LatestFirmware | null>(null);
+  // The board it was written to (protocol 1.20 id; null on older firmware):
+  // Install again writes only that board's bootloader, or the only one.
+  const [writtenTo, setWrittenTo] = useState<string | null>(null);
 
   const refreshLatest = useCallback(async (): Promise<FirmwareLookup> => {
     let r: FirmwareLookup;
@@ -155,6 +158,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     try {
       // The entry shown on the card, exactly (never a newer feed's).
       written.current = latest;
+      setWrittenTo(client.boardId);
       verify(await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress })));
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) in the firmware banner's error notice with Dismiss
@@ -174,21 +178,24 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     const firmware = written.current;
     if (state.phase !== "notStarted" || !firmware) return;
     try {
-      const device = await findBootloader();
-      if (!device) throw new Error(i18n.t("desktop.firmware.noBootsel"));
+      const device = await onlyBootloader(writtenTo);
       verify(await installFirmware(device, firmware, (progress) => setState({ phase: "running", progress })));
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed: the firmware banner's error notice with Dismiss (also noBootsel / wrongFile, in plain words)
       setState({ phase: "failed", detail: causeText(cause) });
     }
-  }, [state.phase, verify]);
+  }, [state.phase, verify, writtenTo]);
 
   // The hook reconnects to the rebooted dongle by itself; the outcome is the
   // version it reports. Kept once known (set while rendering, React's pattern
   // for state that follows a value): the board leaving USB again later (its
   // controller turned off, unplugged) is not a new wait for the update.
   let shown: FirmwareUpdateState = state;
-  if (state.phase === "verifying" && installed) {
+  // With several boards, only the board that was written settles it (another
+  // board shown meanwhile, e.g. while the updated one waits for its
+  // controller, says nothing about the update). Unknown ids: as before.
+  const sameBoardBack = !writtenTo || !bridge.client?.boardId || bridge.client.boardId === writtenTo;
+  if (state.phase === "verifying" && installed && sameBoardBack) {
     shown = sameVersion(state.version, installed)
       ? { phase: "done", version: installed }
       : { phase: "failed", detail: i18n.t("desktop.firmware.wrongVersion", { installed, expected: state.version }) };

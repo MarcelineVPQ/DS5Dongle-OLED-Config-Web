@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { causeText } from "../desktop/shownError";
 import { useTranslation } from "react-i18next";
 import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, type OledPadButton, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
+import { type BoardEntry, type BoardSummary, OTHER_BOARDS_MS, entryTransport, lastBoardId, listBoards, pickBoard, readSummaries, rememberBoard, rememberKey, summaryOf } from "./boards";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
@@ -91,7 +92,23 @@ export interface UseDs5BridgeResult {
   // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice), in place of the raw WebUSB error
   busy: { holders: BoardHolder[] } | null;
   retryBusy: () => Promise<void>;
+  // Every board on USB (any number), in a steady order, the one on screen
+  // included (its row from its live poll; the others read every
+  // OTHER_BOARDS_MS while the window is shown). Empty without boards.
+  boards: BoardSummary[];
+  // The key of the board on screen (BoardSummary.key), null without one.
+  currentBoard: string | null;
+  // Show another board (and flash its OLED, protocol 1.20); the one on
+  // screen just flashes its OLED. Remembered as the board to show next start.
+  selectBoard: (key: string) => Promise<void>;
+  // Flash a board's "THIS ONE" screen (protocol 1.20; older firmware: nothing).
+  identifyBoard: (key: string) => Promise<void>;
 }
+
+// How long a board that left USB on purpose (BOOTSEL for an update, a
+// reboot) is waited for before another board is shown: an update's BOOTSEL,
+// write and restart take well under this.
+export const EXPECT_BACK_MS = 90_000;
 
 // How often the app tries the board again while another program holds it.
 // One claim attempt (no reads), also while hidden: the tray shows when it connects.
@@ -141,6 +158,19 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     busyRef.current = busy;
   }, [busy]);
   const clientRef = useRef<Ds5BridgeClient | null>(null);
+  // The board on screen (its BoardSummary.key), for the board stack.
+  const [currentKey, setCurrentKey] = useState<string | null>(null);
+  const currentKeyRef = useRef<string | null>(null);
+  // A board that left USB on purpose (BOOTSEL, reboot, USB reconnect: the
+  // client's onLeaveBus) and is expected back: until `until`, autoConnect
+  // waits for it instead of showing another board (a firmware update must
+  // come back to the board it wrote). By its remembered id.
+  // cache: OK — key=none (the one board expected back); invalidated=cleared when it connects, on a switch, or after its deadline; bound=1 entry
+  const expectRef = useRef<{ id: string; until: number } | null>(null);
+  const expectBack = useCallback((c: Ds5BridgeClient) => {
+    const id = rememberKey({ boardId: c.boardId, serial: c.transport.serial ?? null });
+    if (id) expectRef.current = { id, until: Date.now() + EXPECT_BACK_MS };
+  }, []);
   // lifetime: OK — acquires nothing (mirrors the client into a ref)
   useEffect(() => {
     clientRef.current = client;
@@ -183,18 +213,19 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   // `quiet`: the busy retry, which doesn't flash "Connecting…" every 2 s.
   const attachTransport = useCallback(
-    async (transport: Ds5Transport, quiet = false) => {
+    async (transport: Ds5Transport, quiet = false, key: string | null = null): Promise<boolean> => {
       if (!quiet) setOperation("connecting");
       try {
         // loop: SERIAL-REQUIRED — retry/backoff: one quiet second try after a passing error (isPassingConnectError), never more
         for (let attempt = 0; ; attempt++) {
           try {
-            const next = new Ds5BridgeClient(transport);
+            const next = new Ds5BridgeClient(transport, { onLeaveBus: expectBack });
             // lifetime: OK — closed below on any failure; on success the connection's (freed on disconnect, as WebUsbTransport.open says)
             await next.transport.open();
             const id = await next.checkCompatible();
             const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
             const normalized = normalizeConfig(cfg);
+            clientRef.current = next; // at once: the caller may use it before the next render (a switch's identify)
             setClient(next);
             setIdentity(id);
             setFirmwareVersion(version);
@@ -206,7 +237,12 @@ export function useDs5Bridge(): UseDs5BridgeResult {
             setSaveState("idle");
             setError(null);
             setBusy(null);
-            return;
+            currentKeyRef.current = key;
+            setCurrentKey(key);
+            rememberBoard({ boardId: id.boardId, serial: transport.serial ?? null });
+            const back = expectRef.current;
+            if (back && back.id === rememberKey({ boardId: id.boardId, serial: transport.serial ?? null })) expectRef.current = null;
+            return true;
           } catch (cause) {
             // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice: what holds it where known, Retry, and it connects by itself once free), else the keyed USB/board errors below
             // Let go of the half-open device whatever went wrong, so this app
@@ -225,44 +261,151 @@ export function useDs5Bridge(): UseDs5BridgeResult {
               const first = !busyRef.current;
               setBusy((prev) => prev ?? { holders: [] });
               if (first) lookUpHolders();
-              return;
+              return false;
             }
             // error: SHOWN — desktop.errors.usb.network and the other keyed USB/board errors (causeText) in the error notice (bridge.error); on Windows an open failure is desktop.windowsUsb.seen on the setup screen instead
             // Windows: a dongle Windows won't let us open (no WinUSB driver, or it
             // vanished during Repair USB driver). The setup screen explains that
             // and offers the repair (WindowsUsbRepair.tsx); the raw error helps no one.
             if (!(platform === "win32" && isOpenFailure(cause))) setError(causeText(cause));
-            return;
+            return false;
           }
         }
       } finally {
         if (!quiet) setOperation(null);
       }
     },
-    [lookUpHolders],
+    [expectBack, lookUpHolders],
   );
 
-  const attach = useCallback((device: USBDevice, quiet = false) => attachTransport(new WebUsbTransport(device), quiet), [attachTransport]);
+  // Every board on USB (useful with any number of them). The board stack in
+  // the rail shows them; one is on screen. Board operations (listing,
+  // reading the others, switching) run one at a time: reading a board opens
+  // and lets go of its USB device, which must never overlap a connect to it.
+  // cache: OK — key=the board entry key; invalidated=replaced on every list (connect/disconnect, the slow refresh, a switch); bound=the boards on USB
+  const entriesRef = useRef<Map<string, BoardEntry>>(new Map());
+  const [summaries, setSummaries] = useState<BoardSummary[]>([]);
+  const boardOps = useRef<Promise<unknown>>(Promise.resolve());
+  const serialized = useCallback(<T>(task: () => Promise<T>): Promise<T> => {
+    // error: NOT-WORTH — a task runs after a failed one too; the failure already went to its own caller
+    const run = boardOps.current.then(task, task);
+    // error: NOT-WORTH — the queue's own copy; the caller gets \`run\` with the error
+    boardOps.current = run.catch(() => undefined);
+    return run;
+  }, []);
+  const busyCause = useCallback((cause: unknown) => isBoardBusy(cause, window.desktop?.platform), []);
 
-  // Desktop: the main process has already granted the dongle, so this connects
-  // with no prompt. Browser: works once the user has picked the dongle before.
-  // Dev builds can use the simulated dongle instead (Developer card).
+  // The list again, and a read of every board but the one on screen.
+  const refreshBoards = useCallback(
+    () =>
+      serialized(async () => {
+        const entries = await listBoards();
+        entriesRef.current = new Map(entries.map((e) => [e.key, e]));
+        const current = currentKeyRef.current;
+        // loop: NOT-WORTH — N = boards on USB; once per refresh
+        const others = entries.filter((e) => e.key !== current);
+        const read = others.length > 0 && entries.length > 1 ? await readSummaries(others, busyCause) : [];
+        const byKey = new Map(read.map((r) => [r.key, r]));
+        // loop: NOT-WORTH — N = boards on USB; once per refresh
+        setSummaries(entries.map((e) => byKey.get(e.key) ?? summaryOf(e, null, null, null)));
+      }),
+    [busyCause, serialized],
+  );
+
+  // Desktop: the main process has already granted the boards, so this
+  // connects with no prompt. With several, the last one used (by its board
+  // id) if it is there, else the first; while a board is expected back
+  // (after its BOOTSEL, reboot or USB reconnect) only that one. Dev builds
+  // can add simulated boards (Developer card).
   const autoConnect = useCallback(
-    async (quiet = false) => {
-      if (clientRef.current) return;
-      const sim = simulatedBoard();
-      if (sim) {
-        // Only while it runs the firmware (in BOOTSEL it's a bootloader, not a board to configure).
-        const dongle = sim.dongle();
-        if (dongle) await attachTransport(dongle, quiet);
+    (quiet = false): Promise<void> =>
+      serialized(async () => {
+        if (clientRef.current) return;
+        const entries = await listBoards();
+        entriesRef.current = new Map(entries.map((e) => [e.key, e]));
+        if (entries.length === 0) {
+          setSummaries([]);
+          setBusy(null); // unplugged meanwhile: nothing holds it any more
+          return;
+        }
+        let pick = entries[0];
+        const several = entries.length > 1;
+        if (several) {
+          const read = await readSummaries(entries, busyCause);
+          setSummaries(read);
+          const back = expectRef.current;
+          if (back && Date.now() < back.until) {
+            // loop: NOT-WORTH — N = boards on USB; once per connect
+            const at = read.findIndex((r) => rememberKey(r) === back.id);
+            if (at < 0) return; // not back yet: its own USB event (or the deadline) tries again
+            pick = entries[at];
+          } else {
+            expectRef.current = null;
+            pick = entries[pickBoard(read, lastBoardId())];
+          }
+        } else setSummaries([summaryOf(pick, null, null, null)]);
+        const ok = await attachTransport(entryTransport(pick), quiet, pick.key);
+        // With several boards, the one now on screen says so on its OLED.
+        const c = clientRef.current as Ds5BridgeClient | null; // set by attachTransport meanwhile
+        if (ok && several && c?.identifies) await c.identify().catch(logged("flashing the board's identify screen after connecting (the rail's stack shows which board is in use)"));
+      }),
+    [attachTransport, busyCause, serialized],
+  );
+
+  // A board picked in the stack: the board on screen just flashes its "THIS
+  // ONE" screen; another one runs `other` (one board operation at a time).
+  const onBoardPicked = useCallback(
+    async (key: string, other: (entry: BoardEntry) => Promise<void>) => {
+      if (key === currentKeyRef.current) {
+        // error: SHOWN — desktop.errors.board.noIdentify and the board errors (causeText) in the error notice
+        await clientRef.current?.identify().catch((cause: unknown) => setError(causeText(cause)));
         return;
       }
-      if (!supported) return;
-      const device = await WebUsbTransport.findPermitted();
-      if (device) await attach(device, quiet);
-      else setBusy(null); // unplugged meanwhile: nothing holds it any more
+      await serialized(async () => {
+        const entry = entriesRef.current.get(key);
+        if (entry) await other(entry);
+      });
     },
-    [attach, attachTransport, supported],
+    [serialized],
+  );
+
+  // Show another board: let go of this one, connect that one, flash it.
+  const selectBoard = useCallback(
+    async (key: string) => {
+      await onBoardPicked(key, async (entry) => {
+        const prev = clientRef.current;
+        clientRef.current = null;
+        detach();
+        if (prev && !(prev.transport instanceof SimulatedDongle)) await prev.transport.close();
+        expectRef.current = null;
+        const ok = await attachTransport(entryTransport(entry), false, entry.key);
+        const c = clientRef.current as Ds5BridgeClient | null; // set by attachTransport meanwhile
+        if (ok && c?.identifies) await c.identify().catch(logged("flashing the identify screen of the board just switched to (the rail shows it as in use)"));
+      });
+      await refreshBoards();
+    },
+    [attachTransport, detach, onBoardPicked, refreshBoards],
+  );
+
+  // Flash a board's "THIS ONE" screen without switching to it.
+  const identifyBoard = useCallback(
+    (key: string) =>
+      onBoardPicked(key, async (entry) => {
+        const transport = entryTransport(entry);
+        try {
+          // lifetime: OK — closed in the finally below
+          await transport.open();
+          const c = new Ds5BridgeClient(transport);
+          await c.identity();
+          await c.identify();
+        } catch (cause) {
+          // error: SHOWN — desktop.errors.board.noIdentify / the board errors (causeText) in the error notice
+          setError(causeText(cause));
+        } finally {
+          if (entry.kind === "usb") await transport.close();
+        }
+      }),
+    [onBoardPicked],
   );
 
   // Retry now (the notice's button): names the holder again too.
@@ -298,12 +441,12 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   const connect = useCallback(async () => {
     try {
-      await attach(await WebUsbTransport.request());
+      await attachTransport(new WebUsbTransport(await WebUsbTransport.request()));
     } catch (cause) {
       // error: SHOWN — desktop.errors.usb.security and the other keyed USB/board errors (causeText) in the error notice (bridge.error); NotFoundError is the user closing the device picker, not an error
       if (!(cause instanceof DOMException && cause.name === "NotFoundError")) setError(causeText(cause));
     }
-  }, [attach]);
+  }, [attachTransport]);
 
   // What a successful apply, revert or save did to the board's unsaved flag
   // (identity [19]: RAM differs from flash), set here at once: the 1 s poll
@@ -495,8 +638,18 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     if (!supported) return;
     const onDisconnect = (event: USBConnectionEvent) => {
       const current = clientRef.current?.transport;
-      if (current instanceof WebUsbTransport && current.device === event.device) detach();
-      if (isDongle(event.device)) setBusy(null);
+      const wasCurrent = current instanceof WebUsbTransport && current.device === event.device;
+      if (wasCurrent) {
+        clientRef.current = null;
+        currentKeyRef.current = null;
+        setCurrentKey(null);
+        detach();
+      }
+      if (isDongle(event.device)) {
+        setBusy(null);
+        // Another board may be there: show it (unless this one is expected back), else just list again.
+        (wasCurrent ? autoConnect() : refreshBoards()).catch(logged("listing the boards after one left USB (the stack keeps the last list)"));
+      }
     };
     const onConnect = (event: USBConnectionEvent) => {
       if (isDongle(event.device)) autoConnect().catch(logged("connecting to a board that was plugged in (it stays on the setup screen)"));
@@ -509,7 +662,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       navigator.usb.removeEventListener("disconnect", onDisconnect);
       navigator.usb.removeEventListener("connect", onConnect);
     };
-  }, [autoConnect, detach, supported]);
+  }, [autoConnect, detach, refreshBoards, supported]);
 
   // The simulated board (dev builds) re-enumerates the same way: BOOTSEL and
   // a firmware update take it off "USB" and bring it back running the new version.
@@ -520,14 +673,61 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     // lifetime: OK — the effect returns its unsubscribe
     return sim.onChange(() => {
       const current = clientRef.current?.transport;
-      if (current instanceof SimulatedDongle && current !== sim.dongle()) {
+      // Only the first simulated board re-enumerates (the extra ones never leave).
+      if (current instanceof SimulatedDongle && currentKeyRef.current === "sim-0" && current !== sim.dongle()) {
         clientRef.current = null; // gone now: the reconnect below must not wait for the next render
+        currentKeyRef.current = null;
+        setCurrentKey(null);
         detach();
       }
       if (sim.state !== "dongle") setBusy(null); // off USB: nothing holds it any more
       if (sim.state === "dongle") autoConnect().catch(logged("connecting to the simulated board after it restarted (it stays on the setup screen)"));
+      else refreshBoards().catch(logged("listing the boards after the simulated one left (the stack keeps the last list)"));
     });
-  }, [autoConnect, detach]);
+  }, [autoConnect, detach, refreshBoards]);
+
+  // With several boards, the ones not on screen are read again every
+  // OTHER_BOARDS_MS while the window is shown (their controller, slot,
+  // version); hidden, nothing (the tray shows only the board in use).
+  const several = summaries.length > 1;
+  // lifetime: OK — cleanup: clears the slow refresh timer (fewer boards, client change, unmount)
+  useEffect(() => {
+    if (!several || !client) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      const again = () => {
+        // lifetime: OK — self re-arming every OTHER_BOARDS_MS; cleared in the cleanup
+        if (!stopped) timer = setTimeout(tick, OTHER_BOARDS_MS);
+      };
+      if (!isWindowShown()) return again();
+      refreshBoards().catch(logged("reading the other boards (their rows keep the last read)")).finally(again);
+    };
+    // lifetime: OK — the first refresh; cleared in the cleanup
+    timer = setTimeout(tick, OTHER_BOARDS_MS);
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [several, client, refreshBoards]);
+
+  // A board expected back that never came (a failed update, unplugged on the
+  // way): at its deadline, show whichever board is there.
+  // lifetime: OK — cleanup: clears the deadline timer (connected again, unmount)
+  useEffect(() => {
+    if (client) return;
+    const back = expectRef.current;
+    if (!back) return;
+    // lifetime: OK — fires once at the deadline; cleared in the cleanup
+    const timer = setTimeout(
+      () => {
+        expectRef.current = null;
+        autoConnect().catch(logged("connecting to another board after the expected one didn't come back (the setup screen stays)"));
+      },
+      Math.max(0, back.until - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [client, autoConnect]);
 
   return {
     supported,
@@ -564,5 +764,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     clearError: () => setError(null),
     busy,
     retryBusy,
+    // loop: HOT-PATH-OK — N = boards on USB (up to ~20), a shallow copy per render of the hook
+    boards: summaries.map((s) => (s.key === currentKey ? summaryOf(s, identity, client?.transport.serial ?? null, firmwareVersion) : s)),
+    currentBoard: currentKey,
+    selectBoard,
+    identifyBoard,
   };
 }

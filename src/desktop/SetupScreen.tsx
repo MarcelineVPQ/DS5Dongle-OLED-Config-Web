@@ -10,7 +10,7 @@ import { causeText } from "./shownError";
 import { useTranslation } from "react-i18next";
 import type { PicoflashHandle } from "../flash";
 import type { LatestFirmware } from "./api";
-import { findBootloader, installFirmware, type FirmwareProgress } from "./firmwareUpdate";
+import { findBootloader, installFirmware, onlyBootloader, type FirmwareProgress } from "./firmwareUpdate";
 import { readPref } from "./storage";
 import { BusyButton } from "./controls";
 import { usePoll } from "./usePoll";
@@ -55,7 +55,8 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   const start = async () => {
     if (!pico || !firmware) return;
     try {
-      const version = await installFirmware(pico, firmware, (progress) => setInstall({ phase: "running", progress }));
+      // With several Picos in BOOTSEL, none is guessed (the message says to unplug the others).
+      const version = await installFirmware(await onlyBootloader(), firmware, (progress) => setInstall({ phase: "running", progress }));
       setInstall({ phase: "restarting", version, left: false });
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) next to Install

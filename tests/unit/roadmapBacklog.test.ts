@@ -155,6 +155,8 @@ const BACKLOG_ROW: Record<string, string> = {
   "Menu bar icon on macOS": "macOS: tray icon as a Template image",
   "No board needed (experiment)": "Dongle-free mode",
   "Lifelike controller drawing": "Realistic (PBR) controller",
+  "Several boards on one PC": "Several boards: tell them apart",
+  "Every board at once": "Full multi-board support",
 };
 
 /**

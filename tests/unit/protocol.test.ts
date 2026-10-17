@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, supportsIdentify, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
 import { HIDDEN_LIGHTBAR_MS, takeIdentity } from "../../src/hooks/useDs5Bridge";
 import {
   CONFIG_BODY_SIZE,
@@ -180,6 +180,8 @@ describe("identity report (0xF1)", () => {
       features3: 0,
       powerFlags: null,
       pcMicLevel: null,
+      features4: 0,
+      boardId: null,
     });
   });
 
@@ -268,6 +270,27 @@ describe("identity report (0xF1)", () => {
     const older = b.slice();
     older[5] = 15;
     expect(decodeIdentity(older).pcMicLevel).toBeNull();
+  });
+
+  it("reads the board id (protocol 1.20) only from a 58-byte identity with [49] bit 0", () => {
+    const b = new Uint8Array(58);
+    b.set(sample());
+    b[5] = 20;
+    b[49] = 0x03;
+    b.set([0xe6, 0x61, 0x38, 0x52, 0x83, 0x4a, 0x2b, 0x2c], 50);
+    const id = decodeIdentity(b);
+    expect(id.boardId).toBe("E6613852834A2B2C"); // as the boot ROM's USB serial spells it
+    expect(id.features4).toBe(0x03);
+    expect(supportsIdentify(id)).toBe(true);
+    expect(decodeIdentity(b.subarray(0, 57)).boardId).toBeNull(); // too short for the id
+    expect(decodeIdentity(b.subarray(0, 49)).features4).toBe(0); // a 1.19 answer
+    const noBit = b.slice();
+    noBit[49] = 0x02;
+    expect(decodeIdentity(noBit).boardId).toBeNull();
+    const older = b.slice();
+    older[5] = 19;
+    expect(decodeIdentity(older).boardId).toBeNull();
+    expect(supportsIdentify(decodeIdentity(older))).toBe(false);
   });
 
   it("reads the board name (protocol 1.7) only when the firmware announces it", () => {

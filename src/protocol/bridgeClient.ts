@@ -67,6 +67,7 @@ export const FUNC = {
   pcSleep: 0x17, // protocol 1.14: [POWER_FLAGS bits], saved on its own (like the narrator)
   oledKey: 0x18, // protocol 1.18: [key 0 KEY0 / 1 KEY1, 0 short / 1 long], pressed like the board's own keys
   oledPad: 0x19, // protocol 1.19: [button, hold ms lo, hi], a controller button for the OLED screens only (games never see it)
+  identify: 0x1a, // protocol 1.20: [tenths] the "THIS ONE" screen + LED blink (0 stops; answered at once)
 } as const;
 
 // The commands that take the board off USB on purpose: losing it after one of
@@ -110,6 +111,13 @@ export const FEATURES3 = {
   oledKeys: 0x40, // protocol 1.18: 0xF6 0x18 presses KEY0 / KEY1 from the app (short or long)
   oledPad: 0x80, // protocol 1.19: 0xF6 0x19 presses controller buttons for the OLED screens
 } as const;
+// Identity [49] (protocol 1.20): a fourth feature byte.
+export const FEATURES4 = {
+  boardId: 0x01, // identity [50..57]: the board's own id (flash unique id), whatever controller is paired
+  identify: 0x02, // 0xF6 0x1A [tenths]: the board shows "THIS ONE" on its OLED and blinks its LED
+} as const;
+// How long the identify screen shows when the app asks (tenths of a second).
+export const IDENTIFY_TENTHS = 30;
 // Protocol 1.19: the controller buttons the OLED screens react to, by their
 // wire id (firmware src/oled_vpad.h). Only the OLED sees them, never the PC.
 export const OLED_PAD_BUTTONS = { up: 0, down: 1, left: 2, right: 3, triangle: 4, circle: 5, cross: 6, square: 7, r1: 8 } as const;
@@ -121,7 +129,7 @@ export const POWER_FLAGS = {
   psWakesPc: 0x02, // the PS button wakes the PC (default off)
 } as const;
 // The longest identity this app reads; older firmware answers its own length.
-export const IDENTITY_BYTES = 49;
+export const IDENTITY_BYTES = 58;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
 // The mirror's 1024 image bytes against a 0xEF answer's (they start at [4]).
@@ -149,11 +157,14 @@ const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed",
 
 // A protocol 1.x addition announced by a bit in one of identity's feature
 // bytes ([29] FEATURES2, [46] FEATURES3), from protocol 1.<minMinor> on.
-export function supportsFeature(identity: BridgeIdentity | null, byte: "features2" | "features3", minMinor: number, bit: number): boolean {
+export function supportsFeature(identity: BridgeIdentity | null, byte: "features2" | "features3" | "features4", minMinor: number, bit: number): boolean {
   return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity[byte] & bit) !== 0;
 }
 export const supportsFeature2 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features2", minMinor, bit);
 export const supportsFeature3 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features3", minMinor, bit);
+export const supportsFeature4 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features4", minMinor, bit);
+// Protocol 1.20: the board can show "THIS ONE" on request (0xF6 0x1A).
+export const supportsIdentify = (identity: BridgeIdentity | null) => supportsFeature4(identity, 20, FEATURES4.identify);
 
 export interface BridgeIdentity {
   protoMajor: number;
@@ -196,6 +207,12 @@ export interface BridgeIdentity {
   // Protocol 1.16+ (FEATURES3.micLevel): identity [48], the PC's mic level as
   // the controller's 0..64 (what micLevel 0 follows); null on older firmware.
   pcMicLevel: number | null;
+  // Protocol 1.20+: identity [49], a fourth feature byte (FEATURES4); 0 on older firmware.
+  features4: number;
+  // Protocol 1.20+ (FEATURES4.boardId): identity [50..57], the board's own id
+  // as 16 hex digits (its flash unique id). The same whatever controller is
+  // paired, unlike the USB serial (the controller's MAC); null on older firmware.
+  boardId: string | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -212,6 +229,13 @@ function boardNameFrom(raw: Uint8Array): string | null {
   if (!chars.length || chars.some((c) => c < 0x20 || c > 0x7e)) return null;
   return String.fromCharCode(...chars).trim() || null;
 }
+
+// The board id as the bootloader's USB serial spells it: upper-case hex, in byte order.
+// loop: HOT-PATH-OK — N = 8 id bytes per identity decode
+const hexId = (raw: Uint8Array): string =>
+  Array.from(raw, (b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
 
 export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
   if (bytes.length < 20 || bytes[0] !== 0x44 || bytes[1] !== 0x53 || bytes[2] !== 0x35 || bytes[3] !== 0x4f) {
@@ -245,6 +269,8 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     features3: bytes.length >= 47 ? bytes[46] : 0,
     powerFlags: bytes.length >= 48 && (bytes[4] > 1 || bytes[5] >= 14) && (bytes[46] & FEATURES3.pcSleep) !== 0 ? bytes[47] : null,
     pcMicLevel: bytes.length >= 49 && (bytes[4] > 1 || bytes[5] >= 16) && (bytes[46] & FEATURES3.micLevel) !== 0 ? bytes[48] : null,
+    features4: bytes.length >= 50 && (bytes[4] > 1 || bytes[5] >= 20) ? bytes[49] : 0,
+    boardId: bytes.length >= 58 && (bytes[4] > 1 || bytes[5] >= 20) && (bytes[49] & FEATURES4.boardId) !== 0 ? hexId(bytes.subarray(50, 58)) : null,
   };
 }
 
@@ -384,7 +410,18 @@ const CONTROLLER_TEST_TIMEOUT_MS = 12000;
 const CONTROLLER_TEST_POLL_MS = 60;
 
 export class Ds5BridgeClient {
-  constructor(public readonly transport: Ds5Transport) {}
+  constructor(
+    public readonly transport: Ds5Transport,
+    // Told just before a command that takes the board off USB on purpose
+    // (BOOTSEL, reboot, USB reconnect): useDs5Bridge then waits for this
+    // board to come back instead of showing another one.
+    private readonly opts: { onLeaveBus?: (client: Ds5BridgeClient) => void } = {},
+  ) {}
+
+  // The board's own id (protocol 1.20), as of the last identity read; null before one or on older firmware.
+  get boardId(): string | null {
+    return this.protocol?.boardId ?? null;
+  }
 
   get isOpen(): boolean {
     return this.transport.isOpen;
@@ -392,11 +429,11 @@ export class Ds5BridgeClient {
 
   // The firmware's protocol, as of the last identity read (decides the config layout).
   // cache: OK — key=the client (one per connected board); invalidated=every identity read (the 1 s poll), a new board makes a new client; bound=1 entry
-  private protocol: { major: number; minor: number; features3: number } | null = null;
+  private protocol: { major: number; minor: number; features3: number; features4: number; boardId: string | null } | null = null;
 
   async identity(): Promise<BridgeIdentity> {
     const id = decodeIdentity(await this.transport.getReport(REPORT.identity, IDENTITY_BYTES));
-    this.protocol = { major: id.protoMajor, minor: id.protoMinor, features3: id.features3 };
+    this.protocol = { major: id.protoMajor, minor: id.protoMinor, features3: id.features3, features4: id.features4, boardId: id.boardId };
     return id;
   }
 
@@ -428,6 +465,12 @@ export class Ds5BridgeClient {
   get oledPad(): boolean {
     const p = this.protocol;
     return !!p && (p.major > 1 || p.minor >= 19) && (p.features3 & FEATURES3.oledPad) !== 0;
+  }
+
+  // Protocol 1.20+: the identify screen (0xF6 0x1A).
+  get identifies(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 20) && (p.features4 & FEATURES4.identify) !== 0;
   }
 
   // Protocol 1.6+: left and right grip haptics strengths.
@@ -462,6 +505,7 @@ export class Ds5BridgeClient {
   private async runCommand(func: number, args: number[]): Promise<"ok" | "gone"> {
     const before = await this.identity();
     const payload = new Uint8Array([func, ...args]);
+    if (LEAVES_THE_BUS.has(func)) this.opts.onLeaveBus?.(this);
     await this.transport.setReport(REPORT.command, payload);
     const expected = (before.sequence + 1) & 0xffff;
     const deadline = Date.now() + COMMAND_TIMEOUT_MS;
@@ -612,6 +656,16 @@ export class Ds5BridgeClient {
     if (!this.oledPad) throw new KeyedError("desktop.errors.board.noOledPad");
     const ms = Math.max(0, Math.min(OLED_PAD_MAX_HOLD_MS, Math.round(holdMs)));
     await this.command(FUNC.oledPad, [OLED_PAD_BUTTONS[button], ms & 0xff, ms >> 8]);
+  }
+
+  // Protocol 1.20 (FEATURES4.identify): the board shows "THIS ONE" with its
+  // name and slot on the OLED, flashing at full brightness, and blinks its
+  // LED, for tenths x 0.1 s (0 stops); its screen and LED go back to what
+  // they were afterwards. Answered at once (it never makes a command wait).
+  async identify(tenths = IDENTIFY_TENTHS): Promise<void> {
+    // error: SHOWN — desktop.errors.board.noIdentify via the caller (the board stack hides Identify on older firmware, so this is a bug guard)
+    if (!this.identifies) throw new KeyedError("desktop.errors.board.noIdentify");
+    await this.command(FUNC.identify, [Math.max(0, Math.min(100, Math.round(tenths)))]);
   }
 
   async previewTrigger(preset: number): Promise<void> {
@@ -795,7 +849,7 @@ function toView(bytes: Uint8Array, need: number): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }
 
-function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   // lifetime: OK — fires once (sleep between status polls)
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

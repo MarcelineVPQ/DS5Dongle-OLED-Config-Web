@@ -15,10 +15,14 @@ export interface SlotRead<T> {
 }
 
 // The same physical board: the same connection, or one that came back with
-// the same USB serial number (a reconnect, a replug). Unknown serial = not the same.
+// the same board id (protocol 1.20: the Pico's own id; a reconnect, a
+// replug). Firmware without the id: the same USB serial number, which is the
+// paired controller's MAC, so two such boards paired to one DualSense look
+// the same (one more reason the stack asks for 1.20). Unknown = not the same.
 export function sameBoard(a: Ds5BridgeClient | null, b: Ds5BridgeClient | null): boolean {
   if (!a || !b) return false;
   if (a === b) return true;
+  if (a.boardId || b.boardId) return a.boardId === b.boardId;
   const serial = a.transport.serial;
   return !!serial && serial === b.transport.serial;
 }

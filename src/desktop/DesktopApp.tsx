@@ -503,6 +503,9 @@ export default function DesktopApp() {
               firmware={bridge.firmwareVersion}
               deviceLabel={bridge.deviceLabel}
               device={hardwareName(bridge.identity)}
+              boards={bridge.boards}
+              currentBoard={bridge.currentBoard}
+              onBoard={(key) => void bridge.selectBoard(key).catch(logged("switching boards (the hook shows its own errors)"))}
             />
           </div>
         </LibraryContext.Provider>
