@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **A save the board drops off during no longer says "All changes saved".** If your board left USB right after Save (unplugged, a loose cable), the bar said everything was saved although the save may never have reached it. Now the bar keeps saying your changes aren't saved, a notice says the board was unplugged, and you can save again once it's back. Restart, BOOTSEL and Reconnect USB still count as done when the board goes away, as they should.
 - **Board errors are in your language.** "Your board disconnected", "Your board refused report …", a firmware update's "came back reporting … expected …" and "Normal settings not restored before the slot switch" were shown in English whatever language you use. They now say what happened and what to do in all 7 languages.
+- **A failed connect no longer keeps hold of your board.** When connecting failed for any reason other than another program holding the board, the app kept it open, so other programs (or the app's next try) couldn't get it. It now lets go every time. If the board was only slow to answer, the app quietly tries once more before saying anything; a firmware that speaks another protocol is not tried again.
 
 ## [0.9.5-dev.18] - 2026-10-17
 
