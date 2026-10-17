@@ -105,7 +105,8 @@
     "common": {
       "cancel": "取消",
       "stop": "停止",
-      "moreInfo": "更多信息"
+      "moreInfo": "更多信息",
+      "sliderValue": "{{label}}数值"
     },
     "overview": {
       "firmware": "固件",

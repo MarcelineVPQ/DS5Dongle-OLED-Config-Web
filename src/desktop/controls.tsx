@@ -165,6 +165,7 @@ interface SliderProps {
 // The range thumb updates a local value while dragging and only reports on
 // release, so a drag sends one write to the dongle, not dozens.
 export function Slider({ label, sub, info, value, min, max, step, unit, digits = 0, invalid, disabled, signed, onChange }: SliderProps) {
+  const { t } = useTranslation();
   // While the user is dragging or typing, show their value; otherwise show the
   // dongle's. null = not editing.
   const [editing, setEditing] = useState<number | null>(null);
@@ -201,7 +202,7 @@ export function Slider({ label, sub, info, value, min, max, step, unit, digits =
         step={step}
         value={text ?? local.toFixed(digits)}
         disabled={disabled}
-        aria-label={`${label} value`}
+        aria-label={t("desktop.common.sliderValue", { label })}
         onChange={(e) => setText(e.currentTarget.value)}
         onBlur={(e) => {
           setText(null);

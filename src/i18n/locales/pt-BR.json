@@ -105,7 +105,8 @@
     "common": {
       "cancel": "Cancelar",
       "stop": "Parar",
-      "moreInfo": "Mais informações"
+      "moreInfo": "Mais informações",
+      "sliderValue": "{{label}}: valor"
     },
     "overview": {
       "firmware": "Firmware",
