@@ -456,6 +456,7 @@ function arraysEqual(a: number[], b: number[]): boolean {
 }
 
 export function fieldIssue(issues: ConfigValidationIssue[], field: keyof ConfigBody): ConfigValidationIssue | undefined {
+  // loop: HOT-PATH-OK — N = the draft's validation issues (usually 0, at most one per config field); per settings control render
   return issues.find((issue) => issue.field === field);
 }
 

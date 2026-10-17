@@ -16,11 +16,10 @@ export const LIGHTBAR_MODES = [
   { value: 0, key: "live", label: "Tilt color" },
 ] as const;
 
-// The Light bar section's rows (Controller page); the game page shows them
-// with a game profile's draft (`fields`).
+// The Light bar section's rows (Controller page).
 export default function LightbarPage(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, patch, mark, sub } = useFields(props);
+  const { d, set, patch } = useFields(props);
 
   const setFav = (i: number, hex: string) => {
     const [r, g, b] = hexToRgb(hex);
@@ -30,7 +29,7 @@ export default function LightbarPage(props: SectionProps) {
 
   return (
     <>
-      <Row label={t("desktop.lightbar.mode", "Mode")} sub={sub("lightbarMode")} info={t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")} stack>
+      <Row label={t("desktop.lightbar.mode", "Mode")} info={t("desktop.lightbar.hint", "While charging, {{device}} shows an amber pulse in every mode.")} stack>
         <div className="dk-presets">
           {/* loop: HOT-PATH-OK — N ≈ 9 lightbar modes; only while Light bar is open */}
           {LIGHTBAR_MODES.map((m) => (
@@ -40,13 +39,7 @@ export default function LightbarPage(props: SectionProps) {
           ))}
         </div>
       </Row>
-      <SectionGroup
-        title={
-          <>
-            {t("desktop.lightbar.favorites", "Favorite colors")} {mark("lbFavR")}
-          </>
-        }
-      >
+      <SectionGroup title={t("desktop.lightbar.favorites", "Favorite colors")}>
         {/* loop: HOT-PATH-OK — N = 4 favorite slots; only while Light bar is open */}
         {[0, 1, 2, 3].map((i) => (
           <Row key={i} label={t("desktop.lightbar.favN", { n: i, defaultValue: `FAV${i}` })}>

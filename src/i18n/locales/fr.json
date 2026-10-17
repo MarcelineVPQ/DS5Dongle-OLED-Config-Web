@@ -1653,7 +1653,6 @@
       "changes": "Ce que ce jeu change (tout le reste utilise tes réglages habituels) :",
       "allNormal": "Rien n'est encore changé pour ce jeu : il utilise tes réglages habituels. « Modifier sur la page Manette » les change pour ce jeu seulement.",
       "useNormal": "{{name}}. Utiliser mon réglage habituel",
-      "normalSub": "Ton réglage habituel",
       "on": "Activé",
       "off": "Désactivé",
       "copyHint": "Ce jeu reçoit les réglages actuellement sur {{device}}",

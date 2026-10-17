@@ -1120,12 +1120,6 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 | 36 | `LightbarPage` | .map | hot:render | **HOT-PATH-OK** | ~6, per render | N ≈ 9 lightbar modes; only while Light bar is open | - |
 | 51 | `LightbarPage` | .map | hot:render | **HOT-PATH-OK** | ~6, per render | N = 4 favorite slots; only while Light bar is open | - |
 
-#### src/desktop/pages/sectionFields.tsx
-
-| Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
-|---|---|---|---|---|---|---|---|
-| 45 | `sub` | .filter | hot:render | **NOT-WORTH** | 2, per section render | N = 2 strings | - |
-
 #### src/desktop/pages/SettingsPage.tsx
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
@@ -1271,6 +1265,7 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 | 390 | `normalizeConfig` | .map | hot:usb-event | **HOT-PATH-OK** | 4 / every 2 s config poll | N = 4 favourite colors | - |
 | 392 | `normalizeConfig` | .map | hot:usb-event | **HOT-PATH-OK** | 4 / every 2 s config poll | N = 4 favourite colors | - |
 | 450 | `arraysEqual` | .every | hot:render | **HOT-PATH-OK** | 4 / every 2 s poll + per render | N = 4 favourite colors per field | - |
+| 460 | `fieldIssue` | .find | hot:render | **HOT-PATH-OK** | issues (usually 0) / per settings control render | N = the draft's validation issues, at most one per config field (listed once the sections called it straight from render, 2026-10-17, profile `fields` path removed) | - |
 | 486 | `decodeAt` | .map | hot:poll+usb-event | **HOT-PATH-OK** | 4 / every 2 s config poll | N = 4 favourite colors | - |
 | 488 | `decodeAt` | .map | hot:poll+usb-event | **HOT-PATH-OK** | 4 / every 2 s config poll | N = 4 favourite colors | - |
 | 490 | `decodeAt` | .map | hot:poll+usb-event | **HOT-PATH-OK** | 4 / every 2 s config poll | N = 4 favourite colors | - |

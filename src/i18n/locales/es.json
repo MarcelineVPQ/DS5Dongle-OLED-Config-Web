@@ -1653,7 +1653,6 @@
       "changes": "Lo que cambia este juego (todo lo demás usa tus ajustes normales):",
       "allNormal": "Aún no hay cambios para este juego: usa tus ajustes normales. «Editar en la página Mando» los cambia solo para este juego.",
       "useNormal": "{{name}}. Usar mi ajuste normal",
-      "normalSub": "Tu ajuste normal",
       "on": "Activado",
       "off": "Desactivado",
       "copyHint": "Este juego recibe los ajustes que hay ahora en {{device}}",

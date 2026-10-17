@@ -26,9 +26,7 @@ import { useBoardDrafts } from "../live/boardDrafts";
 // accordion: live/PartPanel.tsx, dongle/DonglePage.tsx). Each function is a
 // section's body (its rows), the Section around it gives the title. Changes
 // apply to the dongle's RAM right away (DesktopApp); "Save to dongle" in the
-// bottom bar makes them survive a power cycle. The game page shows the
-// profile-able ones with a game profile's draft instead (`fields`, see
-// sectionFields.tsx).
+// bottom bar makes them survive a power cycle.
 // The haptic feedback test plays for 3 s. Firmware from protocol 1.15
 // (FEATURES3.timedGripTest) holds the grip test (0xF6 0x0E) steadily for a
 // given time: one command starts it, and pressing the running button again,
@@ -102,11 +100,11 @@ const hasV13 = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity,
 // Per game too (a profile can hold it).
 export function TriggerIntensitySection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue, sub } = useFields(props);
+  const { d, set, issue } = useFields(props);
   return hasV13(props.bridge) ? (
     <Slider
       label={t("desktop.settings.triggerReduce")}
-      sub={sub("triggerReduce", t("desktop.settings.triggerReduceSub"))}
+      sub={t("desktop.settings.triggerReduceSub")}
       value={d.triggerReduce}
       min={0}
       max={10}
@@ -122,21 +120,20 @@ export function TriggerIntensitySection(props: SectionProps) {
 export function HapticsSection(props: SectionProps) {
   const { t } = useTranslation();
   const { bridge } = props;
-  const { d, set, patch, issue, sub } = useFields(props);
+  const { d, set, patch, issue } = useFields(props);
   return (
     <>
       <GripHaptics
         left={d.hapticsGain}
         right={d.hapticsGainRight}
         split={!!bridge.client?.splitHaptics}
-        sub={sub("hapticsGain")}
         invalid={issue("hapticsGain") || issue("hapticsGainRight")}
         onChange={(l, r) => patch({ hapticsGain: l, hapticsGainRight: r })}
       />
       {/* hint: MUST-SHOW — the range's meaning (lower: less delay; higher: steadier) */}
       <Slider
         label={t("haptics.audioBufferLabel")}
-        sub={sub("audioBufferLength", t("haptics.audioBufferSub"))}
+        sub={t("haptics.audioBufferSub")}
         value={d.audioBufferLength}
         min={AUDIO_BUFFER_MIN}
         max={AUDIO_BUFFER_MAX}
@@ -171,7 +168,7 @@ export function HapticsTest({ bridge }: { bridge: UseDs5BridgeResult }) {
 
 export function AutoHapticsSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, sub } = useFields(props);
+  const { d, set } = useFields(props);
   // loop: HOT-PATH-OK — N = 4 options; page render
   const ahModes: ReadonlyArray<{ value: AutoHapticsMode; label: string; title: string }> = (["off", "fallback", "mix", "replace"] as const).map((k, i) => ({
     value: i as AutoHapticsMode,
@@ -182,7 +179,6 @@ export function AutoHapticsSection(props: SectionProps) {
     <>
       <Segmented
         label={t("autoHaptics.modeLabel")}
-        sub={sub("autoHapticsEnable")}
         info={t(`autoHaptics.modes.${["off", "fallback", "mix", "replace"][d.autoHapticsEnable & 3]}.hint`)}
         value={d.autoHapticsEnable}
         options={ahModes}
@@ -203,7 +199,7 @@ export function AutoHapticsSection(props: SectionProps) {
 
 export function SpeakerSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue, sub, live } = useFields(props);
+  const { d, set, issue } = useFields(props);
   const v13 = hasV13(props.bridge);
   // loop: HOT-PATH-OK — N = 4 options; page render
   const outputs: ReadonlyArray<{ value: SpeakerSelect; label: string }> = (["auto", "speaker", "headset", "off"] as const).map((k, i) => ({
@@ -214,7 +210,7 @@ export function SpeakerSection(props: SectionProps) {
     <>
       <Slider
         label={t("desktop.settings.speakerLevel", "Volume (Speaker for Controller)")}
-        sub={sub("speakerVolume", t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip"))}
+        sub={t("desktop.settings.speakerLevelSub", "0 = unchanged; above 0 boosts and can clip")}
         value={d.speakerVolume}
         // Usual range ±12 dB; a lower level set on the OLED (down to -100)
         // still shows as it is instead of being clamped by the slider.
@@ -230,7 +226,7 @@ export function SpeakerSection(props: SectionProps) {
         <>
           <Slider
             label={t("desktop.settings.speakerBoost")}
-            sub={sub("speakerGain", t("desktop.settings.speakerBoostSub"))}
+            sub={t("desktop.settings.speakerBoostSub")}
             value={d.speakerGain}
             min={0}
             max={7}
@@ -238,9 +234,9 @@ export function SpeakerSection(props: SectionProps) {
             invalid={issue("speakerGain")}
             onChange={(v) => set("speakerGain", v)}
           />
-          <Toggle label={t("desktop.settings.lockVolume")} sub={sub("lockVolume")} info={t("desktop.settings.lockVolumeSub")} value={d.lockVolume} onChange={(v) => set("lockVolume", v)} />
+          <Toggle label={t("desktop.settings.lockVolume")} info={t("desktop.settings.lockVolumeSub")} value={d.lockVolume} onChange={(v) => set("lockVolume", v)} />
           {/* Where the PC's audio plays is the dongle's, not a game's (not in profiles). */}
-          {live && <Segmented label={t("desktop.settings.audioOutput")} value={d.speakerSelect} options={outputs} onChange={(v) => set("speakerSelect", v)} />}
+          <Segmented label={t("desktop.settings.audioOutput")} value={d.speakerSelect} options={outputs} onChange={(v) => set("speakerSelect", v)} />
         </>
       )}
       {!v13 && <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>}
@@ -259,15 +255,15 @@ const hasMicLevel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.iden
 // PipeWire never changes it (it uses software volume), so live it says so.
 export function MicLevelSlider(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, issue, sub, live } = useFields(props);
+  const { d, set, issue } = useFields(props);
   if (!hasMicLevel(props.bridge)) return <p className="dk-hint">{t("desktop.settings.needsFirmware")}</p>;
-  const silent = live && d.btMicEnable && d.micLevel === 0 && props.bridge.identity?.pcMicLevel === 0;
+  const silent = d.btMicEnable && d.micLevel === 0 && props.bridge.identity?.pcMicLevel === 0;
   return (
     <>
       {/* hint: MUST-SHOW — the range: 0 = as set on the PC, 1–64 the controller's own level */}
       <Slider
         label={t("desktop.settings.micLevel")}
-        sub={sub("micLevel", t("desktop.settings.micLevelSub"))}
+        sub={t("desktop.settings.micLevelSub")}
         value={d.micLevel}
         min={0}
         max={MIC_LEVEL_MAX}
@@ -296,23 +292,14 @@ const hasEchoCancel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.id
 // switch (MicLevelSlider already says to update).
 export function EchoCancelToggle(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, sub } = useFields(props);
+  const { d, set } = useFields(props);
   if (!hasEchoCancel(props.bridge)) return null;
-  return (
-    <Toggle
-      label={t("desktop.settings.echoCancel")}
-      sub={sub("micEchoCancel")}
-      info={t("desktop.settings.echoCancelSub")}
-      value={d.micEchoCancel}
-      disabled={!d.btMicEnable}
-      onChange={(v) => set("micEchoCancel", v)}
-    />
-  );
+  return <Toggle label={t("desktop.settings.echoCancel")} info={t("desktop.settings.echoCancelSub")} value={d.micEchoCancel} disabled={!d.btMicEnable} onChange={(v) => set("micEchoCancel", v)} />;
 }
 
 export function MicSection(props: SectionProps) {
   const { t } = useTranslation();
-  const { d, set, sub, live } = useFields(props);
+  const { d, set } = useFields(props);
   // loop: HOT-PATH-OK — N = 3 options; page render
   const mics: ReadonlyArray<{ value: MicSelect; label: string }> = (["auto", "builtIn", "headset"] as const).map((k, i) => ({
     value: i as MicSelect,
@@ -320,9 +307,9 @@ export function MicSection(props: SectionProps) {
   }));
   return (
     <>
-      <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
+      <Toggle label={t("haptics.btMicLabel")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
-      {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
+      {hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
       <MicLevelSlider {...props} />
       <EchoCancelToggle {...props} />
     </>

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "games": {
+    "steam-1a2b3c4d:steam:1091500": {
+      "title": "Cyberpunk 2077",
+      "profile": {
+        "settings": {
+          "hapticsGain": 2,
+          "autoHapticsEnable": 2,
+          "autoHapticsGain": 120,
+          "autoHapticsLowpass": 1,
+          "speakerVolume": 0,
+          "lightbarMode": 8,
+          "lbFavR": [255, 0, 0, 255],
+          "lbFavG": [0, 255, 0, 255],
+          "lbFavB": [0, 0, 255, 255],
+          "btMicEnable": true,
+          "buttonLayout": "l-racing"
+        },
+        "updated": 1760000000000
+      },
+      "mine": { "rating": 5, "tags": ["triggers-work"], "notes": "triggers great" }
+    },
+    "steam-1a2b3c4d:steam:2050650": {
+      "title": "Galactic Racer",
+      "profile": {
+        "settings": {
+          "format": 2,
+          "hapticsGain": 4,
+          "hapticsGainRight": 3,
+          "speakerVolume": -10,
+          "lightbarMode": 2,
+          "lbFavR": [10, 20, 30, 40],
+          "lbFavG": [50, 60, 70, 80],
+          "lbFavB": [90, 100, 110, 120],
+          "triggerReduce": 3,
+          "speakerGain": 2,
+          "lockVolume": true,
+          "micLevel": 40,
+          "micEchoCancel": false,
+          "stickCurves": {
+            "left": {
+              "type": "precise",
+              "points": [
+                [0, 0],
+                [64, 32],
+                [128, 96],
+                [255, 255]
+              ]
+            }
+          }
+        },
+        "updated": 1760400000000
+      }
+    },
+    "heroic-0f0e0d0c:epic:fortnite": {
+      "title": "Quiet Game",
+      "profile": { "settings": { "format": 2, "btMicEnable": false, "audioBufferLength": 96 }, "updated": 1760500000000 }
+    }
+  },
+  "restore": {
+    "gameKey": "steam-1a2b3c4d:steam:2050650",
+    "settings": {
+      "format": 2,
+      "hapticsGain": 1.5,
+      "hapticsGainRight": 1.5,
+      "autoHapticsEnable": 0,
+      "autoHapticsGain": 100,
+      "autoHapticsLowpass": 0,
+      "speakerVolume": 0,
+      "lightbarMode": 8,
+      "lbFavR": [255, 0, 0, 0],
+      "lbFavG": [0, 255, 0, 0],
+      "lbFavB": [0, 0, 255, 0],
+      "btMicEnable": true,
+      "audioBufferLength": 64,
+      "triggerReduce": 0,
+      "speakerGain": 0,
+      "lockVolume": false,
+      "micLevel": 0,
+      "micEchoCancel": true
+    }
+  },
+  "layouts": {
+    "l-racing": { "name": "Racing", "table": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "updated": 1760000000000 }
+  }
+}
