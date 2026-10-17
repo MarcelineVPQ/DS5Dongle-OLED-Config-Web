@@ -63,8 +63,11 @@ const ALLOW = [
   { re: /^Debugger attached\.$/, why: "this test attaching to the main-process inspector" },
   { re: /^(Debugger ending on ws:\/\/|Waiting for the debugger to disconnect)/, why: "the inspector this test attached, at quit" },
   {
-    re: /ERROR:base\/process\/process_mac\.cc:\d+\] task_policy_set TASK_SUPPRESSION_POLICY: \(os\/kern\) invalid argument/,
-    why: "Chromium on macOS, at quit: lowering the priority of a helper process that has already exited",
+    // A quit-time race: Chromium sets a helper's task policy (suppression or
+    // category) just after that helper has already exited (dev.18's run
+    // 39056315898 hit the CATEGORY line).
+    re: /ERROR:base\/process\/process_mac\.cc:\d+\] task_policy_set TASK_(CATEGORY|SUPPRESSION)_POLICY: \(os\/kern\) invalid argument/,
+    why: "Chromium on macOS, at quit: setting the task policy (priority) of a helper process that has already exited",
   },
 ];
 const allowed = (line) => ALLOW.find((a) => a.re.test(line.trim()));
