@@ -1774,6 +1774,7 @@
       "settingNotSaved": "Couldn't save that setting, so it's back to how it was. Check that your home folder isn't full or read-only, then try again.",
       "settingsRead": "Couldn't read the app's settings, so App settings can't show them. Restart the app; if this keeps happening, please report it.",
       "linkNotOpened": "Couldn't open that link: no browser answered. Open your browser and try again.",
+      "shortcutNotCreated": "Couldn't create the desktop shortcut: Windows refused it. Check that your Desktop folder isn't read-only or full, then try again.",
       "badRequest": "Nothing was changed: the app sent this in a form it doesn't accept. That's a bug in the app. Restart it and try again, and please report it if it happens again.",
       "actionFailed": "That didn't work: {{reason}}. Try again; if it keeps failing, restart the app.",
       "slotSwitch": "Couldn't switch to slot {{slot}}: {{reason}}",

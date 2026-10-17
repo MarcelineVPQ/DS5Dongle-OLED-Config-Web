@@ -69,6 +69,15 @@ describe("main-process wiring (index.ts)", () => {
     for (const key of MAIN_ERROR_KEYS) expect(hasKey(key)).toBe(true);
   });
 
+  // A7 (0.9.5 bug hunt): the tray's Create desktop shortcut ignored
+  // writeShortcutLink returning false, so a refused shortcut failed silently.
+  it("a desktop shortcut Windows refuses is said on the page (Windows tray)", () => {
+    expect(main).toContain('if (createDesktopShortcut()) return; showWindow(); showMainError("desktop.errors.shortcutNotCreated");');
+    expect(main).not.toContain("() => void createDesktopShortcut()");
+    expect(MAIN_ERROR_KEYS).toContain("desktop.errors.shortcutNotCreated");
+    expect(source("electron/main/integration.ts")).toMatch(/return shell\.writeShortcutLink\(/);
+  });
+
   it("a game link that doesn't open answers false (the page shows desktop.library.action.failed)", () => {
     expect(main).toContain("return shell.openExternal(target.url).then( () => true, () => false);");
     expect(main).not.toContain("shell.openExternal(target.url).catch(() => undefined);");

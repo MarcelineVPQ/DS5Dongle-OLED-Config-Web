@@ -1775,6 +1775,7 @@
       "settingNotSaved": "Não foi possível salvar essa configuração, então ela voltou ao que era. Verifique se a sua pasta pessoal não está cheia ou somente leitura e tente de novo.",
       "settingsRead": "Não foi possível ler as configurações do app, então Configurações do app não consegue mostrá-las. Reinicie o app; se continuar acontecendo, avise a gente.",
       "linkNotOpened": "Não foi possível abrir esse link: nenhum navegador respondeu. Abra o seu navegador e tente de novo.",
+      "shortcutNotCreated": "Não foi possível criar o atalho na área de trabalho: o Windows recusou. Verifique se a sua pasta Área de Trabalho não está somente leitura ou cheia e tente de novo.",
       "badRequest": "Nada foi alterado: o app enviou isso num formato que ele não aceita. É um bug do app. Reinicie e tente de novo, e avise a gente se acontecer outra vez.",
       "actionFailed": "Não deu certo: {{reason}}. Tente de novo; se continuar falhando, reinicie o app.",
       "slotSwitch": "Não foi possível mudar para o slot {{slot}}: {{reason}}",

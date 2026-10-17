@@ -1775,6 +1775,7 @@
       "settingNotSaved": "Impossible d'enregistrer ce réglage, il est revenu comme avant. Vérifie que ton dossier personnel n'est pas plein ou en lecture seule, puis réessaie.",
       "settingsRead": "Impossible de lire les réglages de l'appli, Réglages de l'appli ne peut donc pas les afficher. Redémarre l'appli ; si ça se reproduit, signale-le.",
       "linkNotOpened": "Impossible d'ouvrir ce lien : aucun navigateur n'a répondu. Ouvre ton navigateur et réessaie.",
+      "shortcutNotCreated": "Impossible de créer le raccourci sur le Bureau : Windows l'a refusé. Vérifiez que votre dossier Bureau n'est pas en lecture seule ou plein, puis réessayez.",
       "badRequest": "Rien n'a été modifié : l'appli a envoyé ça sous une forme qu'elle n'accepte pas. C'est un bug de l'appli. Redémarre-la et réessaie, et signale-le si ça se reproduit.",
       "actionFailed": "Ça n'a pas marché : {{reason}}. Réessaie ; si ça échoue encore, redémarre l'appli.",
       "slotSwitch": "Impossible de passer à l'emplacement {{slot}} : {{reason}}",

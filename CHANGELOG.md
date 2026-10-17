@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **Create desktop shortcut says when it fails (Windows).** When Windows refused the shortcut, the tray menu item did nothing you could see. The app's window now opens and says the shortcut couldn't be made, and what to check. All 7 languages.
 - **Going back to 0.9.5-dev.17 keeps your game reports.** dev.17 doesn't know the new test sheet and set it aside, and dev.18 no longer wrote the old checklist, so a report was gone after going back. The app now also saves your sheet as the old checklist (as far as it can say it), until 0.9.5 is stable.
 - **A game inside gamescope no longer stays "Running" after it closes (Linux).** gamescope's own display helper can stay open after the game ends, and it carries the game's Steam id, so the library kept saying the game was running (and kept its profile on). Only the game's own processes count now.
 - **Games inside gamescope see the controller (Linux).** Inside gamescope (the way our HDR setup runs a game, or your own launch options) Steam can't hand its controller to the game, so a game with Steam Input on saw no controller at all, while Games said there was nothing to set up. Games now offers **Turn Steam Input off for** the game, with Undo, when it runs in gamescope or when you tick **Controller not detected**: Proton then passes the DualSense straight to the game. **Turn on HDR** turns Steam Input off with it, and HDR's **Set it up yourself** steps say so. All 7 languages.

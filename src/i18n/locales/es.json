@@ -1775,6 +1775,7 @@
       "settingNotSaved": "No se pudo guardar ese ajuste, así que vuelve a estar como antes. Comprueba que tu carpeta personal no esté llena ni sea de solo lectura e inténtalo otra vez.",
       "settingsRead": "No se pudieron leer los ajustes de la app, así que Ajustes de la app no puede mostrarlos. Reinicia la app; si vuelve a pasar, avísanos.",
       "linkNotOpened": "No se pudo abrir ese enlace: ningún navegador respondió. Abre tu navegador e inténtalo otra vez.",
+      "shortcutNotCreated": "No se pudo crear el acceso directo en el escritorio: Windows lo rechazó. Comprueba que tu carpeta Escritorio no sea de solo lectura ni esté llena e inténtalo otra vez.",
       "badRequest": "No se cambió nada: la app envió esto de una forma que no acepta. Es un error de la app. Reiníciala e inténtalo otra vez, y avísanos si vuelve a pasar.",
       "actionFailed": "Eso no funcionó: {{reason}}. Inténtalo otra vez; si sigue fallando, reinicia la app.",
       "slotSwitch": "No se pudo cambiar a la ranura {{slot}}: {{reason}}",

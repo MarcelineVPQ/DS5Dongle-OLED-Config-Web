@@ -217,7 +217,15 @@ function start(): void {
           showMainError("desktop.errors.settingNotSaved");
         }
       },
-      createDesktopShortcut: process.platform === "win32" ? () => void createDesktopShortcut() : undefined,
+      createDesktopShortcut:
+        process.platform === "win32"
+          ? () => {
+              // error: SHOWN — desktop.errors.shortcutNotCreated (Windows refused the shortcut; was SILENT-BUG, bug hunt A7)
+              if (createDesktopShortcut()) return;
+              showWindow();
+              showMainError("desktop.errors.shortcutNotCreated");
+            }
+          : undefined,
       checkForUpdates: () => {
         showWindow();
         updater.check().catch(logged("updater.check() doesn't reject: a failed check is the 'failed' banner in the window just shown"));

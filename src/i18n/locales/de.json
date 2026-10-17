@@ -1775,6 +1775,7 @@
       "settingNotSaved": "Die Einstellung konnte nicht gespeichert werden und ist wieder wie vorher. Prüfe, ob dein Home-Ordner voll oder schreibgeschützt ist, und versuch es noch einmal.",
       "settingsRead": "Die App-Einstellungen konnten nicht gelesen werden, daher kann App-Einstellungen sie nicht anzeigen. Starte die App neu; wenn das wieder passiert, melde es bitte.",
       "linkNotOpened": "Der Link konnte nicht geöffnet werden: Kein Browser hat reagiert. Öffne deinen Browser und versuch es noch einmal.",
+      "shortcutNotCreated": "Die Desktop-Verknüpfung konnte nicht erstellt werden: Windows hat sie abgelehnt. Prüfe, ob dein Desktop-Ordner schreibgeschützt oder voll ist, und versuch es noch einmal.",
       "badRequest": "Nichts wurde geändert: Die App hat das in einer Form gesendet, die sie nicht annimmt. Das ist ein Fehler in der App. Starte sie neu und versuch es noch einmal; wenn es wieder passiert, melde es bitte.",
       "actionFailed": "Das hat nicht geklappt: {{reason}}. Versuch es noch einmal; wenn es weiter fehlschlägt, starte die App neu.",
       "slotSwitch": "Konnte nicht zu Slot {{slot}} wechseln: {{reason}}",
