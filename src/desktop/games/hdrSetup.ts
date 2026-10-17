@@ -66,6 +66,8 @@ export const LUTRIS_GAMESCOPE_FLAGS = "--backend wayland";
 // ---- Steam launch options ----
 const word = (re: string) => new RegExp(`(^|\\s)${re}(?=\\s|$)`);
 const GAMESCOPE = /(^|\s)(\S*\/)?gamescope(?=\s|$)/;
+// The launch options run the game inside gamescope (with or without HDR).
+export const runsGamescope = (opts: string) => GAMESCOPE.test(opts);
 // A gamescope line with --hdr-enabled (ours, or written by hand).
 export const hasGamescopeHdr = (opts: string) => GAMESCOPE.test(opts) && word("--hdr-enabled").test(opts);
 const OLD_ASSIGN = new RegExp(`(^|\\s)(?:${OLD_HDR_VARS.join("|")})=\\S*`, "g");

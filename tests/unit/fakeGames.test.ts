@@ -44,7 +44,7 @@ describe("the fake library", () => {
   const report = fakeReport(newFakeState(), linux);
 
   it("has about 20 games with valid, unique keys that can never match a real install", () => {
-    expect(report.games.length).toBe(20);
+    expect(report.games.length).toBe(21);
     const keys = report.games.map((g) => g.key);
     expect(new Set(keys).size).toBe(keys.length);
     for (const k of keys) {

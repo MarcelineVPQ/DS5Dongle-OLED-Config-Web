@@ -503,6 +503,8 @@
           "runner": "{{support}} Ele roda hoje com {{current}}, que não repassa os recursos nativos do controle.",
           "runnerMissing": "{{game}} está configurado com {{current}}, que não está mais instalado, então o jogo não abre.",
           "steamInput": "{{support}} O Steam Input está ligado para este jogo, então o Steam traduz o controle para um controle genérico e o jogo nunca vê o DualSense. É o mesmo que Propriedades → Controle → \"Desativar o Steam Input\" no Steam.",
+          "steamInputGamescope": "{{game}} roda dentro do gamescope (as opções de inicialização o iniciam lá), e lá o Steam não consegue passar o controle dele para o jogo, então o jogo não vê nenhum controle. Com o Steam Input desligado, o Proton passa o DualSense direto para o jogo. É o mesmo que Propriedades → Controle → \"Desativar o Steam Input\" no Steam.",
+          "steamInputNotDetected": "Você marcou que {{game}} não detecta o controle, e o Steam Input está ligado para ele. Com o Steam Input desligado, o Proton passa o DualSense direto para o jogo (dentro do gamescope, o Steam não consegue passar o controle dele para um jogo). É o mesmo que Propriedades → Controle → \"Desativar o Steam Input\" no Steam.",
           "envSteam": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis. As opções de inicialização ficam: {{options}}",
           "preferSdlWindows": "{{vars}} só funciona com o Proton no Linux. No Windows não faz nada, então a opção que uma versão anterior adicionou é retirada. As opções de inicialização ficam: {{options}}",
           "envHeroic": "{{vars}} faz o Proton apresentar o controle como um controle de Xbox, o que desliga os gatilhos adaptáveis.",
@@ -514,8 +516,9 @@
           "gamepad": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração.{{runner}}",
           "gamepadSteam": "{{game}} só funciona com controles no estilo Xbox (XInput), e nosso Proton repassa o DualSense como ele é, então o jogo não vê nenhum controle. PROTON_PREFER_SDL=1 faz o Proton entregá-lo a este jogo como controle padrão, com vibração. As opções de inicialização ficam: {{options}}{{runner}}",
           "gamepadRunner": " {{current}} ignora essa opção, então o jogo também passa para {{proton}}.",
-          "hdrSteam": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava. As opções de inicialização ficam: {{options}}{{runner}}",
+          "hdrSteam": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava. As opções de inicialização ficam: {{options}}{{runner}}{{input}}",
           "hdrRunner": " Ele também passa para {{proton}}, nosso Proton DualSense, para que os gatilhos adaptáveis e a resposta tátil do controle funcionem com HDR.",
+          "hdrInputOff": " O Steam Input também é desligado para ele: dentro do gamescope o Steam não consegue passar o controle dele para o jogo, então o Proton passa o DualSense direto para o jogo.",
           "hdrHeroic": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR: as configurações de Gamescope do Heroic para o jogo são preenchidas, e as chaves Enable Wine-Wayland e Enable HDR são desligadas. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava.{{runner}}",
           "hdrLutris": "{{game}} é compatível com HDR. Ele vai rodar dentro do gamescope (o compositor da Valve), em tela cheia em {{screen}} ({{mode}}), e assim ganha HDR: as opções de Gamescope do Lutris para o jogo são ligadas, HDR incluído. Ative o HDR nas configurações do próprio jogo. Se o jogo der problema, Desfazer deixa tudo como estava.{{runner}}",
           "hdrNoProton": " Instale nosso Proton DualSense em Jogos → Build do Proton para DualSense para ter também os gatilhos adaptáveis e a resposta tátil com HDR.",
@@ -1032,7 +1035,7 @@
       "micLevel": "Nível do microfone",
       "echoCancel": "Cancelamento de eco",
       "gamepadSet": "O controle chega a este jogo como controle padrão (XInput).",
-      "gamepadSteamInput": "O Steam Input não está desligado para este jogo, então a Steam já entrega a ele um controle de Xbox: a opção de controle padrão não é necessária.",
+      "gamepadSteamInput": "O Steam Input está ligado para este jogo, então o Steam entrega a ele um controle de Xbox: a opção de controle padrão não é necessária. Se o jogo não vir o controle, marque Controle não detectado.",
       "gamepadNoBuild": "Este jogo precisa da opção de controle padrão (PROTON_PREFER_SDL), mas {{runner}} a ignora e nenhum Proton que a respeite está instalado. Instale nosso Proton DualSense mais novo (GE-Proton11-7.2-DualSense ou posterior) ou um GE-Proton comum.",
       "modeSet": "Inicia em {{api}} ({{flag}}), então {{feature}} está disponível.",
       "modeOwn": "Seus próprios argumentos iniciam {{game}} com {{own}}, então eles ficam como estão. Para {{feature}}, troque {{own}} por {{flag}}.",
@@ -1752,7 +1755,8 @@
       "copied": "Copiado",
       "steam": {
         "proton": "No Steam, Propriedades do jogo → Compatibilidade: marque Forçar o uso de uma ferramenta de compatibilidade específica do Steam Play e escolha {{proton}}.",
-        "line": "Propriedades → Geral → Opções de inicialização: cole esta linha (feita para {{screen}} em {{mode}}; mantenha o que já estava lá):"
+        "line": "Propriedades → Geral → Opções de inicialização: cole esta linha (feita para {{screen}} em {{mode}}; mantenha o que já estava lá):",
+        "input": "Propriedades → Controle: escolha Desativar o Steam Input. Dentro do gamescope o Steam não consegue passar o controle dele para o jogo; com o Steam Input desligado, o Proton passa o DualSense direto para o jogo."
       },
       "heroic": {
         "proton": "No Heroic, Configurações do jogo → Versão do Wine: escolha {{proton}}.",

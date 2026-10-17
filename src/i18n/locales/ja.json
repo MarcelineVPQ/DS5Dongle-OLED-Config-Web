@@ -500,6 +500,8 @@
           "runner": "{{support}}現在は {{current}} で実行されており、コントローラーのネイティブ機能が届きません。",
           "runnerMissing": "{{game}} は {{current}} に設定されていますが、もうインストールされていないため起動できません。",
           "steamInput": "{{support}}このゲームでは Steam Input がオンのため、Steam がコントローラーを汎用ゲームパッドに変換し、ゲームからは DualSense が見えません。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
+          "steamInputGamescope": "{{game}} は gamescope の中で動いています（起動オプションでそこから起動）。gamescope の中では Steam がコントローラーをゲームに渡せないため、ゲームからはコントローラーがまったく見えません。Steam Input をオフにすると、代わりに Proton が DualSense をそのままゲームに渡します。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
+          "steamInputNotDetected": "{{game}} でコントローラーが検出されないと記録されていて、このゲームでは Steam Input がオンです。Steam Input をオフにすると、代わりに Proton が DualSense をそのままゲームに渡します（gamescope の中では Steam がコントローラーをゲームに渡せません）。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
           "envSteam": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。起動オプションは次のようになります: {{options}}",
           "preferSdlWindows": "{{vars}} は Linux の Proton でのみ機能します。Windows では何も効果がないため、以前のバージョンが追加したこのオプションを削除します。起動オプションは次のようになります: {{options}}",
           "envHeroic": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。",
@@ -511,8 +513,9 @@
           "gamepad": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。{{runner}}",
           "gamepadSteam": "{{game}} は Xbox タイプ（XInput）のコントローラーにしか対応しておらず、私たちの Proton は DualSense をそのまま渡すため、ゲームからコントローラーが見えません。PROTON_PREFER_SDL=1 にすると、Proton がこのゲームにだけ標準ゲームパッドとして渡します（振動あり）。起動オプションは次のようになります: {{options}}{{runner}}",
           "gamepadRunner": "{{current}} はこのオプションを無視するため、ゲームを {{proton}} にも切り替えます。",
-          "hdrSteam": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。起動オプションは次のようになります: {{options}}{{runner}}",
+          "hdrSteam": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。起動オプションは次のようになります: {{options}}{{runner}}{{input}}",
           "hdrRunner": " また、HDR でもコントローラーのアダプティブトリガーとハプティックフィードバックが使えるよう、当アプリの DualSense Proton である {{proton}} に切り替えます。",
+          "hdrInputOff": " あわせて Steam Input もオフにします。gamescope の中では Steam がコントローラーをゲームに渡せないため、代わりに Proton が DualSense をそのままゲームに渡します。",
           "hdrHeroic": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Heroic の Gamescope 設定を入力し、Enable Wine-Wayland と Enable HDR はオフにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
           "hdrLutris": "{{game}} は HDR に対応しています。gamescope（Valve のコンポジター）の中で {{screen}}（{{mode}}）に全画面で実行され、これで HDR が使えます: このゲームの Lutris の Gamescope オプションを HDR も含めてオンにします。ゲーム内の設定で HDR をオンにしてください。ゲームの動作がおかしいときは「元に戻す」で戻せます。{{runner}}",
           "hdrNoProton": " HDR と一緒にアダプティブトリガーとハプティックフィードバックも使うには、「ゲーム → DualSense 用 Proton ビルド」から当アプリの DualSense Proton をインストールしてください。",
@@ -1023,7 +1026,7 @@
       "micLevel": "マイクレベル",
       "echoCancel": "エコーキャンセル",
       "gamepadSet": "コントローラーは標準ゲームパッド（XInput）としてこのゲームに届いています。",
-      "gamepadSteamInput": "このゲームでは Steam Input がオフになっていないため、Steam がすでに Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。",
+      "gamepadSteamInput": "このゲームでは Steam Input がオンのため、Steam が Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。ゲームからコントローラーが見えない場合は「コントローラー未検出」にチェックを入れてください。",
       "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
       "modeSet": "{{api}}（{{flag}}）で起動するので、{{feature}}が使えます。",
       "modeOwn": "独自の引数で {{game}} を {{own}} で起動しているため、そのままにしています。{{feature}}を使うには {{own}} を {{flag}} に置き換えてください。",
@@ -1741,7 +1744,8 @@
       "copied": "コピーしました",
       "steam": {
         "proton": "Steam で、ゲームのプロパティ → 互換性: 「特定の Steam Play 互換性ツールの使用を強制する」にチェックを入れ、{{proton}} を選びます。",
-        "line": "プロパティ → 一般 → 起動オプション: この行を貼り付けます（{{screen}}・{{mode}} 用。すでにある内容はそのまま残してください）:"
+        "line": "プロパティ → 一般 → 起動オプション: この行を貼り付けます（{{screen}}・{{mode}} 用。すでにある内容はそのまま残してください）:",
+        "input": "プロパティ → コントローラー: 「Steam Input を無効化」を選びます。gamescope の中では Steam がコントローラーをゲームに渡せません。Steam Input をオフにすると、Proton が DualSense をそのままゲームに渡します。"
       },
       "heroic": {
         "proton": "Heroic で、ゲームの設定 → Wine バージョン: {{proton}} を選びます。",

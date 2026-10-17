@@ -15,6 +15,7 @@ import {
   HEROIC_GAMESCOPE_OPTIONS,
   LUTRIS_GAMESCOPE_FLAGS,
   hasGamescopeHdr,
+  runsGamescope,
   hasOldHdrVars,
   hdrReady,
   hdrScreen,
@@ -469,13 +470,41 @@ export function scan(deps: ScanDeps): Scan {
       // Otherwise Steam already gives an XInput game an Xbox pad. Proton only:
       // on Windows the game sees the controller the way Windows gives it.
       const windows = process.platform === "win32";
+      const notDetected = !!deps.notDetected?.has(key);
+      const inputOff = (doc: VdfNode) => setKey(ensureNode(doc, "UserLocalConfigStore", "apps", g.appid), "UseSteamControllerConfig", "0");
+      // Steam Input is on for the game (forced, or Steam's default for a game
+      // without native DualSense support, which games with it opt out of).
+      const inputActive = input === "on" || (input === "global" && !nativeSupport(support));
+      // A game inside gamescope (our HDR setup, or the player's own line) sees
+      // no Steam Input pad at all: Steam can't see gamescope's focus, so it
+      // never hands its controller to the game (Assetto Corsa Rally,
+      // 2026-10-17). Also offered when the player marked "Controller not
+      // detected" while Steam Input is on. Proton then passes the DualSense
+      // straight to the game. A forced "on" with native support has its own
+      // fix below.
+      const offerInputOff =
+        !windows && playable && !!local && !!install.localConfigPath && input !== "off" && !(nativeSupport(support) && input === "on") && ((inputActive && runsGamescope(opts)) || notDetected);
+      if (offerInputOff) {
+        gfixes.push(
+          fix(
+            `${prefix}:input:${g.appid}`,
+            "steam-input-off",
+            "steam",
+            msg("label.steamInput", { game: g.name }),
+            msg(runsGamescope(opts) ? "why.steamInputGamescope" : "why.steamInputNotDetected", { game: g.name }),
+            true,
+            [{ file: install.localConfigPath!, format: "vdf", mutate: inputOff }],
+          ),
+        );
+      }
       if (!windows && playable && !nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && local && install.localConfigPath && config) {
         const runner = override ?? defaultRunner;
         const p = gamepadPlan({
           envSet: hasPreferSdl(opts),
           honours: !runner || buildHonoursPreferSdl(runner, [install.toolsDir]),
           target: preferSdlBuild(tools, [install.toolsDir], runner),
-          steamInputOff: input === "off",
+          // Turning Steam Input off is offered above: plan as it will be.
+          steamInputOff: input === "off" || offerInputOff,
         });
         gamepad = p.state;
         gamepadTo = p.switchTo;
@@ -536,7 +565,7 @@ export function scan(deps: ScanDeps): Scan {
         if (local && input === "on" && install.localConfigPath) {
           gfixes.push(
             fix(`${prefix}:input:${g.appid}`, "steam-input-off", "steam", msg("label.steamInput", { game: g.name }), msg("why.steamInput", { support: supportMsg(support) }), true, [
-              { file: install.localConfigPath, format: "vdf", mutate: (doc) => setKey(ensureNode(doc, "UserLocalConfigStore", "apps", g.appid), "UseSteamControllerConfig", "0") },
+              { file: install.localConfigPath, format: "vdf", mutate: inputOff },
             ]),
           );
         }
@@ -568,11 +597,20 @@ export function scan(deps: ScanDeps): Scan {
           const change = (o: string) => (p.gamescope ? withGamescopeHdr(o, hdrScr!) : stripOldHdrVars(o));
           const edits: Edit[] = [editLaunchOptions(install.localConfigPath, g.appid, change)];
           if (switchTo) edits.push({ file: install.configPath, format: "vdf", mutate: (doc) => setCompatTool(doc, g.appid, switchTo) });
+          // In gamescope Steam can't hand its controller to the game: Steam Input goes off with it.
+          const hdrInputOff = p.gamescope && inputActive;
+          if (hdrInputOff) edits.push({ file: install.localConfigPath, format: "vdf", mutate: inputOff });
           const texts = hdrTexts(
             p.state,
             p.gamescope,
             g.name,
-            msg("why.hdrSteam", { game: g.name, ...hdrScreenParams(), options: change(opts) || msg("fallback.empty"), runner: hdrRunnerSwitch(switchTo, protonInstalled) }),
+            msg("why.hdrSteam", {
+              game: g.name,
+              ...hdrScreenParams(),
+              options: change(opts) || msg("fallback.empty"),
+              runner: hdrRunnerSwitch(switchTo, protonInstalled),
+              input: hdrInputOff ? msg("why.hdrInputOff") : "",
+            }),
           );
           gfixes.push(fix(`${prefix}:hdr:${g.appid}`, "hdr-on", "steam", texts.label, texts.why, true, edits));
         }
