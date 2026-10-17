@@ -1390,8 +1390,8 @@ html[data-theme="light"] .live-ctl {
   stroke: #fff; /* theme-exempt: the controller drawing: its real lights and press tints */
   stroke-width: 3px;
 }
-/* Selectable parts. */
-.live-ctl [data-part] {
+/* Selectable parts: role="button", the parts with a section to open (LiveController). The player lights have none, so they don't look clickable. */
+.live-ctl [role="button"] {
   cursor: pointer;
   outline: none;
 }

@@ -152,8 +152,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const buttonsOpen = view === "overview" && acc.isOpen("buttons");
   const selected = buttonsOpen ? (listPart(buttonHover) ?? listPart(buttonFocus)) : picked && view === "overview" && acc.isOpen(sectionForPart(picked)) ? picked : null;
   // A click on the drawing opens its section; a button opens Button
-  // assignments at its row (with the list open already, the row just gets
-  // the focus: no jump away).
+  // assignments at its row. Always a deep link, the list open or not: it
+  // shows a hidden panel, scrolls the row into view ("nearest": no jump when
+  // it's in view already), flashes it and focuses its picker.
   const pickPart = (part: PartId) => {
     const index = REMAP_INDEX[part];
     // The Edge's Fn buttons and paddles live in the Buttons list too (firmware with protocol 1.9).
@@ -169,7 +170,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     setPicked(part);
     if (row !== null) {
       setButtonFocus(row);
-      if (!buttonsOpen) acc.reveal("buttons", `btn-${row}`);
+      acc.reveal("buttons", `btn-${row}`);
     } else acc.reveal(section);
   };
 

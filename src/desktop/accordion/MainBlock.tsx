@@ -88,7 +88,7 @@ export function MainBlock({ state, icon, title, status, task, actions, children 
   // lifetime: OK — returns showLinked's cleanup, on unmount or the next link
   useEffect(() => {
     const block = ref.current;
-    if (revealed && block) return showLinked(block, block, null, block.querySelector<HTMLElement>(".dk-block-head"), "start");
+    if (revealed && block) return showLinked(block, null, block.querySelector<HTMLElement>(".dk-block-head"), "start");
   }, [revealed]);
   return (
     <section ref={ref} className="dk-block" data-block={state.id} aria-labelledby={`${uid}-h`}>

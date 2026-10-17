@@ -45,6 +45,9 @@ interface PanelInfo {
 }
 const PanelContext = createContext<PanelInfo>({ shown: true, reportTask: () => undefined });
 
+// A deep-linked row's control, which takes the focus (a picker, a switch, a field, a button).
+const ROW_CONTROL = "select, input, textarea, button, [tabindex]:not([tabindex='-1'])";
+
 // Arrow keys between the headers of one accordion.
 function onHeaderKeys(e: KeyboardEvent<HTMLDivElement>) {
   if (!(e.target instanceof HTMLElement) || !e.target.classList.contains("dk-sec-toggle")) return;
@@ -100,7 +103,7 @@ export function Section({ id, icon: Icon, title, status, task, notice, idle = fa
   // The deep link already shown (a link that came while the panel was hidden is shown when it's shown).
   // cache: NOT-WORTH — key=none (the last link's number); invalidated=each new link; bound=1 number
   const shownLink = useRef(0);
-  // A deep link: scroll to it (or its row), focus the header, flash once (the panel hidden: once it's shown).
+  // A deep link: scroll to it (or its row), focus the header (a row: its control), flash once (the panel hidden: once it's shown).
   // lifetime: OK — showLinked's cleanup removes its transitionend listener (unmount / the next link / the panel hidden)
   useEffect(() => {
     const el = ref.current;
@@ -108,7 +111,8 @@ export function Section({ id, icon: Icon, title, status, task, notice, idle = fa
     shownLink.current = revealed.n;
     const row = revealed.row ? el.querySelector<HTMLElement>(`[data-row="${CSS.escape(revealed.row)}"]`) : null;
     // A row in a body that's opening is scrolled to again once the body has grown, or it stays out of view.
-    return showLinked(el, row ?? el, row ? el.querySelector<HTMLElement>(".dk-sec-body") : null, el.querySelector<HTMLElement>(".dk-sec-toggle"), "nearest");
+    const head = el.querySelector<HTMLElement>(".dk-sec-toggle");
+    return showLinked(row ?? el, row ? el.querySelector<HTMLElement>(".dk-sec-body") : null, row ? (row.querySelector<HTMLElement>(ROW_CONTROL) ?? head) : head, "nearest");
   }, [revealed, shown]);
   const keepOpen = t("desktop.accordion.keepOpen", { section: title });
   if (idle)
@@ -172,16 +176,16 @@ export function HeadContent({ icon: Icon, title, status, task, chevron = true }:
 
 // Where a deep link lands (a Section, or a main-view MainBlock): `target`
 // (the place, or a row in it) scrolled into view, and again once `body` has
-// grown (its open transition); the focus to `head`, unless the link already
-// put it inside `el` (a drawing click focuses its button's row); `target`
-// flashed once. Returns the cleanup (the transitionend listener).
-export function showLinked(el: HTMLElement, target: HTMLElement, body: HTMLElement | null, head: HTMLElement | null, block: ScrollLogicalPosition): () => void {
+// grown (its open transition); the focus to `focus` (the header, or a row's
+// control), unless it's inside `target` already; `target` flashed once.
+// Returns the cleanup (the transitionend listener).
+export function showLinked(target: HTMLElement, body: HTMLElement | null, focus: HTMLElement | null, block: ScrollLogicalPosition): () => void {
   const scroll = () => target.scrollIntoView({ block });
   scroll();
   // lifetime: OK — fires once (once: true), when the body's open transition ends; removed by the returned cleanup if it never does
   body?.addEventListener("transitionend", scroll, { once: true });
   const cleanup = () => body?.removeEventListener("transitionend", scroll);
-  if (!el.contains(document.activeElement)) head?.focus({ preventScroll: true });
+  if (!target.contains(document.activeElement)) focus?.focus({ preventScroll: true });
   if (reducedMotionNow()) return cleanup;
   target.classList.remove("dk-flash");
   void target.offsetWidth; // restart the animation for a second link to the same place
