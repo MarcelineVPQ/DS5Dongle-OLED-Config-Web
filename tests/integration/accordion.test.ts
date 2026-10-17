@@ -770,6 +770,58 @@ describe("the Controller page on the accordion", () => {
     act(() => void part("ps").dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(openIds()).toEqual(["slots"]);
   });
+
+  // Marcy, 2026-10-17: "You should be able to press on a button to change it
+  // and have the accordion automatically open and have it scroll to what you
+  // are changing." The panel hidden or shown, the list open or not: the panel
+  // shows, the section opens, the row scrolls into view, flashes and its
+  // picker takes the focus.
+  it("a click on a part shows a hidden panel and lands on the part's row, focused (the list open already or not)", async () => {
+    localStorage.setItem(m.Section.PANEL_HIDDEN_KEY("controller"), "1");
+    localStorage.setItem(m.acc.OPEN_KEY("controller"), "buttons"); // the list left open, the panel hidden (her screenshot)
+    const scrolled: Element[] = [];
+    vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(function (this: Element) {
+      scrolled.push(this);
+    });
+    await live("overview");
+    const split = () => container.querySelector(".dk-split")!;
+    const part = (p: string) => container.querySelector(`.live-ctl [data-part="${p}"]`)!;
+    const pick = async (p: string) => {
+      act(() => void part(p).dispatchEvent(new MouseEvent("click", { bubbles: true })));
+      await act(() => new Promise((r) => setTimeout(r, 30)));
+    };
+    expect(split().classList.contains("panel-hidden"), "starts hidden").toBe(true);
+    // loop: test — the panel hidden first, then shown: the same landing
+    for (const [p, row] of [
+      ["circle", 12],
+      ["cross", 13],
+      ["circle", 12], // the same part again: lands again
+    ] as const) {
+      scrolled.length = 0;
+      await pick(p);
+      expect(split().classList.contains("panel-hidden"), `${p}: the panel shown`).toBe(false);
+      expect(openIds(), p).toEqual(["buttons"]);
+      const rowEl = container.querySelector(`[data-row="btn-${row}"]`)!;
+      expect(scrolled, `${p}: its row scrolled into view`).toContain(rowEl);
+      expect(rowEl.classList.contains("dk-flash"), `${p}: its row flashed`).toBe(true);
+      expect(document.activeElement, `${p}: its picker focused`).toBe(container.querySelector(`#all-remap-${row}`));
+    }
+    // A part with a section and no row: the panel shown again, its header focused.
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList); // jsdom lays nothing out
+    act(() => m.Section.togglePanel()); // the rail item hides it
+    expect(split().classList.contains("panel-hidden")).toBe(true);
+    await pick("lightbar");
+    expect(split().classList.contains("panel-hidden")).toBe(false);
+    expect(openIds()).toEqual(["lightbar"]);
+    expect(document.activeElement).toBe(head("lightbar"));
+    // No section, no button: the player lights don't act (or look) clickable.
+    expect(part("player-leds").getAttribute("role")).toBeNull();
+    // loop: test — every part the drawing says is a button opens something
+    for (const el of container.querySelectorAll<HTMLElement>('.live-ctl [role="button"]')) {
+      await pick(el.dataset.part!);
+      expect(openIds().length, `${el.dataset.part} opens a section`).toBe(1);
+    }
+  });
 });
 
 describe("the Pico 2 W page on the accordion", () => {
