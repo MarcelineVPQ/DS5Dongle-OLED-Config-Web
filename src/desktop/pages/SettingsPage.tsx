@@ -374,9 +374,15 @@ export function PowerSection(props: SectionProps) {
     <>
       <Toggle label={t("desktop.settings.idleDisconnect", "Disconnect when idle")} value={!d.disableInactiveDisconnect} onChange={(v) => set("disableInactiveDisconnect", !v)} />
       <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
-      <Toggle label={t("desktop.settings.picoLed", "Pico status LED")} value={!d.disablePicoLed} onChange={(v) => set("disablePicoLed", !v)} />
     </>
   );
+}
+
+// The Pico's own status LED: in Status lights, with the status pin (both show the connection).
+export function PicoLedToggle(props: SectionProps) {
+  const { t } = useTranslation();
+  const { d, set } = useFields(props);
+  return <Toggle label={t("desktop.settings.picoLed", "Pico status LED")} value={!d.disablePicoLed} onChange={(v) => set("disablePicoLed", !v)} />;
 }
 
 // What the dongle does when the PC sleeps (protocol 1.14). Not part of the

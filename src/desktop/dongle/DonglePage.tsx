@@ -3,17 +3,21 @@
 // the centerpiece (OledHero: the module named, the mirror with KEY0 / KEY1
 // and the console's Log tab, what the screen is doing), then the board
 // (PicoGauges: dials and facts), then Diagnostics (a main-view block:
-// readouts don't go in the accordion). Its accordion at the right: Firmware,
-// Restart & reset, Power & sleep, OLED screen, USB & status pin. The dials
+// readouts don't go in the accordion). Its accordion at the right, by how
+// often each is used and the danger zone last (IA audit Q10, P1, P2, P5):
+// OLED screen, Power & sleep, Connection to the PC (with Set up USB access),
+// Status lights (the Pico's LED and the status pin), Firmware (its yellow dot
+// and the banner say when an update waits), Restart & reset. The dials
 // and Diagnostics read the board live, once a second, while the page is
 // shown and the window is on screen (DongleDashboard.tsx); a folded section
 // renders nothing.
 import { useTranslation } from "react-i18next";
-import { Activity, Download, Monitor, Power, RotateCcw, Usb } from "lucide-react";
+import { Activity, Download, Lightbulb, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES3, supportsFeature3, type BridgeIdentity, type OledPadButton } from "../../protocol/bridgeClient";
 import { STATUS_GPIO_OFF } from "../../protocol/config";
 import { shortVersion } from "../../update/manifest";
+import UsbAccessSetup from "../UsbAccessSetup";
 import { named, onOff } from "../accordion/status";
 import { Section, SectionGroup, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
@@ -25,7 +29,7 @@ import Notice from "../Notice";
 import { useNoticeTasks } from "../notices";
 import { BOARD_PROBLEM_BLOCK, FIRMWARE_UPDATE_SECTION } from "../openTasks";
 import FirmwareSection, { DeviceSection } from "../pages/FirmwarePage";
-import { DisplaySection, PcSleepSection, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
+import { DisplaySection, PcSleepSection, PicoLedToggle, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
 import type { FirmwareUpdate } from "../useUpdates";
 import DongleConsole, { supportsOledMirror, type OledFrameState } from "./DongleConsole";
 import OledHero from "./OledHero";
@@ -102,32 +106,25 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
       page="dongle"
       main={main}
       title={hardwareName(bridge.identity)}
-      sub={`DS5 Dongle OLED Edition${installed ? ` · ${shortVersion(installed)}` : ""}`}
+      sub={t("desktop.panelSub.dongle")}
       // The board-wide settings aren't part of a game's profile: said while one is on, since the save bar then saves to the profile.
       top={target && <Notice closable>{t("desktop.editing.dongleNote", { title: target.title })}</Notice>}
       state={acc}
       panelRef={panelRef}
     >
       <Section
-        id="firmware"
-        icon={Download}
-        title={t("desktop.sections.firmware")}
-        status={installed ? `${shortVersion(installed)} · ${fw.available ? t("desktop.firmware.update", { version: shortVersion(fw.latest?.version) }) : t("desktop.firmware.upToDate")}` : null}
-        task={fwTask}
+        id="oled"
+        icon={Monitor}
+        title={t("desktop.sections.oled")}
+        status={[["100%", "50%", "25%", "6%"][d.screenBrightness & 3], named(t, t("behavior.screenDimTimeoutLabel"), minutesOrNever(t, d.screenDimTimeout))].join(" · ")}
       >
-        {() => <FirmwareSection bridge={bridge} fw={fw} />}
-      </Section>
-      <Section id="device" icon={RotateCcw} title={t("desktop.sections.device")} status={s ? named(t, t("desktop.dash.uptime"), formatUptime(s.uptime)) : null}>
-        {() => <DeviceSection bridge={bridge} />}
+        {() => <DisplaySection bridge={bridge} />}
       </Section>
       <Section
         id="power"
         icon={Power}
         title={t("desktop.sections.power")}
-        status={[
-          d.disableInactiveDisconnect ? onOff(t, t("desktop.settings.idleDisconnect"), false) : named(t, t("behavior.inactiveTimeLabel"), minutesOrNever(t, d.inactiveTime)),
-          onOff(t, t("desktop.settings.picoLed"), !d.disablePicoLed),
-        ].join(" · ")}
+        status={d.disableInactiveDisconnect ? onOff(t, t("desktop.settings.idleDisconnect"), false) : named(t, t("behavior.inactiveTimeLabel"), minutesOrNever(t, d.inactiveTime))}
       >
         {() => (
           <>
@@ -139,21 +136,27 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
         )}
       </Section>
       <Section
-        id="oled"
-        icon={Monitor}
-        title={t("desktop.sections.oled")}
-        status={[["100%", "50%", "25%", "6%"][d.screenBrightness & 3], named(t, t("behavior.screenDimTimeoutLabel"), minutesOrNever(t, d.screenDimTimeout))].join(" · ")}
-      >
-        {() => <DisplaySection bridge={bridge} />}
-      </Section>
-      <Section
         id="usb"
         icon={Usb}
         title={t("desktop.sections.usb")}
-        // loop: NOT-WORTH — N = 3 parts of one status line
+        // loop: NOT-WORTH — N = 2 parts of one status line
+        status={[["250 Hz", "500 Hz", "1 kHz"][d.pollingRateMode] ?? "", named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? "")].filter(Boolean).join(" · ")}
+      >
+        {() => (
+          <>
+            <UsbSection bridge={bridge} />
+            {/* Set up USB access (Linux): PC-side setup for this app and games, beside the PC connection (IA audit P1). */}
+            <UsbAccessSetup />
+          </>
+        )}
+      </Section>
+      <Section
+        id="lights"
+        icon={Lightbulb}
+        title={t("desktop.sections.lights")}
+        // loop: NOT-WORTH — N = 2 parts of one status line
         status={[
-          ["250 Hz", "500 Hz", "1 kHz"][d.pollingRateMode] ?? "",
-          named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? ""),
+          onOff(t, t("desktop.settings.picoLed"), !d.disablePicoLed),
           v13 ? named(t, t("desktop.settings.statusPin"), d.statusGpioPin === STATUS_GPIO_OFF ? t("desktop.settings.statusPinOff") : `GP${d.statusGpioPin}`) : null,
         ]
           .filter(Boolean)
@@ -161,12 +164,24 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
       >
         {() => (
           <>
-            <UsbSection bridge={bridge} />
+            <PicoLedToggle bridge={bridge} />
             <SectionGroup title={t("desktop.settings.statusPin")}>
               <StatusPinSection bridge={bridge} />
             </SectionGroup>
           </>
         )}
+      </Section>
+      <Section
+        id="firmware"
+        icon={Download}
+        title={t("desktop.sections.firmware")}
+        status={installed ? `${shortVersion(installed)} · ${fw.available ? t("desktop.firmware.update", { version: shortVersion(fw.latest?.version) }) : t("desktop.firmware.upToDate")}` : null}
+        task={fwTask}
+      >
+        {() => <FirmwareSection bridge={bridge} fw={fw} />}
+      </Section>
+      <Section id="device" icon={RotateCcw} title={t("desktop.sections.device")} status={s ? named(t, t("desktop.dash.uptime"), formatUptime(s.uptime)) : null}>
+        {() => <DeviceSection bridge={bridge} />}
       </Section>
     </SplitView>
   );

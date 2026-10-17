@@ -1884,7 +1884,8 @@
       "device": "Redémarrage et réinitialisation",
       "power": "Alimentation et veille",
       "oled": "Écran OLED",
-      "usb": "USB et broche d'état",
+      "usb": "Connexion au PC",
+      "lights": "Voyants d'état",
       "diagnostics": "Diagnostic"
     },
     "boardBusy": {
@@ -1914,7 +1915,8 @@
       "app": "Ce PC uniquement · enregistré à chaque changement",
       "controller": "Sur {{device}} · slot d'association {{slot}}",
       "game": "Gardé sur ce PC · un correctif ne change des fichiers qu'une fois appliqué",
-      "about": "Guide, nouveautés et crédits"
+      "about": "Guide, nouveautés et crédits",
+      "dongle": "Sur {{device}} · pour chaque slot d'association"
     }
   },
   "ad": {

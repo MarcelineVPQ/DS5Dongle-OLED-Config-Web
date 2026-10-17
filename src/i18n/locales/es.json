@@ -1884,7 +1884,8 @@
       "device": "Reinicio y restablecimiento",
       "power": "Energía y suspensión",
       "oled": "Pantalla OLED",
-      "usb": "USB y pin de estado",
+      "usb": "Conexión con el PC",
+      "lights": "Luces de estado",
       "diagnostics": "Diagnóstico"
     },
     "boardBusy": {
@@ -1914,7 +1915,8 @@
       "app": "Solo este PC · se guarda al cambiarlo",
       "controller": "En {{device}} · slot de emparejamiento {{slot}}",
       "game": "Se guarda en este PC · un ajuste solo cambia archivos al aplicarlo",
-      "about": "Guía, cambios y créditos"
+      "about": "Guía, cambios y créditos",
+      "dongle": "En {{device}} · para cada slot de emparejamiento"
     }
   },
   "ad": {

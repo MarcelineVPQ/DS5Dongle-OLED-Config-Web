@@ -273,7 +273,7 @@ const BASE_VIEWS = [
     await sleep(800);
     await evaluate(`(() => { const s = document.querySelector(".dk-split-main"); if (s) s.scrollTop = s.scrollHeight; })()`);
   }),
-  ...["firmware", "device", "power", "oled", "usb"].map((id) =>
+  ...["oled", "power", "usb", "lights", "firmware", "device"].map((id) =>
     view("dongle", `dongle section:${id}`, 900, async () => {
       await rail("dongle");
       await sleep(300);

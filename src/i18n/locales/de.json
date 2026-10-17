@@ -1884,7 +1884,8 @@
       "device": "Neustart & Zurücksetzen",
       "power": "Energie & Ruhezustand",
       "oled": "OLED-Bildschirm",
-      "usb": "USB & Status-Pin",
+      "usb": "Verbindung zum PC",
+      "lights": "Statusleuchten",
       "diagnostics": "Diagnose"
     },
     "boardBusy": {
@@ -1914,7 +1915,8 @@
       "app": "Nur dieser PC · wird beim Ändern gespeichert",
       "controller": "Auf {{device_dat}} · Kopplungs-Slot {{slot}}",
       "game": "Auf diesem PC · eine Korrektur ändert Dateien erst beim Übernehmen",
-      "about": "Handbuch, Änderungen und Credits"
+      "about": "Handbuch, Änderungen und Credits",
+      "dongle": "Auf {{device_dat}} · für jeden Kopplungs-Slot"
     }
   },
   "ad": {

@@ -8,7 +8,7 @@ export const SECTIONS = {
   app: ["language", "appearance", "accessibility", "startup", "graphics", "updates", "privacy", "dismissed", "developer"],
   about: ["guide", "changes", "firmware", "proton", "roadmap", "credits"],
   controller: ["lightbar", "triggers", "haptics", "speaker", "mic", "buttons", "sticks", "slots"],
-  dongle: ["firmware", "device", "power", "oled", "usb"],
+  dongle: ["oled", "power", "usb", "lights", "firmware", "device"],
   games: ["launchers", "proton", "recommended", "history"],
   game: ["profile", "setup", "compatibility", "hdr", "report", "notes"],
 } as const;

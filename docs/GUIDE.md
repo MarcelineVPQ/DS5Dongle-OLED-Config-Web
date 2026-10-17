@@ -49,7 +49,7 @@ Hold the **Create button** and the **PS button** on the controller until the lig
 
 ### USB access (Linux)
 
-On Linux, press **Set up USB access** on your board's page once (it asks for your password). It lets the app open your board, and on newer Ubuntu it also lets the app run inside its security sandbox.
+On Linux, press **Set up USB access** once (your board's page → **Connection to the PC**; Games → **This computer** offers it too when games can't reach the controller). It asks for your password and installs one rule for two things: the app can open your board, and games can reach the controller directly (adaptive triggers and haptic feedback through Proton). On newer Ubuntu it also lets the app run inside its security sandbox.
 
 ## 3. The Controller page
 
@@ -155,13 +155,14 @@ The side bar names this page after your board (**Pico 2 W**, for example), and t
 
 ![The dashboard's gauges and graphs](screenshots/guide-dashboard.png)
 
-In the panel on the right, one section each for what you set or do (they work like the Controller page's; a yellow dot marks a firmware update):
+In the panel on the right, one section each for what you set or do (they work like the Controller page's), the OLED's first and the danger zone last; the line under the panel's title says they're kept on your board, for every pairing slot:
 
-- **Firmware:** what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards). While firmware is being written, the app doesn't restart or quit: an app update's **Restart now** waits ("Wait for the firmware update to finish."), and closing the window or quitting from the tray waits until the write is done, then the app closes.
-- **Restart & reset:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments), USB access (Linux).
-- **Power & sleep:** disconnect the controller when idle, the timeout, the Pico's status LED; under **PC sleep**: turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
 - **OLED screen** (the Waveshare Pico-OLED-1.3 add-on): its brightness, dim and off timeouts, whether controller input wakes it.
-- **USB & status pin:** polling rate and controller mode (these apply after **Reconnect USB**); under **Status pin**, a Pico pin (GPIO) that gives 3.3 V while a controller is connected (**On while connected**), or a 0.2 s pulse when one connects (**Pulse on connect**): for an LED (with a resistor) or a PC case's power-button header. Only pins nothing else uses are offered. Needs the newest firmware on your board.
+- **Power & sleep:** disconnect the controller when idle and the timeout; under **PC sleep**: turn off the controller when the PC sleeps (on by default), and wake the PC with the PS button (off by default; the PC must keep USB powered while it sleeps and allow the keyboard to wake it: with no controller connected, your board appears as "DS5 Dongle Wake Keyboard"). Each switch is saved on your board at once.
+- **Connection to the PC:** polling rate and controller mode (these apply after **Reconnect USB**), and on Linux **Set up USB access** (see "USB access" above).
+- **Status lights:** the Pico's status LED, and under **Status pin**, a Pico pin (GPIO) that gives 3.3 V while a controller is connected (**On while connected**), or a 0.2 s pulse when one connects (**Pulse on connect**): for an LED (with a resistor) or a PC case's power-button header. Only pins nothing else uses are offered. Needs the newest firmware on your board.
+- **Firmware** (a yellow dot, and the banner at the top, say when an update waits): what's installed and the latest version. **Check now** looks right away; an update is one click (your board restarts itself; press the PS button on the controller afterwards). While firmware is being written, the app doesn't restart or quit: an app update's **Restart now** waits ("Wait for the firmware update to finish."), and closing the window or quitting from the tray waits until the write is done, then the app closes.
+- **Restart & reset:** restart your board, enter BOOTSEL, factory reset (keeps pairings and button assignments).
 
 ## 7. Games
 

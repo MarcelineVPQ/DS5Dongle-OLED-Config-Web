@@ -4,14 +4,14 @@ import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
-import UsbAccessSetup from "../UsbAccessSetup";
 import { announce } from "../toast";
 import { feedProblemKey, type FirmwareUpdate } from "../useUpdates";
 import { logged } from "../../errorText";
 
 // The Pico 2 W page's Firmware section (installed / latest, update, check)
-// and its Restart & reset section (restart, BOOTSEL, factory reset, the
-// Linux USB rule): section bodies for dongle/DonglePage.tsx.
+// and its Restart & reset section (restart, BOOTSEL, factory reset; Set up
+// USB access is in Connection to the PC): section bodies for
+// dongle/DonglePage.tsx.
 export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeResult; fw: FirmwareUpdate }) {
   const { t } = useTranslation();
   const client = bridge.client;
@@ -173,7 +173,6 @@ export function DeviceSection({ bridge }: { bridge: UseDs5BridgeResult }) {
       </div>
       {/* hint: MUST-SHOW — what Factory reset keeps and loses, before you press it */}
       <p className="dk-hint">{t("desktop.firmware.resetHint", "Factory reset restores default settings. Pairings and button assignments are kept.")}</p>
-      <UsbAccessSetup />
     </>
   );
 }

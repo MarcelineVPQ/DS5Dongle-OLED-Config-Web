@@ -569,12 +569,14 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
   sticks: ["desktop.calib.title", "desktop.calib.leftStick", "desktop.curves.title", "desktop.calib.triggers"],
   slots: ["desktop.slots.wipe"],
 };
+// The Pico 2 W page's panel (IA audit Q10): the OLED first, the danger zone last.
 const DONGLE_INVENTORY: Record<string, string[]> = {
+  oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
+  power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
+  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect"],
+  lights: ["desktop.settings.picoLed", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
   firmware: ["desktop.firmware.check"],
   device: ["desktop.firmware.enterBootsel", "desktop.firmware.factoryReset"],
-  power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.picoLed", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
-  oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
-  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
 };
 // Each section opened in turn: everything listed shows in it, and no row or
 // heading shows in two sections (nothing lost, no dupes).
@@ -941,6 +943,15 @@ describe("the panel sub-lines", () => {
   it("the Controller page: on the board, which pairing slot", async () => {
     await live("overview");
     expect(sub()).toBe(m.i18n.t("desktop.panelSub.controller", { slot: 0 }));
+  });
+  it("the Pico 2 W page: on the board, every slot; no firmware version (that's Firmware's)", async () => {
+    await live("dongle");
+    expect(sub()).toBe(m.i18n.t("desktop.panelSub.dongle"));
+    expect(sub()).not.toMatch(VERSION);
+    // The OLED's settings first, the danger zone last (IA audit Q10).
+    const ids = [...container.querySelectorAll<HTMLElement>(".dk-split-panel .dk-sec")].map((x) => x.dataset.section);
+    expect(ids[0]).toBe("oled");
+    expect(ids.at(-1)).toBe("device");
   });
   it("App settings, About and a game's page: their own line, no version", async () => {
     await render(appSettings());

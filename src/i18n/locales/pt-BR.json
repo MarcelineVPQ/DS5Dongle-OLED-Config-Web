@@ -1884,7 +1884,8 @@
       "device": "Reinício e redefinição",
       "power": "Energia e suspensão",
       "oled": "Tela OLED",
-      "usb": "USB e pino de status",
+      "usb": "Conexão com o PC",
+      "lights": "Luzes de status",
       "diagnostics": "Diagnóstico"
     },
     "boardBusy": {
@@ -1914,7 +1915,8 @@
       "app": "Só este PC · salvo ao mudar",
       "controller": "{{device_em, capitalize}} · slot de emparelhamento {{slot}}",
       "game": "Fica neste PC · um ajuste só muda arquivos quando você aplica",
-      "about": "Guia, mudanças e créditos"
+      "about": "Guia, mudanças e créditos",
+      "dongle": "{{device_em, capitalize}} · para cada slot de emparelhamento"
     }
   },
   "ad": {

@@ -1883,7 +1883,8 @@
       "device": "Restart & reset",
       "power": "Power & sleep",
       "oled": "OLED screen",
-      "usb": "USB & status pin",
+      "usb": "Connection to the PC",
+      "lights": "Status lights",
       "diagnostics": "Diagnostics"
     },
     "boardBusy": {
@@ -1913,7 +1914,8 @@
       "app": "This PC only · saved as you change them",
       "controller": "On {{device}} · pairing slot {{slot}}",
       "game": "Kept on this PC · a fix changes files only when you apply it",
-      "about": "Guide, changes and credits"
+      "about": "Guide, changes and credits",
+      "dongle": "On {{device}} · every pairing slot"
     }
   },
   "ad": {
