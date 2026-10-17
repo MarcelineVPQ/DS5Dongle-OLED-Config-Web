@@ -59,6 +59,10 @@ export class WebUsbTransport implements Ds5Transport {
     return this.device.opened && this.interfaceNumber >= 0;
   }
 
+  get serial(): string | null {
+    return this.device.serialNumber || null;
+  }
+
   async open(): Promise<void> {
     if (this.isOpen) return;
     const itf = configuratorInterface(this.device);

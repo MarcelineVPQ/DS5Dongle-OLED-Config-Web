@@ -1838,7 +1838,8 @@
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
-      "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal."
+      "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal.",
+      "draftsDropped": "Nicht gespeicherte Änderungen wurden verworfen: Jetzt ist ein anderes Board oder ein anderer Kopplungs-Slot aktiv. Nimm sie noch einmal vor, wenn du sie noch willst."
     },
     "notices": {
       "volumeRestored": "Controller-Lautstärke wieder auf voll: Sie war nach dem erneuten Verbinden des Controllers wieder niedrig.",

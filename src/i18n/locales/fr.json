@@ -1838,7 +1838,8 @@
         "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli."
       },
       "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
-      "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer."
+      "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer.",
+      "draftsDropped": "Les modifications non enregistrées n'ont pas été gardées : une autre carte ou un autre slot d'association est utilisé maintenant. Refais-les si tu les veux toujours."
     },
     "notices": {
       "volumeRestored": "Volume de la manette remis au maximum : il était de nouveau bas après la reconnexion de la manette.",

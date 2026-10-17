@@ -11,6 +11,9 @@ import { keyedText } from "../errorText";
 export interface Ds5Transport {
   readonly label: string;
   readonly isOpen: boolean;
+  // The board's USB serial number (per board, from its flash chip's unique
+  // ID), when it reports one: tells the same board coming back from another.
+  readonly serial?: string | null;
   open(): Promise<void>;
   close(): Promise<void>;
   // GET a report. Resolves to the payload WITHOUT the report-id byte.

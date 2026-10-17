@@ -1838,7 +1838,8 @@
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
-      "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar."
+      "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar.",
+      "draftsDropped": "Los cambios sin guardar no se conservaron: ahora se usa otra placa u otro slot de emparejamiento. Vuelve a hacerlos si todavía los quieres."
     },
     "notices": {
       "volumeRestored": "Volumen del mando restaurado al máximo: estaba bajo otra vez tras volver a conectar el mando.",

@@ -2,12 +2,14 @@
 // button at a time from the side panel, and written by the save bar's Save
 // (boardDrafts.tsx: the firmware writes remaps straight to flash, so the
 // write is the save, verified by re-reading the table and its revision).
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { causeText } from "../shownError";
+import { sameBoard, showDraftsDropped } from "./slotSettings";
 import { useTranslation } from "react-i18next";
 import type { Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { defaultExtra, identityTable, tablesEqual, type RemapState } from "../../protocol/remap";
 import { sayInPassing } from "../narrator";
+import { logged } from "../../errorText";
 
 export interface Remap {
   supported: boolean | null; // null while loading
@@ -44,6 +46,19 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const clearError = useCallback(() => setError(null), []);
   const [extraDevice, setExtraDevice] = useState<number[] | null>(null);
   const [extraDraft, setExtraDraft] = useState<number[]>(defaultExtra);
+  // The connection the table was read from: until this one's read is in, the
+  // old board's table is neither compared with nor written.
+  const [readFor, setReadFor] = useState<Ds5BridgeClient | null>(null);
+  // What a new read compares with (it lands outside a render).
+  const latest = useRef({ draft, table: state?.table ?? null, extraDraft, extraDevice, readFor });
+  // lifetime: OK — acquires nothing (mirrors state into a ref)
+  useEffect(() => {
+    latest.current = { draft, table: state?.table ?? null, extraDraft, extraDevice, readFor };
+  });
+  // Staged board edits set aside while a game's layout is on (the editor
+  // then shows and edits the game's buttons), put back when it comes off.
+  // cache: OK — key=the board (sameBoard); invalidated=put back or dropped on the next read without a game's layout; bound=1 table pair
+  const parked = useRef<{ from: Ds5BridgeClient; draft: number[]; extraDraft: number[] } | null>(null);
 
   // lifetime: OK — cleanup: drops late reads (acquires nothing else)
   useEffect(() => {
@@ -51,24 +66,41 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     let live = true;
     // Firmware without the Edge extras answers nothing (or stalls): no rows then.
     // error: NOT-WORTH — firmware without the Edge extras answers nothing: no extra rows
-    client.readRemapExtra().then(
-      (e) => {
-        if (!live) return;
-        setExtraDevice(e);
-        setExtraDraft(e ? e.slice() : defaultExtra());
-      },
-      () => live && setExtraDevice(null),
-    );
+    const extra = client.readRemapExtra().catch(() => null);
     // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText): the remap card's error notice
     client.readRemap().then(
-      (s) => {
+      async (s) => {
+        const e = await extra;
         if (!live) return;
+        // A staged change survives the read only on the same board (a reconnect,
+        // a game's layout going on or off); on another board it's dropped, said once.
+        const was = latest.current;
+        const staged = !!was.readFor && (!tablesEqual(was.draft, was.table ?? identityTable()) || (!!was.extraDevice && !tablesEqual(was.extraDraft, was.extraDevice)));
+        const board = sameBoard(was.readFor, client);
+        let draftNext = s ? s.table.slice() : identityTable();
+        let extraNext = e ? e.slice() : defaultExtra();
+        const back = parked.current;
+        const backHere = !!back && sameBoard(back.from, client);
+        let dropped = !!back && !backHere;
+        parked.current = temporary && backHere ? back : null; // the game's layout still on: they stay aside
+        if (temporary && staged && board && !backHere) parked.current = { from: client, draft: was.draft, extraDraft: was.extraDraft };
+        else if (!temporary && back && backHere) [draftNext, extraNext] = [back.draft, back.extraDraft];
+        else if (staged && board) [draftNext, extraNext] = [was.draft, was.extraDraft];
+        else if (staged) dropped = true;
+        if (dropped) showDraftsDropped();
         setSupported(!!s);
         setState(s);
-        setDraft(s ? s.table.slice() : identityTable());
+        setDraft(draftNext);
+        setExtraDevice(e);
+        setExtraDraft(extraNext);
+        setReadFor(client);
         setError(null);
       },
-      (cause: unknown) => live && setError(causeText(cause)),
+      (cause: unknown) => {
+        if (!live) return;
+        setError(causeText(cause));
+        extra.then((e) => live && setExtraDevice(e)).catch(logged("the Edge extras after a failed remap read (the card shows the remap error)"));
+      },
     );
     return () => {
       live = false;
@@ -80,7 +112,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
   const device = useMemo(() => state?.table ?? identityTable(), [state]);
 
   const apply = useCallback(async (): Promise<boolean> => {
-    if (!client) return false;
+    if (!client || readFor !== client) return false;
     setBusy(true);
     setError(null);
     try {
@@ -111,7 +143,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
     } finally {
       setBusy(false);
     }
-  }, [client, draft, state, t, extraDevice, extraDraft]);
+  }, [client, readFor, draft, state, t, extraDevice, extraDraft]);
 
   const setTarget = useCallback((source: number, target: number) => setDraft((d) => d.map((v, i) => (i === source ? target : v))), []);
   const revert = useCallback(() => {
@@ -137,7 +169,7 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       supported: client ? supported : null,
       device,
       draft,
-      dirty: !tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice)),
+      dirty: !!client && readFor === client && (!tablesEqual(draft, device) || (!!extraDevice && !tablesEqual(extraDraft, extraDevice))),
       busy,
       error,
       clearError,
@@ -152,6 +184,6 @@ export function useRemap(client: Ds5BridgeClient | null, temporary: boolean | nu
       loaded,
       temporary: !!temporary,
     }),
-    [client, supported, device, draft, extraDevice, extraDraft, busy, error, clearError, setTarget, apply, revert, resetAll, load, setExtra, loaded, temporary],
+    [client, readFor, supported, device, draft, extraDevice, extraDraft, busy, error, clearError, setTarget, apply, revert, resetAll, load, setExtra, loaded, temporary],
   );
 }

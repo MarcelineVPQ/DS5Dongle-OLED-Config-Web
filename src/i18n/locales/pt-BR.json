@@ -1838,7 +1838,8 @@
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app."
       },
       "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
-      "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo."
+      "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo.",
+      "draftsDropped": "As alterações não salvas não foram mantidas: agora outra placa ou outro slot de emparelhamento está em uso. Faça-as de novo se ainda quiser."
     },
     "notices": {
       "volumeRestored": "Volume do controle restaurado ao máximo: ele estava baixo de novo depois que o controle reconectou.",

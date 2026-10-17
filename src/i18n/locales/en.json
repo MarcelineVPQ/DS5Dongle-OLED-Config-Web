@@ -1837,7 +1837,8 @@
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app."
       },
       "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
-      "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again."
+      "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again.",
+      "draftsDropped": "Unsaved changes weren't kept: another board or pairing slot is in use now. Make them again if you still want them."
     },
     "notices": {
       "volumeRestored": "Controller volume restored to full: it was low again after the controller reconnected.",
