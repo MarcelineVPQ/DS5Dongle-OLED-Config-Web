@@ -39,7 +39,7 @@ Never in it: the notes (free text, private to this PC), install folders or any p
 
 ## Migration from the old checklist
 
-Up to 0.9.5-dev.17 the report was a list of ticked statements (`Mine.tags`). They're read through `migrateTags` wherever the sheet is shown or shared; the player's next change writes the sheet and drops the old list. The star rating, the notes and the Supports HDR mark are separate fields and stay as they are.
+Up to 0.9.5-dev.17 the report was a list of ticked statements (`Mine.tags`). They're read through `migrateTags` wherever the sheet is shown or shared; the player's next change writes the sheet, and until 0.9.5 is stable also the old list made from it (`legacyTags`), so going back to dev.17 (which drops `report`) keeps the ticks. The star rating, the notes and the Supports HDR mark are separate fields and stay as they are.
 
 | Old statement (tag) | New |
 | --- | --- |

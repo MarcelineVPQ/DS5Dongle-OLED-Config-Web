@@ -15,6 +15,7 @@ import {
   TAG_MIGRATION,
   countResults,
   isNotDetected,
+  legacyTags,
   migrateTags,
   resultOf,
   setFlag,
@@ -26,6 +27,8 @@ import {
   type ReportSheet,
 } from "../../src/desktop/games/report";
 import { SetMineSchema } from "../../electron/main/ipc";
+import { z } from "zod";
+import { salvageObject } from "../../src/persisted";
 
 const FIXTURE = new URL("../fixtures/reports/library-dev17.json", import.meta.url);
 const fixture = () => JSON.parse(readFileSync(FIXTURE, "utf8")) as { games: Record<string, { title: string; mine: Mine }> };
@@ -171,12 +174,11 @@ describe("migration from the old checklist", () => {
       const store = new LibraryStore(dir);
       const key = "lutris-00000001:lutris:battlenet-1";
       const before = store.get().games[key].mine!;
-      // What the page sends (useMine): the sheet, the old ticks dropped, a new stamp.
+      // What the page sends (useMine): the sheet, the old ticks rewritten from it, a new stamp.
       const report = setResult(sheetOf(before), "microphone", "fail");
-      const { tags: _, ...kept } = before;
-      store.setMine(key, "Every statement at once", { ...kept, report, ratedOn: { app: "0.9.5-dev.18", at: 1760300000 } });
+      store.setMine(key, "Every statement at once", { ...before, report, tags: legacyTags(report), ratedOn: { app: "0.9.5-dev.18", at: 1760300000 } });
       const after = JSON.parse(readFileSync(join(dir, LIBRARY_FILE), "utf8")).games[key].mine;
-      expect(after.tags).toBeUndefined();
+      expect(after.tags).toEqual(legacyTags(report));
       expect(after.rating).toBe(3);
       expect(after.notes).toBe("Fixture notes: everything ticked.");
       expect(after.hdr).toBe(true);
@@ -187,6 +189,63 @@ describe("migration from the old checklist", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// B2 (0.9.5 bug hunt): going back from dev.18 to dev.17 lost every test
+// sheet: dev.17's strict schema drops `report`, and dev.18 dropped `tags`.
+// dev.17's MineSchema, as it shipped (v0.9.5-dev.17-oled-edition), read the way
+// its LibraryStore reads a record that doesn't fit whole (salvageObject).
+const MineSchemaDev17 = z.strictObject({
+  rating: z.number().int().min(1).max(5).optional(),
+  tags: z.array(z.enum(FEEDBACK_TAGS)).max(FEEDBACK_TAGS.length).optional(),
+  ratedOn: z.strictObject({ app: z.string().regex(/^\d+\.\d+\.\d+$/), build: z.string().max(40).optional(), gameUpdated: z.number().optional(), at: z.number() }).optional(),
+  notes: z.string().max(5000).optional(),
+  hdr: z.boolean().optional(),
+});
+const readByDev17 = (mine: Mine) => salvageObject(MineSchemaDev17, mine)!.value;
+
+describe("going back to 0.9.5-dev.17 and forward again", () => {
+  const sheet: ReportSheet = {
+    schemaVersion: 1,
+    results: {
+      "controller-detected": { result: "fail" },
+      "adaptive-triggers": { result: "pass" },
+      "haptic-feedback": { result: "fail", details: ["weak", "rumble-only"] },
+      speaker: { result: "fail", details: ["problems"] },
+      "stays-connected": { result: "fail" },
+    },
+    setup: { "steam-input-off": true },
+  };
+
+  it("dev.18 → dev.17: the sheet is also written as the old ticks, which dev.17 keeps", () => {
+    const written: Mine = { rating: 2, report: sheet, tags: legacyTags(sheet), notes: "n", ratedOn: { app: "0.9.5-dev.18", at: 1 } };
+    expect(MineSchema.safeParse(written).success).toBe(true);
+    const old = readByDev17(written);
+    expect("report" in old).toBe(false); // dev.17 doesn't know it
+    expect(old.tags).toEqual(["not-detected", "triggers-work", "weak-vibration", "rumble-only", "speaker-problems", "disconnects", "needs-steam-input-off"]);
+    expect(old.rating).toBe(2);
+    expect(old.notes).toBe("n");
+  });
+
+  it("dev.17 → dev.18: the ticks come back as the same sheet, conflicts included", () => {
+    const back = readByDev17({ report: sheet, tags: legacyTags(sheet) });
+    expect(sheetOf(back)).toEqual(sheet);
+    const both = setResult(sheet, "light-bar", "pass");
+    const conflicted: ReportSheet = { ...both, results: { ...both.results, speaker: { result: "fail", details: ["problems"] } }, conflicts: ["speaker"] };
+    expect(sheetOf(readByDev17({ report: conflicted, tags: legacyTags(conflicted) }))).toEqual(conflicted);
+    // Every fixture game's sheet survives the round trip, where the checklist could say it.
+    for (const [key, game] of Object.entries(fixture().games)) {
+      const s = sheetOf(game.mine);
+      expect(migrateTags(legacyTags(s)), key).toEqual(s);
+    }
+  });
+
+  it("what the old checklist had no statement for is left out, not guessed", () => {
+    expect(legacyTags({ schemaVersion: 1, results: { "controller-detected": { result: "pass" }, microphone: { result: "fail" }, "haptic-feedback": { result: "fail" } } })).toEqual([]);
+    expect(legacyTags(EMPTY_SHEET)).toEqual([]);
+    // A speaker Fail is the checklist's one speaker statement (its "sound problems").
+    expect(legacyTags({ schemaVersion: 1, results: { speaker: { result: "fail" } } })).toEqual(["speaker-problems"]);
   });
 });
 
