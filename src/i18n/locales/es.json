@@ -1581,7 +1581,8 @@
         "right": "Probar derecha",
         "both": "Probar ambas"
       },
-      "testHint": "Hace vibrar ese lado durante 3 s con su intensidad de la vibración actual; púlsalo otra vez para pararlo antes (las pruebas de gatillos no la usan: L2 y R2 tienen sus propios motores)."
+      "testHint": "Hace vibrar ese lado durante 3 s con su intensidad de la vibración actual; púlsalo otra vez para pararlo antes (las pruebas de gatillos no la usan: L2 y R2 tienen sus propios motores).",
+      "testTitle": "Prueba de la retroalimentación háptica"
     },
     "channel": {
       "label": "Canal de actualizaciones",

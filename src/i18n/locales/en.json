@@ -1580,7 +1580,8 @@
         "right": "Test right",
         "both": "Test both"
       },
-      "testHint": "Vibrates that side for 3 s at its vibration intensity now; press it again to stop early (the trigger tests don't use these: L2 and R2 have their own motors)."
+      "testHint": "Vibrates that side for 3 s at its vibration intensity now; press it again to stop early (the trigger tests don't use these: L2 and R2 have their own motors).",
+      "testTitle": "Haptic feedback test"
     },
     "channel": {
       "label": "Update channel",

@@ -1581,7 +1581,8 @@
         "right": "Rechts testen",
         "both": "Beide testen"
       },
-      "testHint": "Lässt diese Seite 3 s lang mit ihrer aktuellen Vibrationsintensität vibrieren; erneut drücken beendet es früher (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren)."
+      "testHint": "Lässt diese Seite 3 s lang mit ihrer aktuellen Vibrationsintensität vibrieren; erneut drücken beendet es früher (die Triggertests nutzen das nicht: L2 und R2 haben eigene Motoren).",
+      "testTitle": "Test des haptischen Feedbacks"
     },
     "channel": {
       "label": "Update-Kanal",

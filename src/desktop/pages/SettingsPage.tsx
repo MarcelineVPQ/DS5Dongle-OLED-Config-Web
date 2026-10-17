@@ -16,9 +16,10 @@ import {
   type SpeakerSelect,
   type StatusGpioMode,
 } from "../../protocol/config";
-import { BusyButton, GripHaptics, InfoTip, Row, Segmented, Slider, Toggle } from "../controls";
+import { BusyButton, GripHaptics, Row, Segmented, Slider, Toggle } from "../controls";
 import { useFields, type SectionProps } from "./sectionFields";
 import Notice from "../Notice";
+import { SectionGroup } from "../accordion/Section";
 
 // The settings rows of the Controller and Pico 2 W pages' sections (their
 // accordion: live/PartPanel.tsx, dongle/DonglePage.tsx). Each function is a
@@ -120,10 +121,7 @@ export function TriggerIntensitySection(props: SectionProps) {
 export function HapticsSection(props: SectionProps) {
   const { t } = useTranslation();
   const { bridge } = props;
-  const { d, set, patch, issue, sub, live } = useFields(props);
-  const gripTest = live && bridge.client && supportsFeature2(bridge.identity, 6, FEATURES2.gripTest);
-  const connected = !!bridge.identity?.controllerConnected;
-  const test = useGripTest(bridge.client, connected, supportsFeature3(bridge.identity, 15, FEATURES3.timedGripTest));
+  const { d, set, patch, issue, sub } = useFields(props);
   return (
     <>
       <GripHaptics
@@ -134,24 +132,6 @@ export function HapticsSection(props: SectionProps) {
         invalid={issue("hapticsGain") || issue("hapticsGainRight")}
         onChange={(l, r) => patch({ hapticsGain: l, hapticsGainRight: r })}
       />
-      {gripTest && (
-        <div className="dk-row-btns">
-          {/* loop: HOT-PATH-OK — N = 3 sides; page render */}
-          {(["left", "right", "both"] as const).map((side) => (
-            <BusyButton
-              key={side}
-              className="dk-btn"
-              disabled={!connected || (test.running !== null && test.running !== side)}
-              countdown={GRIP_TEST_S}
-              onStop={test.stop}
-              onClick={() => test.run(side)}
-            >
-              {t(`desktop.grips.test.${side}`)}
-            </BusyButton>
-          ))}
-          <InfoTip text={t("desktop.grips.testHint")} />
-        </div>
-      )}
       {/* hint: MUST-SHOW — the range's meaning (lower: less delay; higher: steadier) */}
       <Slider
         label={t("haptics.audioBufferLabel")}
@@ -164,6 +144,27 @@ export function HapticsSection(props: SectionProps) {
         onChange={(v) => set("audioBufferLength", v)}
       />
     </>
+  );
+}
+
+// The haptic feedback test: the section's test group, last (settings → meter →
+// test, page rule 5). Each side buzzes at its vibration intensity now.
+export function HapticsTest({ bridge }: { bridge: UseDs5BridgeResult }) {
+  const { t } = useTranslation();
+  const connected = !!bridge.identity?.controllerConnected;
+  const test = useGripTest(bridge.client, connected, supportsFeature3(bridge.identity, 15, FEATURES3.timedGripTest));
+  if (!bridge.client || !supportsFeature2(bridge.identity, 6, FEATURES2.gripTest)) return null;
+  return (
+    <SectionGroup title={t("desktop.grips.testTitle")} info={t("desktop.grips.testHint")}>
+      <div className="dk-row-btns">
+        {/* loop: HOT-PATH-OK — N = 3 sides; page render */}
+        {(["left", "right", "both"] as const).map((side) => (
+          <BusyButton key={side} className="dk-btn" disabled={!connected || (test.running !== null && test.running !== side)} countdown={GRIP_TEST_S} onStop={test.stop} onClick={() => test.run(side)}>
+            {t(`desktop.grips.test.${side}`)}
+          </BusyButton>
+        ))}
+      </div>
+    </SectionGroup>
   );
 }
 
@@ -250,8 +251,8 @@ export function SpeakerSection(props: SectionProps) {
 const hasMicLevel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.identity, 16, FEATURES3.micLevel);
 
 // The controller's mic level, 1..64 (its VolumeMic), or 0 = whatever the PC's
-// mic level is. Live it sits under the Mic Test, so its meter shows the
-// change; in a game's profile it is in the Microphone card. Following a PC
+// mic level is. In Microphone's settings, above the Microphone test (settings
+// → test, page rule 5); in a game's profile, in the Microphone card. Following a PC
 // level of 0 (identity [48]) means a silent mic, which is common on Linux:
 // the boot-time ALSA restore sets the controller's hardware capture volume and
 // PipeWire never changes it (it uses software volume), so live it says so.
@@ -289,8 +290,8 @@ const hasEchoCancel = (bridge: UseDs5BridgeResult) => supportsFeature3(bridge.id
 // The controller's echo cancellation (on by default): it takes the PC's own
 // sound, played on the controller's headset or speaker, back out of what its
 // mic hears, so a voice chat or the Mic Test doesn't repeat itself. Off, the
-// board leaves it to the game. Live it sits next to Microphone level under the
-// Mic Test; in a game's profile, in the Microphone card. Older firmware has no
+// board leaves it to the game. Next to Microphone level, above the Microphone
+// test; in a game's profile, in the Microphone card. Older firmware has no
 // switch (MicLevelSlider already says to update).
 export function EchoCancelToggle(props: SectionProps) {
   const { t } = useTranslation();
@@ -321,9 +322,8 @@ export function MicSection(props: SectionProps) {
       <Toggle label={t("haptics.btMicLabel")} sub={sub("btMicEnable")} value={d.btMicEnable} onChange={(v) => set("btMicEnable", v)} />
       {/* Which mic is the dongle's setting, not a game's (not in profiles). */}
       {live && hasV13(props.bridge) && <Segmented label={t("desktop.settings.micInput")} value={d.micSelect} options={mics} disabled={!d.btMicEnable} onChange={(v) => set("micSelect", v)} />}
-      {/* Live, the level and the echo cancellation are under the Mic Test (PartPanel). */}
-      {!live && <MicLevelSlider {...props} />}
-      {!live && <EchoCancelToggle {...props} />}
+      <MicLevelSlider {...props} />
+      <EchoCancelToggle {...props} />
     </>
   );
 }

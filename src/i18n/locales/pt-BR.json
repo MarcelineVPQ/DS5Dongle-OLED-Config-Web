@@ -1581,7 +1581,8 @@
         "right": "Testar direita",
         "both": "Testar ambas"
       },
-      "testHint": "Faz esse lado vibrar por 3 s com a intensidade da vibração atual; aperte de novo para parar antes (os testes dos gatilhos não usam isso: L2 e R2 têm motores próprios)."
+      "testHint": "Faz esse lado vibrar por 3 s com a intensidade da vibração atual; aperte de novo para parar antes (os testes dos gatilhos não usam isso: L2 e R2 têm motores próprios).",
+      "testTitle": "Teste da resposta tátil"
     },
     "channel": {
       "label": "Canal de atualizações",

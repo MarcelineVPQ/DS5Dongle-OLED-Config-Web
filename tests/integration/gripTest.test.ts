@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The Haptic feedback panel's test buttons. Firmware from protocol 1.15 holds
+// The Haptic feedback section's test group (Haptic feedback test, its last group). Firmware from protocol 1.15 holds
 // the grip test (0xF6 0x0E [side, tenths]) steadily: the app sends one 3 s
 // test and a stop ([side, 0]) when it ends early. Older firmware buzzes 0.5 s
 // per command, so the app repeats it every 0.4 s (overlapping) up to 3 s. The
@@ -12,7 +12,7 @@ import "../../src/i18n";
 import { Ds5BridgeClient, type BridgeIdentity } from "../../src/protocol/bridgeClient";
 import { DEFAULT_CONFIG, validateConfig } from "../../src/protocol/config";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
-import { HapticsSection } from "../../src/desktop/pages/SettingsPage";
+import { HapticsTest } from "../../src/desktop/pages/SettingsPage";
 import { FakeDongle, type FakeDongleOptions } from "../support/fakeDongle";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -43,7 +43,7 @@ async function setup(opts: FakeDongleOptions = {}) {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  const render = (connected = true) => act(() => root!.render(createElement(HapticsSection, { bridge: bridge(connected) })));
+  const render = (connected = true) => act(() => root!.render(createElement(HapticsTest, { bridge: bridge(connected) })));
   render();
   const el = container;
   const button = (label: string) => [...el.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent?.startsWith(label))!;

@@ -9,7 +9,7 @@ import Calibration from "./Calibration";
 import { startSpeakerTest, stopSpeakerTest, useSpeakerPlayback } from "./speakerPlayer";
 import { LISTEN_SECONDS, listenBack, startMicTest, type MicClip, type MicProblem, type MicSession } from "./micTest";
 import { useWindowShown } from "../useWindowShown";
-import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import type { InputReport } from "../../oled/inputReport";
@@ -19,7 +19,7 @@ import { buttonLabel, layoutSummary } from "./layoutSummary";
 import type { SpeakerSelect } from "../../protocol/config";
 import { BusyButton, Row } from "../controls";
 import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
-import { AutoHapticsSection, EchoCancelToggle, HapticsSection, MicLevelSlider, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
+import { AutoHapticsSection, HapticsSection, HapticsTest, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
 import { usePoll } from "../usePoll";
@@ -66,8 +66,9 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
       <Section id="triggers" icon={MoveDown} title={t("desktop.sections.triggers")} status={named(t, t("desktop.settings.triggerReduce"), d.triggerReduce)}>
         {() => (
           <>
-            <TriggerLive input={input} side={trigger} />
+            {/* Settings → live meter → test, the test last (page rule 5). */}
             <TriggerIntensitySection bridge={bridge} />
+            <TriggerLive input={input} side={trigger} />
             <TriggersPage bridge={bridge} />
           </>
         )}
@@ -81,10 +82,11 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
         {() => (
           <>
             <HapticsSection bridge={bridge} />
-            <LevelMeter bridge={bridge} which="haptic" />
             <SectionGroup title={t("autoHaptics.sectionTitle")}>
               <AutoHapticsSection bridge={bridge} />
             </SectionGroup>
+            <LevelMeter bridge={bridge} which="haptic" />
+            <HapticsTest bridge={bridge} />
           </>
         )}
       </Section>
@@ -118,16 +120,7 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
         {() => (
           <>
             <MicSection bridge={bridge} />
-            <MicTest
-              headset={input?.headphones ?? false}
-              output={d.speakerSelect}
-              level={
-                <>
-                  <MicLevelSlider bridge={bridge} />
-                  <EchoCancelToggle bridge={bridge} />
-                </>
-              }
-            />
+            <MicTest headset={input?.headphones ?? false} output={d.speakerSelect} />
           </>
         )}
       </Section>
@@ -589,14 +582,14 @@ export function SpeakerTest() {
 // live sound (it would feed back on the speaker), nor with Audio output set to
 // Speaker: Listen back plays the last 3 seconds, after the mic is closed. A status line always says what is
 // happening, so silence with text is a visible error, never silence alone.
-// Folding the section or hiding the window stops everything. `level` (the Mic
-// level slider) sits right under the meter, so a change shows on it live.
+// Folding the section or hiding the window stops everything. Microphone level
+// and Echo cancellation are the section's settings above it.
 const VU_SEGMENTS = 20;
 type MicPhase = "idle" | "starting" | "testing" | "stopping" | "playing";
 // error: SHOWN — desktop.audioTest.problem.failed (the status line says desktop.audioTest.problem.<problem>)
 type MicNote = { kind: "stopped" | "done" | "quiet" } | { kind: "problem"; problem: MicProblem } | null;
 
-export function MicTest({ headset, output, level }: { headset: boolean; output: SpeakerSelect; level?: ReactNode }) {
+export function MicTest({ headset, output }: { headset: boolean; output: SpeakerSelect }) {
   const { t } = useTranslation();
   const onScreen = useWindowShown();
   const [phase, setPhase] = useState<MicPhase>("idle");
@@ -759,7 +752,6 @@ export function MicTest({ headset, output, level }: { headset: boolean; output: 
           ))}
         </div>
       </div>
-      {level}
       {(phase === "testing" || (phase === "idle" && hasClip)) && (
         <div className="dk-row-btns">
           {/* error: SHOWN — desktop.audioTest.problem.failed (failed() ends on the status line) */}

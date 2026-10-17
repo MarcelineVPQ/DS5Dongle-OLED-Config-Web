@@ -645,6 +645,28 @@ describe("the Controller page on the accordion", () => {
     expect(steps.querySelector(".dk-fw-steps")!.textContent).toContain(m.i18n.t("desktop.ctrlInfo.howToPs5"));
   });
 
+  // Page rule 5: settings → the section's own live meter → its test group, titled "<Sony term> test", last.
+  it("every section with a test ends with it, its live meter (if any) right before it", async () => {
+    await live("overview");
+    const TESTS: Record<string, { test: string; meter?: string }> = {
+      triggers: { test: "desktop.triggers.title", meter: "desktop.live.pull" },
+      haptics: { test: "desktop.grips.testTitle", meter: "desktop.live.hapticLevel" },
+      speaker: { test: "desktop.audioTest.speakerTitle", meter: "desktop.live.speakerLevel" },
+      mic: { test: "desktop.audioTest.micTitle" },
+    };
+    for (const [id, { test, meter }] of Object.entries(TESTS)) {
+      click(head(id));
+      await act(() => new Promise((r) => setTimeout(r, 30)));
+      const groups = [...container.querySelectorAll(`[data-section="${id}"] .dk-sec-body > .dk-sec-group`)].map((g) => g.querySelector(".dk-subhead")?.firstChild?.textContent ?? "");
+      expect(groups.at(-1), `${id}: its test last`).toBe(m.i18n.t(test));
+      expect(m.i18n.t(test).toLowerCase(), `${id}: "<term> test"`).toMatch(/test|prueba|teste|测试|テスト/);
+      if (meter) expect(groups.at(-2), `${id}: its meter right before the test`).toBe(m.i18n.t(meter));
+    }
+    // Microphone level and Echo cancellation are settings above the test, not inside it.
+    const micGroup = [...container.querySelectorAll('[data-section="mic"] .dk-sec-group')].at(-1)!;
+    expect(micGroup.textContent).not.toContain(m.i18n.t("desktop.settings.micLevel"));
+  });
+
   it("says what a click on the drawing does right under it, and keeps the line (hidden) while a part is picked", async () => {
     await live("overview");
     const hint = () => [...container.querySelectorAll<HTMLElement>(".live-hint")].find((p) => p.textContent === m.i18n.t("desktop.live.pickHint"))!;
