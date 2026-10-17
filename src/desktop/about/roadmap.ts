@@ -305,7 +305,7 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
   },
   {
-    column: "planned",
+    column: "next",
     title: "Bluetooth rests when idle",
     text: "{{device, capitalize}} stops searching for controllers all the time while none is connected: less radio use and heat.",
     areas: ["dongle"],
@@ -356,7 +356,7 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
   },
   { column: "next", title: "Whole narrator lines", text: "{{device, capitalize}}'s spoken lines on the controller's speaker play without missing pieces.", areas: ["audio", "dongle"] },
-  { column: "progress", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
+  { column: "next", title: "Speaker buffer that can't break up", text: "The speaker's audio buffer can't be set so low that the sound garbles.", areas: ["audio", "dongle"] },
   {
     column: "next",
     title: "Launchers close cleanly",
@@ -390,9 +390,9 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "next", title: "Headphones up to full volume", text: "Headphones on the controller reach the controller's full headphone volume.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Clearer highs on speaker and headset", text: "Cleaner treble on the speaker and headset, from a better sample-rate step in {{device}}.", areas: ["audio", "dongle"] },
-  { column: "planned", title: "Steady mic delay", text: "Your voice reaches the PC with the same short delay all session, even after a Bluetooth hiccup.", areas: ["audio", "dongle"] },
+  { column: "next", title: "Steady mic delay", text: "Your voice reaches the PC with the same short delay all session, even after a Bluetooth hiccup.", areas: ["audio", "dongle"] },
   { column: "planned", title: "Less headset delay", text: "Game sound reaches a headset on the controller about 10 ms sooner.", areas: ["audio", "dongle"] },
-  { column: "progress", title: "Speaker plays both channels", text: "The controller's speaker plays the left and right channels, not only the right.", areas: ["audio", "dongle"] },
+  { column: "next", title: "Speaker plays both channels", text: "The controller's speaker plays the left and right channels, not only the right.", areas: ["audio", "dongle"] },
   {
     column: "next",
     title: "Stereo setup on Windows",
