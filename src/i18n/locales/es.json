@@ -1250,7 +1250,8 @@
       "graphics": "Gráficos",
       "reduceMotion": "Reducir movimiento",
       "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)",
-      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware",
+      "launchersLink": "Leer mis lanzadores de juegos: Juegos → Launchers"
     },
     "dev": {
       "title": "Desarrollador",

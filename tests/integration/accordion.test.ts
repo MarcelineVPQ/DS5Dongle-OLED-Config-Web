@@ -338,7 +338,7 @@ const APP_INVENTORY: Record<string, string[]> = {
   startup: ["desktop.live.closeToTray", "desktop.live.launchAtLogin", "desktop.live.startMinimized"],
   graphics: ["desktop.live.hardwareAcceleration", "desktop.hdr.label", "desktop.knobs.hdrNits"],
   updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.settings2.firmwareLink", "desktop.channel.backToStable"],
-  privacy: ["desktop.games.readLaunchers"],
+  privacy: ["desktop.settings2.launchersLink"],
   dismissed: [], // none dismissed: nothing to do, its status says so (page rule 6)
   developer: ["desktop.dev.model", "desktop.dev.colorway", "desktop.dev.simulated", "desktop.dev.fakeSlots", "desktop.dev.updates", "desktop.dev.hdrTitle"],
 };
@@ -484,12 +484,13 @@ describe("App settings on the accordion", () => {
     expect(openIds()).toEqual(["graphics"]);
   });
 
-  it("Privacy's turn-off question is a notice inside its section", async () => {
-    await render(appSettings());
+  it("Privacy says whether the launchers are read and links to the switch in Games → Launchers (IA audit Q5)", async () => {
+    const goTo = vi.fn();
+    await render(createElement(m.notices.NoticeTasksContext.Provider, { value: { tasks: [], goTo } }, appSettings()));
     click(head("privacy"));
-    click(container.querySelector<HTMLButtonElement>('[data-section="privacy"] [role="switch"]')!);
-    const notice = container.querySelector('[data-section="privacy"] .dk-sec-body > .dk-notice[role="alert"]');
-    expect(notice?.textContent).toContain(m.i18n.t("desktop.games.readLaunchersOff"));
+    expect(container.querySelector('[data-section="privacy"] [role="switch"]')).toBeNull();
+    click([...container.querySelectorAll<HTMLButtonElement>('[data-section="privacy"] button')].find((b) => b.textContent === m.i18n.t("desktop.settings2.launchersLink"))!);
+    expect(goTo).toHaveBeenCalledWith("games", "launchers");
   });
 });
 
@@ -909,7 +910,7 @@ describe("App settings beside the live controller", () => {
 // section's body says (its texts, buttons and row labels).
 // [] = nothing to do in this state: the section shows its status only (page rule 6).
 const GAMES_INVENTORY: Record<string, string[]> = {
-  launchers: ["desktop.games.intro", "desktop.games.rescan"],
+  launchers: ["desktop.games.intro", "desktop.games.rescan", "desktop.games.readLaunchers"],
   proton: [], // ours installed and current
   recommended: ["desktop.games.changesHint", "desktop.games.review"],
   history: ["desktop.games.undoShort"],

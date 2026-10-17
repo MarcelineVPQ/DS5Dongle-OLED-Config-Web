@@ -1249,7 +1249,8 @@
       "graphics": "Graphics",
       "reduceMotion": "Reduce motion",
       "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)",
-      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware",
+      "launchersLink": "Read my game launchers: Games → Launchers"
     },
     "dev": {
       "title": "Developer",

@@ -1238,7 +1238,8 @@
       "graphics": "图形",
       "reduceMotion": "减少动态效果",
       "reduceMotionSub": "不显示移动背景、闪烁或动画（系统要求时也会开启）",
-      "firmwareLink": "固件：{{deviceName}} → 固件"
+      "firmwareLink": "固件：{{deviceName}} → 固件",
+      "launchersLink": "读取我的游戏启动器：游戏 → 启动器"
     },
     "dev": {
       "title": "开发者",

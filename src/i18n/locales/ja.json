@@ -1238,7 +1238,8 @@
       "graphics": "グラフィックス",
       "reduceMotion": "視差効果を減らす",
       "reduceMotionSub": "動く背景、点滅、アニメーションをなくします（システムで設定している場合もオン）",
-      "firmwareLink": "ファームウェア: {{deviceName}} → ファームウェア"
+      "firmwareLink": "ファームウェア: {{deviceName}} → ファームウェア",
+      "launchersLink": "ゲームランチャーを読み取る: ゲーム → ランチャー"
     },
     "dev": {
       "title": "開発者",

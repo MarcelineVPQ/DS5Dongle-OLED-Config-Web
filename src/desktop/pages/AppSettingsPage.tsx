@@ -32,11 +32,9 @@ import { feedProblemKey, firmwareOffer, type FirmwareUpdate } from "../useUpdate
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
-import { gamesSupported, protonApplies } from "../games/platform";
-import { onGamesAllowed, setGamesAllowed } from "../games/consent";
-import { logged } from "../../errorText";
+import { gamesSupported } from "../games/platform";
+import { useGamesAllowed } from "../library/GameLaunchersSetting";
 import { shown } from "../shownError";
-import Notice from "../Notice";
 import DismissedNotices, { useDismissedTasks } from "../DismissedNotices";
 import { useNoticeTasks } from "../notices";
 import { named, onOff } from "../accordion/status";
@@ -238,9 +236,16 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           </Section>
         </>
       )}
+      {/* Privacy: the switch lives in Games → Launchers, where it acts (IA audit Q5); one click there. */}
       {gamesSupported() && launchers !== null && (
         <Section id="privacy" icon={Shield} title={t("desktop.settings2.privacy")} status={t(launchers ? "desktop.accordion.launchersRead" : "desktop.accordion.launchersNotRead")}>
-          {() => <GameLaunchersSetting allowed={launchers} />}
+          {() => (
+            <div className="dk-row-btns">
+              <button type="button" className="dk-btn" onClick={() => goTo("games", "launchers")}>
+                {t("desktop.settings2.launchersLink")}
+              </button>
+            </div>
+          )}
         </Section>
       )}
       <Section
@@ -258,72 +263,6 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
         </Section>
       )}
     </SplitView>
-  );
-}
-
-// Whether Games may read the game launchers (null until known). App settings
-// → Privacy's status and switch.
-export function useGamesAllowed(): boolean | null {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-  // lifetime: OK — cleanup: drops a late read, unsubscribes the games-allowed event
-  useEffect(() => {
-    let live = true;
-    window.desktop
-      ?.getSettings()
-      .then((s) => live && setAllowed(s.gamesScanAllowed))
-      .catch(logged("reading the Games consent for App settings (the section stays hidden)"));
-    // lifetime: OK — off() in the effect cleanup
-    const off = onGamesAllowed(setAllowed);
-    return () => {
-      live = false;
-      off();
-    };
-  }, []);
-  return allowed;
-}
-
-// Privacy: whether Games may read the game launchers (its first-visit consent).
-// Turning it off asks first (a notice in the section), since the library and
-// per-game controller profiles hide until it's back on; turning it on is the
-// same as "Check my launchers".
-export function GameLaunchersSetting({ allowed }: { allowed: boolean }) {
-  const { t } = useTranslation();
-  const [confirmOff, setConfirmOff] = useState(false);
-  const reads = t("desktop.games.readLaunchersSub", { what: t(protonApplies() ? "desktop.games.consentLaunchers" : "desktop.games.consentLaunchersWindows") });
-  const offText = t("desktop.games.readLaunchersOff");
-  return (
-    <>
-      {confirmOff && (
-        <Notice
-          role="alert"
-          action={
-            <>
-              <button type="button" className="dk-btn" onClick={() => setConfirmOff(false)}>
-                {t("desktop.common.cancel")}
-              </button>
-              <BusyButton
-                className="dk-btn danger"
-                onClick={async () => {
-                  await setGamesAllowed(false).catch(shown("desktop.errors.settingNotSaved"));
-                  setConfirmOff(false);
-                }}
-              >
-                {t("desktop.games.readLaunchersTurnOff")}
-              </BusyButton>
-            </>
-          }
-        >
-          <span>{offText}</span>
-        </Notice>
-      )}
-      <Toggle
-        label={t("desktop.games.readLaunchers")}
-        sub={`${reads} ${offText}`}
-        value={allowed}
-        disabled={confirmOff}
-        onChange={(v) => (v ? setGamesAllowed(true).catch(shown("desktop.errors.settingNotSaved")) : setConfirmOff(true))}
-      />
-    </>
   );
 }
 

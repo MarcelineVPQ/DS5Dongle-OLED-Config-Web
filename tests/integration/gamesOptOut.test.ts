@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
-// Reading the game launchers is turned off in App settings → Privacy, never
-// from Games → Home (a button there made the whole library vanish at one
-// click). Turning it off asks first and says nothing is deleted; turning it
-// back on is the first-visit consent; Games then says the library comes back.
+// Reading the game launchers is turned off in Games → Home → Launchers, the
+// place it acts on (IA audit Q5; App settings → Privacy links there). It is a
+// switch that asks first and says nothing is deleted, never a one-click
+// button (one made the whole library vanish at one click); turning it back on
+// is the first-visit consent; Games then says the library comes back.
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import GamesPage from "../../src/desktop/pages/GamesPage";
-import { GameLaunchersSetting, useGamesAllowed } from "../../src/desktop/pages/AppSettingsPage";
+import { GameLaunchersSetting, useGamesAllowed } from "../../src/desktop/library/GameLaunchersSetting";
 
-// App settings → Privacy's body, as the page shows it (with the consent read).
+// The switch, as Games → Launchers shows it (with the consent read).
 function Privacy() {
   const allowed = useGamesAllowed();
   return allowed === null ? null : createElement(GameLaunchersSetting, { allowed });
@@ -71,7 +72,7 @@ const toggle = () => container!.querySelector<HTMLButtonElement>('[role="switch"
 const click = (b: HTMLElement | undefined) => act(() => b!.click());
 
 describe("game launchers opt-out", () => {
-  it("Games → Home has Rescan but no button that turns reading off", async () => {
+  it("Games → Launchers has Rescan and the switch (no one-click button that turns reading off)", async () => {
     const page = (on: boolean) =>
       createElement(GamesPage, {
         allowed: on,
@@ -85,6 +86,11 @@ describe("game launchers opt-out", () => {
     click(container!.querySelector<HTMLButtonElement>('[data-section="launchers"] .dk-sec-toggle')!);
     expect(button(i18n.t("desktop.games.rescan"))).toBeTruthy();
     expect(buttons().some((b) => /stop/i.test(b.textContent ?? ""))).toBe(false);
+    expect(container!.querySelector('[data-section="launchers"] [role="switch"]')!.getAttribute("aria-checked")).toBe("true");
+    // Off asks first, in the section.
+    click(container!.querySelector<HTMLButtonElement>('[data-section="launchers"] [role="switch"]')!);
+    expect(writes).toEqual([]);
+    expect(container!.querySelector('[data-section="launchers"] [role="alert"]')!.textContent).toContain(i18n.t("desktop.games.readLaunchersOff"));
     // Off: the consent card, saying the library comes back once allowed.
     act(() => root!.render(page(false)));
     expect(text()).toContain(i18n.t("desktop.games.consentLibrary"));

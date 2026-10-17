@@ -37,6 +37,7 @@ import type { GameProfileState } from "../library/useGameProfile";
 import { useTranslation } from "react-i18next";
 import { BusyButton } from "../controls";
 import UsbAccessSetup from "../UsbAccessSetup";
+import { GameLaunchersSetting } from "../library/GameLaunchersSetting";
 import { sayInPassing } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
 import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
@@ -539,6 +540,8 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                 {t("desktop.games.rescan", "Rescan")}
               </BusyButton>
             </div>
+            {/* Whether the app reads them at all: here, where it acts (IA audit Q5); App settings → Privacy links here. */}
+            <GameLaunchersSetting allowed />
           </>
         )}
       </Section>

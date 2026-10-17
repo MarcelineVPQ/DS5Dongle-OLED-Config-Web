@@ -168,7 +168,7 @@ In the panel on the right, one section each for what you set or do (they work li
 
 ![The Games library](screenshots/guide-games.png)
 
-The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there. To stop the app reading your launchers, turn off **Read my game launchers** in App settings → Privacy: your library and per-game controller profiles are hidden until you turn it back on, and nothing is deleted.
+The first time, the app asks before reading anything; it then lists your **Steam, Heroic and Lutris** games, with their artwork from the launchers' own caches (nothing is downloaded). On **Windows** it lists your **Steam, GOG Galaxy and Epic** games; Proton and the system checks are Linux-only, so they don't appear there. To stop the app reading your launchers, turn off **Read my game launchers** in Home → **Launchers** (App settings → Privacy links there): it asks first, then your library and per-game controller profiles are hidden until you allow it again, and nothing is deleted.
 
 - **Home**, top to bottom:
   - **This computer** (Linux; at the top of Home, click its name to open it, and the app remembers it open; a yellow dot on it when something there needs you): controller audio, controller access, environment, and **HDR**, which opens to the HDR checklist (already open when an HDR game is waiting for it).
@@ -246,7 +246,7 @@ Open with the ⚙ in the rail. Your controller stays on the left, so a theme, ac
 - **Appearance:** theme (**Match my controller**, light, dark, or your desktop's colors), style (**Standard** or **Glass**), accent color, and the look sliders: **card opacity** (let the game art through), **background dim**, **background blur** and **depth** (shadow strength).
 - **Accessibility:** **Color vision** modes (colors never carry meaning alone anyway), **Reduce motion**, the **narrator** voice and captions.
 - **Startup and window:** close to tray, start at login, start minimized.
-- **Privacy** (Linux and Windows): **Read my game launchers**, the permission Games asks for the first time. Turning it off asks first, then hides your game library and per-game controller profiles until you turn it back on; nothing is deleted.
+- **Privacy** (Linux and Windows): whether the app reads your game launchers (the permission Games asks for the first time), with a button to the switch itself, **Read my game launchers** in Games → Home → **Launchers**.
 - **Updates:** check automatically, install automatically, and the **update channel**: Stable (the default) or **Development**, which brings development builds of the app and firmware before they're released (newer, less tested), plus every stable release. **Back to stable** returns to the latest stable app and firmware.
 - **Graphics:** **hardware acceleration**, and **HDR lighting** (experimental: on an HDR display the light bar glows brighter than white, at the peak brightness you set in nits).
 - **Dismissed notices:** the notices you closed that still apply, with a way to each one and **Show again**.
