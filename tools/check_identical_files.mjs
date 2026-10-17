@@ -20,9 +20,96 @@ import { readFileSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const FW_CONFIG_FIXTURES =
+  "intended: the firmware's config fixtures are each released config writer's own output (tests/host/fixtures/config, fix-fw 3b866c7); two writers that save the same bytes give identical pages, and that is what the test proves";
+
 // Each entry: the exact set of "label:path" files that are allowed to be
 // identical, and why (the review finding and the batch that removes it).
 const ALLOWED = [
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.6.11-oled-edition/layout.txt",
+      "firmware:tests/host/fixtures/config/v0.6.12-oled-edition/layout.txt",
+      "firmware:tests/host/fixtures/config/v0.7.0-oled-edition/layout.txt",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.7.2-hotfix/layout.txt", "firmware:tests/host/fixtures/config/v0.7.2/layout.txt"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.8.0-oled-edition/custom.bin", "firmware:tests/host/fixtures/config/v0.8.1-oled-edition/custom.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.8.0-oled-edition/custom_narrator.bin", "firmware:tests/host/fixtures/config/v0.8.1-oled-edition/custom_narrator.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.8.0-oled-edition/default.bin", "firmware:tests/host/fixtures/config/v0.8.1-oled-edition/default.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.8.0-oled-edition/layout.txt", "firmware:tests/host/fixtures/config/v0.8.1-oled-edition/layout.txt"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.9.0-oled-edition/custom.bin", "firmware:tests/host/fixtures/config/v0.9.5-dev.8-oled-edition/custom.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.9.0-oled-edition/custom_narrator.bin", "firmware:tests/host/fixtures/config/v0.9.5-dev.8-oled-edition/custom_narrator.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.9.0-oled-edition/default.bin", "firmware:tests/host/fixtures/config/v0.9.5-dev.8-oled-edition/default.bin"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: ["firmware:tests/host/fixtures/config/v0.9.0-oled-edition/layout.txt", "firmware:tests/host/fixtures/config/v0.9.5-dev.8-oled-edition/layout.txt"],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.10-oled-edition/custom.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.14-oled-edition/custom.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.17-oled-edition/custom.bin",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.10-oled-edition/custom_narrator.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.14-oled-edition/custom_narrator.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.17-oled-edition/custom_narrator.bin",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.10-oled-edition/custom_power.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.14-oled-edition/custom_power.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.17-oled-edition/custom_power.bin",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.10-oled-edition/default.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.14-oled-edition/default.bin",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.17-oled-edition/default.bin",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
+  {
+    files: [
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.10-oled-edition/layout.txt",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.14-oled-edition/layout.txt",
+      "firmware:tests/host/fixtures/config/v0.9.5-dev.17-oled-edition/layout.txt",
+    ],
+    why: FW_CONFIG_FIXTURES,
+  },
   {
     files: ["app:assets-src/edge/LICENSE", "app:src/assets/DAIDR-LICENSE.txt"],
     why: "intended: daidr's MIT notice travels with each copy of the art (the source art, and the art bundled into the app)",
