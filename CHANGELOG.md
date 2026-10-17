@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Fixed
 
 - **No more error in the log at every start with Games off.** With Games not allowed, the Controller page's background still asked for game art, was refused and logged an error each time the page loaded. It now asks only once you allow Games, and the art shows as soon as you do, without a restart.
+- **You can see which part of the controller drawing has the keyboard focus.** On the standard DualSense, focus, hover and the selected part barely showed on most parts and not at all on Haptic feedback, Speaker, PS, Touch pad and Light bar. Every part of both drawings now gets a clear ring around its own shape, in every colorway and theme, white and black controllers included.
 
 ## [0.9.5-dev.18] - 2026-10-17
 
