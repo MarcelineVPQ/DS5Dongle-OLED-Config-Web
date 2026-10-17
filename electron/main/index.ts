@@ -398,6 +398,7 @@ function start(): void {
             return r.canceled || !r.filePath ? null : r.filePath;
           },
           write: writeFileAtomic,
+          exists: existsSync,
           pictures: () => {
             try {
               return app.getPath("pictures");
