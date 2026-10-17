@@ -23,6 +23,14 @@ const SLIPS: [string, RegExp, string][] = [
   ["zh-CN", /(?<!标准|其他)手柄/, "控制器 (Controller)"],
 ];
 
+// English left in a translation (bug hunt D8: the board's chip line).
+describe("no English left in the board's spec line", () => {
+  it.each(["de", "es", "fr", "ja", "pt-BR", "zh-CN"])("%s", (loc) => {
+    // loop: test — every string of one locale
+    expect(load(loc).filter(([key, value]) => key.startsWith("desktop.dash.specs.chip") && /dual-core/.test(value))).toEqual([]);
+  });
+});
+
 describe("Sony's names (docs/GLOSSARY.md)", () => {
   it.each(SLIPS)("%s: no %s (Sony: %s)", (loc, slip) => {
     // loop: test — every string of one locale

@@ -1563,8 +1563,8 @@
       },
       "specs": {
         "chip": "Chip",
-        "chipValue": "{{chip}}, dual-core {{core}}",
-        "chipClock": "{{chip}}, dual-core {{core}} a {{mhz}} MHz",
+        "chipValue": "{{chip}}, núcleo duplo {{core}}",
+        "chipClock": "{{chip}}, núcleo duplo {{core}} a {{mhz}} MHz",
         "sram": "SRAM",
         "flash": "Flash",
         "wireless": "Sem fio",
