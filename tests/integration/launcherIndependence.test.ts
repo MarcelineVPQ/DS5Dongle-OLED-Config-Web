@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { SHELL_START_TIMEOUT_MS } from "../../electron/main/games/schemeHandler";
 
 const linux = process.platform === "linux";
 const userSystemd =
@@ -142,18 +143,39 @@ describe.skipIf(process.platform === "win32")("POSIX without systemd: a started 
 });
 
 describe.skipIf(process.platform !== "win32")("Windows: a started program survives the app exiting", () => {
+  // Windows starts the program through PowerShell (shellStart), whose cold
+  // start is most of the time this takes and grows with CPU load: ~3 s on CI
+  // while the other test files run, 10 s and more at times. So the test waits
+  // the way the app does: first for startForUser's answer, as long as the app
+  // itself would wait for PowerShell, then for the program it started.
   it("is detached from the app's job object", async () => {
     const pidFile = join(dir, "windows.pid");
+    const t0 = Date.now();
+    const secs = () => `${((Date.now() - t0) / 1000).toFixed(1)} s`;
     const child = spawn(process.execPath, [app, pidFile], { stdio: ["ignore", "pipe", "pipe"] });
+    const exited = new Promise((r) => child.once("exit", r));
     let out = "";
     child.stdout.on("data", (d) => (out += String(d)));
     child.stderr.on("data", (d) => (out += String(d)));
-    const pid = await waitFor(() => readPid(pidFile)).catch((e: unknown) => {
-      throw new Error(`no program started; the app said: ${out || "(nothing)"}`, { cause: e });
-    });
-    survivors.push(pid);
-    child.kill();
-    await new Promise((r) => setTimeout(r, 500));
-    expect(alive(pid)).toBe(true);
-  }, 40_000);
+    try {
+      // The app's answer: node starting the app, then PowerShell (SHELL_START_TIMEOUT_MS at most).
+      await waitFor(() => (/started|failed/.test(out) ? true : null), SHELL_START_TIMEOUT_MS + 15_000).catch((e: unknown) => {
+        throw new Error(`the app gave no answer after ${secs()}; it said: ${out || "(nothing)"}`, { cause: e });
+      });
+      expect(out, `the app couldn't start the program (after ${secs()})`).toContain("started");
+      // Start-Process returned: the program exists, it has to boot node and write its pid.
+      const pid = await waitFor(() => readPid(pidFile), 15_000).catch((e: unknown) => {
+        throw new Error(`the app said "started" but the program wrote no pid after ${secs()}`, { cause: e });
+      });
+      survivors.push(pid);
+      child.kill();
+      await exited; // the app's job object closes with it
+      await new Promise((r) => setTimeout(r, 500));
+      expect(alive(pid)).toBe(true);
+    } finally {
+      child.kill();
+      const late = readPid(pidFile); // a program that started after a failure
+      if (late !== null && !survivors.includes(late)) survivors.push(late);
+    }
+  }, 60_000);
 });
