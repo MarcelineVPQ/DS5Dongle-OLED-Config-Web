@@ -85,8 +85,10 @@ function Probe() {
   return null;
 }
 // The Controller page as DesktopApp shows it: the board's drafts, the page and the bar.
+let bridgeNow: ReturnType<typeof m.useDs5Bridge> | null = null;
 function Page({ profiles = NO_PROFILE }: { profiles?: typeof NO_PROFILE }) {
   const bridge = m.useDs5Bridge();
+  bridgeNow = bridge;
   if (!bridge.isConnected) return null;
   return createElement(
     m.drafts.BoardDraftsProvider,
@@ -185,6 +187,28 @@ describe("the save bar", () => {
     expect(drafts!.remap.draft[13]).toBe(dongle().remap[13]); // what the board has (the previous test saved Circle there)
     expect(dongle().remap[13]).not.toBe(15);
     expect(note()).toBe(m.i18n.t("desktop.bar.saved"));
+  });
+
+  it("a save the board drops off during is not 'All changes saved': the bar stays unsaved and says the board went away", async () => {
+    await live();
+    await act(async () => void (await bridgeNow!.applyBody({ ...bridgeNow!.config!, inactiveTime: 45 })));
+    await wait(1200); // the identity poll reads the unsaved flag
+    expect(note()).toBe(t("desktop.bar.unsaved"));
+    const board = dongle();
+    const original = board.setReport.bind(board);
+    board.setReport = async (id, payload) => {
+      await original(id, payload);
+      if (payload[0] === 0x02) board.gone = true; // the save's SET landed, then the board left the bus
+    };
+    try {
+      await act(async () => barButton(t("desktop.bar.save")).click());
+      await wait();
+      expect(note()).toBe(t("desktop.bar.unsaved"));
+      expect(bridgeNow!.error).toBe(t("desktop.errors.usb.gone"));
+    } finally {
+      board.setReport = original;
+      board.gone = false;
+    }
   });
 
   it("a game's profile on: the bar saves to the profile, nothing staged for the board is written", async () => {

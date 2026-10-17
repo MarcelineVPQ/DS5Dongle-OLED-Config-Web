@@ -88,6 +88,23 @@ describe("Ds5BridgeClient against the firmware command rules", () => {
     expect(dongle.gone).toBe(true);
   });
 
+  it("treats the device leaving after a USB reconnect as success, but not after a save or an apply", async () => {
+    const { dongle, client } = setup();
+    // The board drops off the bus right after the SET lands, before its outcome can be read.
+    const original = dongle.setReport.bind(dongle);
+    let leave = false;
+    dongle.setReport = async (id, payload) => {
+      await original(id, payload);
+      if (leave) dongle.gone = true;
+    };
+    leave = true;
+    await expect(client.command(0x03)).resolves.toBe("gone");
+    for (const run of [() => client.saveToFlash(), () => client.applyConfig(DEFAULT_CONFIG), () => client.factoryReset()]) {
+      dongle.gone = false;
+      await expect(run()).rejects.toThrow(/desktop\.errors\.usb\.gone/);
+    }
+  });
+
   it("detects another program commanding the dongle at the same time", async () => {
     const { dongle, client } = setup({ pendingPolls: 2 });
     const original = dongle.setReport.bind(dongle);
