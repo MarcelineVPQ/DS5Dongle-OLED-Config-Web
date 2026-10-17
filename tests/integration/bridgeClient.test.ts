@@ -722,7 +722,7 @@ describe("controller health & info (protocol 1.12)", () => {
   it("announces it in identity [46], and older firmware doesn't", async () => {
     expect((await setup({ protoMinor: 12 }).client.identity()).features3 & FEATURES3.controllerInfo).toBe(FEATURES3.controllerInfo);
     expect((await setup({ protoMinor: 11 }).client.identity()).features3).toBe(0);
-    await expect(setup({ protoMinor: 11 }).client.readControllerHeader()).rejects.toThrow(/refused/);
+    await expect(setup({ protoMinor: 11 }).client.readControllerHeader()).rejects.toThrow(/desktop\.errors\.board\.stalled/);
   });
 
   it("runs the counters command and returns its pages", async () => {

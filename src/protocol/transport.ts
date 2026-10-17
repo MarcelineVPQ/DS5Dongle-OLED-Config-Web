@@ -6,6 +6,8 @@
 // USB interface that carries them instead (firmware src/vendor_itf.h). WebUSB
 // reaches it in Chromium browsers and in the Electron app alike.
 
+import { keyedText } from "../errorText";
+
 export interface Ds5Transport {
   readonly label: string;
   readonly isOpen: boolean;
@@ -18,8 +20,9 @@ export interface Ds5Transport {
 }
 
 // A transfer failed because the device left the bus (reboot, BOOTSEL, unplug).
+// The messages are keyed text (src/errorText.ts): causeText says them in the user's language.
 export class DeviceGoneError extends Error {
-  constructor(message = "Your board disconnected") {
+  constructor(message = keyedText("desktop.errors.usb.gone")) {
     super(message);
     this.name = "DeviceGoneError";
   }
@@ -29,7 +32,7 @@ export class DeviceGoneError extends Error {
 // too old to have it.
 export class ReportStalledError extends Error {
   constructor(public readonly reportId: number) {
-    super(`Your board refused report 0x${reportId.toString(16).toUpperCase()}`);
+    super(keyedText("desktop.errors.board.stalled", { report: `0x${reportId.toString(16).toUpperCase()}` }));
     this.name = "ReportStalledError";
   }
 }

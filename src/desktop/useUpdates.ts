@@ -3,7 +3,6 @@ import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
 import type { FeedProblem, FirmwareHoldState, FirmwareLookup, LatestFirmware, UpdateState } from "./api";
-import { deviceText } from "./hardwareName";
 import { type FirmwareProgress, findBootloader, installFirmware, updateFirmware } from "./firmwareUpdate";
 import { logged } from "../errorText";
 import i18n from "../i18n";
@@ -191,7 +190,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   if (state.phase === "verifying" && installed) {
     shown = sameVersion(state.version, installed)
       ? { phase: "done", version: installed }
-      : { phase: "failed", detail: `${deviceText("{{device, capitalize}}")} came back reporting ${installed}, expected ${state.version}.` };
+      : { phase: "failed", detail: i18n.t("desktop.firmware.wrongVersion", { installed, expected: state.version }) };
     setState(shown);
   }
   // "Press the PS button" only while no controller is connected: once one is
