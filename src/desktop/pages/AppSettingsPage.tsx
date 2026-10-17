@@ -69,7 +69,9 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
   const dismissed = useDismissedTasks().length;
   const [devTools] = useDevToolsShown();
   // loop: NOT-WORTH — N ≤ ~6 open tasks; App settings' render
-  const updateTask = useNoticeTasks().tasks.find((task) => task.place === "app" && task.section === "updates")?.text ?? null;
+  const { tasks, goTo } = useNoticeTasks();
+  // loop: NOT-WORTH — N ≤ ~6 open tasks; App settings' render
+  const updateTask = tasks.find((task) => task.place === "app" && task.section === "updates")?.text ?? null;
   const acc = useAccordion("app", pinScope("app"), updateTask ? "updates" : null);
 
   const startup = settings
@@ -212,6 +214,12 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
                   />
                 )}
                 <CheckNow firmwareInstalled={bridge.firmwareVersion} refreshFirmware={fw.refreshLatest} />
+                {/* The board's firmware updates live on its page (IA audit A3): one click there. */}
+                <div className="dk-row-btns">
+                  <button type="button" className="dk-btn" onClick={() => goTo("dongle", "firmware")}>
+                    {t("desktop.settings2.firmwareLink")}
+                  </button>
+                </div>
                 {settings.updateChannel === "dev" && (
                   <div className="dk-row-btns">
                     <BusyButton

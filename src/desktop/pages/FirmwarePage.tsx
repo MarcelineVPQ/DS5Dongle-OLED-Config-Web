@@ -86,7 +86,8 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
             );
           }}
         >
-          {t("desktop.firmware.check", "Check now")}
+          {/* The same label as App settings → Updates' check (page rule 8). */}
+          {t("desktop.setup.checkUpdates")}
         </BusyButton>
       </div>
       {checked && (

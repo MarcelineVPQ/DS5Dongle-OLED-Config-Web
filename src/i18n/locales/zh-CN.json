@@ -263,7 +263,6 @@
       "latest": "最新",
       "update": "更新到 {{version}}",
       "upToDate": "已是最新",
-      "check": "立即检查",
       "updateHint": "{{device}} 会重启到引导程序、写入固件并自动重启。请保持插入；之后按控制器上的 PS 键。",
       "unpublished": "尚未发布版本",
       "offline": "无法检查（离线）",
@@ -1238,7 +1237,8 @@
       "updates": "更新",
       "graphics": "图形",
       "reduceMotion": "减少动态效果",
-      "reduceMotionSub": "不显示移动背景、闪烁或动画（系统要求时也会开启）"
+      "reduceMotionSub": "不显示移动背景、闪烁或动画（系统要求时也会开启）",
+      "firmwareLink": "固件：{{deviceName}} → 固件"
     },
     "dev": {
       "title": "开发者",

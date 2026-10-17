@@ -337,7 +337,7 @@ const APP_INVENTORY: Record<string, string[]> = {
   accessibility: ["desktop.colorVision.label", "desktop.settings2.reduceMotion", "desktop.narrator.voice", "desktop.narrator.captions", "desktop.narrator.test"],
   startup: ["desktop.live.closeToTray", "desktop.live.launchAtLogin", "desktop.live.startMinimized"],
   graphics: ["desktop.live.hardwareAcceleration", "desktop.hdr.label", "desktop.knobs.hdrNits"],
-  updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.channel.backToStable"],
+  updates: ["desktop.live.checkForUpdates", "desktop.live.autoInstall", "desktop.channel.label", "desktop.setup.checkUpdates", "desktop.settings2.firmwareLink", "desktop.channel.backToStable"],
   privacy: ["desktop.games.readLaunchers"],
   dismissed: [], // none dismissed: nothing to do, its status says so (page rule 6)
   developer: ["desktop.dev.model", "desktop.dev.colorway", "desktop.dev.simulated", "desktop.dev.fakeSlots", "desktop.dev.updates", "desktop.dev.hdrTitle"],
@@ -599,7 +599,7 @@ const DONGLE_INVENTORY: Record<string, string[]> = {
   power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
   usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect"],
   lights: ["desktop.settings.picoLed", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
-  firmware: ["desktop.firmware.check"],
+  firmware: ["desktop.setup.checkUpdates"],
   device: ["desktop.firmware.enterBootsel", "desktop.firmware.factoryReset"],
 };
 // Each section opened in turn: everything listed shows in it, and no row or

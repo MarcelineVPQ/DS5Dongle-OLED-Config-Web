@@ -263,7 +263,6 @@
       "latest": "Última",
       "update": "Actualizar a {{version}}",
       "upToDate": "Actualizado",
-      "check": "Comprobar ahora",
       "updateHint": "{{device, capitalize}} se reinicia en su bootloader, recibe el firmware y vuelve a arrancar automáticamente. No desconectes nada; después pulsa el botón PS en el mando.",
       "unpublished": "aún no hay versión publicada",
       "offline": "no se puede comprobar (sin conexión)",
@@ -1250,7 +1249,8 @@
       "updates": "Actualizaciones",
       "graphics": "Gráficos",
       "reduceMotion": "Reducir movimiento",
-      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)"
+      "reduceMotionSub": "Sin fondo en movimiento, pulsos ni animaciones (también activo si tu sistema lo pide)",
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
     },
     "dev": {
       "title": "Desarrollador",

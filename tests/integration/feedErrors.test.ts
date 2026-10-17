@@ -3,7 +3,7 @@
 // "Are you online?" everywhere). The updater says why a check failed
 // (network / unsigned / malformed) and every page that reports a check says
 // it in those words: App settings' Check for updates, the setup screen, the
-// firmware card (Latest and Check now), the Development channel dialog and
+// Firmware section (Latest and Check for updates), the Development channel dialog and
 // the Games page's Proton install.
 import { generateKeyPairSync, sign } from "node:crypto";
 import { act, createElement } from "react";
@@ -164,7 +164,7 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
     notOffline(text());
   });
 
-  it("the firmware card: Latest and Check now", async () => {
+  it("the firmware card: Latest and Check for updates", async () => {
     const lookup = fakeMain(problem);
     const r = await lookup(true);
     expect(r.problem).toBe(problem);
@@ -181,7 +181,7 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
     const bridge = { client: null, firmwareVersion: "v9.0.0-oled-edition", identity: null } as unknown as UseDs5BridgeResult;
     await act(async () => root.render(createElement(FirmwarePage, { bridge, fw })));
     expect(text()).toContain(words.card);
-    await act(async () => button("Check now").click());
+    await act(async () => button("Check for updates").click());
     expect(text()).toContain(words.checked);
     notOffline(text());
   });

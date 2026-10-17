@@ -263,7 +263,6 @@
       "latest": "Dernière",
       "update": "Mettre à jour en {{version}}",
       "upToDate": "À jour",
-      "check": "Vérifier maintenant",
       "updateHint": "{{device, capitalize}} redémarre dans son bootloader, reçoit le firmware puis redémarre automatiquement. Ne débranche rien ; appuie ensuite sur PS sur la manette.",
       "unpublished": "aucune version publiée pour l'instant",
       "offline": "vérification impossible (hors ligne)",
@@ -1250,7 +1249,8 @@
       "updates": "Mises à jour",
       "graphics": "Graphismes",
       "reduceMotion": "Réduire les animations",
-      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)"
+      "reduceMotionSub": "Pas de fond animé, de pulsation ni d'animations (aussi actif si votre système le demande)",
+      "firmwareLink": "Firmware : {{deviceName}} → Firmware"
     },
     "dev": {
       "title": "Développeur",

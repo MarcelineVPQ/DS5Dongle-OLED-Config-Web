@@ -263,7 +263,6 @@
       "latest": "Mais recente",
       "update": "Atualizar para {{version}}",
       "upToDate": "Atualizado",
-      "check": "Verificar agora",
       "updateHint": "{{device, capitalize}} reinicia no bootloader, recebe o firmware e reinicia automaticamente. Não desconecte nada; depois pressione o botão PS no controle.",
       "unpublished": "nenhuma versão publicada ainda",
       "offline": "não dá para verificar (offline)",
@@ -1250,7 +1249,8 @@
       "updates": "Atualizações",
       "graphics": "Gráficos",
       "reduceMotion": "Reduzir movimento",
-      "reduceMotionSub": "Sem fundo em movimento, pulsação ou animações (também ativo se o sistema pedir)"
+      "reduceMotionSub": "Sem fundo em movimento, pulsação ou animações (também ativo se o sistema pedir)",
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
     },
     "dev": {
       "title": "Desenvolvedor",

@@ -263,7 +263,6 @@
       "latest": "Neueste",
       "update": "Auf {{version}} aktualisieren",
       "upToDate": "Aktuell",
-      "check": "Jetzt prüfen",
       "updateHint": "{{device, capitalize}} startet in den Bootloader, wird geflasht und startet von selbst neu. Nicht abziehen; drücke danach die PS-Taste am Controller.",
       "unpublished": "noch kein Release veröffentlicht",
       "offline": "Prüfung nicht möglich (offline)",
@@ -1250,7 +1249,8 @@
       "updates": "Updates",
       "graphics": "Grafik",
       "reduceMotion": "Bewegung reduzieren",
-      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)"
+      "reduceMotionSub": "Kein bewegter Hintergrund, kein Pulsieren, keine Animationen (auch an, wenn dein System es verlangt)",
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
     },
     "dev": {
       "title": "Entwickler",

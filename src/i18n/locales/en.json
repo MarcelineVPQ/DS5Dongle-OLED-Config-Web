@@ -262,7 +262,6 @@
       "latest": "Latest",
       "update": "Update to {{version}}",
       "upToDate": "Up to date",
-      "check": "Check now",
       "updateHint": "{{device, capitalize}} restarts into its bootloader, gets flashed and restarts on its own. Keep it plugged in; press the PS button on the controller afterwards.",
       "unpublished": "no release published yet",
       "offline": "can't check (offline)",
@@ -1249,7 +1248,8 @@
       "updates": "Updates",
       "graphics": "Graphics",
       "reduceMotion": "Reduce motion",
-      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)"
+      "reduceMotionSub": "No moving background, pulsing or animations (also on when your system asks for it)",
+      "firmwareLink": "Firmware: {{deviceName}} → Firmware"
     },
     "dev": {
       "title": "Developer",
