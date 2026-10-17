@@ -5130,6 +5130,18 @@ main.dk-body:focus:not(:focus-visible),
   text-align: left;
   cursor: pointer;
 }
+/* A status that wraps instead of "…" (Section's `statusWrap`: Language's
+   word in every language, always all visible). */
+.dk-sec.status-wrap .dk-sec-toggle {
+  height: auto;
+  min-height: 34px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.dk-sec.status-wrap .dk-sec-status {
+  overflow: visible;
+  white-space: normal;
+}
 /* A section with nothing to do (Section's `idle`): its header as plain text,
    no chevron, no pin, nothing to open. */
 .dk-sec-toggle.dk-sec-static {

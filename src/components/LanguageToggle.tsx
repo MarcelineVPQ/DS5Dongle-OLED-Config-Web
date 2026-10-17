@@ -4,7 +4,7 @@
 import { Check, Globe } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
+import i18n, { LANGUAGE_KEY, SUPPORTED_LANGUAGES } from "../i18n";
 import { logged } from "../errorText";
 import { useTopLayer } from "../desktop/topLayer";
 
@@ -13,6 +13,21 @@ import { useTopLayer } from "../desktop/topLayer";
 export function currentLanguage(language: string | undefined): (typeof SUPPORTED_LANGUAGES)[number] {
   // loop: HOT-PATH-OK — N = 7 languages, early exit; per render
   return SUPPORTED_LANGUAGES.find((l) => l.code === language) ?? SUPPORTED_LANGUAGES.find((l) => language?.startsWith(l.code)) ?? SUPPORTED_LANGUAGES[0];
+}
+
+// The word "Language" in every language the app has, for App settings →
+// Language's header: someone who switched to a language they can't read
+// finds their way back (owner, dev.15). The current language's word first
+// (the title), the others after it (the status line), each word once (es and
+// pt-BR share "Idioma"). Visual only: the header's accessible name stays in
+// the current language.
+export function languageWords(language: string | undefined): { own: string; others: string[] } {
+  const ownCode = currentLanguage(language).code;
+  const word = (code: string) => i18n.getFixedT(code)("desktop.settings2.language");
+  const own = word(ownCode);
+  // loop: NOT-WORTH — N = 7 languages; App settings' render
+  const others = [...new Set(SUPPORTED_LANGUAGES.map((l) => word(l.code)))].filter((w) => w !== own);
+  return { own, others };
 }
 
 export default function LanguageToggle() {

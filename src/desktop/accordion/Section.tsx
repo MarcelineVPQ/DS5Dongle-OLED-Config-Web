@@ -75,10 +75,12 @@ interface SectionProps {
   task?: string | null | false; // an open task: the yellow dot, said as the status
   notice?: ReactNode;
   idle?: boolean; // nothing to do now: the status only, no body (page rule 6)
+  statusWrap?: boolean; // the status may wrap onto more lines instead of "…" (Language's words in every language)
+  ariaLabel?: string; // the header's accessible name when the title and status are visual only (Language)
   children: () => ReactNode; // called only while open
 }
 
-export function Section({ id, icon: Icon, title, status, task, notice, idle = false, children }: SectionProps) {
+export function Section({ id, icon: Icon, title, status, task, notice, idle = false, statusWrap = false, ariaLabel, children }: SectionProps) {
   const { t } = useTranslation();
   const acc = useContext(AccordionContext);
   if (!acc) throw new Error("Section outside an Accordion");
@@ -120,9 +122,9 @@ export function Section({ id, icon: Icon, title, status, task, notice, idle = fa
       </section>
     );
   return (
-    <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}`} data-section={id}>
+    <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}${statusWrap ? " status-wrap" : ""}`} data-section={id}>
       <div className="dk-sec-head">
-        <button type="button" className="dk-sec-toggle" id={`${uid}-h`} aria-expanded={open} aria-controls={open ? `${uid}-b` : undefined} onClick={() => acc.toggle(id)}>
+        <button type="button" className="dk-sec-toggle" id={`${uid}-h`} aria-label={ariaLabel} aria-expanded={open} aria-controls={open ? `${uid}-b` : undefined} onClick={() => acc.toggle(id)}>
           <HeadContent icon={Icon} title={title} status={status} task={task} />
         </button>
         <button

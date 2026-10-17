@@ -24,7 +24,7 @@ import { ACCENT_KEY, ACCENTS, useControllerCode, useDesktopAccentUnreadable } fr
 import { GLASS_KEY } from "../glass/glassPref";
 import { BACKGROUNDS, useBackground, type Background } from "../live/ArtBackdrop";
 import { writePref, useFlagPref, usePref } from "../storage";
-import LanguageToggle, { currentLanguage } from "../../components/LanguageToggle";
+import LanguageToggle, { currentLanguage, languageWords } from "../../components/LanguageToggle";
 import ThemeToggle, { useTheme } from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import ColorPicker from "../colorPicker/ColorPicker";
@@ -68,6 +68,7 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
   const captions = useCaptionsOn();
   const launchers = useGamesAllowed();
   const dismissed = useDismissedTasks().length;
+  const languages = languageWords(i18n.language);
   const [devTools] = useDevToolsShown();
   // loop: NOT-WORTH — N ≤ ~6 open tasks; App settings' render
   const { tasks, goTo } = useNoticeTasks();
@@ -151,8 +152,17 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           </>
         )}
       </Section>
-      {/* The title says what it is and the status which language: the body is the choice alone (IA audit A5). */}
-      <Section id="language" icon={Globe} title={t("desktop.settings2.language")} status={currentLanguage(i18n.language).label}>
+      {/* Findable in every language (owner, dev.15): the title is this language's word, the line under it the
+          word in every other language, always shown; the header's accessible name stays in this language.
+          The body is the picker alone (each language in its own name; IA audit A5). */}
+      <Section
+        id="language"
+        icon={Globe}
+        title={t("desktop.settings2.language")}
+        status={languages.others.join(" · ")}
+        statusWrap
+        ariaLabel={`${t("desktop.settings2.language")}: ${currentLanguage(i18n.language).label}`}
+      >
         {() => <LanguageToggle />}
       </Section>
       {settings && (

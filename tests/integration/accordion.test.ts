@@ -425,6 +425,27 @@ describe("App settings on the accordion", () => {
     expect(dupes).toEqual([]);
   });
 
+  it("Language is findable in every language: its header shows the word in all 7 (once each), its accessible name stays in the current one", async () => {
+    const WORDS = ["Language", "Sprache", "Langue", "Idioma", "语言", "言語"];
+    try {
+      for (const lng of ["en", "de", "zh-CN", "ja", "pt-BR"]) {
+        await act(async () => void (await m.i18n.changeLanguage(lng)));
+        await render(appSettings());
+        const header = container.querySelector<HTMLButtonElement>('[data-section="language"] .dk-sec-toggle')!;
+        const shown = `${header.querySelector(".dk-sec-title")!.textContent} ${header.querySelector(".dk-sec-status")!.textContent}`;
+        for (const word of WORDS) expect(shown.split(word).length - 1, `${lng}: ${word} once`).toBe(1);
+        expect(header.querySelector(".dk-sec-title")!.textContent).toBe(m.i18n.t("desktop.settings2.language"));
+        expect(header.getAttribute("aria-label")).toContain(m.i18n.t("desktop.settings2.language"));
+        // The picker alone in the body: no "Language" row label repeating the title.
+        click(header);
+        expect(container.querySelector('[data-section="language"] .dk-sec-body .dk-row > .dk-label')).toBeNull();
+        click(header);
+      }
+    } finally {
+      await act(async () => void (await m.i18n.changeLanguage("en")));
+    }
+  });
+
   it("Background dim and blur show only with the Game art background (they do nothing over the swirls or a plain one)", async () => {
     const knob = (k: string) => labelsIn("appearance").includes(m.i18n.t(`desktop.knobs.${k}`));
     await render(appSettings());
@@ -438,7 +459,7 @@ describe("App settings on the accordion", () => {
   it("says each section's state in its header, from the settings it holds", async () => {
     await render(appSettings());
     const status = (id: string) => container.querySelector(`[data-section="${id}"] .dk-sec-status`)?.textContent;
-    expect(status("language")).toBe("English");
+    expect(status("language")).toBe("语言 · Idioma · Sprache · Langue · 言語"); // the word in the other languages (findable in every language)
     expect(status("startup")).toBe("Close to tray");
     expect(status("appearance")).toContain("HDR lighting");
     expect(status("updates")).toBe("Development · asks before installing");
