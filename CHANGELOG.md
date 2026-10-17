@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **No more short freezes while Games looks for Steam (Windows).** The app asked Windows where Steam is installed several times per scan, ▶ Play and Steam restart, and each time the window stopped answering for a moment. It now asks once per scan, in the background.
+
 ## [0.9.5-dev.18] - 2026-10-17
 
 ### Changed

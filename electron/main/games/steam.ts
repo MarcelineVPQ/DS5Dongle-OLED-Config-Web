@@ -1,6 +1,6 @@
 // Steam: installs, games, compatibility-tool mapping and per-game Steam Input.
 // Read side only; edits are planned in games.ts and written through backup.ts.
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { filesIn, readParsed } from "./files";
 import { join } from "node:path";
@@ -28,21 +28,40 @@ const TOOL_NAME = /^(Proton\b|Steam Linux Runtime|Steamworks Common|SteamVR)/i;
 const STEAM_TOOL_PRIORITY_DEFAULT = "75";
 const STEAM_TOOL_PRIORITY_GAME = "250";
 
-// Windows: where Steam is installed. The registry's SteamPath (the Steam
-// client writes it on every start), then the default install folders.
+// `reg query HKCU\Software\Valve\Steam /v SteamPath`: where the Steam client
+// says it is installed (it writes it on every start), with backslashes.
+export const steamPathIn = (regOutput: string): string | null => {
+  const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(regOutput);
+  return m ? m[1].trim().replace(/\//g, "\\") : null;
+};
+
+function querySteamPath(): Promise<string | null> {
+  return new Promise((resolve) =>
+    // lifetime: OK — reg.exe exits on its own; the 3 s timeout kills a hung one
+    // error: NOT-WORTH — no Steam in the registry (or no answer): the default install folders are still looked at
+    execFile(
+      join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe"),
+      ["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"],
+      { encoding: "utf8", windowsHide: true, timeout: 3000 },
+      (error, stdout) => resolve(error ? null : steamPathIn(stdout)),
+    ),
+  );
+}
+
+// The registry's SteamPath, read in the background (reg.exe takes 50-100 ms;
+// it used to run blocking on the main thread several times per scan, Play and
+// Steam restart). Read once at the start of each scan and of an Undo;
+// everything in between (the scan's three looks, Play, a Steam restart) reuses it.
+// cache: OK — key=none (HKCU SteamPath); invalidated=read again at the start of every scan and Undo (refreshWindowsSteamPath); bound=1 string
+let registrySteamPath: string | null = null;
+export async function refreshWindowsSteamPath(query: () => Promise<string | null> = querySteamPath): Promise<void> {
+  registrySteamPath = await query();
+}
+
+// Windows: where Steam is installed. The registry's SteamPath (as last read
+// by refreshWindowsSteamPath), then the default install folders.
 export function windowsSteamRoots(): string[] {
-  const roots: string[] = [];
-  try {
-    const out = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe"), ["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"], {
-      encoding: "utf8",
-      windowsHide: true,
-      timeout: 3000,
-    });
-    const m = /SteamPath\s+REG_SZ\s+(.+)/.exec(out);
-    if (m) roots.push(m[1].trim().replace(/\//g, "\\"));
-  } catch {
-    // error: NOT-WORTH — no Steam in the registry
-  }
+  const roots: string[] = registrySteamPath ? [registrySteamPath] : [];
   // loop: NOT-WORTH — N = 2 Program Files folders, Windows only, once per scan
   for (const pf of [process.env["ProgramFiles(x86)"], process.env.ProgramFiles]) if (pf) roots.push(join(pf, "Steam"));
   return roots;

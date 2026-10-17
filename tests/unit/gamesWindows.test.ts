@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Backups } from "../../electron/main/games/backup";
 import { detectRunningWindows, gameExecutables, parseTasklist, type ProcView } from "../../electron/main/games/running";
-import { findSteamInstalls, listSteamGames } from "../../electron/main/games/steam";
+import { findSteamInstalls, listSteamGames, refreshWindowsSteamPath, steamPathIn, windowsSteamRoots } from "../../electron/main/games/steam";
 import { parseEpicManifest, parseGogRegistry, readEpicGames, readGogGames, storeKey } from "../../electron/main/games/windowsStores";
 import { actionUrl } from "../../electron/main/games/actions";
 import { applyFixes, idHash, scan, withoutOurPreferSdl } from "../../electron/main/games/games";
@@ -36,6 +36,26 @@ describe("Games on Windows", () => {
     expect(listSteamGames(installs[0]).map((g) => g.name)).toEqual(["Marvel's Spider-Man Remastered"]);
     // Linux paths are never looked at on Windows.
     expect(findSteamInstalls(root, "win32", () => [])).toEqual([]);
+  });
+
+  // B3 (0.9.5 bug hunt): reg.exe ran blocking on the main thread several
+  // times per scan, Play and Steam restart (50-100 ms each).
+  it("reads Steam's registry folder once, in the background, and reuses it", async () => {
+    expect(steamPathIn("\r\nHKEY_CURRENT_USER\\Software\\Valve\\Steam\r\n    SteamPath    REG_SZ    c:/program files (x86)/steam\r\n")).toBe("c:\\program files (x86)\\steam");
+    expect(steamPathIn("ERROR: The system was unable to find the specified registry key or value.")).toBeNull();
+    let asked = 0;
+    await refreshWindowsSteamPath(() => {
+      asked++;
+      return Promise.resolve("D:\\Steam");
+    });
+    // Every look in between (the scan's three, Play, a restart) reuses the one answer.
+    expect(windowsSteamRoots()[0]).toBe("D:\\Steam");
+    expect(windowsSteamRoots()[0]).toBe("D:\\Steam");
+    expect(asked).toBe(1);
+    await refreshWindowsSteamPath(() => Promise.resolve(null));
+    expect(windowsSteamRoots()).not.toContain("D:\\Steam");
+    // No blocking child process left in the Steam module.
+    expect(readFileSync(new URL("../../electron/main/games/steam.ts", import.meta.url), "utf8")).not.toMatch(/execFileSync|spawnSync/);
   });
 
   it("indexes a game's program files, without generic helpers", () => {

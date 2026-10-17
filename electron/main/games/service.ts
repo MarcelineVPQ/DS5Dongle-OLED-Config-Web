@@ -27,7 +27,7 @@ import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
 import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClosed, type LauncherControl, type ReopenPlan } from "./processes";
 import { schemeHandlerExec } from "./schemeHandler";
 import { installProton, type ExtraTarget } from "./proton";
-import { findSteamInstalls, installedTools, windowsSteamRoots } from "./steam";
+import { findSteamInstalls, installedTools, refreshWindowsSteamPath, windowsSteamRoots } from "./steam";
 import {
   amixerLayer,
   dualSenseCards,
@@ -142,6 +142,8 @@ export class GamesService {
     this.requireConsent();
     // Windows: no Proton to look up and no PipeWire audio profile to check.
     const linux = process.platform === "linux";
+    // Windows: Steam's folder from the registry, read once, in the background, for the whole scan.
+    if (process.platform === "win32") await refreshWindowsSteamPath();
     const probes = this.deps.probes ?? { audioCards: dualSenseCards, hdr: () => hdrSystem() };
     const mixer = this.mixerLayer();
     const [audioCards, hdr, mixers, , texts] = await Promise.all([
@@ -307,6 +309,8 @@ export class GamesService {
   undo(backupId: string, allowed: RestartList): Promise<UndoResult> {
     return this.exclusive(async () => {
       this.requireConsent();
+      // Windows: Steam's folder for reopening it (read in the background).
+      if (process.platform === "win32") await refreshWindowsSteamPath();
       try {
         // Same rule as writing: a running launcher would overwrite the restored
         // files, so it's closed and reopened, only if the page said so.
