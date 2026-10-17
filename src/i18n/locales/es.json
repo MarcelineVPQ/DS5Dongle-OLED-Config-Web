@@ -504,7 +504,7 @@
           "runnerMissing": "{{game}} está configurado con {{current}}, que ya no está instalado, así que el juego no puede arrancar.",
           "steamInput": "{{support}} Steam Input está activado para este juego, así que Steam convierte el mando en un mando genérico y el juego nunca ve el DualSense. Es lo mismo que Propiedades → Mando → «Desactivar Steam Input» en Steam.",
           "steamInputGamescope": "{{game}} se ejecuta dentro de gamescope (sus opciones de lanzamiento lo inician ahí), y ahí Steam no puede pasarle su mando al juego, así que el juego no ve ningún mando. Con Steam Input desactivado, Proton pasa el DualSense directamente al juego. Es lo mismo que Propiedades → Mando → «Desactivar Steam Input» en Steam.",
-          "steamInputNotDetected": "Marcaste que {{game}} no detecta el mando, y Steam Input está activado para él. Con Steam Input desactivado, Proton pasa el DualSense directamente al juego (dentro de gamescope, Steam no puede pasarle su mando a un juego). Es lo mismo que Propiedades → Mando → «Desactivar Steam Input» en Steam.",
+          "steamInputNotDetected": "Tu informe dice Mando detectado: Falla para {{game}}, y Steam Input está activado para él. Con Steam Input desactivado, Proton pasa el DualSense directamente al juego (dentro de gamescope, Steam no puede pasarle su mando a un juego). Es lo mismo que Propiedades → Mando → «Desactivar Steam Input» en Steam.",
           "envSteam": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos. Las opciones de lanzamiento quedan así: {{options}}",
           "preferSdlWindows": "{{vars}} solo funciona con Proton en Linux. En Windows no hace nada, así que se quita la opción que añadió una versión anterior. Las opciones de lanzamiento quedan así: {{options}}",
           "envHeroic": "{{vars}} hace que Proton presente el mando como uno de Xbox, lo que desactiva los gatillos adaptativos.",
@@ -959,6 +959,7 @@
       },
       "failDetails": "{{feature}}: qué falló",
       "sheetConflict": "Tu lista anterior decía ambas cosas: compruébalo de nuevo",
+      "sheetDetectedFix": "Configuración tiene una solución para esto: {{fix}}.",
       "setupFlags": "Qué necesitó",
       "flag": {
         "steam-input-off": "Requiere Steam Input off"
@@ -1035,7 +1036,7 @@
       "micLevel": "Nivel del micrófono",
       "echoCancel": "Cancelación de eco",
       "gamepadSet": "El mando llega a este juego como mando estándar (XInput).",
-      "gamepadSteamInput": "Steam Input está activado para este juego, así que Steam le da un mando de Xbox: la opción de mando estándar no hace falta. Si el juego no ve el mando, marca Mando no detectado.",
+      "gamepadSteamInput": "Steam Input está activado para este juego, así que Steam le da un mando de Xbox: la opción de mando estándar no hace falta. Si el juego no ve el mando, marca Mando detectado como Falla en tu informe.",
       "gamepadNoBuild": "Este juego necesita la opción de mando estándar (PROTON_PREFER_SDL), pero {{runner}} la ignora y no hay instalado ningún Proton que la respete. Instala nuestro Proton DualSense más reciente (GE-Proton11-7.2-DualSense o posterior) o un GE-Proton normal.",
       "modeSet": "Se inicia en {{api}} ({{flag}}), así que {{feature}} está disponible.",
       "modeOwn": "Tus propios argumentos inician {{game}} con {{own}}, así que se quedan como están. Para {{feature}}, cambia {{own}} por {{flag}}.",

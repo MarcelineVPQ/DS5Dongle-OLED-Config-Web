@@ -501,7 +501,7 @@
           "runnerMissing": "{{game}} は {{current}} に設定されていますが、もうインストールされていないため起動できません。",
           "steamInput": "{{support}}このゲームでは Steam Input がオンのため、Steam がコントローラーを汎用ゲームパッドに変換し、ゲームからは DualSense が見えません。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
           "steamInputGamescope": "{{game}} は gamescope の中で動いています（起動オプションでそこから起動）。gamescope の中では Steam がコントローラーをゲームに渡せないため、ゲームからはコントローラーがまったく見えません。Steam Input をオフにすると、代わりに Proton が DualSense をそのままゲームに渡します。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
-          "steamInputNotDetected": "{{game}} でコントローラーが検出されないと記録されていて、このゲームでは Steam Input がオンです。Steam Input をオフにすると、代わりに Proton が DualSense をそのままゲームに渡します（gamescope の中では Steam がコントローラーをゲームに渡せません）。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
+          "steamInputNotDetected": "{{game}} のレポートで「コントローラー検出: 不合格」になっていて、このゲームでは Steam Input がオンです。Steam Input をオフにすると、代わりに Proton が DualSense をそのままゲームに渡します（gamescope の中では Steam がコントローラーをゲームに渡せません）。Steam の「プロパティ → コントローラー → Steam Input を無効化」と同じです。",
           "envSteam": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。起動オプションは次のようになります: {{options}}",
           "preferSdlWindows": "{{vars}} は Linux の Proton でのみ機能します。Windows では何も効果がないため、以前のバージョンが追加したこのオプションを削除します。起動オプションは次のようになります: {{options}}",
           "envHeroic": "{{vars}} があると Proton がコントローラーを Xbox パッドとして見せるため、アダプティブトリガーが無効になります。",
@@ -950,6 +950,7 @@
       },
       "failDetails": "{{feature}}：不合格の内容",
       "sheetConflict": "以前のリストでは両方にチェック：再確認してください",
+      "sheetDetectedFix": "セットアップにこの解決策があります: {{fix}}。",
       "setupFlags": "必要だった設定",
       "flag": {
         "steam-input-off": "Steam Input オフが必要"
@@ -1026,7 +1027,7 @@
       "micLevel": "マイクレベル",
       "echoCancel": "エコーキャンセル",
       "gamepadSet": "コントローラーは標準ゲームパッド（XInput）としてこのゲームに届いています。",
-      "gamepadSteamInput": "このゲームでは Steam Input がオンのため、Steam が Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。ゲームからコントローラーが見えない場合は「コントローラー未検出」にチェックを入れてください。",
+      "gamepadSteamInput": "このゲームでは Steam Input がオンのため、Steam が Xbox コントローラーとして渡しています。標準ゲームパッドのオプションは必要ありません。ゲームからコントローラーが見えない場合は、レポートの「コントローラー検出」を「不合格」にしてください。",
       "gamepadNoBuild": "このゲームには標準ゲームパッドのオプション（PROTON_PREFER_SDL）が必要ですが、{{runner}} はこれを無視し、対応する Proton がインストールされていません。新しい DualSense Proton（GE-Proton11-7.2-DualSense 以降）か通常の GE-Proton をインストールしてください。",
       "modeSet": "{{api}}（{{flag}}）で起動するので、{{feature}}が使えます。",
       "modeOwn": "独自の引数で {{game}} を {{own}} で起動しているため、そのままにしています。{{feature}}を使うには {{own}} を {{flag}} に置き換えてください。",

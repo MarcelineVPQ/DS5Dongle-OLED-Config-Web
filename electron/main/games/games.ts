@@ -478,8 +478,8 @@ export function scan(deps: ScanDeps): Scan {
       // A game inside gamescope (our HDR setup, or the player's own line) sees
       // no Steam Input pad at all: Steam can't see gamescope's focus, so it
       // never hands its controller to the game (Assetto Corsa Rally,
-      // 2026-10-17). Also offered when the player marked "Controller not
-      // detected" while Steam Input is on. Proton then passes the DualSense
+      // 2026-10-17). Also offered when the player's report says Controller
+      // detected: Fail (deps.notDetected, report.ts isNotDetected) while Steam Input is on. Proton then passes the DualSense
       // straight to the game. A forced "on" with native support has its own
       // fix below.
       const offerInputOff =

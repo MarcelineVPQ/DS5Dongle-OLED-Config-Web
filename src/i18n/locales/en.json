@@ -503,7 +503,7 @@
           "runnerMissing": "{{game}} is set to {{current}}, which is no longer installed, so the game can't start.",
           "steamInput": "{{support}} Steam Input is switched on for this game, so Steam translates the controller into a generic gamepad and the game never sees the DualSense. This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
           "steamInputGamescope": "{{game}} runs inside gamescope (its launch options start it there), and there Steam can't hand its controller to the game, so the game sees no controller at all. With Steam Input off, Proton passes the DualSense straight to the game instead. This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
-          "steamInputNotDetected": "You marked {{game}} as not detecting the controller, and Steam Input is on for it. With Steam Input off, Proton passes the DualSense straight to the game instead (inside gamescope, Steam can't hand its controller to a game). This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
+          "steamInputNotDetected": "Your report says Controller detected: Fail for {{game}}, and Steam Input is on for it. With Steam Input off, Proton passes the DualSense straight to the game instead (inside gamescope, Steam can't hand its controller to a game). This is the same as Properties → Controller → \"Disable Steam Input\" in Steam.",
           "envSteam": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers. The launch options become: {{options}}",
           "preferSdlWindows": "{{vars}} only works with Proton on Linux. On Windows it does nothing, so the option an earlier version added is taken out again. The launch options become: {{options}}",
           "envHeroic": "{{vars}} makes Proton present the controller as an Xbox pad, which turns off adaptive triggers.",
@@ -958,6 +958,7 @@
       },
       "failDetails": "{{feature}}: what failed",
       "sheetConflict": "Your old checklist said both: check it again",
+      "sheetDetectedFix": "Setup has a fix for this: {{fix}}.",
       "setupFlags": "What it needed",
       "flag": {
         "steam-input-off": "Needs Steam Input off"
@@ -1034,7 +1035,7 @@
       "micLevel": "Microphone level",
       "echoCancel": "Echo cancellation",
       "gamepadSet": "The controller reaches this game as a standard gamepad (XInput).",
-      "gamepadSteamInput": "Steam Input is on for this game, so Steam gives it an Xbox controller: the standard gamepad option isn't needed. If the game doesn't see the controller, tick Controller not detected.",
+      "gamepadSteamInput": "Steam Input is on for this game, so Steam gives it an Xbox controller: the standard gamepad option isn't needed. If the game doesn't see the controller, mark Controller detected as Fail in Your report.",
       "gamepadNoBuild": "This game needs the standard gamepad option (PROTON_PREFER_SDL), but {{runner}} ignores it and no Proton that honours it is installed. Install our newer DualSense Proton (GE-Proton11-7.2-DualSense or later) or a stock GE-Proton.",
       "modeSet": "Starts in {{api}} ({{flag}}), so {{feature}} is available.",
       "modeOwn": "Your own arguments start {{game}} with {{own}}, so they're left as they are. For {{feature}}, replace {{own}} with {{flag}}.",

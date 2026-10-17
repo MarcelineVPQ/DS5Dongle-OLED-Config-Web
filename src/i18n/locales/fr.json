@@ -504,7 +504,7 @@
           "runnerMissing": "{{game}} est réglé sur {{current}}, qui n'est plus installé : le jeu ne peut pas démarrer.",
           "steamInput": "{{support}} Steam Input est activé pour ce jeu : Steam traduit la manette en manette générique et le jeu ne voit jamais la DualSense. C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
           "steamInputGamescope": "{{game}} tourne dans gamescope (ses options de lancement l'y démarrent), et là Steam ne peut pas transmettre sa manette au jeu : le jeu ne voit aucune manette. Avec Steam Input désactivé, Proton transmet directement la DualSense au jeu. C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
-          "steamInputNotDetected": "Vous avez indiqué que {{game}} ne détecte pas la manette, et Steam Input est activé pour ce jeu. Avec Steam Input désactivé, Proton transmet directement la DualSense au jeu (dans gamescope, Steam ne peut pas transmettre sa manette à un jeu). C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
+          "steamInputNotDetected": "Votre rapport indique Manette détectée : Échec pour {{game}}, et Steam Input est activé pour ce jeu. Avec Steam Input désactivé, Proton transmet directement la DualSense au jeu (dans gamescope, Steam ne peut pas transmettre sa manette à un jeu). C'est l'équivalent de Propriétés → Manette → « Désactiver Steam Input » dans Steam.",
           "envSteam": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives. Les options de lancement deviennent : {{options}}",
           "preferSdlWindows": "{{vars}} ne fonctionne qu'avec Proton sous Linux. Sous Windows il n'a aucun effet : l'option ajoutée par une version précédente est donc retirée. Les options de lancement deviennent : {{options}}",
           "envHeroic": "{{vars}} fait passer la manette pour une manette Xbox auprès de Proton, ce qui coupe les gâchettes adaptatives.",
@@ -959,6 +959,7 @@
       },
       "failDetails": "{{feature}} : ce qui a échoué",
       "sheetConflict": "Ton ancienne liste disait les deux : vérifie à nouveau",
+      "sheetDetectedFix": "Réglages propose une correction : {{fix}}.",
       "setupFlags": "Ce qu'il a fallu",
       "flag": {
         "steam-input-off": "Steam Input à couper"
@@ -1035,7 +1036,7 @@
       "micLevel": "Niveau du microphone",
       "echoCancel": "Annulation de l'écho",
       "gamepadSet": "La manette arrive dans ce jeu comme manette standard (XInput).",
-      "gamepadSteamInput": "Steam Input est activé pour ce jeu, donc Steam lui fournit une manette Xbox : l'option manette standard n'est pas nécessaire. Si le jeu ne voit pas la manette, cochez Manette non détectée.",
+      "gamepadSteamInput": "Steam Input est activé pour ce jeu, donc Steam lui fournit une manette Xbox : l'option manette standard n'est pas nécessaire. Si le jeu ne voit pas la manette, mettez Manette détectée sur Échec dans votre rapport.",
       "gamepadNoBuild": "Ce jeu a besoin de l'option manette standard (PROTON_PREFER_SDL), mais {{runner}} l'ignore et aucun Proton qui la respecte n'est installé. Installe notre Proton DualSense plus récent (GE-Proton11-7.2-DualSense ou plus) ou un GE-Proton standard.",
       "modeSet": "Démarre en {{api}} ({{flag}}) : {{feature}} est disponible.",
       "modeOwn": "Vos propres arguments lancent {{game}} avec {{own}}, ils restent donc tels quels. Pour {{feature}}, remplacez {{own}} par {{flag}}.",
