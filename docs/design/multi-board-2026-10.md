@@ -114,7 +114,7 @@ Weighing it:
 
 - **Board id, Identify, the stack, the update target rule**: plain WebUSB and PICOBOOT, the same on Linux, Windows and macOS.
 - **Windows**: each board needs WinUSB on its configurator interface (MS OS 1.0 descriptors; the first plug of each board installs it). The boot ROM's USB serial is readable through WebUSB on every OS, so the update target rule holds. A board held by another program shows "Used by another program" on its row.
-- **macOS**: untested (no hardware), as for the rest of the app; nothing here is OS-specific.
+- **macOS**: covered by the macOS smoke test like the rest of the app (a real Apple Silicon Mac, the simulated board, no hardware attached); nothing here is OS-specific.
 - **Games on the game's board** (section 6) is OS-specific by nature (hidraw / SetupAPI / IOKit), one implementation per OS behind one "which board is this game's controller on" call.
 
 ## 13. QC with two (or more) real boards

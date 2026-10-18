@@ -37,7 +37,7 @@ A few pictures (from 0.9.5):
 
 Full feature list, for reference (not proposed for the README):
 
-**Configurator app (Linux, Windows; macOS untested)**
+**Configurator app (Linux, Windows, macOS)**
 - The live controller: a drawing of your exact controller (DualSense or
   DualSense Edge, its colorway or your own colors) showing every press, stick,
   trigger and touch as it happens; click any part to set it up

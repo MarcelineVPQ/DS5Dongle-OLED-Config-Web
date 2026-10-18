@@ -8,8 +8,8 @@
 //                                                                 one table, three OSes
 //
 // --mac takes the macOS smoke test's results.json (the "mac-smoke" artifact
-// of .github/workflows/mac-smoke.yml): macOS is best effort, so its column is
-// reported and never changes the exit code. Any of the three may be left out.
+// of .github/workflows/mac-smoke.yml): its shorter stretches are
+// reported, not judged, so the macOS column never changes the exit code. Any of the three may be left out.
 import { existsSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { combineResults, formatCombined, formatTable, fromMacSmoke, judgeBudgets, passed } from "./budgets_lib.mjs";
@@ -70,7 +70,7 @@ for (const os of oses) {
   w.lines.forEach((l) => console.log(l));
   if (os !== "macOS") notReached += w.notReached;
 }
-// macOS is best effort: reported, never judged here.
+// macOS: reported, never judged here (the smoke test's shorter stretches).
 const failed = rows.filter((r) => Object.entries(r.cells).some(([os, c]) => os !== "macOS" && c.verdict === "FAIL"));
 const ok = failed.length === 0 && notReached === 0;
 console.log(

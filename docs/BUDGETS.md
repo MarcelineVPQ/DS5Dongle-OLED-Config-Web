@@ -75,7 +75,7 @@ gh run download <mac-smoke run id> -n mac-smoke -D tmp/mac-smoke     # macOS: th
 node tools/budgets_report.mjs --linux tmp/budgets/results.json --windows tmp/budgets-vm/results.json --mac tmp/mac-smoke/results.json
 ```
 
-One row per budget (and page), a "measured VERDICT" column per OS, `n/a` where an OS didn't measure it, and the memory measure each OS used under it (PSS, private working set, footprint). macOS is best effort: its column comes from the smoke test (shorter stretches, footprint as memory) and never changes the exit code; Linux and Windows do.
+One row per budget (and page), a "measured VERDICT" column per OS, `n/a` where an OS didn't measure it, and the memory measure each OS used under it (PSS, private working set, footprint). macOS is reported, not judged: its column comes from the smoke test (shorter stretches, footprint as memory) and never changes the exit code; Linux and Windows do.
 
 ## New visuals
 

@@ -6,8 +6,7 @@
 
 const FEED = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest.json";
 const RELEASES = "https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest";
-// macOS builds are community-tested only (we have no Mac): always labeled so.
-const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS (community-tested)" };
+const NAMES = { linux: "Linux", windows: "Windows", macos: "macOS" };
 const KINDS = { linux: "AppImage", windows: "installer, no admin rights", macos: ".zip" };
 
 function detectOs() {
@@ -64,7 +63,7 @@ async function main() {
     el("dl-sub").textContent = `v${version} · ${KINDS[os]} · ${mb(mine.size)}`;
   } else {
     el("dl-title").textContent = `Download v${version}`;
-    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC (Linux, Windows; macOS community-tested)" : "Linux and Windows (macOS community-tested)";
+    el("dl-sub").textContent = os === "mobile" ? "The app runs on your PC (Linux, Windows, macOS)" : "Linux, Windows and macOS";
     el("dl-main").href = RELEASES;
   }
 
@@ -82,11 +81,11 @@ async function main() {
     note.textContent = "Make the AppImage executable (chmod +x) and run it; it adds itself to your app menu.";
   } else if (os === "windows") {
     note.hidden = false;
-    note.textContent = "The Windows build hasn't been tested on a Windows PC yet. Windows SmartScreen warns that it's unsigned: choose More info → Run anyway. Reports welcome!";
+    note.textContent = "Windows SmartScreen warns that the installer is unsigned: choose More info → Run anyway. It installs for you only, no admin rights needed.";
   } else if (os === "macos") {
     note.hidden = false;
     note.textContent =
-      "We can't test the macOS build ourselves, but it has been reported working on macOS 27.0.1. Unzip it and move the app to Applications. It isn't signed yet: the first time macOS refuses it, choose Done, then System Settings → Privacy & Security → Open Anyway (macOS 14 and older: right-click → Open). Reports welcome!";
+      "Unzip it and move the app to Applications. It isn't signed yet: the first time macOS refuses it, choose Done, then System Settings → Privacy & Security → Open Anyway (macOS 14 and older: right-click → Open).";
   }
 }
 
