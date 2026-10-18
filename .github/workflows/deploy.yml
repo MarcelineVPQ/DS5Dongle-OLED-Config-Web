@@ -16,8 +16,8 @@ concurrency:
 
 # GitHub Pages serves the download page (site/): plain static files, no build.
 # Its button reads the app's update feed live, so a release needs no redeploy.
-# The browser configurator it replaced is retired: the desktop app does all
-# of it (and the web build can still be run locally with `npm run dev`).
+# The browser configurator it replaced is retired and its code removed: the
+# desktop app does all of it.
 jobs:
   build:
     runs-on: ubuntu-latest

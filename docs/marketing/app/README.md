@@ -12,6 +12,7 @@ are in `docs/screenshots/`, taken in one fixed look with `tools/screenshot_env.m
 | `tour.png` | The first-run guided tour |
 | `live-data.png` | Close-up of the live data cards |
 | `about-credits.png` | About → Credits (42 Pixel Studios) |
+| `app-settings.png` | App settings |
 
 Not included on purpose: the PS (pairing slots) panel, which shows controller
 Bluetooth addresses, and the Games page, which lists the local game library.
