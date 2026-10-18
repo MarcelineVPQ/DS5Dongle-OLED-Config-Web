@@ -145,4 +145,4 @@ A standing rule, the game-development way: the app is a little tool for a contro
 
 ## Docs
 
-`docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `docs/DEDUPE_AUDIT.md`, `docs/LOOP_PASS_2026-10.md` (loop pass, both repos), `docs/BUDGETS.md` (resource budgets), `CHANGELOG.md`.
+`docs/GUIDE.md` (the user guide, bundled in About), `docs/GLOSSARY.md` (Sony's names for every UI term, per locale), `docs/adr/` (decisions), `docs/CONTRIBUTING.md`, `docs/TEST_PLAN.md`, `docs/SECURITY_AUDIT.md`, `docs/LINT_SUPPRESSIONS.md`, `docs/DEDUPE_AUDIT.md`, `docs/LOOP_PASS_2026-10.md` (loop pass, both repos), `docs/BUDGETS.md` (resource budgets), `CHANGELOG.md`.
