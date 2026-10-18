@@ -71,7 +71,7 @@ Your controller (a DualSense in its colorway, or a DualSense Edge with its Fn bu
 
 ![The Light bar panel](screenshots/guide-lightbar.png)
 
-Pick a mode: **Game** (the game decides), one of your four **favorite colors** (FAV0–FAV3), or an effect (breathing, rainbow, fade). Set the favorites with the color pickers.
+Pick a mode: **Game controls it** (the game decides), one of your four **favorite colors** (FAV0–FAV3), an effect (**Breathing**, **Rainbow**, **Fade**), or **Tilt color** (tilt the controller to mix the color). Set the favorites with the color pickers.
 
 ### Adaptive triggers
 
@@ -111,7 +111,7 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 
 ![Assigning a button](screenshots/guide-remap.png)
 
-Click a button or stick on the drawing and choose what it **acts as**, or open **Buttons & layouts** (in the controller overview) to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in your board (with the bar's **Save**) and work in every game, on any computer. **Reset all** puts every button back to itself (then Save).
+Click a button or stick on the drawing and choose what it **acts as**, or open **Button assignments** in the panel to see every button in one list, with the changed ones marked. On a DualSense Edge the **Fn buttons** and **back buttons (LB / RB)** are in the list too: each can act as any button, stay itself, or do nothing. Button assignments are stored in your board (with the bar's **Save**) and work in every game, on any computer. **Reset all buttons** puts every button back to itself (then Save).
 
 **DualSense Edge in PlayStation Accessories:** Sony's PlayStation Accessories app (Windows) sees the Edge's own profiles through your board, and a profile you save there shows right away. With **Controller mode** set to **DS5** (USB, on your board's page) it no longer offers a firmware update that then fails.
 
