@@ -345,6 +345,8 @@ function entryOf(key: string, g: GameState, s: FakeState, linux: boolean, hdrRea
     ...screen,
     options: "gamescope --backend wayland --hdr-enabled -f -W 3840 -H 2160 --force-grab-cursor -- %command%",
     runner: usesOurProton ? "" : msg("why.hdrRunner", { proton: s.ourProton }),
+    // Steam's text has an {{input}} part too (games.ts hdrInputOff): Steam Input goes off with gamescope.
+    ...(d.launcher === "steam" ? { input: g.steamInput === "on" || (g.steamInput === "global" && !native(support)) ? msg("why.hdrInputOff") : "" } : {}),
   });
   if (hdr === "needed") fix(`hdr:${d.id}`, "hdr-on", msg("label.hdr", { game: d.title }), hdrWhy, files.options);
   if (hdr === "update")

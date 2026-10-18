@@ -17,6 +17,8 @@ import { GAMESCOPE_MIN, hasGamescopeHdr, hdrGameReqs, hdrReady, hdrSystemReqs, m
 import type { HdrSystem } from "../../src/desktop/games/types";
 import { ApplyRequestSchema } from "../../electron/main/ipc";
 import { asLinux } from "../support/platform";
+import i18n, { SUPPORTED_LANGUAGES } from "../../src/i18n";
+import { msgText } from "../../src/desktop/library/waiting";
 
 asLinux();
 
@@ -403,6 +405,18 @@ describe("the Turn on HDR fix", () => {
     expect(state(deps(), "1091500")).toBe("update"); // Cyberpunk: the combined line
     expect(state(deps(), "1888930")).toBe("update"); // The Last of Us: the old variant
     expect(state(deps(), "1145360")).toBeUndefined(); // Hades isn't an HDR game
+  });
+
+  it("renders every fix's text with no {{placeholder}} left, in every language", async () => {
+    buildHome();
+    const fixes = scan(deps()).report.games.flatMap((g) => g.fixes);
+    expect(fixes.some((f) => f.kind === "hdr-on")).toBe(true);
+    // loop: NOT-WORTH — test only: 7 languages x a few fixes
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      await i18n.changeLanguage(code);
+      for (const f of fixes) for (const m of [f.label, f.why]) expect(msgText(i18n.t.bind(i18n), m), `${code} ${f.id}`).not.toContain("{{");
+    }
+    await i18n.changeLanguage("en");
   });
 
   it("isn't offered while a requirement is missing; the old variant is still removed", () => {
