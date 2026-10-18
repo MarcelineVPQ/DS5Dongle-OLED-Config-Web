@@ -16,6 +16,11 @@ name: macOS smoke test
 #     to this repo too): runs on the tagged app;
 #   - before tagging, or any time: gh workflow run mac-smoke.yml --ref master
 #     (or a branch). macOS minutes are free on this public repo.
+#
+# The release notes depend on it: the firmware repo's release.yml reads this
+# workflow's run for the release tag (and the app commit it builds), and its
+# "Tested on" line names macOS only when that run passed. Keep the name
+# (mac-smoke.yml) and the tag trigger, or the claim drops out of every release.
 
 on:
   push:
