@@ -581,7 +581,7 @@ function useWhatsNew(): { version: string | null; dismiss: () => void } {
   return { version, dismiss };
 }
 
-// Linux Games page: whether the user allowed it to read launcher settings, and
+// Games page (Linux and Windows): whether the user allowed it to read launcher settings, and
 // which recommended changes are waiting (the sidebar badge and its tooltip). The startup
 // check only runs once the user has allowed it.
 function useGamesAttention() {

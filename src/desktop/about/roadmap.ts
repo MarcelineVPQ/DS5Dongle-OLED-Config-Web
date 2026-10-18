@@ -38,6 +38,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "A game's report marks each controller feature Pass, Fail or Not tested (with what failed), and what the game needed, so a report can't say a feature both works and doesn't; your earlier checklist carries over.",
     areas: ["games"],
   },
+  { column: "next", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
   {
     column: "next",
     title: "Quicker second start on Windows",
@@ -415,7 +416,6 @@ export const ROADMAP: RoadmapItem[] = [
     text: "The Match desktop theme follows accent color changes right away on macOS, and takes more of the system's colors on macOS and Windows.",
     areas: ["app"],
   },
-  { column: "planned", title: "Menu bar icon on macOS", text: "The menu bar icon follows light and dark menu bars on macOS.", areas: ["app"] },
   {
     column: "next",
     title: "Several boards on one PC",
