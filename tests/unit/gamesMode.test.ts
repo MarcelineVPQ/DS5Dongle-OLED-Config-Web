@@ -206,7 +206,7 @@ describe("the graphics-mode fix on Windows (Steam)", () => {
     const backups = new Backups(join(home, "backups"));
     const before = read(localconfig());
     const fresh = scan({ home, ourProton: null, latestProton: null, latestSize: null, running: new Set(), audioCards: [] });
-    const prefix = `steam-${idHash(steamRoot())}`;
+    const prefix = `steam-${idHash(realpathSync.native(steamRoot()))}`;
     const fixes = allFixes(fresh.report).filter((f) => f.kind === "graphics-mode");
     expect(fixes.map((f) => f.id).sort()).toEqual([`${prefix}:mode:1139900`, `${prefix}:mode:2144740`]);
     expect(fixes[0].why).toMatchObject({ key: "why.modeSteam", params: { proton: "" } });

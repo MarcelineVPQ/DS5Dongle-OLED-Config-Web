@@ -388,7 +388,7 @@ describe("the standard-gamepad fix on Windows", () => {
     const before = readFileSync(localconfig(), "utf8");
     const fresh = scanNow();
     const cleanups = fresh.report.games.flatMap((g) => g.fixes).filter((f) => f.kind === "remove-env");
-    const prefix = `steam-${idHash(steamRoot())}`;
+    const prefix = `steam-${idHash(realpathSync.native(steamRoot()))}`;
     expect(cleanups.map((f) => [f.id, f.recommended])).toEqual([
       [`${prefix}:env:1139900`, true],
       [`${prefix}:env:1145360`, true],
