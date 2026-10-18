@@ -1,0 +1,3 @@
+# SHA-256 of each secret project's name (SECRET_PROJECTS.md), lowercased words joined by one space.
+# Refresh: node tools/doc_gates.mjs privacy-sync. Checked by: node tools/doc_gates.mjs privacy.
+efb9b9e3ffb20ff50879602b3cc57724ebecd8d7b09c67cf55032d08a95c001f

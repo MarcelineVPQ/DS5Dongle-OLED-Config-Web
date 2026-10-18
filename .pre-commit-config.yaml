@@ -3,6 +3,10 @@
 # Run manually: pre-commit run --all-files
 # Skip hooks: git commit --no-verify (use sparingly)
 
+# `pre-commit install` sets up both: the file checks, and the commit message's privacy check.
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
 repos:
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -108,3 +112,15 @@ repos:
         entry: node tools/check_identical_files.mjs
         language: system
         pass_filenames: false
+      - id: doc-gates
+        name: Docs name what exists; no secret project's name in a file (tools/doc_gates.mjs)
+        entry: node tools/doc_gates.mjs --check refs privacy
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: privacy-commit-msg
+        name: No secret project's name in the commit message or the branch's name
+        entry: node tools/doc_gates.mjs privacy-msg
+        language: system
+        stages: [commit-msg]
+        always_run: true

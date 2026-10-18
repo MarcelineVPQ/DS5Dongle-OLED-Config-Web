@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          # The changelog gate reads the commits since the last release tag.
+          fetch-depth: 0
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
@@ -54,6 +57,8 @@ jobs:
         run: node tools/list_settings.mjs --check
       - name: Long hints sit behind the ⓘ unless they must stay visible (tools/list_hints.mjs)
         run: node tools/list_hints.mjs --check
+      - name: Docs say what the code does (tools/doc_gates.mjs; the tags for the changelog gate)
+        run: node tools/doc_gates.mjs --check
 
   typecheck:
     name: Typecheck
