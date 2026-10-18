@@ -38,7 +38,7 @@ describe("About → Proton changes", () => {
     expect(header.getAttribute("aria-expanded")).toBe("true");
     const headings = [...container!.querySelectorAll("h1, h2")].map((h) => h.textContent);
     expect(headings).toContain("DualSense Proton changelog");
-    expect(headings).toContain("GE-Proton11-7.2-DualSense - 2026-10-13 (not published yet)");
+    expect(headings).toContain("GE-Proton11-7.2-DualSense - 2026-10-13");
     expect(headings).toContain("GE-Proton11-7-DualSense - 2026-09-27");
     expect(container!.textContent).toContain("PROTON_PREFER_SDL=1");
   });
