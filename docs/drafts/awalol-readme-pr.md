@@ -77,7 +77,7 @@ Thanks again!
 ### OLED Edition [MarcelineVPQ/DS5Dongle-OLED-Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)
 
 > Adds an optional Pico-OLED-1.3 display (11 screens: live controller, multi-controller pairing, lightbar, diagnostics,
-> settings) and a desktop configurator app for Linux and Windows with the firmware bundled: a live view of your
+> settings) and a desktop configurator app for Linux, Windows and macOS with the firmware bundled: a live view of your
 > controller, per-game profiles, button remapping (including the DualSense Edge), stick curves and calibration, a games
 > library, and one-click updates.
 
@@ -88,7 +88,7 @@ Thanks again!
 1. Controller page: the live drawing (Cosmic Red or similar) with the live data
    cards and the Controller info card
 2. A game page with its profile (compact card) and artwork
-3. Buttons & layouts (remap list with the Edge drawing)
+3. Button assignments (the button list with the Edge drawing)
 4. Calibration with the stick curve editor
 5. Pico 2 W page: live OLED mirror + dashboard (timing card visible)
 6. The OLED itself: contact sheet of the Status screen, DualSense and Edge
