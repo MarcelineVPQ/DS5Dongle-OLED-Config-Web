@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+**Release Candidate 2 for 0.9.5**: fixes and up-to-date pictures and guide.
+
 ### Changed
 
 - **New pictures of the current app.** The guide's screenshots, the marketing shots and the download page show the 0.9.5 layout (the Controller page's sections, the Pico 2 W page, Games), not the 0.8/0.9.0 one with its Dongle tab and Save to dongle; the download page's "New in" line names 0.9.5-dev.19's features.
@@ -14,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Fixed
 
+- **No more redrawing every page every 10 seconds while idle.** The board's health check (every 10 s, for the Pico 2 W page's dot) handed the whole app a new answer each time, even with nothing changed, so every page was redrawn and its listeners set up again for nothing. Now only a changed answer redraws.
 - **Fake games' Turn on HDR text ended in "{{input}}".** In a dev build's Fake games, a Steam game's HDR change in Recommended changes ended with a stray `{{input}}` (after "…with HDR." or after the launch options): the made-up library left out the part about Steam Input. It now says it like a real Steam game does, in all 7 languages, and a test renders every recommended change's text in every language and fails on any `{{` left over.
 
 ## [0.9.5-dev.19] — Release Candidate 1 — 2026-10-17

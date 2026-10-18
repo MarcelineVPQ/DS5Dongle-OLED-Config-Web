@@ -29,3 +29,13 @@ export function boardProblems(t: TFunction, c: AudioCounters, core1Alive: boolea
   if (flags & CORE1_MIC_FAILED) out.push({ reason: "mic-decoder", text: t("desktop.diag.micDecoderFailed", { kb }) });
   return out;
 }
+
+// What boardProblems' answer is made of, as one string: two reads with the
+// same key give the same problems and texts (the free heap counts only while
+// a problem shows it). null alive = not known yet.
+export function boardProblemsKey(c: AudioCounters, core1Alive: boolean | null): string {
+  const failed = (c.core1Flags ?? 0) & (CORE1_SPEAKER_FAILED | CORE1_MIC_FAILED);
+  if (core1Alive !== false && !failed) return String(core1Alive);
+  const kb = c.core1FreeHeap === undefined ? "?" : Math.round(c.core1FreeHeap / 1024);
+  return `${String(core1Alive)}|${c.core1Stage ?? "?"}|${failed}|${kb}`;
+}
