@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.20] — Release Candidate 2 — 2026-10-18
+
 **Release Candidate 2 for 0.9.5**: fixes and up-to-date pictures and guide.
 
 ### Changed
