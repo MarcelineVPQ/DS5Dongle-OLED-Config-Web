@@ -7,7 +7,16 @@
 //   node tools/screenshot_env.mjs apply             switch the app to the preset (your settings are kept aside)
 //   node tools/screenshot_env.mjs shot FILE.png     capture the window as it is now (after apply)
 //   node tools/screenshot_env.mjs restore           put your own settings back
-//   [--port 9333]
+//   [--port 9350]
+//
+// Take the shots on an isolated copy, never on the copy you're using: its
+// own home, settings, virtual display, private D-Bus that can start nothing
+// (no portals or kscreen on your desktop) and no USB, quit through the app:
+//   DS5_DEV_TOOLS=1 npx electron-vite build
+//   tools/isolated.sh start --state tmp/shots --port 9350 --size 1600x1400
+//   node tools/screenshot_env.mjs apply; node tools/screenshot_env.mjs shot docs/screenshots/x.png ...
+//   tools/isolated.sh stop --state tmp/shots --port 9350   (fails on a new core dump or desktop helper)
+// --port 9333 points it at your dev copy instead (apply keeps your look aside, restore puts it back).
 //
 // "Desktop" theme colors come from this PC's KDE scheme and the colorway from
 // the connected controller: apply warns when either differs from the preset.
@@ -19,7 +28,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const args = process.argv.slice(2);
 const cmd = args[0];
-const port = Number(args.includes("--port") ? args[args.indexOf("--port") + 1] : "9333");
+const port = Number(args.includes("--port") ? args[args.indexOf("--port") + 1] : "9350");
 const PRESET = new URL("../docs/screenshots/look.json", import.meta.url);
 const BACKUP = join(tmpdir(), "ds5-screenshot-env-backup.json");
 // Look settings only (not data like play history or the update notice).

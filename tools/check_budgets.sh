@@ -7,11 +7,14 @@
 # Like the UI checker it runs its own copy of the app, never the one you're
 # using: a dev build with its own home folder and settings (tmp/budgets),
 # DevTools on port 9420 (main-process inspector 9421; far from the
-# 9333-9345 range the dev copy and other test copies use), a virtual 1920x1080
-# display (xvfb-run, WAYLAND_DISPLAY unset), a private D-Bus session (no
-# tray icon on your desktop) and a bubblewrap sandbox with a fresh /dev (no
+# 9333-9345 range the dev copy and other test copies use), fully isolated
+# (tools/isolated.sh): a clean environment with its own runtime folder, a
+# virtual 1920x1080 display (xvfb-run), a private D-Bus session that can
+# start nothing (no portals, kscreen, wallet or tray icon on your desktop),
+# --password-store=basic, and a bubblewrap sandbox with a fresh /dev (no
 # /dev/bus/usb or /dev/hidraw*: it can never reach a real board or
-# controller; the GPU nodes are passed through). The board is the simulated
+# controller; the GPU nodes are passed through). It quits through the app's
+# own quit and fails when a core dump or a desktop helper appeared meanwhile. The board is the simulated
 # one with the controller put down; Developer card -> Fake games gives it a
 # full game library, so it never reads your Steam or Heroic. Everything
 # runs at nice 19. WebGL runs on SwiftShader (software), which inflates the
@@ -32,7 +35,6 @@ set -euo pipefail
 APP="$(cd "$(dirname "$0")/.." && pwd)"
 STATE="$APP/tmp/budgets"
 PORT="${DS5_BUDGET_PORT:-9420}"
-ELECTRON="$APP/node_modules/electron/dist/electron"
 MODE=quick
 BUILD=1
 for arg in "$@"; do
@@ -44,32 +46,11 @@ for arg in "$@"; do
   esac
 done
 
-# Only our copy: Electron from this tree with our debug port (an anchored
-# full path, so the pattern never matches this shell).
-stop() {
-  local pids
-  pids="$(pgrep -f "^$ELECTRON .*--remote-debugging-port=$PORT" || true)"
-  [ -n "$pids" ] && kill $pids 2>/dev/null || true
-}
+stop() { "$APP/tools/isolated.sh" stop --state "$STATE" --port "$PORT"; }
 
-missing=()
-for tool in bwrap dbus-run-session curl xvfb-run getconf; do
-  command -v "$tool" > /dev/null || missing+=("$tool")
-done
-if [ "${#missing[@]}" -gt 0 ]; then
-  echo "check_budgets.sh needs: ${missing[*]} (install them first)" >&2
-  exit 2
-fi
+command -v getconf > /dev/null || { echo "check_budgets.sh needs: getconf (install it first)" >&2; exit 2; }
 
 cd "$APP"
-stop
-# Never attach to someone else's app: both ports must be free.
-for p in "$PORT" $((PORT + 1)); do
-  if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$p/json"; then
-    echo "Port $p is in use by another program; pick other ports with DS5_BUDGET_PORT=<n> (uses n and n+1)." >&2
-    exit 2
-  fi
-done
 rm -rf "$STATE"
 mkdir -p "$STATE/userdata"
 node tools/seed_test_library.mjs "$STATE" > /dev/null
@@ -82,22 +63,14 @@ if [ "$BUILD" = 1 ]; then
   DS5_DEV_TOOLS=1 nice -n 19 npx electron-vite build > "$STATE/build.log" 2>&1
 fi
 echo "== Starting the budget copy (port $PORT, $MODE)"
-SANDBOX=(bwrap --dev-bind / / --dev /dev)
-for node in /dev/dri /dev/nvidia*; do
-  if [ -e "$node" ]; then SANDBOX+=(--dev-bind "$node" "$node"); fi
-done
-setsid dbus-run-session -- xvfb-run -a -s "-screen 0 1920x1080x24" env -u WAYLAND_DISPLAY "${SANDBOX[@]}" \
-  env HOME="$STATE/home" nice -n 19 "$ELECTRON" . --ozone-platform=x11 --no-sandbox --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-  --user-data-dir="$STATE/userdata" --remote-debugging-port="$PORT" --inspect=$((PORT + 1)) > "$STATE/app.log" 2>&1 < /dev/null &
-up=0
-for _ in $(seq 60); do curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$PORT/json" && up=1 && break; sleep 1; done
-if [ "$up" != 1 ]; then
-  echo "The budget copy never answered on port $PORT. The end of $STATE/app.log:" >&2
-  tail -n 30 "$STATE/app.log" >&2 || true
-  stop
-  exit 1
-fi
-[ "${DS5_BUDGET_KEEP:-}" = 1 ] || trap stop EXIT
+tools/isolated.sh start --state "$STATE" --port "$PORT" --size 1920x1080 --nice -- --enable-unsafe-swiftshader --ignore-gpu-blocklist
+# The after-check's verdict counts: a core dump or a desktop helper started fails the gate.
+finish() {
+  local code=$?
+  if [ "${DS5_BUDGET_KEEP:-}" != 1 ]; then stop || code=1; fi
+  exit "$code"
+}
+trap finish EXIT
 
 status=0
 nice -n 19 node tools/measure_budgets.mjs --port "$PORT" --mode "$MODE" --out "$STATE/results.json" || status=$?
