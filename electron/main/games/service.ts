@@ -1,4 +1,4 @@
-// Main-process side of the Games page (Linux only): owns scanning, applying
+// Main-process side of the Games page (Linux and Windows): owns scanning, applying
 // confirmed fixes, undo (closing and reopening the launchers the page named),
 // and installing our
 // Proton build. The renderer only ever passes fix ids, a backup id or a

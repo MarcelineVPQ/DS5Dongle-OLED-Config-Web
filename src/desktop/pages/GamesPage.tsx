@@ -3,8 +3,8 @@
 // (adaptive triggers, haptics) from reaching games, and fixes them with the
 // user's consent. Like every page: the library (Continue playing, the grid)
 // is the main view, with This computer (Linux: controller audio and access,
-// the environment, the HDR checklist; a readout, so a main-view MainBlock at
-// its top, always shown), and game setup is the accordion at the
+// the environment, the HDR checklist; a readout, so a main-view MainBlock
+// after the library, always shown), and game setup is the accordion at the
 // right: Launchers, DualSense Proton (Linux), Recommended changes (the rail's
 // count: its task dot) and Change history. Each section and block says its
 // state in its header; what needs the player carries the yellow dot.
@@ -450,7 +450,7 @@ function GamesHome({ bridge, profiles, onScanned, onDeclinedChange, openGame }: 
   );
 }
 
-// This computer (Linux), at the top of Home's main view: what the scan found
+// This computer (Linux), after the library in Home's main view: what the scan found
 // about the controller's audio and access, the environment and HDR, with a
 // yellow dot on its header while something there needs the player.
 function ComputerBlock({ state, report, status, onRescan }: { state: MainBlockState; report: GamesReport; status: ReturnType<typeof homeStatus>; onRescan: () => void }) {

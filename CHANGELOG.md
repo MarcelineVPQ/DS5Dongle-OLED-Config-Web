@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **New pictures of the current app.** The guide's screenshots, the marketing shots and the download page show the 0.9.5 layout (the Controller page's sections, the Pico 2 W page, Games), not the 0.8/0.9.0 one with its Dongle tab and Save to dongle; the download page's "New in" line names 0.9.5-dev.19's features.
+- **Button layout hints name the real buttons.** They pointed at an "Apply assignments" button and a "Buttons page" that don't exist; they now say **Save to** your board (the save bar) and **Button assignments** on the **Controller** page, in all 7 languages.
+- **The guide, the download page and About say it right.** The app is tested on Linux, Windows 11 and macOS (on a real Apple Silicon Mac, by the macOS smoke test), not "untested" or "community-tested" on macOS. The guide's light bar modes and button list use the app's names (Game controls it, Tilt color, Button assignments, Reset all buttons). About → Coming soon lists the macOS menu bar icon as done, and the credits name the button glyphs instead of the retired web tool.
+
 ## [0.9.5-dev.19] - 2026-10-17
 
 The release candidate for 0.9.5: bug fixes, several boards on one PC, and the board's Settings screen in groups.

@@ -1,7 +1,7 @@
 # DualSense colorway renders
 
-Marketing images of the app's live controller view in each standard DualSense
-colorway the app recognizes, as the app draws them:
+Marketing images of the app's live controller view in the 13 standard DualSense
+colorways (codes 00-12), as the app draws them:
 
 - `dualsense-NN-<name>.png`: one per colorway, transparent background, 2x
   resolution, steady blue lightbar, player 1 lit.
@@ -17,8 +17,7 @@ Colors come from `src/desktop/live/colorways.ts` (00-05: AL2009man's art
 colors; 06-12: close approximations). Art: AL2009man's DualSense
 (Gamepad-Asset-Pack, MIT); credit it where these are used.
 
-Special editions (God of War, Spider-Man, Astro Bot, ...) have printed artwork
-the app can't reproduce, so they aren't shown.
+Not rendered here: the colorways the app learned after these renders (HyperPop 13-15, the 30th Anniversary and the limited editions such as God of War, Spider-Man and Astro Bot). The app draws those as plain or two-tone approximations without their printed artwork.
 
 Made by rendering the running desktop app over the Chrome DevTools protocol
 (transparent page background, each colorway's CSS variables applied, the

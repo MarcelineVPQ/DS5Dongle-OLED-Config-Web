@@ -21,14 +21,12 @@ pre-commit install
 ### Running
 
 ```bash
-npm run dev            # browser build, http://127.0.0.1:5173 (Chromium only: WebUSB)
 npm run dev:desktop    # desktop app with hot reload
-npm run build          # browser production build (GitHub Pages)
 npm run build:desktop  # desktop production build into out/
 npm run start:desktop  # run the desktop production build
 ```
 
-On Linux the desktop scripts pass `--no-sandbox` (see `docs/adr/0004-linux-sandbox-and-gpu.md`). If the app can't open the dongle (`SecurityError` / access denied), install a udev rule granting your user access to `054c:0ce6` (Steam's controller rules already do).
+On Linux the desktop scripts pass `--no-sandbox` (see `docs/adr/0004-linux-sandbox-and-gpu.md`). If the app can't open the dongle (`SecurityError` / access denied), press **Set up USB access** on the board's page (under **Connection to the PC**): it installs `resources/linux/70-ds5-dongle.rules` (`054c:0ce6`, `054c:0df2` in DualSense Edge mode, and the Pico bootloader `2e8a:000f`). Steam's controller rules often already grant it. The browser web tool is gone (ADR-0002); there is no browser build to run.
 
 ## Code Style
 
@@ -67,6 +65,8 @@ Gates in `tools/` (also in `npm run gates` and CI):
 - **`list_caches.mjs --check`** fails on kept state without a `// cache: VERDICT — key=…; invalidated=…; bound=…` comment on its line or the line above: a module-level or class collection written after load, a module/class value used as a memo (lazy init, `??=`, a timestamp, a value read from disk/IPC/network), a closure memo, a `useRef` used as a cache, a value mirrored from a file at load. Verdicts: OK, FIX-STALE, FIX-UNBOUNDED (name the growth source), ADD-CACHE, REMOVE, NOT-WORTH. Add the comment in the same commit as the cache. `tools/list_caches.mjs` and `tools/list_loops.mjs` share `tools/ts_program.mjs` (the program, function names, call resolution). Re-run the full pass (`node tools/list_caches.mjs --firmware ../DS5Dongle`) when a release adds caches, polls or library-scan reads, and update `docs/CACHE_PASS_<date>.md`. See CLAUDE.md "Cache pass".
 
 - **`list_errors.mjs --check`** fails on an error path without a verdict: a try/catch, `.catch`, `.then(ok, onRejected)`, `void` promise, IPC handler or renderer IPC call, zod parse, child process, fetch, `JSON.parse` or failure field in a result type. Write the verdict as `// error: VERDICT — reason` on the line or the line above, or use the handlers that carry it: `.catch(shown("desktop.errors.…"))` (SHOWN: the user sees it, in all 7 languages) or `.catch(logged("why"))` (LOGGED-OK). It also fails on a SHOWN key missing from en.json, and on a SILENT-BUG / SWALLOWED / FLOATING row that doesn't name its batch. ESLint adds `no-floating-promises` (with `void` only in front of a handled chain), `no-misused-promises` and `no-empty` (catch included). See CLAUDE.md "Error pass" and `docs/ERROR_PASS_2026-10.md`.
+- **`list_settings.mjs --check`** fails on a setting outside the one framework: an old-style settings card, a setting row or action button outside a `Section`, a bare `<select>` or range input without its `Row`, a `Section` without a stable id, icon or translated title, or a `Section` with no setting or action (readouts go in the main view as a `MainBlock`). A card that only looks like one says `// settings-gate: not-settings — reason`.
+- **`list_hints.mjs --check`** fails on a visible hint (a row's `sub`, a `dk-hint` paragraph) longer than its limit, unless it says `// hint: MUST-SHOW — reason`; longer explanations go behind the ⓘ (`InfoTip`).
 
 Gates in the tests:
 
@@ -101,7 +101,7 @@ npx vitest run tests/integration   # one category
 <type>(<scope>): <description>
 ```
 
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `deps`. Scopes in use: `desktop`, `protocol`, `web`, `i18n`, `updater`, `security`.
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `deps`. Common scopes: `desktop`, `games`, `ui`, `live`, `dongle`, `controller`, `protocol`, `i18n`, `updates`, `security`, `backlog`, `changelog`, `guide`, `gates`, `release`.
 
 ## Versioning
 

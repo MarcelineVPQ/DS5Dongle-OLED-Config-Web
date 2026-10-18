@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded (2026-10-11): the browser tool was retired with 0.8.0 and its code removed (`cc794d6`, "remove the retired web tool"). The repository builds only the desktop app; GitHub Pages serves the static download page in `site/`. The browser flasher (`src/flash/`) stays, as the app's firmware updater. Kept as the record of why the desktop app exists.
 
 ## Date
 

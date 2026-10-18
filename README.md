@@ -2,7 +2,7 @@
 
 The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, haptic feedback, built-in speaker and microphone included).
 
-Made on Linux, tested on Linux and Windows 11. The macOS build is included; we can't test it ourselves, but it has been reported working on macOS 27.0.1 (thanks, @wfsg00098!). More reports are welcome. The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
+Made on Linux, tested on Linux, Windows 11 and macOS (the universal app, installed and run on a real Apple Silicon Mac by the [macOS smoke test](.github/workflows/mac-smoke.yml)). The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
 
 ![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
 
@@ -10,13 +10,13 @@ Made on Linux, tested on Linux and Windows 11. The macOS build is included; we c
 
 **The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
 
-- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers (with **Trigger Effect Intensity** to make games' resistance weaker), haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (**Speaker boost**, **Lock volume**, **Audio output** and **Microphone used**, with a speaker test, and a mic test on Linux), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
+- **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers (with **Trigger Effect Intensity** to make games' resistance weaker), haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (**Speaker boost**, **Lock volume**, **Audio output** and **Microphone used**, with a speaker test and a mic test), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
 - **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per pairing slot; a **sensitivity curve** per stick; circularity and drift tests.
 - **Your board's page** (named after the board, for example **Pico 2 W**): its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline, how long each part of the firmware takes) with the board's and the screen's specs, one-click firmware updates, **PC sleep** (turn the controller off when the PC sleeps, wake the PC with the PS button) and a **Status pin** (a Pico pin that shows the controller connection, for an LED or a PC's power-button header).
 - **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that hold every controller setting the game changes (including a **button layout** and stick curves), edited live in the controller view and switched in while the game runs, Proton setup and fixes (Linux), **HDR in games on Linux** (through gamescope, with a checklist of what it needs and the steps to do it yourself), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
-The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to the Pico 2 W** (the button names your board) keeps them after it powers off.
+The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to Pico 2 W** (the button names your board) keeps them after it powers off.
 
 ## Requirements
 
@@ -71,16 +71,16 @@ What each part does:
 
 It can come back if a real DualSense is plugged into the PC by USB again; press the button again then. To do it by hand instead: run the same script in an administrator PowerShell, then replug the dongle.
 
-### macOS (community-tested)
+### macOS
 
-We don't have a Mac to test on, but 0.9.5-dev.6 was [reported working on macOS 27.0.1](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues/17) (thanks, @wfsg00098!). More reports are welcome.
+The universal app (Apple Silicon and Intel) is tested on every release: the [macOS smoke test](.github/workflows/mac-smoke.yml) installs it from a quarantined download on a real Apple Silicon Mac, starts it and drives it. 0.9.5-dev.6 was also [reported working on macOS 27.0.1](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/issues/17) (thanks, @wfsg00098!).
 
 Download the `.zip`, unzip it, and move the app to *Applications*. The build isn't signed yet, so the first time macOS says *"DS5 Dongle OLED Edition Configurator" Not Opened: Apple could not verify it is free of malware* and offers only **Move to Trash** or **Done**. Choose **Done**, then open *System Settings → Privacy & Security*, scroll down to the message about the app and choose **Open Anyway**. (On macOS 14 and older, right-click the app and choose **Open** instead.) Or, in Terminal: `xattr -dr com.apple.quarantine "/Applications/DS5 Dongle OLED Edition Configurator.app"`, then open it as usual. After that it starts normally. On macOS the app tells you about updates and links to the download, but doesn't install them itself.
 
 ## Updates
 
 - **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off in ⚙ App settings or the tray menu.
-- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear on your board's page (**Check now** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
+- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear on your board's page (**Check for updates** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
 
 ## Privacy
 
@@ -125,7 +125,7 @@ The result is in `release/`. The official downloads are built the same way by [G
 - **Live controller art:** DualSense art from the [Gamepad Asset Pack](https://github.com/AL2009man/Gamepad-Asset-Pack) by AL2009man, MIT, modified (recolored and tagged by `tools/prepare_controller_art.py`; license in `src/assets/AL2009MAN-LICENSE.txt`).
 - **DualSense Edge art:** from [dualsense-tester](https://github.com/daidr/dualsense-tester) by Xuezhou Dai (daidr), MIT, modified (Sony marks removed, regions filled, recolored and parts tagged by `tools/prepare_edge_art.py`; license in `src/assets/DAIDR-LICENSE.txt`).
 - **Controller info layouts:** the controller firmware report and lifetime-counter offsets and their decoding (`src/protocol/controllerInfo.ts`) follow [dualsense-tester](https://github.com/daidr/dualsense-tester) by Xuezhou Dai (daidr), MIT (license in `src/assets/DAIDR-LICENSE.txt`).
-- **Tray icon and web tool art:** "PS5 Button Icons and Controls" by [Zacksly](https://zacksly.itch.io), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), modified.
+- **Tray icon and button glyphs:** "PS5 Button Icons and Controls" by [Zacksly](https://zacksly.itch.io), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), modified.
 - **PICOBOOT flasher:** picoflash by Piers Finlayson (MIT).
 
 DualSense and PlayStation are trademarks of Sony Interactive Entertainment. This project is not affiliated with Sony.

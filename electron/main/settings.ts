@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   // Off until the user says yes (the app asks once, after the tour).
   autoInstallUpdates: false,
   updatesAsked: false,
-  // Linux Games page: off until the user agrees to let the app read launcher settings.
+  // Games page (Linux and Windows): off until the user agrees to let the app read launcher settings.
   gamesScanAllowed: false,
   // Silent until the user says yes (the tour asks once).
   narratorVoice: "ask",

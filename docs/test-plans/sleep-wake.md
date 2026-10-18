@@ -154,7 +154,7 @@ Seen along the way:
   profile) the backdrop asks for game art anyway, and main logs
   `Error occurred in handler for 'desktop:games-details': gamesNotAllowed`
   once per page load. BACKLOG row "Games off: the backdrop's game-art request
-  logs an error in main at every start (internal)".
+  logs an error in main at every start (internal)", fixed in 0.9.5-dev.19.
 - Negative control (`--no-return`, 1 cycle): FAIL as it should
   (`reconnected`, `controllerBack`, `audioPath`, `configKept`, `haptics`
   false), so the checks can fail.
@@ -173,7 +173,7 @@ speaker and a game or the app's grip test giving haptics:
    level moves (Controller → Microphone), HD haptics felt in both grips,
    Pico 2 W → Diagnostics counters move with drops at 0.
 4. Repeat steps 1–3 at least twice more (PadSense-CE fails on the second).
-5. Once more with "Controller off when the PC sleeps" turned off: the
+5. Once more with **Turn off the controller when the PC sleeps** turned off: the
    controller stays on; after the wake sound and haptics come back by
    themselves.
 6. Once with the controller left to idle off by itself first (its own

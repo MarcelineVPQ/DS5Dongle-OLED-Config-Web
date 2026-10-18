@@ -4,9 +4,9 @@ Our Proton build for playing Windows games on Linux with a DualSense through the
 
 GE-Proton itself already brings the DualSense's own features to games through Proton: the controller is read directly (hidraw), so games that support the DualSense get its adaptive triggers and haptic feedback, and it keeps working when the controller is plugged in or reconnects while a game runs. The notes below list only what our build changes on top of that.
 
-## GE-Proton11-7.2-DualSense - 2026-10-13 (not published yet)
+## GE-Proton11-7.2-DualSense - 2026-10-13
 
-Based on GE-Proton11-7, like the build before it.
+Based on GE-Proton11-7, like the build before it. [Download](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/tag/proton-GE-Proton11-7.2-DualSense).
 
 ### Added
 

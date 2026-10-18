@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DS5 Dongle OLED Edition</title>
-    <meta
-      name="description"
-      content="The desktop app for the DS5 Dongle OLED Edition: your DualSense live on screen, one-click firmware updates, no drivers. Linux and Windows; the macOS build is community-tested."
-    />
+    <meta name="description" content="The desktop app for the DS5 Dongle OLED Edition: your DualSense live on screen, one-click firmware updates, no drivers. Linux, Windows and macOS." />
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; media-src 'self'; connect-src https://raw.githubusercontent.com https://api.github.com; base-uri 'none'; form-action 'none'"
@@ -34,7 +31,7 @@
 
     <main>
       <section class="hero">
-        <p class="eyebrow">New in 0.9: calibration, vibration intensity per side, the dongle's screen live</p>
+        <p class="eyebrow">New in 0.9.5-dev.19: DualSense Edge support, stick sensitivity curves, sleep and wake with your PC, HDR games on Linux</p>
         <h1>Your DualSense,<br /><span class="glow">live on screen.</span></h1>
         <p class="lede">
           The DS5 Dongle OLED Edition turns a Raspberry Pi Pico&nbsp;2&nbsp;W into a Bluetooth bridge that games see as a wired DualSense, with adaptive triggers, haptic feedback, built-in speaker and
@@ -44,7 +41,7 @@
         <div class="download" id="download">
           <a class="btn primary" id="dl-main" href="https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition/releases/latest">
             <span class="btn-title" id="dl-title">Download the app</span>
-            <span class="btn-sub" id="dl-sub">Linux and Windows (macOS community-tested)</span>
+            <span class="btn-sub" id="dl-sub">Linux, Windows and macOS</span>
           </a>
           <p class="others" id="dl-others" hidden>
             Also for <span id="dl-other-links"></span> ·
@@ -54,7 +51,7 @@
         </div>
 
         <figure class="shot">
-          <img src="img/hero.webp" width="1458" height="1377" alt="The app: a Cosmic Red DualSense drawn live, with tiles and live data below it" />
+          <img src="img/hero.webp" width="1458" height="1376" alt="The app: a Cosmic Red DualSense drawn live, with tiles and live data below it" />
         </figure>
       </section>
 
@@ -70,8 +67,8 @@
         <article>
           <h2>No drivers</h2>
           <p>
-            Plug it in and it works on Linux and Windows. The macOS build is included; we can't test it ourselves, but it has been reported working on macOS 27.0.1. To games it's a real DualSense; the
-            app talks to the dongle on its own USB channel.
+            Plug it in and it works on Linux and Windows, and it has been reported working on macOS 27.0.1. The app is tested on Linux, Windows 11 and macOS (on macOS the smoke test installs and runs
+            it on a real Apple Silicon Mac). To games it's a real DualSense; the app talks to the dongle on its own USB channel.
           </p>
         </article>
       </section>
@@ -91,11 +88,11 @@
         </figure>
         <figure>
           <img src="img/calibration.webp" width="1200" height="1133" loading="lazy" alt="Calibration: a guided run with raw and corrected stick previews" />
-          <figcaption>Calibration: stick drift, triggers that don't reach full, a creeping gyro. Fixed in the dongle, for every game.</figcaption>
+          <figcaption>Calibration: stick drift, triggers that don't reach full, a creeping gyro. Fixed on your board, for every game.</figcaption>
         </figure>
         <figure>
-          <img src="img/dongle.webp" width="1200" height="1133" loading="lazy" alt="The dongle's screen mirrored live, with its diagnostics dashboard" />
-          <figcaption>The dongle's own screen, live, and a dashboard of what it's doing.</figcaption>
+          <img src="img/board.webp" width="1200" height="1133" loading="lazy" alt="The Pico 2 W's page: its OLED screen mirrored live, with its dials and diagnostics" />
+          <figcaption>Your board's own screen, live, and a dashboard of what it's doing.</figcaption>
         </figure>
       </section>
 
