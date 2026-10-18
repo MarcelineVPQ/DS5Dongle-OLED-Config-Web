@@ -37,9 +37,11 @@
 #     app's own before-quit path runs) and waits for it. Never SIGTERM
 #     (Electron answers it with a core dump, and every dump pops a crash
 #     notice on the desktop); SIGKILL only as the last resort.
-#   - the after-check fails when, since the start, a core dump appeared (any
-#     process) or a portal, kscreen, wallet or at-spi process was started, or
-#     anything still runs with this copy's runtime folder.
+#   - the after-check fails when, since the start, this copy left a core dump
+#     (its Electron, or any process with its runtime folder or its log open)
+#     or started a portal, kscreen, wallet or at-spi process, or anything
+#     still runs with its runtime folder. Other sessions' dumps and helpers
+#     (another test copy, the desktop) are listed, not judged.
 set -euo pipefail
 APP="$(cd "$(dirname "$0")/.." && pwd)"
 ELECTRON="$APP/node_modules/electron/dist/electron"
@@ -70,29 +72,49 @@ WATCH='^/usr/[^ ]*/(xdg-desktop-portal[^ /]*|xdg-document-portal|xdg-permission-
 watched_pids() { pgrep -f "$WATCH" | sort || true; }
 copy_pids() { [ -n "$PORT" ] && pgrep -f "^$ELECTRON .*--remote-debugging-port=$PORT( |\$)" || true; }
 
+# Core dumps and helpers are told apart by their environment: this copy's
+# carry its runtime folder (or, for a dump, its log as an open file); other
+# sessions' (another agent's test copy, the desktop itself) are reported,
+# not judged.
 after_check() {
   [ -s "$ISO/started" ] || { echo "isolated.sh check: no run recorded in $ISO" >&2; return 2; }
-  local since run fail=0 dumps new left
+  local since run fail=0 dumps new left ours others
   since="$(cat "$ISO/started")"
   run="$(cat "$ISO/runtime" 2>/dev/null || echo /nonexistent)"
-  dumps="$(coredumpctl list --since "$since" --no-legend 2>/dev/null | grep -v '^No coredumps' || true)"
-  if [ -n "$dumps" ]; then
-    echo "after-check: core dumps since $since:" >&2
-    printf '%s\n' "$dumps" >&2
+  dumps="$(journalctl --user --system --since "$since" MESSAGE_ID=fc2e22bc6ee647b6b90729ab34a250b1 -o json 2>/dev/null |
+    node -e '
+      const [run, log, exe] = process.argv.slice(1);
+      const text = (v) => (Array.isArray(v) ? Buffer.from(v).toString() : String(v ?? ""));
+      let data = ""; process.stdin.on("data", (c) => (data += c)).on("end", () => {
+        for (const line of data.split("\n").filter(Boolean)) {
+          const d = JSON.parse(line);
+          const mine = text(d.COREDUMP_ENVIRON).includes("XDG_RUNTIME_DIR=" + run) || text(d.COREDUMP_OPEN_FDS).includes(log) || text(d.COREDUMP_EXE) === exe;
+          console.log((mine ? "OURS " : "OTHER ") + text(d.COREDUMP_PID) + " " + text(d.COREDUMP_EXE) + " " + text(d.COREDUMP_SIGNAL_NAME));
+        }
+      });' "$run" "$STATE/app.log" "$ELECTRON" || true)"
+  ours="$(printf '%s\n' "$dumps" | grep '^OURS ' || true)"
+  others="$(printf '%s\n' "$dumps" | grep '^OTHER ' || true)"
+  if [ -n "$ours" ]; then
+    echo "after-check: this copy left core dumps since $since:" >&2
+    printf '%s\n' "$ours" >&2
     fail=1
   fi
+  [ -z "$others" ] || { echo "after-check (not this copy, reported only): core dumps of other sessions since $since:" >&2; printf '%s\n' "$others" >&2; }
   new="$(comm -13 "$ISO/watched-before" <(watched_pids))"
-  if [ -n "$new" ]; then
-    echo "after-check: desktop helpers started since $since:" >&2
-    for p in $new; do ps -o pid=,args= -p "$p" >&2 || true; done
-    fail=1
-  fi
+  for p in $new; do
+    if grep -qsaF "XDG_RUNTIME_DIR=$run" "/proc/$p/environ"; then
+      echo "after-check: this copy started a desktop helper: $(ps -o pid=,args= -p "$p" || true)" >&2
+      fail=1
+    else
+      echo "after-check (not this copy, reported only): $(ps -o pid=,args= -p "$p" || echo "$p (gone)")" >&2
+    fi
+  done
   left="$( { grep -lsaF "XDG_RUNTIME_DIR=$run" /proc/[0-9]*/environ || true; } | wc -l)"
   if [ "$left" != 0 ]; then
     echo "after-check: $left processes still run with this copy's runtime folder $run" >&2
     fail=1
   fi
-  [ "$fail" = 0 ] && echo "after-check: clean (no core dumps, no desktop helpers started, nothing left running)"
+  [ "$fail" = 0 ] && echo "after-check: clean (no core dumps or desktop helpers from this copy, nothing left running)"
   return "$fail"
 }
 
@@ -101,7 +123,7 @@ case "$cmd" in
     [ -n "$PORT" ] || { echo "isolated.sh start: --port P" >&2; exit 2; }
     [ -x "$ELECTRON" ] || { echo "isolated.sh: no Electron at $ELECTRON (npm ci first)" >&2; exit 2; }
     missing=()
-    for tool in bwrap dbus-run-session curl coredumpctl $([ "$SHOW" = 1 ] || echo xvfb-run); do command -v "$tool" > /dev/null || missing+=("$tool"); done
+    for tool in bwrap dbus-run-session curl journalctl node $([ "$SHOW" = 1 ] || echo xvfb-run); do command -v "$tool" > /dev/null || missing+=("$tool"); done
     [ "${#missing[@]}" = 0 ] || { echo "isolated.sh needs: ${missing[*]} (install them first)" >&2; exit 2; }
     # Never attach to someone else's app: both ports must be free.
     for p in "$PORT" $((PORT + 1)); do

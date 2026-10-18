@@ -44,7 +44,8 @@ describe("tools/isolated.sh", () => {
   });
 
   it("checks afterwards for core dumps, desktop helpers and leftovers", () => {
-    expect(launcher).toMatch(/coredumpctl list --since/);
+    expect(launcher).toMatch(/journalctl --user --system --since "\$since" MESSAGE_ID=fc2e22bc6ee647b6b90729ab34a250b1/);
+    expect(launcher).toContain("COREDUMP_OPEN_FDS");
     for (const name of ["xdg-desktop-portal", "kscreen_backend_launcher", "kwalletd", "ksecretd"]) expect(launcher).toContain(name);
   });
 });
