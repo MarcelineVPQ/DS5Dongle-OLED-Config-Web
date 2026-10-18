@@ -16,9 +16,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 - **Fake games' Turn on HDR text ended in "{{input}}".** In a dev build's Fake games, a Steam game's HDR change in Recommended changes ended with a stray `{{input}}` (after "…with HDR." or after the launch options): the made-up library left out the part about Steam Input. It now says it like a real Steam game does, in all 7 languages, and a test renders every recommended change's text in every language and fails on any `{{` left over.
 
-## [0.9.5-dev.19] - 2026-10-17
+## [0.9.5-dev.19] — Release Candidate 1 — 2026-10-17
 
-The release candidate for 0.9.5: bug fixes, several boards on one PC, and the board's Settings screen in groups.
+**Release Candidate 1 for 0.9.5**: bug fixes, several boards on one PC, and the board's Settings screen in groups.
 
 ### Added
 

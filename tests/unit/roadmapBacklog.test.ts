@@ -157,6 +157,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Lifelike controller drawing": "Realistic (PBR) controller",
   "Several boards on one PC": "Several boards: tell them apart",
   "Every board at once": "Full multi-board support",
+  "Beta and release candidate builds": "Updater: alpha / beta / rc stages",
 };
 
 /**

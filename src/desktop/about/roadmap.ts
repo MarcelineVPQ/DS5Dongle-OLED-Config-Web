@@ -429,6 +429,12 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle", "games"],
   },
   {
+    column: "planned",
+    title: "Beta and release candidate builds",
+    text: "The app tells alpha, beta and release candidate builds apart from the final release, and a Beta channel in App settings offers tested-but-early builds without every Development build.",
+    areas: ["app"],
+  },
+  {
     column: "next",
     title: "Clearer message when {{device}} is busy",
     text: "When another program is using {{device}}, the app says so (and which program, on Linux) instead of a raw USB error, and connects by itself once it's free.",
