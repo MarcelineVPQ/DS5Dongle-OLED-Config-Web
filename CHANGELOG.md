@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+
+- **The guide, the download page and About say it right.** The app is tested on Linux, Windows 11 and macOS (on a real Apple Silicon Mac, by the macOS smoke test), not "untested" or "community-tested" on macOS. The guide's light bar modes and button list use the app's names (Game controls it, Tilt color, Button assignments, Reset all buttons). About → Coming soon lists the macOS menu bar icon as done, and the credits name the button glyphs instead of the retired web tool.
+
 ## [0.9.5-dev.19] - 2026-10-17
 
 The release candidate for 0.9.5: bug fixes, several boards on one PC, and the board's Settings screen in groups.
