@@ -23,9 +23,9 @@
     "@fontsource/dm-sans": "5.3.0",
     "@fontsource/jetbrains-mono": "5.3.0",
     "@fontsource/space-grotesk": "5.3.0",
-    "i18next": "26.4.3",
+    "i18next": "26.4.4",
     "i18next-browser-languagedetector": "8.2.1",
-    "koffi": "3.3.2",
+    "koffi": "3.3.3",
     "lucide-react": "0.577.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -33,7 +33,7 @@
     "react-markdown": "10.1.0",
     "remark-gfm": "4.0.1",
     "yaml": "2.9.1",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -42,18 +42,18 @@
     "@types/react-dom": "18.3.7",
     "@types/w3c-web-usb": "1.0.14",
     "@vitejs/plugin-react": "5.2.0",
-    "@vitest/coverage-v8": "5.0.3",
+    "@vitest/coverage-v8": "5.0.4",
     "electron": "45.0.0-beta.3",
     "electron-builder": "26.17.0",
     "electron-vite": "5.0.0",
     "eslint": "10.12.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "jsdom": "30.1.2",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.1",
-    "vite": "7.3.6",
-    "vitest": "5.0.3"
+    "vite": "7.3.7",
+    "vitest": "5.0.4"
   },
   "productName": "DS5 Dongle OLED Edition Configurator",
   "description": "Desktop and web configurator for the DS5 Dongle OLED Edition firmware.",
