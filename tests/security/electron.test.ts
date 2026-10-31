@@ -168,6 +168,8 @@ describe("window and session baseline", () => {
   it("blocks new windows and off-app navigation", () => {
     expect(mainSource).toMatch(/return \{ action: "deny" \}/);
     expect(mainSource).toMatch(/will-navigate/);
+    expect(mainSource).toMatch(/"will-redirect", \(event, url\) => \{\s*if \(!isAppUrl\(url\)\) event\.preventDefault\(\)/);
+    expect(mainSource).toMatch(/"will-frame-navigate", \(event\) => \{\s*if \(!isAppUrl\(event\.url\)\) event\.preventDefault\(\)/);
   });
 
   it("never hands ipcRenderer to the page, only fixed channel functions", () => {

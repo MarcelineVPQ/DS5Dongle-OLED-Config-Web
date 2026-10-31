@@ -116,12 +116,17 @@ if (process.env.PATH) process.env.PATH = pathWithoutAppImageMounts(process.env.P
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  // Launching it again just brings the running copy forward.
-  app.on("second-instance", showWindow); // lifetime: NOT-WORTH — one per app, lives until quit
+  const started = app.whenReady().then(start);
+  // Launching it again just brings the running copy forward, once it has
+  // started (a second launch in the first moments would otherwise make a
+  // window before the app is ready).
+  // lifetime: NOT-WORTH — one per app, lives until quit
+  app.on("second-instance", () => {
+    // error: NOT-WORTH — a failed start is shown by the dialog below; there is no window to bring forward
+    started.then(showWindow, () => undefined);
+  });
   // The app couldn't set itself up: without a window, a dialog says so.
-  app
-    .whenReady()
-    .then(start)
+  started
     // error: SHOWN — desktop.errors.main.startFailed in a dialog, in the system's language (mainText); no window exists to show it in
     .catch(async (cause: unknown) => {
       // error: LOGGED-OK — the locale file couldn't be loaded: the dialog still says it, in English
@@ -777,6 +782,16 @@ function createWindow(visible: boolean): void {
       event.preventDefault();
       if (isAllowedExternalUrl(url)) openExternalLink(url);
     }
+  });
+  // A redirect or a frame can't take the page anywhere else either (there are
+  // no frames and the CSP allows only the app's own files: defence in depth).
+  // lifetime: OK — goes with the window (destroyed on "closed")
+  contents.on("will-redirect", (event, url) => {
+    if (!isAppUrl(url)) event.preventDefault();
+  });
+  // lifetime: OK — goes with the window (destroyed on "closed")
+  contents.on("will-frame-navigate", (event) => {
+    if (!isAppUrl(event.url)) event.preventDefault();
   });
 
   // A page that can't load is a broken install or a stopped dev server; Chromium logs did-fail-load too.
