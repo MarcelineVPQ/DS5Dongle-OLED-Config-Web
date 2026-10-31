@@ -419,8 +419,8 @@ describe("game page", () => {
 });
 
 // The rating rates the controller in this game, not the game: it sits in
-// Your report, asks so, and every star names what it means (owner: "five
-// stars under a game banner read as rating the game").
+// Your report, asks so, and every star names what it means (owner: five
+// stars under a game banner read as a rating of the game).
 describe("rating: how well the DualSense works in this game", () => {
   const stars = () => [...container!.querySelectorAll<HTMLButtonElement>("#gp-rating [role=radio]")];
   // The rating is in Your report: rendered while it's open.

@@ -1,6 +1,6 @@
 ## Headset audio audit: is the headset path the best it can be? (read-only)
 
-**Question (owner, 2026-10-13):** "For our (dream) 1 million users that use a headset with the controller, is it the best it can be?"
+**Question (owner, 2026-10-13):** for a large user base (a million users) with a headset in the controller, is the headset audio as good as it can be?
 
 **Answer: not yet.** The Bluetooth codec side is in good shape: full-band stereo CELT at the largest frame the 0x39 report holds, with no drops on the owner's board. Most of what a headset user hears wrong happens before the encoder. On Linux the default card profile sends mono to the right channel only. The hardware volumes restored at boot leave the microphone gain at 0 and cap the headphone amp. The speaker resampler is plain linear interpolation. On top of that, the microphone jitter buffer has no level control.
 

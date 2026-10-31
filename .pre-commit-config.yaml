@@ -113,8 +113,8 @@ repos:
         language: system
         pass_filenames: false
       - id: doc-gates
-        name: Docs name what exists; no secret project's name in a file (tools/doc_gates.mjs)
-        entry: node tools/doc_gates.mjs --check refs privacy
+        name: Docs name what exists; no secret project's name or quoted words of the owner in a file (tools/doc_gates.mjs)
+        entry: node tools/doc_gates.mjs --check refs privacy quotes
         language: system
         pass_filenames: false
         always_run: true

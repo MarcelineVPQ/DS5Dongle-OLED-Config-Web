@@ -2,7 +2,7 @@
 
 Status: **Part 1 shipped in 0.9.5-dev.19** (the safety fix, below). **Part 2 is the design for 0.9.6**: nothing in it is built yet. BACKLOG rows: "Several boards: tell them apart, never update the wrong one" (shipped), "Full multi-board support (0.9.6)", "Settings and pairing with no controller connected", "Controller switcher in the rail", "Per-controller settings", "Multi-controller testing (fake slots)".
 
-Marcy's requirement (2026-10-17): "we need to automatically account for multiple dev boards connected", and "flexible, it could be 20". Every rule here is for **any number of boards**: no two-board assumptions in data, UI or tests.
+Marcy's requirement (2026-10-17): account for several connected boards automatically, and stay flexible: any number of them, e.g. 20. Every rule here is for **any number of boards**: no two-board assumptions in data, UI or tests.
 
 ## 1. What a board is to the app
 
@@ -37,7 +37,7 @@ The smallest change so nothing goes wrong with 2 or 20 boards:
 
 ## 3. The board stack in the rail (Part 1, Marcy's design)
 
-Marcy, 2026-10-17, looking at the rail's bottom status row: *"I am going to assume we are just going to keep stacking them here, that can also act as a switcher."* So the status row becomes a stack, inside `AppRail.tsx` (one component, the rail's own classes):
+Marcy, 2026-10-17, looking at the rail's bottom status row: keep stacking the boards there, and let the stack also act as a switcher. So the status row becomes a stack, inside `AppRail.tsx` (one component, the rail's own classes):
 
 - **One row per board**: the board name (or "Simulated board"), its firmware version, and its controller and slot ("DualSense · Slot 0", "No controller · Slot 0", or "Used by another program" / "Can't be read"). A heading says "N boards connected" (`role="status"`).
 - **The board in use is marked** like the active page (accent bar, `aria-current`), with a ✓ only for a real board in use; others show a plain dot, "!" when they can't be read.

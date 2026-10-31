@@ -1,4 +1,4 @@
-// tools/doc_gates.mjs: the changelog, refs, version and privacy gates catch
+// tools/doc_gates.mjs: the changelog, refs, version, privacy and quotes gates catch
 // what they're for, and pass what they should.
 import { describe, expect, it } from "vitest";
 // @ts-expect-error -- a plain ESM tool script without types
@@ -13,6 +13,7 @@ const g = gates as {
   privacyProblems: (texts: { name: string; text: string }[], hashes: Set<string>) => string[];
   phraseHash: (p: string) => string;
   secretNames: (md: string) => string[];
+  quoteProblems: (texts: { name: string; text: string }[]) => string[];
   versionCmp: (a: string, b: string) => number;
 };
 
@@ -94,5 +95,24 @@ describe("privacy gate", () => {
   it("passes its words apart, and a line marked privacy-ok", () => {
     expect(g.privacyProblems([{ name: "a", text: "a velvet cushion; an otter" }], hashes)).toEqual([]);
     expect(g.privacyProblems([{ name: "a", text: "velvet otter (privacy-ok: the toy's brand)" }], hashes)).toEqual([]);
+  });
+});
+
+describe("quotes gate", () => {
+  // Built from a quote character so this file's own lines don't quote anyone.
+  const q = String.fromCharCode(34);
+  const check = (text: string) => g.quoteProblems([{ name: "docs/BACKLOG.md", text }]);
+  it("finds a quotation attributed to Marcy or the owner, also one that runs on to the next line", () => {
+    expect(check(`fine\n(Marcy 2026-10-19: ${q}we could reuse those ideas${q})`)[0]).toMatch(/^docs\/BACKLOG\.md:2: /);
+    expect(check(`**Question (owner, 2026-10-13):** ${q}is it the best it can be?${q}`)).toHaveLength(1);
+    expect(check(`Marcy's requirement (2026-10-17), as she said ${q}make it complete${q}`)).toHaveLength(1);
+    expect(check(`// (owner: ${q}five\n// stars read as a game rating${q})`)).toHaveLength(1);
+  });
+  it("passes neutral wording, a quoted label or name in another sentence, short words and quote-ok", () => {
+    expect(check("(Marcy 2026-10-19: reuse their ideas)")).toEqual([]);
+    expect(check(`Open (Marcy 2026-10-12). Now favoured: ${q}PixelLink OLED${q}`)).toEqual([]);
+    expect(check(`In progress (Marcy 2026-10-12): Developer ${q}Pretend more controllers${q} shipped`)).toEqual([]);
+    expect(check(`{ path: file, owner: ${q}heroic${q} }`)).toEqual([]);
+    expect(check(`Marcy: ${q}a quoted line kept on purpose${q} (quote-ok: the reason)`)).toEqual([]);
   });
 });

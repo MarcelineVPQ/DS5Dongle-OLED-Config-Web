@@ -35,6 +35,12 @@
 //              SHA-256 hashes are in tools/privacy-denylist.txt, so the list
 //              names nothing. A line that must say such a word anyway carries
 //              "privacy-ok" and a reason.
+//   quotes     no tracked file quotes Marcy's or the owner's own words: after
+//              "Marcy" or "owner", a colon (or said / asked / wrote) and then a
+//              double-quoted phrase of 8+ letters, or one that runs on to the
+//              next line. Write the decision in neutral words and keep the
+//              attribution ("Marcy 2026-10-19: reuse their ideas"). A line that
+//              must quote anyway carries "quote-ok" and a reason.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -278,6 +284,36 @@ export function privacyProblems(texts, hashes) {
   return problems;
 }
 
+// ---------- quotes ----------
+
+// "Marcy" / "owner", up to 80 characters in the same sentence (no quote mark,
+// table cell break or ". "), a colon or said / asked / wrote, then the opening quote.
+const QUOTED = /\b(?:Marcy|[Oo]wner)\b(?:[^"“”|\n.]|\.(?!\s)){0,80}?(?::|\bsaid|\basked|\bwrote)\s*[*_]{0,2}\s*["“]([^"”\n]*)(["”]?)/g;
+
+/** texts: [{ name, text }] -> problems: each line that quotes Marcy's or the owner's words. */
+export function quoteProblems(texts) {
+  const problems = [];
+  // loop: NOT-WORTH — every tracked text file once (~1000 files)
+  for (const f of texts) {
+    const lines = f.text.split("\n");
+    // loop: NOT-WORTH — once per line
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes("quote-ok")) continue;
+      // loop: NOT-WORTH — the few matches on one line
+      for (const m of lines[i].matchAll(QUOTED)) {
+        const letters = (m[1].match(/\p{L}/gu) ?? []).length;
+        if (letters >= 8 || (!m[2] && letters > 0)) {
+          problems.push(
+            `${f.name}:${i + 1}: quotes Marcy's or the owner's words: write the decision in neutral words and keep the attribution (Marcy <date>: …); public repos never carry her quoted words`,
+          );
+          break;
+        }
+      }
+    }
+  }
+  return problems;
+}
+
 const BINARY = /\.(png|jpe?g|webp|gif|ico|icns|ttf|otf|woff2?|wav|flac|mp3|ogg|opus|uf2|bin|elf|zip|gz|pdf|psd|blend|glb)$/i;
 const loadDenylist = () =>
   existsSync(DENYLIST)
@@ -301,6 +337,12 @@ function gates(root, firmwareRoot) {
   const tracked = trackedIn(root);
   const appRoot = kind === "app" ? root : APP_ROOT;
   const otherRoot = kind === "app" ? firmwareRoot : appRoot;
+  // loop: NOT-WORTH — every tracked text file once
+  const textFiles = () =>
+    tracked
+      .filter((f) => !BINARY.test(f) && existsSync(join(root, f)) && statSync(join(root, f)).isFile())
+      .map((f) => ({ name: f, text: read(f) }))
+      .filter((f) => !f.text.includes("\u0000"));
   return {
     changelog() {
       const tag = lastTag(root);
@@ -342,10 +384,7 @@ function gates(root, firmwareRoot) {
       const hashes = loadDenylist();
       if (!hashes.size) return { problems: ["tools/privacy-denylist.txt has no names: node tools/doc_gates.mjs privacy-sync (in the app repo, where SECRET_PROJECTS.md is)"] };
       // loop: NOT-WORTH — every tracked text file once
-      const files = tracked
-        .filter((f) => !BINARY.test(f) && f !== "tools/privacy-denylist.txt" && existsSync(join(root, f)) && statSync(join(root, f)).isFile())
-        .map((f) => ({ name: f, text: read(f) }))
-        .filter((f) => !f.text.includes("\u0000"));
+      const files = textFiles().filter((f) => f.name !== "tools/privacy-denylist.txt");
       const tag = lastTag(root);
       const messages = tag ? commitsSince(root, tag).map((c) => ({ name: `commit ${c.hash.slice(0, 7)}`, text: `${c.subject}\n${c.body}` })) : [];
       const branches = runGit(root, ["branch", "--format=%(refname:short)"])
@@ -356,6 +395,10 @@ function gates(root, firmwareRoot) {
         problems: privacyProblems([...files, ...messages, ...branches], hashes),
         info: `${files.length} files, ${messages.length} commit messages, ${branches.length} branches, ${hashes.size} names`,
       };
+    },
+    quotes() {
+      const files = textFiles();
+      return { problems: quoteProblems(files), info: `${files.length} files` };
     },
   };
 }
@@ -410,7 +453,7 @@ function main(argv) {
   }
   const all = gates(root, existsSync(join(firmware, "CMakeLists.txt")) ? firmware : null);
   let failed = 0;
-  // loop: NOT-WORTH — four gates
+  // loop: NOT-WORTH — five gates
   for (const name of names.length ? names : Object.keys(all)) {
     if (!all[name]) {
       console.error(`unknown gate ${name} (${Object.keys(all).join(", ")})`);

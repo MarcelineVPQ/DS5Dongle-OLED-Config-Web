@@ -49,11 +49,11 @@ Watch out: pico2_w.h defaults `PICO_FLASH_SPI_CLKDIV` to 2. Embedding without ov
 ### Our sync decisions
 - **June:** syncing stopped once state_mgr diverged. Upstream deleted it in July and our native triggers depend on it (session c6bbfa5c, 10-10).
 - **0.7.0 (10-10):** ported A.1 (core1 side), A.2, A.3, B.4 (queue ops only) and B.5. CHANGELOG:161 says "clock unchanged at 320 MHz". Memory `project_speaker_crackle_core1_ram.md` says the same.
-- **0.8.1 audit (10-11, 180 commits):** proposed Batch 4, "stock clock in two steps": (A) B.1–B.4, 57f185b, a2772a9 and `audio_loop` to RAM at 320 MHz; (B) 150 MHz, div 2, vreg skip, then separately `PICO_EMBED_XIP_SETUP` with CLKDIV 2. Batches 1 and 2 shipped (1bb5978, c8d9cae). Batch 2's first try crackled the speaker. You then said "i dont want to do any more of these batches … this i feel will only serve to break shit" (`project_no_more_upstream_batches.md`: no stock clock unless you ask).
+- **0.8.1 audit (10-11, 180 commits):** proposed Batch 4, "stock clock in two steps": (A) B.1–B.4, 57f185b, a2772a9 and `audio_loop` to RAM at 320 MHz; (B) 150 MHz, div 2, vreg skip, then separately `PICO_EMBED_XIP_SETUP` with CLKDIV 2. Batches 1 and 2 shipped (1bb5978, c8d9cae). Batch 2's first try crackled the speaker. You then stopped further batches: they risked breaking what works (`project_no_more_upstream_batches.md`: no stock clock unless you ask).
 - **The #13 reply (10-11)** told the reporter the overclock "has to stay". The same session later called that outdated.
 - **0.9.1 (10-11):** opt-in Development channel. CLAUDE.md:139 says to use it "to try risky firmware (e.g. upstream's clock changes)".
 - **Fork research (10-12, app `docs/research/forks-2026-10.md` §1, row 3, item 9):** every active fork runs at 150 MHz. It lists our 150 MHz gap as "missing on purpose" and suggests a Development-channel experiment.
-- **Now:** you've asked for all effort on issue #15. That is you bringing the clock back up, so the 10-11 "no more batches" stop no longer blocks this.
+- **Now:** you've asked for all effort on issue #15. That is you bringing the clock back up, so the 10-11 stop on further batches no longer blocks this.
 
 ### Upstream commits since 0ed05d3 that we have NOT merged
 | Group | Commits | Risk / value |

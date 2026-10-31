@@ -771,9 +771,8 @@ describe("the Controller page on the accordion", () => {
     expect(openIds()).toEqual(["slots"]);
   });
 
-  // Marcy, 2026-10-17: "You should be able to press on a button to change it
-  // and have the accordion automatically open and have it scroll to what you
-  // are changing." The panel hidden or shown, the list open or not: the panel
+  // Marcy, 2026-10-17: a press on a button in the drawing opens its accordion
+  // section and scrolls to the setting being changed. The panel hidden or shown, the list open or not: the panel
   // shows, the section opens, the row scrolls into view, flashes and its
   // picker takes the focus.
   it("a click on a part shows a hidden panel and lands on the part's row, focused (the list open already or not)", async () => {
