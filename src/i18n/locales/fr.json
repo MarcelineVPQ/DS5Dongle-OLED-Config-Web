@@ -1563,6 +1563,12 @@
       "protocol": "Protocole",
       "firmware": "Firmware",
       "hciErrors": "Erreurs Bluetooth",
+      "persona": "Se présente comme",
+      "personaDs5": "DualSense",
+      "display": "Écran",
+      "displayNone": "Aucun",
+      "displayNext": "{{now}}, {{next}} au prochain démarrage",
+      "savedStateOff": "{{device, capitalize}} a moins de mémoire flash que ce firmware n'en attend : les réglages ne peuvent pas y être enregistrés. Ils restent actifs jusqu'au redémarrage.",
       "usb": "Trames audio USB",
       "bt": "Paquets Bluetooth",
       "signal": "Signal",
@@ -1612,7 +1618,9 @@
         "wireless": "Sans fil",
         "wirelessValue": "{{chip}} : Bluetooth {{bt}} (Classic utilisé), Wi-Fi 4",
         "keys": "Touches",
-        "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché."
+        "notDetected": "Non détecté : {{device}} le pilote dès qu'il est branché.",
+        "flashMeasured": "{{mb}} MB, mesurés au démarrage (ce firmware est prévu pour {{built}} MB)",
+        "flashNotReported": "La puce n'indique pas sa taille ; ce firmware est prévu pour {{built}} MB"
       }
     },
     "hdr": {

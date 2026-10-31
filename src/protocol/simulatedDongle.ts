@@ -202,6 +202,10 @@ export class SimulatedDongle implements Ds5Transport {
   // asks: the tenths of each (0 = stop), newest last.
   boardId: string;
   identifies: number[] = [];
+  // Protocol 1.21 (0xEA): the display driven since start-up and the one saved
+  // for the next start (0xF6 0x1B), firmware display_table.h ids.
+  display = 1;
+  displaySaved = 1;
   private get minor() {
     return this.opts.protoMinor ?? 6;
   }
@@ -407,6 +411,13 @@ export class SimulatedDongle implements Ds5Transport {
         else for (let i = 0; i < 1024; i++) out[4 + i] = i % 2 ? 0xaa : 0x55;
         return out.subarray(0, length);
       }
+      case 0xea: {
+        // 1.21 firmware identity (firmware src/fw_identity.h): a Pico 2 W, DualSense,
+        // 4 MB built and measured, RP2350A, radio + display running.
+        if (this.minor < 21) return new Uint8Array(0);
+        const out = new Uint8Array([0x46, 0x49, 1, 1, 0, 0, 0x01, 0x0a, 0x0a, 1, 0x01 | (this.display ? 0x04 : 0), this.display, 0x03, this.displaySaved]);
+        return out.subarray(0, length < out.length ? 0 : out.length);
+      }
       case 0xf1:
         this.tick();
         // Reboot / BOOTSEL: the device is already off the bus, nothing answers.
@@ -604,6 +615,10 @@ export class SimulatedDongle implements Ds5Transport {
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
+    } else if (func === 0x1b && this.minor >= 21) {
+      // 1.21 display choice: [display] 0 none, 1 Pico-OLED-1.3; saved for the next start.
+      if (payload.length < 2 || arg > 1) this.lastResult = RESULT.invalid;
+      else this.displaySaved = arg;
     } else if (func === 0x1a && this.minor >= 20) {
       // 1.20 identify: [tenths] (no byte = 3 s, 0 stops, max 10 s), answered at once.
       this.identifies.push(payload.length >= 2 ? Math.min(arg, 100) : 30);
@@ -842,6 +857,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (minor >= 19) out[46] |= 0x80; // FEATURES3: controller buttons for the OLED screens (1.19)
     if (minor >= 20) {
       out[49] = 0x01 | 0x02; // FEATURES4: board id, identify (1.20)
+      if (minor >= 21) out[49] |= 0x04 | 0x08; // FEATURES4: firmware identity 0xEA, display choice 0xF6 0x1B (1.21)
       // loop: HOT-PATH-OK — dev/test fake only; N = 8 id bytes
       for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
     }

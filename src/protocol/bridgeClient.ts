@@ -37,6 +37,7 @@ export const REPORT = {
   oledMirror: 0xef, // protocol 1.4+, feature bit FEATURES2.oledMirror
   calibration: 0xee, // protocol 1.5+, feature bit FEATURES2.calibration
   controllerInfo: 0xeb, // protocol 1.12+, feature bit FEATURES3.controllerInfo; selector in wValue's high byte
+  firmwareIdentity: 0xea, // protocol 1.21+, feature bit FEATURES4.firmwareIdentity
 } as const;
 
 // 0xF9's "no reading" byte (firmware src/rssi_poll.h kRssiNoReading).
@@ -115,7 +116,51 @@ export const FEATURES3 = {
 export const FEATURES4 = {
   boardId: 0x01, // identity [50..57]: the board's own id (flash unique id), whatever controller is paired
   identify: 0x02, // 0xF6 0x1A [tenths]: the board shows "THIS ONE" on its OLED and blinks its LED
+  firmwareIdentity: 0x04, // protocol 1.21: 0xEA, what the board and its firmware are (FirmwareIdentity)
+  displayChoice: 0x08, // protocol 1.21: 0xF6 0x1B [display] saves the display the board drives from its next start
 } as const;
+
+// 0xEA (protocol 1.21, firmware src/fw_identity.h): what this board and its
+// firmware are, from the board itself, so an update is matched to the board
+// instead of to its name. Numbers as the firmware sends them; boardIdentity.ts
+// turns them into the feed's ids.
+export interface FirmwareIdentity {
+  boardType: number; // 1 pico2_w, 2 pico_w, 0 not in the firmware's table
+  persona: number; // 0 DualSense
+  personas: number; // bit n = persona n
+  flashBuiltBytes: number | null; // what the image was built for
+  flashMeasuredBytes: number | null; // read from the flash chip at start-up; null = unknown
+  chip: number; // 0 RP2040, 1 RP2350A (QFN60), 2 RP2350B (QFN80), 0xFF unknown
+  radio: boolean;
+  savedStateOff: boolean; // the flash is smaller than the build: settings can't be saved
+  displayRunning: boolean;
+  display: number; // the display driven now: 0 none, 1 Waveshare Pico-OLED-1.3
+  displays: number; // bit n = display n is in this image
+  displaySaved: number; // what runs from the next start
+}
+export const FIRMWARE_IDENTITY_BYTES = 14;
+
+// Size code n = 4 KiB << n (0 = unknown; above 16 GiB is no flash chip).
+const flashBytes = (code: number): number | null => (code > 0 && code <= 22 ? 4096 * 2 ** code : null);
+
+// null when it isn't a layout this app reads (too short, no magic, layout 0).
+export function decodeFirmwareIdentity(bytes: Uint8Array): FirmwareIdentity | null {
+  if (bytes.length < FIRMWARE_IDENTITY_BYTES || bytes[0] !== 0x46 || bytes[1] !== 0x49 || bytes[2] < 1) return null;
+  return {
+    boardType: bytes[3] | (bytes[4] << 8),
+    persona: bytes[5],
+    personas: bytes[6],
+    flashBuiltBytes: flashBytes(bytes[7]),
+    flashMeasuredBytes: flashBytes(bytes[8]),
+    chip: bytes[9],
+    radio: (bytes[10] & 0x01) !== 0,
+    savedStateOff: (bytes[10] & 0x02) !== 0,
+    displayRunning: (bytes[10] & 0x04) !== 0,
+    display: bytes[11],
+    displays: bytes[12],
+    displaySaved: bytes[13],
+  };
+}
 // How long the identify screen shows when the app asks (tenths of a second).
 export const IDENTIFY_TENTHS = 30;
 // Protocol 1.19: the controller buttons the OLED screens react to, by their
@@ -465,6 +510,14 @@ export class Ds5BridgeClient {
   get oledPad(): boolean {
     const p = this.protocol;
     return !!p && (p.major > 1 || p.minor >= 19) && (p.features3 & FEATURES3.oledPad) !== 0;
+  }
+
+  // Protocol 1.21+ (identity [49] bit 2): what the board and its firmware
+  // are (0xEA); null on older firmware or an answer this app can't read.
+  async readFirmwareIdentity(): Promise<FirmwareIdentity | null> {
+    const p = this.protocol;
+    if (!p || !(p.major > 1 || p.minor >= 21) || (p.features4 & FEATURES4.firmwareIdentity) === 0) return null;
+    return decodeFirmwareIdentity(await this.transport.getReport(REPORT.firmwareIdentity, FIRMWARE_IDENTITY_BYTES));
   }
 
   // Protocol 1.20+: the identify screen (0xF6 0x1A).

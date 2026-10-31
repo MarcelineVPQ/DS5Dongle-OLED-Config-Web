@@ -1548,6 +1548,12 @@
       "protocol": "协议",
       "firmware": "固件",
       "hciErrors": "蓝牙错误",
+      "persona": "呈现为",
+      "personaDs5": "DualSense",
+      "display": "显示屏",
+      "displayNone": "无",
+      "displayNext": "{{now}}，下次启动起为 {{next}}",
+      "savedStateOff": "{{device, capitalize}}的闪存小于此固件的要求，因此无法在其上保存设置。设置在其重启前有效。",
       "usb": "USB 音频帧",
       "bt": "蓝牙数据包",
       "signal": "信号",
@@ -1597,7 +1603,9 @@
         "wireless": "无线",
         "wirelessValue": "{{chip}}：蓝牙 {{bt}}（使用经典蓝牙），Wi-Fi 4",
         "keys": "按键",
-        "notDetected": "无法检测：只要装上，{{device}}就会驱动它。"
+        "notDetected": "无法检测：只要装上，{{device}}就会驱动它。",
+        "flashMeasured": "{{mb}} MB，启动时测得（此固件按 {{built}} MB 构建）",
+        "flashNotReported": "芯片未报告容量；此固件按 {{built}} MB 构建"
       }
     },
     "hdr": {

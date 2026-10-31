@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **The Pico 2 W page shows what the board reports about itself** (firmware protocol 1.21). With firmware that has its new identity report, the board zone's spec line names the chip's package (RP2350A) and the flash size the board measured at start-up (its ⓘ says what the firmware is built for), the board's facts say what it presents itself to the PC as (DualSense), and a display other than the Waveshare Pico-OLED-1.3, or a display change waiting for the next start, is shown. When the board has less flash than its firmware expects, the zone says settings can't be saved on it. Update offers use this report instead of the board's name, so a board that measured a smaller flash isn't offered an image that needs more. Older firmware works as before.
+
 ### Fixed
 
 - **Ctrl+R no longer reloads the app (and can't cut a firmware update short).** Electron's built-in menu was still active behind the hidden menu bar: Ctrl+R / ⌘R or F5 reloaded the page, which during a firmware update stopped the write halfway and dropped unsaved button, stick and calibration changes; Ctrl+Shift+I opened the developer tools in releases; Ctrl+= zoomed past the fixed 100 %. The app now has its own menu (none on Windows and Linux; App, Edit and Window on macOS) and refuses those keys.

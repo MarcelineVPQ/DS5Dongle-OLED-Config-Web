@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TFunction } from "i18next";
 import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
@@ -118,9 +118,14 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // The board it was written to (protocol 1.20 id; null on older firmware):
   // Install again writes only that board's bootloader, or the only one.
   const [writtenTo, setWrittenTo] = useState<string | null>(null);
-  // The connected board, as far as offers go (old firmware: by its name,
-  // DESIGN_FIRMWARE_IDENTITY §1.1); null = unknown: nothing is offered.
-  const board = boardIdentity(bridge.identity);
+  // The connected board, as far as offers go: its own 0xEA report (protocol
+  // 1.21), else by its name (DESIGN_FIRMWARE_IDENTITY §1.1); null = unknown:
+  // nothing is offered. Kept as one object while those don't change, so the
+  // lookup below isn't re-made on every identity poll.
+  const boardName = bridge.identity?.boardName ?? null;
+  const protoMinor = bridge.identity?.protoMinor;
+  const fwIdentity = bridge.firmwareIdentity ?? null;
+  const board = useMemo(() => boardIdentity(protoMinor === undefined ? null : { boardName, protoMinor }, fwIdentity), [boardName, protoMinor, fwIdentity]);
   // The board the lookups are for: follows the kind of board connected, so a
   // reconnect of the same kind (after an update) doesn't look again.
   const [lookupBoard, setLookupBoard] = useState<BoardIdentity | null>(null);

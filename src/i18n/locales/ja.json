@@ -1548,6 +1548,12 @@
       "protocol": "プロトコル",
       "firmware": "ファームウェア",
       "hciErrors": "Bluetooth エラー",
+      "persona": "PC での認識",
+      "personaDs5": "DualSense",
+      "display": "ディスプレイ",
+      "displayNone": "なし",
+      "displayNext": "{{now}}（次回の起動から {{next}}）",
+      "savedStateOff": "{{device, capitalize}}のフラッシュがこのファームウェアの想定より小さいため、設定を保存できません。再起動するまでは有効です。",
       "usb": "USB オーディオフレーム",
       "bt": "Bluetooth パケット",
       "signal": "信号",
@@ -1597,7 +1603,9 @@
         "wireless": "ワイヤレス",
         "wirelessValue": "{{chip}}：Bluetooth {{bt}}（Classic を使用）、Wi-Fi 4",
         "keys": "キー",
-        "notDetected": "検出はできません。取り付けられていれば {{device}} が常に駆動します。"
+        "notDetected": "検出はできません。取り付けられていれば {{device}} が常に駆動します。",
+        "flashMeasured": "{{mb}} MB（起動時に測定。このファームウェアは {{built}} MB 用）",
+        "flashNotReported": "チップが容量を報告しません。このファームウェアは {{built}} MB 用です"
       }
     },
     "hdr": {

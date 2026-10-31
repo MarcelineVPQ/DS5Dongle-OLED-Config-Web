@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { causeText } from "../desktop/shownError";
 import { useTranslation } from "react-i18next";
-import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, type OledPadButton, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
+import { type BridgeIdentity, Ds5BridgeClient, FEATURES3, type FirmwareIdentity, type OledPadButton, sameIdentity, supportsFeature3 } from "../protocol/bridgeClient";
 import { type BoardEntry, type BoardSummary, OTHER_BOARDS_MS, entryTransport, lastBoardId, listBoards, pickBoard, readSummaries, rememberBoard, rememberKey, summaryOf } from "./boards";
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
@@ -35,6 +35,9 @@ export interface UseDs5BridgeResult {
   supported: boolean;
   client: Ds5BridgeClient | null;
   identity: BridgeIdentity | null;
+  // Protocol 1.21 (0xEA): what the board and its firmware are, read once per
+  // connect; null on older firmware (then the board's name stands in).
+  firmwareIdentity: FirmwareIdentity | null;
   firmwareVersion: string | null;
   deviceLabel: string;
   config: ConfigBody | null;
@@ -145,6 +148,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [client, setClient] = useState<Ds5BridgeClient | null>(null);
   const [identity, setIdentity] = useState<BridgeIdentity | null>(null);
   const [firmwareVersion, setFirmwareVersion] = useState<string | null>(null);
+  const [firmwareIdentity, setFirmwareIdentity] = useState<FirmwareIdentity | null>(null);
   const [config, setConfig] = useState<ConfigBody | null>(null);
   const [savedConfig, setSavedConfig] = useState<ConfigBody | null>(null);
   const [draft, setDraft] = useState<ConfigBody>(DEFAULT_CONFIG);
@@ -194,6 +198,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const detach = useCallback(() => {
     setClient(null);
     setIdentity(null);
+    setFirmwareIdentity(null);
     setFirmwareVersion(null);
     setConfig(null);
     setSavedConfig(null);
@@ -224,10 +229,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
             await next.transport.open();
             const id = await next.checkCompatible();
             const [version, cfg] = await Promise.all([next.readFirmwareVersion(), next.readConfig()]);
+            // A board whose 0xEA can't be read still connects: offers fall back to its name.
+            const fwIdentity = (await next.readFirmwareIdentity().catch(logged("reading the board's firmware identity (0xEA; update offers fall back to the board's name)"))) ?? null;
             const normalized = normalizeConfig(cfg);
             clientRef.current = next; // at once: the caller may use it before the next render (a switch's identify)
             setClient(next);
             setIdentity(id);
+            setFirmwareIdentity(fwIdentity);
             setFirmwareVersion(version);
             setConfig(normalized);
             // Flash holds this only if the dongle says nothing is unsaved (older
@@ -733,6 +741,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     supported,
     client,
     identity,
+    firmwareIdentity,
     firmwareVersion,
     deviceLabel,
     config,

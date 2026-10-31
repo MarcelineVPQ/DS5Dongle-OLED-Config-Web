@@ -138,7 +138,7 @@ export function simulatedBoard(): SimulatedBoard | null {
     version: version === "" ? null : (version ?? undefined),
     fault: pick(SIM_FAULT_KEY, SIM_BOARD_FAULTS),
     speed: pick(SIM_SPEED_KEY, SIM_SPEEDS),
-    dongle: { live: true, protoMinor: 20, boardId: DEFAULT_SIM_BOARD_ID, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
+    dongle: { live: true, protoMinor: 21, boardId: DEFAULT_SIM_BOARD_ID, core1StuckStage: simulatedCore1Stage(), rest: simulatedRest() },
   });
   // lifetime: NOT-WORTH — one listener on the one board per page load: keeps its state across restarts
   board.onChange(() => {
@@ -166,7 +166,7 @@ export function extraSimulatedBoards(): readonly SimulatedDongle[] {
   simExtras = Array.from(
     { length: n },
     (_, i) =>
-      new SimulatedDongle({ live: true, protoMinor: 20, boardId: simBoardId(i + 1), serial: i % 2 === 0 ? DEFAULT_SIM_BOARD_ID : simBoardId(i + 1), version: "v0.9.5-dev.19-oled-edition+simulated" }),
+      new SimulatedDongle({ live: true, protoMinor: 21, boardId: simBoardId(i + 1), serial: i % 2 === 0 ? DEFAULT_SIM_BOARD_ID : simBoardId(i + 1), version: "v0.9.5-dev.19-oled-edition+simulated" }),
   );
   return simExtras;
 }

@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
-import { boardSpecs } from "./boardSpecs";
+import { boardSpecs, OLED_MODULE } from "./boardSpecs";
 import { causeText } from "../shownError";
 import { BusyButton, InfoTip } from "../controls";
 import { boardProblems } from "./core1Status";
@@ -116,6 +116,11 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
   return { sample: sample?.s ?? null, history: sample?.history ?? [], longHistory: sample?.longHistory ?? [], error: poll.error, frame: frameNow };
 }
 
+// 0xEA's chip byte (protocol 1.21) as the spec line names it, with its package for the ⓘ.
+const CHIP_PACKAGES: Record<number, { chip: string; pkg: string }> = { 0: { chip: "RP2040", pkg: "QFN56" }, 1: { chip: "RP2350A", pkg: "QFN60" }, 2: { chip: "RP2350B", pkg: "QFN80" } };
+const DISPLAY_NAMES: Record<number, string> = { 1: OLED_MODULE.name };
+const mb = (bytes: number) => Math.round(bytes / (1024 * 1024));
+
 // The clock gauge's scale is the board's own ceiling (the fastest the dongle
 // firmware ever runs it), fixed, so 150 MHz and 320 MHz read as what they are
 // instead of each filling the dial.
@@ -131,6 +136,18 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
   // loop: HOT-PATH-OK — N = 60 samples per trend, one trend per render
   const series = (pick: (x: Sample) => number) => history.map(pick);
   const specs = boardSpecs(bridge.identity?.boardName);
+  // Protocol 1.21: the board's own report (0xEA) names the chip's package and
+  // the flash it measured at start-up; older firmware: the table's values.
+  const fw = bridge.firmwareIdentity;
+  const pkg = fw ? CHIP_PACKAGES[fw.chip] : undefined;
+  const chipName = pkg?.chip ?? specs?.chip;
+  const flashMb = fw?.flashMeasuredBytes ? mb(fw.flashMeasuredBytes) : specs?.flashMb;
+  const flashInfo = fw?.flashMeasuredBytes
+    ? td("specs.flashMeasured", { mb: mb(fw.flashMeasuredBytes), built: fw.flashBuiltBytes ? mb(fw.flashBuiltBytes) : "?" })
+    : fw?.flashBuiltBytes
+      ? td("specs.flashNotReported", { built: mb(fw.flashBuiltBytes) })
+      : `${flashMb} MB`;
+  const displayName = (id: number) => (id === 0 ? td("displayNone") : (DISPLAY_NAMES[id] ?? `#${id}`));
   // The clock as measured, once read (as the dial shows it).
   const mhz = s ? Math.round(s.realMhz) : null;
   const core = specs && `${specs.coreMaker} ${specs.core}`;
@@ -141,18 +158,19 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
         {specs && core && (
           <span className="zone-sub">
             {/* loop: NOT-WORTH — N = 6 parts of one title line */}
-            {[specs.chip, `2× ${specs.core}`, mhz !== null ? `${mhz} MHz` : null, `${specs.sramKb} KB`, `${specs.flashMb} MB`, specs.wireless].filter(Boolean).join(" · ")}
+            {[chipName, `2× ${specs.core}`, mhz !== null ? `${mhz} MHz` : null, `${specs.sramKb} KB`, `${flashMb} MB`, specs.wireless].filter(Boolean).join(" · ")}
             <InfoTip
               text={[
-                `${td("specs.chip")}: ${mhz !== null ? td("specs.chipClock", { chip: specs.chip, core, mhz }) : td("specs.chipValue", { chip: specs.chip, core })}`,
+                `${td("specs.chip")}: ${mhz !== null ? td("specs.chipClock", { chip: pkg ? `${pkg.chip} (${pkg.pkg})` : specs.chip, core, mhz }) : td("specs.chipValue", { chip: pkg ? `${pkg.chip} (${pkg.pkg})` : specs.chip, core })}`,
                 `${td("specs.sram")}: ${specs.sramKb} KB`,
-                `${td("specs.flash")}: ${specs.flashMb} MB`,
+                `${td("specs.flash")}: ${flashInfo}`,
                 `${td("specs.wireless")}: ${td("specs.wirelessValue", { chip: `${specs.wirelessMaker} ${specs.wireless}`, bt: specs.bluetooth })}`,
               ].join("\n")}
             />
           </span>
         )}
       </header>
+      {fw?.savedStateOff && <Notice error>{td("savedStateOff")}</Notice>}
       <div className="dash-row">
         <Gauge label={td("temperature")} value={s?.tempC} min={20} max={85} unit="°C" digits={1} warn={60} bad={72} trend={series((x) => x.tempC)} />
         <Gauge label={td("clock")} value={s?.realMhz} min={0} max={clockMaxMhz(bridge.identity?.boardName ?? null)} unit="MHz" sub={s ? td("clockSet", { mhz: Math.round(s.setMhz) }) : undefined} />
@@ -163,6 +181,11 @@ export function PicoGauges({ bridge, telemetry, onDiagnostics }: { bridge: UseDs
           {/* Every build is the OLED Edition: the short form fits the card; the tooltip has it all. */}
           <Fact label={td("firmware")} value={bridge.firmwareVersion?.replace("-oled-edition", "") ?? "—"} title={bridge.firmwareVersion ?? undefined} />
           <Fact label={td("hciErrors")} value={s ? String(s.hciErrors) : "—"} bad={!!s?.hciErrors} />
+          {fw && <Fact label={td("persona")} value={fw.persona === 0 ? td("personaDs5") : `#${fw.persona}`} />}
+          {/* The OLED's zone above already names the module it drives: only "None" or a change waiting for the next start adds anything. */}
+          {fw && (fw.display !== 1 || fw.displaySaved !== fw.display) && (
+            <Fact label={td("display")} value={fw.displaySaved === fw.display ? displayName(fw.display) : td("displayNext", { now: displayName(fw.display), next: displayName(fw.displaySaved) })} />
+          )}
           <button type="button" className="dk-btn dash-more" onClick={onDiagnostics}>
             {t("desktop.accordion.moreInDiagnostics")}
           </button>

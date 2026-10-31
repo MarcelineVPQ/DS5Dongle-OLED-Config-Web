@@ -849,7 +849,13 @@ describe("the Pico 2 W page on the accordion", () => {
     // The board's specs: its zone's title line (name, then chip · cores · clock · SRAM · flash · wireless), not in Diagnostics.
     const zone = container.querySelector<HTMLElement>(".dk-split-main .pico-zone")!;
     expect(zone.querySelector("h3")?.textContent).toBe("Pico 2 W");
-    expect(lineText(zone)).toMatch(/^RP2350 · 2× Cortex-M33 · \d+ MHz · 520 KB · 4 MB · CYW43439$/);
+    // The simulated board is protocol 1.21: its 0xEA names the package (RP2350A) and the flash it measured.
+    expect(lineText(zone)).toMatch(/^RP2350A · 2× Cortex-M33 · \d+ MHz · 520 KB · 4 MB · CYW43439$/);
+    expect(zone.querySelector(".zone-sub [role=tooltip]")?.textContent).toContain("RP2350A (QFN60)");
+    expect(zone.querySelector(".zone-sub [role=tooltip]")?.textContent).toContain(m.i18n.t("desktop.dash.specs.flashMeasured", { mb: 4, built: 4 }));
+    expect(zone.querySelector(".dash-facts")?.textContent).toContain(`${m.i18n.t("desktop.dash.persona")}DualSense`);
+    // The OLED's own zone names the display it drives: no second Display fact.
+    expect(zone.querySelector(".dash-facts")?.textContent).not.toContain(m.i18n.t("desktop.dash.display"));
     expect(zone.querySelectorAll(".dash-gauge")).toHaveLength(3);
     expect(diagText).not.toContain("RP2350");
     counters.mockRestore();

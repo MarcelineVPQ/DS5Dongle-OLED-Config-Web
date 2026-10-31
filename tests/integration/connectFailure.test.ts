@@ -107,7 +107,7 @@ describe("a connect that fails", () => {
     });
     expect(seen.connected).toBe(false);
     expect(seen.error).toContain("2.");
-    expect(seen.error).toBe(t("desktop.errors.board.protocol", { have: `2.${20}`, need: "1.x", interpolation: { escapeValue: false } }));
+    expect(seen.error).toBe(t("desktop.errors.board.protocol", { have: `2.${21}`, need: "1.x", interpolation: { escapeValue: false } }));
     expect(opens.count).toBe(1);
     expect(dongle.isOpen).toBe(false);
   });

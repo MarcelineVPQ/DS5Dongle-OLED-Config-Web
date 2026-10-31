@@ -1562,6 +1562,12 @@
       "protocol": "Protocol",
       "firmware": "Firmware",
       "hciErrors": "Bluetooth errors",
+      "persona": "Presents as",
+      "personaDs5": "DualSense",
+      "display": "Display",
+      "displayNone": "None",
+      "displayNext": "{{now}}, {{next}} from the next start",
+      "savedStateOff": "{{device, capitalize}} has less flash than this firmware expects, so settings can't be saved on it. They work until it restarts.",
       "usb": "USB audio frames",
       "bt": "Bluetooth packets",
       "signal": "Signal",
@@ -1611,7 +1617,9 @@
         "wireless": "Wireless",
         "wirelessValue": "{{chip}}: Bluetooth {{bt}} (Classic in use), Wi-Fi 4",
         "keys": "Keys",
-        "notDetected": "Not detected: {{device}} drives it whenever it's attached."
+        "notDetected": "Not detected: {{device}} drives it whenever it's attached.",
+        "flashMeasured": "{{mb}} MB, measured at start-up (this firmware is built for {{built}} MB)",
+        "flashNotReported": "The chip doesn't report its size; this firmware is built for {{built}} MB"
       }
     },
     "hdr": {

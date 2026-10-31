@@ -1563,6 +1563,12 @@
       "protocol": "Protokoll",
       "firmware": "Firmware",
       "hciErrors": "Bluetooth-Fehler",
+      "persona": "Gibt sich aus als",
+      "personaDs5": "DualSense",
+      "display": "Display",
+      "displayNone": "Keins",
+      "displayNext": "{{now}}, ab dem nächsten Start {{next}}",
+      "savedStateOff": "{{device, capitalize}} hat weniger Flash-Speicher, als diese Firmware erwartet, daher lassen sich Einstellungen darauf nicht speichern. Sie gelten bis zum nächsten Neustart.",
       "usb": "USB-Audio-Frames",
       "bt": "Bluetooth-Pakete",
       "signal": "Signal",
@@ -1612,7 +1618,9 @@
         "wireless": "Funk",
         "wirelessValue": "{{chip}}: Bluetooth {{bt}} (Classic in Betrieb), WLAN 4",
         "keys": "Tasten",
-        "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist."
+        "notDetected": "Nicht erkannt: {{device}} steuert es an, sobald es aufgesteckt ist.",
+        "flashMeasured": "{{mb}} MB, beim Start gemessen (diese Firmware ist für {{built}} MB gebaut)",
+        "flashNotReported": "Der Chip meldet seine Größe nicht; diese Firmware ist für {{built}} MB gebaut"
       }
     },
     "hdr": {

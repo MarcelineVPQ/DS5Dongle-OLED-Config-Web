@@ -28,11 +28,35 @@ export const IMAGE_NEEDS: Readonly<Record<string, { name: string; chip: string; 
   pico2_w: { name: "Pico 2 W", chip: PICO2_W_IMAGE.chip, flash_min: PICO2_W_IMAGE.flash_min },
 };
 
-// Firmware without its own identity report (all of it today: 0xEA comes with
-// protocol 1.21): the identity from the board's name (design §1.1). null =
-// unknown, nothing is offered. Only for offers: the write-time check in
-// BOOTSEL is separate (design §1.2).
-export function boardIdentity(id: { boardName: string | null; protoMinor: number } | null | undefined): BoardIdentity | null {
+// 0xEA's numbers (firmware src/fw_identity.h, display_table.h) as the feed's
+// ids. A number missing here is a board, chip, persona or display this app
+// doesn't know: no offer for it.
+export const FW_BOARD_TYPES: Readonly<Record<number, string>> = { 1: "pico2_w", 2: "pico_w" };
+export const FW_CHIPS: Readonly<Record<number, string>> = { 0: "rp2040", 1: "rp2350a", 2: "rp2350b" };
+export const FW_PERSONAS: Readonly<Record<number, string>> = { 0: "ds5" };
+export const FW_DISPLAYS: Readonly<Record<number, string>> = { 0: "none", 1: "pico_oled_1_3" };
+
+// The parts of 0xEA (src/protocol/bridgeClient.ts, FirmwareIdentity) an offer needs.
+export type FirmwareIdentityFacts = { boardType: number; chip: number; persona: number; flashBuiltBytes: number | null; flashMeasuredBytes: number | null };
+
+// The identity from the board's own 0xEA report (protocol 1.21). The flash
+// size is the one measured at start-up when the chip told it, else the one
+// the running image was built for. null when any part is unknown here.
+export function identityFromFirmware(fw: FirmwareIdentityFacts): BoardIdentity | null {
+  const board = FW_BOARD_TYPES[fw.boardType];
+  const chip = FW_CHIPS[fw.chip];
+  const persona = FW_PERSONAS[fw.persona];
+  const flashBytes = fw.flashMeasuredBytes ?? fw.flashBuiltBytes;
+  if (!board || !chip || !persona || !flashBytes) return null;
+  return { board, chip, flashBytes, persona };
+}
+
+// The connected board's identity for offers: from its own 0xEA report when
+// the firmware has one (protocol 1.21), else from the board's name (design
+// §1.1). null = unknown, nothing is offered. Only for offers: the write-time
+// check in BOOTSEL is separate (design §1.2).
+export function boardIdentity(id: { boardName: string | null; protoMinor: number } | null | undefined, fw?: FirmwareIdentityFacts | null): BoardIdentity | null {
+  if (fw) return identityFromFirmware(fw);
   if (!id) return null;
   if (id.boardName === "Pico 2 W") return PICO2_W;
   if (id.boardName === "Pico W") return PICO_W; // no image in the feed: "no firmware update for {{device}}"

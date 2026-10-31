@@ -1563,6 +1563,12 @@
       "protocol": "Protocolo",
       "firmware": "Firmware",
       "hciErrors": "Errores de Bluetooth",
+      "persona": "Se presenta como",
+      "personaDs5": "DualSense",
+      "display": "Pantalla",
+      "displayNone": "Ninguna",
+      "displayNext": "{{now}}, {{next}} desde el próximo inicio",
+      "savedStateOff": "{{device, capitalize}} tiene menos memoria flash de la que espera este firmware, así que los ajustes no se pueden guardar en ella. Funcionan hasta que se reinicie.",
       "usb": "Tramas de audio USB",
       "bt": "Paquetes Bluetooth",
       "signal": "Señal",
@@ -1612,7 +1618,9 @@
         "wireless": "Inalámbrico",
         "wirelessValue": "{{chip}}: Bluetooth {{bt}} (se usa Classic), Wi-Fi 4",
         "keys": "Teclas",
-        "notDetected": "No se detecta: {{device}} la controla siempre que esté conectada."
+        "notDetected": "No se detecta: {{device}} la controla siempre que esté conectada.",
+        "flashMeasured": "{{mb}} MB, medidos al arrancar (este firmware está hecho para {{built}} MB)",
+        "flashNotReported": "El chip no indica su tamaño; este firmware está hecho para {{built}} MB"
       }
     },
     "hdr": {
