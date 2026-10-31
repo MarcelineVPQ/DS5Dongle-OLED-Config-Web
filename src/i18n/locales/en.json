@@ -715,6 +715,7 @@
       "closeToTray": "Close to tray",
       "launchAtLogin": "Start at login",
       "startMinimized": "Start minimized",
+      "noTray": "This desktop shows no tray icons, so closing the window quits the app.",
       "checkForUpdates": "Check for updates automatically",
       "player": "Player",
       "edgeButtons": "Edge buttons",

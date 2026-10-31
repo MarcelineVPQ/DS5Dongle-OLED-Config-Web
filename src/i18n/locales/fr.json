@@ -710,6 +710,7 @@
       "closeToTray": "Fermer dans la zone de notification",
       "launchAtLogin": "Lancer à la connexion",
       "startMinimized": "Démarrer réduit",
+      "noTray": "Ce bureau n'affiche pas d'icônes dans la zone de notification : fermer la fenêtre quitte l'appli.",
       "checkForUpdates": "Rechercher les mises à jour automatiquement",
       "player": "Joueur",
       "edgeButtons": "Boutons Edge",

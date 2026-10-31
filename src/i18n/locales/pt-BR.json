@@ -710,6 +710,7 @@
       "closeToTray": "Fechar para a bandeja",
       "launchAtLogin": "Iniciar com o sistema",
       "startMinimized": "Iniciar minimizado",
+      "noTray": "Esta área de trabalho não mostra ícones na bandeja, então fechar a janela encerra o app.",
       "checkForUpdates": "Procurar atualizações automaticamente",
       "player": "Jogador",
       "edgeButtons": "Botões Edge",

@@ -703,6 +703,7 @@
       "closeToTray": "閉じるとトレイに格納",
       "launchAtLogin": "ログイン時に起動",
       "startMinimized": "最小化して起動",
+      "noTray": "このデスクトップにはトレイアイコンが表示されないため、ウィンドウを閉じるとアプリが終了します。",
       "checkForUpdates": "アップデートを自動確認",
       "player": "プレイヤー",
       "edgeButtons": "Edge ボタン",

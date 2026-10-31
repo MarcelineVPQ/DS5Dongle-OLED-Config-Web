@@ -87,9 +87,9 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
   const startup = settings
     ? // loop: NOT-WORTH — N = 4 switches; App settings' render
       [
-        settings.closeToTray && t("desktop.live.closeToTray"),
+        !settings.trayMissing && settings.closeToTray && t("desktop.live.closeToTray"),
         settings.launchAtLogin && t("desktop.live.launchAtLogin"),
-        settings.startMinimized && t("desktop.live.startMinimized"),
+        !settings.trayMissing && settings.startMinimized && t("desktop.live.startMinimized"),
         !settings.hardwareAcceleration && onOff(t, t("desktop.live.hardwareAcceleration"), false),
       ]
         .filter(Boolean)
@@ -178,9 +178,15 @@ export default function AppSettingsPage({ bridge, fw, main, panelRef }: { bridge
           <Section id="startup" icon={AppWindow} title={t("desktop.settings2.startup")} status={startup}>
             {() => (
               <>
-                <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
+                {/* No tray on this desktop (GNOME without an AppIndicator extension): the tray switches couldn't act, so they're left out and the line says why. */}
+                {settings.trayMissing ? (
+                  // hint: MUST-SHOW — why Close to tray and Start minimized aren't here
+                  <p className="dk-hint">{t("desktop.live.noTray")}</p>
+                ) : (
+                  <Toggle label={t("desktop.live.closeToTray")} value={settings.closeToTray} onChange={(v) => set("closeToTray", v)} />
+                )}
                 <Toggle label={t("desktop.live.launchAtLogin")} value={settings.launchAtLogin} onChange={(v) => set("launchAtLogin", v)} />
-                <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />
+                {!settings.trayMissing && <Toggle label={t("desktop.live.startMinimized")} value={settings.startMinimized} onChange={(v) => set("startMinimized", v)} />}
                 {/* A system switch that needs a restart, like the others here (IA audit A6). */}
                 <Toggle
                   label={t("desktop.live.hardwareAcceleration")}

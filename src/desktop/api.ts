@@ -71,6 +71,10 @@ export type DevChannelAnswer = DevChannelPreview | { problem: FeedProblem | "unp
 export interface DesktopSettings {
   closeToTray: boolean;
   startMinimized: boolean;
+  // Read-only, from the main process (never saved): this desktop shows no
+  // tray icons (GNOME without an AppIndicator extension), so closing quits
+  // and the app never starts hidden (electron/main/trayHost.ts).
+  trayMissing?: boolean;
   launchAtLogin: boolean;
   checkForUpdates: boolean;
   // Download and install app updates in the background (they start the next

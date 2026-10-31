@@ -710,6 +710,7 @@
       "closeToTray": "In den Infobereich schließen",
       "launchAtLogin": "Beim Anmelden starten",
       "startMinimized": "Minimiert starten",
+      "noTray": "Dieser Desktop zeigt keine Symbole im Infobereich, daher beendet das Schließen des Fensters die App.",
       "checkForUpdates": "Automatisch nach Updates suchen",
       "player": "Spieler",
       "edgeButtons": "Edge-Tasten",

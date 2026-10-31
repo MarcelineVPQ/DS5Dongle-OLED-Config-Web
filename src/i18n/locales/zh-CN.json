@@ -703,6 +703,7 @@
       "closeToTray": "关闭时最小化到托盘",
       "launchAtLogin": "登录时启动",
       "startMinimized": "启动时最小化",
+      "noTray": "此桌面不显示托盘图标，因此关闭窗口会退出应用。",
       "checkForUpdates": "自动检查更新",
       "player": "玩家",
       "edgeButtons": "Edge 按键",
