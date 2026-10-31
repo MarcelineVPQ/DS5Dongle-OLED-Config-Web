@@ -13,6 +13,8 @@ import { Manifest } from "../../src/update/manifest";
 import type { DesktopApi, LatestFirmware } from "../../src/desktop/api";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { firmwareOffer, useFirmwareUpdate, type FirmwareUpdate } from "../../src/desktop/useUpdates";
+import FirmwarePage from "../../src/desktop/pages/FirmwarePage";
+import i18n from "../../src/i18n";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -102,11 +104,42 @@ describe("firmware Back to stable", () => {
   const stable = (version: string, newestStable?: string): LatestFirmware => ({ version, source: "online", channel: "stable", sha256: sha(1), board: "pico2_w", newestStable });
   const dev = "v0.9.6-dev.2-oled-edition";
 
-  it("offers only newest_stable (schema 1 feeds have none: as before)", () => {
-    expect(firmwareOffer(stable("v0.9.5-oled-edition", "0.9.5"), dev)).toEqual({ available: true, backToStable: true });
-    expect(firmwareOffer(stable("v0.9.4-oled-edition", "0.9.5"), dev)).toEqual({ available: false, backToStable: false });
-    expect(firmwareOffer(stable("v0.9.4-oled-edition"), dev)).toEqual({ available: true, backToStable: true });
-    expect(firmwareOffer(stable("v0.9.5-oled-edition", "0.9.5"), "v0.9.4-oled-edition")).toEqual({ available: true, backToStable: false });
+  it("offers only newest_stable (schema 1 feeds have none: as before), and says when it can't", () => {
+    expect(firmwareOffer(stable("v0.9.5-oled-edition", "0.9.5"), dev)).toEqual({ available: true, backToStable: true, stableMismatch: false });
+    expect(firmwareOffer(stable("v0.9.4-oled-edition", "0.9.5"), dev)).toEqual({ available: false, backToStable: false, stableMismatch: true });
+    expect(firmwareOffer(stable("v0.9.4-oled-edition"), dev)).toEqual({ available: true, backToStable: true, stableMismatch: false });
+    expect(firmwareOffer(stable("v0.9.5-oled-edition", "0.9.5"), "v0.9.4-oled-edition")).toEqual({ available: true, backToStable: false, stableMismatch: false });
+    expect(firmwareOffer(stable("v0.9.4-oled-edition", "0.9.5"), "v0.9.4-oled-edition")).toEqual({ available: false, backToStable: false, stableMismatch: false });
+  });
+
+  it('the Firmware section gives the reason instead of "Up to date"', async () => {
+    await i18n.changeLanguage("en");
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const fw = {
+      latest: stable("v0.9.4-oled-edition", "0.9.5"),
+      problem: "stableMismatch",
+      available: false,
+      backToStable: false,
+      state: { phase: "idle" },
+      start: async () => undefined,
+      refreshLatest: async () => ({ latest: stable("v0.9.4-oled-edition", "0.9.5"), problem: null }),
+      dismiss: () => undefined,
+    } as FirmwareUpdate;
+    const bridge = { client: null, firmwareVersion: dev, identity: null } as unknown as UseDs5BridgeResult;
+    window.desktop = { checkForUpdates: async () => ({ phase: "idle" }) } as unknown as DesktopApi;
+    await act(async () => root.render(createElement(FirmwarePage, { bridge, fw })));
+    const words = "doesn't match the newest stable release yet";
+    expect(container.textContent).toContain(words);
+    expect(container.textContent).not.toContain("Up to date");
+    // Check for updates says the same, not "you're up to date".
+    await act(async () => [...container.querySelectorAll("button")].find((b) => b.textContent === "Check for updates")!.click());
+    expect(container.textContent!.split(words).length - 1).toBe(2);
+    expect(container.textContent).not.toContain("you're up to date");
+    act(() => root.unmount());
+    container.remove();
+    delete window.desktop;
   });
 });
 
@@ -121,7 +154,7 @@ describe("the firmware card", () => {
     delete window.desktop;
   });
 
-  async function card(identity: object, answer: LatestFirmware) {
+  async function card(identity: object, answer: LatestFirmware, installed = "v0.9.4-oled-edition") {
     const asked: BoardIdentity[] = [];
     window.desktop = {
       latestFirmware: async (_asked: boolean, board: BoardIdentity) => {
@@ -129,7 +162,7 @@ describe("the firmware card", () => {
         return { latest: answer, problem: null };
       },
     } as unknown as DesktopApi;
-    const bridge = { client: null, firmwareVersion: "v0.9.4-oled-edition", identity } as unknown as UseDs5BridgeResult;
+    const bridge = { client: null, firmwareVersion: installed, identity } as unknown as UseDs5BridgeResult;
     const out: { fw: FirmwareUpdate | null } = { fw: null };
     function Card() {
       const fw = useFirmwareUpdate(bridge, { phase: "idle" });
@@ -156,6 +189,11 @@ describe("the firmware card", () => {
     const c = await card({ boardName: "Pico W", protoMinor: 20 }, pico2wImage);
     expect(c.asked.map((b) => b.board)).toEqual(["pico_w"]);
     expect(c.fw()).toMatchObject({ latest: null, problem: "noBoardImage", available: false });
+  });
+
+  it("a development build on Stable whose feed firmware isn't newest_stable: the reason, nothing offered", async () => {
+    const c = await card({ boardName: "Pico 2 W", protoMinor: 20 }, { ...pico2wImage, version: "v0.9.4-oled-edition", newestStable: "0.9.5" }, "v0.9.6-dev.2-oled-edition");
+    expect(c.fw()).toMatchObject({ problem: "stableMismatch", available: false, backToStable: false });
   });
 
   it("an unknown board: no lookup, the same refusal", async () => {

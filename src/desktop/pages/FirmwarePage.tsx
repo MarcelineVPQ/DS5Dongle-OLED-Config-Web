@@ -5,7 +5,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import { announce } from "../toast";
-import { feedProblemText, type FirmwareUpdate } from "../useUpdates";
+import { feedProblemText, firmwareOffer, type FirmwareUpdate } from "../useUpdates";
 import { logged } from "../../errorText";
 
 // The Pico 2 W page's Firmware section (installed / latest, update, check)
@@ -79,7 +79,10 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
               ? t("desktop.firmware.backToStable", { version: shortVersion(fw.latest?.version) })
               : t("desktop.firmware.update", { version: shortVersion(fw.latest?.version), defaultValue: "Update to {{version}}" })}
           </button>
-        ) : fw.problem === "noBoardImage" ? null : (
+        ) : fw.problem === "noBoardImage" ? null : fw.problem === "stableMismatch" ? (
+          // hint: MUST-SHOW — why Back to stable isn't offered (instead of "Up to date")
+          <span className="dk-hint">{t("desktop.firmware.stableMismatch")}</span>
+        ) : (
           <span className="dk-good">✓ {t("desktop.firmware.upToDate", "Up to date")}</span>
         )}
         <BusyButton
@@ -91,7 +94,9 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
               lookup.latest
                 ? installed && isNewer(lookup.latest.version, installed)
                   ? t("desktop.firmware.checkedNewer", { version: lookup.latest.version })
-                  : t("desktop.firmware.checkedCurrent")
+                  : firmwareOffer(lookup.latest, installed).stableMismatch
+                    ? t("desktop.firmware.stableMismatch")
+                    : t("desktop.firmware.checkedCurrent")
                 : lookup.problem === "unpublished"
                   ? t("desktop.firmware.checkedNone")
                   : feedProblemText(t, lookup.problem, "desktop.firmware.checkedOffline"),

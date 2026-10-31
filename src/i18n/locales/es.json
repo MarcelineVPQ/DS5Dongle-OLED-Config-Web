@@ -274,6 +274,7 @@
       "wrongChannel": "no se puede comprobar (el canal de actualizaciones trajo compilaciones de otro canal)",
       "olderFeed": "no se puede comprobar (el canal de actualizaciones es más antiguo que uno ya comprobado)",
       "noBoardImage": "Todavía no hay ninguna actualización de firmware publicada para {{device}}.",
+      "stableMismatch": "El firmware del canal estable todavía no coincide con la versión estable más reciente, así que no se ofrece nada para {{device}}. Vuelve a intentarlo en unos minutos.",
       "bundled": "incluido con la app",
       "checkedNewer": "Comprobado ahora: {{version}} está disponible.",
       "checkedCurrent": "Comprobado ahora: estás al día.",

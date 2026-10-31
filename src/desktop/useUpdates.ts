@@ -61,11 +61,14 @@ const STILL_IN_BOOTSEL_MS = 8_000;
 // version; or, on a board running a development build, the stable version
 // (after "Back to stable"), even though it's older, and only the newest stable
 // release (the feed's newest_stable; a schema 1 feed has none: as before).
-export function firmwareOffer(latest: LatestFirmware | null | undefined, installed: string | null | undefined): { available: boolean; backToStable: boolean } {
-  if (!latest || !installed) return { available: false, backToStable: false };
+// stableMismatch: Back to stable, and the stable feed's firmware isn't
+// newest_stable yet, so nothing is offered (the page says why).
+export function firmwareOffer(latest: LatestFirmware | null | undefined, installed: string | null | undefined): { available: boolean; backToStable: boolean; stableMismatch: boolean } {
+  if (!latest || !installed) return { available: false, backToStable: false, stableMismatch: false };
   const toStable = devNumber(installed) !== null && devNumber(latest.version) === null && !sameVersion(latest.version, installed);
   const backToStable = toStable && (latest.newestStable === undefined || sameVersion(latest.version, latest.newestStable));
-  return { available: isNewer(latest.version, installed) || backToStable, backToStable };
+  const available = isNewer(latest.version, installed) || backToStable;
+  return { available, backToStable, stableMismatch: toStable && !available };
 }
 
 // The answer for a board no published image is built for (design §3).
@@ -92,8 +95,9 @@ export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" |
 
 export interface FirmwareUpdate {
   latest: LatestFirmware | null;
-  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline / unsigned / malformed under Latest)
-  problem: FirmwareLookup["problem"]; // why there's no latest: nothing published yet, offline, or the feed was refused
+  // Why there's no latest: nothing published yet, offline, or the feed was refused; "stableMismatch": no Back to stable yet (see firmwareOffer).
+  // error: SHOWN — desktop.firmware.offline (FirmwarePage: unpublished / offline / unsigned / malformed under Latest; stableMismatch: desktop.firmware.stableMismatch beside Check for updates)
+  problem: FirmwareLookup["problem"] | "stableMismatch";
   available: boolean;
   backToStable: boolean; // the offer is the stable version, older than this development build
   state: FirmwareUpdateState;
@@ -167,9 +171,9 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // Only an image built for the board connected now, never another board's
   // (an unknown board, or the last lookup's board right after a switch).
   const offered = latest && board && latest.board === board.board ? latest : null;
-  const offerProblem: FirmwareLookup["problem"] = board && (offered || !latest) ? problem : "noBoardImage";
   const installed = bridge.firmwareVersion;
-  const { available, backToStable } = firmwareOffer(offered, installed);
+  const { available, backToStable, stableMismatch } = firmwareOffer(offered, installed);
+  const offerProblem: FirmwareUpdate["problem"] = stableMismatch ? "stableMismatch" : board && (offered || !latest) ? problem : "noBoardImage";
 
   // Written and restarted: wait for the board to come back with `version`.
   const verify = useCallback((version: string) => {

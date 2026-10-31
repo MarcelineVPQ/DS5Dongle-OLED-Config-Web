@@ -274,6 +274,7 @@
       "wrongChannel": "não foi possível verificar (o feed de atualizações trouxe builds de outro canal)",
       "olderFeed": "não foi possível verificar (o feed de atualizações é mais antigo que um já verificado)",
       "noBoardImage": "Ainda não há atualização de firmware publicada para {{device}}.",
+      "stableMismatch": "O firmware do feed estável ainda não corresponde à versão estável mais recente, então nada é oferecido para {{device}}. Tente de novo em alguns minutos.",
       "bundled": "incluído no app",
       "checkedNewer": "Verificado agora: {{version}} está disponível.",
       "checkedCurrent": "Verificado agora: você está atualizado.",

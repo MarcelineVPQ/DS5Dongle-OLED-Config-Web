@@ -274,6 +274,7 @@
       "wrongChannel": "无法检查（更新源包含了其他渠道的版本）",
       "olderFeed": "无法检查（更新源比已检查过的更旧）",
       "noBoardImage": "尚未发布适用于{{device}}的固件更新。",
+      "stableMismatch": "稳定版更新源中的固件尚未与最新的稳定版一致，因此没有为{{device}}提供任何内容。请几分钟后再试。",
       "bundled": "随应用附带",
       "checkedNewer": "刚刚检查：{{version}} 可用。",
       "checkedCurrent": "刚刚检查：已是最新版本。",

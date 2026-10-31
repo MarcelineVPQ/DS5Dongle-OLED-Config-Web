@@ -273,6 +273,7 @@
       "wrongChannel": "can't check (the update feed carried another channel's builds)",
       "olderFeed": "can't check (the update feed is older than one already checked)",
       "noBoardImage": "No firmware update is published for {{device}} yet.",
+      "stableMismatch": "The stable update feed's firmware doesn't match the newest stable release yet, so nothing is offered for {{device}}. Try again in a few minutes.",
       "bundled": "included with the app",
       "checkedNewer": "Checked just now: {{version}} is available.",
       "checkedCurrent": "Checked just now: you're up to date.",

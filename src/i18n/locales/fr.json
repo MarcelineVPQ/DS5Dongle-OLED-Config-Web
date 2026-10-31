@@ -274,6 +274,7 @@
       "wrongChannel": "vérification impossible (le flux de mises à jour contenait les builds d’un autre canal)",
       "olderFeed": "vérification impossible (le flux de mises à jour est plus ancien qu’un flux déjà vérifié)",
       "noBoardImage": "Aucune mise à jour du firmware n’est encore publiée pour {{device}}.",
+      "stableMismatch": "Le firmware du flux stable ne correspond pas encore à la dernière version stable, donc rien n’est proposé pour {{device}}. Réessaie dans quelques minutes.",
       "bundled": "incluse dans l'app",
       "checkedNewer": "Vérifié à l'instant : {{version}} est disponible.",
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",

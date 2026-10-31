@@ -304,7 +304,9 @@ export function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInsta
     if (firmwareInstalled && app && app.phase !== "failed") {
       const lookup = await refreshFirmware();
       const latest = lookup.latest?.version;
-      if (latest && firmwareOffer(lookup.latest, firmwareInstalled).available) lines.push(t("desktop.setup.checkedFwNewer", { version: latest }));
+      const offer = firmwareOffer(lookup.latest, firmwareInstalled);
+      if (latest && offer.available) lines.push(t("desktop.setup.checkedFwNewer", { version: latest }));
+      else if (offer.stableMismatch) lines.push(t("desktop.firmware.stableMismatch"));
       else if (lookup.problem === "noBoardImage") lines.push(t("desktop.firmware.noBoardImage"));
       else if (lookup.latest || lookup.problem === "unpublished") lines.push(t("desktop.setup.checkedFwCurrent", { version: firmwareInstalled }));
     }
