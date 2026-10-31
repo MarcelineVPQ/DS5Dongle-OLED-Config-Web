@@ -14,20 +14,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "22"
+          node-version: "22.23.3"
       - name: Run npm audit on shipped dependencies (fail on high)
+        # bash runs it with -eo pipefail: the step fails with npm audit. GitHub's
+        # default shell has no pipefail, so it took tee's status and never failed.
+        shell: bash
         run: npx -y npm@11.6.2 audit --omit=dev --audit-level=high --json | tee npm_audit_report.json
-      - name: Report dev-dependency advisories (informational)
+      - name: Every advisory, dev dependencies included, is fixed or allowlisted with its reason (tools/audit_gate.mjs)
         if: always()
-        run: npx -y npm@11.6.2 audit --audit-level=high || true
-      - name: Upload npm audit report
+        shell: bash
+        run: |
+          # npm audit exits 1 whenever it lists anything; the gate below judges the list.
+          npx -y npm@11.6.2 audit --json > npm_audit_full.json || true
+          node tools/audit_gate.mjs npm_audit_full.json
+      - name: Upload npm audit reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: npm-audit-report
-          path: npm_audit_report.json
+          path: |
+            npm_audit_report.json
+            npm_audit_full.json
           retention-days: 30
