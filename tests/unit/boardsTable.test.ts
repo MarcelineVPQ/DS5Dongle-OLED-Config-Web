@@ -11,7 +11,9 @@ import { boardSpecs } from "../../src/desktop/dongle/boardSpecs";
 const fwFile = process.env.DS5_FIRMWARE_REPO ? join(process.env.DS5_FIRMWARE_REPO, "boards.json") : null;
 
 describe("the board table", () => {
-  it.skipIf(!fwFile || !existsSync(fwFile))("matches the firmware repo's boards.json", () => {
+  // Skipped only when no firmware checkout is named; a named checkout without boards.json fails (CI names one).
+  it.skipIf(!fwFile)("matches the firmware repo's boards.json", () => {
+    expect(existsSync(fwFile!), `${fwFile} is missing`).toBe(true);
     const rows = (JSON.parse(readFileSync(fwFile!, "utf8")) as { boards: Record<string, unknown>[] }).boards;
     const fields = Object.keys(BOARDS[0]);
     expect(BOARDS).toEqual(rows.map((r) => Object.fromEntries(fields.map((f) => [f, r[f]]))));

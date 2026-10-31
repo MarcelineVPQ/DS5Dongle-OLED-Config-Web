@@ -80,7 +80,16 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: $NPM ci
+      # The firmware repo (public), so tests/unit/boardsTable.test.ts compares the app's board table with its boards.json
+      - uses: actions/checkout@v7
+        with:
+          repository: MarcelineVPQ/DS5Dongle-OLED-Edition
+          path: firmware
+          sparse-checkout: boards.json
+          sparse-checkout-cone-mode: false
       - name: Unit, integration and security tests with coverage
+        env:
+          DS5_FIRMWARE_REPO: ${{ github.workspace }}/firmware
         run: npx vitest run --coverage --coverage.reporter=text --coverage.reporter=html
 
   # The release builds the app on Windows and macOS too and runs the tests
