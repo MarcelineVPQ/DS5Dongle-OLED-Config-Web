@@ -75,7 +75,7 @@ export async function updateFirmware(client: Ds5BridgeClient, shown: LatestFirmw
   const { version, bytes } = await shownFirmware(desktop, shown);
   // Parse before touching the device: a malformed file must fail here, while
   // the dongle is still running its current firmware.
-  const regions = firmwareRegions(bytes);
+  const regions = firmwareRegions(bytes, shown.board);
   if (client.identifies) await sleep(Math.max(0, shownAt + IDENTIFY_BEFORE_UPDATE_MS - Date.now()));
 
   return whileWriting(async () => {
@@ -104,7 +104,7 @@ export async function installFirmware(device: PicoflashHandle, shown: LatestFirm
   if (!(await checkBoard(device, shown, ask))) return null;
   onProgress({ step: "downloading" });
   const { version, bytes } = await shownFirmware(desktop, shown);
-  const regions = firmwareRegions(bytes);
+  const regions = firmwareRegions(bytes, shown.board);
   await whileWriting(() => flash(device, regions, onProgress));
   return version;
 }
@@ -155,9 +155,9 @@ export async function checkBoard(device: PicoflashHandle, shown: LatestFirmware,
 
 // The firmware file's flash regions, or a plain reason it isn't firmware for
 // this board (another chip's UF2, a cut-off or damaged file): nothing is written.
-function firmwareRegions(bytes: Uint8Array): ReturnType<typeof parseUf2Regions> {
+function firmwareRegions(bytes: Uint8Array, board: string): ReturnType<typeof parseUf2Regions> {
   try {
-    return parseUf2Regions(bytes.slice().buffer);
+    return parseUf2Regions(bytes.slice().buffer, IMAGE_NEEDS[board]?.flash_min);
   } catch (cause) {
     // error: SHOWN — desktop.firmware.wrongFile: rethrown in plain words (the parser's reason kept as its cause); the firmware banner and the setup screen show it
     if (cause instanceof Uf2FileError) throw new Error(i18n.t("desktop.firmware.wrongFile"), { cause });

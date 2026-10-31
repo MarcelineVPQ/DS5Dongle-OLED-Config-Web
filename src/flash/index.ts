@@ -71,12 +71,19 @@ const RP2350_FAMILIES = new Set([UF2_FAMILY_RP2350_ARM_S, 0xe48bff5a, 0xe48bff5b
 // missing): refused before the board is touched.
 export class Uf2FileError extends Error {}
 
+// Flash as the RP2350 maps it (XIP), at most 16 MB; the UF2 spec's largest payload.
+const FLASH_START = 0x10000000;
+const FLASH_MAX_BYTES = 16 * 1024 * 1024;
+const UF2_MAX_PAYLOAD = 476;
+
 /**
  * Parse a UF2 file into the set of contiguous flash regions it specifies.
  * Each region is `{ address, data }` and can be flashed independently with
  * `Picoboot.flashEraseAndWrite(region.address, region.data)`.
+ * Every block must fit in the first `flashBytes` of flash (the board's flash
+ * as the image needs it; saved state at its end is CI's check_flash_reserved.py).
  */
-export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
+export function parseUf2Regions(buffer: ArrayBuffer, flashBytes = FLASH_MAX_BYTES): Uf2Region[] {
   const u8 = new Uint8Array(buffer);
   if (u8.length === 0 || u8.length % 512 !== 0) {
     throw new Uf2FileError(`UF2 size ${u8.length} is not a multiple of 512 bytes`);
@@ -109,6 +116,8 @@ export function parseUf2Regions(buffer: ArrayBuffer): Uf2Region[] {
     if (flags & UF2_FLAG_NOT_MAIN_FLASH) continue;
     const address = view.getUint32(12, true);
     const payloadSize = view.getUint32(16, true);
+    if (payloadSize > UF2_MAX_PAYLOAD) throw new Uf2FileError(`UF2 block ${blockNo} carries ${payloadSize} bytes (at most ${UF2_MAX_PAYLOAD})`);
+    if (address < FLASH_START || address + payloadSize > FLASH_START + flashBytes) throw new Uf2FileError(`UF2 block ${blockNo} at 0x${address.toString(16)} is outside the flash`);
     const payload = new Uint8Array(u8.buffer, u8.byteOffset + offset + 32, payloadSize);
     blocks.push({ address, payload });
   }

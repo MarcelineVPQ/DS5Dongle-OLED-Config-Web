@@ -54,6 +54,16 @@ describe("parseUf2Regions", () => {
     expect(() => parseUf2Regions(uf2(block(0x10ffff00, UF2_FAMILY_ABSOLUTE, 0xaa)))).toThrow(Uf2FileError);
   });
 
+  it("refuses a block bigger than the UF2 spec allows, or outside the board's flash (update review N6)", () => {
+    const big = block(0x10000000, RP2350_ARM_S, 1);
+    new DataView(big.buffer).setUint32(16, 477, true);
+    expect(() => parseUf2Regions(uf2(big))).toThrow(/at most 476/);
+    expect(() => parseUf2Regions(uf2(block(0x0fffff00, RP2350_ARM_S, 1)))).toThrow(/outside the flash/);
+    const fourMb = 4 * 1024 * 1024;
+    expect(() => parseUf2Regions(uf2(block(0x10000000 + fourMb, RP2350_ARM_S, 1)), fourMb)).toThrow(/outside the flash/);
+    expect(parseUf2Regions(uf2(block(0x10000000 + fourMb - 256, RP2350_ARM_S, 1)), fourMb)).toHaveLength(1);
+  });
+
   it("refuses another chip's firmware (an RP2040 UF2) before anything is written", () => {
     expect(() => parseUf2Regions(uf2(block(0x10000000, RP2040, 1), block(0x10000100, RP2040, 2)))).toThrow(/not an RP2350/);
   });
