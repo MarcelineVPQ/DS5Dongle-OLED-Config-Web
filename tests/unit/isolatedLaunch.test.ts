@@ -54,9 +54,37 @@ describe("the test launchers", () => {
   it("start the app only through tools/isolated.sh", () => {
     const dir = new URL("../../tools/", import.meta.url);
     // loop: NOT-WORTH — test only: the tools folder's scripts
-    const scripts = readdirSync(dir).filter((f) => f.endsWith(".sh") && f !== "isolated.sh");
+    // check_tray_kwin.sh is the one exception: it needs a nested KWin (Wayland), which isolated.sh's X11 display can't give; it keeps the same rules (below).
+    const scripts = readdirSync(dir).filter((f) => f.endsWith(".sh") && f !== "isolated.sh" && f !== "check_tray_kwin.sh");
     // loop: NOT-WORTH — test only
     for (const f of scripts) expect(code(tool(f)), f).not.toMatch(/electron\/dist\/electron|xvfb-run|dbus-run-session/);
     for (const f of ["check_ui.sh", "check_budgets.sh"]) expect(code(tool(f)), f).toMatch(/tools\/isolated\.sh" stop|tools\/isolated\.sh start/);
+  });
+});
+
+// The tray check in a nested KWin starts its own copy (a Wayland client of a
+// KWin inside its own Xvfb), so it can't use isolated.sh; it keeps its rules.
+describe("tools/check_tray_kwin.sh", () => {
+  const tray = code(tool("check_tray_kwin.sh"));
+
+  it("builds a clean environment with its own runtime folder, home, display and private bus", () => {
+    expect(tray).toMatch(/setsid env -i PATH=/);
+    expect(tray).toMatch(/XDG_RUNTIME_DIR="\$run"/);
+    expect(tray).toMatch(/chmod 700 "\$run"/);
+    expect(tray).toMatch(/HOME="\$STATE\/home"/);
+    expect(tray).toMatch(/Xvfb -displayfd/);
+    expect(tray).toMatch(/kwin_wayland --x11-display "\$DISPLAY"/);
+    expect(tray).toMatch(/dbus-run-session --config-file="\$STATE\/session.conf"/);
+    expect(tray).toMatch(/<servicedir>\$STATE\/no-services<\/servicedir>/);
+    expect(tray).not.toMatch(/standard_session_servicedirs/);
+    for (const v of ["GTK_USE_PORTAL=0", "NO_AT_BRIDGE=1", "GSETTINGS_BACKEND=memory"]) expect(tray).toContain(v);
+  });
+
+  it("starts the app without USB or a keyring, and quits it through app.quit(), never SIGTERM", () => {
+    expect(tray).toContain("--password-store=basic");
+    expect(tray).toMatch(/bwrap --dev-bind \/ \/ --dev \/dev --tmpfs "\/run\/user\/\$\(id -u\)"/);
+    expect(tray).toContain("app.quit()");
+    // The plain kills are for its own helpers (the watcher, Xvfb, KWin, the helper window); the app only by -KILL as the last resort.
+    expect(tray).not.toMatch(/pkill(?! -KILL)|kill (-TERM|-15|-s TERM)/);
   });
 });

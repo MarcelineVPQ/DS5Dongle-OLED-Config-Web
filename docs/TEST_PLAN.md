@@ -48,6 +48,10 @@ When the firmware protocol changes, change the fake in the same commit, or the i
 - **Release builds** (`tools/release.sh`, CI): a plain version, no Developer card; previews left in settings by a dev build do nothing.
 - **Simulated dongle** (dev builds, Developer card's **Simulate Pico 2 W (no hardware)**): the app adds `src/protocol/simulatedDongle.ts` (the same code as the tests' fake) to the rail's board stack beside any real boards, so every page works without hardware: for the Windows VM and the macOS smoke test. Firmware updates and the first-time setup are simulated too; haptics, audio and pairing aren't.
 
+## The tray check in a nested KWin (by hand)
+
+`tools/check_tray_kwin.sh` checks that a tray click brings the minimized app back on KDE Wayland the way Plasma's tray does it: a nested KWin (`kwin_wayland --x11-display`) inside a private Xvfb, with its own D-Bus session bus, runtime folder and HOME (the isolated-copy rules of `tools/isolated.sh`), a stand-in tray host (a StatusNotifierWatcher on that bus), and the app in bubblewrap without USB. A KWin script minimizes the app; a helper window takes the focus, asks KWin for an xdg-activation token and hands it to the app's tray item (`ProvideXdgActivationToken`, then `Activate`); a KWin script then reports the app restored, active, at the same position and without the attention flag. PASS / FAIL per check. Run it after `npm run build:desktop` when the tray code or Electron changes (an Electron upgrade, the tray's activation); not in CI (it needs KWin and a display server). Never on the copy you're using: it starts its own.
+
 ## Hardware-in-the-loop (before a release)
 
 On the release firmware with a paired DualSense:
