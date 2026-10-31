@@ -1199,7 +1199,9 @@
         "encode": "Couldn't make the picture: {{reason}}. Try again.",
         "tooBig": "The file came out too big to share (over {{mb}} MB). Pick a smaller size or a shorter recording, then try again.",
         "save": "Couldn't save the file: {{reason}}. Pick another folder and try again.",
-        "copy": "Couldn't copy the picture: {{reason}}. Use Save PNG instead."
+        "copy": "Couldn't copy the picture: {{reason}}. Use Save PNG instead.",
+        "unreadable": "the system couldn't read it as a picture",
+        "nothingRecorded": "nothing was recorded"
       }
     },
     "rail": {
@@ -1842,6 +1844,8 @@
         "timeout": "{{device, capitalize}} didn't finish in time. Try again; if it keeps happening, unplug it and plug it back in.",
         "noOledKeys": "This firmware can't press the board's keys from the app. Update the firmware.",
         "noOledPad": "This firmware can't press controller buttons on the board's screen from the app. Update the firmware.",
+        "pressRefused": "{{device, capitalize}} didn't take the {{button}} press.",
+        "badRemap": "The button layout is incomplete (every button needs a place or Off), so it wasn't sent.",
         "noControllerInfo": "{{device, capitalize}} sent no controller info. Check that the controller is connected.",
         "controllerGone": "The controller disconnected. Connect it and try again.",
         "controllerTimeout": "The controller didn't answer in time. Try again.",
@@ -1867,6 +1871,7 @@
         "protonName": "The published Proton build has a name the app doesn't accept, so nothing was installed. Please report it.",
         "noLauncher": "No Steam, Heroic or Lutris installation was found.",
         "alreadyUndone": "This change was already undone.",
+        "mixedEdits": "The app planned two different kinds of change for {{file}}, so nothing was changed. Please report this as a bug.",
         "diskSpace": "Not enough disk space in {{dir}}: about {{gb}} GB is needed.",
         "archiveEmpty": "The downloaded Proton archive is empty, so nothing was installed. Try again later.",
         "archiveUnsafe": "The downloaded Proton archive has an unsafe path ({{entry}}), so nothing was installed. Please report it.",

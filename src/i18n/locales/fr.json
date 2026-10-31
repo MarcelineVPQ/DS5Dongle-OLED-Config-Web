@@ -1200,7 +1200,9 @@
         "encode": "Impossible de créer l'image : {{reason}}. Réessayez.",
         "tooBig": "Le fichier est trop lourd pour être partagé (plus de {{mb}} Mo). Choisissez une taille plus petite ou un enregistrement plus court, puis réessayez.",
         "save": "Impossible d'enregistrer le fichier : {{reason}}. Choisissez un autre dossier et réessayez.",
-        "copy": "Impossible de copier l'image : {{reason}}. Utilisez plutôt Enregistrer en PNG."
+        "copy": "Impossible de copier l'image : {{reason}}. Utilisez plutôt Enregistrer en PNG.",
+        "unreadable": "le système n'a pas pu le lire comme une image",
+        "nothingRecorded": "rien n'a été enregistré"
       }
     },
     "rail": {
@@ -1843,6 +1845,8 @@
         "timeout": "{{device, capitalize}} n'a pas terminé à temps. Réessaie ; si ça se reproduit, débranche {{device}} puis rebranche-le.",
         "noOledKeys": "Ce firmware ne permet pas d'appuyer sur les touches de la carte depuis l'appli. Mets le firmware à jour.",
         "noOledPad": "Ce firmware ne permet pas d'appuyer sur les boutons de la manette pour l'écran de la carte depuis l'appli. Mets le firmware à jour.",
+        "pressRefused": "{{device, capitalize}} n'a pas pris en compte l'appui sur {{button}}.",
+        "badRemap": "La disposition des boutons est incomplète (chaque bouton doit avoir une place ou Désactivé), elle n'a donc pas été envoyée.",
         "noControllerInfo": "{{device, capitalize}} n'a envoyé aucune info sur la manette. Vérifie que la manette est connectée.",
         "controllerGone": "La manette s'est déconnectée. Reconnecte-la et réessaie.",
         "controllerTimeout": "La manette n'a pas répondu à temps. Réessaie.",
@@ -1868,6 +1872,7 @@
         "protonName": "Le build Proton publié porte un nom que l'appli n'accepte pas : rien n'a été installé. Signale-le, s'il te plaît.",
         "noLauncher": "Aucune installation de Steam, Heroic ou Lutris n'a été trouvée.",
         "alreadyUndone": "Cette modification a déjà été annulée.",
+        "mixedEdits": "L'appli a prévu deux types de modification différents pour {{file}}, donc rien n'a été modifié. Signale-le comme un bug.",
         "diskSpace": "Pas assez d'espace disque dans {{dir}} : il faut environ {{gb}} Go.",
         "archiveEmpty": "L'archive Proton téléchargée est vide : rien n'a été installé. Réessaie plus tard.",
         "archiveUnsafe": "L'archive Proton téléchargée contient un chemin dangereux ({{entry}}) : rien n'a été installé. Signale-le, s'il te plaît.",

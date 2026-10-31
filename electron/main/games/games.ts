@@ -1216,7 +1216,7 @@ async function writeChosen(chosen: Planned[], unknown: string[], deps: ApplyDeps
 
 function writeEdits(file: string, edits: Edit[]): void {
   const format = edits[0].format;
-  if (edits.some((e) => e.format !== format)) throw new Error(`Mixed edit formats for ${file}`);
+  if (edits.some((e) => e.format !== format)) throw new KeyedError("desktop.errors.main.mixedEdits", { file });
   if (format === "disable") {
     writeFileAtomic(`${file}.disabled`, readFileSync(file));
     unlinkSync(file);

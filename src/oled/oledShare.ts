@@ -9,6 +9,7 @@
 // Both formats use one small palette (≤ 16 colors): the panel's off color,
 // the lit color at each brightness the recording saw, and the frame's.
 import { OLED_H, OLED_OFF, OLED_W, oledLit, oledOnColor, type Rgb } from "./oledPixels";
+import { KeyedError } from "../errorText";
 
 export const SHARE_SCALES = [1, 4, 8] as const;
 export type ShareScale = (typeof SHARE_SCALES)[number];
@@ -378,7 +379,7 @@ export async function encodeShare(req: ShareRequest): Promise<Uint8Array> {
     return png;
   }
   const frames = dedupeFrames(req.frames).slice(0, GIF_MAX_FRAMES);
-  if (frames.length === 0) throw new Error("Nothing was recorded");
+  if (frames.length === 0) throw new KeyedError("desktop.oledShare.errors.nothingRecorded");
   // loop: NOT-WORTH — once per encode, N ≤ GIF_MAX_FRAMES
   const palette = buildPalette(frames.map((f) => f.frame));
   const { width, height } = shareSize(req.scale, req.framed);

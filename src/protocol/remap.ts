@@ -10,6 +10,7 @@
 
 import { CONFIG_BODY_SIZE, FEATURE_REPORT_PAYLOAD_SIZE, CONFIG_BODY_SIZE_SPLIT } from "./config";
 import { toUint8Array } from "./bytes";
+import { KeyedError } from "../errorText";
 
 export const REMAP_COUNT = 16;
 
@@ -96,13 +97,13 @@ export function decodeRemapFromConfigReport(source: ArrayBuffer | DataView | Uin
   return null;
 }
 
-// Build the 0xF6 SET payload (without the leading report-ID byte; WebHID
-// prepends it). Throws on an invalid table.
+// Build the 0xF6 SET payload (without a report-id byte: WebUSB control
+// transfers carry the payload alone). Throws on an invalid table.
 // func 0x11 (protocol 1.8): the same table, applied in the dongle's RAM only.
 export const REMAP_SET_TEMPORARY_FUNC = 0x11;
 export function encodeRemapSet(table: number[], func: number = REMAP_SET_FUNC): Uint8Array<ArrayBuffer> {
   if (!isValidTable(table)) {
-    throw new Error(`Invalid remap table (need ${REMAP_COUNT} entries, each 0-${REMAP_COUNT - 1} or disabled)`);
+    throw new KeyedError("desktop.errors.board.badRemap");
   }
   const report = new Uint8Array(new ArrayBuffer(FEATURE_REPORT_PAYLOAD_SIZE));
   report[0] = func;

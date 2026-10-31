@@ -1200,7 +1200,9 @@
         "encode": "Não foi possível criar a imagem: {{reason}}. Tente de novo.",
         "tooBig": "O arquivo ficou grande demais para compartilhar (mais de {{mb}} MB). Escolha um tamanho menor ou uma gravação mais curta e tente de novo.",
         "save": "Não foi possível salvar o arquivo: {{reason}}. Escolha outra pasta e tente de novo.",
-        "copy": "Não foi possível copiar a imagem: {{reason}}. Use Salvar PNG."
+        "copy": "Não foi possível copiar a imagem: {{reason}}. Use Salvar PNG.",
+        "unreadable": "o sistema não conseguiu lê-la como imagem",
+        "nothingRecorded": "nada foi gravado"
       }
     },
     "rail": {
@@ -1843,6 +1845,8 @@
         "timeout": "{{device, capitalize}} não terminou a tempo. Tente de novo; se continuar acontecendo, desconecte {{device}} e conecte de novo.",
         "noOledKeys": "Este firmware não consegue apertar as teclas da placa pelo app. Atualize o firmware.",
         "noOledPad": "Este firmware não consegue apertar botões do controle na tela da placa pelo app. Atualize o firmware.",
+        "pressRefused": "{{device, capitalize}} não aceitou o toque em {{button}}.",
+        "badRemap": "O layout dos botões está incompleto (cada botão precisa de um lugar ou Desligado), então não foi enviado.",
         "noControllerInfo": "{{device, capitalize}} não enviou informações do controle. Verifique se o controle está conectado.",
         "controllerGone": "O controle se desconectou. Conecte-o e tente de novo.",
         "controllerTimeout": "O controle não respondeu a tempo. Tente de novo.",
@@ -1868,6 +1872,7 @@
         "protonName": "O build do Proton publicado tem um nome que o app não aceita, então nada foi instalado. Avise a gente, por favor.",
         "noLauncher": "Nenhuma instalação do Steam, Heroic ou Lutris foi encontrada.",
         "alreadyUndone": "Esta mudança já foi desfeita.",
+        "mixedEdits": "O app planejou dois tipos diferentes de mudança para {{file}}, então nada foi alterado. Relate isso como um bug.",
         "diskSpace": "Não há espaço suficiente em {{dir}}: são necessários cerca de {{gb}} GB.",
         "archiveEmpty": "O arquivo do Proton baixado está vazio, então nada foi instalado. Tente de novo mais tarde.",
         "archiveUnsafe": "O arquivo do Proton baixado tem um caminho inseguro ({{entry}}), então nada foi instalado. Avise a gente, por favor.",

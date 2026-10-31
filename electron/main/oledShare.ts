@@ -10,6 +10,7 @@ import { basename, extname, join } from "node:path";
 import { z } from "zod";
 import { GIF_MAX_BYTES, PNG_MAX_BYTES, hasMagic } from "../../src/oled/oledShare";
 import type { SaveOledResult } from "../../src/desktop/api";
+import { KeyedError } from "../../src/errorText";
 
 export const OledImageSchema = z
   .strictObject({
@@ -76,6 +77,6 @@ export interface CopyDeps {
 export async function copyOledImage(deps: CopyDeps, png: Uint8Array): Promise<void> {
   const buf = Buffer.from(png);
   // error: PASSES-ON — rejects the IPC call; the page shows desktop.oledShare.errors.copy
-  if (!deps.decodes(buf)) throw new Error("The picture couldn't be read for the clipboard");
+  if (!deps.decodes(buf)) throw new KeyedError("desktop.oledShare.errors.unreadable");
   await deps.write(buf);
 }

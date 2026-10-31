@@ -1200,7 +1200,9 @@
         "encode": "Das Bild konnte nicht erstellt werden: {{reason}}. Versuche es erneut.",
         "tooBig": "Die Datei ist zu groß zum Teilen (über {{mb}} MB). Wähle eine kleinere Größe oder eine kürzere Aufnahme und versuche es erneut.",
         "save": "Die Datei konnte nicht gespeichert werden: {{reason}}. Wähle einen anderen Ordner und versuche es erneut.",
-        "copy": "Das Bild konnte nicht kopiert werden: {{reason}}. Nutze stattdessen „PNG speichern“."
+        "copy": "Das Bild konnte nicht kopiert werden: {{reason}}. Nutze stattdessen „PNG speichern“.",
+        "unreadable": "das System konnte es nicht als Bild lesen",
+        "nothingRecorded": "es wurde nichts aufgenommen"
       }
     },
     "rail": {
@@ -1843,6 +1845,8 @@
         "timeout": "{{device, capitalize}} ist nicht rechtzeitig fertig geworden. Versuch es noch einmal; wenn es wieder passiert, zieh {{device_akk}} ab und steck es wieder ein.",
         "noOledKeys": "Diese Firmware kann die Tasten des Boards nicht aus der App drücken. Aktualisiere die Firmware.",
         "noOledPad": "Diese Firmware kann Controller-Tasten für den Bildschirm des Boards nicht aus der App drücken. Aktualisiere die Firmware.",
+        "pressRefused": "{{device, capitalize}} hat den Druck auf {{button}} nicht angenommen.",
+        "badRemap": "Die Tastenbelegung ist unvollständig (jede Taste braucht einen Platz oder Aus), daher wurde sie nicht gesendet.",
         "noControllerInfo": "{{device, capitalize}} hat keine Controller-Infos gesendet. Prüfe, ob der Controller verbunden ist.",
         "controllerGone": "Der Controller wurde getrennt. Verbinde ihn und versuch es noch einmal.",
         "controllerTimeout": "Der Controller hat nicht rechtzeitig geantwortet. Versuch es noch einmal.",
@@ -1868,6 +1872,7 @@
         "protonName": "Der veröffentlichte Proton-Build hat einen Namen, den die App nicht annimmt, darum wurde nichts installiert. Melde es bitte.",
         "noLauncher": "Es wurde keine Installation von Steam, Heroic oder Lutris gefunden.",
         "alreadyUndone": "Diese Änderung wurde schon rückgängig gemacht.",
+        "mixedEdits": "Die App hat zwei verschiedene Arten von Änderungen für {{file}} geplant, daher wurde nichts geändert. Bitte melde das als Fehler.",
         "diskSpace": "Nicht genug Speicherplatz in {{dir}}: Es werden etwa {{gb}} GB gebraucht.",
         "archiveEmpty": "Das heruntergeladene Proton-Archiv ist leer, darum wurde nichts installiert. Versuch es später noch einmal.",
         "archiveUnsafe": "Das heruntergeladene Proton-Archiv enthält einen unsicheren Pfad ({{entry}}), darum wurde nichts installiert. Melde es bitte.",

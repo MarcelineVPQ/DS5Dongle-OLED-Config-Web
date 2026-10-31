@@ -25,6 +25,7 @@ import { MainBlock, revealBlock, useMainBlock } from "../accordion/MainBlock";
 import { useProfileTarget } from "../library/libraryContext";
 import { hardwareName } from "../hardwareName";
 import { formatUptime } from "../format";
+import { KeyedError } from "../../errorText";
 import Notice from "../Notice";
 import { useNoticeTasks } from "../notices";
 import { BOARD_PROBLEM_BLOCK, FIRMWARE_UPDATE_SECTION } from "../openTasks";
@@ -66,10 +67,10 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const installed = bridge.firmwareVersion;
   // A refused press: the app's error notice says why (useDs5Bridge); the key's outline too.
   const pressKey = async (key: 0 | 1, long: boolean) => {
-    if (!(await bridge.pressOledKey(key, long))) throw new Error(`The ${hardwareName(bridge.identity)} did not take the KEY${key} press`);
+    if (!(await bridge.pressOledKey(key, long))) throw new KeyedError("desktop.errors.board.pressRefused", { button: `KEY${key}` });
   };
   const pressPad = async (button: OledPadButton, holdMs: number) => {
-    if (!(await bridge.pressOledPad(button, holdMs))) throw new Error(`The ${hardwareName(bridge.identity)} did not take the ${button} press`);
+    if (!(await bridge.pressOledPad(button, holdMs))) throw new KeyedError("desktop.errors.board.pressRefused", { button });
   };
 
   const main = (

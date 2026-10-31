@@ -1185,7 +1185,9 @@
         "encode": "无法生成图片：{{reason}}。请重试。",
         "tooBig": "文件太大，无法分享（超过 {{mb}} MB）。请选择更小的尺寸或更短的录制，然后重试。",
         "save": "无法保存文件：{{reason}}。请选择其他文件夹后重试。",
-        "copy": "无法复制图片：{{reason}}。请改用“保存 PNG”。"
+        "copy": "无法复制图片：{{reason}}。请改用“保存 PNG”。",
+        "unreadable": "系统无法将其读取为图片",
+        "nothingRecorded": "没有录制到任何内容"
       }
     },
     "rail": {
@@ -1828,6 +1830,8 @@
         "timeout": "{{device}} 未能及时完成。请重试；如果仍然发生，请拔下 {{device}} 再插上。",
         "noOledKeys": "此固件无法从应用按下开发板上的按键。请更新固件。",
         "noOledPad": "此固件无法从应用为开发板屏幕按下控制器按钮。请更新固件。",
+        "pressRefused": "{{device}} 没有接受 {{button}} 的按下。",
+        "badRemap": "按键布局不完整（每个按键都需要一个位置或“关闭”），因此没有发送。",
         "noControllerInfo": "{{device}} 没有发送控制器信息。请检查控制器是否已连接。",
         "controllerGone": "控制器已断开连接。请连接后重试。",
         "controllerTimeout": "控制器未能及时响应。请重试。",
@@ -1853,6 +1857,7 @@
         "protonName": "已发布的 Proton 版本名称不被应用接受，因此没有安装任何内容。请反馈此问题。",
         "noLauncher": "未找到 Steam、Heroic 或 Lutris 的安装。",
         "alreadyUndone": "此更改已撤销过。",
+        "mixedEdits": "应用为 {{file}} 计划了两种不同的更改，因此没有做任何更改。请将此作为错误报告。",
         "diskSpace": "{{dir}} 中的磁盘空间不足：大约需要 {{gb}} GB。",
         "archiveEmpty": "下载的 Proton 压缩包是空的，因此没有安装任何内容。请稍后重试。",
         "archiveUnsafe": "下载的 Proton 压缩包含有不安全的路径（{{entry}}），因此没有安装任何内容。请反馈此问题。",

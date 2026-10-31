@@ -93,7 +93,7 @@ describe("Share: copying", () => {
 
   it("refuses bytes the system can't read as a picture", async () => {
     const write = vi.fn(() => Promise.resolve());
-    await expect(copyOledImage({ decodes: () => false, write }, png)).rejects.toThrow(/couldn't be read/);
+    await expect(copyOledImage({ decodes: () => false, write }, png)).rejects.toThrow("desktop.oledShare.errors.unreadable");
     expect(write).not.toHaveBeenCalled();
   });
 
