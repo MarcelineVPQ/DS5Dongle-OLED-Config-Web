@@ -107,7 +107,7 @@ describe("calibration codec (protocol 1.5)", () => {
     expect(fitGyro([[0, 0, 0]])).toEqual([0, 0, 1]); // 0,0,0 means "not calibrated"
   });
   it("reads and writes through the client", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const client = new Ds5BridgeClient(dongle);
     expect((await client.identity()).features2 & FEATURES2.calibration).toBe(FEATURES2.calibration);
     expect(await client.readCalibration()).toEqual({ slot: 0, calibration: DEFAULT_CALIBRATION });

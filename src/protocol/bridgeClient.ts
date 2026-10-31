@@ -78,6 +78,11 @@ const LEAVES_THE_BUS: ReadonlySet<number> = new Set([FUNC.reconnectUsb, FUNC.reb
 // The protocol major this app speaks. A dongle reporting another major is
 // refused (layouts may have changed); a newer minor only adds features.
 export const SUPPORTED_PROTO_MAJOR = 1;
+// The newest protocol minor this app knows (every feature gate below is at or
+// under it): the firmware's PICO_PROTO_MINOR (src/cmd.h), checked against the
+// firmware repo by tests/unit/protocolLockstep.test.ts. The simulated board
+// (the tests' fake) speaks it unless told otherwise.
+export const PROTOCOL_MINOR_KNOWN = 21;
 
 export const IDENTITY_FEATURES = {
   remap: 0x01,

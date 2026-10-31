@@ -6,7 +6,7 @@
 // real hardware) and dev builds' "Simulated dongle" (Developer card), e.g. in
 // the Windows VM without passing the real dongle through. `live: true` adds
 // what the app shows (moving input, diagnostics, a real-looking version).
-import { IDENTITY_BYTES, OLED_PAD_BUTTONS, OLED_PAD_MAX_HOLD_MS, type OledPadButton } from "./bridgeClient";
+import { IDENTITY_BYTES, OLED_PAD_BUTTONS, OLED_PAD_MAX_HOLD_MS, type OledPadButton, PROTOCOL_MINOR_KNOWN } from "./bridgeClient";
 import {
   CONFIG_BODY_SIZE,
   CONFIG_BODY_SIZE_SPLIT,
@@ -44,7 +44,7 @@ const SIM_TIMINGS: [number, number][] = [
 
 export interface SimulatedDongleOptions {
   protoMajor?: number;
-  protoMinor?: number; // default 6
+  protoMinor?: number; // default PROTOCOL_MINOR_KNOWN (the firmware's current minor)
   // How many identity reads a deferred command stays PENDING for.
   pendingPolls?: number;
   saveFails?: boolean;
@@ -207,7 +207,7 @@ export class SimulatedDongle implements Ds5Transport {
   display = 1;
   displaySaved = 1;
   private get minor() {
-    return this.opts.protoMinor ?? 6;
+    return this.opts.protoMinor ?? PROTOCOL_MINOR_KNOWN;
   }
   private get split() {
     return this.minor >= 6;

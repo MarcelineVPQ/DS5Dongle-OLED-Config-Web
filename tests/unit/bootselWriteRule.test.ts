@@ -28,7 +28,7 @@ afterAll(() => vi.unstubAllGlobals());
 
 // A board in BOOTSEL with this silicon; `blank`: nothing in its flash.
 function bootsel(silicon: Partial<SimSilicon> = {}, blank = false) {
-  const board = new SimulatedBoard({ state: "bootsel", version: blank ? null : undefined, speed: "fast", silicon });
+  const board = new SimulatedBoard({ dongle: { protoMinor: 6 }, state: "bootsel", version: blank ? null : undefined, speed: "fast", silicon });
   const loader = board.bootloader()!;
   const erase = vi.spyOn(loader, "flashErase");
   const write = vi.spyOn(loader, "flashEraseAndWrite");

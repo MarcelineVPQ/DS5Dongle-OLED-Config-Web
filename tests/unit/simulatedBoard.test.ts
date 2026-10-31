@@ -27,7 +27,7 @@ describe("programVersion", () => {
 
 describe("the simulated bootloader", () => {
   it("is there only in BOOTSEL; BOOTSEL from the running firmware brings it up", async () => {
-    const board = new SimulatedBoard({ speed: "fast" });
+    const board = new SimulatedBoard({ dongle: { protoMinor: 6 }, speed: "fast" });
     expect(board.bootloader()).toBeNull();
     const dongle = board.dongle()!;
     board.enterBootsel();
@@ -39,7 +39,7 @@ describe("the simulated bootloader", () => {
   });
 
   it("one session at a time, sector-aligned writes inside the flash", async () => {
-    const board = new SimulatedBoard({ state: "bootsel", version: null, speed: "fast" });
+    const board = new SimulatedBoard({ dongle: { protoMinor: 6 }, state: "bootsel", version: null, speed: "fast" });
     const loader = board.bootloader()!;
     await expect(loader.flashEraseAndWrite(FLASH_BASE, new Uint8Array(0x1000))).rejects.toThrow(/disconnected/);
     await loader.connect();
@@ -51,7 +51,7 @@ describe("the simulated bootloader", () => {
   });
 
   it("a write starts erasing the old firmware: interrupted, the board has none", async () => {
-    const board = new SimulatedBoard({ state: "bootsel", speed: "fast" });
+    const board = new SimulatedBoard({ dongle: { protoMinor: 6 }, state: "bootsel", speed: "fast" });
     const loader = board.bootloader()!;
     await loader.connect();
     const run = vi.fn();

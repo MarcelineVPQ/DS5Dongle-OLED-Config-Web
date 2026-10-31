@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 async function setup(opts: FakeDongleOptions = {}) {
-  const dongle = new FakeDongle(opts);
+  const dongle = new FakeDongle({ protoMinor: 6, ...opts });
   const client = new Ds5BridgeClient(dongle);
   const identity: BridgeIdentity = { ...(await client.identity()), controllerConnected: true };
   const bridge = (connected = true) =>

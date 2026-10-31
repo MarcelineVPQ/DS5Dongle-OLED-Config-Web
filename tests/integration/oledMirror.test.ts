@@ -33,7 +33,7 @@ let root: Root;
 const putImageData = vi.fn();
 beforeEach(async () => {
   await i18n.changeLanguage("en");
-  identity = await new Ds5BridgeClient(new FakeDongle()).identity();
+  identity = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6 })).identity();
   report.fill(0);
   report.set([0, 2, 0xff, 0]);
   // loop: test — a stripe pattern

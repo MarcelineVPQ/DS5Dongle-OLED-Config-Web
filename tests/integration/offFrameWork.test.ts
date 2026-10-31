@@ -88,7 +88,7 @@ describe("the Games grid (loop pass batch 4)", () => {
 
 describe("the Pico page's log (loop pass batch 4)", () => {
   it("formats each line's time once and leaves the rows alone on mirror frames", async () => {
-    const client = new Ds5BridgeClient(new FakeDongle());
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 6 }));
     const identity: BridgeIdentity = await client.identity();
     const toTime = vi.spyOn(Date.prototype, "toLocaleTimeString");
     const page = (frame: OledFrame | null, on: boolean) =>

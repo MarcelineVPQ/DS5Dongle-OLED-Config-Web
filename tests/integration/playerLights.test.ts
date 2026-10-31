@@ -38,7 +38,7 @@ afterEach(() => {
 
 // The identity as the client decodes it from the dongle's bytes.
 async function identityWith(playerLeds: number, model: "dualsense" | "edge"): Promise<BridgeIdentity> {
-  const dongle = new FakeDongle();
+  const dongle = new FakeDongle({ protoMinor: 6 });
   dongle.playerLeds = playerLeds;
   const id = await new Ds5BridgeClient(dongle).identity();
   return { ...id, controllerConnected: true, model };

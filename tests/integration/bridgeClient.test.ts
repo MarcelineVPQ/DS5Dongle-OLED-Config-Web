@@ -23,7 +23,7 @@ import { loadControllerInfo } from "../../src/desktop/live/loadControllerInfo";
 import { FakeDongle } from "../support/fakeDongle";
 
 function setup(opts = {}) {
-  const dongle = new FakeDongle(opts);
+  const dongle = new FakeDongle({ protoMinor: 6, ...opts });
   return { dongle, client: new Ds5BridgeClient(dongle) };
 }
 
@@ -225,7 +225,7 @@ describe("live input without a controller", () => {
 
 describe("narrator firmware lines (protocol 1.3)", () => {
   it("reads the narrator byte after the config body and sets it without saving anything else", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const client = new Ds5BridgeClient(dongle);
     const id = await client.identity();
     expect(id.features & IDENTITY_FEATURES.narrator).toBeTruthy();
@@ -242,14 +242,14 @@ describe("narrator firmware lines (protocol 1.3)", () => {
   });
 
   it("still finds the remap table after the longer body", async () => {
-    const client = new Ds5BridgeClient(new FakeDongle());
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 6 }));
     await client.applyRemap([1, 0, ...Array.from({ length: 14 }, (_, i) => i + 2)]);
     const remap = await client.readRemap();
     expect(remap?.table.slice(0, 2)).toEqual([1, 0]);
   });
 
   it("previews a line and refuses bad arguments", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const client = new Ds5BridgeClient(dongle);
     await client.sayNarratorLine(NARRATOR_LINES.batteryLow, 6);
     expect(dongle.said).toEqual([[5, 6]]);
@@ -258,7 +258,7 @@ describe("narrator firmware lines (protocol 1.3)", () => {
   });
 
   it("is off on older firmware (no byte after the body)", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const client = new Ds5BridgeClient(dongle);
     dongle.getReport = async () => new Uint8Array(37);
     expect(await client.readNarrator()).toBeNull();
@@ -280,7 +280,7 @@ describe("OLED screen mirror (0xEF, protocol 1.4)", () => {
 
 describe("left / right grip haptics (protocol 1.6)", () => {
   it("writes and reads both strengths, keeps the narrator, and still finds the remap block", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     dongle.narrator = 3;
     const client = new Ds5BridgeClient(dongle);
     await client.identity();
@@ -470,7 +470,7 @@ describe("PC sleep options (protocol 1.14)", () => {
 
 describe("grip test (protocol 1.6)", () => {
   it("announces it and sends the side", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const client = new Ds5BridgeClient(dongle);
     expect((await client.identity()).features2 & FEATURES2.gripTest).toBe(FEATURES2.gripTest);
     await client.gripTest("right");
@@ -534,19 +534,19 @@ describe("temporary remap (protocol 1.8)", () => {
 
 describe("core1 health in the audio counters (issue #15)", () => {
   it("reads the speaker-encoder failure when the firmware reports it", async () => {
-    const c = await new Ds5BridgeClient(new FakeDongle({ speakerEncoderFailed: true })).readAudioCounters();
+    const c = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, speakerEncoderFailed: true })).readAudioCounters();
     expect(c.core1Flags).toBe(0x03);
     expect(c.core1FreeHeap).toBe(12 * 1024);
   });
   it("reads the mic-decoder failure, on its own and with the speaker's", async () => {
-    const mic = await new Ds5BridgeClient(new FakeDongle({ micDecoderFailed: true })).readAudioCounters();
+    const mic = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, micDecoderFailed: true })).readAudioCounters();
     expect(mic.core1Flags).toBe(0x01 | CORE1_MIC_FAILED);
     expect((mic.core1Flags ?? 0) & CORE1_SPEAKER_FAILED).toBe(0);
-    const both = await new Ds5BridgeClient(new FakeDongle({ micDecoderFailed: true, speakerEncoderFailed: true })).readAudioCounters();
+    const both = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, micDecoderFailed: true, speakerEncoderFailed: true })).readAudioCounters();
     expect(both.core1Flags).toBe(0x01 | CORE1_SPEAKER_FAILED | CORE1_MIC_FAILED);
   });
   it("a healthy core1: started, its free heap, and loops that move", async () => {
-    const client = new Ds5BridgeClient(new FakeDongle());
+    const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 6 }));
     const a = await client.readAudioCounters();
     const b = await client.readAudioCounters();
     expect(a.core1Flags).toBe(0x01);
@@ -554,7 +554,7 @@ describe("core1 health in the audio counters (issue #15)", () => {
     expect(b.core1Loops).not.toBe(a.core1Loops);
   });
   it("asks for no more than the 63 bytes a reply can carry", async () => {
-    const dongle = new FakeDongle();
+    const dongle = new FakeDongle({ protoMinor: 6 });
     const lengths: number[] = [];
     const get = dongle.getReport.bind(dongle);
     dongle.getReport = (id, length) => (lengths.push(length), get(id, length));
@@ -563,7 +563,7 @@ describe("core1 health in the audio counters (issue #15)", () => {
   });
   for (const legacy of ["none", "cut"] as const) {
     it(`older firmware (${legacy}): no health fields, the counters still read`, async () => {
-      const c = await new Ds5BridgeClient(new FakeDongle({ audioCountersLegacy: legacy, speakerEncoderFailed: true })).readAudioCounters();
+      const c = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, audioCountersLegacy: legacy, speakerEncoderFailed: true })).readAudioCounters();
       expect(c.core1Loops).toBe(1234);
       expect(c.core1Flags).toBeUndefined();
       expect(c.core1FreeHeap).toBeUndefined();
@@ -571,13 +571,13 @@ describe("core1 health in the audio counters (issue #15)", () => {
     });
   }
   it("a running core1 reports start-up stage 9, apart from the flags", async () => {
-    const c = await new Ds5BridgeClient(new FakeDongle({ speakerEncoderFailed: true })).readAudioCounters();
+    const c = await new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, speakerEncoderFailed: true })).readAudioCounters();
     expect(c.core1Stage).toBe(CORE1_STAGE_RUNNING);
     expect(c.core1Flags).toBe(0x03);
   });
   it("a core1 stuck in start-up: the stage, loops that never move, heap only once read", async () => {
     for (let stage = 0; stage <= 8; stage++) {
-      const client = new Ds5BridgeClient(new FakeDongle({ core1StuckStage: stage }));
+      const client = new Ds5BridgeClient(new FakeDongle({ protoMinor: 6, core1StuckStage: stage }));
       const a = await client.readAudioCounters();
       const b = await client.readAudioCounters();
       expect(a.core1Stage).toBe(stage);
