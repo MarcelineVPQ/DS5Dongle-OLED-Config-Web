@@ -13,6 +13,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **A failed update check says what really happened, not "offline?".** A busy or failing update server (an HTTP error such as 503, or a rate limit) and an error inside the app were all reported as "can't be reached (offline?)" / "Are you online?". The app, firmware, Development channel and DualSense Proton checks now say which it was: the server didn't answer, it's limiting requests, it answered with an error (with its HTTP status), the feed failed its security check, or the check failed inside the app; in all 7 languages.
 - **A firmware update cut short can't leave a half-written firmware that starts and hangs.** The update wrote the firmware's first sector (where the board looks for the firmware to start) first, so a write stopped partway (a pulled cable, a USB reset) could leave a board that tried to start the half-written image instead of waiting in BOOTSEL mode. The app now clears that sector before anything else and writes it last: until the very end there is nothing to start, so the board comes back in BOOTSEL mode by itself and the app offers to install again. The failure message no longer says that unplugging and replugging recovers the board: if it doesn't show up, hold its BOOTSEL button while plugging it in and run the update again. When the firmware was fully written and only the restart failed, the app now says that instead of "no firmware running"; in all 7 languages.
 
+### Security
+
+- **Electron 45.2.1 (stable), up from the 45 beta.** Fixes CVE-2026-115570: Electron did not block the compromised eMudhra intermediate certificates, so connections signed by them were trusted. Chromium 156.0.8078.75, Node 24.22.1.
+
 ## [0.9.5-dev.20] — Release Candidate 2 — 2026-10-18
 
 **Release Candidate 2 for 0.9.5**: fixes and up-to-date pictures and guide.
