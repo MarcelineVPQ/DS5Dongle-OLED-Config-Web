@@ -18,6 +18,8 @@ import { chooseBootTarget } from "../hooks/boards";
 import { KeyedError, logged } from "../errorText";
 import { PicoflashAPI, parseUf2Regions, Uf2FileError, type PicoflashHandle } from "../flash";
 import i18n from "../i18n";
+import { readBootselBoard, type BootselBoard, type Chip } from "../flash/boardRead";
+import { IMAGE_NEEDS } from "../update/boardIdentity";
 import { simulatedBoard } from "./devPreview";
 import type { DesktopApi, LatestFirmware } from "./api";
 
@@ -82,21 +84,73 @@ export async function updateFirmware(client: Ds5BridgeClient, shown: LatestFirmw
 
     onProgress({ step: "waiting-bootloader" });
     const device = await waitForBootloader(boardId, before);
+    // The board just ran firmware, so its flash isn't blank and its size reads;
+    // if it doesn't, nothing is written (no ask here: the setup screen, which
+    // now shows the board in BOOTSEL, asks).
+    await checkBoard(device, shown, null);
 
     await flash(device, regions, onProgress);
     return version;
   });
 }
 
-// First-run setup: a Pico already in BOOTSEL mode gets the app's firmware.
-export async function installFirmware(device: PicoflashHandle, shown: LatestFirmware, onProgress: (p: FirmwareProgress) => void): Promise<string> {
+// First-run setup: a Pico already in BOOTSEL mode gets the app's firmware,
+// once it is the board the image is for (checkBoard). `ask`: the user's
+// answer when the flash size can't be read (null: refused instead). Returns
+// null when the user cancelled at the ask: nothing was written.
+export async function installFirmware(device: PicoflashHandle, shown: LatestFirmware, onProgress: (p: FirmwareProgress) => void, ask: (() => Promise<boolean>) | null): Promise<string | null> {
   const desktop = window.desktop;
   if (!desktop) throw new Error("Installing firmware needs the desktop app.");
+  if (!(await checkBoard(device, shown, ask))) return null;
   onProgress({ step: "downloading" });
   const { version, bytes } = await shownFirmware(desktop, shown);
   const regions = firmwareRegions(bytes);
   await whileWriting(() => flash(device, regions, onProgress));
   return version;
+}
+
+const MB = 1024 * 1024;
+const CHIP_NAMES: Record<Chip, string> = { rp2040: "RP2040", rp2350a: "RP2350A", rp2350b: "RP2350B" };
+const sizeText = (bytes: number) => (bytes >= MB ? `${bytes / MB} MB` : `${bytes / 1024} KB`);
+
+// The write rule (DESIGN_FIRMWARE_IDENTITY §1.2, owner decision 4): what the
+// board read in BOOTSEL says about writing `board`'s image. "write": same
+// chip and package, enough flash. "ask": right chip, flash size unknown (a
+// blank chip): the user decides. A KeyedError: the plain reason nothing is
+// written.
+export function writeVerdict(read: BootselBoard, board: string): "write" | "ask" | KeyedError {
+  const needs = IMAGE_NEEDS[board];
+  // error: SHOWN — desktop.firmware.wrongFile: an image for a board type the app can't check is never written
+  if (!needs) return new KeyedError("desktop.firmware.wrongFile");
+  // error: SHOWN — desktop.firmware.refuseRp2040: nothing was written
+  if (read.chip === "rp2040" && needs.chip !== "rp2040") return new KeyedError("desktop.firmware.refuseRp2040");
+  // error: SHOWN — desktop.firmware.chipUnreadable: nothing was written
+  if (read.chip === null) return new KeyedError("desktop.firmware.chipUnreadable");
+  // error: SHOWN — desktop.firmware.refuseChip: nothing was written
+  if (read.chip !== needs.chip) return new KeyedError("desktop.firmware.refuseChip", { chip: CHIP_NAMES[read.chip], board: needs.name, wanted: CHIP_NAMES[needs.chip as Chip] ?? needs.chip });
+  if (read.flashBytes === null) return "ask";
+  // error: SHOWN — desktop.firmware.refuseFlash: nothing was written
+  if (read.flashBytes < needs.flash_min) return new KeyedError("desktop.firmware.refuseFlash", { size: sizeText(read.flashBytes), needed: sizeText(needs.flash_min) });
+  return "write";
+}
+
+// Reads the board in BOOTSEL and applies the write rule, before anything is
+// erased. true: write; false: the user cancelled at the ask. Throws the plain
+// reason otherwise (nothing written). `ask` null: an unknown size is refused.
+export async function checkBoard(device: PicoflashHandle, shown: LatestFirmware, ask: (() => Promise<boolean>) | null): Promise<boolean> {
+  let read: BootselBoard;
+  try {
+    read = await readBootselBoard(device);
+  } catch (cause) {
+    // error: SHOWN — desktop.firmware.chipUnreadable: a read that failed (the USB error kept as its cause); nothing was written
+    throw new KeyedError("desktop.firmware.chipUnreadable", undefined, { cause });
+  }
+  const verdict = writeVerdict(read, shown.board);
+  if (verdict instanceof KeyedError) throw verdict;
+  if (verdict === "write") return true;
+  // error: SHOWN — desktop.firmware.flashUnknown: no one to ask (an update from the running firmware); nothing was written
+  if (!ask) throw new KeyedError("desktop.firmware.flashUnknown");
+  return ask();
 }
 
 // The firmware file's flash regions, or a plain reason it isn't firmware for

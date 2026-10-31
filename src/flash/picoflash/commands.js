@@ -270,6 +270,24 @@ export class PicobootCmd {
     }
 
     /**
+     * DS5 addition (not upstream picoflash): PC_GET_INFO (RP2350 only).
+     * Args = struct picoboot_get_info_cmd (pico-sdk 2.3.0 boot/picoboot.h):
+     * bType u8, bParam u8, wParam u16, dParams[3] u32, little endian;
+     * bCmdSize 16. picotool asks for 256 bytes and the boot ROM pads to it.
+     * @param {number} bType - PICOBOOT_GET_INFO_SYS = 1
+     * @param {number} param0 - dParams[0], e.g. SYS_INFO_CHIP_INFO = 0x1
+     * @param {number} transferLen
+     * @returns {PicobootCmd}
+     */
+    static getInfo(bType, param0, transferLen) {
+        const args = new Uint8Array(16);
+        const view = new DataView(args.buffer);
+        view.setUint8(0, bType);
+        view.setUint32(4, param0, true);
+        return new PicobootCmd(PicobootCmdId.GET_INFO, 16, transferLen, args);
+    }
+
+    /**
      * @param {number} rowIndex - OTP row index to write (1 row = 16 bytes)
      * @param {Uint8Array} data - OTP data
      * @param {boolean} ecc - whether to write ECC 16-bit rows or 32-bit rows

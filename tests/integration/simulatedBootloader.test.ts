@@ -163,6 +163,9 @@ describe("a firmware update against the simulated board", () => {
     expect(text()).toContain("A Pico is ready to set up");
     board.fault = "";
     press(/^Install the firmware$/);
+    // Its first sector was erased first, so the flash reads blank: the app asks before writing.
+    await watch(/Install on a blank Pico/, 2000);
+    press(/^Install$/);
     await watch(/Now pair your controller/);
     expect(text()).toContain("Firmware 0.9.5 installed. Now pair your controller");
     await watch(new RegExp(NEW.replace(/[.+]/g, "\\$&")));
@@ -263,6 +266,8 @@ describe("a firmware update against the simulated board", () => {
   it("an image the boot ROM won't start (no IMAGE_DEF): the board stays in BOOTSEL, and setup says the firmware didn't start", async () => {
     const board = await start({ board: "bootsel", version: "", file: rp2350Uf2(NEW, { imageDef: false }) });
     press(/^Install the firmware$/);
+    await watch(/Install on a blank Pico/, 2000);
+    press(/^Install$/);
     const seen = await watch(/didn't start/, 6000);
     expect(seen.join("\n")).toContain("Firmware 0.9.5 installed");
     expect(board.state).toBe("bootsel");
@@ -284,6 +289,11 @@ describe("first-time setup against a blank simulated Pico", () => {
     expect(text()).toContain("A Pico is ready to set up");
     expect(text()).toContain("Install firmware 0.9.5, included with this app");
     press(/^Install the firmware$/);
+    // A blank Pico: its flash size can't be read, so the app asks first (nothing written yet).
+    await watch(/Install on a blank Pico/, 2000);
+    expect(text()).toContain("This firmware is for the Pico 2 W and needs 4 MB of flash. Install it only if this board is a Pico 2 W. Nothing has been written yet.");
+    expect(board.flash).toBeNull();
+    press(/^Install$/);
     const seen = await watch(/Now pair your controller/);
     expect(seen.join("\n")).toContain("Installing the firmware…");
     expect(container.querySelector("progress")).toBeNull();
@@ -292,5 +302,25 @@ describe("first-time setup against a blank simulated Pico", () => {
     expect(after.join("\n")).not.toContain("A Pico is ready to set up");
     expect(text()).toContain(NEW);
     expect(board.state).toBe("dongle");
+  });
+
+  // A Pico 2 (no wireless chip) can't be told from a Pico 2 W in BOOTSEL and
+  // never starts the Pico 2 W image: after three tries the app stops offering it.
+  it("a board the firmware never starts on: stops after three tries with a plain message", async () => {
+    const board = await start({ board: "bootsel", version: "", fault: "noStart" });
+    press(/^Install the firmware$/);
+    await watch(/Install on a blank Pico/, 2000);
+    press(/^Install$/);
+    await watch(/didn't start/, 6000);
+    for (let tries = 2; tries <= 3; tries++) {
+      press(/^Install again$/);
+      await watch(/Installing the firmware/, 2000);
+      await watch(/didn't start|stopped trying/, 6000);
+    }
+    expect(text()).toContain(
+      "The firmware didn't start on this board three times, so the app stopped trying. This firmware is for the Pico 2 W: a Pico 2 without the wireless chip can't run it. Nothing more was written.",
+    );
+    expect([...container.querySelectorAll("button")].some((b) => /^Install/.test(b.textContent?.trim() ?? ""))).toBe(false); // nothing more to install
+    expect(board.state).toBe("bootsel");
   });
 });

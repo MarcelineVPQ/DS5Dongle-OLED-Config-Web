@@ -291,7 +291,12 @@
       "installAgain": "Install again",
       "waitForApp": "Wait for the app update to finish first.",
       "wrongVersion": "After restarting, {{device}} reports firmware {{installed}} instead of {{expected}}. Install the update again.",
-      "severalBootsel": "{{count}} boards are in update mode, so the app can't tell which one to update. Unplug the ones you don't want to update, then try again."
+      "severalBootsel": "{{count}} boards are in update mode, so the app can't tell which one to update. Unplug the ones you don't want to update, then try again.",
+      "refuseChip": "This board has an {{chip}} chip, and this firmware is for the {{board}} ({{wanted}}). Nothing was written.",
+      "refuseRp2040": "This board has an RP2040 chip (a Pico or Pico W). The app can't install firmware on it yet. Nothing was written.",
+      "refuseFlash": "This board has {{size}} of flash, and this firmware needs {{needed}}. Nothing was written.",
+      "chipUnreadable": "The app couldn't read which chip this board has, so nothing was written. Unplug it, hold its BOOTSEL button while plugging it back in, and try again.",
+      "flashUnknown": "The app couldn't read how much flash {{device}} has, so nothing was written. Unplug it and plug it back in: it starts its current firmware again."
     },
     "recovered": {
       "partial": "{{what}} had damaged parts. Those went back to their defaults, and everything else was kept. The damaged copy is saved as {{kept}}.",
@@ -626,6 +631,10 @@
       "noFirmware": "Looking for the firmware…",
       "replaces": "This replaces whatever is on the Pico now.",
       "install": "Install the firmware",
+      "askTitle": "Install on a blank Pico?",
+      "askFlash": "This Pico's flash is empty, so the app can't read its size. This firmware is for the {{board}} and needs {{needed}} of flash. Install it only if this board is a {{board}}. Nothing has been written yet.",
+      "askInstall": "Install",
+      "stopTrying": "The firmware didn't start on this board three times, so the app stopped trying. This firmware is for the Pico 2 W: a Pico 2 without the wireless chip can't run it. Nothing more was written.",
       "newPico": "New Pico? Plug it in while holding its BOOTSEL button (a brand-new Pico doesn't need the button). The app finds it and installs the firmware.",
       "driveNote": "Your computer may also show it as a drive called RP2350. You don't need to open it.",
       "turnOnTitle": "Turn on your controller",

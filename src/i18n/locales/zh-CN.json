@@ -292,7 +292,12 @@
       "installAgain": "重新安装",
       "waitForApp": "请先等待应用更新完成。",
       "wrongVersion": "重启后，{{device}} 报告的固件是 {{installed}}，而不是 {{expected}}。请重新安装更新。",
-      "severalBootsel": "有 {{count}} 块开发板处于更新模式，应用无法判断要更新哪一块。请拔下不想更新的开发板，然后重试。"
+      "severalBootsel": "有 {{count}} 块开发板处于更新模式，应用无法判断要更新哪一块。请拔下不想更新的开发板，然后重试。",
+      "refuseChip": "这块开发板的芯片是 {{chip}}，而此固件适用于 {{board}}（{{wanted}}）。没有写入任何内容。",
+      "refuseRp2040": "这块开发板的芯片是 RP2040（Pico 或 Pico W）。应用暂时无法为它安装固件。没有写入任何内容。",
+      "refuseFlash": "这块开发板有 {{size}} 闪存，而此固件需要 {{needed}}。没有写入任何内容。",
+      "chipUnreadable": "应用无法读取这块开发板的芯片，因此没有写入任何内容。请拔下它，按住 BOOTSEL 按钮重新插上，然后再试一次。",
+      "flashUnknown": "应用无法读取{{device}}的闪存容量，因此没有写入任何内容。请拔下后重新插上：它会以当前固件重新启动。"
     },
     "recovered": {
       "partial": "{{what}}有部分已损坏。这些部分已恢复为默认值，其余内容都已保留。损坏的副本已保存为 {{kept}}。",
@@ -620,6 +625,10 @@
       "noFirmware": "正在查找固件…",
       "replaces": "这会替换 Pico 上现有的内容。",
       "install": "安装固件",
+      "askTitle": "要安装到空白的 Pico 上吗？",
+      "askFlash": "这块 Pico 的闪存是空的，因此应用无法读取其容量。此固件适用于 {{board}}，需要 {{needed}} 闪存。只有当这块开发板是 {{board}} 时才安装。目前还没有写入任何内容。",
+      "askInstall": "安装",
+      "stopTrying": "固件在这块开发板上三次都没有启动，因此应用不再尝试。此固件适用于 Pico 2 W：没有无线芯片的 Pico 2 无法运行它。没有再写入任何内容。",
       "newPico": "新的 Pico？按住它的 BOOTSEL 按钮插上（全新的 Pico 不需要按）。应用会发现它并安装固件。",
       "driveNote": "电脑可能还会显示一个名为 RP2350 的磁盘，无需打开它。",
       "turnOnTitle": "请打开控制器",

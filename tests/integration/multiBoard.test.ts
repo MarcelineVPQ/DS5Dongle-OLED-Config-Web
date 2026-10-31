@@ -219,6 +219,9 @@ describe("a firmware update with several boards in BOOTSEL", () => {
     flashErase: async () => undefined,
     flashEraseAndWrite: async () => undefined,
     rebootRp2350: async () => undefined,
+    flashRead: async (_addr: number, size: number) => new Uint8Array(size),
+    getSystemInfo: async () => new Uint8Array(256),
+    otpRead: async () => new Uint8Array(0),
   });
 
   it("takes the rebooted board's bootloader by its id, with 19 others already in BOOTSEL", async () => {

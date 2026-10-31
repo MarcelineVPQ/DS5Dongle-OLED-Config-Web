@@ -19,6 +19,15 @@ const PICO_W: BoardIdentity = { board: "pico_w", chip: "rp2040", flashBytes: 2 *
 // build until its firmware.json names a board) is built for.
 export const PICO2_W_IMAGE = { board: "pico2_w", chip: "rp2350a", flash_min: 4 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] };
 
+// What an offered image needs from the board in BOOTSEL (the write rule,
+// desktop/firmwareUpdate.ts), by the board it is built for. Main offers only
+// a feed entry that fitsBoard() this board type, so for pico2_w the entry's
+// chip is rp2350a and its flash_min at most this. A board type missing here
+// is never written.
+export const IMAGE_NEEDS: Readonly<Record<string, { name: string; chip: string; flash_min: number }>> = {
+  pico2_w: { name: "Pico 2 W", chip: PICO2_W_IMAGE.chip, flash_min: PICO2_W_IMAGE.flash_min },
+};
+
 // Firmware without its own identity report (all of it today: 0xEA comes with
 // protocol 1.21): the identity from the board's name (design §1.1). null =
 // unknown, nothing is offered. Only for offers: the write-time check in

@@ -35,6 +35,20 @@ export const SIM_DEFAULT_VERSION = "v0.9.4-oled-edition+12.a1b2c3d.dirty+simulat
 // The version a firmware without one reports (the firmware's CMake fallback).
 export const UNKNOWN_VERSION = "v0.0.0-oled-edition+unknown";
 
+// What its boot ROM answers to the reads before an install (flash/boardRead.ts).
+// The defaults are a Pico 2 W as the design reads it (RP2350A on A4 silicon,
+// 4 MB that wraps, no flash size in OTP); the real values on the owner's board
+// are UNVERIFIED until step 5H. Tests change them to be another board.
+export interface SimSilicon {
+  productId: number; // 0x000F RP2350, 0x0003 RP2040
+  romVersion: number; // the byte at ROM 0x13: 2 = A2 (package_id wrong, NUM_GPIOS used)
+  packageId: number; // GET_INFO package_id: nonzero = QFN60 (RP2350A), 0 = QFN80 (RP2350B)
+  numGpios: number; // OTP row 0x18: 30 = QFN60, 48 = QFN80
+  flashBytes: number; // reads wrap at this size (writes stay within the 4 MB array)
+  otpFlashBytes: number | null; // OTP FLASH_DEVINFO CS0 size with BOOT_FLAGS0 enabling it, or null
+}
+export const PICO2_W_SILICON: SimSilicon = { productId: 0x000f, romVersion: 4, packageId: 1, numGpios: 30, flashBytes: 4 * 1024 * 1024, otpFlashBytes: null };
+
 export interface SimulatedBoardOptions {
   state?: SimBoardState;
   // The firmware it runs; null = a blank Pico (nothing in flash).
@@ -47,6 +61,8 @@ export interface SimulatedBoardOptions {
   restartMs?: number;
   // How the firmware it runs behaves (live input, protocol, core1).
   dongle?: Omit<SimulatedDongleOptions, "version" | "onBootsel">;
+  // Its chip as the boot ROM reports it (default: a Pico 2 W).
+  silicon?: Partial<SimSilicon>;
 }
 
 export class SimulatedBoard {
@@ -70,6 +86,7 @@ export class SimulatedBoard {
   // Flash contents, once something was written this session (4 MB, erased = 0xFF).
   flash: Uint8Array | null = null;
   claimed: SimulatedBootloader | null = null;
+  silicon: SimSilicon;
   // The image now in flash starts (an IMAGE_DEF block in its first 4 KB).
   private bootable: boolean;
   // A pending re-enumeration (BOOTSEL or a restart), cancelled by a new state.
@@ -86,6 +103,7 @@ export class SimulatedBoard {
     this.restartMs = opts.restartMs ?? 1500;
     this.dongleOpts = opts.dongle ?? {};
     this.boardId = (this.dongleOpts.boardId ?? DEFAULT_SIM_BOARD_ID).toUpperCase();
+    this.silicon = { ...PICO2_W_SILICON, ...opts.silicon };
   }
 
   // The Developer card's failure and speed, for the next update.
@@ -205,7 +223,7 @@ export class SimulatedBootloader implements PicoflashHandle {
     return { toString: () => "RP2350" };
   }
   getUsbDeviceInfo(): PicoflashUsbInfo {
-    return { vendorId: 0x2e8a, productId: 0x000f, serialNumber: this.board.boardId, productName: "RP2350 Boot", manufacturerName: "Raspberry Pi" };
+    return { vendorId: 0x2e8a, productId: this.board.silicon.productId, serialNumber: this.board.boardId, productName: "RP2350 Boot", manufacturerName: "Raspberry Pi" };
   }
   isConnected(): boolean {
     return this.board.claimed === this;
@@ -254,6 +272,57 @@ export class SimulatedBootloader implements PicoflashHandle {
     this.board.flash.fill(0xff, addr - FLASH_BASE, end - FLASH_BASE);
     this.board.flash.set(buf, addr - FLASH_BASE);
     if (counted) this.written += buf.byteLength;
+  }
+
+  // ROM and flash reads (Picoboot.flashRead opens a session by itself). Flash
+  // reads wrap at the chip's size, like a chip that ignores the high address
+  // bits; a board that runs firmware not written this session reads as a
+  // non-blank pattern, a blank one as erased.
+  async flashRead(addr: number, size: number): Promise<Uint8Array> {
+    if (!this.present) throw new Error("The device was disconnected.");
+    const { silicon, flash, version } = this.board;
+    const out = new Uint8Array(size);
+    if (addr < 0x8000) {
+      // loop: NOT-WORTH — dev/test fake only; a few ROM bytes per install
+      for (let i = 0; i < size; i++) out[i] = addr + i === 0x13 ? silicon.romVersion : 0;
+      return out;
+    }
+    // loop: NOT-WORTH — dev/test fake only; 512 bytes, ≤ 13 reads per install
+    for (let i = 0; i < size; i++) {
+      const off = (addr - FLASH_BASE + i) % silicon.flashBytes;
+      out[i] = flash ? flash[off] : version !== null ? Math.imul(off + 1, 0x9e3779b1) >>> 24 : 0xff;
+    }
+    return out;
+  }
+
+  // GET_INFO system info: [count, included, package_id, device_id lo, hi], 256 bytes.
+  async getSystemInfo(flags: number): Promise<Uint8Array> {
+    if (!this.isConnected()) throw new Error("The device was disconnected.");
+    const out = new Uint8Array(256);
+    const v = new DataView(out.buffer);
+    v.setUint32(0, 3, true);
+    v.setUint32(4, flags & 1, true);
+    v.setUint32(8, this.board.silicon.packageId, true);
+    v.setUint32(12, 0x89abcdef, true);
+    v.setUint32(16, 0x01234567, true);
+    return out;
+  }
+
+  // OTP rows: NUM_GPIOS (0x18), BOOT_FLAGS0 and its copies (0x48..0x4A), FLASH_DEVINFO (0x54).
+  async otpRead(row: number, count: number, ecc: boolean): Promise<Uint8Array> {
+    if (!this.isConnected()) throw new Error("The device was disconnected.");
+    const { numGpios, otpFlashBytes } = this.board.silicon;
+    const width = ecc ? 2 : 4;
+    const out = new Uint8Array(count * width);
+    const v = new DataView(out.buffer);
+    // loop: NOT-WORTH — dev/test fake only; ≤ 3 rows per read
+    for (let i = 0; i < count; i++) {
+      const r = row + i;
+      const value = r === 0x18 ? numGpios : r >= 0x48 && r <= 0x4a ? (otpFlashBytes ? 0x20 : 0) : r === 0x54 && otpFlashBytes ? Math.log2(otpFlashBytes / 4096) << 8 : 0;
+      if (ecc) v.setUint16(i * 2, value, true);
+      else v.setUint32(i * 4, value, true);
+    }
+    return out;
   }
 
   async rebootRp2350(_flags: number, _p0: number, _p1: number, delayMs: number): Promise<void> {

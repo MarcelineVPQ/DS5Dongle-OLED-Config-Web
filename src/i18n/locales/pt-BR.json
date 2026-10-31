@@ -292,7 +292,12 @@
       "installAgain": "Instalar de novo",
       "waitForApp": "Espere primeiro a atualização do app terminar.",
       "wrongVersion": "Depois de reiniciar, {{device}} informa o firmware {{installed}} em vez de {{expected}}. Instale a atualização de novo.",
-      "severalBootsel": "{{count}} placas estão no modo de atualização, então o app não sabe qual atualizar. Desconecte as que você não quer atualizar e tente de novo."
+      "severalBootsel": "{{count}} placas estão no modo de atualização, então o app não sabe qual atualizar. Desconecte as que você não quer atualizar e tente de novo.",
+      "refuseChip": "Esta placa tem um chip {{chip}}, e este firmware é para o {{board}} ({{wanted}}). Nada foi gravado.",
+      "refuseRp2040": "Esta placa tem um chip RP2040 (um Pico ou Pico W). O app ainda não consegue instalar firmware nela. Nada foi gravado.",
+      "refuseFlash": "Esta placa tem {{size}} de flash, e este firmware precisa de {{needed}}. Nada foi gravado.",
+      "chipUnreadable": "O app não conseguiu ler qual chip esta placa tem, então nada foi gravado. Desconecte, segure o botão BOOTSEL enquanto conecta de novo e tente outra vez.",
+      "flashUnknown": "O app não conseguiu ler quanta flash {{device}} tem, então nada foi gravado. Desconecte e conecte de novo: o firmware atual volta a iniciar."
     },
     "recovered": {
       "partial": "{{what}}: algumas partes estavam danificadas. Elas voltaram ao padrão, e todo o resto foi mantido. A cópia danificada foi salva como {{kept}}.",
@@ -627,6 +632,10 @@
       "noFirmware": "Procurando o firmware…",
       "replaces": "Isso substitui o que estiver no Pico agora.",
       "install": "Instalar o firmware",
+      "askTitle": "Instalar em um Pico vazio?",
+      "askFlash": "A flash deste Pico está vazia, então o app não consegue ler o tamanho dela. Este firmware é para o {{board}} e precisa de {{needed}} de flash. Instale só se esta placa for um {{board}}. Nada foi gravado ainda.",
+      "askInstall": "Instalar",
+      "stopTrying": "O firmware não iniciou nesta placa três vezes, então o app parou de tentar. Este firmware é para o Pico 2 W: um Pico 2 sem o chip sem fio não consegue rodá-lo. Nada mais foi gravado.",
       "newPico": "Pico novo? Conecte-o segurando o botão BOOTSEL (um Pico novinho não precisa do botão). O app o encontra e instala o firmware.",
       "driveNote": "Seu computador também pode mostrá-lo como uma unidade chamada RP2350. Não precisa abrir.",
       "turnOnTitle": "Ligue seu controle",

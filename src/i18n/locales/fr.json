@@ -292,7 +292,12 @@
       "installAgain": "Réinstaller",
       "waitForApp": "Attends d'abord la fin de la mise à jour de l'appli.",
       "wrongVersion": "Après le redémarrage, {{device}} indique le firmware {{installed}} au lieu de {{expected}}. Réinstalle la mise à jour.",
-      "severalBootsel": "{{count}} cartes sont en mode mise à jour : l’app ne sait pas laquelle mettre à jour. Débranche celles que tu ne veux pas mettre à jour, puis réessaie."
+      "severalBootsel": "{{count}} cartes sont en mode mise à jour : l’app ne sait pas laquelle mettre à jour. Débranche celles que tu ne veux pas mettre à jour, puis réessaie.",
+      "refuseChip": "Cette carte a une puce {{chip}}, et ce firmware est pour le {{board}} ({{wanted}}). Rien n’a été écrit.",
+      "refuseRp2040": "Cette carte a une puce RP2040 (un Pico ou un Pico W). L’app ne peut pas encore y installer de firmware. Rien n’a été écrit.",
+      "refuseFlash": "Cette carte a {{size}} de mémoire flash, et ce firmware en demande {{needed}}. Rien n’a été écrit.",
+      "chipUnreadable": "L’app n’a pas pu lire quelle puce a cette carte : rien n’a été écrit. Débranche-la, maintiens son bouton BOOTSEL en la rebranchant, puis réessaie.",
+      "flashUnknown": "L’app n’a pas pu lire la taille de la mémoire flash {{device_de}} : rien n’a été écrit. Débranche-le et rebranche-le : son firmware actuel redémarre."
     },
     "recovered": {
       "partial": "{{what}} : certaines parties étaient endommagées. Elles sont revenues à leurs valeurs par défaut, et tout le reste a été gardé. La copie endommagée est enregistrée sous {{kept}}.",
@@ -627,6 +632,10 @@
       "noFirmware": "Recherche du firmware…",
       "replaces": "Cela remplace tout ce qui se trouve sur le Pico.",
       "install": "Installer le firmware",
+      "askTitle": "Installer sur un Pico vierge ?",
+      "askFlash": "La mémoire flash de ce Pico est vide : l’app ne peut pas lire sa taille. Ce firmware est pour le {{board}} et demande {{needed}} de flash. Installe-le seulement si cette carte est un {{board}}. Rien n’a encore été écrit.",
+      "askInstall": "Installer",
+      "stopTrying": "Le firmware n’a pas démarré trois fois sur cette carte : l’app arrête d’essayer. Ce firmware est pour le Pico 2 W : un Pico 2 sans puce sans fil ne peut pas le faire tourner. Rien de plus n’a été écrit.",
       "newPico": "Nouveau Pico ? Branche-le en maintenant son bouton BOOTSEL (un Pico neuf n'en a pas besoin). L'app le trouve et installe le firmware.",
       "driveNote": "Ton ordinateur peut aussi l'afficher comme un disque nommé RP2350. Inutile de l'ouvrir.",
       "turnOnTitle": "Allume ta manette",

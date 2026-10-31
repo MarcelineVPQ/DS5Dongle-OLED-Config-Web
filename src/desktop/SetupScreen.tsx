@@ -19,9 +19,14 @@ import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
 import { logged } from "../errorText";
 import { feedProblemText } from "./useUpdates";
-import { PICO2_W } from "../update/boardIdentity";
+import { IMAGE_NEEDS, PICO2_W } from "../update/boardIdentity";
 
 const POLL_MS = 1000;
+// The same board back in BOOTSEL this many times after an install (the
+// firmware didn't start): stop offering it. A Pico 2 without the wireless
+// chip can't run the Pico 2 W image and can't be told apart in BOOTSEL
+// (DESIGN_FIRMWARE_IDENTITY §1.2).
+const MAX_TRIES = 3;
 
 // Set once a dongle has connected on this PC (DesktopApp).
 export const HAD_DONGLE_KEY = "ds5.hadDongle";
@@ -29,13 +34,22 @@ export const HAD_DONGLE_KEY = "ds5.hadDongle";
 // `left`: the flashed Pico has left BOOTSEL. Until then the poll can still
 // see it (it restarts half a second after the write), and that must not read
 // as "a Pico is ready to set up" again.
-type Install = { phase: "idle" } | { phase: "running"; progress: FirmwareProgress } | { phase: "restarting"; version: string; left: boolean } | { phase: "failed"; detail: string };
+// `ask`: the board's flash is blank, so its size can't be read: the user
+// decides before anything is written (owner decision, design §9).
+type Install =
+  | { phase: "idle" }
+  | { phase: "ask"; answer: (install: boolean) => void }
+  | { phase: "running"; progress: FirmwareProgress }
+  | { phase: "restarting"; version: string; left: boolean }
+  | { phase: "failed"; detail: string };
 
 export default function SetupScreen({ supported }: { supported: boolean }) {
   const { t } = useTranslation();
   const [hadDongle] = useState(() => readPref(HAD_DONGLE_KEY) === "1");
   const [firmware, setFirmware] = useState<LatestFirmware | null>(null);
   const [install, setInstall] = useState<Install>({ phase: "idle" });
+  // Installs on one board (its BOOTSEL serial) that ended back in BOOTSEL.
+  const [tries, setTries] = useState({ serial: "", count: 0 });
 
   // Watch for a Pico in BOOTSEL mode (stops while installing, and while the
   // window is hidden: it's only shown here).
@@ -44,8 +58,8 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
   // Online only with automatic checks on (main); otherwise the bundled build.
-  // The Pico 2 W image, as before: setup writes only to an RP2350 in BOOTSEL
-  // (devices.ts), and reading which board that is comes later (design §1.2).
+  // The Pico 2 W image: installFirmware reads the board in BOOTSEL first and
+  // writes only to an RP2350A with enough flash (design §1.2).
   // lifetime: OK — acquires nothing (one firmware lookup once a Pico shows up)
   useEffect(() => {
     if (!pico || firmware) return;
@@ -59,8 +73,10 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
     if (!pico || !firmware) return;
     try {
       // With several Picos in BOOTSEL, none is guessed (the message says to unplug the others).
-      const version = await installFirmware(await onlyBootloader(), firmware, (progress) => setInstall({ phase: "running", progress }));
-      setInstall({ phase: "restarting", version, left: false });
+      const ask = () => new Promise<boolean>((answer) => setInstall({ phase: "ask", answer }));
+      const version = await installFirmware(await onlyBootloader(), firmware, (progress) => setInstall({ phase: "running", progress }), ask);
+      // Cancelled at the ask: nothing was written.
+      setInstall(version === null ? { phase: "idle" } : { phase: "restarting", version, left: false });
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) next to Install
       setInstall({ phase: "failed", detail: causeText(cause) });
@@ -75,8 +91,33 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   // for state that follows a value from the last render).
   if (restarting && !restarting.left && !pico) setInstall({ ...restarting, left: true });
   // A Pico back in BOOTSEL after the flashed one left: the new firmware didn't
-  // start (the boot ROM went back to BOOTSEL). Say so, and offer it again.
-  else if (restarting && restarting.left && pico) setInstall({ phase: "failed", detail: t("desktop.firmware.didntStart") });
+  // start (the boot ROM went back to BOOTSEL, or the user put it there after
+  // it never came up). Say so, and offer it again, MAX_TRIES times per board.
+  else if (restarting && restarting.left && pico) {
+    const serial = pico.getUsbDeviceInfo().serialNumber ?? "";
+    const count = tries.serial === serial ? tries.count + 1 : 1;
+    setTries({ serial, count });
+    setInstall({ phase: "failed", detail: t(count >= MAX_TRIES ? "desktop.setup.stopTrying" : "desktop.firmware.didntStart") });
+  }
+  const stopped = !!pico && tries.count >= MAX_TRIES && tries.serial === (pico.getUsbDeviceInfo().serialNumber ?? "");
+
+  if (install.phase === "ask") {
+    const needs = firmware ? IMAGE_NEEDS[firmware.board] : undefined;
+    return (
+      <Center>
+        <strong>{t("desktop.setup.askTitle")}</strong>
+        <span>{t("desktop.setup.askFlash", { board: needs?.name ?? "", needed: needs ? `${needs.flash_min / (1024 * 1024)} MB` : "" })}</span>
+        <div>
+          <button className="dk-btn primary" onClick={() => install.answer(true)}>
+            {t("desktop.setup.askInstall")}
+          </button>{" "}
+          <button className="dk-btn" onClick={() => install.answer(false)}>
+            {t("desktop.common.cancel")}
+          </button>
+        </div>
+      </Center>
+    );
+  }
 
   if (install.phase === "running") {
     const p = install.progress;
@@ -111,9 +152,11 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
         {/* hint: MUST-SHOW — the first-run setup: the step's own instruction, read while doing it */}
         <span className="dk-hint">{t("desktop.setup.driveNote")}</span>
         {install.phase === "failed" && <span className="dk-bad">{install.detail}</span>}
-        <BusyButton className="dk-btn primary" disabled={!firmware} onClick={start}>
-          {install.phase === "failed" ? t("desktop.firmware.installAgain") : t("desktop.setup.install", "Install the firmware")}
-        </BusyButton>
+        {!stopped && (
+          <BusyButton className="dk-btn primary" disabled={!firmware} onClick={start}>
+            {install.phase === "failed" ? t("desktop.firmware.installAgain") : t("desktop.setup.install", "Install the firmware")}
+          </BusyButton>
+        )}
       </Center>
     );
   }

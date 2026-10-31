@@ -4,6 +4,7 @@
 
 import { Target } from './target.js';
 import { Connection } from './connection.js';
+import { PicobootCmd } from './commands.js';
 import { UsbError, NotFoundError, ProtocolError, ValidationError } from './errors.js';
 import {
     PICOBOOT_VID,
@@ -500,6 +501,31 @@ export class Picoboot {
                 await this.disconnect();
             }
         }
+    }
+
+    /**
+     * DS5 addition (not upstream picoflash): GET_INFO system info (RP2350),
+     * the raw reply (picotool's word buffer: count, included flags, then the
+     * fields of each included flag). Needs a connect() first.
+     * @param {number} flags - SYS_INFO_* bits
+     * @returns {Promise<Uint8Array>}
+     */
+    async getSystemInfo(flags) {
+        await this.connection.resetInterface();
+        return await this.connection.sendCmd(PicobootCmd.getInfo(1, flags, 256), null);
+    }
+
+    /**
+     * DS5 addition: OTP read (RP2350), ECC rows 2 bytes each, raw rows 4.
+     * Needs a connect() first.
+     * @param {number} row
+     * @param {number} count
+     * @param {boolean} ecc
+     * @returns {Promise<Uint8Array>}
+     */
+    async otpRead(row, count, ecc) {
+        await this.connection.resetInterface();
+        return await this.connection.otpRead(row, count, ecc);
     }
 
     /**

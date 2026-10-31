@@ -216,7 +216,9 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     if (state.phase !== "notStarted" || !firmware) return;
     try {
       const device = await onlyBootloader(writtenTo);
-      verify(await installFirmware(device, firmware, (progress) => setState({ phase: "running", progress })));
+      // The image was written and didn't start, so the flash isn't blank: no ask here (an unknown size is refused).
+      const version = await installFirmware(device, firmware, (progress) => setState({ phase: "running", progress }), null);
+      if (version) verify(version);
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed: the firmware banner's error notice with Dismiss (also noBootsel / wrongFile, in plain words)
       setState({ phase: "failed", detail: causeText(cause) });

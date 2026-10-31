@@ -30,6 +30,11 @@ export interface PicoflashHandle {
   flashErase(addr: number, size: number): Promise<void>;
   flashEraseAndWrite(addr: number, buf: Uint8Array): Promise<void>;
   rebootRp2350(flags: number, p0: number, p1: number, delayMs: number): Promise<void>;
+  // Reads before anything is written (boardRead.ts). flashRead works on any
+  // address (ROM too); getSystemInfo and otpRead need connect() first.
+  flashRead(addr: number, size: number): Promise<Uint8Array>;
+  getSystemInfo(flags: number): Promise<Uint8Array>;
+  otpRead(row: number, count: number, ecc: boolean): Promise<Uint8Array>;
 }
 
 export interface PicoflashStatic {

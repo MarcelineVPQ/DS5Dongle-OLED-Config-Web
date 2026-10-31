@@ -292,7 +292,12 @@
       "installAgain": "Erneut installieren",
       "waitForApp": "Warte zuerst, bis das App-Update fertig ist.",
       "wrongVersion": "Nach dem Neustart meldet {{device}} die Firmware {{installed}} statt {{expected}}. Installiere das Update noch einmal.",
-      "severalBootsel": "{{count}} Boards sind im Update-Modus, daher weiß die App nicht, welches sie aktualisieren soll. Zieh die ab, die du nicht aktualisieren willst, und versuch es noch einmal."
+      "severalBootsel": "{{count}} Boards sind im Update-Modus, daher weiß die App nicht, welches sie aktualisieren soll. Zieh die ab, die du nicht aktualisieren willst, und versuch es noch einmal.",
+      "refuseChip": "Dieses Board hat einen {{chip}}-Chip, und diese Firmware ist für den {{board}} ({{wanted}}). Es wurde nichts geschrieben.",
+      "refuseRp2040": "Dieses Board hat einen RP2040-Chip (ein Pico oder Pico W). Darauf kann die App noch keine Firmware installieren. Es wurde nichts geschrieben.",
+      "refuseFlash": "Dieses Board hat {{size}} Flash-Speicher, und diese Firmware braucht {{needed}}. Es wurde nichts geschrieben.",
+      "chipUnreadable": "Die App konnte nicht lesen, welchen Chip dieses Board hat, darum wurde nichts geschrieben. Zieh es ab, halte beim Einstecken die BOOTSEL-Taste gedrückt und versuch es noch einmal.",
+      "flashUnknown": "Die App konnte nicht lesen, wie viel Flash-Speicher {{device}} hat, darum wurde nichts geschrieben. Einmal ab- und wieder einstecken: Dann startet die bisherige Firmware wieder."
     },
     "recovered": {
       "partial": "{{what}}: Einige Teile waren beschädigt. Sie wurden auf die Standardwerte zurückgesetzt, alles andere blieb erhalten. Die beschädigte Kopie ist gespeichert als {{kept}}.",
@@ -627,6 +632,10 @@
       "noFirmware": "Firmware wird gesucht…",
       "replaces": "Das ersetzt alles, was gerade auf dem Pico ist.",
       "install": "Firmware installieren",
+      "askTitle": "Auf einem leeren Pico installieren?",
+      "askFlash": "Der Flash-Speicher dieses Pico ist leer, darum kann die App seine Größe nicht lesen. Diese Firmware ist für den {{board}} und braucht {{needed}} Flash-Speicher. Installiere sie nur, wenn dieses Board ein {{board}} ist. Bisher wurde nichts geschrieben.",
+      "askInstall": "Installieren",
+      "stopTrying": "Die Firmware ist auf diesem Board dreimal nicht gestartet, darum versucht die App es nicht weiter. Diese Firmware ist für den Pico 2 W: Ein Pico 2 ohne Funkchip kann sie nicht ausführen. Es wurde nichts weiter geschrieben.",
       "newPico": "Neuer Pico? Steck ihn ein, während du seinen BOOTSEL-Knopf hältst (ein fabrikneuer Pico braucht den Knopf nicht). Die App findet ihn und installiert die Firmware.",
       "driveNote": "Dein Computer zeigt ihn eventuell auch als Laufwerk namens RP2350 an. Das musst du nicht öffnen.",
       "turnOnTitle": "Schalte deinen Controller ein",
