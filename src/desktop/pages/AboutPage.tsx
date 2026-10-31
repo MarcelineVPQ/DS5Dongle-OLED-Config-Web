@@ -67,7 +67,7 @@ function StudioCard() {
         <span className="dk-studio-eyebrow">{t("desktop.about.production", "A 42 Pixel Studios production")}</span>
         <h2 className="dk-studio-title">DS5 Dongle OLED Edition Configurator</h2>
         <p className="dk-studio-by">
-          {t("desktop.about.developedBy", "Developed by")} <strong>Marcy Kuhn</strong>
+          {t("desktop.about.developedBy", "Developed by")} <strong>MarcelineVPQ</strong>
           {window.desktop && <span className="dk-studio-version"> · v{appVersionLabel()}</span>}
         </p>
         <div className="dk-studio-links">
@@ -79,7 +79,7 @@ function StudioCard() {
             </a>
           ))}
         </div>
-        <small className="dk-studio-copy">© {new Date().getFullYear()} 42 Pixel Studios — a Marcy Kuhn production.</small>
+        <small className="dk-studio-copy">© {new Date().getFullYear()} 42 Pixel Studios — a MarcelineVPQ production.</small>
       </div>
     </section>
   );
