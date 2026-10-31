@@ -1,10 +1,15 @@
-// The update feed (latest.json) is signed: CI signs the exact bytes with an
-// Ed25519 key that only exists as a GitHub Actions secret, and publishes the
-// signature beside it as latest.json.sig (base64). The app refuses a feed
-// that no trusted key signed, so a compromised GitHub account or a tampered
-// mirror can't point installed apps at a malicious update, firmware or
-// Proton build. TRUSTED_KEYS is a list so the key can be rotated: ship the
-// new key in one release, start signing with it in the next.
+// The update feed (latest.json, latest-dev.json) is signed: the developer
+// signs the exact bytes on their own PC as the last release step, with an
+// Ed25519 key that exists only there (never in CI or on GitHub; owner
+// decision 2026-10-31), and publishes the signature beside it as
+// latest.json.sig (base64). The app refuses a feed that no trusted key
+// signed, and every download in it is pinned by size and SHA-256, so a
+// compromised GitHub account, CI job or mirror can't write a feed that
+// points installed apps at a different update, firmware or Proton build.
+// What it doesn't cover: anyone holding the key (that PC), and an old or
+// other-channel feed signed earlier, served again (the feed carries no
+// channel binding or expiry yet). TRUSTED_KEYS is a list so the key can be
+// rotated: ship the new key in one release, start signing with it in the next.
 import { createPublicKey, verify } from "node:crypto";
 
 // base64 SPKI DER (`openssl pkey -pubout -outform DER | base64`).
