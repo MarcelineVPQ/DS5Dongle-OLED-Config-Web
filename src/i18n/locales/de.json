@@ -1012,7 +1012,7 @@
       "size": "Größe",
       "updated": "Zuletzt aktualisiert",
       "fixedIn": "Behoben in {{version}}:",
-      "staleFix": "Du hast das vor DS5 Dongle {{version}} bewertet, das etwas in diesem Spiel behoben hat.",
+      "staleFix": "Du hast das vor Version {{version}} dieser App bewertet, die etwas in diesem Spiel behoben hat.",
       "staleUpdateOn": "Du hast das vor dem Update des Spiels am {{date}} bewertet.",
       "staleUpdate": "Du hast das vor dem letzten Update des Spiels bewertet.",
       "stillAccurate": "Stimmt noch",

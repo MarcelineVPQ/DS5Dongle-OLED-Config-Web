@@ -1011,7 +1011,7 @@
       "size": "Size on disk",
       "updated": "Last updated",
       "fixedIn": "Fixed in {{version}}:",
-      "staleFix": "You rated this before DS5 Dongle {{version}}, which fixed something in this game.",
+      "staleFix": "You rated this before version {{version}} of this app, which fixed something in this game.",
       "staleUpdateOn": "You rated this before the game's update on {{date}}.",
       "staleUpdate": "You rated this before the game's last update.",
       "stillAccurate": "Still accurate",

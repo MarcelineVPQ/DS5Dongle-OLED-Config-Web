@@ -28,7 +28,6 @@ const PRODUCT_NAME = /DS5 ?Dongle/g;
 const PRODUCT_NAME_KEYS = new Set([
   "__comment", // the repository URL
   "desktop.settings.psWakesPcSub", // "DS5 Dongle Wake Keyboard", the USB name the firmware gives itself
-  "desktop.library.staleFix", // "DS5 Dongle {{version}}", the release name
 ]);
 
 const lngOf = (file: string) => file.replace(".json", "").split("-")[0];

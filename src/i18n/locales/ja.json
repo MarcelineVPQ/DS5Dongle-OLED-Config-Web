@@ -999,7 +999,7 @@
       "size": "ディスク使用量",
       "updated": "最終更新",
       "fixedIn": "{{version}} で修正:",
-      "staleFix": "このゲームの問題を修正した DS5 Dongle {{version}} より前に評価しました。",
+      "staleFix": "このゲームの問題を修正した、このアプリのバージョン {{version}} より前に評価しました。",
       "staleUpdateOn": "{{date}} のゲーム更新より前に評価しました。",
       "staleUpdate": "ゲームの最新の更新より前に評価しました。",
       "stillAccurate": "今も正確",

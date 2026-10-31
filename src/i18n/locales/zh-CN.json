@@ -999,7 +999,7 @@
       "size": "磁盘占用",
       "updated": "最后更新",
       "fixedIn": "已在 {{version}} 中修复:",
-      "staleFix": "你评分时的 DS5 Dongle 版本早于 {{version}},该版本修复了此游戏的某个问题。",
+      "staleFix": "你评分时本应用的版本早于 {{version}},该版本修复了此游戏的某个问题。",
       "staleUpdateOn": "你评分时早于此游戏 {{date}} 的更新。",
       "staleUpdate": "你评分时早于此游戏的最近一次更新。",
       "stillAccurate": "仍然准确",
