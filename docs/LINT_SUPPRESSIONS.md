@@ -1,11 +1,11 @@
 # Lint Suppressions
 
-Every rule that is weakened or suppressed, and why. Mirrors AVNetworkMonitor's `PYLINT_SUPPRESSIONS.md`. CI allows at most 1 warning (`--max-warnings=1`): lower the number when a warning is fixed, never raise it without adding a line here.
+Every rule that is weakened or suppressed, and why. Mirrors AVNetworkMonitor's `PYLINT_SUPPRESSIONS.md`. CI allows no warning (`--max-warnings=0`); the rules below stay at warn so a new case shows up as a review item, and CI fails on it until it is fixed or listed here with the number raised (an owner decision).
 
 | Rule                              | Level | Where                               | Why                                                                                                                                                                                         |
 | --------------------------------- | ----- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `react-hooks/refs`                | warn  | (none today)                        | React Compiler advisory, kept at warn so a new case is reviewed rather than blocking; there are none now                                                                                  |
-| `react-hooks/set-state-in-effect` | warn  | `useDs5Bridge.ts`                   | The auto-connect effect sets "connecting" synchronously before it awaits the device. Behavior is correct; restructuring is tracked, not urgent                                         |
+| `react-hooks/set-state-in-effect` | warn  | (none today)                        | React Compiler advisory, kept at warn like `refs`; the auto-connect case it once flagged in `useDs5Bridge.ts` is gone |
 | `react-hooks/purity`              | warn  | (none today)                        | React Compiler advisory, kept at warn like `refs`                                                                                                                                          |
 
 ## Inline disables

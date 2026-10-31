@@ -18,7 +18,7 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       // React Compiler advisories. Warn, not fail, so a new case is reviewed;
-      // the one left is listed in docs/LINT_SUPPRESSIONS.md (CI caps warnings).
+      // CI allows none (docs/LINT_SUPPRESSIONS.md).
       "react-hooks/refs": "warn",
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/purity": "warn",

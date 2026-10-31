@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: $NPM ci
       - name: ESLint (incl. no-floating-promises, no-misused-promises, no-empty)
-        run: npx eslint . --max-warnings=1
+        run: npx eslint . --max-warnings=0
       - name: Prettier
         run: npx prettier --check .
       - name: Electron security gate
