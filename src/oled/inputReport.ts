@@ -83,8 +83,7 @@ export interface InputReport {
 export function decodeInputReport(data: Uint8Array | DataView): InputReport {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
-  // Bounds-safe access; firmware always sends 63 bytes but defensive in case
-  // some upstream API includes the report ID byte at offset 0.
+  // Bounds-safe access; the firmware always sends 63 bytes (no report-id byte).
   const b = (i: number): number => (i >= 0 && i < bytes.length ? bytes[i] : 0);
 
   const b7 = b(7);

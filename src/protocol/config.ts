@@ -228,21 +228,15 @@ export const AUTO_HAPTICS_LOWPASS_OPTIONS: Array<{ value: AutoHapticsLowpass; la
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
   const bytes = toUint8Array(source);
-  // WebHID feature-report reads may or may not include the leading report-ID
-  // byte depending on browser/driver. Try both offsets and pick whichever
-  // passes validation.
-  const candidates = bytes.byteLength >= CONFIG_BODY_MIN_SIZE + 1 ? [0, 1] : [0];
-  // loop: HOT-PATH-OK — N ≤ 2 offsets (with or without report id)
-  const parsed = candidates.map((offset) => decodeAt(bytes, offset)).filter(Boolean) as ConfigBody[];
-  // loop: HOT-PATH-OK — N ≤ 2 candidates, early exit
-  const valid = parsed.find((config) => validateConfig(config).length === 0);
-  if (valid) return valid;
-  if (parsed[0]) {
+  // WebUSB control transfers carry the body alone (no report-id byte), so it
+  // starts at offset 0; nothing else is tried (a body shifted by one byte must
+  // never pass as the board's settings).
+  const config = decodeAt(bytes, 0);
+  if (config) {
+    const issues = validateConfig(config);
+    if (issues.length === 0) return config;
     // loop: NOT-WORTH — error path only (the board sent an invalid config)
-    const issues = validateConfig(parsed[0])
-      .map((i) => i.message)
-      .join("; ");
-    console.warn("the board's settings don't check out:", issues);
+    console.warn("the board's settings don't check out:", issues.map((i) => i.message).join("; "));
     throw new KeyedError("desktop.errors.board.badConfig");
   }
   throw new KeyedError("desktop.errors.board.short");

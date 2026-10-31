@@ -25,6 +25,20 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     expect(decodeConfigBody(bytes)).toEqual({ ...cfg, hapticsGainRight: cfg.hapticsGain });
   });
 
+  it("reads the body from offset 0 only: a body shifted by a byte never passes as the settings (review N3)", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGain: 2, hapticsGainRight: 5.5 });
+    const body = encodeConfigBody(cfg, true);
+    const shifted = new Uint8Array(body.length + 1);
+    shifted.set(body, 1);
+    let read: unknown = null;
+    try {
+      read = decodeConfigBody(shifted);
+    } catch {
+      // error: NOT-WORTH — refusing it is one of the two right answers
+    }
+    expect(read).not.toEqual(cfg);
+  });
+
   it("carries the right grip after the narrator byte from protocol 1.6", () => {
     const cfg = normalizeConfig({ ...DEFAULT_CONFIG, hapticsGain: 2, hapticsGainRight: 5.5 });
     const bytes = encodeConfigBody(cfg, true);
