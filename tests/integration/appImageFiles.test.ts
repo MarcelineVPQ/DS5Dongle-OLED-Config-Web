@@ -38,11 +38,13 @@ afterAll(() => {
 afterEach(() => rmSync(STABLE, { force: true }));
 
 describe("start-up tidy-up (Linux)", () => {
-  it("removes our own partial download and older builds, never another program's .part file", () => {
+  it("removes our own partial download and older builds but the newest one, never another program's .part file", () => {
     const files = {
       ours: `${NAME("0.9.6")}.part`,
       oursDev: `${NAME("0.9.6-dev.1")}.part`,
+      previous: NAME("0.9.5-dev.20"), // the newest older build: kept to go back to (review N3)
       older: NAME("0.9.4"),
+      oldest: NAME("0.9.3"),
       browsers: "Other-App-1.0-x86_64.AppImage.part",
       lookAlike: "DS5Dongle-OLED-Edition-Configurator-copy.AppImage.part",
     };
@@ -50,7 +52,9 @@ describe("start-up tidy-up (Linux)", () => {
     new Updater(() => undefined).pruneStaleFiles();
     expect(existsSync(join(temp, files.ours))).toBe(false);
     expect(existsSync(join(temp, files.oursDev))).toBe(false);
+    expect(existsSync(join(temp, files.previous))).toBe(true);
     expect(existsSync(join(temp, files.older))).toBe(false);
+    expect(existsSync(join(temp, files.oldest))).toBe(false);
     expect(existsSync(join(temp, files.browsers))).toBe(true);
     expect(existsSync(join(temp, files.lookAlike))).toBe(true);
     expect(existsSync(process.env.APPIMAGE!)).toBe(true);
@@ -73,5 +77,6 @@ describe("stable-name symlink", () => {
     expect(linkStableAppImage(process.env.APPIMAGE!)).toBe(STABLE);
     expect(readlinkSync(STABLE)).toBe(process.env.APPIMAGE);
     expect(launchPath()).toBe(STABLE);
+    expect(existsSync(`${STABLE}.tmp-link`)).toBe(false); // renamed over the old link (review N2)
   });
 });

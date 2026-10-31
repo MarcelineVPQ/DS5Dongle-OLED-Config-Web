@@ -152,13 +152,18 @@ export class Updater {
       if (process.platform === "linux" && process.env.APPIMAGE) {
         const current = realpathSync(process.env.APPIMAGE);
         const dir = dirname(current);
+        const older: { full: string; version: string }[] = [];
         for (const f of readdirSync(dir)) {
           const full = join(dir, f);
           // Only our own partial download: other programs' *.AppImage.part (a browser's download into ~/Downloads) are theirs.
           if (f.endsWith(".part") && OUR_APPIMAGE.test(f.slice(0, -".part".length))) rmSync(full, { force: true });
           const m = OUR_APPIMAGE.exec(f);
-          if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
+          if (m && full !== current && isNewer(app.getVersion(), m[1])) older.push({ full, version: m[1] });
         }
+        // The newest older copy stays, so the version before this update is
+        // still there to go back to; anything older goes.
+        older.sort((a, b) => (isNewer(a.version, b.version) ? -1 : 1));
+        for (const { full } of older.slice(1)) rmSync(full, { force: true });
       } else if (process.platform === "win32" && !this.downloadStarted) {
         rmSync(windowsUpdateDir(), { recursive: true, force: true });
       }

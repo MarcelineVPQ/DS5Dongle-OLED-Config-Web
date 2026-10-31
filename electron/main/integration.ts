@@ -8,7 +8,7 @@
 //
 // Windows: the per-user installer adds the Start menu entry and the
 // uninstaller (electron-builder.yml); the tray menu can add a desktop shortcut.
-import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { execFile } from "node:child_process";
@@ -56,8 +56,12 @@ export function linkStableAppImage(target: string): string {
   const stable = join(dirname(target), STABLE_APPIMAGE);
   const existing = lstatSync(stable, { throwIfNoEntry: false });
   if (existing && !existing.isSymbolicLink()) return target;
-  if (existing) rmSync(stable, { force: true });
-  symlinkSync(target, stable);
+  // A new link renamed over the old one: a crash in between never leaves the
+  // menu entry and autostart pointing at nothing.
+  const next = `${stable}.tmp-link`;
+  rmSync(next, { force: true });
+  symlinkSync(target, next);
+  renameSync(next, stable);
   return stable;
 }
 
