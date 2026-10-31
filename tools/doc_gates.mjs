@@ -258,30 +258,34 @@ export function secretNames(md) {
   return [...String(md).matchAll(/^##\s+(?:\d+\.\s*)?(.+?)\s*(?:\(.*\))?\s*$/gm)].map((m) => m[1].replace(/^the\s+/i, "").trim()).filter(Boolean);
 }
 
-/** texts: [{ name, text }]; hashes: Set of phraseHash values -> problems (never the phrase itself). */
-export function privacyProblems(texts, hashes) {
+/** Every line of `texts` ([{ name, text }]) without `okTag`, through `check(line)`: a message for a problem, else null. */
+function lineProblems(texts, okTag, check) {
   const problems = [];
   // loop: NOT-WORTH — every tracked text file once (~1000 files)
   for (const f of texts) {
     const lines = f.text.split("\n");
     // loop: NOT-WORTH — once per line
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes("privacy-ok")) continue;
-      const w = words(lines[i]);
-      // loop: NOT-WORTH — 1- to 4-word phrases per line
-      for (let a = 0; a < w.length; a++)
-        // loop: NOT-WORTH — up to 4 words
-        for (let n = 1; n <= 4 && a + n <= w.length; n++)
-          if (hashes.has(sha(w.slice(a, a + n).join(" ")))) {
-            problems.push(
-              `${f.name}:${i + 1}: words ${a + 1}-${a + n} are a secret project's name (SECRET_PROJECTS.md): take them out; secret work stays out of the public repos, commits and branch names`,
-            );
-            a = w.length;
-            break;
-          }
+      if (lines[i].includes(okTag)) continue;
+      const why = check(lines[i]);
+      if (why) problems.push(`${f.name}:${i + 1}: ${why}`);
     }
   }
   return problems;
+}
+
+/** texts: [{ name, text }]; hashes: Set of phraseHash values -> problems (never the phrase itself). */
+export function privacyProblems(texts, hashes) {
+  return lineProblems(texts, "privacy-ok", (line) => {
+    const w = words(line);
+    // loop: NOT-WORTH — 1- to 4-word phrases per line
+    for (let a = 0; a < w.length; a++)
+      // loop: NOT-WORTH — up to 4 words
+      for (let n = 1; n <= 4 && a + n <= w.length; n++)
+        if (hashes.has(sha(w.slice(a, a + n).join(" "))))
+          return `words ${a + 1}-${a + n} are a secret project's name (SECRET_PROJECTS.md): take them out; secret work stays out of the public repos, commits and branch names`;
+    return null;
+  });
 }
 
 // ---------- quotes ----------
@@ -292,26 +296,15 @@ const QUOTED = /\b(?:Marcy|[Oo]wner)\b(?:[^"“”|\n.]|\.(?!\s)){0,80}?(?::|\bs
 
 /** texts: [{ name, text }] -> problems: each line that quotes Marcy's or the owner's words. */
 export function quoteProblems(texts) {
-  const problems = [];
-  // loop: NOT-WORTH — every tracked text file once (~1000 files)
-  for (const f of texts) {
-    const lines = f.text.split("\n");
-    // loop: NOT-WORTH — once per line
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes("quote-ok")) continue;
-      // loop: NOT-WORTH — the few matches on one line
-      for (const m of lines[i].matchAll(QUOTED)) {
-        const letters = (m[1].match(/\p{L}/gu) ?? []).length;
-        if (letters >= 8 || (!m[2] && letters > 0)) {
-          problems.push(
-            `${f.name}:${i + 1}: quotes Marcy's or the owner's words: write the decision in neutral words and keep the attribution (Marcy <date>: …); public repos never carry her quoted words`,
-          );
-          break;
-        }
-      }
+  return lineProblems(texts, "quote-ok", (line) => {
+    // loop: NOT-WORTH — the few matches on one line
+    for (const m of line.matchAll(QUOTED)) {
+      const letters = (m[1].match(/\p{L}/gu) ?? []).length;
+      if (letters >= 8 || (!m[2] && letters > 0))
+        return "quotes Marcy's or the owner's words: write the decision in neutral words and keep the attribution (Marcy <date>: …); public repos never carry her quoted words";
     }
-  }
-  return problems;
+    return null;
+  });
 }
 
 const BINARY = /\.(png|jpe?g|webp|gif|ico|icns|ttf|otf|woff2?|wav|flac|mp3|ogg|opus|uf2|bin|elf|zip|gz|pdf|psd|blend|glb)$/i;
