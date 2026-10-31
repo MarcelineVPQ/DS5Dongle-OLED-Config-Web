@@ -69,9 +69,10 @@ jobs:
           fi
           echo "Firmware: $tag"
           mkdir -p fw resources/firmware
-          gh release download "$tag" -R "$FIRMWARE_REPO" -p 'ds5-bridge-oled-*.uf2' -D fw
-          cp fw/ds5-bridge-oled-*.uf2 resources/firmware/ds5-bridge-oled.uf2
-          printf '{"version":"%s","file":"ds5-bridge-oled.uf2","sha256":"%s"}\n' "$tag" "$(shasum -a 256 resources/firmware/ds5-bridge-oled.uf2 | cut -d' ' -f1)" > resources/firmware/firmware.json
+          # The Pico 2 W image only (boards.json asset ds5-bridge-oled-{tag}.uf2); other boards are ds5-bridge-oled-{tag}-<board>.uf2.
+          gh release download "$tag" -R "$FIRMWARE_REPO" -p "ds5-bridge-oled-$tag.uf2" -D fw
+          cp "fw/ds5-bridge-oled-$tag.uf2" resources/firmware/ds5-bridge-oled.uf2
+          printf '{"version":"%s","board":"pico2_w","file":"ds5-bridge-oled.uf2","sha256":"%s"}\n' "$tag" "$(shasum -a 256 resources/firmware/ds5-bridge-oled.uf2 | cut -d' ' -f1)" > resources/firmware/firmware.json
           curl -fsSL "https://raw.githubusercontent.com/$FIRMWARE_REPO/$tag/CHANGELOG.md" -o resources/firmware/CHANGELOG.md
 
       - name: Build the universal app (dev tools on)
