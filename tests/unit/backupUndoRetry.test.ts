@@ -24,13 +24,17 @@ describe("Undo after a failure part-way", () => {
     const second = join(home, "locked", "b.json");
     writeFileSync(first, "a0");
     writeFileSync(second, "b0");
-    const id = backups.run([{ key: "label.defaultHeroic" }], [
-      { path: first, owner: "heroic" },
-      { path: second, owner: "heroic" },
-    ], () => {
-      writeFileSync(first, "a1");
-      writeFileSync(second, "b1");
-    });
+    const id = backups.run(
+      [{ key: "label.defaultHeroic" }],
+      [
+        { path: first, owner: "heroic" },
+        { path: second, owner: "heroic" },
+      ],
+      () => {
+        writeFileSync(first, "a1");
+        writeFileSync(second, "b1");
+      },
+    );
 
     chmodSync(join(home, "locked"), 0o555); // the second file can't be written
     expect(() => backups.restore(id)).toThrow();
