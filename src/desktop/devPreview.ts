@@ -4,7 +4,7 @@
 // owning them. Only changes what the app shows; nothing is sent to the dongle.
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { type BridgeIdentity, PROTOCOL_MINOR_KNOWN } from "../protocol/bridgeClient";
-import { DEFAULT_SIM_BOARD_ID, SIM_BOARD_FAULTS, SIM_FLASH_SPEEDS, SimulatedBoard, type SimBoardFault, type SimBoardState, type SimFlashSpeed } from "../protocol/simulatedBoard";
+import { DEFAULT_SIM_BOARD_ID, SIM_BOARD_FAULTS, SIM_DEFAULT_VERSION, SIM_FLASH_SPEEDS, SimulatedBoard, type SimBoardFault, type SimBoardState, type SimFlashSpeed } from "../protocol/simulatedBoard";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
 import { COLORWAYS } from "./live/colorways";
 import { readPref, useFlagPref, usePref, writePref } from "./storage";
@@ -171,7 +171,7 @@ export function extraSimulatedBoards(): readonly SimulatedDongle[] {
         protoMinor: PROTOCOL_MINOR_KNOWN,
         boardId: simBoardId(i + 1),
         serial: i % 2 === 0 ? DEFAULT_SIM_BOARD_ID : simBoardId(i + 1),
-        version: "v0.9.5-dev.19-oled-edition+simulated",
+        version: SIM_DEFAULT_VERSION, // the first board's, so no version here goes stale
       }),
   );
   return simExtras;
