@@ -267,4 +267,5 @@ Open with the ⚙ in the rail. Your controller stays on the left (the drawing an
 | **Windows:** the grips buzz in surround games, or sounds are missing from the headset | Set the controller to **Stereo** in Windows' sound settings (see [Speaker and microphone](#speaker-and-microphone)). |
 | The narrator is silent | She speaks only through the controller's speaker, and only when the narrator is on (App settings → Accessibility). Check the controller's volume. |
 | The app window doesn't appear | It may be in the tray: click the tray icon. |
+| Windows: the app doesn't start after an update was installed (the PC lost power during it, say) | The update installer was cut short. Download the installer from the release page and run it: it repairs the app and keeps your settings. |
 | A soft reboot without unplugging | Hold **PS + Mute** for 2 seconds, or **KEY0 + KEY1** on the OLED for 1 second. |
