@@ -578,4 +578,11 @@ describe("no restart or quit while firmware is written", () => {
     expect(mainSource).toContain("} else if (!hold.allowQuit(event, () => app.quit())) {");
     expect(mainSource).not.toMatch(/app\.(relaunch|exit)\(/);
   });
+
+  it("replaces the default menu and refuses reload keys, so a reload can't end a write (or its hold)", () => {
+    expect(mainSource).toContain("Menu.setApplicationMenu(menuTemplate && Menu.buildFromTemplate(menuTemplate));");
+    expect(mainSource).toContain('contents.on("before-input-event", (event, input) => {');
+    expect(mainSource).toContain('if (shortcut === "devTools" && DEV_TOOLS_BUILT) contents.toggleDevTools();');
+    expect(mainSource).not.toMatch(/openDevTools\(/);
+  });
 });

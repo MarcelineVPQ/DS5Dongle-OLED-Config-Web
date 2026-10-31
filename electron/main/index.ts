@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { app, BrowserWindow, clipboard, ClipboardItem, dialog, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
+import { app, BrowserWindow, clipboard, ClipboardItem, dialog, Menu, nativeImage, net, protocol, shell, session, type WebContents } from "electron";
 import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from "../../src/desktop/api";
 import { errorText, KeyedError, keyedText, logged } from "../../src/errorText";
 import { mainText, mainTranslator } from "./mainText";
@@ -13,6 +13,7 @@ import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService, moveOldSteamKeys } from "./games/service";
 import { DEV_TOOLS_BUILT } from "./devTools";
+import { appMenuTemplate, pageShortcut } from "./appMenu";
 import { FakeGamesService } from "./games/fake/service";
 import { dominantColor } from "./games/artColor";
 import { LibraryStore } from "./games/libraryStore";
@@ -156,6 +157,9 @@ function start(): void {
   recordGpuCrash();
   if (process.platform === "win32") app.setAppUserModelId(APP_ID);
   settings = loadSettings();
+  // No reload, DevTools or zoom shortcuts (appMenu.ts).
+  const menuTemplate = appMenuTemplate(process.platform);
+  Menu.setApplicationMenu(menuTemplate && Menu.buildFromTemplate(menuTemplate)); // lifetime: NOT-WORTH — one menu per app, lives until quit
   integrateDesktop(resourcesDir);
   updater = new Updater(
     (state) => {
@@ -740,6 +744,16 @@ function createWindow(visible: boolean): void {
   });
 
   const contents = mainWindow.webContents;
+  // Reload, zoom and DevTools keys never reach Chromium: a reload mid firmware
+  // write would end the write and (did-finish-load above) the hold with it.
+  // Dev builds still open DevTools with Ctrl+Shift+I / ⌥⌘I.
+  // lifetime: OK — goes with the window (destroyed on "closed")
+  contents.on("before-input-event", (event, input) => {
+    const shortcut = pageShortcut(input, process.platform === "darwin");
+    if (!shortcut) return;
+    event.preventDefault();
+    if (shortcut === "devTools" && DEV_TOOLS_BUILT) contents.toggleDevTools();
+  });
   // External links open in the system browser, and only to allowlisted hosts.
   contents.setWindowOpenHandler(({ url }) => {
     if (isAllowedExternalUrl(url)) openExternalLink(url);

@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **Ctrl+R no longer reloads the app (and can't cut a firmware update short).** Electron's built-in menu was still active behind the hidden menu bar: Ctrl+R / ⌘R or F5 reloaded the page, which during a firmware update stopped the write halfway and dropped unsaved button, stick and calibration changes; Ctrl+Shift+I opened the developer tools in releases; Ctrl+= zoomed past the fixed 100 %. The app now has its own menu (none on Windows and Linux; App, Edit and Window on macOS) and refuses those keys.
+
 ## [0.9.5-dev.20] — Release Candidate 2 — 2026-10-18
 
 **Release Candidate 2 for 0.9.5**: fixes and up-to-date pictures and guide.
