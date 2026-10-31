@@ -1,4 +1,4 @@
-// tools/doc_gates.mjs: the changelog, refs, version, privacy and quotes gates catch
+// tools/doc_gates.mjs: the changelog, refs, version, privacy, quotes and community gates catch
 // what they're for, and pass what they should.
 import { describe, expect, it } from "vitest";
 // @ts-expect-error -- a plain ESM tool script without types
@@ -14,6 +14,7 @@ const g = gates as {
   phraseHash: (p: string) => string;
   secretNames: (md: string) => string[];
   quoteProblems: (texts: { name: string; text: string }[]) => string[];
+  communityProblems: (tracked: string[]) => string[];
   versionCmp: (a: string, b: string) => number;
 };
 
@@ -114,5 +115,28 @@ describe("quotes gate", () => {
     expect(check(`In progress (Marcy 2026-10-12): Developer ${q}Pretend more controllers${q} shipped`)).toEqual([]);
     expect(check(`{ path: file, owner: ${q}heroic${q} }`)).toEqual([]);
     expect(check(`Marcy: ${q}a quoted line kept on purpose${q} (quote-ok: the reason)`)).toEqual([]);
+  });
+});
+
+describe("community gate", () => {
+  const all = [
+    "README.md",
+    "CODE_OF_CONDUCT.md",
+    "docs/CONTRIBUTING.md",
+    "LICENSE",
+    "SECURITY.md",
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/pull_request_template.md",
+  ];
+  it("passes with all seven, in the root, docs/ or .github/", () => {
+    expect(g.communityProblems(all)).toEqual([]);
+    expect(g.communityProblems(all.map((f) => f.replace(/^SECURITY\.md$/, ".github/SECURITY.md")))).toEqual([]);
+  });
+  it("fails on each one that's missing, and an ISSUE_TEMPLATE with only config.yml", () => {
+    expect(g.communityProblems(all.filter((f) => f !== "CODE_OF_CONDUCT.md"))).toEqual([expect.stringMatching(/^CODE_OF_CONDUCT\.md is not tracked/)]);
+    expect(g.communityProblems(all.filter((f) => f !== ".github/ISSUE_TEMPLATE/bug_report.yml"))).toHaveLength(1);
+    expect(g.communityProblems(all.filter((f) => f !== ".github/pull_request_template.md"))).toHaveLength(1);
+    expect(g.communityProblems([])).toHaveLength(7);
   });
 });

@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in the app doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. This form is for bugs in the app; for a question or an idea, open a blank issue instead.
+        A security problem? Please report it privately (see SECURITY.md), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Connect the controller\n2. Open …\n3. Press …"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: The About page, or the file name you downloaded
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: System
+      options:
+        - Linux
+        - Windows
+        - macOS
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distribution / version, desktop
+      placeholder: "e.g. Ubuntu 24.04, KDE Plasma on Wayland"
+  - type: input
+    id: firmware
+    attributes:
+      label: Board and its firmware version
+      description: Your board's page (named after the board in the side bar), under the live dashboard or in Firmware
+      placeholder: "e.g. Pico 2 W, 0.9.5-dev.20"
+    validations:
+      required: true
+  - type: dropdown
+    id: controller
+    attributes:
+      label: Controller
+      options:
+        - DualSense
+        - DualSense Edge
+        - None connected
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics and log
+      description: "On your board's page: a screenshot of the **Diagnostics** section (More in Diagnostics), and what the OLED screen's **Log** pane shows around the problem. A screenshot of any error message helps too. Drag the pictures in here."
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Did it work in an earlier version? Does it happen every time?

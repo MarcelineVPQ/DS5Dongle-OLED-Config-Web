@@ -41,6 +41,10 @@
 //              next line. Write the decision in neutral words and keep the
 //              attribution ("Marcy 2026-10-19: reuse their ideas"). A line that
 //              must quote anyway carries "quote-ok" and a reason.
+//   community  the files GitHub's community standards ask for are tracked:
+//              README, CODE_OF_CONDUCT, CONTRIBUTING, LICENSE, SECURITY (at
+//              the root, in docs/ or .github/), an issue form in
+//              .github/ISSUE_TEMPLATE/ and a pull request template.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -307,6 +311,25 @@ export function quoteProblems(texts) {
   });
 }
 
+// ---------- community ----------
+
+// GitHub's community standards: each file at the root, in docs/ or in .github/ (any case).
+const COMMUNITY = [
+  ["README", /^(docs\/|\.github\/)?readme(\.\w+)?$/i],
+  ["CODE_OF_CONDUCT.md", /^(docs\/|\.github\/)?code_of_conduct\.md$/i],
+  ["CONTRIBUTING.md", /^(docs\/|\.github\/)?contributing\.md$/i],
+  ["LICENSE", /^(licen[cs]e|copying)(\.\w+)?$/i],
+  ["SECURITY.md", /^(docs\/|\.github\/)?security\.md$/i],
+  ["an issue template (.github/ISSUE_TEMPLATE/*.yml or *.md)", /^\.github\/ISSUE_TEMPLATE\/(?!config\.ya?ml$)[^/]+\.(ya?ml|md)$/i],
+  ["a pull request template (.github/pull_request_template.md)", /^(docs\/|\.github\/)?(pull_request_template\.md|pull_request_template\/[^/]+\.md)$/i],
+];
+
+/** tracked: [paths] -> problems: each community file that's missing. */
+export function communityProblems(tracked) {
+  // loop: NOT-WORTH — 7 files x the tracked paths, once per run
+  return COMMUNITY.filter(([, re]) => !tracked.some((f) => re.test(f))).map(([name]) => `${name} is not tracked: GitHub's community standards ask for it (Insights → Community standards); restore it`);
+}
+
 const BINARY = /\.(png|jpe?g|webp|gif|ico|icns|ttf|otf|woff2?|wav|flac|mp3|ogg|opus|uf2|bin|elf|zip|gz|pdf|psd|blend|glb)$/i;
 const loadDenylist = () =>
   existsSync(DENYLIST)
@@ -393,6 +416,10 @@ function gates(root, firmwareRoot) {
       const files = textFiles();
       return { problems: quoteProblems(files), info: `${files.length} files` };
     },
+    community() {
+      if (kind !== "app") return { skip: "run from the app repo" };
+      return { problems: communityProblems(tracked), info: `${COMMUNITY.length} files` };
+    },
   };
 }
 
@@ -446,7 +473,7 @@ function main(argv) {
   }
   const all = gates(root, existsSync(join(firmware, "CMakeLists.txt")) ? firmware : null);
   let failed = 0;
-  // loop: NOT-WORTH — five gates
+  // loop: NOT-WORTH — six gates
   for (const name of names.length ? names : Object.keys(all)) {
     if (!all[name]) {
       console.error(`unknown gate ${name} (${Object.keys(all).join(", ")})`);
