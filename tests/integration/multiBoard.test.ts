@@ -216,6 +216,7 @@ describe("a firmware update with several boards in BOOTSEL", () => {
     isConnected: () => false,
     connect: async () => undefined,
     disconnect: async () => undefined,
+    flashErase: async () => undefined,
     flashEraseAndWrite: async () => undefined,
     rebootRp2350: async () => undefined,
   });

@@ -140,41 +140,58 @@ export async function onlyBootloader(boardId: string | null = null): Promise<Pic
 }
 
 const FLASH_CHUNK = 0x10000; // 64 KB: 16 flash sectors
+const FLASH_SECTOR = 0x1000; // 4 KB
 
 // Writes the firmware over one PICOBOOT session and restarts the board. The
 // session (the board's claimed USB interface) is always released, also when a
 // write fails: otherwise the board stays claimed until it is unplugged and a
 // retry can't open it. A failure is reported in plain words (the board is in
-// BOOTSEL with no firmware: Setup offers to install it again), with the USB
-// error kept as the cause for the log.
+// BOOTSEL with no firmware: Setup offers to install it again; or the image is
+// complete and only the restart failed), with the USB error kept as the cause
+// for the log.
+//
+// The boot ROM starts an image from the block loop that begins in its first
+// 4 KB sector (the IMAGE_DEF). That sector is erased before anything else and
+// written last: a write cut short anywhere leaves no image to start, so the
+// board comes back in BOOTSEL by itself, instead of starting a half-written
+// image that hangs (review M3, 2026-10-31).
 export async function flash(device: PicoflashHandle, regions: ReturnType<typeof parseUf2Regions>, onProgress: (p: FirmwareProgress) => void): Promise<void> {
   onProgress({ step: "flashing", fraction: 0 });
   const total = regions.reduce((n, r) => n + r.data.byteLength, 0);
   // The simulated bootloader (dev builds) fails "at N %" of this; real boards have no such call.
   (device as { expectBytes?: (n: number) => void }).expectBytes?.(total);
   let done = 0;
+  let written = false;
+  const write = async (address: number, piece: Uint8Array) => {
+    await device.flashEraseAndWrite(address, piece);
+    done += piece.byteLength;
+    onProgress({ step: "flashing", fraction: done / total });
+  };
   try {
     // lifetime: OK — released in the finally below (disconnect), on success and on every failure
     await device.connect();
+    // Regions are sorted and whole flash sectors (alignRegionToSector), so the
+    // first region's first sector is the image's start.
+    const first = regions[0];
+    const firstSector = first.data.subarray(0, FLASH_SECTOR);
+    await device.flashErase(first.address, FLASH_SECTOR);
     // In pieces, so the progress moves (the firmware is usually one region).
-    // Regions are whole flash sectors (alignRegionToSector), and a piece is a
-    // whole number of sectors, so every write stays sector-aligned.
+    // A piece is a whole number of sectors, so every write stays sector-aligned.
     // loop: SERIAL-REQUIRED — one PICOBOOT session: regions are erased and written in order
     for (const region of regions) {
       // loop: SERIAL-REQUIRED — one PICOBOOT session: 64 KB erase+write pieces in order, for the progress
-      for (let offset = 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
-        const piece = region.data.subarray(offset, offset + FLASH_CHUNK);
-        await device.flashEraseAndWrite(region.address + offset, piece);
-        done += piece.byteLength;
-        onProgress({ step: "flashing", fraction: done / total });
+      for (let offset = region === first ? FLASH_SECTOR : 0; offset < region.data.byteLength; offset += FLASH_CHUNK) {
+        await write(region.address + offset, region.data.subarray(offset, offset + FLASH_CHUNK));
       }
     }
+    await write(first.address, firstSector);
+    written = true;
 
     onProgress({ step: "restarting" });
     await device.rebootRp2350(0, 0, 0, REBOOT_DELAY_MS);
   } catch (cause) {
-    // error: SHOWN — desktop.firmware.writeFailed: rethrown in plain words (the USB error kept as its cause); the firmware card and the setup screen show it
-    throw new Error(i18n.t("desktop.firmware.writeFailed"), { cause });
+    // error: SHOWN — desktop.firmware.writeFailed / restartFailed (the image is complete, only the restart failed): rethrown in plain words (the USB error kept as its cause); the firmware card and the setup screen show it
+    throw new Error(i18n.t(written ? "desktop.firmware.restartFailed" : "desktop.firmware.writeFailed"), { cause });
   } finally {
     // Never throws (picoflash logs a failed release). After the restart
     // request it only lets go of the interface before the board resets.

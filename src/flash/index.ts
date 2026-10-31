@@ -27,6 +27,7 @@ export interface PicoflashHandle {
   isConnected(): boolean;
   connect(): Promise<unknown>;
   disconnect(): Promise<void>;
+  flashErase(addr: number, size: number): Promise<void>;
   flashEraseAndWrite(addr: number, buf: Uint8Array): Promise<void>;
   rebootRp2350(flags: number, p0: number, p1: number, delayMs: number): Promise<void>;
 }

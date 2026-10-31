@@ -94,8 +94,13 @@ describe("a firmware write touches only the UF2's own sectors", () => {
 
     const calls: string[] = [];
     const written: number[] = [];
+    const erased: number[] = [];
     const base = {
       connect: async () => void calls.push("connect"),
+      flashErase: async (addr: number, size: number) => {
+        calls.push("flashErase");
+        erased.push(...sectorsOf(addr, size));
+      },
       flashEraseAndWrite: async (addr: number, data: Uint8Array) => {
         calls.push("flashEraseAndWrite");
         written.push(...sectorsOf(addr, data.byteLength));
@@ -105,7 +110,7 @@ describe("a firmware write touches only the UF2's own sectors", () => {
       rebootRp2350: async () => void calls.push("rebootRp2350"),
       disconnect: async () => void calls.push("disconnect"),
     };
-    // Any other method (a chip erase, a plain erase, a raw write) fails the
+    // Any other method (a chip erase, a raw write) fails the
     // test; expectBytes is the simulated board's progress hook (dev builds).
     const device = new Proxy(base, {
       get: (target, key) => {
@@ -117,7 +122,9 @@ describe("a firmware write touches only the UF2's own sectors", () => {
 
     await flash(device, parseUf2Regions(file), () => undefined);
 
-    expect(new Set(calls)).toEqual(new Set(["connect", "flashEraseAndWrite", "rebootRp2350", "disconnect"]));
+    expect(new Set(calls)).toEqual(new Set(["connect", "flashErase", "flashEraseAndWrite", "rebootRp2350", "disconnect"]));
+    expect(erased).toEqual([0x10000000]); // only the image's first sector, written last
+    expect(written.at(-1)).toBe(0x10000000);
     expect(new Set(written)).toEqual(covered);
     expect(written).toHaveLength(covered.size); // each sector once
     expect(Math.max(...written)).toBeLessThan(0x10006400 + SECTOR);

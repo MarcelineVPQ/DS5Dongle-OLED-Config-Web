@@ -233,7 +233,13 @@ export class SimulatedBootloader implements PicoflashHandle {
     this.planned = total;
   }
 
-  async flashEraseAndWrite(addr: number, buf: Uint8Array): Promise<void> {
+  // An erase is a write of erased bytes that doesn't count toward the
+  // firmware's size (the "fail at N %" fault).
+  async flashErase(addr: number, size: number): Promise<void> {
+    await this.flashEraseAndWrite(addr, new Uint8Array(size).fill(0xff), false);
+  }
+
+  async flashEraseAndWrite(addr: number, buf: Uint8Array, counted = true): Promise<void> {
     if (!this.present || !this.isConnected()) throw new Error("The device was disconnected.");
     if (addr % SECTOR !== 0) throw new Error(`Address ${addr.toString(16)} must be aligned to both sector and page size`);
     const end = addr + Math.ceil(buf.byteLength / SECTOR) * SECTOR;
@@ -242,12 +248,12 @@ export class SimulatedBootloader implements PicoflashHandle {
     // lifetime: OK — fires once (the simulated erase + write time)
     await new Promise((r) => setTimeout(r, (SIM_FLASH_SPEEDS[this.board.speed] * buf.byteLength) / 0x10000));
     const share = { write10: 0.1, write50: 0.5, write90: 0.9 }[this.board.fault as "write10"];
-    if (share !== undefined && this.planned > 0 && (this.written + buf.byteLength) / this.planned > share) throw new Error("LIBUSB_ERROR_TIMEOUT (simulated write error)");
+    if (counted && share !== undefined && this.planned > 0 && (this.written + buf.byteLength) / this.planned > share) throw new Error("LIBUSB_ERROR_TIMEOUT (simulated write error)");
     if (!this.present) throw new Error("The device was disconnected.");
     this.board.flash ??= new Uint8Array(FLASH_BYTES).fill(0xff);
     this.board.flash.fill(0xff, addr - FLASH_BASE, end - FLASH_BASE);
     this.board.flash.set(buf, addr - FLASH_BASE);
-    this.written += buf.byteLength;
+    if (counted) this.written += buf.byteLength;
   }
 
   async rebootRp2350(_flags: number, _p0: number, _p1: number, delayMs: number): Promise<void> {

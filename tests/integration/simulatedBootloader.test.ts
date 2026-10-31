@@ -129,9 +129,12 @@ describe("a firmware update against the simulated board", () => {
     const seen = await watch(/Firmware updated to/);
     const said = seen.join("\n");
     expect(said).toContain("Waiting for the bootloader");
-    // The progress moves in steps (four 64 KB pieces).
+    // The progress moves in steps (64 KB pieces after the first sector; that
+    // sector, written last, is a short final step at 98 % that may be too
+    // brief to be seen).
     const pcts = [...said.matchAll(/ignore the RP2350 drive if it pops up (\d+)%/g)].map((m) => Number(m[1]));
-    expect(pcts).toEqual([0, 25, 50, 75]);
+    expect(pcts.slice(0, 4)).toEqual([0, 25, 50, 75]);
+    expect(pcts.slice(4).every((p) => p === 98)).toBe(true);
     expect(said).toContain("Waiting for your board: press the PS button");
     expect(text()).toContain(`Firmware updated to ${NEW}.`);
     // The board came back with its controller already connected: a plain

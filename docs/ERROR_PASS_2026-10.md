@@ -763,7 +763,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 |---|---|---|---|---|---|
 | 41 | `shownFirmware` | ipc-call | `downloadFirmware` | **PASSES-ON** | awaited: the caller of shownFirmware handles it _(flow)_ |
 | 84 | `firmwareRegions` | catch | `rethrow` | **SHOWN** | desktop.firmware.wrongFile: rethrown in plain words (the parser's reason kept as its cause); the firmware banner and the setup screen show it |
-| 132 | `flash` | catch | `rethrow` | **SHOWN** | desktop.firmware.writeFailed: rethrown in plain words (the USB error kept as its cause); the firmware card and the setup screen show it |
+| 132 | `flash` | catch | `rethrow` | **SHOWN** | desktop.firmware.writeFailed / restartFailed (the image is complete, only the restart failed): rethrown in plain words (the USB error kept as its cause); the firmware card and the setup screen show it |
 
 #### src/desktop/frameTick.ts
 
