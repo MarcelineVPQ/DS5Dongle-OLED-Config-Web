@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeAll, describe, expect, it } from "vitest";
 import i18n from "../../src/i18n";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
-import { DiagnosticsBody, type Telemetry } from "../../src/desktop/dongle/DongleDashboard";
+import { DiagnosticsBody, SPEAKER_FRAME_US, type Telemetry } from "../../src/desktop/dongle/DongleDashboard";
 
 beforeAll(async () => {
   await i18n.changeLanguage("en");
@@ -56,5 +56,13 @@ describe("the Signal graph", () => {
     expect(card).toContain("—<span>dB</span>");
     expect(card).not.toContain("<em>");
     expect(card.match(/<polyline/g)).toHaveLength(2);
+  });
+});
+
+// fw-audio review D4 (2026-10-31): the speaker stage is flagged at one
+// frame's real time, 512 samples at 48 kHz, not a round 10 ms.
+describe("core1 speaker frame budget", () => {
+  it("is 10 667 µs", () => {
+    expect(SPEAKER_FRAME_US).toBe(10667);
   });
 });

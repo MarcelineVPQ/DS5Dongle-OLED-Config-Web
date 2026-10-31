@@ -244,9 +244,10 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
   );
 }
 
-// The core1 speaker frame has 10 ms of audio to encode in; a worst case at
-// that or above means a dropped frame.
-const SPEAKER_FRAME_US = 10000;
+// The core1 speaker frame has 512 samples at 48 kHz (10.67 ms) of audio to
+// encode in; a worst case at that or above means the frame was late (one
+// late frame doesn't drop: the audio FIFO is 2 deep).
+export const SPEAKER_FRAME_US = Math.round((512 / 48000) * 1e6); // 10 667
 
 // Protocol 1.11: how long each stage of the firmware takes (average and worst
 // case since the reset), the averages over time, and a Reset. The trend column
