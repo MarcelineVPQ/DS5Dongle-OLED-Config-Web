@@ -60,6 +60,8 @@ const USER_COMMIT = /^(feat|fix|perf)(\([^)]*\))?!?:/;
 const NO_USER_CHANGE = /no user-facing change/i;
 
 /** "## [Unreleased]" (or another name) -> its body, trimmed; null when there is no such section. */
+// The app's version ordering, the one implementation (the installed updater uses it too).
+import { compareVersions } from "../src/update/versionOrder.mjs";
 export function changelogSection(md, name) {
   const lines = String(md ?? "").split("\n");
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -214,18 +216,8 @@ export function refProblems(docs, ctx) {
 // ---------- version ----------
 
 const VERSION_HEAD = /^## \[(\d+\.\d+\.\d+(?:-dev\.\d+)?)(-oled-edition)?\]/gm;
-/** A dev build sorts before its stable release: [major, minor, patch, dev or Infinity]. */
-export function versionKey(v) {
-  const m = /^(\d+)\.(\d+)\.(\d+)(?:-dev\.(\d+))?$/.exec(v);
-  return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? Infinity : +m[4]] : null;
-}
-export function versionCmp(a, b) {
-  const x = versionKey(a);
-  const y = versionKey(b);
-  // loop: NOT-WORTH — 4 parts
-  for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1;
-  return 0;
-}
+/** A dev build sorts before its stable release (src/update/versionOrder.mjs). */
+export const versionCmp = (a, b) => compareVersions(a, b);
 /** The CHANGELOG's released sections, newest first (as written). */
 export const changelogVersions = (md) => [...String(md).matchAll(VERSION_HEAD)].map((m) => m[1]);
 

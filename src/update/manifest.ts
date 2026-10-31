@@ -3,6 +3,7 @@
 // prerelease flags). Every download carries its full URL and SHA-256; the
 // client never builds a URL and never installs without a matching checksum.
 import { z } from "zod";
+import { compareVersions, devNumber, parseVersion } from "./versionOrder.mjs";
 
 const Sha256 = z.string().regex(/^[0-9a-f]{64}$/, "sha256 must be 64 lowercase hex characters");
 
@@ -82,42 +83,15 @@ export const Manifest = z
   .refine((m) => (m.schema ?? 1) < 2 || (m.issued_at !== undefined && m.newest_stable !== undefined), "a schema 2 feed carries issued_at and newest_stable");
 export type Manifest = z.infer<typeof Manifest>;
 
-// `v0.8.0-oled-edition`, `0.8.0`, `0.7.0-vendor` -> [0, 8, 0]. Anything after
-// the first "-" is a channel label, not part of the ordering. Returns null for
-// anything else; callers treat null as "can't tell", never as "newer".
-export function parseVersion(raw: string | null | undefined): [number, number, number] | null {
-  if (!raw) return null;
-  let s = raw.trim();
-  if (s.startsWith("v") || s.startsWith("V")) s = s.slice(1);
-  const dash = s.indexOf("-");
-  if (dash !== -1) s = s.slice(0, dash);
-  const parts = s.split(".");
-  // loop: HOT-PATH-OK — N = 3 version parts
-  if (parts.length !== 3 || parts.some((p) => !/^\d+$/.test(p))) return null;
-  return [Number(parts[0]), Number(parts[1]), Number(parts[2])];
-}
-
-// A development build's number: "0.9.1-dev.3", "v0.9.1-dev.3-oled-edition"
-// -> 3; null for a stable version.
-export function devNumber(raw: string | null | undefined): number | null {
-  const m = /-dev\.(\d+)(?:-|$)/.exec(raw?.trim() ?? "");
-  return m ? Number(m[1]) : null;
-}
+// The version ordering lives in versionOrder.mjs (shared with tools/doc_gates.mjs).
+export { devNumber, parseVersion } from "./versionOrder.mjs";
 
 // Strictly newer only. Equal is not newer, and an unparseable version on
 // either side is not newer: an updater that can't read a version must do
 // nothing rather than risk moving someone backwards. Development builds come
 // before their release: 0.9.1-dev.1 < 0.9.1-dev.2 < 0.9.1.
 export function isNewer(remote: string | null | undefined, local: string | null | undefined): boolean {
-  const r = parseVersion(remote);
-  const l = parseVersion(local);
-  if (!r || !l) return false;
-  // loop: HOT-PATH-OK — N = 3 version parts
-  for (let i = 0; i < 3; i++) if (r[i] !== l[i]) return r[i] > l[i];
-  const rd = devNumber(remote);
-  const ld = devNumber(local);
-  if (rd === null) return ld !== null; // a release is newer than its development builds
-  return ld !== null && rd > ld;
+  return compareVersions(remote, local) === 1;
 }
 
 // The same version, development number included.
