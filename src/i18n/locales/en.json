@@ -1972,6 +1972,7 @@
         "browser": "{{name}} (a browser tab)"
       }
     },
+    "boardNotAnswering": "{{device, capitalize}} isn't answering, so what you see here may be out of date. If it stays like this, unplug it and plug it back in.",
     "headset": {
       "stereo": "Stereo when a headset is plugged in",
       "stereoInfo": "Linux plays the controller's sound in mono on its speaker profile, also with a headset in the headset jack. With this on, the app switches the controller's sound to stereo when a headset is plugged in, and back to the speaker when it's unplugged. A profile you pick yourself in your sound settings is left alone until you unplug the headset. It uses your own sound settings (PipeWire), no password.",

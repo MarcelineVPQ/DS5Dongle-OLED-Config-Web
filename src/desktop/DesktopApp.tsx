@@ -408,6 +408,11 @@ export default function DesktopApp() {
                   </Notice>
                 )}
                 <BoardBusyNotice busy={bridge.busy} onRetry={bridge.retryBusy} />
+                {bridge.notAnswering && (
+                  <Notice error role="alert">
+                    <span data-testid="board-not-answering">{t("desktop.boardNotAnswering")}</span>
+                  </Notice>
+                )}
                 <ErrorNotice message={bridge.error} onDismiss={bridge.clearError} />
                 <ErrorNotice message={profiles.error} onDismiss={profiles.clearError} />
                 {main === "games" && (

@@ -6,7 +6,7 @@ import { type BoardEntry, type BoardSummary, OTHER_BOARDS_MS, entryTransport, la
 import { ConfigBody, DEFAULT_CONFIG, ConfigValidationIssue, configsEqual, normalizeConfig, validateConfig } from "../protocol/config";
 import { WebUsbTransport, isDongle, webUsbAvailable } from "../protocol/webUsbTransport";
 import { SimulatedDongle } from "../protocol/simulatedDongle";
-import type { Ds5Transport } from "../protocol/transport";
+import { DeviceGoneError, type Ds5Transport } from "../protocol/transport";
 import { simulatedBoard } from "../desktop/devPreview";
 import { KeyedError, logged } from "../errorText";
 import { isWindowShown } from "../desktop/useWindowShown";
@@ -95,6 +95,10 @@ export interface UseDs5BridgeResult {
   // error: SHOWN — desktop.boardBusy.* (BoardBusyNotice), in place of the raw WebUSB error
   busy: { holders: BoardHolder[] } | null;
   retryBusy: () => Promise<void>;
+  // The board on screen hasn't answered the last NOT_ANSWERING_POLLS polls
+  // (still on USB): what the page shows may be out of date. Cleared by the
+  // next answer, or when it leaves USB.
+  notAnswering: boolean;
   // Every board on USB (any number), in a steady order, the one on screen
   // included (its row from its live poll; the others read every
   // OTHER_BOARDS_MS while the window is shown). Empty without boards.
@@ -112,6 +116,11 @@ export interface UseDs5BridgeResult {
 // reboot) is waited for before another board is shown: an update's BOOTSEL,
 // write and restart take well under this.
 export const EXPECT_BACK_MS = 90_000;
+
+// Polls in a row the board on screen may fail (each up to the transfer
+// deadline) before the page says it isn't answering: one miss is a busy
+// moment, three are a board that stopped answering.
+export const NOT_ANSWERING_POLLS = 3;
 
 // How often the app tries the board again while another program holds it.
 // One claim attempt (no reads), also while hidden: the tray shows when it connects.
@@ -156,6 +165,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<{ holders: BoardHolder[] } | null>(null);
+  const [notAnswering, setNotAnswering] = useState(false);
   const busyRef = useRef(busy);
   // lifetime: OK — acquires nothing (mirrors the busy state into a ref)
   useEffect(() => {
@@ -204,6 +214,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setSavedConfig(null);
     setDraft(DEFAULT_CONFIG);
     setSaveState("idle");
+    setNotAnswering(false);
   }, []);
 
   // What holds the board (Linux: the main process looks; elsewhere nothing to name).
@@ -597,6 +608,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     let takenAt = 0;
     let lastLightbar: string | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let failures = 0;
     const poll = async () => {
       try {
         if (!operationRef.current) {
@@ -615,7 +627,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
             });
           // Saved by something else (a slot switch, the OLED): flash = RAM now.
           if (!stopped && id.unsaved === false && !isDirtyRef.current) setSavedConfig(configRef.current);
-          if (++tick % 2 === 0 && !isDirtyRef.current && !operationRef.current) {
+          // Settings only while the window is shown: the tray needs the identity alone.
+          if (++tick % 2 === 0 && isWindowShown() && !isDirtyRef.current && !operationRef.current) {
             const next = normalizeConfig(await client.readConfig());
             if (!stopped && !isDirtyRef.current && !operationRef.current && !configsEqual(next, configRef.current)) {
               setConfig(next);
@@ -623,8 +636,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
             }
           }
         }
-      } catch {
-        // error: NOT-WORTH — gone or busy: the USB events handle reconnecting
+        failures = 0;
+        if (!stopped) setNotAnswering(false);
+      } catch (cause) {
+        // error: SHOWN — desktop.boardNotAnswering (DesktopApp) after NOT_ANSWERING_POLLS failures in a row; a board that left USB: the USB events handle reconnecting
+        if (!(cause instanceof DeviceGoneError) && ++failures >= NOT_ANSWERING_POLLS && !stopped) setNotAnswering(true);
       }
       // lifetime: OK — self re-arming 1 s poll, runs hidden on purpose (tray); cleared in the cleanup
       if (!stopped) timer = setTimeout(next, 1000);
@@ -773,6 +789,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     clearError: () => setError(null),
     busy,
     retryBusy,
+    notAnswering,
     // loop: HOT-PATH-OK — N = boards on USB (up to ~20), a shallow copy per render of the hook
     boards: summaries.map((s) => (s.key === currentKey ? summaryOf(s, identity, client?.transport.serial ?? null, firmwareVersion) : s)),
     currentBoard: currentKey,

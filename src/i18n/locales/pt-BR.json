@@ -1973,6 +1973,7 @@
         "browser": "{{name}} (uma aba do navegador)"
       }
     },
+    "boardNotAnswering": "{{device, capitalize}} não está respondendo, então o que aparece aqui pode estar desatualizado. Se continuar assim, desconecte {{device}} e conecte de novo.",
     "headset": {
       "stereo": "Estéreo quando um headset é conectado",
       "stereoInfo": "O Linux toca o som do controle em mono no perfil do alto-falante, mesmo com um headset no conector de headset. Com isto ligado, o app muda o som do controle para estéreo quando um headset é conectado e volta para o alto-falante quando ele é desconectado. Um perfil que você mesmo escolher nas suas configurações de som fica como está até você desconectar o headset. Usa as suas próprias configurações de som (PipeWire), sem senha.",

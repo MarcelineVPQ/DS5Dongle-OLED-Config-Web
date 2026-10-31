@@ -1973,6 +1973,7 @@
         "browser": "{{name}} (ein Browser-Tab)"
       }
     },
+    "boardNotAnswering": "{{device, capitalize}} antwortet nicht, was du hier siehst, ist vielleicht nicht aktuell. Wenn es so bleibt, zieh {{device_akk}} ab und steck es wieder ein.",
     "headset": {
       "stereo": "Stereo, wenn ein Headset angeschlossen ist",
       "stereoInfo": "Linux gibt den Ton des Controllers im Lautsprecher-Profil in Mono aus, auch mit einem Headset am Headset-Anschluss. Ist dies an, schaltet die App den Ton des Controllers auf Stereo, sobald ein Headset angeschlossen wird, und zurück auf den Lautsprecher, wenn es abgezogen wird. Ein Profil, das du selbst in deinen Soundeinstellungen wählst, bleibt unangetastet, bis du das Headset abziehst. Es nutzt deine eigenen Soundeinstellungen (PipeWire), ohne Passwort.",

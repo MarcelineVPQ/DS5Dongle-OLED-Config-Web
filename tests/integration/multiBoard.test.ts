@@ -253,3 +253,21 @@ describe("a firmware update with several boards in BOOTSEL", () => {
     expect((await onlyBootloader(null)).getUsbDeviceInfo().serialNumber).toBe("AAAA000000000001"); // only one: it
   });
 });
+
+// 2026-10-31 app review S3: a board that stops answering (still on USB) isn't
+// shown as live: after NOT_ANSWERING_POLLS failed polls the page says so, and
+// the next answer clears it.
+describe("a board that stops answering", () => {
+  it("is said so after three failed polls, and the notice goes with the next answer", async () => {
+    const { seen } = await start(1);
+    const client = seen.bridge!.client!;
+    const stuck = vi.spyOn(client, "identity").mockRejectedValue(new Error("no answer"));
+    await advance(2100);
+    expect(seen.bridge!.notAnswering).toBe(false); // one or two misses: a busy moment
+    await advance(1100);
+    expect(seen.bridge!.notAnswering).toBe(true);
+    stuck.mockRestore();
+    await advance(1100);
+    expect(seen.bridge!.notAnswering).toBe(false);
+  });
+});

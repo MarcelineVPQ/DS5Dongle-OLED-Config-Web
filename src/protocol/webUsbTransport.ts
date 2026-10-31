@@ -6,6 +6,11 @@ export const DONGLE_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
 const VENDOR_CLASS = 0xff;
 const REQ_GET = 0x01;
 const REQ_SET = 0x02;
+// A control transfer the board hasn't answered by then has failed: WebUSB sets
+// no deadline of its own, so a wedged board would hold every later request in
+// the queue forever while the screen kept showing it as live. Well above a
+// flash write's stall (a sector erase is under half a second).
+export const TRANSFER_TIMEOUT_MS = 3000;
 
 export function webUsbAvailable(): boolean {
   return typeof navigator !== "undefined" && "usb" in navigator && navigator.usb !== undefined;
@@ -111,17 +116,30 @@ export class WebUsbTransport implements Ds5Transport {
   }
 
   private async transfer<T>(reportId: number, run: () => Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       // Inside the try: reopening a device that has just left the bus (reboot,
       // BOOTSEL) must also surface as DeviceGoneError, not a raw DOMException.
-      if (!this.isOpen) await this.open();
-      return await run();
+      const attempt = (async () => {
+        if (!this.isOpen) await this.open();
+        return await run();
+      })();
+      const deadline = new Promise<never>((_, reject) => {
+        // lifetime: OK — cleared in the finally below (fires once otherwise)
+        timer = setTimeout(() => reject(new KeyedError("desktop.errors.board.timeout")), TRANSFER_TIMEOUT_MS);
+      });
+      // error: NOT-WORTH — the transfer left behind after a timeout settles into nothing; the caller got the timeout
+      attempt.catch(() => undefined);
+      return await Promise.race([attempt, deadline]);
     } catch (cause) {
+      if (cause instanceof KeyedError && cause.key === "desktop.errors.board.timeout") throw cause;
       if (!this.device.opened || (cause instanceof DOMException && (cause.name === "NotFoundError" || cause.name === "NetworkError"))) {
         this.interfaceNumber = -1;
         throw new DeviceGoneError();
       }
       throw cause instanceof Error ? cause : new KeyedError("desktop.errors.board.transfer", { report: `0x${reportId.toString(16)}` });
+    } finally {
+      clearTimeout(timer);
     }
   }
 

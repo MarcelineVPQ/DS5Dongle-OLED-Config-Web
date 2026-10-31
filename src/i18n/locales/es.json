@@ -1973,6 +1973,7 @@
         "browser": "{{name}} (una pestaña del navegador)"
       }
     },
+    "boardNotAnswering": "{{device, capitalize}} no responde, así que lo que ves aquí puede no estar al día. Si sigue así, desconecta {{device}} y vuelve a conectarlo.",
     "headset": {
       "stereo": "Estéreo al conectar unos auriculares",
       "stereoInfo": "Linux reproduce el sonido del mando en mono con el perfil del altavoz, también con unos auriculares en el conector para auriculares. Con esta opción, la app cambia el sonido del mando a estéreo al conectar unos auriculares y vuelve al altavoz al desconectarlos. Un perfil que elijas tú en tus ajustes de sonido no se toca hasta que desconectes los auriculares. Usa tus propios ajustes de sonido (PipeWire), sin contraseña.",
