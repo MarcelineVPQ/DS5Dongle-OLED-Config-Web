@@ -264,7 +264,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                   disabled={remap.busy || remap.supported !== true}
                   onChange={(e) => remap.setTarget(i, Number(e.target.value))}
                 >
-                  {/* loop: HOT-PATH-OK — 16 x ~17 options; memo()ed, only on a remap or focus change */}
+                  {/* loop: HOT-PATH-OK — N = 16 x ~17 options; memo()ed, only on a remap or focus change */}
                   {REMAP_BUTTON_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.value === i ? `${o.label} (${t("desktop.live.remapDefault", "default")})` : o.label}
@@ -300,7 +300,7 @@ function AllButtonsSection({ remap, focus, onFocus, onHover, edge }: { remap: Re
                     onChange={(e) => remap.setExtra(n, Number(e.target.value))}
                   >
                     <option value={REMAP_EXTRA_SELF}>{t("desktop.layouts.extraSelf")}</option>
-                    {/* loop: HOT-PATH-OK — 4 x ~17 options; memo()ed, only on a remap or focus change */}
+                    {/* loop: HOT-PATH-OK — N = 4 x ~17 options; memo()ed, only on a remap or focus change */}
                     {REMAP_BUTTON_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
                         {o.label}

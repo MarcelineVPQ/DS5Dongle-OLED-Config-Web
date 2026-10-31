@@ -75,13 +75,13 @@ function matches(launcher: LauncherId, p: ProcView): boolean {
 const LAUNCHERS = ["steam", "heroic", "lutris"] as const;
 
 export function launchersIn(procs: ProcView[]): Set<LauncherId> {
-  // loop: HOT-PATH-OK — 3 launchers x game-candidate processes
+  // loop: HOT-PATH-OK — N = 3 launchers x game-candidate processes (a handful)
   return new Set(LAUNCHERS.filter((id) => procs.some((p) => matches(id, p))));
 }
 
 // A Proton/Wine game is running (Proton's script or a wineserver).
 export function gameIn(procs: ProcView[]): boolean {
-  // loop: HOT-PATH-OK — args of one process, short
+  // loop: HOT-PATH-OK — N = one process's args (a few to tens)
   return procs.some((p) => p.comm === "wineserver" || (/python/.test(p.comm) && p.args.some((a) => a.endsWith("/proton")) && p.args.includes("waitforexitandrun")));
 }
 

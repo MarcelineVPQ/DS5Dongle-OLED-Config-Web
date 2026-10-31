@@ -121,7 +121,7 @@ export interface Scan {
 }
 
 const SDL_ASSIGN = new RegExp(`(^|\\s)(${SDL_FORCING_VARS.join("|")})=(\\S*)`, "g");
-// loop: HOT-PATH-OK — env assignments in one launch-options line
+// loop: HOT-PATH-OK — N = env assignments in one launch-options line (a few)
 export const sdlVarsIn = (opts: string) => [...new Set([...opts.matchAll(SDL_ASSIGN)].filter((m) => sdlVarForcing(m[2], m[3])).map((m) => m[2]))];
 // Remove the forcing assignments only; everything else (spacing inside quotes included) stays.
 // Each forcing assignment goes together with the one space before it.
@@ -446,11 +446,11 @@ export function scan(deps: ScanDeps): Scan {
     const steamGames = listSteamGames(install);
     const kinds = steamAppTypes(
       install.root,
-      // loop: HOT-PATH-OK — app ids for the appinfo lookup, one array
+      // loop: HOT-PATH-OK — N = the Steam games' app ids (hundreds), one array
       steamGames.map((g) => g.appid),
     );
     const byApp = steamAppIndex(config, local);
-    // loop: HOT-PATH-OK — per game 3 Map lookups (steamAppIndex, loop pass batch 3); its files were read ahead
+    // loop: HOT-PATH-OK — N = Steam games (hundreds), 3 Map lookups each (steamAppIndex, loop pass batch 3); its files were read ahead
     for (const g of steamGames) {
       const kind = kinds.get(g.appid);
       // Soundtracks, videos and software don't run as games: no controller
@@ -689,12 +689,12 @@ export function scan(deps: ScanDeps): Scan {
     }
     launchers.push({ id: "heroic", found: true, flatpak: install.flatpak, running: deps.running.has("heroic"), protonInstalled, defaultRunner: def?.name ?? null, defaultIsOurs, fixes: lfixes });
 
-    // loop: HOT-PATH-OK — per game; the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
+    // loop: HOT-PATH-OK — N = games (hundreds); the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
     for (const g of listHeroicGames(install)) {
       const support = dualSenseSupport(g.title);
       const runnerMissing = !!g.wineVersion && !existsSync(g.wineVersion.bin);
       const effective = g.wineVersion?.name ?? def?.name ?? null;
-      // loop: HOT-PATH-OK — env entries of one game
+      // loop: HOT-PATH-OK — N = one game's env entries (a few)
       const envFlags = [...new Set(g.env.filter((e) => sdlVarForcing(e.key, e.value)).map((e) => e.key))];
       const hasConfig = existsSync(g.configPath);
       const gfixes: Fix[] = [];
@@ -711,7 +711,7 @@ export function scan(deps: ScanDeps): Scan {
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key)) && hasConfig) {
         const runner = runnerFix ? ourWine : (g.wineVersion ?? def);
         const p = gamepadPlan({
-          // loop: HOT-PATH-OK — env entries of one game
+          // loop: HOT-PATH-OK — N = one game's env entries (a few)
           envSet: g.env.some((e) => e.key === PREFER_SDL && sdlVarForcing(e.key, e.value)),
           honours: !runner || buildHonoursPreferSdl(runner.name, [install.toolsDir, dirname(dirname(runner.bin))]),
           target: preferSdlBuild(tools, [install.toolsDir, ...(runner ? [dirname(dirname(runner.bin))] : [])], runner?.name),
@@ -865,7 +865,7 @@ export function scan(deps: ScanDeps): Scan {
       fixes: lfixes,
     });
 
-    // loop: HOT-PATH-OK — per game; the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
+    // loop: HOT-PATH-OK — N = games (hundreds); the runner's version file is read once per scan (readParsed's scan texts, loop pass batch 3)
     for (const g of listLutrisGames(install)) {
       const support = dualSenseSupport(g.name);
       const runnerMissing = !!g.runner && !visible.has(g.runner) && !hasBuild(install.wineDir, g.runner);
@@ -880,7 +880,7 @@ export function scan(deps: ScanDeps): Scan {
       if (!nativeSupport(support) && (support === "xinput" || deps.notDetected?.has(key))) {
         const runner = runnerFix ? ours : effective;
         const p = gamepadPlan({
-          // loop: HOT-PATH-OK — env entries of one game
+          // loop: HOT-PATH-OK — N = one game's env entries (a few)
           envSet: Object.entries(g.env).some(([k, v]) => k === PREFER_SDL && sdlVarForcing(k, v)),
           honours: !runner || buildHonoursPreferSdl(runner, buildDirs),
           // Lutris runs Proton builds through umu.
@@ -973,7 +973,7 @@ export function scan(deps: ScanDeps): Scan {
     const store = deps.windowsStores?.[id];
     if (!store) continue;
     launchers.push({ id, found: store.found, flatpak: false, running: false, protonInstalled: false, defaultRunner: null, defaultIsOurs: false, fixes: [] });
-    // loop: HOT-PATH-OK — plain object per store game, no I/O
+    // loop: HOT-PATH-OK — N = store games (hundreds), a plain object each, no I/O
     for (const g of store.games) {
       games.push({
         key: storeKey(g),

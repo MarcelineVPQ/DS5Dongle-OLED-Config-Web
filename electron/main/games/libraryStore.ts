@@ -147,7 +147,7 @@ export class LibraryStore {
 
   // Whether any game has a profile (the running-game watcher's pace), without copying the library.
   hasProfiles(): boolean {
-    // loop: HOT-PATH-OK — the library's games (tens to a few hundred), once per watcher pass, stops at the first profile
+    // loop: HOT-PATH-OK — N = the library's games (tens to a few hundred), once per watcher pass, stops at the first profile
     return Object.values(this.data.games).some((r) => r.profile);
   }
 

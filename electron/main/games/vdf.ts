@@ -22,10 +22,10 @@ export function parseVdf(text: string): VdfNode {
 
   const skip = () => {
     for (;;) {
-      // loop: HOT-PATH-OK — skips whitespace, linear in the file
+      // loop: HOT-PATH-OK — N = the whitespace run's characters, linear in the file
       while (i < n && /\s/.test(text[i])) i++;
       if (text.startsWith("//", i)) {
-        // loop: HOT-PATH-OK — skips one comment line, linear
+        // loop: HOT-PATH-OK — N = one comment line's characters, linear
         while (i < n && text[i] !== "\n") i++;
         continue;
       }

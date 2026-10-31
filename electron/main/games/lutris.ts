@@ -61,7 +61,7 @@ function readYaml(path: string): unknown {
 function systemEnv(doc: unknown): Record<string, string> {
   const env = (doc as { system?: { env?: unknown } } | null)?.system?.env;
   if (!env || typeof env !== "object" || Array.isArray(env)) return {};
-  // loop: HOT-PATH-OK — env entries of one game
+  // loop: HOT-PATH-OK — N = one game's env entries (a few)
   return Object.fromEntries(Object.entries(env).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)]));
 }
 
@@ -115,7 +115,7 @@ export function listLutrisGames(install: LutrisInstall): LutrisGame[] {
       rows = [];
     }
   }
-  // loop: HOT-PATH-OK — one YAML parse per game from the scan's read-ahead texts (games/*.yml read in parallel first, loop pass batch 3)
+  // loop: HOT-PATH-OK — N = Lutris games (tens), one YAML parse each from the scan's read-ahead texts (games/*.yml read in parallel first, loop pass batch 3)
   return rows
     .filter((r) => r.configpath && /^[\w.-]+$/.test(r.configpath))
     .map((r) => {

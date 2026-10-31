@@ -66,7 +66,7 @@ const removeDir = (dir: string) => rm(dir, { recursive: true, force: true });
 export async function pruneUnpackLeftovers(temp: string, execPath = process.execPath, now = Date.now(), remove: (dir: string) => Promise<void> = removeDir): Promise<string[]> {
   const ownDir = dirname(execPath);
   const removed: string[] = [];
-  // loop: SERIAL-REQUIRED — one folder at a time keeps the disk work at start-up small (a few folders at most once tidy)
+  // loop: NOT-WORTH — start-up only, a few folders at most once tidy; one at a time keeps the disk work small
   for (const dir of findLeftovers(temp, ownDir, basename(execPath), now)) {
     try {
       await remove(dir);

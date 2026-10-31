@@ -14,7 +14,7 @@ const DIM: Rgb = [8, 10, 16];
 export function glassCaption(artColor: string | null): Record<string, string> {
   const tint = mix(artColor ? hexToRgb(artColor) : DIM, DIM, 0.68);
   let alpha = 0.5;
-  // loop: HOT-PATH-OK — at most 25 steps of arithmetic, memoized per tile and art color
+  // loop: HOT-PATH-OK — N ≤ 25 steps of arithmetic, memoized per tile and art color
   while (alpha < 1 && contrast(LIGHT, mix(LIGHT, tint, alpha)) < 4.6) alpha = Math.min(1, alpha + 0.02);
   const pct = Math.ceil(alpha * 100);
   const grounds = [mix(LIGHT, tint, pct / 100), mix(DARK, tint, pct / 100), tint];

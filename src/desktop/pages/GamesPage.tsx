@@ -252,7 +252,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
   const rescanAfterChange = useCallback(() => void rescan(true).catch(logged("rescan (it shows its own errors)")), [rescan]);
 
   const fixes = useMemo(() => (report ? allFixes(report) : []), [report]);
-  // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render on interaction
+  // loop: HOT-PATH-OK — N = fixes found by the scan (tens at most); Home render on interaction
   const selected = fixes.filter((f) => chosen.has(f.id));
   // The review checks the running launchers again when it opens (and after each scan).
   const [reviews, setReviews] = useState(0);
@@ -491,7 +491,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
   const lastChange = backups.reduce((n, b) => Math.max(n, Date.parse(b.created) || 0), 0);
   // A change set's line; one whose backup can't be read says so, and where it is (error pass E2).
   const changeText = (b: GameBackup) =>
-    // loop: HOT-PATH-OK — a few changes per backup; Home render
+    // loop: HOT-PATH-OK — N = a backup's changes (a few); Home render
     b.damaged ? t("desktop.games.historyDamaged") : b.changes.map(m).join("; ");
 
   // A section's messages, at the top of its body.
@@ -623,11 +623,11 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                 {/* hint: MUST-SHOW — a warning: these files change (backed up first), before Apply */}
                 <p className="dk-hint">{t("desktop.games.reviewHint", "These files will be changed. Each one is backed up first, so Undo puts it back exactly as it was.")}</p>
                 <ul className="dk-review">
-                  {/* loop: HOT-PATH-OK — chosen fixes, tens at most; review render */}
+                  {/* loop: HOT-PATH-OK — N = chosen fixes (tens at most); review render */}
                   {selected.map((f) => (
                     <li key={f.id}>
                       <strong>{m(f.label)}</strong>
-                      {/* loop: HOT-PATH-OK — 1-3 files per chosen fix; review render */}
+                      {/* loop: HOT-PATH-OK — N = 1-3 files per chosen fix; review render */}
                       {f.files.map((file) => (
                         <div key={file} className="dk-mono dk-file">
                           {file}
@@ -652,7 +652,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
               <>
                 <h3 className="dk-subhead">{t("desktop.games.doneTitle", "Done")}</h3>
                 <ul className="dk-review">
-                  {/* loop: HOT-PATH-OK — applied fixes, tens at most; result render after apply */}
+                  {/* loop: HOT-PATH-OK — N = applied fixes (tens at most); result render after apply */}
                   {result.applied.map((a) => (
                     <li key={a.id} className={a.ok ? "" : "dk-bad"}>
                       {a.ok ? "✓ " : "✗ "}
@@ -692,7 +692,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
               <p className="dk-hint">{t("desktop.games.historyNone")}</p>
             ) : (
               <ul className="dk-review">
-                {/* loop: HOT-PATH-OK — change history entries, tens; Home render */}
+                {/* loop: HOT-PATH-OK — N = change history entries (tens); Home render */}
                 {backups.map((b) => (
                   <li key={b.id}>
                     <span className="dk-hint">{new Date(b.created).toLocaleString()}</span> {changeText(b)}
@@ -747,7 +747,7 @@ function FixList({ report, chosen, onToggle }: { report: GamesReport; chosen: Se
   // loop: NOT-WORTH — N ≤ 3 launchers; Home render on interaction
   const pc = [...report.launchers.flatMap((l) => l.fixes), ...report.system.fixes];
   const rows = (fixes: Fix[]) =>
-    // loop: HOT-PATH-OK — fixes in one group, a few at most
+    // loop: HOT-PATH-OK — N = fixes in one group (a few at most)
     fixes.map((f) => (
       <label key={f.id} className="dk-fix">
         <input type="checkbox" checked={chosen.has(f.id)} onChange={() => onToggle(f.id)} />
@@ -759,7 +759,7 @@ function FixList({ report, chosen, onToggle }: { report: GamesReport; chosen: Se
     ));
   return (
     <div className="dk-fixes">
-      {/* loop: HOT-PATH-OK — games with a change, tens at most */}
+      {/* loop: HOT-PATH-OK — N = games with a change (tens at most) */}
       {games.map((g) => (
         <div key={g.key} data-fix-group={g.key}>
           <h3 className="launcher-name">
@@ -809,7 +809,7 @@ function SystemPart({ report, hdrBad, onRescan }: { report: GamesReport; hdrBad:
         <dt>{t("desktop.games.env", "Environment")}</dt>
         <dd className={s.envWarnings.length ? "dk-bad" : ""}>
           {s.envWarnings.length
-            ? // loop: HOT-PATH-OK — env warnings, 0-3; Home render
+            ? // loop: HOT-PATH-OK — N = 0-3 env warnings; Home render
               s.envWarnings.map((w) => (w.file ? t("desktop.games.envSetIn", { variable: w.variable, file: w.file }) : t("desktop.games.envSession", { variable: w.variable }))).join("; ")
             : t("desktop.games.envOk", "nothing forcing the Xbox (SDL) path")}
         </dd>
@@ -827,7 +827,7 @@ function SystemPart({ report, hdrBad, onRescan }: { report: GamesReport; hdrBad:
           {t("desktop.games.envHint", "These variables are set outside any launcher, so this app doesn't change them. Remove them from the file named above, then log out and back in.")}
         </p>
       )}
-      {/* loop: HOT-PATH-OK — PipeWire pro-audio rule files, 0-3 */}
+      {/* loop: HOT-PATH-OK — N = 0-3 PipeWire pro-audio rule files */}
       {s.proAudioRules.some((r) => r.startsWith("/etc")) && (
         // hint: MUST-SHOW — a status: a rule this app can't change, and why
         <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>

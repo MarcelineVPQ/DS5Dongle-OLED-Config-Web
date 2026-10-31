@@ -249,11 +249,11 @@ function CirclePlot({ outline, dot }: { outline: Outline; dot: [number, number] 
 const DriftPlot = memo(function DriftPlot({ samples }: { samples: DriftSample[] }) {
   const W = 200;
   const H = 50;
-  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
+  // loop: HOT-PATH-OK — N ≈ 300 samples; memo()ed, once per finished test
   const pts = samples.map((s) => ({ t: s.t, x: normAxis(s.x), y: normAxis(s.y) }));
-  // loop: HOT-PATH-OK — ~300 samples; memo()ed, once per finished test
+  // loop: HOT-PATH-OK — N ≈ 300 samples; memo()ed, once per finished test
   const scale = Math.max(0.05, ...pts.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
-  // loop: HOT-PATH-OK — two ~300-point paths; memo()ed, once per finished test
+  // loop: HOT-PATH-OK — N = 2 x ~300-point paths; memo()ed, once per finished test
   const line = (key: "x" | "y") => pts.map((p, i) => `${i ? "L" : "M"}${((p.t / DRIFT_MS) * W).toFixed(1)} ${(H / 2 - (p[key] / scale) * (H / 2 - 2)).toFixed(1)}`).join(" ");
   return (
     <figure className="stest-driftfig">

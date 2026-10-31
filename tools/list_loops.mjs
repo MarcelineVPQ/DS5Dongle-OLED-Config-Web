@@ -25,7 +25,8 @@
 // A verdict is a comment on the loop's line or the line above it:
 //   // loop: SERIAL-REQUIRED — one HID session
 //   {/* loop: HOT-PATH-OK — N ≤ 6 slots */}      (inside JSX)
-// Verdicts: PARALLELIZE BATCH SERIAL-REQUIRED HOT-PATH-OK FIX-HOT-PATH NOT-WORTH,
+// Verdicts: PARALLELIZE BATCH SERIAL-REQUIRED HOT-PATH-OK FIX-HOT-PATH NOT-WORTH
+// (HOT-PATH-OK must state its N, SERIAL-REQUIRED one of the five reasons),
 // each followed by " — " and the reason. See CLAUDE.md "Loop pass".
 import ts from "typescript";
 import {
@@ -233,6 +234,22 @@ for (const sf of sources) {
   visit(sf);
 }
 rows.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+
+// What a verdict must say (CLAUDE.md "Loop pass" 2): HOT-PATH-OK states its N,
+// SERIAL-REQUIRED one of the five reasons. A row that doesn't is INVALID.
+const MUST_SAY = {
+  "HOT-PATH-OK": [/\bN\s*(=|≈|≤|<|~)/, 'HOT-PATH-OK states its N: "N = 3 parts", "N ≈ 30 fields", "N ≤ 20 builds", "N = games (hundreds)"'],
+  "SERIAL-REQUIRED": [
+    /\b(session|order|retry|backoff|deadline|dependency)\b/i,
+    "SERIAL-REQUIRED names its reason: one session, protocol or transaction order, retry/backoff, a deadline, or a data dependency",
+  ],
+};
+// loop: NOT-WORTH — every row once per run (a few hundred)
+for (const r of rows) {
+  const m = /^loop:\s*(\S+)\s+—\s+(.*)$/.exec(r.verdict);
+  const need = m && MUST_SAY[m[1]];
+  if (need && !need[0].test(m[2])) r.verdict = `INVALID ${r.verdict} (${need[1]})`;
+}
 
 report({
   tool: "list_loops",

@@ -92,7 +92,7 @@ async function buildMask(svg: SVGSVGElement, w: number, h: number): Promise<Imag
   const player = await shapeAlpha(svg, ".pled rect.on", w, h);
   if (!bar || !player) return null;
   const out = new ImageData(w, h);
-  // loop: HOT-PATH-OK — full-size mask, w x h px (~1M), built once per settled size (MASK_SETTLE_MS after a resize ends), not per resize frame
+  // loop: HOT-PATH-OK — N = w x h px (~1M), the full-size mask built once per settled size (MASK_SETTLE_MS after a resize ends), not per resize frame
   for (let i = 0; i < out.data.length; i += 4) {
     out.data[i] = bar[0].data[i + 3];
     out.data[i + 1] = bar[1].data[i + 3];

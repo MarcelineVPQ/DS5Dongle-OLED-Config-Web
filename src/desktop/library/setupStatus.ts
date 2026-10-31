@@ -44,11 +44,11 @@ export interface HomeStatus {
 export function homeStatus(report: GamesReport, declined: ReadonlySet<string>): HomeStatus {
   const linux = protonApplies();
   const s = report.system;
-  // loop: HOT-PATH-OK — fixes found by the scan, tens at most; Home render
+  // loop: HOT-PATH-OK — N = fixes found by the scan (tens at most); Home render
   const fixes = allFixes(report).some((f) => !declined.has(f.id));
   const proton = linux && (!report.ourProton.name || (report.ourProton.updateAvailable && !!report.ourProton.latest));
   const system = linux && (s.proAudio || s.hidrawAccess === false || s.envWarnings.length > 0);
-  // loop: HOT-PATH-OK — games (hundreds) until one has HDR, then ≤ 4 HDR checks; Home render
+  // loop: HOT-PATH-OK — N = games (hundreds) until one has HDR, then ≤ 4 HDR checks; Home render
   const hdr = linux && report.games.some((g) => g.hdr !== undefined) && !systemHdrReqs(report).every((r) => r.ok);
   return { attention: fixes || proton || system || hdr, fixes, proton, system, hdr };
 }

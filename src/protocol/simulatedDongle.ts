@@ -329,7 +329,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (status && state === 1) g.fillText("~--m", kEtaX, kBattY);
     const px = g.getImageData(0, 0, 128, 64).data;
     const out = new Uint8Array(1024);
-    // loop: HOT-PATH-OK — dev/test fake only: 128x64 px per simulated OLED mirror read
+    // loop: HOT-PATH-OK — N = 128 x 64 px per simulated OLED mirror read; dev/test fake only
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) if (px[(y * 128 + x) * 4] > 127) out[y * 16 + (x >> 3)] |= 0x80 >> (x & 7);
     return out;
   }
@@ -407,7 +407,7 @@ export class SimulatedDongle implements Ds5Transport {
         const live = this.opts.live ? this.liveScreen() : null;
         out.set([0, this.oledScreen, OLED_BRIGHT_LEVELS[this.oledBright], this.seq & 0xff]);
         if (live) out.set(live, 4);
-        // loop: HOT-PATH-OK — dev/test fake only: 1024-byte test pattern
+        // loop: HOT-PATH-OK — N = 1024 bytes of test pattern; dev/test fake only
         else for (let i = 0; i < 1024; i++) out[4 + i] = i % 2 ? 0xaa : 0x55;
         return out.subarray(0, length);
       }

@@ -26,7 +26,7 @@ export const NO_WAITING: Waiting = { games: [], pc: [] };
 export const isWaiting = (f: Fix, declined: ReadonlySet<string>): boolean => f.recommended && !declined.has(f.id);
 
 export function waitingChanges(r: GamesReport, declined: ReadonlySet<string>): Waiting {
-  // loop: HOT-PATH-OK — one game's or launcher's fixes (a few); once per scan or untick
+  // loop: HOT-PATH-OK — N = one game's or launcher's fixes (a few); once per scan or untick
   const labels = (fixes: Fix[]) => fixes.filter((f) => isWaiting(f, declined)).map((f) => f.label);
   // loop: HOT-PATH-OK — N = games (hundreds) x their fixes (a few); once per scan or untick
   const games = r.games.map((g) => ({ key: g.key, title: g.title, labels: labels(g.fixes) })).filter((g) => g.labels.length > 0);

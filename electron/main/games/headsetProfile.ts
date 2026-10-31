@@ -52,7 +52,7 @@ export const pactlSubscribe: CardEvents = (onChange, onEnd) => {
   child.stdout.on("data", (chunk: Buffer) => {
     const lines = (rest + chunk.toString("utf8")).split("\n");
     rest = lines.pop() ?? "";
-    // loop: HOT-PATH-OK — the lines of one chunk of pactl events, a few; events come per stream or device change, not per frame
+    // loop: HOT-PATH-OK — N = one chunk of pactl events' lines (a few); events come per stream or device change, not per frame
     if (lines.some((line) => / on card #\d+/.test(line))) onChange();
   });
   // lifetime: OK — fires once, when the child ends

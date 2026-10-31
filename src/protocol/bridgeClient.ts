@@ -323,7 +323,7 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
 // that brings nothing new doesn't re-render the app.
 export function sameIdentity(a: BridgeIdentity | null, b: BridgeIdentity | null): boolean {
   if (!a || !b) return a === b;
-  // loop: HOT-PATH-OK — ~30 identity fields compared so a same poll skips the re-render
+  // loop: HOT-PATH-OK — N ≈ 30 identity fields compared so a same poll skips the re-render
   return (Object.keys(a) as Array<keyof BridgeIdentity>).every((k) => {
     const x = a[k];
     const y = b[k];

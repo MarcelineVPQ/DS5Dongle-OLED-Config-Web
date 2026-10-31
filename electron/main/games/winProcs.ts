@@ -46,7 +46,7 @@ export async function loadToolhelp(): Promise<() => ProcView[]> {
     const out: ProcView[] = [];
     try {
       const entry: Entry = { dwSize: size };
-      // loop: HOT-PATH-OK — one entry per running program (~150), every 3 s; no I/O, a few µs each
+      // loop: HOT-PATH-OK — N ≈ 150 running programs, one entry each, every 3 s; no I/O, a few µs each
       for (let ok = first(snapshot, entry) as boolean; ok; ok = next(snapshot, entry) as boolean) {
         if (entry.szExeFile) out.push({ pid: entry.th32ProcessID ?? 0, comm: entry.szExeFile, args: [], cwd: null, env: {} });
         entry.dwSize = size;

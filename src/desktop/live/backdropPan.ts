@@ -22,7 +22,7 @@ function cubicBezier(x: number, x1: number, y1: number, x2: number, y2: number):
   const bez = (u: number, p1: number, p2: number) => 3 * (1 - u) * (1 - u) * u * p1 + 3 * (1 - u) * u * u * p2 + u * u * u;
   let lo = 0;
   let hi = 1;
-  // loop: HOT-PATH-OK — 20 bisection steps, once per pan step (≤ 10 a second)
+  // loop: HOT-PATH-OK — N = 20 bisection steps, once per pan step (≤ 10 a second)
   for (let i = 0; i < 20; i++) {
     const mid = (lo + hi) / 2;
     if (bez(mid, x1, x2) < x) lo = mid;

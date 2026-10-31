@@ -66,7 +66,7 @@ export default function GamePage({ game, info, record, running, report, bridge, 
   const { t } = useTranslation();
   const m = useMsg();
   // Setup's fix for a game that doesn't see the controller, named under the sheet's Controller detected: Fail.
-  // loop: HOT-PATH-OK — one game's fixes (a handful); the page's render
+  // loop: HOT-PATH-OK — N = one game's fixes (a handful); the page's render
   const detectedFix = game.fixes.find((f) => f.kind === "steam-input-off" || f.kind === "standard-gamepad");
   const page = useRef<HTMLDivElement>(null);
   // What a report is tested on (the board, the controller, this OS, the game's Proton), read when it changes.

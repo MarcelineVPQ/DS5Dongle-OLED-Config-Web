@@ -480,7 +480,7 @@ export async function saveDualSenseMixer(key: string, layer: MixerLayer = amixer
  * app runs in the background). Returns how many cards it changed. */
 export async function raiseLowDualSenseMixers(layer: MixerLayer = amixerLayer): Promise<number> {
   let raised = 0;
-  // loop: SERIAL-REQUIRED — one ALSA card's read and writes after another, ≤ 2 cards; per card appearing
+  // loop: SERIAL-REQUIRED — ALSA order: one card's read and writes after another, ≤ 2 cards; per card appearing
   for (const { card } of layer.cards()) {
     // A card not open to this user yet throws: the watcher tries again.
     // Live levels only: what the saved state says is for the next reconnect.

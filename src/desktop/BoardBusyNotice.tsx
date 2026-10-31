@@ -13,7 +13,7 @@ export default function BoardBusyNotice({ busy, onRetry }: { busy: { holders: Bo
   const { t } = useTranslation();
   if (!busy) return null;
   const windows = window.desktop?.platform === "win32";
-  // loop: HOT-PATH-OK — at most 5 holders (MAX_HOLDERS), only while the board is busy
+  // loop: HOT-PATH-OK — N ≤ 5 holders (MAX_HOLDERS), only while the board is busy
   const names = busy.holders.map((h) => (h.kind === "app" ? t("desktop.boardBusy.kind.app") : h.kind === "browser" ? t("desktop.boardBusy.kind.browser", { name: h.name }) : h.name));
   return (
     <Notice error role="alert" action={<BusyButton onClick={onRetry}>{t("desktop.boardBusy.retry")}</BusyButton>}>

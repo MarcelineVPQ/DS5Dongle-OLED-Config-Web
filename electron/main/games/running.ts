@@ -104,7 +104,7 @@ function uptimeS(root: string): number {
 function readFull(dir: string, pid: number): ProcView {
   const env: Record<string, string> = {};
   try {
-    // loop: HOT-PATH-OK — environ vars (~50-100) of a candidate game process only
+    // loop: HOT-PATH-OK — N ≈ 50-100 environ vars of a candidate game process only
     for (const kv of readFileSync(`${dir}/environ`, "utf8").split("\0")) {
       const i = kv.indexOf("=");
       if (i > 0 && ENV_KEYS.includes(kv.slice(0, i))) env[kv.slice(0, i)] = kv.slice(i + 1);
@@ -121,7 +121,7 @@ function readFull(dir: string, pid: number): ProcView {
   return {
     pid,
     comm: readFileSync(`${dir}/comm`, "utf8").trim(),
-    // loop: HOT-PATH-OK — cmdline args of a candidate game process only
+    // loop: HOT-PATH-OK — N = one candidate game process's args (a few to tens)
     args: readFileSync(`${dir}/cmdline`, "utf8").split("\0").filter(Boolean),
     cwd,
     env,
@@ -146,7 +146,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   const own: Array<{ pid: number; name: string; ppid: number }> = [];
   const seen = new Set<string>();
   const freshFrom = gamesOnly ? (uptimeS(root) - FRESH_S) * CLK_TCK : 0;
-  // loop: HOT-PATH-OK — all PIDs; cheap first pass (owner checked once per process, status of own only); runs hidden on purpose
+  // loop: HOT-PATH-OK — N = all PIDs (hundreds); cheap first pass (owner checked once per process, status of own only); runs hidden on purpose
   for (const entry of entries) {
     if (!/^\d+$/.test(entry)) continue;
     try {
@@ -183,13 +183,13 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
   }
   if (!gamesOnly) return out;
   // Forget the owners of processes that are gone (a later process may get the pid).
-  // loop: HOT-PATH-OK — one Map of live processes, a delete only for those that left
+  // loop: HOT-PATH-OK — N = live processes (hundreds), one Map, a delete only for those that left
   for (const dir of ownsDir.keys()) if (dir.startsWith(`${root}/`) && !seen.has(dir)) ownsDir.delete(dir);
-  // loop: HOT-PATH-OK — one Map of the user's live processes, a delete only for those that left
+  // loop: HOT-PATH-OK — N = the user's live processes (hundreds), one Map, a delete only for those that left
   for (const dir of known.keys()) if (dir.startsWith(`${root}/`) && !seen.has(dir)) known.delete(dir);
   // Possible games: a launcher or Wine process, anything started under one,
   // and Wine processes that outlived their launcher.
-  // loop: HOT-PATH-OK — one Map over own processes for the ancestry walk
+  // loop: HOT-PATH-OK — N = own processes (hundreds), one Map for the ancestry walk
   const byPid = new Map(own.map((p) => [p.pid, p]));
   // cache: OK — key=pid; invalidated=per readProcs call; bound=the user's processes in one pass
   const memo = new Map<number, boolean>();
@@ -237,7 +237,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     }
     return false;
   };
-  // loop: HOT-PATH-OK — own processes, memoized ancestry; full reads only for candidates
+  // loop: HOT-PATH-OK — N = own processes (hundreds), memoized ancestry; full reads only for candidates
   for (const p of own) {
     if (!underLauncher(p.pid) && !wineExe(p.pid) && !(orphan(p) && launched(p))) continue;
     const k = known.get(`${root}/${p.pid}`);
@@ -250,7 +250,7 @@ export function readProcs(gamesOnly = false, root = "/proc"): ProcView[] {
     }
   }
   // Forget orphans that are gone (a new process may get the same pid).
-  // loop: HOT-PATH-OK — remembered plain orphans, a handful
+  // loop: HOT-PATH-OK — N = remembered plain orphans (a handful)
   for (const id of plainOrphans) if (id.startsWith(`${root}/`) && !seenPlain.has(id)) plainOrphans.delete(id);
   return out;
 }
@@ -267,35 +267,35 @@ const unixPath = (arg: string) => (/^[A-Za-z]:\\/.test(arg) ? arg.slice(2).repla
 // The running game among the candidates, or null. Steam and Heroic by their
 // launch variables first; then by install folder, for any launcher.
 export function detectRunning(procs: ProcView[], games: RunningCandidate[]): string | null {
-  // loop: HOT-PATH-OK — game-candidate processes only (readProcs filters), returns on a hit
+  // loop: HOT-PATH-OK — N = game-candidate processes (a handful; readProcs filters), returns on a hit
   for (const p of procs) {
     // gamescope's own processes carry the game's variables but aren't the game:
     // its Xwayland is reparented to the user's systemd and can outlive it.
     if (GAMESCOPE_HELPERS.test(p.comm)) continue;
     const appid = p.env.SteamGameId || p.env.SteamAppId;
-    // loop: HOT-PATH-OK — args of one reaper process
+    // loop: HOT-PATH-OK — N = one reaper process's args (a few)
     const reaper = p.comm === "reaper" ? p.args.find((a) => a.startsWith("AppId="))?.slice(6) : undefined;
     const steamId = reaper || (appid && appid !== "0" ? appid : undefined);
     if (steamId) {
-      // loop: HOT-PATH-OK — library games, only for a process with a Steam id
+      // loop: HOT-PATH-OK — N = library games (hundreds), only for a process with a Steam id
       const hit = games.find((g) => g.launcher === "steam" && g.id === steamId);
       if (hit) return hit.key;
     }
     if (p.env.HEROIC_APP_NAME) {
-      // loop: HOT-PATH-OK — library games, only for a process with HEROIC_APP_NAME
+      // loop: HOT-PATH-OK — N = library games (hundreds), only for a process with HEROIC_APP_NAME
       const hit = games.find((g) => g.launcher === "heroic" && g.id === p.env.HEROIC_APP_NAME);
       if (hit) return hit.key;
     }
   }
-  // loop: HOT-PATH-OK — one filtered copy of the library per tick, no I/O
+  // loop: HOT-PATH-OK — N = library games (hundreds), one filtered copy per tick, no I/O
   const withDirs = games.filter((g) => g.installDir && g.installDir.length > 1);
-  // loop: HOT-PATH-OK — candidate processes, skips non-Wine ones first
+  // loop: HOT-PATH-OK — N = candidate processes (a handful), skips non-Wine ones first
   for (const p of procs) {
-    // loop: HOT-PATH-OK — args of one process
+    // loop: HOT-PATH-OK — N = one process's args (a few to tens)
     if (!WINE_COMMS.test(p.comm) && !p.args.some((a) => /\.exe$/i.test(a))) continue;
-    // loop: HOT-PATH-OK — games with a folder, only for Wine/exe processes
+    // loop: HOT-PATH-OK — N = games with a folder (hundreds), only for Wine/exe processes
     for (const g of withDirs) {
-      // loop: HOT-PATH-OK — args of one Wine process, string prefix checks
+      // loop: HOT-PATH-OK — N = one Wine process's args (a few to tens), string prefix checks
       if (inside(p.cwd, g.installDir!) || p.args.some((a) => inside(unixPath(a), g.installDir!))) return g.key;
     }
   }
@@ -370,12 +370,12 @@ export function gameExecutables(dir: string, depth = 3, budget = { left: 4000 },
 export const EXE_RECHECK_MS = 60_000;
 
 export function detectRunningWindows(procs: ProcView[], games: RunningCandidate[], exes: (dir: string) => Set<string>): string | null {
-  // loop: HOT-PATH-OK — Windows process list into a Set, needed for the lookups
+  // loop: HOT-PATH-OK — N = the Windows process list (hundreds) into a Set, needed for the lookups
   const running = new Set(procs.map((p) => p.comm.toLowerCase()));
-  // loop: HOT-PATH-OK — library games, exe sets cached per folder
+  // loop: HOT-PATH-OK — N = library games (hundreds), exe sets cached per folder
   for (const g of games) {
     if (!g.installDir) continue;
-    // loop: HOT-PATH-OK — one game's cached exe names, Set lookups
+    // loop: HOT-PATH-OK — N = one game's cached exe names (a few), Set lookups
     for (const exe of exes(g.installDir)) if (running.has(exe)) return g.key;
   }
   return null;

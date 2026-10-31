@@ -130,14 +130,14 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
 
   const games = useMemo(() => {
     const by = (g: GameEntry) => (sort === "recent" ? (details[g.key]?.lastPlayed ?? 0) : sort === "played" ? (details[g.key]?.playtimeMin ?? 0) : 0);
-    // loop: HOT-PATH-OK — sort of the games (hundreds); memoized on report, sort and details
+    // loop: HOT-PATH-OK — N = games (hundreds), one sort; memoized on report, sort and details (a new report per scan; details read once per report)
     return [...(report?.games ?? [])].sort((a, b) => by(b) - by(a) || a.title.localeCompare(b.title));
   }, [report, sort, details]);
   // Rows whose name another row also has (one game in two launchers) say their launcher.
   const shared = useMemo(() => sharedTitleKeys(report?.games ?? []), [report]);
   // Continue playing: the games played last (with artwork).
   const recent = useMemo(() => {
-    // loop: HOT-PATH-OK — games (hundreds) filtered+sorted to 8; memoized on report and details
+    // loop: HOT-PATH-OK — N = games (hundreds) filtered+sorted to 8; memoized on report and details
     const played = (report?.games ?? [])
       .filter((g) => !hiddenKinds.has(kindOfGame(g)) && details[g.key]?.lastPlayed && details[g.key].art.length > 0)
       .sort((a, b) => (details[b.key].lastPlayed ?? 0) - (details[a.key].lastPlayed ?? 0));
@@ -159,7 +159,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
   // The sidebar: a plain A–Z list of what the search, filter and Show leave
   // (IA audit Q6: the filter chips do the grouping; ◆ marks a profile, the
   // running game says so). The grid keeps the chosen sort.
-  // loop: HOT-PATH-OK — sort of the visible games (hundreds); per library render (interaction), like the filters above
+  // loop: HOT-PATH-OK — N = visible games (hundreds), one sort; per library render (interaction), like the filters above
   const side = [...visible].sort((a, b) => a.title.localeCompare(b.title));
   // loop: HOT-PATH-OK — N = games (hundreds); per library render (interaction)
   const game = games.find((g) => g.key === selected) ?? null;
@@ -247,7 +247,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
           </p>
         )}
         <ul className="lib-list" ref={listRef} onKeyDown={onListKey}>
-          {/* loop: HOT-PATH-OK — one sidebar row per visible game (hundreds); per library render */}
+          {/* loop: HOT-PATH-OK — N = visible games (hundreds), one sidebar row each; per library render */}
           {side.map(row)}
           {report && visible.length === 0 && <li className="dk-hint lib-empty">{t("desktop.library.noMatch")}</li>}
         </ul>
@@ -280,7 +280,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                             onClick={() => setFilter(f)}
                           >
                             {t(`desktop.library.filters.${f}`)}
-                            {/* loop: HOT-PATH-OK — 4 filters x searched games (hundreds); per library render */}
+                            {/* loop: HOT-PATH-OK — N = 4 filters x searched games (hundreds); per library render */}
                             <span className="lib-count">{searched.filter((g) => matches(f, g)).length}</span>
                           </button>
                         ))}
@@ -338,7 +338,7 @@ export default function GameLibrary({ report, home, bridge, onRescan, library, o
                     </div>
                     {visible.length > 0 ? (
                       <ul className="lib-grid">
-                        {/* loop: HOT-PATH-OK — a tile element per game; GameTile is memo with a stable onOpen, so only changed tiles render (loop pass batch 4) */}
+                        {/* loop: HOT-PATH-OK — N = games (hundreds), a tile element each; GameTile is memo with a stable onOpen, so only changed tiles render (loop pass batch 4) */}
                         {visible.map((g) => (
                           <li key={g.key}>
                             <GameTile game={g} info={details[g.key]} running={g.key === running} hasProfile={!!library.games[g.key]?.profile} onOpen={setSelected} glass={glass} />

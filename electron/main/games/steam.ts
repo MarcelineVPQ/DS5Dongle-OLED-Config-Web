@@ -179,7 +179,7 @@ export function steamManifestFiles(install: SteamInstall): Array<{ steamapps: st
 // during a scan the files were read ahead in parallel (loop pass batch 3).
 export function steamAppManifests(install: SteamInstall): Array<{ steamapps: string; acf: VdfNode }> {
   const out: Array<{ steamapps: string; acf: VdfNode }> = [];
-  // loop: HOT-PATH-OK — one VDF parse per appmanifest from the scan's read-ahead texts (no file read in the loop)
+  // loop: HOT-PATH-OK — N = appmanifests (hundreds), one VDF parse each from the scan's read-ahead texts (no file read in the loop)
   for (const { steamapps, path } of steamManifestFiles(install)) {
     const acf = readVdfFile(path);
     if (acf) out.push({ steamapps, acf });
@@ -189,14 +189,14 @@ export function steamAppManifests(install: SteamInstall): Array<{ steamapps: str
 
 export function listSteamGames(install: SteamInstall): SteamGame[] {
   const games = new Map<string, SteamGame>();
-  // loop: HOT-PATH-OK — parsed manifests, two getString each
+  // loop: HOT-PATH-OK — N = parsed manifests (hundreds), two getString each
   for (const { acf } of steamAppManifests(install)) {
     const appid = getString(acf, "AppState", "appid");
     const name = getString(acf, "AppState", "name");
     if (!appid || !name || TOOL_APPIDS.has(appid) || TOOL_NAME.test(name)) continue;
     games.set(appid, { appid, name });
   }
-  // loop: HOT-PATH-OK — one sort of the Steam games by name
+  // loop: HOT-PATH-OK — N = Steam games (hundreds), one sort by name per scan
   return [...games.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
