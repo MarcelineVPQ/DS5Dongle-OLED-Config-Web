@@ -44,7 +44,7 @@
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Derived haptic fires only when the game has been silent on the native haptic path for ~1 s. Preserves native haptic feedback (Spider-Man Remastered, etc.) while filling in for games that send no haptic data (Ghost of Tsushima on Linux, etc.)."
+        "hint": "Derived haptic fires only when the game has been silent on the native haptic path for ~0.1 s. Preserves native haptic feedback (Spider-Man Remastered, etc.) while filling in for games that send no haptic data (Ghost of Tsushima on Linux, etc.)."
       },
       "mix": {
         "label": "Mix",

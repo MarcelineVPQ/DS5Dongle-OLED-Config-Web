@@ -45,7 +45,7 @@
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~1 s auf dem nativen Haptik-Pfad still war. Erhält natives haptisches Feedback (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
+        "hint": "Abgeleitete Haptik wird nur ausgelöst, wenn das Spiel ~0,1 s auf dem nativen Haptik-Pfad still war. Erhält natives haptisches Feedback (Spider-Man Remastered usw.) und füllt für Spiele ohne Haptik-Daten (Ghost of Tsushima auf Linux usw.)."
       },
       "mix": {
         "label": "Mix",

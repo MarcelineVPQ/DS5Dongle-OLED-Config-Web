@@ -45,7 +45,7 @@
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "O háptico derivado dispara apenas quando o jogo estiver em silêncio no caminho háptico nativo por ~1 s. Preserva a resposta tátil nativa (Spider-Man Remastered, etc.) enquanto preenche jogos que não enviam dados hápticos (Ghost of Tsushima no Linux, etc.)."
+        "hint": "O háptico derivado dispara apenas quando o jogo estiver em silêncio no caminho háptico nativo por ~0,1 s. Preserva a resposta tátil nativa (Spider-Man Remastered, etc.) enquanto preenche jogos que não enviam dados hápticos (Ghost of Tsushima no Linux, etc.)."
       },
       "mix": {
         "label": "Mix",

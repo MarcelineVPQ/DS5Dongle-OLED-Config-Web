@@ -45,7 +45,7 @@
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~1 s. Preserva la retroalimentación háptica nativa (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
+        "hint": "El háptico derivado se activa solo cuando el juego ha estado en silencio en la ruta háptica nativa durante ~0,1 s. Preserva la retroalimentación háptica nativa (Spider-Man Remastered, etc.) y rellena los juegos que no envían datos hápticos (Ghost of Tsushima en Linux, etc.)."
       },
       "mix": {
         "label": "Mix",

@@ -45,7 +45,7 @@
       },
       "fallback": {
         "label": "Fallback",
-        "hint": "Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~1 s. Préserve le retour haptique natif (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
+        "hint": "Le haptique dérivé ne se déclenche que lorsque le jeu est silencieux sur la voie haptique native depuis ~0,1 s. Préserve le retour haptique natif (Spider-Man Remastered, etc.) tout en comblant les jeux qui n'envoient pas de données haptiques (Ghost of Tsushima sur Linux, etc.)."
       },
       "mix": {
         "label": "Mix",
