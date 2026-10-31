@@ -4,7 +4,9 @@
 // can't come back in any locale, and each locale only uses the variables its
 // language defines.
 import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { firstChapters, NEWEST_BUDGET } from "../../src/desktop/Markdown";
 import i18n, { setDeviceBoard } from "../../src/i18n";
 import { DEVICE_FORMS } from "../../src/i18n/deviceForms";
 
@@ -74,5 +76,46 @@ describe("board wording", () => {
     setDeviceBoard(null);
     expect(i18n.t("desktop.bar.save")).toBe("Auf deinem Board speichern");
     await i18n.changeLanguage("en");
+  });
+});
+
+// The documents the app shows (About bundles the guide and the three
+// changelogs; the update banner shows a release's CHANGELOG notes) and the
+// public README say "board" too. A changelog is checked where it is shown by
+// default: [Unreleased], the newest release (the update banner's notes) and
+// whatever About opens on (NEWEST_BUDGET). Older releases are the historical
+// record, written before the rule; they stay as written and show only on
+// request. Link targets, URLs and the product's own name don't count.
+describe("board wording in the documents the app shows", () => {
+  const repo = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+  const shownByDefault = (md: string) => {
+    const opened = firstChapters(md, NEWEST_BUDGET)?.text ?? md;
+    // loop: test fixture
+    const heads = [...md.matchAll(/^## /gm)].map((m) => m.index);
+    const top = md.slice(0, heads[/^## \[Unreleased\]/m.test(md) ? 2 : 1] ?? md.length);
+    return opened.length > top.length ? opened : top;
+  };
+  const bare = (name: string, text: string) =>
+    text.split("\n").flatMap((line, i) => {
+      const visible = line
+        .replace(/\]\([^)]*\)/g, "]")
+        .replace(/https?:\/\/\S+/g, "")
+        .replace(/DS5 ?Dongle/gi, "");
+      return /dongle/i.test(visible) ? [`${name}:${i + 1}: ${line.trim().slice(0, 120)}`] : [];
+    });
+
+  it.each([
+    ["docs/GUIDE.md", (t: string) => t],
+    ["README.md", (t: string) => t],
+    ["CHANGELOG.md", shownByDefault],
+    ["docs/PROTON_CHANGELOG.md", shownByDefault],
+  ])("%s never says dongle", (file, part) => {
+    expect(bare(file, part(repo(file)))).toEqual([]);
+  });
+
+  const fwLog = process.env.DS5_FIRMWARE_REPO ? join(process.env.DS5_FIRMWARE_REPO, "CHANGELOG.md") : null;
+  // Skipped only when no firmware checkout is named (CI names one; a checkout next to this one may be on any branch).
+  it.skipIf(!fwLog)("the firmware's CHANGELOG.md (About → Firmware changes) never says dongle where it is shown by default", () => {
+    expect(bare("firmware CHANGELOG.md", shownByDefault(readFileSync(fwLog!, "utf8")))).toEqual([]);
   });
 });

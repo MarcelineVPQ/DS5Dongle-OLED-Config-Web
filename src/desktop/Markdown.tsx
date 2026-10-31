@@ -43,6 +43,12 @@ export function markdownHeadings(text: string): string[] {
   return out["## "].length ? out["## "] : out["### "];
 }
 
+// A changelog opens on its newest releases (whole ones, about the first 16k
+// characters); the rest shows on request. Parsing and drawing all of App
+// changes (100 KB, ~900 elements) for the release on top would be drinking.
+// About uses it; the wording gate checks what it shows (deviceWording.test.ts).
+export const NEWEST_BUDGET = 16_000;
+
 // A long text cut to its first chapters (a changelog's newest releases):
 // whole level-2 chapters (outside code blocks) while they fit in `budget`
 // characters, at least one. null when the whole text fits.

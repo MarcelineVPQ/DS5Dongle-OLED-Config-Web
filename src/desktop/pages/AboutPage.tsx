@@ -11,7 +11,7 @@ import guide from "../../../docs/GUIDE.md?raw";
 import protonChangelog from "../../../docs/PROTON_CHANGELOG.md?raw";
 // The firmware repo's CHANGELOG.md, bundled at build time (firmwareChangelog.config.ts).
 import firmwareChangelog from "@firmware-changelog?raw";
-import Markdown, { firstChapters, markdownHeadings, plainHeading, scrollToHeading } from "../Markdown";
+import Markdown, { firstChapters, markdownHeadings, NEWEST_BUDGET, plainHeading, scrollToHeading } from "../Markdown";
 import diceIcon from "../assets/42ps-dice.png";
 import ComingSoon from "../about/ComingSoon";
 import { ISSUES_URL, ROADMAP_COLUMNS } from "../about/roadmap";
@@ -95,10 +95,6 @@ const TEXTS: Record<AboutTab, { icon: LucideIcon; title: string; text: string | 
   credits: { icon: Heart, title: "desktop.about.credits", text: CREDITS },
 };
 
-// A changelog opens on its newest releases (whole ones, about the first 16k
-// characters); the rest shows on request. Parsing and drawing all of App
-// changes (100 KB, ~900 elements) for the release on top would be drinking.
-const NEWEST_BUDGET = 16_000;
 const NEWEST: Partial<Record<AboutTab, { text: string; chapters: number } | null>> = {
   changes: firstChapters(changelog, NEWEST_BUDGET),
   firmware: firstChapters(firmwareChangelog, NEWEST_BUDGET),

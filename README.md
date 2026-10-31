@@ -1,22 +1,22 @@
 # DS5 Dongle OLED Edition Configurator
 
-The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W dongle that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, haptic feedback, built-in speaker and microphone included).
+The desktop app for the **[DS5 Dongle OLED Edition](https://github.com/MarcelineVPQ/DS5Dongle-OLED-Edition)**: the Raspberry Pi Pico 2 W board that connects a DualSense controller to your PC over Bluetooth while looking, to games, exactly like a wired DualSense (adaptive triggers, haptic feedback, built-in speaker and microphone included).
 
-Made on Linux, tested on Linux, Windows 11 and macOS (the universal app, installed and run on a real Apple Silicon Mac by the [macOS smoke test](.github/workflows/mac-smoke.yml)). The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the dongle's firmware.
+Made on Linux, tested on Linux, Windows 11 and macOS (the universal app, installed and run on a real Apple Silicon Mac by the [macOS smoke test](.github/workflows/mac-smoke.yml)). The Games page works on Linux (Steam, Heroic, Lutris) and Windows (Steam, GOG Galaxy, Epic). No drivers to install. It updates itself and the board's firmware.
 
 ![The live controller: your DualSense in its own colors, moving as you use it](docs/screenshots/live-controller.png)
 
 ## What you can do
 
-**The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the dongle to each setting, with a picture for each step. In short:
+**The step-by-step [guide](docs/GUIDE.md)** walks through everything, from building the board to each setting, with a picture for each step. In short:
 
 - **Your controller, live:** drawn in its own colors (DualSense colorways and the Edge), moving as you use it. Click any part to set it up: light bar, adaptive triggers (with **Trigger Effect Intensity** to make games' resistance weaker), haptic feedback with vibration intensity per side (haptic feedback and classic vibration, with a test), Audio Auto Haptics, speaker and mic (**Speaker boost**, **Lock volume**, **Audio output** and **Microphone used**, with a speaker test and a mic test), button assignments (every button in one list, the Edge's Fn buttons and back buttons too, plus **saved button layouts** you can give to games), pairing slots, and **Controller info**: the controller's own firmware (and whether Sony has a newer one), its battery voltage and the lifetime counters it keeps.
-- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored in the dongle per pairing slot; a **sensitivity curve** per stick; circularity and drift tests.
+- **Calibration:** fix stick drift, sticks or triggers that don't reach full, and a creeping gyroscope, stored on the board per pairing slot; a **sensitivity curve** per stick; circularity and drift tests.
 - **Your board's page** (named after the board, for example **Pico 2 W**): its screen mirrored pixel for pixel, a live dashboard (temperature, clock, Bluetooth and USB traffic, the audio pipeline, how long each part of the firmware takes) with the board's and the screen's specs, one-click firmware updates, **PC sleep** (turn the controller off when the PC sleeps, wake the PC with the PS button) and a **Status pin** (a Pico pin that shows the controller connection, for an LED or a PC's power-button header).
 - **Games:** your Steam, Heroic and Lutris library (on Windows: Steam, GOG Galaxy and Epic) as a list and a cover grid with launcher icons and Steam's own categories (hide soundtracks, software, videos…), per-game controller profiles that hold every controller setting the game changes (including a **button layout** and stick curves), edited live in the controller view and switched in while the game runs, Proton setup and fixes (Linux), **HDR in games on Linux** (through gamescope, with a checklist of what it needs and the steps to do it yourself), DualSense support per game, and your own ratings and notes.
 - **Made yours:** themes (including one in your controller's colors), Glass, look sliders, color vision modes, Reduce motion, a narrator through the controller's speaker, and experimental HDR lighting.
 
-The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the dongle the moment you make them; **Save to Pico 2 W** (the button names your board) keeps them after it powers off.
+The app lives in the **system tray** (its icon shows your light bar color and the connection). Changes apply to the board the moment you make them; **Save to Pico 2 W** (the button names your board) keeps them after it powers off.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Download from the **[releases page](https://github.com/MarcelineVPQ/DS5Dongle-OL
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-linux-x86_64.AppImage`, put it wherever you keep apps, and make it executable (file properties, or `chmod +x`).
 2. Run it once. It adds itself to your application menu, and updates keep that entry working.
-3. **Press Set up USB access** on your board's page, under **Connection to the PC** (the side bar names the page after the board, for example **Pico 2 W**; it asks for your password once). It lets the app open the dongle and games reach the controller directly (adaptive triggers and haptic feedback through Proton), and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
+3. **Press Set up USB access** on your board's page, under **Connection to the PC** (the side bar names the page after the board, for example **Pico 2 W**; it asks for your password once). It lets the app open the board and games reach the controller directly (adaptive triggers and haptic feedback through Proton), and on Ubuntu 23.10 and newer it also installs a small AppArmor profile so the app runs inside Chromium's security sandbox (Ubuntu does the same for Chrome and VS Code). Users with Steam installed often already have USB access, but the sandbox still needs this step.
 
 ### Windows
 
@@ -43,12 +43,12 @@ Tested on Windows 11, end to end in a test machine (`tools/windows_vm_test.py`) 
 
 1. Download `DS5Dongle-OLED-Edition-Configurator-<version>-win-x64-setup.exe` and run it. Windows SmartScreen warns that it's unsigned: choose *More info → Run anyway*. It installs for your Windows user only (no admin rights needed) into `%LOCALAPPDATA%\Programs`, adds the app to the Start menu and opens it; the tray menu can also create a desktop shortcut. Updates install themselves from inside the app. To remove it: Settings → Apps → Installed apps → DS5 Dongle OLED Edition Configurator → Uninstall (your settings and game profiles stay, in `%APPDATA%\DS5 Dongle OLED Edition Configurator`).
 2. Used the older portable `…-win-x64.exe`? It can't update itself to the installer: download the installer once and run it. Your settings and game profiles carry over, and afterwards the old `.exe` file can be deleted.
-3. Windows loads the USB driver for the dongle automatically.
-4. **If the app says "The Pico 2 W is plugged in, but Windows hasn't set up its driver"** (it names your board) (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the dongle and plug it back in. See below for exactly what it does.
+3. Windows loads the USB driver for the board automatically.
+4. **If the app says "The Pico 2 W is plugged in, but Windows hasn't set up its driver"** (it names your board) (or it never connects), press **Repair USB driver** on that screen, allow the admin prompt, then unplug the board and plug it back in. See below for exactly what it does.
 
 #### Repair USB driver: exactly what it runs
 
-The dongle uses a real DualSense's USB IDs (`054C:0CE6`, or `054C:0DF2` in DualSense Edge mode), so games treat it as one. It also asks Windows to load the standard **WinUSB** driver for the configurator's own interface. Windows asks a device for that only the **first time** it sees those IDs, and remembers the answer. If a real DualSense was ever plugged into the PC by USB, Windows remembered "no driver needed", and the app can't open the dongle.
+The board uses a real DualSense's USB IDs (`054C:0CE6`, or `054C:0DF2` in DualSense Edge mode), so games treat it as one. It also asks Windows to load the standard **WinUSB** driver for the configurator's own interface. Windows asks a device for that only the **first time** it sees those IDs, and remembers the answer. If a real DualSense was ever plugged into the PC by USB, Windows remembered "no driver needed", and the app can't open the board.
 
 **Repair USB driver** makes Windows forget that answer. It runs this PowerShell script once, as administrator (Windows shows its admin prompt first; choose No and nothing happens). Before anything runs, the app lists these steps and can show the script itself, and you choose **Run the repair** or **Cancel**. The app contains it as fixed text ([`src/desktop/windowsRepairScript.ts`](src/desktop/windowsRepairScript.ts), run by [`electron/main/windowsSetup.ts`](electron/main/windowsSetup.ts)); nothing from the page or the internet goes into it, and a test fails the build if this copy and the app's ever differ:
 
@@ -65,11 +65,11 @@ exit 0
 
 What each part does:
 
-- **`usbflags\054C…0100`**: Windows' remembered answer for those two USB IDs (revision 0100). Deleting it makes Windows ask the dongle again on the next plug-in. Nothing else in the registry is touched.
-- **`pnputil /remove-device`**: removes Windows' cached device entries for the same two IDs only (`USB\VID_054C&PID_0CE6…` / `0DF2…`). Windows creates them again, with the right driver, when the dongle is plugged back in. A real DualSense plugged in by USB gets its entries recreated the same way.
+- **`usbflags\054C…0100`**: Windows' remembered answer for those two USB IDs (revision 0100). Deleting it makes Windows ask the board again on the next plug-in. Nothing else in the registry is touched.
+- **`pnputil /remove-device`**: removes Windows' cached device entries for the same two IDs only (`USB\VID_054C&PID_0CE6…` / `0DF2…`). Windows creates them again, with the right driver, when the board is plugged back in. A real DualSense plugged in by USB gets its entries recreated the same way.
 - Nothing is downloaded, installed or left running. The app starts it through `powershell.exe` from `%SystemRoot%\System32`, passed as `-EncodedCommand` so no shell interprets it on the way.
 
-It can come back if a real DualSense is plugged into the PC by USB again; press the button again then. To do it by hand instead: run the same script in an administrator PowerShell, then replug the dongle.
+It can come back if a real DualSense is plugged into the PC by USB again; press the button again then. To do it by hand instead: run the same script in an administrator PowerShell, then replug the board.
 
 ### macOS
 
@@ -80,11 +80,11 @@ Download the `.zip`, unzip it, and move the app to *Applications*. The build isn
 ## Updates
 
 - **App:** about 20 seconds after it starts (then every 6 hours) the app checks for a new version. If there is one, a banner offers **Download and install**, then **Restart now**. Every download is checked against its published size and SHA-256 before anything is replaced, and the app never installs an older version. Turn automatic checks off in ⚙ App settings or the tray menu.
-- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear on your board's page (**Check for updates** looks right away). One click does everything: download and verify, restart the dongle into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the dongle while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
+- **Firmware:** each app release includes the firmware it was built with, and a newer published firmware is offered when there is one. Both appear on your board's page (**Check for updates** looks right away). One click does everything: download and verify, restart the board into its bootloader, flash it, wait for it to come back, and confirm the version. Don't unplug the board while it runs (about 20 seconds); press the **PS button** on the controller afterwards.
 
 ## Privacy
 
-No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates, to load the firmware changelog, and (with automatic update checks on, or when you press Refresh on Controller info) to read Sony's list of official controller firmware versions from `fwupdater.dl.playstation.net`: a plain request with nothing about you or your controller in it, cached for a day. The controller's serial number is never read into the app. To show your controller's colors, the dongle reads the colorway code from the controller's factory serial number once when it connects; only those two characters are kept, and they never leave your PC. The Games page reads launcher settings only after you allow it. It can only open the dongle and the dongle's bootloader over USB; every other device and web permission is refused.
+No accounts, no analytics, no telemetry. The app only goes online to check GitHub for updates, to load the firmware changelog, and (with automatic update checks on, or when you press Refresh on Controller info) to read Sony's list of official controller firmware versions from `fwupdater.dl.playstation.net`: a plain request with nothing about you or your controller in it, cached for a day. The controller's serial number is never read into the app. To show your controller's colors, the board reads the colorway code from the controller's factory serial number once when it connects; only those two characters are kept, and they never leave your PC. The Games page reads launcher settings only after you allow it. It can only open the board and the board's bootloader over USB; every other device and web permission is refused.
 
 ## Troubleshooting
 
@@ -114,8 +114,8 @@ The result is in `release/`. The official downloads are built the same way by [G
   - [SECURITY_AUDIT](docs/SECURITY_AUDIT.md).
   - [Architecture decisions](docs/adr/README.md).
   - [CLAUDE.md](CLAUDE.md): an architecture overview.
-- **Protocol:** the app talks to the dongle over a vendor USB interface using WebUSB; see [ADR-0001](docs/adr/0001-vendor-usb-transport.md) and the firmware's `CLAUDE.md`.
-- **Browser version:** retired after 0.8.0; the desktop app is the only way to configure the dongle. Its old address now serves the download page (`site/`).
+- **Protocol:** the app talks to the board over a vendor USB interface using WebUSB; see [ADR-0001](docs/adr/0001-vendor-usb-transport.md) and the firmware's `CLAUDE.md`.
+- **Browser version:** retired after 0.8.0; the desktop app is the only way to configure the board. Its old address now serves the download page (`site/`).
 
 ## Credits
 
