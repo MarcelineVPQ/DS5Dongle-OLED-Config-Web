@@ -218,6 +218,123 @@ html[data-theme="dark"] {
   }
 }
 
+/* ---------- The desktop shell's palette (.dk) ----------
+ * Selection, action and grey tokens of the app's window; the themes and
+ * Color vision override them (theme/desktopPalette.ts, live/controllerAccent.ts,
+ * colorVision.ts). Every literal-colour token is defined in this file, the one
+ * place (.hooks/check_theme_colors.mjs refuses one anywhere else). */
+.dk {
+  /* Selection / action colors. Light theme uses a deeper green than the web
+   * tool's accent so selected states read clearly on white. */
+  --dk-accent: #15803d;
+  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
+  --dk-accent-hover: #166534;
+  --dk-on-accent: #ffffff;
+  --dk-sel-bg: #dcfce7;
+  --dk-sel-border: #16a34a;
+  --dk-sel-text: #14532d;
+  --dk-disabled-bg: #e2e8f0;
+  --dk-disabled-text: #475569;
+  --dk-focus: #15803d;
+  /* Light theme: stronger greys than the web tool's, for small desktop type. */
+  --text-muted: #475569;
+  --text-eyebrow: #475569;
+  --text-soft: #1e293b;
+  --dk-chip-ok-bg: #15803d;
+  --dk-chip-ok-text: #ffffff;
+  /* A selected warning chip (a Fail's details): the status amber filled, its
+     badge ink on it (both follow Color vision). */
+  --dk-chip-warn-bg: var(--status-warn);
+  --dk-chip-warn-text: var(--on-status);
+}
+
+/* The dark block is written twice, like the palette's above: CSS can't share
+   one block between an attribute selector and a media query. The theme gate
+   checks the two copies stay identical. */
+html[data-theme="dark"] .dk {
+  --dk-accent: #22c55e;
+  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
+  --dk-accent-hover: #16a34a;
+  --dk-on-accent: #052e16;
+  --dk-sel-bg: #052e1f;
+  --dk-sel-border: #15803d;
+  --dk-sel-text: #86efac;
+  --dk-disabled-bg: #1e293b;
+  --dk-disabled-text: #64748b;
+  --dk-focus: #4ade80;
+  --text-muted: #94a3b8;
+  --text-eyebrow: #94a3b8;
+  --text-soft: #cbd5e1;
+  --dk-chip-ok-bg: #052e1f;
+  --dk-chip-ok-text: #86efac;
+  --dk-chip-warn-bg: var(--notice-warn-bg);
+  --dk-chip-warn-text: var(--notice-warn-text);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] .dk,
+  html:not([data-theme]) .dk {
+    --dk-accent: #22c55e;
+    --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
+    --dk-accent-hover: #16a34a;
+    --dk-on-accent: #052e16;
+    --dk-sel-bg: #052e1f;
+    --dk-sel-border: #15803d;
+    --dk-sel-text: #86efac;
+    --dk-disabled-bg: #1e293b;
+    --dk-disabled-text: #64748b;
+    --dk-focus: #4ade80;
+    --text-muted: #94a3b8;
+    --text-eyebrow: #94a3b8;
+    --text-soft: #cbd5e1;
+    --dk-chip-ok-bg: #052e1f;
+    --dk-chip-ok-text: #86efac;
+    --dk-chip-warn-bg: var(--notice-warn-bg);
+    --dk-chip-warn-text: var(--notice-warn-text);
+  }
+}
+
+/* ---------- Fixed colours ----------
+ * Physical things drawn as they really look, the same in every theme (the
+ * one-theme rule's exceptions), as tokens so they too live in one place. */
+
+/* The live controller drawing: like the real controller, the center,
+   triggers, bumpers and sticks are darker than the body in every theme. */
+.live-ctl {
+  --ctl-dark: color-mix(in srgb, #000 62%, var(--bg-panel));
+  --ctl-stick: color-mix(in srgb, #000 45%, var(--bg-panel));
+  --ctl-press-ink: #fff; /* press tint: lighter (dark theme) or darker (light), per controller in LiveController */
+}
+/* Pressed: a grayscale tint over the part's own color, darker on light
+   buttons and lighter on dark ones (desktop.css, .live-ctl .on). */
+html[data-theme="light"] .live-ctl {
+  --ctl-press-ink: #000;
+}
+.live-ctl .led {
+  /* Unlit: the grey of the light strip's plastic (same as the bottom strip). */
+  --ctl-led-off: color-mix(in srgb, #fff 45%, var(--ctl-dark));
+}
+
+/* The board console (the OLED mirror + log): dark in every theme, like any
+   console (its colors don't follow the app theme on purpose). */
+.dcon {
+  --dcon-bg: #0d0d0d;
+  --dcon-text: #e6e6e6;
+  --dcon-border: #2a2a2a;
+  --dcon-muted: #8a8a8a;
+  --dcon-pcb: #101418; /* the module's black board around the panel */
+  --dcon-key: #23272c;
+  --dcon-key-edge: #3a4048;
+  --dcon-key-cap: #4a5058;
+  --dcon-key-cap-hi: #6c737c;
+}
+
+/* Glass (preview): the light layer (a faint white fill) and the edge (a
+   brighter line where glass meets glass or art). */
+html[data-glass] {
+  --glass-light: rgb(255 255 255 / 5%);
+  --glass-edge: rgb(255 255 255 / 14%);
+}
+
 * {
   box-sizing: border-box;
 }

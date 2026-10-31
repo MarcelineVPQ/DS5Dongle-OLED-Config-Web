@@ -5,12 +5,18 @@
 // (--bg-*, --text-*, --border-*, --dk-accent, --status-*...), so a new theme,
 // a controller colorway or Color vision restyles everything. This blocks a
 // literal color (#hex, rgb()/rgba(), named) anywhere except:
-//   - a token definition (a line that sets a --custom-property);
+//   - a token definition (a line that sets a --custom-property) in a PALETTE
+//     file (src/styles.css): every literal-colour token lives in that one
+//     place, so a component stylesheet can't mint its own (--my-red: #f00
+//     would escape the themes and Color vision);
 //   - a neutral shadow: pure black with alpha in a box-/text-shadow or filter;
 //   - a line marked `theme-exempt: <reason>` (the controller's real LEDs, the
 //     OLED console, 42PS brand colors...); listed by `--list`;
 //   - a token source (TOKEN_SOURCES below): the .ts files whose job is to hold
 //     the palettes the tokens are built from. Exempt by path, listed by `--list`.
+// And in a palette file, each dark block (html[data-theme="dark"] X) and its
+// copy for the system's dark mode (inside @media (prefers-color-scheme: dark))
+// must stay identical: CSS can't share one block between the two.
 // It walks .css, .tsx and .ts (F44: .ts was skipped, so tray/trayIcon.ts drew
 // with literal colors unseen).
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -27,6 +33,8 @@ const TOKEN_SOURCES = new Map([
   // Not colors at all: user-facing prose ("the black parts") that the named-color pattern matches.
   ["src/desktop/about/roadmap.ts", "prose only (About -> Coming soon text)"],
 ]);
+// The one place for literal-colour tokens (CLAUDE.md, "One theme system").
+const PALETTE_FILES = ["src/styles.css"];
 const COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|(?<![\w-])(white|black|red|green|blue|orange|yellow|purple|gray|grey)(?![\w-])/;
 const SHADOW_BLACK = /\brgba?\(\s*0[ ,]+0[ ,]+0\s*(\/|,)/g;
 
@@ -39,7 +47,7 @@ const walk = (dir) => {
   }
 };
 ROOTS.forEach(walk);
-const staleSources = [...TOKEN_SOURCES.keys()].filter((f) => !files.includes(f));
+const staleSources = [...TOKEN_SOURCES.keys(), ...PALETTE_FILES].filter((f) => !files.includes(f));
 if (staleSources.length) {
   console.log(`Theme gate: TOKEN_SOURCES lists files that aren't walked (moved or deleted?): ${staleSources.join(", ")}`);
   process.exit(1);
@@ -50,7 +58,7 @@ const exempt = [...TOKEN_SOURCES].map(([file, why]) => `${file}: (whole file) to
 const check = (file, startLine, text, rawText) => {
   if (!COLOR.test(text)) return;
   const where = `${file}:${startLine}: ${rawText.trim().replace(/\s+/g, " ").slice(0, 160)}`;
-  if (/^\s*--[\w-]+\s*:/.test(text)) return; // token definition
+  if (/^\s*--[\w-]+\s*:/.test(text) && PALETTE_FILES.includes(file)) return; // a token definition in the palette
   if (/(box-shadow|text-shadow|filter)\s*:/.test(text) && !COLOR.test(text.replace(SHADOW_BLACK, "x("))) return;
   if (/theme-exempt:/.test(rawText)) {
     exempt.push(where);
@@ -91,12 +99,42 @@ for (const file of files) {
   }
 }
 
+// A palette's dark blocks and their system-dark copies: same declarations, same order.
+const norm = (body) =>
+  body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .join("\n");
+// loop: NOT-WORTH — the palette files (one), once per run
+for (const file of PALETTE_FILES) {
+  const css = readFileSync(file, "utf8");
+  const media = /@media \(prefers-color-scheme: dark\) \{([\s\S]*?)\n\}/g;
+  const systemCopies = new Map();
+  // loop: NOT-WORTH — the palette's dark media blocks (a few)
+  for (const m of css.matchAll(media)) for (const b of m[1].matchAll(/html\[data-theme="system"\]([^,{]*),\s*html:not\(\[data-theme\]\)\1\s*\{([^}]*)\}/g)) systemCopies.set(b[1].trim(), norm(b[2]));
+  const outside = css.replace(media, "");
+  // loop: NOT-WORTH — the palette's dark blocks (a few)
+  for (const b of outside.matchAll(/html\[data-theme="dark"\]([^,{]*)\{([^}]*)\}/g)) {
+    const scope = b[1].trim();
+    const copy = systemCopies.get(scope);
+    if (copy === undefined)
+      hits.push(
+        `${file}: html[data-theme="dark"] ${scope} has no copy for the system's dark mode (@media (prefers-color-scheme: dark) html[data-theme="system"] ${scope}, html:not([data-theme]) ${scope})`,
+      );
+    else if (copy !== norm(b[2])) hits.push(`${file}: html[data-theme="dark"] ${scope} and its system-dark copy differ: make them identical`);
+    systemCopies.delete(scope);
+  }
+  // loop: NOT-WORTH — what's left of a few blocks
+  for (const scope of systemCopies.keys()) hits.push(`${file}: a system-dark block for "${scope || "html"}" without its html[data-theme="dark"] block`);
+}
+
 if (process.argv.includes("--list")) {
   console.log(exempt.join("\n"));
   process.exit(0);
 }
 if (hits.length) {
-  console.log("Theme gate: literal color outside the theme tokens (use a token, or mark the line 'theme-exempt: <reason>')");
+  console.log("Theme gate: literal color outside the theme tokens (use a token defined in src/styles.css, or mark the line 'theme-exempt: <reason>')");
   console.log(hits.join("\n"));
   process.exit(1);
 }

@@ -1,7 +1,7 @@
 /* Desktop (Electron) layout. Dense by design: a settings tool that sits next to
  * games and terminals. The shell is exactly the window: sidebar + page, with
  * only the page body scrolling, and only when the window is too small for it.
- * Colors come from the shared theme tokens in styles.css. */
+ * Colors come from the theme tokens, all defined in styles.css (the one place). */
 
 /* Minimized or hidden in the tray (useWindowShown): every animation holds
    still. A running animation keeps the compositor drawing frames nobody sees
@@ -23,29 +23,7 @@
   --dk-font: 13px;
   --dk-small: 11.5px;
   --dk-radius: 6px;
-
-  /* Selection / action colors. Light theme uses a deeper green than the web
-   * tool's accent so selected states read clearly on white. */
-  --dk-accent: #15803d;
-  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
-  --dk-accent-hover: #166534;
-  --dk-on-accent: #ffffff;
-  --dk-sel-bg: #dcfce7;
-  --dk-sel-border: #16a34a;
-  --dk-sel-text: #14532d;
-  --dk-disabled-bg: #e2e8f0;
-  --dk-disabled-text: #475569;
-  --dk-focus: #15803d;
-  /* Light theme: stronger greys than the web tool's, for small desktop type. */
-  --text-muted: #475569;
-  --text-eyebrow: #475569;
-  --text-soft: #1e293b;
-  --dk-chip-ok-bg: #15803d;
-  --dk-chip-ok-text: #ffffff;
-  /* A selected warning chip (a Fail's details): the status amber filled, its
-     badge ink on it (both follow Color vision). */
-  --dk-chip-warn-bg: var(--status-warn);
-  --dk-chip-warn-text: var(--on-status);
+  /* Its colour tokens (the --dk-* palette, light and dark): styles.css. */
 
   position: fixed;
   inset: 0;
@@ -55,48 +33,6 @@
   line-height: 1.35;
   background: var(--bg-page);
   color: var(--text-body);
-}
-
-html[data-theme="dark"] .dk {
-  --dk-accent: #22c55e;
-  --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
-  --dk-accent-hover: #16a34a;
-  --dk-on-accent: #052e16;
-  --dk-sel-bg: #052e1f;
-  --dk-sel-border: #15803d;
-  --dk-sel-text: #86efac;
-  --dk-disabled-bg: #1e293b;
-  --dk-disabled-text: #64748b;
-  --dk-focus: #4ade80;
-  --text-muted: #94a3b8;
-  --text-eyebrow: #94a3b8;
-  --text-soft: #cbd5e1;
-  --dk-chip-ok-bg: #052e1f;
-  --dk-chip-ok-text: #86efac;
-  --dk-chip-warn-bg: var(--notice-warn-bg);
-  --dk-chip-warn-text: var(--notice-warn-text);
-}
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"] .dk,
-  html:not([data-theme]) .dk {
-    --dk-accent: #22c55e;
-    --dk-accent-text: var(--dk-accent); /* the accent as text; themes set a contrast-checked one */
-    --dk-accent-hover: #16a34a;
-    --dk-on-accent: #052e16;
-    --dk-sel-bg: #052e1f;
-    --dk-sel-border: #15803d;
-    --dk-sel-text: #86efac;
-    --dk-disabled-bg: #1e293b;
-    --dk-disabled-text: #64748b;
-    --dk-focus: #4ade80;
-    --text-muted: #94a3b8;
-    --text-eyebrow: #94a3b8;
-    --text-soft: #cbd5e1;
-    --dk-chip-ok-bg: #052e1f;
-    --dk-chip-ok-text: #86efac;
-    --dk-chip-warn-bg: var(--notice-warn-bg);
-    --dk-chip-warn-text: var(--notice-warn-text);
-  }
 }
 
 /* Keyboard focus: one visible ring in the theme color (Chromium's default is
@@ -1292,10 +1228,7 @@ html[data-theme="dark"] .dk {
 .live-ctl {
   --ctl-body: var(--bg-panel);
   --ctl-cap: var(--bg-inset);
-  /* Like the real controller: the center, triggers, bumpers and sticks are
-     darker than the body in every theme. */
-  --ctl-dark: color-mix(in srgb, #000 62%, var(--bg-panel));
-  --ctl-stick: color-mix(in srgb, #000 45%, var(--bg-panel));
+  /* --ctl-dark, --ctl-stick and --ctl-press-ink: styles.css, "Fixed colours". */
   --ctl-line: var(--text-muted);
   --ctl-line-dark: var(--ctl-line);
   --ctl-on: var(--cv-press, var(--dk-accent));
@@ -1305,7 +1238,6 @@ html[data-theme="dark"] .dk {
   display: flex;
   justify-content: center;
   min-height: 0;
-  --ctl-press-ink: #fff; /* press tint: lighter (dark theme) or darker (light), per controller in LiveController */
 }
 .live-ctl svg {
   width: 100%;
@@ -1334,8 +1266,7 @@ html[data-theme="dark"] .dk {
   fill: var(--ctl-line-dark);
 }
 .live-ctl .led {
-  /* Unlit: the grey of the light strip's plastic (same as the bottom strip). */
-  --ctl-led-off: color-mix(in srgb, #fff 45%, var(--ctl-dark));
+  /* --ctl-led-off: styles.css, "Fixed colours". */
   fill: color-mix(in srgb, var(--ctl-led, #4061d6) var(--ctl-led-pct, 100%), var(--ctl-led-off)); /* theme-exempt: the controller drawing: its real lights and press tints */
   /* Bridges the 10 Hz color samples (useLiveLightbar) so animated modes glide. */
   transition: fill 100ms linear;
@@ -1372,9 +1303,6 @@ html[data-theme="dark"] .dk {
 /* Pressed: a grayscale tint over the part's own color, darker on light
    buttons and lighter on dark ones (sticks, bumpers), so a press shows on
    every colorway; the accent could match the body (Cosmic Red). */
-html[data-theme="light"] .live-ctl {
-  --ctl-press-ink: #000;
-}
 .live-ctl .on .cap {
   fill: color-mix(in srgb, var(--ctl-cap) 50%, var(--ctl-press-ink));
 }
@@ -2678,15 +2606,7 @@ html[data-theme="light"] .live-ctl {
 /* ---- Dongle console: the OLED mirror + log. Dark in every theme, like any
    console (its colors don't follow the app theme on purpose). ---- */
 .dcon {
-  --dcon-bg: #0d0d0d;
-  --dcon-text: #e6e6e6;
-  --dcon-border: #2a2a2a;
-  --dcon-muted: #8a8a8a;
-  --dcon-pcb: #101418; /* the module's black board around the panel */
-  --dcon-key: #23272c;
-  --dcon-key-edge: #3a4048;
-  --dcon-key-cap: #4a5058;
-  --dcon-key-cap-hi: #6c737c;
+  /* Its fixed colours (--dcon-*): styles.css, "Fixed colours". */
   display: flex;
   flex-direction: column;
   width: min(100%, 900px);
@@ -3936,12 +3856,7 @@ html[data-theme="light"] .live-ctl {
    rim; the refraction itself is the backdrop filter from useLiquidGlass),
    a specular rim lit from where the pointer is, a liquid press. Content keeps
    its plain surfaces. ---- */
-/* The glass tokens: the light layer (a faint white fill) and the edge (a
-   brighter line where glass meets glass or art). */
-html[data-glass] {
-  --glass-light: rgb(255 255 255 / 5%);
-  --glass-edge: rgb(255 255 255 / 14%);
-}
+/* The glass tokens (--glass-light, --glass-edge): styles.css, "Fixed colours". */
 /* Docked: flush with the window edges, square corners (the user preferred
    that to Apple's floating rounded shapes). */
 html[data-glass] .app-rail {
