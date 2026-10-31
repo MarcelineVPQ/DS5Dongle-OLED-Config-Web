@@ -23,7 +23,8 @@ updates:
       - "dependencies"
       - "javascript"
     commit-message:
-      prefix: "deps"
+      prefix: "build"
+      include: "scope"
     groups:
       # The runtime that ships to users: review these on their own.
       electron:
