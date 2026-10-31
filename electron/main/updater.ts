@@ -9,7 +9,7 @@
 // user verbatim.
 import { TRUSTED_KEYS, feedSignedBy } from "./feedSignature";
 import { errorText, KeyedError, keyedText } from "../../src/errorText";
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, chmodSync, lstatSync, symlinkSync, realpathSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, chmodSync, realpathSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { app, net } from "electron";
@@ -23,6 +23,7 @@ import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
 import { FeedCache, FeedError, FeedMissingError, feedProblem } from "./updateFeed";
 import { pathWithoutAppImageMounts } from "./games/schemeHandler";
 import { WINDOWS_SETUP_NAME, installerArgs, isInstalledApp } from "./windowsInstall";
+import { linkStableAppImage } from "./integration";
 
 // Published by the release workflow on the firmware repo, where every release
 // (app + firmware) lives; see docs/adr/0005-releases-on-the-firmware-repo.md.
@@ -30,7 +31,8 @@ const MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-O
 // The development channel's feed (opt-in): the newest development build or
 // stable release, whichever is newer. Same signing key, same checks.
 const DEV_MANIFEST_URL = "https://raw.githubusercontent.com/MarcelineVPQ/DS5Dongle-OLED-Edition/master/latest-dev.json";
-const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
+// The versioned AppImage an update downloads (its partial download adds ".part").
+const OUR_APPIMAGE = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/;
 
 // Test feed: DS5_UPDATE_MANIFEST=http://127.0.0.1:8765/latest.json points the
 // updater at a server on this machine, so a full update cycle can be exercised
@@ -150,8 +152,9 @@ export class Updater {
         const dir = dirname(current);
         for (const f of readdirSync(dir)) {
           const full = join(dir, f);
-          if (f.endsWith(".AppImage.part")) rmSync(full, { force: true });
-          const m = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev\.\d+)?)-linux-x86_64\.AppImage$/.exec(f);
+          // Only our own partial download: other programs' *.AppImage.part (a browser's download into ~/Downloads) are theirs.
+          if (f.endsWith(".part") && OUR_APPIMAGE.test(f.slice(0, -".part".length))) rmSync(full, { force: true });
+          const m = OUR_APPIMAGE.exec(f);
           if (m && full !== current && isNewer(app.getVersion(), m[1])) rmSync(full, { force: true });
         }
       } else if (process.platform === "win32" && !this.downloadStarted) {
@@ -303,10 +306,7 @@ export class Updater {
       chmodSync(part, 0o755);
       renameSync(part, target);
       // Repoint the stable symlink the menu entry and autostart use.
-      const stable = join(dirname(target), STABLE_APPIMAGE);
-      if (lstatSync(stable, { throwIfNoEntry: false })) rmSync(stable, { force: true });
-      symlinkSync(target, stable);
-      return stable;
+      return linkStableAppImage(target);
     }
     // Windows: the verified installer waits; restart() or quitting runs it.
     renameSync(part, target);

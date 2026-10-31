@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Fixed
 
 - **Ctrl+R no longer reloads the app (and can't cut a firmware update short).** Electron's built-in menu was still active behind the hidden menu bar: Ctrl+R / ⌘R or F5 reloaded the page, which during a firmware update stopped the write halfway and dropped unsaved button, stick and calibration changes; Ctrl+Shift+I opened the developer tools in releases; Ctrl+= zoomed past the fixed 100 %. The app now has its own menu (none on Windows and Linux; App, Edit and Window on macOS) and refuses those keys.
+- **Linux: the app no longer deletes other programs' downloads or your own copy.** At every start it removed any `*.AppImage.part` file in its folder (often Downloads), including a browser's download still in progress, and a real file you kept under the name `DS5Dongle-OLED-Edition-Configurator.AppImage` was replaced by its shortcut link. It now removes only its own unfinished update download and replaces only its own link.
 
 ## [0.9.5-dev.20] — Release Candidate 2 — 2026-10-18
 

@@ -24,7 +24,8 @@ const SHORTCUT_NAME = "DS5 Dongle OLED Edition Configurator.lnk";
 export function launchPath(): string {
   if (process.env.APPIMAGE) {
     const stable = join(dirname(realpathOrSelf(process.env.APPIMAGE)), STABLE_APPIMAGE);
-    return existsSync(stable) ? stable : process.env.APPIMAGE;
+    // Our symlink only: a real file by that name is the user's own copy.
+    return lstatSync(stable, { throwIfNoEntry: false })?.isSymbolicLink() && existsSync(stable) ? stable : process.env.APPIMAGE;
   }
   return process.execPath;
 }
@@ -47,15 +48,26 @@ function realpathOrSelf(path: string): string {
   }
 }
 
+// Points the stable name beside `target` at it and returns the path launchers
+// should run. Only our own symlink is ever replaced: a real file by that name
+// is the user's (a copy they renamed or kept), never deleted; then the
+// versioned file is the launch path.
+export function linkStableAppImage(target: string): string {
+  const stable = join(dirname(target), STABLE_APPIMAGE);
+  const existing = lstatSync(stable, { throwIfNoEntry: false });
+  if (existing && !existing.isSymbolicLink()) return target;
+  if (existing) rmSync(stable, { force: true });
+  symlinkSync(target, stable);
+  return stable;
+}
+
 function integrateAppImage(resourcesDir: string): void {
   const installed = realpathOrSelf(process.env.APPIMAGE!);
   const stable = join(dirname(installed), STABLE_APPIMAGE);
   let launch = installed;
   if (stable !== installed) {
     try {
-      if (lstatSync(stable, { throwIfNoEntry: false })) rmSync(stable, { force: true });
-      symlinkSync(installed, stable);
-      launch = stable;
+      launch = linkStableAppImage(installed);
     } catch {
       // error: NOT-WORTH — Read-only folder: fall back to the versioned path.
     }
