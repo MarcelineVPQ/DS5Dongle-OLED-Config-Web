@@ -18,7 +18,7 @@ import { shortVersion } from "../update/manifest";
 import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
 import { logged } from "../errorText";
-import { feedProblemKey } from "./useUpdates";
+import { feedProblemText } from "./useUpdates";
 
 const POLL_MS = 1000;
 
@@ -152,12 +152,12 @@ function UpdatesWithoutDongle() {
   if (!desktop) return null;
   const check = async () => {
     setChecked(null);
-    // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed when the feed was refused (a failed check reads as null, which the line below says)
+    // error: SHOWN — desktop.setup.checkFailed (no answer), desktop.updateFeed.* by problem (refused feed, HTTP error, rate limit), desktop.updateFeed.internal when the app's own call failed (null)
     const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true).catch(() => null)]);
     if (lookup?.latest) setFirmware(lookup.latest);
     setChecked(
       !app || app.phase === "failed"
-        ? t(feedProblemKey(app?.phase === "failed" ? app.problem : null, "desktop.setup.checkFailed"))
+        ? feedProblemText(t, app ? app.problem : "internal", "desktop.setup.checkFailed")
         : app.phase === "up-to-date"
           ? t("desktop.setup.checkedCurrent", { version: app.version })
           : app.phase === "idle" || app.phase === "checking"

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 // A refused update feed is not "offline" (dev.10: a stale .sig read as
-// "Are you online?" everywhere). The updater says why a check failed
-// (network / unsigned / malformed) and every page that reports a check says
-// it in those words: App settings' Check for updates, the setup screen, the
+// "Are you online?" everywhere), and neither is a server's HTTP error or an
+// error inside the app (pre-release review: no "offline?" guesses). The
+// updater says why a check failed (no answer / rate-limited / HTTP status /
+// unsigned / malformed) and every page that reports a check says it in those words: App settings' Check for updates, the setup screen, the
 // Firmware section (Latest and Check for updates), the Development channel dialog and
 // the Games page's Proton install.
 import { generateKeyPairSync, sign } from "node:crypto";
@@ -80,6 +81,20 @@ describe("the updater says why a feed check failed", () => {
     expect(await check()).toMatchObject({ phase: "failed", problem: "malformed" });
   });
 
+  it("the server answered with an HTTP error: its status (or rate-limited), never offline", async () => {
+    for (const [status, problem] of [
+      [403, "http403"],
+      [503, "http503"],
+      [429, "rateLimited"],
+    ] as const) {
+      net.fetch = async () => new Response("", { status });
+      expect(await check()).toMatchObject({ phase: "failed", problem });
+    }
+    // A server error on the .sig is the server's, not a refused signature.
+    net.fetch = async (url) => (url.endsWith(".sig") ? new Response("", { status: 503 }) : new Response(GOOD));
+    expect(await check()).toMatchObject({ phase: "failed", problem: "http503" });
+  });
+
   it("a good feed still checks out", async () => {
     serve(GOOD, signed(GOOD));
     expect(await check()).toMatchObject({ phase: "up-to-date" });
@@ -88,7 +103,16 @@ describe("the updater says why a feed check failed", () => {
 
 // The words each page shows, per problem.
 const WORDS: Record<FeedProblem, { check: string; card: string; checked: string; join: string; proton: string }> = {
-  offline: { check: "Are you online?", card: "can't check (offline)", checked: "can't be reached (offline?)", join: "Can't reach the development feed", proton: "Couldn't reach the update server" },
+  offline: {
+    check: "the update server didn't answer",
+    card: "can't check (the update server didn't answer)",
+    checked: "Couldn't check: the update server didn't answer",
+    join: "The development feed's server didn't answer",
+    proton: "Couldn't reach the update server",
+  },
+  rateLimited: { check: "limiting requests", card: "limiting requests", checked: "limiting requests", join: "limiting requests", proton: "limiting requests" },
+  http503: { check: "(HTTP 503)", card: "answered HTTP 503", checked: "(HTTP 503)", join: "(HTTP 503)", proton: "(HTTP 503)" },
+  internal: { check: "failed inside the app", card: "an error inside the app", checked: "failed inside the app", join: "failed inside the app", proton: "failed inside the app" },
   unsigned: {
     check: "didn't pass its security check",
     card: "failed its security check",
@@ -145,7 +169,7 @@ function fakeMain(problem: FeedProblem) {
 const button = (text: string) => [...container.querySelectorAll("button")].find((b) => b.textContent === text)!;
 const text = () => container.textContent ?? "";
 
-describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on every page", (problem) => {
+describe.each(["offline", "rateLimited", "http503", "unsigned", "malformed"] as const)("a %s feed, on every page", (problem) => {
   const words = WORDS[problem];
   const notOffline = (s: string) => problem === "offline" || expect(s).not.toMatch(/online|offline/i);
 
@@ -229,6 +253,29 @@ describe.each(["offline", "unsigned", "malformed"] as const)("a %s feed, on ever
     expect(text()).not.toContain("refused");
     expect(text()).not.toContain("ERR_INTERNET_DISCONNECTED");
     notOffline(text());
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+// The page's call into the app itself failed (IPC): an error inside the app,
+// never "offline" (it was read as offline before the pre-release review).
+describe("the app's own call fails", () => {
+  it("App settings, the setup screen and the Development channel dialog say so", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const reject = () => Promise.reject(new Error("Error invoking remote method: BAD_REQUEST"));
+    window.desktop = { checkForUpdates: reject, latestFirmware: reject, devChannelPreview: reject, usbAccessInstalled: async () => true } as unknown as DesktopApi;
+    await act(async () => root.render(createElement(CheckNow, { firmwareInstalled: null, refreshFirmware: async () => ({ latest: null, problem: null }) })));
+    await act(async () => button("Check for updates").click());
+    expect(text()).toContain(WORDS.internal.check);
+    expect(text()).not.toMatch(/online|offline/i);
+    await act(async () => root.render(createElement(SetupScreen, { supported: false })));
+    await act(async () => button("Check for updates").click());
+    expect(text()).toContain(WORDS.internal.check);
+    expect(text()).not.toMatch(/online|offline/i);
+    await act(async () => root.render(createElement(DevChannelDialog, { automatic: true, onJoin: () => undefined, onCancel: () => undefined })));
+    expect(text()).toContain(WORDS.internal.join);
+    expect(text()).not.toMatch(/online|offline/i);
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });

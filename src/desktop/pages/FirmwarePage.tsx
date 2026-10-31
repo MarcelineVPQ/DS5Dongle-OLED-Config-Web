@@ -5,7 +5,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { isNewer, shortVersion } from "../../update/manifest";
 import { BusyButton } from "../controls";
 import { announce } from "../toast";
-import { feedProblemKey, type FirmwareUpdate } from "../useUpdates";
+import { feedProblemText, type FirmwareUpdate } from "../useUpdates";
 import { logged } from "../../errorText";
 
 // The Pico 2 W page's Firmware section (installed / latest, update, check)
@@ -40,7 +40,13 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
                   ? t("desktop.firmware.unsigned")
                   : fw.problem === "malformed"
                     ? t("desktop.firmware.malformed")
-                    : t("desktop.firmware.offline")}
+                    : fw.problem === "rateLimited"
+                      ? t("desktop.firmware.rateLimited")
+                      : fw.problem === "internal"
+                        ? t("desktop.firmware.internal")
+                        : fw.problem?.startsWith("http")
+                          ? t("desktop.firmware.server", { status: fw.problem.slice(4) })
+                          : t("desktop.firmware.offline")}
         </dd>
       </dl>
       <div className="dk-row-btns">
@@ -82,7 +88,7 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
                   : t("desktop.firmware.checkedCurrent")
                 : lookup.problem === "unpublished"
                   ? t("desktop.firmware.checkedNone")
-                  : t(feedProblemKey(lookup.problem, "desktop.firmware.checkedOffline")),
+                  : feedProblemText(t, lookup.problem, "desktop.firmware.checkedOffline"),
             );
           }}
         >

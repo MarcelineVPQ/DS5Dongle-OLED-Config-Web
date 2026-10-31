@@ -52,11 +52,14 @@ export interface DevChannelPreview {
   notesUrl: string | null;
 }
 
-// Why the update feed gave no answer: "offline" (the server couldn't be
-// reached: no network, a timeout, an HTTP error), "unsigned" (it answered, but
-// the feed failed its signature check) or "malformed" (signed, but not a feed
-// this app can read). Only "offline" is the user's connection.
-export type FeedProblem = "offline" | "unsigned" | "malformed";
+// Why the update feed gave no answer: "offline" (no answer at all: no
+// network, a timeout, a blocked host), "rateLimited" (the server answered
+// HTTP 429), `http<status>` (it answered with another HTTP error, e.g.
+// "http503"), "unsigned" (it answered, but the feed failed its signature
+// check), "malformed" (signed, but not a feed this app can read) or
+// "internal" (the page couldn't get an answer from the app's own main
+// process). Only "offline" can be the user's connection.
+export type FeedProblem = "offline" | "rateLimited" | `http${number}` | "unsigned" | "malformed" | "internal";
 
 // The join dialog's answer: the preview, why there's none, or null (not checked).
 // error: SHOWN — desktop.channel.joinOffline / .joinUnpublished, desktop.updateFeed.unsigned / .malformed (DevChannelDialog)

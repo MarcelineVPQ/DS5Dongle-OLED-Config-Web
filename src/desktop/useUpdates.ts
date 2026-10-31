@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { TFunction } from "i18next";
 import { causeText } from "./shownError";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { devNumber, isNewer, sameVersion } from "../update/manifest";
@@ -63,14 +64,18 @@ export function firmwareOffer(latest: string | null | undefined, installed: stri
   return { available: isNewer(latest, installed) || backToStable, backToStable };
 }
 
-// The message for a failed update check: the refused feed's own words, or
-// `offlineKey` when the server couldn't be reached (never "offline?" when the
-// network worked).
-export function feedProblemKey(problem: FeedProblem | "noBuild" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
-  if (problem === "noBuild") return "desktop.updateFeed.noBuild";
-  if (problem === "unsigned") return "desktop.updateFeed.unsigned";
-  if (problem === "malformed") return "desktop.updateFeed.malformed";
-  return offlineKey;
+// The message for a failed update check: what really happened (a refused
+// feed, the server's HTTP error or rate limit, an error inside the app), or
+// `offlineKey` when the server didn't answer at all (never "offline?" when
+// the network worked).
+export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+  if (problem === "noBuild") return t("desktop.updateFeed.noBuild");
+  if (problem === "unsigned") return t("desktop.updateFeed.unsigned");
+  if (problem === "malformed") return t("desktop.updateFeed.malformed");
+  if (problem === "rateLimited") return t("desktop.updateFeed.rateLimited");
+  if (problem === "internal") return t("desktop.updateFeed.internal");
+  if (problem?.startsWith("http")) return t("desktop.updateFeed.server", { status: problem.slice(4) });
+  return t(offlineKey);
 }
 
 export interface FirmwareUpdate {
@@ -102,10 +107,11 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     let r: FirmwareLookup;
     try {
       // A check button: allowed to go online even with automatic checks off.
-      r = (await window.desktop?.latestFirmware(true)) ?? { latest: null, problem: "offline" };
-    } catch {
-      // error: SHOWN — desktop.firmware.checkedOffline (an unanswered lookup reads as offline)
-      r = { latest: null, problem: "offline" };
+      r = (await window.desktop?.latestFirmware(true)) ?? { latest: null, problem: "internal" };
+    } catch (cause) {
+      // error: SHOWN — desktop.updateFeed.internal (the app's own lookup failed: not the network), the cause logged
+      logged("looking up the latest firmware (shown as an error inside the app)")(cause);
+      r = { latest: null, problem: "internal" };
     }
     setLatest(r.latest);
     setProblem(r.problem);
@@ -121,14 +127,17 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   useEffect(() => {
     if (midCheck) return;
     let live = true;
-    // error: SHOWN — desktop.firmware.offline (an unanswered lookup reads as offline)
+    // error: SHOWN — desktop.firmware.internal (the app's own lookup failed: not the network), the cause logged
     window.desktop?.latestFirmware(false).then(
       (r) => {
         if (!live) return;
         setLatest(r.latest);
         setProblem(r.problem);
       },
-      () => live && setProblem("offline"),
+      (cause: unknown) => {
+        logged("looking up the latest firmware (shown as an error inside the app)")(cause);
+        if (live) setProblem("internal");
+      },
     );
     return () => {
       live = false;

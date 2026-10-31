@@ -34,6 +34,12 @@ export function feedProblem(cause: unknown): FeedProblem {
   return cause instanceof FeedError ? cause.problem : "offline";
 }
 
+// The server answered with an HTTP error: rate-limited (429) or its status,
+// never "offline" (the network worked).
+export function httpProblem(status: number): FeedProblem {
+  return status === 429 ? "rateLimited" : `http${status}`;
+}
+
 export class FeedCache {
   // cache: OK — key=channel; invalidated=FEED_REUSE_MS for lookups, every update check refetches, a failed fetch is dropped; bound=1 in flight
   private inflight: { channel: UpdateChannel; promise: Promise<Manifest> } | null = null;

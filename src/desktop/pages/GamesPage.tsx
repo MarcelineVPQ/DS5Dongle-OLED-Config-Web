@@ -45,7 +45,7 @@ import { allFixes } from "../games/types";
 import { msgText, NO_WAITING, waitingChanges, waitingSplit, waitingTotal, type Waiting } from "../library/waiting";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
 import { logged } from "../../errorText";
-import { feedProblemKey } from "../useUpdates";
+import { feedProblemText } from "../useUpdates";
 import Notice from "../Notice";
 import { Section } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
@@ -360,7 +360,7 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
         r.ok
           ? t("desktop.games.protonInstalled", { name: r.name, defaultValue: "{{name}} is installed." })
           : r.problem
-            ? t(feedProblemKey(r.problem, "desktop.updateFeed.offline"))
+            ? feedProblemText(t, r.problem, "desktop.updateFeed.offline")
             : shownText(r.message),
       );
       await rescan();

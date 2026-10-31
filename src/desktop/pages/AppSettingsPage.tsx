@@ -28,13 +28,14 @@ import LanguageToggle, { currentLanguage, languageWords } from "../../components
 import ThemeToggle, { useTheme } from "../../components/ThemeToggle";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import ColorPicker from "../colorPicker/ColorPicker";
-import { feedProblemKey, firmwareOffer, type FirmwareUpdate } from "../useUpdates";
+import { feedProblemText, firmwareOffer, type FirmwareUpdate } from "../useUpdates";
 import { BusyButton, Row, Segmented, Toggle, Slider } from "../controls";
 import { COLOR_VISIONS, type ColorVision, setColorVision, useColorVision } from "../colorVision";
 import { say, setCaptions, setNarrator, useCaptionsOn, useNarrator } from "../narrator";
 import { gamesSupported } from "../games/platform";
 import { useGamesAllowed } from "../library/GameLaunchersSetting";
 import { shown } from "../shownError";
+import { logged } from "../../errorText";
 import DismissedNotices, { useDismissedTasks } from "../DismissedNotices";
 import { useNoticeTasks } from "../notices";
 import { named, onOff } from "../accordion/status";
@@ -293,10 +294,10 @@ export function CheckNow({ firmwareInstalled, refreshFirmware }: { firmwareInsta
   if (!desktop) return null;
   const check = async () => {
     setResult([]);
-    // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed when the feed was refused (null: the line below says the check failed)
+    // error: SHOWN — desktop.setup.checkFailed (no answer), desktop.updateFeed.* by problem (refused feed, HTTP error, rate limit), desktop.updateFeed.internal when the app's own call failed (null)
     const app = await desktop.checkForUpdates().catch(() => null);
     const lines: string[] = [];
-    if (!app || app.phase === "failed") lines.push(t(feedProblemKey(app?.problem, "desktop.setup.checkFailed")));
+    if (!app || app.phase === "failed") lines.push(feedProblemText(t, app ? app.problem : "internal", "desktop.setup.checkFailed"));
     else if (app.phase === "up-to-date") lines.push(t("desktop.setup.checkedCurrent", { version: app.version }));
     else if (app.phase !== "idle" && app.phase !== "checking") lines.push(t("desktop.setup.checkedNewer", { version: app.version }));
     // The firmware: only with a dongle connected (its version is what's compared).
@@ -487,10 +488,13 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
   useEffect(() => {
     if (!automatic && !asked) return;
     let live = true;
-    // error: SHOWN — desktop.channel.joinOffline (or the answer's problem: joinUnpublished, desktop.updateFeed.unsigned / .malformed)
+    // error: SHOWN — desktop.updateFeed.internal when the app's own call failed (the cause logged), else the answer's problem (joinOffline, joinUnpublished, desktop.updateFeed.*)
     window.desktop?.devChannelPreview(asked).then(
       (p) => live && setPreview(p),
-      () => live && setPreview({ problem: "offline" }),
+      (cause: unknown) => {
+        logged("asking for the development build's preview (shown as an error inside the app)")(cause);
+        if (live) setPreview({ problem: "internal" });
+      },
     );
     return () => {
       live = false;
@@ -550,7 +554,7 @@ export function DevChannelDialog({ automatic, onJoin, onCancel }: { automatic: b
           <p className="dk-hint">{t("desktop.channel.joinLoading")}</p>
         ) : preview && "problem" in preview ? (
           // hint: MUST-SHOW — a status: the feed couldn't be read (what happened, what you can still do)
-          <p className="dk-hint">{t(preview.problem === "unpublished" ? "desktop.channel.joinUnpublished" : feedProblemKey(preview.problem, "desktop.channel.joinOffline"))}</p>
+          <p className="dk-hint">{preview.problem === "unpublished" ? t("desktop.channel.joinUnpublished") : feedProblemText(t, preview.problem, "desktop.channel.joinOffline")}</p>
         ) : preview ? (
           <>
             <p>{t("desktop.channel.joinVersions", { app: preview.app, firmware: preview.firmware ?? "—" })}</p>

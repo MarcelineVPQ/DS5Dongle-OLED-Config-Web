@@ -20,7 +20,7 @@ import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
-import { FeedCache, FeedError, FeedMissingError, feedProblem } from "./updateFeed";
+import { FeedCache, FeedError, FeedMissingError, feedProblem, httpProblem } from "./updateFeed";
 import { pathWithoutAppImageMounts } from "./games/schemeHandler";
 import { WINDOWS_SETUP_NAME, installerArgs, isInstalledApp } from "./windowsInstall";
 import { linkStableAppImage } from "./integration";
@@ -219,7 +219,7 @@ export class Updater {
   async fetchManifest(channel: UpdateChannel = this.channel()): Promise<Manifest> {
     const url = manifestUrl(channel);
     // The server answering at all: a failure here is a network one (offline, unreachable, a timeout).
-    // error: PASSES-ON — status/ok are read right below (404 = FeedMissingError, else FeedError "offline"; a bad .sig = "unsigned")
+    // error: PASSES-ON — status/ok are read right below (404 = FeedMissingError, another HTTP error = its status (httpProblem); a missing or bad .sig = "unsigned")
     const reach = async (u: string): Promise<{ status: number; ok: boolean; text: string }> => {
       try {
         const r = await net.fetch(u, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
@@ -231,10 +231,12 @@ export class Updater {
     };
     const response = await reach(url);
     if (response.status === 404) throw new FeedMissingError();
-    if (!response.ok) throw new FeedError("offline", `update server returned HTTP ${response.status}`);
+    if (!response.ok) throw new FeedError(httpProblem(response.status), `update server returned HTTP ${response.status}`);
     const text = response.text;
     // Nothing in the feed is used before its signature checks out.
     const sig = await reach(`${url}.sig`);
+    // A server error on the .sig is the server's, not a refused signature (a missing .sig, 404, is unsigned).
+    if (!sig.ok && sig.status !== 404) throw new FeedError(httpProblem(sig.status), `update server returned HTTP ${sig.status} for the signature`);
     if (!sig.ok || !feedSignedBy(text, sig.text, trustedKeys())) throw new FeedError("unsigned", "the update feed isn't signed by the developer; ignoring it");
     let json: unknown;
     try {
