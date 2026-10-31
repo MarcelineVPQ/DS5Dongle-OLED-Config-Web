@@ -338,7 +338,7 @@
       "step": {
         "admin": "Windows pide permiso de administrador (Windows PowerShell, de Microsoft). Si eliges No, no cambia nada.",
         "forget": "Windows olvida el ajuste USB que guardó para los dos ID USB {{device_de}} (054C:0CE6 y 054C:0DF2). No se toca nada más del registro.",
-        "entries": "Se eliminan las entradas de dispositivo guardadas para esos dos ID. Windows las vuelve a crear solo.",
+        "entries": "Se eliminan las entradas de dispositivo guardadas para esos dos ID (un DualSense conectado por USB también usa uno de ellos). Windows las vuelve a crear solo la próxima vez que se conecte, así que no hay nada que deshacer.",
         "replug": "Desconectas {{device}} y vuelves a conectar el cable USB. Windows instala el controlador desde cero y la app se conecta."
       },
       "scriptTitle": "El script exacto que ejecuta:",

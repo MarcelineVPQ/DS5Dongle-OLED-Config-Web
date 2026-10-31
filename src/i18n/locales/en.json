@@ -337,7 +337,7 @@
       "step": {
         "admin": "Windows asks for administrator permission (Windows PowerShell, from Microsoft). Choose No and nothing changes.",
         "forget": "Windows forgets the USB setting it saved for {{device}}'s two USB IDs (054C:0CE6 and 054C:0DF2). Nothing else in the registry is touched.",
-        "entries": "It removes Windows' saved device entries for those two IDs. Windows creates them again by itself.",
+        "entries": "It removes Windows' saved device entries for those two IDs (a DualSense plugged in by USB uses one of them too). Windows creates them again by itself the next time either is plugged in, so there is nothing to undo.",
         "replug": "You unplug {{device}} and plug it back in. Windows sets up its driver from scratch, and the app connects."
       },
       "scriptTitle": "The exact script it runs:",

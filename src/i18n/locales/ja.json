@@ -338,7 +338,7 @@
       "step": {
         "admin": "Windows が管理者の許可を求めます（Windows PowerShell、Microsoft 製）。「いいえ」を選ぶと何も変わりません。",
         "forget": "{{device}} の 2 つの USB ID（054C:0CE6 と 054C:0DF2）について Windows が保存した USB 設定を消去します。レジストリのほかの部分には触れません。",
-        "entries": "この 2 つの ID について保存されたデバイス情報を削除します。Windows が自動で作り直します。",
+        "entries": "この 2 つの ID について保存されたデバイス情報を削除します（USB で接続した DualSense もその一方を使います）。次に接続したときに Windows が自動で作り直すため、元に戻す必要はありません。",
         "replug": "{{device}} を抜いて差し直します。Windows がドライバーを一から設定し、アプリが接続します。"
       },
       "scriptTitle": "実行するスクリプト:",

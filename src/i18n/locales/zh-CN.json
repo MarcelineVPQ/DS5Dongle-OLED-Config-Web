@@ -338,7 +338,7 @@
       "step": {
         "admin": "Windows 会请求管理员权限（Windows PowerShell，来自 Microsoft）。选择“否”则不会有任何改动。",
         "forget": "Windows 清除它为 {{device}} 的两个 USB ID（054C:0CE6 和 054C:0DF2）保存的 USB 设置。注册表的其他部分不会改动。",
-        "entries": "删除 Windows 为这两个 ID 保存的设备条目，Windows 会自动重新创建。",
+        "entries": "删除 Windows 为这两个 ID 保存的设备条目（通过 USB 连接的 DualSense 也使用其中一个）。下次插入时 Windows 会自动重新创建，因此无需撤销。",
         "replug": "拔下 {{device}} 再重新插入。Windows 会重新安装驱动，应用随即连接。"
       },
       "scriptTitle": "将运行的完整脚本：",

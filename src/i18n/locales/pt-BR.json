@@ -338,7 +338,7 @@
       "step": {
         "admin": "O Windows pede permissão de administrador (Windows PowerShell, da Microsoft). Se escolher Não, nada muda.",
         "forget": "O Windows esquece a configuração USB que salvou para os dois IDs USB {{device_de}} (054C:0CE6 e 054C:0DF2). Nada mais no registro é alterado.",
-        "entries": "As entradas de dispositivo salvas para esses dois IDs são removidas. O Windows as recria sozinho.",
+        "entries": "As entradas de dispositivo salvas para esses dois IDs são removidas (um DualSense conectado por USB também usa um deles). O Windows as recria sozinho na próxima vez que for conectado, então não há nada a desfazer.",
         "replug": "Você desconecta {{device}} e conecta o cabo USB de novo. O Windows configura o driver do zero e o app se conecta."
       },
       "scriptTitle": "O script exato que ele executa:",

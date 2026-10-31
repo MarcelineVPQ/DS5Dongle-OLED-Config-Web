@@ -338,7 +338,7 @@
       "step": {
         "admin": "Windows fragt nach Administratorrechten (Windows PowerShell, von Microsoft). Wählst du Nein, ändert sich nichts.",
         "forget": "Windows vergisst die USB-Einstellung, die es für die zwei USB-IDs {{device_gen}} gespeichert hat (054C:0CE6 und 054C:0DF2). Sonst wird nichts in der Registry geändert.",
-        "entries": "Die gespeicherten Geräteeinträge für diese zwei IDs werden entfernt. Windows legt sie von selbst neu an.",
+        "entries": "Die gespeicherten Geräteeinträge für diese zwei IDs werden entfernt (ein per USB angeschlossener DualSense nutzt eine davon auch). Windows legt sie beim nächsten Einstecken von selbst neu an, daher gibt es nichts rückgängig zu machen.",
         "replug": "Du ziehst {{device_akk}} ab und steckst das USB-Kabel wieder ein. Windows richtet den Treiber neu ein, und die App verbindet sich."
       },
       "scriptTitle": "Das genaue Skript, das ausgeführt wird:",

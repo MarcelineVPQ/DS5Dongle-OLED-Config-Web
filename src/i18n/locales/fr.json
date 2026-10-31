@@ -338,7 +338,7 @@
       "step": {
         "admin": "Windows demande l’autorisation administrateur (Windows PowerShell, de Microsoft). Choisis Non et rien ne change.",
         "forget": "Windows oublie le réglage USB qu’il a enregistré pour les deux identifiants USB {{device_de}} (054C:0CE6 et 054C:0DF2). Rien d’autre n’est modifié dans le registre.",
-        "entries": "Les entrées de périphérique enregistrées pour ces deux identifiants sont supprimées. Windows les recrée tout seul.",
+        "entries": "Les entrées de périphérique enregistrées pour ces deux identifiants sont supprimées (une DualSense branchée en USB utilise aussi l'un d'eux). Windows les recrée tout seul au prochain branchement, il n'y a donc rien à annuler.",
         "replug": "Tu débranches {{device}} et rebranches le câble USB. Windows réinstalle le pilote et l’app se connecte."
       },
       "scriptTitle": "Le script exact qu'elle exécute :",
