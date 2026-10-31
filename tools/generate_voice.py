@@ -59,7 +59,8 @@ def main() -> None:
             headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"},
         )
         try:
-            audio = urllib.request.urlopen(req, timeout=120).read()
+            # Semgrep baseline: a fixed https URL (the ElevenLabs API), a dev tool run by hand
+            audio = urllib.request.urlopen(req, timeout=120).read()  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         except urllib.error.HTTPError as e:
             sys.exit(f"{line['key']}: HTTP {e.code} {e.read()[:300]!r}")
         out.write_bytes(audio)

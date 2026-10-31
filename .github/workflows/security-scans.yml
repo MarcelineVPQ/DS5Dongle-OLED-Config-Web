@@ -3,7 +3,8 @@ name: Security Scans
 # Free, no-GHAS SAST + secret scanning (same setup as AVNetworkMonitor):
 #   - Semgrep OSS  -> static analysis (TypeScript, React, Electron rules via p/javascript)
 #   - Gitleaks     -> hard-coded secrets across the full git history
-# Both emit SARIF as build artifacts.
+# Both emit SARIF as build artifacts, and a finding fails the job. Both run
+# on the runner itself (pinned, checked downloads), never in a container.
 
 on:
   push:
@@ -18,12 +19,24 @@ jobs:
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
-    container:
-      image: semgrep/semgrep
+    env:
+      # Exact, at least 14 days old (the dependency rule). Installed with pipx on
+      # the runner: no container (the owner never uses Docker).
+      SEMGREP_VERSION: "1.181.0"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Install Semgrep
+        run: pipx install "semgrep==$SEMGREP_VERSION"
+
+      # Any finding fails the job (--error). The reviewed baseline: a finding
+      # that is accepted carries "nosemgrep: <rule id>" on its line with the
+      # reason on the line above, or is excluded here with its reason:
+      #   - npm-missing-minimum-release-age: .npmrc can't set min-release-age
+      #     until the pinned npm (11.6.2) moves to 11.10 or later; the 14-day
+      #     rule is kept by Dependabot's cooldown and the dependency rule
+      #     (docs/BACKLOG.md, "npm 11.10: min-release-age").
       - name: Run Semgrep
         run: |
           semgrep scan \
@@ -33,9 +46,11 @@ jobs:
             --config=p/react \
             --config=p/javascript \
             --config=p/owasp-top-ten \
+            --exclude-rule=package_managers.npm.npm-missing-minimum-release-age.npm-missing-minimum-release-age \
             --metrics=off \
+            --error \
             --sarif --output=semgrep-report.sarif \
-            --verbose || true
+            --verbose
 
       - name: Summarize findings
         if: always()
@@ -47,7 +62,7 @@ jobs:
           fi
 
       - name: Upload Semgrep report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: semgrep-report
@@ -57,25 +72,38 @@ jobs:
   gitleaks:
     name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.18.4"
+      # From the release's gitleaks_8.18.4_checksums.txt (linux_x64).
+      GITLEAKS_SHA256: "ba6dbb656933921c775ee5a2d1c13a91046e7952e9d919f9bac4cec61d628e7d"
     steps:
       - name: Checkout code (full history)
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # scan every commit, not just the tip
 
+      # The release binary, checked against its published SHA-256: no container.
+      - name: Install Gitleaks
+        run: |
+          set -euo pipefail
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$RUNNER_TEMP/$tarball" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tarball"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+
+      # A leak fails the job (exit code 1).
       - name: Run Gitleaks
         run: |
-          docker run --rm -v "${{ github.workspace }}:/repo" \
-            ghcr.io/gitleaks/gitleaks:v8.18.4 detect \
-            --source=/repo \
+          "$RUNNER_TEMP/gitleaks" detect \
+            --source=. \
             --report-format=sarif \
-            --report-path=/repo/gitleaks-report.sarif \
+            --report-path=gitleaks-report.sarif \
             --redact \
-            --exit-code=0 \
+            --exit-code=1 \
             --verbose
 
       - name: Upload Gitleaks report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: gitleaks-report

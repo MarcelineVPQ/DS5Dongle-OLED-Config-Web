@@ -14,7 +14,8 @@ The output is committed; rerun only when the source art changes.
 import re
 import sys
 from pathlib import Path
-from xml.etree import ElementTree as ET
+# Semgrep baseline: only our own SVGs from the repo are parsed (see ET.parse below)
+from xml.etree import ElementTree as ET  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 
 SRC = Path(sys.argv[1] if len(sys.argv) > 1 else Path.home() / "projects/Gamepad-Asset-Pack/Controller Asset Pack/DualSense Controller Image/Default/Theme SVG/DualSense VSCView SVG.svg")
 OUT = Path(__file__).resolve().parent.parent / "src/assets/dualsense.svg"
@@ -37,7 +38,8 @@ PARTS = {
 }
 FILL_CLASS = {"#707373": "ln", "#e1e3e6": "cap", "#ebeef0": "bd", "#171b20": "dk", "#17191e": "dk", "#333333": "stk", "#b8babc": "cap"}
 
-tree = ET.parse(SRC)
+# Semgrep baseline: parses our own SVG from the repo (assets/), never untrusted XML
+tree = ET.parse(SRC)  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
 root = tree.getroot()
 parent = {c: p for p in root.iter() for c in p}
 

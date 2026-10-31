@@ -42,7 +42,8 @@ def transcribe(key: str, path: Path) -> tuple[str, str]:
     b = uuid.uuid4().hex
     body = (f'--{b}\r\nContent-Disposition: form-data; name="model_id"\r\n\r\nscribe_v1\r\n--{b}\r\nContent-Disposition: form-data; name="file"; filename="a.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n').encode() + path.read_bytes() + f"\r\n--{b}--\r\n".encode()
     req = urllib.request.Request("https://api.elevenlabs.io/v1/speech-to-text", data=body, headers={"xi-api-key": key, "Content-Type": f"multipart/form-data; boundary={b}"})
-    r = json.load(urllib.request.urlopen(req, timeout=120))
+    # Semgrep baseline: a fixed https URL (the ElevenLabs API), a dev tool run by hand
+    r = json.load(urllib.request.urlopen(req, timeout=120))  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
     return r.get("text", ""), r.get("language_code", "")
 
 

@@ -37,7 +37,8 @@ Standard library only.
 import re
 import sys
 from pathlib import Path
-from xml.etree import ElementTree as ET
+# Semgrep baseline: only our own SVGs from the repo are parsed (see ET.parse below)
+from xml.etree import ElementTree as ET  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets-src/edge/dualsenseEdge.svg"
@@ -129,7 +130,8 @@ def bbox(subs):
 
 
 # ---- source shapes by id ----
-src = ET.parse(SRC).getroot()
+# Semgrep baseline: parses our own SVG from the repo (assets/), never untrusted XML
+src = ET.parse(SRC).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
 by_id = {e.get("id"): e for e in src.iter() if e.get("id")}
 
 
