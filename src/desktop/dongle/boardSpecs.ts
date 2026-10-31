@@ -6,14 +6,20 @@
 // (Pico 2 W: RP2350, dual-core Arm Cortex-M33, 520 kB SRAM, 4 MB flash,
 // Infineon CYW43439, Bluetooth 5.2, 802.11n 2.4 GHz; Pico W: RP2040, dual-core
 // Cortex-M0+, 264 kB SRAM, 2 MB flash, same CYW43439). Checked 2026-10-13.
+// The name and flash size are the board table's (src/update/boardIdentity.ts, boards.json).
+import { boardRow } from "../../update/boardIdentity";
 
 // The zone's title line uses the short names (2× Cortex-M33 · CYW43439); its ⓘ the makers' too.
 export type BoardSpecs = { chip: string; core: string; coreMaker: string; sramKb: number; flashMb: number; wireless: string; wirelessMaker: string; bluetooth: string };
 
-const BOARD_SPECS: Record<string, BoardSpecs> = {
-  "Pico 2 W": { chip: "RP2350", core: "Cortex-M33", coreMaker: "Arm", sramKb: 520, flashMb: 4, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" },
-  "Pico W": { chip: "RP2040", core: "Cortex-M0+", coreMaker: "Arm", sramKb: 264, flashMb: 2, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" },
+const specRow = (id: string, s: Omit<BoardSpecs, "flashMb">): [string, BoardSpecs] => {
+  const row = boardRow(id)!;
+  return [row.name, { ...s, flashMb: row.flash_bytes / (1024 * 1024) }];
 };
+const BOARD_SPECS: Record<string, BoardSpecs> = Object.fromEntries([
+  specRow("pico2_w", { chip: "RP2350", core: "Cortex-M33", coreMaker: "Arm", sramKb: 520, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" }),
+  specRow("pico_w", { chip: "RP2040", core: "Cortex-M0+", coreMaker: "Arm", sramKb: 264, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" }),
+]);
 
 /** The board's specs, or null for a board we have no table row for (its zone's title has no spec line). */
 export const boardSpecs = (board: string | null | undefined): BoardSpecs | null => (board && BOARD_SPECS[board]) || null;

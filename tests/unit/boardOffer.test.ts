@@ -52,7 +52,7 @@ const v2 = (firmwares: object[]) =>
 const v1 = Manifest.parse({ channel: "stable", app: { version: "0.9.5", platforms: {} }, firmware: { version: "v0.9.5-oled-edition", uf2: uf2(1) } });
 
 const deps = (manifest: Manifest, bundled: string | null = null): FirmwareSourceDeps => ({
-  bundled: () => (bundled ? { version: bundled, path: "/nowhere", sha256: sha(9) } : null),
+  bundled: () => (bundled ? { version: bundled, path: "/nowhere", sha256: sha(9), board: "pico2_w" } : null),
   manifest: async () => ({ manifest, problem: null, channel: "stable" }),
   freshFeed: async () => manifest,
   download: vi.fn(async (u: { url: string }) => new Uint8Array([Number(/fw-(\d+)/.exec(u.url)![1])])),

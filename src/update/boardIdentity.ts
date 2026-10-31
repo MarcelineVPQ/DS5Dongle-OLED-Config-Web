@@ -12,26 +12,48 @@ export const BoardIdentity = z.strictObject({ board: Id, chip: Id, flashBytes: z
 export type BoardIdentity = z.infer<typeof BoardIdentity>;
 
 const MB = 1024 * 1024;
-export const PICO2_W: BoardIdentity = { board: "pico2_w", chip: "rp2350a", flashBytes: 4 * MB, persona: "ds5" };
-const PICO_W: BoardIdentity = { board: "pico_w", chip: "rp2040", flashBytes: 2 * MB, persona: "ds5" };
 
-// What every image published so far (schema 1's `firmware`, and the bundled
-// build until its firmware.json names a board) is built for.
-export const PICO2_W_IMAGE = { board: "pico2_w", chip: "rp2350a", flash_min: 4 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] };
+// The firmware repo's boards.json (DESIGN_FIRMWARE_IDENTITY §5), the one table
+// of boards, as far as the app reads it: same rows, same order, same values
+// (tests/unit/boardsTable.test.ts compares them with the firmware's file when
+// DS5_FIRMWARE_REPO names its checkout). A TS table, not a copy of the file:
+// a byte-identical copy across the repos is what tools/check_identical_files.mjs
+// refuses. A new board is a row there first.
+export const BOARDS = [
+  { id: "pico2_w", name: "Pico 2 W", type_id: 1, chip: "rp2350a", flash_bytes: 4 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] },
+  { id: "pico_w", name: "Pico W", type_id: 2, chip: "rp2040", flash_bytes: 2 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] },
+] as const;
+export type BoardRow = (typeof BOARDS)[number];
+export const boardRow = (id: string): BoardRow | undefined => BOARDS.find((b) => b.id === id);
+
+// A board's full identity (its flash as built, its first persona).
+const identityOf = (b: BoardRow): BoardIdentity => ({ board: b.id, chip: b.chip, flashBytes: b.flash_bytes, persona: b.personas[0] });
+export const PICO2_W: BoardIdentity = identityOf(BOARDS[0]);
+
+// What an image built for a board needs and supports (a feed entry's fields).
+// null: a board this app has no row for, so nothing is offered or written.
+export function imageFor(board: string): { board: string; chip: string; flash_min: number; personas: string[]; displays: string[] } | null {
+  const b = boardRow(board);
+  return b ? { board: b.id, chip: b.chip, flash_min: b.flash_bytes, personas: [...b.personas], displays: [...b.displays] } : null;
+}
+
+// What every image published so far (schema 1's `firmware`, and a bundled
+// build whose firmware.json names no board) is built for.
+export const PICO2_W_IMAGE = imageFor("pico2_w")!;
 
 // What an offered image needs from the board in BOOTSEL (the write rule,
 // desktop/firmwareUpdate.ts), by the board it is built for. Main offers only
-// a feed entry that fitsBoard() this board type, so for pico2_w the entry's
-// chip is rp2350a and its flash_min at most this. A board type missing here
-// is never written.
-export const IMAGE_NEEDS: Readonly<Record<string, { name: string; chip: string; flash_min: number }>> = {
-  pico2_w: { name: "Pico 2 W", chip: PICO2_W_IMAGE.chip, flash_min: PICO2_W_IMAGE.flash_min },
-};
+// a feed entry that fitsBoard() this board type, so the entry's chip is the
+// row's and its flash_min at most this. A board type missing here is never
+// written.
+export const IMAGE_NEEDS: Readonly<Record<string, { name: string; chip: string; flash_min: number }>> = Object.fromEntries(
+  BOARDS.map((b) => [b.id, { name: b.name, chip: b.chip, flash_min: b.flash_bytes }]),
+);
 
 // 0xEA's numbers (firmware src/fw_identity.h, display_table.h) as the feed's
 // ids. A number missing here is a board, chip, persona or display this app
 // doesn't know: no offer for it.
-export const FW_BOARD_TYPES: Readonly<Record<number, string>> = { 1: "pico2_w", 2: "pico_w" };
+export const FW_BOARD_TYPES: Readonly<Record<number, string>> = Object.fromEntries(BOARDS.map((b) => [b.type_id, b.id]));
 export const FW_CHIPS: Readonly<Record<number, string>> = { 0: "rp2040", 1: "rp2350a", 2: "rp2350b" };
 export const FW_PERSONAS: Readonly<Record<number, string>> = { 0: "ds5" };
 export const FW_DISPLAYS: Readonly<Record<number, string>> = { 0: "none", 1: "pico_oled_1_3" };
@@ -58,8 +80,11 @@ export function identityFromFirmware(fw: FirmwareIdentityFacts): BoardIdentity |
 export function boardIdentity(id: { boardName: string | null; protoMinor: number } | null | undefined, fw?: FirmwareIdentityFacts | null): BoardIdentity | null {
   if (fw) return identityFromFirmware(fw);
   if (!id) return null;
-  if (id.boardName === "Pico 2 W") return PICO2_W;
-  if (id.boardName === "Pico W") return PICO_W; // no image in the feed: "no firmware update for {{device}}"
+  // By the name the firmware reports (boards.json `name`). Pico W: no image
+  // in the feed, so "no firmware update for {{device}}".
+  // loop: NOT-WORTH — N ≤ 32 board rows (boards.json), once per identity
+  const named = BOARDS.find((b) => b.name === id.boardName);
+  if (named) return identityOf(named);
   // No name: protocol before 1.7, when every published image was the Pico 2 W's.
   if (id.boardName === null && id.protoMinor < 7) return PICO2_W;
   return null;

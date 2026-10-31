@@ -8,16 +8,17 @@ import { CorruptDownloadError } from "../../electron/main/download";
 import { FEED_REUSE_MS, FeedCache } from "../../electron/main/updateFeed";
 import type { UpdateChannel } from "../../src/desktop/api";
 import { Manifest, type Download } from "../../src/update/manifest";
-import { PICO2_W } from "../../src/update/boardIdentity";
+import { boardIdentity, PICO2_W } from "../../src/update/boardIdentity";
 
 let res: string;
 const uf2 = new Uint8Array([1, 2, 3, 4]);
 const sha = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
 
-function bundle(version: string, hash = sha(uf2)) {
+// No `board`: a bundle written before firmware.json named one (the Pico 2 W image).
+function bundle(version: string, hash = sha(uf2), board?: string) {
   mkdirSync(join(res, "firmware"), { recursive: true });
   writeFileSync(join(res, "firmware/ds5-bridge-oled.uf2"), uf2);
-  writeFileSync(join(res, "firmware/firmware.json"), JSON.stringify({ version, file: "ds5-bridge-oled.uf2", sha256: hash }));
+  writeFileSync(join(res, "firmware/firmware.json"), JSON.stringify({ version, file: "ds5-bridge-oled.uf2", sha256: hash, ...(board ? { board } : {}) }));
 }
 
 const fwBytes = new Uint8Array([9]);
@@ -55,6 +56,16 @@ describe("firmware source", () => {
   it("falls back to the feed when nothing is bundled (builds from source)", async () => {
     expect(readBundled(res)).toBeNull();
     expect((await latestFirmware(deps(published("v0.8.0-oled-edition")), PICO2_W)).latest?.source).toBe("online");
+    expect(await latestFirmware(deps(null), PICO2_W)).toEqual({ latest: null, problem: "offline" });
+  });
+
+  it("offers and gives the bundled build only to the board its firmware.json names", async () => {
+    const PICO_W = boardIdentity({ boardName: "Pico W", protoMinor: 20 })!;
+    bundle("v0.8.0-oled-edition", sha(uf2), "pico_w");
+    expect(await latestFirmware(deps(null), PICO2_W)).toEqual({ latest: null, problem: "offline" });
+    expect(await latestFirmware(deps(null), PICO_W)).toEqual({ latest: { version: "v0.8.0-oled-edition", source: "bundled", board: "pico_w" }, problem: "offline" });
+    expect(await firmwareBytes(deps(null), { version: "v0.8.0-oled-edition", source: "bundled", board: "pico2_w" })).toEqual({ ok: false, reason: "changed" });
+    bundle("v0.8.0-oled-edition", sha(uf2), "a_board_this_app_has_no_row_for");
     expect(await latestFirmware(deps(null), PICO2_W)).toEqual({ latest: null, problem: "offline" });
   });
 

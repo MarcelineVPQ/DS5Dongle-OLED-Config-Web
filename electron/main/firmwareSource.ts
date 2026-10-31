@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import type { FirmwareDownload, FirmwareLookup, LatestFirmware, UpdateChannel } from "../../src/desktop/api";
 import { isNewer, type Download, type Manifest } from "../../src/update/manifest";
-import { feedImages, fitsBoard, newestFor, PICO2_W_IMAGE, type BoardIdentity } from "../../src/update/boardIdentity";
+import { feedImages, fitsBoard, imageFor, newestFor, PICO2_W_IMAGE, type BoardIdentity } from "../../src/update/boardIdentity";
 import { CorruptDownloadError } from "./download";
 import { KeyedError } from "../../src/errorText";
 import { FEED_REUSE_MS, FeedMissingError, feedProblem, type FeedCache } from "./updateFeed";
@@ -21,19 +21,23 @@ const BundleInfo = z.object({
   version: z.string().max(64),
   file: z.string().regex(/^[\w.-]+\.uf2$/),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  // The board it is built for (boards.json id). Bundles written before this
+  // field were all the Pico 2 W image.
+  board: z.string().max(32).default(PICO2_W_IMAGE.board),
 });
 
 export interface Bundled {
   version: string;
   path: string;
   sha256: string;
+  board: string;
 }
 
 export function readBundled(resourcesDir: string): Bundled | null {
   try {
     const dir = join(resourcesDir, "firmware");
     const info = BundleInfo.parse(JSON.parse(readFileSync(join(dir, "firmware.json"), "utf8")));
-    return { version: info.version, path: join(dir, info.file), sha256: info.sha256 };
+    return { version: info.version, path: join(dir, info.file), sha256: info.sha256, board: info.board };
   } catch {
     // error: NOT-WORTH — development builds have no bundled firmware: the published one is used
     return null; // development builds have no bundled firmware
@@ -104,11 +108,13 @@ export const installFeed =
     feed.get(channel, FEED_REUSE_MS);
 
 // Only an image built for `board` (DESIGN_FIRMWARE_IDENTITY §2): the newest
-// feed entry for it, or the bundled build (the Pico 2 W image) when that board
-// is a Pico 2 W. A feed with images, none for this board: "noBoardImage",
-// never another board's image.
+// feed entry for it, or the bundled build when its firmware.json names this
+// board (a board the app has no row for: never). A feed with images, none for
+// this board: "noBoardImage", never another board's image.
 export async function latestFirmware(deps: FirmwareSourceDeps, board: BoardIdentity, asked = false): Promise<FirmwareLookup> {
-  const bundled = fitsBoard(PICO2_W_IMAGE, board) ? deps.bundled() : null;
+  const inside = deps.bundled();
+  const insideImage = inside && imageFor(inside.board);
+  const bundled = insideImage && fitsBoard(insideImage, board) ? inside : null;
   const { manifest, problem, channel } = await deps.manifest(asked);
   const images = manifest ? feedImages(manifest) : [];
   const published = newestFor(images, board);
@@ -127,7 +133,7 @@ export async function latestFirmware(deps: FirmwareSourceDeps, board: BoardIdent
 export async function firmwareBytes(deps: FirmwareSourceDeps, shown: LatestFirmware): Promise<FirmwareDownload> {
   if (shown.source === "bundled") {
     const bundled = deps.bundled();
-    if (!bundled || bundled.version !== shown.version || shown.board !== PICO2_W_IMAGE.board) return { ok: false, reason: "changed" };
+    if (!bundled || bundled.version !== shown.version || shown.board !== bundled.board) return { ok: false, reason: "changed" };
     return { ok: true, version: bundled.version, bytes: loadBundled(bundled) };
   }
   if (!shown.sha256 || !shown.channel) return { ok: false, reason: "changed" };
