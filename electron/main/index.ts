@@ -7,6 +7,7 @@ import { IPC, type DesktopSettings, type MainErrorKey, type MainNoticeKey } from
 import { errorText, KeyedError, keyedText, logged } from "../../src/errorText";
 import { mainText, mainTranslator } from "./mainText";
 import { APP_ID, HIDDEN_FLAG, applyAutostart } from "./autostart";
+import { PRODUCT_NAME } from "./desktopEntry";
 import { isAllowedUsbDevice } from "./devices";
 import { allowPermissionCheck, allowPermissionRequest } from "./permissions";
 import { createDesktopShortcut, integrateDesktop } from "./integration";
@@ -128,7 +129,7 @@ if (!app.requestSingleInstanceLock()) {
         logged("translating the start-failure dialog (shown in English)")(why);
         return `The app couldn't start: ${errorText(cause)}`;
       });
-      dialog.showErrorBox("DS5 Dongle Configurator", text);
+      dialog.showErrorBox(PRODUCT_NAME, text);
       app.quit();
     });
 }
@@ -697,7 +698,7 @@ function createWindow(visible: boolean): void {
     minHeight: 560,
     show: false,
     autoHideMenuBar: true,
-    title: "DS5 Dongle OLED Edition Configurator",
+    title: PRODUCT_NAME,
     icon: join(resourcesDir, "icon.png"),
     webPreferences: {
       preload: join(here, "../preload/index.cjs"),

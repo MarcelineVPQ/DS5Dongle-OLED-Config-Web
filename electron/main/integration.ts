@@ -14,10 +14,10 @@ import { dirname, join } from "node:path";
 import { execFile } from "node:child_process";
 import { app, shell } from "electron";
 import { APP_ID } from "./autostart";
-import { execArg } from "./desktopEntry";
+import { PRODUCT_NAME, execArg } from "./desktopEntry";
 
 const STABLE_APPIMAGE = "DS5Dongle-OLED-Edition-Configurator.AppImage";
-const SHORTCUT_NAME = "DS5 Dongle OLED Edition Configurator.lnk";
+const SHORTCUT_NAME = `${PRODUCT_NAME}.lnk`;
 
 // The path launchers should run: the stable AppImage symlink, or the
 // executable itself (installed on Windows; in development the plain one).
@@ -79,7 +79,7 @@ function integrateAppImage(resourcesDir: string): void {
   copyFileSync(join(resourcesDir, "icon.png"), iconPath);
 
   const entry =
-    "[Desktop Entry]\nType=Application\nName=DS5 Dongle OLED Edition Configurator\n" +
+    `[Desktop Entry]\nType=Application\nName=${PRODUCT_NAME}\n` +
     "Comment=Configure the DS5 Dongle OLED Edition\n" +
     `Exec=${execArg(launch)} %U\n` +
     `Icon=${APP_ID}\nTerminal=false\nCategories=Utility;Settings;\n` +

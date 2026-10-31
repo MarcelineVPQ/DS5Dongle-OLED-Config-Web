@@ -1,3 +1,8 @@
+// The product's name wherever the main process writes it (package.json and
+// electron-builder.yml productName). Here, in a module that imports nothing,
+// so a module-level use is safe from the autostart/integration import cycle.
+export const PRODUCT_NAME = "DS5 Dongle OLED Edition Configurator";
+
 // One argument of a desktop entry's Exec= key, per the Desktop Entry spec:
 // quoted, with " ` $ \ escaped inside the quotes, then the string-value
 // escaping of the file itself (\ doubled) and % doubled (field codes).
