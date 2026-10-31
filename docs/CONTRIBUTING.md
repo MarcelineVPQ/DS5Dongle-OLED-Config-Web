@@ -101,7 +101,7 @@ npx vitest run tests/integration   # one category
 <type>(<scope>): <description>
 ```
 
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `deps`. Common scopes: `desktop`, `games`, `ui`, `live`, `dongle`, `controller`, `protocol`, `i18n`, `updates`, `security`, `backlog`, `changelog`, `guide`, `gates`, `release`.
+Types: `feat`, `fix`, `perf`, `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`, `revert` (dependency updates are `build(deps)`, as Dependabot writes them). Checked by the commit-msg hook (`pre-commit install`) and, for every commit since the last release tag, by `node tools/doc_gates.mjs --check commits` in CI. A `feat` commit that touches a shipped file updates its row in `docs/BACKLOG.md` in the same commit, or says `No backlog change: why` (the `backlog` gate). Common scopes: `desktop`, `games`, `ui`, `live`, `dongle`, `controller`, `protocol`, `i18n`, `updates`, `security`, `backlog`, `changelog`, `guide`, `gates`, `release`.
 
 ## Versioning
 

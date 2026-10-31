@@ -81,6 +81,32 @@ describe("version gate", () => {
   });
 });
 
+describe("backlog gate", () => {
+  const { backlogProblems } = gates as { backlogProblems: (a: { commits: Commit[]; shipped: (f: string) => boolean }) => string[] };
+  const shipped = g.SHIPPED.app;
+  it("passes a feat that updates docs/BACKLOG.md, says why not, or is named by a later docs(backlog) commit", () => {
+    expect(backlogProblems({ commits: [commit("feat(ui): a", ["src/a.ts", "docs/BACKLOG.md"])], shipped })).toEqual([]);
+    expect(backlogProblems({ commits: [commit("feat(ui): a", ["src/a.ts"], "No backlog change: a tweak without a row")], shipped })).toEqual([]);
+    expect(backlogProblems({ commits: [commit("feat(ui): a", ["src/a.ts"]), commit("docs(backlog): a1b2c3d shipped", ["docs/BACKLOG.md"], "", "f00f00f00f")], shipped })).toEqual([]);
+  });
+  it("fails a shipped feat without its row, and leaves fixes and tooling alone", () => {
+    expect(backlogProblems({ commits: [commit("feat(ui): a", ["src/a.ts"])], shipped })[0]).toContain("docs/BACKLOG.md");
+    expect(backlogProblems({ commits: [commit("fix(ui): a", ["src/a.ts"]), commit("feat(tools): b", ["tools/b.mjs"])], shipped })).toEqual([]);
+  });
+});
+
+describe("commits gate", () => {
+  const { commitProblems } = gates as { commitProblems: (commits: Commit[], before?: Set<string>) => string[] };
+  it("passes Conventional Commits and git's own reverts", () => {
+    const ok = ["feat(board): x", "fix: y", "build(deps): bump z", "ci!: w", "docs(changelog, backlog): v", 'Revert "feat: x"'];
+    expect(commitProblems(ok.map((s) => commit(s, [])))).toEqual([]);
+  });
+  it("fails anything else, except the commits made before the gate", () => {
+    expect(commitProblems([commit("deps: bump the group", []), commit("Board page: tidy", [], "", "b0b0b0b0b0")])).toHaveLength(2);
+    expect(commitProblems([commit("deps: bump the group", [])], new Set(["a1b2c3d4e5"]))).toEqual([]);
+  });
+});
+
 describe("privacy gate", () => {
   // A made-up name: the real ones are only in SECRET_PROJECTS.md (untracked).
   const hashes = new Set([g.phraseHash("Velvet Otter")]);

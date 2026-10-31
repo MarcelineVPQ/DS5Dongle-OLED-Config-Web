@@ -14,6 +14,8 @@
 //        only how many names it hashed, never a name.
 //   node tools/doc_gates.mjs privacy-msg FILE
 //        the commit-msg hook: FILE (the message) and the branch's name
+//   node tools/doc_gates.mjs commit-msg FILE
+//        the commit-msg hook: FILE's subject is a Conventional Commit
 //
 // Gates:
 //   changelog  every feat / fix / perf commit since the last release tag
@@ -21,6 +23,14 @@
 //              CHANGELOG: the commit changes CHANGELOG.md itself, or its
 //              message says "No user-facing change" (and why). And with any
 //              such commit, [Unreleased] is not empty.
+//   backlog    every feat commit since the last release tag that touches a
+//              shipped file changes docs/BACKLOG.md in the same commit (the
+//              feature's row: started, shipped), or a later docs(backlog)
+//              commit names its short hash, or its message says "No backlog
+//              change" (and why). App repo only: the one backlog lives here.
+//   commits    every commit since the last release tag is a Conventional
+//              Commit (type(scope)!: subject; docs/CONTRIBUTING.md). With the
+//              commit-msg hook this catches what was committed without it.
 //   refs       README*.md, CLAUDE.md and docs/*.md name only files, folders
 //              and npm scripts that exist (in this repo, or in the firmware
 //              repo for a firmware path, when it's named with --firmware or
@@ -50,6 +60,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+// The app's version ordering, the one implementation (the installed updater uses it too).
+import { compareVersions } from "../src/update/versionOrder.mjs";
 
 const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DENYLIST = join(APP_ROOT, "tools", "privacy-denylist.txt");
@@ -60,8 +72,6 @@ const USER_COMMIT = /^(feat|fix|perf)(\([^)]*\))?!?:/;
 const NO_USER_CHANGE = /no user-facing change/i;
 
 /** "## [Unreleased]" (or another name) -> its body, trimmed; null when there is no such section. */
-// The app's version ordering, the one implementation (the installed updater uses it too).
-import { compareVersions } from "../src/update/versionOrder.mjs";
 export function changelogSection(md, name) {
   const lines = String(md ?? "").split("\n");
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -97,6 +107,51 @@ export function changelogProblems({ changelog, commits, shipped }) {
     left.push(`${user.length} user-facing commit(s) since the last release tag and CHANGELOG.md [Unreleased] is empty: say what changed for users there (Added / Changed / Fixed)`);
   }
   return left;
+}
+
+// ---------- backlog ----------
+
+const FEAT_COMMIT = /^feat(\([^)]*\))?!?:/;
+const NO_BACKLOG_CHANGE = /no backlog change/i;
+
+/** The changelog gate's pattern for docs/BACKLOG.md and feat commits -> problems. */
+export function backlogProblems({ commits, shipped }) {
+  // loop: NOT-WORTH — the commits since the last tag (tens)
+  const feats = commits.filter((c) => FEAT_COMMIT.test(c.subject) && c.files.some(shipped));
+  // loop: NOT-WORTH — the feat commits x the commits since the tag (tens)
+  return feats
+    .filter((c) => !c.files.includes("docs/BACKLOG.md") && !NO_BACKLOG_CHANGE.test(c.body))
+    .filter((c) => !commits.some((o) => o.files.includes("docs/BACKLOG.md") && `${o.subject}\n${o.body}`.includes(c.hash.slice(0, 7))))
+    .map(
+      (c) =>
+        `${c.hash.slice(0, 7)} ${c.subject}: docs/BACKLOG.md isn't updated with it. Update the feature's row in the same commit (or a follow-up "docs(backlog): ${c.hash.slice(0, 7)} …" commit), or say "No backlog change: why" in its message`,
+    );
+}
+
+// ---------- commits ----------
+
+// docs/CONTRIBUTING.md's types. Dependabot writes build(deps) / ci (.github/dependabot.yml).
+export const CONVENTIONAL = /^(feat|fix|perf|refactor|docs|style|test|build|ci|chore|revert)(\([\w .,/-]+\))?!?: \S/;
+// What git writes itself: a revert, and (local only, squashed before a push) fixup!/squash!/amend! and merges.
+const GIT_OWN = /^Revert "/;
+const GIT_LOCAL = /^((fixup|squash|amend)! |Merge )/;
+// Commits made before this gate (batch 3, 2026-10-31); they drop out at the next release tag.
+export const COMMITS_BEFORE_THE_GATE = new Set(["2c5df267f6b53df747dc56a232d3860792b499a7"]);
+
+export const commitSubjectProblem = (subject) =>
+  CONVENTIONAL.test(subject) || GIT_OWN.test(subject)
+    ? null
+    : `"${subject}" isn't a Conventional Commit: type(scope): subject, the type one of feat fix perf refactor docs style test build ci chore revert (docs/CONTRIBUTING.md)`;
+
+/** commits: [{ hash, subject }] -> problems. */
+export function commitProblems(commits, before = COMMITS_BEFORE_THE_GATE) {
+  // loop: NOT-WORTH — the commits since the last tag (tens)
+  return commits
+    .filter((c) => !before.has(c.hash))
+    .flatMap((c) => {
+      const why = commitSubjectProblem(c.subject);
+      return why ? [`${c.hash.slice(0, 7)} ${why}`] : [];
+    });
 }
 
 // What ships: the app's code and resources; the firmware's sources and build.
@@ -358,6 +413,19 @@ function gates(root, firmwareRoot) {
       const commits = commitsSince(root, tag);
       return { problems: changelogProblems({ changelog: read("CHANGELOG.md"), commits, shipped: SHIPPED[kind] }), info: `${commits.length} commits since ${tag}` };
     },
+    backlog() {
+      if (kind !== "app") return { skip: "the one backlog (docs/BACKLOG.md) lives in the app repo" };
+      const tag = lastTag(root);
+      if (!tag) return { skip: "no release tag in this clone (a CI checkout needs fetch-depth: 0)" };
+      const commits = commitsSince(root, tag);
+      return { problems: backlogProblems({ commits, shipped: SHIPPED.app }), info: `${commits.length} commits since ${tag}` };
+    },
+    commits() {
+      const tag = lastTag(root);
+      if (!tag) return { skip: "no release tag in this clone (a CI checkout needs fetch-depth: 0)" };
+      const commits = commitsSince(root, tag);
+      return { problems: commitProblems(commits), info: `${commits.length} commits since ${tag}` };
+    },
     refs() {
       const docs = tracked.filter((f) => /^(README[^/]*|CLAUDE|QUALITY)\.md$/.test(f) || /^docs\/[^/]+\.md$/.test(f)).map((f) => ({ name: f, text: read(f) }));
       const other = otherRoot && existsSync(join(otherRoot, ".git")) ? { tracked: trackedIn(otherRoot) } : null;
@@ -449,9 +517,21 @@ function privacyMsg(file) {
   return problems.length ? 1 : 0;
 }
 
+// The commit-msg hook: the message's subject (its first line that isn't a comment) is a Conventional Commit.
+function commitMsg(file) {
+  const subject =
+    readFileSync(file, "utf8")
+      .split("\n")
+      .find((l) => l.trim() && !l.startsWith("#")) ?? "";
+  const why = GIT_LOCAL.test(subject) ? null : commitSubjectProblem(subject);
+  if (why) console.log(`  ✗ ${why}`);
+  return why ? 1 : 0;
+}
+
 function main(argv) {
   if (argv[0] === "privacy-sync") return privacySync();
   if (argv[0] === "privacy-msg") return privacyMsg(argv[1]);
+  if (argv[0] === "commit-msg") return commitMsg(argv[1]);
   const opt = (name) => (argv.includes(name) ? resolve(argv[argv.indexOf(name) + 1]) : null);
   const root = opt("--repo") ?? APP_ROOT;
   // The firmware repo only when named (tools/release.sh does): a checkout next to this one may be on any branch.
@@ -465,7 +545,7 @@ function main(argv) {
   }
   const all = gates(root, existsSync(join(firmware, "CMakeLists.txt")) ? firmware : null);
   let failed = 0;
-  // loop: NOT-WORTH — six gates
+  // loop: NOT-WORTH — eight gates
   for (const name of names.length ? names : Object.keys(all)) {
     if (!all[name]) {
       console.error(`unknown gate ${name} (${Object.keys(all).join(", ")})`);
