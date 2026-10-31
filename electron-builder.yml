@@ -20,6 +20,20 @@ extraResources:
     # The release bundle's CHANGELOG.md is built into the renderer (firmwareChangelog.config.ts), not read at runtime.
     filter: ["**/*", "!firmware/CHANGELOG.md"]
 asar: true
+# Electron fuses (2026-10-31 app review S1): the shipped binary can't be used
+# as a plain Node runtime (ELECTRON_RUN_AS_NODE), ignores NODE_OPTIONS, loads
+# the app only from its app.asar and, on Windows and macOS, checks that
+# app.asar wasn't edited. The Mac build isn't signed with an identity, so
+# flipping the fuses resets its ad-hoc signature. --inspect stays allowed for
+# now: the release gates (mac-smoke, the budget and UI checkers) drive the
+# packaged app through it (docs/SECURITY_AUDIT.md).
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableCookieEncryption: true
+  onlyLoadAppFromAsar: true
+  enableEmbeddedAsarIntegrityValidation: true
+  resetAdHocDarwinSignature: true
 artifactName: DS5Dongle-OLED-Edition-Configurator-${version}-${os}-${arch}.${ext}
 
 linux:

@@ -3,6 +3,7 @@
 // to it has to come with a change here (and a SECURITY_AUDIT.md note).
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
 import { ART_WIDTHS } from "../../src/desktop/games/types";
@@ -586,5 +587,19 @@ describe("no restart or quit while firmware is written", () => {
     expect(mainSource).toContain('contents.on("before-input-event", (event, input) => {');
     expect(mainSource).toContain('if (shortcut === "devTools" && DEV_TOOLS_BUILT) contents.toggleDevTools();');
     expect(mainSource).not.toMatch(/openDevTools\(/);
+  });
+});
+
+// 2026-10-31 app review S1: the packaged app isn't a general Node runtime.
+describe("Electron fuses (electron-builder.yml)", () => {
+  it("turns off run-as-node and NODE_OPTIONS, loads only app.asar and checks it", () => {
+    const config = parseYaml(readFileSync(new URL("../../electron-builder.yml", import.meta.url), "utf8")) as { electronFuses?: Record<string, boolean> };
+    expect(config.electronFuses).toMatchObject({
+      runAsNode: false,
+      enableNodeOptionsEnvironmentVariable: false,
+      enableCookieEncryption: true,
+      onlyLoadAppFromAsar: true,
+      enableEmbeddedAsarIntegrityValidation: true,
+    });
   });
 });
