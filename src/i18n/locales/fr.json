@@ -273,6 +273,7 @@
       "internal": "vérification impossible (une erreur dans l’app)",
       "wrongChannel": "vérification impossible (le flux de mises à jour contenait les builds d’un autre canal)",
       "olderFeed": "vérification impossible (le flux de mises à jour est plus ancien qu’un flux déjà vérifié)",
+      "noBoardImage": "Aucune mise à jour du firmware n’est encore publiée pour {{device}}.",
       "bundled": "incluse dans l'app",
       "checkedNewer": "Vérifié à l'instant : {{version}} est disponible.",
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",

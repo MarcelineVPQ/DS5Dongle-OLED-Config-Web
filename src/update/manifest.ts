@@ -53,6 +53,23 @@ export const Manifest = z
         uf2: Download,
       })
       .optional(),
+    // Schema 2: one image per board (src/update/boardIdentity.ts picks the
+    // connected board's); `firmware` stays the Pico 2 W image for older apps.
+    firmwares: z
+      .array(
+        z.object({
+          version: z.string(),
+          board: z.string().max(32),
+          chip: z.string().max(32),
+          flash_min: z.number().int().positive(),
+          personas: z.array(z.string().max(32)).max(8),
+          displays: z.array(z.string().max(32)).max(16),
+          notes_url: z.string().url().optional(),
+          uf2: Download,
+        }),
+      )
+      .max(32)
+      .optional(),
     // Our GE-Proton DualSense build, installed by the Games page (Linux).
     proton: z
       .object({

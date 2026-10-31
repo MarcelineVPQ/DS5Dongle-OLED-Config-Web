@@ -550,7 +550,7 @@ function start(): void {
       return updater.backToStable();
     },
     restartToUpdate,
-    latestFirmware: (asked) => latestFirmware(firmwareSource, asked),
+    latestFirmware: ({ asked, board }) => latestFirmware(firmwareSource, board, asked),
     officialControllerFirmware: (asked) => officialFirmware.lookup(asked),
     downloadFirmware: (shown) => firmwareBytes(firmwareSource, shown),
     setFirmwareWriting: (writing) => hold.setWriting(writing),

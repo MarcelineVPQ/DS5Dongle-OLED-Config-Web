@@ -4,6 +4,7 @@ import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
 import type { OfficialFirmware } from "../protocol/officialFirmware";
+import type { BoardIdentity } from "../update/boardIdentity";
 
 // What the Electron preload exposes as `window.desktop`. Absent in the browser
 // build, so `isDesktop()` is the switch between the two targets. Every call
@@ -151,6 +152,10 @@ export interface LatestFirmware {
   // Online only: the exact feed entry shown, so Install downloads that one.
   sha256?: string;
   channel?: UpdateChannel;
+  // The board type it is built for (src/update/boardIdentity.ts): offered only to that board.
+  board: string;
+  // The feed's newest_stable (schema 2): firmware Back to stable offers only that version.
+  newestStable?: string;
 }
 
 // The firmware the user confirmed, or why it wasn't downloaded: "changed" =
@@ -164,8 +169,9 @@ export type FirmwareDownload = { ok: true; version: string; bytes: Uint8Array } 
 export interface FirmwareLookup {
   latest: LatestFirmware | null;
   // "disabled": automatic checks are off and the user hasn't asked.
-  // error: SHOWN — desktop.firmware.offline / .unsigned / .malformed (or desktop.firmware.unpublished; "disabled" is a choice, not an error)
-  problem: "unpublished" | FeedProblem | "disabled" | null;
+  // "noBoardImage": the feed has no image built for this board (never another board's).
+  // error: SHOWN — desktop.firmware.offline / .unsigned / .malformed (or desktop.firmware.unpublished / .noBoardImage; "disabled" is a choice, not an error)
+  problem: "unpublished" | FeedProblem | "disabled" | "noBoardImage" | null;
 }
 
 // Sony's official controller firmware (check only): the latest version per
@@ -267,7 +273,8 @@ export interface DesktopApi {
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   // Firmware: what's published, and the verified UF2 bytes.
   // `asked`: the user pressed a check button (allowed with automatic checks off).
-  latestFirmware(asked?: boolean): Promise<FirmwareLookup>;
+  // `board`: the board the offer is for; only an image built for it is offered.
+  latestFirmware(asked: boolean, board: BoardIdentity): Promise<FirmwareLookup>;
   // Sony's latest DualSense / Edge firmware versions (fetched by the main
   // process; `asked` = the user pressed Refresh, allowed with automatic checks off).
   officialControllerFirmware(asked: boolean): Promise<OfficialFirmwareLookup>;

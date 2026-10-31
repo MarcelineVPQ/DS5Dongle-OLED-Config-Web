@@ -34,23 +34,25 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
             ? `${fw.latest.version}${fw.latest.source === "bundled" ? ` (${t("desktop.firmware.bundled")})` : ""}`
             : fw.problem === "unpublished"
               ? t("desktop.firmware.unpublished")
-              : fw.problem === "disabled"
-                ? t("desktop.firmware.disabled")
-                : fw.problem === "unsigned"
-                  ? t("desktop.firmware.unsigned")
-                  : fw.problem === "malformed"
-                    ? t("desktop.firmware.malformed")
-                    : fw.problem === "wrongChannel"
-                      ? t("desktop.firmware.wrongChannel")
-                      : fw.problem === "olderFeed"
-                        ? t("desktop.firmware.olderFeed")
-                        : fw.problem === "rateLimited"
-                          ? t("desktop.firmware.rateLimited")
-                          : fw.problem === "internal"
-                            ? t("desktop.firmware.internal")
-                            : fw.problem?.startsWith("http")
-                              ? t("desktop.firmware.server", { status: fw.problem.slice(4) })
-                              : t("desktop.firmware.offline")}
+              : fw.problem === "noBoardImage"
+                ? t("desktop.firmware.noBoardImage")
+                : fw.problem === "disabled"
+                  ? t("desktop.firmware.disabled")
+                  : fw.problem === "unsigned"
+                    ? t("desktop.firmware.unsigned")
+                    : fw.problem === "malformed"
+                      ? t("desktop.firmware.malformed")
+                      : fw.problem === "wrongChannel"
+                        ? t("desktop.firmware.wrongChannel")
+                        : fw.problem === "olderFeed"
+                          ? t("desktop.firmware.olderFeed")
+                          : fw.problem === "rateLimited"
+                            ? t("desktop.firmware.rateLimited")
+                            : fw.problem === "internal"
+                              ? t("desktop.firmware.internal")
+                              : fw.problem?.startsWith("http")
+                                ? t("desktop.firmware.server", { status: fw.problem.slice(4) })
+                                : t("desktop.firmware.offline")}
         </dd>
       </dl>
       <div className="dk-row-btns">
@@ -77,7 +79,7 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
               ? t("desktop.firmware.backToStable", { version: shortVersion(fw.latest?.version) })
               : t("desktop.firmware.update", { version: shortVersion(fw.latest?.version), defaultValue: "Update to {{version}}" })}
           </button>
-        ) : (
+        ) : fw.problem === "noBoardImage" ? null : (
           <span className="dk-good">✓ {t("desktop.firmware.upToDate", "Up to date")}</span>
         )}
         <BusyButton

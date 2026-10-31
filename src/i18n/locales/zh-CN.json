@@ -273,6 +273,7 @@
       "internal": "无法检查（应用内部出错）",
       "wrongChannel": "无法检查（更新源包含了其他渠道的版本）",
       "olderFeed": "无法检查（更新源比已检查过的更旧）",
+      "noBoardImage": "尚未发布适用于{{device}}的固件更新。",
       "bundled": "随应用附带",
       "checkedNewer": "刚刚检查：{{version}} 可用。",
       "checkedCurrent": "刚刚检查：已是最新版本。",

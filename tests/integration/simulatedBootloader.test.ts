@@ -47,7 +47,7 @@ function fakeDesktop(file: Uint8Array) {
     getUpdateState: async () => ({ phase: "idle" }),
     getFirmwareHold: async () => ({ writing: false, restartQueued: false, quitQueued: false }),
     setFirmwareWriting: vi.fn(),
-    latestFirmware: async () => ({ latest: { version: "0.9.5", source: "bundled" }, problem: null }),
+    latestFirmware: async () => ({ latest: { version: "0.9.5", source: "bundled", board: "pico2_w" }, problem: null }),
     downloadFirmware: async (shown: { version: string }) => ({ ok: true, version: shown.version, bytes: file }),
     checkForUpdates: async () => ({ phase: "up-to-date", version: "0.9.5" }),
   };

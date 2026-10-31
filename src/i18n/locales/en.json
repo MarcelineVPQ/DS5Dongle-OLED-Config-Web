@@ -272,6 +272,7 @@
       "internal": "can't check (an error inside the app)",
       "wrongChannel": "can't check (the update feed carried another channel's builds)",
       "olderFeed": "can't check (the update feed is older than one already checked)",
+      "noBoardImage": "No firmware update is published for {{device}} yet.",
       "bundled": "included with the app",
       "checkedNewer": "Checked just now: {{version}} is available.",
       "checkedCurrent": "Checked just now: you're up to date.",

@@ -8,6 +8,7 @@ import { type FirmwareProgress, findBootloader, installFirmware, onlyBootloader,
 import { logged } from "../errorText";
 import i18n from "../i18n";
 import { announce, showToast } from "./toast";
+import { boardIdentity, type BoardIdentity } from "../update/boardIdentity";
 
 // App self-update state, mirrored from the main process.
 export function useAppUpdate(): UpdateState {
@@ -55,21 +56,29 @@ const BOOTLOADER_LOOK_MS = 500;
 const BOOTLOADER_WATCH_MS = 30_000;
 const STILL_IN_BOOTSEL_MS = 8_000;
 
-// Whether `latest` is offered to a dongle running `installed`: a newer
-// version; or, on a dongle running a development build, the stable version
-// (after "Back to stable"), even though it's older.
-export function firmwareOffer(latest: string | null | undefined, installed: string | null | undefined): { available: boolean; backToStable: boolean } {
+// Whether `latest` (already the connected board's image, see
+// useFirmwareUpdate) is offered to a board running `installed`: a newer
+// version; or, on a board running a development build, the stable version
+// (after "Back to stable"), even though it's older, and only the newest stable
+// release (the feed's newest_stable; a schema 1 feed has none: as before).
+export function firmwareOffer(latest: LatestFirmware | null | undefined, installed: string | null | undefined): { available: boolean; backToStable: boolean } {
   if (!latest || !installed) return { available: false, backToStable: false };
-  const backToStable = devNumber(installed) !== null && devNumber(latest) === null && !sameVersion(latest, installed);
-  return { available: isNewer(latest, installed) || backToStable, backToStable };
+  const toStable = devNumber(installed) !== null && devNumber(latest.version) === null && !sameVersion(latest.version, installed);
+  const backToStable = toStable && (latest.newestStable === undefined || sameVersion(latest.version, latest.newestStable));
+  return { available: isNewer(latest.version, installed) || backToStable, backToStable };
 }
+
+// The answer for a board no published image is built for (design §3).
+const NO_BOARD_IMAGE: FirmwareLookup = { latest: null, problem: "noBoardImage" };
+const boardKey = (b: BoardIdentity | null) => (b ? `${b.board}/${b.chip}/${b.flashBytes}/${b.persona}` : "");
 
 // The message for a failed update check: what really happened (a refused
 // feed, the server's HTTP error or rate limit, an error inside the app), or
 // `offlineKey` when the server didn't answer at all (never "offline?" when
 // the network worked).
-export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" | "stableMismatch" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" | "stableMismatch" | "unpublished" | "disabled" | "noBoardImage" | null | undefined, offlineKey: string): string {
   if (problem === "noBuild") return t("desktop.updateFeed.noBuild");
+  if (problem === "noBoardImage") return t("desktop.firmware.noBoardImage");
   if (problem === "stableMismatch") return t("desktop.updateFeed.stableMismatch");
   if (problem === "unsigned") return t("desktop.updateFeed.unsigned");
   if (problem === "malformed") return t("desktop.updateFeed.malformed");
@@ -105,12 +114,20 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   // The board it was written to (protocol 1.20 id; null on older firmware):
   // Install again writes only that board's bootloader, or the only one.
   const [writtenTo, setWrittenTo] = useState<string | null>(null);
+  // The connected board, as far as offers go (old firmware: by its name,
+  // DESIGN_FIRMWARE_IDENTITY §1.1); null = unknown: nothing is offered.
+  const board = boardIdentity(bridge.identity);
+  // The board the lookups are for: follows the kind of board connected, so a
+  // reconnect of the same kind (after an update) doesn't look again.
+  const [lookupBoard, setLookupBoard] = useState<BoardIdentity | null>(null);
+  if (board && boardKey(board) !== boardKey(lookupBoard)) setLookupBoard(board);
 
   const refreshLatest = useCallback(async (): Promise<FirmwareLookup> => {
+    if (!board) return NO_BOARD_IMAGE;
     let r: FirmwareLookup;
     try {
       // A check button: allowed to go online even with automatic checks off.
-      r = (await window.desktop?.latestFirmware(true)) ?? { latest: null, problem: "internal" };
+      r = (await window.desktop?.latestFirmware(true, board)) ?? { latest: null, problem: "internal" };
     } catch (cause) {
       // error: SHOWN — desktop.updateFeed.internal (the app's own lookup failed: not the network), the cause logged
       logged("looking up the latest firmware (shown as an error inside the app)")(cause);
@@ -119,7 +136,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     setLatest(r.latest);
     setProblem(r.problem);
     return r;
-  }, []);
+  }, [board]);
 
   // Look up the published firmware at start and whenever an app update check
   // ends. Main goes online for it only with automatic checks on, and reuses
@@ -128,10 +145,10 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   const midCheck = phase === "checking" || phase === "downloading" || phase === "installing";
   // lifetime: OK — cleanup: drops a late lookup answer (holds no resource)
   useEffect(() => {
-    if (midCheck) return;
+    if (midCheck || !lookupBoard) return;
     let live = true;
     // error: SHOWN — desktop.firmware.internal (the app's own lookup failed: not the network), the cause logged
-    window.desktop?.latestFirmware(false).then(
+    window.desktop?.latestFirmware(false, lookupBoard).then(
       (r) => {
         if (!live) return;
         setLatest(r.latest);
@@ -145,10 +162,14 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     return () => {
       live = false;
     };
-  }, [phase, midCheck]);
+  }, [phase, midCheck, lookupBoard]);
 
+  // Only an image built for the board connected now, never another board's
+  // (an unknown board, or the last lookup's board right after a switch).
+  const offered = latest && board && latest.board === board.board ? latest : null;
+  const offerProblem: FirmwareLookup["problem"] = board && (offered || !latest) ? problem : "noBoardImage";
   const installed = bridge.firmwareVersion;
-  const { available, backToStable } = firmwareOffer(latest?.version, installed);
+  const { available, backToStable } = firmwareOffer(offered, installed);
 
   // Written and restarted: wait for the board to come back with `version`.
   const verify = useCallback((version: string) => {
@@ -161,7 +182,7 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
 
   const start = useCallback(async () => {
     const client = bridge.client;
-    if (!client || !latest || state.phase === "running" || state.phase === "verifying") return;
+    if (!client || !offered || !board || state.phase === "running" || state.phase === "verifying") return;
     // Never flash while the app is replacing itself.
     if (appUpdate.phase === "downloading" || appUpdate.phase === "installing") {
       setState({ phase: "failed", detail: i18n.t("desktop.firmware.waitForApp") });
@@ -169,20 +190,20 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
     }
     try {
       // The entry shown on the card, exactly (never a newer feed's).
-      written.current = latest;
+      written.current = offered;
       setWrittenTo(client.boardId);
-      verify(await updateFirmware(client, latest, (progress) => setState({ phase: "running", progress })));
+      verify(await updateFirmware(client, offered, (progress) => setState({ phase: "running", progress })));
     } catch (cause) {
       // error: SHOWN — desktop.firmware.writeFailed and the other keyed flash/board errors (causeText) in the firmware banner's error notice with Dismiss
       setState({ phase: "failed", detail: causeText(cause) });
       // Show what the feed offers now (the failed install already fetched it,
       // so this doesn't go online again).
-      window.desktop?.latestFirmware(false).then((r) => {
+      window.desktop?.latestFirmware(false, board).then((r) => {
         setLatest(r.latest);
         setProblem(r.problem);
       }, logged("refreshing the offer after a failed install (the failure is already shown)"));
     }
-  }, [appUpdate.phase, bridge.client, latest, state.phase, verify]);
+  }, [appUpdate.phase, bridge.client, offered, board, state.phase, verify]);
 
   // Install again, after the new firmware didn't start: the board waits in
   // BOOTSEL, so this writes it directly (no reboot command first).
@@ -282,8 +303,8 @@ export function useFirmwareUpdate(bridge: UseDs5BridgeResult, appUpdate: UpdateS
   );
 
   return {
-    problem,
-    latest,
+    problem: offerProblem,
+    latest: offered,
     available,
     backToStable,
     state: shown,

@@ -17,6 +17,7 @@ import type { FirmwareUpdate } from "../../src/desktop/useUpdates";
 import { FeedCache, FeedError, devChannelPreview } from "../../electron/main/updateFeed";
 import { keyedText } from "../../src/errorText";
 import { firmwareFeed, latestFirmware } from "../../electron/main/firmwareSource";
+import { PICO2_W } from "../../src/update/boardIdentity";
 import SetupScreen from "../../src/desktop/SetupScreen";
 import FirmwarePage from "../../src/desktop/pages/FirmwarePage";
 import { CheckNow, DevChannelDialog } from "../../src/desktop/pages/AppSettingsPage";
@@ -163,6 +164,7 @@ function fakeMain(problem: FeedProblem) {
         freshFeed: (ch) => feed.get(ch, 0),
         download: async () => new Uint8Array(),
       },
+      PICO2_W,
       asked,
     );
   window.desktop = {

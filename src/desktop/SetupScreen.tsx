@@ -19,6 +19,7 @@ import UsbAccessSetup from "./UsbAccessSetup";
 import WindowsUsbRepair from "./WindowsUsbRepair";
 import { logged } from "../errorText";
 import { feedProblemText } from "./useUpdates";
+import { PICO2_W } from "../update/boardIdentity";
 
 const POLL_MS = 1000;
 
@@ -43,11 +44,13 @@ export default function SetupScreen({ supported }: { supported: boolean }) {
   const pico: PicoflashHandle | null = usePoll(findBootloader, POLL_MS, supported && !installing).value;
 
   // Online only with automatic checks on (main); otherwise the bundled build.
+  // The Pico 2 W image, as before: setup writes only to an RP2350 in BOOTSEL
+  // (devices.ts), and reading which board that is comes later (design §1.2).
   // lifetime: OK — acquires nothing (one firmware lookup once a Pico shows up)
   useEffect(() => {
     if (!pico || firmware) return;
     window.desktop
-      ?.latestFirmware(false)
+      ?.latestFirmware(false, PICO2_W)
       .then((r) => setFirmware(r.latest))
       .catch(logged("looking up the firmware to install (without it, Install says desktop.setup.noFirmware)"));
   }, [pico, firmware]);
@@ -145,7 +148,7 @@ function UpdatesWithoutDongle() {
   // lifetime: OK — acquires nothing (one firmware lookup on mount)
   useEffect(() => {
     desktop
-      ?.latestFirmware(false)
+      ?.latestFirmware(false, PICO2_W)
       .then((r) => setFirmware(r.latest))
       .catch(logged("looking up the latest firmware (Check now reports it when asked)"));
   }, [desktop]);
@@ -153,7 +156,7 @@ function UpdatesWithoutDongle() {
   const check = async () => {
     setChecked(null);
     // error: SHOWN — desktop.setup.checkFailed (no answer), desktop.updateFeed.* by problem (refused feed, HTTP error, rate limit), desktop.updateFeed.internal when the app's own call failed (null)
-    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true).catch(() => null)]);
+    const [app, lookup] = await Promise.all([desktop.checkForUpdates().catch(() => null), desktop.latestFirmware(true, PICO2_W).catch(() => null)]);
     if (lookup?.latest) setFirmware(lookup.latest);
     setChecked(
       !app || app.phase === "failed"

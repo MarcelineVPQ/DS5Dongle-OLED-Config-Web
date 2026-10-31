@@ -23,7 +23,7 @@ export function useUpdatePreview(): [UpdatePreview, (value: UpdatePreview) => vo
 
 export function previewUpdates(preview: UpdatePreview, app: UpdateState, fw: FirmwareUpdate): [UpdateState, FirmwareUpdate] {
   if (!preview) return [app, fw];
-  const offered: FirmwareUpdate = { ...fw, latest: { version: FW_VERSION, source: "online" }, problem: null, available: true, backToStable: false, start: async () => undefined };
+  const offered: FirmwareUpdate = { ...fw, latest: { version: FW_VERSION, source: "online", board: "pico2_w" }, problem: null, available: true, backToStable: false, start: async () => undefined };
   if (preview === "available")
     return [
       { phase: "available", version: APP_VERSION, size: 152_000_000 },

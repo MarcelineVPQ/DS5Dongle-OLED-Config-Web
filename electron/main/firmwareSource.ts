@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import type { FirmwareDownload, FirmwareLookup, LatestFirmware, UpdateChannel } from "../../src/desktop/api";
 import { isNewer, type Download, type Manifest } from "../../src/update/manifest";
+import { feedImages, fitsBoard, newestFor, PICO2_W_IMAGE, type BoardIdentity } from "../../src/update/boardIdentity";
 import { CorruptDownloadError } from "./download";
 import { KeyedError } from "../../src/errorText";
 import { FEED_REUSE_MS, FeedMissingError, feedProblem, type FeedCache } from "./updateFeed";
@@ -102,14 +103,21 @@ export const installFeed =
   (channel) =>
     feed.get(channel, FEED_REUSE_MS);
 
-export async function latestFirmware(deps: FirmwareSourceDeps, asked = false): Promise<FirmwareLookup> {
-  const bundled = deps.bundled();
+// Only an image built for `board` (DESIGN_FIRMWARE_IDENTITY §2): the newest
+// feed entry for it, or the bundled build (the Pico 2 W image) when that board
+// is a Pico 2 W. A feed with images, none for this board: "noBoardImage",
+// never another board's image.
+export async function latestFirmware(deps: FirmwareSourceDeps, board: BoardIdentity, asked = false): Promise<FirmwareLookup> {
+  const bundled = fitsBoard(PICO2_W_IMAGE, board) ? deps.bundled() : null;
   const { manifest, problem, channel } = await deps.manifest(asked);
-  const published = manifest?.firmware ?? null;
+  const images = manifest ? feedImages(manifest) : [];
+  const published = newestFor(images, board);
   const source = choose(bundled, published);
-  if (source === "online") return { latest: { version: published!.version, notesUrl: published!.notes_url, source, sha256: published!.uf2.sha256, channel }, problem: null };
-  if (source === "bundled") return { latest: { version: bundled!.version, source }, problem };
-  return { latest: null, problem: problem ?? "unpublished" };
+  const newestStable = manifest?.newest_stable;
+  if (source === "online")
+    return { latest: { version: published!.version, notesUrl: published!.notes_url, source, sha256: published!.uf2.sha256, channel, board: board.board, newestStable }, problem: null };
+  if (source === "bundled") return { latest: { version: bundled!.version, source, board: board.board, newestStable }, problem };
+  return { latest: null, problem: problem ?? (images.length > 0 ? "noBoardImage" : "unpublished") };
 }
 
 // The firmware the user was shown and confirmed, nothing else: the bundled
@@ -119,12 +127,13 @@ export async function latestFirmware(deps: FirmwareSourceDeps, asked = false): P
 export async function firmwareBytes(deps: FirmwareSourceDeps, shown: LatestFirmware): Promise<FirmwareDownload> {
   if (shown.source === "bundled") {
     const bundled = deps.bundled();
-    if (!bundled || bundled.version !== shown.version) return { ok: false, reason: "changed" };
+    if (!bundled || bundled.version !== shown.version || shown.board !== PICO2_W_IMAGE.board) return { ok: false, reason: "changed" };
     return { ok: true, version: bundled.version, bytes: loadBundled(bundled) };
   }
   if (!shown.sha256 || !shown.channel) return { ok: false, reason: "changed" };
-  const fw = (await deps.freshFeed(shown.channel)).firmware;
-  if (!fw || fw.version !== shown.version || fw.uf2.sha256 !== shown.sha256) return { ok: false, reason: "changed" };
+  // loop: NOT-WORTH — N ≤ 32 feed images, once per Install
+  const fw = feedImages(await deps.freshFeed(shown.channel)).find((image) => image.board === shown.board && image.version === shown.version && image.uf2.sha256 === shown.sha256);
+  if (!fw) return { ok: false, reason: "changed" };
   let bytes: Uint8Array;
   try {
     bytes = await deps.download(fw.uf2);

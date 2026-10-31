@@ -273,6 +273,7 @@
       "internal": "no se puede comprobar (un error dentro de la app)",
       "wrongChannel": "no se puede comprobar (el canal de actualizaciones trajo compilaciones de otro canal)",
       "olderFeed": "no se puede comprobar (el canal de actualizaciones es más antiguo que uno ya comprobado)",
+      "noBoardImage": "Todavía no hay ninguna actualización de firmware publicada para {{device}}.",
       "bundled": "incluido con la app",
       "checkedNewer": "Comprobado ahora: {{version}} está disponible.",
       "checkedCurrent": "Comprobado ahora: estás al día.",

@@ -273,6 +273,7 @@
       "internal": "Prüfung nicht möglich (ein Fehler in der App)",
       "wrongChannel": "Prüfung nicht möglich (Update-Feed enthielt die Builds eines anderen Kanals)",
       "olderFeed": "Prüfung nicht möglich (Update-Feed ist älter als ein bereits geprüfter)",
+      "noBoardImage": "Für {{device_akk}} ist noch kein Firmware-Update veröffentlicht.",
       "bundled": "in der App enthalten",
       "checkedNewer": "Gerade geprüft: {{version}} ist verfügbar.",
       "checkedCurrent": "Gerade geprüft: Du bist auf dem neuesten Stand.",

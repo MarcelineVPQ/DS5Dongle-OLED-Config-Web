@@ -16,6 +16,7 @@ import {
 import { FAKE_GAMES_HDR, type DevChannelAnswer, type DevFakeGamesChange, type DevFakeGamesState } from "../../src/desktop/api";
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
+import { BoardIdentity } from "../../src/update/boardIdentity";
 import {
   IPC,
   type DesktopSettings,
@@ -90,7 +91,11 @@ export const ShownFirmwareSchema = z.strictObject({
     .regex(/^[0-9a-f]{64}$/)
     .optional(),
   channel: z.enum(["stable", "dev"]).optional(),
+  board: z.string().max(32),
+  newestStable: z.string().max(64).optional(),
 });
+// A firmware lookup: "asked" (a check button) and the board the offer is for.
+export const LatestFirmwareSchema = z.strictObject({ asked: z.boolean(), board: BoardIdentity });
 export const BackupIdSchema = z.string().regex(BACKUP_ID);
 // The running launchers the page said it will close and reopen for the change.
 const RestartSchema = z.array(z.enum(["steam", "heroic", "lutris"])).max(3);
@@ -143,7 +148,7 @@ export interface IpcHandlers {
   // Linux (headsetProfile.ts): Undo of the first stereo switch, and the live input's headset bit.
   headsetUndo: () => Promise<boolean>;
   headsetHint: (headphones: boolean | null) => void;
-  latestFirmware: (asked: boolean) => Promise<FirmwareLookup>;
+  latestFirmware: (request: z.infer<typeof LatestFirmwareSchema>) => Promise<FirmwareLookup>;
   officialControllerFirmware: (asked: boolean) => Promise<OfficialFirmwareLookup>;
   downloadFirmware: (shown: LatestFirmware) => Promise<FirmwareDownload>;
   setFirmwareWriting: (writing: boolean) => void;
@@ -281,7 +286,7 @@ export function registerIpc(h: IpcHandlers): void {
   if (h.devFakeGames) invokeWith(IPC.devFakeGames, DevFakeGamesSchema, h.devFakeGames);
   invokeWith(IPC.officialControllerFirmware, z.boolean(), h.officialControllerFirmware);
   invokeWith(IPC.devChannelPreview, z.boolean(), h.devChannelPreview);
-  invokeWith(IPC.latestFirmware, z.boolean(), h.latestFirmware);
+  invokeWith(IPC.latestFirmware, LatestFirmwareSchema, h.latestFirmware);
   invokeWith(IPC.downloadFirmware, ShownFirmwareSchema, h.downloadFirmware);
   invokeWith(IPC.copyOledImage, OledPngSchema, h.copyOledImage);
 

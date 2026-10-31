@@ -80,7 +80,7 @@ const api: DesktopApi = {
     ipcRenderer.on(IPC.updateState, handler);
     return () => ipcRenderer.removeListener(IPC.updateState, handler);
   },
-  latestFirmware: (asked = false) => ipcRenderer.invoke(IPC.latestFirmware, asked),
+  latestFirmware: (asked, board) => ipcRenderer.invoke(IPC.latestFirmware, { asked, board }),
   officialControllerFirmware: (asked) => ipcRenderer.invoke(IPC.officialControllerFirmware, asked),
   downloadFirmware: (shown) => ipcRenderer.invoke(IPC.downloadFirmware, shown),
   setFirmwareWriting: (writing) => ipcRenderer.send(IPC.setFirmwareWriting, writing),

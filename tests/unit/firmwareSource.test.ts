@@ -8,6 +8,7 @@ import { CorruptDownloadError } from "../../electron/main/download";
 import { FEED_REUSE_MS, FeedCache } from "../../electron/main/updateFeed";
 import type { UpdateChannel } from "../../src/desktop/api";
 import { Manifest, type Download } from "../../src/update/manifest";
+import { PICO2_W } from "../../src/update/boardIdentity";
 
 let res: string;
 const uf2 = new Uint8Array([1, 2, 3, 4]);
@@ -38,28 +39,28 @@ afterEach(() => rmSync(res, { recursive: true, force: true }));
 describe("firmware source", () => {
   it("uses the bundled firmware offline, and when the published one isn't newer", async () => {
     bundle("v0.8.0-oled-edition");
-    expect(await latestFirmware(deps(null))).toEqual({ latest: { version: "v0.8.0-oled-edition", source: "bundled" }, problem: "offline" });
-    const shown = (await latestFirmware(deps(published("v0.8.0-oled-edition")))).latest!;
+    expect(await latestFirmware(deps(null), PICO2_W)).toEqual({ latest: { version: "v0.8.0-oled-edition", source: "bundled", board: "pico2_w" }, problem: "offline" });
+    const shown = (await latestFirmware(deps(published("v0.8.0-oled-edition")), PICO2_W)).latest!;
     expect(await firmwareBytes(deps(published("v0.8.0-oled-edition")), shown)).toEqual({ ok: true, version: "v0.8.0-oled-edition", bytes: uf2 });
     expect(choose(readBundled(res), published("v0.7.0-oled-edition"))).toBe("bundled");
   });
 
   it("prefers a strictly newer published firmware", async () => {
     bundle("v0.8.0-oled-edition");
-    const shown = (await latestFirmware(deps(published("v0.8.1-oled-edition")))).latest!;
+    const shown = (await latestFirmware(deps(published("v0.8.1-oled-edition")), PICO2_W)).latest!;
     expect(shown).toMatchObject({ source: "online", sha256: sha(fwBytes), channel: "stable" });
     expect(await firmwareBytes(deps(published("v0.8.1-oled-edition")), shown)).toEqual({ ok: true, version: "v0.8.1-oled-edition", bytes: fwBytes });
   });
 
   it("falls back to the feed when nothing is bundled (builds from source)", async () => {
     expect(readBundled(res)).toBeNull();
-    expect((await latestFirmware(deps(published("v0.8.0-oled-edition")))).latest?.source).toBe("online");
-    expect(await latestFirmware(deps(null))).toEqual({ latest: null, problem: "offline" });
+    expect((await latestFirmware(deps(published("v0.8.0-oled-edition")), PICO2_W)).latest?.source).toBe("online");
+    expect(await latestFirmware(deps(null), PICO2_W)).toEqual({ latest: null, problem: "offline" });
   });
 
   it("refuses a damaged bundled file", async () => {
     bundle("v0.8.0-oled-edition", "f".repeat(64));
-    await expect(firmwareBytes(deps(null), { version: "v0.8.0-oled-edition", source: "bundled" })).rejects.toThrow(/desktop\.errors\.main\.bundledDamaged/);
+    await expect(firmwareBytes(deps(null), { version: "v0.8.0-oled-edition", source: "bundled", board: "pico2_w" })).rejects.toThrow(/desktop\.errors\.main\.bundledDamaged/);
   });
 
   it("ignores a malformed bundle description", () => {
@@ -88,7 +89,7 @@ describe("installing the firmware shown", () => {
 
   it("after a channel switch, Install downloads the entry shown (from its own channel's feed)", async () => {
     const f = live();
-    const shown = (await latestFirmware(f.deps("dev"))).latest!;
+    const shown = (await latestFirmware(f.deps("dev"), PICO2_W)).latest!;
     expect(shown).toMatchObject({ version: dev.version, channel: "dev" });
     // The setting is back on Stable by the time Install is pressed.
     const r = await firmwareBytes(f.deps("stable"), shown);
@@ -99,7 +100,7 @@ describe("installing the firmware shown", () => {
 
   it("refuses when the feed changed since (a stale offer can't be installed)", async () => {
     const f0 = live();
-    const shown = (await latestFirmware(f0.deps("stable"))).latest!;
+    const shown = (await latestFirmware(f0.deps("stable"), PICO2_W)).latest!;
     const newer = published("v0.9.2-oled-edition", new Uint8Array([3]), "https://github.com/x/new.uf2");
     const f = live({ stable: newer });
     expect(await firmwareBytes(f.deps("stable"), shown)).toEqual({ ok: false, reason: "changed" });
@@ -109,12 +110,12 @@ describe("installing the firmware shown", () => {
     expect(await firmwareBytes(rebuilt.deps("stable"), shown)).toEqual({ ok: false, reason: "changed" });
     expect(rebuilt.download).not.toHaveBeenCalled();
     // An online entry without its hash/channel is never trusted.
-    expect(await firmwareBytes(f0.deps("stable"), { version: v1.version, source: "online" })).toEqual({ ok: false, reason: "changed" });
+    expect(await firmwareBytes(f0.deps("stable"), { version: v1.version, source: "online", board: "pico2_w" })).toEqual({ ok: false, reason: "changed" });
   });
 
   it("refuses a file whose hash doesn't match the entry shown", async () => {
     const f = live({}, new Uint8Array([6, 6]));
-    const shown = (await latestFirmware(f.deps("stable"))).latest!;
+    const shown = (await latestFirmware(f.deps("stable"), PICO2_W)).latest!;
     expect(await firmwareBytes(f.deps("stable"), shown)).toEqual({ ok: false, reason: "mismatch" });
     // The verified download's own checksum failure is the same answer.
     const corrupt = live();
@@ -125,7 +126,7 @@ describe("installing the firmware shown", () => {
   it("a bundled offer installs the bundled build, without going online", async () => {
     bundle("v0.8.0-oled-edition");
     const f = live();
-    const r = await firmwareBytes({ ...f.deps("stable"), bundled: () => readBundled(res) }, { version: "v0.8.0-oled-edition", source: "bundled" });
+    const r = await firmwareBytes({ ...f.deps("stable"), bundled: () => readBundled(res) }, { version: "v0.8.0-oled-edition", source: "bundled", board: "pico2_w" });
     expect(r).toEqual({ ok: true, version: "v0.8.0-oled-edition", bytes: uf2 });
     expect(f.freshFeed).not.toHaveBeenCalled();
     expect(f.download).not.toHaveBeenCalled();
@@ -205,7 +206,7 @@ describe("the firmware feed under the automatic-checks switch", () => {
       freshFeed: installFeed(feed),
       download,
     };
-    const offer = await latestFirmware(d, true); // Check now
+    const offer = await latestFirmware(d, PICO2_W, true); // Check now
     const offered = await net.mock.results[0].value;
     now = FEED_REUSE_MS - 1;
     expect(await firmwareBytes(d, offer.latest!)).toMatchObject({ ok: true, version: "v0.9.0-oled-edition" });

@@ -17,6 +17,7 @@ import { OfficialFirmwareSource } from "../../electron/main/officialFirmware";
 import type { DesktopApi, UpdateChannel, UpdateState } from "../../src/desktop/api";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { Manifest } from "../../src/update/manifest";
+import type { BoardIdentity } from "../../src/update/boardIdentity";
 import { useFirmwareUpdate, type FirmwareUpdate } from "../../src/desktop/useUpdates";
 import SetupScreen from "../../src/desktop/SetupScreen";
 import { DevChannelDialog } from "../../src/desktop/pages/AppSettingsPage";
@@ -60,7 +61,7 @@ function fakeMain(automatic: boolean) {
   };
   const official = new OfficialFirmwareSource(sony, () => automatic);
   const desktop = {
-    latestFirmware: (asked = false) => latestFirmware(deps, asked),
+    latestFirmware: (asked: boolean, board: BoardIdentity) => latestFirmware(deps, board, asked),
     downloadFirmware: (shown: Parameters<DesktopApi["downloadFirmware"]>[0]) => firmwareBytes(deps, shown),
     checkForUpdates: async (): Promise<UpdateState> => {
       await feed.get("stable", 0);
@@ -78,7 +79,7 @@ function fakeMain(automatic: boolean) {
   return { net, sony, scheduled, desktop, deps };
 }
 
-const bridge = { client: null, firmwareVersion: "v9.0.0-oled-edition" } as unknown as UseDs5BridgeResult;
+const bridge = { client: null, firmwareVersion: "v9.0.0-oled-edition", identity: { boardName: "Pico 2 W", protoMinor: 20 } } as unknown as UseDs5BridgeResult;
 const card: { fw: FirmwareUpdate | null } = { fw: null };
 function FirmwareCard({ app }: { app: UpdateState }) {
   const fw = useFirmwareUpdate(bridge, app);
