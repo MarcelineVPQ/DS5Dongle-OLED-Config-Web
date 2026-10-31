@@ -663,7 +663,8 @@ export function DeveloperSettings() {
       )}
       {simulated && <SimulatedBoard />}
       <Toggle label={t("desktop.dev.fakeSlots")} info={t("desktop.dev.fakeSlotsHint")} value={fakeSlots.on} onChange={fakeSlots.setOn} />
-      <FakeGames />
+      {/* Only where there is a Games page to fill (no control that does nothing: none on macOS). */}
+      {gamesSupported() && <FakeGames />}
       <Row label={t("desktop.dev.updates")} info={t("desktop.dev.updatesHint")}>
         <select className="dk-select" aria-label={t("desktop.dev.updates")} value={updatePreview} onChange={(e) => setUpdatePreview(e.target.value as UpdatePreview)}>
           {/* loop: HOT-PATH-OK — N = 4 previews, Developer card only */}
